@@ -19,6 +19,12 @@ export interface PineconeLibArgs {
   filter?: PineconeMetadata;
 }
 
+export type PineconeDeleteParams = {
+  ids?: string[];
+  deleteAll?: boolean;
+  namespace?: string;
+};
+
 export class PineconeStore extends VectorStore {
   declare FilterType: PineconeMetadata;
 
@@ -30,6 +36,10 @@ export class PineconeStore extends VectorStore {
 
   filter?: PineconeMetadata;
 
+  _vectorstoreType(): string {
+    return "pinecone";
+  }
+
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
@@ -40,29 +50,47 @@ export class PineconeStore extends VectorStore {
     this.filter = args.filter;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] } | string[]
+  ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      ids
+      options
     );
   }
 
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    ids?: string[]
-  ): Promise<void> {
+    options?: { ids?: string[] } | string[]
+  ) {
+    const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
       // Pinecone doesn't support nested objects, so we flatten them
+      const documentMetadata = { ...documents[idx].metadata };
+      // preserve string arrays which are allowed
+      const stringArrays: Record<string, string[]> = {};
+      for (const key of Object.keys(documentMetadata)) {
+        if (
+          Array.isArray(documentMetadata[key]) &&
+          // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+          documentMetadata[key].every((el: any) => typeof el === "string")
+        ) {
+          stringArrays[key] = documentMetadata[key];
+          delete documentMetadata[key];
+        }
+      }
       const metadata: {
-        [key: string]: string | number | boolean | null;
-      } = flatten({
-        ...documents[idx].metadata,
+        [key: string]: string | number | boolean | string[] | null;
+      } = {
+        ...flatten(documentMetadata),
+        ...stringArrays,
         [this.textKey]: documents[idx].pageContent,
-      });
+      };
       // Pinecone doesn't support null values, so we remove them
       for (const key of Object.keys(metadata)) {
         if (metadata[key] == null) {
@@ -74,6 +102,7 @@ export class PineconeStore extends VectorStore {
           delete metadata[key];
         }
       }
+
       return {
         id: documentIds[idx],
         metadata,
@@ -91,6 +120,30 @@ export class PineconeStore extends VectorStore {
           namespace: this.namespace,
         },
       });
+    }
+    return documentIds;
+  }
+
+  async delete(params: PineconeDeleteParams): Promise<void> {
+    const { namespace = this.namespace, deleteAll, ids, ...rest } = params;
+    if (deleteAll) {
+      await this.pineconeIndex.delete1({
+        deleteAll: true,
+        namespace,
+        ...rest,
+      });
+    } else if (ids) {
+      const batchSize = 1000;
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const batchIds = ids.slice(i, i + batchSize);
+        await this.pineconeIndex.delete1({
+          ids: batchIds,
+          namespace,
+          ...rest,
+        });
+      }
+    } else {
+      throw new Error("Either ids or delete_all must be provided.");
     }
   }
 

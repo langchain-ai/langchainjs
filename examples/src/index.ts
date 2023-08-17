@@ -1,3 +1,4 @@
+import { awaitAllCallbacks } from "langchain/callbacks";
 import path from "path";
 import url from "url";
 
@@ -44,10 +45,11 @@ if (runExample) {
   const maybePromise = runExample(args);
 
   if (maybePromise instanceof Promise) {
-    maybePromise.catch((e) => {
-      console.error(`Example failed with:`);
-      console.error(e);
-      process.exit(1);
-    });
+    maybePromise
+      .catch((e) => {
+        console.error(`Example failed with:`);
+        console.error(e);
+      })
+      .finally(() => awaitAllCallbacks());
   }
 }

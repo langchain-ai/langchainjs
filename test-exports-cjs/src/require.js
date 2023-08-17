@@ -5,7 +5,7 @@ const { ChatPromptTemplate } = require("langchain/prompts");
 const { loadPrompt } = require("langchain/prompts/load");
 const { HNSWLib } = require("langchain/vectorstores/hnswlib");
 const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
-const { InMemoryDocstore, Document } = require("langchain/docstore");
+const { Document } = require("langchain/document");
 const { CSVLoader } = require("langchain/document_loaders/fs/csv");
 
 async function test() {
@@ -22,7 +22,6 @@ async function test() {
   const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
     space: "ip",
     numDimensions: 3,
-    docstore: new InMemoryDocstore(),
     index: new HierarchicalNSW("ip", 3),
   });
 

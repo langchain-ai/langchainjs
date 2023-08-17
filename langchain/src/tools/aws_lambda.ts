@@ -16,6 +16,17 @@ interface LambdaClientConstructorArgs {
 }
 
 class AWSLambda extends DynamicTool {
+  get lc_namespace(): string[] {
+    return [...super.lc_namespace, "aws_lambda"];
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      accessKeyId: "AWS_ACCESS_KEY_ID",
+      secretAccessKey: "AWS_SECRET_ACCESS_KEY",
+    };
+  }
+
   private lambdaConfig: LambdaConfig;
 
   constructor({

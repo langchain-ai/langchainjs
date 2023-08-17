@@ -1,13 +1,11 @@
 import * as uuid from "uuid";
-import { MilvusClient } from "@zilliz/milvus2-sdk-node";
 import {
+  MilvusClient,
   DataType,
   DataTypeMap,
-} from "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js";
-import {
   ErrorCode,
   FieldType,
-} from "@zilliz/milvus2-sdk-node/dist/milvus/types.js";
+} from "@zilliz/milvus2-sdk-node";
 
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
@@ -23,6 +21,7 @@ export interface MilvusLibArgs {
   ssl?: boolean;
   username?: string;
   password?: string;
+  textFieldMaxLength?: number;
 }
 
 type IndexType =
@@ -50,6 +49,16 @@ const MILVUS_TEXT_FIELD_NAME = "langchain_text";
 const MILVUS_COLLECTION_NAME_PREFIX = "langchain_col";
 
 export class Milvus extends VectorStore {
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      ssl: "MILVUS_SSL",
+      username: "MILVUS_USERNAME",
+      password: "MILVUS_PASSWORD",
+    };
+  }
+
+  declare FilterType: string;
+
   collectionName: string;
 
   numDimensions?: number;
@@ -61,6 +70,8 @@ export class Milvus extends VectorStore {
   vectorField: string;
 
   textField: string;
+
+  textFieldMaxLength: number;
 
   fields: string[];
 
@@ -86,6 +97,10 @@ export class Milvus extends VectorStore {
 
   indexSearchParams = JSON.stringify({ ef: 64 });
 
+  _vectorstoreType(): string {
+    return "milvus";
+  }
+
   constructor(embeddings: Embeddings, args: MilvusLibArgs) {
     super(embeddings, args);
     this.embeddings = embeddings;
@@ -95,6 +110,9 @@ export class Milvus extends VectorStore {
     this.autoId = true;
     this.primaryField = args.primaryField ?? MILVUS_PRIMARY_FIELD_NAME;
     this.vectorField = args.vectorField ?? MILVUS_VECTOR_FIELD_NAME;
+
+    this.textFieldMaxLength = args.textFieldMaxLength ?? 0;
+
     this.fields = [];
 
     const url = args.url ?? getEnvironmentVariable("MILVUS_URL");
@@ -174,7 +192,8 @@ export class Milvus extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: string
   ): Promise<[Document, number][]> {
     const hasColResp = await this.client.hasCollection({
       collection_name: this.collectionName,
@@ -187,6 +206,8 @@ export class Milvus extends VectorStore {
         `Collection not found: ${this.collectionName}, please create collection before search.`
       );
     }
+
+    const filterStr = filter ?? "";
 
     await this.grabCollectionFields();
 
@@ -213,18 +234,22 @@ export class Milvus extends VectorStore {
       output_fields: outputFields,
       vector_type: DataType.FloatVector,
       vectors: [query],
+      filter: filterStr,
     });
     if (searchResp.status.error_code !== ErrorCode.SUCCESS) {
       throw new Error(`Error searching data: ${JSON.stringify(searchResp)}`);
     }
     const results: [Document, number][] = [];
     searchResp.results.forEach((result) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const fields = { pageContent: "", metadata: {} as Record<string, any> };
+      const fields = {
+        pageContent: "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        metadata: {} as Record<string, any>,
+      };
       Object.keys(result).forEach((key) => {
         if (key === this.textField) {
           fields.pageContent = result[key];
-        } else if (this.fields.includes(key)) {
+        } else if (this.fields.includes(key) || key === this.primaryField) {
           if (typeof result[key] === "string") {
             const { isJson, obj } = checkJsonString(result[key]);
             fields.metadata[key] = isJson ? obj : result[key];
@@ -282,7 +307,10 @@ export class Milvus extends VectorStore {
         description: "Text field",
         data_type: DataType.VarChar,
         type_params: {
-          max_length: getTextFieldMaxLength(documents).toString(),
+          max_length:
+            this.textFieldMaxLength > 0
+              ? this.textFieldMaxLength.toString()
+              : getTextFieldMaxLength(documents).toString(),
         },
       },
       {
@@ -359,11 +387,7 @@ export class Milvus extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig?: {
-      collectionName?: string;
-      url?: string;
-      ssl?: boolean;
-    }
+    dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -386,6 +410,11 @@ export class Milvus extends VectorStore {
       collectionName: dbConfig?.collectionName || genCollectionName(),
       url: dbConfig?.url,
       ssl: dbConfig?.ssl,
+      username: dbConfig?.username,
+      password: dbConfig?.password,
+      textField: dbConfig?.textField,
+      primaryField: dbConfig?.primaryField,
+      vectorField: dbConfig?.vectorField,
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
@@ -399,6 +428,31 @@ export class Milvus extends VectorStore {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();
     return instance;
+  }
+
+  async delete(params: { filter: string }): Promise<void> {
+    const hasColResp = await this.client.hasCollection({
+      collection_name: this.collectionName,
+    });
+    if (hasColResp.status.error_code !== ErrorCode.SUCCESS) {
+      throw new Error(`Error checking collection: ${hasColResp}`);
+    }
+    if (hasColResp.value === false) {
+      throw new Error(
+        `Collection not found: ${this.collectionName}, please create collection before search.`
+      );
+    }
+
+    const { filter } = params;
+
+    const deleteResp = await this.client.deleteEntities({
+      collection_name: this.collectionName,
+      expr: filter,
+    });
+
+    if (deleteResp.status.error_code !== ErrorCode.SUCCESS) {
+      throw new Error(`Error deleting data: ${JSON.stringify(deleteResp)}`);
+    }
   }
 }
 

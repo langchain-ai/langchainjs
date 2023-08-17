@@ -1,3 +1,4 @@
+// TODO: Deprecate in favor of stores/message/ioredis.ts when LLMCache and other implementations are ported
 import {
   createClient,
   RedisClientOptions,
@@ -6,10 +7,7 @@ import {
   RedisFunctions,
   RedisScripts,
 } from "redis";
-import {
-  BaseChatMessage,
-  BaseListChatMessageHistory,
-} from "../../schema/index.js";
+import { BaseMessage, BaseListChatMessageHistory } from "../../schema/index.js";
 import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
@@ -25,6 +23,16 @@ export type RedisChatMessageHistoryInput = {
 };
 
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "redis"];
+
+  get lc_secrets() {
+    return {
+      "config.url": "REDIS_URL",
+      "config.username": "REDIS_USERNAME",
+      "config.password": "REDIS_PASSWORD",
+    };
+  }
+
   public client: RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 
   private sessionId: string;
@@ -32,8 +40,9 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   private sessionTTL?: number;
 
   constructor(fields: RedisChatMessageHistoryInput) {
+    super(fields);
+
     const { sessionId, sessionTTL, config, client } = fields;
-    super();
     this.client = (client ?? createClient(config ?? {})) as RedisClientType<
       RedisModules,
       RedisFunctions,
@@ -50,7 +59,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     return true;
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  async getMessages(): Promise<BaseMessage[]> {
     await this.ensureReadiness();
     const rawStoredMessages = await this.client.lRange(this.sessionId, 0, -1);
     const orderedMessages = rawStoredMessages
@@ -59,7 +68,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
-  async addMessage(message: BaseChatMessage): Promise<void> {
+  async addMessage(message: BaseMessage): Promise<void> {
     await this.ensureReadiness();
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
     await this.client.lPush(this.sessionId, JSON.stringify(messageToAdd[0]));

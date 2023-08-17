@@ -7,6 +7,7 @@ import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
+/** @deprecated use `MongoDBAtlasVectorSearch` instead. */
 export type MongoLibArgs = {
   client: MongoClient;
   collection: Collection<MongoDocument>;
@@ -17,6 +18,7 @@ export type MongoVectorStoreQueryExtension = {
   postQueryPipelineSteps?: MongoDocument[];
 };
 
+/** @deprecated use `MongoDBAtlasVectorSearch` instead. */
 export class MongoVectorStore extends VectorStore {
   declare FilterType: MongoVectorStoreQueryExtension;
 
@@ -25,6 +27,10 @@ export class MongoVectorStore extends VectorStore {
   client: MongoClient;
 
   indexName: string;
+
+  _vectorstoreType(): string {
+    return "mongodb";
+  }
 
   constructor(embeddings: Embeddings, args: MongoLibArgs) {
     super(embeddings, args);

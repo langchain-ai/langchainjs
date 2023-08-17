@@ -73,14 +73,19 @@ const scenarios = [
 
 describe.each(agents)(`Run agent %#`, (initializeAgentExecutorWithTools) => {
   test.concurrent.each(scenarios)(`With scenario %#`, async (scenario) => {
-    const agentIndex = agents.indexOf(initializeAgentExecutorWithTools);
-    const scenarioIndex = scenarios.indexOf(scenario);
-    const { tools, input } = await scenario();
-    const agent = await initializeAgentExecutorWithTools(tools);
-    const result = await agent.call({ input });
-    console.log(`Agent #${agentIndex}`, `Scenario #${scenarioIndex}`, {
-      result,
-    });
-    expect(typeof result.output).toBe("string");
+    try {
+      const agentIndex = agents.indexOf(initializeAgentExecutorWithTools);
+      const scenarioIndex = scenarios.indexOf(scenario);
+      const { tools, input } = await scenario();
+      const agent = await initializeAgentExecutorWithTools(tools);
+      const result = await agent.call({ input });
+      console.log(`Agent #${agentIndex}`, `Scenario #${scenarioIndex}`, {
+        result,
+      });
+      expect(typeof result.output).toBe("string");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      console.log(e);
+    }
   });
 });

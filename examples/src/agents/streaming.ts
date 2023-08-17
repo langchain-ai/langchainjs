@@ -4,6 +4,7 @@ import { BaseCallbackHandler } from "langchain/callbacks";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Calculator } from "langchain/tools/calculator";
 import { AgentAction } from "langchain/schema";
+import { Serialized } from "langchain/load/serializable";
 
 export const run = async () => {
   // You can implement your own callback handler by extending BaseCallbackHandler
@@ -14,11 +15,11 @@ export const run = async () => {
       console.log("token", { token });
     }
 
-    handleLLMStart(llm: { name: string }, _prompts: string[]) {
+    handleLLMStart(llm: Serialized, _prompts: string[]) {
       console.log("handleLLMStart", { llm });
     }
 
-    handleChainStart(chain: { name: string }) {
+    handleChainStart(chain: Serialized) {
       console.log("handleChainStart", { chain });
     }
 
@@ -26,7 +27,7 @@ export const run = async () => {
       console.log("handleAgentAction", action);
     }
 
-    handleToolStart(tool: { name: string }) {
+    handleToolStart(tool: Serialized) {
       console.log("handleToolStart", { tool });
     }
   }

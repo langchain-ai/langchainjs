@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { BaseFileStore } from "../../schema/index.js";
 
 export class NodeFileStore extends BaseFileStore {
+  lc_namespace = ["langchain", "stores", "file", "node"];
+
   constructor(public basePath: string = mkdtempSync("langchain-")) {
     super();
   }

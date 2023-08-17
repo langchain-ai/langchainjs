@@ -1,6 +1,6 @@
-import { Tool } from "./base.js";
+import { Tool, ToolParams } from "./base.js";
 
-export interface AIPluginToolParams {
+export interface AIPluginToolParams extends ToolParams {
   name: string;
   description: string;
   apiSpec: string;
@@ -22,7 +22,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
   }
 
   constructor(params: AIPluginToolParams) {
-    super();
+    super(params);
     this._name = params.name;
     this._description = params.description;
     this.apiSpec = params.apiSpec;

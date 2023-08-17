@@ -5,6 +5,7 @@ import {
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../util/async_caller.js";
+import { chunkArray } from "../util/chunk.js";
 
 export interface GoogleVertexAIEmbeddingsParams
   extends EmbeddingsParams,
@@ -64,21 +65,28 @@ export class GoogleVertexAIEmbeddings
   }
 
   async embedDocuments(documents: string[]): Promise<number[][]> {
-    const instances: GoogleVertexAILLMEmbeddingsInstance[] = documents.map(
-      (document) => ({
+    const instanceChunks: GoogleVertexAILLMEmbeddingsInstance[][] = chunkArray(
+      documents.map((document) => ({
         content: document,
-      })
-    );
+      })),
+      5
+    ); // Vertex AI accepts max 5 instnaces per prediction
     const parameters = {};
     const options = {};
-    const response = await this.connection.request(
-      instances,
-      parameters,
-      options
+    const responses = await Promise.all(
+      instanceChunks.map((instances) =>
+        this.connection.request(instances, parameters, options)
+      )
     );
     const result: number[][] =
-      response?.data?.predictions?.map((result) => result.embeddings.values) ??
-      [];
+      responses
+        ?.map(
+          (response) =>
+            response.data?.predictions?.map(
+              (result) => result.embeddings.values
+            ) ?? []
+        )
+        .flat() ?? [];
     return result;
   }
 

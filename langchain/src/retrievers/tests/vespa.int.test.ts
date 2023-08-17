@@ -4,7 +4,7 @@ import { test, expect } from "@jest/globals";
 
 import { VespaRetriever } from "../vespa.js";
 
-test("VespaRetriever", async () => {
+test.skip("VespaRetriever", async () => {
   const url = process.env.VESPA_URL!;
   const query_body = {
     yql: "select * from music where album contains 'head';",

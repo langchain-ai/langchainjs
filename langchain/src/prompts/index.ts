@@ -37,8 +37,6 @@ export {
   SerializedPromptTemplate,
   SerializedBasePromptTemplate,
   SerializedFewShotTemplate,
-  SerializedMessagePromptTemplate,
-  SerializedChatPromptTemplate,
 } from "./serde.js";
 export {
   parseTemplate,
@@ -46,3 +44,8 @@ export {
   checkValidTemplate,
   TemplateFormat,
 } from "./template.js";
+export {
+  PipelinePromptParams,
+  PipelinePromptTemplate,
+  PipelinePromptTemplateInput,
+} from "./pipeline.js";

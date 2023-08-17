@@ -1,7 +1,5 @@
-# Your PR Title Here (What it does)
-
 <!--
-Thank you for contributing to LangChainJS! Your PR will appear in our next release under the title you set. Please make sure it highlights your valuable contribution.
+Thank you for contributing to LangChainJS! Your PR will appear in our next release under the title you set above. Please make sure it highlights your valuable contribution.
 
 To help streamline the review process, please make sure you read our contribution guidelines:
 https://github.com/hwchase17/langchainjs/blob/main/CONTRIBUTING.md

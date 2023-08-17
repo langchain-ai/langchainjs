@@ -10,6 +10,7 @@ import { AzureOpenAIInput } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
@@ -53,6 +54,8 @@ export class OpenAIEmbeddings
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAIBasePath?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -74,7 +77,7 @@ export class OpenAIEmbeddings
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
     if (!azureApiKey && !apiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
     const azureApiInstanceName =
@@ -91,8 +94,12 @@ export class OpenAIEmbeddings
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
     this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.batchSize = fields?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
 
@@ -102,7 +109,7 @@ export class OpenAIEmbeddings
     this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -121,7 +128,7 @@ export class OpenAIEmbeddings
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const subPrompts = chunkArray(
-      this.stripNewLines ? texts.map((t) => t.replaceAll("\n", " ")) : texts,
+      this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
 
@@ -144,16 +151,23 @@ export class OpenAIEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: this.stripNewLines ? text.replaceAll("\n", " ") : text,
+      input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
     });
     return data.data[0].embedding;
   }
 
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        basePath: this.clientConfig.basePath,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,

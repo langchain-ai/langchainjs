@@ -93,6 +93,13 @@ export class AsyncCaller {
               if (status && STATUS_NO_RETRY.includes(+status)) {
                 throw error;
               }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const data = (error as any)?.response?.data;
+              if (data?.error?.code === "insufficient_quota") {
+                const error = new Error(data?.error?.message);
+                error.name = "InsufficientQuotaError";
+                throw error;
+              }
             },
             retries: this.maxRetries,
             randomize: true,

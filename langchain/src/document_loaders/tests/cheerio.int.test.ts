@@ -19,3 +19,15 @@ test("Test cheerio web scraper loader with selector", async () => {
     "Committed to significantly improving the lives of as many people as possible."
   );
 });
+
+test("Test cheerio web scraper loader with textDecoder", async () => {
+  const loader = new CheerioWebBaseLoader(
+    "https://corp.163.com/gb/about/management.html",
+    {
+      textDecoder: new TextDecoder("gbk"),
+    }
+  );
+
+  const doc = await loader.load();
+  expect(doc[0].pageContent.trim()).toEqual(expect.stringContaining("网易"));
+});

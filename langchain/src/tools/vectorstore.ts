@@ -20,7 +20,7 @@ export class VectorStoreQATool extends Tool implements VectorStoreTool {
   chain: VectorDBQAChain;
 
   constructor(name: string, description: string, fields: VectorStoreTool) {
-    super();
+    super(...arguments);
     this.name = name;
     this.description = description;
     this.vectorStore = fields.vectorStore;

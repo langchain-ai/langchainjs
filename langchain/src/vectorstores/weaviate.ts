@@ -57,6 +57,7 @@ export interface WeaviateLibArgs {
   indexName: string;
   textKey?: string;
   metadataKeys?: string[];
+  tenant?: string;
 }
 
 interface ResultRow {
@@ -80,6 +81,12 @@ export class WeaviateStore extends VectorStore {
 
   private queryAttrs: string[];
 
+  private tenant?: string;
+
+  _vectorstoreType(): string {
+    return "weaviate";
+  }
+
   constructor(public embeddings: Embeddings, args: WeaviateLibArgs) {
     super(embeddings, args);
 
@@ -87,13 +94,34 @@ export class WeaviateStore extends VectorStore {
     this.indexName = args.indexName;
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
+    this.tenant = args.tenant;
 
     if (args.metadataKeys) {
-      this.queryAttrs = this.queryAttrs.concat(args.metadataKeys);
+      this.queryAttrs = [
+        ...new Set([
+          ...this.queryAttrs,
+          ...args.metadataKeys.filter((k) => {
+            // https://spec.graphql.org/June2018/#sec-Names
+            // queryAttrs need to be valid GraphQL Names
+            const keyIsValid = /^[_A-Za-z][_0-9A-Za-z]*$/.test(k);
+            if (!keyIsValid) {
+              console.warn(
+                `Skipping metadata key ${k} as it is not a valid GraphQL Name`
+              );
+            }
+            return keyIsValid;
+          }),
+        ]),
+      ];
     }
   }
 
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ) {
+    const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
     const batch: WeaviateObject[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
@@ -102,8 +130,9 @@ export class WeaviateStore extends VectorStore {
 
       const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
       return {
+        ...(this.tenant ? { tenant: this.tenant } : {}),
         class: this.indexName,
-        id: uuid.v4(),
+        id: documentIds[index],
         vector: vectors[index],
         properties: {
           [this.textKey]: document.pageContent,
@@ -118,15 +147,54 @@ export class WeaviateStore extends VectorStore {
         .withObjects(...batch)
         .do();
     } catch (e) {
-      throw Error(`'Error in addDocuments' ${e}`);
+      throw Error(`'Error adding vectors' ${e}`);
     }
+    return documentIds;
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
-      documents
+      documents,
+      options
     );
+  }
+
+  async delete(params: {
+    ids?: string[];
+    filter?: WeaviateFilter;
+  }): Promise<void> {
+    const { ids, filter } = params;
+
+    if (ids && ids.length > 0) {
+      for (const id of ids) {
+        let deleter = this.client.data
+          .deleter()
+          .withClassName(this.indexName)
+          .withId(id);
+
+        if (this.tenant) {
+          deleter = deleter.withTenant(this.tenant);
+        }
+
+        await deleter.do();
+      }
+    } else if (filter) {
+      let batchDeleter = this.client.batch
+        .objectsBatchDeleter()
+        .withClassName(this.indexName)
+        .withWhere(filter.where);
+
+      if (this.tenant) {
+        batchDeleter = batchDeleter.withTenant(this.tenant);
+      }
+
+      await batchDeleter.do();
+    } else {
+      throw new Error(
+        `This method requires either "ids" or "filter" to be set in the input object`
+      );
+    }
   }
 
   async similaritySearchVectorWithScore(
@@ -144,6 +212,10 @@ export class WeaviateStore extends VectorStore {
           distance: filter?.distance,
         })
         .withLimit(k);
+
+      if (this.tenant) {
+        builder = builder.withTenant(this.tenant);
+      }
 
       if (filter?.where) {
         builder = builder.withWhere(filter.where);

@@ -1,16 +1,19 @@
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   BasePromptValue,
   ChatGeneration,
   ChatResult,
-  HumanChatMessage,
+  HumanMessage,
+  BaseMessageChunk,
   LLMResult,
   RUN_KEY,
+  ChatGenerationChunk,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
   BaseLanguageModelCallOptions,
+  BaseLanguageModelInput,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
@@ -18,6 +21,7 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
+import { RunnableConfig } from "../schema/runnable.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -36,10 +40,24 @@ export type BaseChatModelParams = BaseLanguageModelParams;
 
 export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 
-export abstract class BaseChatModel extends BaseLanguageModel {
-  declare CallOptions: BaseChatModelCallOptions;
+export function createChatMessageChunkEncoderStream() {
+  const textEncoder = new TextEncoder();
+  return new TransformStream<BaseMessageChunk>({
+    transform(chunk: BaseMessageChunk, controller) {
+      controller.enqueue(textEncoder.encode(chunk.content));
+    },
+  });
+}
 
-  declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
+export abstract class BaseChatModel<
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
+> extends BaseLanguageModel<BaseMessageChunk, CallOptions> {
+  declare ParsedCallOptions: Omit<
+    CallOptions,
+    keyof RunnableConfig & "timeout"
+  >;
+
+  lc_namespace = ["langchain", "chat_models", this._llmType()];
 
   constructor(fields: BaseChatModelParams) {
     super(fields);
@@ -49,63 +67,186 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     ...llmOutputs: LLMResult["llmOutput"][]
   ): LLMResult["llmOutput"];
 
+  protected _separateRunnableConfigFromCallOptions(
+    options?: Partial<CallOptions>
+  ): [RunnableConfig, this["ParsedCallOptions"]] {
+    const [runnableConfig, callOptions] =
+      super._separateRunnableConfigFromCallOptions(options);
+    if (callOptions?.timeout && !callOptions.signal) {
+      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
+    }
+    return [runnableConfig, callOptions as this["ParsedCallOptions"]];
+  }
+
+  async invoke(
+    input: BaseLanguageModelInput,
+    options?: CallOptions
+  ): Promise<BaseMessageChunk> {
+    const promptValue = BaseChatModel._convertInputToPromptValue(input);
+    const result = await this.generatePrompt(
+      [promptValue],
+      options,
+      options?.callbacks
+    );
+    const chatGeneration = result.generations[0][0] as ChatGeneration;
+    // TODO: Remove cast after figuring out inheritance
+    return chatGeneration.message as BaseMessageChunk;
+  }
+
+  // eslint-disable-next-line require-yield
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    throw new Error("Not implemented.");
+  }
+
+  async *_streamIterator(
+    input: BaseLanguageModelInput,
+    options?: CallOptions
+  ): AsyncGenerator<BaseMessageChunk> {
+    // Subclass check required to avoid double callbacks with default implementation
+    if (
+      this._streamResponseChunks ===
+      BaseChatModel.prototype._streamResponseChunks
+    ) {
+      yield this.invoke(input, options);
+    } else {
+      const prompt = BaseChatModel._convertInputToPromptValue(input);
+      const messages = prompt.toChatMessages();
+      const [runnableConfig, callOptions] =
+        this._separateRunnableConfigFromCallOptions(options);
+      const callbackManager_ = await CallbackManager.configure(
+        runnableConfig.callbacks,
+        this.callbacks,
+        runnableConfig.tags,
+        this.tags,
+        runnableConfig.metadata,
+        this.metadata,
+        { verbose: this.verbose }
+      );
+      const extra = {
+        options: callOptions,
+        invocation_params: this?.invocationParams(callOptions),
+      };
+      const runManagers = await callbackManager_?.handleChatModelStart(
+        this.toJSON(),
+        [messages],
+        undefined,
+        undefined,
+        extra
+      );
+      let generationChunk: ChatGenerationChunk | undefined;
+      try {
+        for await (const chunk of this._streamResponseChunks(
+          messages,
+          callOptions,
+          runManagers?.[0]
+        )) {
+          yield chunk.message;
+          if (!generationChunk) {
+            generationChunk = chunk;
+          } else {
+            generationChunk = generationChunk.concat(chunk);
+          }
+        }
+      } catch (err) {
+        await Promise.all(
+          (runManagers ?? []).map((runManager) =>
+            runManager?.handleLLMError(err)
+          )
+        );
+        throw err;
+      }
+      await Promise.all(
+        (runManagers ?? []).map((runManager) =>
+          runManager?.handleLLMEnd({
+            // TODO: Remove cast after figuring out inheritance
+            generations: [[generationChunk as ChatGeneration]],
+          })
+        )
+      );
+    }
+  }
+
   async generate(
-    messages: BaseChatMessage[][],
-    options?: string[] | this["CallOptions"],
+    messages: BaseMessage[][],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
-    const generations: ChatGeneration[][] = [];
-    const llmOutputs: LLMResult["llmOutput"][] = [];
-    let parsedOptions: this["CallOptions"];
+    // parse call options
+    let parsedOptions: CallOptions | undefined;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as this["CallOptions"];
-    } else if (options?.timeout && !options.signal) {
-      parsedOptions = {
-        ...options,
-        signal: AbortSignal.timeout(options.timeout),
-      };
+      parsedOptions = { stop: options } as CallOptions;
     } else {
-      parsedOptions = options ?? {};
+      parsedOptions = options;
     }
+
+    const [runnableConfig, callOptions] =
+      this._separateRunnableConfigFromCallOptions(parsedOptions);
+    // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      runnableConfig.callbacks ?? callbacks,
       this.callbacks,
+      runnableConfig.tags,
+      this.tags,
+      runnableConfig.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
-    const invocationParams = { invocation_params: this?.invocationParams() };
-    const runManager = await callbackManager_?.handleChatModelStart(
-      { name: this._llmType() },
+    const extra = {
+      options: callOptions,
+      invocation_params: this?.invocationParams(parsedOptions),
+    };
+    const runManagers = await callbackManager_?.handleChatModelStart(
+      this.toJSON(),
       messages,
       undefined,
       undefined,
-      invocationParams
+      extra
     );
-    try {
-      const results = await Promise.all(
-        messages.map((messageList) =>
-          this._generate(messageList, parsedOptions, runManager)
+    // generate results
+    const results = await Promise.allSettled(
+      messages.map((messageList, i) =>
+        this._generate(
+          messageList,
+          { ...callOptions, promptIndex: i },
+          runManagers?.[i]
         )
-      );
-      for (const result of results) {
-        if (result.llmOutput) {
-          llmOutputs.push(result.llmOutput);
+      )
+    );
+    // handle results
+    const generations: ChatGeneration[][] = [];
+    const llmOutputs: LLMResult["llmOutput"][] = [];
+    await Promise.all(
+      results.map(async (pResult, i) => {
+        if (pResult.status === "fulfilled") {
+          const result = pResult.value;
+          generations[i] = result.generations;
+          llmOutputs[i] = result.llmOutput;
+          return runManagers?.[i]?.handleLLMEnd({
+            generations: [result.generations],
+            llmOutput: result.llmOutput,
+          });
+        } else {
+          // status === "rejected"
+          await runManagers?.[i]?.handleLLMError(pResult.reason);
+          return Promise.reject(pResult.reason);
         }
-        generations.push(result.generations);
-      }
-    } catch (err) {
-      await runManager?.handleLLMError(err);
-      throw err;
-    }
-
+      })
+    );
+    // create combined output
     const output: LLMResult = {
       generations,
       llmOutput: llmOutputs.length
         ? this._combineLLMOutput?.(...llmOutputs)
         : undefined,
     };
-    await runManager?.handleLLMEnd(output);
     Object.defineProperty(output, RUN_KEY, {
-      value: runManager ? { runId: runManager?.runId } : undefined,
+      value: runManagers
+        ? { runIds: runManagers?.map((manager) => manager.runId) }
+        : undefined,
       configurable: true,
     });
     return output;
@@ -115,7 +256,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
    * Get the parameters used to invoke the model
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  invocationParams(): any {
+  invocationParams(_options?: this["ParsedCallOptions"]): any {
     return {};
   }
 
@@ -127,26 +268,26 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
-    const promptMessages: BaseChatMessage[][] = promptValues.map(
-      (promptValue) => promptValue.toChatMessages()
+    const promptMessages: BaseMessage[][] = promptValues.map((promptValue) =>
+      promptValue.toChatMessages()
     );
     return this.generate(promptMessages, options, callbacks);
   }
 
   abstract _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
   async call(
-    messages: BaseChatMessage[],
-    options?: string[] | this["CallOptions"],
+    messages: BaseMessage[],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
+  ): Promise<BaseMessage> {
     const result = await this.generate([messages], options, callbacks);
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
@@ -154,50 +295,50 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async callPrompt(
     promptValue: BasePromptValue,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
-    const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
+  ): Promise<BaseMessage> {
+    const promptMessages: BaseMessage[] = promptValue.toChatMessages();
     return this.call(promptMessages, options, callbacks);
   }
 
   async predictMessages(
-    messages: BaseChatMessage[],
-    options?: string[] | this["CallOptions"],
+    messages: BaseMessage[],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
+  ): Promise<BaseMessage> {
     return this.call(messages, options, callbacks);
   }
 
   async predict(
     text: string,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string> {
-    const message = new HumanChatMessage(text);
+    const message = new HumanMessage(text);
     const result = await this.call([message], options, callbacks);
-    return result.text;
+    return result.content;
   }
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const text = await this._call(messages, options, runManager);
-    const message = new AIChatMessage(text);
+    const message = new AIMessage(text);
     return {
       generations: [
         {
-          text: message.text,
+          text: message.content,
           message,
         },
       ],

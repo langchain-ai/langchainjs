@@ -1,43 +1,76 @@
+// Default generic "any" values are for backwards compatibility.
+// Replace with "string" when we are comfortable with a breaking change.
+
+import { BaseCallbackConfig } from "../callbacks/manager.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   BasePromptValue,
   ChatMessage,
-  HumanChatMessage,
+  HumanMessage,
   InputValues,
   PartialValues,
-  SystemChatMessage,
+  SystemMessage,
 } from "../schema/index.js";
+import { Runnable } from "../schema/runnable.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
   BaseStringPromptTemplate,
+  TypedPromptInputValues,
 } from "./base.js";
 import { PromptTemplate } from "./prompt.js";
-import {
-  SerializedChatPromptTemplate,
-  SerializedMessagePromptTemplate,
-} from "./serde.js";
 
-export abstract class BaseMessagePromptTemplate {
-  abstract inputVariables: string[];
+export abstract class BaseMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  RunOutput extends BaseMessage[] = BaseMessage[]
+> extends Runnable<RunInput, RunOutput> {
+  lc_namespace = ["langchain", "prompts", "chat"];
 
-  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+  lc_serializable = true;
 
-  serialize(): SerializedMessagePromptTemplate {
-    return {
-      _type: this.constructor.name,
-      ...JSON.parse(JSON.stringify(this)),
-    };
+  abstract inputVariables: Array<Extract<keyof RunInput, string>>;
+
+  abstract formatMessages(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<RunOutput>;
+
+  async invoke(
+    input: RunInput,
+    options?: BaseCallbackConfig
+  ): Promise<RunOutput> {
+    return this._callWithConfig(
+      (input: RunInput) => this.formatMessages(input),
+      input,
+      { ...options, runType: "prompt" }
+    );
   }
 }
 
-export class ChatPromptValue extends BasePromptValue {
-  messages: BaseChatMessage[];
+export interface ChatPromptValueFields {
+  messages: BaseMessage[];
+}
 
-  constructor(messages: BaseChatMessage[]) {
-    super();
-    this.messages = messages;
+export class ChatPromptValue extends BasePromptValue {
+  lc_namespace = ["langchain", "prompts", "chat"];
+
+  lc_serializable = true;
+
+  messages: BaseMessage[];
+
+  constructor(messages: BaseMessage[]);
+
+  constructor(fields: ChatPromptValueFields);
+
+  constructor(fields: BaseMessage[] | ChatPromptValueFields) {
+    if (Array.isArray(fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { messages: fields };
+    }
+
+    super(...arguments);
+    this.messages = fields.messages;
   }
 
   toString() {
@@ -49,69 +82,176 @@ export class ChatPromptValue extends BasePromptValue {
   }
 }
 
-export class MessagesPlaceholder extends BaseMessagePromptTemplate {
-  variableName: string;
+export interface MessagePlaceholderFields<T extends string> {
+  variableName: T;
+}
 
-  constructor(variableName: string) {
-    super();
-    this.variableName = variableName;
+export class MessagesPlaceholder<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends BaseMessagePromptTemplate<RunInput> {
+  variableName: Extract<keyof RunInput, string>;
+
+  constructor(variableName: Extract<keyof RunInput, string>);
+
+  constructor(
+    fields: MessagePlaceholderFields<Extract<keyof RunInput, string>>
+  );
+
+  constructor(
+    fields:
+      | Extract<keyof RunInput, string>
+      | MessagePlaceholderFields<Extract<keyof RunInput, string>>
+  ) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign
+      fields = { variableName: fields };
+    }
+    super(fields);
+    this.variableName = fields.variableName;
   }
 
   get inputVariables() {
     return [this.variableName];
   }
 
-  formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
-    return Promise.resolve(values[this.variableName] as BaseChatMessage[]);
+  formatMessages(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<BaseMessage[]> {
+    return Promise.resolve(values[this.variableName] as BaseMessage[]);
   }
 }
 
-export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptTemplate {
-  prompt: BaseStringPromptTemplate;
+export interface MessageStringPromptTemplateFields<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends InputValues = any
+> {
+  prompt: BaseStringPromptTemplate<T, string>;
+}
 
-  protected constructor(prompt: BaseStringPromptTemplate) {
-    super();
-    this.prompt = prompt;
+export abstract class BaseMessageStringPromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends BaseMessagePromptTemplate<RunInput> {
+  prompt: BaseStringPromptTemplate<
+    InputValues<Extract<keyof RunInput, string>>,
+    string
+  >;
+
+  constructor(
+    prompt: BaseStringPromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>
+    >
+  );
+
+  constructor(
+    fields: MessageStringPromptTemplateFields<
+      InputValues<Extract<keyof RunInput, string>>
+    >
+  );
+
+  constructor(
+    fields:
+      | MessageStringPromptTemplateFields<
+          InputValues<Extract<keyof RunInput, string>>
+        >
+      | BaseStringPromptTemplate<
+          InputValues<Extract<keyof RunInput, string>>,
+          string
+        >
+  ) {
+    if (!("prompt" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { prompt: fields };
+    }
+    super(fields);
+    this.prompt = fields.prompt;
   }
 
   get inputVariables() {
     return this.prompt.inputVariables;
   }
 
-  abstract format(values: InputValues): Promise<BaseChatMessage>;
+  abstract format(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<BaseMessage>;
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<BaseMessage[]> {
     return [await this.format(values)];
   }
 }
 
-export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
-  constructor(input: BasePromptTemplateInput) {
+export abstract class BaseChatPromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> extends BasePromptTemplate<RunInput, ChatPromptValue, PartialVariableName> {
+  constructor(input: BasePromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
   }
 
-  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+  abstract formatMessages(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<BaseMessage[]>;
 
-  async format(values: InputValues): Promise<string> {
+  async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     return (await this.formatPromptValue(values)).toString();
   }
 
-  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+  async formatPromptValue(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<ChatPromptValue> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
   }
 }
 
-export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
+  extends MessageStringPromptTemplateFields<T> {
+  role: string;
+}
+
+export class ChatMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
   role: string;
 
-  async format(values: InputValues): Promise<BaseChatMessage> {
-    return new ChatMessage(await this.prompt.format(values), this.role);
+  constructor(
+    prompt: BaseStringPromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>
+    >,
+    role: string
+  );
+
+  constructor(
+    fields: ChatMessagePromptTemplateFields<
+      InputValues<Extract<keyof RunInput, string>>
+    >
+  );
+
+  constructor(
+    fields:
+      | ChatMessagePromptTemplateFields<
+          InputValues<Extract<keyof RunInput, string>>
+        >
+      | BaseStringPromptTemplate<InputValues<Extract<keyof RunInput, string>>>,
+    role?: string
+  ) {
+    if (!("prompt" in fields)) {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { prompt: fields, role: role! };
+    }
+    super(fields);
+    this.role = fields.role;
   }
 
-  constructor(prompt: BaseStringPromptTemplate, role: string) {
-    super(prompt);
-    this.role = role;
+  async format(values: RunInput): Promise<BaseMessage> {
+    return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
   static fromTemplate(template: string, role: string) {
@@ -119,27 +259,12 @@ export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   }
 }
 
-export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
-    return new HumanChatMessage(await this.prompt.format(values));
-  }
-
-  constructor(prompt: BaseStringPromptTemplate) {
-    super(prompt);
-  }
-
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
-  }
-}
-
-export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
-    return new AIChatMessage(await this.prompt.format(values));
-  }
-
-  constructor(prompt: BaseStringPromptTemplate) {
-    super(prompt);
+export class HumanMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
+  async format(values: RunInput): Promise<BaseMessage> {
+    return new HumanMessage(await this.prompt.format(values));
   }
 
   static fromTemplate(template: string) {
@@ -147,13 +272,12 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   }
 }
 
-export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
-    return new SystemChatMessage(await this.prompt.format(values));
-  }
-
-  constructor(prompt: BaseStringPromptTemplate) {
-    super(prompt);
+export class AIMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
+  async format(values: RunInput): Promise<BaseMessage> {
+    return new AIMessage(await this.prompt.format(values));
   }
 
   static fromTemplate(template: string) {
@@ -161,7 +285,25 @@ export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate
   }
 }
 
-export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
+export class SystemMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
+  async format(values: RunInput): Promise<BaseMessage> {
+    return new SystemMessage(await this.prompt.format(values));
+  }
+
+  static fromTemplate(template: string) {
+    return new this(PromptTemplate.fromTemplate(template));
+  }
+}
+
+export interface ChatPromptTemplateInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt messages
    */
@@ -175,15 +317,26 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   validateTemplate?: boolean;
 }
 
-export class ChatPromptTemplate
-  extends BaseChatPromptTemplate
-  implements ChatPromptTemplateInput
+export class ChatPromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PartialVariableName extends string = any
+  >
+  extends BaseChatPromptTemplate<RunInput, PartialVariableName>
+  implements ChatPromptTemplateInput<RunInput, PartialVariableName>
 {
+  get lc_aliases() {
+    return {
+      promptMessages: "messages",
+    };
+  }
+
   promptMessages: BaseMessagePromptTemplate[];
 
   validateTemplate = true;
 
-  constructor(input: ChatPromptTemplateInput) {
+  constructor(input: ChatPromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
     Object.assign(this, input);
 
@@ -194,10 +347,12 @@ export class ChatPromptTemplate
           inputVariablesMessages.add(inputVariable);
         }
       }
+
+      const totalInputVariables = this.inputVariables as string[];
       const inputVariablesInstance = new Set(
         this.partialVariables
-          ? this.inputVariables.concat(Object.keys(this.partialVariables))
-          : this.inputVariables
+          ? totalInputVariables.concat(Object.keys(this.partialVariables))
+          : totalInputVariables
       );
       const difference = new Set(
         [...inputVariablesInstance].filter(
@@ -230,17 +385,19 @@ export class ChatPromptTemplate
     return "chat";
   }
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
-    let resultMessages: BaseChatMessage[] = [];
+    let resultMessages: BaseMessage[] = [];
 
     for (const promptMessage of this.promptMessages) {
       const inputValues = promptMessage.inputVariables.reduce(
         (acc, inputVariable) => {
           if (!(inputVariable in allValues)) {
             throw new Error(
-              `Missing value for input variable \`${inputVariable}\``
+              `Missing value for input variable \`${inputVariable.toString()}\``
             );
           }
           acc[inputVariable] = allValues[inputVariable];
@@ -254,35 +411,37 @@ export class ChatPromptTemplate
     return resultMessages;
   }
 
-  serialize(): SerializedChatPromptTemplate {
-    if (this.outputParser !== undefined) {
-      throw new Error(
-        "ChatPromptTemplate cannot be serialized if outputParser is set"
-      );
-    }
-    return {
-      input_variables: this.inputVariables,
-      prompt_messages: this.promptMessages.map((m) => m.serialize()),
-    };
-  }
-
-  async partial(values: PartialValues): Promise<ChatPromptTemplate> {
+  async partial<NewPartialVariableName extends string>(
+    values: PartialValues<NewPartialVariableName>
+  ) {
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
-    const promptDict: ChatPromptTemplateInput = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
+    const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    );
-    promptDict.partialVariables = {
+    ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
+    const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
+    } as PartialValues<PartialVariableName | NewPartialVariableName>;
+    const promptDict = {
+      ...this,
+      inputVariables: newInputVariables,
+      partialVariables: newPartialVariables,
     };
-    return new ChatPromptTemplate(promptDict);
+    return new ChatPromptTemplate<
+      InputValues<
+        Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>
+      >
+    >(promptDict);
   }
 
-  static fromPromptMessages(
-    promptMessages: (BaseMessagePromptTemplate | ChatPromptTemplate)[]
-  ): ChatPromptTemplate {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromPromptMessages<RunInput extends InputValues = any>(
+    promptMessages: (
+      | BaseMessagePromptTemplate<InputValues>
+      | ChatPromptTemplate<InputValues, string>
+    )[]
+  ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
       (acc, promptMessage) =>
         acc.concat(
@@ -311,8 +470,8 @@ export class ChatPromptTemplate
         inputVariables.add(inputVariable);
       }
     }
-    return new ChatPromptTemplate({
-      inputVariables: [...inputVariables],
+    return new ChatPromptTemplate<RunInput>({
+      inputVariables: [...inputVariables] as Extract<keyof RunInput, string>[],
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,
     });

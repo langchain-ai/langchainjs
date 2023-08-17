@@ -15,6 +15,7 @@ function tryJsonStringify(obj: unknown, fallback: string) {
 }
 
 function elapsed(run: Run): string {
+  if (!run.end_time) return "";
   const elapsed = run.end_time - run.start_time;
   if (elapsed < 1000) {
     return `${elapsed}ms`;
@@ -161,6 +162,43 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(color.red, "[tool/error]")} [${crumbs}] [${elapsed(
         run
       )}] Tool run errored with error: ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}`
+    );
+  }
+
+  onRetrieverStart(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.green,
+        "[retriever/start]"
+      )} [${crumbs}] Entering Retriever run with input: ${tryJsonStringify(
+        run.inputs,
+        "[inputs]"
+      )}`
+    );
+  }
+
+  onRetrieverEnd(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.cyan, "[retriever/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting Retriever run with output: ${tryJsonStringify(
+        run.outputs,
+        "[outputs]"
+      )}`
+    );
+  }
+
+  onRetrieverError(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.red, "[retriever/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] Retriever run errored with error: ${tryJsonStringify(
         run.error,
         "[error]"
       )}`

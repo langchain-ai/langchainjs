@@ -5,7 +5,9 @@ const llm = new OpenAI({
   temperature: 0,
 });
 
-// This handler will be used only for this call.
-const response = await llm.call("1 + 1 =", undefined, [
-  new ConsoleCallbackHandler(),
-]);
+const response = await llm.call("1 + 1 =", {
+  // These tags will be attached only to this call to the LLM.
+  tags: ["example", "callbacks", "request"],
+  // This handler will be used only for this call.
+  callbacks: [new ConsoleCallbackHandler()],
+});

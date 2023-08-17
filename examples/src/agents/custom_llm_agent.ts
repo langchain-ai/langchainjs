@@ -72,7 +72,7 @@ class CustomPromptTemplate extends BaseStringPromptTemplate {
     return Promise.resolve(renderTemplate(template, "f-string", newInput));
   }
 
-  partial(_values: PartialValues): Promise<BasePromptTemplate> {
+  partial(_values: PartialValues): Promise<BaseStringPromptTemplate> {
     throw new Error("Not implemented");
   }
 
@@ -82,6 +82,8 @@ class CustomPromptTemplate extends BaseStringPromptTemplate {
 }
 
 class CustomOutputParser extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "custom_llm_agent"];
+
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     if (text.includes("Final Answer:")) {
       const parts = text.split("Final Answer:");

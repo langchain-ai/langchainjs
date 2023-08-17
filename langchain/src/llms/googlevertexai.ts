@@ -7,12 +7,21 @@ import {
   GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
 
 interface GoogleVertexAILLMTextInstance {
   content: string;
 }
+
+interface GoogleVertexAILLMCodeInstance {
+  prefix: string;
+}
+
+type GoogleVertexAILLMInstance =
+  | GoogleVertexAILLMTextInstance
+  | GoogleVertexAILLMCodeInstance;
 
 /**
  * Models the data returned from the API call
@@ -47,8 +56,8 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
   topK = 40;
 
   private connection: GoogleVertexAIConnection<
-    this["CallOptions"],
-    GoogleVertexAILLMTextInstance,
+    BaseLanguageModelCallOptions,
+    GoogleVertexAILLMInstance,
     TextPrediction
   >;
 
@@ -56,6 +65,15 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
+
+    // Change the defaults for code models
+    if (this.model.startsWith("code-gecko")) {
+      this.maxOutputTokens = 64;
+    }
+    if (this.model.startsWith("code-")) {
+      this.temperature = 0.2;
+    }
+
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
     this.topP = fields?.topP ?? this.topP;
@@ -106,8 +124,18 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     ];
   }
 
-  formatInstance(prompt: string): GoogleVertexAILLMTextInstance {
+  formatInstanceText(prompt: string): GoogleVertexAILLMInstance {
     return { content: prompt };
+  }
+
+  formatInstanceCode(prompt: string): GoogleVertexAILLMInstance {
+    return { prefix: prompt };
+  }
+
+  formatInstance(prompt: string): GoogleVertexAILLMInstance {
+    return this.model.startsWith("code-")
+      ? this.formatInstanceCode(prompt)
+      : this.formatInstanceText(prompt);
   }
 
   extractPredictionFromResponse(

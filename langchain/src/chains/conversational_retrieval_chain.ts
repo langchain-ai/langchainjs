@@ -3,9 +3,11 @@ import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import {
   ChainValues,
-  BaseRetriever,
-  BaseChatMessage,
+  BaseMessage,
+  HumanMessage,
+  AIMessage,
 } from "../schema/index.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
@@ -65,16 +67,37 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
-  static getChatHistoryString(chatHistory: string | BaseChatMessage[]) {
+  static getChatHistoryString(
+    chatHistory: string | BaseMessage[] | string[][]
+  ) {
+    let historyMessages: BaseMessage[];
     if (Array.isArray(chatHistory)) {
-      return chatHistory
+      // TODO: Deprecate on a breaking release
+      if (
+        Array.isArray(chatHistory[0]) &&
+        typeof chatHistory[0][0] === "string"
+      ) {
+        console.warn(
+          "Passing chat history as an array of strings is deprecated.\nPlease see https://js.langchain.com/docs/modules/chains/popular/chat_vector_db#externally-managed-memory for more information."
+        );
+        historyMessages = chatHistory.flat().map((stringMessage, i) => {
+          if (i % 2 === 0) {
+            return new HumanMessage(stringMessage);
+          } else {
+            return new AIMessage(stringMessage);
+          }
+        });
+      } else {
+        historyMessages = chatHistory as BaseMessage[];
+      }
+      return historyMessages
         .map((chatMessage) => {
           if (chatMessage._getType() === "human") {
-            return `Human: ${chatMessage.text}`;
+            return `Human: ${chatMessage.content}`;
           } else if (chatMessage._getType() === "ai") {
-            return `Assistant: ${chatMessage.text}`;
+            return `Assistant: ${chatMessage.content}`;
           } else {
-            return `${chatMessage.text}`;
+            return `${chatMessage.content}`;
           }
         })
         .join("\n");
@@ -105,7 +128,7 @@ export class ConversationalRetrievalQAChain
           question,
           chat_history: chatHistory,
         },
-        runManager?.getChild()
+        runManager?.getChild("question_generator")
       );
       const keys = Object.keys(result);
       if (keys.length === 1) {
@@ -116,7 +139,10 @@ export class ConversationalRetrievalQAChain
         );
       }
     }
-    const docs = await this.retriever.getRelevantDocuments(newQuestion);
+    const docs = await this.retriever.getRelevantDocuments(
+      newQuestion,
+      runManager?.getChild("retriever")
+    );
     const inputs = {
       question: newQuestion,
       input_documents: docs,
@@ -124,7 +150,7 @@ export class ConversationalRetrievalQAChain
     };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {

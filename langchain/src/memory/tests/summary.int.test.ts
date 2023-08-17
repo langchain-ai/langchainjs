@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { ConversationSummaryMemory } from "../summary.js";
 import { OpenAIChat } from "../../llms/openai-chat.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
-import { SystemChatMessage } from "../../schema/index.js";
+import { SystemMessage } from "../../schema/index.js";
 
 test("Test summary memory", async () => {
   const memory = new ConversationSummaryMemory({
@@ -52,7 +52,7 @@ test("Test summary memory return messages", async () => {
     returnMessages: true,
   });
   expect(await memory.loadMemoryVariables({})).toEqual({
-    history: [new SystemChatMessage("")],
+    history: [new SystemMessage("")],
   });
 
   await memory.saveContext(
@@ -64,6 +64,6 @@ test("Test summary memory return messages", async () => {
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({
-    history: [new SystemChatMessage("")],
+    history: [new SystemMessage("")],
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.88",
+  "version": "0.0.129",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -10,12 +10,27 @@
   "types": "./index.d.ts",
   "files": [
     "dist/",
+    "load.cjs",
+    "load.js",
+    "load.d.ts",
+    "load/serializable.cjs",
+    "load/serializable.js",
+    "load/serializable.d.ts",
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/toolkits.cjs",
+    "agents/toolkits.js",
+    "agents/toolkits.d.ts",
+    "agents/toolkits/aws_sfn.cjs",
+    "agents/toolkits/aws_sfn.js",
+    "agents/toolkits/aws_sfn.d.ts",
+    "agents/toolkits/sql.cjs",
+    "agents/toolkits/sql.js",
+    "agents/toolkits/sql.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -25,9 +40,15 @@
     "tools/aws_lambda.cjs",
     "tools/aws_lambda.js",
     "tools/aws_lambda.d.ts",
+    "tools/aws_sfn.cjs",
+    "tools/aws_sfn.js",
+    "tools/aws_sfn.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/sql.cjs",
+    "tools/sql.js",
+    "tools/sql.d.ts",
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
@@ -37,18 +58,27 @@
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
+    "chains/openai_functions.cjs",
+    "chains/openai_functions.js",
+    "chains/openai_functions.d.ts",
     "chains/query_constructor.cjs",
     "chains/query_constructor.js",
     "chains/query_constructor.d.ts",
     "chains/query_constructor/ir.cjs",
     "chains/query_constructor/ir.js",
     "chains/query_constructor/ir.d.ts",
+    "chains/sql_db.cjs",
+    "chains/sql_db.js",
+    "chains/sql_db.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
+    "embeddings/cache_backed.cjs",
+    "embeddings/cache_backed.js",
+    "embeddings/cache_backed.d.ts",
     "embeddings/fake.cjs",
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
@@ -67,6 +97,9 @@
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
+    "embeddings/googlepalm.cjs",
+    "embeddings/googlepalm.js",
+    "embeddings/googlepalm.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -79,21 +112,39 @@
     "llms/openai.cjs",
     "llms/openai.js",
     "llms/openai.d.ts",
+    "llms/ai21.cjs",
+    "llms/ai21.js",
+    "llms/ai21.d.ts",
+    "llms/aleph_alpha.cjs",
+    "llms/aleph_alpha.js",
+    "llms/aleph_alpha.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
     "llms/hf.cjs",
     "llms/hf.js",
     "llms/hf.d.ts",
+    "llms/raycast.cjs",
+    "llms/raycast.js",
+    "llms/raycast.d.ts",
+    "llms/ollama.cjs",
+    "llms/ollama.js",
+    "llms/ollama.d.ts",
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
+    "llms/googlepalm.cjs",
+    "llms/googlepalm.js",
+    "llms/googlepalm.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/bedrock.cjs",
+    "llms/bedrock.js",
+    "llms/bedrock.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -103,9 +154,15 @@
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
+    "vectorstores/analyticdb.cjs",
+    "vectorstores/analyticdb.js",
+    "vectorstores/analyticdb.d.ts",
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/elasticsearch.cjs",
+    "vectorstores/elasticsearch.js",
+    "vectorstores/elasticsearch.d.ts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -121,9 +178,15 @@
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
+    "vectorstores/lancedb.cjs",
+    "vectorstores/lancedb.js",
+    "vectorstores/lancedb.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
+    "vectorstores/mongodb_atlas.cjs",
+    "vectorstores/mongodb_atlas.js",
+    "vectorstores/mongodb_atlas.d.ts",
     "vectorstores/pinecone.cjs",
     "vectorstores/pinecone.js",
     "vectorstores/pinecone.d.ts",
@@ -142,15 +205,36 @@
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
+    "vectorstores/typeorm.cjs",
+    "vectorstores/typeorm.js",
+    "vectorstores/typeorm.d.ts",
     "vectorstores/myscale.cjs",
     "vectorstores/myscale.js",
     "vectorstores/myscale.d.ts",
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/typesense.cjs",
+    "vectorstores/typesense.js",
+    "vectorstores/typesense.d.ts",
+    "vectorstores/singlestore.cjs",
+    "vectorstores/singlestore.js",
+    "vectorstores/singlestore.d.ts",
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/usearch.cjs",
+    "vectorstores/usearch.js",
+    "vectorstores/usearch.d.ts",
+    "vectorstores/vectara.cjs",
+    "vectorstores/vectara.js",
+    "vectorstores/vectara.d.ts",
+    "vectorstores/xata.cjs",
+    "vectorstores/xata.js",
+    "vectorstores/xata.d.ts",
+    "vectorstores/zep.cjs",
+    "vectorstores/zep.js",
+    "vectorstores/zep.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -163,9 +247,6 @@
     "document.cjs",
     "document.js",
     "document.d.ts",
-    "docstore.cjs",
-    "docstore.js",
-    "docstore.d.ts",
     "document_loaders.cjs",
     "document_loaders.js",
     "document_loaders.d.ts",
@@ -175,6 +256,15 @@
     "document_loaders/web/apify_dataset.cjs",
     "document_loaders/web/apify_dataset.js",
     "document_loaders/web/apify_dataset.d.ts",
+    "document_loaders/web/assemblyai.cjs",
+    "document_loaders/web/assemblyai.js",
+    "document_loaders/web/assemblyai.d.ts",
+    "document_loaders/web/azure_blob_storage_container.cjs",
+    "document_loaders/web/azure_blob_storage_container.js",
+    "document_loaders/web/azure_blob_storage_container.d.ts",
+    "document_loaders/web/azure_blob_storage_file.cjs",
+    "document_loaders/web/azure_blob_storage_file.js",
+    "document_loaders/web/azure_blob_storage_file.d.ts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
@@ -205,12 +295,24 @@
     "document_loaders/web/notiondb.cjs",
     "document_loaders/web/notiondb.js",
     "document_loaders/web/notiondb.d.ts",
+    "document_loaders/web/notionapi.cjs",
+    "document_loaders/web/notionapi.js",
+    "document_loaders/web/notionapi.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/sonix_audio.cjs",
+    "document_loaders/web/sonix_audio.js",
+    "document_loaders/web/sonix_audio.d.ts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/serpapi.cjs",
+    "document_loaders/web/serpapi.js",
+    "document_loaders/web/serpapi.d.ts",
+    "document_loaders/web/sort_xyz_blockchain.cjs",
+    "document_loaders/web/sort_xyz_blockchain.js",
+    "document_loaders/web/sort_xyz_blockchain.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -244,6 +346,15 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_transformers/html_to_text.cjs",
+    "document_transformers/html_to_text.js",
+    "document_transformers/html_to_text.d.ts",
+    "document_transformers/mozilla_readability.cjs",
+    "document_transformers/mozilla_readability.js",
+    "document_transformers/mozilla_readability.d.ts",
+    "document_transformers/openai_functions.cjs",
+    "document_transformers/openai_functions.js",
+    "document_transformers/openai_functions.d.ts",
     "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
@@ -259,6 +370,15 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/googlepalm.cjs",
+    "chat_models/googlepalm.js",
+    "chat_models/googlepalm.d.ts",
+    "chat_models/baiduwenxin.cjs",
+    "chat_models/baiduwenxin.js",
+    "chat_models/baiduwenxin.d.ts",
+    "chat_models/ollama.cjs",
+    "chat_models/ollama.js",
+    "chat_models/ollama.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -268,6 +388,15 @@
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
+    "schema/retriever.cjs",
+    "schema/retriever.js",
+    "schema/retriever.d.ts",
+    "schema/runnable.cjs",
+    "schema/runnable.js",
+    "schema/runnable.d.ts",
+    "schema/storage.cjs",
+    "schema/storage.js",
+    "schema/storage.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -283,6 +412,9 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "retrievers/amazon_kendra.cjs",
+    "retrievers/amazon_kendra.js",
+    "retrievers/amazon_kendra.d.ts",
     "retrievers/remote.cjs",
     "retrievers/remote.js",
     "retrievers/remote.d.ts",
@@ -304,6 +436,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/parent_document.cjs",
+    "retrievers/parent_document.js",
+    "retrievers/parent_document.d.ts",
     "retrievers/time_weighted.cjs",
     "retrievers/time_weighted.js",
     "retrievers/time_weighted.d.ts",
@@ -316,6 +451,21 @@
     "retrievers/self_query.cjs",
     "retrievers/self_query.js",
     "retrievers/self_query.d.ts",
+    "retrievers/self_query/chroma.cjs",
+    "retrievers/self_query/chroma.js",
+    "retrievers/self_query/chroma.d.ts",
+    "retrievers/self_query/functional.cjs",
+    "retrievers/self_query/functional.js",
+    "retrievers/self_query/functional.d.ts",
+    "retrievers/self_query/pinecone.cjs",
+    "retrievers/self_query/pinecone.js",
+    "retrievers/self_query/pinecone.d.ts",
+    "retrievers/self_query/supabase.cjs",
+    "retrievers/self_query/supabase.js",
+    "retrievers/self_query/supabase.d.ts",
+    "retrievers/self_query/weaviate.cjs",
+    "retrievers/self_query/weaviate.js",
+    "retrievers/self_query/weaviate.d.ts",
     "retrievers/vespa.cjs",
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
@@ -328,36 +478,78 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "cache/ioredis.cjs",
+    "cache/ioredis.js",
+    "cache/ioredis.d.ts",
+    "cache/upstash_redis.cjs",
+    "cache/upstash_redis.js",
+    "cache/upstash_redis.d.ts",
+    "stores/doc/in_memory.cjs",
+    "stores/doc/in_memory.js",
+    "stores/doc/in_memory.d.ts",
+    "stores/doc/gcs.cjs",
+    "stores/doc/gcs.js",
+    "stores/doc/gcs.d.ts",
     "stores/file/in_memory.cjs",
     "stores/file/in_memory.js",
     "stores/file/in_memory.d.ts",
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/in_memory.cjs",
+    "stores/message/in_memory.js",
+    "stores/message/in_memory.d.ts",
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/firestore.cjs",
+    "stores/message/firestore.js",
+    "stores/message/firestore.d.ts",
     "stores/message/momento.cjs",
     "stores/message/momento.js",
     "stores/message/momento.d.ts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
+    "stores/message/ioredis.cjs",
+    "stores/message/ioredis.js",
+    "stores/message/ioredis.d.ts",
     "stores/message/upstash_redis.cjs",
     "stores/message/upstash_redis.js",
     "stores/message/upstash_redis.d.ts",
+    "stores/message/planetscale.cjs",
+    "stores/message/planetscale.js",
+    "stores/message/planetscale.d.ts",
+    "stores/message/xata.cjs",
+    "stores/message/xata.js",
+    "stores/message/xata.d.ts",
+    "storage/in_memory.cjs",
+    "storage/in_memory.js",
+    "storage/in_memory.d.ts",
+    "storage/ioredis.cjs",
+    "storage/ioredis.js",
+    "storage/ioredis.d.ts",
+    "util/math.cjs",
+    "util/math.js",
+    "util/math.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
+    "experimental/generative_agents.cjs",
+    "experimental/generative_agents.js",
+    "experimental/generative_agents.d.ts",
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
-    "client.cjs",
-    "client.js",
-    "client.d.ts",
+    "experimental/multimodal_embeddings/googlevertexai.cjs",
+    "experimental/multimodal_embeddings/googlevertexai.js",
+    "experimental/multimodal_embeddings/googlevertexai.d.ts",
+    "evaluation.cjs",
+    "evaluation.js",
+    "evaluation.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -368,13 +560,13 @@
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "build:esm": "tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -r dist-cjs",
+    "build:esm": "tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
+    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
-    "precommit": "tsc --noEmit && lint-staged",
-    "clean": "rm -rf dist/ && node scripts/create-entrypoints.js clean",
+    "precommit": "lint-staged",
+    "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
@@ -387,20 +579,35 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.362.0",
+    "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
+    "@aws-sdk/types": "^3.357.0",
+    "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.3.1",
+    "@getzep/zep-js": "^0.6.3",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@mozilla/readability": "^0.4.4",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
+    "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
+    "@raycast/api": "^1.55.2",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
@@ -410,19 +617,26 @@
     "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
+    "@types/decamelize": "^1.2.0",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
+    "@types/js-yaml": "^4",
+    "@types/jsdom": "^21.1.1",
+    "@types/mozilla-readability": "^0.2.1",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
+    "@types/pg": "^8",
+    "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.4.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -434,45 +648,72 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.2.0",
-    "google-auth-library": "^8.8.0",
+    "faiss-node": "^0.3.0",
+    "firebase-admin": "^11.9.0",
+    "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
     "jest": "^29.5.0",
+    "jsdom": "^22.1.0",
     "mammoth": "^1.5.1",
+    "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
+    "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.9.0",
+    "replicate": "^0.12.3",
+    "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "sonix-speech-recognition": "^2.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
-    "weaviate-ts-client": "^1.0.0"
+    "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
+    "vectordb": "^0.1.4",
+    "weaviate-ts-client": "^1.4.0"
   },
   "peerDependencies": {
+    "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.310.0",
+    "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
+    "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.3.1",
+    "@getzep/zep-js": "^0.6.3",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
+    "@mozilla/readability": "*",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
+    "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
+    "@raycast/api": "^1.55.2",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
@@ -480,34 +721,52 @@
     "@tensorflow/tfjs-core": "*",
     "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.4.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.2.0",
-    "google-auth-library": "^8.8.0",
+    "faiss-node": "^0.3.0",
+    "firebase-admin": "^11.9.0",
+    "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
+    "jsdom": "*",
     "mammoth": "*",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
+    "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
-    "replicate": "^0.9.0",
+    "replicate": "^0.12.3",
+    "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
-    "weaviate-ts-client": "^1.0.0"
+    "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
+    "vectordb": "^0.1.4",
+    "weaviate-ts-client": "^1.4.0"
   },
   "peerDependenciesMeta": {
+    "@aws-crypto/sha256-js": {
+      "optional": true
+    },
     "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/client-kendra": {
       "optional": true
     },
     "@aws-sdk/client-lambda": {
@@ -519,7 +778,25 @@
     "@aws-sdk/client-sagemaker-runtime": {
       "optional": true
     },
+    "@aws-sdk/client-sfn": {
+      "optional": true
+    },
+    "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@aws-sdk/protocol-http": {
+      "optional": true
+    },
+    "@aws-sdk/signature-v4": {
+      "optional": true
+    },
+    "@azure/storage-blob": {
+      "optional": true
+    },
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -531,7 +808,16 @@
     "@gomomento/sdk": {
       "optional": true
     },
+    "@google-ai/generativelanguage": {
+      "optional": true
+    },
+    "@google-cloud/storage": {
+      "optional": true
+    },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@notionhq/client": {
       "optional": true
     },
     "@opensearch-project/opensearch": {
@@ -540,7 +826,13 @@
     "@pinecone-database/pinecone": {
       "optional": true
     },
+    "@planetscale/database": {
+      "optional": true
+    },
     "@qdrant/js-client-rest": {
+      "optional": true
+    },
+    "@raycast/api": {
       "optional": true
     },
     "@supabase/postgrest-js": {
@@ -562,6 +854,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@xata.io/client": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -591,6 +886,9 @@
     "faiss-node": {
       "optional": true
     },
+    "firebase-admin": {
+      "optional": true
+    },
     "google-auth-library": {
       "optional": true
     },
@@ -603,16 +901,31 @@
     "ignore": {
       "optional": true
     },
+    "ioredis": {
+      "optional": true
+    },
     "mammoth": {
       "optional": true
     },
     "mongodb": {
       "optional": true
     },
+    "mysql2": {
+      "optional": true
+    },
+    "notion-to-md": {
+      "optional": true
+    },
     "pdf-parse": {
       "optional": true
     },
     "peggy": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "pg-copy-streams": {
       "optional": true
     },
     "pickleparser": {
@@ -630,10 +943,22 @@
     "replicate": {
       "optional": true
     },
+    "sonix-speech-recognition": {
+      "optional": true
+    },
     "srt-parser-2": {
       "optional": true
     },
     "typeorm": {
+      "optional": true
+    },
+    "typesense": {
+      "optional": true
+    },
+    "usearch": {
+      "optional": true
+    },
+    "vectordb": {
       "optional": true
     },
     "weaviate-ts-client": {
@@ -641,16 +966,21 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.4.3",
+    "@anthropic-ai/sdk": "^0.5.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
+    "camelcase": "6",
+    "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
-    "js-tiktoken": "^1.0.6",
+    "js-tiktoken": "^1.0.7",
+    "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
+    "langsmith": "~0.0.16",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.2.0",
+    "openai": "^3.3.0",
+    "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -681,6 +1011,16 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./load": {
+      "types": "./load.d.ts",
+      "import": "./load.js",
+      "require": "./load.cjs"
+    },
+    "./load/serializable": {
+      "types": "./load/serializable.d.ts",
+      "import": "./load/serializable.js",
+      "require": "./load/serializable.cjs"
+    },
     "./agents": {
       "types": "./agents.d.ts",
       "import": "./agents.js",
@@ -690,6 +1030,21 @@
       "types": "./agents/load.d.ts",
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
+    },
+    "./agents/toolkits": {
+      "types": "./agents/toolkits.d.ts",
+      "import": "./agents/toolkits.js",
+      "require": "./agents/toolkits.cjs"
+    },
+    "./agents/toolkits/aws_sfn": {
+      "types": "./agents/toolkits/aws_sfn.d.ts",
+      "import": "./agents/toolkits/aws_sfn.js",
+      "require": "./agents/toolkits/aws_sfn.cjs"
+    },
+    "./agents/toolkits/sql": {
+      "types": "./agents/toolkits/sql.d.ts",
+      "import": "./agents/toolkits/sql.js",
+      "require": "./agents/toolkits/sql.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
@@ -706,10 +1061,20 @@
       "import": "./tools/aws_lambda.js",
       "require": "./tools/aws_lambda.cjs"
     },
+    "./tools/aws_sfn": {
+      "types": "./tools/aws_sfn.d.ts",
+      "import": "./tools/aws_sfn.js",
+      "require": "./tools/aws_sfn.cjs"
+    },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/sql": {
+      "types": "./tools/sql.d.ts",
+      "import": "./tools/sql.js",
+      "require": "./tools/sql.cjs"
     },
     "./tools/webbrowser": {
       "types": "./tools/webbrowser.d.ts",
@@ -726,6 +1091,11 @@
       "import": "./chains/load.js",
       "require": "./chains/load.cjs"
     },
+    "./chains/openai_functions": {
+      "types": "./chains/openai_functions.d.ts",
+      "import": "./chains/openai_functions.js",
+      "require": "./chains/openai_functions.cjs"
+    },
     "./chains/query_constructor": {
       "types": "./chains/query_constructor.d.ts",
       "import": "./chains/query_constructor.js",
@@ -735,6 +1105,11 @@
       "types": "./chains/query_constructor/ir.d.ts",
       "import": "./chains/query_constructor/ir.js",
       "require": "./chains/query_constructor/ir.cjs"
+    },
+    "./chains/sql_db": {
+      "types": "./chains/sql_db.d.ts",
+      "import": "./chains/sql_db.js",
+      "require": "./chains/sql_db.cjs"
     },
     "./embeddings": {
       "node": {
@@ -747,6 +1122,11 @@
       "types": "./embeddings/base.d.ts",
       "import": "./embeddings/base.js",
       "require": "./embeddings/base.cjs"
+    },
+    "./embeddings/cache_backed": {
+      "types": "./embeddings/cache_backed.d.ts",
+      "import": "./embeddings/cache_backed.js",
+      "require": "./embeddings/cache_backed.cjs"
     },
     "./embeddings/fake": {
       "types": "./embeddings/fake.d.ts",
@@ -778,6 +1158,11 @@
       "import": "./embeddings/googlevertexai.js",
       "require": "./embeddings/googlevertexai.cjs"
     },
+    "./embeddings/googlepalm": {
+      "types": "./embeddings/googlepalm.d.ts",
+      "import": "./embeddings/googlepalm.js",
+      "require": "./embeddings/googlepalm.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -800,6 +1185,16 @@
       "import": "./llms/openai.js",
       "require": "./llms/openai.cjs"
     },
+    "./llms/ai21": {
+      "types": "./llms/ai21.d.ts",
+      "import": "./llms/ai21.js",
+      "require": "./llms/ai21.cjs"
+    },
+    "./llms/aleph_alpha": {
+      "types": "./llms/aleph_alpha.d.ts",
+      "import": "./llms/aleph_alpha.js",
+      "require": "./llms/aleph_alpha.cjs"
+    },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
       "import": "./llms/cohere.js",
@@ -809,6 +1204,16 @@
       "types": "./llms/hf.d.ts",
       "import": "./llms/hf.js",
       "require": "./llms/hf.cjs"
+    },
+    "./llms/raycast": {
+      "types": "./llms/raycast.d.ts",
+      "import": "./llms/raycast.js",
+      "require": "./llms/raycast.cjs"
+    },
+    "./llms/ollama": {
+      "types": "./llms/ollama.d.ts",
+      "import": "./llms/ollama.js",
+      "require": "./llms/ollama.cjs"
     },
     "./llms/replicate": {
       "types": "./llms/replicate.d.ts",
@@ -820,10 +1225,20 @@
       "import": "./llms/googlevertexai.js",
       "require": "./llms/googlevertexai.cjs"
     },
+    "./llms/googlepalm": {
+      "types": "./llms/googlepalm.d.ts",
+      "import": "./llms/googlepalm.js",
+      "require": "./llms/googlepalm.cjs"
+    },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/bedrock": {
+      "types": "./llms/bedrock.d.ts",
+      "import": "./llms/bedrock.js",
+      "require": "./llms/bedrock.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
@@ -842,10 +1257,20 @@
         "require": "./vectorstores.cjs"
       }
     },
+    "./vectorstores/analyticdb": {
+      "types": "./vectorstores/analyticdb.d.ts",
+      "import": "./vectorstores/analyticdb.js",
+      "require": "./vectorstores/analyticdb.cjs"
+    },
     "./vectorstores/base": {
       "types": "./vectorstores/base.d.ts",
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
+    },
+    "./vectorstores/elasticsearch": {
+      "types": "./vectorstores/elasticsearch.d.ts",
+      "import": "./vectorstores/elasticsearch.js",
+      "require": "./vectorstores/elasticsearch.cjs"
     },
     "./vectorstores/memory": {
       "types": "./vectorstores/memory.d.ts",
@@ -872,10 +1297,20 @@
       "import": "./vectorstores/weaviate.js",
       "require": "./vectorstores/weaviate.cjs"
     },
+    "./vectorstores/lancedb": {
+      "types": "./vectorstores/lancedb.d.ts",
+      "import": "./vectorstores/lancedb.js",
+      "require": "./vectorstores/lancedb.cjs"
+    },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",
       "import": "./vectorstores/mongo.js",
       "require": "./vectorstores/mongo.cjs"
+    },
+    "./vectorstores/mongodb_atlas": {
+      "types": "./vectorstores/mongodb_atlas.d.ts",
+      "import": "./vectorstores/mongodb_atlas.js",
+      "require": "./vectorstores/mongodb_atlas.cjs"
     },
     "./vectorstores/pinecone": {
       "types": "./vectorstores/pinecone.d.ts",
@@ -907,6 +1342,11 @@
       "import": "./vectorstores/prisma.js",
       "require": "./vectorstores/prisma.cjs"
     },
+    "./vectorstores/typeorm": {
+      "types": "./vectorstores/typeorm.d.ts",
+      "import": "./vectorstores/typeorm.js",
+      "require": "./vectorstores/typeorm.cjs"
+    },
     "./vectorstores/myscale": {
       "types": "./vectorstores/myscale.d.ts",
       "import": "./vectorstores/myscale.js",
@@ -917,10 +1357,40 @@
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
     },
+    "./vectorstores/typesense": {
+      "types": "./vectorstores/typesense.d.ts",
+      "import": "./vectorstores/typesense.js",
+      "require": "./vectorstores/typesense.cjs"
+    },
+    "./vectorstores/singlestore": {
+      "types": "./vectorstores/singlestore.d.ts",
+      "import": "./vectorstores/singlestore.js",
+      "require": "./vectorstores/singlestore.cjs"
+    },
     "./vectorstores/tigris": {
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/usearch": {
+      "types": "./vectorstores/usearch.d.ts",
+      "import": "./vectorstores/usearch.js",
+      "require": "./vectorstores/usearch.cjs"
+    },
+    "./vectorstores/vectara": {
+      "types": "./vectorstores/vectara.d.ts",
+      "import": "./vectorstores/vectara.js",
+      "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/xata": {
+      "types": "./vectorstores/xata.d.ts",
+      "import": "./vectorstores/xata.js",
+      "require": "./vectorstores/xata.cjs"
+    },
+    "./vectorstores/zep": {
+      "types": "./vectorstores/zep.d.ts",
+      "import": "./vectorstores/zep.js",
+      "require": "./vectorstores/zep.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
@@ -942,11 +1412,6 @@
       "import": "./document.js",
       "require": "./document.cjs"
     },
-    "./docstore": {
-      "types": "./docstore.d.ts",
-      "import": "./docstore.js",
-      "require": "./docstore.cjs"
-    },
     "./document_loaders": {
       "node": {
         "types": "./document_loaders.d.ts",
@@ -963,6 +1428,21 @@
       "types": "./document_loaders/web/apify_dataset.d.ts",
       "import": "./document_loaders/web/apify_dataset.js",
       "require": "./document_loaders/web/apify_dataset.cjs"
+    },
+    "./document_loaders/web/assemblyai": {
+      "types": "./document_loaders/web/assemblyai.d.ts",
+      "import": "./document_loaders/web/assemblyai.js",
+      "require": "./document_loaders/web/assemblyai.cjs"
+    },
+    "./document_loaders/web/azure_blob_storage_container": {
+      "types": "./document_loaders/web/azure_blob_storage_container.d.ts",
+      "import": "./document_loaders/web/azure_blob_storage_container.js",
+      "require": "./document_loaders/web/azure_blob_storage_container.cjs"
+    },
+    "./document_loaders/web/azure_blob_storage_file": {
+      "types": "./document_loaders/web/azure_blob_storage_file.d.ts",
+      "import": "./document_loaders/web/azure_blob_storage_file.js",
+      "require": "./document_loaders/web/azure_blob_storage_file.cjs"
     },
     "./document_loaders/web/cheerio": {
       "types": "./document_loaders/web/cheerio.d.ts",
@@ -1014,15 +1494,35 @@
       "import": "./document_loaders/web/notiondb.js",
       "require": "./document_loaders/web/notiondb.cjs"
     },
+    "./document_loaders/web/notionapi": {
+      "types": "./document_loaders/web/notionapi.d.ts",
+      "import": "./document_loaders/web/notionapi.js",
+      "require": "./document_loaders/web/notionapi.cjs"
+    },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
     },
+    "./document_loaders/web/sonix_audio": {
+      "types": "./document_loaders/web/sonix_audio.d.ts",
+      "import": "./document_loaders/web/sonix_audio.js",
+      "require": "./document_loaders/web/sonix_audio.cjs"
+    },
     "./document_loaders/web/confluence": {
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/serpapi": {
+      "types": "./document_loaders/web/serpapi.d.ts",
+      "import": "./document_loaders/web/serpapi.js",
+      "require": "./document_loaders/web/serpapi.cjs"
+    },
+    "./document_loaders/web/sort_xyz_blockchain": {
+      "types": "./document_loaders/web/sort_xyz_blockchain.d.ts",
+      "import": "./document_loaders/web/sort_xyz_blockchain.js",
+      "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
@@ -1079,6 +1579,21 @@
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
     },
+    "./document_transformers/html_to_text": {
+      "types": "./document_transformers/html_to_text.d.ts",
+      "import": "./document_transformers/html_to_text.js",
+      "require": "./document_transformers/html_to_text.cjs"
+    },
+    "./document_transformers/mozilla_readability": {
+      "types": "./document_transformers/mozilla_readability.d.ts",
+      "import": "./document_transformers/mozilla_readability.js",
+      "require": "./document_transformers/mozilla_readability.cjs"
+    },
+    "./document_transformers/openai_functions": {
+      "types": "./document_transformers/openai_functions.d.ts",
+      "import": "./document_transformers/openai_functions.js",
+      "require": "./document_transformers/openai_functions.cjs"
+    },
     "./chat_models": {
       "node": {
         "types": "./chat_models.d.ts",
@@ -1106,6 +1621,21 @@
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
     },
+    "./chat_models/googlepalm": {
+      "types": "./chat_models/googlepalm.d.ts",
+      "import": "./chat_models/googlepalm.js",
+      "require": "./chat_models/googlepalm.cjs"
+    },
+    "./chat_models/baiduwenxin": {
+      "types": "./chat_models/baiduwenxin.d.ts",
+      "import": "./chat_models/baiduwenxin.js",
+      "require": "./chat_models/baiduwenxin.cjs"
+    },
+    "./chat_models/ollama": {
+      "types": "./chat_models/ollama.d.ts",
+      "import": "./chat_models/ollama.js",
+      "require": "./chat_models/ollama.cjs"
+    },
     "./schema": {
       "types": "./schema.d.ts",
       "import": "./schema.js",
@@ -1120,6 +1650,21 @@
       "types": "./schema/query_constructor.d.ts",
       "import": "./schema/query_constructor.js",
       "require": "./schema/query_constructor.cjs"
+    },
+    "./schema/retriever": {
+      "types": "./schema/retriever.d.ts",
+      "import": "./schema/retriever.js",
+      "require": "./schema/retriever.cjs"
+    },
+    "./schema/runnable": {
+      "types": "./schema/runnable.d.ts",
+      "import": "./schema/runnable.js",
+      "require": "./schema/runnable.cjs"
+    },
+    "./schema/storage": {
+      "types": "./schema/storage.d.ts",
+      "import": "./schema/storage.js",
+      "require": "./schema/storage.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",
@@ -1147,6 +1692,11 @@
         "import": "./retrievers.js",
         "require": "./retrievers.cjs"
       }
+    },
+    "./retrievers/amazon_kendra": {
+      "types": "./retrievers/amazon_kendra.d.ts",
+      "import": "./retrievers/amazon_kendra.js",
+      "require": "./retrievers/amazon_kendra.cjs"
     },
     "./retrievers/remote": {
       "types": "./retrievers/remote.d.ts",
@@ -1183,6 +1733,11 @@
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
     },
+    "./retrievers/parent_document": {
+      "types": "./retrievers/parent_document.d.ts",
+      "import": "./retrievers/parent_document.js",
+      "require": "./retrievers/parent_document.cjs"
+    },
     "./retrievers/time_weighted": {
       "types": "./retrievers/time_weighted.d.ts",
       "import": "./retrievers/time_weighted.js",
@@ -1202,6 +1757,31 @@
       "types": "./retrievers/self_query.d.ts",
       "import": "./retrievers/self_query.js",
       "require": "./retrievers/self_query.cjs"
+    },
+    "./retrievers/self_query/chroma": {
+      "types": "./retrievers/self_query/chroma.d.ts",
+      "import": "./retrievers/self_query/chroma.js",
+      "require": "./retrievers/self_query/chroma.cjs"
+    },
+    "./retrievers/self_query/functional": {
+      "types": "./retrievers/self_query/functional.d.ts",
+      "import": "./retrievers/self_query/functional.js",
+      "require": "./retrievers/self_query/functional.cjs"
+    },
+    "./retrievers/self_query/pinecone": {
+      "types": "./retrievers/self_query/pinecone.d.ts",
+      "import": "./retrievers/self_query/pinecone.js",
+      "require": "./retrievers/self_query/pinecone.cjs"
+    },
+    "./retrievers/self_query/supabase": {
+      "types": "./retrievers/self_query/supabase.d.ts",
+      "import": "./retrievers/self_query/supabase.js",
+      "require": "./retrievers/self_query/supabase.cjs"
+    },
+    "./retrievers/self_query/weaviate": {
+      "types": "./retrievers/self_query/weaviate.d.ts",
+      "import": "./retrievers/self_query/weaviate.js",
+      "require": "./retrievers/self_query/weaviate.cjs"
     },
     "./retrievers/vespa": {
       "types": "./retrievers/vespa.d.ts",
@@ -1223,6 +1803,26 @@
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
     },
+    "./cache/ioredis": {
+      "types": "./cache/ioredis.d.ts",
+      "import": "./cache/ioredis.js",
+      "require": "./cache/ioredis.cjs"
+    },
+    "./cache/upstash_redis": {
+      "types": "./cache/upstash_redis.d.ts",
+      "import": "./cache/upstash_redis.js",
+      "require": "./cache/upstash_redis.cjs"
+    },
+    "./stores/doc/in_memory": {
+      "types": "./stores/doc/in_memory.d.ts",
+      "import": "./stores/doc/in_memory.js",
+      "require": "./stores/doc/in_memory.cjs"
+    },
+    "./stores/doc/gcs": {
+      "types": "./stores/doc/gcs.d.ts",
+      "import": "./stores/doc/gcs.js",
+      "require": "./stores/doc/gcs.cjs"
+    },
     "./stores/file/in_memory": {
       "types": "./stores/file/in_memory.d.ts",
       "import": "./stores/file/in_memory.js",
@@ -1233,10 +1833,20 @@
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
     },
+    "./stores/message/in_memory": {
+      "types": "./stores/message/in_memory.d.ts",
+      "import": "./stores/message/in_memory.js",
+      "require": "./stores/message/in_memory.cjs"
+    },
     "./stores/message/dynamodb": {
       "types": "./stores/message/dynamodb.d.ts",
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/firestore": {
+      "types": "./stores/message/firestore.d.ts",
+      "import": "./stores/message/firestore.js",
+      "require": "./stores/message/firestore.cjs"
     },
     "./stores/message/momento": {
       "types": "./stores/message/momento.d.ts",
@@ -1248,10 +1858,40 @@
       "import": "./stores/message/redis.js",
       "require": "./stores/message/redis.cjs"
     },
+    "./stores/message/ioredis": {
+      "types": "./stores/message/ioredis.d.ts",
+      "import": "./stores/message/ioredis.js",
+      "require": "./stores/message/ioredis.cjs"
+    },
     "./stores/message/upstash_redis": {
       "types": "./stores/message/upstash_redis.d.ts",
       "import": "./stores/message/upstash_redis.js",
       "require": "./stores/message/upstash_redis.cjs"
+    },
+    "./stores/message/planetscale": {
+      "types": "./stores/message/planetscale.d.ts",
+      "import": "./stores/message/planetscale.js",
+      "require": "./stores/message/planetscale.cjs"
+    },
+    "./stores/message/xata": {
+      "types": "./stores/message/xata.d.ts",
+      "import": "./stores/message/xata.js",
+      "require": "./stores/message/xata.cjs"
+    },
+    "./storage/in_memory": {
+      "types": "./storage/in_memory.d.ts",
+      "import": "./storage/in_memory.js",
+      "require": "./storage/in_memory.cjs"
+    },
+    "./storage/ioredis": {
+      "types": "./storage/ioredis.d.ts",
+      "import": "./storage/ioredis.js",
+      "require": "./storage/ioredis.cjs"
+    },
+    "./util/math": {
+      "types": "./util/math.d.ts",
+      "import": "./util/math.js",
+      "require": "./util/math.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
@@ -1263,15 +1903,25 @@
       "import": "./experimental/babyagi.js",
       "require": "./experimental/babyagi.cjs"
     },
+    "./experimental/generative_agents": {
+      "types": "./experimental/generative_agents.d.ts",
+      "import": "./experimental/generative_agents.js",
+      "require": "./experimental/generative_agents.cjs"
+    },
     "./experimental/plan_and_execute": {
       "types": "./experimental/plan_and_execute.d.ts",
       "import": "./experimental/plan_and_execute.js",
       "require": "./experimental/plan_and_execute.cjs"
     },
-    "./client": {
-      "types": "./client.d.ts",
-      "import": "./client.js",
-      "require": "./client.cjs"
+    "./experimental/multimodal_embeddings/googlevertexai": {
+      "types": "./experimental/multimodal_embeddings/googlevertexai.d.ts",
+      "import": "./experimental/multimodal_embeddings/googlevertexai.js",
+      "require": "./experimental/multimodal_embeddings/googlevertexai.cjs"
+    },
+    "./evaluation": {
+      "types": "./evaluation.d.ts",
+      "import": "./evaluation.js",
+      "require": "./evaluation.cjs"
     },
     "./package.json": "./package.json"
   }

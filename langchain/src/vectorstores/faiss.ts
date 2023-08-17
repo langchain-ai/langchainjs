@@ -4,10 +4,10 @@ import * as uuid from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
-import { InMemoryDocstore } from "../docstore/index.js";
+import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
 
 export interface FaissLibArgs {
-  docstore?: InMemoryDocstore;
+  docstore?: SynchronousInMemoryDocstore;
   index?: IndexFlatL2;
   mapping?: Record<number, string>;
 }
@@ -17,9 +17,21 @@ export class FaissStore extends SaveableVectorStore {
 
   _mapping: Record<number, string>;
 
-  docstore: InMemoryDocstore;
+  docstore: SynchronousInMemoryDocstore;
 
   args: FaissLibArgs;
+
+  _vectorstoreType(): string {
+    return "faiss";
+  }
+
+  getMapping(): Record<number, string> {
+    return this._mapping;
+  }
+
+  getDocstore(): SynchronousInMemoryDocstore {
+    return this.docstore;
+  }
 
   constructor(embeddings: Embeddings, args: FaissLibArgs) {
     super(embeddings, args);
@@ -27,10 +39,10 @@ export class FaissStore extends SaveableVectorStore {
     this._index = args.index;
     this._mapping = args.mapping ?? {};
     this.embeddings = embeddings;
-    this.docstore = args?.docstore ?? new InMemoryDocstore();
+    this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -41,7 +53,7 @@ export class FaissStore extends SaveableVectorStore {
   public get index(): IndexFlatL2 {
     if (!this._index) {
       throw new Error(
-        "Vector store not initialised yet. Try calling `fromTexts` or `fromDocuments` first."
+        "Vector store not initialised yet. Try calling `fromTexts`, `fromDocuments` or `fromIndex` first."
       );
     }
     return this._index;
@@ -53,7 +65,7 @@ export class FaissStore extends SaveableVectorStore {
 
   async addVectors(vectors: number[][], documents: Document[]) {
     if (vectors.length === 0) {
-      return;
+      return [];
     }
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and documents must have the same length`);
@@ -70,14 +82,17 @@ export class FaissStore extends SaveableVectorStore {
       );
     }
 
-    const docstoreSize = this.docstore.count;
+    const docstoreSize = this.index.ntotal();
+    const documentIds = [];
     for (let i = 0; i < vectors.length; i += 1) {
       const documentId = uuid.v4();
+      documentIds.push(documentId);
       const id = docstoreSize + i;
       this.index.add(vectors[i]);
       this._mapping[id] = documentId;
       this.docstore.add({ [documentId]: documents[i] });
     }
+    return documentIds;
   }
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
@@ -121,6 +136,33 @@ export class FaissStore extends SaveableVectorStore {
     ]);
   }
 
+  async mergeFrom(targetIndex: FaissStore) {
+    const targetIndexDimensions = targetIndex.index.getDimension();
+    if (!this._index) {
+      const { IndexFlatL2 } = await FaissStore.importFaiss();
+      this._index = new IndexFlatL2(targetIndexDimensions);
+    }
+    const d = this.index.getDimension();
+    if (targetIndexDimensions !== d) {
+      throw new Error("Cannot merge indexes with different dimensions.");
+    }
+    const targetMapping = targetIndex.getMapping();
+    const targetDocstore = targetIndex.getDocstore();
+    const targetSize = targetIndex.index.ntotal();
+    const documentIds = [];
+    const currentDocstoreSize = this.index.ntotal();
+    for (let i = 0; i < targetSize; i += 1) {
+      const targetId = targetMapping[i];
+      documentIds.push(targetId);
+      const targetDocument = targetDocstore.search(targetId);
+      const id = currentDocstoreSize + i;
+      this._mapping[id] = targetId;
+      this.docstore.add({ [targetId]: targetDocument });
+    }
+    this.index.mergeFrom(targetIndex.index);
+    return documentIds;
+  }
+
   static async load(directory: string, embeddings: Embeddings) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
@@ -138,7 +180,7 @@ export class FaissStore extends SaveableVectorStore {
       readStore(directory),
       readIndex(directory),
     ]);
-    const docstore = new InMemoryDocstore(new Map(docstoreFiles));
+    const docstore = new SynchronousInMemoryDocstore(new Map(docstoreFiles));
     return new this(embeddings, { docstore, index, mapping });
   }
 
@@ -159,8 +201,8 @@ export class FaissStore extends SaveableVectorStore {
     class PyInMemoryDocstore {
       _dict: Map<string, PyDocument>;
 
-      toInMemoryDocstore(): InMemoryDocstore {
-        const s = new InMemoryDocstore();
+      toInMemoryDocstore(): SynchronousInMemoryDocstore {
+        const s = new SynchronousInMemoryDocstore();
         for (const [key, value] of Object.entries(this._dict)) {
           s._docs.set(key, value.toDocument());
         }
@@ -182,6 +224,8 @@ export class FaissStore extends SaveableVectorStore {
           PyInMemoryDocstore
         )
         .register("langchain.schema", "Document", PyDocument)
+        .register("langchain.docstore.document", "Document", PyDocument)
+        .register("langchain.schema.document", "Document", PyDocument)
         .register("pathlib", "WindowsPath", (...args) => args.join("\\"))
         .register("pathlib", "PosixPath", (...args) => args.join("/"));
 
@@ -215,7 +259,7 @@ export class FaissStore extends SaveableVectorStore {
     metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig?: {
-      docstore?: InMemoryDocstore;
+      docstore?: SynchronousInMemoryDocstore;
     }
   ): Promise<FaissStore> {
     const docs: Document[] = [];
@@ -234,7 +278,7 @@ export class FaissStore extends SaveableVectorStore {
     docs: Document[],
     embeddings: Embeddings,
     dbConfig?: {
-      docstore?: InMemoryDocstore;
+      docstore?: SynchronousInMemoryDocstore;
     }
   ): Promise<FaissStore> {
     const args: FaissLibArgs = {
@@ -242,6 +286,21 @@ export class FaissStore extends SaveableVectorStore {
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
+    return instance;
+  }
+
+  static async fromIndex(
+    targetIndex: FaissStore,
+    embeddings: Embeddings,
+    dbConfig?: {
+      docstore?: SynchronousInMemoryDocstore;
+    }
+  ): Promise<FaissStore> {
+    const args: FaissLibArgs = {
+      docstore: dbConfig?.docstore,
+    };
+    const instance = new this(embeddings, args);
+    await instance.mergeFrom(targetIndex);
     return instance;
   }
 
@@ -255,7 +314,7 @@ export class FaissStore extends SaveableVectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       throw new Error(
-        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\` and make sure you have \`libomp\` installed in your path.\n\nError: ${err?.message}`
+        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\`.\n\nError: ${err?.message}`
       );
     }
   }
@@ -270,9 +329,10 @@ export class FaissStore extends SaveableVectorStore {
       } = await import("pickleparser");
 
       return { Parser, NameRegistry };
-    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       throw new Error(
-        "Please install pickleparser as a dependency with, e.g. `npm install -S pickleparser`"
+        `Could not import pickleparser. Please install pickleparser as a dependency with, e.g. \`npm install -S pickleparser\`.\n\nError: ${err?.message}`
       );
     }
   }

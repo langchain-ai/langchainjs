@@ -28,6 +28,7 @@ export interface SupabaseLibArgs {
   tableName?: string;
   queryName?: string;
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
+  upsertBatchSize?: number;
 }
 
 export class SupabaseVectorStore extends VectorStore {
@@ -41,6 +42,12 @@ export class SupabaseVectorStore extends VectorStore {
 
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 
+  upsertBatchSize = 500;
+
+  _vectorstoreType(): string {
+    return "supabase";
+  }
+
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings, args);
 
@@ -48,17 +55,26 @@ export class SupabaseVectorStore extends VectorStore {
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
     this.filter = args.filter;
+    this.upsertBatchSize = args.upsertBatchSize ?? this.upsertBatchSize;
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] | number[] }
+  ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] | number[] }
+  ) {
     const rows = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
       embedding,
@@ -67,16 +83,32 @@ export class SupabaseVectorStore extends VectorStore {
 
     // upsert returns 500/502/504 (yes really any of them) if given too many rows/characters
     // ~2000 trips it, but my data is probably smaller than average pageContent and metadata
-    const chunkSize = 500;
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize);
+    let returnedIds: string[] = [];
+    for (let i = 0; i < rows.length; i += this.upsertBatchSize) {
+      const chunk = rows.slice(i, i + this.upsertBatchSize).map((row, j) => {
+        if (options?.ids) {
+          return { id: options.ids[i + j], ...row };
+        }
+        return row;
+      });
 
-      const res = await this.client.from(this.tableName).insert(chunk);
+      const res = await this.client.from(this.tableName).upsert(chunk).select();
       if (res.error) {
         throw new Error(
           `Error inserting: ${res.error.message} ${res.status} ${res.statusText}`
         );
       }
+      if (res.data) {
+        returnedIds = returnedIds.concat(res.data.map((row) => row.id));
+      }
+    }
+    return returnedIds;
+  }
+
+  async delete(params: { ids: string[] }): Promise<void> {
+    const { ids } = params;
+    for (const id of ids) {
+      await this.client.from(this.tableName).delete().eq("id", id);
     }
   }
 

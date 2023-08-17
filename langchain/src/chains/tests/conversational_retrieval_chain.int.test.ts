@@ -53,6 +53,42 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
   );
 });
 
+test("Test ConversationalRetrievalQAChain from LLM with flag option to return source and memory set", async () => {
+  const model = new OpenAI({ modelName: "text-ada-001" });
+  const vectorStore = await HNSWLib.fromTexts(
+    ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new OpenAIEmbeddings()
+  );
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(),
+    {
+      returnSourceDocuments: true,
+      memory: new BufferMemory({
+        memoryKey: "chat_history",
+        inputKey: "question",
+        outputKey: "text",
+      }),
+    }
+  );
+  const res = await chain.call({ question: "foo", chat_history: "bar" });
+
+  expect(res).toEqual(
+    expect.objectContaining({
+      text: expect.any(String),
+      sourceDocuments: expect.arrayContaining([
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            id: expect.any(Number),
+          }),
+          pageContent: expect.any(String),
+        }),
+      ]),
+    })
+  );
+});
+
 test("Test ConversationalRetrievalQAChain from LLM with override default prompts", async () => {
   const model = new OpenAI({ modelName: "text-ada-001", temperature: 0 });
   const vectorStore = await HNSWLib.fromTexts(
@@ -290,6 +326,42 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
 
   const res2 = await chain.call({
     question: "What are they made out of?",
+  });
+
+  console.log({ res2 });
+});
+
+test("Test ConversationalRetrievalQAChain from LLM with deprecated history syntax", async () => {
+  const model = new OpenAI({
+    temperature: 0,
+  });
+  const vectorStore = await HNSWLib.fromTexts(
+    [
+      "Mitochondria are the powerhouse of the cell",
+      "Foo is red",
+      "Bar is red",
+      "Buildings are made out of brick",
+      "Mitochondria are made of lipids",
+    ],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new OpenAIEmbeddings()
+  );
+
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever()
+  );
+  const question = "What is the powerhouse of the cell?";
+  const res = await chain.call({
+    question,
+    chat_history: [],
+  });
+
+  console.log({ res });
+
+  const res2 = await chain.call({
+    question: "What are they made out of?",
+    chat_history: [[question, res.text]],
   });
 
   console.log({ res2 });

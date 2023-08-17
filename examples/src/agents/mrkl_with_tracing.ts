@@ -5,7 +5,7 @@ import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 
 export const run = async () => {
-  process.env.LANGCHAIN_TRACING = "true";
+  process.env.LANGCHAIN_TRACING_V2 = "true";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {

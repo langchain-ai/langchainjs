@@ -12,7 +12,7 @@ import {
 
 import {
   StoredMessage,
-  BaseChatMessage,
+  BaseMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
@@ -44,6 +44,16 @@ interface DynamoDBSerializedChatMessage {
 }
 
 export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "dynamodb"];
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "config.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "config.credentials.secretAccessKey": "AWS_SECRETE_ACCESS_KEY",
+      "config.credentials.sessionToken": "AWS_SESSION_TOKEN",
+    };
+  }
+
   private tableName: string;
 
   private sessionId: string;
@@ -82,7 +92,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  async getMessages(): Promise<BaseMessage[]> {
     const params: GetItemCommandInput = {
       TableName: this.tableName,
       Key: this.dynamoKey,
@@ -115,7 +125,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     await this.client.send(new DeleteItemCommand(params));
   }
 
-  protected async addMessage(message: BaseChatMessage) {
+  async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
 
     const params: UpdateItemCommandInput = {

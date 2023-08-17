@@ -15,8 +15,8 @@ import {
   AgentAction,
   AgentFinish,
   AgentStep,
-  BaseChatMessage,
-  HumanChatMessage,
+  BaseMessage,
+  HumanMessage,
   InputValues,
   PartialValues,
 } from "langchain/schema";
@@ -53,7 +53,7 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
     throw new Error("Not implemented");
   }
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(values: InputValues): Promise<BaseMessage[]> {
     /** Construct the final template */
     const toolStrings = this.tools
       .map((tool) => `${tool.name}: ${tool.description}`)
@@ -72,10 +72,10 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
     const newInput = { agent_scratchpad: agentScratchpad, ...values };
     /** Format the template. */
     const formatted = renderTemplate(template, "f-string", newInput);
-    return [new HumanChatMessage(formatted)];
+    return [new HumanMessage(formatted)];
   }
 
-  partial(_values: PartialValues): Promise<BasePromptTemplate> {
+  partial(_values: PartialValues): Promise<BaseChatPromptTemplate> {
     throw new Error("Not implemented");
   }
 
@@ -85,6 +85,8 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
 }
 
 class CustomOutputParser extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "custom_llm_agent_chat"];
+
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     if (text.includes("Final Answer:")) {
       const parts = text.split("Final Answer:");

@@ -28,7 +28,7 @@ class HuggingFaceTextGenerationGPT2ContentHandler
 }
 
 // Requires a pre-configured sagemaker endpoint
-test("Test SageMakerEndpoint", async () => {
+test.skip("Test SageMakerEndpoint", async () => {
   const contentHandler = new HuggingFaceTextGenerationGPT2ContentHandler();
 
   const model = new SageMakerEndpoint({

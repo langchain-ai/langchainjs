@@ -96,7 +96,7 @@ export class ChatVectorDBQAChain
           question,
           chat_history: chatHistory,
         },
-        runManager?.getChild()
+        runManager?.getChild("question_generator")
       );
       const keys = Object.keys(result);
       console.log("_call", values, keys);
@@ -108,7 +108,12 @@ export class ChatVectorDBQAChain
         );
       }
     }
-    const docs = await this.vectorstore.similaritySearch(newQuestion, this.k);
+    const docs = await this.vectorstore.similaritySearch(
+      newQuestion,
+      this.k,
+      undefined,
+      runManager?.getChild("vectorstore")
+    );
     const inputs = {
       question: newQuestion,
       input_documents: docs,
@@ -116,7 +121,7 @@ export class ChatVectorDBQAChain
     };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {
