@@ -328,6 +328,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/xata"?:
     | typeof import("../stores/message/xata.js")
     | Promise<typeof import("../stores/message/xata.js")>;
+  "langchain/storage/ioredis"?:
+    | typeof import("../storage/ioredis.js")
+    | Promise<typeof import("../storage/ioredis.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;

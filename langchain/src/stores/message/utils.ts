@@ -3,6 +3,8 @@ import {
   BaseMessage,
   ChatMessage,
   ChatMessageFieldsWithRole,
+  FunctionMessage,
+  FunctionMessageFieldsWithName,
   HumanMessage,
   StoredMessage,
   SystemMessage,
@@ -45,6 +47,13 @@ export function mapStoredMessagesToChatMessages(
         return new AIMessage(storedMessage.data);
       case "system":
         return new SystemMessage(storedMessage.data);
+      case "function":
+        if (storedMessage.data.name === undefined) {
+          throw new Error("Name must be defined for function messages");
+        }
+        return new FunctionMessage(
+          storedMessage.data as FunctionMessageFieldsWithName
+        );
       case "chat": {
         if (storedMessage.data.role === undefined) {
           throw new Error("Role must be defined for chat messages");
