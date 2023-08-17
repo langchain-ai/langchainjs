@@ -393,7 +393,10 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
     },
   ];
 
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PRIVATE_KEY) {
+  if (
+    !process.env.SUPABASE_VECTOR_STORE_URL ||
+    !process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
+  ) {
     throw new Error(
       "Supabase URL or private key not set. Please set it in the .env file"
     );
@@ -403,8 +406,8 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
   const llm = new OpenAI();
   const documentContents = "Brief summary of a movie";
   const client = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_PRIVATE_KEY
+    process.env.SUPABASE_VECTOR_STORE_URL,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   );
   const vectorStore = new SupabaseVectorStore(embeddings, { client });
   // idempotency
