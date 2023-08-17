@@ -611,7 +611,6 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
-    "@rockset/client": "^0.9.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
@@ -718,6 +717,7 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "*",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
@@ -837,6 +837,9 @@
       "optional": true
     },
     "@raycast/api": {
+      "optional": true
+    },
+    "@rockset/client": {
       "optional": true
     },
     "@supabase/postgrest-js": {

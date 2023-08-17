@@ -1,4 +1,4 @@
-import * as rockset from "@rockset/client"
+import * as rockset from "@rockset/client";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -24,9 +24,9 @@ export const run = async () => {
     const docs = await (new RecursiveCharacterTextSplitter()).createDocuments([text]);
     
     await store.addDocuments(docs);
-    let response = await chain.call({
+    const response = await chain.call({
         query: "What is America's role in Ukraine?"
     });
-    console.log(response["text"]);
+    console.log(response.text);
     await store.destroy();
 };

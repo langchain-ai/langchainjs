@@ -244,7 +244,7 @@ export class RocksetStore extends VectorStore {
         `
       }
     })).results?.map((rocksetDoc) => ([
-        new Document<Record<string, any>>({
+        new Document<Record<string, object>>({
           pageContent: rocksetDoc[this.textKey],
           metadata: (({ 
             [this.textKey]: t, 
@@ -300,9 +300,8 @@ export class RocksetStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig: RocksetLibArgs
   ): Promise<RocksetStore> {
-    dbConfig.textKey = dbConfig.textKey ?? "text";
-
-    const instance = new this(embeddings, dbConfig);
+    const args = {...dbConfig, textKey: dbConfig.textKey ?? "text"};
+    const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
   }
@@ -357,7 +356,7 @@ export class RocksetStore extends VectorStore {
       while (await RocksetStore.collectionExists({
         collectionName: this.collectionName,
         client: this.client
-      })) {};
+      }));
     }
   }
 
@@ -398,12 +397,12 @@ export class RocksetStore extends VectorStore {
     }
     await dbConfig.client.collections.createCollection(
       dbConfig.workspaceName ?? "commons",
-      collectionOptions ? collectionOptions : { name: dbConfig.collectionName }
+      collectionOptions || { name: dbConfig.collectionName }
     )
     while (
       !(await this.collectionExists(dbConfig)) ||
       !(await this.collectionReady(dbConfig))
-    ) {};
+    );
     return new this(embeddings, dbConfig);
   }
 
