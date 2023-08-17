@@ -4,8 +4,9 @@ import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 
 interface YoutubeConfig {
+  videoId: string;
   language?: string;
-  addViedoInfo: boolean;
+  addVideoInfo?: boolean;
 }
 
 interface VideoMetadata {
@@ -24,11 +25,11 @@ export class YoutubeLoader extends BaseDocumentLoader {
 
   private addVideoInfo: boolean;
 
-  constructor(videoId: string, config?: YoutubeConfig) {
+  constructor(config: YoutubeConfig) {
     super();
-    this.videoId = videoId;
+    this.videoId = config.videoId;
     this.language = config?.language;
-    this.addVideoInfo = config?.addViedoInfo ?? false;
+    this.addVideoInfo = config?.addVideoInfo ?? false;
   }
 
   private static getVideoID(url: string): string {
@@ -42,9 +43,12 @@ export class YoutubeLoader extends BaseDocumentLoader {
     }
   }
 
-  static createFromUrl(url: string, config?: YoutubeConfig): YoutubeLoader {
+  static createFromUrl(
+    url: string,
+    config?: Omit<YoutubeConfig, "videoId">
+  ): YoutubeLoader {
     const videoId = YoutubeLoader.getVideoID(url);
-    return new YoutubeLoader(videoId, config);
+    return new YoutubeLoader({ ...config, videoId });
   }
 
   async load(): Promise<Document[]> {
@@ -69,7 +73,7 @@ export class YoutubeLoader extends BaseDocumentLoader {
       }
     } catch (e: unknown) {
       throw new Error(
-        `Failed to get youtube video transcription: ${(e as Error).message}`
+        `Failed to get YouTube video transcription: ${(e as Error).message}`
       );
     }
     const document = new Document({
