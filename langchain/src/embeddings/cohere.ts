@@ -37,16 +37,19 @@ export class CohereEmbeddings
       apiKey?: string;
     }
   ) {
-    super(fields ?? {});
+    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
-    const apiKey = fields?.apiKey || getEnvironmentVariable("COHERE_API_KEY");
+    super(fieldsWithDefaults);
+
+    const apiKey =
+      fieldsWithDefaults?.apiKey || getEnvironmentVariable("COHERE_API_KEY");
 
     if (!apiKey) {
       throw new Error("Cohere API key not found");
     }
 
-    this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
   }
 
