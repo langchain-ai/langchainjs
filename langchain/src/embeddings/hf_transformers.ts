@@ -2,7 +2,8 @@ import { TransformersEmbeddingFunction } from "chromadb";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
-export interface HuggingFaceTransformersEmbeddingsParams extends EmbeddingsParams {
+export interface HuggingFaceTransformersEmbeddingsParams
+  extends EmbeddingsParams {
   /** Model name to use */
   modelName: string;
 
