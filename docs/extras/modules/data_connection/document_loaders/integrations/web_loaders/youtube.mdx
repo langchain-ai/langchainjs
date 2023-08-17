@@ -1,0 +1,29 @@
+---
+hide_table_of_contents: true
+---
+
+# YouTube transcripts
+
+This covers how to load youtube transcript into LangChain documents.
+
+## Setup
+
+You'll need to install youtube-transcript library:
+
+```bash npm2yarn
+npm install youtube-transcript
+```
+
+If you'll also need to add video info to the metadata:
+```bash npm2yarn
+npm install youtubei.js
+```
+
+## Usage
+
+You need to specify a link to the video in the `url`. You can also specify `language` in [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) and `addVideoInfo` flag.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/youtube.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
