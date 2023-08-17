@@ -58,18 +58,24 @@ export class CohereEmbeddings
   async embedDocuments(texts: string[]): Promise<number[][]> {
     await this.maybeInitClient();
 
-    const subPrompts = chunkArray(texts, this.batchSize);
+    const batches = chunkArray(texts, this.batchSize);
+
+    const batchRequests = batches.map((batch) =>
+      this.embeddingWithRetry({
+        model: this.modelName,
+        texts: batch,
+      })
+    );
+
+    const batchResponses = await Promise.all(batchRequests);
 
     const embeddings: number[][] = [];
 
-    for (let i = 0; i < subPrompts.length; i += 1) {
-      const input = subPrompts[i];
-      const { body } = await this.embeddingWithRetry({
-        model: this.modelName,
-        texts: input,
-      });
-      for (let j = 0; j < input.length; j += 1) {
-        embeddings.push(body.embeddings[j]);
+    for (let i = 0; i < batchResponses.length; i += 1) {
+      const batch = batches[i];
+      const { body: batchResponse } = batchResponses[i];
+      for (let j = 0; j < batch.length; j += 1) {
+        embeddings.push(batchResponse.embeddings[j]);
       }
     }
 
