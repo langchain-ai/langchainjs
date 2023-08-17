@@ -302,7 +302,7 @@ export class FunctionMessage extends BaseMessage {
     fields: string | BaseMessageFields,
     /** @deprecated */
     name: string
-  )
+  );
 
   constructor(
     fields: string | FunctionMessageFieldsWithName,

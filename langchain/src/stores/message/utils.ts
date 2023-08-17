@@ -51,7 +51,9 @@ export function mapStoredMessagesToChatMessages(
         if (storedMessage.data.name === undefined) {
           throw new Error("Name must be defined for function messages");
         }
-        return new FunctionMessage(storedMessage.data as FunctionMessageFieldsWithName);
+        return new FunctionMessage(
+          storedMessage.data as FunctionMessageFieldsWithName
+        );
       case "chat": {
         if (storedMessage.data.role === undefined) {
           throw new Error("Role must be defined for chat messages");
