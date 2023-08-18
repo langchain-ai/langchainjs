@@ -1,25 +1,18 @@
 import {
-  Configuration,
-  OpenAIApi,
-  CreateChatCompletionRequest,
-  ConfigurationParameters,
-  CreateChatCompletionResponse,
-  ChatCompletionResponseMessageRoleEnum,
-  ChatCompletionRequestMessage,
-  ChatCompletionResponseMessage,
   ChatCompletionFunctions,
-  CreateChatCompletionRequestFunctionCall,
+  ChatCompletionRequestMessage,
   ChatCompletionRequestMessageFunctionCall,
+  ChatCompletionResponseMessage,
+  ChatCompletionResponseMessageRoleEnum,
+  Configuration,
+  ConfigurationParameters,
+  CreateChatCompletionRequest,
+  CreateChatCompletionRequestFunctionCall,
+  CreateChatCompletionResponse,
+  OpenAIApi,
 } from "openai";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
-import {
-  AzureOpenAIInput,
-  OpenAICallOptions,
-  OpenAIChatInput,
-} from "../types/openai-types.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
   AIMessage,
   AIMessageChunk,
@@ -35,15 +28,22 @@ import {
   SystemMessage,
   SystemMessageChunk,
 } from "../schema/index.js";
-import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { StructuredTool } from "../tools/base.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
-import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
+import {
+  AzureOpenAIInput,
+  OpenAICallOptions,
+  OpenAIChatInput,
+} from "../types/openai-types.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
+import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { readableStreamToAsyncIterable } from "../util/stream.js";
+import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
-export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
+export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
 interface TokenUsage {
   completionTokens?: number;
@@ -191,6 +191,7 @@ export class ChatOpenAI
     return {
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      organization: "OPENAI_ORGANIZATION",
     };
   }
 
@@ -243,6 +244,8 @@ export class ChatOpenAI
 
   azureOpenAIBasePath?: string;
 
+  organization?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -285,6 +288,10 @@ export class ChatOpenAI
       fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
+    this.organization =
+      fields?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
+
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
@@ -315,6 +322,7 @@ export class ChatOpenAI
 
     this.clientConfig = {
       apiKey: this.openAIApiKey,
+      organization: this.organization,
       ...configuration,
       ...fields?.configuration,
     };
