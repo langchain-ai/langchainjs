@@ -18,6 +18,10 @@ interface Berry {
 }
 
 export class DataberryRetriever extends BaseRetriever {
+  static lc_name() {
+    return "DataberryRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "databerry"];
 
   get lc_secrets() {

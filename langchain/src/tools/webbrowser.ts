@@ -160,6 +160,10 @@ export interface WebBrowserArgs extends ToolParams {
 }
 
 export class WebBrowser extends Tool {
+  static lc_name() {
+    return "WebBrowser";
+  }
+
   get lc_namespace() {
     return [...super.lc_namespace, "webbrowser"];
   }

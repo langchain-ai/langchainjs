@@ -15,6 +15,10 @@ export interface ZepRetrieverConfig extends BaseRetrieverInput {
 }
 
 export class ZepRetriever extends BaseRetriever {
+  static lc_name() {
+    return "ZepRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "zep"];
 
   get lc_secrets(): { [key: string]: string } | undefined {

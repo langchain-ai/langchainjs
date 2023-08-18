@@ -23,6 +23,10 @@ export class RetrievalQAChain
   extends BaseChain
   implements RetrievalQAChainInput
 {
+  static lc_name() {
+    return "RetrievalQAChain";
+  }
+
   inputKey = "query";
 
   get inputKeys() {

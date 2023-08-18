@@ -25,6 +25,10 @@ export class AnalyzeDocumentChain
   extends BaseChain
   implements AnalyzeDocumentChainInput
 {
+  static lc_name() {
+    return "AnalyzeDocumentChain";
+  }
+
   inputKey = "input_document";
 
   combineDocumentsChain: BaseChain;

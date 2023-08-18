@@ -35,6 +35,10 @@ https://maker.ifttt.com/use/YOUR_IFTTT_KEY. Grab the YOUR_IFTTT_KEY value.
 import { Tool } from "./base.js";
 
 export class IFTTTWebhook extends Tool {
+  static lc_name() {
+    return "IFTTTWebhook";
+  }
+
   private url: string;
 
   name: string;

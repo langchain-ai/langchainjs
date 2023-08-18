@@ -7,6 +7,10 @@ export interface GoogleCustomSearchParams {
 }
 
 export class GoogleCustomSearch extends Tool {
+  static lc_name() {
+    return "GoogleCustomSearch";
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "GOOGLE_API_KEY",

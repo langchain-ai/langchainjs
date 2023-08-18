@@ -34,6 +34,10 @@ interface PageResult {
 }
 
 export class WikipediaQueryRun extends Tool {
+  static lc_name() {
+    return "WikipediaQueryRun";
+  }
+
   name = "wikipedia-api";
 
   description =

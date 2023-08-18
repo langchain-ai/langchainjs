@@ -12,6 +12,10 @@ import {
 import { ChatOpenAI } from "../chat_models/openai.js";
 
 export class MetadataTagger extends MappingDocumentTransformer {
+  static lc_name() {
+    return "MetadataTagger";
+  }
+
   protected taggingChain: BaseChain;
 
   constructor(fields: { taggingChain: BaseChain }) {

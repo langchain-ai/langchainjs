@@ -58,6 +58,10 @@ export interface SupabaseHybridSearchParams {
 }
 
 export class SupabaseHybridSearch extends BaseRetriever {
+  static lc_name() {
+    return "SupabaseHybridSearch";
+  }
+
   lc_namespace = ["langchain", "retrievers", "supabase"];
 
   similarityK: number;

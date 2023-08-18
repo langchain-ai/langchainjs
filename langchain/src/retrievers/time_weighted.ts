@@ -22,6 +22,10 @@ export const BUFFER_IDX = "buffer_idx";
  * ref: https://github.com/hwchase17/langchain/blob/master/langchain/retrievers/time_weighted_retriever.py
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
+  static lc_name() {
+    return "TimeWeightedVectorStoreRetriever";
+  }
+
   get lc_namespace() {
     return ["langchain", "retrievers", "time_weighted"];
   }

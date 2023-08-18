@@ -15,6 +15,10 @@ export interface ParentDocumentRetrieverFields extends BaseRetrieverInput {
 }
 
 export class ParentDocumentRetriever extends BaseRetriever {
+  static lc_name() {
+    return "ParentDocumentRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "parent_document"];
 
   protected vectorstore: VectorStore;

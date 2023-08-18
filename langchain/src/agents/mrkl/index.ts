@@ -30,6 +30,10 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ZeroShotAgent extends Agent {
+  static lc_name() {
+    return "ZeroShotAgent";
+  }
+
   lc_namespace = ["langchain", "agents", "mrkl"];
 
   declare ToolType: Tool;

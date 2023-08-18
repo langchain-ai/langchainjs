@@ -43,6 +43,10 @@ export type VectorStoreRetrieverInput<V extends VectorStore> =
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
 > extends BaseRetriever {
+  static lc_name() {
+    return "VectorStoreRetriever";
+  }
+
   get lc_namespace() {
     return ["langchain", "retrievers", "base"];
   }

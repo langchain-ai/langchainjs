@@ -35,6 +35,10 @@ export class ConversationalRetrievalQAChain
   extends BaseChain
   implements ConversationalRetrievalQAChainInput
 {
+  static lc_name() {
+    return "ConversationalRetrievalQAChain";
+  }
+
   inputKey = "question";
 
   chatHistoryKey = "chat_history";

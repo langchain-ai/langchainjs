@@ -25,6 +25,10 @@ export interface BabyAGIInputs
 }
 
 export class BabyAGI extends BaseChain implements BabyAGIInputs {
+  static lc_name() {
+    return "BabyAGI";
+  }
+
   taskList: Task[];
 
   creationChain: BaseChain;

@@ -87,6 +87,10 @@ interface SearxngSearchParams {
  * note: works best with *agentType*: `structured-chat-zero-shot-react-description`
  * https://github.com/searxng/searxng */
 export class SearxngSearch extends Tool {
+  static lc_name() {
+    return "SearxngSearch";
+  }
+
   name = "searxng-search";
 
   description =

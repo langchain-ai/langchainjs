@@ -36,6 +36,10 @@ export abstract class RouterChain extends BaseChain {
 }
 
 export class MultiRouteChain extends BaseChain {
+  static lc_name() {
+    return "MultiRouteChain";
+  }
+
   routerChain: RouterChain;
 
   destinationChains: { [name: string]: BaseChain };

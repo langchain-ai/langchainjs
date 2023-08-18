@@ -30,6 +30,10 @@ export interface PlanAndExecuteAgentExecutorInput extends ChainInputs {
 }
 
 export class PlanAndExecuteAgentExecutor extends BaseChain {
+  static lc_name() {
+    return "PlanAndExecuteAgentExecutor";
+  }
+
   private planner: BasePlanner;
 
   private stepExecutor: BaseStepExecutor;

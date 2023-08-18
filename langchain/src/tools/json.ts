@@ -68,6 +68,10 @@ export interface JsonToolFields extends ToolParams {
 }
 
 export class JsonListKeysTool extends Tool {
+  static lc_name() {
+    return "JsonListKeysTool";
+  }
+
   name = "json_list_keys";
 
   jsonSpec: JsonSpec;
@@ -95,12 +99,16 @@ export class JsonListKeysTool extends Tool {
     }
   }
 
-  description = `Can be used to list all keys at a given path. 
+  description = `Can be used to list all keys at a given path.
     Before calling this you should be SURE that the path to this exists.
     The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).`;
 }
 
 export class JsonGetValueTool extends Tool {
+  static lc_name() {
+    return "JsonGetValueTool";
+  }
+
   name = "json_get_value";
 
   constructor(public jsonSpec: JsonSpec) {

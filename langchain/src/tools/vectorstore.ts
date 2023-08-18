@@ -9,6 +9,10 @@ interface VectorStoreTool {
 }
 
 export class VectorStoreQATool extends Tool implements VectorStoreTool {
+  static lc_name() {
+    return "VectorStoreQATool";
+  }
+
   vectorStore: VectorStore;
 
   llm: BaseLanguageModel;

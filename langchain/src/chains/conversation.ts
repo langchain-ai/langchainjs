@@ -11,6 +11,10 @@ Human: {input}
 AI:`;
 
 export class ConversationChain extends LLMChain {
+  static lc_name() {
+    return "ConversationChain";
+  }
+
   constructor({
     prompt,
     outputKey,

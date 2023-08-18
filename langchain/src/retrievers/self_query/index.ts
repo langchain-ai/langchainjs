@@ -32,6 +32,10 @@ export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever
   implements SelfQueryRetrieverArgs<T>
 {
+  static lc_name() {
+    return "SelfQueryRetriever";
+  }
+
   get lc_namespace() {
     return ["langchain", "retrievers", "self_query"];
   }

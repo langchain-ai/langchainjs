@@ -4,6 +4,10 @@ import { Document } from "../document.js";
 import { MappingDocumentTransformer } from "../schema/document.js";
 
 export class HtmlToTextTransformer extends MappingDocumentTransformer {
+  static lc_name() {
+    return "HtmlToTextTransformer";
+  }
+
   constructor(protected options: HtmlToTextOptions = {}) {
     super(options);
   }

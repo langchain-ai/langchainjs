@@ -6,6 +6,10 @@ export interface ChainToolInput extends Omit<DynamicToolInput, "func"> {
 }
 
 export class ChainTool extends DynamicTool {
+  static lc_name() {
+    return "ChainTool";
+  }
+
   chain: BaseChain;
 
   constructor({ chain, ...rest }: ChainToolInput) {

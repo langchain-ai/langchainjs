@@ -7,6 +7,10 @@ export interface AIPluginToolParams extends ToolParams {
 }
 
 export class AIPluginTool extends Tool implements AIPluginToolParams {
+  static lc_name() {
+    return "AIPluginTool";
+  }
+
   private _name: string;
 
   private _description: string;
