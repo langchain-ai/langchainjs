@@ -7,25 +7,25 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
-import { isNode, getEnvironmentVariable } from "../util/env.js";
+import { calculateMaxTokens } from "../base_language/count_tokens.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { GenerationChunk, LLMResult } from "../schema/index.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
 } from "../types/openai-types.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { chunkArray } from "../util/chunk.js";
-import { BaseLLM, BaseLLMParams } from "./base.js";
-import { calculateMaxTokens } from "../base_language/count_tokens.js";
-import { OpenAIChat } from "./openai-chat.js";
-import { LLMResult, GenerationChunk } from "../schema/index.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 import { readableStreamToAsyncIterable } from "../util/stream.js";
+import { BaseLLM, BaseLLMParams } from "./base.js";
+import { OpenAIChat } from "./openai-chat.js";
 
-export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
+export { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
 interface TokenUsage {
   completionTokens?: number;
@@ -65,6 +65,7 @@ export class OpenAI
     return {
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      organization: "OPENAI_ORGANIZATION",
     };
   }
 
@@ -119,6 +120,8 @@ export class OpenAI
 
   azureOpenAIBasePath?: string;
 
+  organization?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -148,6 +151,10 @@ export class OpenAI
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
+    this.organization =
+      fields?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
       throw new Error("OpenAI or Azure OpenAI API key not found");
@@ -206,6 +213,7 @@ export class OpenAI
 
     this.clientConfig = {
       apiKey: this.openAIApiKey,
+      organization: this.organization,
       ...configuration,
       ...fields?.configuration,
     };
