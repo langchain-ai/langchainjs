@@ -134,9 +134,11 @@ export abstract class BaseTransformOutputParser<
  * OutputParser that parses LLMResult into the top likely string.
  */
 export class StringOutputParser extends BaseTransformOutputParser<string> {
-  lc_namespace = ["schema", "output_parser"];
+  static get lc_name() {
+    return "StrOutputParser";
+  }
 
-  lc_name = "StrOutputParser";
+  lc_namespace = ["schema", "output_parser"];
 
   lc_serializable = true;
 

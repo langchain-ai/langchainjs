@@ -248,6 +248,17 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
+  static get lc_name(): string {
+    return this.name;
+  }
+
+  get lc_id(): string[] {
+    return [
+      ...this.lc_namespace,
+      (this.constructor as typeof Serializable).lc_name,
+    ];
+  }
+
   lc_kwargs: SerializedFields;
 
   abstract name: string;
