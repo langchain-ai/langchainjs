@@ -91,10 +91,14 @@ export class ProxyParamsDuplicator {
   }
 
   removeType(value: string) {
-    if (value.includes("::int")) {
-      return value.replace("::int", "");
+    let cleanedValue = value;
+    if (cleanedValue.includes("::float")) {
+      cleanedValue = cleanedValue.replace("::float", "");
     }
-    return value;
+    if (cleanedValue.includes("::int")) {
+      cleanedValue = cleanedValue.replace("::int", "");
+    }
+    return cleanedValue;
   }
 
   addDefaultOpClause(prop: string, column: string, value: unknown) {

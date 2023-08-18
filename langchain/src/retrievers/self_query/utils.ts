@@ -17,3 +17,17 @@ export function isFilterEmpty(
   }
   return isObject(filter) && Object.keys(filter).length === 0;
 }
+
+export function isInt(value: unknown): boolean {
+  const numberValue = parseFloat(value as string);
+  return !Number.isNaN(numberValue) && numberValue % 1 === 0;
+}
+
+export function isFloat(value: unknown): boolean {
+  const numberValue = parseFloat(value as string);
+  return !Number.isNaN(numberValue) && numberValue % 1 !== 0;
+}
+
+export function isString(value: unknown): boolean {
+  return typeof value === "string" && Number.isNaN(parseFloat(value as string));
+}

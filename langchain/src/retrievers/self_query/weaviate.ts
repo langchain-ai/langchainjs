@@ -11,7 +11,7 @@ import {
 } from "../../chains/query_constructor/ir.js";
 import { WeaviateFilter, WeaviateStore } from "../../vectorstores/weaviate.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty } from "./utils.js";
+import { isFilterEmpty, isString, isInt, isFloat } from "./utils.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
@@ -49,20 +49,6 @@ export type WeaviateStructuredQueryResult = {
     where?: WeaviateComparisonResult | WeaviateOperationResult;
   };
 };
-
-function isInt(value: unknown): boolean {
-  const numberValue = parseFloat(value as string);
-  return !Number.isNaN(numberValue) && numberValue % 1 === 0;
-}
-
-function isFloat(value: unknown): boolean {
-  const numberValue = parseFloat(value as string);
-  return !Number.isNaN(numberValue) && numberValue % 1 !== 0;
-}
-
-function isString(value: unknown): boolean {
-  return typeof value === "string" && Number.isNaN(parseFloat(value as string));
-}
 
 export class WeaviateTranslator<
   T extends WeaviateStore

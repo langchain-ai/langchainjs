@@ -13,7 +13,7 @@ import type {
   SupabaseVectorStore,
 } from "../../vectorstores/supabase.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty, isObject } from "./utils.js";
+import { isFilterEmpty, isFloat, isInt, isObject, isString } from "./utils.js";
 import {
   ProxyParamsDuplicator,
   convertObjectFilterToStructuredQuery,
@@ -86,10 +86,12 @@ export class SupabaseTranslator<
 
   buildColumnName(attr: string, value: string | number, includeType = true) {
     let column = "";
-    if (typeof value === "string") {
+    if (isString(value)) {
       column = `metadata->>${attr}`;
-    } else if (typeof value === "number") {
+    } else if (isInt(value)) {
       column = `metadata->${attr}${includeType ? "::int" : ""}`;
+    } else if (isFloat(value)) {
+      column = `metadata->${attr}${includeType ? "::float" : ""}`;
     } else {
       throw new Error("Data type not supported");
     }
@@ -189,11 +191,10 @@ export class SupabaseTranslator<
     generatedFilter: SupabaseFilterRPCCall | undefined,
     mergeType = "and"
   ): SupabaseFilterRPCCall | SupabaseMetadata | undefined {
-    let myDefaultFilter = defaultFilter;
-    if (isFilterEmpty(myDefaultFilter) && isFilterEmpty(generatedFilter)) {
+    if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
     }
-    if (isFilterEmpty(myDefaultFilter) || mergeType === "replace") {
+    if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
       if (isFilterEmpty(generatedFilter)) {
         return undefined;
       }
@@ -203,13 +204,22 @@ export class SupabaseTranslator<
       if (mergeType === "and") {
         return undefined;
       }
-      return myDefaultFilter;
+      return defaultFilter;
     }
 
+    let myDefaultFilter = defaultFilter;
     if (isObject(defaultFilter)) {
       const { filter } = this.visitStructuredQuery(
         convertObjectFilterToStructuredQuery(defaultFilter)
       );
+
+      // just in case the built filter is empty somehow
+      if (isFilterEmpty(filter)) {
+        if (isFilterEmpty(generatedFilter)) {
+          return undefined;
+        }
+        return generatedFilter;
+      }
       myDefaultFilter = filter;
     }
     // After this point, myDefaultFilter will always be SupabaseFilterRPCCall
