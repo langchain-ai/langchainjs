@@ -51,15 +51,6 @@ function replaceSecrets(
   return result;
 }
 
-// /**
-//  * Exists purely to allow subclass checks.
-//  */
-// abstract class BaseSerializable {
-//   static lc_name(): string {
-//     return this.constructor.name;
-//   }
-// }
-
 export abstract class Serializable /*extends BaseSerializable*/ {
   lc_serializable = false;
 
