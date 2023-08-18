@@ -9,10 +9,15 @@ import {
 } from "../../chains/query_constructor/ir.js";
 import type {
   SupabaseFilterRPCCall,
+  SupabaseMetadata,
   SupabaseVectorStore,
 } from "../../vectorstores/supabase.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty, ProxyParamsDuplicator } from "./utils.js";
+import { isFilterEmpty, isObject } from "./utils.js";
+import {
+  ProxyParamsDuplicator,
+  convertObjectFilterToStructuredQuery,
+} from "./supabase_utils.js";
 
 type ValueType = {
   eq: string | number;
@@ -180,14 +185,15 @@ export class SupabaseTranslator<
   }
 
   mergeFilters(
-    defaultFilter: SupabaseFilterRPCCall | undefined,
+    defaultFilter: SupabaseFilterRPCCall | SupabaseMetadata | undefined,
     generatedFilter: SupabaseFilterRPCCall | undefined,
     mergeType = "and"
-  ): SupabaseFilterRPCCall | undefined {
-    if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
+  ): SupabaseFilterRPCCall | SupabaseMetadata | undefined {
+    let myDefaultFilter = defaultFilter;
+    if (isFilterEmpty(myDefaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
     }
-    if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
+    if (isFilterEmpty(myDefaultFilter) || mergeType === "replace") {
       if (isFilterEmpty(generatedFilter)) {
         return undefined;
       }
@@ -197,21 +203,29 @@ export class SupabaseTranslator<
       if (mergeType === "and") {
         return undefined;
       }
-      return defaultFilter;
+      return myDefaultFilter;
     }
 
+    if (isObject(defaultFilter)) {
+      const { filter } = this.visitStructuredQuery(
+        convertObjectFilterToStructuredQuery(defaultFilter)
+      );
+      myDefaultFilter = filter;
+    }
+    // After this point, myDefaultFilter will always be SupabaseFilterRPCCall
     if (mergeType === "or") {
       return (rpc) => {
         const defaultFlattenedParams = ProxyParamsDuplicator.getFlattenedParams(
           rpc,
-          defaultFilter
+          myDefaultFilter as SupabaseFilterRPCCall
         );
         const generatedFlattenedParams =
           ProxyParamsDuplicator.getFlattenedParams(rpc, generatedFilter);
         return rpc.or(`${defaultFlattenedParams},${generatedFlattenedParams}`);
       };
     } else if (mergeType === "and") {
-      return (rpc) => generatedFilter(defaultFilter(rpc));
+      return (rpc) =>
+        generatedFilter((myDefaultFilter as SupabaseFilterRPCCall)(rpc));
     } else {
       throw new Error("Unknown merge type");
     }

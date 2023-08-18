@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
