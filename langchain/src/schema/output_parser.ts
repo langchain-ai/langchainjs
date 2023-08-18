@@ -136,6 +136,8 @@ export abstract class BaseTransformOutputParser<
 export class StringOutputParser extends BaseTransformOutputParser<string> {
   lc_namespace = ["schema", "output_parser"];
 
+  lc_name = "StrOutputParser";
+
   lc_serializable = true;
 
   parse(text: string): Promise<string> {

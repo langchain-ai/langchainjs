@@ -143,7 +143,14 @@ async function reviver(
     }
 
     // Extract the builder from the import map.
-    const builder = module[name as keyof typeof module];
+    const builder =
+      // look for a named export with the same name as the class
+      module[name as keyof typeof module] ??
+      // look for an export with a lc_name property matching the class name
+      // this is necessary for classes that are minified
+      Object.values(module).find(
+        (v) => typeof v === "function" && v.lc_name === name
+      );
     if (typeof builder !== "function") {
       throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);
     }

@@ -62,6 +62,17 @@ export abstract class Serializable {
    */
   abstract lc_namespace: string[];
 
+  static get lc_name(): string {
+    return this.name;
+  }
+
+  get lc_id(): string[] {
+    return [
+      ...this.lc_namespace,
+      (this.constructor as typeof Serializable).lc_name,
+    ];
+  }
+
   /**
    * A map of secrets, which will be omitted from serialization.
    * Keys are paths to the secret in constructor args, e.g. "foo.bar.baz".
@@ -139,7 +150,7 @@ export abstract class Serializable {
     return {
       lc: 1,
       type: "constructor",
-      id: [...this.lc_namespace, this.constructor.name],
+      id: this.lc_id,
       kwargs: mapKeys(
         Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
         keyToJson,
@@ -152,7 +163,7 @@ export abstract class Serializable {
     return {
       lc: 1,
       type: "not_implemented",
-      id: [...this.lc_namespace, this.constructor.name],
+      id: this.lc_id,
     };
   }
 }
