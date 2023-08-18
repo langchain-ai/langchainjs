@@ -70,7 +70,7 @@ export class GoogleVertexAIEmbeddings
         content: document,
       })),
       5
-    ); // Vertex AI accepts max 5 instnaces per prediction
+    ); // Vertex AI accepts max 5 instances per prediction
     const parameters = {};
     const options = {};
     const responses = await Promise.all(

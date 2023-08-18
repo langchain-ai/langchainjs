@@ -58,7 +58,7 @@ export class MyScaleStore extends VectorStore {
   constructor(embeddings: Embeddings, args: MyScaleLibArgs) {
     super(embeddings, args);
 
-    this.indexType = args.indexType || "IVFFLAT";
+    this.indexType = args.indexType || "MSTG";
     this.indexParam = args.indexParam || {};
     this.columnMap = args.columnMap || {
       id: "id",

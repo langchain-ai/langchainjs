@@ -53,7 +53,16 @@ export async function* createOllamaStream(
   params: OllamaRequestParams,
   options: OllamaCallOptions
 ): AsyncGenerator<OllamaGenerationChunk> {
-  const response = await fetch(`${baseUrl}/api/generate`, {
+  let formattedBaseUrl = baseUrl;
+  if (formattedBaseUrl.startsWith("http://localhost:")) {
+    // Node 18 has issues with resolving "localhost"
+    // See https://github.com/node-fetch/node-fetch/issues/1624
+    formattedBaseUrl = formattedBaseUrl.replace(
+      "http://localhost:",
+      "http://127.0.0.1:"
+    );
+  }
+  const response = await fetch(`${formattedBaseUrl}/api/generate`, {
     method: "POST",
     body: JSON.stringify(params),
     headers: {
@@ -80,7 +89,15 @@ export async function* createOllamaStream(
   const decoder = new TextDecoder();
   for await (const chunk of stream) {
     try {
-      yield JSON.parse(decoder.decode(chunk));
+      if (chunk !== undefined) {
+        const lines = decoder
+          .decode(chunk)
+          .split("\n")
+          .filter((v) => v.length);
+        for (const line of lines) {
+          yield JSON.parse(line);
+        }
+      }
     } catch (e) {
       console.warn(
         `Received a non-JSON parseable chunk: ${decoder.decode(chunk)}`
