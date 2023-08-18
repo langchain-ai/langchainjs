@@ -51,7 +51,7 @@ function replaceSecrets(
   return result;
 }
 
-export abstract class Serializable /*extends BaseSerializable*/ {
+export abstract class Serializable {
   lc_serializable = false;
 
   lc_kwargs: SerializedFields;
