@@ -253,7 +253,12 @@ export abstract class BaseCallbackHandler
   }
 
   static get _lc_unique_name(): string {
-    const lcNameIsSubclassed = this.lc_name !== super.lc_name;
+    // "super" here would refer to the parent class of Serializable.
+    // It's enough to compare values one level up.
+    const parentClass = Object.getPrototypeOf(this);
+    const lcNameIsSubclassed =
+      typeof parentClass.lc_name !== "function" ||
+      this.lc_name() !== parentClass.lc_name();
     if (lcNameIsSubclassed) {
       return this.lc_name();
     } else {
