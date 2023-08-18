@@ -7,8 +7,8 @@ import { Document } from "../../document.js";
 
 describe("ElasticVectorSearch", () => {
   let store: ElasticVectorSearch;
-  
-  beforeEach(async() => {
+
+  beforeEach(async () => {
     if (!process.env.ELASTIC_URL) {
       throw new Error("ELASTIC_URL not set");
     }
@@ -90,10 +90,9 @@ describe("ElasticVectorSearch", () => {
     });
 
     expect(results4).toHaveLength(1);
-
   });
 
-  test.skip("ElasticVectorSearch integration with more than 10 documents",async () => {
+  test.skip("ElasticVectorSearch integration with more than 10 documents", async () => {
     const createdAt = new Date().getTime();
     await store.addDocuments([
       { pageContent: "pretty", metadata: { a: createdAt + 1 } },
