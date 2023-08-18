@@ -1,28 +1,28 @@
 import {
-  Configuration,
-  OpenAIApi,
   ChatCompletionRequestMessage,
-  CreateChatCompletionRequest,
-  ConfigurationParameters,
   ChatCompletionResponseMessageRoleEnum,
+  Configuration,
+  ConfigurationParameters,
+  CreateChatCompletionRequest,
   CreateChatCompletionResponse,
+  OpenAIApi,
 } from "openai";
-import { isNode, getEnvironmentVariable } from "../util/env.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { Generation, GenerationChunk, LLMResult } from "../schema/index.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
 } from "../types/openai-types.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseLLMParams, LLM } from "./base.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { Generation, LLMResult, GenerationChunk } from "../schema/index.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 import { readableStreamToAsyncIterable } from "../util/stream.js";
+import { BaseLLMParams, LLM } from "./base.js";
 
-export { OpenAIChatInput, AzureOpenAIInput };
+export { AzureOpenAIInput, OpenAIChatInput };
 
 export interface OpenAIChatCallOptions extends OpenAICallOptions {
   promptIndex?: number;
@@ -68,6 +68,7 @@ export class OpenAIChat
     return {
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      organization: "OPENAI_ORGANIZATION",
     };
   }
 
@@ -122,6 +123,8 @@ export class OpenAIChat
 
   azureOpenAIBasePath?: string;
 
+  organization?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -166,6 +169,10 @@ export class OpenAIChat
       fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
+    this.organization =
+      fields?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
+
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -203,6 +210,7 @@ export class OpenAIChat
 
     this.clientConfig = {
       apiKey: this.openAIApiKey,
+      organization: this.organization,
       ...configuration,
       ...fields?.configuration,
     };

@@ -154,10 +154,6 @@ export class OpenAI
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    this.organization =
-      fields?.configuration?.organization ??
-      getEnvironmentVariable("OPENAI_ORGANIZATION");
-
     if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
       throw new Error("OpenAI or Azure OpenAI API key not found");
     }
@@ -179,6 +175,10 @@ export class OpenAI
     this.azureOpenAIBasePath =
       fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
+    this.organization =
+      fields?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
