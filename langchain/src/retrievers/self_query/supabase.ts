@@ -7,12 +7,17 @@ import {
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import {
+import type {
   SupabaseFilterRPCCall,
+  SupabaseMetadata,
   SupabaseVectorStore,
 } from "../../vectorstores/supabase.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty } from "./utils.js";
+import { isFilterEmpty, isFloat, isInt, isObject, isString } from "./utils.js";
+import {
+  ProxyParamsDuplicator,
+  convertObjectFilterToStructuredQuery,
+} from "./supabase_utils.js";
 
 type ValueType = {
   eq: string | number;
@@ -81,10 +86,12 @@ export class SupabaseTranslator<
 
   buildColumnName(attr: string, value: string | number, includeType = true) {
     let column = "";
-    if (typeof value === "string") {
+    if (isString(value)) {
       column = `metadata->>${attr}`;
-    } else if (typeof value === "number") {
+    } else if (isInt(value)) {
       column = `metadata->${attr}${includeType ? "::int" : ""}`;
+    } else if (isFloat(value)) {
+      column = `metadata->${attr}${includeType ? "::float" : ""}`;
     } else {
       throw new Error("Data type not supported");
     }
@@ -180,15 +187,10 @@ export class SupabaseTranslator<
   }
 
   mergeFilters(
-    defaultFilter: SupabaseFilterRPCCall | undefined,
+    defaultFilter: SupabaseFilterRPCCall | SupabaseMetadata | undefined,
     generatedFilter: SupabaseFilterRPCCall | undefined,
     mergeType = "and"
-  ): SupabaseFilterRPCCall | undefined {
-    if (mergeType === "or") {
-      throw new Error(
-        "Supabase self-query filter does not support merging two filters with the OR operator"
-      );
-    }
+  ): SupabaseFilterRPCCall | SupabaseMetadata | undefined {
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
     }
@@ -205,8 +207,35 @@ export class SupabaseTranslator<
       return defaultFilter;
     }
 
-    if (mergeType === "and") {
-      return (rpc) => generatedFilter(defaultFilter(rpc));
+    let myDefaultFilter = defaultFilter;
+    if (isObject(defaultFilter)) {
+      const { filter } = this.visitStructuredQuery(
+        convertObjectFilterToStructuredQuery(defaultFilter)
+      );
+
+      // just in case the built filter is empty somehow
+      if (isFilterEmpty(filter)) {
+        if (isFilterEmpty(generatedFilter)) {
+          return undefined;
+        }
+        return generatedFilter;
+      }
+      myDefaultFilter = filter;
+    }
+    // After this point, myDefaultFilter will always be SupabaseFilterRPCCall
+    if (mergeType === "or") {
+      return (rpc) => {
+        const defaultFlattenedParams = ProxyParamsDuplicator.getFlattenedParams(
+          rpc,
+          myDefaultFilter as SupabaseFilterRPCCall
+        );
+        const generatedFlattenedParams =
+          ProxyParamsDuplicator.getFlattenedParams(rpc, generatedFilter);
+        return rpc.or(`${defaultFlattenedParams},${generatedFlattenedParams}`);
+      };
+    } else if (mergeType === "and") {
+      return (rpc) =>
+        generatedFilter((myDefaultFilter as SupabaseFilterRPCCall)(rpc));
     } else {
       throw new Error("Unknown merge type");
     }

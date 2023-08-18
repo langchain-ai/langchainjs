@@ -11,7 +11,7 @@ interface SearchEmbeddingsParams {
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
-type SupabaseMetadata = Record<string, any>;
+export type SupabaseMetadata = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 export type SupabaseFilter = PostgrestFilterBuilder<any, any, any>;
 export type SupabaseFilterRPCCall = (rpcCall: SupabaseFilter) => SupabaseFilter;
@@ -166,7 +166,7 @@ export class SupabaseVectorStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
