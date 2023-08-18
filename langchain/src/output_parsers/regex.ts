@@ -20,6 +20,10 @@ export interface RegexParserFields {
  * @augments BaseOutputParser
  */
 export class RegexParser extends BaseOutputParser<Record<string, string>> {
+  static lc_name() {
+    return "RegexParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "regex"];
 
   lc_serializable = true;

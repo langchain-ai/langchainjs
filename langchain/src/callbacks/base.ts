@@ -10,6 +10,7 @@ import {
   Serializable,
   Serialized,
   SerializedNotImplemented,
+  get_lc_unique_name,
 } from "../load/serializable.js";
 import { SerializedFields } from "../load/map_keys.js";
 import { Document } from "../document.js";
@@ -246,6 +247,26 @@ export abstract class BaseCallbackHandler
 
   get lc_aliases(): { [key: string]: string } | undefined {
     return undefined;
+  }
+
+  /**
+   * The name of the serializable. Override to provide an alias or
+   * to preserve the serialized module name in minified environments.
+   *
+   * Implemented as a static method to support loading logic.
+   */
+  static lc_name(): string {
+    return this.name;
+  }
+
+  /**
+   * The final serialized identifier for the module.
+   */
+  get lc_id(): string[] {
+    return [
+      ...this.lc_namespace,
+      get_lc_unique_name(this.constructor as typeof BaseCallbackHandler),
+    ];
   }
 
   lc_kwargs: SerializedFields;

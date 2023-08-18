@@ -24,6 +24,10 @@ export interface JsonMarkdownFormatInstructionsOptions
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
+  static lc_name() {
+    return "StructuredOutputParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "structured"];
 
   toJSON() {
@@ -89,6 +93,10 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 export class JsonMarkdownStructuredOutputParser<
   T extends z.ZodTypeAny
 > extends StructuredOutputParser<T> {
+  static lc_name() {
+    return "JsonMarkdownStructuredOutputParser";
+  }
+
   getFormatInstructions(
     options?: JsonMarkdownFormatInstructionsOptions
   ): string {

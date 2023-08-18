@@ -25,6 +25,10 @@ export interface SqlDatabaseChainInput extends ChainInputs {
 }
 
 export class SqlDatabaseChain extends BaseChain {
+  static lc_name() {
+    return "SqlDatabaseChain";
+  }
+
   // LLM wrapper to use
   llm: BaseLanguageModel;
 

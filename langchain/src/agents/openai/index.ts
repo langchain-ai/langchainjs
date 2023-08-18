@@ -94,6 +94,10 @@ export interface OpenAIAgentCreatePromptArgs {
 }
 
 export class OpenAIAgent extends Agent {
+  static lc_name() {
+    return "OpenAIAgent";
+  }
+
   lc_namespace = ["langchain", "agents", "openai"];
 
   _agentType() {

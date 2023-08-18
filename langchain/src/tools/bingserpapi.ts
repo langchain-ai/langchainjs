@@ -2,6 +2,10 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 class BingSerpAPI extends Tool {
+  static lc_name() {
+    return "BingSerpAPI";
+  }
+
   toJSON() {
     return this.toJSONNotImplemented();
   }

@@ -30,6 +30,10 @@ export interface DynamicStructuredToolInput<
  * A tool that can be created dynamically from a function, name, and description.
  */
 export class DynamicTool extends Tool {
+  static lc_name() {
+    return "DynamicTool";
+  }
+
   name: string;
 
   description: string;
@@ -57,6 +61,10 @@ export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends StructuredTool {
+  static lc_name() {
+    return "DynamicStructuredTool";
+  }
+
   name: string;
 
   description: string;

@@ -20,6 +20,10 @@ export type GenerativeAgentConfig = {
 };
 
 export class GenerativeAgent extends BaseChain {
+  static lc_name() {
+    return "GenerativeAgent";
+  }
+
   // a character with memory and innate characterisitics
   name: string; // the character's name
 

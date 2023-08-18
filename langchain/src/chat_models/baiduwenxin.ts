@@ -132,6 +132,10 @@ export class ChatBaiduWenxin
   extends BaseChatModel
   implements BaiduWenxinChatInput
 {
+  static lc_name() {
+    return "ChatBaiduWenxin";
+  }
+
   get callKeys(): string[] {
     return ["stop", "signal", "options"];
   }

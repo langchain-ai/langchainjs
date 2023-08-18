@@ -54,6 +54,10 @@ export class OpenAIChat
   extends LLM<OpenAIChatCallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
+  static lc_name() {
+    return "OpenAIChat";
+  }
+
   get callKeys(): (keyof OpenAIChatCallOptions)[] {
     return [
       ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),

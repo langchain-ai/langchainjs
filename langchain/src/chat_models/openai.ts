@@ -170,6 +170,10 @@ export class ChatOpenAI
   extends BaseChatModel<ChatOpenAICallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
+  static lc_name() {
+    return "ChatOpenAI";
+  }
+
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
     return [
       ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),

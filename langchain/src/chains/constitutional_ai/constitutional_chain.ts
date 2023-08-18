@@ -21,6 +21,10 @@ export class ConstitutionalChain
   extends BaseChain
   implements ConstitutionalChainInput
 {
+  static lc_name() {
+    return "ConstitutionalChain";
+  }
+
   chain: LLMChain;
 
   constitutionalPrinciples: ConstitutionalPrinciple[];

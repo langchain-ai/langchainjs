@@ -19,6 +19,10 @@ export type GenerativeAgentMemoryConfig = {
 };
 
 class GenerativeAgentMemoryChain extends BaseChain {
+  static lc_name() {
+    return "GenerativeAgentMemoryChain";
+  }
+
   reflecting = false;
 
   reflectionThreshold?: number;

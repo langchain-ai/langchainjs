@@ -279,6 +279,10 @@ export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any
 > extends Runnable<RunInput, RunOutput> {
+  static lc_name() {
+    return "RunnableSequence";
+  }
+
   protected first: Runnable<RunInput>;
 
   protected middle: Runnable[] = [];
@@ -526,6 +530,10 @@ export class RunnableMap<RunInput> extends Runnable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Record<string, any>
 > {
+  static lc_name() {
+    return "RunnableMap";
+  }
+
   lc_namespace = ["schema", "runnable"];
 
   lc_serializable = true;
@@ -609,6 +617,10 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   RunInput,
   RunInput
 > {
+  static lc_name() {
+    return "RunnablePassthrough";
+  }
+
   lc_namespace = ["schema", "runnable"];
 
   lc_serializable = true;
@@ -633,6 +645,10 @@ export class RunnableBinding<
   RunOutput,
   CallOptions extends BaseCallbackConfig
 > extends Runnable<RunInput, RunOutput, CallOptions> {
+  static lc_name() {
+    return "RunnableBinding";
+  }
+
   lc_namespace = ["schema", "runnable"];
 
   lc_serializable = true;
@@ -703,6 +719,10 @@ export class RouterRunnable<
   RunnableInput,
   RunOutput
 > extends Runnable<RunInput, RunOutput> {
+  static lc_name() {
+    return "RouterRunnable";
+  }
+
   lc_namespace = ["schema", "langchain"];
 
   lc_serializable = true;
@@ -778,6 +798,10 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
 > {
+  static lc_name() {
+    return "RunnableWithFallbacks";
+  }
+
   lc_namespace = ["schema", "langchain"];
 
   lc_serializable = true;

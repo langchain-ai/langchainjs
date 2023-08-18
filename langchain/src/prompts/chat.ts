@@ -57,6 +57,10 @@ export class ChatPromptValue extends BasePromptValue {
 
   lc_serializable = true;
 
+  static lc_name() {
+    return "ChatPromptValue";
+  }
+
   messages: BaseMessage[];
 
   constructor(messages: BaseMessage[]);
@@ -90,6 +94,10 @@ export class MessagesPlaceholder<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessagePromptTemplate<RunInput> {
+  static lc_name() {
+    return "MessagesPlaceholder";
+  }
+
   variableName: Extract<keyof RunInput, string>;
 
   constructor(variableName: Extract<keyof RunInput, string>);
@@ -219,6 +227,10 @@ export class ChatMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "ChatMessagePromptTemplate";
+  }
+
   role: string;
 
   constructor(
@@ -263,6 +275,10 @@ export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "HumanMessagePromptTemplate";
+  }
+
   async format(values: RunInput): Promise<BaseMessage> {
     return new HumanMessage(await this.prompt.format(values));
   }
@@ -276,6 +292,10 @@ export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "AIMessagePromptTemplate";
+  }
+
   async format(values: RunInput): Promise<BaseMessage> {
     return new AIMessage(await this.prompt.format(values));
   }
@@ -289,6 +309,10 @@ export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "SystemMessagePromptTemplate";
+  }
+
   async format(values: RunInput): Promise<BaseMessage> {
     return new SystemMessage(await this.prompt.format(values));
   }
@@ -326,6 +350,10 @@ export class ChatPromptTemplate<
   extends BaseChatPromptTemplate<RunInput, PartialVariableName>
   implements ChatPromptTemplateInput<RunInput, PartialVariableName>
 {
+  static lc_name() {
+    return "ChatPromptTemplate";
+  }
+
   get lc_aliases() {
     return {
       promptMessages: "messages",

@@ -77,6 +77,12 @@ export class ChatGooglePaLM
   extends BaseChatModel
   implements GooglePaLMChatInput
 {
+  static lc_name() {
+    return "ChatGooglePaLM";
+  }
+
+  lc_serializable = true;
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "GOOGLE_PALM_API_KEY",

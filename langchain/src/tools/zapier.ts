@@ -239,6 +239,10 @@ export class ZapierNLAWrapper extends Serializable {
 }
 
 export class ZapierNLARunAction extends Tool {
+  static lc_name() {
+    return "ZapierNLARunAction";
+  }
+
   apiWrapper: ZapierNLAWrapper;
 
   actionId: string;

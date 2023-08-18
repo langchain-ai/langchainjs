@@ -3,6 +3,10 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 
 /** Chain to prioritize tasks. */
 export class TaskPrioritizationChain extends LLMChain {
+  static lc_name() {
+    return "TaskPrioritizationChain";
+  }
+
   static fromLLM(fields: Omit<LLMChainInput, "prompt">): LLMChain {
     const taskPrioritizationTemplate =
       `You are a task prioritization AI tasked with cleaning the formatting of ` +

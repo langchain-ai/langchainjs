@@ -88,6 +88,10 @@ type ApiResponse = {
  * @description Represents a wrapper class to work with DataForSEO SERP API.
  */
 export class DataForSeoAPISearch extends Tool {
+  static lc_name() {
+    return "DataForSeoAPISearch";
+  }
+
   name = "dataforseo-api-wrapper";
 
   description =

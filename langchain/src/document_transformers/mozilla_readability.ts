@@ -5,6 +5,10 @@ import { Document } from "../document.js";
 import { MappingDocumentTransformer } from "../schema/document.js";
 
 export class MozillaReadabilityTransformer extends MappingDocumentTransformer {
+  static lc_name() {
+    return "MozillaReadabilityTransformer";
+  }
+
   constructor(protected options: Options = {}) {
     super(options);
   }

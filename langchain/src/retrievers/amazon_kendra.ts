@@ -24,6 +24,10 @@ export interface AmazonKendraRetrieverArgs {
 }
 
 export class AmazonKendraRetriever extends BaseRetriever {
+  static lc_name() {
+    return "AmazonKendraRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "amazon_kendra"];
 
   indexId: string;

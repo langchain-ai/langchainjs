@@ -15,6 +15,10 @@ export class TransformChain<
   I extends ChainValues,
   O extends ChainValues
 > extends BaseChain {
+  static lc_name() {
+    return "TransformChain";
+  }
+
   transformFunc: (values: I, callbacks?: Callbacks) => O | Promise<O>;
 
   inputVariables: (keyof I extends string ? keyof I : never)[];

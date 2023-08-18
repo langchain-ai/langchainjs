@@ -1,6 +1,10 @@
 import { Tool } from "./base.js";
 
 class DadJokeAPI extends Tool {
+  static lc_name() {
+    return "DadJokeAPI";
+  }
+
   name = "dadjoke";
 
   description =

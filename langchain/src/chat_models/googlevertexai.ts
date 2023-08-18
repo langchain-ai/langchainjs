@@ -141,6 +141,12 @@ export class ChatGoogleVertexAI
   extends BaseChatModel
   implements GoogleVertexAIChatInput
 {
+  static lc_name() {
+    return "ChatGoogleVertexAI";
+  }
+
+  lc_serializable = true;
+
   model = "chat-bison";
 
   temperature = 0.2;
