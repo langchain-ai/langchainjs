@@ -3,6 +3,7 @@ import {
   SerializedConstructor,
   SerializedNotImplemented,
   SerializedSecret,
+  get_lc_unique_name,
 } from "./serializable.js";
 import { optionalImportEntrypoints } from "./import_constants.js";
 import * as importMap from "./import_map.js";
@@ -149,7 +150,7 @@ async function reviver(
       // look for an export with a lc_name property matching the class name
       // this is necessary for classes that are minified
       Object.values(module).find(
-        (v) => typeof v === "function" && v._lc_unique_name === name
+        (v) => typeof v === "function" && get_lc_unique_name(v) === name
       );
     if (typeof builder !== "function") {
       throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);

@@ -10,6 +10,7 @@ import {
   Serializable,
   Serialized,
   SerializedNotImplemented,
+  get_lc_unique_name,
 } from "../load/serializable.js";
 import { SerializedFields } from "../load/map_keys.js";
 import { Document } from "../document.js";
@@ -248,28 +249,23 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
+  /**
+   * The name of the serializable. Override to provide an alias or
+   * to preserve the serialized module name in minified environments.
+   *
+   * Implemented as a static method to support loading logic.
+   */
   static lc_name(): string {
     return this.name;
   }
 
-  static get _lc_unique_name(): string {
-    // "super" here would refer to the parent class of Serializable.
-    // It's enough to compare values one level up.
-    const parentClass = Object.getPrototypeOf(this);
-    const lcNameIsSubclassed =
-      typeof parentClass.lc_name !== "function" ||
-      this.lc_name() !== parentClass.lc_name();
-    if (lcNameIsSubclassed) {
-      return this.lc_name();
-    } else {
-      return this.name;
-    }
-  }
-
+  /**
+   * The final serialized identifier for the module.
+   */
   get lc_id(): string[] {
     return [
       ...this.lc_namespace,
-      (this.constructor as typeof BaseCallbackHandler)._lc_unique_name,
+      get_lc_unique_name(this.constructor as typeof BaseCallbackHandler),
     ];
   }
 

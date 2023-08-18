@@ -51,6 +51,28 @@ function replaceSecrets(
   return result;
 }
 
+/**
+ * Get a unique name for the module, rather than parent class implementations.
+ * Should not be subclassed, subclass lc_name above instead.
+ */
+export function get_lc_unique_name(
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  serializableClass: typeof Serializable
+): string {
+  // "super" here would refer to the parent class of Serializable,
+  // when we want the parent class of the module actually calling this method.
+  const parentClass = Object.getPrototypeOf(serializableClass);
+  const lcNameIsSubclassed =
+    typeof serializableClass.lc_name === "function" &&
+    (typeof parentClass.lc_name !== "function" ||
+      serializableClass.lc_name() !== parentClass.lc_name());
+  if (lcNameIsSubclassed) {
+    return serializableClass.lc_name();
+  } else {
+    return serializableClass.name;
+  }
+}
+
 export abstract class Serializable {
   lc_serializable = false;
 
@@ -73,30 +95,12 @@ export abstract class Serializable {
   }
 
   /**
-   * Get a unique name for the module, rather than parent class implementations.
-   * Should not be subclassed, subclass lc_name above instead.
-   */
-  static get _lc_unique_name(): string {
-    // "super" here would refer to the parent class of Serializable,
-    // when we want the parent class of the module actually calling this method.
-    const parentClass = Object.getPrototypeOf(this);
-    const lcNameIsSubclassed =
-      typeof parentClass.lc_name !== "function" ||
-      this.lc_name() !== parentClass.lc_name();
-    if (lcNameIsSubclassed) {
-      return this.lc_name();
-    } else {
-      return this.name;
-    }
-  }
-
-  /**
    * The final serialized identifier for the module.
    */
   get lc_id(): string[] {
     return [
       ...this.lc_namespace,
-      (this.constructor as typeof Serializable)._lc_unique_name,
+      get_lc_unique_name(this.constructor as typeof Serializable),
     ];
   }
 
