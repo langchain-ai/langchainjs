@@ -998,7 +998,7 @@
     "langsmith": "~0.0.16",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.3.0",
+    "openai": "^4.0.0",
     "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",

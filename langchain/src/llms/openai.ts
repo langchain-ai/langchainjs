@@ -1,12 +1,5 @@
 import type { TiktokenModel } from "js-tiktoken/lite";
-import {
-  Configuration,
-  ConfigurationParameters,
-  CreateCompletionRequest,
-  CreateCompletionResponse,
-  CreateCompletionResponseChoicesInner,
-  OpenAIApi,
-} from "openai";
+import { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { GenerationChunk, LLMResult } from "../schema/index.js";
@@ -131,18 +124,18 @@ export class OpenAI
 
   organization?: string;
 
-  private client: OpenAIApi;
+  private client: OpenAIClient;
 
-  private clientConfig: ConfigurationParameters;
+  private clientConfig: ClientOptions;
 
   constructor(
     fields?: Partial<OpenAIInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        configuration?: ConfigurationParameters;
+        configuration?: ClientOptions;
       },
     /** @deprecated */
-    configuration?: ConfigurationParameters
+    configuration?: ClientOptions
   ) {
     if (
       fields?.modelName?.startsWith("gpt-3.5-turbo") ||
@@ -234,7 +227,7 @@ export class OpenAI
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): CreateCompletionRequest {
+  ): OpenAIClient.CompletionCreateParams {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -289,7 +282,7 @@ export class OpenAI
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
-    const choices: CreateCompletionResponseChoicesInner[] = [];
+    const choices: OpenAIClient.CompletionChoice[] = [];
     const tokenUsage: TokenUsage = {};
 
     const params = this.invocationParams(options);
@@ -309,9 +302,9 @@ export class OpenAI
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const data = params.stream
-        ? await new Promise<CreateCompletionResponse>((resolve, reject) => {
-            const choices: CreateCompletionResponseChoicesInner[] = [];
-            let response: Omit<CreateCompletionResponse, "choices">;
+        ? await new Promise<OpenAIClient.Completion>((resolve, reject) => {
+            const choices: OpenAIClient.CompletionChoice[] = [];
+            let response: Omit<OpenAIClient.Completion, "choices">;
             let rejected = false;
             let resolved = false;
             this.completionWithRetry(
@@ -347,7 +340,7 @@ export class OpenAI
                     }
 
                     const message = data as Omit<
-                      CreateCompletionResponse,
+                    OpenAIClient.Completion,
                       "usage"
                     >;
 
@@ -416,7 +409,7 @@ export class OpenAI
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
         total_tokens: totalTokens,
-      } = data.usage ?? {};
+      } = ('usage' in data && data.usage) ? data.usage : {};
 
       if (completionTokens) {
         tokenUsage.completionTokens =
@@ -480,7 +473,7 @@ export class OpenAI
   }
 
   startStream(
-    request: CreateCompletionRequest,
+    request: OpenAIClient.CompletionCreateParams,
     options?: StreamingAxiosConfiguration
   ) {
     let done = false;
@@ -533,7 +526,7 @@ export class OpenAI
 
   /** @ignore */
   async completionWithRetry(
-    request: CreateCompletionRequest,
+    request: OpenAIClient.CompletionCreateParams,
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
@@ -542,24 +535,22 @@ export class OpenAI
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        basePath: this.clientConfig.basePath,
+        basePath: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const clientConfig = new Configuration({
+      
+      this.client = new OpenAIClient({
         ...this.clientConfig,
-        basePath: endpoint,
-        baseOptions: {
-          timeout: this.timeout,
-          ...this.clientConfig.baseOptions,
-        },
+        baseURL: endpoint,
+        timeout: this.timeout,
+        ...this.clientConfig,
       });
-      this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions: StreamingAxiosConfiguration = {
       adapter: isNode() ? undefined : fetchAdapter,
-      ...this.clientConfig.baseOptions,
+      ...this.clientConfig,
       ...options,
     };
     if (this.azureOpenAIApiKey) {
@@ -574,11 +565,11 @@ export class OpenAI
     }
     return this.caller
       .call(
-        this.client.createCompletion.bind(this.client),
+        this.client.completions.create.bind(this.client),
         request,
         axiosOptions
       )
-      .then((res) => res.data);
+      .then((res) => res);
   }
 
   _llmType() {
@@ -632,7 +623,7 @@ export class PromptLayerOpenAI extends OpenAI {
    * @returns The response from the OpenAI API.
    */
   async completionWithRetry(
-    request: CreateCompletionRequest,
+    request: OpenAIClient.CompletionCreateParams,
     options?: StreamingAxiosConfiguration
   ) {
     if (request.stream) {

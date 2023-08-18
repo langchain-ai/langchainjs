@@ -14323,7 +14323,7 @@ __metadata:
     mysql2: ^3.3.3
     notion-to-md: ^3.1.0
     object-hash: ^3.0.0
-    openai: ^3.3.0
+    openai: ^4.0.0
     openapi-types: ^12.1.3
     p-queue: ^6.6.2
     p-retry: 4
@@ -16332,13 +16332,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^3.3.0":
-  version: 3.3.0
-  resolution: "openai@npm:3.3.0"
+"openai@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "openai@npm:4.0.0"
   dependencies:
-    axios: ^0.26.0
-    form-data: ^4.0.0
-  checksum: 28ccff8c09b6f47828c9583bb3bafc38a8459c76ea10eb9e08ca880f65523c5a9cc6c5f3c7669dded6f4c93e7cf49dd5c4dbfd12732a0f958c923117740d677b
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+  bin:
+    openai: bin/cli
+  checksum: d740a0411eefe8fcdc4cd41558d294ec18240782e3ebede1bc76d222537e52869223885bfb17ec8033fa37715a4a6cf8d236d2ab3e3d790fef07d5501ea0325d
   languageName: node
   linkType: hard
 

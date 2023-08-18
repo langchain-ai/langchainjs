@@ -108,6 +108,7 @@ export function createStructuredOutputChain<
       ],
       function_call: {
         name: functionName,
+        arguments: '',
       },
     },
     outputKey,

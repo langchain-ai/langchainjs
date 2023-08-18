@@ -1,13 +1,6 @@
-import {
-  Configuration,
-  OpenAIApi,
-  ConfigurationParameters,
-  CreateModerationRequest,
-  CreateModerationResponseResultsInner,
-} from "openai";
+import OpenAI, { ClientOptions } from "openai";
 import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
@@ -20,7 +13,7 @@ export interface OpenAIModerationChainInput
   openAIApiKey?: string;
   openAIOrganization?: string;
   throwError?: boolean;
-  configuration?: ConfigurationParameters;
+  configuration?: ClientOptions;
 }
 
 /**
@@ -50,9 +43,9 @@ export class OpenAIModerationChain
 
   openAIOrganization?: string;
 
-  clientConfig: Configuration;
+  clientConfig: ClientOptions;
 
-  client: OpenAIApi;
+  client: OpenAI;
 
   throwError: boolean;
 
@@ -70,24 +63,21 @@ export class OpenAIModerationChain
 
     this.openAIOrganization = fields?.openAIOrganization;
 
-    this.clientConfig = new Configuration({
+    this.clientConfig = {
       ...fields?.configuration,
       apiKey: this.openAIApiKey,
       organization: this.openAIOrganization,
-      baseOptions: {
-        adapter: fetchAdapter,
-        ...fields?.configuration?.baseOptions,
-      },
-    });
+      ...fields?.configuration,
+    };
 
-    this.client = new OpenAIApi(this.clientConfig);
+    this.client = new OpenAI(this.clientConfig);
 
     this.caller = new AsyncCaller(fields ?? {});
   }
 
   _moderate(
     text: string,
-    results: CreateModerationResponseResultsInner
+    results: OpenAI.Moderation
   ): string {
     if (results.flagged) {
       const errorStr = "Text was found that violates OpenAI's content policy.";
@@ -102,13 +92,13 @@ export class OpenAIModerationChain
 
   async _call(values: ChainValues): Promise<ChainValues> {
     const text = values[this.inputKey];
-    const moderationRequest: CreateModerationRequest = {
+    const moderationRequest: OpenAI.ModerationCreateParams = {
       input: text,
     };
     let mod;
     try {
       mod = await this.caller.call(() =>
-        this.client.createModeration(moderationRequest)
+        this.client.moderations.create(moderationRequest)
       );
     } catch (error) {
       // eslint-disable-next-line no-instanceof/no-instanceof
@@ -118,7 +108,7 @@ export class OpenAIModerationChain
         throw new Error(error as string);
       }
     }
-    const output = this._moderate(text, mod.data.results[0]);
+    const output = this._moderate(text, mod.results[0]);
     return {
       [this.outputKey]: output,
     };

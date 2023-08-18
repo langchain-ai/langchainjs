@@ -1,13 +1,7 @@
-import {
-  Configuration,
-  OpenAIApi,
-  CreateEmbeddingRequest,
-  ConfigurationParameters,
-} from "openai";
+import OpenAI, { ClientOptions } from "openai";
 import type { AxiosRequestConfig } from "axios";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { AzureOpenAIInput } from "../types/openai-types.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
@@ -65,9 +59,9 @@ export class OpenAIEmbeddings
 
   azureOpenAIBasePath?: string;
 
-  private client: OpenAIApi;
+  private client: OpenAI;
 
-  private clientConfig: ConfigurationParameters;
+  private clientConfig: ClientOptions;
 
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> &
@@ -75,7 +69,7 @@ export class OpenAIEmbeddings
         verbose?: boolean;
         openAIApiKey?: string;
       },
-    configuration?: ConfigurationParameters
+    configuration?: ClientOptions
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
@@ -166,7 +160,7 @@ export class OpenAIEmbeddings
       const batch = batches[i];
       const { data: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse.data[j].embedding);
+        embeddings.push(batchResponse[j].embedding);
       }
     }
     return embeddings;
@@ -183,7 +177,7 @@ export class OpenAIEmbeddings
       model: this.modelName,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
     });
-    return data.data[0].embedding;
+    return data[0].embedding;
   }
 
   /**
@@ -193,28 +187,25 @@ export class OpenAIEmbeddings
    * @param request Request to send to the OpenAI API.
    * @returns Promise that resolves to the response from the API.
    */
-  private async embeddingWithRetry(request: CreateEmbeddingRequest) {
+  private async embeddingWithRetry(request: OpenAI.EmbeddingCreateParams) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        basePath: this.clientConfig.basePath,
+        basePath: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const clientConfig = new Configuration({
+      
+      this.client = new OpenAI({
         ...this.clientConfig,
-        basePath: endpoint,
-        baseOptions: {
-          timeout: this.timeout,
-          adapter: isNode() ? undefined : fetchAdapter,
-          ...this.clientConfig.baseOptions,
-        },
+        baseURL: endpoint,
+        timeout: this.timeout,
+        ...this.clientConfig
       });
-      this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions: AxiosRequestConfig = {};
     if (this.azureOpenAIApiKey) {
@@ -228,7 +219,7 @@ export class OpenAIEmbeddings
       };
     }
     return this.caller.call(
-      this.client.createEmbedding.bind(this.client),
+      this.client.embeddings.create.bind(this.client),
       request,
       axiosOptions
     );
