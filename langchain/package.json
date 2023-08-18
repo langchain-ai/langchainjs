@@ -313,6 +313,9 @@
     "document_loaders/web/sort_xyz_blockchain.cjs",
     "document_loaders/web/sort_xyz_blockchain.js",
     "document_loaders/web/sort_xyz_blockchain.d.ts",
+    "document_loaders/web/youtube.cjs",
+    "document_loaders/web/youtube.js",
+    "document_loaders/web/youtube.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -685,7 +688,9 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0"
+    "weaviate-ts-client": "^1.4.0",
+    "youtube-transcript": "^1.0.6",
+    "youtubei.js": "^5.8.0"
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
@@ -757,7 +762,9 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0"
+    "weaviate-ts-client": "^1.4.0",
+    "youtube-transcript": "^1.0.6",
+    "youtubei.js": "^5.8.0"
   },
   "peerDependenciesMeta": {
     "@aws-crypto/sha256-js": {
@@ -815,6 +822,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@mozilla/readability": {
       "optional": true
     },
     "@notionhq/client": {
@@ -904,6 +914,9 @@
     "ioredis": {
       "optional": true
     },
+    "jsdom": {
+      "optional": true
+    },
     "mammoth": {
       "optional": true
     },
@@ -962,6 +975,12 @@
       "optional": true
     },
     "weaviate-ts-client": {
+      "optional": true
+    },
+    "youtube-transcript": {
+      "optional": true
+    },
+    "youtubei.js": {
       "optional": true
     }
   },
@@ -1523,6 +1542,11 @@
       "types": "./document_loaders/web/sort_xyz_blockchain.d.ts",
       "import": "./document_loaders/web/sort_xyz_blockchain.js",
       "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
+    },
+    "./document_loaders/web/youtube": {
+      "types": "./document_loaders/web/youtube.d.ts",
+      "import": "./document_loaders/web/youtube.js",
+      "require": "./document_loaders/web/youtube.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
