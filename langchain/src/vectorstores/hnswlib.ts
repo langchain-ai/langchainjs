@@ -178,7 +178,7 @@ export class HNSWLib extends SaveableVectorStore {
       await fs.rm(path.join(params.directory, "docstore.json"), {
         force: true,
       }),
-      await fs.rm(path.join(params.directory, "args.json.x"), { force: true }),
+      await fs.rm(path.join(params.directory, "args.json"), { force: true }),
     ]);
   }
 
