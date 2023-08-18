@@ -7,10 +7,10 @@ export const RUN_KEY = "__run";
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputValues = Record<string, any>;
+export type InputValues<K extends string = string> = Record<K, any>;
 
-export type PartialValues = Record<
-  string,
+export type PartialValues<K extends string = string> = Record<
+  K,
   string | (() => Promise<string>) | (() => string)
 >;
 
@@ -107,6 +107,10 @@ export interface BaseMessageFields {
 
 export interface ChatMessageFieldsWithRole extends BaseMessageFields {
   role: string;
+}
+
+export interface FunctionMessageFieldsWithName extends BaseMessageFields {
+  name: string;
 }
 
 export abstract class BaseMessage
@@ -292,14 +296,22 @@ export const AIChatMessage = AIMessage;
 export const SystemChatMessage = SystemMessage;
 
 export class FunctionMessage extends BaseMessage {
+  constructor(fields: FunctionMessageFieldsWithName);
+
   constructor(
     fields: string | BaseMessageFields,
     /** @deprecated */
     name: string
+  );
+
+  constructor(
+    fields: string | FunctionMessageFieldsWithName,
+    /** @deprecated */
+    name?: string
   ) {
     if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign
-      fields = { content: fields, name };
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { content: fields, name: name! };
     }
     super(fields);
   }

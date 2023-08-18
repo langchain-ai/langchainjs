@@ -160,6 +160,28 @@ export class HNSWLib extends SaveableVectorStore {
     );
   }
 
+  async delete(params: { directory: string }) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    try {
+      await fs.access(path.join(params.directory, "hnswlib.index"));
+    } catch (err) {
+      throw new Error(
+        `Directory ${params.directory} does not contain a hnswlib.index file.`
+      );
+    }
+
+    await Promise.all([
+      await fs.rm(path.join(params.directory, "hnswlib.index"), {
+        force: true,
+      }),
+      await fs.rm(path.join(params.directory, "docstore.json"), {
+        force: true,
+      }),
+      await fs.rm(path.join(params.directory, "args.json"), { force: true }),
+    ]);
+  }
+
   async save(directory: string) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");

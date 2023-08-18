@@ -5,7 +5,7 @@ import { WeaviateStore } from "../weaviate.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
-test.skip("WeaviateStore", async () => {
+test("WeaviateStore", async () => {
   // Something wrong with the weaviate-ts-client types, so we need to disable
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
@@ -90,7 +90,7 @@ test.skip("WeaviateStore", async () => {
   ]);
 });
 
-test.skip("WeaviateStore upsert + delete", async () => {
+test("WeaviateStore upsert + delete", async () => {
   // Something wrong with the weaviate-ts-client types, so we need to disable
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
@@ -200,7 +200,7 @@ test.skip("WeaviateStore upsert + delete", async () => {
   ]);
 });
 
-test.skip("WeaviateStore delete with filter", async () => {
+test("WeaviateStore delete with filter", async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
     scheme:

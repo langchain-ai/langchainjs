@@ -73,6 +73,29 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     return this;
   }
 
+  static fromReadableStream<T>(stream: ReadableStream<T>) {
+    // From https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams#reading_the_stream
+    const reader = stream.getReader();
+    return new IterableReadableStream<T>({
+      start(controller) {
+        return pump();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        function pump(): any {
+          return reader.read().then(({ done, value }) => {
+            // When no more data needs to be consumed, close the stream
+            if (done) {
+              controller.close();
+              return;
+            }
+            // Enqueue the next data chunk into our target stream
+            controller.enqueue(value);
+            return pump();
+          });
+        }
+      },
+    });
+  }
+
   static fromAsyncGenerator<T>(generator: AsyncGenerator<T>) {
     return new IterableReadableStream<T>({
       async pull(controller) {
