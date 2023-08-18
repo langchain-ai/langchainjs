@@ -73,12 +73,12 @@ export abstract class Serializable {
   }
 
   /**
-   * Get a unique name for the module, guarding against superclass implementations.
+   * Get a unique name for the module, rather than parent class implementations.
    * Should not be subclassed, subclass lc_name above instead.
    */
   static get _lc_unique_name(): string {
-    // "super" here would refer to the parent class of Serializable.
-    // It's enough to compare values one level up.
+    // "super" here would refer to the parent class of Serializable,
+    // when we want the parent class of the module actually calling this method.
     const parentClass = Object.getPrototypeOf(this);
     const lcNameIsSubclassed =
       typeof parentClass.lc_name !== "function" ||
