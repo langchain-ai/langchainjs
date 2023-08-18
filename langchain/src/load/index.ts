@@ -149,7 +149,7 @@ async function reviver(
       // look for an export with a lc_name property matching the class name
       // this is necessary for classes that are minified
       Object.values(module).find(
-        (v) => typeof v === "function" && v.lc_name === name
+        (v) => typeof v === "function" && v._lc_unique_name === name
       );
     if (typeof builder !== "function") {
       throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);

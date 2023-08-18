@@ -51,7 +51,16 @@ function replaceSecrets(
   return result;
 }
 
-export abstract class Serializable {
+// /**
+//  * Exists purely to allow subclass checks.
+//  */
+// abstract class BaseSerializable {
+//   static lc_name(): string {
+//     return this.constructor.name;
+//   }
+// }
+
+export abstract class Serializable /*extends BaseSerializable*/ {
   lc_serializable = false;
 
   lc_kwargs: SerializedFields;
@@ -62,14 +71,41 @@ export abstract class Serializable {
    */
   abstract lc_namespace: string[];
 
-  static get lc_name(): string {
+  /**
+   * The name of the serializable. Override to provide an alias or
+   * to preserve the serialized module name in minified environments.
+   *
+   * Implemented as a static method to support loading logic.
+   */
+  static lc_name(): string {
     return this.name;
   }
 
+  /**
+   * Get a unique name for the module, guarding against superclass implementations.
+   * Should not be subclassed, subclass lc_name above instead.
+   */
+  static get _lc_unique_name(): string {
+    // "super" here would refer to the parent class of Serializable.
+    // It's enough to compare values one level up.
+    const parentClass = Object.getPrototypeOf(this);
+    const lcNameIsSubclassed =
+      typeof parentClass.lc_name !== "function" ||
+      this.lc_name() !== parentClass.lc_name();
+    if (lcNameIsSubclassed) {
+      return this.lc_name();
+    } else {
+      return this.name;
+    }
+  }
+
+  /**
+   * The final serialized identifier for the module.
+   */
   get lc_id(): string[] {
     return [
       ...this.lc_namespace,
-      (this.constructor as typeof Serializable).lc_name,
+      (this.constructor as typeof Serializable)._lc_unique_name,
     ];
   }
 

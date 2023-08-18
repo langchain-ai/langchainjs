@@ -9,6 +9,10 @@ export type FunctionParameters = Optional<
 >;
 
 export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
+  static lc_name() {
+    return "OutputFunctionsParser";
+  }
+
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   lc_serializable = true;
@@ -49,6 +53,10 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
 }
 
 export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
+  static lc_name() {
+    return "JsonOutputFunctionsParser";
+  }
+
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   lc_serializable = true;
@@ -84,6 +92,10 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
 export class JsonKeyOutputFunctionsParser<
   T = object
 > extends BaseLLMOutputParser<T> {
+  static lc_name() {
+    return "JsonKeyOutputFunctionsParser";
+  }
+
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   lc_serializable = true;

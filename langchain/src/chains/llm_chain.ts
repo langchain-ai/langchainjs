@@ -51,6 +51,10 @@ export class LLMChain<
   extends BaseChain
   implements LLMChainInput<T>
 {
+  static lc_name() {
+    return "LLMChain";
+  }
+
   lc_serializable = true;
 
   prompt: BasePromptTemplate;

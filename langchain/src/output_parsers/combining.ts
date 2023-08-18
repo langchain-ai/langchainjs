@@ -13,6 +13,10 @@ export interface CombiningOutputParserFields {
  * @augments BaseOutputParser
  */
 export class CombiningOutputParser extends BaseOutputParser<object> {
+  static lc_name() {
+    return "CombiningOutputParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "combining"];
 
   lc_serializable = true;

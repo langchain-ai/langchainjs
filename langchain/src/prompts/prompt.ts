@@ -69,6 +69,10 @@ export class PromptTemplate<
   extends BaseStringPromptTemplate<RunInput, PartialVariableName>
   implements PromptTemplateInput<RunInput, PartialVariableName>
 {
+  static lc_name() {
+    return "PromptTemplate";
+  }
+
   template: string;
 
   templateFormat: TemplateFormat = "f-string";

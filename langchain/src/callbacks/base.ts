@@ -30,6 +30,10 @@ export interface NewTokenIndices {
 }
 
 abstract class BaseCallbackHandlerMethodsClass {
+  static lc_name() {
+    return this.name;
+  }
+
   /**
    * Called at the start of an LLM or Chat Model run, with the prompt(s)
    * and the run ID.
@@ -248,14 +252,23 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
-  static get lc_name(): string {
+  static get _lc_unique_name(): string {
+    const lcNameIsSubclassed = this.lc_name !== super.lc_name;
+    if (lcNameIsSubclassed) {
+      return this.lc_name();
+    } else {
+      return this.name;
+    }
+  }
+
+  static lc_name(): string {
     return this.name;
   }
 
   get lc_id(): string[] {
     return [
       ...this.lc_namespace,
-      (this.constructor as typeof Serializable).lc_name,
+      (this.constructor as typeof BaseCallbackHandler)._lc_unique_name,
     ];
   }
 

@@ -10,6 +10,10 @@ import { GenerationChunk } from "../schema/index.js";
 export class Ollama extends LLM implements OllamaInput {
   declare CallOptions: OllamaCallOptions;
 
+  static lc_name() {
+    return "Ollama";
+  }
+
   lc_serializable = true;
 
   model = "llama2";

@@ -127,6 +127,10 @@ type Kwargs = Record<string, any>;
  *
  */
 export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
+  static lc_name() {
+    return "ChatAnthropic";
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       anthropicApiKey: "ANTHROPIC_API_KEY",

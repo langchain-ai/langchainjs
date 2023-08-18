@@ -206,12 +206,20 @@ export abstract class BaseMessageChunk extends BaseMessage {
 }
 
 export class HumanMessage extends BaseMessage {
+  static lc_name() {
+    return "HumanMessage";
+  }
+
   _getType(): MessageType {
     return "human";
   }
 }
 
 export class HumanMessageChunk extends BaseMessageChunk {
+  static lc_name() {
+    return "HumanMessageChunk";
+  }
+
   _getType(): MessageType {
     return "human";
   }
@@ -228,12 +236,20 @@ export class HumanMessageChunk extends BaseMessageChunk {
 }
 
 export class AIMessage extends BaseMessage {
+  static lc_name() {
+    return "AIMessage";
+  }
+
   _getType(): MessageType {
     return "ai";
   }
 }
 
 export class AIMessageChunk extends BaseMessageChunk {
+  static lc_name() {
+    return "AIMessageChunk";
+  }
+
   _getType(): MessageType {
     return "ai";
   }
@@ -250,12 +266,20 @@ export class AIMessageChunk extends BaseMessageChunk {
 }
 
 export class SystemMessage extends BaseMessage {
+  static lc_name() {
+    return "SystemMessage";
+  }
+
   _getType(): MessageType {
     return "system";
   }
 }
 
 export class SystemMessageChunk extends BaseMessageChunk {
+  static lc_name() {
+    return "SystemMessageChunk";
+  }
+
   _getType(): MessageType {
     return "system";
   }
@@ -296,6 +320,10 @@ export const AIChatMessage = AIMessage;
 export const SystemChatMessage = SystemMessage;
 
 export class FunctionMessage extends BaseMessage {
+  static lc_name() {
+    return "FunctionMessage";
+  }
+
   constructor(fields: FunctionMessageFieldsWithName);
 
   constructor(
@@ -322,6 +350,10 @@ export class FunctionMessage extends BaseMessage {
 }
 
 export class FunctionMessageChunk extends BaseMessageChunk {
+  static lc_name() {
+    return "FunctionMessageChunk";
+  }
+
   _getType(): MessageType {
     return "function";
   }
@@ -342,6 +374,10 @@ export class ChatMessage
   extends BaseMessage
   implements ChatMessageFieldsWithRole
 {
+  static lc_name() {
+    return "ChatMessage";
+  }
+
   role: string;
 
   constructor(content: string, role: string);
@@ -367,6 +403,10 @@ export class ChatMessage
 }
 
 export class ChatMessageChunk extends BaseMessageChunk {
+  static lc_name() {
+    return "ChatMessageChunk";
+  }
+
   role: string;
 
   constructor(content: string, role: string);

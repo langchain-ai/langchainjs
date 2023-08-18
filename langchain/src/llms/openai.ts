@@ -55,6 +55,10 @@ export class OpenAI
   extends BaseLLM<OpenAICallOptions>
   implements OpenAIInput, AzureOpenAIInput
 {
+  static lc_name() {
+    return "OpenAI";
+  }
+
   get callKeys(): (keyof OpenAICallOptions)[] {
     return [...(super.callKeys as (keyof OpenAICallOptions)[]), "options"];
   }
