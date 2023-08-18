@@ -30,10 +30,6 @@ export interface NewTokenIndices {
 }
 
 abstract class BaseCallbackHandlerMethodsClass {
-  static lc_name() {
-    return this.name;
-  }
-
   /**
    * Called at the start of an LLM or Chat Model run, with the prompt(s)
    * and the run ID.
@@ -252,6 +248,10 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
+  static lc_name(): string {
+    return this.name;
+  }
+
   static get _lc_unique_name(): string {
     // "super" here would refer to the parent class of Serializable.
     // It's enough to compare values one level up.
@@ -264,10 +264,6 @@ export abstract class BaseCallbackHandler
     } else {
       return this.name;
     }
-  }
-
-  static lc_name(): string {
-    return this.name;
   }
 
   get lc_id(): string[] {
