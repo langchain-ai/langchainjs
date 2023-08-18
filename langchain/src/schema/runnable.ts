@@ -292,7 +292,7 @@ export class RunnableSequence<
 
   lc_serializable = true;
 
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   constructor(fields: {
     first: Runnable<RunInput>;
@@ -534,7 +534,7 @@ export class RunnableMap<RunInput> extends Runnable<
     return "RunnableMap";
   }
 
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -589,7 +589,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
 > {
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   protected func: RunnableFunc<RunInput, RunOutput>;
 
@@ -621,7 +621,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     return "RunnablePassthrough";
   }
 
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -649,7 +649,7 @@ export class RunnableBinding<
     return "RunnableBinding";
   }
 
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -723,7 +723,7 @@ export class RouterRunnable<
     return "RouterRunnable";
   }
 
-  lc_namespace = ["schema", "langchain"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -802,7 +802,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     return "RunnableWithFallbacks";
   }
 
-  lc_namespace = ["schema", "langchain"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
