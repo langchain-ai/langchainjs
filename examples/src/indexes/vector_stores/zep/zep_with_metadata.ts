@@ -68,15 +68,33 @@ export const run = async () => {
     zepConfig
   );
 
+  // Sleep to allow the vector store to finish embedding the documents
+  // eslint-disable-next-line no-promise-executor-return
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
   vectorStore
     .similaritySearchWithScore("sad music", 3, {
       where: { jsonpath: "$[*] ? (@.year == 1973)" }, // We should see a single result: The Rain Song
     })
     .then((results) => {
-      console.log(JSON.stringify(results));
+      console.log(`\n\nSimilarity Results:\n${JSON.stringify(results)}`);
+    })
+    .catch((e) => {
+      if (e.name === "NotFoundError") {
+        console.log("No results found");
+      } else {
+        throw e;
+      }
+    });
 
-      // We got our results, now let's delete the collection
-      vectorStore.client.document.deleteCollection(collectionName);
+  // We're not filtering here, but rather demonstrating MMR at work.
+  // We could also add a filter to the MMR search, as we did with the similarity search above.
+  vectorStore
+    .maxMarginalRelevanceSearch("sad music", {
+      k: 3,
+    })
+    .then((results) => {
+      console.log(`\n\nMMR Results:\n${JSON.stringify(results)}`);
     })
     .catch((e) => {
       if (e.name === "NotFoundError") {

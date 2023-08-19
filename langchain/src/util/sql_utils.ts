@@ -1,6 +1,7 @@
 import type { DataSource, DataSourceOptions } from "typeorm";
 import {
   DEFAULT_SQL_DATABASE_PROMPT,
+  SQL_SAP_HANA_PROMPT,
   SQL_MSSQL_PROMPT,
   SQL_MYSQL_PROMPT,
   SQL_POSTGRES_PROMPT,
@@ -189,6 +190,32 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
+  if (appDataSource.options.type === "sap") {
+    const schema = appDataSource.options?.schema ?? "public";
+    sql = `SELECT
+        TABLE_NAME,
+        COLUMN_NAME,
+        DATA_TYPE_NAME AS data_type,
+        CASE WHEN IS_NULLABLE='TRUE' THEN 'YES' ELSE 'NO' END AS is_nullable
+      FROM TABLE_COLUMNS
+      WHERE SCHEMA_NAME='${schema}'`;
+
+    const rep: Array<{ [key: string]: string }> = await appDataSource.query(
+      sql
+    );
+
+    const repLowerCase: Array<RawResultTableAndColumn> = [];
+    rep.forEach((_rep) =>
+      repLowerCase.push({
+        table_name: _rep.TABLE_NAME,
+        column_name: _rep.COLUMN_NAME,
+        data_type: _rep.DATA_TYPE,
+        is_nullable: _rep.IS_NULLABLE,
+      })
+    );
+
+    return formatToSqlTable(repLowerCase);
+  }
   throw new Error("Database type not implemented yet");
 };
 
@@ -220,10 +247,15 @@ export const generateTableInfoFromTables = async (
   let globalString = "";
   for (const currentTable of tables) {
     // Add the creation of the table in SQL
-    const schema =
-      appDataSource.options.type === "postgres"
-        ? appDataSource.options?.schema ?? "public"
-        : null;
+    let schema = null;
+    if (appDataSource.options.type === "postgres") {
+      schema = appDataSource.options?.schema ?? "public";
+    } else if (appDataSource.options.type === "sap") {
+      schema =
+        appDataSource.options?.schema ??
+        appDataSource.options?.username ??
+        "public";
+    }
     let sqlCreateTableQuery = schema
       ? `CREATE TABLE "${schema}"."${currentTable.tableName}" (\n`
       : `CREATE TABLE ${currentTable.tableName} (\n`;
@@ -246,6 +278,12 @@ export const generateTableInfoFromTables = async (
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else if (appDataSource.options.type === "mssql") {
       sqlSelectInfoQuery = `SELECT TOP ${nbSampleRow} * FROM [${currentTable.tableName}];\n`;
+    } else if (appDataSource.options.type === "sap") {
+      const schema =
+        appDataSource.options?.schema ??
+        appDataSource.options?.username ??
+        "public";
+      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     }
@@ -294,6 +332,10 @@ export const getPromptTemplateFromDataSource = (
 
   if (appDataSource.options.type === "mssql") {
     return SQL_MSSQL_PROMPT;
+  }
+
+  if (appDataSource.options.type === "sap") {
+    return SQL_SAP_HANA_PROMPT;
   }
 
   return DEFAULT_SQL_DATABASE_PROMPT;

@@ -3,6 +3,10 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 
 /** Chain to generate tasks. */
 export class TaskCreationChain extends LLMChain {
+  static lc_name() {
+    return "TaskCreationChain";
+  }
+
   static fromLLM(fields: Omit<LLMChainInput, "prompt">): LLMChain {
     const taskCreationTemplate =
       `You are an task creation AI that uses the result of an execution agent` +

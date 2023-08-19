@@ -9,6 +9,10 @@ import { Callbacks } from "../callbacks/manager.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
 
 export class OutputFixingParser<T> extends BaseOutputParser<T> {
+  static lc_name() {
+    return "OutputFixingParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "fix"];
 
   lc_serializable = true;

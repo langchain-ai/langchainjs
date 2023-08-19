@@ -23,6 +23,10 @@ export interface AgentExecutorInput extends ChainInputs {
  * @augments BaseChain
  */
 export class AgentExecutor extends BaseChain {
+  static lc_name() {
+    return "AgentExecutor";
+  }
+
   get lc_namespace() {
     return ["langchain", "agents", "executor"];
   }

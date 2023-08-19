@@ -29,6 +29,10 @@ export interface SequentialChainInput extends ChainInputs {
  * Chain where the outputs of one chain feed directly into next.
  */
 export class SequentialChain extends BaseChain implements SequentialChainInput {
+  static lc_name() {
+    return "SequentialChain";
+  }
+
   chains: BaseChain[];
 
   inputVariables: string[];
@@ -232,6 +236,10 @@ export class SimpleSequentialChain
   extends BaseChain
   implements SimpleSequentialChainInput
 {
+  static lc_name() {
+    return "SimpleSequentialChain";
+  }
+
   chains: Array<BaseChain>;
 
   inputKey = "input";

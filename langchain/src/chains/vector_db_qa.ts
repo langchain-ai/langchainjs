@@ -18,6 +18,10 @@ export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
 }
 
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
+  static lc_name() {
+    return "VectorDBQAChain";
+  }
+
   k = 4;
 
   inputKey = "query";

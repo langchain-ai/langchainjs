@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.127",
+  "version": "0.0.131",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -76,6 +76,9 @@
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
+    "embeddings/cache_backed.cjs",
+    "embeddings/cache_backed.js",
+    "embeddings/cache_backed.d.ts",
     "embeddings/fake.cjs",
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
@@ -139,6 +142,9 @@
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/bedrock.cjs",
+    "llms/bedrock.js",
+    "llms/bedrock.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -307,6 +313,9 @@
     "document_loaders/web/sort_xyz_blockchain.cjs",
     "document_loaders/web/sort_xyz_blockchain.js",
     "document_loaders/web/sort_xyz_blockchain.d.ts",
+    "document_loaders/web/youtube.cjs",
+    "document_loaders/web/youtube.js",
+    "document_loaders/web/youtube.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -343,6 +352,9 @@
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",
+    "document_transformers/mozilla_readability.cjs",
+    "document_transformers/mozilla_readability.js",
+    "document_transformers/mozilla_readability.d.ts",
     "document_transformers/openai_functions.cjs",
     "document_transformers/openai_functions.js",
     "document_transformers/openai_functions.d.ts",
@@ -385,6 +397,9 @@
     "schema/runnable.cjs",
     "schema/runnable.js",
     "schema/runnable.d.ts",
+    "schema/storage.cjs",
+    "schema/storage.js",
+    "schema/storage.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -511,6 +526,12 @@
     "stores/message/xata.cjs",
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
+    "storage/in_memory.cjs",
+    "storage/in_memory.js",
+    "storage/in_memory.d.ts",
+    "storage/ioredis.cjs",
+    "storage/ioredis.js",
+    "storage/ioredis.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -561,12 +582,17 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
+    "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
+    "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
@@ -578,6 +604,7 @@
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
@@ -597,6 +624,8 @@
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
+    "@types/jsdom": "^21.1.1",
+    "@types/mozilla-readability": "^0.2.1",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
@@ -631,6 +660,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
+    "jsdom": "^22.1.0",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
@@ -658,15 +688,21 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0"
+    "weaviate-ts-client": "^1.4.0",
+    "youtube-transcript": "^1.0.6",
+    "youtubei.js": "^5.8.0"
   },
   "peerDependencies": {
+    "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
+    "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
@@ -676,6 +712,7 @@
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
+    "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
@@ -705,6 +742,7 @@
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
+    "jsdom": "*",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -724,9 +762,14 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.4.0"
+    "weaviate-ts-client": "^1.4.0",
+    "youtube-transcript": "^1.0.6",
+    "youtubei.js": "^5.8.0"
   },
   "peerDependenciesMeta": {
+    "@aws-crypto/sha256-js": {
+      "optional": true
+    },
     "@aws-sdk/client-dynamodb": {
       "optional": true
     },
@@ -743,6 +786,15 @@
       "optional": true
     },
     "@aws-sdk/client-sfn": {
+      "optional": true
+    },
+    "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@aws-sdk/protocol-http": {
+      "optional": true
+    },
+    "@aws-sdk/signature-v4": {
       "optional": true
     },
     "@azure/storage-blob": {
@@ -770,6 +822,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@mozilla/readability": {
       "optional": true
     },
     "@notionhq/client": {
@@ -859,6 +914,9 @@
     "ioredis": {
       "optional": true
     },
+    "jsdom": {
+      "optional": true
+    },
     "mammoth": {
       "optional": true
     },
@@ -917,6 +975,12 @@
       "optional": true
     },
     "weaviate-ts-client": {
+      "optional": true
+    },
+    "youtube-transcript": {
+      "optional": true
+    },
+    "youtubei.js": {
       "optional": true
     }
   },
@@ -1078,6 +1142,11 @@
       "import": "./embeddings/base.js",
       "require": "./embeddings/base.cjs"
     },
+    "./embeddings/cache_backed": {
+      "types": "./embeddings/cache_backed.d.ts",
+      "import": "./embeddings/cache_backed.js",
+      "require": "./embeddings/cache_backed.cjs"
+    },
     "./embeddings/fake": {
       "types": "./embeddings/fake.d.ts",
       "import": "./embeddings/fake.js",
@@ -1184,6 +1253,11 @@
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/bedrock": {
+      "types": "./llms/bedrock.d.ts",
+      "import": "./llms/bedrock.js",
+      "require": "./llms/bedrock.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
@@ -1469,6 +1543,11 @@
       "import": "./document_loaders/web/sort_xyz_blockchain.js",
       "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
     },
+    "./document_loaders/web/youtube": {
+      "types": "./document_loaders/web/youtube.d.ts",
+      "import": "./document_loaders/web/youtube.js",
+      "require": "./document_loaders/web/youtube.cjs"
+    },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
       "import": "./document_loaders/fs/directory.js",
@@ -1528,6 +1607,11 @@
       "types": "./document_transformers/html_to_text.d.ts",
       "import": "./document_transformers/html_to_text.js",
       "require": "./document_transformers/html_to_text.cjs"
+    },
+    "./document_transformers/mozilla_readability": {
+      "types": "./document_transformers/mozilla_readability.d.ts",
+      "import": "./document_transformers/mozilla_readability.js",
+      "require": "./document_transformers/mozilla_readability.cjs"
     },
     "./document_transformers/openai_functions": {
       "types": "./document_transformers/openai_functions.d.ts",
@@ -1600,6 +1684,11 @@
       "types": "./schema/runnable.d.ts",
       "import": "./schema/runnable.js",
       "require": "./schema/runnable.cjs"
+    },
+    "./schema/storage": {
+      "types": "./schema/storage.d.ts",
+      "import": "./schema/storage.js",
+      "require": "./schema/storage.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",
@@ -1812,6 +1901,16 @@
       "types": "./stores/message/xata.d.ts",
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
+    },
+    "./storage/in_memory": {
+      "types": "./storage/in_memory.d.ts",
+      "import": "./storage/in_memory.js",
+      "require": "./storage/in_memory.cjs"
+    },
+    "./storage/ioredis": {
+      "types": "./storage/ioredis.d.ts",
+      "import": "./storage/ioredis.js",
+      "require": "./storage/ioredis.cjs"
     },
     "./util/math": {
       "types": "./util/math.d.ts",

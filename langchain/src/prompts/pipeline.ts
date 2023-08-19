@@ -20,6 +20,10 @@ export type PipelinePromptTemplateInput<
 export class PipelinePromptTemplate<
   PromptTemplateType extends BasePromptTemplate
 > extends BasePromptTemplate {
+  static lc_name() {
+    return "PipelinePromptTemplate";
+  }
+
   pipelinePrompts: PipelinePromptParams<PromptTemplateType>[];
 
   finalPrompt: PromptTemplateType;

@@ -3,6 +3,10 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 
 /** Chain to execute tasks. */
 export class TaskExecutionChain extends LLMChain {
+  static lc_name() {
+    return "TaskExecutionChain";
+  }
+
   static fromLLM(fields: Omit<LLMChainInput, "prompt">): LLMChain {
     const executionTemplate =
       `You are an AI who performs one task based on the following objective: ` +

@@ -64,6 +64,9 @@ embeddings.d.ts
 embeddings/base.cjs
 embeddings/base.js
 embeddings/base.d.ts
+embeddings/cache_backed.cjs
+embeddings/cache_backed.js
+embeddings/cache_backed.d.ts
 embeddings/fake.cjs
 embeddings/fake.js
 embeddings/fake.d.ts
@@ -127,6 +130,9 @@ llms/googlepalm.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
+llms/bedrock.cjs
+llms/bedrock.js
+llms/bedrock.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
@@ -295,6 +301,9 @@ document_loaders/web/serpapi.d.ts
 document_loaders/web/sort_xyz_blockchain.cjs
 document_loaders/web/sort_xyz_blockchain.js
 document_loaders/web/sort_xyz_blockchain.d.ts
+document_loaders/web/youtube.cjs
+document_loaders/web/youtube.js
+document_loaders/web/youtube.d.ts
 document_loaders/fs/directory.cjs
 document_loaders/fs/directory.js
 document_loaders/fs/directory.d.ts
@@ -331,6 +340,9 @@ document_loaders/fs/unstructured.d.ts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
+document_transformers/mozilla_readability.cjs
+document_transformers/mozilla_readability.js
+document_transformers/mozilla_readability.d.ts
 document_transformers/openai_functions.cjs
 document_transformers/openai_functions.js
 document_transformers/openai_functions.d.ts
@@ -373,6 +385,9 @@ schema/retriever.d.ts
 schema/runnable.cjs
 schema/runnable.js
 schema/runnable.d.ts
+schema/storage.cjs
+schema/storage.js
+schema/storage.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts
@@ -499,6 +514,12 @@ stores/message/planetscale.d.ts
 stores/message/xata.cjs
 stores/message/xata.js
 stores/message/xata.d.ts
+storage/in_memory.cjs
+storage/in_memory.js
+storage/in_memory.d.ts
+storage/ioredis.cjs
+storage/ioredis.js
+storage/ioredis.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts

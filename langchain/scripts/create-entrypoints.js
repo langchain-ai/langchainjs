@@ -35,6 +35,7 @@ const entrypoints = {
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
+  "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/fake": "embeddings/fake",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
@@ -57,6 +58,7 @@ const entrypoints = {
   "llms/googlevertexai": "llms/googlevertexai",
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
+  "llms/bedrock": "llms/bedrock",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -123,6 +125,7 @@ const entrypoints = {
   "document_loaders/web/serpapi": "document_loaders/web/serpapi",
   "document_loaders/web/sort_xyz_blockchain":
     "document_loaders/web/sort_xyz_blockchain",
+  "document_loaders/web/youtube": "document_loaders/web/youtube",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -136,6 +139,8 @@ const entrypoints = {
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability":
+    "document_transformers/mozilla_readability",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -153,6 +158,7 @@ const entrypoints = {
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
   "schema/runnable": "schema/runnable",
+  "schema/storage": "schema/storage",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -202,6 +208,9 @@ const entrypoints = {
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
   "stores/message/xata": "stores/message/xata",
+  // storage
+  "storage/in_memory": "storage/in_memory",
+  "storage/ioredis": "storage/ioredis",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -253,6 +262,7 @@ const requiresOptionalDependency = [
   "llms/raycast",
   "llms/replicate",
   "llms/sagemaker_endpoint",
+  "llms/bedrock",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
@@ -295,6 +305,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
+  "document_loaders/web/youtube",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
   "document_loaders/fs/text",
@@ -307,6 +318,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
   "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability",
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",
@@ -337,6 +349,7 @@ const requiresOptionalDependency = [
   "stores/message/upstash_redis",
   "stores/message/planetscale",
   "stores/message/xata",
+  "storage/ioredis",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 

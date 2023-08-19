@@ -14,6 +14,10 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
 export class ChatOllama extends SimpleChatModel implements OllamaInput {
   declare CallOptions: OllamaCallOptions;
 
+  static lc_name() {
+    return "ChatOllama";
+  }
+
   lc_serializable = true;
 
   model = "llama2";

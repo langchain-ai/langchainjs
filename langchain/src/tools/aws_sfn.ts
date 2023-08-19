@@ -23,6 +23,10 @@ interface SfnClientConstructorArgs {
 }
 
 export class StartExecutionAWSSfnTool extends Tool {
+  static lc_name() {
+    return "StartExecutionAWSSfnTool";
+  }
+
   private sfnConfig: SfnConfig;
 
   public name: string;
@@ -80,6 +84,10 @@ export class StartExecutionAWSSfnTool extends Tool {
 }
 
 export class DescribeExecutionAWSSfnTool extends Tool {
+  static lc_name() {
+    return "DescribeExecutionAWSSfnTool";
+  }
+
   name = "describe-execution-aws-sfn";
 
   description =
@@ -126,6 +134,10 @@ export class DescribeExecutionAWSSfnTool extends Tool {
 }
 
 export class SendTaskSuccessAWSSfnTool extends Tool {
+  static lc_name() {
+    return "SendTaskSuccessAWSSfnTool";
+  }
+
   name = "send-task-success-aws-sfn";
 
   description =

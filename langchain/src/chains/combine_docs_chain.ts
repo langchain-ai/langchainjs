@@ -30,6 +30,10 @@ export class StuffDocumentsChain
   extends BaseChain
   implements StuffDocumentsChainInput
 {
+  static lc_name() {
+    return "StuffDocumentsChain";
+  }
+
   llmChain: LLMChain;
 
   inputKey = "input_documents";
@@ -124,6 +128,10 @@ export class MapReduceDocumentsChain
   extends BaseChain
   implements MapReduceDocumentsChainInput
 {
+  static lc_name() {
+    return "MapReduceDocumentsChain";
+  }
+
   llmChain: LLMChain;
 
   inputKey = "input_documents";
@@ -292,6 +300,10 @@ export class RefineDocumentsChain
   extends BaseChain
   implements RefineDocumentsChainInput
 {
+  static lc_name() {
+    return "RefineDocumentsChain";
+  }
+
   llmChain: LLMChain;
 
   inputKey = "input_documents";

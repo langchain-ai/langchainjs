@@ -211,6 +211,10 @@ export class CharacterTextSplitter
   extends TextSplitter
   implements CharacterTextSplitterParams
 {
+  static lc_name() {
+    return "CharacterTextSplitter";
+  }
+
   separator = "\n\n";
 
   constructor(fields?: Partial<CharacterTextSplitterParams>) {
@@ -256,6 +260,10 @@ export class RecursiveCharacterTextSplitter
   extends TextSplitter
   implements RecursiveCharacterTextSplitterParams
 {
+  static lc_name() {
+    return "RecursiveCharacterTextSplitter";
+  }
+
   separators: string[] = ["\n\n", "\n", " ", ""];
 
   constructor(fields?: Partial<RecursiveCharacterTextSplitterParams>) {
@@ -691,6 +699,10 @@ export class TokenTextSplitter
   extends TextSplitter
   implements TokenTextSplitterParams
 {
+  static lc_name() {
+    return "TokenTextSplitter";
+  }
+
   encodingName: tiktoken.TiktokenEncoding;
 
   allowedSpecial: "all" | Array<string>;

@@ -73,19 +73,16 @@ declare interface BaiduWenxinChatInput {
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
    * multiple choice, and temp closer to 1 for creative
    * and generative tasks. Defaults to 0.95.
-   * Only supported for `modelName` of `WenxinModelName.ERNIE_BOT`.
    */
   temperature?: number;
 
   /** Total probability mass of tokens to consider at each step. Range
    * from 0 to 1.0. Defaults to 0.8.
-   * Only supported for `modelName` of `WenxinModelName.ERNIE_BOT`.
    */
   topP?: number;
 
   /** Penalizes repeated tokens according to frequency. Range
    * from 1.0 to 2.0. Defaults to 1.0.
-   * Only supported for `modelName` of `WenxinModelName.ERNIE_BOT`.
    */
   penaltyScore?: number;
 }
@@ -132,6 +129,10 @@ export class ChatBaiduWenxin
   extends BaseChatModel
   implements BaiduWenxinChatInput
 {
+  static lc_name() {
+    return "ChatBaiduWenxin";
+  }
+
   get callKeys(): string[] {
     return ["stop", "signal", "options"];
   }
@@ -198,26 +199,9 @@ export class ChatBaiduWenxin
     if (this.modelName === "ERNIE-Bot") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
-      this.temperature = this.temperature ?? 0.95;
-      this.topP = this.topP ?? 0.8;
-      this.penaltyScore = this.penaltyScore ?? 1.0;
     } else if (this.modelName === "ERNIE-Bot-turbo") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
-      // Validate the input
-      if (this.temperature) {
-        throw new Error(
-          "Temperature is not supported forERNIE-Bot-turbo model"
-        );
-      }
-      if (this.topP) {
-        throw new Error("TopP is not supported for ERNIE-Bot-turbo model");
-      }
-      if (this.penaltyScore) {
-        throw new Error(
-          "PenaltyScore is not supported for ERNIE-Bot-turbo model"
-        );
-      }
     } else {
       throw new Error(`Invalid model name: ${this.modelName}`);
     }

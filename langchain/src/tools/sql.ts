@@ -11,6 +11,10 @@ interface SqlTool {
 }
 
 export class QuerySqlTool extends Tool implements SqlTool {
+  static lc_name() {
+    return "QuerySqlTool";
+  }
+
   name = "query-sql";
 
   db: SqlDatabase;
@@ -35,6 +39,10 @@ export class QuerySqlTool extends Tool implements SqlTool {
 }
 
 export class InfoSqlTool extends Tool implements SqlTool {
+  static lc_name() {
+    return "InfoSqlTool";
+  }
+
   name = "info-sql";
 
   db: SqlDatabase;
@@ -61,6 +69,10 @@ export class InfoSqlTool extends Tool implements SqlTool {
 }
 
 export class ListTablesSqlTool extends Tool implements SqlTool {
+  static lc_name() {
+    return "ListTablesSqlTool";
+  }
+
   name = "list-tables-sql";
 
   db: SqlDatabase;
@@ -92,6 +104,10 @@ type QueryCheckerToolArgs = {
 };
 
 export class QueryCheckerTool extends Tool {
+  static lc_name() {
+    return "QueryCheckerTool";
+  }
+
   name = "query-checker";
 
   template = `

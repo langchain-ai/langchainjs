@@ -104,6 +104,7 @@ export class ElasticVectorSearch extends VectorStore {
   ): Promise<[Document, number][]> {
     const result = await this.client.search({
       index: this.indexName,
+      size: k,
       knn: {
         field: "embedding",
         query_vector: query,

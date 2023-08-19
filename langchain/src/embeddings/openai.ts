@@ -68,40 +68,45 @@ export class OpenAIEmbeddings
       },
     configuration?: ConfigurationParameters
   ) {
-    super(fields ?? {});
+    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
+
+    super(fieldsWithDefaults);
 
     const apiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fieldsWithDefaults?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     const azureApiKey =
-      fields?.azureOpenAIApiKey ??
+      fieldsWithDefaults?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
     if (!azureApiKey && !apiKey) {
       throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
     const azureApiInstanceName =
-      fields?.azureOpenAIApiInstanceName ??
+      fieldsWithDefaults?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     const azureApiDeploymentName =
-      (fields?.azureOpenAIApiEmbeddingsDeploymentName ||
-        fields?.azureOpenAIApiDeploymentName) ??
+      (fieldsWithDefaults?.azureOpenAIApiEmbeddingsDeploymentName ||
+        fieldsWithDefaults?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
     const azureApiVersion =
-      fields?.azureOpenAIApiVersion ??
+      fieldsWithDefaults?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.azureOpenAIBasePath =
-      fields?.azureOpenAIBasePath ??
+      fieldsWithDefaults?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
-    this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
-    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.timeout = fields?.timeout;
+    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.batchSize =
+      fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
+    this.stripNewLines =
+      fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
+    this.timeout = fieldsWithDefaults?.timeout;
 
     this.azureOpenAIApiVersion = azureApiVersion;
     this.azureOpenAIApiKey = azureApiKey;
@@ -127,24 +132,27 @@ export class OpenAIEmbeddings
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    const subPrompts = chunkArray(
+    const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
 
-    const embeddings: number[][] = [];
-
-    for (let i = 0; i < subPrompts.length; i += 1) {
-      const input = subPrompts[i];
-      const { data } = await this.embeddingWithRetry({
+    const batchRequests = batches.map((batch) =>
+      this.embeddingWithRetry({
         model: this.modelName,
-        input,
-      });
-      for (let j = 0; j < input.length; j += 1) {
-        embeddings.push(data.data[j].embedding);
+        input: batch,
+      })
+    );
+    const batchResponses = await Promise.all(batchRequests);
+
+    const embeddings: number[][] = [];
+    for (let i = 0; i < batchResponses.length; i += 1) {
+      const batch = batches[i];
+      const { data: batchResponse } = batchResponses[i];
+      for (let j = 0; j < batch.length; j += 1) {
+        embeddings.push(batchResponse.data[j].embedding);
       }
     }
-
     return embeddings;
   }
 

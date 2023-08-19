@@ -353,6 +353,10 @@ type SimpleRequestChainExecutionMethod = (
 ) => Promise<string>;
 
 class SimpleRequestChain extends BaseChain {
+  static lc_name() {
+    return "SimpleRequestChain";
+  }
+
   private requestMethod: SimpleRequestChainExecutionMethod;
 
   inputKey = "function";

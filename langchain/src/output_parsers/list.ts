@@ -14,6 +14,10 @@ export abstract class ListOutputParser extends BaseOutputParser<string[]> {}
  * @augments ListOutputParser
  */
 export class CommaSeparatedListOutputParser extends ListOutputParser {
+  static lc_name() {
+    return "CommaSeparatedListOutputParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "list"];
 
   lc_serializable = true;

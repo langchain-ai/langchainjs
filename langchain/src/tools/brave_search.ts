@@ -6,6 +6,10 @@ export interface BraveSearchParams {
 }
 
 export class BraveSearch extends Tool {
+  static lc_name() {
+    return "BraveSearch";
+  }
+
   name = "brave-search";
 
   description =
