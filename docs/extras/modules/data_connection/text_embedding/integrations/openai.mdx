@@ -10,3 +10,6 @@ const embeddings = new OpenAIEmbeddings({
   batchSize: 512, // Default value if omitted is 512. Max is 2048
 });
 ```
+
+If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` to your OpenAI organization id, or pass it in as `organization` when
+initializing the model.
