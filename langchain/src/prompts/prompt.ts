@@ -46,6 +46,22 @@ export interface PromptTemplateInput<
 }
 
 /**
+ * Recursive type to extract template parameters from a string.
+ * @template T - The input string.
+ * @template Result - The resulting array of extracted template parameters.
+ */
+type ExtractTemplateParamsRecursive<T extends string, Result extends string[] = []> =
+  T extends `{${infer Param}}${infer Rest}`
+  ? ExtractTemplateParamsRecursive<Rest, [...Result, Param]>
+  : T extends `${string}${infer Rest}`
+    ? ExtractTemplateParamsRecursive<Rest, Result>
+    : Result;
+
+    type ParamsFrom<T extends string> = {
+      [Key in ExtractTemplateParamsRecursive<T>[number]]: string;
+    };
+
+/**
  * Schema to represent a basic prompt for an LLM.
  * @augments BasePromptTemplate
  * @augments PromptTemplateInput
@@ -138,8 +154,8 @@ export class PromptTemplate<
    * Load prompt template from a template f-string
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromTemplate<RunInput extends InputValues = any>(
-    template: string,
+  static fromTemplate<RunInput extends InputValues = never, T extends string = string>(
+    template: T,
     {
       templateFormat = "f-string",
       ...rest
@@ -151,8 +167,8 @@ export class PromptTemplate<
         names.add(node.name);
       }
     });
-    return new PromptTemplate<RunInput>({
-      inputVariables: [...names] as Extract<keyof RunInput, string>[],
+    return new PromptTemplate<RunInput extends never ? ParamsFrom<T> : RunInput>({
+      inputVariables: [...names] as Extract<RunInput extends never ? keyof ParamsFrom<T>: keyof RunInput, string>[],
       templateFormat,
       template,
       ...rest,
