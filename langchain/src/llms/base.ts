@@ -66,6 +66,14 @@ export abstract class BaseLLM<
     }
   }
 
+  /**
+   * This method takes an input and options, and returns a string. It
+   * converts the input to a prompt value and generates a result based on
+   * the prompt.
+   * @param input Input for the LLM.
+   * @param options Options for the LLM call.
+   * @returns A string result based on the prompt.
+   */
   async invoke(
     input: BaseLanguageModelInput,
     options?: CallOptions
@@ -168,6 +176,14 @@ export abstract class BaseLLM<
     }
   }
 
+  /**
+   * This method takes prompt values, options, and callbacks, and generates
+   * a result based on the prompts.
+   * @param promptValues Prompt values for the LLM.
+   * @param options Options for the LLM call.
+   * @param callbacks Callbacks for the LLM call.
+   * @returns An LLMResult based on the prompts.
+   */
   async generatePrompt(
     promptValues: BasePromptValue[],
     options?: string[] | CallOptions,
@@ -351,6 +367,14 @@ export abstract class BaseLLM<
     return generations[0][0].text;
   }
 
+  /**
+   * This method is similar to `call`, but it's used for making predictions
+   * based on the input text.
+   * @param text Input text for the prediction.
+   * @param options Options for the LLM call.
+   * @param callbacks Callbacks for the LLM call.
+   * @returns A prediction based on the input text.
+   */
   async predict(
     text: string,
     options?: string[] | CallOptions,
@@ -359,6 +383,14 @@ export abstract class BaseLLM<
     return this.call(text, options, callbacks);
   }
 
+  /**
+   * This method takes a list of messages, options, and callbacks, and
+   * returns a predicted message.
+   * @param messages A list of messages for the prediction.
+   * @param options Options for the LLM call.
+   * @param callbacks Callbacks for the LLM call.
+   * @returns A predicted message based on the list of messages.
+   */
   async predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,

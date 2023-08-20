@@ -18,6 +18,11 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * Interface for FirestoreDBChatMessageHistory. It includes the collection
+ * name, session ID, user ID, and optionally, the app index and
+ * configuration for the Firebase app.
+ */
 export interface FirestoreDBChatMessageHistory {
   collectionName: string;
   sessionId: string;
@@ -25,6 +30,10 @@ export interface FirestoreDBChatMessageHistory {
   appIdx?: number;
   config?: AppOptions;
 }
+/**
+ * Class for managing chat message history using Google's Firestore as a
+ * storage backend. Extends the BaseListChatMessageHistory class.
+ */
 export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "firestore"];
 
@@ -77,6 +86,12 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       .doc(this.sessionId);
   }
 
+  /**
+   * Method to retrieve all messages from the Firestore collection
+   * associated with the current session. Returns an array of BaseMessage
+   * objects.
+   * @returns Promise<BaseMessage[]>
+   */
   async getMessages(): Promise<BaseMessage[]> {
     if (!this.document) {
       throw new Error("Document not initialized");
@@ -99,6 +114,12 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(response);
   }
 
+  /**
+   * Method to add a new message to the Firestore collection. The message is
+   * passed as a BaseMessage object.
+   * @param message The message to be added as a BaseMessage object.
+   * @returns Promise<void>
+   */
   public async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
     await this.upsertMessage(messages[0]);
@@ -128,6 +149,11 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       });
   }
 
+  /**
+   * Method to delete all messages from the Firestore collection associated
+   * with the current session.
+   * @returns Promise<void>
+   */
   public async clear(): Promise<void> {
     if (!this.document) {
       throw new Error("Document not initialized");

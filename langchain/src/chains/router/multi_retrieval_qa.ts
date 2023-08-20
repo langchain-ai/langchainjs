@@ -18,12 +18,23 @@ import {
 } from "../../chains/retrieval_qa.js";
 import { RouterOutputParser } from "../../output_parsers/router.js";
 
+/**
+ * A type that represents the default values for the MultiRetrievalQAChain
+ * class. It includes optional properties for the default retriever,
+ * default prompt, and default chain.
+ */
 export type MultiRetrievalDefaults = {
   defaultRetriever?: BaseRetriever;
   defaultPrompt?: PromptTemplate;
   defaultChain?: BaseChain;
 };
 
+/**
+ * A class that represents a multi-retrieval question answering chain in
+ * the LangChain framework. It extends the MultiRouteChain class and
+ * provides additional functionality specific to multi-retrieval QA
+ * chains.
+ */
 export class MultiRetrievalQAChain extends MultiRouteChain {
   get outputKeys(): string[] {
     return ["result"];
@@ -51,6 +62,22 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     });
   }
 
+  /**
+   * A static method that creates an instance of MultiRetrievalQAChain from
+   * a BaseLanguageModel and a set of retrievers. It takes in optional
+   * parameters for the retriever names, descriptions, prompts, defaults,
+   * and additional options. It is an alternative method to fromRetrievers
+   * and provides more flexibility in configuring the underlying chains.
+   * @param llm A BaseLanguageModel instance.
+   * @param retrieverNames An array of retriever names.
+   * @param retrieverDescriptions An array of retriever descriptions.
+   * @param retrievers An array of BaseRetriever instances.
+   * @param retrieverPrompts An optional array of PromptTemplate instances for the retrievers.
+   * @param defaults An optional MultiRetrievalDefaults instance.
+   * @param multiRetrievalChainOpts Additional optional parameters for the multi-retrieval chain.
+   * @param retrievalQAChainOpts Additional optional parameters for the retrieval QA chain.
+   * @returns A new instance of MultiRetrievalQAChain.
+   */
   static fromLLMAndRetrievers(
     llm: BaseLanguageModel,
     {

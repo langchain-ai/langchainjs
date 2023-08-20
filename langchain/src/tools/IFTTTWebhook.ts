@@ -34,6 +34,12 @@ https://maker.ifttt.com/use/YOUR_IFTTT_KEY. Grab the YOUR_IFTTT_KEY value.
  */
 import { Tool } from "./base.js";
 
+/**
+ * Represents a tool for creating and managing webhooks with the IFTTT (If
+ * This Then That) service. The IFTTT service allows users to create
+ * chains of simple conditional statements, called applets, which are
+ * triggered based on changes to other web services.
+ */
 export class IFTTTWebhook extends Tool {
   static lc_name() {
     return "IFTTTWebhook";

@@ -1,6 +1,10 @@
 import { Document } from "../../document.js";
 import { Docstore } from "../../schema/index.js";
 
+/**
+ * Class for storing and retrieving documents in memory asynchronously.
+ * Extends the Docstore class.
+ */
 export class InMemoryDocstore extends Docstore {
   _docs: Map<string, Document>;
 
@@ -9,6 +13,11 @@ export class InMemoryDocstore extends Docstore {
     this._docs = docs ?? new Map();
   }
 
+  /**
+   * Searches for a document in the store based on its ID.
+   * @param search The ID of the document to search for.
+   * @returns The document with the given ID.
+   */
   async search(search: string): Promise<Document> {
     const result = this._docs.get(search);
     if (!result) {
@@ -18,6 +27,11 @@ export class InMemoryDocstore extends Docstore {
     }
   }
 
+  /**
+   * Adds new documents to the store.
+   * @param texts An object where the keys are document IDs and the values are the documents themselves.
+   * @returns Void
+   */
   async add(texts: Record<string, Document>): Promise<void> {
     const keys = [...this._docs.keys()];
     const overlapping = Object.keys(texts).filter((x) => keys.includes(x));
@@ -32,6 +46,9 @@ export class InMemoryDocstore extends Docstore {
   }
 }
 
+/**
+ * Class for storing and retrieving documents in memory synchronously.
+ */
 export class SynchronousInMemoryDocstore {
   _docs: Map<string, Document>;
 
@@ -39,6 +56,11 @@ export class SynchronousInMemoryDocstore {
     this._docs = docs ?? new Map();
   }
 
+  /**
+   * Searches for a document in the store based on its ID.
+   * @param search The ID of the document to search for.
+   * @returns The document with the given ID.
+   */
   search(search: string): Document {
     const result = this._docs.get(search);
     if (!result) {
@@ -48,6 +70,11 @@ export class SynchronousInMemoryDocstore {
     }
   }
 
+  /**
+   * Adds new documents to the store.
+   * @param texts An object where the keys are document IDs and the values are the documents themselves.
+   * @returns Void
+   */
   add(texts: Record<string, Document>): void {
     const keys = [...this._docs.keys()];
     const overlapping = Object.keys(texts).filter((x) => keys.includes(x));

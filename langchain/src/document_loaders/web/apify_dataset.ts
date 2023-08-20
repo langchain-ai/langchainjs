@@ -9,10 +9,19 @@ import { Document } from "../../document.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
+/**
+ * A type that represents a function that takes a single object (an Apify
+ * dataset item) and converts it to an instance of the Document class.
+ */
 export type ApifyDatasetMappingFunction = (
   item: Record<string | number, unknown>
 ) => Document;
 
+/**
+ * A class that extends the BaseDocumentLoader and implements the
+ * DocumentLoader interface. It represents a document loader that loads
+ * documents from an Apify dataset.
+ */
 export class ApifyDatasetLoader
   extends BaseDocumentLoader
   implements DocumentLoader
@@ -48,6 +57,12 @@ export class ApifyDatasetLoader
     return config?.token ?? getEnvironmentVariable("APIFY_API_TOKEN");
   }
 
+  /**
+   * Retrieves the dataset items from the Apify platform and applies the
+   * datasetMappingFunction to each item to create an array of Document
+   * instances.
+   * @returns An array of Document instances.
+   */
   async load(): Promise<Document[]> {
     const datasetItems = (
       await this.apifyClient.dataset(this.datasetId).listItems({ clean: true })

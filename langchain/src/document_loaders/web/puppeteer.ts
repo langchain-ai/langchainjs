@@ -17,6 +17,11 @@ export type PuppeteerGotoOptions = WaitForOptions & {
   referrerPolicy?: string;
 };
 
+/**
+ * Type representing a function for evaluating JavaScript code on a web
+ * page using Puppeteer. It takes a Page and Browser object as parameters
+ * and returns a Promise that resolves to a string.
+ */
 export type PuppeteerEvaluate = (
   page: Page,
   browser: Browser
@@ -28,6 +33,11 @@ export type PuppeteerWebBaseLoaderOptions = {
   evaluate?: PuppeteerEvaluate;
 };
 
+/**
+ * Class that extends the BaseDocumentLoader class and implements the
+ * DocumentLoader interface. It represents a document loader for scraping
+ * web pages using Puppeteer.
+ */
 export class PuppeteerWebBaseLoader
   extends BaseDocumentLoader
   implements DocumentLoader
@@ -67,10 +77,20 @@ export class PuppeteerWebBaseLoader
     return bodyHTML;
   }
 
+  /**
+   * Method that calls the _scrape method to perform the scraping of the web
+   * page specified by the webPath property.
+   * @returns Promise that resolves to the scraped HTML content of the web page.
+   */
   async scrape(): Promise<string> {
     return PuppeteerWebBaseLoader._scrape(this.webPath, this.options);
   }
 
+  /**
+   * Method that calls the scrape method and returns the scraped HTML
+   * content as a Document object.
+   * @returns Promise that resolves to an array of Document objects.
+   */
   async load(): Promise<Document[]> {
     const text = await this.scrape();
 
@@ -78,6 +98,11 @@ export class PuppeteerWebBaseLoader
     return [new Document({ pageContent: text, metadata })];
   }
 
+  /**
+   * Static method that imports the necessary Puppeteer modules. It returns
+   * a Promise that resolves to an object containing the imported modules.
+   * @returns Promise that resolves to an object containing the imported Puppeteer modules.
+   */
   static async imports(): Promise<{
     launch: typeof launch;
   }> {

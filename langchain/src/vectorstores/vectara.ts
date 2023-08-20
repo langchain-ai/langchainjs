@@ -4,6 +4,10 @@ import { FakeEmbeddings } from "../embeddings/fake.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
 
+/**
+ * Interface for the arguments required to initialize a VectaraStore
+ * instance.
+ */
 export interface VectaraLibArgs {
   customerId: number;
   corpusId: number;
@@ -11,6 +15,9 @@ export interface VectaraLibArgs {
   verbose?: boolean;
 }
 
+/**
+ * Interface for the headers required for Vectara API calls.
+ */
 interface VectaraCallHeader {
   headers: {
     "x-api-key": string;
@@ -19,6 +26,9 @@ interface VectaraCallHeader {
   };
 }
 
+/**
+ * Interface for the filter options used in Vectara API calls.
+ */
 export interface VectaraFilter {
   // Example of a vectara filter string can be: "doc.rating > 3.0 and part.lang = 'deu'"
   // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
@@ -31,6 +41,9 @@ export interface VectaraFilter {
   contextConfig?: VectaraContextConfig;
 }
 
+/**
+ * Interface for the context configuration used in Vectara API calls.
+ */
 export interface VectaraContextConfig {
   // The number of sentences before the matching segment to add. Default is 2.
   sentencesBefore?: number;
@@ -38,6 +51,10 @@ export interface VectaraContextConfig {
   sentencesAfter?: number;
 }
 
+/**
+ * Class for interacting with the Vectara API. Extends the VectorStore
+ * class.
+ */
 export class VectaraStore extends VectorStore {
   get lc_secrets(): { [key: string]: string } {
     return {
@@ -101,6 +118,10 @@ export class VectaraStore extends VectorStore {
     this.verbose = args.verbose ?? false;
   }
 
+  /**
+   * Returns a header for Vectara API calls.
+   * @returns A Promise that resolves to a VectaraCallHeader object.
+   */
   async getJsonHeader(): Promise<VectaraCallHeader> {
     return {
       headers: {
@@ -111,6 +132,13 @@ export class VectaraStore extends VectorStore {
     };
   }
 
+  /**
+   * Throws an error, as this method is not implemented. Use addDocuments
+   * instead.
+   * @param _vectors Not used.
+   * @param _documents Not used.
+   * @returns Does not return a value.
+   */
   async addVectors(
     _vectors: number[][],
     _documents: Document[]
@@ -120,6 +148,11 @@ export class VectaraStore extends VectorStore {
     );
   }
 
+  /**
+   * Adds documents to the Vectara store.
+   * @param documents An array of Document objects to add to the Vectara store.
+   * @returns A Promise that resolves when the documents have been added.
+   */
   async addDocuments(documents: Document[]): Promise<void> {
     const headers = await this.getJsonHeader();
     let countAdded = 0;
@@ -183,6 +216,14 @@ export class VectaraStore extends VectorStore {
     }
   }
 
+  /**
+   * Performs a similarity search and returns documents along with their
+   * scores.
+   * @param query The query string for the similarity search.
+   * @param k Optional. The number of results to return. Default is 10.
+   * @param filter Optional. A VectaraFilter object to refine the search results.
+   * @returns A Promise that resolves to an array of tuples, each containing a Document and its score.
+   */
   async similaritySearchWithScore(
     query: string,
     k = 10,
@@ -243,6 +284,13 @@ export class VectaraStore extends VectorStore {
     return documentsAndScores;
   }
 
+  /**
+   * Performs a similarity search and returns documents.
+   * @param query The query string for the similarity search.
+   * @param k Optional. The number of results to return. Default is 10.
+   * @param filter Optional. A VectaraFilter object to refine the search results.
+   * @returns A Promise that resolves to an array of Document objects.
+   */
   async similaritySearch(
     query: string,
     k = 10,
@@ -256,6 +304,14 @@ export class VectaraStore extends VectorStore {
     return resultWithScore.map((result) => result[0]);
   }
 
+  /**
+   * Throws an error, as this method is not implemented. Use
+   * similaritySearch or similaritySearchWithScore instead.
+   * @param _query Not used.
+   * @param _k Not used.
+   * @param _filter Not used.
+   * @returns Does not return a value.
+   */
   async similaritySearchVectorWithScore(
     _query: number[],
     _k: number,
@@ -266,6 +322,14 @@ export class VectaraStore extends VectorStore {
     );
   }
 
+  /**
+   * Creates a VectaraStore instance from texts.
+   * @param texts An array of text strings.
+   * @param metadatas Metadata for the texts. Can be a single object or an array of objects.
+   * @param _embeddings Not used.
+   * @param args A VectaraLibArgs object for initializing the VectaraStore instance.
+   * @returns A Promise that resolves to a VectaraStore instance.
+   */
   static fromTexts(
     texts: string[],
     metadatas: object | object[],
@@ -285,6 +349,13 @@ export class VectaraStore extends VectorStore {
     return VectaraStore.fromDocuments(docs, new FakeEmbeddings(), args);
   }
 
+  /**
+   * Creates a VectaraStore instance from documents.
+   * @param docs An array of Document objects.
+   * @param _embeddings Not used.
+   * @param args A VectaraLibArgs object for initializing the VectaraStore instance.
+   * @returns A Promise that resolves to a VectaraStore instance.
+   */
   static async fromDocuments(
     docs: Document[],
     _embeddings: Embeddings,

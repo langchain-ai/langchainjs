@@ -14,11 +14,18 @@ export interface Query {
   limit?: number;
 }
 
+/**
+ * Interface representing the parameters for the SortXYZBlockchainLoader
+ * class.
+ */
 export interface SortXYZBlockchainLoaderParams {
   apiKey: string;
   query: Query | string;
 }
 
+/**
+ * Interface representing the response from the SortXYZ API.
+ */
 export interface SortXYZBlockchainAPIResponse {
   code: number;
   data: {
@@ -30,6 +37,10 @@ export interface SortXYZBlockchainAPIResponse {
   };
 }
 
+/**
+ * Class representing a document loader for loading data from the SortXYZ
+ * blockchain using the SortXYZ API.
+ */
 export class SortXYZBlockchainLoader extends BaseDocumentLoader {
   public readonly contractAddress: string;
 
@@ -64,6 +75,12 @@ export class SortXYZBlockchainLoader extends BaseDocumentLoader {
     }
   }
 
+  /**
+   * Method that loads the data from the SortXYZ blockchain based on the
+   * specified query parameters. It makes requests to the SortXYZ API and
+   * returns an array of Documents representing the retrieved data.
+   * @returns Promise<Document[]> - An array of Documents representing the retrieved data.
+   */
   public async load(): Promise<Document[]> {
     if (this.limit > 1000) {
       throw new Error(
