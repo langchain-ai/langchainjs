@@ -7,7 +7,7 @@ import {
   ChatResult,
   LLMResult,
 } from "../schema/index.js";
-import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
@@ -159,7 +159,7 @@ export class ChatGoogleVertexAI
 
   examples: ChatExample[] = [];
 
-  connection: GoogleVertexAIConnection<
+  connection: GoogleVertexAILLMConnection<
     BaseLanguageModelCallOptions,
     GoogleVertexAIChatInstance,
     GoogleVertexAIChatPrediction
@@ -175,7 +175,7 @@ export class ChatGoogleVertexAI
     this.topK = fields?.topK ?? this.topK;
     this.examples = fields?.examples ?? this.examples;
 
-    this.connection = new GoogleVertexAIConnection(
+    this.connection = new GoogleVertexAILLMConnection(
       {
         ...fields,
         ...this,

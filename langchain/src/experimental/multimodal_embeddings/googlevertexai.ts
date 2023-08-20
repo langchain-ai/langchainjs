@@ -1,15 +1,15 @@
 import { Embeddings, EmbeddingsParams } from "../../embeddings/base.js";
 import {
+  GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
-  GoogleVertexAIConnectionParams,
   GoogleVertexAILLMResponse,
 } from "../../types/googlevertexai-types.js";
-import { GoogleVertexAIConnection } from "../../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../../util/async_caller.js";
 
 export interface GoogleVertexAIMultimodalEmbeddingsParams
   extends EmbeddingsParams,
-    GoogleVertexAIConnectionParams {}
+    GoogleVertexAIBaseLLMInput {}
 
 interface GoogleVertexAIMultimodalEmbeddingsOptions
   extends AsyncCallerCallOptions {}
@@ -51,7 +51,7 @@ export class GoogleVertexAIMultimodalEmbeddings
 {
   model = "multimodalembedding@001";
 
-  private connection: GoogleVertexAIConnection<
+  private connection: GoogleVertexAILLMConnection<
     GoogleVertexAIMultimodalEmbeddingsOptions,
     GoogleVertexAIMultimodalEmbeddingsInstance,
     GoogleVertexAIMultimodalEmbeddingsResults
@@ -62,7 +62,7 @@ export class GoogleVertexAIMultimodalEmbeddings
 
     this.model = fields?.model ?? this.model;
 
-    this.connection = new GoogleVertexAIConnection(
+    this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller
     );

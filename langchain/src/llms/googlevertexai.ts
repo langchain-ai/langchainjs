@@ -1,6 +1,6 @@
 import { BaseLLM } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
-import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
@@ -55,7 +55,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
 
   topK = 40;
 
-  private connection: GoogleVertexAIConnection<
+  private connection: GoogleVertexAILLMConnection<
     BaseLanguageModelCallOptions,
     GoogleVertexAILLMInstance,
     TextPrediction
@@ -79,7 +79,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
 
-    this.connection = new GoogleVertexAIConnection(
+    this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller
     );
