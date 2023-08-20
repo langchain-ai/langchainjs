@@ -3,7 +3,11 @@ Here's a simple example:
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
 
-const prompt = PromptTemplate.fromTemplate<{product: string}>(
+// If a template is passed in, the input variables are inferred automatically from the template,
+// otherwise they must be specified manually as an generic type parameter.
+
+// const prompt = PromptTemplate.fromTemplate<{product: string}>(
+const prompt = PromptTemplate.fromTemplate(
   `You are a naming consultant for new companies.
 What is a good name for a company that makes {product}?`
 );

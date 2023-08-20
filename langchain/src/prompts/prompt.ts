@@ -154,7 +154,7 @@ export class PromptTemplate<
    * Load prompt template from a template f-string
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromTemplate<RunInput extends InputValues = never, T extends string = string>(
+  static fromTemplate<RunInput extends InputValues = Symbol, T extends string = string>(
     template: T,
     {
       templateFormat = "f-string",
@@ -167,7 +167,7 @@ export class PromptTemplate<
         names.add(node.name);
       }
     });
-    return new PromptTemplate<RunInput extends never ? ParamsFrom<T> : RunInput>({
+    return new PromptTemplate<RunInput extends Symbol ? ParamsFrom<T> : RunInput>({
       inputVariables: [...names] as Extract<RunInput extends never ? keyof ParamsFrom<T>: keyof RunInput, string>[],
       templateFormat,
       template,
