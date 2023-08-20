@@ -21,17 +21,17 @@ interface VectaraCallHeader {
 
 export interface VectaraContextConfig {
   // The amount of context before. Ignored if sentences_before is set.
-  charsBefore: number;
+  charsBefore?: number;
   // The amount of context after. Ignored if sentences_after is set.
-  charsAfter: number;
+  charsAfter?: number;
   // The amount of context before, in sentences.
-  sentencesBefore: number;
+  sentencesBefore?: number;
   // The amount of context after, in sentences.
-  sentencesAfter: number;
+  sentencesAfter?: number;
   // The tag that wraps the snippet at the start.
-  startTag: string;
+  startTag?: string;
   // The tag that wraps the snippet at the end.
-  endTag: string;
+  endTag?: string;
 }
 
 export interface VectaraRerankingConfig {
