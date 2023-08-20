@@ -225,8 +225,29 @@ export class VectaraStore extends VectorStore {
     if (response.status !== 200) {
       throw new Error(`Vectara API returned status code ${response.status}`);
     }
+
     const result = await response.json();
     const responses = result.responseSet[0].response;
+    const documents = result.responseSet[0].document;
+
+    for (let i = 0; i < responses.length; i += 1) {
+      const responseMetadata = responses[i].metadata;
+      const documentMetadata = documents[responses[i].documentIndex].metadata;
+      const combinedMetadata: Record<string, unknown> = {};
+
+      responseMetadata.forEach((item: { name: string; value: unknown }) => {
+        combinedMetadata[item.name] = item.value;
+      });
+
+      documentMetadata.forEach((item: { name: string; value: unknown }) => {
+        combinedMetadata[item.name] = item.value;
+      });
+
+      responses[i].metadata = Object.entries(combinedMetadata).map(
+        ([name, value]) => ({ name, value })
+      );
+    }
+
     const documentsAndScores = responses.map(
       (response: {
         text: string;
