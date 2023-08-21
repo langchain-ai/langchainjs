@@ -277,15 +277,12 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * @param page The Notion page to parse.
    * @returns An object containing the parsed properties as key-value pairs.
    */
-  private parsePageProperties(page: PageObjectResponse): {
-    [key: string]: string;
-  } {
-    return Object.fromEntries(
-      Object.entries(page.properties).map(([propName, prop]) => [
-        propName,
-        this.getPropValue(prop),
-      ])
-    );
+  private parsePageProperties(page: PageObjectResponse) {
+    return Object.entries(page.properties).reduce((accum, [propName, prop]) => {
+      const value = this.getPropValue(prop);
+      let props = { ...accum, [propName]: value };
+      return prop.type === "title" ? { ...props, _title: value } : props;
+    }, {} as { [key: string]: string });
   }
 
   /**
