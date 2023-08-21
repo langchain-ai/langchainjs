@@ -7,10 +7,17 @@ import { FakeEmbeddings } from "../embeddings/fake.js";
 import { Callbacks } from "../callbacks/index.js";
 import { maximalMarginalRelevance } from "../util/math.js";
 
+/**
+ * Interface for the arguments required to initialize a ZepVectorStore
+ * instance.
+ */
 export interface IZepArgs {
   collection: DocumentCollection;
 }
 
+/**
+ * Interface for the configuration options for a ZepVectorStore instance.
+ */
 export interface IZepConfig {
   apiUrl: string;
   apiKey?: string;
@@ -21,6 +28,10 @@ export interface IZepConfig {
   isAutoEmbedded?: boolean;
 }
 
+/**
+ * Interface for the parameters required to delete documents from a
+ * ZepVectorStore instance.
+ */
 export interface IZepDeleteParams {
   uuids: string[];
 }

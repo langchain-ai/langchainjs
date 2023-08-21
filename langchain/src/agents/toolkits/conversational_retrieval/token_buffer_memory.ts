@@ -13,6 +13,10 @@ import {
 } from "../../../memory/chat_memory.js";
 import { _formatIntermediateSteps } from "../../openai/index.js";
 
+/**
+ * Type definition for the fields required to initialize an instance of
+ * OpenAIAgentTokenBufferMemory.
+ */
 export type OpenAIAgentTokenBufferMemoryFields = BaseChatMemoryInput & {
   llm: ChatOpenAI;
   humanPrefix?: string;
@@ -61,10 +65,19 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
     return [this.memoryKey];
   }
 
+  /**
+   * Retrieves the messages from the chat history.
+   * @returns Promise that resolves with the messages from the chat history.
+   */
   async getMessages() {
     return this.chatHistory.getMessages();
   }
 
+  /**
+   * Loads memory variables from the input values.
+   * @param _values Input values.
+   * @returns Promise that resolves with the loaded memory variables.
+   */
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
     const buffer = await this.getMessages();
     if (this.returnMessages) {
@@ -79,6 +92,14 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
     }
   }
 
+  /**
+   * Saves the context of the chat, including user input, AI output, and
+   * intermediate steps. Prunes the chat history if the total token count
+   * exceeds the maximum limit.
+   * @param inputValues Input values.
+   * @param outputValues Output values.
+   * @returns Promise that resolves when the context has been saved.
+   */
   async saveContext(
     inputValues: InputValues,
     outputValues: OutputValues

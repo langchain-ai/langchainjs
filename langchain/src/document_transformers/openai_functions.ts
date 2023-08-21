@@ -11,6 +11,9 @@ import {
 } from "../chains/openai_functions/index.js";
 import { ChatOpenAI } from "../chat_models/openai.js";
 
+/**
+ * A transformer that tags metadata to a document using a tagging chain.
+ */
 export class MetadataTagger extends MappingDocumentTransformer {
   static lc_name() {
     return "MetadataTagger";

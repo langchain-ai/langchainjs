@@ -10,6 +10,11 @@ import {
 } from "../schema/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
+/**
+ * Interface defining the structure of input data for creating an
+ * AgentExecutor. It extends ChainInputs and includes additional
+ * properties specific to agent execution.
+ */
 export interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: this["agent"]["ToolType"][];
@@ -74,6 +79,12 @@ export class AgentExecutor extends BaseChain {
     return new AgentExecutor(fields);
   }
 
+  /**
+   * Method that checks if the agent execution should continue based on the
+   * number of iterations.
+   * @param iterations The current number of iterations.
+   * @returns A boolean indicating whether the agent execution should continue.
+   */
   private shouldContinue(iterations: number): boolean {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }

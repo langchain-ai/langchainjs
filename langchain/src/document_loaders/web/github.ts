@@ -10,10 +10,20 @@ import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
 const extensions = new Set(binaryExtensions);
 
+/**
+ * A function that checks if a file path is a binary file based on its
+ * extension.
+ * @param name The file path to check.
+ * @returns A boolean indicating whether the file path is a binary file.
+ */
 function isBinaryPath(name: string) {
   return extensions.has(extname(name).slice(1).toLowerCase());
 }
 
+/**
+ * An interface that represents a file in a GitHub repository. It has
+ * properties for the file name, path, SHA, size, URLs, type, and links.
+ */
 export interface GithubFile {
   name: string;
   path: string;
@@ -31,11 +41,20 @@ export interface GithubFile {
   };
 }
 
+/**
+ * An interface that represents the response from fetching the content of
+ * a file. It has properties for the file contents and metadata.
+ */
 interface GetContentResponse {
   contents: string;
   metadata: { source: string };
 }
 
+/**
+ * An interface that represents the parameters for the GithubRepoLoader
+ * class. It extends the AsyncCallerParams interface and adds additional
+ * properties specific to the GitHub repository loader.
+ */
 export interface GithubRepoLoaderParams extends AsyncCallerParams {
   branch?: string;
   recursive?: boolean;
@@ -55,6 +74,11 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
   maxRetries?: number;
 }
 
+/**
+ * A class that extends the BaseDocumentLoader and implements the
+ * GithubRepoLoaderParams interface. It represents a document loader for
+ * loading files from a GitHub repository.
+ */
 export class GithubRepoLoader
   extends BaseDocumentLoader
   implements GithubRepoLoaderParams
@@ -124,6 +148,11 @@ export class GithubRepoLoader
     }
   }
 
+  /**
+   * Extracts the owner, repository, and path from a GitHub URL.
+   * @param url The GitHub URL to extract information from.
+   * @returns An object containing the owner, repository, and path extracted from the GitHub URL.
+   */
   private extractOwnerAndRepoAndPath(url: string): {
     owner: string;
     repo: string;
@@ -140,6 +169,12 @@ export class GithubRepoLoader
     return { owner: match[1], repo: match[2], path: match[4] || "" };
   }
 
+  /**
+   * Fetches the files from the GitHub repository and creates Document
+   * instances for each file. It also handles error handling based on the
+   * unknown handling option.
+   * @returns A promise that resolves to an array of Document instances.
+   */
   public async load(): Promise<Document[]> {
     return (await this.processRepo()).map(
       (fileResponse) =>
@@ -150,6 +185,13 @@ export class GithubRepoLoader
     );
   }
 
+  /**
+   * Determines whether a file or directory should be ignored based on its
+   * path and type.
+   * @param path The path of the file or directory.
+   * @param fileType The type of the file or directory.
+   * @returns A boolean indicating whether the file or directory should be ignored.
+   */
   protected shouldIgnore(path: string, fileType: string): boolean {
     if (fileType !== "dir" && isBinaryPath(path)) {
       return true;
@@ -247,6 +289,12 @@ export class GithubRepoLoader
     }
   }
 
+  /**
+   * Fetches the contents of a directory and maps the file / directory paths
+   * to promises that will fetch the file / directory contents.
+   * @param path The path of the directory to process.
+   * @returns A promise that resolves to an array of promises that will fetch the file / directory contents.
+   */
   private async processDirectory(
     path: string
   ): Promise<Promise<GetContentResponse>[]> {
@@ -259,6 +307,11 @@ export class GithubRepoLoader
     }
   }
 
+  /**
+   * Fetches the files from a GitHub repository.
+   * @param path The path of the repository to fetch the files from.
+   * @returns A promise that resolves to an array of GithubFile instances.
+   */
   private async fetchRepoFiles(path: string): Promise<GithubFile[]> {
     const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
     return this.caller.call(async () => {
@@ -283,6 +336,11 @@ export class GithubRepoLoader
     });
   }
 
+  /**
+   * Fetches the content of a file from a GitHub repository.
+   * @param file The file to fetch the content from.
+   * @returns A promise that resolves to the content of the file.
+   */
   private async fetchFileContent(file: GithubFile): Promise<string> {
     return this.caller.call(async () => {
       if (this.verbose) {
@@ -295,6 +353,11 @@ export class GithubRepoLoader
     });
   }
 
+  /**
+   * Handles errors based on the unknown handling option.
+   * @param message The error message.
+   * @returns void
+   */
   private handleError(message: string): void {
     switch (this.unknown) {
       case UnknownHandling.Ignore:

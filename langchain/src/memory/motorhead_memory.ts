@@ -9,6 +9,10 @@ import {
 } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
+/**
+ * Interface for the structure of a memory message in the Motorhead
+ * service. It includes the role and content of the message.
+ */
 export interface MotorheadMemoryMessage {
   role: string;
   content: string;
@@ -29,6 +33,11 @@ export type MotorheadMemoryInput = BaseChatMemoryInput &
 
 const MANAGED_URL = "https://api.getmetal.io/v1/motorhead";
 
+/**
+ * Class for managing chat message memory using the Motorhead service. It
+ * extends BaseChatMemory and includes methods for initializing the
+ * memory, loading memory variables, and saving the context.
+ */
 export class MotorheadMemory extends BaseChatMemory {
   url = MANAGED_URL;
 
@@ -96,6 +105,11 @@ export class MotorheadMemory extends BaseChatMemory {
     return headers;
   }
 
+  /**
+   * Method that initializes the memory by fetching the session memory from
+   * the Motorhead service. It adds the messages to the chat history and
+   * sets the context if it is not 'NONE'.
+   */
   async init(): Promise<void> {
     const res = await this.caller.call(
       fetch,
@@ -125,6 +139,12 @@ export class MotorheadMemory extends BaseChatMemory {
     }
   }
 
+  /**
+   * Method that loads the memory variables. It gets the chat messages and
+   * returns them as a string or an array based on the returnMessages flag.
+   * @param _values The input values.
+   * @returns A promise that resolves with the memory variables.
+   */
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
     const messages = await this.chatHistory.getMessages();
     if (this.returnMessages) {
@@ -139,6 +159,15 @@ export class MotorheadMemory extends BaseChatMemory {
     return result;
   }
 
+  /**
+   * Method that saves the context to the Motorhead service and the base
+   * chat memory. It sends a POST request to the Motorhead service with the
+   * input and output messages, and calls the saveContext method of the base
+   * chat memory.
+   * @param inputValues The input values.
+   * @param outputValues The output values.
+   * @returns A promise that resolves when the context is saved.
+   */
   async saveContext(
     inputValues: InputValues,
     outputValues: OutputValues

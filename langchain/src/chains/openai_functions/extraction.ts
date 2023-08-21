@@ -10,6 +10,12 @@ import {
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain } from "../llm_chain.js";
 
+/**
+ * Function that returns an array of extraction functions. These functions
+ * are used to extract relevant information from a passage.
+ * @param schema The schema of the function parameters.
+ * @returns An array of extraction functions.
+ */
 function getExtractionFunctions(schema: FunctionParameters) {
   return [
     {
@@ -39,6 +45,13 @@ Passage:
 {input}
 `;
 
+/**
+ * Function that creates an extraction chain using the provided JSON schema.
+ * It sets up the necessary components, such as the prompt, output parser, and tags.
+ * @param schema JSON schema of the function parameters.
+ * @param llm Must be a ChatOpenAI model that supports function calling.
+ * @returns A LLMChain instance configured to return data matching the schema.
+ */
 export function createExtractionChain(
   schema: FunctionParameters,
   llm: ChatOpenAI
@@ -55,6 +68,14 @@ export function createExtractionChain(
   });
 }
 
+/**
+ * Function that creates an extraction chain from a Zod schema. It
+ * converts the Zod schema to a JSON schema using zod-to-json-schema
+ * before creating the extraction chain.
+ * @param schema The Zod schema which extracted data should match
+ * @param llm Must be a ChatOpenAI model that supports function calling.
+ * @returns A LLMChain instance configured to return data matching the schema.
+ */
 export function createExtractionChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodObject<any, any, any, any>,

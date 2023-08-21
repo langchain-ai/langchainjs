@@ -13,6 +13,9 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * Type for the input to the `RedisChatMessageHistory` constructor.
+ */
 export type RedisChatMessageHistoryInput = {
   sessionId: string;
   sessionTTL?: number;
@@ -22,6 +25,10 @@ export type RedisChatMessageHistoryInput = {
   client?: any;
 };
 
+/**
+ * Class for storing chat message history using Redis. Extends the
+ * `BaseListChatMessageHistory` class.
+ */
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "redis"];
 
@@ -52,6 +59,11 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     this.sessionTTL = sessionTTL;
   }
 
+  /**
+   * Ensures the Redis client is ready to perform operations. If the client
+   * is not ready, it attempts to connect to the Redis database.
+   * @returns Promise resolving to true when the client is ready.
+   */
   async ensureReadiness() {
     if (!this.client.isReady) {
       await this.client.connect();
@@ -59,6 +71,11 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     return true;
   }
 
+  /**
+   * Retrieves all chat messages from the Redis database for the current
+   * session.
+   * @returns Promise resolving to an array of `BaseMessage` instances.
+   */
   async getMessages(): Promise<BaseMessage[]> {
     await this.ensureReadiness();
     const rawStoredMessages = await this.client.lRange(this.sessionId, 0, -1);
@@ -68,6 +85,11 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
+  /**
+   * Adds a new chat message to the Redis database for the current session.
+   * @param message The `BaseMessage` instance to add.
+   * @returns Promise resolving when the message has been added.
+   */
   async addMessage(message: BaseMessage): Promise<void> {
     await this.ensureReadiness();
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
@@ -77,6 +99,11 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
+  /**
+   * Deletes all chat messages from the Redis database for the current
+   * session.
+   * @returns Promise resolving when the messages have been deleted.
+   */
   async clear(): Promise<void> {
     await this.ensureReadiness();
     await this.client.del(this.sessionId);

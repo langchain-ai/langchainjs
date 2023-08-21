@@ -8,6 +8,9 @@ import {
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 import { RunnableConfig } from "../schema/runnable.js";
 
+/**
+ * Parameters for the Tool classes.
+ */
 export interface ToolParams extends BaseLangChainParams {}
 
 /**
@@ -35,6 +38,12 @@ export abstract class StructuredTool<
     runManager?: CallbackManagerForToolRun
   ): Promise<string>;
 
+  /**
+   * Invokes the tool with the provided input and configuration.
+   * @param input The input for the tool.
+   * @param config Optional configuration for the tool.
+   * @returns A Promise that resolves with a string.
+   */
   async invoke(
     input: (z.output<T> extends string ? string : never) | z.input<T>,
     config?: RunnableConfig
@@ -42,6 +51,15 @@ export abstract class StructuredTool<
     return this.call(input, config);
   }
 
+  /**
+   * Calls the tool with the provided argument, configuration, and tags. It
+   * parses the input according to the schema, handles any errors, and
+   * manages callbacks.
+   * @param arg The input argument for the tool.
+   * @param configArg Optional configuration or callbacks for the tool.
+   * @param tags Optional tags for the tool.
+   * @returns A Promise that resolves with a string.
+   */
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
     configArg?: Callbacks | RunnableConfig,
@@ -93,6 +111,13 @@ export abstract class Tool extends StructuredTool {
     super(fields);
   }
 
+  /**
+   * Calls the tool with the provided argument and callbacks. It handles
+   * string inputs specifically.
+   * @param arg The input argument for the tool, which can be a string, undefined, or an input of the tool's schema.
+   * @param callbacks Optional callbacks for the tool.
+   * @returns A Promise that resolves with a string.
+   */
   call(
     arg: string | undefined | z.input<this["schema"]>,
     callbacks?: Callbacks
