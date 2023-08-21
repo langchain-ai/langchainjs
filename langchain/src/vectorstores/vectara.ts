@@ -1,7 +1,3 @@
-import fs from "fs";
-import path from "path";
-import FormData from "form-data";
-import https from "https";
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
@@ -168,69 +164,47 @@ export class VectaraStore extends VectorStore {
   }
 
   async addFiles(
-    file_paths: string[],
+    filePaths: Blob[], 
     metadata: Record<string, unknown> | undefined = undefined
   ) {
     let numDocs = 0;
 
-    for (const [index, file] of file_paths.entries()) {
-      if (!fs.existsSync(path.resolve(file))) {
-        console.error(`File ${file} does not exist, skipping`);
-        continue;
-      }
+    for (const [index, fileBlob] of filePaths.entries()) {
       const md = metadata ? metadata[index] : {};
 
-      const f = fs.createReadStream(path.join(process.cwd(), file));
       const data = new FormData();
-      data.append("file", f, file);
+      data.append("file", fileBlob, `file_${index}`);
       data.append("doc-metadata", JSON.stringify(md));
 
-      const options = {
-        method: "POST",
-        headers: {
-          "x-api-key": this.apiKey,
-          ...data.getHeaders(),
-        },
-      };
-
-      const uploadResult = await new Promise<number>((resolve, reject) => {
-        const req = https.request(
+      try {
+        const response = await fetch(
           `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`,
-          options,
-          (res) => {
-            let responseBody = "";
-            res.on("data", (chunk) => {
-              responseBody += chunk;
-            });
-            res.on("end", () => {
-              const result = JSON.parse(responseBody);
-              const { statusCode } = res;
-
-              if (statusCode !== 200 && statusCode !== 409) {
-                reject(
-                  new Error(
-                    `Vectara API returned status code ${statusCode}: ${result}`
-                  )
-                );
-              } else {
-                resolve(1);
-              }
-            });
+          {
+            method: "POST",
+            headers: {
+              "x-api-key": this.apiKey,
+            },
+            body: data,
           }
         );
 
-        req.on("error", (err) => {
-          reject(err);
-        });
+        const result = await response.json();
+        const { status } = response;
 
-        data.pipe(req);
-      });
-
-      numDocs += uploadResult;
+        if (status !== 200 && status !== 409) {
+          throw new Error(
+            `Vectara API returned status code ${status}: ${result}`
+          );
+        } else {
+          numDocs += 1;
+        }
+      } catch (err) {
+        console.error(`Failed to upload file at index ${index}:`, err);
+      }
     }
 
     if (this.verbose) {
-      console.log(`Uploaded ${file_paths.length} files to Vectara`);
+      console.log(`Uploaded ${filePaths.length} files to Vectara`);
     }
 
     return numDocs;

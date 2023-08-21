@@ -162,30 +162,28 @@ describe("VectaraStore", () => {
       const englishOneContent = docs[0].pageContent;
       const frenchOneContent = docs[2].pageContent;
 
-      // Create temporary files for test
       const files = [
         { filename: "englishOne.txt", content: englishOneContent },
         { filename: "frenchOne.txt", content: frenchOneContent },
       ];
 
-      // Using async/await and the helper function to create files
+      const blobs = [];
       for (const file of files) {
-        fs.writeFile(file.filename, file.content, (err) => {
-          if (err) throw err;
-        });
+        fs.writeFileSync(file.filename, file.content);
+
+        const buffer = fs.readFileSync(file.filename);
+        blobs.push(new Blob([buffer], { type: "text/plain" }));
       }
 
-      const results = await store.addFiles([
-        "./englishOne.txt",
-        "./frenchOne.txt",
-        "../examples/src/document_loaders/example_data/bitcoin.pdf",
-      ]);
+      const bitcoinBuffer = fs.readFileSync(
+        "../examples/src/document_loaders/example_data/bitcoin.pdf"
+      );
+      blobs.push(new Blob([bitcoinBuffer], { type: "application/pdf" }));
 
-      // Delete temporary files
+      const results = await store.addFiles(blobs);
+
       for (const file of files) {
-        fs.unlink(file.filename, (err) => {
-          if (err) throw err;
-        });
+        fs.unlinkSync(file.filename);
       }
 
       expect(results).toEqual(3);
