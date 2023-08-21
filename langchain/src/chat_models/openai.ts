@@ -23,13 +23,11 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
+  OpenAICoreRequestOptions,
 } from "../types/openai-types.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { readableStreamToAsyncIterable } from "../util/stream.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
@@ -346,7 +344,9 @@ export class ChatOpenAI
   }
 
   /** @ignore */
-  _identifyingParams() {
+  _identifyingParams(): Omit<OpenAI.Chat.CompletionCreateParams, "messages"> & {
+    model_name: string;
+  } & ClientOptions {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
@@ -361,44 +361,33 @@ export class ChatOpenAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: OpenAI.Chat.CreateChatCompletionRequestMessage[] = messages.map(
-      (message) => ({
+    const messagesMapped: OpenAI.Chat.CreateChatCompletionRequestMessage[] =
+      messages.map((message) => ({
         role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
           .function_call as OpenAI.Chat.ChatCompletionMessage.FunctionCall,
-      })
-    );
+      }));
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
-      stream: true,
+      stream: true as const,
     };
-    let defaultRole: "system" | "assistant" | "user" | "function" = "assistant";
-    const streamIterable = this.startStream(params, options);
-    for await (const streamedResponse of streamIterable) {
-      const data = JSON.parse(streamedResponse) as {
-        choices?: Array<{
-          index: number;
-          finish_reason: string | null;
-          delta: {
-            role?: string;
-            content?: string;
-            function_call?: { name: string; arguments: string };
-          };
-        }>;
-      };
-
-      const choice = data.choices?.[0];
+    let defaultRole: "system" | "assistant" | "user" | "function" | undefined;
+    const streamIterable = await this.streamingCompletionWithRetry(
+      params,
+      options
+    );
+    for await (const data of streamIterable) {
+      const choice = data.choices[0];
       if (!choice) {
         continue;
       }
 
       const { delta } = choice;
       const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
-      defaultRole = (delta.role ??
-        defaultRole) as "system" | "assistant" | "user" | "function";
+      defaultRole = delta.role ?? defaultRole;
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
         text: chunk.content,
@@ -407,58 +396,6 @@ export class ChatOpenAI
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(generationChunk.text ?? "");
     }
-  }
-
-  startStream(
-    request: OpenAI.Chat.CompletionCreateParams,
-    options?: StreamingAxiosConfiguration
-  ) {
-    let done = false;
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const iterable = readableStreamToAsyncIterable(stream.readable);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let err: any;
-    this.completionWithRetry(request, {
-      ...options,
-      adapter: fetchAdapter, // default adapter doesn't do streaming
-      responseType: "stream",
-      onmessage: (event) => {
-        if (done) return;
-        if (event.data?.trim?.() === "[DONE]") {
-          done = true;
-          // eslint-disable-next-line no-void
-          void writer.close();
-        } else {
-          const data = JSON.parse(event.data);
-          if (data.error) {
-            done = true;
-            throw data.error;
-          }
-          // eslint-disable-next-line no-void
-          void writer.write(event.data);
-        }
-      },
-    }).catch((error) => {
-      if (!done) {
-        err = error;
-        done = true;
-        // eslint-disable-next-line no-void
-        void writer.close();
-      }
-    });
-    return {
-      async next() {
-        const chunk = await iterable.next();
-        if (err) {
-          throw err;
-        }
-        return chunk;
-      },
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    };
   }
 
   /**
@@ -476,151 +413,85 @@ export class ChatOpenAI
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped: OpenAI.Chat.CreateChatCompletionRequestMessage[] = messages.map(
-      (message) => ({
+    const messagesMapped: OpenAI.Chat.CreateChatCompletionRequestMessage[] =
+      messages.map((message) => ({
         role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
           .function_call as OpenAI.Chat.ChatCompletionMessage.FunctionCall,
-      })
-    );
+      }));
 
     const data = params.stream
-      ? await new Promise<OpenAI.Chat.Completions.ChatCompletion>((resolve, reject) => {
-          let response: OpenAI.Chat.Completions.ChatCompletion;
-          let rejected = false;
-          let resolved = false;
-          this.completionWithRetry(
+      ? await (async () => {
+          let response: OpenAI.Chat.Completions.ChatCompletion | undefined;
+          const stream = await this.streamingCompletionWithRetry(
             {
               ...params,
+              stream: true,
               messages: messagesMapped,
             },
-            {
-              signal: options?.signal,
-              ...options?.options,
-              adapter: fetchAdapter, // default adapter doesn't do streaming
-              responseType: "stream",
-              onmessage: (event) => {
-                if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved || rejected) {
-                    return;
-                  }
-                  resolved = true;
-                  resolve(response);
-                } else {
-                  const data = JSON.parse(event.data);
-                  if (!data.id) return;
-                  if (data?.error) {
-                    if (rejected) {
-                      return;
-                    }
-                    rejected = true;
-                    reject(data.error);
-                    return;
-                  }
-
-                  const message = data as {
-                    id: string;
-                    object: string;
-                    created: number;
-                    model: string;
-                    choices?: Array<{
-                      index: number;
-                      finish_reason: string | null;
-                      delta: {
-                        role?: string;
-                        content?: string;
-                        function_call?: { name: string; arguments: string };
-                      };
-                    }>;
-                  };
-
-                  // on the first message set the response properties
-                  if (!response) {
-                    response = {
-                      id: message.id,
-                      object: message.object,
-                      created: message.created,
-                      model: message.model,
-                      choices: [],
-                    };
-                  }
-
-                  // on all messages, update choice
-                  for (const part of message.choices ?? []) {
-                    if (part != null) {
-                      let choice = response.choices.find(
-                        (c) => c.index === part.index
-                      );
-
-                      if (!choice) {
-                        choice = {
-                          index: part.index,
-                          finish_reason: part.finish_reason ?? undefined,
-                        };
-                        response.choices[part.index] = choice;
-                      }
-
-                      if (!choice.message) {
-                        choice.message = {
-                          role: part.delta
-                            ?.role as "system" | "assistant" | "user" | "function",
-                          content: "",
-                        };
-                      }
-
-                      if (
-                        part.delta.function_call &&
-                        !choice.message.function_call
-                      ) {
-                        choice.message.function_call = {
-                          name: "",
-                          arguments: "",
-                        };
-                      }
-
-                      choice.message.content += part.delta?.content ?? "";
-                      if (choice.message.function_call) {
-                        choice.message.function_call.name +=
-                          part.delta?.function_call?.name ?? "";
-                        choice.message.function_call.arguments +=
-                          part.delta?.function_call?.arguments ?? "";
-                      }
-                      // eslint-disable-next-line no-void
-                      void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? "",
-                        {
-                          prompt: options.promptIndex ?? 0,
-                          completion: part.index,
-                        }
-                      );
-                      // TODO we don't currently have a callback method for
-                      // sending the function call arguments
-                    }
-                  }
-                  // when all messages are finished, resolve
-                  if (
-                    !resolved &&
-                    !rejected &&
-                    message.choices?.every((c) => c.finish_reason != null)
-                  ) {
-                    resolved = true;
-                    resolve(response);
-                  }
-                }
-              },
+            options
+          );
+          for await (const message of stream) {
+            // on the first message set the response properties
+            if (!response) {
+              response = {
+                id: message.id,
+                object: message.object,
+                created: message.created,
+                model: message.model,
+                choices: [],
+              };
             }
-          ).catch((error) => {
-            if (!rejected) {
-              rejected = true;
-              reject(error);
+            // on all messages, update choice
+            for (const part of message.choices ?? []) {
+              let choice = response.choices.find((c) => c.index === part.index);
+
+              if (!choice) {
+                choice = {
+                  index: part.index,
+                  finish_reason: part.finish_reason as
+                    | "stop"
+                    | "function_call"
+                    | "length",
+                  message: {
+                    role: part.delta.role ?? "assistant",
+                    content: part.delta.content ?? "",
+                  },
+                };
+                response.choices.push(choice);
+              }
+
+              if (part.delta.function_call && !choice.message.function_call) {
+                choice.message.function_call = {
+                  name: "",
+                  arguments: "",
+                };
+              }
+
+              choice.message.content += part.delta?.content ?? "";
+              if (choice.message.function_call) {
+                choice.message.function_call.name +=
+                  part.delta?.function_call?.name ?? "";
+                choice.message.function_call.arguments +=
+                  part.delta?.function_call?.arguments ?? "";
+              }
+              // eslint-disable-next-line no-void
+              void runManager?.handleLLMNewToken(part.delta?.content ?? "", {
+                prompt: options.promptIndex ?? 0,
+                completion: part.index,
+              });
+              // TODO we don't currently have a callback method for
+              // sending the function call arguments
             }
-          });
-        })
+          }
+          return response;
+        })()
       : await this.completionWithRetry(
           {
             ...params,
+            stream: false,
             messages: messagesMapped,
           },
           {
@@ -633,7 +504,7 @@ export class ChatOpenAI
       completion_tokens: completionTokens,
       prompt_tokens: promptTokens,
       total_tokens: totalTokens,
-    } = data.usage ?? {};
+    } = data?.usage ?? {};
 
     if (completionTokens) {
       tokenUsage.completionTokens =
@@ -649,7 +520,7 @@ export class ChatOpenAI
     }
 
     const generations: ChatGeneration[] = [];
-    for (const part of data.choices) {
+    for (const part of data?.choices ?? []) {
       const text = part.message?.content ?? "";
       generations.push({
         text,
@@ -702,10 +573,35 @@ export class ChatOpenAI
   }
 
   /** @ignore */
+  async streamingCompletionWithRetry(
+    request: OpenAI.Chat.CompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+    const requestOptions = this._getClientOptions(options);
+    const fn: (
+      body: OpenAI.Chat.CompletionCreateParamsStreaming,
+      options?: OpenAICoreRequestOptions
+    ) => Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> =
+      this.client.chat.completions.create.bind(this.client);
+    return this.caller.call(fn, request, requestOptions).then((res) => res);
+  }
+
+  /** @ignore */
   async completionWithRetry(
-    request: OpenAI.Chat.CompletionCreateParams,
-    options?: StreamingAxiosConfiguration
-  ) {
+    request: OpenAI.Chat.CompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+    const requestOptions = this._getClientOptions(options);
+    const fn: (
+      body: OpenAI.Chat.CompletionCreateParamsNonStreaming,
+      options?: OpenAICoreRequestOptions
+    ) => Promise<OpenAI.Chat.Completions.ChatCompletion> =
+      this.client.chat.completions.create.bind(this.client);
+    return this.caller.call(fn, request, requestOptions).then((res) => res);
+  }
+
+  /** @ignore */
+  private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -717,38 +613,28 @@ export class ChatOpenAI
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      
-
       this.client = new OpenAI({
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-        ...this.clientConfig
+        ...this.clientConfig,
       });
     }
-
-    const axiosOptions = {
-      adapter: isNode() ? undefined : fetchAdapter,
+    const requestOptions = {
       ...this.clientConfig,
       ...options,
-    } as StreamingAxiosConfiguration;
+    } as OpenAICoreRequestOptions;
     if (this.azureOpenAIApiKey) {
-      axiosOptions.headers = {
+      requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...axiosOptions.headers,
+        ...requestOptions.headers,
       };
-      axiosOptions.params = {
+      requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...axiosOptions.params,
+        ...requestOptions.query,
       };
     }
-    return this.caller
-      .call(
-        this.client.chat.completions.create.bind(this.client),
-        request,
-        axiosOptions
-      )
-      .then((res) => res);
+    return requestOptions;
   }
 
   _llmType() {
@@ -834,7 +720,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _convertMessageToDict = (message: BaseMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let messageDict: Record<string, any>;
+      let messageDict: OpenAI.Chat.CreateChatCompletionRequestMessage;
 
       if (message._getType() === "human") {
         messageDict = { role: "user", content: message.content };
@@ -846,7 +732,11 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
         messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {
         messageDict = {
-          role: (message as ChatMessage).role,
+          role: (message as ChatMessage).role as
+            | "system"
+            | "assistant"
+            | "user"
+            | "function",
           content: message.content,
         };
       } else {
@@ -891,8 +781,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const promptLayerRespBody = await promptLayerTrackRequest(
         this.caller,
         "langchain.PromptLayerChatOpenAI",
-        messageDicts,
-        this._identifyingParams(),
+        { ...this._identifyingParams(), messages: messageDicts },
         this.plTags,
         parsedResp,
         requestStartTime,

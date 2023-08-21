@@ -242,7 +242,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   await expect(() =>
     model.call([new HumanMessage("Print hello world")], {
-      options: { timeout: 10, adapter: undefined },
+      options: { timeout: 10 },
     })
   ).rejects.toThrow();
 }, 5000);
@@ -266,7 +266,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call([new HumanMessage("Print hello world")], {
-      options: { signal: controller.signal, adapter: undefined },
+      options: { signal: controller.signal },
     });
 
     controller.abort();
@@ -423,7 +423,7 @@ test("Function calling with streaming", async () => {
       ],
       function_call: {
         name: "get_current_weather",
-        arguments: '',
+        arguments: "",
       },
     }
   );

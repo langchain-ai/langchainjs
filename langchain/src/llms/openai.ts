@@ -6,15 +6,14 @@ import { GenerationChunk, LLMResult } from "../schema/index.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
+  OpenAICoreRequestOptions,
   OpenAIInput,
 } from "../types/openai-types.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { chunkArray } from "../util/chunk.js";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { readableStreamToAsyncIterable } from "../util/stream.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { OpenAIChat } from "./openai-chat.js";
 
@@ -227,7 +226,7 @@ export class OpenAI
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): OpenAIClient.CompletionCreateParams {
+  ): Omit<OpenAIClient.CompletionCreateParams, "prompt"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -245,7 +244,10 @@ export class OpenAI
     };
   }
 
-  _identifyingParams() {
+  /** @ignore */
+  _identifyingParams(): Omit<OpenAIClient.CompletionCreateParams, "prompt"> & {
+    model_name: string;
+  } & ClientOptions {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
@@ -256,7 +258,9 @@ export class OpenAI
   /**
    * Get the identifying parameters for the model
    */
-  identifyingParams() {
+  identifyingParams(): Omit<OpenAIClient.CompletionCreateParams, "prompt"> & {
+    model_name: string;
+  } & ClientOptions {
     return this._identifyingParams();
   }
 
@@ -302,99 +306,50 @@ export class OpenAI
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const data = params.stream
-        ? await new Promise<OpenAIClient.Completion>((resolve, reject) => {
+        ? await (async () => {
             const choices: OpenAIClient.CompletionChoice[] = [];
-            let response: Omit<OpenAIClient.Completion, "choices">;
-            let rejected = false;
-            let resolved = false;
-            this.completionWithRetry(
+            let response: Omit<OpenAIClient.Completion, "choices"> | undefined;
+            const stream = await this.streamingCompletionWithRetry(
               {
                 ...params,
+                stream: true,
                 prompt: subPrompts[i],
               },
-              {
-                signal: options.signal,
-                ...options.options,
-                adapter: fetchAdapter, // default adapter doesn't do streaming
-                responseType: "stream",
-                onmessage: (event) => {
-                  if (event.data?.trim?.() === "[DONE]") {
-                    if (resolved || rejected) {
-                      return;
-                    }
-                    resolved = true;
-                    resolve({
-                      ...response,
-                      choices,
-                    });
-                  } else {
-                    const data = JSON.parse(event.data);
-
-                    if (data?.error) {
-                      if (rejected) {
-                        return;
-                      }
-                      rejected = true;
-                      reject(data.error);
-                      return;
-                    }
-
-                    const message = data as Omit<
-                    OpenAIClient.Completion,
-                      "usage"
-                    >;
-
-                    // on the first message set the response properties
-                    if (!response) {
-                      response = {
-                        id: message.id,
-                        object: message.object,
-                        created: message.created,
-                        model: message.model,
-                      };
-                    }
-
-                    // on all messages, update choice
-                    for (const part of message.choices) {
-                      if (part != null && part.index != null) {
-                        if (!choices[part.index]) choices[part.index] = {};
-                        const choice = choices[part.index];
-                        choice.text = (choice.text ?? "") + (part.text ?? "");
-                        choice.finish_reason = part.finish_reason;
-                        choice.logprobs = part.logprobs;
-                        // eslint-disable-next-line no-void
-                        void runManager?.handleLLMNewToken(part.text ?? "", {
-                          prompt: Math.floor(part.index / this.n),
-                          completion: part.index % this.n,
-                        });
-                      }
-                    }
-
-                    // when all messages are finished, resolve
-                    if (
-                      !resolved &&
-                      !rejected &&
-                      choices.every((c) => c.finish_reason != null)
-                    ) {
-                      resolved = true;
-                      resolve({
-                        ...response,
-                        choices,
-                      });
-                    }
-                  }
-                },
+              options
+            );
+            for await (const message of stream) {
+              // on the first message set the response properties
+              if (!response) {
+                response = {
+                  id: message.id,
+                  object: message.object,
+                  created: message.created,
+                  model: message.model,
+                };
               }
-            ).catch((error) => {
-              if (!rejected) {
-                rejected = true;
-                reject(error);
+
+              // on all messages, update choice
+              for (const part of message.choices) {
+                if (!choices[part.index]) {
+                  choices[part.index] = part;
+                } else {
+                  const choice = choices[part.index];
+                  choice.text += part.text;
+                  choice.finish_reason = part.finish_reason;
+                  choice.logprobs = part.logprobs;
+                }
+                void runManager?.handleLLMNewToken(part.text, {
+                  prompt: Math.floor(part.index / this.n),
+                  completion: part.index % this.n,
+                });
               }
-            });
-          })
+            }
+            return { ...response, choices };
+          })()
         : await this.completionWithRetry(
             {
               ...params,
+              stream: false,
               prompt: subPrompts[i],
             },
             {
@@ -404,12 +359,17 @@ export class OpenAI
           );
 
       choices.push(...data.choices);
-
       const {
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
         total_tokens: totalTokens,
-      } = ('usage' in data && data.usage) ? data.usage : {};
+      } = data.usage
+        ? data.usage
+        : {
+            completion_tokens: undefined,
+            prompt_tokens: undefined,
+            total_tokens: undefined,
+          };
 
       if (completionTokens) {
         tokenUsage.completionTokens =
@@ -450,20 +410,15 @@ export class OpenAI
     const params = {
       ...this.invocationParams(options),
       prompt: input,
-      stream: true,
+      stream: true as const,
     };
-    const streamIterable = this.startStream(params, options);
-    for await (const streamedResponse of streamIterable) {
-      const data = JSON.parse(streamedResponse);
-      const choice = data.choices?.[0];
-      if (!choice) {
-        continue;
-      }
+    const stream = await this.streamingCompletionWithRetry(params, options);
+    for await (const data of stream) {
+      const choice = data.choices[0];
       const chunk = new GenerationChunk({
         text: choice.text,
         generationInfo: {
           finishReason: choice.finish_reason,
-          logprobs: choice.logprobs,
         },
       });
       yield chunk;
@@ -472,63 +427,36 @@ export class OpenAI
     }
   }
 
-  startStream(
-    request: OpenAIClient.CompletionCreateParams,
-    options?: StreamingAxiosConfiguration
-  ) {
-    let done = false;
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const iterable = readableStreamToAsyncIterable(stream.readable);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let err: any;
-    this.completionWithRetry(request, {
-      ...options,
-      adapter: fetchAdapter, // default adapter doesn't do streaming
-      responseType: "stream",
-      onmessage: (event) => {
-        if (done) return;
-        if (event.data?.trim?.() === "[DONE]") {
-          done = true;
-          // eslint-disable-next-line no-void
-          void writer.close();
-        } else {
-          const data = JSON.parse(event.data);
-          if (data.error) {
-            done = true;
-            throw data.error;
-          }
-          // eslint-disable-next-line no-void
-          void writer.write(event.data);
-        }
-      },
-    }).catch((error) => {
-      if (!done) {
-        err = error;
-        done = true;
-        // eslint-disable-next-line no-void
-        void writer.close();
-      }
-    });
-    return {
-      async next() {
-        const chunk = await iterable.next();
-        if (err) {
-          throw err;
-        }
-        return chunk;
-      },
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    };
+  /** @ignore */
+  async streamingCompletionWithRetry(
+    request: OpenAIClient.CompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAIClient.Completion>> {
+    const requestOptions = this._getClientOptions(options);
+    const fn: (
+      body: OpenAIClient.CompletionCreateParamsStreaming,
+      options?: OpenAICoreRequestOptions
+    ) => Promise<AsyncIterable<OpenAIClient.Completions.Completion>> =
+      this.client.completions.create.bind(this.client);
+    return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
   /** @ignore */
   async completionWithRetry(
-    request: OpenAIClient.CompletionCreateParams,
-    options?: StreamingAxiosConfiguration
-  ) {
+    request: OpenAIClient.CompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIClient.Completions.Completion> {
+    const requestOptions = this._getClientOptions(options);
+    const fn: (
+      body: OpenAIClient.CompletionCreateParamsNonStreaming,
+      options?: OpenAICoreRequestOptions
+    ) => Promise<OpenAIClient.Completions.Completion> =
+      this.client.completions.create.bind(this.client);
+    return this.caller.call(fn, request, requestOptions).then((res) => res);
+  }
+
+  /** @ignore */
+  private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -540,7 +468,6 @@ export class OpenAI
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      
       this.client = new OpenAIClient({
         ...this.clientConfig,
         baseURL: endpoint,
@@ -548,28 +475,21 @@ export class OpenAI
         ...this.clientConfig,
       });
     }
-    const axiosOptions: StreamingAxiosConfiguration = {
-      adapter: isNode() ? undefined : fetchAdapter,
+    const requestOptions = {
       ...this.clientConfig,
       ...options,
-    };
+    } as OpenAICoreRequestOptions;
     if (this.azureOpenAIApiKey) {
-      axiosOptions.headers = {
+      requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...axiosOptions.headers,
+        ...requestOptions.headers,
       };
-      axiosOptions.params = {
+      requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...axiosOptions.params,
+        ...requestOptions.query,
       };
     }
-    return this.caller
-      .call(
-        this.client.completions.create.bind(this.client),
-        request,
-        axiosOptions
-      )
-      .then((res) => res);
+    return requestOptions;
   }
 
   _llmType() {
@@ -622,18 +542,18 @@ export class PromptLayerOpenAI extends OpenAI {
    * @param options Optional configuration for the API call.
    * @returns The response from the OpenAI API.
    */
-  async completionWithRetry(
-    request: OpenAIClient.CompletionCreateParams,
-    options?: StreamingAxiosConfiguration
-  ) {
-    if (request.stream) {
-      return super.completionWithRetry(request, options);
-    }
+  // async completionWithRetry(
+  //   request: OpenAIClient.CompletionCreateParams,
+  //   options?: StreamingAxiosConfiguration
+  // ) {
+  //   if (request.stream) {
+  //     return super.completionWithRetry(request, options);
+  //   }
 
-    const response = await super.completionWithRetry(request);
+  //   const response = await super.completionWithRetry(request);
 
-    return response;
-  }
+  //   return response;
+  // }
 
   async _generate(
     prompts: string[],
@@ -653,8 +573,7 @@ export class PromptLayerOpenAI extends OpenAI {
       const promptLayerRespBody = await promptLayerTrackRequest(
         this.caller,
         "langchain.PromptLayerOpenAI",
-        [prompts[i]],
-        this._identifyingParams(),
+        { ...this._identifyingParams(), prompt: prompts[i] },
         this.plTags,
         parsedResp,
         requestStartTime,

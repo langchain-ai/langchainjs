@@ -75,10 +75,7 @@ export class OpenAIModerationChain
     this.caller = new AsyncCaller(fields ?? {});
   }
 
-  _moderate(
-    text: string,
-    results: OpenAI.Moderation
-  ): string {
+  _moderate(text: string, results: OpenAI.Moderation): string {
     if (results.flagged) {
       const errorStr = "Text was found that violates OpenAI's content policy.";
       if (this.throwError) {

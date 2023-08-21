@@ -4,8 +4,7 @@ import { AsyncCaller } from "../util/async_caller.js";
 export const promptLayerTrackRequest = async (
   callerFunc: AsyncCaller,
   functionName: string,
-  prompt: Array<number> | Array<string> | string,
-  kwargs: OpenAI.CompletionCreateParams,
+  kwargs: OpenAI.CompletionCreateParams | OpenAI.Chat.CompletionCreateParams,
   plTags: string[] | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestResponse: any,
@@ -26,7 +25,6 @@ export const promptLayerTrackRequest = async (
       body: JSON.stringify({
         function_name: functionName,
         provider: "langchain",
-        args: prompt,
         kwargs,
         tags: plTags,
         request_response: requestResponse,

@@ -5,17 +5,14 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
+  OpenAICoreRequestOptions,
 } from "../types/openai-types.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { readableStreamToAsyncIterable } from "../util/stream.js";
 import { BaseLLMParams, LLM } from "./base.js";
 
 export { AzureOpenAIInput, OpenAIChatInput };
-
 /**
  * Interface that extends the OpenAICallOptions interface and includes an
  * optional promptIndex property. It represents the options that can be
@@ -240,7 +237,9 @@ export class OpenAIChat
   }
 
   /** @ignore */
-  _identifyingParams() {
+  _identifyingParams(): Omit<OpenAI.Chat.CompletionCreateParams, "messages"> & {
+    model_name: string;
+  } & ClientOptions {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
@@ -251,7 +250,9 @@ export class OpenAIChat
   /**
    * Get the identifying parameters for the model
    */
-  identifyingParams() {
+  identifyingParams(): Omit<OpenAI.Chat.CompletionCreateParams, "messages"> & {
+    model_name: string;
+  } & ClientOptions {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
@@ -264,7 +265,9 @@ export class OpenAIChat
    * @param prompt The prompt to be formatted.
    * @returns Array of formatted messages.
    */
-  private formatMessages(prompt: string): OpenAI.Chat.CreateChatCompletionRequestMessage[] {
+  private formatMessages(
+    prompt: string
+  ): OpenAI.Chat.CreateChatCompletionRequestMessage[] {
     const message: OpenAI.Chat.CreateChatCompletionRequestMessage = {
       role: "user",
       content: prompt,
@@ -284,25 +287,9 @@ export class OpenAIChat
       messages: this.formatMessages(prompt),
       stream: true as const,
     };
-    const streamIterable = this.startStream(params, options);
-    for await (const streamedResponse of streamIterable) {
-      const data = JSON.parse(streamedResponse) as {
-        choices?: Array<{
-          index: number;
-          finish_reason: string | null;
-          delta: {
-            role?: string;
-            content?: string;
-            function_call?: { name: string; arguments: string };
-          };
-        }>;
-      };
-
-      const choice = data.choices?.[0];
-      if (!choice) {
-        continue;
-      }
-
+    const stream = await this.streamingCompletionWithRetry(params, options);
+    for await (const data of stream) {
+      const choice = data.choices[0];
       const { delta } = choice;
       const generationChunk = new GenerationChunk({
         text: delta.content ?? "",
@@ -313,64 +300,6 @@ export class OpenAIChat
     }
   }
 
-  /**
-   * Starts a stream of responses from the OpenAI API.
-   * @param request The request to be sent to the OpenAI API.
-   * @param options Optional configuration for the Axios request.
-   * @returns An iterable object that can be used to iterate over the response chunks.
-   */
-  startStream(
-    request: OpenAI.Chat.CompletionCreateParamsStreaming,
-    options?: StreamingAxiosConfiguration
-  ) {
-    let done = false;
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const iterable = readableStreamToAsyncIterable(stream.readable);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let err: any;
-    this.completionWithRetry(request, {
-      ...options,
-      adapter: fetchAdapter, // default adapter doesn't do streaming
-      responseType: "stream",
-      onmessage: (event) => {
-        if (done) return;
-        if (event.data?.trim?.() === "[DONE]") {
-          done = true;
-          // eslint-disable-next-line no-void
-          void writer.close();
-        } else {
-          const data = JSON.parse(event.data);
-          if (data.error) {
-            done = true;
-            throw data.error;
-          }
-          // eslint-disable-next-line no-void
-          void writer.write(event.data);
-        }
-      },
-    }).catch((error) => {
-      if (!done) {
-        err = error;
-        done = true;
-        // eslint-disable-next-line no-void
-        void writer.close();
-      }
-    });
-    return {
-      async next() {
-        const chunk = await iterable.next();
-        if (err) {
-          throw err;
-        }
-        return chunk;
-      },
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    };
-  }
-
   /** @ignore */
   async _call(
     prompt: string,
@@ -379,120 +308,62 @@ export class OpenAIChat
   ): Promise<string> {
     const params = this.invocationParams(options);
 
-    const data = params.stream
-      ? await new Promise<OpenAI.Chat.Completions.ChatCompletion>((resolve, reject) => {
-          let response: OpenAI.Chat.Completions.ChatCompletion;
-          let rejected = false;
-          let resolved = false;
-          this.completionWithRetry(
+    const response = params.stream
+      ? await (async () => {
+          let response: OpenAI.Chat.Completions.ChatCompletion | undefined;
+          const stream = await this.streamingCompletionWithRetry(
             {
               ...params,
               messages: this.formatMessages(prompt),
+              stream: true,
             },
-            {
-              signal: options.signal,
-              ...options.options,
-              adapter: fetchAdapter, // default adapter doesn't do streaming
-              responseType: "stream",
-              onmessage: (event) => {
-                if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved || rejected) {
-                    return;
-                  }
-                  resolved = true;
-                  resolve(response);
-                } else {
-                  const data = JSON.parse(event.data);
-
-                  if (data?.error) {
-                    if (rejected) {
-                      return;
-                    }
-                    rejected = true;
-                    reject(data.error);
-                    return;
-                  }
-
-                  const message = data as {
-                    id: string;
-                    object: string;
-                    created: number;
-                    model: string;
-                    choices: Array<{
-                      index: number;
-                      finish_reason: string | null;
-                      delta: { content?: string; role?: string };
-                    }>;
-                  };
-
-                  // on the first message set the response properties
-                  if (!response) {
-                    response = {
-                      id: message.id,
-                      object: message.object,
-                      created: message.created,
-                      model: message.model,
-                      choices: [],
-                    };
-                  }
-
-                  // on all messages, update choice
-                  for (const part of message.choices) {
-                    if (part != null) {
-                      let choice = response.choices.find(
-                        (c) => c.index === part.index
-                      );
-
-                      if (!choice) {
-                        choice = {
-                          index: part.index,
-                          finish_reason: part.finish_reason ?? undefined,
-                        };
-                        response.choices.push(choice);
-                      }
-
-                      if (!choice?.message) {
-                        choice.message = {
-                          role: part.delta
-                            ?.role as "system" | "assistant" | "user" | "function",
-                          content: part.delta?.content ?? "",
-                        };
-                      }
-
-                      choice.message.content += part.delta?.content ?? "";
-                      // eslint-disable-next-line no-void
-                      void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? "",
-                        {
-                          prompt: options.promptIndex ?? 0,
-                          completion: part.index,
-                        }
-                      );
-                    }
-                  }
-
-                  // when all messages are finished, resolve
-                  if (
-                    !resolved &&
-                    !rejected &&
-                    message.choices.every((c) => c.finish_reason != null)
-                  ) {
-                    resolved = true;
-                    resolve(response);
-                  }
-                }
-              },
+            options
+          );
+          for await (const message of stream) {
+            // on the first message set the response properties
+            if (!response) {
+              response = {
+                id: message.id,
+                object: message.object,
+                created: message.created,
+                model: message.model,
+                choices: [],
+              };
             }
-          ).catch((error) => {
-            if (!rejected) {
-              rejected = true;
-              reject(error);
+
+            // on all messages, update choice
+            for (const part of message.choices) {
+              let choice = response.choices.find((c) => c.index === part.index);
+
+              if (!choice) {
+                choice = {
+                  index: part.index,
+                  finish_reason: part.finish_reason as
+                    | "stop"
+                    | "function_call"
+                    | "length",
+                  message: {
+                    role: part.delta.role ?? "assistant",
+                    content: part.delta.content ?? "",
+                  },
+                };
+                response.choices.push(choice);
+              }
+
+              choice.message.content += part.delta?.content ?? "";
+              // eslint-disable-next-line no-void
+              void runManager?.handleLLMNewToken(part.delta.content ?? "", {
+                prompt: options.promptIndex ?? 0,
+                completion: part.index,
+              });
             }
-          });
-        })
+          }
+          return response;
+        })()
       : await this.completionWithRetry(
           {
             ...params,
+            stream: false,
             messages: this.formatMessages(prompt),
           },
           {
@@ -500,15 +371,39 @@ export class OpenAIChat
             ...options.options,
           }
         );
+    return response?.choices[0]?.message?.content ?? "";
+  }
 
-    return data.choices[0].message?.content ?? "";
+  /** @ignore */
+  async streamingCompletionWithRetry(
+    request: OpenAI.Chat.CompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+    const requestOptions = this._getClientOptions(options);
+    const fn: (
+      body: OpenAI.Chat.CompletionCreateParamsStreaming,
+      options?: OpenAICoreRequestOptions
+    ) => Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> =
+      this.client.chat.completions.create.bind(this.client);
+    return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
   /** @ignore */
   async completionWithRetry(
-    request: OpenAI.Chat.CompletionCreateParams,
-    options?: StreamingAxiosConfiguration
-  ): Promise<OpenAI.Chat.Completions.ChatCompletion | OpenAI.Chat.Completions.ChatCompletionChunk> {
+    request: OpenAI.Chat.CompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+    const requestOptions = this._getClientOptions(options);
+    const fn: (
+      body: OpenAI.Chat.CompletionCreateParamsNonStreaming,
+      options?: OpenAICoreRequestOptions
+    ) => Promise<OpenAI.Chat.Completions.ChatCompletion> =
+      this.client.chat.completions.create.bind(this.client);
+    return this.caller.call(fn, request, requestOptions).then((res) => res);
+  }
+
+  /** @ignore */
+  private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -520,7 +415,6 @@ export class OpenAIChat
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      
       this.client = new OpenAI({
         ...this.clientConfig,
         baseURL: endpoint,
@@ -528,28 +422,21 @@ export class OpenAIChat
         ...this.clientConfig,
       });
     }
-    const axiosOptions = {
-      adapter: isNode() ? undefined : fetchAdapter,
+    const requestOptions = {
       ...this.clientConfig,
       ...options,
-    } as StreamingAxiosConfiguration;
+    } as OpenAICoreRequestOptions;
     if (this.azureOpenAIApiKey) {
-      axiosOptions.headers = {
+      requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...axiosOptions.headers,
+        ...requestOptions.headers,
       };
-      axiosOptions.params = {
+      requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...axiosOptions.params,
+        ...requestOptions.query,
       };
     }
-    return this.caller
-      .call(
-        this.client.chat.completions.create.bind(this.client),
-        request,
-        axiosOptions
-      )
-      .then((res) => res);
+    return requestOptions;
   }
 
   _llmType() {
@@ -595,25 +482,6 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     }
   }
 
-  /**
-   * Makes a call to the OpenAI API with retry logic in case of failures.
-   * @param request The request to be sent to the OpenAI API.
-   * @param options Optional configuration for the Axios request.
-   * @returns The response from the OpenAI API.
-   */
-  async completionWithRetry(
-    request: OpenAI.Chat.CompletionCreateParams,
-    options?: StreamingAxiosConfiguration
-  ): Promise<OpenAI.Chat.Completions.ChatCompletion | OpenAI.Chat.Completions.ChatCompletionChunk> {
-    if (request.stream) {
-      return super.completionWithRetry(request, options);
-    }
-
-    const response = await super.completionWithRetry(request);
-
-    return response;
-  }
-
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
@@ -635,8 +503,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
         const promptLayerRespBody = await promptLayerTrackRequest(
           this.caller,
           "langchain.PromptLayerOpenAIChat",
-          [prompt],
-          this._identifyingParams(),
+          { ...this._identifyingParams(), prompt },
           this.plTags,
           parsedResp,
           requestStartTime,

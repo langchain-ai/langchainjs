@@ -1,7 +1,9 @@
 import OpenAI, { ClientOptions } from "openai";
-import type { AxiosRequestConfig } from "axios";
 import { getEnvironmentVariable } from "../util/env.js";
-import { AzureOpenAIInput } from "../types/openai-types.js";
+import {
+  AzureOpenAIInput,
+  OpenAICoreRequestOptions,
+} from "../types/openai-types.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
@@ -199,29 +201,28 @@ export class OpenAIEmbeddings
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      
       this.client = new OpenAI({
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-        ...this.clientConfig
+        ...this.clientConfig,
       });
     }
-    const axiosOptions: AxiosRequestConfig = {};
+    const requestOptions: OpenAICoreRequestOptions = {};
     if (this.azureOpenAIApiKey) {
-      axiosOptions.headers = {
+      requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...axiosOptions.headers,
+        ...requestOptions.headers,
       };
-      axiosOptions.params = {
+      requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...axiosOptions.params,
+        ...requestOptions.query,
       };
     }
     return this.caller.call(
       this.client.embeddings.create.bind(this.client),
       request,
-      axiosOptions
+      requestOptions
     );
   }
 }
