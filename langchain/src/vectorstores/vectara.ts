@@ -216,6 +216,53 @@ export class VectaraStore extends VectorStore {
     }
   }
 
+  async addFiles(
+    filePaths: Blob[],
+    metadata: Record<string, unknown> | undefined = undefined
+  ) {
+    let numDocs = 0;
+
+    for (const [index, fileBlob] of filePaths.entries()) {
+      const md = metadata ? metadata[index] : {};
+
+      const data = new FormData();
+      data.append("file", fileBlob, `file_${index}`);
+      data.append("doc-metadata", JSON.stringify(md));
+
+      try {
+        const response = await fetch(
+          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`,
+          {
+            method: "POST",
+            headers: {
+              "x-api-key": this.apiKey,
+            },
+            body: data,
+          }
+        );
+
+        const result = await response.json();
+        const { status } = response;
+
+        if (status !== 200 && status !== 409) {
+          throw new Error(
+            `Vectara API returned status code ${status}: ${result}`
+          );
+        } else {
+          numDocs += 1;
+        }
+      } catch (err) {
+        console.error(`Failed to upload file at index ${index}:`, err);
+      }
+    }
+
+    if (this.verbose) {
+      console.log(`Uploaded ${filePaths.length} files to Vectara`);
+    }
+
+    return numDocs;
+  }
+
   /**
    * Performs a similarity search and returns documents along with their
    * scores.
