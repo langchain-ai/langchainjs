@@ -38,8 +38,6 @@ type GetResponse =
   | GetDatabaseResponse
   | APIResponseError;
 
-// const isBlockResponse = (res: GetResponse): res is GetBlockResponse =>
-//   !isNotionClientError(res) && res.object === "block";
 const isPageResponse = (res: GetResponse): res is GetPageResponse =>
   !isNotionClientError(res) && res.object === "page";
 const isDatabaseResponse = (res: GetResponse): res is GetDatabaseResponse =>
@@ -47,8 +45,6 @@ const isDatabaseResponse = (res: GetResponse): res is GetDatabaseResponse =>
 const isErrorResponse = (res: GetResponse): res is APIResponseError =>
   isNotionClientError(res);
 
-// const isBlock = (res: GetResponse): res is BlockObjectResponse =>
-//   isBlockResponse(res) && isFullBlock(res);
 const isPage = (res: GetResponse): res is PageObjectResponse =>
   isPageResponse(res) && isFullPage(res);
 const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
