@@ -599,7 +599,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
     "firebase-admin": "^11.9.0",
-    "form-data": "^4.0.0",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -674,7 +673,6 @@
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
     "firebase-admin": "^11.9.0",
-    "form-data": "^4.0.0",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -813,9 +811,6 @@
       "optional": true
     },
     "firebase-admin": {
-      "optional": true
-    },
-    "form-data": {
       "optional": true
     },
     "google-auth-library": {
