@@ -164,7 +164,7 @@ export class VectaraStore extends VectorStore {
   }
 
   async addFiles(
-    filePaths: Blob[], 
+    filePaths: Blob[],
     metadata: Record<string, unknown> | undefined = undefined
   ) {
     let numDocs = 0;
