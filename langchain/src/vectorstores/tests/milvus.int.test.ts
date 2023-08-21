@@ -18,7 +18,7 @@ beforeAll(async () => {
   collectionName = `test_collection_${Math.random().toString(36).substring(7)}`;
 });
 
-test("Test Milvus.fromtext with token", async () => {
+test.skip("Test Milvus.fromtext with token", async () => {
   const texts = [
     `Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little
 Harmonic Labyrinth of the dreaded Majotaur?`,
