@@ -9,7 +9,7 @@ export const questionPromptTemplateString = `Context information is below.
 ---------------------
 {context}
 ---------------------
-Given the context information and not prior knowledge, answer the question: {question}`;
+Given the context information and no prior knowledge, answer the question: {question}`;
 
 const questionPrompt = new PromptTemplate({
   inputVariables: ["context", "question"],

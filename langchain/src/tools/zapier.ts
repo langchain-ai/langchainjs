@@ -34,6 +34,13 @@ export interface ZapierNLAWrapperParams extends AsyncCallerParams {
   oauthAccessToken?: string;
 }
 
+/**
+ * A wrapper class for Zapier's Natural Language Actions (NLA). It
+ * provides an interface to interact with the 5k+ apps and 20k+ actions on
+ * Zapier's platform through a natural language API interface. This
+ * includes apps like Gmail, Salesforce, Trello, Slack, Asana, HubSpot,
+ * Google Sheets, Microsoft Teams, and many more.
+ */
 export class ZapierNLAWrapper extends Serializable {
   lc_namespace = ["langchain", "tools", "zapier"];
 
@@ -238,7 +245,16 @@ export class ZapierNLAWrapper extends Serializable {
   }
 }
 
+/**
+ * A tool that uses the `ZapierNLAWrapper` to run a specific action. It
+ * takes in the `ZapierNLAWrapper` instance, an action ID, a description,
+ * a schema for the parameters, and optionally the parameters themselves.
+ */
 export class ZapierNLARunAction extends Tool {
+  static lc_name() {
+    return "ZapierNLARunAction";
+  }
+
   apiWrapper: ZapierNLAWrapper;
 
   actionId: string;

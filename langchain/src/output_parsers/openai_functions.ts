@@ -3,12 +3,23 @@ import { ChatGeneration, Generation } from "../schema/index.js";
 import { Optional } from "../types/type-utils.js";
 import { BaseLLMOutputParser } from "../schema/output_parser.js";
 
+/**
+ * Represents optional parameters for a function in a JSON Schema.
+ */
 export type FunctionParameters = Optional<
   JsonSchema7ObjectType,
   "additionalProperties"
 >;
 
+/**
+ * Class for parsing the output of an LLM. Can be configured to return
+ * only the arguments of the function call in the output.
+ */
 export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
+  static lc_name() {
+    return "OutputFunctionsParser";
+  }
+
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   lc_serializable = true;
@@ -20,6 +31,12 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
     this.argsOnly = config?.argsOnly ?? this.argsOnly;
   }
 
+  /**
+   * Parses the output and returns a string representation of the function
+   * call or its arguments.
+   * @param generations The output of the LLM to parse.
+   * @returns A string representation of the function call or its arguments.
+   */
   async parseResult(
     generations: Generation[] | ChatGeneration[]
   ): Promise<string> {
@@ -48,7 +65,15 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
   }
 }
 
+/**
+ * Class for parsing the output of an LLM into a JSON object. Uses an
+ * instance of `OutputFunctionsParser` to parse the output.
+ */
 export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
+  static lc_name() {
+    return "JsonOutputFunctionsParser";
+  }
+
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   lc_serializable = true;
@@ -63,6 +88,12 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
     this.outputParser = new OutputFunctionsParser(config);
   }
 
+  /**
+   * Parses the output and returns a JSON object. If `argsOnly` is true,
+   * only the arguments of the function call are returned.
+   * @param generations The output of the LLM to parse.
+   * @returns A JSON object representation of the function call or its arguments.
+   */
   async parseResult(
     generations: Generation[] | ChatGeneration[]
   ): Promise<object> {
@@ -81,9 +112,18 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
   }
 }
 
+/**
+ * Class for parsing the output of an LLM into a JSON object and returning
+ * a specific attribute. Uses an instance of `JsonOutputFunctionsParser`
+ * to parse the output.
+ */
 export class JsonKeyOutputFunctionsParser<
   T = object
 > extends BaseLLMOutputParser<T> {
+  static lc_name() {
+    return "JsonKeyOutputFunctionsParser";
+  }
+
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   lc_serializable = true;
@@ -97,6 +137,12 @@ export class JsonKeyOutputFunctionsParser<
     this.attrName = fields.attrName;
   }
 
+  /**
+   * Parses the output and returns a specific attribute of the parsed JSON
+   * object.
+   * @param generations The output of the LLM to parse.
+   * @returns The value of a specific attribute of the parsed JSON object.
+   */
   async parseResult(generations: Generation[] | ChatGeneration[]): Promise<T> {
     const result = await this.outputParser.parseResult(generations);
     return result[this.attrName as keyof typeof result] as T;

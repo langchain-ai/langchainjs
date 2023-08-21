@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { expect, test } from "@jest/globals";
 import { HUMAN_PROMPT } from "@anthropic-ai/sdk";
 import { ChatMessage, HumanMessage } from "../../schema/index.js";
@@ -22,6 +24,27 @@ test("Test ChatAnthropic", async () => {
 test("Test ChatAnthropic Generate", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.generate([[message], [message]]);
+  expect(res.generations.length).toBe(2);
+  for (const generation of res.generations) {
+    expect(generation.length).toBe(1);
+    for (const message of generation) {
+      console.log(message.text);
+    }
+  }
+  console.log({ res });
+});
+
+test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    clientOptions: {
+      defaultHeaders: {
+        "Helicone-Auth": "HELICONE_API_KEY",
+      },
+    },
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message], [message]]);
@@ -272,4 +295,19 @@ test("Test ChatAnthropic stream method with early break", async () => {
       break;
     }
   }
+});
+
+test("Test ChatAnthropic headers passed through", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    anthropicApiKey: "NOT_REAL",
+    invocationKwargs: {
+      headers: {
+        "X-Api-Key": process.env.ANTHROPIC_API_KEY,
+      },
+    },
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.call([message]);
+  console.log({ res });
 });

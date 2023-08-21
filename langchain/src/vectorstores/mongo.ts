@@ -14,6 +14,10 @@ export type MongoLibArgs = {
   indexName?: string;
 };
 
+/**
+ * Type that defines an extension for MongoDB queries. It includes an
+ * optional array of post-query pipeline steps.
+ */
 export type MongoVectorStoreQueryExtension = {
   postQueryPipelineSteps?: MongoDocument[];
 };
@@ -39,6 +43,13 @@ export class MongoVectorStore extends VectorStore {
     this.indexName = args.indexName || "default";
   }
 
+  /**
+   * Method that adds documents to the MongoDB collection. It first converts
+   * the documents into vectors using the `embedDocuments` method of the
+   * `embeddings` instance, and then adds these vectors to the collection.
+   * @param documents Array of Document instances to be added to the MongoDB collection.
+   * @returns Promise that resolves when the documents have been added to the collection.
+   */
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
@@ -47,6 +58,14 @@ export class MongoVectorStore extends VectorStore {
     );
   }
 
+  /**
+   * Method that adds vectors to the MongoDB collection. It creates an array
+   * of items, each containing the content, embedding, and metadata of a
+   * document, and then inserts these items into the collection.
+   * @param vectors Array of vectors to be added to the MongoDB collection.
+   * @param documents Array of Document instances corresponding to the vectors.
+   * @returns Promise that resolves when the vectors have been added to the collection.
+   */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     const items = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
@@ -57,6 +76,16 @@ export class MongoVectorStore extends VectorStore {
     await this.collection.insertMany(items);
   }
 
+  /**
+   * Method that performs a similarity search on vectors and returns the
+   * documents and their similarity scores. It constructs a MongoDB
+   * aggregation pipeline, applies any post-query pipeline steps if
+   * provided, and then executes the pipeline to retrieve the results.
+   * @param query Query vector for the similarity search.
+   * @param k Number of nearest neighbors to return.
+   * @param filter Optional filter for the query, which can include post-query pipeline steps.
+   * @returns Promise that resolves to an array of tuples, each containing a Document instance and its similarity score.
+   */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
@@ -127,6 +156,17 @@ export class MongoVectorStore extends VectorStore {
     return ret;
   }
 
+  /**
+   * Static method that creates a `MongoVectorStore` instance from an array
+   * of texts. It creates Document instances from the texts and their
+   * corresponding metadata, and then calls the `fromDocuments` method to
+   * create the `MongoVectorStore` instance.
+   * @param texts Array of texts to be converted into Document instances.
+   * @param metadatas Array or single object of metadata corresponding to the texts.
+   * @param embeddings Embeddings instance used to convert the texts into vectors.
+   * @param dbConfig Configuration for the MongoDB database.
+   * @returns Promise that resolves to a new MongoVectorStore instance.
+   */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
@@ -145,6 +185,15 @@ export class MongoVectorStore extends VectorStore {
     return MongoVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
+  /**
+   * Static method that creates a `MongoVectorStore` instance from an array
+   * of Document instances. It creates a new `MongoVectorStore` instance,
+   * adds the documents to it, and then returns the instance.
+   * @param docs Array of Document instances to be added to the `MongoVectorStore`.
+   * @param embeddings Embeddings instance used to convert the documents into vectors.
+   * @param dbConfig Configuration for the MongoDB database.
+   * @returns Promise that resolves to a new MongoVectorStore instance.
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,

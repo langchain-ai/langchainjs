@@ -10,6 +10,10 @@ import {
 import { DEFAULT_PROMPT } from "./stuff_prompts.js";
 import { REFINE_PROMPT } from "./refine_prompts.js";
 
+/**
+ * Type for the base parameters that can be used to configure a
+ * summarization chain.
+ */
 type BaseParams = {
   verbose?: boolean;
 };

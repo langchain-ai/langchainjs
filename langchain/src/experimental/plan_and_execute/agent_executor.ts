@@ -21,6 +21,11 @@ import { Tool } from "../../tools/base.js";
 import { ChatAgent } from "../../agents/chat/index.js";
 import { SerializedLLMChain } from "../../chains/serde.js";
 
+/**
+ * Interface for the input to the PlanAndExecuteAgentExecutor class. It
+ * extends ChainInputs and includes additional properties for the planner,
+ * step executor, step container, and input and output keys.
+ */
 export interface PlanAndExecuteAgentExecutorInput extends ChainInputs {
   planner: BasePlanner;
   stepExecutor: BaseStepExecutor;
@@ -29,7 +34,17 @@ export interface PlanAndExecuteAgentExecutorInput extends ChainInputs {
   outputKey?: string;
 }
 
+/**
+ * Class representing a plan-and-execute agent executor. This agent
+ * decides on the full sequence of actions upfront, then executes them all
+ * without updating the plan. This is suitable for complex or long-running
+ * tasks that require maintaining long-term objectives and focus.
+ */
 export class PlanAndExecuteAgentExecutor extends BaseChain {
+  static lc_name() {
+    return "PlanAndExecuteAgentExecutor";
+  }
+
   private planner: BasePlanner;
 
   private stepExecutor: BaseStepExecutor;
@@ -57,6 +72,13 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     return [this.outputKey];
   }
 
+  /**
+   * Static method that returns a default planner for the agent. It creates
+   * a new LLMChain with a given LLM and a fixed prompt, and uses it to
+   * create a new LLMPlanner with a PlanOutputParser.
+   * @param llm The Large Language Model (LLM) used to generate responses.
+   * @returns A new LLMPlanner instance.
+   */
   static getDefaultPlanner({ llm }: { llm: BaseLanguageModel }) {
     const plannerLlmChain = new LLMChain({
       llm,
@@ -65,6 +87,15 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     return new LLMPlanner(plannerLlmChain, new PlanOutputParser());
   }
 
+  /**
+   * Static method that returns a default step executor for the agent. It
+   * creates a new ChatAgent from a given LLM and a set of tools, and uses
+   * it to create a new ChainStepExecutor.
+   * @param llm The Large Language Model (LLM) used to generate responses.
+   * @param tools The set of tools used by the agent.
+   * @param humanMessageTemplate The template for human messages. If not provided, a default template is used.
+   * @returns A new ChainStepExecutor instance.
+   */
   static getDefaultStepExecutor({
     llm,
     tools,
@@ -85,6 +116,16 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     );
   }
 
+  /**
+   * Static method that creates a new PlanAndExecuteAgentExecutor from a
+   * given LLM, a set of tools, and optionally a human message template. It
+   * uses the getDefaultPlanner and getDefaultStepExecutor methods to create
+   * the planner and step executor for the new agent executor.
+   * @param llm The Large Language Model (LLM) used to generate responses.
+   * @param tools The set of tools used by the agent.
+   * @param humanMessageTemplate The template for human messages. If not provided, a default template is used.
+   * @returns A new PlanAndExecuteAgentExecutor instance.
+   */
   static fromLLMAndTools({
     llm,
     tools,

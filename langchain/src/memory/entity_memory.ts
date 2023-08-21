@@ -17,6 +17,9 @@ import { LLMChain } from "../chains/llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
 
+/**
+ * Interface for the input parameters required by the EntityMemory class.
+ */
 export interface EntityMemoryInput extends BaseChatMemoryInput {
   llm: BaseLanguageModel;
   humanPrefix?: string;
@@ -31,6 +34,11 @@ export interface EntityMemoryInput extends BaseChatMemoryInput {
 }
 
 // Entity extractor & summarizer to memory.
+/**
+ * Class for managing entity extraction and summarization to memory in
+ * chatbot applications. Extends the BaseChatMemory class and implements
+ * the EntityMemoryInput interface.
+ */
 export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
   private entityExtractionChain: LLMChain;
 
@@ -87,6 +95,11 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
   }
 
   // Return history buffer.
+  /**
+   * Method to load memory variables and perform entity extraction.
+   * @param inputs Input values for the method.
+   * @returns Promise resolving to an object containing memory variables.
+   */
   async loadMemoryVariables(inputs: InputValues): Promise<MemoryVariables> {
     const promptInputKey =
       this.inputKey ?? getPromptInputKey(inputs, this.memoryVariables);
@@ -122,6 +135,13 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
   }
 
   // Save context from this conversation to buffer.
+  /**
+   * Method to save the context from a conversation to a buffer and perform
+   * entity summarization.
+   * @param inputs Input values for the method.
+   * @param outputs Output values from the method.
+   * @returns Promise resolving to void.
+   */
   async saveContext(inputs: InputValues, outputs: OutputValues): Promise<void> {
     await super.saveContext(inputs, outputs);
 
@@ -153,6 +173,10 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
   }
 
   // Clear memory contents.
+  /**
+   * Method to clear the memory contents.
+   * @returns Promise resolving to void.
+   */
   async clear() {
     await super.clear();
     await this.entityStore.clear();

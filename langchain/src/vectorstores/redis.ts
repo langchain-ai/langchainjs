@@ -10,6 +10,10 @@ import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 
 // Adapated from internal redis types which aren't exported
+/**
+ * Type for creating a schema vector field. It includes the algorithm,
+ * distance metric, and initial capacity.
+ */
 export type CreateSchemaVectorField<
   T extends VectorAlgorithms,
   A extends Record<string, unknown>
@@ -18,12 +22,21 @@ export type CreateSchemaVectorField<
   DISTANCE_METRIC: "L2" | "IP" | "COSINE";
   INITIAL_CAP?: number;
 } & A;
+/**
+ * Type for creating a flat schema vector field. It extends
+ * CreateSchemaVectorField with a block size property.
+ */
 export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
   VectorAlgorithms.FLAT,
   {
     BLOCK_SIZE?: number;
   }
 >;
+/**
+ * Type for creating a HNSW schema vector field. It extends
+ * CreateSchemaVectorField with M, EF_CONSTRUCTION, and EF_RUNTIME
+ * properties.
+ */
 export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
   VectorAlgorithms.HNSW,
   {
@@ -33,6 +46,11 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
   }
 >;
 
+/**
+ * Interface for the configuration of the RedisVectorStore. It includes
+ * the Redis client, index name, index options, key prefix, content key,
+ * metadata key, vector key, and filter.
+ */
 export interface RedisVectorStoreConfig {
   redisClient:
     | ReturnType<typeof createClient>
@@ -46,13 +64,26 @@ export interface RedisVectorStoreConfig {
   filter?: RedisVectorStoreFilterType;
 }
 
+/**
+ * Interface for the options when adding documents to the
+ * RedisVectorStore. It includes keys and batch size.
+ */
 export interface RedisAddOptions {
   keys?: string[];
   batchSize?: number;
 }
 
+/**
+ * Type for the filter used in the RedisVectorStore. It is an array of
+ * strings.
+ */
 export type RedisVectorStoreFilterType = string[];
 
+/**
+ * Class representing a RedisVectorStore. It extends the VectorStore class
+ * and includes methods for adding documents and vectors, performing
+ * similarity searches, managing the index, and more.
+ */
 export class RedisVectorStore extends VectorStore {
   declare FilterType: RedisVectorStoreFilterType;
 
@@ -94,6 +125,13 @@ export class RedisVectorStore extends VectorStore {
     this.filter = _dbConfig.filter;
   }
 
+  /**
+   * Method for adding documents to the RedisVectorStore. It first converts
+   * the documents to texts and then adds them as vectors.
+   * @param documents The documents to add.
+   * @param options Optional parameters for adding the documents.
+   * @returns A promise that resolves when the documents have been added.
+   */
   async addDocuments(documents: Document[], options?: RedisAddOptions) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
@@ -103,6 +141,16 @@ export class RedisVectorStore extends VectorStore {
     );
   }
 
+  /**
+   * Method for adding vectors to the RedisVectorStore. It checks if the
+   * index exists and creates it if it doesn't, then adds the vectors in
+   * batches.
+   * @param vectors The vectors to add.
+   * @param documents The documents associated with the vectors.
+   * @param keys Optional keys for the vectors.
+   * @param batchSize The size of the batches in which to add the vectors. Defaults to 1000.
+   * @returns A promise that resolves when the vectors have been added.
+   */
   async addVectors(
     vectors: number[][],
     documents: Document[],
@@ -136,6 +184,14 @@ export class RedisVectorStore extends VectorStore {
     await multi.exec();
   }
 
+  /**
+   * Method for performing a similarity search in the RedisVectorStore. It
+   * returns the documents and their scores.
+   * @param query The query vector.
+   * @param k The number of nearest neighbors to return.
+   * @param filter Optional filter to apply to the search.
+   * @returns A promise that resolves to an array of documents and their scores.
+   */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
@@ -174,6 +230,16 @@ export class RedisVectorStore extends VectorStore {
     return result;
   }
 
+  /**
+   * Static method for creating a new instance of RedisVectorStore from
+   * texts. It creates documents from the texts and metadata, then adds them
+   * to the RedisVectorStore.
+   * @param texts The texts to add.
+   * @param metadatas The metadata associated with the texts.
+   * @param embeddings The embeddings to use.
+   * @param dbConfig The configuration for the RedisVectorStore.
+   * @returns A promise that resolves to a new instance of RedisVectorStore.
+   */
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
@@ -192,6 +258,14 @@ export class RedisVectorStore extends VectorStore {
     return RedisVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
+  /**
+   * Static method for creating a new instance of RedisVectorStore from
+   * documents. It adds the documents to the RedisVectorStore.
+   * @param docs The documents to add.
+   * @param embeddings The embeddings to use.
+   * @param dbConfig The configuration for the RedisVectorStore.
+   * @returns A promise that resolves to a new instance of RedisVectorStore.
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
@@ -202,6 +276,10 @@ export class RedisVectorStore extends VectorStore {
     return instance;
   }
 
+  /**
+   * Method for checking if an index exists in the RedisVectorStore.
+   * @returns A promise that resolves to a boolean indicating whether the index exists.
+   */
   async checkIndexExists() {
     try {
       await this.redisClient.ft.info(this.indexName);
@@ -213,6 +291,12 @@ export class RedisVectorStore extends VectorStore {
     return true;
   }
 
+  /**
+   * Method for creating an index in the RedisVectorStore. If the index
+   * already exists, it does nothing.
+   * @param dimensions The dimensions of the index. Defaults to 1536.
+   * @returns A promise that resolves when the index has been created.
+   */
   async createIndex(dimensions = 1536): Promise<void> {
     if (await this.checkIndexExists()) {
       return;
@@ -235,6 +319,10 @@ export class RedisVectorStore extends VectorStore {
     });
   }
 
+  /**
+   * Method for dropping an index from the RedisVectorStore.
+   * @returns A promise that resolves to a boolean indicating whether the index was dropped.
+   */
   async dropIndex(): Promise<boolean> {
     try {
       await this.redisClient.ft.dropIndex(this.indexName);
