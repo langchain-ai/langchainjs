@@ -33,7 +33,8 @@ const prompt = new ChatPromptTemplate({
 
 const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 });
 
-// Binding "function_call" below makes
+// Binding "function_call" below makes the model always call the specified function.
+// If you want to allow the model to call functions selectively, omit it.
 const functionCallingModel = llm.bind({
   functions: [
     {
