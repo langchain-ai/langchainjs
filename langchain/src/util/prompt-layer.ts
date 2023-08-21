@@ -1,10 +1,12 @@
-import OpenAI from "openai";
+import { OpenAI as OpenAIClient } from "openai";
 import { AsyncCaller } from "../util/async_caller.js";
 
 export const promptLayerTrackRequest = async (
   callerFunc: AsyncCaller,
   functionName: string,
-  kwargs: OpenAI.CompletionCreateParams | OpenAI.Chat.CompletionCreateParams,
+  kwargs:
+    | OpenAIClient.CompletionCreateParams
+    | OpenAIClient.Chat.CompletionCreateParams,
   plTags: string[] | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestResponse: any,

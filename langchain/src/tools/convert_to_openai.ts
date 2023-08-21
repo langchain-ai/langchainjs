@@ -1,5 +1,5 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
-import OpenAI from "openai";
+import { OpenAI as OpenAIClient } from "openai";
 
 import { StructuredTool } from "./base.js";
 
@@ -11,7 +11,7 @@ import { StructuredTool } from "./base.js";
  */
 export function formatToOpenAIFunction(
   tool: StructuredTool
-): OpenAI.Chat.CompletionCreateParams.Function {
+): OpenAIClient.Chat.CompletionCreateParams.Function {
   return {
     name: tool.name,
     description: tool.description,

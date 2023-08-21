@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI as OpenAIClient } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
@@ -195,7 +195,7 @@ function convertOpenAPISchemaToJSONSchema(
  * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
  */
 function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
-  openAIFunctions: OpenAI.Chat.CompletionCreateParams.Function[];
+  openAIFunctions: OpenAIClient.Chat.CompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {
   if (!spec.document.paths) {
@@ -273,16 +273,17 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
           };
         }
       }
-      const openAIFunction: OpenAI.Chat.CompletionCreateParams.Function = {
-        name: OpenAPISpec.getCleanedOperationId(operation, path, method),
-        description: operation.description ?? operation.summary ?? "",
-        parameters: {
-          type: "object",
-          properties: requestArgsSchema,
-          // All remaining top-level parameters are required
-          required: Object.keys(requestArgsSchema),
-        },
-      };
+      const openAIFunction: OpenAIClient.Chat.CompletionCreateParams.Function =
+        {
+          name: OpenAPISpec.getCleanedOperationId(operation, path, method),
+          description: operation.description ?? operation.summary ?? "",
+          parameters: {
+            type: "object",
+            properties: requestArgsSchema,
+            // All remaining top-level parameters are required
+            required: Object.keys(requestArgsSchema),
+          },
+        };
 
       openAIFunctions.push(openAIFunction);
       const baseUrl = (spec.baseUrl ?? "").endsWith("/")

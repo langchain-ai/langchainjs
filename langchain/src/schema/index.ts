@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI as OpenAIClient } from "openai";
 import { Document } from "../document.js";
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 
@@ -100,7 +100,7 @@ export interface BaseMessageFields {
   content: string;
   name?: string;
   additional_kwargs?: {
-    function_call?: OpenAI.Chat.ChatCompletionMessage.FunctionCall;
+    function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
     [key: string]: unknown;
   };
 }

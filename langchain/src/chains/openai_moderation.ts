@@ -1,4 +1,4 @@
-import OpenAI, { ClientOptions } from "openai";
+import { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
@@ -45,7 +45,7 @@ export class OpenAIModerationChain
 
   clientConfig: ClientOptions;
 
-  client: OpenAI;
+  client: OpenAIClient;
 
   throwError: boolean;
 
@@ -70,12 +70,12 @@ export class OpenAIModerationChain
       ...fields?.configuration,
     };
 
-    this.client = new OpenAI(this.clientConfig);
+    this.client = new OpenAIClient(this.clientConfig);
 
     this.caller = new AsyncCaller(fields ?? {});
   }
 
-  _moderate(text: string, results: OpenAI.Moderation): string {
+  _moderate(text: string, results: OpenAIClient.Moderation): string {
     if (results.flagged) {
       const errorStr = "Text was found that violates OpenAI's content policy.";
       if (this.throwError) {
@@ -89,7 +89,7 @@ export class OpenAIModerationChain
 
   async _call(values: ChainValues): Promise<ChainValues> {
     const text = values[this.inputKey];
-    const moderationRequest: OpenAI.ModerationCreateParams = {
+    const moderationRequest: OpenAIClient.ModerationCreateParams = {
       input: text,
     };
     let mod;

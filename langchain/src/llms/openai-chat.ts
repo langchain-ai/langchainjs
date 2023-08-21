@@ -1,4 +1,4 @@
-import OpenAI, { ClientOptions } from "openai";
+import OpenAI, { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, GenerationChunk, LLMResult } from "../schema/index.js";
 import {
@@ -97,7 +97,7 @@ export class OpenAIChat
 
   modelName = "gpt-3.5-turbo";
 
-  prefixMessages?: OpenAI.Chat.CreateChatCompletionRequestMessage[];
+  prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -123,7 +123,7 @@ export class OpenAIChat
 
   organization?: string;
 
-  private client: OpenAI;
+  private client: OpenAIClient;
 
   private clientConfig: ClientOptions;
 
@@ -219,7 +219,7 @@ export class OpenAIChat
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<OpenAI.Chat.CompletionCreateParams, "messages"> {
+  ): Omit<OpenAIClient.Chat.CompletionCreateParams, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -237,7 +237,10 @@ export class OpenAIChat
   }
 
   /** @ignore */
-  _identifyingParams(): Omit<OpenAI.Chat.CompletionCreateParams, "messages"> & {
+  _identifyingParams(): Omit<
+    OpenAIClient.Chat.CompletionCreateParams,
+    "messages"
+  > & {
     model_name: string;
   } & ClientOptions {
     return {
@@ -250,7 +253,10 @@ export class OpenAIChat
   /**
    * Get the identifying parameters for the model
    */
-  identifyingParams(): Omit<OpenAI.Chat.CompletionCreateParams, "messages"> & {
+  identifyingParams(): Omit<
+    OpenAIClient.Chat.CompletionCreateParams,
+    "messages"
+  > & {
     model_name: string;
   } & ClientOptions {
     return {
@@ -267,8 +273,8 @@ export class OpenAIChat
    */
   private formatMessages(
     prompt: string
-  ): OpenAI.Chat.CreateChatCompletionRequestMessage[] {
-    const message: OpenAI.Chat.CreateChatCompletionRequestMessage = {
+  ): OpenAIClient.Chat.CreateChatCompletionRequestMessage[] {
+    const message: OpenAIClient.Chat.CreateChatCompletionRequestMessage = {
       role: "user",
       content: prompt,
     };
@@ -310,7 +316,9 @@ export class OpenAIChat
 
     const response = params.stream
       ? await (async () => {
-          let response: OpenAI.Chat.Completions.ChatCompletion | undefined;
+          let response:
+            | OpenAIClient.Chat.Completions.ChatCompletion
+            | undefined;
           const stream = await this.streamingCompletionWithRetry(
             {
               ...params,
@@ -376,28 +384,29 @@ export class OpenAIChat
 
   /** @ignore */
   async streamingCompletionWithRetry(
-    request: OpenAI.Chat.CompletionCreateParamsStreaming,
+    request: OpenAIClient.Chat.CompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+  ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>> {
     const requestOptions = this._getClientOptions(options);
     const fn: (
-      body: OpenAI.Chat.CompletionCreateParamsStreaming,
+      body: OpenAIClient.Chat.CompletionCreateParamsStreaming,
       options?: OpenAICoreRequestOptions
-    ) => Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> =
-      this.client.chat.completions.create.bind(this.client);
+    ) => Promise<
+      AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
+    > = this.client.chat.completions.create.bind(this.client);
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
   /** @ignore */
   async completionWithRetry(
-    request: OpenAI.Chat.CompletionCreateParamsNonStreaming,
+    request: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion> {
     const requestOptions = this._getClientOptions(options);
     const fn: (
-      body: OpenAI.Chat.CompletionCreateParamsNonStreaming,
+      body: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
       options?: OpenAICoreRequestOptions
-    ) => Promise<OpenAI.Chat.Completions.ChatCompletion> =
+    ) => Promise<OpenAIClient.Chat.Completions.ChatCompletion> =
       this.client.chat.completions.create.bind(this.client);
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
@@ -415,7 +424,7 @@ export class OpenAIChat
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      this.client = new OpenAI({
+      this.client = new OpenAIClient({
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,

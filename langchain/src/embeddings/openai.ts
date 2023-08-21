@@ -1,4 +1,4 @@
-import OpenAI, { ClientOptions } from "openai";
+import { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "../util/env.js";
 import {
   AzureOpenAIInput,
@@ -61,7 +61,7 @@ export class OpenAIEmbeddings
 
   azureOpenAIBasePath?: string;
 
-  private client: OpenAI;
+  private client: OpenAIClient;
 
   private clientConfig: ClientOptions;
 
@@ -189,7 +189,9 @@ export class OpenAIEmbeddings
    * @param request Request to send to the OpenAI API.
    * @returns Promise that resolves to the response from the API.
    */
-  private async embeddingWithRetry(request: OpenAI.EmbeddingCreateParams) {
+  private async embeddingWithRetry(
+    request: OpenAIClient.EmbeddingCreateParams
+  ) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -201,7 +203,7 @@ export class OpenAIEmbeddings
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      this.client = new OpenAI({
+      this.client = new OpenAIClient({
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
