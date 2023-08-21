@@ -372,7 +372,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     request: CompletionCreateParams & Kwargs
   ) {
     if (!this.streamingClient) {
-      const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+      const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.streamingClient = new Anthropic({
         ...this.clientOptions,
         ...options,
@@ -380,7 +380,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       });
     }
     const makeCompletionRequest = async () =>
-      this.streamingClient.completions.create({ ...request, stream: true });
+      this.streamingClient.completions.create(
+        { ...request, stream: true },
+        { headers: request.headers }
+      );
     return this.caller.call(makeCompletionRequest);
   }
 
@@ -393,7 +396,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       throw new Error("Missing Anthropic API key.");
     }
     if (!this.batchClient) {
-      const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+      const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.batchClient = new Anthropic({
         ...this.clientOptions,
         ...options,
@@ -401,7 +404,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       });
     }
     const makeCompletionRequest = async () =>
-      this.batchClient.completions.create({ ...request, stream: false });
+      this.batchClient.completions.create(
+        { ...request, stream: false },
+        { headers: request.headers }
+      );
     return this.caller.callWithOptions(
       { signal: options.signal },
       makeCompletionRequest
