@@ -20,8 +20,8 @@ const retriever = new ParentDocumentRetriever({
     chunkSize: 50,
   }),
   // Optional `k` parameter to search for more child documents in VectorStore.
-  // Note that this does not affect the number of actual documents retrieved,
-  // as multiple child documents can point to the same parent.
+  // Note that this does not exactly correspond to the number of final (parent) documents
+  // retrieved, as multiple child documents can point to the same parent.
   childK: 20,
 });
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
