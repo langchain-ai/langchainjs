@@ -9,7 +9,6 @@ import {
   OpenAICoreRequestOptions,
   OpenAIInput,
 } from "../types/openai-types.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { chunkArray } from "../util/chunk.js";
 import { getEnvironmentVariable } from "../util/env.js";
@@ -441,7 +440,12 @@ export class OpenAI
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
-  /** @ignore */
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
@@ -455,7 +459,12 @@ export class OpenAI
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
-  /** @ignore */
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -535,25 +544,6 @@ export class PromptLayerOpenAI extends OpenAI {
       throw new Error("Missing PromptLayer API key");
     }
   }
-
-  /**
-   * Calls the OpenAI API with retry logic in case of failures.
-   * @param request The request to send to the OpenAI API.
-   * @param options Optional configuration for the API call.
-   * @returns The response from the OpenAI API.
-   */
-  // async completionWithRetry(
-  //   request: OpenAIClient.CompletionCreateParams,
-  //   options?: StreamingAxiosConfiguration
-  // ) {
-  //   if (request.stream) {
-  //     return super.completionWithRetry(request, options);
-  //   }
-
-  //   const response = await super.completionWithRetry(request);
-
-  //   return response;
-  // }
 
   async _generate(
     prompts: string[],

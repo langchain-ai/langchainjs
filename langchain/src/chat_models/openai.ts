@@ -1,4 +1,4 @@
-import OpenAI, { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
@@ -41,6 +41,10 @@ interface OpenAILLMOutput {
   tokenUsage: TokenUsage;
 }
 
+
+// TODO import from SDK when available
+type OpenAIRoleEnum = "system" | "assistant" | "user" | "function";
+
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
     message.role !== "system" &&
@@ -51,12 +55,12 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
     console.warn(`Unknown message role: ${message.role}`);
   }
 
-  return message.role as "system" | "assistant" | "user" | "function";
+  return message.role as OpenAIRoleEnum;
 }
 
 function messageToOpenAIRole(
   message: BaseMessage
-): "system" | "assistant" | "user" | "function" {
+): OpenAIRoleEnum {
   const type = message._getType();
   switch (type) {
     case "system":
@@ -97,7 +101,7 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  defaultRole?: "system" | "assistant" | "user" | "function"
+  defaultRole?: OpenAIRoleEnum
 ) {
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
@@ -376,7 +380,7 @@ export class ChatOpenAI
       messages: messagesMapped,
       stream: true as const,
     };
-    let defaultRole: "system" | "assistant" | "user" | "function" | undefined;
+    let defaultRole: OpenAIRoleEnum | undefined;
     const streamIterable = await this.streamingCompletionWithRetry(
       params,
       options
@@ -576,7 +580,12 @@ export class ChatOpenAI
     return { totalCount, countPerMessage };
   }
 
-  /** @ignore */
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async streamingCompletionWithRetry(
     request: OpenAIClient.Chat.CompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
@@ -591,7 +600,12 @@ export class ChatOpenAI
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
-  /** @ignore */
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
@@ -605,7 +619,7 @@ export class ChatOpenAI
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
-  /** @ignore */
+
   private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {

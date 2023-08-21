@@ -1,4 +1,4 @@
-import OpenAI, { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, GenerationChunk, LLMResult } from "../schema/index.js";
 import {
@@ -382,7 +382,12 @@ export class OpenAIChat
     return response?.choices[0]?.message?.content ?? "";
   }
 
-  /** @ignore */
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async streamingCompletionWithRetry(
     request: OpenAIClient.Chat.CompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
@@ -397,7 +402,12 @@ export class OpenAIChat
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
-  /** @ignore */
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
