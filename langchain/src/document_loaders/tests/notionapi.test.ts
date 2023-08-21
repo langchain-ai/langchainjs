@@ -11,7 +11,6 @@ test("Properties Parser", async () => {
     clientOptions: {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
-    limiterOptions: { maxConcurrent: 64, minTime: 64 },
     id: process.env.NOTION_PAGE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle) => {
       console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
@@ -70,4 +69,5 @@ test("Properties Parser", async () => {
     '[["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"], ["user", "9d6b0c60-efdd-48d1-b63e-027d9b7d66a0"]]'
   );
   expect(contents.Name).toBe("An example page in a database");
+  expect(contents._title).toBe("An example page in a database");
 });
