@@ -21,7 +21,7 @@ const retriever = new ParentDocumentRetriever({
   }),
   // Optional `k` parameter to search for more documents in VectorStore. This is sometimes desired, when
   // using LLM model with a bigger context window
-  k: 20
+  k: 20,
 });
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
