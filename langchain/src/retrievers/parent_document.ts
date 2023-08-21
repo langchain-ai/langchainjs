@@ -24,8 +24,8 @@ export interface ParentDocumentRetrieverFields extends BaseRetrieverInput {
  * The small chunks are embedded, then on retrieval, the original
  * "parent" documents are retrieved.
  *
- * This strikes a balance between the fine-grained control of smaller chunks
- * with the broader context of bigger ones.
+ * This strikes a balance between better targeted retrieval with small documents
+ * and the more context-rich larger documents.
  */
 export class ParentDocumentRetriever extends BaseRetriever {
   static lc_name() {
