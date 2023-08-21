@@ -41,7 +41,6 @@ interface OpenAILLMOutput {
   tokenUsage: TokenUsage;
 }
 
-
 // TODO import from SDK when available
 type OpenAIRoleEnum = "system" | "assistant" | "user" | "function";
 
@@ -58,9 +57,7 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
   return message.role as OpenAIRoleEnum;
 }
 
-function messageToOpenAIRole(
-  message: BaseMessage
-): OpenAIRoleEnum {
+function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   const type = message._getType();
   switch (type) {
     case "system":
