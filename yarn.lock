@@ -7507,13 +7507,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bottleneck@npm:^2.19.5":
-  version: 2.19.5
-  resolution: "bottleneck@npm:2.19.5"
-  checksum: c5eef1bbea12cef1f1405e7306e7d24860568b0f7ac5eeab706a86762b3fc65ef6d1c641c8a166e4db90f412fc5c948fc5ce8008a8cd3d28c7212ef9c3482bda
-  languageName: node
-  linkType: hard
-
 "bowser@npm:^2.11.0":
   version: 2.11.0
   resolution: "bowser@npm:2.11.0"
@@ -13160,7 +13153,6 @@ __metadata:
     apify-client: ^2.7.1
     axios: ^0.26.0
     binary-extensions: ^2.2.0
-    bottleneck: ^2.19.5
     camelcase: 6
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
@@ -13260,7 +13252,6 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"
-    bottleneck: ^2.19.5
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
     cohere-ai: ^5.0.2
@@ -13354,8 +13345,6 @@ __metadata:
     apify-client:
       optional: true
     axios:
-      optional: true
-    bottleneck:
       optional: true
     cheerio:
       optional: true

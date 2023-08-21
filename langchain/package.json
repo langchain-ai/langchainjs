@@ -584,7 +584,6 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
-    "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
@@ -667,7 +666,6 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
-    "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
@@ -792,9 +790,6 @@
       "optional": true
     },
     "axios": {
-      "optional": true
-    },
-    "bottleneck": {
       "optional": true
     },
     "cheerio": {

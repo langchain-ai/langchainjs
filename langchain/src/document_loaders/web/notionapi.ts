@@ -15,9 +15,9 @@ import type {
   MdBlock,
 } from "notion-to-md/build/types";
 
-import Bottleneck from "bottleneck";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
+import { AsyncCaller } from "../../util/async_caller.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
@@ -76,12 +76,12 @@ export type NotionAPILoaderOptions = {
   clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
   type?: NotionAPIType; // @deprecated `type` property is now automatically determined.
-  limiterOptions?: ConstructorParameters<typeof Bottleneck>[0];
+  callerOptions?: ConstructorParameters<typeof AsyncCaller>[0];
   onDocumentLoaded?: OnDocumentLoadedCallback;
 };
 
 export class NotionAPILoader extends BaseDocumentLoader {
-  private limiter: Bottleneck;
+  private caller: AsyncCaller;
 
   private notionClient: Client;
 
@@ -104,9 +104,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
   constructor(options: NotionAPILoaderOptions) {
     super();
 
-    this.limiter = new Bottleneck(
-      options.limiterOptions ?? { maxConcurrent: 64, minTime: 64 }
-    );
+    this.caller = new AsyncCaller({
+      maxConcurrency: 64,
+      ...options.callerOptions,
+    });
     this.notionClient = new Client(options.clientOptions);
     this.n2mClient = new NotionToMarkdown({
       notionClient: this.notionClient,
@@ -208,7 +209,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     const mdBlock: MdBlock = {
       type: block.type,
       blockId: block.id,
-      parent: await this.limiter.schedule(() =>
+      parent: await this.caller.call(() =>
         this.n2mClient.blockToMarkdown(block)
       ),
       children: [],
@@ -222,7 +223,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
           : block.id;
 
       const childBlocks = await this.loadBlocks(
-        await this.limiter.schedule(() =>
+        await this.caller.call(() =>
           getBlockChildren(this.notionClient, block_id, null)
         )
       );
@@ -247,7 +248,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     // Add child database pages to queue
     const childDatabases = blocks
       .filter((block) => block.type.includes("child_database"))
-      .map((block) => this.limiter.schedule(() => this.loadDatabase(block.id)));
+      .map((block) => this.caller.call(() => this.loadDatabase(block.id)));
 
     // Load this block and child blocks
     const loadingMdBlocks = blocks
@@ -267,7 +268,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     const [pageData, pageId] =
       typeof page === "string"
         ? [
-            this.limiter.schedule(() =>
+            this.caller.call(() =>
               this.notionClient.pages.retrieve({ page_id: page })
             ),
             page,
@@ -276,9 +277,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
     const [pageDetails, pageBlocks] = await Promise.all([
       pageData,
-      this.limiter.schedule(() =>
-        getBlockChildren(this.notionClient, pageId, null)
-      ),
+      this.caller.call(() => getBlockChildren(this.notionClient, pageId, null)),
     ]);
 
     if (!isFullPage(pageDetails)) return;
