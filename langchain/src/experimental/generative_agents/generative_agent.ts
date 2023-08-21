@@ -25,8 +25,8 @@ export type GenerativeAgentConfig = {
 };
 
 /**
- * GenerativeAgent is an agent designed to hold a conversation in addition
- * to using tools. It extends the BaseChain class, which is a generic
+ * Implementation of a generative agent that can learn and form new memories over
+ * time. It extends the BaseChain class, which is a generic
  * sequence of calls to components, including other chains.
  */
 export class GenerativeAgent extends BaseChain {
