@@ -2,6 +2,11 @@ import type { Redis } from "ioredis";
 
 import { BaseStore } from "../schema/storage.js";
 
+/**
+ * Class that extends the BaseStore class to interact with a Redis
+ * database. It provides methods for getting, setting, and deleting data,
+ * as well as yielding keys from the database.
+ */
 export class RedisByteStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage", "ioredis"];
 
@@ -43,6 +48,11 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
     return key;
   }
 
+  /**
+   * Gets multiple keys from the Redis database.
+   * @param keys Array of keys to be retrieved.
+   * @returns An array of retrieved values.
+   */
   async mget(keys: string[]) {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.client.mgetBuffer(prefixedKeys);
@@ -55,6 +65,11 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
     });
   }
 
+  /**
+   * Sets multiple keys in the Redis database.
+   * @param keyValuePairs Array of key-value pairs to be set.
+   * @returns Promise that resolves when all keys have been set.
+   */
   async mset(keyValuePairs: [string, Uint8Array][]): Promise<void> {
     const decoder = new TextDecoder();
     const encodedKeyValuePairs = keyValuePairs.map(([key, value]) => [
@@ -72,10 +87,20 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
     await pipeline.exec();
   }
 
+  /**
+   * Deletes multiple keys from the Redis database.
+   * @param keys Array of keys to be deleted.
+   * @returns Promise that resolves when all keys have been deleted.
+   */
   async mdelete(keys: string[]): Promise<void> {
     await this.client.del(...keys.map(this._getPrefixedKey.bind(this)));
   }
 
+  /**
+   * Yields keys from the Redis database.
+   * @param prefix Optional prefix to filter the keys.
+   * @returns An AsyncGenerator that yields keys from the Redis database.
+   */
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
     let pattern;
     if (prefix) {

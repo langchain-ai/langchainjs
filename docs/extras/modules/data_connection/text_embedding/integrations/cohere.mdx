@@ -11,5 +11,6 @@ import { CohereEmbeddings } from "langchain/embeddings/cohere";
 
 const embeddings = new CohereEmbeddings({
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.COHERE_API_KEY
+  batchSize: 48, // Default value if omitted is 48. Max value is 96
 });
 ```

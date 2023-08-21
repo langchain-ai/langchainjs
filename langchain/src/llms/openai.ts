@@ -7,26 +7,29 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
-import { isNode, getEnvironmentVariable } from "../util/env.js";
+import { calculateMaxTokens } from "../base_language/count_tokens.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { GenerationChunk, LLMResult } from "../schema/index.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
 } from "../types/openai-types.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { chunkArray } from "../util/chunk.js";
-import { BaseLLM, BaseLLMParams } from "./base.js";
-import { calculateMaxTokens } from "../base_language/count_tokens.js";
-import { OpenAIChat } from "./openai-chat.js";
-import { LLMResult, GenerationChunk } from "../schema/index.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 import { readableStreamToAsyncIterable } from "../util/stream.js";
+import { BaseLLM, BaseLLMParams } from "./base.js";
+import { OpenAIChat } from "./openai-chat.js";
 
-export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
+export { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
+/**
+ * Interface for tracking token usage in OpenAI calls.
+ */
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
@@ -55,6 +58,10 @@ export class OpenAI
   extends BaseLLM<OpenAICallOptions>
   implements OpenAIInput, AzureOpenAIInput
 {
+  static lc_name() {
+    return "OpenAI";
+  }
+
   get callKeys(): (keyof OpenAICallOptions)[] {
     return [...(super.callKeys as (keyof OpenAICallOptions)[]), "options"];
   }
@@ -65,6 +72,7 @@ export class OpenAI
     return {
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      organization: "OPENAI_ORGANIZATION",
     };
   }
 
@@ -121,6 +129,8 @@ export class OpenAI
 
   azureOpenAIBasePath?: string;
 
+  organization?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -173,6 +183,10 @@ export class OpenAI
       fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
+    this.organization =
+      fields?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
+
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
@@ -209,6 +223,7 @@ export class OpenAI
 
     this.clientConfig = {
       apiKey: this.openAIApiKey,
+      organization: this.organization,
       ...configuration,
       ...fields?.configuration,
     };
@@ -610,6 +625,12 @@ export class PromptLayerOpenAI extends OpenAI {
     }
   }
 
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: CreateCompletionRequest,
     options?: StreamingAxiosConfiguration

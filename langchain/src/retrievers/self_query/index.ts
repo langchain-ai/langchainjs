@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
@@ -14,6 +13,10 @@ import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
+/**
+ * Interface for the arguments required to create a SelfQueryRetriever
+ * instance. It extends the BaseRetrieverInput interface.
+ */
 export interface SelfQueryRetrieverArgs<T extends VectorStore>
   extends BaseRetrieverInput {
   vectorStore: T;
@@ -28,10 +31,19 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
   };
 }
 
+/**
+ * Class for question answering over an index. It retrieves relevant
+ * documents based on a query. It extends the BaseRetriever class and
+ * implements the SelfQueryRetrieverArgs interface.
+ */
 export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever
   implements SelfQueryRetrieverArgs<T>
 {
+  static lc_name() {
+    return "SelfQueryRetriever";
+  }
+
   get lc_namespace() {
     return ["langchain", "retrievers", "self_query"];
   }
@@ -104,6 +116,15 @@ export class SelfQueryRetriever<T extends VectorStore>
     }
   }
 
+  /**
+   * Static method to create a new SelfQueryRetriever instance from a
+   * BaseLanguageModel and a VectorStore. It first loads a query constructor
+   * chain using the loadQueryConstructorChain function, then creates a new
+   * SelfQueryRetriever instance with the loaded chain and the provided
+   * options.
+   * @param options The options used to create the SelfQueryRetriever instance. It includes the QueryConstructorChainOptions and all the SelfQueryRetrieverArgs except 'llmChain'.
+   * @returns A new instance of SelfQueryRetriever.
+   */
   static fromLLM<T extends VectorStore>(
     options: QueryConstructorChainOptions &
       Omit<SelfQueryRetrieverArgs<T>, "llmChain">

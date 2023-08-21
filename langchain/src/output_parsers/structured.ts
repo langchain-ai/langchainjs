@@ -24,6 +24,10 @@ export interface JsonMarkdownFormatInstructionsOptions
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
+  static lc_name() {
+    return "StructuredOutputParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "structured"];
 
   toJSON() {
@@ -34,10 +38,21 @@ export class StructuredOutputParser<
     super(schema);
   }
 
+  /**
+   * Creates a new StructuredOutputParser from a Zod schema.
+   * @param schema The Zod schema which the output should match
+   * @returns A new instance of StructuredOutputParser.
+   */
   static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
     return new this(schema);
   }
 
+  /**
+   * Creates a new StructuredOutputParser from a set of names and
+   * descriptions.
+   * @param schemas An object where each key is a name and each value is a description
+   * @returns A new instance of StructuredOutputParser.
+   */
   static fromNamesAndDescriptions<S extends { [key: string]: string }>(
     schemas: S
   ) {
@@ -53,6 +68,12 @@ export class StructuredOutputParser<
     return new this(zodSchema);
   }
 
+  /**
+   * Returns a markdown code snippet with a JSON object formatted according
+   * to the schema.
+   * @param options Optional. The options for formatting the instructions
+   * @returns A markdown code snippet with a JSON object formatted according to the schema.
+   */
   getFormatInstructions(): string {
     return `You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
@@ -71,6 +92,11 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 `;
   }
 
+  /**
+   * Parses the given text according to the schema.
+   * @param text The text to parse
+   * @returns The parsed output.
+   */
   async parse(text: string): Promise<z.infer<T>> {
     try {
       const json = text.includes("```")
@@ -86,9 +112,17 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
   }
 }
 
+/**
+ * A specific type of `StructuredOutputParser` that parses JSON data
+ * formatted as a markdown code snippet.
+ */
 export class JsonMarkdownStructuredOutputParser<
   T extends z.ZodTypeAny
 > extends StructuredOutputParser<T> {
+  static lc_name() {
+    return "JsonMarkdownStructuredOutputParser";
+  }
+
   getFormatInstructions(
     options?: JsonMarkdownFormatInstructionsOptions
   ): string {
@@ -197,6 +231,10 @@ export interface AsymmetricStructuredOutputParserFields<
   inputSchema: T;
 }
 
+/**
+ * A type of `StructuredOutputParser` that handles asymmetric input and
+ * output schemas.
+ */
 export abstract class AsymmetricStructuredOutputParser<
   T extends z.ZodTypeAny,
   Y = unknown
@@ -210,6 +248,12 @@ export abstract class AsymmetricStructuredOutputParser<
     );
   }
 
+  /**
+   * Processes the parsed input into the desired output format. Must be
+   * implemented by subclasses.
+   * @param input The parsed input
+   * @returns The processed output.
+   */
   abstract outputProcessor(input: z.infer<T>): Promise<Y>;
 
   async parse(text: string): Promise<Y> {

@@ -7,5 +7,9 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const embeddings = new OpenAIEmbeddings({
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  batchSize: 512, // Default value if omitted is 512. Max is 2048
 });
 ```
+
+If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` to your OpenAI organization id, or pass it in as `organization` when
+initializing the model.

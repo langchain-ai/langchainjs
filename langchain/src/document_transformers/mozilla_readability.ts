@@ -4,7 +4,15 @@ import { Options } from "mozilla-readability";
 import { Document } from "../document.js";
 import { MappingDocumentTransformer } from "../schema/document.js";
 
+/**
+ * A transformer that uses the Mozilla Readability library to extract the
+ * main content from a web page.
+ */
 export class MozillaReadabilityTransformer extends MappingDocumentTransformer {
+  static lc_name() {
+    return "MozillaReadabilityTransformer";
+  }
+
   constructor(protected options: Options = {}) {
     super(options);
   }

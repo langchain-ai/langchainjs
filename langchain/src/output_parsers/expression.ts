@@ -38,6 +38,13 @@ export class ExpressionParser extends BaseOutputParser<ParsedType> {
     }
   }
 
+  /**
+   * Parses the given text. It first ensures the parser is loaded, then
+   * tries to parse the text. If the parsing fails, it throws an error. If
+   * the parsing is successful, it returns the parsed expression.
+   * @param text The text to be parsed.
+   * @returns The parsed expression
+   */
   async parse(text: string) {
     await this.ensureParser();
 
@@ -62,6 +69,11 @@ export class ExpressionParser extends BaseOutputParser<ParsedType> {
     }
   }
 
+  /**
+   * This method is currently empty, but it could be used to provide
+   * instructions on the format of the input text.
+   * @returns string
+   */
   getFormatInstructions(): string {
     return "";
   }

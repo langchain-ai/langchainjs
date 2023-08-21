@@ -20,6 +20,12 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * Interface defining the fields required to create an instance of
+ * `DynamoDBChatMessageHistory`. It includes the DynamoDB table name,
+ * session ID, partition key, sort key, message attribute name, and
+ * DynamoDB client configuration.
+ */
 export interface DynamoDBChatMessageHistoryFields {
   tableName: string;
   sessionId: string;
@@ -29,6 +35,10 @@ export interface DynamoDBChatMessageHistoryFields {
   config?: DynamoDBClientConfig;
 }
 
+/**
+ * Interface defining the structure of a chat message as it is stored in
+ * DynamoDB.
+ */
 interface DynamoDBSerializedChatMessage {
   M: {
     type: {
@@ -43,6 +53,11 @@ interface DynamoDBSerializedChatMessage {
   };
 }
 
+/**
+ * Class providing methods to interact with a DynamoDB table to store and
+ * retrieve chat messages. It extends the `BaseListChatMessageHistory`
+ * class.
+ */
 export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "dynamodb"];
 
@@ -92,6 +107,11 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
+  /**
+   * Retrieves all messages from the DynamoDB table and returns them as an
+   * array of `BaseMessage` instances.
+   * @returns Array of stored messages
+   */
   async getMessages(): Promise<BaseMessage[]> {
     const params: GetItemCommandInput = {
       TableName: this.tableName,
@@ -117,6 +137,9 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(messages);
   }
 
+  /**
+   * Deletes all messages from the DynamoDB table.
+   */
   async clear(): Promise<void> {
     const params: DeleteItemCommandInput = {
       TableName: this.tableName,
@@ -125,6 +148,10 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     await this.client.send(new DeleteItemCommand(params));
   }
 
+  /**
+   * Adds a new message to the DynamoDB table.
+   * @param message The message to be added to the DynamoDB table.
+   */
   async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
 

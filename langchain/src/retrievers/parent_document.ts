@@ -6,6 +6,10 @@ import { VectorStore } from "../vectorstores/base.js";
 import { Docstore } from "../schema/index.js";
 import { TextSplitter } from "../text_splitter.js";
 
+/**
+ * Interface for the fields required to initialize a
+ * ParentDocumentRetriever instance.
+ */
 export interface ParentDocumentRetrieverFields extends BaseRetrieverInput {
   vectorstore: VectorStore;
   docstore: Docstore;
@@ -14,7 +18,19 @@ export interface ParentDocumentRetrieverFields extends BaseRetrieverInput {
   idKey?: string;
 }
 
+/**
+ * A type of document retriever that fetches small chunks of data, then
+ * fetches their parent documents. This is useful when there are
+ * conflicting desires in splitting documents for retrieval. It strikes a
+ * balance by splitting and storing small chunks of data. During
+ * retrieval, it first fetches the small chunks but then looks up the
+ * parent ids for those chunks and returns the parent documents.
+ */
 export class ParentDocumentRetriever extends BaseRetriever {
+  static lc_name() {
+    return "ParentDocumentRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "parent_document"];
 
   protected vectorstore: VectorStore;

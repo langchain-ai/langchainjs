@@ -9,6 +9,11 @@ import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 import { OpenAIAgent } from "./openai/index.js";
 
+/**
+ * Represents the type of an agent in LangChain. It can be
+ * "zero-shot-react-description", "chat-zero-shot-react-description", or
+ * "chat-conversational-react-description".
+ */
 type AgentType =
   | "zero-shot-react-description"
   | "chat-zero-shot-react-description"

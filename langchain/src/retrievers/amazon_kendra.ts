@@ -15,6 +15,10 @@ import {
 import { BaseRetriever } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
+/**
+ * Interface for the arguments required to initialize an
+ * AmazonKendraRetriever instance.
+ */
 export interface AmazonKendraRetrieverArgs {
   indexId: string;
   topK: number;
@@ -23,7 +27,15 @@ export interface AmazonKendraRetrieverArgs {
   clientOptions?: KendraClientConfig;
 }
 
+/**
+ * Class for interacting with Amazon Kendra, an intelligent search service
+ * provided by AWS. Extends the BaseRetriever class.
+ */
 export class AmazonKendraRetriever extends BaseRetriever {
+  static lc_name() {
+    return "AmazonKendraRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "amazon_kendra"];
 
   indexId: string;
@@ -61,6 +73,12 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to combine title and excerpt into a single string.
+  /**
+   * Combines title and excerpt into a single string.
+   * @param title The title of the document.
+   * @param excerpt An excerpt from the document.
+   * @returns A single string combining the title and excerpt.
+   */
   combineText(title?: string, excerpt?: string): string {
     let text = "";
     if (title) {
@@ -73,12 +91,23 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to clean the result text by replacing sequences of whitespace with a single space and removing ellipses.
+  /**
+   * Cleans the result text by replacing sequences of whitespace with a
+   * single space and removing ellipses.
+   * @param resText The result text to clean.
+   * @returns The cleaned result text.
+   */
   cleanResult(resText: string) {
     const res = resText.replace(/\s+/g, " ").replace(/\.\.\./g, "");
     return res;
   }
 
   // A method to extract the attribute value from a DocumentAttributeValue object.
+  /**
+   * Extracts the attribute value from a DocumentAttributeValue object.
+   * @param value The DocumentAttributeValue object to extract the value from.
+   * @returns The extracted attribute value.
+   */
   getDocAttributeValue(value: DocumentAttributeValue) {
     if (value.DateValue) {
       return value.DateValue;
@@ -96,6 +125,12 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to extract the attribute key-value pairs from an array of DocumentAttribute objects.
+  /**
+   * Extracts the attribute key-value pairs from an array of
+   * DocumentAttribute objects.
+   * @param documentAttributes The array of DocumentAttribute objects to extract the key-value pairs from.
+   * @returns An object containing the extracted attribute key-value pairs.
+   */
   getDocAttributes(documentAttributes?: DocumentAttribute[]): {
     [key: string]: unknown;
   } {
@@ -111,6 +146,11 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to convert a RetrieveResultItem object into a Document object.
+  /**
+   * Converts a RetrieveResultItem object into a Document object.
+   * @param item The RetrieveResultItem object to convert.
+   * @returns A Document object.
+   */
   convertRetrieverItem(item: RetrieveResultItem) {
     const title = item.DocumentTitle || "";
     const excerpt = item.Content ? this.cleanResult(item.Content) : "";
@@ -128,6 +168,12 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to extract the top-k documents from a RetrieveCommandOutput object.
+  /**
+   * Extracts the top-k documents from a RetrieveCommandOutput object.
+   * @param response The RetrieveCommandOutput object to extract the documents from.
+   * @param pageSize The number of documents to extract.
+   * @returns An array of Document objects.
+   */
   getRetrieverDocs(
     response: RetrieveCommandOutput,
     pageSize: number
@@ -142,6 +188,11 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to extract the excerpt text from a QueryResultItem object.
+  /**
+   * Extracts the excerpt text from a QueryResultItem object.
+   * @param item The QueryResultItem object to extract the excerpt text from.
+   * @returns The extracted excerpt text.
+   */
   getQueryItemExcerpt(item: QueryResultItem) {
     if (
       item.AdditionalAttributes &&
@@ -166,6 +217,11 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to convert a QueryResultItem object into a Document object.
+  /**
+   * Converts a QueryResultItem object into a Document object.
+   * @param item The QueryResultItem object to convert.
+   * @returns A Document object.
+   */
   convertQueryItem(item: QueryResultItem) {
     const title = item.DocumentTitle?.Text || "";
     const excerpt = this.getQueryItemExcerpt(item);
@@ -183,6 +239,12 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to extract the top-k documents from a QueryCommandOutput object.
+  /**
+   * Extracts the top-k documents from a QueryCommandOutput object.
+   * @param response The QueryCommandOutput object to extract the documents from.
+   * @param pageSize The number of documents to extract.
+   * @returns An array of Document objects.
+   */
   getQueryDocs(response: QueryCommandOutput, pageSize: number) {
     if (!response.ResultItems) return [];
     const { length } = response.ResultItems;
@@ -193,6 +255,14 @@ export class AmazonKendraRetriever extends BaseRetriever {
   }
 
   // A method to send a retrieve or query request to Kendra and return the top-k documents.
+  /**
+   * Sends a retrieve or query request to Kendra and returns the top-k
+   * documents.
+   * @param query The query to send to Kendra.
+   * @param topK The number of top documents to return.
+   * @param attributeFilter Optional filter to apply when retrieving documents.
+   * @returns A Promise that resolves to an array of Document objects.
+   */
   async queryKendra(
     query: string,
     topK: number,
