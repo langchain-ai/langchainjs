@@ -123,6 +123,11 @@ describe("VectaraStore", () => {
       expect(resultsWithScore.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].pageContent.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].metadata.length).toBeGreaterThan(0);
+      expect(
+        resultsWithScore[0][0].metadata.find(
+          (item: { name: string }) => item.name === "title"
+        ).value
+      ).toBe("Lord of the Rings");
       expect(resultsWithScore[0][1]).toBeGreaterThan(0);
     });
 
