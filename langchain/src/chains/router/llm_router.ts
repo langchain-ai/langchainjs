@@ -16,9 +16,8 @@ export type RouterOutputSchema = {
 };
 
 /**
- * An interface that extends the ChainInputs interface and adds an
- * additional property "llmChain" of type LLMChain<RouterOutputSchema>. It
- * represents the input expected by the LLMRouterChain class.
+ * An interface that extends the default ChainInputs interface and adds an
+ * additional "llmChain" property.
  */
 export interface LLMRouterChainInput extends ChainInputs {
   llmChain: LLMChain<RouterOutputSchema>;

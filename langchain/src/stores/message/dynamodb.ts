@@ -110,7 +110,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   /**
    * Retrieves all messages from the DynamoDB table and returns them as an
    * array of `BaseMessage` instances.
-   * @returns Promise<BaseMessage[]>
+   * @returns Array of stored messages
    */
   async getMessages(): Promise<BaseMessage[]> {
     const params: GetItemCommandInput = {
@@ -139,7 +139,6 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   /**
    * Deletes all messages from the DynamoDB table.
-   * @returns Promise<void>
    */
   async clear(): Promise<void> {
     const params: DeleteItemCommandInput = {
@@ -152,7 +151,6 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   /**
    * Adds a new message to the DynamoDB table.
    * @param message The message to be added to the DynamoDB table.
-   * @returns Promise<void>
    */
   async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);

@@ -109,7 +109,6 @@ export class MotorheadMemory extends BaseChatMemory {
    * Method that initializes the memory by fetching the session memory from
    * the Motorhead service. It adds the messages to the chat history and
    * sets the context if it is not 'NONE'.
-   * @returns Promise<void>. A promise that resolves when the memory is initialized.
    */
   async init(): Promise<void> {
     const res = await this.caller.call(
@@ -144,7 +143,7 @@ export class MotorheadMemory extends BaseChatMemory {
    * Method that loads the memory variables. It gets the chat messages and
    * returns them as a string or an array based on the returnMessages flag.
    * @param _values The input values.
-   * @returns Promise<MemoryVariables>. A promise that resolves with the memory variables.
+   * @returns A promise that resolves with the memory variables.
    */
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
     const messages = await this.chatHistory.getMessages();
@@ -167,7 +166,7 @@ export class MotorheadMemory extends BaseChatMemory {
    * chat memory.
    * @param inputValues The input values.
    * @param outputValues The output values.
-   * @returns Promise<void>. A promise that resolves when the context is saved.
+   * @returns A promise that resolves when the context is saved.
    */
   async saveContext(
     inputValues: InputValues,

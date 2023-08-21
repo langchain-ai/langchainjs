@@ -90,7 +90,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * Method to retrieve all messages from the Firestore collection
    * associated with the current session. Returns an array of BaseMessage
    * objects.
-   * @returns Promise<BaseMessage[]>
+   * @returns Array of stored messages
    */
   async getMessages(): Promise<BaseMessage[]> {
     if (!this.document) {
@@ -118,7 +118,6 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
    * Method to add a new message to the Firestore collection. The message is
    * passed as a BaseMessage object.
    * @param message The message to be added as a BaseMessage object.
-   * @returns Promise<void>
    */
   public async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
@@ -152,7 +151,6 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
   /**
    * Method to delete all messages from the Firestore collection associated
    * with the current session.
-   * @returns Promise<void>
    */
   public async clear(): Promise<void> {
     if (!this.document) {

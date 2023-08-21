@@ -43,7 +43,7 @@ export class ExpressionParser extends BaseOutputParser<ParsedType> {
    * tries to parse the text. If the parsing fails, it throws an error. If
    * the parsing is successful, it returns the parsed expression.
    * @param text The text to be parsed.
-   * @returns Promise<ParsedType>
+   * @returns The parsed expression
    */
   async parse(text: string) {
     await this.ensureParser();

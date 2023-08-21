@@ -41,7 +41,7 @@ export abstract class BaseMessagePromptTemplate<
    * Method that takes an object of TypedPromptInputValues and returns a
    * promise that resolves to an array of BaseMessage instances.
    * @param values Object of TypedPromptInputValues
-   * @returns Promise<RunOutput>
+   * @returns Formatted array of BaseMessages
    */
   abstract formatMessages(
     values: TypedPromptInputValues<RunInput>
@@ -51,7 +51,7 @@ export abstract class BaseMessagePromptTemplate<
    * Calls the formatMessages method with the provided input and options.
    * @param input Input for the formatMessages method
    * @param options Optional BaseCallbackConfig
-   * @returns Promise<RunOutput>
+   * @returns Formatted output messages
    */
   async invoke(
     input: RunInput,

@@ -113,7 +113,6 @@ export class SingleStoreVectorStore extends VectorStore {
   /**
    * Creates a new table in the SingleStoreDB database if it does not
    * already exist.
-   * @returns Promise<void>
    */
   async createTableIfNotExists(): Promise<void> {
     await this.connectionPool
@@ -125,7 +124,6 @@ export class SingleStoreVectorStore extends VectorStore {
 
   /**
    * Ends the connection to the SingleStoreDB database.
-   * @returns Promise<void>
    */
   async end(): Promise<void> {
     return this.connectionPool.end();
@@ -134,7 +132,6 @@ export class SingleStoreVectorStore extends VectorStore {
   /**
    * Adds new documents to the SingleStoreDB database.
    * @param documents An array of Document objects.
-   * @returns Promise<void>
    */
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
@@ -146,7 +143,6 @@ export class SingleStoreVectorStore extends VectorStore {
    * Adds new vectors to the SingleStoreDB database.
    * @param vectors An array of vectors.
    * @param documents An array of Document objects.
-   * @returns Promise<void>
    */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     await this.createTableIfNotExists();
@@ -178,7 +174,7 @@ export class SingleStoreVectorStore extends VectorStore {
    * @param query An array of numbers representing the query vector.
    * @param k The number of nearest neighbors to return.
    * @param filter Optional metadata to filter the vectors by.
-   * @returns Promise<[Document, number][]>
+   * @returns Top matching vectors with score
    */
   async similaritySearchVectorWithScore(
     query: number[],
@@ -260,7 +256,7 @@ export class SingleStoreVectorStore extends VectorStore {
    * @param metadatas An array of metadata objects.
    * @param embeddings An Embeddings object.
    * @param dbConfig A SingleStoreVectorStoreConfig object.
-   * @returns Promise<SingleStoreVectorStore>
+   * @returns A new SingleStoreVectorStore instance
    */
   static async fromTexts(
     texts: string[],
@@ -284,7 +280,7 @@ export class SingleStoreVectorStore extends VectorStore {
    * @param docs An array of Document objects.
    * @param embeddings An Embeddings object.
    * @param dbConfig A SingleStoreVectorStoreConfig object.
-   * @returns Promise<SingleStoreVectorStore>
+   * @returns A new SingleStoreVectorStore instance
    */
   static async fromDocuments(
     docs: Document[],

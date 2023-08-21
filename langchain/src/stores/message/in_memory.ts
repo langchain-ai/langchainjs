@@ -18,7 +18,7 @@ export class ChatMessageHistory extends BaseListChatMessageHistory {
   /**
    * Method to get all the messages stored in the ChatMessageHistory
    * instance.
-   * @returns Promise<BaseMessage[]> - A promise that resolves with an array of BaseMessage instances.
+   * @returns Array of stored BaseMessage instances.
    */
   async getMessages(): Promise<BaseMessage[]> {
     return this.messages;
@@ -27,7 +27,7 @@ export class ChatMessageHistory extends BaseListChatMessageHistory {
   /**
    * Method to add a new message to the ChatMessageHistory instance.
    * @param message The BaseMessage instance to add.
-   * @returns Promise<void> - A promise that resolves when the message has been added.
+   * @returns A promise that resolves when the message has been added.
    */
   async addMessage(message: BaseMessage) {
     this.messages.push(message);
@@ -35,7 +35,7 @@ export class ChatMessageHistory extends BaseListChatMessageHistory {
 
   /**
    * Method to clear all the messages from the ChatMessageHistory instance.
-   * @returns Promise<void> - A promise that resolves when all messages have been cleared.
+   * @returns A promise that resolves when all messages have been cleared.
    */
   async clear() {
     this.messages = [];
