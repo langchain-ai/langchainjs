@@ -284,7 +284,6 @@ const requiresOptionalDependency = [
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
-  "vectorstores/vectara",
   "vectorstores/usearch",
   "vectorstores/zep",
   "memory/zep",

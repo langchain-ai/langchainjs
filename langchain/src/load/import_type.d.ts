@@ -145,9 +145,6 @@ export interface OptionalImportMap {
   "langchain/vectorstores/usearch"?:
     | typeof import("../vectorstores/usearch.js")
     | Promise<typeof import("../vectorstores/usearch.js")>;
-  "langchain/vectorstores/vectara"?:
-    | typeof import("../vectorstores/vectara.js")
-    | Promise<typeof import("../vectorstores/vectara.js")>;
   "langchain/vectorstores/zep"?:
     | typeof import("../vectorstores/zep.js")
     | Promise<typeof import("../vectorstores/zep.js")>;
