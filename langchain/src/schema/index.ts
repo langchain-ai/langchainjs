@@ -113,6 +113,11 @@ export interface FunctionMessageFieldsWithName extends BaseMessageFields {
   name: string;
 }
 
+/**
+ * Base class for all types of messages in a conversation. It includes
+ * properties like `content`, `name`, and `additional_kwargs`. It also
+ * includes methods like `toDict()` and `_getType()`.
+ */
 export abstract class BaseMessage
   extends Serializable
   implements BaseMessageFields
@@ -170,6 +175,13 @@ export abstract class BaseMessage
   }
 }
 
+/**
+ * Represents a chunk of a message, which can be concatenated with other
+ * message chunks. It includes a method `_merge_kwargs_dict()` for merging
+ * additional keyword arguments from another `BaseMessageChunk` into this
+ * one. It also overrides the `__add__()` method to support concatenation
+ * of `BaseMessageChunk` instances.
+ */
 export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
 
@@ -205,6 +217,9 @@ export abstract class BaseMessageChunk extends BaseMessage {
   }
 }
 
+/**
+ * Represents a human message in a conversation.
+ */
 export class HumanMessage extends BaseMessage {
   static lc_name() {
     return "HumanMessage";
@@ -215,6 +230,10 @@ export class HumanMessage extends BaseMessage {
   }
 }
 
+/**
+ * Represents a chunk of a human message, which can be concatenated with
+ * other human message chunks.
+ */
 export class HumanMessageChunk extends BaseMessageChunk {
   static lc_name() {
     return "HumanMessageChunk";
@@ -235,6 +254,9 @@ export class HumanMessageChunk extends BaseMessageChunk {
   }
 }
 
+/**
+ * Represents an AI message in a conversation.
+ */
 export class AIMessage extends BaseMessage {
   static lc_name() {
     return "AIMessage";
@@ -245,6 +267,10 @@ export class AIMessage extends BaseMessage {
   }
 }
 
+/**
+ * Represents a chunk of an AI message, which can be concatenated with
+ * other AI message chunks.
+ */
 export class AIMessageChunk extends BaseMessageChunk {
   static lc_name() {
     return "AIMessageChunk";
@@ -265,6 +291,9 @@ export class AIMessageChunk extends BaseMessageChunk {
   }
 }
 
+/**
+ * Represents a system message in a conversation.
+ */
 export class SystemMessage extends BaseMessage {
   static lc_name() {
     return "SystemMessage";
@@ -275,6 +304,10 @@ export class SystemMessage extends BaseMessage {
   }
 }
 
+/**
+ * Represents a chunk of a system message, which can be concatenated with
+ * other system message chunks.
+ */
 export class SystemMessageChunk extends BaseMessageChunk {
   static lc_name() {
     return "SystemMessageChunk";
@@ -319,6 +352,9 @@ export const AIChatMessage = AIMessage;
  */
 export const SystemChatMessage = SystemMessage;
 
+/**
+ * Represents a function message in a conversation.
+ */
 export class FunctionMessage extends BaseMessage {
   static lc_name() {
     return "FunctionMessage";
@@ -349,6 +385,10 @@ export class FunctionMessage extends BaseMessage {
   }
 }
 
+/**
+ * Represents a chunk of a function message, which can be concatenated
+ * with other function message chunks.
+ */
 export class FunctionMessageChunk extends BaseMessageChunk {
   static lc_name() {
     return "FunctionMessageChunk";
@@ -370,6 +410,9 @@ export class FunctionMessageChunk extends BaseMessageChunk {
   }
 }
 
+/**
+ * Represents a chat message in a conversation.
+ */
 export class ChatMessage
   extends BaseMessage
   implements ChatMessageFieldsWithRole
@@ -402,6 +445,10 @@ export class ChatMessage
   }
 }
 
+/**
+ * Represents a chunk of a chat message, which can be concatenated with
+ * other chat message chunks.
+ */
 export class ChatMessageChunk extends BaseMessageChunk {
   static lc_name() {
     return "ChatMessageChunk";
@@ -505,6 +552,10 @@ export type AgentStep = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
 
+/**
+ * Base class for all chat message histories. All chat message histories
+ * should extend this class.
+ */
 export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseMessage[]>;
 
@@ -517,6 +568,10 @@ export abstract class BaseChatMessageHistory extends Serializable {
   public abstract clear(): Promise<void>;
 }
 
+/**
+ * Base class for all list chat message histories. All list chat message
+ * histories should extend this class.
+ */
 export abstract class BaseListChatMessageHistory extends Serializable {
   public abstract addMessage(message: BaseMessage): Promise<void>;
 
@@ -529,18 +584,29 @@ export abstract class BaseListChatMessageHistory extends Serializable {
   }
 }
 
+/**
+ * Base class for all caches. All caches should extend this class.
+ */
 export abstract class BaseCache<T = Generation[]> {
   abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
 
   abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
 }
 
+/**
+ * Base class for all file stores. All file stores should extend this
+ * class.
+ */
 export abstract class BaseFileStore extends Serializable {
   abstract readFile(path: string): Promise<string>;
 
   abstract writeFile(path: string, contents: string): Promise<void>;
 }
 
+/**
+ * Base class for all entity stores. All entity stores should extend this
+ * class.
+ */
 export abstract class BaseEntityStore extends Serializable {
   abstract get(key: string, defaultValue?: string): Promise<string | undefined>;
 
@@ -553,6 +619,10 @@ export abstract class BaseEntityStore extends Serializable {
   abstract clear(): Promise<void>;
 }
 
+/**
+ * Abstract class for a document store. All document stores should extend
+ * this class.
+ */
 export abstract class Docstore {
   abstract search(search: string): Promise<Document>;
 

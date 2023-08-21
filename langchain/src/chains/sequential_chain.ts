@@ -14,6 +14,9 @@ function formatSet(input: Set<string>) {
     .join(", ");
 }
 
+/**
+ * Interface for the input parameters of the SequentialChain class.
+ */
 export interface SequentialChainInput extends ChainInputs {
   /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
   chains: BaseChain[];
@@ -189,6 +192,9 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
   }
 }
 
+/**
+ * Interface for the input parameters of the SimpleSequentialChain class.
+ */
 export interface SimpleSequentialChainInput extends ChainInputs {
   /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
   chains: Array<BaseChain>;

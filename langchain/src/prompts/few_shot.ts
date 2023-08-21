@@ -156,6 +156,11 @@ export class FewShotPromptTemplate
     return new FewShotPromptTemplate(promptDict);
   }
 
+  /**
+   * Formats the prompt with the given values.
+   * @param values The values to format the prompt with.
+   * @returns A promise that resolves to a string representing the formatted prompt.
+   */
   async format(values: InputValues): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = await this.getExamples(allValues);

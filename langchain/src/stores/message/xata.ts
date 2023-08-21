@@ -17,6 +17,10 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * An object type that represents the input for the XataChatMessageHistory
+ * class.
+ */
 export type XataChatMessageHistoryInput<XataClient> = {
   sessionId: string;
   config?: BaseClientOptions;
@@ -26,6 +30,10 @@ export type XataChatMessageHistoryInput<XataClient> = {
   apiKey?: string;
 };
 
+/**
+ * An interface that represents the data transfer object for stored
+ * messages.
+ */
 interface storedMessagesDTO {
   id: string;
   sessionId: string;
@@ -45,6 +53,12 @@ const chatMemoryColumns: Schemas.Column[] = [
   { name: "additionalKwargs", type: "text" },
 ];
 
+/**
+ * A class for managing chat message history using Xata.io client. It
+ * extends the BaseListChatMessageHistory class and provides methods to
+ * get, add, and clear messages. It also ensures the existence of a table
+ * where the chat messages are stored.
+ */
 export class XataChatMessageHistory<
   XataClient extends BaseClient
 > extends BaseListChatMessageHistory {
@@ -92,6 +106,11 @@ export class XataChatMessageHistory<
     this.tableInitialized = false;
   }
 
+  /**
+   * Retrieves all messages associated with the session ID, ordered by
+   * creation time.
+   * @returns A promise that resolves to an array of BaseMessage instances.
+   */
   async getMessages(): Promise<BaseMessage[]> {
     await this.ensureTable();
     const records = await this.client.db[this.table]
@@ -122,6 +141,11 @@ export class XataChatMessageHistory<
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
+  /**
+   * Adds a new message to the database.
+   * @param message The BaseMessage instance to be added.
+   * @returns A promise that resolves when the message has been added.
+   */
   async addMessage(message: BaseMessage): Promise<void> {
     await this.ensureTable();
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
@@ -135,6 +159,10 @@ export class XataChatMessageHistory<
     });
   }
 
+  /**
+   * Deletes all messages associated with the session ID.
+   * @returns A promise that resolves when the messages have been deleted.
+   */
   async clear(): Promise<void> {
     await this.ensureTable();
     const records = await this.client.db[this.table]
@@ -145,6 +173,11 @@ export class XataChatMessageHistory<
     await this.client.db[this.table].delete(ids);
   }
 
+  /**
+   * Checks if the table exists and creates it if it doesn't. This method is
+   * called before any operation on the table.
+   * @returns A promise that resolves when the table has been ensured.
+   */
   private async ensureTable(): Promise<void> {
     if (!this.createTable) {
       return;

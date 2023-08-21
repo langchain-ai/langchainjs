@@ -13,6 +13,13 @@ import type {
 
 type SupabaseFilterProps = keyof SupabaseFilter;
 
+/**
+ * Utility class used to duplicate parameters for a proxy object,
+ * specifically designed to work with `SupabaseFilter` objects. It
+ * contains methods to handle different types of operations such as "or",
+ * "filter", "in", "contains", "textSearch", "match", "not", and default
+ * operations.
+ */
 export class ProxyParamsDuplicator {
   duplicationAllowedOps: string[] = [
     "eq",
@@ -34,6 +41,12 @@ export class ProxyParamsDuplicator {
 
   values: [string, string][] = [];
 
+  /**
+   * Creates a proxy handler for a `SupabaseFilter` object. The handler
+   * intercepts get operations and applies specific logic based on the
+   * property being accessed.
+   * @returns A proxy handler for a `SupabaseFilter` object.
+   */
   buildProxyHandler() {
     const proxyHandler: ProxyHandler<SupabaseFilter> = {
       get: (target, prop, receiver) => {
@@ -90,6 +103,11 @@ export class ProxyParamsDuplicator {
     return proxyHandler;
   }
 
+  /**
+   * Removes type annotations from a value string.
+   * @param value The value string to clean.
+   * @returns The cleaned value string.
+   */
   removeType(value: string) {
     let cleanedValue = value;
     if (cleanedValue.includes("::float")) {
@@ -101,10 +119,21 @@ export class ProxyParamsDuplicator {
     return cleanedValue;
   }
 
+  /**
+   * Adds a default operation clause to the values array.
+   * @param prop The operation property.
+   * @param column The column to apply the operation to.
+   * @param value The value for the operation.
+   */
   addDefaultOpClause(prop: string, column: string, value: unknown) {
     this.values.push([this.removeType(column), `${String(prop)}.${value}`]);
   }
 
+  /**
+   * Adds an 'or' clause to the values array.
+   * @param filters The filters for the 'or' clause.
+   * @param foreignTable Optional foreign table for the 'or' clause.
+   */
   addOrClause(
     filters: string,
     { foreignTable }: { foreignTable?: string } = {}
@@ -113,10 +142,21 @@ export class ProxyParamsDuplicator {
     this.values.push([this.removeType(key), `(${filters})`]);
   }
 
+  /**
+   * Adds a 'filter' clause to the values array.
+   * @param column The column to apply the filter to.
+   * @param operator The operator for the filter.
+   * @param value The value for the filter.
+   */
   addFilterClause(column: string, operator: string, value: unknown) {
     this.values.push([this.removeType(column), `${operator}.${value}`]);
   }
 
+  /**
+   * Adds an 'in' clause to the values array.
+   * @param column The column to apply the 'in' clause to.
+   * @param values The values for the 'in' clause.
+   */
   addInClause(column: string, values: unknown[]) {
     const cleanedValues = values
       .map((s) => {
@@ -127,6 +167,11 @@ export class ProxyParamsDuplicator {
     this.values.push([this.removeType(column), `in.(${cleanedValues})`]);
   }
 
+  /**
+   * Adds a 'contains' clause to the values array.
+   * @param column The column to apply the 'contains' clause to.
+   * @param value The value for the 'contains' clause.
+   */
   addContainsClause(column: string, value: unknown) {
     if (typeof value === "string") {
       this.values.push([this.removeType(column), `cs.${value}`]);
@@ -140,6 +185,13 @@ export class ProxyParamsDuplicator {
     }
   }
 
+  /**
+   * Adds a 'textSearch' clause to the values array.
+   * @param column The column to apply the 'textSearch' clause to.
+   * @param query The query for the 'textSearch' clause.
+   * @param config Optional configuration for the 'textSearch' clause.
+   * @param type Optional type for the 'textSearch' clause.
+   */
   addTextSearchClause(
     column: string,
     query: string[],
@@ -163,22 +215,43 @@ export class ProxyParamsDuplicator {
     ]);
   }
 
+  /**
+   * Adds a 'not' clause to the values array.
+   * @param column The column to apply the 'not' clause to.
+   * @param operator The operator for the 'not' clause.
+   * @param value The value for the 'not' clause.
+   */
   addNotClause(column: string, operator: string, value: unknown) {
     this.values.push([column, `not.${operator}.${value}`]);
   }
 
+  /**
+   * Adds a 'match' clause to the values array.
+   * @param query The query for the 'match' clause.
+   */
   addMatchClause(query: Record<string, unknown>) {
     Object.entries(query).forEach(([column, value]) => {
       this.values.push([column, `eq.${value}`]);
     });
   }
 
+  /**
+   * Returns the flattened parameters as a string.
+   * @returns The flattened parameters as a string.
+   */
   flattenedParams() {
     const mapped = this.values.map(([k, v]) => `${k}.${v}`);
     if (mapped.length === 1) return mapped[0];
     return `and(${mapped.join(",")})`;
   }
 
+  /**
+   * Gets flattened parameters from a `SupabaseFilter` and a
+   * `SupabaseFilterRPCCall`.
+   * @param rpc The `SupabaseFilter` object.
+   * @param filter The `SupabaseFilterRPCCall` object.
+   * @returns The flattened parameters as a string.
+   */
   static getFlattenedParams(
     rpc: SupabaseFilter,
     filter: SupabaseFilterRPCCall
@@ -190,6 +263,11 @@ export class ProxyParamsDuplicator {
   }
 }
 
+/**
+ * Converts a `SupabaseMetadata` object into a `StructuredQuery` object.
+ * The function creates a new `StructuredQuery` object and uses the
+ * `Operation` and `Comparison` classes to build the query.
+ */
 export function convertObjectFilterToStructuredQuery(
   objFilter: SupabaseMetadata
 ): StructuredQuery {

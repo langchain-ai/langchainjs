@@ -9,8 +9,17 @@ import {
   ChatMessage,
 } from "../schema/index.js";
 
+/**
+ * An interface defining the options for an Ollama API call. It extends
+ * the BaseLanguageModelCallOptions interface.
+ */
 export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
 
+/**
+ * A class that enables calls to the Ollama API to access large language
+ * models in a chat-like fashion. It extends the SimpleChatModel class and
+ * implements the OllamaInput interface.
+ */
 export class ChatOllama extends SimpleChatModel implements OllamaInput {
   declare CallOptions: OllamaCallOptions;
 
@@ -75,6 +84,12 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
     return "ollama";
   }
 
+  /**
+   * A method that returns the parameters for an Ollama API call. It
+   * includes model and options parameters.
+   * @param options Optional parsed call options.
+   * @returns An object containing the parameters for an Ollama API call.
+   */
   invocationParams(options?: this["ParsedCallOptions"]) {
     return {
       model: this.model,
