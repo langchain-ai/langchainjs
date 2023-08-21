@@ -333,8 +333,9 @@ export class NotionAPILoader extends BaseDocumentLoader {
       resPagePromise,
       resDatabasePromise,
     ]);
-    const errors = [resPage, resDatabase].filter(isErrorResponse);
 
+    // Check if both resPage and resDatabase resulted in error responses
+    const errors = [resPage, resDatabase].filter(isErrorResponse);
     if (errors.length === 2) {
       if (errors.every((e) => e.code === APIErrorCode.ObjectNotFound)) {
         throw new AggregateError([
