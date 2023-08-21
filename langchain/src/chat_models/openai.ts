@@ -616,7 +616,6 @@ export class ChatOpenAI
     return this.caller.call(fn, request, requestOptions).then((res) => res);
   }
 
-
   private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
