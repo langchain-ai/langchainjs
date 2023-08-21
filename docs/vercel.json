@@ -335,6 +335,10 @@
     {
       "source": "/docs/production/tracing(/?)",
       "destination": "https://docs.smith.langchain.com/"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/integrations/parent-document-retriever",
+      "destination": "/docs/modules/data_connection/retrievers/how_to/parent-document-retriever"
     }
   ]
 }

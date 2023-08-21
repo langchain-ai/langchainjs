@@ -20,12 +20,13 @@ export interface ParentDocumentRetrieverFields extends BaseRetrieverInput {
 }
 
 /**
- * A type of document retriever that fetches small chunks of data, then
- * fetches their parent documents. This is useful when there are
- * conflicting desires in splitting documents for retrieval. It strikes a
- * balance by splitting and storing small chunks of data. During
- * retrieval, it first fetches the small chunks but then looks up the
- * parent ids for those chunks and returns the parent documents.
+ * A type of document retriever that splits input documents into smaller chunks
+ * while separately storing and preserving the original documents.
+ * The small chunks are embedded, then on retrieval, the original
+ * "parent" documents are retrieved.
+ *
+ * This strikes a balance between better targeted retrieval with small documents
+ * and the more context-rich larger documents.
  */
 export class ParentDocumentRetriever extends BaseRetriever {
   static lc_name() {
