@@ -15,12 +15,12 @@ import {
 } from "../types/googlevertexai-types.js";
 import { Docstore } from "../schema/index.js";
 
-export interface IdDocumentInput extends DocumentInput<Record<string, any>> {
+export interface IdDocumentInput extends DocumentInput {
   id?: string;
 }
 
 export class IdDocument
-  extends Document<Record<string, any>>
+  extends Document
   implements IdDocumentInput
 {
   id?: string;
