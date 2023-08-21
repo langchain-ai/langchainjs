@@ -380,7 +380,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       });
     }
     const makeCompletionRequest = async () =>
-      this.streamingClient.completions.create({ ...request, stream: true });
+      this.streamingClient.completions.create(
+        { ...request, stream: true },
+        { headers: request.headers }
+      );
     return this.caller.call(makeCompletionRequest);
   }
 
@@ -401,7 +404,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       });
     }
     const makeCompletionRequest = async () =>
-      this.batchClient.completions.create({ ...request, stream: false });
+      this.batchClient.completions.create(
+        { ...request, stream: false },
+        { headers: request.headers }
+      );
     return this.caller.callWithOptions(
       { signal: options.signal },
       makeCompletionRequest
