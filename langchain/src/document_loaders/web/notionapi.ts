@@ -291,12 +291,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * @returns An object containing the parsed details of the page.
    */
   private parsePageDetails(page: PageObjectResponse) {
-    const metadata = Object.fromEntries(
-      Object.entries(page).filter(([key, _]) => key !== "id")
-    );
+    const { id, ...rest } = page;
     return {
-      ...metadata,
-      notionId: page.id,
+      ...rest,
+      notionId: id,
       properties: this.parsePageProperties(page),
     };
   }
