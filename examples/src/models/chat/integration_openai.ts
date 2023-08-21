@@ -56,6 +56,7 @@ await modelForFunctionCalling.predictMessages(
     // You can set the `function_call` arg to force the model to use a function
     function_call: {
       name: "get_current_weather",
+      arguments: "",
     },
   }
 );

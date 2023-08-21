@@ -33,7 +33,7 @@ const model = new ChatOpenAI({
   modelName: "gpt-4",
 }).bind({
   functions: [extractionFunctionSchema],
-  function_call: { name: "extractor" },
+  function_call: { name: "extractor", arguments: "" },
 });
 
 const result = await model.invoke([new HumanMessage("What a beautiful day!")]);

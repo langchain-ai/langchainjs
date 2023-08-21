@@ -27,7 +27,7 @@ const functionSchema = [
 ];
 
 const chain = prompt.pipe(
-  model.bind({ functions: functionSchema, function_call: { name: "joke" } })
+  model.bind({ functions: functionSchema, function_call: { name: "joke", arguments: "" } })
 );
 
 const result = await chain.invoke({ subject: "bears" });
