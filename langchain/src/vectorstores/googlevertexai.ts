@@ -15,10 +15,16 @@ import {
 } from "../types/googlevertexai-types.js";
 import { Docstore } from "../schema/index.js";
 
+/**
+ * Allows us to create IdDocument classes that contain the ID.
+ */
 export interface IdDocumentInput extends DocumentInput {
   id?: string;
 }
 
+/**
+ * A Document that optionally includes the ID of the document.
+ */
 export class IdDocument extends Document implements IdDocumentInput {
   id?: string;
 
@@ -75,6 +81,10 @@ class IndexEndpointConnection extends GoogleVertexAIConnection<
   }
 }
 
+/**
+ * Used to represent parameters that are necessary to delete documents
+ * from the matching engine. These must be a list of string IDs
+ */
 export interface MatchingEngineDeleteParams {
   ids: string[];
 }
@@ -263,12 +273,19 @@ class FindNeighborsConnection
   }
 }
 
+/**
+ * Information about the Matching Engine public API endpoint.
+ * Primarily exported to allow for testing.
+ */
 export interface PublicAPIEndpointInfo {
   apiEndpoint?: string;
 
   deployedIndexId?: string;
 }
 
+/**
+ * Parameters necessary to configure the Matching Engine.
+ */
 export interface MatchingEngineArgs
   extends GoogleVertexAIConnectionParams,
     IndexEndpointConnectionParams,
@@ -284,6 +301,10 @@ export interface MatchingEngineArgs
   deployedIndexId?: string;
 }
 
+/**
+ * A class that represents a connection to a Google Vertex AI Matching Engine
+ * instance.
+ */
 export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
   declare FilterType: Restriction[];
 
@@ -474,6 +495,17 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     return metadata;
   }
 
+  /**
+   * Given the metadata from a document, convert it to an array of Restriction
+   * objects that may be passed to the Matching Engine and stored.
+   * The default implementation flattens any metadata and includes it as
+   * an "allowList". Subclasses can choose to convert some of these to
+   * "denyList" items or to add additional restrictions (for example, to format
+   * dates into a different structure or to add additional restrictions
+   * based on the date).
+   * @param documentMetadata - The metadata from a document
+   * @returns a Restriction[] (or an array of a subclass, from the FilterType)
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadataToRestrictions(
     documentMetadata: Record<string, any>
@@ -593,6 +625,9 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
         try {
           doc = await this.docstore.search(id);
         } catch (xx) {
+          // Documents that are in the index are returned, even if they
+          // are not in the document store, to allow for some way to get
+          // the id so they can be deleted.
           console.error(xx);
           doc = new Document({ pageContent: `Missing document ${id}` });
         }
