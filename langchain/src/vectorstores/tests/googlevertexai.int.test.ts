@@ -37,9 +37,11 @@ describe("Vertex AI matching", () => {
     engine = new MatchingEngine(embeddings, config);
   });
 
-  test.skip("public endpoint", async () => {
+  test("public endpoint", async () => {
     const apiendpoint = await engine.determinePublicAPIEndpoint();
     console.log(apiendpoint);
+    expect(apiendpoint).toHaveProperty("apiEndpoint");
+    expect(apiendpoint).toHaveProperty("deployedIndexId");
   });
 
   test("store", async () => {

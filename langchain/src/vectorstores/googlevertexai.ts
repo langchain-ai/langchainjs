@@ -622,18 +622,19 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     // so we need to extract it from the name
     const indexPathPattern = /projects\/.+\/locations\/.+\/indexes\/(.+)$/;
     const deployedIndexes = response?.data?.deployedIndexes ?? [];
-    let found = false;
-    for (let co = 0; co < deployedIndexes.length && !found; co += 1) {
-      const deployedIndex = deployedIndexes[co];
-      const deployedIndexPath = deployedIndex.index;
+    const deployedIndex = deployedIndexes.find( index => {
+      const deployedIndexPath = index.index;
       const match = deployedIndexPath.match(indexPathPattern);
       if (match) {
         const [, potentialIndexId] = match;
         if (potentialIndexId === this.index) {
-          this.deployedIndexId = deployedIndex.id;
-          found = true;
+          return true;
         }
       }
+      return false;
+    });
+    if (deployedIndex) {
+      this.deployedIndexId = deployedIndex.id;
     }
 
     return {
