@@ -12,7 +12,7 @@ Only available on Node.js.
 
 The Google Vertex AI Matching Engine "provides the industry's leading high-scale
 low latency vector database. These vector databases are commonly referred
-to as vector similarity-mathing or an aprximate nearest neighbor (ANN) service."
+to as vector similarity-matching or an approximate nearest neighbor (ANN) service."
 
 ## Setup
 
@@ -58,8 +58,8 @@ initial testing, you will likely want to use something like a
 ```typescript
     import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
     import { Document } from "langchain/document";
-    import { SyntheticEmbeddings } from "langchain/embeddings/fake.js";
-    import { InMemoryDocstore } from "langchain/stores/doc/in_memory.js";
+    import { SyntheticEmbeddings } from "langchain/embeddings/fake";
+    import { InMemoryDocstore } from "langchain/stores/doc/in_memory";
 
     const embeddings = new SyntheticEmbeddings({
       vectorSize: Number.parseInt(process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768", 10)
@@ -125,7 +125,7 @@ Doing a straightforward k-nearest-neighbor search which returns all results
 is done using any of the standard methods:
 
 ```typescript
-    const results = await engine.similaritySearch("that");
+    const results = await engine.similaritySearch("this");
 ```
 
 ### Querying documents with a filter / restriction
