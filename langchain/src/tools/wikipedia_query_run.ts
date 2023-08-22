@@ -1,16 +1,28 @@
 import { Tool } from "./base.js";
 
+/**
+ * Interface for the parameters that can be passed to the
+ * WikipediaQueryRun constructor.
+ */
 export interface WikipediaQueryRunParams {
   topKResults?: number;
   maxDocContentLength?: number;
   baseUrl?: string;
 }
 
+/**
+ * Type alias for URL parameters. Represents a record where keys are
+ * strings and values can be string, number, boolean, undefined, or null.
+ */
 type UrlParameters = Record<
   string,
   string | number | boolean | undefined | null
 >;
 
+/**
+ * Interface for the structure of search results returned by the Wikipedia
+ * API.
+ */
 interface SearchResults {
   query: {
     search: Array<{
@@ -19,6 +31,9 @@ interface SearchResults {
   };
 }
 
+/**
+ * Interface for the structure of a page returned by the Wikipedia API.
+ */
 interface Page {
   pageid: number;
   ns: number;
@@ -26,6 +41,10 @@ interface Page {
   extract: string;
 }
 
+/**
+ * Interface for the structure of a page result returned by the Wikipedia
+ * API.
+ */
 interface PageResult {
   batchcomplete: string;
   query: {
@@ -33,7 +52,15 @@ interface PageResult {
   };
 }
 
+/**
+ * Class for interacting with and fetching data from the Wikipedia API. It
+ * extends the Tool class.
+ */
 export class WikipediaQueryRun extends Tool {
+  static lc_name() {
+    return "WikipediaQueryRun";
+  }
+
   name = "wikipedia-api";
 
   description =
@@ -79,6 +106,13 @@ export class WikipediaQueryRun extends Tool {
     }
   }
 
+  /**
+   * Fetches the content of a specific Wikipedia page. It returns the
+   * extracted content as a string.
+   * @param page The specific Wikipedia page to fetch its content.
+   * @param redirect A boolean value to indicate whether to redirect or not.
+   * @returns The extracted content of the specific Wikipedia page as a string.
+   */
   public async content(page: string, redirect = true): Promise<string> {
     try {
       const result = await this._fetchPage(page, redirect);
@@ -88,6 +122,11 @@ export class WikipediaQueryRun extends Tool {
     }
   }
 
+  /**
+   * Builds a URL for the Wikipedia API using the provided parameters.
+   * @param parameters The parameters to be used in building the URL.
+   * @returns A string representing the built URL.
+   */
   protected buildUrl<P extends UrlParameters>(parameters: P): string {
     const nonUndefinedParams: [string, string][] = Object.entries(parameters)
       .filter(([_, value]) => value !== undefined)

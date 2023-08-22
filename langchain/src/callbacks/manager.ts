@@ -73,6 +73,9 @@ export function parseCallbackConfigArg(
   }
 }
 
+/**
+ * Manage callbacks from different components of LangChain.
+ */
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
 
@@ -85,6 +88,9 @@ export abstract class BaseCallbackManager {
   }
 }
 
+/**
+ * Base class for run manager in LangChain.
+ */
 class BaseRunManager {
   constructor(
     public readonly runId: string,
@@ -119,6 +125,9 @@ class BaseRunManager {
   }
 }
 
+/**
+ * Manages callbacks for retriever runs.
+ */
 export class CallbackManagerForRetrieverRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
@@ -848,7 +857,8 @@ export class CallbackManager
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") || options?.verbose;
     const tracingV2Enabled =
-      getEnvironmentVariable("LANGCHAIN_TRACING_V2") ?? false;
+      getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true";
+
     const tracingEnabled =
       tracingV2Enabled ||
       (getEnvironmentVariable("LANGCHAIN_TRACING") ?? false);

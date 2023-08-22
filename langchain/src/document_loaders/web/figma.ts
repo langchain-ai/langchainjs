@@ -2,6 +2,12 @@ import { BaseDocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
+/**
+ * Interface representing a Figma file. It includes properties for the
+ * file name, role, last modified date, editor type, thumbnail URL,
+ * version, document node, schema version, main file key, and an array of
+ * branches.
+ */
 export interface FigmaFile {
   name: string;
   role: string;
@@ -21,12 +27,23 @@ export interface FigmaFile {
   }>;
 }
 
+/**
+ * Interface representing the parameters for configuring the FigmaLoader.
+ * It includes optional properties for the access token, an array of node
+ * IDs, and the file key.
+ */
 export interface FigmaLoaderParams {
   accessToken?: string;
   nodeIds: string[];
   fileKey: string;
 }
 
+/**
+ * Class representing a document loader for loading Figma files. It
+ * extends the BaseDocumentLoader and implements the FigmaLoaderParams
+ * interface. The constructor takes a config object as a parameter, which
+ * contains the access token, an array of node IDs, and the file key.
+ */
 export class FigmaFileLoader
   extends BaseDocumentLoader
   implements FigmaLoaderParams
@@ -57,12 +74,21 @@ export class FigmaFileLoader
     }
   }
 
+  /**
+   * Constructs the URL for the Figma API call.
+   * @returns The constructed URL as a string.
+   */
   private constructFigmaApiURL(): string {
     return `https://api.figma.com/v1/files/${
       this.fileKey
     }/nodes?ids=${this.nodeIds.join(",")}`;
   }
 
+  /**
+   * Fetches the Figma file using the Figma API and returns it as a
+   * FigmaFile object.
+   * @returns A Promise that resolves to a FigmaFile object.
+   */
   private async getFigmaFile(): Promise<FigmaFile> {
     const url = this.constructFigmaApiURL();
     const response = await fetch(url, { headers: this.headers });
@@ -81,6 +107,12 @@ export class FigmaFileLoader
     return data as FigmaFile;
   }
 
+  /**
+   * Fetches the Figma file using the Figma API, creates a Document instance
+   * with the JSON representation of the file as the page content and the
+   * API URL as the metadata, and returns it.
+   * @returns A Promise that resolves to an array of Document instances.
+   */
   public async load(): Promise<Document[]> {
     const data = await this.getFigmaFile();
     const text = JSON.stringify(data);

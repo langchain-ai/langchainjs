@@ -125,6 +125,7 @@ const entrypoints = {
   "document_loaders/web/serpapi": "document_loaders/web/serpapi",
   "document_loaders/web/sort_xyz_blockchain":
     "document_loaders/web/sort_xyz_blockchain",
+  "document_loaders/web/youtube": "document_loaders/web/youtube",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -304,6 +305,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
+  "document_loaders/web/youtube",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
   "document_loaders/fs/text",

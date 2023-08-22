@@ -279,6 +279,10 @@ export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any
 > extends Runnable<RunInput, RunOutput> {
+  static lc_name() {
+    return "RunnableSequence";
+  }
+
   protected first: Runnable<RunInput>;
 
   protected middle: Runnable[] = [];
@@ -288,7 +292,7 @@ export class RunnableSequence<
 
   lc_serializable = true;
 
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   constructor(fields: {
     first: Runnable<RunInput>;
@@ -526,7 +530,11 @@ export class RunnableMap<RunInput> extends Runnable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Record<string, any>
 > {
-  lc_namespace = ["schema", "runnable"];
+  static lc_name() {
+    return "RunnableMap";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -581,7 +589,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
 > {
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   protected func: RunnableFunc<RunInput, RunOutput>;
 
@@ -609,7 +617,11 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   RunInput,
   RunInput
 > {
-  lc_namespace = ["schema", "runnable"];
+  static lc_name() {
+    return "RunnablePassthrough";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -633,7 +645,11 @@ export class RunnableBinding<
   RunOutput,
   CallOptions extends BaseCallbackConfig
 > extends Runnable<RunInput, RunOutput, CallOptions> {
-  lc_namespace = ["schema", "runnable"];
+  static lc_name() {
+    return "RunnableBinding";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -703,7 +719,11 @@ export class RouterRunnable<
   RunnableInput,
   RunOutput
 > extends Runnable<RunInput, RunOutput> {
-  lc_namespace = ["schema", "langchain"];
+  static lc_name() {
+    return "RouterRunnable";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -778,7 +798,11 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
 > {
-  lc_namespace = ["schema", "langchain"];
+  static lc_name() {
+    return "RunnableWithFallbacks";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 

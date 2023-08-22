@@ -205,6 +205,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/confluence"?:
     | typeof import("../document_loaders/web/confluence.js")
     | Promise<typeof import("../document_loaders/web/confluence.js")>;
+  "langchain/document_loaders/web/youtube"?:
+    | typeof import("../document_loaders/web/youtube.js")
+    | Promise<typeof import("../document_loaders/web/youtube.js")>;
   "langchain/document_loaders/fs/directory"?:
     | typeof import("../document_loaders/fs/directory.js")
     | Promise<typeof import("../document_loaders/fs/directory.js")>;
@@ -354,6 +357,7 @@ export interface SecretMap {
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
   OPENAI_API_KEY?: string;
+  OPENAI_ORGANIZATION?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;

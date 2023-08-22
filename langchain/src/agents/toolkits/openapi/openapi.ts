@@ -18,6 +18,10 @@ import {
 } from "../../../tools/requests.js";
 import { createJsonAgent, JsonToolkit } from "../json/json.js";
 
+/**
+ * Represents a toolkit for making HTTP requests. It initializes the
+ * request tools based on the provided headers.
+ */
 export class RequestsToolkit extends Toolkit {
   tools: Tool[];
 
@@ -27,6 +31,12 @@ export class RequestsToolkit extends Toolkit {
   }
 }
 
+/**
+ * Extends the `RequestsToolkit` class and adds a dynamic tool for
+ * exploring JSON data. It creates a JSON agent using the `JsonToolkit`
+ * and the provided language model, and adds the JSON explorer tool to the
+ * toolkit.
+ */
 export class OpenApiToolkit extends RequestsToolkit {
   constructor(jsonSpec: JsonSpec, llm: BaseLanguageModel, headers?: Headers) {
     super(headers);
@@ -45,6 +55,17 @@ export class OpenApiToolkit extends RequestsToolkit {
   }
 }
 
+/**
+ * Creates an OpenAPI agent using a language model, an OpenAPI toolkit,
+ * and optional prompt arguments. It creates a prompt for the agent using
+ * the OpenAPI tools and the provided prefix and suffix. It then creates a
+ * ZeroShotAgent with the prompt and the OpenAPI tools, and returns an
+ * AgentExecutor for executing the agent with the tools.
+ * @param llm The language model to use.
+ * @param openApiToolkit The OpenAPI toolkit to use.
+ * @param args Optional arguments for creating the prompt.
+ * @returns An AgentExecutor for executing the agent with the tools.
+ */
 export function createOpenApiAgent(
   llm: BaseLanguageModel,
   openApiToolkit: OpenApiToolkit,

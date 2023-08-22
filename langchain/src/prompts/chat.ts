@@ -21,6 +21,11 @@ import {
 } from "./base.js";
 import { PromptTemplate } from "./prompt.js";
 
+/**
+ * Abstract class that serves as a base for creating message prompt
+ * templates. It defines how to format messages for different roles in a
+ * conversation.
+ */
 export abstract class BaseMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
@@ -32,10 +37,22 @@ export abstract class BaseMessagePromptTemplate<
 
   abstract inputVariables: Array<Extract<keyof RunInput, string>>;
 
+  /**
+   * Method that takes an object of TypedPromptInputValues and returns a
+   * promise that resolves to an array of BaseMessage instances.
+   * @param values Object of TypedPromptInputValues
+   * @returns Formatted array of BaseMessages
+   */
   abstract formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<RunOutput>;
 
+  /**
+   * Calls the formatMessages method with the provided input and options.
+   * @param input Input for the formatMessages method
+   * @param options Optional BaseCallbackConfig
+   * @returns Formatted output messages
+   */
   async invoke(
     input: RunInput,
     options?: BaseCallbackConfig
@@ -48,14 +65,25 @@ export abstract class BaseMessagePromptTemplate<
   }
 }
 
+/**
+ * Interface for the fields of a ChatPromptValue.
+ */
 export interface ChatPromptValueFields {
   messages: BaseMessage[];
 }
 
+/**
+ * Class that represents a chat prompt value. It extends the
+ * BasePromptValue and includes an array of BaseMessage instances.
+ */
 export class ChatPromptValue extends BasePromptValue {
   lc_namespace = ["langchain", "prompts", "chat"];
 
   lc_serializable = true;
+
+  static lc_name() {
+    return "ChatPromptValue";
+  }
 
   messages: BaseMessage[];
 
@@ -82,14 +110,25 @@ export class ChatPromptValue extends BasePromptValue {
   }
 }
 
+/**
+ * Interface for the fields of a MessagePlaceholder.
+ */
 export interface MessagePlaceholderFields<T extends string> {
   variableName: T;
 }
 
+/**
+ * Class that represents a placeholder for messages in a chat prompt. It
+ * extends the BaseMessagePromptTemplate.
+ */
 export class MessagesPlaceholder<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessagePromptTemplate<RunInput> {
+  static lc_name() {
+    return "MessagesPlaceholder";
+  }
+
   variableName: Extract<keyof RunInput, string>;
 
   constructor(variableName: Extract<keyof RunInput, string>);
@@ -122,6 +161,9 @@ export class MessagesPlaceholder<
   }
 }
 
+/**
+ * Interface for the fields of a MessageStringPromptTemplate.
+ */
 export interface MessageStringPromptTemplateFields<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends InputValues = any
@@ -129,6 +171,10 @@ export interface MessageStringPromptTemplateFields<
   prompt: BaseStringPromptTemplate<T, string>;
 }
 
+/**
+ * Abstract class that serves as a base for creating message string prompt
+ * templates. It extends the BaseMessagePromptTemplate.
+ */
 export abstract class BaseMessageStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
@@ -183,6 +229,10 @@ export abstract class BaseMessageStringPromptTemplate<
   }
 }
 
+/**
+ * Abstract class that serves as a base for creating chat prompt
+ * templates. It extends the BasePromptTemplate.
+ */
 export abstract class BaseChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
@@ -209,16 +259,27 @@ export abstract class BaseChatPromptTemplate<
   }
 }
 
+/**
+ * Interface for the fields of a ChatMessagePromptTemplate.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
   extends MessageStringPromptTemplateFields<T> {
   role: string;
 }
 
+/**
+ * Class that represents a chat message prompt template. It extends the
+ * BaseMessageStringPromptTemplate.
+ */
 export class ChatMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "ChatMessagePromptTemplate";
+  }
+
   role: string;
 
   constructor(
@@ -259,10 +320,18 @@ export class ChatMessagePromptTemplate<
   }
 }
 
+/**
+ * Class that represents a human message prompt template. It extends the
+ * BaseMessageStringPromptTemplate.
+ */
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "HumanMessagePromptTemplate";
+  }
+
   async format(values: RunInput): Promise<BaseMessage> {
     return new HumanMessage(await this.prompt.format(values));
   }
@@ -272,10 +341,18 @@ export class HumanMessagePromptTemplate<
   }
 }
 
+/**
+ * Class that represents an AI message prompt template. It extends the
+ * BaseMessageStringPromptTemplate.
+ */
 export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "AIMessagePromptTemplate";
+  }
+
   async format(values: RunInput): Promise<BaseMessage> {
     return new AIMessage(await this.prompt.format(values));
   }
@@ -285,10 +362,18 @@ export class AIMessagePromptTemplate<
   }
 }
 
+/**
+ * Class that represents a system message prompt template. It extends the
+ * BaseMessageStringPromptTemplate.
+ */
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
+  static lc_name() {
+    return "SystemMessagePromptTemplate";
+  }
+
   async format(values: RunInput): Promise<BaseMessage> {
     return new SystemMessage(await this.prompt.format(values));
   }
@@ -298,6 +383,9 @@ export class SystemMessagePromptTemplate<
   }
 }
 
+/**
+ * Interface for the input of a ChatPromptTemplate.
+ */
 export interface ChatPromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
@@ -317,6 +405,11 @@ export interface ChatPromptTemplateInput<
   validateTemplate?: boolean;
 }
 
+/**
+ * Class that represents a chat prompt. It extends the
+ * BaseChatPromptTemplate and uses an array of BaseMessagePromptTemplate
+ * instances to format a series of messages for a conversation.
+ */
 export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
@@ -326,6 +419,10 @@ export class ChatPromptTemplate<
   extends BaseChatPromptTemplate<RunInput, PartialVariableName>
   implements ChatPromptTemplateInput<RunInput, PartialVariableName>
 {
+  static lc_name() {
+    return "ChatPromptTemplate";
+  }
+
   get lc_aliases() {
     return {
       promptMessages: "messages",

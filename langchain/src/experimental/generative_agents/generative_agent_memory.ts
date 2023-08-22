@@ -18,7 +18,18 @@ export type GenerativeAgentMemoryConfig = {
   maxTokensLimit?: number;
 };
 
+/**
+ * Class that manages the memory of a generative agent in LangChain. It
+ * extends the `BaseChain` class and has methods for adding observations
+ * or memories to the agent's memory, scoring the importance of a memory,
+ * reflecting on recent events to add synthesized memories, and generating
+ * insights on a topic of reflection based on pertinent memories.
+ */
 class GenerativeAgentMemoryChain extends BaseChain {
+  static lc_name() {
+    return "GenerativeAgentMemoryChain";
+  }
+
   reflecting = false;
 
   reflectionThreshold?: number;
@@ -58,6 +69,11 @@ class GenerativeAgentMemoryChain extends BaseChain {
     return ["output"];
   }
 
+  /**
+   * Method that creates a new LLMChain with the given prompt.
+   * @param prompt The PromptTemplate to use for the new LLMChain.
+   * @returns A new LLMChain instance.
+   */
   chain(prompt: PromptTemplate): LLMChain {
     const chain = new LLMChain({
       llm: this.llm,
@@ -101,6 +117,13 @@ class GenerativeAgentMemoryChain extends BaseChain {
     return { output: importanceScore };
   }
 
+  /**
+   * Method that pauses the agent to reflect on recent events and generate
+   * new insights.
+   * @param now The current date.
+   * @param runManager The CallbackManagerForChainRun to use for the reflection.
+   * @returns An array of new insights as strings.
+   */
   async pauseToReflect(
     now?: Date,
     runManager?: CallbackManagerForChainRun
@@ -130,6 +153,12 @@ class GenerativeAgentMemoryChain extends BaseChain {
     return newInsights;
   }
 
+  /**
+   * Method that scores the importance of a given memory.
+   * @param memoryContent The content of the memory to score.
+   * @param runManager The CallbackManagerForChainRun to use for scoring.
+   * @returns The importance score of the memory as a number.
+   */
   async scoreMemoryImportance(
     memoryContent: string,
     runManager?: CallbackManagerForChainRun
@@ -164,6 +193,13 @@ class GenerativeAgentMemoryChain extends BaseChain {
     }
   }
 
+  /**
+   * Method that retrieves the topics of reflection based on the last K
+   * memories.
+   * @param lastK The number of most recent memories to consider for generating topics.
+   * @param runManager The CallbackManagerForChainRun to use for retrieving topics.
+   * @returns An array of topics of reflection as strings.
+   */
   async getTopicsOfReflection(
     lastK: number,
     runManager?: CallbackManagerForChainRun
@@ -186,6 +222,14 @@ class GenerativeAgentMemoryChain extends BaseChain {
     return GenerativeAgentMemoryChain.parseList(result);
   }
 
+  /**
+   * Method that generates insights on a given topic of reflection based on
+   * pertinent memories.
+   * @param topic The topic of reflection.
+   * @param now The current date.
+   * @param runManager The CallbackManagerForChainRun to use for generating insights.
+   * @returns An array of insights as strings.
+   */
   async getInsightsOnTopic(
     topic: string,
     now?: Date,
@@ -213,12 +257,24 @@ class GenerativeAgentMemoryChain extends BaseChain {
     return GenerativeAgentMemoryChain.parseList(result.output); // added output
   }
 
+  /**
+   * Method that parses a newline-separated string into a list of strings.
+   * @param text The newline-separated string to parse.
+   * @returns An array of strings.
+   */
   static parseList(text: string): string[] {
     // parse a newine seperates string into a list of strings
     return text.split("\n").map((s) => s.trim());
   }
 
   // TODO: Mock "now" to simulate different times
+  /**
+   * Method that fetches memories related to a given observation.
+   * @param observation The observation to fetch memories for.
+   * @param _now The current date.
+   * @param runManager The CallbackManagerForChainRun to use for fetching memories.
+   * @returns An array of Document instances representing the fetched memories.
+   */
   async fetchMemories(
     observation: string,
     _now?: Date,
@@ -231,6 +287,13 @@ class GenerativeAgentMemoryChain extends BaseChain {
   }
 }
 
+/**
+ * Class that manages the memory of a generative agent in LangChain. It
+ * extends the `BaseMemory` class and has methods for adding a memory,
+ * formatting memories, getting memories until a token limit is reached,
+ * loading memory variables, saving the context of a model run to memory,
+ * and clearing memory contents.
+ */
 export class GenerativeAgentMemory extends BaseMemory {
   llm: BaseLanguageModel;
 
@@ -276,18 +339,34 @@ export class GenerativeAgentMemory extends BaseMemory {
     });
   }
 
+  /**
+   * Method that returns the key for relevant memories.
+   * @returns The key for relevant memories as a string.
+   */
   getRelevantMemoriesKey(): string {
     return this.relevantMemoriesKey;
   }
 
+  /**
+   * Method that returns the key for the most recent memories token.
+   * @returns The key for the most recent memories token as a string.
+   */
   getMostRecentMemoriesTokenKey(): string {
     return this.mostRecentMemoriesTokenKey;
   }
 
+  /**
+   * Method that returns the key for adding a memory.
+   * @returns The key for adding a memory as a string.
+   */
   getAddMemoryKey(): string {
     return this.addMemoryKey;
   }
 
+  /**
+   * Method that returns the key for the current time.
+   * @returns The key for the current time as a string.
+   */
   getCurrentTimeKey(): string {
     return this.nowKey;
   }
@@ -297,6 +376,14 @@ export class GenerativeAgentMemory extends BaseMemory {
     return [this.relevantMemoriesKey, this.mostRecentMemoriesKey];
   }
 
+  /**
+   * Method that adds a memory to the agent's memory.
+   * @param memoryContent The content of the memory to add.
+   * @param now The current date.
+   * @param metadata The metadata for the memory.
+   * @param callbacks The Callbacks to use for adding the memory.
+   * @returns The result of the memory addition.
+   */
   async addMemory(
     memoryContent: string,
     now?: Date,
@@ -309,6 +396,11 @@ export class GenerativeAgentMemory extends BaseMemory {
     );
   }
 
+  /**
+   * Method that formats the given relevant memories in detail.
+   * @param relevantMemories The relevant memories to format.
+   * @returns The formatted memories as a string.
+   */
   formatMemoriesDetail(relevantMemories: Document[]): string {
     if (!relevantMemories.length) {
       return "No relevant information.";
@@ -334,6 +426,11 @@ export class GenerativeAgentMemory extends BaseMemory {
     return joinedContent;
   }
 
+  /**
+   * Method that formats the given relevant memories in a simple manner.
+   * @param relevantMemories The relevant memories to format.
+   * @returns The formatted memories as a string.
+   */
   formatMemoriesSimple(relevantMemories: Document[]): string {
     const joinedContent = relevantMemories
       .map((mem) => `${mem.pageContent}`)
@@ -341,6 +438,11 @@ export class GenerativeAgentMemory extends BaseMemory {
     return joinedContent;
   }
 
+  /**
+   * Method that retrieves memories until a token limit is reached.
+   * @param consumedTokens The number of tokens consumed so far.
+   * @returns The memories as a string.
+   */
   async getMemoriesUntilLimit(consumedTokens: number): Promise<string> {
     // reduce the number of tokens in the documents
     const result = [];
@@ -368,6 +470,11 @@ export class GenerativeAgentMemory extends BaseMemory {
     return [];
   }
 
+  /**
+   * Method that loads memory variables based on the given inputs.
+   * @param inputs The inputs to use for loading memory variables.
+   * @returns An object containing the loaded memory variables.
+   */
   async loadMemoryVariables(
     inputs: InputValues
   ): Promise<Record<string, string>> {
@@ -398,6 +505,12 @@ export class GenerativeAgentMemory extends BaseMemory {
     return {};
   }
 
+  /**
+   * Method that saves the context of a model run to memory.
+   * @param _inputs The inputs of the model run.
+   * @param outputs The outputs of the model run.
+   * @returns Nothing.
+   */
   async saveContext(
     _inputs: InputValues,
     outputs: OutputValues
@@ -410,6 +523,10 @@ export class GenerativeAgentMemory extends BaseMemory {
     }
   }
 
+  /**
+   * Method that clears the memory contents.
+   * @returns Nothing.
+   */
   clear(): void {
     // TODO: clear memory contents
   }

@@ -129,6 +129,7 @@
       "src/document_loaders/web/confluence.ts",
       "src/document_loaders/web/serpapi.ts",
       "src/document_loaders/web/sort_xyz_blockchain.ts",
+      "src/document_loaders/web/youtube.ts",
       "src/document_loaders/fs/directory.ts",
       "src/document_loaders/fs/buffer.ts",
       "src/document_loaders/fs/text.ts",

@@ -10,16 +10,23 @@ import CodeBlock from "@theme/CodeBlock";
 Must be used with an [OpenAI functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
 :::
 
-This chain leverages OpenAI functions to output objects that match a given format for any given prompt.
+This example shows how to leverage OpenAI functions to output objects that match a given format for any given input.
 It converts input schema into an OpenAI function, then forces OpenAI to call that function to return a response in the correct format.
 
-You can use it where you would use a chain with a [`StructuredOutputParser`](/docs/modules/model_io/output_parsers) without any special
+You can use it where you would use a chain with a [`StructuredOutputParser`](/docs/modules/model_io/output_parsers), but it doesn't require any special
 instructions stuffed into the prompt. It will also more reliably output structured results with higher `temperature` values, making it better suited
 for more creative applications.
 
 **Note:** The outermost layer of the input schema must be an object.
 
 ## Usage
+
+Though you can pass in JSON Schema directly, you can also define your output schema using the popular [Zod](https://zod.dev) schema
+library and convert it with the `zod-to-json-schema` package. To do so, install the following packages:
+
+```bash npm2yarn
+npm install zod zod-to-json-schema
+```
 
 ### Format Text into Structured Data
 
@@ -29,11 +36,9 @@ import FormatExample from "@examples/chains/openai_functions_structured_format.t
 
 ### Generate a Database Record
 
+Though we suggest the above [Expression Language example](/docs/guides/expression_language/cookbook), here's an example
+of using the `createStructuredOutputChainFromZod` convenience method to return a classic LLMChain:
+
 import GenerateExample from "@examples/chains/openai_functions_structured_generate.ts";
 
 <CodeBlock language="typescript">{GenerateExample}</CodeBlock>
-
-### Customization
-
-This chain takes all the same arguments as a standard [`LLMChain`](/docs/modules/chains/foundational/llm_chain) minus an `outputParser`. It will also be created with a default model set to `gpt-3.5-turbo-0613`,
-but you can pass an options parameter into the input parameters with a pre-created `ChatOpenAI` instance as `llm`.

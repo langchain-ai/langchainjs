@@ -7,6 +7,9 @@ import {
 
 import { Tool, ToolParams } from "./base.js";
 
+/**
+ * Interface for AWS Step Functions configuration.
+ */
 export interface SfnConfig {
   stateMachineArn: string;
   region?: string;
@@ -14,6 +17,9 @@ export interface SfnConfig {
   secretAccessKey?: string;
 }
 
+/**
+ * Interface for AWS Step Functions client constructor arguments.
+ */
 interface SfnClientConstructorArgs {
   region?: string;
   credentials?: {
@@ -22,7 +28,14 @@ interface SfnClientConstructorArgs {
   };
 }
 
+/**
+ * Class for starting the execution of an AWS Step Function.
+ */
 export class StartExecutionAWSSfnTool extends Tool {
+  static lc_name() {
+    return "StartExecutionAWSSfnTool";
+  }
+
   private sfnConfig: SfnConfig;
 
   public name: string;
@@ -40,6 +53,12 @@ export class StartExecutionAWSSfnTool extends Tool {
     this.sfnConfig = rest;
   }
 
+  /**
+   * Generates a formatted description for the StartExecutionAWSSfnTool.
+   * @param name Name of the state machine.
+   * @param description Description of the state machine.
+   * @returns A formatted description string.
+   */
   static formatDescription(name: string, description: string): string {
     return `Use to start executing the ${name} state machine. Use to run ${name} workflows. Whenever you need to start (or execute) an asynchronous workflow (or state machine) about ${description} you should ALWAYS use this. Input should be a valid JSON string.`;
   }
@@ -79,7 +98,14 @@ export class StartExecutionAWSSfnTool extends Tool {
   }
 }
 
+/**
+ * Class for checking the status of an AWS Step Function execution.
+ */
 export class DescribeExecutionAWSSfnTool extends Tool {
+  static lc_name() {
+    return "DescribeExecutionAWSSfnTool";
+  }
+
   name = "describe-execution-aws-sfn";
 
   description =
@@ -125,7 +151,15 @@ export class DescribeExecutionAWSSfnTool extends Tool {
   }
 }
 
+/**
+ * Class for sending a task success signal to an AWS Step Function
+ * execution.
+ */
 export class SendTaskSuccessAWSSfnTool extends Tool {
+  static lc_name() {
+    return "SendTaskSuccessAWSSfnTool";
+  }
+
   name = "send-task-success-aws-sfn";
 
   description =
@@ -170,6 +204,9 @@ export class SendTaskSuccessAWSSfnTool extends Tool {
   }
 }
 
+/**
+ * Helper function to construct the AWS SFN client.
+ */
 function getClientConstructorArgs(config: Partial<SfnConfig>) {
   const clientConstructorArgs: SfnClientConstructorArgs = {};
 

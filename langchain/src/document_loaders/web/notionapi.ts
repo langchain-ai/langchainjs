@@ -22,6 +22,10 @@ type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
 type BlockObjectResponse = GuardType<typeof isFullBlock>;
 type PageObjectResponse = GuardType<typeof isFullPage>;
 
+/**
+ * Represents the type of Notion API to load documents from. The options
+ * are "database" or "page".
+ */
 export type NotionAPIType = "database" | "page";
 
 export type NotionAPILoaderOptions = {
@@ -30,6 +34,10 @@ export type NotionAPILoaderOptions = {
   type: NotionAPIType;
 };
 
+/**
+ * A class that extends the BaseDocumentLoader class. It represents a
+ * document loader for loading documents from Notion using the Notion API.
+ */
 export class NotionAPILoader extends BaseDocumentLoader {
   private notionClient: Client;
 
@@ -51,6 +59,12 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.type = options.type;
   }
 
+  /**
+   * Parses the properties of a Notion page and returns them as key-value
+   * pairs.
+   * @param page The Notion page to parse.
+   * @returns An object containing the parsed properties as key-value pairs.
+   */
   private parsePageProperties(page: PageObjectResponse): {
     [key: string]: string;
   } {
@@ -115,6 +129,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
     );
   }
 
+  /**
+   * Parses the details of a Notion page and returns them as an object.
+   * @param page The Notion page to parse.
+   * @returns An object containing the parsed details of the page.
+   */
   private parsePageDetails(page: PageObjectResponse) {
     const metadata = Object.fromEntries(
       Object.entries(page).filter(([key, _]) => key !== "id")
@@ -126,6 +145,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
     };
   }
 
+  /**
+   * Loads a Notion block and returns it as an MdBlock object.
+   * @param block The Notion block to load.
+   * @returns A Promise that resolves to an MdBlock object.
+   */
   private async loadBlock(block: BlockObjectResponse): Promise<MdBlock> {
     return {
       type: block.type,
@@ -135,6 +159,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
     };
   }
 
+  /**
+   * Loads Notion blocks and their child documents recursively.
+   * @param blocksResponse The response from the Notion API containing the blocks to load.
+   * @returns A Promise that resolves to an object containing the loaded MdBlocks and child Documents.
+   */
   private async loadBlocksAndDocs(
     blocksResponse: ListBlockChildrenResponseResults
   ): Promise<{ mdBlocks: MdBlock[]; childDocuments: Document[] }> {
@@ -201,6 +230,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
     };
   }
 
+  /**
+   * Loads a Notion page and its child documents.
+   * @param page The Notion page or page ID to load.
+   * @returns A Promise that resolves to an array of Documents.
+   */
   private async loadPage(page: string | PageObjectResponse) {
     // Check page is a page ID or a GetPageResponse
     const [pageData, pageId] =
@@ -229,6 +263,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
     return [pageDocument, ...childDocuments];
   }
 
+  /**
+   * Loads a Notion database and its documents.
+   * @param id The ID of the Notion database to load.
+   * @returns A Promise that resolves to an array of Documents.
+   */
   private async loadDatabase(id: string): Promise<Document[]> {
     const documents: Document[] = [];
 
@@ -251,6 +290,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
     return documents;
   }
 
+  /**
+   * Loads the documents from Notion based on the specified options.
+   * @returns A Promise that resolves to an array of Documents.
+   */
   async load(): Promise<Document[]> {
     const documents: Document[] = [];
 
