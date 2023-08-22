@@ -11,7 +11,6 @@ import {
 } from "langchain/vectorstores/googlevertexai";
 
 export const run = async () => {
-
   if (
     !process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX ||
     !process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT
@@ -22,7 +21,10 @@ export const run = async () => {
   }
 
   const embeddings = new SyntheticEmbeddings({
-    vectorSize: Number.parseInt(process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768", 10)
+    vectorSize: Number.parseInt(
+      process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768",
+      10
+    ),
   });
 
   const store = new InMemoryDocstore();
@@ -39,7 +41,7 @@ export const run = async () => {
   /*
    * Simple document add
    */
-  const doc = new Document({pageContent:'this'});
+  const doc = new Document({ pageContent: "this" });
   await engine.addDocuments([doc]);
 
   /*
@@ -61,8 +63,8 @@ export const run = async () => {
   /*
    * Delete the results
    */
-  const oldIds = oldResults.map( doc => doc.id! );
-  await engine.delete({ids: oldIds});
+  const oldIds = oldResults.map((doc) => doc.id!);
+  await engine.delete({ ids: oldIds });
 
   /*
    * Documents with metadata
@@ -73,22 +75,22 @@ export const run = async () => {
       metadata: {
         color: "red",
         category: "edible",
-      }
+      },
     }),
     new Document({
       pageContent: "this blueberry",
       metadata: {
         color: "blue",
         category: "edible",
-      }
+      },
     }),
     new Document({
       pageContent: "this firetruck",
       metadata: {
         color: "red",
         category: "machine",
-      }
-    })
+      },
+    }),
   ];
 
   // Add all our documents
@@ -131,9 +133,13 @@ export const run = async () => {
     {
       namespace: "category",
       denyList: ["edible"],
-    }
+    },
   ];
-  const redNotEdibleResults = await engine.similaritySearch("this", 4, redNotEditableFilter);
+  const redNotEdibleResults = await engine.similaritySearch(
+    "this",
+    4,
+    redNotEditableFilter
+  );
   console.log("red not edible results", redNotEdibleResults);
   /*
     [
@@ -144,6 +150,4 @@ export const run = async () => {
       }
     ]
    */
-
 };
-

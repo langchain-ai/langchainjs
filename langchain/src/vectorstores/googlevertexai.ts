@@ -19,10 +19,7 @@ export interface IdDocumentInput extends DocumentInput {
   id?: string;
 }
 
-export class IdDocument
-  extends Document
-  implements IdDocumentInput
-{
+export class IdDocument extends Document implements IdDocumentInput {
   id?: string;
 
   constructor(fields: IdDocumentInput) {
@@ -478,7 +475,9 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadataToRestrictions(documentMetadata: Record<string, any>): this["FilterType"] {
+  metadataToRestrictions(
+    documentMetadata: Record<string, any>
+  ): this["FilterType"] {
     const metadata = this.cleanMetadata(documentMetadata);
 
     const restrictions: this["FilterType"] = [];
@@ -625,7 +624,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     // so we need to extract it from the name
     const indexPathPattern = /projects\/.+\/locations\/.+\/indexes\/(.+)$/;
     const deployedIndexes = response?.data?.deployedIndexes ?? [];
-    const deployedIndex = deployedIndexes.find( index => {
+    const deployedIndex = deployedIndexes.find((index) => {
       const deployedIndexPath = index.index;
       const match = deployedIndexPath.match(indexPathPattern);
       if (match) {
