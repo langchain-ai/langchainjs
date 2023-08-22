@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeAll, expect, test } from "@jest/globals";
 import { SyntheticEmbeddings } from "../../embeddings/fake.js";
 import { InMemoryDocstore } from "../../stores/doc/in_memory.js";

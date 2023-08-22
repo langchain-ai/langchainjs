@@ -55,6 +55,7 @@ export abstract class GoogleVertexAIConnection<
     const url = await this.buildUrl();
     const method = this.buildMethod();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const opts: any = {
       url,
       method,

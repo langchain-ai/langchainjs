@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeEach, expect, test } from "@jest/globals";
 import { SyntheticEmbeddings } from "../../embeddings/fake.js";
 import { InMemoryDocstore } from "../../stores/doc/in_memory.js";
@@ -48,14 +49,14 @@ describe("Vertex AI matching", () => {
     };
     const flat = engine.cleanMetadata(m);
     console.log("flatten metadata", flat);
-    expect(flat["alpha"]).toEqual("a");
+    expect(flat.alpha).toEqual("a");
     expect(flat["bravo.uno"]).toEqual(1);
     expect(flat["bravo.dos"]).toEqual("two");
     expect(flat["bravo.tres"]).toEqual(false);
     expect(flat["bravo.quatro"]).toEqual(["a", "b", "c", "d"]);
     expect(flat["bravo.cinco.prime"]).toEqual(["1", "2"]);
     expect(flat["bravo.cinco.doublePrime"]).toEqual(["g", "true"]);
-    expect(flat["charlie"]).toEqual(["e", "f"]);
+    expect(flat.charlie).toEqual(["e", "f"]);
   });
 
   test("restrictions", () => {
