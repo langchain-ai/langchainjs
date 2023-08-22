@@ -12,8 +12,6 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 type Dict = { [key: string]: unknown };
 type CredentialType = AwsCredentialIdentity | Provider<AwsCredentialIdentity>;
 
-const marshaller = new EventStreamMarshaller(toUtf8, fromUtf8);
-
 class BedrockChatLLMInputOutputAdapter {
   /** Adapter class to prepare the inputs from Langchain to a format
   that LLM model expects. Also, provides a helper function to extract
@@ -111,6 +109,11 @@ export class BedrockChat extends LLM implements BedrockInput {
   streaming?: boolean | undefined = false;
 
   fetchFn: typeof fetch;
+
+  marshaller: EventStreamMarshaller = new EventStreamMarshaller(
+    toUtf8,
+    fromUtf8
+  );
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {};
@@ -216,7 +219,7 @@ export class BedrockChat extends LLM implements BedrockInput {
       const chunks: string[] = [];
       const reader = response.body?.getReader();
       for await (const chunk of this._readChunks(reader)) {
-        const event = marshaller.unmarshall(chunk);
+        const event = this.marshaller.unmarshall(chunk);
         if (
           event.headers[":event-type"].value !== "chunk" ||
           event.headers[":content-type"].value !== "application/json"
