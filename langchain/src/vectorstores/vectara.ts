@@ -220,7 +220,7 @@ export class VectaraStore extends VectorStore {
    * Vectara provides a way to add documents directly via their API. This API handles
    * pre-processing and chunking internally in an optimal manner. This method is a wrapper
    * to utilize that API within LangChain.
-   * 
+   *
    * @param filePaths An array of Blob objects representing the files to be uploaded to Vectara.
    * @param metadata Optional. An array of metadata objects corresponding to each file in the `filePaths` array.
    * @returns A Promise that resolves to the number of successfully uploaded files.
