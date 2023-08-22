@@ -19,6 +19,9 @@ import {
   getModelContextSize,
 } from "../../base_language/count_tokens.js";
 
+/**
+ * Interface for the input parameters of the AutoGPT class.
+ */
 export interface AutoGPTInput {
   aiName: string;
   aiRole: string;
@@ -28,6 +31,11 @@ export interface AutoGPTInput {
   maxIterations?: number;
 }
 
+/**
+ * Class representing the AutoGPT concept with LangChain primitives. It is
+ * designed to be used with a set of tools such as a search tool,
+ * write-file tool, and a read-file tool.
+ */
 export class AutoGPT {
   aiName: string;
 
@@ -83,6 +91,17 @@ export class AutoGPT {
     });
   }
 
+  /**
+   * Creates a new AutoGPT instance from a given LLM and a set of tools.
+   * @param llm A BaseChatModel object.
+   * @param tools An array of ObjectTool objects.
+   * @param options.aiName The name of the AI.
+   * @param options.aiRole The role of the AI.
+   * @param options.memory A VectorStoreRetriever object that represents the memory of the AI.
+   * @param options.maxIterations The maximum number of iterations the AI can perform.
+   * @param options.outputParser An AutoGPTOutputParser object that parses the output of the AI.
+   * @returns A new instance of the AutoGPT class.
+   */
   static fromLLMAndTools(
     llm: BaseChatModel,
     tools: ObjectTool[],
@@ -117,6 +136,11 @@ export class AutoGPT {
     });
   }
 
+  /**
+   * Runs the AI with a given set of goals.
+   * @param goals An array of strings representing the goals.
+   * @returns A string representing the result of the run or undefined if the maximum number of iterations is reached without a result.
+   */
   async run(goals: string[]): Promise<string | undefined> {
     const user_input =
       "Determine which next command to use, and respond using the format specified above:";

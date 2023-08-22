@@ -7,6 +7,10 @@ import {
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
+/**
+ * Configuration interface for the ZepRetriever class. Extends the
+ * BaseRetrieverInput interface.
+ */
 export interface ZepRetrieverConfig extends BaseRetrieverInput {
   sessionId: string;
   url: string;
@@ -14,7 +18,15 @@ export interface ZepRetrieverConfig extends BaseRetrieverInput {
   apiKey?: string;
 }
 
+/**
+ * Class for retrieving information from a Zep long-term memory store.
+ * Extends the BaseRetriever class.
+ */
 export class ZepRetriever extends BaseRetriever {
+  static lc_name() {
+    return "ZepRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "zep"];
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -28,7 +40,7 @@ export class ZepRetriever extends BaseRetriever {
     return { apiKey: "api_key" };
   }
 
-  private zepClient: ZepClient;
+  zepClientPromise: Promise<ZepClient>;
 
   private sessionId: string;
 
@@ -36,9 +48,9 @@ export class ZepRetriever extends BaseRetriever {
 
   constructor(config: ZepRetrieverConfig) {
     super(config);
-    this.zepClient = new ZepClient(config.url, config.apiKey);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
+    this.zepClientPromise = ZepClient.init(config.url, config.apiKey);
   }
 
   /**
@@ -65,8 +77,13 @@ export class ZepRetriever extends BaseRetriever {
    */
   async _getRelevantDocuments(query: string): Promise<Document[]> {
     const payload: MemorySearchPayload = { text: query, metadata: {} };
+    // Wait for ZepClient to be initialized
+    const zepClient = await this.zepClientPromise;
+    if (!zepClient) {
+      throw new Error("ZepClient is not initialized");
+    }
     try {
-      const results: MemorySearchResult[] = await this.zepClient.searchMemory(
+      const results: MemorySearchResult[] = await zepClient.memory.searchMemory(
         this.sessionId,
         payload,
         this.topK

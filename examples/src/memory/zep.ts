@@ -2,7 +2,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 import { ZepMemory } from "langchain/memory/zep";
 
-const sessionId = "TestSession";
+const sessionId = "TestSession"; // This should be unique for each user or each user's session.
 const zepURL = "http://localhost:8000";
 
 const memory = new ZepMemory({

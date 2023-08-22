@@ -15,6 +15,9 @@ import {
 } from "../callbacks/manager.js";
 import { NoOpOutputParser } from "../output_parsers/noop.js";
 
+/**
+ * Interface for the input parameters of the LLMChain class.
+ */
 export interface LLMChainInput<
   T extends string | object = string,
   L extends BaseLanguageModel = BaseLanguageModel
@@ -51,6 +54,10 @@ export class LLMChain<
   extends BaseChain
   implements LLMChainInput<T>
 {
+  static lc_name() {
+    return "LLMChain";
+  }
+
   lc_serializable = true;
 
   prompt: BasePromptTemplate;

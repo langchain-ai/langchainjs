@@ -25,6 +25,10 @@ import {
   TEMPLATE_TOOL_RESPONSE,
 } from "./prompt.js";
 
+/**
+ * Interface defining the structure of arguments used to create a prompt
+ * for the ChatConversationalAgent class.
+ */
 export interface ChatConversationalCreatePromptArgs {
   /** String to put after the list of tools. */
   systemMessage?: string;
@@ -36,6 +40,11 @@ export interface ChatConversationalCreatePromptArgs {
   outputParser?: AgentActionOutputParser;
 }
 
+/**
+ * Type that extends the AgentInput interface for the
+ * ChatConversationalAgent class, making the outputParser property
+ * optional.
+ */
 export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
@@ -43,6 +52,10 @@ export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ChatConversationalAgent extends Agent {
+  static lc_name() {
+    return "ChatConversationalAgent";
+  }
+
   lc_namespace = ["langchain", "agents", "chat_convo"];
 
   declare ToolType: Tool;
@@ -79,6 +92,12 @@ export class ChatConversationalAgent extends Agent {
     }
   }
 
+  /**
+   * Constructs the agent scratchpad based on the agent steps. It returns an
+   * array of base messages representing the thoughts of the agent.
+   * @param steps The agent steps to construct the scratchpad from.
+   * @returns An array of base messages representing the thoughts of the agent.
+   */
   async constructScratchPad(steps: AgentStep[]): Promise<BaseMessage[]> {
     const thoughts: BaseMessage[] = [];
     for (const step of steps) {
@@ -94,6 +113,13 @@ export class ChatConversationalAgent extends Agent {
     return thoughts;
   }
 
+  /**
+   * Returns the default output parser for the ChatConversationalAgent
+   * class. It takes optional fields as arguments to customize the output
+   * parser.
+   * @param fields Optional fields to customize the output parser.
+   * @returns The default output parser for the ChatConversationalAgent class.
+   */
   static getDefaultOutputParser(
     fields?: OutputParserArgs & {
       toolNames: string[];
@@ -150,6 +176,15 @@ export class ChatConversationalAgent extends Agent {
     return ChatPromptTemplate.fromPromptMessages(messages);
   }
 
+  /**
+   * Creates an instance of the ChatConversationalAgent class from a
+   * BaseLanguageModel and a set of tools. It takes optional arguments to
+   * customize the agent.
+   * @param llm The BaseLanguageModel to create the agent from.
+   * @param tools The set of tools to create the agent from.
+   * @param args Optional arguments to customize the agent.
+   * @returns An instance of the ChatConversationalAgent class.
+   */
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],

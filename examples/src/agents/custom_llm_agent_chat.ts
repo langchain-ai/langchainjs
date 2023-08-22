@@ -75,7 +75,7 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
     return [new HumanMessage(formatted)];
   }
 
-  partial(_values: PartialValues): Promise<BasePromptTemplate> {
+  partial(_values: PartialValues): Promise<BaseChatPromptTemplate> {
     throw new Error("Not implemented");
   }
 

@@ -1,6 +1,9 @@
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
+/**
+ * Interface for the input parameters specific to the Cohere model.
+ */
 export interface CohereInput extends BaseLLMParams {
   /** Sampling temperature to use */
   temperature?: number;
@@ -16,7 +19,15 @@ export interface CohereInput extends BaseLLMParams {
   apiKey?: string;
 }
 
+/**
+ * Class representing a Cohere Large Language Model (LLM). It interacts
+ * with the Cohere API to generate text completions.
+ */
 export class Cohere extends LLM implements CohereInput {
+  static lc_name() {
+    return "Cohere";
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "COHERE_API_KEY",

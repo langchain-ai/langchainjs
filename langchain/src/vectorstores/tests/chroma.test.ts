@@ -39,6 +39,7 @@ describe("Chroma", () => {
 
     expect(chromaStore).toBeDefined();
   });
+
   test("should add vectors to the collection", async () => {
     const expectedPageContents = ["Document 1", "Document 2"];
     const embeddings = new FakeEmbeddings();
@@ -54,6 +55,32 @@ describe("Chroma", () => {
       expectedPageContents
     );
     expect(mockCollection.upsert).toHaveBeenCalled();
+
+    const { metadatas } = mockCollection.upsert.mock.calls[0][0];
+    expect(metadatas).toEqual([{}, {}]);
+  });
+
+  test("should override loc.lines with locFrom/locTo", async () => {
+    const expectedPageContents = ["Document 1"];
+    const embeddings = new FakeEmbeddings();
+    jest.spyOn(embeddings, "embedDocuments");
+
+    const args = { collectionName: "testCollection", index: mockClient };
+    const documents = expectedPageContents.map((pc) => ({
+      pageContent: pc,
+      metadata: { source: "source.html", loc: { lines: { from: 0, to: 4 } } },
+    }));
+
+    const chroma = new Chroma(embeddings, args);
+    await chroma.addDocuments(documents as any);
+
+    const { metadatas } = mockCollection.upsert.mock.calls[0][0];
+
+    expect(metadatas[0]).toEqual({
+      source: "source.html",
+      locFrom: 0,
+      locTo: 4,
+    });
   });
 
   test("should throw an error for mismatched vector lengths", async () => {

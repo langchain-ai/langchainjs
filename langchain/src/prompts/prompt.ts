@@ -1,4 +1,11 @@
-import { BaseStringPromptTemplate, BasePromptTemplateInput } from "./base.js";
+// Default generic "any" values are for backwards compatibility.
+// Replace with "string" when we are comfortable with a breaking change.
+
+import {
+  BaseStringPromptTemplate,
+  BasePromptTemplateInput,
+  TypedPromptInputValues,
+} from "./base.js";
 import {
   checkValidTemplate,
   parseTemplate,
@@ -12,7 +19,12 @@ import { InputValues, PartialValues } from "../schema/index.js";
  * Inputs to create a {@link PromptTemplate}
  * @augments BasePromptTemplateInput
  */
-export interface PromptTemplateInput extends BasePromptTemplateInput {
+export interface PromptTemplateInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
    */
@@ -48,22 +60,31 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  * });
  * ```
  */
-export class PromptTemplate
-  extends BaseStringPromptTemplate
-  implements PromptTemplateInput
+export class PromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PartialVariableName extends string = any
+  >
+  extends BaseStringPromptTemplate<RunInput, PartialVariableName>
+  implements PromptTemplateInput<RunInput, PartialVariableName>
 {
+  static lc_name() {
+    return "PromptTemplate";
+  }
+
   template: string;
 
   templateFormat: TemplateFormat = "f-string";
 
   validateTemplate = true;
 
-  constructor(input: PromptTemplateInput) {
+  constructor(input: PromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
     Object.assign(this, input);
 
     if (this.validateTemplate) {
-      let totalInputVariables = this.inputVariables;
+      let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
           Object.keys(this.partialVariables)
@@ -81,7 +102,12 @@ export class PromptTemplate
     return "prompt";
   }
 
-  async format(values: InputValues): Promise<string> {
+  /**
+   * Formats the prompt template with the provided values.
+   * @param values The values to be used to format the prompt template.
+   * @returns A promise that resolves to a string which is the formatted prompt.
+   */
+  async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
   }
@@ -89,7 +115,7 @@ export class PromptTemplate
   /**
    * Take examples in list format with prefix and suffix to create a prompt.
    *
-   * Intendend to be used a a way to dynamically create a prompt from examples.
+   * Intended to be used a a way to dynamically create a prompt from examples.
    *
    * @param examples - List of examples to use in the prompt.
    * @param suffix - String to go after the list of examples. Should generally set up the user's input.
@@ -116,7 +142,8 @@ export class PromptTemplate
   /**
    * Load prompt template from a template f-string
    */
-  static fromTemplate(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromTemplate<RunInput extends InputValues = any>(
     template: string,
     {
       templateFormat = "f-string",
@@ -129,25 +156,39 @@ export class PromptTemplate
         names.add(node.name);
       }
     });
-
-    return new PromptTemplate({
-      inputVariables: [...names],
+    return new PromptTemplate<RunInput>({
+      inputVariables: [...names] as Extract<keyof RunInput, string>[],
       templateFormat,
       template,
       ...rest,
     });
   }
 
-  async partial(values: PartialValues): Promise<PromptTemplate> {
-    const promptDict: PromptTemplateInput = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
+  /**
+   * Partially applies values to the prompt template.
+   * @param values The values to be partially applied to the prompt template.
+   * @returns A new instance of PromptTemplate with the partially applied values.
+   */
+  async partial<NewPartialVariableName extends string>(
+    values: PartialValues<NewPartialVariableName>
+  ) {
+    const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    );
-    promptDict.partialVariables = {
+    ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
+    const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
+    } as PartialValues<PartialVariableName | NewPartialVariableName>;
+    const promptDict = {
+      ...this,
+      inputVariables: newInputVariables,
+      partialVariables: newPartialVariables,
     };
-    return new PromptTemplate(promptDict);
+    return new PromptTemplate<
+      InputValues<
+        Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>
+      >
+    >(promptDict);
   }
 
   serialize(): SerializedPromptTemplate {

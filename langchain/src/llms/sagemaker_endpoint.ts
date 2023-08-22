@@ -61,6 +61,12 @@ export type SageMakerLLMContentHandler = BaseSageMakerContentHandler<
   string
 >;
 
+/**
+ * The SageMakerEndpointInput interface defines the input parameters for
+ * the SageMakerEndpoint class, which includes the endpoint name, client
+ * options for the SageMaker client, the content handler, and optional
+ * keyword arguments for the model and the endpoint.
+ */
 export interface SageMakerEndpointInput extends BaseLLMParams {
   /**
    * The name of the endpoint from the deployed SageMaker model. Must be unique
@@ -90,6 +96,17 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
   endpointKwargs?: Record<string, unknown>;
 }
 
+/**
+ * The SageMakerEndpoint class is used to interact with SageMaker
+ * Inference Endpoint models. It extends the LLM class and overrides the
+ * _call method to transform the input and output between the LLM and the
+ * SageMaker endpoint using the provided content handler. The class uses
+ * AWS client for authentication, which automatically loads credentials.
+ * If a specific credential profile is to be used, the name of the profile
+ * from the ~/.aws/credentials file must be passed. The credentials or
+ * roles used should have the required policies to access the SageMaker
+ * endpoint.
+ */
 export class SageMakerEndpoint extends LLM {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
