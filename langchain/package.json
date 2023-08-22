@@ -145,6 +145,9 @@
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/bedrock-chat.cjs",
+    "llms/bedrock-chat.js",
+    "llms/bedrock-chat.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -590,9 +593,11 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/eventstream-marshaller": "^3.120.0",
     "@aws-sdk/protocol-http": "^3.374.0",
     "@aws-sdk/signature-v4": "^3.374.0",
     "@aws-sdk/types": "^3.357.0",
+    "@aws-sdk/util-utf8-universal": "^0.1.0-preview.1",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
@@ -701,8 +706,10 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/eventstream-marshaller": "^3.120.0",
     "@aws-sdk/protocol-http": "^3.374.0",
     "@aws-sdk/signature-v4": "^3.374.0",
+    "@aws-sdk/util-utf8-universal": "^0.1.0-preview.1",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
@@ -791,10 +798,16 @@
     "@aws-sdk/credential-provider-node": {
       "optional": true
     },
+    "@aws-sdk/eventstream-marshaller": {
+      "optional": true
+    },
     "@aws-sdk/protocol-http": {
       "optional": true
     },
     "@aws-sdk/signature-v4": {
+      "optional": true
+    },
+    "@aws-sdk/util-utf8-universal": {
       "optional": true
     },
     "@azure/storage-blob": {
@@ -1258,6 +1271,11 @@
       "types": "./llms/bedrock.d.ts",
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
+    },
+    "./llms/bedrock-chat": {
+      "types": "./llms/bedrock-chat.d.ts",
+      "import": "./llms/bedrock-chat.js",
+      "require": "./llms/bedrock-chat.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
