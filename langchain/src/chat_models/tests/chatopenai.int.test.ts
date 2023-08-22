@@ -423,7 +423,6 @@ test("Function calling with streaming", async () => {
       ],
       function_call: {
         name: "get_current_weather",
-        arguments: "",
       },
     }
   );

@@ -128,7 +128,7 @@ function _convertDeltaToMessageChunk(
 }
 
 export interface ChatOpenAICallOptions extends OpenAICallOptions {
-  function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
+  function_call?: OpenAIClient.Chat.CompletionCreateParams.FunctionCallOption;
   functions?: OpenAIClient.Chat.CompletionCreateParams.Function[];
   tools?: StructuredTool[];
   promptIndex?: number;

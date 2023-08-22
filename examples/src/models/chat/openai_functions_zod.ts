@@ -29,7 +29,7 @@ const model = new ChatOpenAI({
       parameters: zodToJsonSchema(extractionFunctionZodSchema),
     },
   ],
-  function_call: { name: "extractor", arguments: "" },
+  function_call: { name: "extractor" },
 });
 
 const result = await model.invoke([new HumanMessage("What a beautiful day!")]);
