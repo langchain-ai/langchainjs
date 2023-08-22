@@ -9,6 +9,8 @@ import {
   ChainValues,
 } from "../schema/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
+import { OutputParserException } from "../schema/output_parser.js";
+import { Tool } from "../tools/base.js";
 
 /**
  * Interface defining the structure of input data for creating an
@@ -21,6 +23,24 @@ export interface AgentExecutorInput extends ChainInputs {
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
+  handleParsingErrors?:
+    | boolean
+    | string
+    | ((e: OutputParserException) => string);
+}
+
+/**
+ * Tool that just returns the query.
+ * Used for exception tracking.
+ */
+export class ExceptionTool extends Tool {
+  name = "_Exception";
+
+  description = "Exception tool";
+
+  async _call(query: string) {
+    return query;
+  }
 }
 
 /**
@@ -46,6 +66,21 @@ export class AgentExecutor extends BaseChain {
 
   earlyStoppingMethod: StoppingMethod = "force";
 
+  /**
+   * How to handle errors raised by the agent's output parser.
+    Defaults to `False`, which raises the error.
+
+    If `true`, the error will be sent back to the LLM as an observation.
+    If a string, the string itself will be sent to the LLM as an observation.
+    If a callable function, the function will be called with the exception
+    as an argument, and the result of that function will be passed to the agent
+    as an observation.
+   */
+  handleParsingErrors:
+    | boolean
+    | string
+    | ((e: OutputParserException) => string) = false;
+
   get inputKeys() {
     return this.agent.inputKeys;
   }
@@ -58,6 +93,8 @@ export class AgentExecutor extends BaseChain {
     super(input);
     this.agent = input.agent;
     this.tools = input.tools;
+    this.handleParsingErrors =
+      input.handleParsingErrors ?? this.handleParsingErrors;
     if (this.agent._agentActionType() === "multi") {
       for (const tool of this.tools) {
         if (tool.returnDirect) {
@@ -112,11 +149,28 @@ export class AgentExecutor extends BaseChain {
     };
 
     while (this.shouldContinue(iterations)) {
-      const output = await this.agent.plan(
-        steps,
-        inputs,
-        runManager?.getChild()
-      );
+      let output;
+      try {
+        output = await this.agent.plan(steps, inputs, runManager?.getChild());
+      } catch (e) {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (e instanceof OutputParserException) {
+          const log = e.message;
+          let observation;
+          if (this.handleParsingErrors === true) {
+            observation = "Invalid or incomplete response";
+          } else if (typeof this.handleParsingErrors === "string") {
+            observation = this.handleParsingErrors;
+          } else if (typeof this.handleParsingErrors === "function") {
+            observation = this.handleParsingErrors(e);
+          } else {
+            throw e;
+          }
+          output = { tool: "_Exception", toolInput: observation, log };
+        } else {
+          throw e;
+        }
+      }
       // Check if the agent has finished
       if ("returnValues" in output) {
         return getOutput(output);
@@ -132,8 +186,10 @@ export class AgentExecutor extends BaseChain {
       const newSteps = await Promise.all(
         actions.map(async (action) => {
           await runManager?.handleAgentAction(action);
-
-          const tool = toolsByName[action.tool?.toLowerCase()];
+          const tool =
+            action.tool === "_Exception"
+              ? new ExceptionTool()
+              : toolsByName[action.tool?.toLowerCase()];
           const observation = tool
             ? await tool.call(action.toolInput, runManager?.getChild())
             : `${action.tool} is not a valid tool, try another one.`;
