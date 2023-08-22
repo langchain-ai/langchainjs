@@ -475,10 +475,10 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     return metadata;
   }
 
-  metadataToRestrictions(documentMetadata: Record<string, any>): Restriction[] {
+  metadataToRestrictions(documentMetadata: Record<string, any>): this["FilterType"] {
     const metadata = this.cleanMetadata(documentMetadata);
 
-    const restrictions: Restriction[] = [];
+    const restrictions: this["FilterType"] = [];
     for (const key of Object.keys(metadata)) {
       // Make sure the value is an array (or that we'll ignore it)
       let valArray;
