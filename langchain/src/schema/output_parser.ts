@@ -176,7 +176,7 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
     return "StrOutputParser";
   }
 
-  lc_namespace = ["schema", "output_parser"];
+  lc_namespace = ["langchain", "schema", "output_parser"];
 
   lc_serializable = true;
 
@@ -206,7 +206,7 @@ export class BytesOutputParser extends BaseTransformOutputParser<Uint8Array> {
     return "BytesOutputParser";
   }
 
-  lc_namespace = ["schema", "output_parser"];
+  lc_namespace = ["langchain", "schema", "output_parser"];
 
   lc_serializable = true;
 
