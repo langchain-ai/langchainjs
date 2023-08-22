@@ -113,3 +113,37 @@ test("QueryCheckerTool", async () => {
   expect(queryCheckerTool.llmChain).not.toBeNull();
   expect(queryCheckerTool.llmChain.inputKeys).toEqual(["query"]);
 });
+
+test("ListTablesSqlTool with include tables", async () => {
+  const includeTables = ["users"];
+  const datasource = new DataSource({
+    type: "sqlite",
+    database: ":memory:",
+    synchronize: true,
+  });
+  await datasource.initialize();
+  db = await SqlDatabase.fromDataSourceParams({
+    appDataSource: datasource,
+    includesTables: includeTables,
+  });
+  const listSqlTool = new ListTablesSqlTool(db);
+  const result = await listSqlTool.call("");
+  expect(result).toBe("users");
+});
+
+test("ListTablesSqlTool with ignore tables", async () => {
+  const ignoreTables = ["products"];
+  const datasource = new DataSource({
+    type: "sqlite",
+    database: ":memory:",
+    synchronize: true,
+  });
+  await datasource.initialize();
+  db = await SqlDatabase.fromDataSourceParams({
+    appDataSource: datasource,
+    ignoreTables: ignoreTables,
+  });
+  const listSqlTool = new ListTablesSqlTool(db);
+  const result = await listSqlTool.call("");
+  expect(result).toBe("users");
+});
