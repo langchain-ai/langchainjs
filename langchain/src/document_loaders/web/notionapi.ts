@@ -41,16 +41,18 @@ export type GetResponse =
 export type PagePropertiesType = PageObjectResponse["properties"];
 export type PagePropertiesValue = PagePropertiesType[keyof PagePropertiesType];
 
-const isPageResponse = (res: GetResponse): res is GetPageResponse =>
+export const isPageResponse = (res: GetResponse): res is GetPageResponse =>
   !isNotionClientError(res) && res.object === "page";
-const isDatabaseResponse = (res: GetResponse): res is GetDatabaseResponse =>
+export const isDatabaseResponse = (
+  res: GetResponse
+): res is GetDatabaseResponse =>
   !isNotionClientError(res) && res.object === "database";
-const isErrorResponse = (res: GetResponse): res is APIResponseError =>
+export const isErrorResponse = (res: GetResponse): res is APIResponseError =>
   isNotionClientError(res);
 
-const isPage = (res: GetResponse): res is PageObjectResponse =>
+export const isPage = (res: GetResponse): res is PageObjectResponse =>
   isPageResponse(res) && isFullPage(res);
-const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
+export const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
   isDatabaseResponse(res) && isFullDatabase(res);
 
 const getTitle = (obj: GetResponse) => {
