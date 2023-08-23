@@ -233,14 +233,24 @@ test("Test Bedrock LLM: streaming", async () => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function setValue(object: any, path: string, value: any) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any no-useless-escape
-  const pathN: string = path.replace(/[\[]/gm, ".").replace(/[\]]/gm, "");
-  const keys: string[] = pathN.split(".");
-  const last: string | undefined = keys.pop();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion no-param-reassign no-return-assign
-  keys.reduce((o, k) => (o[k] = o[k] || {}), object)[last!] = value;
+  const objectWithValue = object;
+  const [currentKey, ...restOfPath] = path.split(".");
 
-  return object;
+  if (restOfPath.length === 0) {
+    objectWithValue[currentKey] = value;
+    return objectWithValue;
+  }
+
+  if (!Object.keys(objectWithValue).includes(currentKey)) {
+    objectWithValue[currentKey] = {};
+  }
+
+  objectWithValue[currentKey] = setValue(
+    objectWithValue[currentKey],
+    restOfPath.join("."),
+    value
+  );
+  return objectWithValue;
 }
 
 function buildResponse(tokens: string, keys = "outputText") {
