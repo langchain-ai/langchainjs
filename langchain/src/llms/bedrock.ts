@@ -8,6 +8,7 @@ import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { GenerationChunk } from "../schema/index.js";
 
 type Dict = { [key: string]: unknown };
 type CredentialType = AwsCredentialIdentity | Provider<AwsCredentialIdentity>;
@@ -159,9 +160,25 @@ export class Bedrock extends LLM implements BedrockInput {
   */
   async _call(
     prompt: string,
-    _options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
+    const chunks = [];
+    for await (const chunk of this._streamResponseChunks(
+      prompt,
+      options,
+      runManager
+    )) {
+      chunks.push(chunk);
+    }
+    return chunks.map((chunk) => chunk.text).join("");
+  }
+
+  async *_streamResponseChunks(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
     const provider = this.model.split(".")[0];
     const service = "bedrock";
 
@@ -199,11 +216,15 @@ export class Bedrock extends LLM implements BedrockInput {
     const signedRequest = await signer.sign(request);
 
     // Send request to AWS using the low-level fetch API
-    const response = await this.fetchFn(url, {
-      headers: signedRequest.headers,
-      body: signedRequest.body,
-      method: signedRequest.method,
-    });
+    const response = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () =>
+        this.fetchFn(url, {
+          headers: signedRequest.headers,
+          body: signedRequest.body,
+          method: signedRequest.method,
+        })
+    );
 
     if (response.status < 200 || response.status >= 300) {
       throw Error(
@@ -213,7 +234,6 @@ export class Bedrock extends LLM implements BedrockInput {
       );
     }
 
-    const chunks: string[] = [];
     const reader = response.body?.getReader();
     for await (const chunk of this._readChunks(reader)) {
       const event = this.codec.decode(chunk);
@@ -230,11 +250,12 @@ export class Bedrock extends LLM implements BedrockInput {
         ).toString()
       );
       const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, body);
+      yield new GenerationChunk({
+        text,
+        generationInfo: {},
+      });
       await runManager?.handleLLMNewToken(text);
-      chunks.push(text);
     }
-
-    return chunks.join("");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

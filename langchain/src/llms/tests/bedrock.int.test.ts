@@ -178,7 +178,7 @@ test("Test Bedrock LLM: no-region-specified", async () => {
   );
 }, 5000);
 
-test("Test Bedrock LLM: streaming", async () => {
+test("Test Bedrock LLM: streaming callback handler", async () => {
   const region = "us-east-1";
   const model = "amazon.model";
   const prompt = "What is your name?";
@@ -229,6 +229,28 @@ test("Test Bedrock LLM: streaming", async () => {
   expect(typeof res).toBe("string");
   expect(res).toBe(answer);
   expect(tokens.join("")).toBe(answer);
+}, 5000);
+
+test("Test Bedrock LLM: stream method", async () => {
+  const region = "us-east-1";
+  const model = "ai21.j2-grande-instruct";
+  const prompt = "What is your name?";
+
+  const bedrock = new Bedrock({
+    maxTokens: 20,
+    region,
+    model,
+  });
+
+  const stream = await bedrock.stream(prompt);
+
+  const chunks = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+  console.log(chunks.join(""));
 }, 5000);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
