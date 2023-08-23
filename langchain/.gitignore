@@ -133,6 +133,9 @@ llms/sagemaker_endpoint.d.ts
 llms/bedrock.cjs
 llms/bedrock.js
 llms/bedrock.d.ts
+llms/llama_cpp.cjs
+llms/llama_cpp.js
+llms/llama_cpp.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
