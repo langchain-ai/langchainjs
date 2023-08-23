@@ -106,6 +106,9 @@ llms/ai21.d.ts
 llms/aleph_alpha.cjs
 llms/aleph_alpha.js
 llms/aleph_alpha.d.ts
+llms/bittensor.cjs
+llms/bittensor.js
+llms/bittensor.d.ts
 llms/cohere.cjs
 llms/cohere.js
 llms/cohere.d.ts

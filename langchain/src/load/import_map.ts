@@ -13,6 +13,7 @@ export * as embeddings__fake from "../embeddings/fake.js";
 export * as embeddings__openai from "../embeddings/openai.js";
 export * as llms__base from "../llms/base.js";
 export * as llms__openai from "../llms/openai.js";
+export * as llms__bittensor from "../llms/bittensor.js";
 export * as llms__ai21 from "../llms/ai21.js";
 export * as llms__aleph_alpha from "../llms/aleph_alpha.js";
 export * as llms__ollama from "../llms/ollama.js";
