@@ -16,10 +16,15 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
   private caller: AsyncCaller;
 
   private url: string;
+
   private excludeDirs: string[];
+
   private extractor: (text: string) => string;
+
   private maxDepth: number;
+
   private timeout: number;
+
   private preventOutside: boolean;
 
   constructor(url: string, options: Options) {
@@ -38,17 +43,18 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
     this.preventOutside = options.preventOutside ?? true;
   }
 
-  private fetchWithTimeout(
+  private async fetchWithTimeout(
     resource: string,
     options: { timeout?: number } & RequestInit
   ): Promise<Response> {
     const { timeout } = options;
 
-    return new Promise<Response>((resolve, reject) => {
+    return await new Promise<Response>((resolve, reject) => {
       const timer = setTimeout(() => {
         reject(new Error("timeout"));
       }, timeout);
 
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.caller.call(() =>
         fetch(resource, options)
           .then(resolve)
@@ -59,12 +65,13 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
   }
 
   private getChildLinks(html: string, baseUrl: string): Array<string> {
-    let allLinks = Array.from(
+    const allLinks = Array.from(
       new JSDOM(html).window.document.querySelectorAll("a")
     ).map((a) => a.href);
-    let absolutePaths = [];
-    let invalid_prefixes = ["javascript:", "mailto:", "#"];
-    let invalid_suffixes = [
+    const absolutePaths = [];
+    // eslint-disable-next-line no-script-url
+    const invalid_prefixes = ["javascript:", "mailto:", "#"];
+    const invalid_suffixes = [
       ".css",
       ".js",
       ".ico",
@@ -75,7 +82,7 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
       ".svg",
     ];
 
-    for (let link of allLinks) {
+    for (const link of allLinks) {
       if (
         invalid_prefixes.some((prefix) => link.startsWith(prefix)) ||
         invalid_suffixes.some((suffix) => link.endsWith(suffix))
@@ -97,10 +104,10 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
     return Array.from(new Set(absolutePaths));
   }
 
-  private extractMetadata(rawHtml: string, url: string): Record<string, any> {
+  private extractMetadata(rawHtml: string, url: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadata: Record<string, any> = { source: url };
-    const dom = new JSDOM(rawHtml);
-    const document = dom.window.document;
+    const { document } = new JSDOM(rawHtml).window;
 
     const title = document.getElementsByTagName("title")[0];
     if (title) {
@@ -136,13 +143,14 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
   }
 
   private async getChildUrlsRecursive(
-    url: string,
+    inputUrl: string,
     visited: Set<string> = new Set<string>(),
-    depth: number = 0
+    depth = 0
   ): Promise<Document[]> {
     if (depth > this.maxDepth) return [];
 
-    if (!url.endsWith("/")) url += "/";
+    let url = inputUrl;
+    if (!inputUrl.endsWith("/")) url += "/";
 
     const isExcluded = this.excludeDirs.some((exDir) => url.startsWith(exDir));
     if (isExcluded) return [];
