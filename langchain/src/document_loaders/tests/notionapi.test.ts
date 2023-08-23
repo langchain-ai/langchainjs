@@ -1,10 +1,10 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { test } from "@jest/globals";
-import { NotionAPILoader, PageObjectResponse } from "../web/notionapi.js";
 import * as fs from "node:fs";
 import * as url from "node:url";
 import * as path from "node:path";
+import { test } from "@jest/globals";
+import { NotionAPILoader, PageObjectResponse } from "../web/notionapi.js";
 
 test("Properties Parser", async () => {
   const loader = new NotionAPILoader({
@@ -27,6 +27,7 @@ test("Properties Parser", async () => {
   );
 
   // Accessing private class method
+  // eslint-disable-next-line dot-notation
   const contents = loader["parsePageProperties"](pageDetails);
 
   expect(contents.File).toBe('["MetaLumna Logo Square.png"]');

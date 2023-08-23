@@ -296,7 +296,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
   private parsePageProperties(page: PageObjectResponse) {
     return Object.entries(page.properties).reduce((accum, [propName, prop]) => {
       const value = this.getPropValue(prop);
-      let props = { ...accum, [propName]: value };
+      const props = { ...accum, [propName]: value };
       return prop.type === "title" ? { ...props, _title: value } : props;
     }, {} as { [key: string]: string });
   }
