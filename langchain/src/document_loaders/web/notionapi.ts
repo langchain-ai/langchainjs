@@ -112,7 +112,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
       maxConcurrency: 64,
       ...options.callerOptions,
     });
-    this.notionClient = new Client(options.clientOptions);
+    this.notionClient = new Client({
+      logger: () => {}, // Suppress Notion SDK logger
+      ...options.clientOptions,
+    });
     this.n2mClient = new NotionToMarkdown({
       notionClient: this.notionClient,
       config: { parseChildPages: false, convertImagesToBase64: false },
