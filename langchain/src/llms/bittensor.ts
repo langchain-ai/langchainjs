@@ -44,7 +44,7 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
   _llmType(): string {
     return "NIBittensorLLM";
   }
-  
+
   /** Call out to NIBittensorLLM's complete endpoint.
    Args:
        prompt: The prompt to pass into the model.

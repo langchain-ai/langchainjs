@@ -12,6 +12,7 @@ const embeddings_fake = require("langchain/embeddings/fake");
 const embeddings_openai = require("langchain/embeddings/openai");
 const llms_base = require("langchain/llms/base");
 const llms_openai = require("langchain/llms/openai");
+const llms_bittensor = require("langchain/llms/bittensor");
 const llms_ai21 = require("langchain/llms/ai21");
 const llms_aleph_alpha = require("langchain/llms/aleph_alpha");
 const llms_ollama = require("langchain/llms/ollama");

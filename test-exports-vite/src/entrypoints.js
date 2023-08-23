@@ -12,6 +12,7 @@ export * from "langchain/embeddings/fake";
 export * from "langchain/embeddings/openai";
 export * from "langchain/llms/base";
 export * from "langchain/llms/openai";
+export * from "langchain/llms/bittensor";
 export * from "langchain/llms/ai21";
 export * from "langchain/llms/aleph_alpha";
 export * from "langchain/llms/ollama";

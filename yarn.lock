@@ -8321,7 +8321,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:*, axios@npm:^1.4.0":
+"axios-bittensor@npm:axios@^1.4.0, axios@npm:*, axios@npm:^1.4.0":
   version: 1.4.0
   resolution: "axios@npm:1.4.0"
   dependencies:
@@ -12675,6 +12675,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"https@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "https@npm:1.0.0"
+  checksum: ccea8a8363a018d4b241db7748cff3a85c9f5b71bf80639e9c37dc6823f590f35dda098b80b726930e9f945387c8bfd6b1461df25cab5bf65a31903d81875b5d
+  languageName: node
+  linkType: hard
+
 "human-signals@npm:^2.1.0":
   version: 2.1.0
   resolution: "human-signals@npm:2.1.0"
@@ -14425,7 +14432,8 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
-    axios: ^1.4.0
+    axios: ^0.26.0
+    axios-bittensor: "npm:axios@^1.4.0"
     binary-extensions: ^2.2.0
     camelcase: 6
     cheerio: ^1.0.0-rc.12
@@ -14450,6 +14458,7 @@ __metadata:
     graphql: ^16.6.0
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
+    https: ^1.0.0
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jest: ^29.5.0
