@@ -882,9 +882,6 @@
     "axios": {
       "optional": true
     },
-    "axios-bittensor": {
-      "optional": true
-    },
     "cheerio": {
       "optional": true
     },
