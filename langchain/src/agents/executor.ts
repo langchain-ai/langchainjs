@@ -10,7 +10,7 @@ import {
 } from "../schema/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { OutputParserException } from "../schema/output_parser.js";
-import { Tool } from "../tools/base.js";
+import { Tool, ToolInputParsingException } from "../tools/base.js";
 
 /**
  * Interface defining the structure of input data for creating an
@@ -26,7 +26,7 @@ export interface AgentExecutorInput extends ChainInputs {
   handleParsingErrors?:
     | boolean
     | string
-    | ((e: OutputParserException) => string);
+    | ((e: OutputParserException | ToolInputParsingException) => string);
 }
 
 /**
@@ -79,7 +79,7 @@ export class AgentExecutor extends BaseChain {
   handleParsingErrors:
     | boolean
     | string
-    | ((e: OutputParserException) => string) = false;
+    | ((e: OutputParserException | ToolInputParsingException) => string) = false;
 
   get inputKeys() {
     return this.agent.inputKeys;
@@ -155,7 +155,6 @@ export class AgentExecutor extends BaseChain {
       } catch (e) {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof OutputParserException) {
-          const log = e.message;
           let observation;
           if (this.handleParsingErrors === true) {
             observation = "Invalid or incomplete response";
@@ -166,7 +165,7 @@ export class AgentExecutor extends BaseChain {
           } else {
             throw e;
           }
-          output = { tool: "_Exception", toolInput: observation, log };
+          output = { tool: "_Exception", toolInput: observation, log: e.message };
         } else {
           throw e;
         }
@@ -190,11 +189,29 @@ export class AgentExecutor extends BaseChain {
             action.tool === "_Exception"
               ? new ExceptionTool()
               : toolsByName[action.tool?.toLowerCase()];
-          const observation = tool
-            ? await tool.call(action.toolInput, runManager?.getChild())
-            : `${action.tool} is not a valid tool, try another one.`;
+          let observation;
+          try {
+            observation = tool
+              ? await tool.call(action.toolInput, runManager?.getChild())
+              : `${action.tool} is not a valid tool, try another one.`;
+          } catch (e) {
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            if (e instanceof ToolInputParsingException) {
+              if (this.handleParsingErrors === true) {
+                observation = "Invalid or incomplete tool input. Please try again.";
+              } else if (typeof this.handleParsingErrors === "string") {
+                observation = this.handleParsingErrors;
+              } else if (typeof this.handleParsingErrors === "function") {
+                observation = this.handleParsingErrors(e);
+              } else {
+                throw e;
+              }
+              observation = await new ExceptionTool().call(observation, runManager?.getChild());
+              return { action, observation: observation ?? "" };
+            }
+          }
 
-          return { action, observation };
+          return { action, observation: observation ?? "" };
         })
       );
 

@@ -14,6 +14,20 @@ import { RunnableConfig } from "../schema/runnable.js";
 export interface ToolParams extends BaseLangChainParams {}
 
 /**
+ * Custom error class used to handle exceptions related to tool input parsing.
+ * It extends the built-in `Error` class and adds an optional `output`
+ * property that can hold the output that caused the exception.
+ */
+export class ToolInputParsingException extends Error {
+  output?: string;
+
+  constructor(message: string, output?: string) {
+    super(message);
+    this.output = output;
+  }
+}
+
+/**
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
 export abstract class StructuredTool<
@@ -66,7 +80,12 @@ export abstract class StructuredTool<
     /** @deprecated */
     tags?: string[]
   ): Promise<string> {
-    const parsed = await this.schema.parseAsync(arg);
+    let parsed;
+    try {
+      parsed = await this.schema.parseAsync(arg);
+    } catch (e) {
+      throw new ToolInputParsingException(`Received tool input did not match expected schema`, JSON.stringify(arg));
+    }
     const config = parseCallbackConfigArg(configArg);
     const callbackManager_ = await CallbackManager.configure(
       config.callbacks,
