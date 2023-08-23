@@ -3,6 +3,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
+  LegacyOpenAIInput,
 } from "../types/openai-types.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
@@ -71,7 +72,7 @@ export class OpenAIEmbeddings
         verbose?: boolean;
         openAIApiKey?: string;
       },
-    configuration?: ClientOptions
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
@@ -132,6 +133,10 @@ export class OpenAIEmbeddings
 
     this.clientConfig = {
       apiKey,
+      baseURL: configuration?.basePath,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders: configuration?.baseOptions?.headers,
+      defaultQuery: configuration?.baseOptions?.params,
       ...configuration,
     };
   }
@@ -198,7 +203,7 @@ export class OpenAIEmbeddings
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        basePath: this.clientConfig.baseURL,
+        baseURL: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
@@ -207,7 +212,6 @@ export class OpenAIEmbeddings
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-        ...this.clientConfig,
       });
     }
     const requestOptions: OpenAICoreRequestOptions = {};

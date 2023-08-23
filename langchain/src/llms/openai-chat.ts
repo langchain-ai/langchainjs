@@ -6,6 +6,7 @@ import {
   OpenAICallOptions,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
+  LegacyOpenAIInput,
 } from "../types/openai-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { getEnvironmentVariable } from "../util/env.js";
@@ -131,10 +132,10 @@ export class OpenAIChat
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        configuration?: ClientOptions;
+        configuration?: ClientOptions & LegacyOpenAIInput;
       },
     /** @deprecated */
-    configuration?: ClientOptions
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     super(fields ?? {});
 
@@ -209,6 +210,14 @@ export class OpenAIChat
     this.clientConfig = {
       apiKey: this.openAIApiKey,
       organization: this.organization,
+      baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders:
+        configuration?.baseOptions?.headers ??
+        fields?.configuration?.baseOptions?.headers,
+      defaultQuery:
+        configuration?.baseOptions?.params ??
+        fields?.configuration?.baseOptions?.params,
       ...configuration,
       ...fields?.configuration,
     };
@@ -429,7 +438,7 @@ export class OpenAIChat
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        basePath: this.clientConfig.baseURL,
+        baseURL: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
@@ -438,7 +447,6 @@ export class OpenAIChat
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-        ...this.clientConfig,
       });
     }
     const requestOptions = {

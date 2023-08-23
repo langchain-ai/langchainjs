@@ -8,6 +8,7 @@ import {
   OpenAICallOptions,
   OpenAICoreRequestOptions,
   OpenAIInput,
+  LegacyOpenAIInput,
 } from "../types/openai-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { chunkArray } from "../util/chunk.js";
@@ -130,10 +131,10 @@ export class OpenAI
     fields?: Partial<OpenAIInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        configuration?: ClientOptions;
+        configuration?: ClientOptions & LegacyOpenAIInput;
       },
     /** @deprecated */
-    configuration?: ClientOptions
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     if (
       fields?.modelName?.startsWith("gpt-3.5-turbo") ||
@@ -215,6 +216,14 @@ export class OpenAI
     this.clientConfig = {
       apiKey: this.openAIApiKey,
       organization: this.organization,
+      baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders:
+        configuration?.baseOptions?.headers ??
+        fields?.configuration?.baseOptions?.headers,
+      defaultQuery:
+        configuration?.baseOptions?.params ??
+        fields?.configuration?.baseOptions?.params,
       ...configuration,
       ...fields?.configuration,
     };
@@ -472,7 +481,7 @@ export class OpenAI
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        basePath: this.clientConfig.baseURL,
+        baseURL: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
@@ -481,7 +490,6 @@ export class OpenAI
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-        ...this.clientConfig,
       });
     }
     const requestOptions = {

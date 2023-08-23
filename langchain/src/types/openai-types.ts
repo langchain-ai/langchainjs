@@ -94,6 +94,17 @@ export declare interface OpenAIInput extends OpenAIBaseInput {
   batchSize: number;
 }
 
+/**
+ * @deprecated Use "baseURL", "defaultHeaders", and "defaultParams" instead.
+ */
+export interface LegacyOpenAIInput {
+  basePath?: string;
+  baseOptions?: {
+    headers?: Record<string, string>;
+    params?: Record<string, string>;
+  };
+}
+
 export interface OpenAIChatInput extends OpenAIBaseInput {
   /** ChatGPT messages to pass as a prefix to the prompt */
   prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
