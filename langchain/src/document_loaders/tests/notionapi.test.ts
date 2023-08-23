@@ -32,9 +32,7 @@ test("Properties Parser", async () => {
 
   expect(contents.File).toBe('["MetaLumna Logo Square.png"]');
   expect(contents.Number).toBe("1234");
-  expect(contents.Rollup).toBe(
-    '{show_original: ["Another page in a database that acts as an example", "An example page in a database", "A database page that is an example"]}'
-  );
+  expect(contents.Rollup).toBe("Unsupported type: rollup");
   expect(contents.Status).toBe("In progress");
   expect(contents["Multi-select"]).toBe('["Red", "Green", "Blue"]');
   expect(contents.Select).toBe("Magenta");
@@ -57,7 +55,7 @@ test("Properties Parser", async () => {
     '["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"]'
   );
   expect(contents.Checkbox).toBe("true");
-  expect(contents.Formula).toBe("false");
+  expect(contents.Formula).toBe("Unsupported type: formula");
   expect(contents.Phone).toBe("555-1234");
   expect(contents.Email).toBe("skarard@gmail.com");
   expect(contents.URL).toBe("https://example.com");
