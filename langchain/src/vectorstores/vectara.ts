@@ -217,6 +217,62 @@ export class VectaraStore extends VectorStore {
   }
 
   /**
+   * Vectara provides a way to add documents directly via their API. This API handles
+   * pre-processing and chunking internally in an optimal manner. This method is a wrapper
+   * to utilize that API within LangChain.
+   *
+   * @param filePaths An array of Blob objects representing the files to be uploaded to Vectara.
+   * @param metadata Optional. An array of metadata objects corresponding to each file in the `filePaths` array.
+   * @returns A Promise that resolves to the number of successfully uploaded files.
+   */
+  async addFiles(
+    filePaths: Blob[],
+    metadatas: Record<string, unknown> | undefined = undefined
+  ) {
+    let numDocs = 0;
+
+    for (const [index, fileBlob] of filePaths.entries()) {
+      const md = metadatas ? metadatas[index] : {};
+
+      const data = new FormData();
+      data.append("file", fileBlob, `file_${index}`);
+      data.append("doc-metadata", JSON.stringify(md));
+
+      try {
+        const response = await fetch(
+          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`,
+          {
+            method: "POST",
+            headers: {
+              "x-api-key": this.apiKey,
+            },
+            body: data,
+          }
+        );
+
+        const result = await response.json();
+        const { status } = response;
+
+        if (status !== 200 && status !== 409) {
+          throw new Error(
+            `Vectara API returned status code ${status}: ${result}`
+          );
+        } else {
+          numDocs += 1;
+        }
+      } catch (err) {
+        console.error(`Failed to upload file at index ${index}:`, err);
+      }
+    }
+
+    if (this.verbose) {
+      console.log(`Uploaded ${filePaths.length} files to Vectara`);
+    }
+
+    return numDocs;
+  }
+
+  /**
    * Performs a similarity search and returns documents along with their
    * scores.
    * @param query The query string for the similarity search.
@@ -266,8 +322,29 @@ export class VectaraStore extends VectorStore {
     if (response.status !== 200) {
       throw new Error(`Vectara API returned status code ${response.status}`);
     }
+
     const result = await response.json();
     const responses = result.responseSet[0].response;
+    const documents = result.responseSet[0].document;
+
+    for (let i = 0; i < responses.length; i += 1) {
+      const responseMetadata = responses[i].metadata;
+      const documentMetadata = documents[responses[i].documentIndex].metadata;
+      const combinedMetadata: Record<string, unknown> = {};
+
+      responseMetadata.forEach((item: { name: string; value: unknown }) => {
+        combinedMetadata[item.name] = item.value;
+      });
+
+      documentMetadata.forEach((item: { name: string; value: unknown }) => {
+        combinedMetadata[item.name] = item.value;
+      });
+
+      responses[i].metadata = Object.entries(combinedMetadata).map(
+        ([name, value]) => ({ name, value })
+      );
+    }
+
     const documentsAndScores = responses.map(
       (response: {
         text: string;

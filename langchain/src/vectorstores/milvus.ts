@@ -5,6 +5,7 @@ import {
   DataTypeMap,
   ErrorCode,
   FieldType,
+  ClientConfig,
 } from "@zilliz/milvus2-sdk-node";
 
 import { Embeddings } from "../embeddings/base.js";
@@ -25,6 +26,8 @@ export interface MilvusLibArgs {
   username?: string;
   password?: string;
   textFieldMaxLength?: number;
+  clientConfig?: ClientConfig;
+  autoId?: boolean;
 }
 
 /**
@@ -121,7 +124,7 @@ export class Milvus extends VectorStore {
     this.collectionName = args.collectionName ?? genCollectionName();
     this.textField = args.textField ?? MILVUS_TEXT_FIELD_NAME;
 
-    this.autoId = true;
+    this.autoId = args.autoId ?? true;
     this.primaryField = args.primaryField ?? MILVUS_PRIMARY_FIELD_NAME;
     this.vectorField = args.vectorField ?? MILVUS_VECTOR_FIELD_NAME;
 
@@ -130,10 +133,26 @@ export class Milvus extends VectorStore {
     this.fields = [];
 
     const url = args.url ?? getEnvironmentVariable("MILVUS_URL");
-    if (!url) {
+    const {
+      address = "",
+      username = "",
+      password = "",
+      ssl,
+    } = args.clientConfig || {};
+
+    // combine args clientConfig and env variables
+    const clientConfig: ClientConfig = {
+      ...(args.clientConfig || {}),
+      address: url || address,
+      username: args.username || username,
+      password: args.password || password,
+      ssl: args.ssl || ssl,
+    };
+
+    if (!clientConfig.address) {
       throw new Error("Milvus URL address is not provided.");
     }
-    this.client = new MilvusClient(url, args.ssl, args.username, args.password);
+    this.client = new MilvusClient(clientConfig);
   }
 
   /**
@@ -337,7 +356,7 @@ export class Milvus extends VectorStore {
   ): Promise<void> {
     const fieldList: FieldType[] = [];
 
-    fieldList.push(...createFieldTypeForMetadata(documents));
+    fieldList.push(...createFieldTypeForMetadata(documents, this.primaryField));
 
     fieldList.push(
       {
@@ -421,7 +440,7 @@ export class Milvus extends VectorStore {
       if (field.is_primary_key) {
         this.primaryField = field.name;
       }
-      const dtype = DataTypeMap[field.data_type.toLowerCase()];
+      const dtype = DataTypeMap[field.data_type];
       if (dtype === DataType.FloatVector || dtype === DataType.BinaryVector) {
         this.vectorField = field.name;
       }
@@ -480,6 +499,8 @@ export class Milvus extends VectorStore {
       textField: dbConfig?.textField,
       primaryField: dbConfig?.primaryField,
       vectorField: dbConfig?.vectorField,
+      clientConfig: dbConfig?.clientConfig,
+      autoId: dbConfig?.autoId,
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
@@ -533,7 +554,10 @@ export class Milvus extends VectorStore {
   }
 }
 
-function createFieldTypeForMetadata(documents: Document[]): FieldType[] {
+function createFieldTypeForMetadata(
+  documents: Document[],
+  primaryFieldName: string
+): FieldType[] {
   const sampleMetadata = documents[0].metadata;
   let textFieldMaxLength = 0;
   let jsonFieldMaxLength = 0;
@@ -566,7 +590,13 @@ function createFieldTypeForMetadata(documents: Document[]): FieldType[] {
   const fields: FieldType[] = [];
   for (const [key, value] of Object.entries(sampleMetadata)) {
     const type = typeof value;
-    if (type === "string") {
+
+    if (key === primaryFieldName) {
+      /**
+       * skip primary field
+       * because we will create primary field in createCollection
+       *  */
+    } else if (type === "string") {
       fields.push({
         name: key,
         description: `Metadata String field`,
