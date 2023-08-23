@@ -339,6 +339,10 @@
     {
       "source": "/docs/modules/data_connection/retrievers/integrations/parent-document-retriever",
       "destination": "/docs/modules/data_connection/retrievers/how_to/parent-document-retriever"
+    },
+    {
+      "source": "/docs/modules/data_connection/caching_embeddings(/?)",
+      "destination": "/docs/modules/data_connection/text_embedding/caching_embeddings"
     }
   ]
 }
