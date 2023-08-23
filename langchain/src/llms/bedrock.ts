@@ -1,10 +1,13 @@
 import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { HttpRequest } from "@aws-sdk/protocol-http";
+import { EventStreamMarshaller } from "@aws-sdk/eventstream-marshaller";
+import { fromUtf8, toUtf8 } from "@aws-sdk/util-utf8-universal";
 import { Sha256 } from "@aws-crypto/sha256-js";
 import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 type Dict = { [key: string]: unknown };
 type CredentialType = AwsCredentialIdentity | Provider<AwsCredentialIdentity>;
@@ -38,9 +41,9 @@ class BedrockLLMInputOutputAdapter {
     if (provider === "anthropic") {
       return responseBody.completion;
     } else if (provider === "ai21") {
-      return responseBody.completions[0].data.text;
+      return responseBody.data.text;
     }
-    return responseBody.results[0].outputText;
+    return responseBody.outputText;
   }
 }
 
@@ -89,6 +92,11 @@ export class Bedrock extends LLM implements BedrockInput {
 
   fetchFn: typeof fetch;
 
+  marshaller: EventStreamMarshaller = new EventStreamMarshaller(
+    toUtf8,
+    fromUtf8
+  );
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {};
   }
@@ -131,7 +139,11 @@ export class Bedrock extends LLM implements BedrockInput {
     Example:
       response = model.call("Tell me a joke.")
   */
-  async _call(prompt: string): Promise<string> {
+  async _call(
+    prompt: string,
+    _options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
     const provider = this.model.split(".")[0];
     const service = "bedrock";
 
@@ -141,7 +153,7 @@ export class Bedrock extends LLM implements BedrockInput {
     );
 
     const url = new URL(
-      `https://${service}.${this.region}.amazonaws.com/model/${this.model}/invoke`
+      `https://${service}.${this.region}.amazonaws.com/model/${this.model}/invoke-with-response-stream`
     );
 
     const request = new HttpRequest({
@@ -183,13 +195,40 @@ export class Bedrock extends LLM implements BedrockInput {
       );
     }
 
-    const responseJson = await response.json();
+    const chunks: string[] = [];
+    const reader = response.body?.getReader();
+    for await (const chunk of this._readChunks(reader)) {
+      const event = this.marshaller.unmarshall(chunk);
+      if (
+        event.headers[":event-type"].value !== "chunk" ||
+        event.headers[":content-type"].value !== "application/json"
+      ) {
+        throw Error(`Failed to get event chunk: got ${chunk}`);
+      }
+      const body = JSON.parse(
+        Buffer.from(
+          JSON.parse(new TextDecoder("utf-8").decode(event.body)).bytes,
+          "base64"
+        ).toString()
+      );
+      const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, body);
+      await runManager?.handleLLMNewToken(text);
+      chunks.push(text);
+    }
 
-    const text = BedrockLLMInputOutputAdapter.prepareOutput(
-      provider,
-      responseJson
-    );
+    return chunks.join("");
+  }
 
-    return text;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _readChunks(reader: any) {
+    return {
+      async *[Symbol.asyncIterator]() {
+        let readResult = await reader.read();
+        while (!readResult.done) {
+          yield readResult.value;
+          readResult = await reader.read();
+        }
+      },
+    };
   }
 }

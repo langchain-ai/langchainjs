@@ -145,9 +145,6 @@
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
-    "llms/bedrock-chat.cjs",
-    "llms/bedrock-chat.js",
-    "llms/bedrock-chat.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -1271,11 +1268,6 @@
       "types": "./llms/bedrock.d.ts",
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
-    },
-    "./llms/bedrock-chat": {
-      "types": "./llms/bedrock-chat.d.ts",
-      "import": "./llms/bedrock-chat.js",
-      "require": "./llms/bedrock-chat.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",

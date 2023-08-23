@@ -27,7 +27,6 @@ export const optionalImportEntrypoints = [
   "langchain/llms/googlepalm",
   "langchain/llms/sagemaker_endpoint",
   "langchain/llms/bedrock",
-  "langchain/llms/bedrock-chat",
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/elasticsearch",
