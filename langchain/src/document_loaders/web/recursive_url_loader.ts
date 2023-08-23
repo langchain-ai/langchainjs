@@ -1,6 +1,7 @@
 import { JSDOM } from "jsdom";
 import { Document } from "../../document.js";
 import { AsyncCaller } from "../../util/async_caller.js";
+import { BaseDocumentLoader, DocumentLoader } from "../index.js";
 
 interface Options {
   excludeDirs?: string[];
@@ -11,7 +12,7 @@ interface Options {
   callerOptions?: ConstructorParameters<typeof AsyncCaller>[0];
 }
 
-class RecursiveUrlLoader {
+class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
   private caller: AsyncCaller;
 
   private url: string;
@@ -22,6 +23,8 @@ class RecursiveUrlLoader {
   private preventOutside: boolean;
 
   constructor(url: string, options: Options) {
+    super();
+
     this.caller = new AsyncCaller({
       maxConcurrency: 64,
       ...options.callerOptions,
