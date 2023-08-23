@@ -55,14 +55,6 @@ export const isPage = (res: GetResponse): res is PageObjectResponse =>
 export const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
   isDatabaseResponse(res) && isFullDatabase(res);
 
-const getTitle = (obj: GetResponse) => {
-  if (isPage(obj) && obj.properties.title.type === "title") {
-    return obj.properties.title.title[0]?.plain_text;
-  }
-  if (isDatabase(obj)) return obj.title[0]?.plain_text;
-  return null;
-};
-
 /**
  * Represents the type of Notion API to load documents from. The options
  * are "database" or "page".
@@ -142,6 +134,19 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.pageQueueTotal += deDuped.length;
   }
 
+  private getTitle(obj: GetResponse) {
+    if (isPage(obj) && obj.properties.title.type === "title") {
+      return obj.properties.title.title[0]?.plain_text;
+    }
+    if (isDatabase(obj)) return obj.title[0]?.plain_text;
+    return null;
+  }
+
+  /**
+   * Parses the property type and returns a string
+   * @param page The Notion page property to parse.
+   * @returns An string of parsed property.
+   */
   private getPropValue(prop: PagePropertiesValue) {
     switch (prop.type) {
       case "number": {
@@ -470,7 +475,8 @@ export class NotionAPILoader extends BaseDocumentLoader {
       throw new AggregateError(errors);
     }
 
-    this.rootTitle = getTitle(resPage) || getTitle(resDatabase) || this.id;
+    this.rootTitle =
+      this.getTitle(resPage) || this.getTitle(resDatabase) || this.id;
 
     let pageId = this.pageQueue.shift();
     while (pageId) {
