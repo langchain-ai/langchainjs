@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { SyntheticEmbeddings } from "langchain/embeddings/fake";
-import { InMemoryDocstore } from "langchain/stores/doc/in_memory";
+import { GoogleCloudStorageDocstore } from "langchain/stores/doc/gcs";
 import { Document } from "langchain/document";
 import {
   MatchingEngineArgs,
@@ -13,10 +13,11 @@ import {
 export const run = async () => {
   if (
     !process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX ||
-    !process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT
+    !process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT ||
+    !process.env.GOOGLE_CLOUD_STORAGE_BUCKET
   ) {
     throw new Error(
-      "GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX and GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT must be set."
+      "GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX, GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT, and GOOGLE_CLOUD_STORAGE_BUCKET must be set."
     );
   }
 
@@ -27,7 +28,9 @@ export const run = async () => {
     ),
   });
 
-  const store = new InMemoryDocstore();
+  const store = new GoogleCloudStorageDocstore({
+    bucket: process.env.GOOGLE_CLOUD_STORAGE_BUCKET!,
+  });
 
   const config: MatchingEngineArgs = {
     index: process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX!,
