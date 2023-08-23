@@ -142,25 +142,27 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
   protected _formatMessagesAsPrompt(messages: BaseMessage[]): string {
     const formattedMessages = messages
       .map((message) => {
-        let rolePrefix;
+        let messageText;
         if (message._getType() === "human") {
-          rolePrefix = "Human: ";
+          messageText = `[INST] ${message.content} [/INST]`;
         } else if (message._getType() === "ai") {
-          rolePrefix = "Assistant: ";
+          messageText = message.content;
         } else if (message._getType() === "system") {
-          rolePrefix = "";
+          messageText = `<<SYS>> ${message.content} <</SYS>>`;
         } else if (ChatMessage.isInstance(message)) {
-          rolePrefix = `${message.role}: `;
+          messageText = `\n\n${message.role[0].toUpperCase()}${message.role.slice(
+            1
+          )}: ${message.content}`;
         } else {
           console.warn(
             `Unsupported message type passed to Ollama: "${message._getType()}"`
           );
-          rolePrefix = "";
+          messageText = "";
         }
-        return `${rolePrefix}${message.content}`;
+        return messageText;
       })
       .join("\n");
-    return `${formattedMessages}\nAssistant: `;
+    return formattedMessages;
   }
 
   /** @ignore */
