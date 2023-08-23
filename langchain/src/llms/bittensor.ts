@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosResponse } from "axios-bittensor";
 import { BaseLLMParams, LLM } from "./base.js";
 
 export interface BittensorInput extends BaseLLMParams {

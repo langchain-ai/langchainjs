@@ -112,15 +112,15 @@
     "llms/openai.cjs",
     "llms/openai.js",
     "llms/openai.d.ts",
+    "llms/bittensor.cjs",
+    "llms/bittensor.js",
+    "llms/bittensor.d.ts",
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
     "llms/aleph_alpha.cjs",
     "llms/aleph_alpha.js",
     "llms/aleph_alpha.d.ts",
-    "llms/bittensor.cjs",
-    "llms/bittensor.js",
-    "llms/bittensor.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -641,6 +641,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
+    "axios-bittensor": "npm:axios@^1.4.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
@@ -995,6 +996,7 @@
     "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
+    "https": "^1.0.0",
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
@@ -1207,6 +1209,11 @@
       "import": "./llms/openai.js",
       "require": "./llms/openai.cjs"
     },
+    "./llms/bittensor": {
+      "types": "./llms/bittensor.d.ts",
+      "import": "./llms/bittensor.js",
+      "require": "./llms/bittensor.cjs"
+    },
     "./llms/ai21": {
       "types": "./llms/ai21.d.ts",
       "import": "./llms/ai21.js",
@@ -1216,11 +1223,6 @@
       "types": "./llms/aleph_alpha.d.ts",
       "import": "./llms/aleph_alpha.js",
       "require": "./llms/aleph_alpha.cjs"
-    },
-    "./llms/bittensor": {
-      "types": "./llms/bittensor.d.ts",
-      "import": "./llms/bittensor.js",
-      "require": "./llms/bittensor.cjs"
     },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
