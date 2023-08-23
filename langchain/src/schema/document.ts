@@ -25,6 +25,13 @@ export abstract class BaseDocumentTransformer<
    */
   abstract transformDocuments(documents: RunInput): Promise<RunOutput>;
 
+  /**
+   * Method to invoke the document transformation. This method calls the
+   * transformDocuments method with the provided input.
+   * @param input The input documents to be transformed.
+   * @param _options Optional configuration object to customize the behavior of callbacks.
+   * @returns A Promise that resolves to the transformed documents.
+   */
   invoke(
     input: RunInput,
     _options?: Partial<BaseCallbackConfig>

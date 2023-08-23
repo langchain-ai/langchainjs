@@ -73,6 +73,12 @@ export abstract class BaseChain<
     return valuesForMemory;
   }
 
+  /**
+   * Invoke the chain with the provided input and returns the output.
+   * @param input Input values for the chain run.
+   * @param config Optional configuration for the Runnable.
+   * @returns Promise that resolves with the output of the chain run.
+   */
   async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
     return this.call(input, config);
   }

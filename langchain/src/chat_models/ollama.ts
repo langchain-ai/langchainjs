@@ -9,10 +9,23 @@ import {
   ChatMessage,
 } from "../schema/index.js";
 
+/**
+ * An interface defining the options for an Ollama API call. It extends
+ * the BaseLanguageModelCallOptions interface.
+ */
 export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
 
+/**
+ * A class that enables calls to the Ollama API to access large language
+ * models in a chat-like fashion. It extends the SimpleChatModel class and
+ * implements the OllamaInput interface.
+ */
 export class ChatOllama extends SimpleChatModel implements OllamaInput {
   declare CallOptions: OllamaCallOptions;
+
+  static lc_name() {
+    return "ChatOllama";
+  }
 
   lc_serializable = true;
 
@@ -71,6 +84,12 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
     return "ollama";
   }
 
+  /**
+   * A method that returns the parameters for an Ollama API call. It
+   * includes model and options parameters.
+   * @param options Optional parsed call options.
+   * @returns An object containing the parameters for an Ollama API call.
+   */
   invocationParams(options?: this["ParsedCallOptions"]) {
     return {
       model: this.model,
@@ -123,25 +142,27 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
   protected _formatMessagesAsPrompt(messages: BaseMessage[]): string {
     const formattedMessages = messages
       .map((message) => {
-        let rolePrefix;
+        let messageText;
         if (message._getType() === "human") {
-          rolePrefix = "Human: ";
+          messageText = `[INST] ${message.content} [/INST]`;
         } else if (message._getType() === "ai") {
-          rolePrefix = "Assistant: ";
+          messageText = message.content;
         } else if (message._getType() === "system") {
-          rolePrefix = "";
+          messageText = `<<SYS>> ${message.content} <</SYS>>`;
         } else if (ChatMessage.isInstance(message)) {
-          rolePrefix = `${message.role}: `;
+          messageText = `\n\n${message.role[0].toUpperCase()}${message.role.slice(
+            1
+          )}: ${message.content}`;
         } else {
           console.warn(
             `Unsupported message type passed to Ollama: "${message._getType()}"`
           );
-          rolePrefix = "";
+          messageText = "";
         }
-        return `${rolePrefix}${message.content}`;
+        return messageText;
       })
       .join("\n");
-    return `${formattedMessages}\nAssistant: `;
+    return formattedMessages;
   }
 
   /** @ignore */

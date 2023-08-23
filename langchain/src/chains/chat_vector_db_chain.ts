@@ -25,6 +25,9 @@ const qa_template = `Use the following pieces of context to answer the question 
 Question: {question}
 Helpful Answer:`;
 
+/**
+ * Interface for the input parameters of the ChatVectorDBQAChain class.
+ */
 export interface ChatVectorDBQAChainInput extends ChainInputs {
   vectorstore: VectorStore;
   combineDocumentsChain: BaseChain;
@@ -168,6 +171,14 @@ export class ChatVectorDBQAChain
     };
   }
 
+  /**
+   * Creates an instance of ChatVectorDBQAChain using a BaseLanguageModel
+   * and other options.
+   * @param llm Instance of BaseLanguageModel used to generate a new question.
+   * @param vectorstore Instance of VectorStore used for vector operations.
+   * @param options (Optional) Additional options for creating the ChatVectorDBQAChain instance.
+   * @returns New instance of ChatVectorDBQAChain.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     vectorstore: VectorStore,

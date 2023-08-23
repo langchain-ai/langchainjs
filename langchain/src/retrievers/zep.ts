@@ -7,6 +7,10 @@ import {
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
+/**
+ * Configuration interface for the ZepRetriever class. Extends the
+ * BaseRetrieverInput interface.
+ */
 export interface ZepRetrieverConfig extends BaseRetrieverInput {
   sessionId: string;
   url: string;
@@ -14,7 +18,15 @@ export interface ZepRetrieverConfig extends BaseRetrieverInput {
   apiKey?: string;
 }
 
+/**
+ * Class for retrieving information from a Zep long-term memory store.
+ * Extends the BaseRetriever class.
+ */
 export class ZepRetriever extends BaseRetriever {
+  static lc_name() {
+    return "ZepRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "zep"];
 
   get lc_secrets(): { [key: string]: string } | undefined {

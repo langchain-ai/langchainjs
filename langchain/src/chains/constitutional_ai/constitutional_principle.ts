@@ -1,5 +1,9 @@
 import { SerializedConstitutionalPrinciple } from "../serde.js";
 
+/**
+ * Class representing a constitutional principle with critique request,
+ * revision request, and name properties.
+ */
 export class ConstitutionalPrinciple {
   critiqueRequest: string;
 

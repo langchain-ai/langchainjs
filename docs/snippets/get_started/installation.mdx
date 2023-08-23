@@ -154,6 +154,18 @@ You will have to make `fetch` available globally, either:
 - run your application with `NODE_OPTIONS='--experimental-fetch' node ...`, or
 - install `node-fetch` and follow the instructions [here](https://github.com/node-fetch/node-fetch#providing-global-access)
 
+You'll also need to [polyfill `ReadableStream`](https://www.npmjs.com/package/web-streams-polyfill) by installing:
+
+```bash npm2yarn
+npm i web-streams-polyfill
+```
+
+And then adding it to the global namespace in your main entrypoint:
+
+```typescript
+import "web-streams-polyfill/es6"
+```
+
 Additionally you'll have to polyfill `structuredClone`, eg. by installing `core-js` and following the instructions [here](https://github.com/zloirock/core-js).
 
-If you are running this on Node.js 18+, you do not need to do anything.
+If you are running Node.js 18+, you do not need to do anything.

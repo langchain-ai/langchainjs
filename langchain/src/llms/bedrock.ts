@@ -12,6 +12,12 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 type Dict = { [key: string]: unknown };
 type CredentialType = AwsCredentialIdentity | Provider<AwsCredentialIdentity>;
 
+/**
+ * A helper class used within the `Bedrock` class. It is responsible for
+ * preparing the input and output for the Bedrock service. It formats the
+ * input prompt based on the provider (e.g., "anthropic", "ai21",
+ * "amazon") and extracts the generated text from the service response.
+ */
 class BedrockLLMInputOutputAdapter {
   /** Adapter class to prepare the inputs from Langchain to a format
   that LLM model expects. Also, provides a helper function to extract
@@ -36,6 +42,12 @@ class BedrockLLMInputOutputAdapter {
     return inputBody;
   }
 
+  /**
+   * Extracts the generated text from the service response.
+   * @param provider The provider name.
+   * @param responseBody The response body from the service.
+   * @returns The generated text.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static prepareOutput(provider: string, responseBody: any): string {
     if (provider === "anthropic") {
@@ -79,6 +91,15 @@ export interface BedrockInput {
   fetchFn?: typeof fetch;
 }
 
+/**
+ * A type of Large Language Model (LLM) that interacts with the Bedrock
+ * service. It extends the base `LLM` class and implements the
+ * `BedrockInput` interface. The class is designed to authenticate and
+ * interact with the Bedrock service, which is a part of Amazon Web
+ * Services (AWS). It uses AWS credentials for authentication and can be
+ * configured with various parameters such as the model to use, the AWS
+ * region, and the maximum number of tokens to generate.
+ */
 export class Bedrock extends LLM implements BedrockInput {
   model = "amazon.titan-tg1-large";
 

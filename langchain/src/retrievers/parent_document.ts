@@ -6,15 +6,33 @@ import { VectorStore } from "../vectorstores/base.js";
 import { Docstore } from "../schema/index.js";
 import { TextSplitter } from "../text_splitter.js";
 
+/**
+ * Interface for the fields required to initialize a
+ * ParentDocumentRetriever instance.
+ */
 export interface ParentDocumentRetrieverFields extends BaseRetrieverInput {
   vectorstore: VectorStore;
   docstore: Docstore;
   childSplitter: TextSplitter;
   parentSplitter?: TextSplitter;
   idKey?: string;
+  childK?: number;
 }
 
+/**
+ * A type of document retriever that splits input documents into smaller chunks
+ * while separately storing and preserving the original documents.
+ * The small chunks are embedded, then on retrieval, the original
+ * "parent" documents are retrieved.
+ *
+ * This strikes a balance between better targeted retrieval with small documents
+ * and the more context-rich larger documents.
+ */
 export class ParentDocumentRetriever extends BaseRetriever {
+  static lc_name() {
+    return "ParentDocumentRetriever";
+  }
+
   lc_namespace = ["langchain", "retrievers", "parent_document"];
 
   protected vectorstore: VectorStore;
@@ -27,6 +45,8 @@ export class ParentDocumentRetriever extends BaseRetriever {
 
   protected idKey = "doc_id";
 
+  protected childK?: number;
+
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
@@ -34,10 +54,11 @@ export class ParentDocumentRetriever extends BaseRetriever {
     this.childSplitter = fields.childSplitter;
     this.parentSplitter = fields.parentSplitter;
     this.idKey = fields.idKey ?? this.idKey;
+    this.childK = fields.childK;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    const subDocs = await this.vectorstore.similaritySearch(query);
+    const subDocs = await this.vectorstore.similaritySearch(query, this.childK);
     // Maintain order
     const parentDocIds: string[] = [];
     for (const doc of subDocs) {

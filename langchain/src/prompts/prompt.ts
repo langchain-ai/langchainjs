@@ -69,6 +69,10 @@ export class PromptTemplate<
   extends BaseStringPromptTemplate<RunInput, PartialVariableName>
   implements PromptTemplateInput<RunInput, PartialVariableName>
 {
+  static lc_name() {
+    return "PromptTemplate";
+  }
+
   template: string;
 
   templateFormat: TemplateFormat = "f-string";
@@ -98,6 +102,11 @@ export class PromptTemplate<
     return "prompt";
   }
 
+  /**
+   * Formats the prompt template with the provided values.
+   * @param values The values to be used to format the prompt template.
+   * @returns A promise that resolves to a string which is the formatted prompt.
+   */
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
@@ -155,6 +164,11 @@ export class PromptTemplate<
     });
   }
 
+  /**
+   * Partially applies values to the prompt template.
+   * @param values The values to be partially applied to the prompt template.
+   * @returns A new instance of PromptTemplate with the partially applied values.
+   */
   async partial<NewPartialVariableName extends string>(
     values: PartialValues<NewPartialVariableName>
   ) {

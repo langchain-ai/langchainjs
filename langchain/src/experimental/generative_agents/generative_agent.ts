@@ -9,6 +9,11 @@ import {
   Callbacks,
 } from "../../callbacks/manager.js";
 
+/**
+ * Configuration for the GenerativeAgent class. Defines the character's
+ * name, optional age, permanent traits, status, verbosity, and summary
+ * refresh seconds.
+ */
 export type GenerativeAgentConfig = {
   name: string;
   age?: number;
@@ -19,7 +24,16 @@ export type GenerativeAgentConfig = {
   // dailySummaries?: string[];
 };
 
+/**
+ * Implementation of a generative agent that can learn and form new memories over
+ * time. It extends the BaseChain class, which is a generic
+ * sequence of calls to components, including other chains.
+ */
 export class GenerativeAgent extends BaseChain {
+  static lc_name() {
+    return "GenerativeAgent";
+  }
+
   // a character with memory and innate characterisitics
   name: string; // the character's name
 
@@ -77,6 +91,11 @@ export class GenerativeAgent extends BaseChain {
   }
 
   // LLM methods
+  /**
+   * Parses a newline-separated string into a list of strings.
+   * @param text The string to parse.
+   * @returns An array of strings parsed from the input text.
+   */
   parseList(text: string): string[] {
     // parse a newline-seperated string into a list of strings
     const lines: string[] = text.trim().split("\n");
@@ -86,6 +105,12 @@ export class GenerativeAgent extends BaseChain {
     return result;
   }
 
+  /**
+   * Creates a new LLMChain with the given prompt and the agent's language
+   * model, verbosity, output key, and memory.
+   * @param prompt The prompt to use for the LLMChain.
+   * @returns A new LLMChain instance.
+   */
   chain(prompt: PromptTemplate): LLMChain {
     const chain = new LLMChain({
       llm: this.llm,
@@ -97,6 +122,12 @@ export class GenerativeAgent extends BaseChain {
     return chain;
   }
 
+  /**
+   * Extracts the observed entity from the given observation.
+   * @param observation The observation to extract the entity from.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns The extracted entity as a string.
+   */
   async getEntityFromObservations(
     observation: string,
     runManager?: CallbackManagerForChainRun
@@ -116,6 +147,13 @@ export class GenerativeAgent extends BaseChain {
     return result.output;
   }
 
+  /**
+   * Extracts the action of the given entity from the given observation.
+   * @param observation The observation to extract the action from.
+   * @param entityName The name of the entity to extract the action for.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns The extracted action as a string.
+   */
   async getEntityAction(
     observation: string,
     entityName: string,
@@ -137,6 +175,12 @@ export class GenerativeAgent extends BaseChain {
     return trimmedResult;
   }
 
+  /**
+   * Summarizes memories that are most relevant to an observation.
+   * @param observation The observation to summarize related memories for.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns The summarized memories as a string.
+   */
   async summarizeRelatedMemories(
     observation: string,
     runManager?: CallbackManagerForChainRun
@@ -273,6 +317,12 @@ Relevant context:`
     return text.replace(regex, "").trim();
   }
 
+  /**
+   * Generates a reaction to the given observation.
+   * @param observation The observation to generate a reaction for.
+   * @param now Optional current date.
+   * @returns A boolean indicating whether to continue the dialogue and the output string.
+   */
   async generateReaction(
     observation: string,
     now?: Date
@@ -292,6 +342,12 @@ Relevant context:`
     return [continue_dialogue, output];
   }
 
+  /**
+   * Generates a dialogue response to the given observation.
+   * @param observation The observation to generate a dialogue response for.
+   * @param now Optional current date.
+   * @returns A boolean indicating whether to continue the dialogue and the output string.
+   */
   async generateDialogueResponse(
     observation: string,
     now?: Date
@@ -309,6 +365,14 @@ Relevant context:`
   // Each dialog or response prompt includes a header
   // summarizing the agent's self-description. This is
   // updated periodically through probing it's memories
+  /**
+   * Gets the agent's summary, which includes the agent's name, age, traits,
+   * and a summary of the agent's core characteristics. The summary is
+   * updated periodically through probing the agent's memories.
+   * @param config Optional configuration object with current date and a boolean to force refresh.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns The agent's summary as a string.
+   */
   async getSummary(
     config?: {
       now?: Date;
@@ -343,6 +407,12 @@ Innate traits: ${this.traits}
 ${this.summary}`;
   }
 
+  /**
+   * Computes the agent's summary by summarizing the agent's core
+   * characteristics given the agent's relevant memories.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns The computed summary as a string.
+   */
   async computeAgentSummary(
     runManager?: CallbackManagerForChainRun
   ): Promise<string> {
@@ -365,6 +435,11 @@ ${this.summary}`;
     return result.output.trim();
   }
 
+  /**
+   * Returns a full header of the agent's status, summary, and current time.
+   * @param config Optional configuration object with current date and a boolean to force refresh.
+   * @returns The full header as a string.
+   */
   getFullHeader(
     config: {
       now?: Date;
@@ -385,6 +460,14 @@ ${this.summary}`;
     return `${summary}\nIt is ${currentTimeString}.\n${this.name}'s status: ${this.status}`;
   }
 
+  /**
+   * Adds a memory to the agent's long-term memory.
+   * @param memoryContent The content of the memory to add.
+   * @param now Optional current date.
+   * @param metadata Optional metadata for the memory.
+   * @param callbacks Optional Callbacks instance.
+   * @returns The result of adding the memory to the agent's long-term memory.
+   */
   async addMemory(
     memoryContent: string,
     now?: Date,

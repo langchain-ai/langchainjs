@@ -6,6 +6,12 @@ import { S3Client, GetObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
 
+/**
+ * Represents the configuration options for the S3 client. It extends the
+ * S3ClientConfig interface from the "@aws-sdk/client-s3" package and
+ * includes additional deprecated properties for access key ID and secret
+ * access key.
+ */
 export type S3Config = S3ClientConfig & {
   /** @deprecated Use the credentials object instead */
   accessKeyId?: string;
@@ -13,6 +19,12 @@ export type S3Config = S3ClientConfig & {
   secretAccessKey?: string;
 };
 
+/**
+ * Represents the parameters for the S3Loader class. It includes
+ * properties such as the S3 bucket, key, unstructured API URL,
+ * unstructured API key, S3 configuration, file system module, and
+ * UnstructuredLoader module.
+ */
 export interface S3LoaderParams {
   bucket: string;
   key: string;
@@ -28,6 +40,10 @@ export interface S3LoaderParams {
   UnstructuredLoader?: typeof UnstructuredLoaderDefault;
 }
 
+/**
+ * A class that extends the BaseDocumentLoader class. It represents a
+ * document loader for loading files from an S3 bucket.
+ */
 export class S3Loader extends BaseDocumentLoader {
   private bucket: string;
 
@@ -67,6 +83,11 @@ export class S3Loader extends BaseDocumentLoader {
     this._UnstructuredLoader = UnstructuredLoader;
   }
 
+  /**
+   * Loads the file from the S3 bucket, saves it to a temporary directory,
+   * and then uses the UnstructuredLoader to load the file as a document.
+   * @returns An array of Document objects representing the loaded documents.
+   */
   public async load() {
     const tempDir = this._fs.mkdtempSync(
       path.join(os.tmpdir(), "s3fileloader-")
