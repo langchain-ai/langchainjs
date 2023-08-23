@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
-import { EventStreamMarshaller } from "@aws-sdk/eventstream-marshaller";
-import { fromUtf8, toUtf8 } from "@aws-sdk/util-utf8-universal";
+import { EventStreamCodec } from "@smithy/eventstream-codec";
+import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
 import { Bedrock } from "../bedrock.js";
 import { CallbackManager } from "../../callbacks/index.js";
 
@@ -248,7 +248,7 @@ function buildResponse(tokens: string, keys = "outputText") {
   const bytes = JSON.stringify({
     bytes: Buffer.from(JSON.stringify(body)).toString("base64"),
   });
-  const event = new EventStreamMarshaller(toUtf8, fromUtf8).marshall({
+  const event = new EventStreamCodec(toUtf8, fromUtf8).encode({
     headers: {
       ":event-type": { type: "string", value: "chunk" },
       ":content-type": { type: "string", value: "application/json" },

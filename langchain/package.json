@@ -590,11 +590,9 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/eventstream-marshaller": "^3.120.0",
     "@aws-sdk/protocol-http": "^3.374.0",
     "@aws-sdk/signature-v4": "^3.374.0",
     "@aws-sdk/types": "^3.357.0",
-    "@aws-sdk/util-utf8-universal": "^0.1.0-preview.1",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
@@ -613,6 +611,8 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
@@ -703,10 +703,8 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/eventstream-marshaller": "^3.120.0",
     "@aws-sdk/protocol-http": "^3.374.0",
     "@aws-sdk/signature-v4": "^3.374.0",
-    "@aws-sdk/util-utf8-universal": "^0.1.0-preview.1",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
@@ -723,6 +721,8 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
@@ -795,16 +795,10 @@
     "@aws-sdk/credential-provider-node": {
       "optional": true
     },
-    "@aws-sdk/eventstream-marshaller": {
-      "optional": true
-    },
     "@aws-sdk/protocol-http": {
       "optional": true
     },
     "@aws-sdk/signature-v4": {
-      "optional": true
-    },
-    "@aws-sdk/util-utf8-universal": {
       "optional": true
     },
     "@azure/storage-blob": {
@@ -853,6 +847,12 @@
       "optional": true
     },
     "@raycast/api": {
+      "optional": true
+    },
+    "@smithy/eventstream-codec": {
+      "optional": true
+    },
+    "@smithy/util-utf8": {
       "optional": true
     },
     "@supabase/postgrest-js": {

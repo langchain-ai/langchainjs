@@ -1,8 +1,8 @@
 import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { HttpRequest } from "@aws-sdk/protocol-http";
-import { EventStreamMarshaller } from "@aws-sdk/eventstream-marshaller";
-import { fromUtf8, toUtf8 } from "@aws-sdk/util-utf8-universal";
+import { EventStreamCodec } from "@smithy/eventstream-codec";
+import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
 import { Sha256 } from "@aws-crypto/sha256-js";
 import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { getEnvironmentVariable } from "../util/env.js";
@@ -92,10 +92,7 @@ export class Bedrock extends LLM implements BedrockInput {
 
   fetchFn: typeof fetch;
 
-  marshaller: EventStreamMarshaller = new EventStreamMarshaller(
-    toUtf8,
-    fromUtf8
-  );
+  codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {};
@@ -198,7 +195,7 @@ export class Bedrock extends LLM implements BedrockInput {
     const chunks: string[] = [];
     const reader = response.body?.getReader();
     for await (const chunk of this._readChunks(reader)) {
-      const event = this.marshaller.unmarshall(chunk);
+      const event = this.codec.decode(chunk);
       if (
         event.headers[":event-type"].value !== "chunk" ||
         event.headers[":content-type"].value !== "application/json"
