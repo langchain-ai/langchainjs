@@ -629,6 +629,13 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
           // are not in the document store, to allow for some way to get
           // the id so they can be deleted.
           console.error(xx);
+          console.warn(
+            [
+              `Document with id "${id}" is missing from the backing docstore.`,
+              `This can occur if you clear the docstore without deleting from the corresponding Matching Engine index.`,
+              `To resolve this, you should call .delete() with this id as part of the "ids" parameter.`,
+            ].join("\n")
+          );
           doc = new Document({ pageContent: `Missing document ${id}` });
         }
         doc.id ??= id;

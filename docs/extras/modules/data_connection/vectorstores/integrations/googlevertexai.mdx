@@ -40,6 +40,13 @@ Install the authentication library with:
 npm install google-auth-library
 ```
 
+The Matching Engine does not store the actual document contents, only embeddings. Therefore, you'll
+need a docstore. The below example uses Google Cloud Storage, which requires the following:
+
+```bash npm2yarn
+npm install @google-cloud/storage
+```
+
 ## Usage
 
 ### Initializing the engine
@@ -52,68 +59,70 @@ for Matching Engine:
 - The id for the Index Endpoint
 
 You will also need a document store. While an `InMemoryDocstore` is ok for
-initial testing, you will likely want to use something like a
-`GoogleCloudStorageDocstore` to store it more permanently.
+initial testing, you will want to use something like a
+[GoogleCloudStorageDocstore](/docs/api/stores_doc_gcs/classes/GoogleCloudStorageDocstore) to store it more permanently.
 
 ```typescript
-    import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
-    import { Document } from "langchain/document";
-    import { SyntheticEmbeddings } from "langchain/embeddings/fake";
-    import { InMemoryDocstore } from "langchain/stores/doc/in_memory";
+import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
+import { Document } from "langchain/document";
+import { SyntheticEmbeddings } from "langchain/embeddings/fake";
+import { GoogleCloudStorageDocstore } from "langchain/stores/doc/gcs";
 
-    const embeddings = new SyntheticEmbeddings({
-      vectorSize: Number.parseInt(process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768", 10)
-    });
+const embeddings = new SyntheticEmbeddings({
+  vectorSize: Number.parseInt(process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768", 10)
+});
 
-    const store = new InMemoryDocstore();
+const store = new GoogleCloudStorageDocstore({
+  bucket: process.env.GOOGLE_CLOUD_STORAGE_BUCKET!,
+});
 
-    const config = {
-      index: process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX!,
-      indexEndpoint: process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT!,
-      apiVersion: "v1beta1",
-      docstore: store,
-    };
+const config = {
+  index: process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX!,
+  indexEndpoint: process.env.GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT!,
+  apiVersion: "v1beta1",
+  docstore: store,
+};
 
-    const engine = new MatchingEngine(embeddings, config);
+const engine = new MatchingEngine(embeddings, config);
 ```
 
 ### Adding documents
 
 ```typescript
-    const doc = new Document({pageContent:'this'});
-    await engine.addDocuments([doc]);
+const doc = new Document({pageContent:'this'});
+await engine.addDocuments([doc]);
 ```
 
 Any metadata in a document is converted into Matching Engine "allow list" values
 that can be used to filter during a query.
 
 ```typescript
-      const documents = [
-        new Document({
-          pageContent: "this apple",
-          metadata: {
-            color: "red",
-            category: "edible",
-          }
-        }),
-        new Document({
-          pageContent: "this blueberry",
-          metadata: {
-            color: "blue",
-            category: "edible",
-          }
-        }),
-        new Document({
-          pageContent: "this firetruck",
-          metadata: {
-            color: "red",
-            category: "machine",
-          }
-        })
-      ];
+const documents = [
+  new Document({
+    pageContent: "this apple",
+    metadata: {
+      color: "red",
+      category: "edible",
+    }
+  }),
+  new Document({
+    pageContent: "this blueberry",
+    metadata: {
+      color: "blue",
+      category: "edible",
+    }
+  }),
+  new Document({
+    pageContent: "this firetruck",
+    metadata: {
+      color: "red",
+      category: "machine",
+    }
+  })
+];
 
-      // Add all our documents
-      await engine.addDocuments(documents);
+// Add all our documents
+await engine.addDocuments(documents);
 ```
 
 The documents are assumed to have an "id" parameter available as well. If this
@@ -125,7 +134,7 @@ Doing a straightforward k-nearest-neighbor search which returns all results
 is done using any of the standard methods:
 
 ```typescript
-    const results = await engine.similaritySearch("this");
+const results = await engine.similaritySearch("this");
 ```
 
 ### Querying documents with a filter / restriction
@@ -135,32 +144,32 @@ set for the document. So if we just wanted to limit the results to those
 with a red color, we can do:
 
 ```typescript
-      import { Restriction } from `langchain/vectorstores/googlevertexai`;
+import { Restriction } from `langchain/vectorstores/googlevertexai`;
 
-      const redFilter: Restriction[] = [
-        {
-          namespace: "color",
-          allowList: ["red"],
-        },
-      ];
-      const redResults = await engine.similaritySearch("this", 4, redFilter);
+const redFilter: Restriction[] = [
+  {
+    namespace: "color",
+    allowList: ["red"],
+  },
+];
+const redResults = await engine.similaritySearch("this", 4, redFilter);
 ```
 
 If we wanted to do something more complicated, like things that are red,
 but not edible:
 
 ```typescript
-      const filter: Restriction[] = [
-        {
-          namespace: "color",
-          allowList: ["red"],
-        },
-        {
-          namespace: "category",
-          denyList: ["edible"],
-        }
-      ];
-      const results = await engine.similaritySearch("this", 4, filter);
+const filter: Restriction[] = [
+  {
+    namespace: "color",
+    allowList: ["red"],
+  },
+  {
+    namespace: "category",
+    denyList: ["edible"],
+  }
+];
+const results = await engine.similaritySearch("this", 4, filter);
 ```
 
 ### Deleting documents
@@ -168,9 +177,9 @@ but not edible:
 Deleting documents are done using ID.
 
 ```typescript
-    import { IdDocument } from `langchain/vectorstores/googlevertexai`;
+import { IdDocument } from `langchain/vectorstores/googlevertexai`;
 
-    const oldResults: IdDocument[] = await engine.similaritySearch("this", 10);
-    const oldIds = oldResults.map( doc => doc.id! );
-    await engine.delete({ids: oldIds});
+const oldResults: IdDocument[] = await engine.similaritySearch("this", 10);
+const oldIds = oldResults.map( doc => doc.id! );
+await engine.delete({ids: oldIds});
 ```
