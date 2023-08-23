@@ -126,6 +126,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.onDocumentLoaded = options.onDocumentLoaded ?? ((_ti, _cu) => {});
   }
 
+  /**
+   * Adds a selection of page ids to the pageQueue and removes duplicates.
+   * @param items An array of string ids
+   */
   private addToQueue(...items: string[]) {
     const deDuped = items.filter(
       (item) => !this.pageCompleted.concat(this.pageQueue).includes(item)
@@ -134,6 +138,11 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.pageQueueTotal += deDuped.length;
   }
 
+  /**
+   * Parses a Notion GetResponse object (page or database) and returns a string of the title.
+   * @param obj The Notion GetResponse object to parse.
+   * @returns The string of the title.
+   */
   private getTitle(obj: GetResponse) {
     if (isPage(obj) && obj.properties.title.type === "title") {
       return obj.properties.title.title[0]?.plain_text;
@@ -145,7 +154,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
   /**
    * Parses the property type and returns a string
    * @param page The Notion page property to parse.
-   * @returns An string of parsed property.
+   * @returns A string of parsed property.
    */
   private getPropValue(prop: PagePropertiesValue) {
     switch (prop.type) {
