@@ -1,17 +1,17 @@
 import { Client, ClientConfiguration, HubPushOptions } from "langchainhub";
-import { Serializable } from "./load/serializable.js";
 import { load } from "./load/index.js";
+import { Runnable } from "./schema/runnable.js";
 
 export async function push(
   repoFullName: string,
-  serializable: Serializable,
+  runnable: Runnable,
   options?: HubPushOptions & ClientConfiguration
 ) {
   const client = new Client(options);
-  return client.push(repoFullName, JSON.stringify(serializable), options);
+  return client.push(repoFullName, JSON.stringify(runnable), options);
 }
 
-export async function pull<T extends Serializable>(
+export async function pull<T extends Runnable>(
   ownerRepoCommit: string,
   options?: ClientConfiguration
 ) {

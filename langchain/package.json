@@ -535,6 +535,9 @@
     "storage/ioredis.cjs",
     "storage/ioredis.js",
     "storage/ioredis.d.ts",
+    "hub.cjs",
+    "hub.js",
+    "hub.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -920,6 +923,9 @@
       "optional": true
     },
     "jsdom": {
+      "optional": true
+    },
+    "langchainhub": {
       "optional": true
     },
     "mammoth": {
@@ -1921,6 +1927,11 @@
       "types": "./storage/ioredis.d.ts",
       "import": "./storage/ioredis.js",
       "require": "./storage/ioredis.cjs"
+    },
+    "./hub": {
+      "types": "./hub.d.ts",
+      "import": "./hub.js",
+      "require": "./hub.cjs"
     },
     "./util/math": {
       "types": "./util/math.d.ts",

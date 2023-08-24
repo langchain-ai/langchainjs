@@ -9,8 +9,8 @@ test("Test LangChain Hub client pushing a new repo", async () => {
     process.env.LANGCHAIN_HUB_USERNAME
   }/langchainjs-${new Date().getTime()}`;
   await hub.push(repoName, prompt);
-  const pulledPrompt = await hub.pull<PromptTemplate>(repoName);
-  expect(prompt.format({ input: "testing" })).toEqual(
-    pulledPrompt.format({ input: "testing" })
+  const pulledPrompt = await hub.pull(repoName);
+  expect(prompt.invoke({ input: "testing" })).toEqual(
+    pulledPrompt.invoke({ input: "testing" })
   );
 });
