@@ -1,7 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { BaseLLMParams, LLM } from "./base.js";
 
-
 export interface BittensorInput extends BaseLLMParams {
   systemPrompt?: string | null | undefined;
   topResponses?: number | undefined;
@@ -67,18 +66,13 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
 
     try {
       // Retrieve API KEY
-      // const apiKeysResponse: AxiosResponse<APIKeyResponse[]> = await axios.get(
-      //   "https://test.neuralinternet.ai/admin/api-keys/"
-      // );
-      const apiKeysResponse: AxiosResponse<APIKeyResponse[]> = await axios.default.request<APIKeyResponse[]>(
-        {
-          method: 'get',
-          url: "https://test.neuralinternet.ai/admin/api-keys/"
-        }
-        
-      );
       
-      
+      const apiKeysResponse: AxiosResponse<APIKeyResponse[]> =
+        await axios.default.request<APIKeyResponse[]>({
+          method: "get",
+          url: "https://test.neuralinternet.ai/admin/api-keys/",
+        });
+
       const apiKey: string = apiKeysResponse.data[0].api_key;
       const headers = {
         "Content-Type": "application/json",
@@ -91,21 +85,14 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
         this.topResponses = 0;
       }
 
-      // Get top benchmark miner uids
-      // const minerResponse: AxiosResponse<string[]> = await axios.get(
-      //   "https://test.neuralinternet.ai/top_miner_uids",
-      //   { headers }
-      // );
-      console.log("starting api")
-      const minerResponse: AxiosResponse<string[]> = await axios.default.request<string[]>(
-        {
-          method: 'get',
-          url:"https://test.neuralinternet.ai/top_miner_uids",
-          headers: headers
-        }
-      );
-      console.log(minerResponse);
-
+      
+      const minerResponse: AxiosResponse<string[]> =
+        await axios.default.request<string[]>({
+          method: "get",
+          url: "https://test.neuralinternet.ai/top_miner_uids",
+          headers,
+        });
+      
       const uids: string[] = minerResponse.data;
 
       if (Array.isArray(uids) && uids.length && this.topResponses === 0) {
@@ -119,17 +106,14 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
               ],
             };
 
-            // const response: AxiosResponse<ChatResponse> = await axios.post(
-            //   "https://test.neuralinternet.ai/chat",
-            //   payload,
-            //   { headers }
-            // );
-            const response: AxiosResponse<ChatResponse> = await axios.default.request<ChatResponse>({
-              method: 'post',
-              url: 'https://test.neuralinternet.ai/chat',
-              data: payload,
-              headers: headers
-            });
+          
+            const response: AxiosResponse<ChatResponse> =
+              await axios.default.request<ChatResponse>({
+                method: "post",
+                url: "https://test.neuralinternet.ai/chat",
+                data: payload,
+                headers,
+              });
             if (response.data.choices) {
               return response.data.choices[0].message.content;
             }
@@ -151,17 +135,14 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
         ],
       };
 
-      // const response: AxiosResponse<ChatResponse | string> = await axios.post(
-      //   "https://test.neuralinternet.ai/chat",
-      //   payload,
-      //   { headers }
-      // );
-      const response: AxiosResponse<ChatResponse | string> = await axios.default.request<ChatResponse | string>({
-        method: 'post',
-        url: 'https://test.neuralinternet.ai/chat',
-        data: payload,
-        headers: headers
-      });
+      
+      const response: AxiosResponse<ChatResponse | string> =
+        await axios.default.request<ChatResponse | string>({
+          method: "post",
+          url: "https://test.neuralinternet.ai/chat",
+          data: payload,
+          headers,
+        });
       if (this.topResponses) {
         return <string>response.data;
       } else if ((<ChatResponse>response.data).choices) {
@@ -169,7 +150,6 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
         return <string>temp[0].message.content;
       }
     } catch (error) {
-      // await axios.get(`https://test.neuralinternet.ai/error_msg?e=${encodeURIComponent(error.message)}&p=${encodeURIComponent(prompt)}`, { headers });
       return "Sorry I am unable to provide response now, Please try again later.";
     }
     return "default";
