@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.132",
+  "version": "0.0.133",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -169,6 +169,9 @@
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
+    "vectorstores/googlevertexai.cjs",
+    "vectorstores/googlevertexai.js",
+    "vectorstores/googlevertexai.d.ts",
     "vectorstores/hnswlib.cjs",
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
@@ -1310,6 +1313,11 @@
       "types": "./vectorstores/chroma.d.ts",
       "import": "./vectorstores/chroma.js",
       "require": "./vectorstores/chroma.cjs"
+    },
+    "./vectorstores/googlevertexai": {
+      "types": "./vectorstores/googlevertexai.d.ts",
+      "import": "./vectorstores/googlevertexai.js",
+      "require": "./vectorstores/googlevertexai.cjs"
     },
     "./vectorstores/hnswlib": {
       "types": "./vectorstores/hnswlib.d.ts",
