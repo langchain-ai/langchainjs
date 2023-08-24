@@ -91,6 +91,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
+  "langchain/vectorstores/googlevertexai"?:
+    | typeof import("../vectorstores/googlevertexai.js")
+    | Promise<typeof import("../vectorstores/googlevertexai.js")>;
   "langchain/vectorstores/hnswlib"?:
     | typeof import("../vectorstores/hnswlib.js")
     | Promise<typeof import("../vectorstores/hnswlib.js")>;
