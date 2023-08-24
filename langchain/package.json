@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.132",
+  "version": "0.0.133",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -169,6 +169,9 @@
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
+    "vectorstores/googlevertexai.cjs",
+    "vectorstores/googlevertexai.js",
+    "vectorstores/googlevertexai.d.ts",
     "vectorstores/hnswlib.cjs",
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
@@ -535,6 +538,9 @@
     "storage/ioredis.cjs",
     "storage/ioredis.js",
     "storage/ioredis.d.ts",
+    "hub.cjs",
+    "hub.js",
+    "hub.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -664,6 +670,7 @@
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "jsdom": "^22.1.0",
+    "langchainhub": "~0.0.3",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
@@ -746,6 +753,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
+    "langchainhub": "~0.0.3",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -920,6 +928,9 @@
     "jsdom": {
       "optional": true
     },
+    "langchainhub": {
+      "optional": true
+    },
     "mammoth": {
       "optional": true
     },
@@ -998,7 +1009,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "~0.0.16",
+    "langsmith": "~0.0.26",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -1303,6 +1314,11 @@
       "types": "./vectorstores/chroma.d.ts",
       "import": "./vectorstores/chroma.js",
       "require": "./vectorstores/chroma.cjs"
+    },
+    "./vectorstores/googlevertexai": {
+      "types": "./vectorstores/googlevertexai.d.ts",
+      "import": "./vectorstores/googlevertexai.js",
+      "require": "./vectorstores/googlevertexai.cjs"
     },
     "./vectorstores/hnswlib": {
       "types": "./vectorstores/hnswlib.d.ts",
@@ -1919,6 +1935,11 @@
       "types": "./storage/ioredis.d.ts",
       "import": "./storage/ioredis.js",
       "require": "./storage/ioredis.cjs"
+    },
+    "./hub": {
+      "types": "./hub.d.ts",
+      "import": "./hub.js",
+      "require": "./hub.cjs"
     },
     "./util/math": {
       "types": "./util/math.d.ts",

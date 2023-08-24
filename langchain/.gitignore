@@ -157,6 +157,9 @@ vectorstores/memory.d.ts
 vectorstores/chroma.cjs
 vectorstores/chroma.js
 vectorstores/chroma.d.ts
+vectorstores/googlevertexai.cjs
+vectorstores/googlevertexai.js
+vectorstores/googlevertexai.d.ts
 vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
@@ -523,6 +526,9 @@ storage/in_memory.d.ts
 storage/ioredis.cjs
 storage/ioredis.js
 storage/ioredis.d.ts
+hub.cjs
+hub.js
+hub.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts

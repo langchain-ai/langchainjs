@@ -31,6 +31,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/elasticsearch",
   "langchain/vectorstores/chroma",
+  "langchain/vectorstores/googlevertexai",
   "langchain/vectorstores/hnswlib",
   "langchain/vectorstores/faiss",
   "langchain/vectorstores/weaviate",
@@ -113,5 +114,6 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/planetscale",
   "langchain/stores/message/xata",
   "langchain/storage/ioredis",
+  "langchain/hub",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
 ];

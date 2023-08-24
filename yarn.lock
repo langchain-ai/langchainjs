@@ -14448,7 +14448,8 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langsmith: ~0.0.16
+    langchainhub: ~0.0.3
+    langsmith: ~0.0.26
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -14540,6 +14541,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
+    langchainhub: ~0.0.3
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -14663,6 +14665,8 @@ __metadata:
       optional: true
     jsdom:
       optional: true
+    langchainhub:
+      optional: true
     mammoth:
       optional: true
     mongodb:
@@ -14710,6 +14714,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"langchainhub@npm:~0.0.3":
+  version: 0.0.3
+  resolution: "langchainhub@npm:0.0.3"
+  checksum: 0962c6088a0cef8635335b735beae5e8654b9b506b4f8a144baba37f4798b1d197a34a1ff5368a982e204cdb9f4e0cb6cf8975b8baf742872829eb4bdb6eb552
+  languageName: node
+  linkType: hard
+
 "langchainjs@workspace:.":
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
@@ -14725,9 +14736,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:~0.0.16":
-  version: 0.0.16
-  resolution: "langsmith@npm:0.0.16"
+"langsmith@npm:~0.0.26":
+  version: 0.0.26
+  resolution: "langsmith@npm:0.0.26"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -14736,7 +14747,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: fc738ef9a563af14a7dc06027f98eb6ac2641b95e384b109ae388c32e9abd5e098fe07925139e489eaed17df84a8e32b961207d4cc760631b4c14e4c06e418d9
+  checksum: 5b155ae09e6c0b09bdef25a2af93728bf994944d7a487a3943b69a0aa74a51ee3758cf145acebae1b2687b363aa8cf5fd99e147588fb1b4152ecb0e69ba62baf
   languageName: node
   linkType: hard
 
