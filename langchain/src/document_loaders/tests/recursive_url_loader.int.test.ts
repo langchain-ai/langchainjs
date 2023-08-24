@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { compile } from "html-to-text";
-import RecursiveUrlLoader from "../web/recursive_url_loader.js";
+import { RecursiveUrlLoader } from "../web/recursive_url_loader.js";
 
 describe("RecursiveUrlLoader", () => {
   test("loading valid url", async () => {

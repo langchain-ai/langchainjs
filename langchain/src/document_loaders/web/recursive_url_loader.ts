@@ -3,7 +3,7 @@ import { Document } from "../../document.js";
 import { AsyncCaller } from "../../util/async_caller.js";
 import { BaseDocumentLoader, DocumentLoader } from "../index.js";
 
-interface Options {
+export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];
   extractor?(text: string): string;
   maxDepth?: number;
@@ -12,7 +12,10 @@ interface Options {
   callerOptions?: ConstructorParameters<typeof AsyncCaller>[0];
 }
 
-class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
+export class RecursiveUrlLoader
+  extends BaseDocumentLoader
+  implements DocumentLoader
+{
   private caller: AsyncCaller;
 
   private url: string;
@@ -27,7 +30,7 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
 
   private preventOutside: boolean;
 
-  constructor(url: string, options: Options) {
+  constructor(url: string, options: RecursiveUrlLoaderOptions) {
     super();
 
     this.caller = new AsyncCaller({
@@ -206,5 +209,3 @@ class RecursiveUrlLoader extends BaseDocumentLoader implements DocumentLoader {
     return docs;
   }
 }
-
-export default RecursiveUrlLoader;
