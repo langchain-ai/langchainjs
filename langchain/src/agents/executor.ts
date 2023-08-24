@@ -79,7 +79,8 @@ export class AgentExecutor extends BaseChain {
   handleParsingErrors:
     | boolean
     | string
-    | ((e: OutputParserException | ToolInputParsingException) => string) = false;
+    | ((e: OutputParserException | ToolInputParsingException) => string) =
+    false;
 
   get inputKeys() {
     return this.agent.inputKeys;
@@ -165,7 +166,11 @@ export class AgentExecutor extends BaseChain {
           } else {
             throw e;
           }
-          output = { tool: "_Exception", toolInput: observation, log: e.message };
+          output = {
+            tool: "_Exception",
+            toolInput: observation,
+            log: e.message,
+          };
         } else {
           throw e;
         }
@@ -198,7 +203,8 @@ export class AgentExecutor extends BaseChain {
             // eslint-disable-next-line no-instanceof/no-instanceof
             if (e instanceof ToolInputParsingException) {
               if (this.handleParsingErrors === true) {
-                observation = "Invalid or incomplete tool input. Please try again.";
+                observation =
+                  "Invalid or incomplete tool input. Please try again.";
               } else if (typeof this.handleParsingErrors === "string") {
                 observation = this.handleParsingErrors;
               } else if (typeof this.handleParsingErrors === "function") {
@@ -206,7 +212,10 @@ export class AgentExecutor extends BaseChain {
               } else {
                 throw e;
               }
-              observation = await new ExceptionTool().call(observation, runManager?.getChild());
+              observation = await new ExceptionTool().call(
+                observation,
+                runManager?.getChild()
+              );
               return { action, observation: observation ?? "" };
             }
           }

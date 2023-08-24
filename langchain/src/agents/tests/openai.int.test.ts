@@ -1,9 +1,11 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
+import { z } from "zod";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { Calculator } from "../../tools/calculator.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
+import { DynamicStructuredTool } from "../../tools/dynamic.js";
 
 test("OpenAIAgent", async () => {
   const executor = await initializeAgentExecutorWithOptions(
@@ -64,4 +66,41 @@ test("OpenAIAgent streaming", async () => {
   });
 
   console.log(result);
+});
+
+test.only("OpenAIAgent with parsing error handling", async () => {
+  const model = new ChatOpenAI({ temperature: 0 });
+  const tools = [
+    new DynamicStructuredTool({
+      name: "animal-picker",
+      description: "Picks animals",
+      schema: z.object({
+        animal: z
+          .object({
+            name: z.string().describe("The name of the animal"),
+            friendliness: z
+              .enum(["earth", "wind", "fire"])
+              .describe("How friendly the animal is."),
+          })
+          .describe("The animal to choose"),
+      }),
+      func: async (input: { animal: object }) => JSON.stringify(input)
+    }),
+  ];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "openai-functions",
+    verbose: true,
+    handleParsingErrors:
+      "Please try again, paying close attention to the allowed enum values",
+  });
+  console.log("Loaded agent.");
+
+  const input = `Please choose an aquatic animal and call the provided tool, returning how friendly it is.`;
+
+  console.log(`Executing with input "${input}"...`);
+
+  const result = await executor.invoke({ input });
+
+  console.log({ result });
 });

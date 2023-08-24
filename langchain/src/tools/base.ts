@@ -84,7 +84,10 @@ export abstract class StructuredTool<
     try {
       parsed = await this.schema.parseAsync(arg);
     } catch (e) {
-      throw new ToolInputParsingException(`Received tool input did not match expected schema`, JSON.stringify(arg));
+      throw new ToolInputParsingException(
+        `Received tool input did not match expected schema`,
+        JSON.stringify(arg)
+      );
     }
     const config = parseCallbackConfigArg(configArg);
     const callbackManager_ = await CallbackManager.configure(
