@@ -117,7 +117,8 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
 
       if (this.db.ignoreTables.length > 0) {
         selectedTables = selectedTables.filter(
-          (currentTable) => !this.db.ignoreTables.includes(currentTable.tableName)
+          (currentTable) =>
+            !this.db.ignoreTables.includes(currentTable.tableName)
         );
       }
 
