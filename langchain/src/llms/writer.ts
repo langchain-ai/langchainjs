@@ -166,7 +166,7 @@ export class Writer extends LLM implements WriterInput {
     writer: typeof import("@writerai/writer-sdk");
   }> {
     try {
-      const { default: writer } = await import("@writerai/writer-sdk");
+      const writer = await import("@writerai/writer-sdk");
       return { writer };
     } catch (e) {
       throw new Error(
