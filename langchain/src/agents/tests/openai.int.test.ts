@@ -68,7 +68,7 @@ test("OpenAIAgent streaming", async () => {
   console.log(result);
 });
 
-test.only("OpenAIAgent with parsing error handling", async () => {
+test("OpenAIAgent with parsing error handling", async () => {
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
     new DynamicStructuredTool({
