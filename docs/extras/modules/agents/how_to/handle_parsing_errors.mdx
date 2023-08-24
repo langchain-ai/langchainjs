@@ -9,13 +9,13 @@ executor. This field can be a boolean, a string, or a function:
 - Passing a function that takes an `OutputParserException` as a single argument allows you to run code in response to an error and return
 whatever string you'd like.
 
-Here's an example:
+Here's an example where the model initially tries to set `"Reminder"` as the task type instead of an allowed value:
 
 import CodeBlock from "@theme/CodeBlock";
 import HandleParsingErrorExample from "@examples/agents/handle_parsing_error.ts";
 
 <CodeBlock language="typescript">{HandleParsingErrorExample}</CodeBlock>
 
-This is what the resulting trace looks like - note that the LLM tries twice before correctly choosing a matching enum:
+This is what the resulting trace looks like - note that the LLM retries before correctly choosing a matching enum:
 
-https://smith.langchain.com/public/700f28f7-a6af-4ff5-a365-1a6dc55fc363/r
+https://smith.langchain.com/public/b00cede1-4aca-49de-896f-921d34a0b756/r

@@ -3,23 +3,40 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { DynamicStructuredTool } from "langchain/tools";
 
-const model = new ChatOpenAI({ temperature: 0 });
-// Use a schema with an intentionally misleading enum for demonstration purposes
+const model = new ChatOpenAI({ temperature: 0.1 });
 const tools = [
   new DynamicStructuredTool({
-    name: "animal-picker",
-    description: "Picks animals",
-    schema: z.object({
-      animal: z
-        .object({
-          name: z.string().describe("The name of the animal"),
-          friendliness: z
-            .enum(["earth", "wind", "fire"])
-            .describe("How friendly the animal is."),
-        })
-        .describe("The animal to choose"),
-    }),
-    func: async (input: { animal: object }) => JSON.stringify(input),
+    name: "task-scheduler",
+    description: "Schedules tasks",
+    schema: z
+      .object({
+        tasks: z
+          .array(
+            z.object({
+              title: z
+                .string()
+                .describe("The title of the tasks, reminders and alerts"),
+              due_date: z
+                .string()
+                .describe("Due date. Must be a valid JavaScript date string"),
+              task_type: z
+                .enum([
+                  "Call",
+                  "Message",
+                  "Todo",
+                  "In-Person Meeting",
+                  "Email",
+                  "Mail",
+                  "Text",
+                  "Open House",
+                ])
+                .describe("The type of task"),
+            })
+          )
+          .describe("The JSON for task, reminder or alert to create"),
+      })
+      .describe("JSON definition for creating tasks, reminders and alerts"),
+    func: async (input: { tasks: object }) => JSON.stringify(input),
   }),
 ];
 
@@ -31,7 +48,7 @@ const executor = await initializeAgentExecutorWithOptions(tools, model, {
 });
 console.log("Loaded agent.");
 
-const input = `Please choose an aquatic animal and call the provided tool, returning how friendly it is.`;
+const input = `Set a reminder to renew our online property ads next week.`;
 
 console.log(`Executing with input "${input}"...`);
 
@@ -40,5 +57,9 @@ const result = await executor.invoke({ input });
 console.log({ result });
 
 /*
-  { result: { output: 'The dolphin is friendly towards the earth.' } }
+  {
+    result: {
+      output: 'I have set a reminder for you to renew your online property ads on October 10th, 2022.'
+    }
+  }
 */
