@@ -119,6 +119,8 @@ const entrypoints = {
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/notionapi": "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url_loader":
+    "document_loaders/web/recursive_url_loader",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
@@ -302,6 +304,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
   "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url_loader",
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
