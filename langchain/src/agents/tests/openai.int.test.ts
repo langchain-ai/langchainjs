@@ -84,7 +84,7 @@ test("OpenAIAgent with parsing error handling", async () => {
           })
           .describe("The animal to choose"),
       }),
-      func: async (input: { animal: object }) => JSON.stringify(input)
+      func: async (input: { animal: object }) => JSON.stringify(input),
     }),
   ];
 
