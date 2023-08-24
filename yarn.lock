@@ -14448,6 +14448,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
+    langchainhub: ~0.0.3
     langsmith: ~0.0.26
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
@@ -14540,6 +14541,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
+    langchainhub: ~0.0.3
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -14663,6 +14665,8 @@ __metadata:
       optional: true
     jsdom:
       optional: true
+    langchainhub:
+      optional: true
     mammoth:
       optional: true
     mongodb:
@@ -14709,6 +14713,13 @@ __metadata:
       optional: true
   languageName: unknown
   linkType: soft
+
+"langchainhub@npm:~0.0.3":
+  version: 0.0.3
+  resolution: "langchainhub@npm:0.0.3"
+  checksum: 0962c6088a0cef8635335b735beae5e8654b9b506b4f8a144baba37f4798b1d197a34a1ff5368a982e204cdb9f4e0cb6cf8975b8baf742872829eb4bdb6eb552
+  languageName: node
+  linkType: hard
 
 "langchainjs@workspace:.":
   version: 0.0.0-use.local
