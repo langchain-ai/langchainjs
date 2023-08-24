@@ -7,6 +7,10 @@ import {
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { GenerationChunk } from "../schema/index.js";
 
+/**
+ * Class that represents the Ollama language model. It extends the base
+ * LLM class and implements the OllamaInput interface.
+ */
 export class Ollama extends LLM implements OllamaInput {
   declare CallOptions: OllamaCallOptions;
 

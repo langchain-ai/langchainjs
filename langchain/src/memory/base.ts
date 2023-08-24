@@ -1,16 +1,54 @@
 import { BaseMessage, ChatMessage } from "../schema/index.js";
+
+/**
+ * Type alias for a record where the keys are strings and the values can
+ * be any type. This is used to represent the input values for a Chain.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
+
+/**
+ * Type alias for a record where the keys are strings and the values can
+ * be any type. This is used to represent the output values from a Chain.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OutputValues = Record<string, any>;
+
+/**
+ * Type alias for a record where the keys are strings and the values can
+ * be any type. This is used to represent the memory variables in a Chain.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MemoryVariables = Record<string, any>;
 
+/**
+ * Abstract base class for memory in LangChain's Chains. Memory refers to
+ * the state in Chains. It can be used to store information about past
+ * executions of a Chain and inject that information into the inputs of
+ * future executions of the Chain.
+ */
 export abstract class BaseMemory {
   abstract get memoryKeys(): string[];
 
+  /**
+   * Abstract method that should take an object of input values and return a
+   * Promise that resolves with an object of memory variables. The
+   * implementation of this method should load the memory variables from the
+   * provided input values.
+   * @param values An object of input values.
+   * @returns Promise that resolves with an object of memory variables.
+   */
   abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
 
+  /**
+   * Abstract method that should take two objects, one of input values and
+   * one of output values, and return a Promise that resolves when the
+   * context has been saved. The implementation of this method should save
+   * the context based on the provided input and output values.
+   * @param inputValues An object of input values.
+   * @param outputValues An object of output values.
+   * @returns Promise that resolves when the context has been saved.
+   */
   abstract saveContext(
     inputValues: InputValues,
     outputValues: OutputValues
@@ -94,6 +132,11 @@ export function getBufferString(
   return string_messages.join("\n");
 }
 
+/**
+ * Function used by memory classes to get the key of the prompt input,
+ * excluding any keys that are memory variables or the "stop" key. If
+ * there is not exactly one prompt input key, an error is thrown.
+ */
 export function getPromptInputKey(
   inputs: Record<string, unknown>,
   memoryVariables: string[]

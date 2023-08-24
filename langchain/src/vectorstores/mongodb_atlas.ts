@@ -4,6 +4,11 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { maximalMarginalRelevance } from "../util/math.js";
 
+/**
+ * Type that defines the arguments required to initialize the
+ * MongoDBAtlasVectorSearch class. It includes the MongoDB collection,
+ * index name, text key, and embedding key.
+ */
 export type MongoDBAtlasVectorSearchLibArgs = {
   readonly collection: Collection<MongoDBDocument>;
   readonly indexName?: string;
@@ -11,12 +16,24 @@ export type MongoDBAtlasVectorSearchLibArgs = {
   readonly embeddingKey?: string;
 };
 
+/**
+ * Type that defines the filter used in the
+ * similaritySearchVectorWithScore and maxMarginalRelevanceSearch methods.
+ * It includes pre-filter, post-filter pipeline, and a flag to include
+ * embeddings.
+ */
 type MongoDBAtlasFilter = {
   preFilter?: MongoDBDocument;
   postFilterPipeline?: MongoDBDocument[];
   includeEmbeddings?: boolean;
 } & MongoDBDocument;
 
+/**
+ * Class that is a wrapper around MongoDB Atlas Vector Search. It is used
+ * to store embeddings in MongoDB documents, create a vector search index,
+ * and perform K-Nearest Neighbors (KNN) search with an approximate
+ * nearest neighbor algorithm.
+ */
 export class MongoDBAtlasVectorSearch extends VectorStore {
   declare FilterType: MongoDBAtlasFilter;
 
@@ -40,6 +57,13 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     this.embeddingKey = args.embeddingKey ?? "embedding";
   }
 
+  /**
+   * Method to add vectors and their corresponding documents to the MongoDB
+   * collection.
+   * @param vectors Vectors to be added.
+   * @param documents Corresponding documents to be added.
+   * @returns Promise that resolves when the vectors and documents have been added.
+   */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
@@ -49,6 +73,13 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     await this.collection.insertMany(docs);
   }
 
+  /**
+   * Method to add documents to the MongoDB collection. It first converts
+   * the documents to vectors using the embeddings and then calls the
+   * addVectors method.
+   * @param documents Documents to be added.
+   * @returns Promise that resolves when the documents have been added.
+   */
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
@@ -57,6 +88,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     );
   }
 
+  /**
+   * Method that performs a similarity search on the vectors stored in the
+   * MongoDB collection. It returns a list of documents and their
+   * corresponding similarity scores.
+   * @param query Query vector for the similarity search.
+   * @param k Number of nearest neighbors to return.
+   * @param filter Optional filter to be applied.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
+   */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
@@ -181,6 +221,16 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     });
   }
 
+  /**
+   * Static method to create an instance of MongoDBAtlasVectorSearch from a
+   * list of texts. It first converts the texts to vectors and then adds
+   * them to the MongoDB collection.
+   * @param texts List of texts to be converted to vectors.
+   * @param metadatas Metadata for the texts.
+   * @param embeddings Embeddings to be used for conversion.
+   * @param dbConfig Database configuration for MongoDB Atlas.
+   * @returns Promise that resolves to a new instance of MongoDBAtlasVectorSearch.
+   */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
@@ -199,6 +249,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     return MongoDBAtlasVectorSearch.fromDocuments(docs, embeddings, dbConfig);
   }
 
+  /**
+   * Static method to create an instance of MongoDBAtlasVectorSearch from a
+   * list of documents. It first converts the documents to vectors and then
+   * adds them to the MongoDB collection.
+   * @param docs List of documents to be converted to vectors.
+   * @param embeddings Embeddings to be used for conversion.
+   * @param dbConfig Database configuration for MongoDB Atlas.
+   * @returns Promise that resolves to a new instance of MongoDBAtlasVectorSearch.
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,

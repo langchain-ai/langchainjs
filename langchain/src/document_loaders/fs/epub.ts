@@ -2,6 +2,10 @@ import type { EPub } from "epub2";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 
+/**
+ * A class that extends the `BaseDocumentLoader` class. It represents a
+ * document loader that loads documents from EPUB files.
+ */
 export class EPubLoader extends BaseDocumentLoader {
   private splitChapters: boolean;
 
@@ -10,6 +14,13 @@ export class EPubLoader extends BaseDocumentLoader {
     this.splitChapters = splitChapters;
   }
 
+  /**
+   * A protected method that takes an EPUB object as a parameter and returns
+   * a promise that resolves to an array of objects representing the content
+   * and metadata of each chapter.
+   * @param epub The EPUB object to parse.
+   * @returns A promise that resolves to an array of objects representing the content and metadata of each chapter.
+   */
   protected async parse(
     epub: EPub
   ): Promise<{ pageContent: string; metadata?: object }[]> {
@@ -33,6 +44,11 @@ export class EPubLoader extends BaseDocumentLoader {
     }));
   }
 
+  /**
+   * A method that loads the EPUB file and returns a promise that resolves
+   * to an array of `Document` instances.
+   * @returns A promise that resolves to an array of `Document` instances.
+   */
   public async load(): Promise<Document[]> {
     const { EPub } = await EpubImport();
     const epub = await EPub.createAsync(this.filePath);

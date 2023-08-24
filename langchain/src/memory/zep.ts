@@ -16,6 +16,11 @@ import {
   SystemMessage,
 } from "../schema/index.js";
 
+/**
+ * Interface defining the structure of the input data for the ZepMemory
+ * class. It includes properties like humanPrefix, aiPrefix, memoryKey,
+ * baseURL, sessionId, and apiKey.
+ */
 export interface ZepMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
 
@@ -31,6 +36,12 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
   apiKey?: string;
 }
 
+/**
+ * Class used to manage the memory of a chat session, including loading
+ * and saving the chat history, and clearing the memory when needed. It
+ * uses the ZepClient to interact with the Zep service for managing the
+ * chat session's memory.
+ */
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   humanPrefix = "Human";
 
@@ -65,6 +76,12 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     return [this.memoryKey];
   }
 
+  /**
+   * Method that retrieves the chat history from the Zep service and formats
+   * it into a list of messages.
+   * @param values Input values for the method.
+   * @returns Promise that resolves with the chat history formatted into a list of messages.
+   */
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
     // use either lastN provided by developer or undefined to use the
     // server preset.
@@ -127,6 +144,12 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     };
   }
 
+  /**
+   * Method that saves the input and output messages to the Zep service.
+   * @param inputValues Input messages to be saved.
+   * @param outputValues Output messages to be saved.
+   * @returns Promise that resolves when the messages have been saved.
+   */
   async saveContext(
     inputValues: InputValues,
     outputValues: OutputValues
@@ -167,6 +190,10 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     await super.saveContext(inputValues, outputValues);
   }
 
+  /**
+   * Method that deletes the chat history from the Zep service.
+   * @returns Promise that resolves when the chat history has been deleted.
+   */
   async clear(): Promise<void> {
     // Wait for ZepClient to be initialized
     const zepClient = await this.zepClientPromise;

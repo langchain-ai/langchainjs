@@ -4,6 +4,11 @@ import { getEnvironmentVariable } from "../../util/env.js";
 
 const NOTION_BASE_URL = "https://api.notion.com/v1";
 
+/**
+ * Interface representing the parameters for the NotionDBLoader class. It
+ * includes the database ID, Notion integration token, Notion API version,
+ * and page size limit.
+ */
 export interface NotionDBLoaderParams {
   databaseId: string;
   notionIntegrationToken?: string;
@@ -11,6 +16,11 @@ export interface NotionDBLoaderParams {
   pageSizeLimit?: number;
 }
 
+/**
+ * Interface representing a Notion page. It includes properties such as
+ * the page ID, created time, last edited time, archived status, parent
+ * type, and properties.
+ */
 interface NotionPage {
   id: string;
   object: "page";
@@ -68,6 +78,10 @@ export class NotionDBLoader
     };
   }
 
+  /**
+   * Loads the documents from Notion based on the specified options.
+   * @returns An array of Document objects.
+   */
   async load(): Promise<Document[]> {
     const pageIds = await this.retrievePageIds();
     const documents: Document[] = [];
@@ -79,6 +93,10 @@ export class NotionDBLoader
     return documents;
   }
 
+  /**
+   * Retrieves the IDs of the pages in the Notion database.
+   * @returns An array of page IDs.
+   */
   private async retrievePageIds(): Promise<string[]> {
     const url = `${NOTION_BASE_URL}/databases/${this.databaseId}/query`;
 
@@ -113,6 +131,11 @@ export class NotionDBLoader
     return pageIds;
   }
 
+  /**
+   * Loads a Notion page and returns it as a Document object.
+   * @param pageId The ID of the Notion page to load.
+   * @returns A Document object representing the loaded Notion page.
+   */
   private async loadPage(pageId: string): Promise<Document> {
     const url = `${NOTION_BASE_URL}/pages/${pageId}`;
     const response = await fetch(url, { method: "GET", headers: this.headers });
@@ -172,6 +195,12 @@ export class NotionDBLoader
     };
   }
 
+  /**
+   * Loads the blocks of a Notion page and returns them as a string.
+   * @param blockId The ID of the block to load.
+   * @param numberOfTabs The number of tabs to use for indentation.
+   * @returns A string representing the loaded blocks.
+   */
   private async loadBlocks(blockId: string, numberOfTabs = 0): Promise<string> {
     const resultLinesArr = [];
     let currentBlockId = blockId;

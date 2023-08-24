@@ -5,6 +5,11 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * Type for the input parameter of the RedisChatMessageHistory
+ * constructor. It includes fields for the session ID, session TTL, Redis
+ * URL, Redis configuration, and Redis client.
+ */
 export type RedisChatMessageHistoryInput = {
   sessionId: string;
   sessionTTL?: number;
@@ -13,6 +18,10 @@ export type RedisChatMessageHistoryInput = {
   client?: Redis;
 };
 
+/**
+ * Class used to store chat message history in Redis. It provides methods
+ * to add, retrieve, and clear messages from the chat history.
+ */
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "ioredis"];
 
@@ -40,6 +49,10 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     this.sessionTTL = sessionTTL;
   }
 
+  /**
+   * Retrieves all messages from the chat history.
+   * @returns Promise that resolves with an array of BaseMessage instances.
+   */
   async getMessages(): Promise<BaseMessage[]> {
     const rawStoredMessages = await this.client.lrange(this.sessionId, 0, -1);
     const orderedMessages = rawStoredMessages
@@ -48,6 +61,11 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
+  /**
+   * Adds a message to the chat history.
+   * @param message The message to add to the chat history.
+   * @returns Promise that resolves when the message has been added.
+   */
   async addMessage(message: BaseMessage): Promise<void> {
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
     await this.client.lpush(this.sessionId, JSON.stringify(messageToAdd[0]));
@@ -56,6 +74,10 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
+  /**
+   * Clears all messages from the chat history.
+   * @returns Promise that resolves when the chat history has been cleared.
+   */
   async clear(): Promise<void> {
     await this.client.del(this.sessionId);
   }

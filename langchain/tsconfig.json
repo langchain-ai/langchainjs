@@ -82,6 +82,7 @@
       "src/vectorstores/elasticsearch.ts",
       "src/vectorstores/memory.ts",
       "src/vectorstores/chroma.ts",
+      "src/vectorstores/googlevertexai.ts",
       "src/vectorstores/hnswlib.ts",
       "src/vectorstores/faiss.ts",
       "src/vectorstores/weaviate.ts",

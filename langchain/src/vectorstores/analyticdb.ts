@@ -11,6 +11,10 @@ import { Document } from "../document.js";
 const _LANGCHAIN_DEFAULT_EMBEDDING_DIM = 1536;
 const _LANGCHAIN_DEFAULT_COLLECTION_NAME = "langchain_document";
 
+/**
+ * Interface defining the arguments required to create an instance of
+ * `AnalyticDBVectorStore`.
+ */
 export interface AnalyticDBArgs {
   connectionOptions: PoolConfig;
   embeddingDimension?: number;
@@ -18,6 +22,10 @@ export interface AnalyticDBArgs {
   preDeleteCollection?: boolean;
 }
 
+/**
+ * Interface defining the structure of data to be stored in the
+ * AnalyticDB.
+ */
 interface DataType {
   id: string;
   embedding: number[];
@@ -26,6 +34,12 @@ interface DataType {
   metadata: Record<string, any>;
 }
 
+/**
+ * Class that provides methods for creating and managing a collection of
+ * documents in an AnalyticDB, adding documents or vectors to the
+ * collection, performing similarity search on vectors, and creating an
+ * instance of `AnalyticDBVectorStore` from texts or documents.
+ */
 export class AnalyticDBVectorStore extends VectorStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   declare FilterType: Record<string, any>;
@@ -61,10 +75,21 @@ export class AnalyticDBVectorStore extends VectorStore {
     this.preDeleteCollection = args.preDeleteCollection || false;
   }
 
+  /**
+   * Closes all the clients in the pool and terminates the pool.
+   * @returns Promise that resolves when all clients are closed and the pool is terminated.
+   */
   async end(): Promise<void> {
     return this.pool.end();
   }
 
+  /**
+   * Creates a new table in the database if it does not already exist. The
+   * table is created with columns for id, embedding, document, and
+   * metadata. An index is also created on the embedding column if it does
+   * not already exist.
+   * @returns Promise that resolves when the table and index are created.
+   */
   async createTableIfNotExists(): Promise<void> {
     const client = await this.pool.connect();
     try {
@@ -109,11 +134,21 @@ export class AnalyticDBVectorStore extends VectorStore {
     }
   }
 
+  /**
+   * Deletes the collection from the database if it exists.
+   * @returns Promise that resolves when the collection is deleted.
+   */
   async deleteCollection(): Promise<void> {
     const dropStatement = `DROP TABLE IF EXISTS ${this.collectionName};`;
     await this.pool.query(dropStatement);
   }
 
+  /**
+   * Creates a new collection in the database. If `preDeleteCollection` is
+   * true, any existing collection with the same name is deleted before the
+   * new collection is created.
+   * @returns Promise that resolves when the collection is created.
+   */
   async createCollection(): Promise<void> {
     if (this.preDeleteCollection) {
       await this.deleteCollection();
@@ -122,6 +157,13 @@ export class AnalyticDBVectorStore extends VectorStore {
     this.isCreateCollection = true;
   }
 
+  /**
+   * Adds an array of documents to the collection. The documents are first
+   * converted to vectors using the `embedDocuments` method of the
+   * `embeddings` instance.
+   * @param documents Array of Document instances to be added to the collection.
+   * @returns Promise that resolves when the documents are added.
+   */
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
@@ -130,6 +172,13 @@ export class AnalyticDBVectorStore extends VectorStore {
     );
   }
 
+  /**
+   * Adds an array of vectors and corresponding documents to the collection.
+   * The vectors and documents are batch inserted into the database.
+   * @param vectors Array of vectors to be added to the collection.
+   * @param documents Array of Document instances corresponding to the vectors.
+   * @returns Promise that resolves when the vectors and documents are added.
+   */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     if (vectors.length === 0) {
       return;
@@ -218,6 +267,16 @@ export class AnalyticDBVectorStore extends VectorStore {
     }
   }
 
+  /**
+   * Performs a similarity search on the vectors in the collection. The
+   * search is performed using the given query vector and returns the top k
+   * most similar vectors along with their corresponding documents and
+   * similarity scores.
+   * @param query Query vector for the similarity search.
+   * @param k Number of top similar vectors to return.
+   * @param filter Optional. Filter to apply on the metadata of the documents.
+   * @returns Promise that resolves to an array of tuples, each containing a Document instance and its similarity score.
+   */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
@@ -259,6 +318,16 @@ export class AnalyticDBVectorStore extends VectorStore {
     return result;
   }
 
+  /**
+   * Creates an instance of `AnalyticDBVectorStore` from an array of texts
+   * and corresponding metadata. The texts are first converted to Document
+   * instances before being added to the collection.
+   * @param texts Array of texts to be added to the collection.
+   * @param metadatas Array or object of metadata corresponding to the texts.
+   * @param embeddings Embeddings instance used to convert the texts to vectors.
+   * @param dbConfig Configuration for the AnalyticDB.
+   * @returns Promise that resolves to an instance of `AnalyticDBVectorStore`.
+   */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
@@ -277,6 +346,14 @@ export class AnalyticDBVectorStore extends VectorStore {
     return AnalyticDBVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
+  /**
+   * Creates an instance of `AnalyticDBVectorStore` from an array of
+   * Document instances. The documents are added to the collection.
+   * @param docs Array of Document instances to be added to the collection.
+   * @param embeddings Embeddings instance used to convert the documents to vectors.
+   * @param dbConfig Configuration for the AnalyticDB.
+   * @returns Promise that resolves to an instance of `AnalyticDBVectorStore`.
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
@@ -287,6 +364,13 @@ export class AnalyticDBVectorStore extends VectorStore {
     return instance;
   }
 
+  /**
+   * Creates an instance of `AnalyticDBVectorStore` from an existing index
+   * in the database. A new collection is created in the database.
+   * @param embeddings Embeddings instance used to convert the documents to vectors.
+   * @param dbConfig Configuration for the AnalyticDB.
+   * @returns Promise that resolves to an instance of `AnalyticDBVectorStore`.
+   */
   static async fromExistingIndex(
     embeddings: Embeddings,
     dbConfig: AnalyticDBArgs

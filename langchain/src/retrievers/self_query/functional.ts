@@ -11,6 +11,11 @@ import { Document } from "../../document.js";
 import { BaseTranslator } from "./base.js";
 import { isFilterEmpty } from "./utils.js";
 
+/**
+ * A type alias for an object that maps comparison operators to string or
+ * number values. This is used in the comparison functions to determine
+ * the result of a comparison operation.
+ */
 type ValueType = {
   eq: string | number;
   ne: string | number;
@@ -20,8 +25,16 @@ type ValueType = {
   gte: string | number;
 };
 
+/**
+ * A type alias for a function that takes a `Document` as an argument and
+ * returns a boolean. This function is used as a filter for documents.
+ */
 export type FunctionFilter = (document: Document) => boolean;
 
+/**
+ * A class that extends `BaseTranslator` to translate structured queries
+ * into functional filters.
+ */
 export class FunctionalTranslator extends BaseTranslator {
   declare VisitOperationOutput: FunctionFilter;
 
@@ -46,6 +59,12 @@ export class FunctionalTranslator extends BaseTranslator {
     throw new Error("Not implemented");
   }
 
+  /**
+   * Returns a function that performs a comparison based on the provided
+   * comparator.
+   * @param comparator The comparator to base the comparison function on.
+   * @returns A function that takes two arguments and returns a boolean based on the comparison.
+   */
   getComparatorFunction<C extends Comparator>(
     comparator: Comparator
   ): (a: string | number, b: ValueType[C]) => boolean {
@@ -74,6 +93,12 @@ export class FunctionalTranslator extends BaseTranslator {
     }
   }
 
+  /**
+   * Returns a function that performs an operation based on the provided
+   * operator.
+   * @param operator The operator to base the operation function on.
+   * @returns A function that takes two boolean arguments and returns a boolean based on the operation.
+   */
   getOperatorFunction(operator: Operator): (a: boolean, b: boolean) => boolean {
     switch (operator) {
       case Operators.and: {
@@ -88,6 +113,12 @@ export class FunctionalTranslator extends BaseTranslator {
     }
   }
 
+  /**
+   * Visits the operation part of a structured query and translates it into
+   * a functional filter.
+   * @param operation The operation part of a structured query.
+   * @returns A function that takes a `Document` as an argument and returns a boolean based on the operation.
+   */
   visitOperation(operation: Operation): this["VisitOperationOutput"] {
     const { operator, args } = operation;
     if (this.allowedOperators.includes(operator)) {
@@ -111,6 +142,12 @@ export class FunctionalTranslator extends BaseTranslator {
     }
   }
 
+  /**
+   * Visits the comparison part of a structured query and translates it into
+   * a functional filter.
+   * @param comparison The comparison part of a structured query.
+   * @returns A function that takes a `Document` as an argument and returns a boolean based on the comparison.
+   */
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
     const { comparator, attribute, value } = comparison;
     const undefinedTrue = [Comparators.ne];
@@ -131,6 +168,11 @@ export class FunctionalTranslator extends BaseTranslator {
     }
   }
 
+  /**
+   * Visits a structured query and translates it into a functional filter.
+   * @param query The structured query to translate.
+   * @returns An object containing a `filter` property, which is a function that takes a `Document` as an argument and returns a boolean based on the structured query.
+   */
   visitStructuredQuery(
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
@@ -144,6 +186,13 @@ export class FunctionalTranslator extends BaseTranslator {
     return { filter: filterFunction as FunctionFilter };
   }
 
+  /**
+   * Merges two filters into one, based on the specified merge type.
+   * @param defaultFilter The default filter function.
+   * @param generatedFilter The generated filter function.
+   * @param mergeType The type of merge to perform. Can be 'and', 'or', or 'replace'. Default is 'and'.
+   * @returns A function that takes a `Document` as an argument and returns a boolean based on the merged filters, or `undefined` if both filters are empty.
+   */
   mergeFilters(
     defaultFilter: FunctionFilter,
     generatedFilter: FunctionFilter,

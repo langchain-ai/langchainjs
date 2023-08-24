@@ -41,6 +41,10 @@ const queryInputSchema = /* #__PURE__ */ z.object({
     .describe("logical condition statement for filtering documents"),
 });
 
+/**
+ * A class that extends AsymmetricStructuredOutputParser to parse
+ * structured query output.
+ */
 export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParser<
   typeof queryInputSchema,
   StructuredQuery
@@ -62,6 +66,12 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
     );
   }
 
+  /**
+   * Processes the output of a structured query.
+   * @param query The query string.
+   * @param filter The filter condition.
+   * @returns A Promise that resolves to a StructuredQuery instance.
+   */
   async outputProcessor({
     query,
     filter,
@@ -78,6 +88,13 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
     }
   }
 
+  /**
+   * Creates a new StructuredQueryOutputParser instance from the provided
+   * components.
+   * @param allowedComparators An array of allowed Comparator instances.
+   * @param allowedOperators An array of allowed Operator instances.
+   * @returns A new StructuredQueryOutputParser instance.
+   */
   static fromComponents(
     allowedComparators: Comparator[] = [],
     allowedOperators: Operator[] = []
@@ -145,6 +162,9 @@ function _getPrompt(
   });
 }
 
+/**
+ * A type that represents options for the query constructor chain.
+ */
 export type QueryConstructorChainOptions = {
   llm: BaseLanguageModel;
   documentContents: string;

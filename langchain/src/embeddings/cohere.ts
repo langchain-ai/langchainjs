@@ -2,6 +2,10 @@ import { chunkArray } from "../util/chunk.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
+/**
+ * Interface that extends EmbeddingsParams and defines additional
+ * parameters specific to the CohereEmbeddings class.
+ */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
   modelName: string;
 
