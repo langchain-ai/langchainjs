@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.131",
+  "version": "0.0.133",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -169,6 +169,9 @@
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
+    "vectorstores/googlevertexai.cjs",
+    "vectorstores/googlevertexai.js",
+    "vectorstores/googlevertexai.d.ts",
     "vectorstores/hnswlib.cjs",
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
@@ -635,7 +638,7 @@
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
     "@xata.io/client": "^0.25.1",
-    "@zilliz/milvus2-sdk-node": ">=2.2.7",
+    "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
@@ -995,7 +998,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "~0.0.16",
+    "langsmith": "~0.0.26",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^4.0.0",
@@ -1300,6 +1303,11 @@
       "types": "./vectorstores/chroma.d.ts",
       "import": "./vectorstores/chroma.js",
       "require": "./vectorstores/chroma.cjs"
+    },
+    "./vectorstores/googlevertexai": {
+      "types": "./vectorstores/googlevertexai.d.ts",
+      "import": "./vectorstores/googlevertexai.js",
+      "require": "./vectorstores/googlevertexai.cjs"
     },
     "./vectorstores/hnswlib": {
       "types": "./vectorstores/hnswlib.d.ts",
