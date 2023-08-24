@@ -28,7 +28,9 @@ test("Test Bedrock LLM: ai21", async () => {
         accept: "application/json",
         "Content-Type": "application/json",
       });
-      expect(init?.body).toBe(`{"prompt":"${prompt}"}`);
+      expect(init?.body).toBe(
+        `{"prompt":"${prompt}","maxTokens":20,"temperature":0}`
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return new Promise<any>((resolve) => {
         resolve({
@@ -71,7 +73,7 @@ test("Test Bedrock LLM: anthropic", async () => {
         "Content-Type": "application/json",
       });
       expect(init?.body).toBe(
-        `{"prompt":"${prompt}","max_tokens_to_sample":50}`
+        `{"prompt":"${prompt}","max_tokens_to_sample":20,"temperature":0}`
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return new Promise<any>((resolve) => {
@@ -115,7 +117,7 @@ test("Test Bedrock LLM: amazon", async () => {
         "Content-Type": "application/json",
       });
       expect(init?.body).toBe(
-        '{"inputText":"What is your name?","textGenerationConfig":{}}'
+        '{"inputText":"What is your name?","textGenerationConfig":{"maxTokenCount":20,"temperature":0}}'
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return new Promise<any>((resolve) => {
@@ -192,7 +194,7 @@ test("Test Bedrock LLM: streaming callback handler", async () => {
   });
 
   const bedrock = new Bedrock({
-    maxTokens: 20,
+    maxTokens: 200,
     region,
     model,
     async fetchFn(
@@ -210,7 +212,7 @@ test("Test Bedrock LLM: streaming callback handler", async () => {
         "Content-Type": "application/json",
       });
       expect(init?.body).toBe(
-        `{"inputText":"${prompt}","textGenerationConfig":{}}`
+        `{"inputText":"${prompt}","textGenerationConfig":{"maxTokenCount":200,"temperature":0}}`
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return new Promise<any>((resolve) => {
@@ -240,6 +242,33 @@ test("Test Bedrock LLM: stream method", async () => {
     maxTokens: 20,
     region,
     model,
+    async fetchFn(
+      input: RequestInfo | URL,
+      init?: RequestInit | undefined
+    ): Promise<Response> {
+      expect(input).toBeInstanceOf(URL);
+      expect((input as URL).href).toBe(
+        `https://bedrock.${region}.amazonaws.com/model/${model}/invoke-with-response-stream`
+      );
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toMatchObject({
+        host: `bedrock.${region}.amazonaws.com`,
+        accept: "application/json",
+        "Content-Type": "application/json",
+      });
+      expect(init?.body).toBe(
+        `{"prompt":"${prompt}","maxTokens":20,"temperature":0}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return new Promise<any>((resolve) => {
+        resolve({
+          status: 200,
+          body: {
+            getReader: () => buildResponse("some response text", "data.text"),
+          },
+        });
+      });
+    },
   });
 
   const stream = await bedrock.stream(prompt);
@@ -249,7 +278,7 @@ test("Test Bedrock LLM: stream method", async () => {
     console.log(chunk);
     chunks.push(chunk);
   }
-  expect(chunks.length).toBeGreaterThan(1);
+  expect(chunks.length).toBeGreaterThanOrEqual(1);
   console.log(chunks.join(""));
 }, 5000);
 

@@ -24,22 +24,29 @@ class BedrockLLMInputOutputAdapter {
   that LLM model expects. Also, provides a helper function to extract
   the generated text from the model response. */
 
-  static prepareInput(provider: string, prompt: string): Dict {
+  static prepareInput(
+    provider: string,
+    prompt: string,
+    maxTokens = 50,
+    temperature = 0
+  ): Dict {
     const inputBody: Dict = {};
 
-    if (provider === "anthropic" || provider === "ai21") {
+    if (provider === "anthropic") {
       inputBody.prompt = prompt;
+      inputBody.max_tokens_to_sample = maxTokens;
+      inputBody.temperature = temperature;
+    } else if (provider === "ai21") {
+      inputBody.prompt = prompt;
+      inputBody.maxTokens = maxTokens;
+      inputBody.temperature = temperature;
     } else if (provider === "amazon") {
       inputBody.inputText = prompt;
-      inputBody.textGenerationConfig = {};
-    } else {
-      inputBody.inputText = prompt;
+      inputBody.textGenerationConfig = {
+        maxTokenCount: maxTokens,
+        temperature,
+      };
     }
-
-    if (provider === "anthropic" && !("max_tokens_to_sample" in inputBody)) {
-      inputBody.max_tokens_to_sample = 50;
-    }
-
     return inputBody;
   }
 
@@ -184,7 +191,9 @@ export class Bedrock extends LLM implements BedrockInput {
 
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
-      prompt
+      prompt,
+      this.maxTokens,
+      this.temperature
     );
 
     const url = new URL(
