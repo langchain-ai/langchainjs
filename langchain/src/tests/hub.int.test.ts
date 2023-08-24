@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import * as hub from "../hub.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 
