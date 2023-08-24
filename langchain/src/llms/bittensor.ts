@@ -66,7 +66,7 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
 
     try {
       // Retrieve API KEY
-      
+
       const apiKeysResponse: AxiosResponse<APIKeyResponse[]> =
         await axios.default.request<APIKeyResponse[]>({
           method: "get",
@@ -85,14 +85,13 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
         this.topResponses = 0;
       }
 
-      
       const minerResponse: AxiosResponse<string[]> =
         await axios.default.request<string[]>({
           method: "get",
           url: "https://test.neuralinternet.ai/top_miner_uids",
           headers,
         });
-      
+
       const uids: string[] = minerResponse.data;
 
       if (Array.isArray(uids) && uids.length && this.topResponses === 0) {
@@ -106,7 +105,6 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
               ],
             };
 
-          
             const response: AxiosResponse<ChatResponse> =
               await axios.default.request<ChatResponse>({
                 method: "post",
@@ -135,7 +133,6 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
         ],
       };
 
-      
       const response: AxiosResponse<ChatResponse | string> =
         await axios.default.request<ChatResponse | string>({
           method: "post",
