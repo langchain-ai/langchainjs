@@ -1,6 +1,7 @@
 import { AgentActionOutputParser } from "../types.js";
 import { AgentFinish } from "../../schema/index.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
+import { OutputParserException } from "../../schema/output_parser.js";
 
 export const FINAL_ANSWER_ACTION = "Final Answer:";
 /**
@@ -38,7 +39,7 @@ export class ChatAgentOutputParser extends AgentActionOutputParser {
         log: text,
       };
     } catch {
-      throw new Error(
+      throw new OutputParserException(
         `Unable to parse JSON response from chat agent.\n\n${text}`
       );
     }

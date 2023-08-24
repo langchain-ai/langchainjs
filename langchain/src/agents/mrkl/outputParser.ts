@@ -1,3 +1,4 @@
+import { OutputParserException } from "../../schema/output_parser.js";
 import { OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser } from "../types.js";
 
@@ -38,7 +39,7 @@ export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
       text
     );
     if (!match) {
-      throw new Error(`Could not parse LLM output: ${text}`);
+      throw new OutputParserException(`Could not parse LLM output: ${text}`);
     }
 
     return {
