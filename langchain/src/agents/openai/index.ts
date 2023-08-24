@@ -1,4 +1,4 @@
-import { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";

@@ -80,7 +80,9 @@ export class AsyncCaller {
               if (
                 error.message.startsWith("Cancel") ||
                 error.message.startsWith("TimeoutError") ||
-                error.message.startsWith("AbortError")
+                error.message.startsWith("AbortError") ||
+                error.message.includes("Request was aborted") ||
+                error.message.includes("Request timed out")
               ) {
                 throw error;
               }

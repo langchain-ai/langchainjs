@@ -1,4 +1,4 @@
-import { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { AsyncCaller } from "../util/async_caller.js";
 
 export const promptLayerTrackRequest = async (

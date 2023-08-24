@@ -1,4 +1,4 @@
-import { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
@@ -408,6 +408,9 @@ export class ChatOpenAI
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(generationChunk.text ?? "");
     }
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
+    }
   }
 
   /**
@@ -636,12 +639,17 @@ export class ChatOpenAI
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
-
-      this.client = new OpenAIClient({
+      const params = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-      });
+        maxRetries: 0,
+      };
+      if (!params.baseURL) {
+        delete params.baseURL;
+      }
+
+      this.client = new OpenAIClient(params);
     }
     const requestOptions = {
       ...this.clientConfig,
@@ -804,7 +812,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const promptLayerRespBody = await promptLayerTrackRequest(
         this.caller,
         "langchain.PromptLayerChatOpenAI",
-        { ...this._identifyingParams(), messages: messageDicts },
+        { ...this._identifyingParams(), messages: messageDicts, stream: false },
         this.plTags,
         parsedResp,
         requestStartTime,

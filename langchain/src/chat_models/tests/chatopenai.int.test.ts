@@ -63,7 +63,7 @@ test("Test ChatOpenAI Generate throws when one of the calls fails", async () => 
     chat.generate([[message], [message]], {
       signal: AbortSignal.timeout(10),
     })
-  ).rejects.toThrow("Cancel: canceled");
+  ).rejects.toThrow();
 });
 
 test("Test ChatOpenAI tokenUsage", async () => {

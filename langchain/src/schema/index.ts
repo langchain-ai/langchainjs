@@ -1,4 +1,4 @@
-import { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { Document } from "../document.js";
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 

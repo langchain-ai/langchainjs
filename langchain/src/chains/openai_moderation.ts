@@ -1,4 +1,4 @@
-import { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
@@ -67,7 +67,6 @@ export class OpenAIModerationChain
       ...fields?.configuration,
       apiKey: this.openAIApiKey,
       organization: this.openAIOrganization,
-      ...fields?.configuration,
     };
 
     this.client = new OpenAIClient(this.clientConfig);

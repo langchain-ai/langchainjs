@@ -1,4 +1,4 @@
-import { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "../util/env.js";
 import {
   AzureOpenAIInput,
@@ -212,6 +212,7 @@ export class OpenAIEmbeddings
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
+        maxRetries: 0,
       });
     }
     const requestOptions: OpenAICoreRequestOptions = {};

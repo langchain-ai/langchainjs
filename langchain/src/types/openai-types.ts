@@ -1,4 +1,4 @@
-import { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 

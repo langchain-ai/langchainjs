@@ -1,5 +1,5 @@
 import type { TiktokenModel } from "js-tiktoken/lite";
-import { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { GenerationChunk, LLMResult } from "../schema/index.js";
@@ -490,6 +490,7 @@ export class OpenAI
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
+        maxRetries: 0,
       });
     }
     const requestOptions = {

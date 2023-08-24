@@ -1,4 +1,4 @@
-import { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, GenerationChunk, LLMResult } from "../schema/index.js";
 import {
@@ -447,6 +447,7 @@ export class OpenAIChat
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
+        maxRetries: 0,
       });
     }
     const requestOptions = {

@@ -377,6 +377,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
+        maxRetries: 0,
       });
     }
     const makeCompletionRequest = async () =>

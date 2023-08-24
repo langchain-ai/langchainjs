@@ -1,4 +1,4 @@
-import { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
