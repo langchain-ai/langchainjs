@@ -28,7 +28,6 @@ export function listExternals() {
     /node\:/,
     /js-tiktoken/,
     "axios", // axios is a dependency of openai
-    "axios-bittensor",
     "mysql2/promise",
     "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
     "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js",
