@@ -5,7 +5,7 @@ describe("NIBittensorLLM", () => {
   test("test with no params", async () => {
     const niBittensorLLM = new NIBittensorLLM();
     const result = await niBittensorLLM.call("What is Bittensor?");
-    console.log("test with no params:", result);
+    console.log("test with no params: ", result);
   });
   test("test with system prompt", async () => {
     const niBittensorLLM = new NIBittensorLLM({
@@ -13,7 +13,7 @@ describe("NIBittensorLLM", () => {
         "Your task is to provide accurate response based on user prompt",
     });
     const result = await niBittensorLLM.call("What is Bittensor?");
-    console.log("test with system prompt:", result);
+    console.log("test with system prompt: ", result);
   });
   test("test with topResponse parameter", async () => {
     const niBittensorLLM = new NIBittensorLLM({
@@ -22,6 +22,6 @@ describe("NIBittensorLLM", () => {
       topResponses: 10,
     });
     const result = await niBittensorLLM.call("What is Bittensor?");
-    console.log("test with topResponse parameter:", result);
+    console.log("test with topResponse parameter: ", result);
   });
 });
