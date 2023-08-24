@@ -6074,6 +6074,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@smithy/eventstream-codec@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "@smithy/eventstream-codec@npm:2.0.5"
+  dependencies:
+    "@aws-crypto/crc32": 3.0.0
+    "@smithy/types": ^2.2.2
+    "@smithy/util-hex-encoding": ^2.0.0
+    tslib: ^2.5.0
+  checksum: 472c0b1652e2afcf9dd9a8f122255d8b3b46019ead3c12ce8ceb3242d2dca525c5dcf6fd2fe57e03621283c8762b44d553a10eb0ce35eecaf2f4366c45bbf683
+  languageName: node
+  linkType: hard
+
 "@smithy/fetch-http-handler@npm:^2.0.2, @smithy/fetch-http-handler@npm:^2.0.3":
   version: 2.0.3
   resolution: "@smithy/fetch-http-handler@npm:2.0.3"
@@ -6391,6 +6403,15 @@ __metadata:
   dependencies:
     tslib: ^2.5.0
   checksum: b9bbb35a3d20d4cb26966830d25251f671253aa8f886d23abde71a879486fc5b049a66c44ebd3e724d495772336f13c3034fb35bc62a6db058daaf310e4a013d
+  languageName: node
+  linkType: hard
+
+"@smithy/types@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "@smithy/types@npm:2.2.2"
+  dependencies:
+    tslib: ^2.5.0
+  checksum: 2799a14620da60efb2a0aba1bf9adc553a5446dc447b9ee1d7a95410233a70dff2b5e563fecf84388137dabbe662c6bf3a2247ca20a1f266c1256f82e0f25fcf
   languageName: node
   linkType: hard
 
@@ -14389,6 +14410,8 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
+    "@smithy/eventstream-codec": ^2.0.5
+    "@smithy/util-utf8": ^2.0.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
@@ -14517,6 +14540,8 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
+    "@smithy/eventstream-codec": ^2.0.5
+    "@smithy/util-utf8": ^2.0.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
@@ -14616,6 +14641,10 @@ __metadata:
     "@qdrant/js-client-rest":
       optional: true
     "@raycast/api":
+      optional: true
+    "@smithy/eventstream-codec":
+      optional: true
+    "@smithy/util-utf8":
       optional: true
     "@supabase/postgrest-js":
       optional: true
