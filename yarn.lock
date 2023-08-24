@@ -14665,6 +14665,8 @@ __metadata:
       optional: true
     jsdom:
       optional: true
+    langchainhub:
+      optional: true
     mammoth:
       optional: true
     mongodb:
