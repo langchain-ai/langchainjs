@@ -65,6 +65,7 @@ const entrypoints = {
   // vectorstores
   vectorstores: "vectorstores/index",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
+  "vectorstores/azuresearch": "vectorstores/azuresearch",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
