@@ -15104,6 +15104,8 @@ __metadata:
       optional: true
     mysql2:
       optional: true
+    node-llama-cpp:
+      optional: true
     notion-to-md:
       optional: true
     pdf-parse:

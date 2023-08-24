@@ -931,10 +931,10 @@
     "mysql2": {
       "optional": true
     },
-    "notion-to-md": {
+    "node-llama-cpp": {
       "optional": true
     },
-    "node-llama-cpp": {
+    "notion-to-md": {
       "optional": true
     },
     "pdf-parse": {
