@@ -268,6 +268,9 @@
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
+    "vectorstores/azuresearch.cjs",
+    "vectorstores/azuresearch.js",
+    "vectorstores/azuresearch.d.ts",
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
@@ -915,6 +918,7 @@
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
+    "@azure/search-documents": "12.0.0-beta.3",
     "@azure/storage-blob": "^12.15.0",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@faker-js/faker": "^7.6.0",
@@ -1000,6 +1004,9 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
+    "@azure/search-documents": "12.0.0-beta.3",
     "@azure/storage-blob": "^12.15.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
@@ -1059,6 +1066,15 @@
       "optional": true
     },
     "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@aws-sdk/protocol-http": {
+      "optional": true
+    },
+    "@aws-sdk/signature-v4": {
+      "optional": true
+    },
+    "@azure/search-documents": {
       "optional": true
     },
     "@azure/storage-blob": {
@@ -1673,6 +1689,11 @@
       "types": "./vectorstores/analyticdb.d.ts",
       "import": "./vectorstores/analyticdb.js",
       "require": "./vectorstores/analyticdb.cjs"
+    },
+    "./vectorstores/azuresearch": {
+      "types": "./vectorstores/azuresearch.d.ts",
+      "import": "./vectorstores/azuresearch.js",
+      "require": "./vectorstores/azuresearch.cjs"
     },
     "./vectorstores/base": {
       "types": "./vectorstores/base.d.ts",
