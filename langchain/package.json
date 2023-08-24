@@ -145,6 +145,9 @@
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/writer.cjs",
+    "llms/writer.js",
+    "llms/writer.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -1261,6 +1264,11 @@
       "types": "./llms/bedrock.d.ts",
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
+    },
+    "./llms/writer": {
+      "types": "./llms/writer.d.ts",
+      "import": "./llms/writer.js",
+      "require": "./llms/writer.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
