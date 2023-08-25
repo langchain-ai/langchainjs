@@ -322,6 +322,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/momento"?:
     | typeof import("../stores/message/momento.js")
     | Promise<typeof import("../stores/message/momento.js")>;
+  "langchain/stores/message/mongodb"?:
+    | typeof import("../stores/message/mongodb.js")
+    | Promise<typeof import("../stores/message/mongodb.js")>;
   "langchain/stores/message/redis"?:
     | typeof import("../stores/message/redis.js")
     | Promise<typeof import("../stores/message/redis.js")>;

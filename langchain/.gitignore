@@ -505,6 +505,9 @@ stores/message/firestore.d.ts
 stores/message/momento.cjs
 stores/message/momento.js
 stores/message/momento.d.ts
+stores/message/mongodb.cjs
+stores/message/mongodb.js
+stores/message/mongodb.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
