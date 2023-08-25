@@ -1,11 +1,11 @@
 import { JSDOM } from "jsdom";
 import { Document } from "../../document.js";
 import { AsyncCaller } from "../../util/async_caller.js";
-import { BaseDocumentLoader, DocumentLoader } from "../index.js";
+import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 
 export interface RecursiveUrlLoaderOptions {
   excludeDirs?: string[];
-  extractor?(text: string): string;
+  extractor?: (text: string) => string;
   maxDepth?: number;
   timeout?: number;
   preventOutside?: boolean;
@@ -35,6 +35,7 @@ export class RecursiveUrlLoader
 
     this.caller = new AsyncCaller({
       maxConcurrency: 64,
+      maxRetries: 0,
       ...options.callerOptions,
     });
 
@@ -48,23 +49,12 @@ export class RecursiveUrlLoader
 
   private async fetchWithTimeout(
     resource: string,
-    options: { timeout?: number } & RequestInit
+    options: { timeout: number } & RequestInit
   ): Promise<Response> {
-    const { timeout } = options;
-
-    return await new Promise<Response>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error("timeout"));
-      }, timeout);
-
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.caller.call(() =>
-        fetch(resource, options)
-          .then(resolve)
-          .catch(reject)
-          .finally(() => clearTimeout(timer))
-      );
-    });
+    const { timeout, ...rest } = options;
+    return this.caller.call(() =>
+      fetch(resource, { ...rest, signal: AbortSignal.timeout(timeout) })
+    );
   }
 
   private getChildLinks(html: string, baseUrl: string): Array<string> {
@@ -73,8 +63,8 @@ export class RecursiveUrlLoader
     ).map((a) => a.href);
     const absolutePaths = [];
     // eslint-disable-next-line no-script-url
-    const invalid_prefixes = ["javascript:", "mailto:", "#"];
-    const invalid_suffixes = [
+    const invalidPrefixes = ["javascript:", "mailto:", "#"];
+    const invalidSuffixes = [
       ".css",
       ".js",
       ".ico",
@@ -87,8 +77,8 @@ export class RecursiveUrlLoader
 
     for (const link of allLinks) {
       if (
-        invalid_prefixes.some((prefix) => link.startsWith(prefix)) ||
-        invalid_suffixes.some((suffix) => link.endsWith(suffix))
+        invalidPrefixes.some((prefix) => link.startsWith(prefix)) ||
+        invalidSuffixes.some((suffix) => link.endsWith(suffix))
       )
         continue;
 
@@ -168,34 +158,30 @@ export class RecursiveUrlLoader
 
     const childUrls: string[] = this.getChildLinks(res, url);
 
-    return (
-      await Promise.all(
-        childUrls.map((childUrl) =>
-          (async () => {
-            if (visited.has(childUrl)) return null;
-            visited.add(childUrl);
+    const results = await Promise.all(
+      childUrls.map((childUrl) =>
+        (async () => {
+          if (visited.has(childUrl)) return null;
+          visited.add(childUrl);
 
-            const childDoc = await this.getUrlAsDoc(childUrl);
-            if (!childDoc) return null;
+          const childDoc = await this.getUrlAsDoc(childUrl);
+          if (!childDoc) return null;
 
-            if (childUrl.endsWith("/")) {
-              return [
-                childDoc,
-                ...(await this.getChildUrlsRecursive(
-                  childUrl,
-                  visited,
-                  depth + 1
-                )),
-              ];
-            }
+          if (childUrl.endsWith("/")) {
+            const childUrlResponses = await this.getChildUrlsRecursive(
+              childUrl,
+              visited,
+              depth + 1
+            );
+            return [childDoc, ...childUrlResponses];
+          }
 
-            return [childDoc];
-          })()
-        )
+          return [childDoc];
+        })()
       )
-    )
-      .flat()
-      .filter((docs) => docs !== null) as Document[];
+    );
+
+    return results.flat().filter((docs) => docs !== null) as Document[];
   }
 
   async load(): Promise<Document[]> {
