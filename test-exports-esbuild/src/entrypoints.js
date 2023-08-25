@@ -33,6 +33,7 @@ import * as chat_models_openai from "langchain/chat_models/openai";
 import * as chat_models_anthropic from "langchain/chat_models/anthropic";
 import * as chat_models_baiduwenxin from "langchain/chat_models/baiduwenxin";
 import * as chat_models_ollama from "langchain/chat_models/ollama";
+import * as chat_models_minimax from "langchain/chat_models/minimax";
 import * as schema from "langchain/schema";
 import * as schema_output_parser from "langchain/schema/output_parser";
 import * as schema_query_constructor from "langchain/schema/query_constructor";

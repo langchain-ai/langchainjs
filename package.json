@@ -22,6 +22,7 @@
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
+    "example-run": "npm run example models/chat/integration_minimax",
     "ci": "turbo run ci",
     "build": "turbo run build --filter=\"!docs_skeleton\"",
     "format": "turbo run format",

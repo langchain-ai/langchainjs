@@ -376,6 +376,9 @@ chat_models/baiduwenxin.d.ts
 chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts
+chat_models/minimax.cjs
+chat_models/minimax.js
+chat_models/minimax.d.ts
 schema.cjs
 schema.js
 schema.d.ts

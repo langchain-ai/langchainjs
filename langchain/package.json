@@ -388,6 +388,9 @@
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
+    "chat_models/minimax.cjs",
+    "chat_models/minimax.js",
+    "chat_models/minimax.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -1693,6 +1696,11 @@
       "types": "./chat_models/ollama.d.ts",
       "import": "./chat_models/ollama.js",
       "require": "./chat_models/ollama.cjs"
+    },
+    "./chat_models/minimax": {
+      "types": "./chat_models/minimax.d.ts",
+      "import": "./chat_models/minimax.js",
+      "require": "./chat_models/minimax.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",

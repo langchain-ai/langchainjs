@@ -34,6 +34,7 @@ export * as chat_models__openai from "../chat_models/openai.js";
 export * as chat_models__anthropic from "../chat_models/anthropic.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
+export * as chat_models__minimax from "../chat_models/minimax.js";
 export * as schema from "../schema/index.js";
 export * as schema__output_parser from "../schema/output_parser.js";
 export * as schema__query_constructor from "../schema/query_constructor.js";
