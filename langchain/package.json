@@ -514,6 +514,9 @@
     "stores/message/momento.cjs",
     "stores/message/momento.js",
     "stores/message/momento.d.ts",
+    "stores/message/mongodb.cjs",
+    "stores/message/mongodb.js",
+    "stores/message/mongodb.d.ts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
@@ -1902,6 +1905,11 @@
       "types": "./stores/message/momento.d.ts",
       "import": "./stores/message/momento.js",
       "require": "./stores/message/momento.cjs"
+    },
+    "./stores/message/mongodb": {
+      "types": "./stores/message/mongodb.d.ts",
+      "import": "./stores/message/mongodb.js",
+      "require": "./stores/message/mongodb.cjs"
     },
     "./stores/message/redis": {
       "types": "./stores/message/redis.d.ts",

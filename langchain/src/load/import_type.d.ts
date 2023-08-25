@@ -162,10 +162,14 @@ export interface OptionalImportMap {
     | Promise<typeof import("../document_loaders/web/assemblyai.js")>;
   "langchain/document_loaders/web/azure_blob_storage_container"?:
     | typeof import("../document_loaders/web/azure_blob_storage_container.js")
-    | Promise<typeof import("../document_loaders/web/azure_blob_storage_container.js")>;
+    | Promise<
+        typeof import("../document_loaders/web/azure_blob_storage_container.js")
+      >;
   "langchain/document_loaders/web/azure_blob_storage_file"?:
     | typeof import("../document_loaders/web/azure_blob_storage_file.js")
-    | Promise<typeof import("../document_loaders/web/azure_blob_storage_file.js")>;
+    | Promise<
+        typeof import("../document_loaders/web/azure_blob_storage_file.js")
+      >;
   "langchain/document_loaders/web/cheerio"?:
     | typeof import("../document_loaders/web/cheerio.js")
     | Promise<typeof import("../document_loaders/web/cheerio.js")>;
@@ -319,6 +323,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/momento"?:
     | typeof import("../stores/message/momento.js")
     | Promise<typeof import("../stores/message/momento.js")>;
+  "langchain/stores/message/mongodb"?:
+    | typeof import("../stores/message/mongodb.js")
+    | Promise<typeof import("../stores/message/mongodb.js")>;
   "langchain/stores/message/redis"?:
     | typeof import("../stores/message/redis.js")
     | Promise<typeof import("../stores/message/redis.js")>;
@@ -342,7 +349,9 @@ export interface OptionalImportMap {
     | Promise<typeof import("../hub.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
-    | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
+    | Promise<
+        typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
+      >;
 }
 
 export interface SecretMap {

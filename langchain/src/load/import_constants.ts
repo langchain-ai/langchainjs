@@ -107,6 +107,7 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/dynamodb",
   "langchain/stores/message/firestore",
   "langchain/stores/message/momento",
+  "langchain/stores/message/mongodb",
   "langchain/stores/message/redis",
   "langchain/stores/message/ioredis",
   "langchain/stores/message/upstash_redis",

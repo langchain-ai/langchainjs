@@ -4,11 +4,7 @@
     "outDir": "../dist",
     "rootDir": "./src",
     "target": "ES2021",
-    "lib": [
-      "ES2021",
-      "ES2022.Object",
-      "DOM"
-    ],
+    "lib": ["ES2021", "ES2022.Object", "DOM"],
     "module": "ES2020",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
@@ -22,14 +18,8 @@
     "allowJs": true,
     "strict": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "docs"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "docs"],
   "typedocOptions": {
     "entryPoints": [
       "src/load/index.ts",
@@ -194,6 +184,7 @@
       "src/stores/message/dynamodb.ts",
       "src/stores/message/firestore.ts",
       "src/stores/message/momento.ts",
+      "src/stores/message/mongodb.ts",
       "src/stores/message/redis.ts",
       "src/stores/message/ioredis.ts",
       "src/stores/message/upstash_redis.ts",
