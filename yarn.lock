@@ -7803,16 +7803,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@writerai/writer-sdk@npm:^0.25.0":
-  version: 0.25.0
-  resolution: "@writerai/writer-sdk@npm:0.25.0"
+"@writerai/writer-sdk@npm:^0.40.2":
+  version: 0.40.2
+  resolution: "@writerai/writer-sdk@npm:0.40.2"
   dependencies:
     axios: ^1.1.3
     class-transformer: ^0.5.1
     form-data: ^4.0.0
     jsonpath: ^1.1.1
     reflect-metadata: ^0.1.13
-  checksum: 5dc5881fd4ce5a4c7622dfedf74d1559e0e4bcd882159e58e2c202d6e08a6ee31e43a191ba8a2da9201671ba635231cfddf59518c4901ddbb89e75ca5cae6ca2
+  checksum: 25b725e49df0f4f75a3837e7835279e32239f94c89a9dbd3fcccb40c31b53d12ce84edc73eba32395e1eda98b5990e823ec159857d54948ee530e4f33d0a5b49
   languageName: node
   linkType: hard
 
@@ -14453,7 +14453,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
-    "@writerai/writer-sdk": ^0.25.0
+    "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     ansi-styles: ^5.0.0
@@ -14565,6 +14565,7 @@ __metadata:
     "@tensorflow/tfjs-core": "*"
     "@tigrisdata/vector": ^1.1.0
     "@upstash/redis": ^1.20.6
+    "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
@@ -14670,6 +14671,8 @@ __metadata:
     "@tigrisdata/vector":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@writerai/writer-sdk":
       optional: true
     "@xata.io/client":
       optional: true

@@ -1,21 +1,20 @@
 # Writer
 
-LangChain.js supports Writer LLMs. Here's an example:
+LangChain.js supports calling [Writer](https://writer.com/) LLMs.
+
+## Setup
+
+First, you'll need to sign up for an account at https://writer.com/. Create a service account and note your API key.
+
+Next, you'll need to install the official package as a peer dependency:
 
 ```bash npm2yarn
 yarn add @writerai/writer-sdk
 ```
 
-```typescript
-import { Writer } from "langchain/llms/writer";
+## Usage
 
-const model = new Writer({
-  maxTokens: 20,
-  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.WRITER_API_KEY
-  orgId: "YOUR-ORGANIZATION-ID", // In Node.js defaults to process.env.WRITER_ORG_ID
-});
-const res = await model.call(
-  "What would be a good company name a company that makes colorful socks?"
-);
-console.log({ res });
-```
+import CodeBlock from "@theme/CodeBlock";
+import WriterExample from "@examples/models/llm/writer.ts";
+
+<CodeBlock language="typescript">{WriterExample}</CodeBlock>

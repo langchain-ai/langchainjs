@@ -640,6 +640,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
@@ -732,6 +733,7 @@
     "@tensorflow/tfjs-core": "*",
     "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
+    "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
@@ -870,6 +872,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@writerai/writer-sdk": {
       "optional": true
     },
     "@xata.io/client": {

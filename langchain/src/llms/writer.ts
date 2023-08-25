@@ -1,3 +1,5 @@
+import { Writer as WriterClient } from "@writerai/writer-sdk";
+
 import { BaseLLMParams, LLM } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
@@ -68,16 +70,27 @@ export class Writer extends LLM implements WriterInput {
   lc_serializable = true;
 
   apiKey: string;
+
   orgId: number;
+
   model = "palmyra-instruct";
+
   temperature?: number;
+
   minTokens?: number;
+
   maxTokens?: number;
+
   bestOf?: number;
+
   frequencyPenalty?: number;
+
   logprobs?: number;
+
   n?: number;
+
   presencePenalty?: number;
+
   topP?: number;
 
   constructor(fields?: WriterInput) {
@@ -99,7 +112,7 @@ export class Writer extends LLM implements WriterInput {
     }
 
     this.apiKey = apiKey;
-    this.orgId = typeof orgId === "string" ? parseInt(orgId) : orgId;
+    this.orgId = typeof orgId === "string" ? parseInt(orgId, 10) : orgId;
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.minTokens = fields?.minTokens ?? this.minTokens;
@@ -121,19 +134,16 @@ export class Writer extends LLM implements WriterInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const { writer } = await Writer.imports();
-
-    const sdk = new writer.Writer({
+    const sdk = new WriterClient({
       security: {
         apiKey: this.apiKey,
       },
       organizationId: this.orgId,
     });
 
-    const response = await this.caller.callWithOptions(
-      { signal: options.signal },
-      () =>
-        sdk.completions.create({
+    return this.caller.callWithOptions({ signal: options.signal }, async () => {
+      try {
+        const res = await sdk.completions.create({
           completionRequest: {
             prompt,
             stop: options.stop,
@@ -148,30 +158,15 @@ export class Writer extends LLM implements WriterInput {
             topP: this.topP,
           },
           modelId: this.model,
-        })
-    );
-
-    if (response.statusCode == 200) {
-      return (
-        response.completionResponse?.choices?.[0].text ?? "No completion found."
-      );
-    } else {
-      console.log(response.failResponse);
-      throw new Error("Received an error from Writer API.");
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    writer: typeof import("@writerai/writer-sdk");
-  }> {
-    try {
-      const writer = await import("@writerai/writer-sdk");
-      return { writer };
-    } catch (e) {
-      throw new Error(
-        "Please install the Writer TS SDK as a dependency with `yarn add @writerai/writer-sdk`"
-      );
-    }
+        });
+        return (
+          res.completionResponse?.choices?.[0].text ?? "No completion found."
+        );
+      } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (e as any).response = (e as any).rawResponse;
+        throw e;
+      }
+    });
   }
 }
