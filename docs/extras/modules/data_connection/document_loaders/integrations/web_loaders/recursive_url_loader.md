@@ -5,11 +5,11 @@ hide_table_of_contents: true
 
 # Recursive URL Loader
 
-We may want to process load all URLs under a root directory.
+When loading content from a website, we may want to process load all URLs on a page.
 
-For example, let's look at the [LangChainJS introduction(https://js.langchain.com/docs/get_started/introduction)] Document.
+For example, let's look at the [LangChainJS introduction](https://js.langchain.com/docs/get_started/introduction) docs.
 
-This has many interesting child pages that we may want to read in bulk.
+This has many interesting child pages that we may want to load, split, and later retrieve in bulk.
 
 The challenge is traversing the tree of child pages and assembling a list!
 
@@ -19,13 +19,14 @@ This also gives us the flexibility to exclude some children, customize the extra
 
 ## Setup
 
-To get started, you'll need to install the `jsdom` package:
+To get started, you'll need to install the [`jsdom`](https://www.npmjs.com/package/jsdom) package:
 
 ```bash npm2yarn
 npm i jsdom
 ```
 
-We also suggest adding a package like `html-to-text` for extracting the raw text from the page.
+We also suggest adding a package like [`html-to-text`](https://www.npmjs.com/package/html-to-text) or
+[`@mozilla/readability`](https://www.npmjs.com/package/@mozilla/readability) for extracting the raw text from the page.
 
 ```bash npm2yarn
 npm i html-to-text
@@ -35,11 +36,11 @@ npm i html-to-text
 
 ```typescript
 import { compile } from "html-to-text";
-import { RecursiveUrlLoader } from "langchain/document_loaders/web/recursive_url_loader";
+import { RecursiveUrlLoader } from "langchain/document_loaders/web/recursive_url";
 
 const url = "https://js.langchain.com/docs/get_started/introduction";
 
-const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string;) => string;
+const compiledConvert = compile({ wordwrap: 130 }); // returns (text: string) => string;
 
 const loader = new RecursiveUrlLoader(url, {
   extractor: compiledConvert,
