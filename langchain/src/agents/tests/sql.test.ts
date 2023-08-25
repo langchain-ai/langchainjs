@@ -113,3 +113,19 @@ test("QueryCheckerTool", async () => {
   expect(queryCheckerTool.llmChain).not.toBeNull();
   expect(queryCheckerTool.llmChain.inputKeys).toEqual(["query"]);
 });
+
+test("ListTablesSqlTool with include tables", async () => {
+  const includesTables = ["users"];
+  db.includesTables = includesTables;
+  const listSqlTool = new ListTablesSqlTool(db);
+  const result = await listSqlTool.call("");
+  expect(result).toBe("users");
+});
+
+test("ListTablesSqlTool with ignore tables", async () => {
+  const ignoreTables = ["products"];
+  db.ignoreTables = ignoreTables;
+  const listSqlTool = new ListTablesSqlTool(db);
+  const result = await listSqlTool.call("");
+  expect(result).toBe("users");
+});

@@ -212,6 +212,8 @@ const entrypoints = {
   // storage
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  // hub
+  "hub": "hub",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -352,6 +354,7 @@ const requiresOptionalDependency = [
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  "hub",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 
