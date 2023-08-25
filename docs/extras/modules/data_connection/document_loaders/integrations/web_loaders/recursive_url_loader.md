@@ -17,6 +17,20 @@ We do this using the RecursiveUrlLoader.
 
 This also gives us the flexibility to exclude some children, customize the extractor, and more.
 
+## Setup
+
+To get started, you'll need to install the `jsdom` package:
+
+```bash npm2yarn
+npm i jsdom
+```
+
+We also suggest adding a package like `html-to-text` for extracting the raw text from the page.
+
+```bash npm2yarn
+npm i html-to-text
+```
+
 ## Usage
 
 ```typescript
