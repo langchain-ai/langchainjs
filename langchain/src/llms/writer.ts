@@ -11,7 +11,7 @@ export interface WriterInput extends BaseLLMParams {
   apiKey?: string;
 
   /** Writer organization ID */
-  orgId?: number;
+  orgId?: string | number;
 
   /** Model to use */
   model?: string;
