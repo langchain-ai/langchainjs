@@ -5,14 +5,13 @@ import {
   AgentFinish,
   BaseMessage,
   ChainValues,
-  ChatGenerationChunk,
-  GenerationChunk,
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
 import {
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
+  HandleLLMNewTokenCallbackFields,
   NewTokenIndices,
 } from "../base.js";
 import { Document } from "../../document.js";
@@ -441,8 +440,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   async handleLLMNewToken(
     token: string,
     idx: NewTokenIndices,
-    chunk: GenerationChunk | ChatGenerationChunk | undefined,
-    runId: string
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
   ): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
@@ -451,7 +452,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.events.push({
       name: "new_token",
       time: Date.now(),
-      kwargs: { token, idx, chunk },
+      kwargs: { token, idx, chunk: fields?.chunk },
     });
     await this.onLLMNewToken?.(run);
   }

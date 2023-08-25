@@ -422,7 +422,10 @@ export class ChatOpenAI
           prompt: 0,
           completion: choice.index,
         },
-        generationChunk
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
       );
     }
   }
@@ -621,7 +624,10 @@ export class ChatOpenAI
                           prompt: options.promptIndex ?? 0,
                           completion: part.index,
                         },
-                        generationChunk
+                        undefined,
+                        undefined,
+                        undefined,
+                        { chunk: generationChunk }
                       );
                     }
                   }
