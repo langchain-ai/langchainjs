@@ -37,7 +37,7 @@ export interface ColumnMap {
 /**
  * Type of metric used in the MyScale database.
  */
-export type metric = "ip" | "cosine" | "l2";
+export type metric = "L2" | "Cosine" | "IP";
 
 /**
  * Type for filtering search results in the MyScale database.
@@ -88,7 +88,7 @@ export class MyScaleStore extends VectorStore {
     };
     this.database = args.database || "default";
     this.table = args.table || "vector_table";
-    this.metric = args.metric || "cosine";
+    this.metric = args.metric || "Cosine";
 
     this.client = createClient({
       host: `${args.protocol ?? "https://"}${args.host}:${args.port}`,
@@ -300,7 +300,7 @@ export class MyScaleStore extends VectorStore {
     k: number,
     filter?: MyScaleFilter
   ): string {
-    const order = this.metric === "ip" ? "DESC" : "ASC";
+    const order = this.metric === "IP" ? "DESC" : "ASC";
 
     const whereStr = filter ? `PREWHERE ${filter.whereStr}` : "";
     return `
