@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import { MongoClient, ObjectId } from "mongodb";
 import { MongoDBChatMessageHistory } from "../message/mongodb.js";
 import { AIMessage, HumanMessage } from "../../schema/index.js";
@@ -6,14 +8,18 @@ import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 afterAll(async () => {
-  const client = new MongoClient("mongodb://127.0.0.1:27017");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
   await client.connect();
   await client.db("langchain").dropDatabase();
   await client.close();
 });
 
-test.skip("Test MongoDB history store", async () => {
-  const client = new MongoClient("mongodb://127.0.0.1:27017");
+test("Test MongoDB history store", async () => {
+  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
   await client.connect();
   const collection = client.db("langchain").collection("memory");
 
@@ -40,8 +46,11 @@ test.skip("Test MongoDB history store", async () => {
   await client.close();
 });
 
-test.skip("Test clear MongoDB history store", async () => {
-  const client = new MongoClient("mongodb://127.0.0.1:27017");
+test("Test clear MongoDB history store", async () => {
+  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
   await client.connect();
   const collection = client.db("langchain").collection("memory");
 
@@ -70,8 +79,11 @@ test.skip("Test clear MongoDB history store", async () => {
   await client.close();
 });
 
-test.skip("Test MongoDB memory with Buffer Memory", async () => {
-  const client = new MongoClient("mongodb://127.0.0.1:27017");
+test("Test MongoDB memory with Buffer Memory", async () => {
+  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
   await client.connect();
   const collection = client.db("langchain").collection("memory");
   const sessionId = new ObjectId().toString();
@@ -99,8 +111,11 @@ test.skip("Test MongoDB memory with Buffer Memory", async () => {
   await client.close();
 });
 
-test.skip("Test MongoDB memory with LLM Chain", async () => {
-  const client = new MongoClient("mongodb://127.0.0.1:27017");
+test("Test MongoDB memory with LLM Chain", async () => {
+  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
   await client.connect();
   const collection = client.db("langchain").collection("memory");
   const sessionId = new ObjectId().toString();
