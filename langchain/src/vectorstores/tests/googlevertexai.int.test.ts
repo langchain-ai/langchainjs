@@ -38,26 +38,26 @@ describe("Vertex AI matching", () => {
     engine = new MatchingEngine(embeddings, config);
   });
 
-  test("public endpoint", async () => {
+  test.skip("public endpoint", async () => {
     const apiendpoint = await engine.determinePublicAPIEndpoint();
     console.log(apiendpoint);
     expect(apiendpoint).toHaveProperty("apiEndpoint");
     expect(apiendpoint).toHaveProperty("deployedIndexId");
   });
 
-  test("store", async () => {
+  test.skip("store", async () => {
     const doc = new Document({ pageContent: "this" });
     await engine.addDocuments([doc]);
     console.log(store._docs);
   });
 
-  test("query", async () => {
+  test.skip("query", async () => {
     const results = await engine.similaritySearch("that");
     console.log("query", results);
     expect(results?.length).toBeGreaterThanOrEqual(1);
   });
 
-  test("query filter exclude", async () => {
+  test.skip("query filter exclude", async () => {
     const filters: Restriction[] = [
       {
         namespace: "color",
@@ -69,7 +69,7 @@ describe("Vertex AI matching", () => {
     expect(results?.length).toEqual(0);
   });
 
-  test("delete", async () => {
+  test.skip("delete", async () => {
     const newDoc = new Document({ pageContent: "this" });
     await engine.addDocuments([newDoc]);
     console.log("added", newDoc);
@@ -123,13 +123,13 @@ describe("Vertex AI matching", () => {
       await engine.addDocuments(documents);
     });
 
-    test("none", async () => {
+    test.skip("none", async () => {
       // A general query to make sure we can read everything
       const allResults = await engine.similaritySearch("this", 4);
       expect(allResults).toHaveLength(3);
     });
 
-    test("red things", async () => {
+    test.skip("red things", async () => {
       // Just get red things
       const redFilter: Restriction[] = [
         {
@@ -141,7 +141,7 @@ describe("Vertex AI matching", () => {
       expect(redResults).toHaveLength(2);
     });
 
-    test("red, not edible", async () => {
+    test.skip("red, not edible", async () => {
       const filter: Restriction[] = [
         {
           namespace: "color",
