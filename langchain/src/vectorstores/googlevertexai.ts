@@ -506,8 +506,8 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
    * @param documentMetadata - The metadata from a document
    * @returns a Restriction[] (or an array of a subclass, from the FilterType)
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadataToRestrictions(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     documentMetadata: Record<string, any>
   ): this["FilterType"] {
     const metadata = this.cleanMetadata(documentMetadata);

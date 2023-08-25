@@ -20,6 +20,7 @@ export {
 
 export {
   CallbackManager,
+  CallbackManagerForRetrieverRun,
   CallbackManagerForChainRun,
   CallbackManagerForLLMRun,
   CallbackManagerForToolRun,

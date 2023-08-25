@@ -289,6 +289,9 @@ document_loaders/web/notiondb.d.ts
 document_loaders/web/notionapi.cjs
 document_loaders/web/notionapi.js
 document_loaders/web/notionapi.d.ts
+document_loaders/web/recursive_url.cjs
+document_loaders/web/recursive_url.js
+document_loaders/web/recursive_url.d.ts
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
@@ -523,6 +526,9 @@ storage/in_memory.d.ts
 storage/ioredis.cjs
 storage/ioredis.js
 storage/ioredis.d.ts
+hub.cjs
+hub.js
+hub.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts

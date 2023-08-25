@@ -120,6 +120,7 @@ const entrypoints = {
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/notionapi": "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url": "document_loaders/web/recursive_url",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
@@ -212,6 +213,8 @@ const entrypoints = {
   // storage
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  // hub
+  "hub": "hub",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -304,6 +307,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
   "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url",
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
@@ -352,6 +356,7 @@ const requiresOptionalDependency = [
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  "hub",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 

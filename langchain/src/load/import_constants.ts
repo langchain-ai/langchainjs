@@ -67,6 +67,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/web/github",
   "langchain/document_loaders/web/notiondb",
   "langchain/document_loaders/web/notionapi",
+  "langchain/document_loaders/web/recursive_url",
   "langchain/document_loaders/web/s3",
   "langchain/document_loaders/web/sonix_audio",
   "langchain/document_loaders/web/confluence",
@@ -113,5 +114,6 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/planetscale",
   "langchain/stores/message/xata",
   "langchain/storage/ioredis",
+  "langchain/hub",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
 ];
