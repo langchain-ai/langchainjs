@@ -416,7 +416,14 @@ export class ChatOpenAI
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+      void runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        {
+          prompt: 0,
+          completion: choice.index,
+        },
+        generationChunk
+      );
     }
   }
 
@@ -599,10 +606,23 @@ export class ChatOpenAI
                           part.delta?.function_call?.arguments ?? "";
                       }
 
-                      void runManager?.handleLLMNewToken(part.delta?.content ?? "", {
-                        prompt: options.promptIndex ?? 0,
-                        completion: part.index,
-                      }, choice.message.function_call);
+                      const chunk = _convertDeltaToMessageChunk(
+                        part.delta,
+                        "assistant"
+                      );
+                      const generationChunk = new ChatGenerationChunk({
+                        message: chunk,
+                        text: chunk.content,
+                      });
+
+                      void runManager?.handleLLMNewToken(
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        },
+                        generationChunk
+                      );
                     }
                   }
                   // when all messages are finished, resolve

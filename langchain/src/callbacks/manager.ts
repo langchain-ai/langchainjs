@@ -4,12 +4,13 @@ import {
   AgentFinish,
   BaseMessage,
   ChainValues,
+  ChatGenerationChunk,
+  GenerationChunk,
   LLMResult,
 } from "../schema/index.js";
 import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
-  NewChunk,
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
@@ -199,7 +200,7 @@ export class CallbackManagerForLLMRun
   async handleLLMNewToken(
     token: string,
     idx: NewTokenIndices = { prompt: 0, completion: 0 },
-    chunk: NewChunk | undefined = undefined
+    chunk: GenerationChunk | ChatGenerationChunk | undefined = undefined
   ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>

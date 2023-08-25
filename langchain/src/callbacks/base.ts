@@ -4,6 +4,8 @@ import {
   AgentFinish,
   BaseMessage,
   ChainValues,
+  ChatGenerationChunk,
+  GenerationChunk,
   LLMResult,
 } from "../schema/index.js";
 import {
@@ -40,15 +42,6 @@ export interface NewTokenIndices {
 }
 
 /**
- * Interface for the chunk produced by an LLM or Chat
- * Model in streaming mode.
- */
-export interface NewChunk {
-  name?: string;
-  arguments?: string;
-}
-
-/**
  * Abstract class that provides a set of optional methods that can be
  * overridden in derived classes to handle various events during the
  * execution of a LangChain application.
@@ -80,7 +73,7 @@ abstract class BaseCallbackHandlerMethodsClass {
      *   (if multiple completions per prompt are requested)
      */
     idx: NewTokenIndices,
-    chunk: NewChunk | undefined,
+    chunk: GenerationChunk | ChatGenerationChunk | undefined,
     runId: string,
     parentRunId?: string,
     tags?: string[]
