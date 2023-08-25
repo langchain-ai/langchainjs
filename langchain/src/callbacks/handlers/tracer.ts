@@ -11,6 +11,7 @@ import { Serialized } from "../../load/serializable.js";
 import {
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
+  NewChunk,
   NewTokenIndices,
 } from "../base.js";
 import { Document } from "../../document.js";
@@ -439,6 +440,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   async handleLLMNewToken(
     token: string,
     idx: NewTokenIndices,
+    chunk: NewChunk | undefined,
     runId: string
   ): Promise<void> {
     const run = this.runMap.get(runId);
@@ -448,7 +450,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.events.push({
       name: "new_token",
       time: Date.now(),
-      kwargs: { token, idx },
+      kwargs: { token, idx, chunk },
     });
     await this.onLLMNewToken?.(run);
   }

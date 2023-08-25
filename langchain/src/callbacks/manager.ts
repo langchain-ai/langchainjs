@@ -9,6 +9,7 @@ import {
 import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
+  NewChunk,
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
@@ -197,7 +198,8 @@ export class CallbackManagerForLLMRun
 {
   async handleLLMNewToken(
     token: string,
-    idx: NewTokenIndices = { prompt: 0, completion: 0 }
+    idx: NewTokenIndices = { prompt: 0, completion: 0 },
+    chunk: NewChunk | undefined = undefined
   ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -207,6 +209,7 @@ export class CallbackManagerForLLMRun
               await handler.handleLLMNewToken?.(
                 token,
                 idx,
+                chunk,
                 this.runId,
                 this._parentRunId,
                 this.tags
@@ -214,36 +217,6 @@ export class CallbackManagerForLLMRun
             } catch (err) {
               console.error(
                 `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
-              );
-            }
-          }
-        }, handler.awaitHandlers)
-      )
-    );
-  }
-
-  async handleEvent(
-    event: {
-      token: string;
-      functionCall?: { name?: string; arguments?: string };
-    },
-    idx: NewTokenIndices = { prompt: 0, completion: 0 }
-  ) {
-    await Promise.all(
-      this.handlers.map((handler) =>
-        consumeCallback(async () => {
-          if (!handler.ignoreLLM) {
-            try {
-              await handler.handleEvent?.(
-                event,
-                idx,
-                this.runId,
-                this._parentRunId,
-                this.tags
-              );
-            } catch (err) {
-              console.error(
-                `Error in handler ${handler.constructor.name}, handleEvent: ${err}`
               );
             }
           }

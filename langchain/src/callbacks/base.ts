@@ -40,6 +40,15 @@ export interface NewTokenIndices {
 }
 
 /**
+ * Interface for the chunk produced by an LLM or Chat
+ * Model in streaming mode.
+ */
+export interface NewChunk {
+  name?: string;
+  arguments?: string;
+}
+
+/**
  * Abstract class that provides a set of optional methods that can be
  * overridden in derived classes to handle various events during the
  * execution of a LangChain application.
@@ -71,20 +80,7 @@ abstract class BaseCallbackHandlerMethodsClass {
      *   (if multiple completions per prompt are requested)
      */
     idx: NewTokenIndices,
-    runId: string,
-    parentRunId?: string,
-    tags?: string[]
-  ): Promise<void> | void;
-
-  /**
-   * Called when an LLM/ChatModel in `streaming` mode produces a new event
-   */
-  handleEvent?(
-    event: {
-      token: string;
-      functionCall?: { name?: string; arguments?: string };
-    },
-    idx: NewTokenIndices,
+    chunk: NewChunk | undefined,
     runId: string,
     parentRunId?: string,
     tags?: string[]

@@ -599,18 +599,10 @@ export class ChatOpenAI
                           part.delta?.function_call?.arguments ?? "";
                       }
 
-                      const idx = {
+                      void runManager?.handleLLMNewToken(part.delta?.content ?? "", {
                         prompt: options.promptIndex ?? 0,
                         completion: part.index,
-                      };
-
-                      const token = part.delta?.content ?? "";
-
-                      void runManager?.handleLLMNewToken(token, idx);
-                      void runManager?.handleEvent(
-                        { token, functionCall: choice.message.function_call },
-                        idx
-                      );
+                      }, choice.message.function_call);
                     }
                   }
                   // when all messages are finished, resolve
