@@ -99,6 +99,10 @@ declare interface MinimaxChatInput {
    * from 1.0 to 2.0. Defaults to 1.0.
    */
   skipInfoMask?: boolean;
+
+  basePath?: string;
+
+  proVersion?: boolean;
 }
 
 /**
@@ -183,11 +187,15 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
 
   apiUrl: string;
 
+  basePath?: string = "https://api.minimax.chat/v1";
+
   temperature?: number | undefined;
 
   topP?: number | undefined;
 
   skipInfoMask?: boolean | undefined;
+
+  proVersion?: boolean = false;
 
   constructor(fields?: Partial<MinimaxChatInput> & BaseChatModelParams) {
     super(fields ?? {});
@@ -211,7 +219,10 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
     this.skipInfoMask = fields?.skipInfoMask ?? this.skipInfoMask;
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.apiUrl = `https://api.minimax.chat/v1/text/chatcompletion`;
+    this.basePath = fields?.basePath ?? this.basePath;
+    this.proVersion = fields?.proVersion ?? this.proVersion;
+    const modelCompletion = this.proVersion  ? "chatcompletion_pro" : "chatcompletion";
+    this.apiUrl = `${this.basePath}/text/${modelCompletion}`;
   }
 
   /**
@@ -370,6 +381,9 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
         signal,
       });
 
+      console.log("url:", url);
+      console.log("request:", request);
+      console.log("response:", response);
       if (!stream) {
         return response.json();
       } else {

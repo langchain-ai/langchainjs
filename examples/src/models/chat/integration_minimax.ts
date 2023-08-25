@@ -4,23 +4,19 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // Default model is abab5-chat
-const ernieTurbo = new ChatMinimax({
-  minimaxApiKey:process.env.MINIMAX_API_KEY, // In Node.js defaults to process.env.MINIMAX_API_KEY
-  minimaxGroupId:process.env.MINIMAX_GROUP_ID, // In Node.js defaults to process.env.MINIMAX_GROUP_ID
+// const abab5 = new ChatMinimax({
+//   verbose: true,
+// });
+
+// Use ERNIE-Bot
+const abab5_5= new ChatMinimax({
+  modelName: "abab5-chat",
   verbose: true,
 });
 
-// Use ERNIE-Bot
-// const ernie = new ChatBaiduWenxin({
-//   modelName: "ERNIE-Bot",
-//   temperature: 1, // Only ERNIE-Bot supports temperature
-//   baiduApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.BAIDU_API_KEY
-//   baiduSecretKey: "YOUR-SECRET-KEY", // In Node.js defaults to process.env.BAIDU_SECRET_KEY
-// });
-
 const messages = [new HumanMessage("Hello")];
 
-let res = await ernieTurbo.call(messages);
+let res = await abab5_5.call(messages);
 console.log(res);
 
 /*
