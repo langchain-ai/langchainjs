@@ -1,6 +1,9 @@
 import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
+/**
+ * Interface for the results returned by the Searxng search.
+ */
 interface SearxngResults {
   query: string;
   number_of_results: number;
@@ -32,6 +35,9 @@ interface SearxngResults {
   unresponsive_engines: Array<string>;
 }
 
+/**
+ * Interface for custom headers used in the Searxng search.
+ */
 interface SearxngCustomHeaders {
   [key: string]: string;
 }
@@ -87,6 +93,10 @@ interface SearxngSearchParams {
  * note: works best with *agentType*: `structured-chat-zero-shot-react-description`
  * https://github.com/searxng/searxng */
 export class SearxngSearch extends Tool {
+  static lc_name() {
+    return "SearxngSearch";
+  }
+
   name = "searxng-search";
 
   description =
@@ -153,6 +163,13 @@ export class SearxngSearch extends Tool {
     }
   }
 
+  /**
+   * Builds the URL for the Searxng search.
+   * @param path The path for the URL.
+   * @param parameters The parameters for the URL.
+   * @param baseUrl The base URL.
+   * @returns The complete URL as a string.
+   */
   protected buildUrl<P extends SearxngSearchParams>(
     path: string,
     parameters: P,

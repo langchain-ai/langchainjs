@@ -7,7 +7,7 @@ import {
   ChatResult,
   LLMResult,
 } from "../schema/index.js";
-import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
@@ -24,11 +24,19 @@ export interface ChatExample {
   output: BaseMessage;
 }
 
+/**
+ * Represents a single example exchange in the Google Vertex AI chat
+ * model.
+ */
 interface GoogleVertexAIChatExample {
   input: GoogleVertexAIChatMessage;
   output: GoogleVertexAIChatMessage;
 }
 
+/**
+ * Represents the author of a chat message in the Google Vertex AI chat
+ * model.
+ */
 export type GoogleVertexAIChatAuthor =
   | "user" // Represents the human for Code and CodeChat models
   | "bot" // Represents the AI for Code models
@@ -41,6 +49,9 @@ export type GoogleVertexAIChatMessageFields = {
   name?: string;
 };
 
+/**
+ * Represents a chat message in the Google Vertex AI chat model.
+ */
 export class GoogleVertexAIChatMessage {
   public author?: GoogleVertexAIChatAuthor;
 
@@ -54,6 +65,12 @@ export class GoogleVertexAIChatMessage {
     this.name = fields.name;
   }
 
+  /**
+   * Extracts the role of a generic message and maps it to a Google Vertex
+   * AI chat author.
+   * @param message The chat message to extract the role from.
+   * @returns The role of the message mapped to a Google Vertex AI chat author.
+   */
   static extractGenericMessageCustomRole(message: ChatMessage) {
     if (
       message.role !== "system" &&
@@ -67,6 +84,12 @@ export class GoogleVertexAIChatMessage {
     return message.role as GoogleVertexAIChatAuthor;
   }
 
+  /**
+   * Maps a message type to a Google Vertex AI chat author.
+   * @param message The message to map.
+   * @param model The model to use for mapping.
+   * @returns The message type mapped to a Google Vertex AI chat author.
+   */
   static mapMessageTypeToVertexChatAuthor(
     message: BaseMessage,
     model: string
@@ -93,6 +116,12 @@ export class GoogleVertexAIChatMessage {
     }
   }
 
+  /**
+   * Creates a new Google Vertex AI chat message from a base message.
+   * @param message The base message to convert.
+   * @param model The model to use for conversion.
+   * @returns A new Google Vertex AI chat message.
+   */
   static fromChatMessage(message: BaseMessage, model: string) {
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
@@ -104,17 +133,26 @@ export class GoogleVertexAIChatMessage {
   }
 }
 
+/**
+ * Represents an instance of the Google Vertex AI chat model.
+ */
 export interface GoogleVertexAIChatInstance {
   context?: string;
   examples?: GoogleVertexAIChatExample[];
   messages: GoogleVertexAIChatMessage[];
 }
 
+/**
+ * Defines the prediction output of the Google Vertex AI chat model.
+ */
 export interface GoogleVertexAIChatPrediction
   extends GoogleVertexAIBasePrediction {
   candidates: GoogleVertexAIChatMessage[];
 }
 
+/**
+ * Defines the input to the Google Vertex AI chat model.
+ */
 export interface GoogleVertexAIChatInput extends GoogleVertexAIBaseLLMInput {
   /** Instructions how the model should respond */
   context?: string;
@@ -141,6 +179,12 @@ export class ChatGoogleVertexAI
   extends BaseChatModel
   implements GoogleVertexAIChatInput
 {
+  static lc_name() {
+    return "ChatGoogleVertexAI";
+  }
+
+  lc_serializable = true;
+
   model = "chat-bison";
 
   temperature = 0.2;
@@ -153,7 +197,7 @@ export class ChatGoogleVertexAI
 
   examples: ChatExample[] = [];
 
-  connection: GoogleVertexAIConnection<
+  connection: GoogleVertexAILLMConnection<
     BaseLanguageModelCallOptions,
     GoogleVertexAIChatInstance,
     GoogleVertexAIChatPrediction
@@ -169,7 +213,7 @@ export class ChatGoogleVertexAI
     this.topK = fields?.topK ?? this.topK;
     this.examples = fields?.examples ?? this.examples;
 
-    this.connection = new GoogleVertexAIConnection(
+    this.connection = new GoogleVertexAILLMConnection(
       {
         ...fields,
         ...this,
@@ -216,6 +260,11 @@ export class ChatGoogleVertexAI
     return "googlevertexai";
   }
 
+  /**
+   * Creates an instance of the Google Vertex AI chat model.
+   * @param messages The messages for the model instance.
+   * @returns A new instance of the Google Vertex AI chat model.
+   */
   createInstance(messages: BaseMessage[]): GoogleVertexAIChatInstance {
     let context = "";
     let conversationMessages = messages;
@@ -271,6 +320,12 @@ export class ChatGoogleVertexAI
     return instance;
   }
 
+  /**
+   * Converts a prediction from the Google Vertex AI chat model to a chat
+   * generation.
+   * @param prediction The prediction to convert.
+   * @returns The converted chat generation.
+   */
   static convertPrediction(
     prediction: GoogleVertexAIChatPrediction
   ): ChatGeneration {

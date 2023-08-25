@@ -290,6 +290,10 @@ type UrlParameters = Record<
  * To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY environment variable set.
  */
 export class SerpAPI extends Tool {
+  static lc_name() {
+    return "SerpAPI";
+  }
+
   toJSON() {
     return this.toJSONNotImplemented();
   }
@@ -320,6 +324,13 @@ export class SerpAPI extends Tool {
 
   name = "search";
 
+  /**
+   * Builds a URL for the SerpAPI request.
+   * @param path The path for the request.
+   * @param parameters The parameters for the request.
+   * @param baseUrl The base URL for the request.
+   * @returns A string representing the built URL.
+   */
   protected buildUrl<P extends UrlParameters>(
     path: string,
     parameters: P,

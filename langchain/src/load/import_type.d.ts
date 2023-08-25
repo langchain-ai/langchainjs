@@ -61,6 +61,9 @@ export interface OptionalImportMap {
   "langchain/llms/hf"?:
     | typeof import("../llms/hf.js")
     | Promise<typeof import("../llms/hf.js")>;
+  "langchain/llms/raycast"?:
+    | typeof import("../llms/raycast.js")
+    | Promise<typeof import("../llms/raycast.js")>;
   "langchain/llms/replicate"?:
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
@@ -73,6 +76,9 @@ export interface OptionalImportMap {
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
+  "langchain/llms/bedrock"?:
+    | typeof import("../llms/bedrock.js")
+    | Promise<typeof import("../llms/bedrock.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
@@ -85,6 +91,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
+  "langchain/vectorstores/googlevertexai"?:
+    | typeof import("../vectorstores/googlevertexai.js")
+    | Promise<typeof import("../vectorstores/googlevertexai.js")>;
   "langchain/vectorstores/hnswlib"?:
     | typeof import("../vectorstores/hnswlib.js")
     | Promise<typeof import("../vectorstores/hnswlib.js")>;
@@ -139,6 +148,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/usearch"?:
     | typeof import("../vectorstores/usearch.js")
     | Promise<typeof import("../vectorstores/usearch.js")>;
+  "langchain/vectorstores/zep"?:
+    | typeof import("../vectorstores/zep.js")
+    | Promise<typeof import("../vectorstores/zep.js")>;
   "langchain/memory/zep"?:
     | typeof import("../memory/zep.js")
     | Promise<typeof import("../memory/zep.js")>;
@@ -187,6 +199,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notionapi"?:
     | typeof import("../document_loaders/web/notionapi.js")
     | Promise<typeof import("../document_loaders/web/notionapi.js")>;
+  "langchain/document_loaders/web/recursive_url"?:
+    | typeof import("../document_loaders/web/recursive_url.js")
+    | Promise<typeof import("../document_loaders/web/recursive_url.js")>;
   "langchain/document_loaders/web/s3"?:
     | typeof import("../document_loaders/web/s3.js")
     | Promise<typeof import("../document_loaders/web/s3.js")>;
@@ -196,6 +211,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/confluence"?:
     | typeof import("../document_loaders/web/confluence.js")
     | Promise<typeof import("../document_loaders/web/confluence.js")>;
+  "langchain/document_loaders/web/youtube"?:
+    | typeof import("../document_loaders/web/youtube.js")
+    | Promise<typeof import("../document_loaders/web/youtube.js")>;
   "langchain/document_loaders/fs/directory"?:
     | typeof import("../document_loaders/fs/directory.js")
     | Promise<typeof import("../document_loaders/fs/directory.js")>;
@@ -232,6 +250,9 @@ export interface OptionalImportMap {
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
+  "langchain/document_transformers/mozilla_readability"?:
+    | typeof import("../document_transformers/mozilla_readability.js")
+    | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;
@@ -313,6 +334,15 @@ export interface OptionalImportMap {
   "langchain/stores/message/planetscale"?:
     | typeof import("../stores/message/planetscale.js")
     | Promise<typeof import("../stores/message/planetscale.js")>;
+  "langchain/stores/message/xata"?:
+    | typeof import("../stores/message/xata.js")
+    | Promise<typeof import("../stores/message/xata.js")>;
+  "langchain/storage/ioredis"?:
+    | typeof import("../storage/ioredis.js")
+    | Promise<typeof import("../storage/ioredis.js")>;
+  "langchain/hub"?:
+    | typeof import("../hub.js")
+    | Promise<typeof import("../hub.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
@@ -336,6 +366,7 @@ export interface SecretMap {
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
   OPENAI_API_KEY?: string;
+  OPENAI_ORGANIZATION?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;

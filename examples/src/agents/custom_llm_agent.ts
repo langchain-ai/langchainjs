@@ -72,7 +72,7 @@ class CustomPromptTemplate extends BaseStringPromptTemplate {
     return Promise.resolve(renderTemplate(template, "f-string", newInput));
   }
 
-  partial(_values: PartialValues): Promise<BasePromptTemplate> {
+  partial(_values: PartialValues): Promise<BaseStringPromptTemplate> {
     throw new Error("Not implemented");
   }
 

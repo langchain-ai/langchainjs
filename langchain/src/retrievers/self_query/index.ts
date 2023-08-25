@@ -13,44 +13,64 @@ import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
-export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
-  vectorStore: VectorStore;
-  structuredQueryTranslator: BaseTranslator;
+/**
+ * Interface for the arguments required to create a SelfQueryRetriever
+ * instance. It extends the BaseRetrieverInput interface.
+ */
+export interface SelfQueryRetrieverArgs<T extends VectorStore>
+  extends BaseRetrieverInput {
+  vectorStore: T;
+  structuredQueryTranslator: BaseTranslator<T>;
   llmChain: LLMChain;
   verbose?: boolean;
+  useOriginalQuery?: boolean;
   searchParams?: {
     k?: number;
-    filter?: VectorStore["FilterType"];
+    filter?: T["FilterType"];
+    mergeFiltersOperator?: "or" | "and" | "replace";
   };
 }
-export class SelfQueryRetriever
+
+/**
+ * Class for question answering over an index. It retrieves relevant
+ * documents based on a query. It extends the BaseRetriever class and
+ * implements the SelfQueryRetrieverArgs interface.
+ */
+export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever
-  implements SelfQueryRetrieverArgs
+  implements SelfQueryRetrieverArgs<T>
 {
+  static lc_name() {
+    return "SelfQueryRetriever";
+  }
+
   get lc_namespace() {
     return ["langchain", "retrievers", "self_query"];
   }
 
-  vectorStore: VectorStore;
+  vectorStore: T;
 
   llmChain: LLMChain;
 
   verbose?: boolean;
 
-  structuredQueryTranslator: BaseTranslator;
+  structuredQueryTranslator: BaseTranslator<T>;
+
+  useOriginalQuery = false;
 
   searchParams?: {
     k?: number;
-    filter?: VectorStore["FilterType"];
+    filter?: T["FilterType"];
+    mergeFiltersOperator?: "or" | "and" | "replace";
   } = { k: 4 };
 
-  constructor(options: SelfQueryRetrieverArgs) {
+  constructor(options: SelfQueryRetrieverArgs<T>) {
     super(options);
     this.vectorStore = options.vectorStore;
     this.llmChain = options.llmChain;
     this.verbose = options.verbose ?? false;
     this.searchParams = options.searchParams ?? this.searchParams;
-
+    this.useOriginalQuery = options.useOriginalQuery ?? this.useOriginalQuery;
     this.structuredQueryTranslator = options.structuredQueryTranslator;
   }
 
@@ -65,31 +85,50 @@ export class SelfQueryRetriever
       runManager?.getChild("llm_chain")
     );
 
+    const generatedStructuredQuery = output as StructuredQuery;
+
     const nextArg = this.structuredQueryTranslator.visitStructuredQuery(
-      output as StructuredQuery
+      generatedStructuredQuery
     );
 
-    if (nextArg.filter) {
-      return this.vectorStore.similaritySearch(
-        query,
-        this.searchParams?.k,
-        nextArg.filter,
-        runManager?.getChild("vectorstore")
-      );
+    const filter = this.structuredQueryTranslator.mergeFilters(
+      this.searchParams?.filter,
+      nextArg.filter,
+      this.searchParams?.mergeFiltersOperator
+    );
+
+    const generatedQuery = generatedStructuredQuery.query;
+    let myQuery = query;
+
+    if (!this.useOriginalQuery && generatedQuery && generatedQuery.length > 0) {
+      myQuery = generatedQuery;
+    }
+
+    if (!filter) {
+      return [];
     } else {
       return this.vectorStore.similaritySearch(
-        query,
+        myQuery,
         this.searchParams?.k,
-        this.searchParams?.filter,
+        filter,
         runManager?.getChild("vectorstore")
       );
     }
   }
 
-  static fromLLM(
+  /**
+   * Static method to create a new SelfQueryRetriever instance from a
+   * BaseLanguageModel and a VectorStore. It first loads a query constructor
+   * chain using the loadQueryConstructorChain function, then creates a new
+   * SelfQueryRetriever instance with the loaded chain and the provided
+   * options.
+   * @param options The options used to create the SelfQueryRetriever instance. It includes the QueryConstructorChainOptions and all the SelfQueryRetrieverArgs except 'llmChain'.
+   * @returns A new instance of SelfQueryRetriever.
+   */
+  static fromLLM<T extends VectorStore>(
     options: QueryConstructorChainOptions &
-      Omit<SelfQueryRetrieverArgs, "llmChain">
-  ): SelfQueryRetriever {
+      Omit<SelfQueryRetrieverArgs<T>, "llmChain">
+  ): SelfQueryRetriever<T> {
     const {
       structuredQueryTranslator,
       allowedComparators,
@@ -111,7 +150,7 @@ export class SelfQueryRetriever
       allowedOperators:
         allowedOperators ?? structuredQueryTranslator.allowedOperators,
     });
-    return new SelfQueryRetriever({
+    return new SelfQueryRetriever<T>({
       ...rest,
       llmChain,
       vectorStore,

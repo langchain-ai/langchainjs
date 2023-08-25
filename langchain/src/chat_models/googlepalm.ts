@@ -11,6 +11,9 @@ import {
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
+/**
+ * An interface defining the input to the ChatGooglePaLM class.
+ */
 export interface GooglePaLMChatInput extends BaseChatModelParams {
   /**
    * Model Name to use
@@ -73,10 +76,19 @@ function getMessageAuthor(message: BaseMessage) {
   return message.name ?? type;
 }
 
+/**
+ * A class that wraps the Google Palm chat model.
+ */
 export class ChatGooglePaLM
   extends BaseChatModel
   implements GooglePaLMChatInput
 {
+  static lc_name() {
+    return "ChatGooglePaLM";
+  }
+
+  lc_serializable = true;
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "GOOGLE_PALM_API_KEY",

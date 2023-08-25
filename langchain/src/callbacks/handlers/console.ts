@@ -25,15 +25,31 @@ function elapsed(run: Run): string {
 
 const { color } = styles;
 
+/**
+ * A tracer that logs all events to the console. It extends from the
+ * `BaseTracer` class and overrides its methods to provide custom logging
+ * functionality.
+ */
 export class ConsoleCallbackHandler extends BaseTracer {
   name = "console_callback_handler" as const;
 
+  /**
+   * Method used to persist the run. In this case, it simply returns a
+   * resolved promise as there's no persistence logic.
+   * @param _run The run to persist.
+   * @returns A resolved promise.
+   */
   protected persistRun(_run: Run) {
     return Promise.resolve();
   }
 
   // utility methods
 
+  /**
+   * Method used to get all the parent runs of a given run.
+   * @param run The run whose parents are to be retrieved.
+   * @returns An array of parent runs.
+   */
   getParents(run: Run) {
     const parents: Run[] = [];
     let currentRun = run;
@@ -49,6 +65,12 @@ export class ConsoleCallbackHandler extends BaseTracer {
     return parents;
   }
 
+  /**
+   * Method used to get a string representation of the run's lineage, which
+   * is used in logging.
+   * @param run The run whose lineage is to be retrieved.
+   * @returns A string representation of the run's lineage.
+   */
   getBreadcrumbs(run: Run) {
     const parents = this.getParents(run).reverse();
     const string = [...parents, run]
@@ -62,6 +84,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
 
   // logging methods
 
+  /**
+   * Method used to log the start of a chain run.
+   * @param run The chain run that has started.
+   * @returns void
+   */
   onChainStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -75,6 +102,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the end of a chain run.
+   * @param run The chain run that has ended.
+   * @returns void
+   */
   onChainEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -87,6 +119,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log any errors of a chain run.
+   * @param run The chain run that has errored.
+   * @returns void
+   */
   onChainError(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -99,6 +136,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the start of an LLM run.
+   * @param run The LLM run that has started.
+   * @returns void
+   */
   onLLMStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     const inputs =
@@ -116,6 +158,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the end of an LLM run.
+   * @param run The LLM run that has ended.
+   * @returns void
+   */
   onLLMEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -128,6 +175,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log any errors of an LLM run.
+   * @param run The LLM run that has errored.
+   * @returns void
+   */
   onLLMError(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -137,6 +189,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the start of a tool run.
+   * @param run The tool run that has started.
+   * @returns void
+   */
   onToolStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -147,6 +204,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the end of a tool run.
+   * @param run The tool run that has ended.
+   * @returns void
+   */
   onToolEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -156,6 +218,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log any errors of a tool run.
+   * @param run The tool run that has errored.
+   * @returns void
+   */
   onToolError(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -168,6 +235,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the start of a retriever run.
+   * @param run The retriever run that has started.
+   * @returns void
+   */
   onRetrieverStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -181,6 +253,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the end of a retriever run.
+   * @param run The retriever run that has ended.
+   * @returns void
+   */
   onRetrieverEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -193,6 +270,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log any errors of a retriever run.
+   * @param run The retriever run that has errored.
+   * @returns void
+   */
   onRetrieverError(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
@@ -205,6 +287,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  /**
+   * Method used to log the action selected by the agent.
+   * @param run The run in which the agent action occurred.
+   * @returns void
+   */
   onAgentAction(run: Run) {
     const agentRun = run as AgentRun;
     const crumbs = this.getBreadcrumbs(run);

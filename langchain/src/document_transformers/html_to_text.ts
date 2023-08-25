@@ -3,7 +3,14 @@ import type { HtmlToTextOptions } from "html-to-text";
 import { Document } from "../document.js";
 import { MappingDocumentTransformer } from "../schema/document.js";
 
+/**
+ * A transformer that converts HTML content to plain text.
+ */
 export class HtmlToTextTransformer extends MappingDocumentTransformer {
+  static lc_name() {
+    return "HtmlToTextTransformer";
+  }
+
   constructor(protected options: HtmlToTextOptions = {}) {
     super(options);
   }

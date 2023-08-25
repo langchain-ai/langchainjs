@@ -9,19 +9,31 @@ import {
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
+/**
+ * Type representing the role of a message in the Wenxin chat model.
+ */
 export type WenxinMessageRole = "assistant" | "user";
 
+/**
+ * Interface representing a message in the Wenxin chat model.
+ */
 interface WenxinMessage {
   role: WenxinMessageRole;
   content: string;
 }
 
+/**
+ * Interface representing the usage of tokens in a chat completion.
+ */
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
 }
 
+/**
+ * Interface representing a request for a chat completion.
+ */
 interface ChatCompletionRequest {
   messages: WenxinMessage[];
   stream?: boolean;
@@ -31,6 +43,9 @@ interface ChatCompletionRequest {
   penalty_score?: number;
 }
 
+/**
+ * Interface representing a response from a chat completion.
+ */
 interface ChatCompletionResponse {
   id: string;
   object: string;
@@ -40,6 +55,9 @@ interface ChatCompletionResponse {
   usage: TokenUsage;
 }
 
+/**
+ * Interface defining the input to the ChatBaiduWenxin class.
+ */
 declare interface BaiduWenxinChatInput {
   /** Model name to use
    * @default "ERNIE-Bot-turbo"
@@ -73,23 +91,25 @@ declare interface BaiduWenxinChatInput {
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
    * multiple choice, and temp closer to 1 for creative
    * and generative tasks. Defaults to 0.95.
-   * Only supported for `modelName` of `WenxinModelName.ERNIE_BOT`.
    */
   temperature?: number;
 
   /** Total probability mass of tokens to consider at each step. Range
    * from 0 to 1.0. Defaults to 0.8.
-   * Only supported for `modelName` of `WenxinModelName.ERNIE_BOT`.
    */
   topP?: number;
 
   /** Penalizes repeated tokens according to frequency. Range
    * from 1.0 to 2.0. Defaults to 1.0.
-   * Only supported for `modelName` of `WenxinModelName.ERNIE_BOT`.
    */
   penaltyScore?: number;
 }
 
+/**
+ * Function that extracts the custom role of a generic chat message.
+ * @param message Chat message from which to extract the custom role.
+ * @returns The custom role of the chat message.
+ */
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (message.role !== "assistant" && message.role !== "user") {
     console.warn(`Unknown message role: ${message.role}`);
@@ -98,6 +118,11 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
   return message.role as WenxinMessageRole;
 }
 
+/**
+ * Function that converts a base message to a Wenxin message role.
+ * @param message Base message to convert.
+ * @returns The Wenxin message role.
+ */
 function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
   const type = message._getType();
   switch (type) {
@@ -132,6 +157,10 @@ export class ChatBaiduWenxin
   extends BaseChatModel
   implements BaiduWenxinChatInput
 {
+  static lc_name() {
+    return "ChatBaiduWenxin";
+  }
+
   get callKeys(): string[] {
     return ["stop", "signal", "options"];
   }
@@ -198,31 +227,20 @@ export class ChatBaiduWenxin
     if (this.modelName === "ERNIE-Bot") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
-      this.temperature = this.temperature ?? 0.95;
-      this.topP = this.topP ?? 0.8;
-      this.penaltyScore = this.penaltyScore ?? 1.0;
     } else if (this.modelName === "ERNIE-Bot-turbo") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
-      // Validate the input
-      if (this.temperature) {
-        throw new Error(
-          "Temperature is not supported forERNIE-Bot-turbo model"
-        );
-      }
-      if (this.topP) {
-        throw new Error("TopP is not supported for ERNIE-Bot-turbo model");
-      }
-      if (this.penaltyScore) {
-        throw new Error(
-          "PenaltyScore is not supported for ERNIE-Bot-turbo model"
-        );
-      }
     } else {
       throw new Error(`Invalid model name: ${this.modelName}`);
     }
   }
 
+  /**
+   * Method that retrieves the access token for making requests to the Baidu
+   * API.
+   * @param options Optional parsed call options.
+   * @returns The access token for making requests to the Baidu API.
+   */
   async getAccessToken(options?: this["ParsedCallOptions"]) {
     const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduApiKey}&client_secret=${this.baiduSecretKey}`;
     const response = await fetch(url, {

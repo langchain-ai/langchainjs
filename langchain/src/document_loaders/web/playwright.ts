@@ -12,6 +12,11 @@ export type PlaywrightGotoOptions = {
   waitUntil?: "load" | "domcontentloaded" | "networkidle" | "commit";
 };
 
+/**
+ * Type representing a function for evaluating JavaScript code on a web
+ * page using Playwright. Takes a Page, Browser, and Response object as
+ * parameters and returns a Promise that resolves to a string.
+ */
 export type PlaywrightEvaluate = (
   page: Page,
   browser: Browser,
@@ -24,6 +29,11 @@ export type PlaywrightWebBaseLoaderOptions = {
   evaluate?: PlaywrightEvaluate;
 };
 
+/**
+ * Class representing a document loader for scraping web pages using
+ * Playwright. Extends the BaseDocumentLoader class and implements the
+ * DocumentLoader interface.
+ */
 export class PlaywrightWebBaseLoader
   extends BaseDocumentLoader
   implements DocumentLoader
@@ -64,10 +74,22 @@ export class PlaywrightWebBaseLoader
     return bodyHTML;
   }
 
+  /**
+   * Method that calls the _scrape method to perform the scraping of the web
+   * page specified by the webPath property. Returns a Promise that resolves
+   * to the scraped HTML content of the web page.
+   * @returns Promise that resolves to the scraped HTML content of the web page.
+   */
   async scrape(): Promise<string> {
     return PlaywrightWebBaseLoader._scrape(this.webPath, this.options);
   }
 
+  /**
+   * Method that calls the scrape method and returns the scraped HTML
+   * content as a Document object. Returns a Promise that resolves to an
+   * array of Document objects.
+   * @returns Promise that resolves to an array of Document objects.
+   */
   async load(): Promise<Document[]> {
     const text = await this.scrape();
 
@@ -75,6 +97,11 @@ export class PlaywrightWebBaseLoader
     return [new Document({ pageContent: text, metadata })];
   }
 
+  /**
+   * Static method that imports the necessary Playwright modules. Returns a
+   * Promise that resolves to an object containing the imported modules.
+   * @returns Promise that resolves to an object containing the imported modules.
+   */
   static async imports(): Promise<{
     chromium: typeof import("playwright").chromium;
   }> {

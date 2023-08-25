@@ -9,6 +9,9 @@ export interface RegExpFields {
   flags?: string;
 }
 
+/**
+ * Interface for the fields required to create a RegexParser instance.
+ */
 export interface RegexParserFields {
   regex: string | RegExp | RegExpFields;
   outputKeys: string[];
@@ -20,6 +23,10 @@ export interface RegexParserFields {
  * @augments BaseOutputParser
  */
 export class RegexParser extends BaseOutputParser<Record<string, string>> {
+  static lc_name() {
+    return "RegexParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "regex"];
 
   lc_serializable = true;
@@ -78,6 +85,13 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     return "regex_parser";
   }
 
+  /**
+   * Parses the given text using the regex pattern and returns a dictionary
+   * with the parsed output. If the regex pattern does not match the text
+   * and no defaultOutputKey is provided, throws an OutputParserException.
+   * @param text The text to be parsed.
+   * @returns A dictionary with the parsed output.
+   */
   async parse(text: string): Promise<Record<string, string>> {
     const match = text.match(this.regex);
     if (match) {
@@ -97,6 +111,11 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     }, {} as Record<string, string>);
   }
 
+  /**
+   * Returns a string with instructions on how the LLM output should be
+   * formatted to match the regex pattern.
+   * @returns A string with formatting instructions.
+   */
   getFormatInstructions(): string {
     return `Your response should match the following regex: ${this.regex}`;
   }

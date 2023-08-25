@@ -26,13 +26,24 @@ import { Document } from "../../document.js";
 import { OutputParserException, StringOutputParser } from "../output_parser.js";
 
 class FakeLLM extends LLM {
-  response: string;
+  response?: string;
+
+  thrownErrorString?: string;
+
+  constructor(fields: { response?: string; thrownErrorString?: string }) {
+    super({});
+    this.response = fields.response;
+    this.thrownErrorString = fields.thrownErrorString;
+  }
 
   _llmType() {
     return "fake";
   }
 
   async _call(prompt: string): Promise<string> {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
     return this.response ?? prompt;
   }
 }
@@ -164,7 +175,9 @@ test("Create a runnable sequence and run it", async () => {
 });
 
 test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
-  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const promptTemplate = PromptTemplate.fromTemplate<{ input: string }>(
+    "{input}"
+  );
   const llm = new FakeChatModel({});
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ outputValue: z.string().describe("A test value") })
@@ -177,7 +190,10 @@ test("Create a runnable sequence with a static method with invalid output and ca
 });
 
 test("Create a runnable sequence with a runnable map", async () => {
-  const promptTemplate = ChatPromptTemplate.fromPromptMessages([
+  const promptTemplate = ChatPromptTemplate.fromPromptMessages<{
+    documents: string;
+    question: string;
+  }>([
     SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
     HumanMessagePromptTemplate.fromTemplate(
       `Context:\n{documents}\n\nQuestion:\n{question}`
@@ -288,4 +304,38 @@ test("Router runnables", async () => {
     },
   ]);
   expect(result2).toEqual(["I am a math genius!", "I am an English genius!"]);
+});
+
+test("RunnableWithFallbacks", async () => {
+  const llm = new FakeLLM({
+    thrownErrorString: "Bad error!",
+  });
+  await expect(async () => {
+    const result1 = await llm.invoke("What up");
+    console.log(result1);
+  }).rejects.toThrow();
+  const llmWithFallbacks = llm.withFallbacks({
+    fallbacks: [new FakeLLM({})],
+  });
+  const result2 = await llmWithFallbacks.invoke("What up");
+  expect(result2).toEqual("What up");
+});
+
+test("RunnableWithFallbacks batch", async () => {
+  const llm = new FakeLLM({
+    thrownErrorString: "Bad error!",
+  });
+  await expect(async () => {
+    const result1 = await llm.batch(["What up"]);
+    console.log(result1);
+  }).rejects.toThrow();
+  const llmWithFallbacks = llm.withFallbacks({
+    fallbacks: [new FakeLLM({})],
+  });
+  const result2 = await llmWithFallbacks.batch([
+    "What up 1",
+    "What up 2",
+    "What up 3",
+  ]);
+  expect(result2).toEqual(["What up 1", "What up 2", "What up 3"]);
 });

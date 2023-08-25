@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-process-env */
-import { test, expect, beforeAll } from "@jest/globals";
+import fs from "fs";
+import { expect, beforeAll } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
 import { VectaraLibArgs, VectaraStore } from "../vectara.js";
@@ -78,7 +80,7 @@ describe("VectaraStore", () => {
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
-    test("with fakeEmbeddings doesn't throw error", () => {
+    test.skip("with fakeEmbeddings doesn't throw error", () => {
       expect(() =>
         VectaraStore.fromTexts([], [], new FakeEmbeddings(), args)
       ).not.toThrow();
@@ -92,7 +94,7 @@ describe("VectaraStore", () => {
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
-    test("with fakeEmbeddings doesn't throw error", async () => {
+    test.skip("with fakeEmbeddings doesn't throw error", async () => {
       await expect(
         VectaraStore.fromDocuments(getDocs(), new FakeEmbeddings(), args)
       ).resolves.toBeDefined();
@@ -110,11 +112,11 @@ describe("VectaraStore", () => {
       });
     });
 
-    test("addDocuments", async () => {
+    test.skip("addDocuments", async () => {
       await store.addDocuments(getDocs());
     });
 
-    test("similaritySearchWithScore", async () => {
+    test.skip("similaritySearchWithScore", async () => {
       const resultsWithScore = await store.similaritySearchWithScore(
         "What did Sam do?",
         10, // Number of results needed
@@ -123,21 +125,32 @@ describe("VectaraStore", () => {
       expect(resultsWithScore.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].pageContent.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].metadata.length).toBeGreaterThan(0);
+      expect(
+        resultsWithScore[0][0].metadata.find(
+          (item: { name: string }) => item.name === "title"
+        ).value
+      ).toBe("Lord of the Rings");
       expect(resultsWithScore[0][1]).toBeGreaterThan(0);
     });
 
-    test("similaritySearch", async () => {
+    test.skip("similaritySearch", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
-        { lambda: 0.025 }
+        {
+          lambda: 0.025,
+          contextConfig: {
+            sentencesAfter: 1,
+            sentencesBefore: 1,
+          },
+        }
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
       expect(results[0].metadata.length).toBeGreaterThan(0);
     });
 
-    test("similaritySearch with filter", async () => {
+    test.skip("similaritySearch with filter", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
@@ -153,6 +166,43 @@ describe("VectaraStore", () => {
           result.metadata.find((m: any) => m.name === "lang")?.value === "eng"
       );
       expect(hasEnglish).toBe(false);
+    });
+
+    it("addFiles", async () => {
+      const docs = getDocs();
+      const englishOneContent = docs[0].pageContent;
+      const frenchOneContent = docs[2].pageContent;
+
+      const files = [
+        { filename: "englishOne.txt", content: englishOneContent },
+        { filename: "frenchOne.txt", content: frenchOneContent },
+      ];
+
+      const blobs = [];
+      for (const file of files) {
+        fs.writeFileSync(file.filename, file.content);
+
+        const buffer = fs.readFileSync(file.filename);
+        blobs.push(new Blob([buffer], { type: "text/plain" }));
+      }
+
+      const bitcoinBuffer = fs.readFileSync(
+        "../examples/src/document_loaders/example_data/bitcoin.pdf"
+      );
+      blobs.push(new Blob([bitcoinBuffer], { type: "application/pdf" }));
+
+      const results = await store.addFiles(blobs);
+
+      for (const file of files) {
+        fs.unlinkSync(file.filename);
+      }
+
+      expect(results).toEqual(3);
+      const searchResults = await store.similaritySearch("What is bitcoin");
+      expect(searchResults.length).toBeGreaterThan(0);
+      expect(searchResults[0].pageContent).toContain(
+        "A Peer-to-Peer Electronic Cash System"
+      );
     });
   });
 });

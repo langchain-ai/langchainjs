@@ -36,6 +36,8 @@ export class SqlDatabase
 
   sampleRowsInTableInfo = 3;
 
+  customDescription?: Record<string, string>;
+
   protected constructor(fields: SqlDatabaseDataSourceParams) {
     super(...arguments);
     this.appDataSource = fields.appDataSource;
@@ -47,6 +49,11 @@ export class SqlDatabase
     this.ignoreTables = fields?.ignoreTables ?? [];
     this.sampleRowsInTableInfo =
       fields?.sampleRowsInTableInfo ?? this.sampleRowsInTableInfo;
+    this.customDescription = Object.fromEntries(
+      Object.entries(fields?.customDescription ?? {}).filter(([key, _]) =>
+        this.allTables.map((table: SqlTable) => table.tableName).includes(key)
+      )
+    );
   }
 
   static async fromDataSourceParams(
@@ -119,7 +126,8 @@ export class SqlDatabase
     return generateTableInfoFromTables(
       selectedTables,
       this.appDataSource,
-      this.sampleRowsInTableInfo
+      this.sampleRowsInTableInfo,
+      this.customDescription
     );
   }
 

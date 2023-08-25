@@ -2,6 +2,11 @@ import PQueueMod from "p-queue";
 
 let queue: typeof import("p-queue")["default"]["prototype"];
 
+/**
+ * Creates a queue using the p-queue library. The queue is configured to
+ * auto-start and has a concurrency of 1, meaning it will process tasks
+ * one at a time.
+ */
 function createQueue() {
   const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
   return new PQueue({
@@ -29,6 +34,10 @@ export async function consumeCallback<T>(
   }
 }
 
+/**
+ * Waits for all promises in the queue to resolve. If the queue is
+ * undefined, it immediately resolves a promise.
+ */
 export function awaitAllCallbacks(): Promise<void> {
   return typeof queue !== "undefined" ? queue.onIdle() : Promise.resolve();
 }

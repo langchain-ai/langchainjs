@@ -31,6 +31,7 @@
     "@pinecone-database/pinecone": "^0.0.14",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",
+    "@raycast/api": "^1.55.2",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@tigrisdata/vector": "^1.1.0",
@@ -54,7 +55,8 @@
     "typesense": "^1.5.3",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0",
-    "zod": "^3.21.4"
+    "zod": "^3.21.4",
+    "zod-to-json-schema": "^3.21.4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",

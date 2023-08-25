@@ -12,6 +12,9 @@ import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
+/**
+ * Interface for the input parameters of the RetrievalQAChain class.
+ */
 export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
@@ -19,10 +22,18 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
   returnSourceDocuments?: boolean;
 }
 
+/**
+ * Class representing a chain for performing question-answering tasks with
+ * a retrieval component.
+ */
 export class RetrievalQAChain
   extends BaseChain
   implements RetrievalQAChainInput
 {
+  static lc_name() {
+    return "RetrievalQAChain";
+  }
+
   inputKey = "query";
 
   get inputKeys() {
@@ -92,6 +103,14 @@ export class RetrievalQAChain
     throw new Error("Not implemented");
   }
 
+  /**
+   * Creates a new instance of RetrievalQAChain using a BaseLanguageModel
+   * and a BaseRetriever.
+   * @param llm The BaseLanguageModel used to generate a new question.
+   * @param retriever The BaseRetriever used to retrieve relevant documents.
+   * @param options Optional parameters for the RetrievalQAChain.
+   * @returns A new instance of RetrievalQAChain.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     retriever: BaseRetriever,
