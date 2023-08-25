@@ -25,7 +25,7 @@ const dbLoader = new NotionAPILoader({
     console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
   },
   callerOptions: {
-    maxConcurrency: 64 // Default value
+    maxConcurrency: 64, // Default value
   },
 });
 
