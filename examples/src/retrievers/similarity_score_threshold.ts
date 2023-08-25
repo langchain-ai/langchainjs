@@ -1,8 +1,5 @@
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { BufferMemory } from "langchain/memory";
 import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
 const vectorStore = await MemoryVectorStore.fromTexts(
@@ -10,6 +7,8 @@ const vectorStore = await MemoryVectorStore.fromTexts(
     "Buildings are made out of brick",
     "Buildings are made out of wood",
     "Buildings are made out of stone",
+    "Buildings are made out of atoms",
+    "Buildings are made out of building materials",
     "Cars are made out of metal",
     "Cars are made out of plastic",
   ],
@@ -17,29 +16,37 @@ const vectorStore = await MemoryVectorStore.fromTexts(
   new OpenAIEmbeddings()
 );
 
-const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
-  temperature: 0,
+const retriever = ScoreThresholdRetriever.fromVectorStore(vectorStore, {
+  minSimilarityScore: 0.9, // Finds results with at least this similarity score
+  maxK: 100, // The maximum K value to use. Use it based to your chunk size to make sure you don't run out of tokens
+  kIncrement: 2, // How much to increase K by each time. It'll fetch N results, then N + kIncrement, then N + kIncrement * 2, etc.
 });
 
-const chain = ConversationalRetrievalQAChain.fromLLM(
-  model,
-  ScoreThresholdRetriever.fromVectorStore(vectorStore, {
-    minSimilarityScore: 0.9, // Finds results with a similarity score of 90% or more
-    maxK: 100, // The maximum K value to use. Use it based to your chunk size to make sure you don't run out of tokens
-    kIncrement: 2, // How much to increase K by each time. It'll fetch N results, then N + kIncrement, then N + kIncrement * 2, etc.
-  }),
-  {
-    returnSourceDocuments: true,
-    memory: new BufferMemory({
-      memoryKey: "chat_history",
-      inputKey: "question",
-      outputKey: "text",
-    }),
-  }
-);
-const res = await chain.call({
-  question: "Buildings are made out of what?",
-});
+const result = await retriever.invoke("What are buildings made out of?");
 
-console.log("response:", res); // {"text":"Buildings can be made out of various materials such as wood, brick, or stone.","sourceDocuments":[{"pageContent":"Buildings are made out of wood","metadata":{"id":2}},{"pageContent":"Buildings are made out of brick","metadata":{"id":1}},{"pageContent":"Buildings are made out of stone","metadata":{"id":3}}]}
+console.log(result);
+
+/*
+  [
+    Document {
+      pageContent: 'Buildings are made out of building materials',
+      metadata: { id: 5 }
+    },
+    Document {
+      pageContent: 'Buildings are made out of wood',
+      metadata: { id: 2 }
+    },
+    Document {
+      pageContent: 'Buildings are made out of brick',
+      metadata: { id: 1 }
+    },
+    Document {
+      pageContent: 'Buildings are made out of stone',
+      metadata: { id: 3 }
+    },
+    Document {
+      pageContent: 'Buildings are made out of atoms',
+      metadata: { id: 4 }
+    }
+  ]
+*/
