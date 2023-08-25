@@ -5,13 +5,14 @@ import {
   AgentFinish,
   BaseMessage,
   ChainValues,
+  ChatGenerationChunk,
+  GenerationChunk,
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
 import {
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
-  NewChunk,
   NewTokenIndices,
 } from "../base.js";
 import { Document } from "../../document.js";
@@ -440,7 +441,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   async handleLLMNewToken(
     token: string,
     idx: NewTokenIndices,
-    chunk: NewChunk | undefined,
+    chunk: GenerationChunk | ChatGenerationChunk | undefined,
     runId: string
   ): Promise<void> {
     const run = this.runMap.get(runId);
