@@ -105,19 +105,31 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
     this.db = db;
   }
 
-  /** @ignore */
   async _call(_: string) {
     try {
-      const tables = this.db.allTables.map(
-        (table: SqlTable) => table.tableName
-      );
+      let selectedTables: SqlTable[] = this.db.allTables;
+
+      if (this.db.includesTables.length > 0) {
+        selectedTables = selectedTables.filter((currentTable) =>
+          this.db.includesTables.includes(currentTable.tableName)
+        );
+      }
+
+      if (this.db.ignoreTables.length > 0) {
+        selectedTables = selectedTables.filter(
+          (currentTable) =>
+            !this.db.ignoreTables.includes(currentTable.tableName)
+        );
+      }
+
+      const tables = selectedTables.map((table: SqlTable) => table.tableName);
       return tables.join(", ");
     } catch (error) {
       return `${error}`;
     }
   }
 
-  description = `Input is an empty string, output is a comma separated list of tables in the database.`;
+  description = `Input is an empty string, output is a comma-separated list of tables in the database.`;
 }
 
 /**
