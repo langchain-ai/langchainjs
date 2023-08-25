@@ -183,6 +183,7 @@ const entrypoints = {
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
+  "retrievers/score_threshold": "retrievers/score_threshold",
   "retrievers/self_query": "retrievers/self_query/index",
   "retrievers/self_query/chroma": "retrievers/self_query/chroma",
   "retrievers/self_query/functional": "retrievers/self_query/functional",

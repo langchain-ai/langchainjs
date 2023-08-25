@@ -49,6 +49,7 @@ const retrievers_parent_document = require("langchain/retrievers/parent_document
 const retrievers_time_weighted = require("langchain/retrievers/time_weighted");
 const retrievers_document_compressors_chain_extract = require("langchain/retrievers/document_compressors/chain_extract");
 const retrievers_hyde = require("langchain/retrievers/hyde");
+const retrievers_score_threshold = require("langchain/retrievers/score_threshold");
 const retrievers_vespa = require("langchain/retrievers/vespa");
 const cache = require("langchain/cache");
 const stores_doc_in_memory = require("langchain/stores/doc/in_memory");

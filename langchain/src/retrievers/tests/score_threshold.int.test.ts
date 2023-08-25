@@ -4,8 +4,8 @@ import { ConversationalRetrievalQAChain } from "../../chains/conversational_retr
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { MemoryVectorStore } from "../memory.js";
-import { ScoreThresholdVectorStoreRetriever } from "../score_threshold.js";
+import { MemoryVectorStore } from "../../vectorstores/memory.js";
+import { ScoreThresholdRetriever } from "../score_threshold.js";
 
 test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursively until it gets all the similar results with the minimum similarity score provided", async () => {
   const vectorStore = await MemoryVectorStore.fromTexts(
@@ -27,7 +27,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursi
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    ScoreThresholdVectorStoreRetriever.fromVectorStore(vectorStore, {
+    ScoreThresholdRetriever.fromVectorStore(vectorStore, {
       minSimilarityScore: 0.9,
       kIncrement: 1,
     }),
@@ -90,7 +90,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store to get 
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    ScoreThresholdVectorStoreRetriever.fromVectorStore(vectorStore, {
+    ScoreThresholdRetriever.fromVectorStore(vectorStore, {
       minSimilarityScore: 0.9,
       maxK: 2,
     }),

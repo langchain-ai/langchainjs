@@ -2,28 +2,28 @@ import {
   VectorStore,
   VectorStoreRetriever,
   VectorStoreRetrieverInput,
-} from "./base.js";
+} from "../vectorstores/base.js";
 import { Document } from "../document.js";
 
-export type ScoreThresholdVectorStoreRetrieverInput<V extends VectorStore> =
-  Omit<VectorStoreRetrieverInput<V>, "k"> & {
-    maxK?: number;
-    kIncrement?: number;
-    minSimilarityScore: number;
-  };
+export type ScoreThresholdRetrieverInput<V extends VectorStore> = Omit<
+  VectorStoreRetrieverInput<V>,
+  "k"
+> & {
+  maxK?: number;
+  kIncrement?: number;
+  minSimilarityScore: number;
+};
 
-export class ScoreThresholdVectorStoreRetriever<
+export class ScoreThresholdRetriever<
   V extends VectorStore
 > extends VectorStoreRetriever<V> {
   minSimilarityScore: number;
-
-  dynamicK = false;
 
   kIncrement = 10;
 
   maxK = 100;
 
-  constructor(input: ScoreThresholdVectorStoreRetrieverInput<V>) {
+  constructor(input: ScoreThresholdRetrieverInput<V>) {
     super(input);
     this.maxK = input.maxK ?? this.maxK;
     this.minSimilarityScore =
@@ -50,7 +50,7 @@ export class ScoreThresholdVectorStoreRetriever<
 
   static fromVectorStore<V extends VectorStore>(
     vectorStore: V,
-    options: Omit<ScoreThresholdVectorStoreRetrieverInput<V>, "vectorStore">
+    options: Omit<ScoreThresholdRetrieverInput<V>, "vectorStore">
   ) {
     return new this<V>({ ...options, vectorStore });
   }
