@@ -1,144 +1,116 @@
-import { getEnvironmentVariable } from "../util/env.js";
+import type {
+  LlamaModel,
+  LlamaContext,
+  LlamaChatSession,
+} from "node-llama-cpp";
+
 import { LLM, BaseLLMParams } from "./base.js";
 
-import type { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
 /**
- * Documentation regarding the parameters can be found as part of the llama-cpp-node documentation.
- * Note that the modelPath is the only required parameter.
+ * Note that the modelPath is the only required parameter. For testing you
+ * can set this in the environment variable `LLAMA_PATH`.
  */
 export interface LlamaCppInputs extends BaseLLMParams {
-	batchSize?: number;
-	contextSize?: number;
-	embedding?: boolean;
-	f16Kv?: boolean;
-	gpuLayers?: number;
-	logitsAll?: boolean;
-	lowVram?: boolean;
-	modelPath: string;
-	seed?: null | number;
-	useMlock?: boolean;
-	useMmap?: boolean;
-	vocabOnly?: boolean;
+  /** Prompt processing batch size. */
+  batchSize?: number;
+  /** Text context size. */
+  contextSize?: number;
+  /** Embedding mode only. */
+  embedding?: boolean;
+  /** Use fp16 for KV cache. */
+  f16Kv?: boolean;
+  /** Number of layers to store in VRAM. */
+  gpuLayers?: number;
+  /** The llama_eval() call computes all logits, not just the last one. */
+  logitsAll?: boolean;
+  /** If true, reduce VRAM usage at the cost of performance. */
+  lowVram?: boolean;
+  /** Path to the model on the filesystem. */
+  modelPath: string;
+  /** If null, a random seed will be used. */
+  seed?: null | number;
+  /** Force system to keep model in RAM. */
+  useMlock?: boolean;
+  /** Use mmap if possible. */
+  useMmap?: boolean;
+  /** Only load the vocabulary, no weights. */
+  vocabOnly?: boolean;
 }
 
 /**
  *  To use this model you need to have the `node-llama-cpp` module installed.
+ *  This can be installed using `npm install -S node-llama-cpp` and the minimum
+ *  version supported in version 2.0.0.
+ *  This also requires that have a locally built version of Llama2 installed.
  */
 export class LlamaCpp extends LLM {
+  static inputs: LlamaCppInputs;
 
-	batchSize = 8;
-	contextSize = 512;
-	embedding?: boolean;
-	f16Kv = true;
-	gpuLayers?: number;
-	logitsAll = false;
-	lowVram?: boolean;
-	modelPath: string;
-	seed = -1;
-	useMlock = false;
-	useMmap = true;
-	vocabOnly = false;
+  static model: LlamaModel;
 
-    model: LlamaModel;
-    context: LlamaContext;
+  static context: LlamaContext;
 
-	static lc_name() {
-      return "Llama2-CPP";
+  static lc_name() {
+    return "Llama2-CPP";
+  }
+
+  constructor(inputs: LlamaCppInputs) {
+    super(inputs);
+
+    if (inputs.modelPath) {
+      LlamaCpp.inputs = inputs;
+    } else {
+      throw new Error("A path to the Llama2 model is required.");
+    }
+  }
+
+  _llmType() {
+    return "llama2_cpp";
+  }
+
+  /** @ignore */
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
+    const { LlamaModel, LlamaContext, LlamaChatSession } =
+      await LlamaCpp.imports();
+
+    if (!LlamaCpp.model) {
+      LlamaCpp.model = new LlamaModel(LlamaCpp.inputs);
     }
 
-	constructor(fields: LlamaCppInputs) {
-		super(fields);
-        LlamaCpp
-            .constructorImports()
-            .then(({ LlamaModel, LlamaContext }) => {
-                const llamaPath = fields?.modelPath ?? getEnvironmentVariable("LLAMA_PATH");
-
-                if (llamaPath) {
-        			this.batchSize = fields?.batchSize ?? this.batchSize;
-        			this.contextSize = fields?.contextSize ?? this.contextSize;
-        			//this.embedding = fields.embedding;
-        			this.f16Kv = fields?.f16Kv ?? this.f16Kv;
-        			//this.gpuLayers = fields.gpuLayers;
-        			this.logitsAll = fields?.logitsAll ?? this.logitsAll;
-        			//this.lowVram = fields.lowVram;
-        			this.modelPath = llamaPath;
-        			this.seed = fields?.seed ?? this.seed;
-        			this.useMlock = fields?.useMlock ?? this.useMlock;
-        			this.useMmap = fields?.useMmap ?? this.useMmap;
-        			this.vocabOnly = fields?.vocabOnly ?? this.vocabOnly;
-
-                    this.model = new LlamaModel({
-            			batchSize: this.batchSize,
-            			contextSize: this.contextSize,
-            			f16Kv: this.f16Kv,
-            			logitsAll: this.logitsAll,
-            			modelPath: this.modelPath,
-            			seed: this.seed,
-            			useMlock: this.useMlock,
-            			useMmap: this.useMmap,
-            			vocabOnly: this.vocabOnly,
-            		});
-                    this.context = new LlamaContext({model: this.model});
-
-        		} else {
-        			throw new Error(
-        	          "A path to the Llama2 model is required."
-        	        );
-        		}
-            });
-	}
-
-	_llmType() {
-      return "llama2_cpp";
+    if (!LlamaCpp.context) {
+      LlamaCpp.context = new LlamaContext({ model: LlamaCpp.model });
     }
 
-	/** @ignore */
-    async _call(
-      prompt: string,
-      options: this["ParsedCallOptions"]
-    ): Promise<string> {
-		const { LlamaChatSession }  = await LlamaCpp.imports();
+    const session = new LlamaChatSession({ context: LlamaCpp.context });
 
-		const session = new LlamaChatSession({context: this.context});
+    try {
+      const compleation = await session.prompt(prompt, undefined, {
+        signal: options.signal,
+      });
+      return compleation;
+    } catch (e) {
+      throw new Error("Error getting prompt compleation.");
+    }
+  }
 
-		try {
-			const compleation = await session.prompt(prompt, undefined, {signal: options.signal});
-			return compleation;
-		} catch (e) {
-			throw new Error(
-				"Error getting prompt compleation: " + e
-			);
-		}
-	}
-
-    /** @ignore */
-	static async constructorImports(): Promise<{
-		LlamaModel: typeof LlamaModel;
-		LlamaContext: typeof LlamaContext;
-	}> {
-		try {
-			const { LlamaModel, LlamaContext } = await import("node-llama-cpp");
-			return { LlamaModel, LlamaContext };
-		} catch (e) {
-			throw new Error(
-				"Please install node-llama-cpp as a dependency with, e.g. `npm install node-llama-cpp`\n" + e
-			);
-		}
-	}
-
-	/** @ignore */
-	static async imports(): Promise<{
-		LlamaChatSession: typeof LlamaChatSession;
-	}> {
-		try {
-            console.log("Get import");
-			const { LlamaChatSession } = await import("node-llama-cpp");
-            console.log("Got import");
-			return { LlamaChatSession };
-		} catch (e) {
-			throw new Error(
-				"Please install node-llama-cpp as a dependency with, e.g. `npm install node-llama-cpp`\n" + e
-			);
-		}
-	}
+  /** @ignore */
+  static async imports(): Promise<{
+    LlamaModel: typeof LlamaModel;
+    LlamaContext: typeof LlamaContext;
+    LlamaChatSession: typeof LlamaChatSession;
+  }> {
+    try {
+      const { LlamaModel, LlamaContext, LlamaChatSession } = await import(
+        "node-llama-cpp"
+      );
+      return { LlamaModel, LlamaContext, LlamaChatSession };
+    } catch (e) {
+      throw new Error(
+        "Please install node-llama-cpp as a dependency with, e.g. `npm install node-llama-cpp`"
+      );
+    }
+  }
 }
