@@ -133,6 +133,9 @@ llms/sagemaker_endpoint.d.ts
 llms/bedrock.cjs
 llms/bedrock.js
 llms/bedrock.d.ts
+llms/writer.cjs
+llms/writer.js
+llms/writer.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
@@ -445,6 +448,9 @@ retrievers/document_compressors/chain_extract.d.ts
 retrievers/hyde.cjs
 retrievers/hyde.js
 retrievers/hyde.d.ts
+retrievers/score_threshold.cjs
+retrievers/score_threshold.js
+retrievers/score_threshold.d.ts
 retrievers/self_query.cjs
 retrievers/self_query.js
 retrievers/self_query.d.ts

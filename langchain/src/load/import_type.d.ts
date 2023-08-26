@@ -79,6 +79,9 @@ export interface OptionalImportMap {
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock.js")
     | Promise<typeof import("../llms/bedrock.js")>;
+  "langchain/llms/writer"?:
+    | typeof import("../llms/writer.js")
+    | Promise<typeof import("../llms/writer.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
@@ -388,6 +391,8 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WRITER_API_KEY?: string;
+  WRITER_ORG_ID?: string;
   ZAPIER_NLA_API_KEY?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;

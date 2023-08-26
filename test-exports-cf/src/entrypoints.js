@@ -49,6 +49,7 @@ export * from "langchain/retrievers/parent_document";
 export * from "langchain/retrievers/time_weighted";
 export * from "langchain/retrievers/document_compressors/chain_extract";
 export * from "langchain/retrievers/hyde";
+export * from "langchain/retrievers/score_threshold";
 export * from "langchain/retrievers/vespa";
 export * from "langchain/cache";
 export * from "langchain/stores/doc/in_memory";

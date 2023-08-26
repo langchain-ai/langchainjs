@@ -50,6 +50,7 @@ export * as retrievers__parent_document from "../retrievers/parent_document.js";
 export * as retrievers__time_weighted from "../retrievers/time_weighted.js";
 export * as retrievers__document_compressors__chain_extract from "../retrievers/document_compressors/chain_extract.js";
 export * as retrievers__hyde from "../retrievers/hyde.js";
+export * as retrievers__score_threshold from "../retrievers/score_threshold.js";
 export * as retrievers__vespa from "../retrievers/vespa.js";
 export * as cache from "../cache/index.js";
 export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
