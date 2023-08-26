@@ -460,6 +460,9 @@
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
+    "retrievers/score_threshold.cjs",
+    "retrievers/score_threshold.js",
+    "retrievers/score_threshold.d.ts",
     "retrievers/self_query.cjs",
     "retrievers/self_query.js",
     "retrievers/self_query.d.ts",
@@ -1826,6 +1829,11 @@
       "types": "./retrievers/hyde.d.ts",
       "import": "./retrievers/hyde.js",
       "require": "./retrievers/hyde.cjs"
+    },
+    "./retrievers/score_threshold": {
+      "types": "./retrievers/score_threshold.d.ts",
+      "import": "./retrievers/score_threshold.js",
+      "require": "./retrievers/score_threshold.cjs"
     },
     "./retrievers/self_query": {
       "types": "./retrievers/self_query.d.ts",
