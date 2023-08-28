@@ -32,6 +32,10 @@ const model = new ChatMinimax({
   ]
 }).bind({
   functions: [extractionFunctionSchema],
+  replyConstraints: {
+    sender_type: "BOT",
+    sender_name: "MM Assistant",
+  },
 });
 
 const result = await model.invoke([

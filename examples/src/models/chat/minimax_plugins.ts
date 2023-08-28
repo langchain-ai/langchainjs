@@ -14,6 +14,10 @@ const model = new ChatMinimax({
   ]
 }).bind({
   plugins: ["plugin_web_search"],
+  replyConstraints: {
+    sender_type: "BOT",
+    sender_name: "MM Assistant",
+  }
 });
 
 const result = await model.invoke([

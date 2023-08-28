@@ -22,6 +22,10 @@ const model = new ChatMinimax({
       content: "select A5 color red change minimax",
     }),
   ],
+  replyConstraints: {
+    sender_type: "BOT",
+    sender_name: "MM Assistant",
+  }
 });
 
 const result = await model.invoke([

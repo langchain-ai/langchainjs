@@ -30,6 +30,10 @@ const model = new ChatMinimax({
       parameters: zodToJsonSchema(extractionFunctionZodSchema),
     },
   ],
+  replyConstraints: {
+    sender_type: "BOT",
+    sender_name: "MM Assistant",
+  }
 });
 
 const result = await model.invoke([
