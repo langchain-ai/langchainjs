@@ -21,7 +21,7 @@ export type MessageRole = "BOT" | "USER" | "FUNCTION";
 /**
  * Interface representing a message in the Wenxin chat model.
  */
-interface ChatCompletionMessage {
+interface ChatCompletionRequestMessage {
   sender_type: MessageRole;
   sender_name?: string;
   text: string;
@@ -53,7 +53,7 @@ export interface ChatCompletionRequestFunctions {
  */
 interface ChatCompletionRequest {
   model: string;
-  messages: ChatCompletionMessage[];
+  messages: ChatCompletionRequestMessage[];
   stream?: boolean;
   prompt?: string;
   temperature?: number;
@@ -66,6 +66,7 @@ interface ChatCompletionRequest {
   role_meta?: RoleMeta;
   bot_setting?: BotSetting[];
   reply_constraints?: ReplyConstraints;
+  sample_messages?: ChatCompletionRequestMessage[];
   /**
    * A list of functions the model may generate JSON inputs for.
    * @type {Array<ChatCompletionRequestFunctions>}
@@ -90,7 +91,6 @@ interface JsonGlyph {
 }
 
 type ReplyConstraintsGlyph = RawGlyph | JsonGlyph;
-
 
 interface ReplyConstraints {
   sender_type: string;
@@ -119,6 +119,8 @@ declare interface MinimaxChatInput {
    *  Dialogue setting, characters, or functionality setting.
    */
   prompt?: string;
+
+  prefixMessages?: ChatCompletionRequestMessage[];
 
   /**
    * API key to use when making requests. Defaults to the value of
@@ -252,6 +254,7 @@ export interface ChatMinimaxCallOptions extends BaseLanguageModelCallOptions {
   tools?: StructuredTool[];
   plugins?: string[];
   replyConstraints?: ReplyConstraints;
+  sampleMessages?: BaseMessage[];
 }
 
 /**
@@ -278,6 +281,7 @@ export class ChatMinimax
       "tools",
       "plugins",
       "replyConstraints",
+      "sampleMessages",
     ];
   }
 
@@ -304,6 +308,8 @@ export class ChatMinimax
 
   modelName = "abab5-chat";
 
+  prefixMessages?: ChatCompletionRequestMessage[];
+
   apiUrl: string;
 
   basePath?: string = "https://api.minimax.chat/v1";
@@ -316,7 +322,7 @@ export class ChatMinimax
 
   skipInfoMask?: boolean;
 
-  proVersion?: boolean = false;
+  proVersion?: boolean = true;
 
   beamWidth?: number;
 
@@ -350,6 +356,7 @@ export class ChatMinimax
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.skipInfoMask = fields?.skipInfoMask ?? this.skipInfoMask;
+    this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.maskSensitiveInfo =
       fields?.maskSensitiveInfo ?? this.maskSensitiveInfo;
     this.beamWidth = fields?.beamWidth ?? this.beamWidth;
@@ -388,7 +395,8 @@ export class ChatMinimax
       use_standard_sse: this.useStandardSse,
       role_meta: this.roleMeta,
       bot_setting: this.botSetting,
-      reply_constraints: options?.replyConstraints,
+      reply_constraints:options?.replyConstraints,
+      sample_messages: this.messageToMinimaxMessage(options?.sampleMessages),
       functions:
         options?.functions ??
         (options?.tools
@@ -407,6 +415,20 @@ export class ChatMinimax
     };
   }
 
+  /**
+   * Convert a list of messages to the format expected by the model.
+   * @param messages
+   */
+  messageToMinimaxMessage(
+    messages?: BaseMessage[]
+  ): ChatCompletionRequestMessage[] | undefined {
+    return messages?.map((message) => ({
+      sender_type: messageToMinimaxRole(message),
+      text: message.content,
+      sender_name: message.name,
+    }));
+  }
+
   /** @ignore */
   async _generate(
     messages: BaseMessage[],
@@ -416,11 +438,10 @@ export class ChatMinimax
     const tokenUsage: TokenUsage = {};
 
     const params = this.invocationParams(options);
-    const messagesMapped: ChatCompletionMessage[] = messages.map((message) => ({
-      sender_type: messageToMinimaxRole(message),
-      text: message.content,
-      sender_name: message.name,
-    }));
+    const messagesMapped: ChatCompletionRequestMessage[] = [
+      ...(this.messageToMinimaxMessage(messages) ?? []),
+      ...(this.prefixMessages ?? []),
+    ];
 
     const data = params.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
@@ -514,6 +535,9 @@ export class ChatMinimax
       tokenUsage.total_tokens = (tokenUsage.total_tokens ?? 0) + totalTokens;
     }
 
+    if (data.base_resp.status_code != 0) {
+      throw new Error("Minimax API error: " + data.base_resp.status_msg);
+    }
     const generations: ChatGeneration[] = [];
     const lastChoiceMessages =
       data.choices.length > 0
@@ -562,10 +586,11 @@ export class ChatMinimax
       });
 
       console.log("url:", url);
-      console.log("request:", request);
+      console.log("request:", JSON.stringify(request));
       console.log("response:", response);
       if (!stream) {
         const json = await response.json();
+        console.log("json:", json);
         return json as ChatCompletionResponse;
       } else {
         if (response.body) {

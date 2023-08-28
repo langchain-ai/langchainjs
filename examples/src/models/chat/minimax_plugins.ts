@@ -11,11 +11,7 @@ const model = new ChatMinimax({
       bot_name: "MM Assistant",
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
-  ],
-  replyConstraints: {
-    sender_type: "BOT",
-    sender_name: "MM Assistant",
-  },
+  ]
 }).bind({
   plugins: ["plugin_web_search"],
 });

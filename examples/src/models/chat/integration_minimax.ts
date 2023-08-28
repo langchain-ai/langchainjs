@@ -8,7 +8,6 @@ dotenv.config();
 // const abab5 = new ChatMinimax({
 // });
 
-
 // Use abab5.5
 // const abab5_5 = new ChatMinimax({
 //   modelName: "abab5.5-chat",
@@ -49,19 +48,23 @@ const abab5_5WithPlugins = new ChatMinimax({
   botSetting: [
     {
       bot_name: "MM Assistant",
-      content:
-        "MM Assistant is an AI Assistant developed by minimax.",
+      content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
+}).bind({
   replyConstraints: {
     sender_type: "BOT",
     sender_name: "MM Assistant",
   },
 });
+const messages = [
+  new HumanMessage({
+    content: " What is the weather like in Shanghai tomorrow?",
+    name: "XiaoMing",
+  }),
+];
 
-const messages = [new HumanMessage({ content: " What is the weather like in Shanghai tomorrow?", name: "XiaoMing" })];
-
-let res = await abab5_5WithPlugins.call(messages);
+let res = await abab5_5WithPlugins.invoke(messages);
 console.log(res);
 
 /*
@@ -72,9 +75,6 @@ AIChatMessage {
   }
 }
 */
-
-
-
 
 // res = await ernie.call(messages);
 /*
