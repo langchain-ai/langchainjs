@@ -29,6 +29,10 @@ interface Message {
 interface TokenUsage {
   total_tokens?: number;
 }
+interface BaseResp {
+  status_code?: number;
+  status_msg?: string;
+}
 
 /**
  * Interface representing a request for a chat completion.
@@ -55,11 +59,15 @@ interface ChatCompletionRequest {
  */
 interface ChatCompletionResponse {
   id: string;
-  object: string;
+  model: string;
   created: number;
   reply: string;
   input_sensitive: boolean;
+  input_sensitive_type: number;
+  output_sensitive: boolean;
+  output_sensitive_type: number;
   usage: TokenUsage;
+  base_resp: BaseResp;
 }
 
 interface RoleMeta {
@@ -374,8 +382,8 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
     }));
 
     const data = params.stream
-      ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
-          let response: ChatCompletionResponse;
+      ? await new Promise<Partial<ChatCompletionResponse>>((resolve, reject) => {
+          let response: Partial<ChatCompletionResponse>;
           let rejected = false;
           let resolved = false;
           this.completionWithRetry(
@@ -412,7 +420,6 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
               if (!response) {
                 response = {
                   id: message.id,
-                  object: message.object,
                   created: message.created,
                   reply: message.result,
                   input_sensitive: message.need_clear_history,
@@ -468,7 +475,7 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
     });
     return {
       generations,
-      llmOutput: { tokenUsage },
+      llmOutput: data,
     };
   }
 
