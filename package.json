@@ -54,7 +54,6 @@
   "dependencies": {
     "@types/axios": "^0.14.0",
     "axios": "^0.26.0",
-    "axios-bittensor": "npm:axios@^1.4.0",
     "turbo": "latest"
   },
   "resolutions": {

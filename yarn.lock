@@ -8321,7 +8321,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios-bittensor@npm:axios@^1.4.0, axios@npm:*, axios@npm:^1.4.0":
+"axios@npm:*, axios@npm:^1.4.0":
   version: 1.4.0
   resolution: "axios@npm:1.4.0"
   dependencies:
@@ -14652,8 +14652,6 @@ __metadata:
       optional: true
     apify-client:
       optional: true
-    axios:
-      optional: true
     cheerio:
       optional: true
     chromadb:
@@ -14735,7 +14733,6 @@ __metadata:
     "@types/axios": ^0.14.0
     "@types/jest": ^29.5.3
     axios: ^0.26.0
-    axios-bittensor: "npm:axios@^1.4.0"
     dotenv: ^16.0.3
     husky: ^8.0.0
     lint-staged: ^13.1.1

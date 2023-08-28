@@ -878,9 +878,6 @@
     "apify-client": {
       "optional": true
     },
-    "axios": {
-      "optional": true
-    },
     "cheerio": {
       "optional": true
     },
