@@ -1,9 +1,9 @@
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import {
   GoogleVertexAIBasePrediction,
-  GoogleVertexAIConnectionParams,
+  GoogleVertexAIBaseLLMInput,
 } from "../types/googlevertexai-types.js";
-import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../util/async_caller.js";
 import { chunkArray } from "../util/chunk.js";
 
@@ -14,7 +14,7 @@ import { chunkArray } from "../util/chunk.js";
  */
 export interface GoogleVertexAIEmbeddingsParams
   extends EmbeddingsParams,
-    GoogleVertexAIConnectionParams {}
+    GoogleVertexAIBaseLLMInput {}
 
 /**
  * Defines additional options specific to the
@@ -65,7 +65,7 @@ export class GoogleVertexAIEmbeddings
 {
   model = "textembedding-gecko";
 
-  private connection: GoogleVertexAIConnection<
+  private connection: GoogleVertexAILLMConnection<
     GoogleVertexAILLMEmbeddingsOptions,
     GoogleVertexAILLMEmbeddingsInstance,
     GoogleVertexEmbeddingsResults
@@ -76,7 +76,7 @@ export class GoogleVertexAIEmbeddings
 
     this.model = fields?.model ?? this.model;
 
-    this.connection = new GoogleVertexAIConnection(
+    this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller
     );

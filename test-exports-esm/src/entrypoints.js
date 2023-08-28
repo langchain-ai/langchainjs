@@ -49,6 +49,7 @@ import * as retrievers_parent_document from "langchain/retrievers/parent_documen
 import * as retrievers_time_weighted from "langchain/retrievers/time_weighted";
 import * as retrievers_document_compressors_chain_extract from "langchain/retrievers/document_compressors/chain_extract";
 import * as retrievers_hyde from "langchain/retrievers/hyde";
+import * as retrievers_score_threshold from "langchain/retrievers/score_threshold";
 import * as retrievers_vespa from "langchain/retrievers/vespa";
 import * as cache from "langchain/cache";
 import * as stores_doc_in_memory from "langchain/stores/doc/in_memory";

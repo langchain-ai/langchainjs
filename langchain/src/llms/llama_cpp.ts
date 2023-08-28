@@ -1,8 +1,4 @@
-import type {
-  LlamaModel,
-  LlamaContext,
-  LlamaChatSession,
-} from "node-llama-cpp";
+import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
 
 import { LLM, BaseLLMParams } from "./base.js";
 
@@ -43,25 +39,61 @@ export interface LlamaCppInputs extends BaseLLMParams {
  *  version supported in version 2.0.0.
  *  This also requires that have a locally built version of Llama2 installed.
  */
-export class LlamaCpp extends LLM {
-  static inputs: LlamaCppInputs;
+export class LlamaCpp extends LLM implements LlamaCppInputs {
+//   static inputs: LlamaCppInputs;
 
-  static model: LlamaModel;
+//   static model: LlamaModel;
 
-  static context: LlamaContext;
+//   static context: LlamaContext;
+
+  batchSize?: number;
+
+  contextSize?: number;
+
+  embedding?: boolean;
+
+  f16Kv?: boolean;
+
+  gpuLayers?: number;
+
+  logitsAll?: boolean;
+
+  lowVram?: boolean;
+
+  seed?: null | number;
+
+  useMlock?: boolean;
+
+  useMmap?: boolean;
+
+  vocabOnly?: boolean;
+
+  modelPath: string;
+
+  _model: LlamaModel;
+
+  _context: LlamaContext;
 
   static lc_name() {
-    return "Llama2-CPP";
+    return "LlamaCpp";
   }
 
   constructor(inputs: LlamaCppInputs) {
     super(inputs);
-
-    if (inputs.modelPath) {
-      LlamaCpp.inputs = inputs;
-    } else {
-      throw new Error("A path to the Llama2 model is required.");
-    }
+    this.batchSize = inputs.batchSize;
+    this.contextSize = inputs.contextSize;
+    this.embedding = inputs.embedding;
+    this.f16Kv = inputs.f16Kv;
+    this.gpuLayers = inputs.gpuLayers;
+    this.logitsAll = inputs.logitsAll;
+    this.lowVram = inputs.lowVram;
+    this.modelPath = inputs.modelPath;
+    this.seed = inputs.seed;
+    this.useMlock = inputs.useMlock;
+    this.useMmap = inputs.useMmap;
+    this.vocabOnly = inputs.vocabOnly;
+    this._model = new LlamaModel(inputs);
+    this._context = new LlamaContext({ model: this._model });
   }
 
   _llmType() {
@@ -73,44 +105,15 @@ export class LlamaCpp extends LLM {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const { LlamaModel, LlamaContext, LlamaChatSession } =
-      await LlamaCpp.imports();
-
-    if (!LlamaCpp.model) {
-      LlamaCpp.model = new LlamaModel(LlamaCpp.inputs);
-    }
-
-    if (!LlamaCpp.context) {
-      LlamaCpp.context = new LlamaContext({ model: LlamaCpp.model });
-    }
-
-    const session = new LlamaChatSession({ context: LlamaCpp.context });
+    const session = new LlamaChatSession({ context: this._context });
 
     try {
-      const compleation = await session.prompt(prompt, undefined, {
+      const completion = await session.prompt(prompt, undefined, {
         signal: options.signal,
       });
-      return compleation;
+      return completion;
     } catch (e) {
-      throw new Error("Error getting prompt compleation.");
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    LlamaModel: typeof LlamaModel;
-    LlamaContext: typeof LlamaContext;
-    LlamaChatSession: typeof LlamaChatSession;
-  }> {
-    try {
-      const { LlamaModel, LlamaContext, LlamaChatSession } = await import(
-        "node-llama-cpp"
-      );
-      return { LlamaModel, LlamaContext, LlamaChatSession };
-    } catch (e) {
-      throw new Error(
-        "Please install node-llama-cpp as a dependency with, e.g. `npm install node-llama-cpp`"
-      );
+      throw new Error("Error getting completion.");
     }
   }
 }

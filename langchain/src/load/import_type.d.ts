@@ -82,6 +82,9 @@ export interface OptionalImportMap {
   "langchain/llms/llama_cpp"?:
     | typeof import("../llms/llama_cpp.js")
     | Promise<typeof import("../llms/llama_cpp.js")>;
+  "langchain/llms/writer"?:
+    | typeof import("../llms/writer.js")
+    | Promise<typeof import("../llms/writer.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
@@ -94,6 +97,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
+  "langchain/vectorstores/googlevertexai"?:
+    | typeof import("../vectorstores/googlevertexai.js")
+    | Promise<typeof import("../vectorstores/googlevertexai.js")>;
   "langchain/vectorstores/hnswlib"?:
     | typeof import("../vectorstores/hnswlib.js")
     | Promise<typeof import("../vectorstores/hnswlib.js")>;
@@ -199,6 +205,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notionapi"?:
     | typeof import("../document_loaders/web/notionapi.js")
     | Promise<typeof import("../document_loaders/web/notionapi.js")>;
+  "langchain/document_loaders/web/recursive_url"?:
+    | typeof import("../document_loaders/web/recursive_url.js")
+    | Promise<typeof import("../document_loaders/web/recursive_url.js")>;
   "langchain/document_loaders/web/s3"?:
     | typeof import("../document_loaders/web/s3.js")
     | Promise<typeof import("../document_loaders/web/s3.js")>;
@@ -319,6 +328,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/momento"?:
     | typeof import("../stores/message/momento.js")
     | Promise<typeof import("../stores/message/momento.js")>;
+  "langchain/stores/message/mongodb"?:
+    | typeof import("../stores/message/mongodb.js")
+    | Promise<typeof import("../stores/message/mongodb.js")>;
   "langchain/stores/message/redis"?:
     | typeof import("../stores/message/redis.js")
     | Promise<typeof import("../stores/message/redis.js")>;
@@ -337,6 +349,9 @@ export interface OptionalImportMap {
   "langchain/storage/ioredis"?:
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
+  "langchain/hub"?:
+    | typeof import("../hub.js")
+    | Promise<typeof import("../hub.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
@@ -379,6 +394,8 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WRITER_API_KEY?: string;
+  WRITER_ORG_ID?: string;
   ZAPIER_NLA_API_KEY?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;

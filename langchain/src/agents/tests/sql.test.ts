@@ -94,6 +94,34 @@ SELECT * FROM "users" LIMIT 3;
   expect(result.trim()).toBe(expectStr.trim());
 });
 
+test("InfoSqlTool with customDescription", async () => {
+  db.customDescription = {
+    products: "Custom Description for Products Table",
+    users: "Custom Description for Users Table",
+    userss: "Should not appear",
+  };
+  const infoSqlTool = new InfoSqlTool(db);
+  const result = await infoSqlTool.call("users, products");
+  const expectStr = `
+Custom Description for Products Table
+CREATE TABLE products (
+id INTEGER , name TEXT , price INTEGER ) 
+SELECT * FROM "products" LIMIT 3;
+ id name price
+ 1 Apple 100
+ 2 Banana 200
+ 3 Orange 300
+Custom Description for Users Table
+CREATE TABLE users (
+id INTEGER , name TEXT , age INTEGER ) 
+SELECT * FROM "users" LIMIT 3;
+ id name age
+ 1 Alice 20
+ 2 Bob 21
+ 3 Charlie 22`;
+  expect(result.trim()).toBe(expectStr.trim());
+});
+
 test("InfoSqlTool with error", async () => {
   const infoSqlTool = new InfoSqlTool(db);
   const result = await infoSqlTool.call("userss, products");
@@ -112,4 +140,20 @@ test("QueryCheckerTool", async () => {
   const queryCheckerTool = new QueryCheckerTool();
   expect(queryCheckerTool.llmChain).not.toBeNull();
   expect(queryCheckerTool.llmChain.inputKeys).toEqual(["query"]);
+});
+
+test("ListTablesSqlTool with include tables", async () => {
+  const includesTables = ["users"];
+  db.includesTables = includesTables;
+  const listSqlTool = new ListTablesSqlTool(db);
+  const result = await listSqlTool.call("");
+  expect(result).toBe("users");
+});
+
+test("ListTablesSqlTool with ignore tables", async () => {
+  const ignoreTables = ["products"];
+  db.ignoreTables = ignoreTables;
+  const listSqlTool = new ListTablesSqlTool(db);
+  const result = await listSqlTool.call("");
+  expect(result).toBe("users");
 });

@@ -6368,6 +6368,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@smithy/eventstream-codec@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "@smithy/eventstream-codec@npm:2.0.5"
+  dependencies:
+    "@aws-crypto/crc32": 3.0.0
+    "@smithy/types": ^2.2.2
+    "@smithy/util-hex-encoding": ^2.0.0
+    tslib: ^2.5.0
+  checksum: 472c0b1652e2afcf9dd9a8f122255d8b3b46019ead3c12ce8ceb3242d2dca525c5dcf6fd2fe57e03621283c8762b44d553a10eb0ce35eecaf2f4366c45bbf683
+  languageName: node
+  linkType: hard
+
 "@smithy/fetch-http-handler@npm:^2.0.2, @smithy/fetch-http-handler@npm:^2.0.3":
   version: 2.0.3
   resolution: "@smithy/fetch-http-handler@npm:2.0.3"
@@ -6685,6 +6697,15 @@ __metadata:
   dependencies:
     tslib: ^2.5.0
   checksum: b9bbb35a3d20d4cb26966830d25251f671253aa8f886d23abde71a879486fc5b049a66c44ebd3e724d495772336f13c3034fb35bc62a6db058daaf310e4a013d
+  languageName: node
+  linkType: hard
+
+"@smithy/types@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "@smithy/types@npm:2.2.2"
+  dependencies:
+    tslib: ^2.5.0
+  checksum: 2799a14620da60efb2a0aba1bf9adc553a5446dc447b9ee1d7a95410233a70dff2b5e563fecf84388137dabbe662c6bf3a2247ca20a1f266c1256f82e0f25fcf
   languageName: node
   linkType: hard
 
@@ -8111,6 +8132,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@writerai/writer-sdk@npm:^0.40.2":
+  version: 0.40.2
+  resolution: "@writerai/writer-sdk@npm:0.40.2"
+  dependencies:
+    axios: ^1.1.3
+    class-transformer: ^0.5.1
+    form-data: ^4.0.0
+    jsonpath: ^1.1.1
+    reflect-metadata: ^0.1.13
+  checksum: 25b725e49df0f4f75a3837e7835279e32239f94c89a9dbd3fcccb40c31b53d12ce84edc73eba32395e1eda98b5990e823ec159857d54948ee530e4f33d0a5b49
+  languageName: node
+  linkType: hard
+
 "@xata.io/client@npm:^0.25.1":
   version: 0.25.1
   resolution: "@xata.io/client@npm:0.25.1"
@@ -8638,6 +8672,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.1.3, axios@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "axios@npm:1.4.0"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 7fb6a4313bae7f45e89d62c70a800913c303df653f19eafec88e56cea2e3821066b8409bc68be1930ecca80e861c52aa787659df0ffec6ad4d451c7816b9386b
+  languageName: node
+  linkType: hard
+
 "axios@npm:^1.3.2":
   version: 1.3.4
   resolution: "axios@npm:1.3.4"
@@ -8646,17 +8691,6 @@ __metadata:
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
   checksum: 7440edefcf8498bc3cdf39de00443e8101f249972c83b739c6e880d9d669fea9486372dbe8739e88b3bf8bb1ad15f6106693f206f078f4516fe8fd47b1c3093c
-  languageName: node
-  linkType: hard
-
-"axios@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "axios@npm:1.4.0"
-  dependencies:
-    follow-redirects: ^1.15.0
-    form-data: ^4.0.0
-    proxy-from-env: ^1.1.0
-  checksum: 7fb6a4313bae7f45e89d62c70a800913c303df653f19eafec88e56cea2e3821066b8409bc68be1930ecca80e861c52aa787659df0ffec6ad4d451c7816b9386b
   languageName: node
   linkType: hard
 
@@ -9419,6 +9453,13 @@ __metadata:
   version: 1.2.2
   resolution: "cjs-module-lexer@npm:1.2.2"
   checksum: 977f3f042bd4f08e368c890d91eecfbc4f91da0bc009a3c557bc4dfbf32022ad1141244ac1178d44de70fc9f3dea7add7cd9a658a34b9fae98a55d8f92331ce5
+  languageName: node
+  linkType: hard
+
+"class-transformer@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "class-transformer@npm:0.5.1"
+  checksum: f191c8b4cc4239990f5efdd790cabdd852c243ed66248e39f6616a349c910c6eed2d9fd1fbf7ee6ea89f69b4f1d0b493b27347fe0cd0ae26b47c3745a805b6d3
   languageName: node
   linkType: hard
 
@@ -11505,6 +11546,16 @@ __metadata:
     acorn-jsx: ^5.3.2
     eslint-visitor-keys: ^3.4.0
   checksum: cdf6e43540433d917c4f2ee087c6e987b2063baa85a1d9cdaf51533d78275ebd5910c42154e7baf8e3e89804b386da0a2f7fad2264d8f04420e7506bf87b3b88
+  languageName: node
+  linkType: hard
+
+"esprima@npm:1.2.2":
+  version: 1.2.2
+  resolution: "esprima@npm:1.2.2"
+  bin:
+    esparse: ./bin/esparse.js
+    esvalidate: ./bin/esvalidate.js
+  checksum: 4f10006f0e315f2f7d8cf6630e465f183512f1ab2e862b11785a133ce37ed1696573deefb5256e510eaa4368342b13b393334477f6ccdcdb8f10e782b0f5e6dc
   languageName: node
   linkType: hard
 
@@ -14645,6 +14696,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonpath@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "jsonpath@npm:1.1.1"
+  dependencies:
+    esprima: 1.2.2
+    static-eval: 2.0.2
+    underscore: 1.12.1
+  checksum: 5480d8e9e424fe2ed4ade6860b6e2cefddb21adb3a99abe0254cd9428e8ef9b0c9fb5729d6a5a514e90df50d645ccea9f3be48d627570e6222dd5dadc28eba7b
+  languageName: node
+  linkType: hard
+
 "jsonpointer@npm:^5.0.1":
   version: 5.0.1
   resolution: "jsonpointer@npm:5.0.1"
@@ -14822,6 +14884,8 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
+    "@smithy/eventstream-codec": ^2.0.5
+    "@smithy/util-utf8": ^2.0.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
@@ -14845,6 +14909,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
+    "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     ansi-styles: ^5.0.0
@@ -14881,7 +14946,8 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langsmith: ~0.0.16
+    langchainhub: ~0.0.3
+    langsmith: ~0.0.26
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -14950,6 +15016,8 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
+    "@smithy/eventstream-codec": ^2.0.5
+    "@smithy/util-utf8": ^2.0.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
@@ -14957,6 +15025,7 @@ __metadata:
     "@tensorflow/tfjs-core": "*"
     "@tigrisdata/vector": ^1.1.0
     "@upstash/redis": ^1.20.6
+    "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
@@ -14974,6 +15043,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
+    langchainhub: ~0.0.3
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -15050,6 +15120,10 @@ __metadata:
       optional: true
     "@raycast/api":
       optional: true
+    "@smithy/eventstream-codec":
+      optional: true
+    "@smithy/util-utf8":
+      optional: true
     "@supabase/postgrest-js":
       optional: true
     "@supabase/supabase-js":
@@ -15063,6 +15137,8 @@ __metadata:
     "@tigrisdata/vector":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@writerai/writer-sdk":
       optional: true
     "@xata.io/client":
       optional: true
@@ -15097,6 +15173,8 @@ __metadata:
     ioredis:
       optional: true
     jsdom:
+      optional: true
+    langchainhub:
       optional: true
     mammoth:
       optional: true
@@ -15147,6 +15225,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"langchainhub@npm:~0.0.3":
+  version: 0.0.3
+  resolution: "langchainhub@npm:0.0.3"
+  checksum: 0962c6088a0cef8635335b735beae5e8654b9b506b4f8a144baba37f4798b1d197a34a1ff5368a982e204cdb9f4e0cb6cf8975b8baf742872829eb4bdb6eb552
+  languageName: node
+  linkType: hard
+
 "langchainjs@workspace:.":
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
@@ -15162,9 +15247,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:~0.0.16":
-  version: 0.0.16
-  resolution: "langsmith@npm:0.0.16"
+"langsmith@npm:~0.0.26":
+  version: 0.0.26
+  resolution: "langsmith@npm:0.0.26"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -15173,7 +15258,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: fc738ef9a563af14a7dc06027f98eb6ac2641b95e384b109ae388c32e9abd5e098fe07925139e489eaed17df84a8e32b961207d4cc760631b4c14e4c06e418d9
+  checksum: 5b155ae09e6c0b09bdef25a2af93728bf994944d7a487a3943b69a0aa74a51ee3758cf145acebae1b2687b363aa8cf5fd99e147588fb1b4152ecb0e69ba62baf
   languageName: node
   linkType: hard
 
@@ -19471,6 +19556,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"static-eval@npm:2.0.2":
+  version: 2.0.2
+  resolution: "static-eval@npm:2.0.2"
+  dependencies:
+    escodegen: ^1.8.1
+  checksum: 335a923c5ccb29add404ac23d0a55c0da6cee3071f6f67a7053aeac0dedc6dbfc53ac9269e9c25f403f5b7603a291ef47d7114f99bde241184f7aa3f9286dc32
+  languageName: node
+  linkType: hard
+
 "statuses@npm:2.0.1":
   version: 2.0.1
   resolution: "statuses@npm:2.0.1"
@@ -20702,6 +20796,13 @@ __metadata:
   version: 2.0.5
   resolution: "undefsafe@npm:2.0.5"
   checksum: f42ab3b5770fedd4ada175fc1b2eb775b78f609156f7c389106aafd231bfc210813ee49f54483d7191d7b76e483bc7f537b5d92d19ded27156baf57592eb02cc
+  languageName: node
+  linkType: hard
+
+"underscore@npm:1.12.1":
+  version: 1.12.1
+  resolution: "underscore@npm:1.12.1"
+  checksum: ec327603aa112b99fe9d74cd9bf3b3b7451465a9d2610ceab269a532e3f191650ab017903be34dc86fe406a11d04d8905a3b04dd4c129493e51bee09a3f3074c
   languageName: node
   linkType: hard
 
