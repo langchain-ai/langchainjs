@@ -8341,7 +8341,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^0.26.0, axios@npm:^0.26.1":
+"axios@npm:^0.26.0":
   version: 0.26.1
   resolution: "axios@npm:0.26.1"
   dependencies:
@@ -14432,7 +14432,7 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
-    axios: ^0.26.1
+    axios: ^0.26.0
     binary-extensions: ^2.2.0
     camelcase: 6
     cheerio: ^1.0.0-rc.12
@@ -14734,7 +14734,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     "@types/axios": ^0.14.0
     "@types/jest": ^29.5.3
-    axios: ^0.26.1
+    axios: ^0.26.0
     axios-bittensor: "npm:axios@^1.4.0"
     dotenv: ^16.0.3
     husky: ^8.0.0
