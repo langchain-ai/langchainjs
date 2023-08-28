@@ -1,22 +1,16 @@
-import axiosMod, { AxiosStatic } from "axios";
-import { Tool } from "./base.js";
-
-const axios = (
-    "default" in axiosMod ? axiosMod.default : axiosMod
-  ) as AxiosStatic;
+import { Tool, ToolParams } from "./base.js";
 
 export class WolframAlphaTool extends Tool {
-  appid = "";
+  appid: string;
 
-  name = "wolframalpha";
+  name = "wolfram_alpha";
 
-  description = `A wrapper around Wolfram Alpha. Useful for when you need to answer questions about Math, Science, Technology, Culture, Society and Everyday Life. Input should be a search query.
-`;
+  description = `A wrapper around Wolfram Alpha. Useful for when you need to answer questions about Math, Science, Technology, Culture, Society and Everyday Life. Input should be a search query.`;
 
-  constructor(appid: string) {
-    super(...arguments);
+  constructor(fields: ToolParams & { appid: string }) {
+    super(fields);
 
-    this.appid = appid;
+    this.appid = fields.appid;
   }
 
   get lc_namespace() {
@@ -24,19 +18,13 @@ export class WolframAlphaTool extends Tool {
   }
 
   static lc_name() {
-    return "WolframAlpha";
+    return "WolframAlphaTool";
   }
 
-  async _call(inputs: string): Promise<string> {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api`;
+  async _call(query: string): Promise<string> {
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${this.appid}&input=${query}`;
+    const res = await fetch(url);
 
-    const res = await axios.get(url, {
-      params: {
-        input: inputs,
-        appid: this.appid,
-      },
-    });
-
-    return res.data;
+    return res.text();
   }
 }
