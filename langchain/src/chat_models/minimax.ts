@@ -19,6 +19,7 @@ export type MessageRole = "BOT" | "USER";
  */
 interface Message {
   sender_type: MessageRole;
+  sender_name?: string;
   text: string;
 }
 
@@ -39,7 +40,14 @@ interface ChatCompletionRequest {
   prompt?: string;
   temperature?: number;
   top_p?: number;
+  tokens_to_generate?: number;
   skip_info_mask?: boolean;
+  mask_sensitive_info?: boolean;
+  beam_width?: number;
+  use_standard_sse?: boolean;
+  role_meta?: RoleMeta;
+  bot_setting?: BotSetting[];
+  reply_constraints?: ReplyConstraints;
 }
 
 /**
@@ -52,6 +60,21 @@ interface ChatCompletionResponse {
   reply: string;
   input_sensitive: boolean;
   usage: TokenUsage;
+}
+
+interface RoleMeta {
+  role_meta: string;
+  bot_name: string;
+}
+
+interface ReplyConstraints {
+  sender_type: string;
+  sender_name: string;
+}
+
+interface BotSetting {
+  content: string;
+  bot_name: string;
 }
 
 /**
@@ -67,7 +90,7 @@ declare interface MinimaxChatInput {
   streaming?: boolean;
 
   /**
-   * ID of the end-user who made requests.
+   *  Dialogue setting, characters, or functionality setting.
    */
   prompt?: string;
 
@@ -90,19 +113,78 @@ declare interface MinimaxChatInput {
    */
   temperature?: number;
 
-  /** Total probability mass of tokens to consider at each step. Range
-   * from 0 to 1.0. Defaults to 0.8.
+  /**
+   *  The smaller the sampling method, the more determinate the result;
+   *  the larger the number, the more random the result.
    */
   topP?: number;
 
-  /** Penalizes repeated tokens according to frequency. Range
-   * from 1.0 to 2.0. Defaults to 1.0.
+  /**
+   *  Sensitize text information in the output that may involve privacy issues,
+   *  currently including but not limited to emails, domain names,
+   *  links, ID numbers, home addresses, etc. Default false, ie. enable sensitization.
    */
   skipInfoMask?: boolean;
 
+  /**
+   *  For the text information in the output that may involve privacy issues,
+   *  code masking is currently included but not limited to emails, domains, links, ID numbers, home addresses, etc.,
+   *  with the default being true, that is, code masking is enabled.
+   */
+  maskSensitiveInfo?: boolean;
+
   basePath?: string;
 
+  /**
+   *  Whether to use the standard SSE format, when set to true,
+   *  the streaming results will be separated by two line breaks.
+   *  This parameter only takes effect when stream is set to true.
+   */
+  useStandardSse?: boolean;
+
+  /**
+   * Enable Chatcompletion pro
+   */
   proVersion?: boolean;
+
+  /**
+   *  If it is true, this indicates that the current request is set to continuation mode,
+   *  and the response is a continuation of the last sentence in the incoming messages;
+   *  at this time, the last sender is not limited to USER, it can also be BOT.
+   *  Assuming the last sentence of incoming messages is {"sender_type": " U S E R", "text": "天生我材"},
+   *  the completion of the reply may be "It must be useful."
+   */
+  continueLastMessage?: boolean;
+
+  /**
+   *  How many results to generate; the default is 1 and the maximum is not more than 4.
+   *  Because beamWidth generates multiple results, it will consume more tokens.
+   */
+  beamWidth?: number;
+
+  /**
+   *  Pay attention to the maximum number of tokens generated,
+   *  this parameter does not affect the generation effect of the model itself,
+   *  but only realizes the function by truncating the tokens exceeding the limit.
+   *  It is necessary to ensure that the number of tokens of the input context plus this value is less than 6144 or 16384,
+   *  otherwise the request will fail.
+   */
+  tokensToGenerate?: number;
+
+  /**
+   * Dialogue Metadata
+   */
+  roleMeta?: RoleMeta;
+
+  /**
+   *  Model Response Requirements , only available for pro version.
+   */
+  replyConstraints?: ReplyConstraints;
+
+  /**
+   *  Setting for each robot, only available for pro version.
+   */
+  botSetting?: BotSetting[];
 }
 
 /**
@@ -189,13 +271,29 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
 
   basePath?: string = "https://api.minimax.chat/v1";
 
-  temperature?: number | undefined;
+  temperature?: number = 0.9;
 
-  topP?: number | undefined;
+  topP?: number = 0.8;
 
-  skipInfoMask?: boolean | undefined;
+  tokensToGenerate?: number;
+
+  skipInfoMask?: boolean;
 
   proVersion?: boolean = false;
+
+  beamWidth?: number;
+
+  botSetting?: BotSetting[];
+
+  continueLastMessage?: boolean;
+
+  maskSensitiveInfo?: boolean;
+
+  replyConstraints?: ReplyConstraints;
+
+  roleMeta?: RoleMeta;
+
+  useStandardSse?: boolean;
 
   constructor(fields?: Partial<MinimaxChatInput> & BaseChatModelParams) {
     super(fields ?? {});
@@ -203,13 +301,13 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
     this.minimaxGroupId =
       fields?.minimaxGroupId ?? getEnvironmentVariable("MINIMAX_GROUP_ID");
     if (!this.minimaxGroupId) {
-      throw new Error("Baidu API key not found");
+      throw new Error("Minimax GroupID  not found");
     }
 
     this.minimaxApiKey =
       fields?.minimaxApiKey ?? getEnvironmentVariable("MINIMAX_API_KEY");
     if (!this.minimaxApiKey) {
-      throw new Error("Baidu Secret key not found");
+      throw new Error("Minimax ApiKey not found");
     }
 
     this.streaming = fields?.streaming ?? this.streaming;
@@ -217,11 +315,22 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.skipInfoMask = fields?.skipInfoMask ?? this.skipInfoMask;
+    this.maskSensitiveInfo = fields?.maskSensitiveInfo ?? this.maskSensitiveInfo;
+    this.beamWidth = fields?.beamWidth ?? this.beamWidth;
+    this.continueLastMessage = fields?.continueLastMessage ?? this.continueLastMessage;
+    this.tokensToGenerate = fields?.tokensToGenerate ?? this.tokensToGenerate;
+    this.roleMeta = fields?.roleMeta ?? this.roleMeta;
+    this.botSetting = fields?.botSetting ?? this.botSetting;
+    this.replyConstraints = fields?.replyConstraints ?? this.replyConstraints;
+    this.useStandardSse = fields?.useStandardSse ?? this.useStandardSse;
+
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.basePath = fields?.basePath ?? this.basePath;
     this.proVersion = fields?.proVersion ?? this.proVersion;
-    const modelCompletion = this.proVersion  ? "chatcompletion_pro" : "chatcompletion";
+    const modelCompletion = this.proVersion
+      ? "chatcompletion_pro"
+      : "chatcompletion";
     this.apiUrl = `${this.basePath}/text/${modelCompletion}`;
   }
 
@@ -235,6 +344,7 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
       prompt: this.prompt,
       temperature: this.temperature,
       top_p: this.topP,
+      tokens_to_generate: this.tokensToGenerate,
       skip_info_mask: this.skipInfoMask,
     };
   }
@@ -260,6 +370,7 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
     const messagesMapped: Message[] = messages.map((message) => ({
       sender_type: messageToMinimaxRole(message),
       text: message.content,
+      sender_name: message.name,
     }));
 
     const data = params.stream

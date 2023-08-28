@@ -5,12 +5,12 @@ dotenv.config();
 
 // Default model is abab5-chat
 // const abab5 = new ChatMinimax({
-//   verbose: true,
 // });
 
 // Use ERNIE-Bot
 const abab5_5= new ChatMinimax({
-  modelName: "abab5-chat",
+  modelName: "abab5.5-chat",
+  proVersion: true,
   verbose: true,
 });
 
