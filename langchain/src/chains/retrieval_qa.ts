@@ -74,7 +74,7 @@ export class RetrievalQAChain
       question,
       runManager?.getChild("retriever")
     );
-    const inputs = { question, input_documents: docs };
+    const inputs = { question, input_documents: docs, ...values };
     const result = await this.combineDocumentsChain.call(
       inputs,
       runManager?.getChild("combine_documents")
