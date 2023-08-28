@@ -30,20 +30,15 @@ const result = await model.invoke([
 console.log(result);
 
 /*
-  AIMessage {
-    content: '',
-    name: undefined,
-    additional_kwargs: {
-      function_call: {
-        name: 'extractor',
-        arguments: '{\n' +
-          '  "tone": "positive",\n' +
-          '  "entity": "day",\n' +
-          '  "word_count": 4,\n' +
-          '  "chat_response": "It certainly is a gorgeous day!",\n' +
-          '  "final_punctuation": "!"\n' +
-          '}'
-      }
-    }
-  }
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: {
+    content: 'The weather in Shanghai tomorrow is expected to be hot. Please note that this is just a forecast and the actual weather conditions may vary.',
+    additional_kwargs: { function_call: undefined }
+  },
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: 'The weather in Shanghai tomorrow is expected to be hot. Please note that this is just a forecast and the actual weather conditions may vary.',
+  name: undefined,
+  additional_kwargs: { function_call: undefined }
+}
 */
