@@ -23,6 +23,9 @@ const retriever = new ParentDocumentRetriever({
   // Note that this does not exactly correspond to the number of final (parent) documents
   // retrieved, as multiple child documents can point to the same parent.
   childK: 20,
+  // Optional `k` parameter to limit number of final, parent documents that will be returned from this retriever and
+  // send to LLM
+  parentK: 200,
 });
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
