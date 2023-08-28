@@ -108,7 +108,7 @@ export class LlamaCpp extends LLM implements LlamaCppInputs {
     const session = new LlamaChatSession({ context: this._context });
 
     try {
-      const completion = await session.prompt(prompt, undefined, {
+      const completion = await session.prompt(prompt, {
         signal: options.signal,
       });
       return completion;
