@@ -23,9 +23,8 @@ const fakeOpenAIChatModel = new ChatOpenAI({
   maxRetries: 0,
 });
 
-const prompt = PromptTemplate.fromTemplate<{
-  animal: string;
-}>(`Instructions: You should always include a compliment in your response.
+const prompt =
+  PromptTemplate.fromTemplate(`Instructions: You should always include a compliment in your response.
 
 Question: Why did the {animal} cross the road?
 
