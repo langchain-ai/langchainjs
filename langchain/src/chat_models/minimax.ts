@@ -16,7 +16,7 @@ import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 /**
  * Type representing the sender_type of a message in the Wenxin chat model.
  */
-export type MessageRole = "BOT" | "USER";
+export type MessageRole = "BOT" | "USER" | "FUNCTION";
 
 /**
  * Interface representing a message in the Wenxin chat model.
@@ -71,6 +71,7 @@ interface ChatCompletionRequest {
    * @type {Array<ChatCompletionRequestFunctions>}
    */
   functions?: Array<ChatCompletionRequestFunctions>;
+  plugins?: string[];
 }
 
 interface RoleMeta {
@@ -226,7 +227,7 @@ function messageToMinimaxRole(message: BaseMessage): MessageRole {
     case "system":
       throw new Error("System messages not supported");
     case "function":
-      throw new Error("Function messages not supported");
+      return "FUNCTION";
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
@@ -240,6 +241,7 @@ function messageToMinimaxRole(message: BaseMessage): MessageRole {
 export interface ChatMinimaxCallOptions extends BaseLanguageModelCallOptions {
   functions?: ChatCompletionRequestFunctions[];
   tools?: StructuredTool[];
+  plugins?: string[];
 }
 
 /**
@@ -264,6 +266,7 @@ export class ChatMinimax
       ...(super.callKeys as (keyof ChatMinimaxCallOptions)[]),
       "functions",
       "tools",
+      "plugins",
     ];
   }
 
@@ -383,6 +386,7 @@ export class ChatMinimax
         (options?.tools
           ? options?.tools.map(formatToOpenAIFunction)
           : undefined),
+      plugins: options?.plugins,
     };
   }
 
@@ -503,17 +507,26 @@ export class ChatMinimax
     }
 
     const generations: ChatGeneration[] = [];
-    for (const part of data.choices) {
-      for (const message of part.messages ?? []) {
-        const text = message?.text ?? "";
-        generations.push({
-          text,
-          message: minimaxResponseToChatMessage(
-            message ?? { role: "assistant" }
-          ),
-        });
-      }
-    }
+    const lastChoiceMessages =
+      data.choices.length > 0
+        ? data.choices[data.choices.length - 1]?.messages ?? []
+        : [];
+    const lastMessage =
+      lastChoiceMessages.length > 0
+        ? lastChoiceMessages[lastChoiceMessages.length - 1]
+        : undefined;
+    const text = lastMessage?.text ?? "";
+    generations.push({
+      text,
+      message: minimaxResponseToChatMessage(
+        lastMessage ?? {
+          sender_type: "BOT",
+          sender_name: "Assistant",
+          text: "",
+        }
+      ),
+    });
+    console.log("generations:", generations);
     return {
       generations,
       llmOutput: data,
@@ -608,6 +621,8 @@ function minimaxResponseToChatMessage(
       return new AIMessage(message.text || "", {
         function_call: message.function_call,
       });
+    case "FUNCTION":
+      return new AIMessage(message.text || "");
     default:
       return new ChatMessage(
         message.text || "",
