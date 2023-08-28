@@ -11,13 +11,18 @@ dotenv.config();
 // Use abab5.5
 const abab5_5 = new ChatMinimax({
   modelName: "abab5.5-chat",
-  verbose: true,
   botSetting: [
     {
       bot_name: "MM Assistant",
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
+  configuration: {
+    basePath: "http://c-aiproxy-api.zpidc.com/minimax/v1",
+    headers: {
+      accessToken: process.env.MINIMAX_TOKEN || "",
+    },
+  },
 }).bind({
   replyConstraints: {
     sender_type: "BOT",

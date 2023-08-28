@@ -103,6 +103,11 @@ interface BotSetting {
   bot_name: string;
 }
 
+declare interface ConfigurationParameters {
+  basePath?: string;
+  headers?: Record<string, string>;
+}
+
 /**
  * Interface defining the input to the ChatMinimax class.
  */
@@ -160,8 +165,6 @@ declare interface MinimaxChatInput {
    *  with the default being true, that is, code masking is enabled.
    */
   maskSensitiveInfo?: boolean;
-
-  basePath?: string;
 
   /**
    *  Whether to use the standard SSE format, when set to true,
@@ -313,6 +316,8 @@ export class ChatMinimax
   apiUrl: string;
 
   basePath?: string = "https://api.minimax.chat/v1";
+  headers?: Record<string, string>;
+
 
   temperature?: number = 0.9;
 
@@ -336,7 +341,12 @@ export class ChatMinimax
 
   useStandardSse?: boolean;
 
-  constructor(fields?: Partial<MinimaxChatInput> & BaseChatModelParams) {
+  constructor(
+    fields?: Partial<MinimaxChatInput> &
+      BaseChatModelParams & {
+        configuration?: ConfigurationParameters;
+      }
+  ) {
     super(fields ?? {});
 
     this.minimaxGroupId =
@@ -368,7 +378,8 @@ export class ChatMinimax
     this.useStandardSse = fields?.useStandardSse ?? this.useStandardSse;
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.basePath = fields?.basePath ?? this.basePath;
+    this.basePath = fields?.configuration?.basePath ?? this.basePath;
+    this.headers = fields?.configuration?.headers ?? this.headers;
     this.proVersion = fields?.proVersion ?? this.proVersion;
     const modelCompletion = this.proVersion
       ? "chatcompletion_pro"
@@ -395,7 +406,7 @@ export class ChatMinimax
       use_standard_sse: this.useStandardSse,
       role_meta: this.roleMeta,
       bot_setting: this.botSetting,
-      reply_constraints:options?.replyConstraints,
+      reply_constraints: options?.replyConstraints,
       sample_messages: this.messageToMinimaxMessage(options?.sampleMessages),
       functions:
         options?.functions ??
@@ -580,6 +591,7 @@ export class ChatMinimax
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.minimaxApiKey,
+          ...this.headers
         },
         body: JSON.stringify(request),
         signal,
