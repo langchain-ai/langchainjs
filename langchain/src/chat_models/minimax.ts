@@ -318,7 +318,6 @@ export class ChatMinimax
   basePath?: string = "https://api.minimax.chat/v1";
   headers?: Record<string, string>;
 
-
   temperature?: number = 0.9;
 
   topP?: number = 0.8;
@@ -550,25 +549,39 @@ export class ChatMinimax
       throw new Error("Minimax API error: " + data.base_resp.status_msg);
     }
     const generations: ChatGeneration[] = [];
-    const lastChoiceMessages =
-      data.choices.length > 0
-        ? data.choices[data.choices.length - 1]?.messages ?? []
-        : [];
-    const lastMessage =
-      lastChoiceMessages.length > 0
-        ? lastChoiceMessages[lastChoiceMessages.length - 1]
-        : undefined;
-    const text = lastMessage?.text ?? "";
-    generations.push({
-      text,
-      message: minimaxResponseToChatMessage(
-        lastMessage ?? {
+
+    if (this.proVersion) {
+      const lastChoiceMessages =
+        data.choices.length > 0
+          ? data.choices[data.choices.length - 1]?.messages ?? []
+          : [];
+      const lastMessage =
+        lastChoiceMessages.length > 0
+          ? lastChoiceMessages[lastChoiceMessages.length - 1]
+          : undefined;
+      const text = lastMessage?.text ?? "";
+      generations.push({
+        text,
+        message: minimaxResponseToChatMessage(
+          lastMessage ?? {
+            sender_type: "BOT",
+            sender_name: "Assistant",
+            text: "",
+          }
+        ),
+      });
+    } else {
+      const choice = data.choices[data.choices.length - 1];
+      const text = choice?.text ?? "";
+      generations.push({
+        text,
+        message: minimaxResponseToChatMessage({
           sender_type: "BOT",
           sender_name: "Assistant",
-          text: "",
-        }
-      ),
-    });
+          text: text,
+        }),
+      });
+    }
     console.log("generations:", generations);
     return {
       generations,
@@ -591,7 +604,7 @@ export class ChatMinimax
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + this.minimaxApiKey,
-          ...this.headers
+          ...this.headers,
         },
         body: JSON.stringify(request),
         signal,
@@ -724,7 +737,7 @@ export interface ChatCompletionResponseMessageFunctionCall {
  * @export
  * @interface ChatCompletionResponseChoices
  */
-export interface ChatCompletionResponseChoices {
+export interface ChatCompletionResponseChoicesPro {
   /**
    *
    * @type {string}
@@ -738,6 +751,12 @@ export interface ChatCompletionResponseChoices {
    * @memberof ChatCompletionResponseChoices
    */
   finish_reason?: string;
+}
+
+interface ChatCompletionResponseChoices {
+  text: string;
+  index: number;
+  finish_reason: string;
 }
 
 /**
@@ -754,5 +773,7 @@ interface ChatCompletionResponse {
   output_sensitive_type: number;
   usage: TokenUsage;
   base_resp: BaseResp;
-  choices: Array<ChatCompletionResponseChoices>;
+  choices: Array<
+    ChatCompletionResponseChoicesPro & ChatCompletionResponseChoices
+  >;
 }

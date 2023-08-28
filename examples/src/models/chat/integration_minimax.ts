@@ -1,12 +1,39 @@
 import { HumanMessage } from "langchain/schema";
 import { ChatMinimax } from "langchain/chat_models/minimax";
 import * as dotenv from "dotenv";
+import process from "process";
 
 dotenv.config();
 
 // Default model is abab5-chat
 // const abab5 = new ChatMinimax({
+//   proVersion:false,
+//   modelName: "abab5-chat",
+//   minimaxGroupId: process.env.MINIMAX_GROUP_ID, // In Node.js defaults to process.env.MINIMAX_GROUP_ID
+//   minimaxApiKey: process.env.MINIMAX_API_KEY, // In Node.js defaults to process.env.MINIMAX_API_KEY
 // });
+//
+// const result = await abab5.invoke([
+//   new HumanMessage({
+//     content: "Hello",
+//     name: "XiaoMing",
+//   })
+// ]);
+// console.log(result);
+
+/*
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: {
+    content: 'Hello! Can I help you with anything?',
+    additional_kwargs: { function_call: undefined }
+  },
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: 'Hello! Can I help you with anything?',
+  name: undefined,
+  additional_kwargs: { function_call: undefined }
+}
+ */
 
 // Use abab5.5
 const abab5_5 = new ChatMinimax({
@@ -17,12 +44,6 @@ const abab5_5 = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-  configuration: {
-    basePath: "http://c-aiproxy-api.zpidc.com/minimax/v1",
-    headers: {
-      accessToken: process.env.MINIMAX_TOKEN || "",
-    },
-  },
 }).bind({
   replyConstraints: {
     sender_type: "BOT",
@@ -39,16 +60,6 @@ const messages = [
 let res = await abab5_5.invoke(messages);
 console.log(res);
 
-/*
-AIChatMessage {
-  text: 'Hello! How may I assist you today?',
-  name: undefined,
-  additional_kwargs: {}
-  }
-}
-*/
-
-// res = await ernie.call(messages);
 /*
 AIChatMessage {
   text: 'Hello! How may I assist you today?',
