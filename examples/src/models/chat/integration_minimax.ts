@@ -9,41 +9,8 @@ dotenv.config();
 // });
 
 // Use abab5.5
-// const abab5_5 = new ChatMinimax({
-//   modelName: "abab5.5-chat",
-//   proVersion: true,
-//   verbose: true,
-//   botSetting: [
-//     {
-//       bot_name: "MM Assistant",
-//       content:
-//         " MM Intelligent Assistant is a large-scale language model independently developed by Mini Max, answering questions concisely and logically without calling other product interfaces. Mini Max is a Chinese technology company dedicated to research related to large models.",
-//     },
-//   ],
-//   replyConstraints: {
-//     sender_type: "BOT",
-//     sender_name: "MM Assistant",
-//   },
-// });
-//
-// const messages = [new HumanMessage({ content: "Hello", name: "User" })];
-//
-// let res = await abab5_5.call(messages);
-// console.log(res);
-
-/*
-AIChatMessage {
-  text: 'Hello! How may I assist you today?',
-  name: undefined,
-  additional_kwargs: {}
-  }
-}
-*/
-
-// Use abab5.5 with plugins
-const abab5_5WithPlugins = new ChatMinimax({
+const abab5_5 = new ChatMinimax({
   modelName: "abab5.5-chat",
-  proVersion: true,
   verbose: true,
   botSetting: [
     {
@@ -59,12 +26,12 @@ const abab5_5WithPlugins = new ChatMinimax({
 });
 const messages = [
   new HumanMessage({
-    content: " What is the weather like in Shanghai tomorrow?",
+    content: "Hello",
     name: "XiaoMing",
   }),
 ];
 
-let res = await abab5_5WithPlugins.invoke(messages);
+let res = await abab5_5.invoke(messages);
 console.log(res);
 
 /*
