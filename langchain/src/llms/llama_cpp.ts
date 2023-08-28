@@ -40,12 +40,6 @@ export interface LlamaCppInputs extends BaseLLMParams {
  *  This also requires that have a locally built version of Llama2 installed.
  */
 export class LlamaCpp extends LLM implements LlamaCppInputs {
-//   static inputs: LlamaCppInputs;
-
-//   static model: LlamaModel;
-
-//   static context: LlamaContext;
-
   batchSize?: number;
 
   contextSize?: number;
