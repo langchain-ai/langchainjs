@@ -79,9 +79,23 @@ interface RoleMeta {
   bot_name: string;
 }
 
+interface RawGlyph {
+  type: "raw";
+  raw_glyph: string;
+}
+
+interface JsonGlyph {
+  type: "json_value";
+  json_properties: any;
+}
+
+type ReplyConstraintsGlyph = RawGlyph | JsonGlyph;
+
+
 interface ReplyConstraints {
   sender_type: string;
   sender_name: string;
+  glyph?: ReplyConstraintsGlyph;
 }
 
 interface BotSetting {
@@ -189,11 +203,6 @@ declare interface MinimaxChatInput {
   roleMeta?: RoleMeta;
 
   /**
-   *  Model Response Requirements , only available for pro version.
-   */
-  replyConstraints?: ReplyConstraints;
-
-  /**
    *  Setting for each robot, only available for pro version.
    */
   botSetting?: BotSetting[];
@@ -242,6 +251,7 @@ export interface ChatMinimaxCallOptions extends BaseLanguageModelCallOptions {
   functions?: ChatCompletionRequestFunctions[];
   tools?: StructuredTool[];
   plugins?: string[];
+  replyConstraints?: ReplyConstraints;
 }
 
 /**
@@ -267,6 +277,7 @@ export class ChatMinimax
       "functions",
       "tools",
       "plugins",
+      "replyConstraints",
     ];
   }
 
@@ -315,8 +326,6 @@ export class ChatMinimax
 
   maskSensitiveInfo?: boolean;
 
-  replyConstraints?: ReplyConstraints;
-
   roleMeta?: RoleMeta;
 
   useStandardSse?: boolean;
@@ -349,7 +358,6 @@ export class ChatMinimax
     this.tokensToGenerate = fields?.tokensToGenerate ?? this.tokensToGenerate;
     this.roleMeta = fields?.roleMeta ?? this.roleMeta;
     this.botSetting = fields?.botSetting ?? this.botSetting;
-    this.replyConstraints = fields?.replyConstraints ?? this.replyConstraints;
     this.useStandardSse = fields?.useStandardSse ?? this.useStandardSse;
 
     this.modelName = fields?.modelName ?? this.modelName;
@@ -380,7 +388,7 @@ export class ChatMinimax
       use_standard_sse: this.useStandardSse,
       role_meta: this.roleMeta,
       bot_setting: this.botSetting,
-      reply_constraints: this.replyConstraints,
+      reply_constraints: options?.replyConstraints,
       functions:
         options?.functions ??
         (options?.tools
