@@ -10,7 +10,12 @@ import { AzureOpenAIInput } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
+/**
+ * Interface for OpenAIEmbeddings parameters. Extends EmbeddingsParams and
+ * defines additional parameters specific to the OpenAIEmbeddings class.
+ */
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
   modelName: string;
@@ -33,6 +38,11 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
+/**
+ * Class for generating embeddings using the OpenAI API. Extends the
+ * Embeddings class and implements OpenAIEmbeddingsParams and
+ * AzureOpenAIInput.
+ */
 export class OpenAIEmbeddings
   extends Embeddings
   implements OpenAIEmbeddingsParams, AzureOpenAIInput
@@ -53,6 +63,8 @@ export class OpenAIEmbeddings
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAIBasePath?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -65,36 +77,45 @@ export class OpenAIEmbeddings
       },
     configuration?: ConfigurationParameters
   ) {
-    super(fields ?? {});
+    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
+
+    super(fieldsWithDefaults);
 
     const apiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fieldsWithDefaults?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     const azureApiKey =
-      fields?.azureOpenAIApiKey ??
+      fieldsWithDefaults?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
     if (!azureApiKey && !apiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
     const azureApiInstanceName =
-      fields?.azureOpenAIApiInstanceName ??
+      fieldsWithDefaults?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     const azureApiDeploymentName =
-      (fields?.azureOpenAIApiEmbeddingsDeploymentName ||
-        fields?.azureOpenAIApiDeploymentName) ??
+      (fieldsWithDefaults?.azureOpenAIApiEmbeddingsDeploymentName ||
+        fieldsWithDefaults?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
     const azureApiVersion =
-      fields?.azureOpenAIApiVersion ??
+      fieldsWithDefaults?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
-    this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? azureApiKey ? 1 : this.batchSize;
-    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
-    this.timeout = fields?.timeout;
+    this.azureOpenAIBasePath =
+      fieldsWithDefaults?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
+    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.batchSize =
+      fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
+    this.stripNewLines =
+      fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
+    this.timeout = fieldsWithDefaults?.timeout;
 
     this.azureOpenAIApiVersion = azureApiVersion;
     this.azureOpenAIApiKey = azureApiKey;
@@ -102,7 +123,7 @@ export class OpenAIEmbeddings
     this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -119,41 +140,71 @@ export class OpenAIEmbeddings
     };
   }
 
+  /**
+   * Method to generate embeddings for an array of documents. Splits the
+   * documents into batches and makes requests to the OpenAI API to generate
+   * embeddings.
+   * @param texts Array of documents to generate embeddings for.
+   * @returns Promise that resolves to a 2D array of embeddings for each document.
+   */
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    const subPrompts = chunkArray(
-      this.stripNewLines ? texts.map((t) => t.replaceAll("\n", " ")) : texts,
+    const batches = chunkArray(
+      this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
 
-    const embeddings: number[][] = [];
-
-    for (let i = 0; i < subPrompts.length; i += 1) {
-      const input = subPrompts[i];
-      const { data } = await this.embeddingWithRetry({
+    const batchRequests = batches.map((batch) =>
+      this.embeddingWithRetry({
         model: this.modelName,
-        input,
-      });
-      for (let j = 0; j < input.length; j += 1) {
-        embeddings.push(data.data[j].embedding);
+        input: batch,
+      })
+    );
+    const batchResponses = await Promise.all(batchRequests);
+
+    const embeddings: number[][] = [];
+    for (let i = 0; i < batchResponses.length; i += 1) {
+      const batch = batches[i];
+      const { data: batchResponse } = batchResponses[i];
+      for (let j = 0; j < batch.length; j += 1) {
+        embeddings.push(batchResponse.data[j].embedding);
       }
     }
-
     return embeddings;
   }
 
+  /**
+   * Method to generate an embedding for a single document. Calls the
+   * embeddingWithRetry method with the document as the input.
+   * @param text Document to generate an embedding for.
+   * @returns Promise that resolves to an embedding for the document.
+   */
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: this.stripNewLines ? text.replaceAll("\n", " ") : text,
+      input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
     });
     return data.data[0].embedding;
   }
 
+  /**
+   * Private method to make a request to the OpenAI API to generate
+   * embeddings. Handles the retry logic and returns the response from the
+   * API.
+   * @param request Request to send to the OpenAI API.
+   * @returns Promise that resolves to the response from the API.
+   */
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        basePath: this.clientConfig.basePath,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,

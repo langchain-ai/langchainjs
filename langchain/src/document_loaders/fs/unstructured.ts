@@ -31,6 +31,10 @@ const UNSTRUCTURED_API_FILETYPES = [
   ".epub",
 ];
 
+/**
+ * Represents an element returned by the Unstructured API. It has
+ * properties for the element type, text content, and metadata.
+ */
 type Element = {
   type: string;
   text: string;
@@ -40,18 +44,46 @@ type Element = {
   };
 };
 
-type UnstructuredLoaderOptions = {
+/**
+ * Represents the available strategies for the UnstructuredLoader. It can
+ * be one of "hi_res", "fast", "ocr_only", or "auto".
+ */
+export type UnstructuredLoaderStrategy =
+  | "hi_res"
+  | "fast"
+  | "ocr_only"
+  | "auto";
+
+/**
+ * Represents a string value with autocomplete suggestions. It is used for
+ * the `strategy` property in the UnstructuredLoaderOptions.
+ */
+type StringWithAutocomplete<T> = T | (string & Record<never, never>);
+
+export type UnstructuredLoaderOptions = {
   apiKey?: string;
   apiUrl?: string;
-  strategy?: string;
+  strategy?: StringWithAutocomplete<UnstructuredLoaderStrategy>;
+  encoding?: string;
+  ocrLanguages?: Array<string>;
+  coordinates?: boolean;
+  pdfInferTableStructure?: boolean;
+  xmlKeepTags?: boolean;
 };
 
 type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
   recursive?: boolean;
   unknown?: UnknownHandling;
-  strategy?: string;
 };
 
+/**
+ * A document loader that uses the Unstructured API to load unstructured
+ * documents. It supports both the new syntax with options object and the
+ * legacy syntax for backward compatibility. The load() method sends a
+ * partitioning request to the Unstructured API and retrieves the
+ * partitioned elements. It creates a Document instance for each element
+ * and returns an array of Document instances.
+ */
 export class UnstructuredLoader extends BaseDocumentLoader {
   public filePath: string;
 
@@ -59,7 +91,18 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private apiKey?: string;
 
-  private strategy: string;
+  private strategy: StringWithAutocomplete<UnstructuredLoaderStrategy> =
+    "hi_res";
+
+  private encoding?: string;
+
+  private ocrLanguages: Array<string> = [];
+
+  private coordinates?: boolean;
+
+  private pdfInferTableStructure?: boolean;
+
+  private xmlKeepTags?: boolean;
 
   constructor(
     filePathOrLegacyApiUrl: string,
@@ -75,9 +118,15 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.apiUrl = filePathOrLegacyApiUrl;
     } else {
       this.filePath = filePathOrLegacyApiUrl;
-      this.apiKey = optionsOrLegacyFilePath.apiKey;
-      this.apiUrl = optionsOrLegacyFilePath.apiUrl ?? this.apiUrl;
-      this.strategy = optionsOrLegacyFilePath.strategy ?? "hi_res";
+      const options = optionsOrLegacyFilePath;
+      this.apiKey = options.apiKey;
+      this.apiUrl = options.apiUrl ?? this.apiUrl;
+      this.strategy = options.strategy ?? this.strategy;
+      this.encoding = options.encoding;
+      this.ocrLanguages = options.ocrLanguages ?? this.ocrLanguages;
+      this.coordinates = options.coordinates;
+      this.pdfInferTableStructure = options.pdfInferTableStructure;
+      this.xmlKeepTags = options.xmlKeepTags;
     }
   }
 
@@ -92,10 +141,25 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     // worried about this for now.
     const formData = new FormData();
     formData.append("files", new Blob([buffer]), fileName);
+    formData.append("strategy", this.strategy);
+    this.ocrLanguages.forEach((language) => {
+      formData.append("ocr_languages", language);
+    });
+    if (this.encoding) {
+      formData.append("encoding", this.encoding);
+    }
+    if (this.coordinates === true) {
+      formData.append("coordinates", "true");
+    }
+    if (this.pdfInferTableStructure === true) {
+      formData.append("pdf_infer_table_structure", "true");
+    }
+    if (this.xmlKeepTags === true) {
+      formData.append("xml_keep_tags", "true");
+    }
 
     const headers = {
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
-      strategy: this.strategy,
     };
 
     const response = await fetch(this.apiUrl, {
@@ -127,15 +191,17 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      documents.push(
-        new Document({
-          pageContent: text,
-          metadata: {
-            ...metadata,
-            category: element.type,
-          },
-        })
-      );
+      if (typeof text === "string") {
+        documents.push(
+          new Document({
+            pageContent: text,
+            metadata: {
+              ...metadata,
+              category: element.type,
+            },
+          })
+        );
+      }
     }
 
     return documents;
@@ -158,6 +224,12 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 }
 
+/**
+ * A document loader that loads unstructured documents from a directory
+ * using the UnstructuredLoader. It creates a UnstructuredLoader instance
+ * for each supported file type and passes it to the DirectoryLoader
+ * constructor.
+ */
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
     directoryPathOrLegacyApiUrl: string,

@@ -1,26 +1,37 @@
 import {
-  Configuration,
-  OpenAIApi,
   ChatCompletionRequestMessage,
-  CreateChatCompletionRequest,
-  ConfigurationParameters,
   ChatCompletionResponseMessageRoleEnum,
+  Configuration,
+  ConfigurationParameters,
+  CreateChatCompletionRequest,
   CreateChatCompletionResponse,
+  OpenAIApi,
 } from "openai";
-import { isNode, getEnvironmentVariable } from "../util/env.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { Generation, GenerationChunk, LLMResult } from "../schema/index.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
 } from "../types/openai-types.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseLLMParams, LLM } from "./base.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { Generation, LLMResult } from "../schema/index.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { readableStreamToAsyncIterable } from "../util/stream.js";
+import { BaseLLMParams, LLM } from "./base.js";
 
-export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
+export { AzureOpenAIInput, OpenAIChatInput };
+
+/**
+ * Interface that extends the OpenAICallOptions interface and includes an
+ * optional promptIndex property. It represents the options that can be
+ * passed when making a call to the OpenAI Chat API.
+ */
+export interface OpenAIChatCallOptions extends OpenAICallOptions {
+  promptIndex?: number;
+}
 
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
@@ -45,13 +56,19 @@ export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
  * @augments AzureOpenAIChatInput
  */
 export class OpenAIChat
-  extends LLM
+  extends LLM<OpenAIChatCallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: OpenAICallOptions;
+  static lc_name() {
+    return "OpenAIChat";
+  }
 
-  get callKeys(): (keyof OpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options"];
+  get callKeys(): (keyof OpenAIChatCallOptions)[] {
+    return [
+      ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),
+      "options",
+      "promptIndex",
+    ];
   }
 
   lc_serializable = true;
@@ -60,6 +77,7 @@ export class OpenAIChat
     return {
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      organization: "OPENAI_ORGANIZATION",
     };
   }
 
@@ -98,7 +116,11 @@ export class OpenAIChat
 
   stop?: string[];
 
+  user?: string;
+
   streaming = false;
+
+  openAIApiKey?: string;
 
   azureOpenAIApiVersion?: string;
 
@@ -108,6 +130,10 @@ export class OpenAIChat
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAIBasePath?: string;
+
+  organization?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -116,7 +142,6 @@ export class OpenAIChat
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        openAIApiKey?: string;
         configuration?: ConfigurationParameters;
       },
     /** @deprecated */
@@ -124,28 +149,38 @@ export class OpenAIChat
   ) {
     super(fields ?? {});
 
-    const apiKey =
+    this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    const azureApiKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!azureApiKey && !apiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
-    const azureApiInstanceName =
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    const azureApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
+    this.azureOpenAIApiDeploymentName =
+      (fields?.azureOpenAIApiCompletionsDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
-    const azureApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
+    this.organization =
+      fields?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
@@ -160,20 +195,18 @@ export class OpenAIChat
     this.logitBias = fields?.logitBias;
     this.maxTokens = fields?.maxTokens;
     this.stop = fields?.stop;
+    this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
 
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
+    if (this.n > 1) {
+      throw new Error(
+        "Cannot use n > 1 in OpenAIChat LLM. Use ChatOpenAI Chat Model instead."
+      );
     }
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -185,7 +218,8 @@ export class OpenAIChat
     }
 
     this.clientConfig = {
-      apiKey,
+      apiKey: this.openAIApiKey,
+      organization: this.organization,
       ...configuration,
       ...fields?.configuration,
     };
@@ -194,7 +228,9 @@ export class OpenAIChat
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -204,7 +240,8 @@ export class OpenAIChat
       n: this.n,
       logit_bias: this.logitBias,
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
+      user: this.user,
       stream: this.streaming,
       ...this.modelKwargs,
     };
@@ -230,6 +267,11 @@ export class OpenAIChat
     };
   }
 
+  /**
+   * Formats the messages for the OpenAI API.
+   * @param prompt The prompt to be formatted.
+   * @returns Array of formatted messages.
+   */
   private formatMessages(prompt: string): ChatCompletionRequestMessage[] {
     const message: ChatCompletionRequestMessage = {
       role: "user",
@@ -238,16 +280,112 @@ export class OpenAIChat
     return this.prefixMessages ? [...this.prefixMessages, message] : [message];
   }
 
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
+  // when we integrate OpenAI's new SDK.
+  async *_streamResponseChunks(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const params = {
+      ...this.invocationParams(options),
+      messages: this.formatMessages(prompt),
+      stream: true,
+    };
+    const streamIterable = this.startStream(params, options);
+    for await (const streamedResponse of streamIterable) {
+      const data = JSON.parse(streamedResponse) as {
+        choices?: Array<{
+          index: number;
+          finish_reason: string | null;
+          delta: {
+            role?: string;
+            content?: string;
+            function_call?: { name: string; arguments: string };
+          };
+        }>;
+      };
+
+      const choice = data.choices?.[0];
+      if (!choice) {
+        continue;
+      }
+
+      const { delta } = choice;
+      const generationChunk = new GenerationChunk({
+        text: delta.content ?? "",
+      });
+      yield generationChunk;
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+    }
+  }
+
+  /**
+   * Starts a stream of responses from the OpenAI API.
+   * @param request The request to be sent to the OpenAI API.
+   * @param options Optional configuration for the Axios request.
+   * @returns An iterable object that can be used to iterate over the response chunks.
+   */
+  startStream(
+    request: CreateChatCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    let done = false;
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const iterable = readableStreamToAsyncIterable(stream.readable);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let err: any;
+    this.completionWithRetry(request, {
+      ...options,
+      adapter: fetchAdapter, // default adapter doesn't do streaming
+      responseType: "stream",
+      onmessage: (event) => {
+        if (done) return;
+        if (event.data?.trim?.() === "[DONE]") {
+          done = true;
+          // eslint-disable-next-line no-void
+          void writer.close();
+        } else {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            done = true;
+            throw data.error;
+          }
+          // eslint-disable-next-line no-void
+          void writer.write(event.data);
+        }
+      },
+    }).catch((error) => {
+      if (!done) {
+        err = error;
+        done = true;
+        // eslint-disable-next-line no-void
+        void writer.close();
+      }
+    });
+    return {
+      async next() {
+        const chunk = await iterable.next();
+        if (err) {
+          throw err;
+        }
+        return chunk;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    };
+  }
+
   /** @ignore */
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const { stop } = options;
-
-    const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    const params = this.invocationParams(options);
 
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
@@ -266,13 +404,24 @@ export class OpenAIChat
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved) {
+                  if (resolved || rejected) {
                     return;
                   }
                   resolved = true;
                   resolve(response);
                 } else {
-                  const message = JSON.parse(event.data) as {
+                  const data = JSON.parse(event.data);
+
+                  if (data?.error) {
+                    if (rejected) {
+                      return;
+                    }
+                    rejected = true;
+                    reject(data.error);
+                    return;
+                  }
+
+                  const message = data as {
                     id: string;
                     object: string;
                     created: number;
@@ -321,7 +470,11 @@ export class OpenAIChat
                       choice.message.content += part.delta?.content ?? "";
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? ""
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
                       );
                     }
                   }
@@ -329,6 +482,7 @@ export class OpenAIChat
                   // when all messages are finished, resolve
                   if (
                     !resolved &&
+                    !rejected &&
                     message.choices.every((c) => c.finish_reason != null)
                   ) {
                     resolved = true;
@@ -364,9 +518,16 @@ export class OpenAIChat
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        basePath: this.clientConfig.basePath,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
@@ -444,6 +605,12 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     }
   }
 
+  /**
+   * Makes a call to the OpenAI API with retry logic in case of failures.
+   * @param request The request to be sent to the OpenAI API.
+   * @param options Optional configuration for the Axios request.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: CreateChatCompletionRequest,
     options?: StreamingAxiosConfiguration

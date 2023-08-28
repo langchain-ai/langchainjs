@@ -28,6 +28,9 @@ export declare interface OpenAIBaseInput {
   /** Dictionary used to adjust the probability of specific tokens being generated */
   logitBias?: Record<string, number>;
 
+  /** Unique string identifier representing your end-user, which can help OpenAI to monitor and detect abuse. */
+  user?: string;
+
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 
@@ -48,15 +51,15 @@ export declare interface OpenAIBaseInput {
    * Timeout to use when making requests to OpenAI.
    */
   timeout?: number;
+
+  /**
+   * API key to use when making requests to OpenAI. Defaults to the value of
+   * `OPENAI_API_KEY` environment variable.
+   */
+  openAIApiKey?: string;
 }
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
-  /**
-   * Abort signal to use for cancelling in-flight requests.
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-   */
-  signal?: AbortSignal;
-
   /**
    * Additional options to pass to the underlying axios request.
    */
@@ -68,7 +71,7 @@ export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
  */
 export declare interface OpenAIInput extends OpenAIBaseInput {
   /** Generates `bestOf` completions server side and returns the "best" */
-  bestOf: number;
+  bestOf?: number;
 
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;
@@ -124,4 +127,11 @@ export declare interface AzureOpenAIInput {
    * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
    */
   azureOpenAIApiCompletionsDeploymentName?: string;
+
+  /**
+   * Custom endpoint for Azure OpenAI API. This is useful in case you have a deployment in another region.
+   * e.g. setting this value to "https://westeurope.api.cognitive.microsoft.com/openai/deployments"
+   * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
+   */
+  azureOpenAIBasePath?: string;
 }

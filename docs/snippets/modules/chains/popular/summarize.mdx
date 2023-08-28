@@ -1,0 +1,11 @@
+import CodeBlock from "@theme/CodeBlock";
+import SummarizeExample from "@examples/chains/summarization_map_reduce.ts";
+import SummarizeExampleIntermediateSteps from "@examples/chains/summarization_map_reduce_intermediate_steps.ts";
+
+<CodeBlock language="typescript">{SummarizeExample}</CodeBlock>
+
+## Intermediate Steps
+
+We can also return the intermediate steps for `map_reduce` chains, should we want to inspect them. This is done with the `returnIntermediateSteps` parameter.
+
+<CodeBlock language="typescript">{SummarizeExampleIntermediateSteps}</CodeBlock>

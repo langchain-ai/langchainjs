@@ -2,7 +2,10 @@ import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
 import { isNode } from "../util/env.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
+import {
+  RecursiveCharacterTextSplitter,
+  TextSplitter,
+} from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
 import { Document } from "../document.js";
 import { Tool, ToolParams } from "./base.js";
@@ -141,6 +144,12 @@ const DEFAULT_HEADERS = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Headers = Record<string, any>;
 
+/**
+ * Defines the arguments that can be passed to the WebBrowser constructor.
+ * It extends the ToolParams interface and includes properties for a
+ * language model, embeddings, HTTP headers, an Axios configuration, a
+ * callback manager, and a text splitter.
+ */
 export interface WebBrowserArgs extends ToolParams {
   model: BaseLanguageModel;
 
@@ -152,9 +161,21 @@ export interface WebBrowserArgs extends ToolParams {
 
   /** @deprecated */
   callbackManager?: CallbackManager;
+
+  textSplitter?: TextSplitter;
 }
 
+/**
+ * A class designed to interact with web pages, either to extract
+ * information from them or to summarize their content. It uses the axios
+ * library to send HTTP requests and the cheerio library to parse the
+ * returned HTML.
+ */
 export class WebBrowser extends Tool {
+  static lc_name() {
+    return "WebBrowser";
+  }
+
   get lc_namespace() {
     return [...super.lc_namespace, "webbrowser"];
   }
@@ -167,17 +188,31 @@ export class WebBrowser extends Tool {
 
   private axiosConfig: Omit<AxiosRequestConfig, "url">;
 
-  constructor({ model, headers, embeddings, axiosConfig }: WebBrowserArgs) {
+  private textSplitter: TextSplitter;
+
+  constructor({
+    model,
+    headers,
+    embeddings,
+    axiosConfig,
+    textSplitter,
+  }: WebBrowserArgs) {
     super(...arguments);
 
     this.model = model;
     this.embeddings = embeddings;
-    this.headers = headers || DEFAULT_HEADERS;
+    this.headers = headers ?? DEFAULT_HEADERS;
     this.axiosConfig = {
       withCredentials: true,
       adapter: isNode() ? undefined : fetchAdapter,
       ...axiosConfig,
     };
+    this.textSplitter =
+      textSplitter ??
+      new RecursiveCharacterTextSplitter({
+        chunkSize: 2000,
+        chunkOverlap: 200,
+      });
   }
 
   /** @ignore */
@@ -196,11 +231,7 @@ export class WebBrowser extends Tool {
       return "There was a problem connecting to the site";
     }
 
-    const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 2000,
-      chunkOverlap: 200,
-    });
-    const texts = await textSplitter.splitText(text);
+    const texts = await this.textSplitter.splitText(text);
 
     let context;
     // if we want a summary grab first 4
@@ -221,7 +252,12 @@ export class WebBrowser extends Tool {
         docs,
         this.embeddings
       );
-      const results = await vectorStore.similaritySearch(task, 4);
+      const results = await vectorStore.similaritySearch(
+        task,
+        4,
+        undefined,
+        runManager?.getChild("vectorstore")
+      );
       context = results.map((res) => res.pageContent).join("\n");
     }
 

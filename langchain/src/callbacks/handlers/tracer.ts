@@ -1,15 +1,22 @@
-import { KVMap, BaseRun } from "langchainplus-sdk/schemas";
+import { KVMap, BaseRun } from "langsmith/schemas";
 
 import {
   AgentAction,
-  BaseChatMessage,
+  AgentFinish,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
-import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
+import {
+  BaseCallbackHandler,
+  BaseCallbackHandlerInput,
+  HandleLLMNewTokenCallbackFields,
+  NewTokenIndices,
+} from "../base.js";
+import { Document } from "../../document.js";
 
-export type RunType = "llm" | "chain" | "tool";
+export type RunType = string;
 
 export interface Run extends BaseRun {
   // some optional fields are always present here
@@ -87,10 +94,14 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runId: string,
     parentRunId?: string,
     extraParams?: KVMap,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
+    const finalExtraParams = metadata
+      ? { ...extraParams, metadata }
+      : extraParams;
     const run: Run = {
       id: runId,
       name: llm.id[llm.id.length - 1],
@@ -108,7 +119,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
-      extra: extraParams ?? {},
+      extra: finalExtraParams ?? {},
       tags: tags || [],
     };
 
@@ -118,14 +129,18 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleChatModelStart(
     llm: Serialized,
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     runId: string,
     parentRunId?: string,
     extraParams?: KVMap,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
+    const finalExtraParams = metadata
+      ? { ...extraParams, metadata }
+      : extraParams;
     const run: Run = {
       id: runId,
       name: llm.id[llm.id.length - 1],
@@ -143,7 +158,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
-      extra: extraParams ?? {},
+      extra: finalExtraParams ?? {},
       tags: tags || [],
     };
 
@@ -186,7 +201,9 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     inputs: ChainValues,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap,
+    runType?: string
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -205,9 +222,9 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       inputs,
       execution_order,
       child_execution_order: execution_order,
-      run_type: "chain",
+      run_type: runType ?? "chain",
       child_runs: [],
-      extra: {},
+      extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
 
@@ -217,7 +234,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "chain") {
+    if (!run) {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
@@ -232,7 +249,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleChainError(error: Error, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "chain") {
+    if (!run) {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
@@ -250,7 +267,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     input: string,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -271,7 +289,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "tool",
       child_runs: [],
-      extra: {},
+      extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
 
@@ -325,6 +343,87 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onAgentAction?.(run as AgentRun);
   }
 
+  async handleAgentEnd(action: AgentFinish, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "chain") {
+      return;
+    }
+    run.events.push({
+      name: "agent_end",
+      time: Date.now(),
+      kwargs: { action },
+    });
+    await this.onAgentEnd?.(run);
+  }
+
+  async handleRetrieverStart(
+    retriever: Serialized,
+    query: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: KVMap
+  ): Promise<void> {
+    const execution_order = this._getExecutionOrder(parentRunId);
+    const start_time = Date.now();
+    const run: Run = {
+      id: runId,
+      name: retriever.id[retriever.id.length - 1],
+      parent_run_id: parentRunId,
+      start_time,
+      serialized: retriever,
+      events: [
+        {
+          name: "start",
+          time: start_time,
+        },
+      ],
+      inputs: { query },
+      execution_order,
+      child_execution_order: execution_order,
+      run_type: "retriever",
+      child_runs: [],
+      extra: metadata ? { metadata } : {},
+      tags: tags || [],
+    };
+
+    this._startTrace(run);
+    await this.onRetrieverStart?.(run);
+  }
+
+  async handleRetrieverEnd(
+    documents: Document<Record<string, unknown>>[],
+    runId: string
+  ): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "retriever") {
+      throw new Error("No retriever run to end");
+    }
+    run.end_time = Date.now();
+    run.outputs = { documents };
+    run.events.push({
+      name: "end",
+      time: run.end_time,
+    });
+    await this.onRetrieverEnd?.(run);
+    await this._endTrace(run);
+  }
+
+  async handleRetrieverError(error: Error, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "retriever") {
+      throw new Error("No retriever run to end");
+    }
+    run.end_time = Date.now();
+    run.error = error.message;
+    run.events.push({
+      name: "error",
+      time: run.end_time,
+    });
+    await this.onRetrieverError?.(run);
+    await this._endTrace(run);
+  }
+
   async handleText(text: string, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "chain") {
@@ -336,6 +435,26 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       kwargs: { text },
     });
     await this.onText?.(run);
+  }
+
+  async handleLLMNewToken(
+    token: string,
+    idx: NewTokenIndices,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
+  ): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "llm") {
+      return;
+    }
+    run.events.push({
+      name: "new_token",
+      time: Date.now(),
+      kwargs: { token, idx, chunk: fields?.chunk },
+    });
+    await this.onLLMNewToken?.(run);
   }
 
   // custom event handlers
@@ -360,9 +479,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   onAgentAction?(run: Run): void | Promise<void>;
 
-  // TODO Implement handleAgentEnd, handleText
+  onAgentEnd?(run: Run): void | Promise<void>;
 
-  // onAgentEnd?(run: ChainRun): void | Promise<void>;
+  onRetrieverStart?(run: Run): void | Promise<void>;
+
+  onRetrieverEnd?(run: Run): void | Promise<void>;
+
+  onRetrieverError?(run: Run): void | Promise<void>;
 
   onText?(run: Run): void | Promise<void>;
+
+  onLLMNewToken?(run: Run): void | Promise<void>;
 }

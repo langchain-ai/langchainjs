@@ -6,16 +6,15 @@ import { Chroma } from "../chroma.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 const mockCollection = {
-  add: jest.fn<Collection["add"]>().mockResolvedValue(undefined as any),
   count: jest.fn<Collection["count"]>().mockResolvedValue(5),
-  // not used, so leave out for now.
-  // upsert: jest.fn<Collection["upsert"]>().mockResolvedValue(undefined as any),
+  upsert: jest.fn<Collection["upsert"]>().mockResolvedValue(undefined as any),
+  delete: jest.fn<Collection["delete"]>().mockResolvedValue(undefined as any),
+  // add: jest.fn<Collection["add"]>().mockResolvedValue(undefined as any),
   // modify: jest.fn<Collection["modify"]>().mockResolvedValue(undefined as any),
   // get: jest.fn<Collection["get"]>().mockResolvedValue(undefined as any),
   // update: jest.fn<Collection["update"]>().mockResolvedValue({ success: true }),
   // query: jest.fn<Collection["query"]>().mockResolvedValue(undefined as any),
   // peek: jest.fn<Collection["peek"]>().mockResolvedValue(undefined as any),
-  // delete: jest.fn<Collection["delete"]>().mockResolvedValue(undefined as any),
 } as any;
 
 const mockClient = {
@@ -40,11 +39,16 @@ describe("Chroma", () => {
 
     expect(chromaStore).toBeDefined();
   });
+
   test("should add vectors to the collection", async () => {
     const expectedPageContents = ["Document 1", "Document 2"];
     const embeddings = new FakeEmbeddings();
     jest.spyOn(embeddings, "embedDocuments");
-    const args = { collectionName: "testCollection", index: mockClient };
+    const args = {
+      collectionName: "testCollection",
+      index: mockClient,
+      collectionMetadata: { "hnsw:space": "cosine" },
+    };
     const documents = expectedPageContents.map((pc) => ({ pageContent: pc }));
 
     const chroma = new Chroma(embeddings, args);
@@ -54,7 +58,33 @@ describe("Chroma", () => {
     expect(embeddings.embedDocuments).toHaveBeenCalledWith(
       expectedPageContents
     );
-    expect(mockCollection.add).toHaveBeenCalled();
+    expect(mockCollection.upsert).toHaveBeenCalled();
+
+    const { metadatas } = mockCollection.upsert.mock.calls[0][0];
+    expect(metadatas).toEqual([{}, {}]);
+  });
+
+  test("should override loc.lines with locFrom/locTo", async () => {
+    const expectedPageContents = ["Document 1"];
+    const embeddings = new FakeEmbeddings();
+    jest.spyOn(embeddings, "embedDocuments");
+
+    const args = { collectionName: "testCollection", index: mockClient };
+    const documents = expectedPageContents.map((pc) => ({
+      pageContent: pc,
+      metadata: { source: "source.html", loc: { lines: { from: 0, to: 4 } } },
+    }));
+
+    const chroma = new Chroma(embeddings, args);
+    await chroma.addDocuments(documents as any);
+
+    const { metadatas } = mockCollection.upsert.mock.calls[0][0];
+
+    expect(metadatas[0]).toEqual({
+      source: "source.html",
+      locFrom: 0,
+      locTo: 4,
+    });
   });
 
   test("should throw an error for mismatched vector lengths", async () => {

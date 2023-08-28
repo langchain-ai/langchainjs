@@ -1,12 +1,10 @@
-import { createClient } from "redis";
+import { Redis } from "ioredis";
 import { BufferMemory } from "langchain/memory";
-import { RedisChatMessageHistory } from "langchain/stores/message/redis";
+import { RedisChatMessageHistory } from "langchain/stores/message/ioredis";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 
-const client = createClient({
-  url: "redis://localhost:6379",
-});
+const client = new Redis("redis://localhost:6379");
 
 const memory = new BufferMemory({
   chatHistory: new RedisChatMessageHistory({

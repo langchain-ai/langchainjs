@@ -1,6 +1,9 @@
 import { LLM, BaseLLMParams } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
+/**
+ * Interface for the input parameters specific to the Aleph Alpha LLM.
+ */
 export interface AlephAlphaInput extends BaseLLMParams {
   model: string;
   maximum_tokens: number;
@@ -39,6 +42,12 @@ export interface AlephAlphaInput extends BaseLLMParams {
   base_url: string;
 }
 
+/**
+ * Specific implementation of a Large Language Model (LLM) designed to
+ * interact with the Aleph Alpha API. It extends the base LLM class and
+ * includes a variety of parameters for customizing the behavior of the
+ * Aleph Alpha model.
+ */
 export class AlephAlpha extends LLM implements AlephAlphaInput {
   model = "luminous-base";
 
@@ -172,6 +181,10 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
     this.stop = fields?.stop ?? this.stop;
   }
 
+  /**
+   * Validates the environment by ensuring the necessary Aleph Alpha API key
+   * is available. Throws an error if the API key is missing.
+   */
   validateEnvironment() {
     if (!this.aleph_alpha_api_key) {
       throw new Error(

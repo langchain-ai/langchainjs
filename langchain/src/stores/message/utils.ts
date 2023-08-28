@@ -1,10 +1,13 @@
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   ChatMessage,
-  HumanChatMessage,
+  ChatMessageFieldsWithRole,
+  FunctionMessage,
+  FunctionMessageFieldsWithName,
+  HumanMessage,
   StoredMessage,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 
 interface StoredMessageV1 {
@@ -13,6 +16,13 @@ interface StoredMessageV1 {
   text: string;
 }
 
+/**
+ * Maps messages from an older format (V1) to the current `StoredMessage`
+ * format. If the message is already in the `StoredMessage` format, it is
+ * returned as is. Otherwise, it transforms the V1 message into a
+ * `StoredMessage`. This function is important for maintaining
+ * compatibility with older message formats.
+ */
 export function mapV1MessageToStoredMessage(
   message: StoredMessage | StoredMessageV1
 ): StoredMessage {
@@ -32,37 +42,53 @@ export function mapV1MessageToStoredMessage(
   }
 }
 
+/**
+ * Transforms an array of `StoredMessage` instances into an array of
+ * `BaseMessage` instances. It uses the `mapV1MessageToStoredMessage`
+ * function to ensure all messages are in the `StoredMessage` format, then
+ * creates new instances of the appropriate `BaseMessage` subclass based
+ * on the type of each message. This function is used to prepare stored
+ * messages for use in a chat context.
+ */
 export function mapStoredMessagesToChatMessages(
   messages: StoredMessage[]
-): BaseChatMessage[] {
+): BaseMessage[] {
   return messages.map((message) => {
     const storedMessage = mapV1MessageToStoredMessage(message);
     switch (storedMessage.type) {
       case "human":
-        return new HumanChatMessage(storedMessage.data.content);
+        return new HumanMessage(storedMessage.data);
       case "ai":
-        return new AIChatMessage(
-          storedMessage.data.content,
-          storedMessage.data.additional_kwargs
-        );
+        return new AIMessage(storedMessage.data);
       case "system":
-        return new SystemChatMessage(storedMessage.data.content);
-      case "chat":
-        if (storedMessage.data?.additional_kwargs?.role === undefined) {
+        return new SystemMessage(storedMessage.data);
+      case "function":
+        if (storedMessage.data.name === undefined) {
+          throw new Error("Name must be defined for function messages");
+        }
+        return new FunctionMessage(
+          storedMessage.data as FunctionMessageFieldsWithName
+        );
+      case "chat": {
+        if (storedMessage.data.role === undefined) {
           throw new Error("Role must be defined for chat messages");
         }
-        return new ChatMessage(
-          storedMessage.data.content,
-          storedMessage.data.additional_kwargs.role
-        );
+        return new ChatMessage(storedMessage.data as ChatMessageFieldsWithRole);
+      }
       default:
         throw new Error(`Got unexpected type: ${storedMessage.type}`);
     }
   });
 }
 
+/**
+ * Transforms an array of `BaseMessage` instances into an array of
+ * `StoredMessage` instances. It does this by calling the `toDict` method
+ * on each `BaseMessage`, which returns a `StoredMessage`. This function
+ * is used to prepare chat messages for storage.
+ */
 export function mapChatMessagesToStoredMessages(
-  messages: BaseChatMessage[]
+  messages: BaseMessage[]
 ): StoredMessage[] {
-  return messages.map((message) => message.toJSON());
+  return messages.map((message) => message.toDict());
 }

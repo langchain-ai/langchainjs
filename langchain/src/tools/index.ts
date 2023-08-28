@@ -11,12 +11,6 @@ export {
 export { IFTTTWebhook } from "./IFTTTWebhook.js";
 export { ChainTool, ChainToolInput } from "./chain.js";
 export {
-  QuerySqlTool,
-  InfoSqlTool,
-  ListTablesSqlTool,
-  QueryCheckerTool,
-} from "./sql.js";
-export {
   JsonSpec,
   JsonListKeysTool,
   JsonGetValueTool,
@@ -38,3 +32,13 @@ export {
 export { AIPluginTool } from "./aiplugin.js";
 export { ReadFileTool, WriteFileTool } from "./fs.js";
 export { BraveSearch, BraveSearchParams } from "./brave_search.js";
+export {
+  WikipediaQueryRun,
+  WikipediaQueryRunParams,
+} from "./wikipedia_query_run.js";
+export { WolframAlphaTool } from "./wolframalpha.js";
+export {
+  DataForSeoAPISearch,
+  DataForSeoApiConfig,
+} from "./dataforseo_api_search.js";
+export { SearxngSearch } from "./searxng_search.js";

@@ -8,7 +8,7 @@ import {
   CollectionTtl,
 } from "@gomomento/sdk";
 import {
-  BaseChatMessage,
+  BaseMessage,
   BaseListChatMessageHistory,
   StoredMessage,
 } from "../../schema/index.js";
@@ -47,6 +47,11 @@ export interface MomentoChatMessageHistoryProps {
   ensureCacheExists?: true;
 }
 
+/**
+ * A class that stores chat message history using Momento Cache. It
+ * interacts with a Momento cache client to perform operations like
+ * fetching, adding, and deleting messages.
+ */
 export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "momento"];
 
@@ -105,7 +110,11 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
-  public async getMessages(): Promise<BaseChatMessage[]> {
+  /**
+   * Fetches messages from the cache.
+   * @returns A Promise that resolves to an array of BaseMessage instances.
+   */
+  public async getMessages(): Promise<BaseMessage[]> {
     const fetchResponse = await this.client.listFetch(
       this.cacheName,
       this.sessionId
@@ -126,7 +135,12 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(messages);
   }
 
-  public async addMessage(message: BaseChatMessage): Promise<void> {
+  /**
+   * Adds a message to the cache.
+   * @param message The BaseMessage instance to add to the cache.
+   * @returns A Promise that resolves when the message has been added.
+   */
+  public async addMessage(message: BaseMessage): Promise<void> {
     const messageToAdd = JSON.stringify(
       mapChatMessagesToStoredMessages([message])[0]
     );
@@ -146,6 +160,10 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
+  /**
+   * Deletes all messages from the cache.
+   * @returns A Promise that resolves when all messages have been deleted.
+   */
   public async clear(): Promise<void> {
     const deleteResponse = await this.client.delete(
       this.cacheName,

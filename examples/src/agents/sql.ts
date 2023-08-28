@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain/llms/openai";
 import { SqlDatabase } from "langchain/sql_db";
-import { createSqlAgent, SqlToolkit } from "langchain/agents";
+import { createSqlAgent, SqlToolkit } from "langchain/agents/toolkits/sql";
 import { DataSource } from "typeorm";
 
 /** This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.

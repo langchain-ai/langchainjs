@@ -2,11 +2,16 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
-import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
+import {
+  BaseCallbackHandler,
+  CallbackHandlerMethods,
+  HandleLLMNewTokenCallbackFields,
+  NewTokenIndices,
+} from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
 import {
   getTracingCallbackHandler,
@@ -20,6 +25,7 @@ import {
 } from "./handlers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
+import { Document } from "../document.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -36,6 +42,41 @@ export type Callbacks =
   | CallbackManager
   | (BaseCallbackHandler | CallbackHandlerMethods)[];
 
+export interface BaseCallbackConfig {
+  /**
+   * Tags for this call and any sub-calls (eg. a Chain calling an LLM).
+   * You can use these to filter calls.
+   */
+  tags?: string[];
+
+  /**
+   * Metadata for this call and any sub-calls (eg. a Chain calling an LLM).
+   * Keys should be strings, values should be JSON-serializable.
+   */
+  metadata?: Record<string, unknown>;
+
+  /**
+   * Callbacks for this call and any sub-calls (eg. a Chain calling an LLM).
+   * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
+   */
+  callbacks?: Callbacks;
+}
+
+export function parseCallbackConfigArg(
+  arg: Callbacks | BaseCallbackConfig | undefined
+): BaseCallbackConfig {
+  if (!arg) {
+    return {};
+  } else if (Array.isArray(arg) || "name" in arg) {
+    return { callbacks: arg };
+  } else {
+    return arg;
+  }
+}
+
+/**
+ * Manage callbacks from different components of LangChain.
+ */
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
 
@@ -48,6 +89,9 @@ export abstract class BaseCallbackManager {
   }
 }
 
+/**
+ * Base class for run manager in LangChain.
+ */
 class BaseRunManager {
   constructor(
     public readonly runId: string,
@@ -55,6 +99,8 @@ class BaseRunManager {
     protected readonly inheritableHandlers: BaseCallbackHandler[],
     protected readonly tags: string[],
     protected readonly inheritableTags: string[],
+    protected readonly metadata: Record<string, unknown>,
+    protected readonly inheritableMetadata: Record<string, unknown>,
     protected readonly _parentRunId?: string
   ) {}
 
@@ -63,7 +109,12 @@ class BaseRunManager {
       this.handlers.map((handler) =>
         consumeCallback(async () => {
           try {
-            await handler.handleText?.(text, this.runId, this._parentRunId);
+            await handler.handleText?.(
+              text,
+              this.runId,
+              this._parentRunId,
+              this.tags
+            );
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleText: ${err}`
@@ -75,11 +126,84 @@ class BaseRunManager {
   }
 }
 
+/**
+ * Manages callbacks for retriever runs.
+ */
+export class CallbackManagerForRetrieverRun
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
+  getChild(tag?: string): CallbackManager {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    const manager = new CallbackManager(this.runId);
+    manager.setHandlers(this.inheritableHandlers);
+    manager.addTags(this.inheritableTags);
+    manager.addMetadata(this.inheritableMetadata);
+    if (tag) {
+      manager.addTags([tag], false);
+    }
+    return manager;
+  }
+
+  async handleRetrieverEnd(documents: Document[]): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverEnd?.(
+                documents,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetriever`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
+  async handleRetrieverError(err: Error | unknown): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverError?.(
+                err,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (error) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+}
+
 export class CallbackManagerForLLMRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
 {
-  async handleLLMNewToken(token: string): Promise<void> {
+  async handleLLMNewToken(
+    token: string,
+    idx?: NewTokenIndices,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -87,8 +211,11 @@ export class CallbackManagerForLLMRun
             try {
               await handler.handleLLMNewToken?.(
                 token,
+                idx ?? { prompt: 0, completion: 0 },
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags,
+                fields
               );
             } catch (err) {
               console.error(
@@ -110,7 +237,8 @@ export class CallbackManagerForLLMRun
               await handler.handleLLMError?.(
                 err,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -132,7 +260,8 @@ export class CallbackManagerForLLMRun
               await handler.handleLLMEnd?.(
                 output,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -155,6 +284,7 @@ export class CallbackManagerForChainRun
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
+    manager.addMetadata(this.inheritableMetadata);
     if (tag) {
       manager.addTags([tag], false);
     }
@@ -170,7 +300,8 @@ export class CallbackManagerForChainRun
               await handler.handleChainError?.(
                 err,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -192,7 +323,8 @@ export class CallbackManagerForChainRun
               await handler.handleChainEnd?.(
                 output,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -214,7 +346,8 @@ export class CallbackManagerForChainRun
               await handler.handleAgentAction?.(
                 action,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -236,7 +369,8 @@ export class CallbackManagerForChainRun
               await handler.handleAgentEnd?.(
                 action,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -259,6 +393,7 @@ export class CallbackManagerForToolRun
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
+    manager.addMetadata(this.inheritableMetadata);
     if (tag) {
       manager.addTags([tag], false);
     }
@@ -274,7 +409,8 @@ export class CallbackManagerForToolRun
               await handler.handleToolError?.(
                 err,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -296,7 +432,8 @@ export class CallbackManagerForToolRun
               await handler.handleToolEnd?.(
                 output,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -322,6 +459,10 @@ export class CallbackManager
 
   inheritableTags: string[] = [];
 
+  metadata: Record<string, unknown> = {};
+
+  inheritableMetadata: Record<string, unknown> = {};
+
   name = "callback_manager";
 
   private readonly _parentRunId?: string;
@@ -336,98 +477,119 @@ export class CallbackManager
   async handleLLMStart(
     llm: Serialized,
     prompts: string[],
-    runId: string = uuidv4(),
+    _runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
-  ): Promise<CallbackManagerForLLMRun> {
-    await Promise.all(
-      this.handlers.map((handler) =>
-        consumeCallback(async () => {
-          if (!handler.ignoreLLM) {
-            try {
-              await handler.handleLLMStart?.(
-                llm,
-                prompts,
-                runId,
-                this._parentRunId,
-                extraParams,
-                this.tags
-              );
-            } catch (err) {
-              console.error(
-                `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
-              );
-            }
-          }
-        }, handler.awaitHandlers)
-      )
-    );
-    return new CallbackManagerForLLMRun(
-      runId,
-      this.handlers,
-      this.inheritableHandlers,
-      this.tags,
-      this.inheritableTags,
-      this._parentRunId
+  ): Promise<CallbackManagerForLLMRun[]> {
+    return Promise.all(
+      prompts.map(async (prompt) => {
+        const runId = uuidv4();
+
+        await Promise.all(
+          this.handlers.map((handler) =>
+            consumeCallback(async () => {
+              if (!handler.ignoreLLM) {
+                try {
+                  await handler.handleLLMStart?.(
+                    llm,
+                    [prompt],
+                    runId,
+                    this._parentRunId,
+                    extraParams,
+                    this.tags,
+                    this.metadata
+                  );
+                } catch (err) {
+                  console.error(
+                    `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+                  );
+                }
+              }
+            }, handler.awaitHandlers)
+          )
+        );
+
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this.metadata,
+          this.inheritableMetadata,
+          this._parentRunId
+        );
+      })
     );
   }
 
   async handleChatModelStart(
     llm: Serialized,
-    messages: BaseChatMessage[][],
-    runId: string = uuidv4(),
+    messages: BaseMessage[][],
+    _runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
-  ): Promise<CallbackManagerForLLMRun> {
-    let messageStrings: string[];
-    await Promise.all(
-      this.handlers.map((handler) =>
-        consumeCallback(async () => {
-          if (!handler.ignoreLLM) {
-            try {
-              if (handler.handleChatModelStart)
-                await handler.handleChatModelStart?.(
-                  llm,
-                  messages,
-                  runId,
-                  this._parentRunId,
-                  extraParams,
-                  this.tags
-                );
-              else if (handler.handleLLMStart) {
-                messageStrings = messages.map((x) => getBufferString(x));
-                await handler.handleLLMStart?.(
-                  llm,
-                  messageStrings,
-                  runId,
-                  this._parentRunId,
-                  extraParams,
-                  this.tags
-                );
+  ): Promise<CallbackManagerForLLMRun[]> {
+    return Promise.all(
+      messages.map(async (messageGroup) => {
+        const runId = uuidv4();
+
+        await Promise.all(
+          this.handlers.map((handler) =>
+            consumeCallback(async () => {
+              if (!handler.ignoreLLM) {
+                try {
+                  if (handler.handleChatModelStart)
+                    await handler.handleChatModelStart?.(
+                      llm,
+                      [messageGroup],
+                      runId,
+                      this._parentRunId,
+                      extraParams,
+                      this.tags,
+                      this.metadata
+                    );
+                  else if (handler.handleLLMStart) {
+                    const messageString = getBufferString(messageGroup);
+                    await handler.handleLLMStart?.(
+                      llm,
+                      [messageString],
+                      runId,
+                      this._parentRunId,
+                      extraParams,
+                      this.tags,
+                      this.metadata
+                    );
+                  }
+                } catch (err) {
+                  console.error(
+                    `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+                  );
+                }
               }
-            } catch (err) {
-              console.error(
-                `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
-              );
-            }
-          }
-        }, handler.awaitHandlers)
-      )
-    );
-    return new CallbackManagerForLLMRun(
-      runId,
-      this.handlers,
-      this.inheritableHandlers,
-      this.tags,
-      this.inheritableTags,
-      this._parentRunId
+            }, handler.awaitHandlers)
+          )
+        );
+
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this.metadata,
+          this.inheritableMetadata,
+          this._parentRunId
+        );
+      })
     );
   }
 
   async handleChainStart(
     chain: Serialized,
     inputs: ChainValues,
-    runId = uuidv4()
+    runId = uuidv4(),
+    runType: string | undefined = undefined
   ): Promise<CallbackManagerForChainRun> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -439,7 +601,9 @@ export class CallbackManager
                 inputs,
                 runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                this.metadata,
+                runType
               );
             } catch (err) {
               console.error(
@@ -456,6 +620,8 @@ export class CallbackManager
       this.inheritableHandlers,
       this.tags,
       this.inheritableTags,
+      this.metadata,
+      this.inheritableMetadata,
       this._parentRunId
     );
   }
@@ -475,7 +641,8 @@ export class CallbackManager
                 input,
                 runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                this.metadata
               );
             } catch (err) {
               console.error(
@@ -492,6 +659,48 @@ export class CallbackManager
       this.inheritableHandlers,
       this.tags,
       this.inheritableTags,
+      this.metadata,
+      this.inheritableMetadata,
+      this._parentRunId
+    );
+  }
+
+  async handleRetrieverStart(
+    retriever: Serialized,
+    query: string,
+    runId: string = uuidv4(),
+    _parentRunId: string | undefined = undefined
+  ): Promise<CallbackManagerForRetrieverRun> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverStart?.(
+                retriever,
+                query,
+                runId,
+                this._parentRunId,
+                this.tags,
+                this.metadata
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetrieverStart: ${err}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+    return new CallbackManagerForRetrieverRun(
+      runId,
+      this.handlers,
+      this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
+      this.metadata,
+      this.inheritableMetadata,
       this._parentRunId
     );
   }
@@ -533,6 +742,20 @@ export class CallbackManager
     );
   }
 
+  addMetadata(metadata: Record<string, unknown>, inherit = true): void {
+    this.metadata = { ...this.metadata, ...metadata };
+    if (inherit) {
+      this.inheritableMetadata = { ...this.inheritableMetadata, ...metadata };
+    }
+  }
+
+  removeMetadata(metadata: Record<string, unknown>): void {
+    for (const key of Object.keys(metadata)) {
+      delete this.metadata[key];
+      delete this.inheritableMetadata[key];
+    }
+  }
+
   copy(
     additionalHandlers: BaseCallbackHandler[] = [],
     inherit = true
@@ -545,6 +768,10 @@ export class CallbackManager
     for (const tag of this.tags) {
       const inheritable = this.inheritableTags.includes(tag);
       manager.addTags([tag], inheritable);
+    }
+    for (const key of Object.keys(this.metadata)) {
+      const inheritable = Object.keys(this.inheritableMetadata).includes(key);
+      manager.addMetadata({ [key]: this.metadata[key] }, inheritable);
     }
     for (const handler of additionalHandlers) {
       if (
@@ -580,6 +807,8 @@ export class CallbackManager
     localHandlers?: Callbacks,
     inheritableTags?: string[],
     localTags?: string[],
+    inheritableMetadata?: Record<string, unknown>,
+    localMetadata?: Record<string, unknown>,
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
     let callbackManager: CallbackManager | undefined;
@@ -604,7 +833,8 @@ export class CallbackManager
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") || options?.verbose;
     const tracingV2Enabled =
-      getEnvironmentVariable("LANGCHAIN_TRACING_V2") ?? false;
+      getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true";
+
     const tracingEnabled =
       tracingV2Enabled ||
       (getEnvironmentVariable("LANGCHAIN_TRACING") ?? false);
@@ -630,7 +860,9 @@ export class CallbackManager
         if (tracingV2Enabled) {
           callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
         } else {
-          const session = getEnvironmentVariable("LANGCHAIN_SESSION");
+          const session =
+            getEnvironmentVariable("LANGCHAIN_PROJECT") &&
+            getEnvironmentVariable("LANGCHAIN_SESSION");
           callbackManager.addHandler(
             await getTracingCallbackHandler(session),
             true
@@ -642,6 +874,12 @@ export class CallbackManager
       if (callbackManager) {
         callbackManager.addTags(inheritableTags ?? []);
         callbackManager.addTags(localTags ?? [], false);
+      }
+    }
+    if (inheritableMetadata || localMetadata) {
+      if (callbackManager) {
+        callbackManager.addMetadata(inheritableMetadata ?? {});
+        callbackManager.addMetadata(localMetadata ?? {}, false);
       }
     }
     return callbackManager;
@@ -664,7 +902,7 @@ export class TraceGroup {
   constructor(
     private groupName: string,
     private options?: {
-      sessionName?: string;
+      projectName?: string;
       exampleId?: string;
     }
   ) {}

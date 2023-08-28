@@ -1,8 +1,9 @@
 import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import { BaseTracer, Run } from "../handlers/tracer.js";
-import { HumanChatMessage } from "../../schema/index.js";
+import { HumanMessage } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
+import { Document } from "../../document.js";
 
 const _DATE = 1620000000000;
 
@@ -68,7 +69,7 @@ test("Test LLMRun", async () => {
 test("Test Chat Model Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
-  const messages = [[new HumanChatMessage("Avast")]];
+  const messages = [[new HumanMessage("Avast")]];
   await tracer.handleChatModelStart(serialized, messages, runId);
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
@@ -99,13 +100,17 @@ test("Test Chat Model Run", async () => {
         "messages": [
           [
             {
-              "data": {
+              "id": [
+                "langchain",
+                "schema",
+                "HumanMessage",
+              ],
+              "kwargs": {
                 "additional_kwargs": {},
                 "content": "Avast",
-                "name": undefined,
-                "role": undefined,
               },
-              "type": "human",
+              "lc": 1,
+              "type": "constructor",
             },
           ],
         ],
@@ -204,6 +209,46 @@ test("Test Tool Run", async () => {
   };
   await tracer.handleToolStart(serialized, "test", runId);
   await tracer.handleToolEnd("output", runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0];
+  expect(run).toEqual(compareRun);
+});
+
+test("Test Retriever Run", async () => {
+  const tracer = new FakeTracer();
+  const runId = uuid.v4();
+  const document = new Document({
+    pageContent: "test",
+    metadata: { test: "test" },
+  });
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
+    child_execution_order: 1,
+    serialized,
+    events: [
+      {
+        name: "start",
+        time: 1620000000000,
+      },
+      {
+        name: "end",
+        time: 1620000000000,
+      },
+    ],
+    inputs: { query: "bar" },
+    outputs: { documents: [document] },
+    run_type: "retriever",
+    child_runs: [],
+    extra: {},
+    tags: [],
+  };
+
+  await tracer.handleRetrieverStart(serialized, "bar", runId);
+  await tracer.handleRetrieverEnd([document], runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   expect(run).toEqual(compareRun);

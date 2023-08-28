@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { GoogleVertexAI, GoogleVertexAICode } from "../googlevertexai.js";
+import { GoogleVertexAI } from "../googlevertexai.js";
 
 test.skip("Test Google Vertex", async () => {
   const model = new GoogleVertexAI({ maxOutputTokens: 50 });
@@ -28,15 +28,17 @@ test.skip("Test Google Vertex generation", async () => {
 });
 
 test.skip("Test Google Vertex Codey gecko model", async () => {
-  const model = new GoogleVertexAICode();
+  const model = new GoogleVertexAI({ model: "code-gecko" });
   expect(model.model).toEqual("code-gecko");
+  expect(model.temperature).toEqual(0.2);
+  expect(model.maxOutputTokens).toEqual(64);
 
   const res = await model.call("for( let co = 0");
   console.log(res);
 });
 
 test.skip("Test Google Vertex Codey bison model", async () => {
-  const model = new GoogleVertexAICode({
+  const model = new GoogleVertexAI({
     model: "code-bison",
     maxOutputTokens: 2048,
   });
@@ -44,4 +46,19 @@ test.skip("Test Google Vertex Codey bison model", async () => {
 
   const res = await model.call("Count to 10 in JavaScript.");
   console.log(res);
+});
+
+test.skip("Test Google Vertex stream returns one chunk", async () => {
+  const model = new GoogleVertexAI({
+    model: "code-bison",
+    maxOutputTokens: 2048,
+  });
+
+  const stream = await model.stream("Count to 10 in JavaScript.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(chunks.length).toBe(1);
 });

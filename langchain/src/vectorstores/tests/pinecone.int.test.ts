@@ -36,6 +36,17 @@ describe("PineconeStore", () => {
     const results = await pineconeStore.similaritySearch(pageContent, 1);
 
     expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
+
+    await pineconeStore.addDocuments(
+      [{ pageContent: `${pageContent} upserted`, metadata: {} }],
+      [documentId]
+    );
+
+    const results2 = await pineconeStore.similaritySearch(pageContent, 1);
+
+    expect(results2).toEqual([
+      new Document({ metadata: {}, pageContent: `${pageContent} upserted` }),
+    ]);
   });
 
   test("auto-generated ids", async () => {
@@ -70,5 +81,57 @@ describe("PineconeStore", () => {
     expect(results).toEqual([
       new Document({ metadata: { foo: id }, pageContent }),
     ]);
+  });
+
+  test("delete by id", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+
+    const ids = await pineconeStore.addDocuments([
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: id } },
+    ]);
+
+    const results = await pineconeStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(results.length).toEqual(2);
+
+    await pineconeStore.delete({
+      ids: ids.slice(0, 1),
+    });
+
+    const results2 = await pineconeStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(results2.length).toEqual(1);
+  });
+
+  test("delete all", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+
+    await pineconeStore.addDocuments([
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: id } },
+    ]);
+
+    const results = await pineconeStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(results.length).toEqual(2);
+
+    await pineconeStore.delete({
+      deleteAll: true,
+    });
+
+    const results2 = await pineconeStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(results2.length).toEqual(0);
   });
 });

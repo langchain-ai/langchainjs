@@ -1,14 +1,16 @@
 import { type Tiktoken } from "js-tiktoken/lite";
+import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
-  BaseChatMessage,
-  BasePromptValue,
-  LLMResult,
-} from "../schema/index.js";
-import { CallbackManager, Callbacks } from "../callbacks/manager.js";
+  BaseCallbackConfig,
+  CallbackManager,
+  Callbacks,
+} from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
-import { Serializable } from "../load/serializable.js";
+import { Runnable, RunnableConfig } from "../schema/runnable.js";
+import { StringPromptValue } from "../prompts/base.js";
+import { ChatPromptValue } from "../prompts/chat.js";
 
 const getVerbosity = () => false;
 
@@ -22,13 +24,18 @@ export interface BaseLangChainParams {
   verbose?: boolean;
   callbacks?: Callbacks;
   tags?: string[];
+  metadata?: Record<string, unknown>;
 }
 
 /**
  * Base class for language models, chains, tools.
  */
-export abstract class BaseLangChain
-  extends Serializable
+export abstract class BaseLangChain<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput, CallOptions>
   implements BaseLangChainParams
 {
   /**
@@ -39,6 +46,8 @@ export abstract class BaseLangChain
   callbacks?: Callbacks;
 
   tags?: string[];
+
+  metadata?: Record<string, unknown>;
 
   get lc_attributes(): { [key: string]: undefined } | undefined {
     return {
@@ -52,6 +61,7 @@ export abstract class BaseLangChain
     this.verbose = params.verbose ?? getVerbosity();
     this.callbacks = params.callbacks;
     this.tags = params.tags ?? [];
+    this.metadata = params.metadata ?? {};
   }
 }
 
@@ -69,7 +79,7 @@ export interface BaseLanguageModelParams
   callbackManager?: CallbackManager;
 }
 
-export interface BaseLanguageModelCallOptions {
+export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   /**
    * Stop tokens to use for this call.
    * If not provided, the default stop tokens for the model will be used.
@@ -84,29 +94,31 @@ export interface BaseLanguageModelCallOptions {
   /**
    * Abort signal for this call.
    * If provided, the call will be aborted when the signal is aborted.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
-
-  /**
-   * Tags to attach to this call.
-   */
-  tags?: string[];
 }
+
+export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
 
 /**
  * Base class for language models.
  */
-export abstract class BaseLanguageModel
-  extends BaseLangChain
+export abstract class BaseLanguageModel<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput = any,
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+  >
+  extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
   implements BaseLanguageModelParams
 {
-  declare CallOptions: BaseLanguageModelCallOptions;
+  declare CallOptions: CallOptions;
 
   /**
    * Keys that the language model accepts as call options.
    */
   get callKeys(): string[] {
-    return ["stop", "timeout", "signal"];
+    return ["stop", "timeout", "signal", "tags", "metadata", "callbacks"];
   }
 
   /**
@@ -129,21 +141,21 @@ export abstract class BaseLanguageModel
 
   abstract generatePrompt(
     promptValues: BasePromptValue[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
   abstract predict(
     text: string,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
   abstract predictMessages(
-    messages: BaseChatMessage[],
-    options?: string[] | this["CallOptions"],
+    messages: BaseMessage[],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage>;
+  ): Promise<BaseMessage>;
 
   abstract _modelType(): string;
 
@@ -175,6 +187,18 @@ export abstract class BaseLanguageModel
     }
 
     return numTokens;
+  }
+
+  protected static _convertInputToPromptValue(
+    input: BaseLanguageModelInput
+  ): BasePromptValue {
+    if (typeof input === "string") {
+      return new StringPromptValue(input);
+    } else if (Array.isArray(input)) {
+      return new ChatPromptValue(input);
+    } else {
+      return input;
+    }
   }
 
   /**
@@ -210,7 +234,7 @@ export abstract class BaseLanguageModel
       openai: (await import("../chat_models/openai.js")).ChatOpenAI,
     }[_type];
     if (Cls === undefined) {
-      throw new Error(`Cannot load  LLM with type ${_type}`);
+      throw new Error(`Cannot load LLM with type ${_type}`);
     }
     return new Cls(rest);
   }

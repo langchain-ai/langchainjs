@@ -3,13 +3,14 @@ import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import {
-  AIChatMessage,
+  AIMessage,
   AgentAction,
   AgentFinish,
   AgentStep,
-  BaseChatMessage,
-  FunctionChatMessage,
+  BaseMessage,
+  FunctionMessage,
   ChainValues,
+  SystemMessage,
 } from "../../schema/index.js";
 import { StructuredTool } from "../../tools/base.js";
 import { Agent, AgentArgs } from "../agent.js";
@@ -23,33 +24,106 @@ import {
 } from "../../prompts/chat.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
+import { OutputParserException } from "../../schema/output_parser.js";
 
-function parseOutput(message: BaseChatMessage): AgentAction | AgentFinish {
+/**
+ * Type that represents an agent action with an optional message log.
+ */
+type FunctionsAgentAction = AgentAction & {
+  messageLog?: BaseMessage[];
+};
+
+/**
+ * Parses the output message into a FunctionsAgentAction or AgentFinish
+ * object.
+ * @param message The BaseMessage to parse.
+ * @returns A FunctionsAgentAction or AgentFinish object.
+ */
+function parseOutput(message: BaseMessage): FunctionsAgentAction | AgentFinish {
   if (message.additional_kwargs.function_call) {
     // eslint-disable-next-line prefer-destructuring
     const function_call: ChatCompletionRequestMessageFunctionCall =
       message.additional_kwargs.function_call;
-    return {
-      tool: function_call.name as string,
-      toolInput: function_call.arguments
+    try {
+      const toolInput = function_call.arguments
         ? JSON.parse(function_call.arguments)
-        : {},
-      log: message.text,
-    };
+        : {};
+      return {
+        tool: function_call.name as string,
+        toolInput,
+        log: `Invoking "${function_call.name}" with ${
+          function_call.arguments ?? "{}"
+        }\n${message.content}`,
+        messageLog: [message],
+      };
+    } catch (error) {
+      throw new OutputParserException(
+        `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
+      );
+    }
   } else {
-    return { returnValues: { output: message.text }, log: message.text };
+    return { returnValues: { output: message.content }, log: message.content };
   }
 }
 
+/**
+ * Checks if the given action is a FunctionsAgentAction.
+ * @param action The action to check.
+ * @returns True if the action is a FunctionsAgentAction, false otherwise.
+ */
+function isFunctionsAgentAction(
+  action: AgentAction | FunctionsAgentAction
+): action is FunctionsAgentAction {
+  return (action as FunctionsAgentAction).messageLog !== undefined;
+}
+
+function _convertAgentStepToMessages(
+  action: AgentAction | FunctionsAgentAction,
+  observation: string
+) {
+  if (isFunctionsAgentAction(action) && action.messageLog !== undefined) {
+    return action.messageLog?.concat(
+      new FunctionMessage(observation, action.tool)
+    );
+  } else {
+    return [new AIMessage(action.log)];
+  }
+}
+
+export function _formatIntermediateSteps(
+  intermediateSteps: AgentStep[]
+): BaseMessage[] {
+  return intermediateSteps.flatMap(({ action, observation }) =>
+    _convertAgentStepToMessages(action, observation)
+  );
+}
+
+/**
+ * Interface for the input data required to create an OpenAIAgent.
+ */
 export interface OpenAIAgentInput extends AgentInput {
   tools: StructuredTool[];
 }
 
+/**
+ * Interface for the arguments required to create a prompt for an
+ * OpenAIAgent.
+ */
 export interface OpenAIAgentCreatePromptArgs {
   prefix?: string;
+  systemMessage?: SystemMessage;
 }
 
+/**
+ * Class representing an agent for the OpenAI chat model in LangChain. It
+ * extends the Agent class and provides additional functionality specific
+ * to the OpenAIAgent type.
+ */
 export class OpenAIAgent extends Agent {
+  static lc_name() {
+    return "OpenAIAgent";
+  }
+
   lc_namespace = ["langchain", "agents", "openai"];
 
   _agentType() {
@@ -75,6 +149,13 @@ export class OpenAIAgent extends Agent {
     this.tools = input.tools;
   }
 
+  /**
+   * Creates a prompt for the OpenAIAgent using the provided tools and
+   * fields.
+   * @param _tools The tools to be used in the prompt.
+   * @param fields Optional fields for creating the prompt.
+   * @returns A BasePromptTemplate object representing the created prompt.
+   */
   static createPrompt(
     _tools: StructuredTool[],
     fields?: OpenAIAgentCreatePromptArgs
@@ -88,6 +169,13 @@ export class OpenAIAgent extends Agent {
     ]);
   }
 
+  /**
+   * Creates an OpenAIAgent from a BaseLanguageModel and a list of tools.
+   * @param llm The BaseLanguageModel to use.
+   * @param tools The tools to be used by the agent.
+   * @param args Optional arguments for creating the agent.
+   * @returns An instance of OpenAIAgent.
+   */
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: StructuredTool[],
@@ -110,20 +198,25 @@ export class OpenAIAgent extends Agent {
     });
   }
 
+  /**
+   * Constructs a scratch pad from a list of agent steps.
+   * @param steps The steps to include in the scratch pad.
+   * @returns A string or a list of BaseMessages representing the constructed scratch pad.
+   */
   async constructScratchPad(
     steps: AgentStep[]
-  ): Promise<string | BaseChatMessage[]> {
-    return steps.flatMap(({ action, observation }) => [
-      new AIChatMessage("", {
-        function_call: {
-          name: action.tool,
-          arguments: JSON.stringify(action.toolInput),
-        },
-      }),
-      new FunctionChatMessage(observation, action.tool),
-    ]);
+  ): Promise<string | BaseMessage[]> {
+    return _formatIntermediateSteps(steps);
   }
 
+  /**
+   * Plans the next action or finish state of the agent based on the
+   * provided steps, inputs, and optional callback manager.
+   * @param steps The steps to consider in planning.
+   * @param inputs The inputs to consider in planning.
+   * @param callbackManager Optional CallbackManager to use in planning.
+   * @returns A Promise that resolves to an AgentAction or AgentFinish object representing the planned action or finish state.
+   */
   async plan(
     steps: Array<AgentStep>,
     inputs: ChainValues,

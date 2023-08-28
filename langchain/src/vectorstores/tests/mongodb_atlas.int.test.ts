@@ -9,12 +9,11 @@ import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
 import { Document } from "../../document.js";
 
 /**
- * The following json can be used to create an index in atlas for cohere embeddings.
+ * The following json can be used to create an index in atlas for Cohere embeddings.
  * Use "langchain.test" for the namespace and "default" for the index name.
 
 {
   "mappings": {
-    "dynamic": true,
     "fields": {
       "embedding": {
         "dimensions": 1024,
@@ -64,7 +63,8 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
       1
     );
 
-    expect(results).toEqual([
+    expect(results.length).toEqual(1);
+    expect(results).toMatchObject([
       { pageContent: "What is a sandwich?", metadata: { c: 1 } },
     ]);
 
@@ -80,6 +80,84 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     );
 
     expect(filteredResults).toEqual([]);
+
+    const retriever = vectorStore.asRetriever({
+      filter: {
+        preFilter,
+      },
+    });
+
+    const docs = await retriever.getRelevantDocuments("That fence is purple");
+    expect(docs).toEqual([]);
+  } finally {
+    await client.close();
+  }
+});
+
+test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
+  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+  expect(
+    process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
+  ).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
+  try {
+    const namespace = "langchain.test";
+    const [dbName, collectionName] = namespace.split(".");
+    const collection = client.db(dbName).collection(collectionName);
+
+    await collection.deleteMany({});
+
+    const texts = ["foo", "foo", "foy"];
+    const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
+      texts,
+      {},
+      new CohereEmbeddings(),
+      { collection }
+    );
+
+    // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
+    await sleep(2000);
+
+    const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
+      k: 10,
+      fetchK: 20,
+      lambda: 0.1,
+    });
+
+    expect(output).toHaveLength(texts.length);
+
+    const actual = output.map((doc) => doc.pageContent);
+    const expected = ["foo", "foy", "foo"];
+    expect(actual).toEqual(expected);
+
+    const standardRetriever = await vectorStore.asRetriever();
+
+    const standardRetrieverOutput =
+      await standardRetriever.getRelevantDocuments("foo");
+    expect(output).toHaveLength(texts.length);
+
+    const standardRetrieverActual = standardRetrieverOutput.map(
+      (doc) => doc.pageContent
+    );
+    const standardRetrieverExpected = ["foo", "foo", "foy"];
+    expect(standardRetrieverActual).toEqual(standardRetrieverExpected);
+
+    const retriever = await vectorStore.asRetriever({
+      searchType: "mmr",
+      searchKwargs: {
+        fetchK: 20,
+        lambda: 0.1,
+      },
+    });
+
+    const retrieverOutput = await retriever.getRelevantDocuments("foo");
+    expect(output).toHaveLength(texts.length);
+
+    const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);
+    const retrieverExpected = ["foo", "foy", "foo"];
+    expect(retrieverActual).toEqual(retrieverExpected);
   } finally {
     await client.close();
   }

@@ -7,24 +7,29 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
-import { isNode, getEnvironmentVariable } from "../util/env.js";
+import { calculateMaxTokens } from "../base_language/count_tokens.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { GenerationChunk, LLMResult } from "../schema/index.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
 } from "../types/openai-types.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { chunkArray } from "../util/chunk.js";
-import { BaseLLM, BaseLLMParams } from "./base.js";
-import { calculateMaxTokens } from "../base_language/count_tokens.js";
-import { OpenAIChat } from "./openai-chat.js";
-import { LLMResult } from "../schema/index.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { readableStreamToAsyncIterable } from "../util/stream.js";
+import { BaseLLM, BaseLLMParams } from "./base.js";
+import { OpenAIChat } from "./openai-chat.js";
 
-export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
+export { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
+/**
+ * Interface for tracking token usage in OpenAI calls.
+ */
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
@@ -49,11 +54,16 @@ interface TokenUsage {
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
-export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
-  declare CallOptions: OpenAICallOptions;
+export class OpenAI
+  extends BaseLLM<OpenAICallOptions>
+  implements OpenAIInput, AzureOpenAIInput
+{
+  static lc_name() {
+    return "OpenAI";
+  }
 
   get callKeys(): (keyof OpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options"];
+    return [...(super.callKeys as (keyof OpenAICallOptions)[]), "options"];
   }
 
   lc_serializable = true;
@@ -62,6 +72,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     return {
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      organization: "OPENAI_ORGANIZATION",
     };
   }
 
@@ -88,7 +99,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   n = 1;
 
-  bestOf = 1;
+  bestOf?: number;
 
   logitBias?: Record<string, number>;
 
@@ -102,7 +113,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   stop?: string[];
 
+  user?: string;
+
   streaming = false;
+
+  openAIApiKey?: string;
 
   azureOpenAIApiVersion?: string;
 
@@ -112,6 +127,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAIBasePath?: string;
+
+  organization?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -120,7 +139,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     fields?: Partial<OpenAIInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        openAIApiKey?: string;
         configuration?: ConfigurationParameters;
       },
     /** @deprecated */
@@ -136,30 +154,38 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
     super(fields ?? {});
 
-    const apiKey =
+    this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    const azureApiKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!azureApiKey && !apiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
-    const azureApiInstanceName =
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    const azureApiDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       (fields?.azureOpenAIApiCompletionsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
-    const azureApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
+    this.organization =
+      fields?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -175,24 +201,16 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     this.bestOf = fields?.bestOf ?? this.bestOf;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
+    this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
 
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
-    }
-
-    if (this.streaming && this.bestOf > 1) {
+    if (this.streaming && this.bestOf && this.bestOf > 1) {
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -204,7 +222,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
 
     this.clientConfig = {
-      apiKey,
+      apiKey: this.openAIApiKey,
+      organization: this.organization,
       ...configuration,
       ...fields?.configuration,
     };
@@ -213,7 +232,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): CreateCompletionRequest {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): CreateCompletionRequest {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -224,7 +245,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       n: this.n,
       best_of: this.bestOf,
       logit_bias: this.logitBias,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
+      user: this.user,
       stream: this.streaming,
       ...this.modelKwargs,
     };
@@ -266,17 +288,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const { stop } = options;
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
-    if (this.stop && stop) {
-      throw new Error("Stop found in input and default params");
-    }
-
-    const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    const params = this.invocationParams(options);
 
     if (params.max_tokens === -1) {
       if (prompts.length !== 1) {
@@ -310,7 +326,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
-                    if (resolved) {
+                    if (resolved || rejected) {
                       return;
                     }
                     resolved = true;
@@ -319,7 +335,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                       choices,
                     });
                   } else {
-                    const message = JSON.parse(event.data) as Omit<
+                    const data = JSON.parse(event.data);
+
+                    if (data?.error) {
+                      if (rejected) {
+                        return;
+                      }
+                      rejected = true;
+                      reject(data.error);
+                      return;
+                    }
+
+                    const message = data as Omit<
                       CreateCompletionResponse,
                       "usage"
                     >;
@@ -342,16 +369,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                         choice.text = (choice.text ?? "") + (part.text ?? "");
                         choice.finish_reason = part.finish_reason;
                         choice.logprobs = part.logprobs;
-                        // TODO this should pass part.index to the callback
-                        // when that's supported there
                         // eslint-disable-next-line no-void
-                        void runManager?.handleLLMNewToken(part.text ?? "");
+                        void runManager?.handleLLMNewToken(part.text ?? "", {
+                          prompt: Math.floor(part.index / this.n),
+                          completion: part.index % this.n,
+                        });
                       }
                     }
 
                     // when all messages are finished, resolve
                     if (
                       !resolved &&
+                      !rejected &&
                       choices.every((c) => c.finish_reason != null)
                     ) {
                       resolved = true;
@@ -418,15 +447,106 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     };
   }
 
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
+  // when we integrate OpenAI's new SDK.
+  async *_streamResponseChunks(
+    input: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const params = {
+      ...this.invocationParams(options),
+      prompt: input,
+      stream: true,
+    };
+    const streamIterable = this.startStream(params, options);
+    for await (const streamedResponse of streamIterable) {
+      const data = JSON.parse(streamedResponse);
+      const choice = data.choices?.[0];
+      if (!choice) {
+        continue;
+      }
+      const chunk = new GenerationChunk({
+        text: choice.text,
+        generationInfo: {
+          finishReason: choice.finish_reason,
+          logprobs: choice.logprobs,
+        },
+      });
+      yield chunk;
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+  }
+
+  startStream(
+    request: CreateCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    let done = false;
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const iterable = readableStreamToAsyncIterable(stream.readable);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let err: any;
+    this.completionWithRetry(request, {
+      ...options,
+      adapter: fetchAdapter, // default adapter doesn't do streaming
+      responseType: "stream",
+      onmessage: (event) => {
+        if (done) return;
+        if (event.data?.trim?.() === "[DONE]") {
+          done = true;
+          // eslint-disable-next-line no-void
+          void writer.close();
+        } else {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            done = true;
+            throw data.error;
+          }
+          // eslint-disable-next-line no-void
+          void writer.write(event.data);
+        }
+      },
+    }).catch((error) => {
+      if (!done) {
+        err = error;
+        done = true;
+        // eslint-disable-next-line no-void
+        void writer.close();
+      }
+    });
+    return {
+      async next() {
+        const chunk = await iterable.next();
+        if (err) {
+          throw err;
+        }
+        return chunk;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    };
+  }
+
   /** @ignore */
   async completionWithRetry(
     request: CreateCompletionRequest,
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        basePath: this.clientConfig.basePath,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
@@ -505,6 +625,12 @@ export class PromptLayerOpenAI extends OpenAI {
     }
   }
 
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: CreateCompletionRequest,
     options?: StreamingAxiosConfiguration

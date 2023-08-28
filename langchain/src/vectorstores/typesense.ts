@@ -1,9 +1,21 @@
 import type { Client } from "typesense";
 import type { MultiSearchRequestSchema } from "typesense/lib/Typesense/MultiSearch.js";
+import type {
+  SearchResponseHit,
+  DocumentSchema,
+} from "typesense/lib/Typesense/Documents.js";
 import type { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+
+/**
+ * Interface for the response hit from a vector search in Typesense.
+ */
+interface VectorSearchResponseHit<T extends DocumentSchema>
+  extends SearchResponseHit<T> {
+  vector_distance?: number;
+}
 
 /**
  * Typesense vector store configuration.
@@ -78,6 +90,10 @@ export class Typesense extends VectorStore {
     data: Record<string, unknown>[],
     collectionName: string
   ) => Promise<void>;
+
+  _vectorstoreType(): string {
+    return "typesense";
+  }
 
   constructor(embeddings: Embeddings, config: TypesenseConfig) {
     super(embeddings, config);
@@ -156,21 +172,23 @@ export class Typesense extends VectorStore {
    * @returns documents
    */
   _typesenseRecordsToDocuments(
-    typesenseRecords: Record<string, unknown>[] | undefined
-  ): Document[] {
-    const documents =
+    typesenseRecords:
+      | { document?: Record<string, unknown>; vector_distance: number }[]
+      | undefined
+  ): [Document, number][] {
+    const documents: [Document, number][] =
       typesenseRecords?.map((hit) => {
         const objectWithMetadatas: Record<string, unknown> = {};
-
+        const hitDoc = hit.document || {};
         this.metadataColumnNames.forEach((metadataColumnName) => {
-          objectWithMetadatas[metadataColumnName] = hit[metadataColumnName];
+          objectWithMetadatas[metadataColumnName] = hitDoc[metadataColumnName];
         });
 
         const document: Document = {
-          pageContent: (hit[this.pageContentColumnName] as string) || "",
+          pageContent: (hitDoc[this.pageContentColumnName] as string) || "",
           metadata: objectWithMetadatas,
         };
-        return document;
+        return [document, hit.vector_distance];
       }) || [];
 
     return documents;
@@ -192,6 +210,11 @@ export class Typesense extends VectorStore {
     await this.import(typesenseDocuments, this.schemaName);
   }
 
+  /**
+   * Adds vectors to the vector store.
+   * @param vectors Vectors to add.
+   * @param documents Documents associated with the vectors.
+   */
   async addVectors(vectors: number[][], documents: Document[]) {
     const typesenseDocuments = this._documentsToTypesenseRecords(
       documents,
@@ -202,8 +225,6 @@ export class Typesense extends VectorStore {
 
   /**
    * Search for similar documents with their similarity score.
-   * All the documents have 0 as similarity score because Typesense API
-   * does not return the similarity score.
    * @param vectorPrompt vector to search for
    * @param k amount of results to return
    * @returns similar documents with their similarity score
@@ -230,15 +251,15 @@ export class Typesense extends VectorStore {
       {}
     );
     const results = typesenseResponse.results[0].hits;
-    const hits = results?.map((hit) => hit.document) as
-      | Record<string, unknown>[]
+
+    const hits = results?.map((hit: VectorSearchResponseHit<object>) => ({
+      document: hit?.document || {},
+      vector_distance: hit?.vector_distance || 2,
+    })) as
+      | { document: Record<string, unknown>; vector_distance: number }[]
       | undefined;
 
-    const documents = this._typesenseRecordsToDocuments(hits).map(
-      (doc) => [doc, 0] as [Document<Record<string, unknown>>, number]
-    );
-
-    return documents;
+    return this._typesenseRecordsToDocuments(hits);
   }
 
   /**

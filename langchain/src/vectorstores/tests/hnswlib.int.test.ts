@@ -46,7 +46,7 @@ test("Test HNSWLib.fromTexts + addDocuments", async () => {
   expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 4 }]);
 });
 
-test("Test HNSWLib.load and HNSWLib.save", async () => {
+test("Test HNSWLib.load, HNSWLib.save, and HNSWLib.delete", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
@@ -85,4 +85,12 @@ test("Test HNSWLib.load and HNSWLib.save", async () => {
 
   const resultFourMetadatas = resultFour.map(({ metadata }) => metadata);
   expect(resultFourMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
+
+  await loadedVectorStore.delete({
+    directory: tempDirectory,
+  });
+
+  await expect(async () => {
+    await HNSWLib.load(tempDirectory, new OpenAIEmbeddings());
+  }).rejects.toThrow();
 });

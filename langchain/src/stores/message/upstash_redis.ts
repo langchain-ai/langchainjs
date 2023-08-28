@@ -1,7 +1,7 @@
 import { Redis, type RedisConfigNodejs } from "@upstash/redis";
 import {
   StoredMessage,
-  BaseChatMessage,
+  BaseMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
@@ -9,6 +9,10 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * Type definition for the input parameters required to initialize an
+ * instance of the UpstashRedisChatMessageHistory class.
+ */
 export type UpstashRedisChatMessageHistoryInput = {
   sessionId: string;
   sessionTTL?: number;
@@ -16,6 +20,10 @@ export type UpstashRedisChatMessageHistoryInput = {
   client?: Redis;
 };
 
+/**
+ * Class used to store chat message history in Redis. It provides methods
+ * to add, get, and clear messages.
+ */
 export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "upstash_redis"];
 
@@ -48,27 +56,28 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
     this.sessionTTL = sessionTTL;
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  /**
+   * Retrieves the chat messages from the Redis database.
+   * @returns An array of BaseMessage instances representing the chat history.
+   */
+  async getMessages(): Promise<BaseMessage[]> {
     const rawStoredMessages: StoredMessage[] =
       await this.client.lrange<StoredMessage>(this.sessionId, 0, -1);
 
     const orderedMessages = rawStoredMessages.reverse();
-    const previousMessages = orderedMessages
-      .map((item) => ({
-        type: item.type,
-        data: {
-          role: item.data.role,
-          content: item.data.content,
-        },
-      }))
-      .filter(
-        (x): x is StoredMessage =>
-          x.type !== undefined && x.data.content !== undefined
-      );
+    const previousMessages = orderedMessages.filter(
+      (x): x is StoredMessage =>
+        x.type !== undefined && x.data.content !== undefined
+    );
     return mapStoredMessagesToChatMessages(previousMessages);
   }
 
-  async addMessage(message: BaseChatMessage): Promise<void> {
+  /**
+   * Adds a new message to the chat history in the Redis database.
+   * @param message The message to be added to the chat history.
+   * @returns Promise resolving to void.
+   */
+  async addMessage(message: BaseMessage): Promise<void> {
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
     await this.client.lpush(this.sessionId, JSON.stringify(messageToAdd[0]));
     if (this.sessionTTL) {
@@ -76,6 +85,10 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
+  /**
+   * Deletes all messages from the chat history in the Redis database.
+   * @returns Promise resolving to void.
+   */
   async clear(): Promise<void> {
     await this.client.del(this.sessionId);
   }
