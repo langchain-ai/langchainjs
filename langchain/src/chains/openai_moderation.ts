@@ -11,6 +11,9 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
+/**
+ * Interface for the input parameters of the OpenAIModerationChain class.
+ */
 export interface OpenAIModerationChainInput
   extends ChainInputs,
     AsyncCallerParams {
@@ -20,6 +23,11 @@ export interface OpenAIModerationChainInput
   configuration?: ConfigurationParameters;
 }
 
+/**
+ * Class representing a chain for moderating text using the OpenAI
+ * Moderation API. It extends the BaseChain class and implements the
+ * OpenAIModerationChainInput interface.
+ */
 export class OpenAIModerationChain
   extends BaseChain
   implements OpenAIModerationChainInput

@@ -59,6 +59,7 @@ const entrypoints = {
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   "llms/bedrock": "llms/bedrock",
+  "llms/writer": "llms/writer",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -69,6 +70,7 @@ const entrypoints = {
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
+  "vectorstores/googlevertexai": "vectorstores/googlevertexai",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
@@ -119,6 +121,7 @@ const entrypoints = {
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/notionapi": "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url": "document_loaders/web/recursive_url",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
@@ -181,6 +184,7 @@ const entrypoints = {
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
+  "retrievers/score_threshold": "retrievers/score_threshold",
   "retrievers/self_query": "retrievers/self_query/index",
   "retrievers/self_query/chroma": "retrievers/self_query/chroma",
   "retrievers/self_query/functional": "retrievers/self_query/functional",
@@ -203,6 +207,7 @@ const entrypoints = {
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/firestore": "stores/message/firestore",
   "stores/message/momento": "stores/message/momento",
+  "stores/message/mongodb": "stores/message/mongodb",
   "stores/message/redis": "stores/message/redis",
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
@@ -211,6 +216,8 @@ const entrypoints = {
   // storage
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  // hub
+  "hub": "hub",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -263,9 +270,11 @@ const requiresOptionalDependency = [
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "llms/bedrock",
+  "llms/writer",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
+  "vectorstores/googlevertexai",
   "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
   "vectorstores/faiss",
@@ -302,6 +311,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
   "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url",
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
@@ -344,12 +354,14 @@ const requiresOptionalDependency = [
   "stores/message/dynamodb",
   "stores/message/firestore",
   "stores/message/momento",
+  "stores/message/mongodb",
   "stores/message/redis",
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  "hub",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 

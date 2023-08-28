@@ -15,6 +15,11 @@ export type ChatConversationalAgentOutputParserFormatInstructionsOptions =
     raw?: boolean;
   };
 
+/**
+ * Class that represents an output parser for the ChatConversationalAgent
+ * class. It extends the AgentActionOutputParser class and provides
+ * methods for parsing the output of the MRKL chain into agent actions.
+ */
 export class ChatConversationalAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "chat_convo"];
 
@@ -25,17 +30,27 @@ export class ChatConversationalAgentOutputParser extends AgentActionOutputParser
     this.toolNames = fields.toolNames;
   }
 
+  /**
+   * Parses the given text into an AgentAction or AgentFinish object. If an
+   * output fixing parser is defined, uses it to parse the text.
+   * @param text Text to parse.
+   * @returns Promise that resolves to an AgentAction or AgentFinish object.
+   */
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     let jsonOutput = text.trim();
-    if (jsonOutput.includes("```json")) {
-      jsonOutput = jsonOutput.split("```json")[1].trimStart();
-    } else if (jsonOutput.includes("```")) {
-      const firstIndex = jsonOutput.indexOf("```");
-      jsonOutput = jsonOutput.slice(firstIndex + 3).trimStart();
-    }
-    const lastIndex = jsonOutput.lastIndexOf("```");
-    if (lastIndex !== -1) {
-      jsonOutput = jsonOutput.slice(0, lastIndex).trimEnd();
+    if (jsonOutput.includes("```json") || jsonOutput.includes("```")) {
+      const testString = jsonOutput.includes("```json") ? "```json" : "```";
+      const firstIndex = jsonOutput.indexOf(testString);
+      const actionInputIndex = jsonOutput.indexOf("action_input");
+      if (actionInputIndex > firstIndex) {
+        jsonOutput = jsonOutput
+          .slice(firstIndex + testString.length)
+          .trimStart();
+        const lastIndex = jsonOutput.lastIndexOf("```");
+        if (lastIndex !== -1) {
+          jsonOutput = jsonOutput.slice(0, lastIndex).trimEnd();
+        }
+      }
     }
 
     try {
@@ -54,6 +69,12 @@ export class ChatConversationalAgentOutputParser extends AgentActionOutputParser
     }
   }
 
+  /**
+   * Returns the format instructions as a string. If the 'raw' option is
+   * true, returns the raw FORMAT_INSTRUCTIONS.
+   * @param options Options for getting the format instructions.
+   * @returns Format instructions as a string.
+   */
   getFormatInstructions(): string {
     return renderTemplate(FORMAT_INSTRUCTIONS, "f-string", {
       tool_names: this.toolNames.join(", "),
@@ -67,6 +88,12 @@ export type ChatConversationalAgentOutputParserArgs = {
   toolNames?: string[];
 };
 
+/**
+ * Class that represents an output parser with retries for the
+ * ChatConversationalAgent class. It extends the AgentActionOutputParser
+ * class and provides methods for parsing the output of the MRKL chain
+ * into agent actions with retry functionality.
+ */
 export class ChatConversationalAgentOutputParserWithRetries extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "chat_convo"];
 
@@ -85,6 +112,10 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
     this.outputFixingParser = fields?.outputFixingParser;
   }
 
+  /**
+   * Returns the format instructions as a string.
+   * @returns Format instructions as a string.
+   */
   getFormatInstructions(
     options: ChatConversationalAgentOutputParserFormatInstructionsOptions
   ): string {
@@ -96,6 +127,11 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
     });
   }
 
+  /**
+   * Parses the given text into an AgentAction or AgentFinish object.
+   * @param text Text to parse.
+   * @returns Promise that resolves to an AgentAction or AgentFinish object.
+   */
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     if (this.outputFixingParser !== undefined) {
       return this.outputFixingParser.parse(text);
@@ -103,6 +139,16 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
     return this.baseParser.parse(text);
   }
 
+  /**
+   * Static method to create a new
+   * ChatConversationalAgentOutputParserWithRetries from a BaseLanguageModel
+   * and options. If no base parser is provided in the options, a new
+   * ChatConversationalAgentOutputParser is created. An OutputFixingParser
+   * is also created from the BaseLanguageModel and the base parser.
+   * @param llm BaseLanguageModel instance used to create the OutputFixingParser.
+   * @param options Options for creating the ChatConversationalAgentOutputParserWithRetries instance.
+   * @returns A new instance of ChatConversationalAgentOutputParserWithRetries.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     options: Omit<ChatConversationalAgentOutputParserArgs, "outputFixingParser">

@@ -1,11 +1,13 @@
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
-import { createStructuredOutputChainFromZod } from "langchain/chains/openai_functions";
+import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 
 const zodSchema = z.object({
   foods: z
@@ -31,12 +33,24 @@ const prompt = new ChatPromptTemplate({
 
 const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 });
 
-const chain = createStructuredOutputChainFromZod(zodSchema, {
-  prompt,
-  llm,
+// Binding "function_call" below makes the model always call the specified function.
+// If you want to allow the model to call functions selectively, omit it.
+const functionCallingModel = llm.bind({
+  functions: [
+    {
+      name: "output_formatter",
+      description: "Should always be used to properly format output",
+      parameters: zodToJsonSchema(zodSchema),
+    },
+  ],
+  function_call: { name: "output_formatter" },
 });
 
-const response = await chain.call({
+const outputParser = new JsonOutputFunctionsParser();
+
+const chain = prompt.pipe(functionCallingModel).pipe(outputParser);
+
+const response = await chain.invoke({
   inputText: "I like apples, bananas, oxygen, and french fries.",
 });
 

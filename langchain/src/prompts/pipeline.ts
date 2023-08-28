@@ -3,6 +3,9 @@ import { BasePromptTemplate, BasePromptTemplateInput } from "./base.js";
 import { ChatPromptTemplate } from "./chat.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 
+/**
+ * Type that includes the name of the prompt and the prompt itself.
+ */
 export type PipelinePromptParams<
   PromptTemplateType extends BasePromptTemplate
 > = {
@@ -10,6 +13,11 @@ export type PipelinePromptParams<
   prompt: PromptTemplateType;
 };
 
+/**
+ * Type that extends the BasePromptTemplateInput type, excluding the
+ * inputVariables property. It includes an array of pipelinePrompts and a
+ * finalPrompt.
+ */
 export type PipelinePromptTemplateInput<
   PromptTemplateType extends BasePromptTemplate
 > = Omit<BasePromptTemplateInput, "inputVariables"> & {
@@ -17,6 +25,12 @@ export type PipelinePromptTemplateInput<
   finalPrompt: PromptTemplateType;
 };
 
+/**
+ * Class that handles a sequence of prompts, each of which may require
+ * different input variables. Includes methods for formatting these
+ * prompts, extracting required input values, and handling partial
+ * prompts.
+ */
 export class PipelinePromptTemplate<
   PromptTemplateType extends BasePromptTemplate
 > extends BasePromptTemplate {
@@ -35,6 +49,10 @@ export class PipelinePromptTemplate<
     this.inputVariables = this.computeInputValues();
   }
 
+  /**
+   * Computes the input values required by the pipeline prompts.
+   * @returns Array of input values required by the pipeline prompts.
+   */
   protected computeInputValues() {
     const intermediateValues = this.pipelinePrompts.map(
       (pipelinePrompt) => pipelinePrompt.name
@@ -60,6 +78,11 @@ export class PipelinePromptTemplate<
     }, {} as InputValues);
   }
 
+  /**
+   * Formats the pipeline prompts based on the provided input values.
+   * @param values Input values to format the pipeline prompts.
+   * @returns Promise that resolves with the formatted input values.
+   */
   protected async formatPipelinePrompts(
     values: InputValues
   ): Promise<InputValues> {
@@ -88,6 +111,11 @@ export class PipelinePromptTemplate<
     );
   }
 
+  /**
+   * Formats the final prompt value based on the provided input values.
+   * @param values Input values to format the final prompt value.
+   * @returns Promise that resolves with the formatted final prompt value.
+   */
   async formatPromptValue(
     values: InputValues
   ): Promise<PromptTemplateType["PromptValueReturnType"]> {
@@ -100,6 +128,12 @@ export class PipelinePromptTemplate<
     return this.finalPrompt.format(await this.formatPipelinePrompts(values));
   }
 
+  /**
+   * Handles partial prompts, which are prompts that have been partially
+   * filled with input values.
+   * @param values Partial input values.
+   * @returns Promise that resolves with a new PipelinePromptTemplate instance with updated input variables.
+   */
   async partial(
     values: PartialValues
   ): Promise<PipelinePromptTemplate<PromptTemplateType>> {

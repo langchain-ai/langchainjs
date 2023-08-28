@@ -4,6 +4,8 @@ import {
   AgentFinish,
   BaseMessage,
   ChainValues,
+  ChatGenerationChunk,
+  GenerationChunk,
   LLMResult,
 } from "../schema/index.js";
 import {
@@ -18,6 +20,11 @@ import { Document } from "../document.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
 
+/**
+ * Interface for the input parameters of the BaseCallbackHandler class. It
+ * allows to specify which types of events should be ignored by the
+ * callback handler.
+ */
 export interface BaseCallbackHandlerInput {
   ignoreLLM?: boolean;
   ignoreChain?: boolean;
@@ -25,11 +32,25 @@ export interface BaseCallbackHandlerInput {
   ignoreRetriever?: boolean;
 }
 
+/**
+ * Interface for the indices of a new token produced by an LLM or Chat
+ * Model in streaming mode.
+ */
 export interface NewTokenIndices {
   prompt: number;
   completion: number;
 }
 
+// TODO: Add all additional callback fields here
+export type HandleLLMNewTokenCallbackFields = {
+  chunk?: GenerationChunk | ChatGenerationChunk;
+};
+
+/**
+ * Abstract class that provides a set of optional methods that can be
+ * overridden in derived classes to handle various events during the
+ * execution of a LangChain application.
+ */
 abstract class BaseCallbackHandlerMethodsClass {
   /**
    * Called at the start of an LLM or Chat Model run, with the prompt(s)
@@ -59,7 +80,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     idx: NewTokenIndices,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
   ): Promise<void> | void;
 
   /**
@@ -227,6 +249,12 @@ abstract class BaseCallbackHandlerMethodsClass {
  */
 export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
+/**
+ * Abstract base class for creating callback handlers in the LangChain
+ * framework. It provides a set of optional methods that can be overridden
+ * in derived classes to handle various events during the execution of a
+ * LangChain application.
+ */
 export abstract class BaseCallbackHandler
   extends BaseCallbackHandlerMethodsClass
   implements BaseCallbackHandlerInput, Serializable

@@ -12,6 +12,10 @@ import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
+/**
+ * Interface for OpenAIEmbeddings parameters. Extends EmbeddingsParams and
+ * defines additional parameters specific to the OpenAIEmbeddings class.
+ */
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
   modelName: string;
@@ -34,6 +38,11 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
+/**
+ * Class for generating embeddings using the OpenAI API. Extends the
+ * Embeddings class and implements OpenAIEmbeddingsParams and
+ * AzureOpenAIInput.
+ */
 export class OpenAIEmbeddings
   extends Embeddings
   implements OpenAIEmbeddingsParams, AzureOpenAIInput
@@ -131,6 +140,13 @@ export class OpenAIEmbeddings
     };
   }
 
+  /**
+   * Method to generate embeddings for an array of documents. Splits the
+   * documents into batches and makes requests to the OpenAI API to generate
+   * embeddings.
+   * @param texts Array of documents to generate embeddings for.
+   * @returns Promise that resolves to a 2D array of embeddings for each document.
+   */
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
@@ -156,6 +172,12 @@ export class OpenAIEmbeddings
     return embeddings;
   }
 
+  /**
+   * Method to generate an embedding for a single document. Calls the
+   * embeddingWithRetry method with the document as the input.
+   * @param text Document to generate an embedding for.
+   * @returns Promise that resolves to an embedding for the document.
+   */
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
@@ -164,6 +186,13 @@ export class OpenAIEmbeddings
     return data.data[0].embedding;
   }
 
+  /**
+   * Private method to make a request to the OpenAI API to generate
+   * embeddings. Handles the retry logic and returns the response from the
+   * API.
+   * @param request Request to send to the OpenAI API.
+   * @returns Promise that resolves to the response from the API.
+   */
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {

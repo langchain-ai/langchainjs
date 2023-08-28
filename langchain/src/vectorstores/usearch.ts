@@ -5,12 +5,22 @@ import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
 
+/**
+ * Interface that defines the arguments that can be passed to the
+ * `USearch` constructor. It includes optional properties for a
+ * `docstore`, `index`, and `mapping`.
+ */
 export interface USearchArgs {
   docstore?: SynchronousInMemoryDocstore;
   index?: usearch.Index;
   mapping?: Record<number, string>;
 }
 
+/**
+ * Class that extends `SaveableVectorStore` and provides methods for
+ * adding documents and vectors to a `usearch` index, performing
+ * similarity searches, and saving the index.
+ */
 export class USearch extends SaveableVectorStore {
   _index?: usearch.Index;
 
@@ -33,6 +43,12 @@ export class USearch extends SaveableVectorStore {
     this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
   }
 
+  /**
+   * Method that adds documents to the `usearch` index. It generates
+   * embeddings for the documents and adds them to the index.
+   * @param documents An array of `Document` instances to be added to the index.
+   * @returns A promise that resolves with an array of document IDs.
+   */
   async addDocuments(documents: Document[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
@@ -54,6 +70,13 @@ export class USearch extends SaveableVectorStore {
     this._index = index;
   }
 
+  /**
+   * Method that adds vectors to the `usearch` index. It also updates the
+   * mapping between vector IDs and document IDs.
+   * @param vectors An array of vectors to be added to the index.
+   * @param documents An array of `Document` instances corresponding to the vectors.
+   * @returns A promise that resolves with an array of document IDs.
+   */
   async addVectors(vectors: number[][], documents: Document[]) {
     if (vectors.length === 0) {
       return [];
@@ -89,6 +112,14 @@ export class USearch extends SaveableVectorStore {
     return documentIds;
   }
 
+  /**
+   * Method that performs a similarity search in the `usearch` index. It
+   * returns the `k` most similar documents to a given query vector, along
+   * with their similarity scores.
+   * @param query The query vector.
+   * @param k The number of most similar documents to return.
+   * @returns A promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
+   */
   async similaritySearchVectorWithScore(query: number[], k: number) {
     const d = this.index.dimensions();
     if (BigInt(query.length) !== d) {
@@ -115,6 +146,11 @@ export class USearch extends SaveableVectorStore {
     return return_list;
   }
 
+  /**
+   * Method that saves the `usearch` index and the document store to disk.
+   * @param directory The directory where the index and document store should be saved.
+   * @returns A promise that resolves when the save operation is complete.
+   */
   async save(directory: string) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
@@ -131,6 +167,16 @@ export class USearch extends SaveableVectorStore {
     ]);
   }
 
+  /**
+   * Static method that creates a new `USearch` instance from a list of
+   * texts. It generates embeddings for the texts and adds them to the
+   * `usearch` index.
+   * @param texts An array of texts to be added to the index.
+   * @param metadatas Metadata associated with the texts.
+   * @param embeddings An instance of `Embeddings` used to generate embeddings for the texts.
+   * @param dbConfig Optional configuration for the document store.
+   * @returns A promise that resolves with a new `USearch` instance.
+   */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
@@ -151,6 +197,15 @@ export class USearch extends SaveableVectorStore {
     return this.fromDocuments(docs, embeddings, dbConfig);
   }
 
+  /**
+   * Static method that creates a new `USearch` instance from a list of
+   * documents. It generates embeddings for the documents and adds them to
+   * the `usearch` index.
+   * @param docs An array of `Document` instances to be added to the index.
+   * @param embeddings An instance of `Embeddings` used to generate embeddings for the documents.
+   * @param dbConfig Optional configuration for the document store.
+   * @returns A promise that resolves with a new `USearch` instance.
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,

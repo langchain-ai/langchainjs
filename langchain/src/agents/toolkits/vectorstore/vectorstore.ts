@@ -9,12 +9,21 @@ import { SUFFIX } from "../../mrkl/prompt.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { AgentExecutor } from "../../executor.js";
 
+/**
+ * Interface that defines the information about a vector store, including
+ * the vector store itself, its name, and description.
+ */
 export interface VectorStoreInfo {
   vectorStore: VectorStore;
   name: string;
   description: string;
 }
 
+/**
+ * Class representing a toolkit for working with a single vector store. It
+ * initializes the vector store QA tool based on the provided vector store
+ * information and language model.
+ */
 export class VectorStoreToolkit extends Toolkit {
   tools: Tool[];
 
@@ -36,6 +45,11 @@ export class VectorStoreToolkit extends Toolkit {
   }
 }
 
+/**
+ * Class representing a toolkit for working with multiple vector stores.
+ * It initializes multiple vector store QA tools based on the provided
+ * vector store information and language model.
+ */
 export class VectorStoreRouterToolkit extends Toolkit {
   tools: Tool[];
 

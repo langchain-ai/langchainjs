@@ -10,6 +10,10 @@ import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
+/**
+ * Interface for the input parameters required by the AnalyzeDocumentChain
+ * class.
+ */
 export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
   combineDocumentsChain: BaseChain;
   textSplitter?: TextSplitter;

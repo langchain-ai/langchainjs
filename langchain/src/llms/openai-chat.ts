@@ -24,6 +24,11 @@ import { BaseLLMParams, LLM } from "./base.js";
 
 export { AzureOpenAIInput, OpenAIChatInput };
 
+/**
+ * Interface that extends the OpenAICallOptions interface and includes an
+ * optional promptIndex property. It represents the options that can be
+ * passed when making a call to the OpenAI Chat API.
+ */
 export interface OpenAIChatCallOptions extends OpenAICallOptions {
   promptIndex?: number;
 }
@@ -262,6 +267,11 @@ export class OpenAIChat
     };
   }
 
+  /**
+   * Formats the messages for the OpenAI API.
+   * @param prompt The prompt to be formatted.
+   * @returns Array of formatted messages.
+   */
   private formatMessages(prompt: string): ChatCompletionRequestMessage[] {
     const message: ChatCompletionRequestMessage = {
       role: "user",
@@ -311,6 +321,12 @@ export class OpenAIChat
     }
   }
 
+  /**
+   * Starts a stream of responses from the OpenAI API.
+   * @param request The request to be sent to the OpenAI API.
+   * @param options Optional configuration for the Axios request.
+   * @returns An iterable object that can be used to iterate over the response chunks.
+   */
   startStream(
     request: CreateChatCompletionRequest,
     options?: StreamingAxiosConfiguration
@@ -589,6 +605,12 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     }
   }
 
+  /**
+   * Makes a call to the OpenAI API with retry logic in case of failures.
+   * @param request The request to be sent to the OpenAI API.
+   * @param options Optional configuration for the Axios request.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: CreateChatCompletionRequest,
     options?: StreamingAxiosConfiguration

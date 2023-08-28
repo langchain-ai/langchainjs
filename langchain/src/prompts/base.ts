@@ -19,6 +19,10 @@ export type TypedPromptInputValues<RunInput> = InputValues<
   Extract<keyof RunInput, string> | (string & Record<never, never>)
 >;
 
+/**
+ * Represents a prompt value as a string. It extends the BasePromptValue
+ * class and overrides the toString and toChatMessages methods.
+ */
 export class StringPromptValue extends BasePromptValue {
   lc_namespace = ["langchain", "prompts", "base"];
 
@@ -108,6 +112,11 @@ export abstract class BasePromptTemplate<
     values: PartialValues
   ): Promise<BasePromptTemplate<RunInput, RunOutput, PartialVariableName>>;
 
+  /**
+   * Merges partial variables and user variables.
+   * @param userVariables The user variables to merge with the partial variables.
+   * @returns A Promise that resolves to an object containing the merged variables.
+   */
   async mergePartialAndUserVariables(
     userVariables: TypedPromptInputValues<RunInput>
   ): Promise<
@@ -131,6 +140,12 @@ export abstract class BasePromptTemplate<
     return allKwargs;
   }
 
+  /**
+   * Invokes the prompt template with the given input and options.
+   * @param input The input to invoke the prompt template with.
+   * @param options Optional configuration for the callback.
+   * @returns A Promise that resolves to the output of the prompt template.
+   */
   async invoke(
     input: RunInput,
     options?: BaseCallbackConfig
@@ -212,12 +227,23 @@ export abstract class BasePromptTemplate<
   }
 }
 
+/**
+ * Base class for string prompt templates. It extends the
+ * BasePromptTemplate class and overrides the formatPromptValue method to
+ * return a StringPromptValue.
+ */
 export abstract class BaseStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
 > extends BasePromptTemplate<RunInput, StringPromptValue, PartialVariableName> {
+  /**
+   * Formats the prompt given the input values and returns a formatted
+   * prompt value.
+   * @param values The input values to format the prompt.
+   * @returns A Promise that resolves to a formatted prompt value.
+   */
   async formatPromptValue(
     values: TypedPromptInputValues<RunInput>
   ): Promise<StringPromptValue> {
@@ -232,7 +258,17 @@ export abstract class BaseStringPromptTemplate<
 export abstract class BaseExampleSelector extends Serializable {
   lc_namespace = ["langchain", "prompts", "selectors"];
 
+  /**
+   * Adds an example to the example selector.
+   * @param example The example to add to the example selector.
+   * @returns A Promise that resolves to void or a string.
+   */
   abstract addExample(example: Example): Promise<void | string>;
 
+  /**
+   * Selects examples from the example selector given the input variables.
+   * @param input_variables The input variables to select examples with.
+   * @returns A Promise that resolves to an array of selected examples.
+   */
   abstract selectExamples(input_variables: Example): Promise<Example[]>;
 }

@@ -1,6 +1,9 @@
 import { LLM, BaseLLMParams } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
+/**
+ * Type definition for AI21 penalty data.
+ */
 export type AI21PenaltyData = {
   scale: number;
   applyToWhitespaces: boolean;
@@ -10,6 +13,9 @@ export type AI21PenaltyData = {
   applyToEmojis: boolean;
 };
 
+/**
+ * Interface for AI21 input parameters.
+ */
 export interface AI21Input extends BaseLLMParams {
   ai21ApiKey?: string;
   model?: string;
@@ -26,6 +32,11 @@ export interface AI21Input extends BaseLLMParams {
   baseUrl?: string;
 }
 
+/**
+ * Class representing the AI21 language model. It extends the LLM (Large
+ * Language Model) class, providing a standard interface for interacting
+ * with the AI21 language model.
+ */
 export class AI21 extends LLM implements AI21Input {
   model = "j2-jumbo-instruct";
 
@@ -72,6 +83,10 @@ export class AI21 extends LLM implements AI21Input {
     this.baseUrl = fields?.baseUrl;
   }
 
+  /**
+   * Method to validate the environment. It checks if the AI21 API key is
+   * set. If not, it throws an error.
+   */
   validateEnvironment() {
     if (!this.ai21ApiKey) {
       throw new Error(
@@ -80,6 +95,10 @@ export class AI21 extends LLM implements AI21Input {
     }
   }
 
+  /**
+   * Static method to get the default penalty data for AI21.
+   * @returns AI21PenaltyData
+   */
   static getDefaultAI21PenaltyData(): AI21PenaltyData {
     return {
       scale: 0,

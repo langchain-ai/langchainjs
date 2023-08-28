@@ -11,7 +11,7 @@ const model = new ChatOpenAI({
 // https://platform.openai.com/docs/guides/gpt/function-calling
 
 const modelForFunctionCalling = new ChatOpenAI({
-  modelName: "gpt-4-0613",
+  modelName: "gpt-4",
   temperature: 0,
 });
 

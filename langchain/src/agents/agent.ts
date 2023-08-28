@@ -18,9 +18,16 @@ import {
   StoppingMethod,
 } from "./types.js";
 
+/**
+ * Record type for arguments passed to output parsers.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OutputParserArgs = Record<string, any>;
 
+/**
+ * Error class for parse errors in LangChain. Contains information about
+ * the error message and the output that caused the error.
+ */
 class ParseError extends Error {
   output: string;
 
@@ -30,6 +37,10 @@ class ParseError extends Error {
   }
 }
 
+/**
+ * Abstract base class for agents in LangChain. Provides common
+ * functionality for agents, such as handling inputs and outputs.
+ */
 export abstract class BaseAgent extends Serializable {
   declare ToolType: StructuredTool;
 
@@ -85,6 +96,11 @@ export abstract class BaseAgent extends Serializable {
   }
 }
 
+/**
+ * Abstract base class for single action agents in LangChain. Extends the
+ * BaseAgent class and provides additional functionality specific to
+ * single action agents.
+ */
 export abstract class BaseSingleActionAgent extends BaseAgent {
   _agentActionType(): string {
     return "single" as const;
@@ -106,6 +122,11 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
   ): Promise<AgentAction | AgentFinish>;
 }
 
+/**
+ * Abstract base class for multi-action agents in LangChain. Extends the
+ * BaseAgent class and provides additional functionality specific to
+ * multi-action agents.
+ */
 export abstract class BaseMultiActionAgent extends BaseAgent {
   _agentActionType(): string {
     return "multi" as const;
@@ -127,12 +148,20 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
+/**
+ * Interface for input data for creating a LLMSingleActionAgent.
+ */
 export interface LLMSingleActionAgentInput {
   llmChain: LLMChain;
   outputParser: AgentActionOutputParser;
   stop?: string[];
 }
 
+/**
+ * Class representing a single action agent using a LLMChain in LangChain.
+ * Extends the BaseSingleActionAgent class and provides methods for
+ * planning agent actions based on LLMChain outputs.
+ */
 export class LLMSingleActionAgent extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents"];
 
@@ -182,6 +211,9 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
   }
 }
 
+/**
+ * Interface for arguments used to create an agent in LangChain.
+ */
 export interface AgentArgs {
   outputParser?: AgentActionOutputParser;
 

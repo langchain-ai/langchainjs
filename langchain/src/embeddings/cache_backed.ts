@@ -5,6 +5,10 @@ import { EncoderBackedStore } from "../storage/encoder_backed.js";
 import { AsyncCallerParams } from "../util/async_caller.js";
 import { Embeddings } from "./base.js";
 
+/**
+ * Interface for the fields required to initialize an instance of the
+ * CacheBackedEmbeddings class.
+ */
 export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
   underlyingEmbeddings: Embeddings;
   documentEmbeddingStore: BaseStore<string, number[]>;

@@ -27,6 +27,9 @@ import { OpenAIChat } from "./openai-chat.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
+/**
+ * Interface for tracking token usage in OpenAI calls.
+ */
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
@@ -622,6 +625,12 @@ export class PromptLayerOpenAI extends OpenAI {
     }
   }
 
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
     request: CreateCompletionRequest,
     options?: StreamingAxiosConfiguration

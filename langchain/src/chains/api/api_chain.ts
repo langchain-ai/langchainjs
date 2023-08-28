@@ -10,6 +10,10 @@ import {
 } from "./prompts.js";
 import { BasePromptTemplate } from "../../index.js";
 
+/**
+ * Interface that extends ChainInputs and defines additional input
+ * parameters specific to an APIChain.
+ */
 export interface APIChainInput extends Omit<ChainInputs, "memory"> {
   apiAnswerChain: LLMChain;
   apiRequestChain: LLMChain;
@@ -20,12 +24,19 @@ export interface APIChainInput extends Omit<ChainInputs, "memory"> {
   outputKey?: string;
 }
 
+/**
+ * Type that defines optional configuration options for an APIChain.
+ */
 export type APIChainOptions = {
   headers?: Record<string, string>;
   apiUrlPrompt?: BasePromptTemplate;
   apiResponsePrompt?: BasePromptTemplate;
 };
 
+/**
+ * Class that extends BaseChain and represents a chain specifically
+ * designed for making API requests and processing API responses.
+ */
 export class APIChain extends BaseChain implements APIChainInput {
   apiAnswerChain: LLMChain;
 
@@ -114,6 +125,14 @@ export class APIChain extends BaseChain implements APIChainInput {
     };
   }
 
+  /**
+   * Static method to create a new APIChain from a BaseLanguageModel and API
+   * documentation.
+   * @param llm BaseLanguageModel instance.
+   * @param apiDocs API documentation.
+   * @param options Optional configuration options for the APIChain.
+   * @returns New APIChain instance.
+   */
   static fromLLMAndAPIDocs(
     llm: BaseLanguageModel,
     apiDocs: string,

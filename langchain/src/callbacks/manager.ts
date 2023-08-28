@@ -9,6 +9,7 @@ import {
 import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
+  HandleLLMNewTokenCallbackFields,
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
@@ -73,6 +74,9 @@ export function parseCallbackConfigArg(
   }
 }
 
+/**
+ * Manage callbacks from different components of LangChain.
+ */
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
 
@@ -85,6 +89,9 @@ export abstract class BaseCallbackManager {
   }
 }
 
+/**
+ * Base class for run manager in LangChain.
+ */
 class BaseRunManager {
   constructor(
     public readonly runId: string,
@@ -119,6 +126,9 @@ class BaseRunManager {
   }
 }
 
+/**
+ * Manages callbacks for retriever runs.
+ */
 export class CallbackManagerForRetrieverRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
@@ -188,7 +198,11 @@ export class CallbackManagerForLLMRun
 {
   async handleLLMNewToken(
     token: string,
-    idx: NewTokenIndices = { prompt: 0, completion: 0 }
+    idx?: NewTokenIndices,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
   ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -197,10 +211,11 @@ export class CallbackManagerForLLMRun
             try {
               await handler.handleLLMNewToken?.(
                 token,
-                idx,
+                idx ?? { prompt: 0, completion: 0 },
                 this.runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                fields
               );
             } catch (err) {
               console.error(
