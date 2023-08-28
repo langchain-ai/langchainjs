@@ -26,6 +26,17 @@ test("Test fromTemplate", async () => {
   );
 });
 
+test("Test fromTemplate with escaped strings", async () => {
+  const prompt = PromptTemplate.fromTemplate("{{foo}}{{bar}}");
+  expect(await prompt.format({ unused: "eee" })).toBe("foobaz");
+});
+
+test("Test fromTemplate with type parameter", async () => {
+  const prompt = PromptTemplate.fromTemplate<{ foo: string }>("test");
+  // @ts-expect-error TS compiler should flag
+  expect(await prompt.format({ unused: "eee" })).toBe("foobaz");
+});
+
 test("Test using full partial", async () => {
   const prompt = new PromptTemplate({
     template: "{foo}{bar}",

@@ -175,8 +175,8 @@ export class PromptTemplate<
    * Load prompt template from a template f-string
    */
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
     T extends string = string
   >(
     template: T,
@@ -188,13 +188,19 @@ export class PromptTemplate<
       "template" | "inputVariables"
     > = {}
   ) {
+    if (templateFormat === "jinja2") {
+      throw new Error("jinja2 templates are not currently supported.");
+    }
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
     });
-    return new PromptTemplate<ParamsFromFString<T>>({
+    return new PromptTemplate<
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
+    >({
       inputVariables: [...names] as Extract<
         keyof ParamsFromFString<T>,
         string
