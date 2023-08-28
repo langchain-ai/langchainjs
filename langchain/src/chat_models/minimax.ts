@@ -354,6 +354,12 @@ export class ChatMinimax extends BaseChatModel implements MinimaxChatInput {
       top_p: this.topP,
       tokens_to_generate: this.tokensToGenerate,
       skip_info_mask: this.skipInfoMask,
+      mask_sensitive_info: this.maskSensitiveInfo,
+      beam_width: this.beamWidth,
+      use_standard_sse: this.useStandardSse,
+      role_meta: this.roleMeta,
+      bot_setting: this.botSetting,
+      reply_constraints: this.replyConstraints,
     };
   }
 
