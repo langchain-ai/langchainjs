@@ -47,15 +47,11 @@ test("Test grouping traces", async () => {
 });
 
 test("Test TraceGroup object", async () => {
-  const traceGroup = new TraceGroup("my-group", {
-    projectName: "my-project",
-    exampleId: "my-example",
-  });
+  const traceGroup = new TraceGroup("my_trace_group");
 
-  const childManager = await traceGroup.start({input: "Hell, World"});
+  const childManager = await traceGroup.start({ input: "Hello, World" });
   const prompt = PromptTemplate.fromTemplate("Hello, world!");
-  const result = prompt.invoke({}, {callbacks: childManager});
+  const result = await prompt.invoke({}, { callbacks: childManager });
   await traceGroup.end(result);
-
-  expect(result).toBe("Hello, world!");
+  expect(result.value).toBe("Hello, world!");
 });

@@ -962,7 +962,7 @@ export async function traceAsGroup<T, A extends any[]>(
   ...args: A
 ): Promise<T> {
   const traceGroup = new TraceGroup(groupOptions.name, groupOptions);
-  const callbackManager = await traceGroup.start(args);
+  const callbackManager = await traceGroup.start({ ...args });
   try {
     const result = await enclosedCode(callbackManager, ...args);
     await traceGroup.end();
