@@ -9,7 +9,9 @@ const createRedisClientMockup = () => {
 
   return {
     ft: {
-      info: jest.fn(),
+      info: jest.fn<any>().mockResolvedValue({
+        numDocs: 0,
+      }),
       create: jest.fn(),
       search: jest.fn<any>().mockResolvedValue({
         total: 0,
