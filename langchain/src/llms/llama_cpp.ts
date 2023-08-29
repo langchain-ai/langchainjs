@@ -125,22 +125,4 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
       throw new Error("Error getting prompt compleation.");
     }
   }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    LlamaModel: typeof LlamaModel;
-    LlamaContext: typeof LlamaContext;
-    LlamaChatSession: typeof LlamaChatSession;
-  }> {
-    try {
-      const { LlamaModel, LlamaContext, LlamaChatSession } = await import(
-        "node-llama-cpp"
-      );
-      return { LlamaModel, LlamaContext, LlamaChatSession };
-    } catch (e) {
-      throw new Error(
-        "Please install node-llama-cpp as a dependency with, e.g. 'npm install node-llama-cpp'"
-      );
-    }
-  }
 }

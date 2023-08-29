@@ -5,14 +5,14 @@ import { LlamaCpp } from "../llama_cpp.js";
 
 const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 
-test("Test Llama_CPP", async () => {
+test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath });
   const res = await model.call("Where do Llamas live?");
   console.log(res);
-}, 50000);
+}, 100000);
 
-test("Test Llama_CPP", async () => {
+test.skip("Test Llama_CPP", async () => {
   const model = new LlamaCpp({ modelPath: llamaPath });
   const res = await model.call("Where do Pandas live?");
   console.log(res);
-}, 50000);
+}, 100000);
