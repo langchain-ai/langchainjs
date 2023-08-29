@@ -23,7 +23,7 @@ describe("RedisVectorStore", () => {
     });
   });
 
-  test("auto-generated ids", async () => {
+  test.skip("auto-generated ids", async () => {
     const pageContent = faker.lorem.sentence(5);
 
     await vectorStore.addDocuments([{ pageContent, metadata: { foo: "bar" } }]);
@@ -35,7 +35,7 @@ describe("RedisVectorStore", () => {
     ]);
   });
 
-  test("user-provided keys", async () => {
+  test.skip("user-provided keys", async () => {
     const documentKey = `test:${uuidv4()}`;
     const pageContent = faker.lorem.sentence(5);
 
@@ -48,7 +48,7 @@ describe("RedisVectorStore", () => {
     expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
   });
 
-  test("metadata filtering", async () => {
+  test.skip("metadata filtering", async () => {
     await vectorStore.dropIndex();
     const pageContent = faker.lorem.sentence(5);
     const uuid = uuidv4();

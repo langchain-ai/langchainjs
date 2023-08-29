@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   redis:
-    image: redis/redis-stack-server:latest
+    image: redis:6.2-alpine
     restart: always
     ports:
       - '6379:6379'
