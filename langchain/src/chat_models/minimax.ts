@@ -659,12 +659,8 @@ export class ChatMinimax
         signal,
       });
 
-      console.log("url:", url);
-      console.log("request:", JSON.stringify(request));
-      console.log("response:", response);
       if (!stream) {
         const json = await response.json();
-        console.log("json:", json);
         return json as ChatCompletionResponse;
       } else {
         if (response.body) {
