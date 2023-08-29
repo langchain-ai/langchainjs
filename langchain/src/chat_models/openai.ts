@@ -688,6 +688,9 @@ export class ChatOpenAI
         message: openAIResponseToChatMessage(
           part.message ?? { role: "assistant" }
         ),
+        generationInfo: {
+          finishReason: part.finish_reason ?? undefined,
+        },
       });
     }
     return {
