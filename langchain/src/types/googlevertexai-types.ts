@@ -10,11 +10,14 @@ export interface GoogleVertexAIConnectionParams {
   /** Region where the LLM is stored */
   location?: string;
 
-  /** Model to use */
-  model?: string;
+  /** The version of the API functions. Part of the path. */
+  apiVersion?: string;
 }
 
 export interface GoogleVertexAIModelParams {
+  /** Model to use */
+  model?: string;
+
   /** Sampling temperature to use */
   temperature?: number;
 
@@ -51,7 +54,12 @@ export interface GoogleVertexAIBaseLLMInput
     GoogleVertexAIConnectionParams,
     GoogleVertexAIModelParams {}
 
-export interface GoogleVertexAIBasePrediction {
+export interface GoogleVertexAIResponse {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
+}
+
+export interface GoogleVertexAIBasePrediction extends GoogleVertexAIResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   safetyAttributes?: any;
 }

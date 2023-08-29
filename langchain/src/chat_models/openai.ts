@@ -406,7 +406,17 @@ export class ChatOpenAI
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+      void runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        {
+          prompt: 0,
+          completion: choice.index,
+        },
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
     if (options.signal?.aborted) {
       throw new Error("AbortError");
@@ -439,71 +449,16 @@ export class ChatOpenAI
 
     const data = params.stream
       ? await (async () => {
-          let response:
-            | OpenAIClient.Chat.Completions.ChatCompletion
-            | undefined;
-          const stream = await this.streamingCompletionWithRetry(
-            {
-              ...params,
-              stream: true,
-              messages: messagesMapped,
-            },
-            options
-          );
-          for await (const message of stream) {
-            // on the first message set the response properties
-            if (!response) {
-              response = {
-                id: message.id,
-                object: message.object,
-                created: message.created,
-                model: message.model,
-                choices: [],
-              };
-            }
-            // on all messages, update choice
-            for (const part of message.choices ?? []) {
-              let choice = response.choices.find((c) => c.index === part.index);
-
-              if (!choice) {
-                choice = {
-                  index: part.index,
-                  finish_reason: part.finish_reason as
-                    | "stop"
-                    | "function_call"
-                    | "length",
-                  message: {
-                    role: part.delta.role ?? "assistant",
-                    content: part.delta.content ?? "",
-                  },
-                };
-                response.choices.push(choice);
-              }
-
-              if (part.delta.function_call && !choice.message.function_call) {
-                choice.message.function_call = {
-                  name: "",
-                  arguments: "",
-                };
-              }
-
-              choice.message.content += part.delta?.content ?? "";
-              if (choice.message.function_call) {
-                choice.message.function_call.name +=
-                  part.delta?.function_call?.name ?? "";
-                choice.message.function_call.arguments +=
-                  part.delta?.function_call?.arguments ?? "";
-              }
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(part.delta?.content ?? "", {
-                prompt: options.promptIndex ?? 0,
-                completion: part.index,
-              });
-              // TODO we don't currently have a callback method for
-              // sending the function call arguments
+          const stream = await this._streamResponseChunks(messages, options, runManager);
+          let finalChunk: ChatGenerationChunk | undefined;
+          for await (const chunk of stream) {
+            if (!finalChunk) {
+              finalChunk = chunk;
+            } else {
+              finalChunk = finalChunk.concat(finalChunk);
             }
           }
-          return response;
+          return finalChunk;
         })()
       : await this.completionWithRetry(
           {

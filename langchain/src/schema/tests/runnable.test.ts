@@ -175,9 +175,7 @@ test("Create a runnable sequence and run it", async () => {
 });
 
 test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
-  const promptTemplate = PromptTemplate.fromTemplate<{ input: string }>(
-    "{input}"
-  );
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
   const llm = new FakeChatModel({});
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ outputValue: z.string().describe("A test value") })

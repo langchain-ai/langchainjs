@@ -133,6 +133,9 @@ llms/sagemaker_endpoint.d.ts
 llms/bedrock.cjs
 llms/bedrock.js
 llms/bedrock.d.ts
+llms/writer.cjs
+llms/writer.js
+llms/writer.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
@@ -157,6 +160,9 @@ vectorstores/memory.d.ts
 vectorstores/chroma.cjs
 vectorstores/chroma.js
 vectorstores/chroma.d.ts
+vectorstores/googlevertexai.cjs
+vectorstores/googlevertexai.js
+vectorstores/googlevertexai.d.ts
 vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
@@ -286,6 +292,9 @@ document_loaders/web/notiondb.d.ts
 document_loaders/web/notionapi.cjs
 document_loaders/web/notionapi.js
 document_loaders/web/notionapi.d.ts
+document_loaders/web/recursive_url.cjs
+document_loaders/web/recursive_url.js
+document_loaders/web/recursive_url.d.ts
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
@@ -439,6 +448,9 @@ retrievers/document_compressors/chain_extract.d.ts
 retrievers/hyde.cjs
 retrievers/hyde.js
 retrievers/hyde.d.ts
+retrievers/score_threshold.cjs
+retrievers/score_threshold.js
+retrievers/score_threshold.d.ts
 retrievers/self_query.cjs
 retrievers/self_query.js
 retrievers/self_query.d.ts
@@ -499,6 +511,9 @@ stores/message/firestore.d.ts
 stores/message/momento.cjs
 stores/message/momento.js
 stores/message/momento.d.ts
+stores/message/mongodb.cjs
+stores/message/mongodb.js
+stores/message/mongodb.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
@@ -520,6 +535,9 @@ storage/in_memory.d.ts
 storage/ioredis.cjs
 storage/ioredis.js
 storage/ioredis.d.ts
+hub.cjs
+hub.js
+hub.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts

@@ -45,6 +45,38 @@ export interface PromptTemplateInput<
   validateTemplate?: boolean;
 }
 
+type NonAlphanumeric =
+  | " "
+  | "\t"
+  | "\n"
+  | "\r"
+  | '"'
+  | "'"
+  | "{"
+  | "["
+  | "("
+  | "`"
+  | ":"
+  | ";";
+
+/**
+ * Recursive type to extract template parameters from a string.
+ * @template T - The input string.
+ * @template Result - The resulting array of extracted template parameters.
+ */
+type ExtractTemplateParamsRecursive<
+  T extends string,
+  Result extends string[] = []
+> = T extends `${string}{${infer Param}}${infer Rest}`
+  ? Param extends `${NonAlphanumeric}${string}`
+    ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that looks like template variables e.g. see https://github.com/hwchase17/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
+    : ExtractTemplateParamsRecursive<Rest, [...Result, Param]>
+  : Result;
+
+export type ParamsFromFString<T extends string> = {
+  [Key in ExtractTemplateParamsRecursive<T>[number]]: string;
+};
+
 /**
  * Schema to represent a basic prompt for an LLM.
  * @augments BasePromptTemplate
@@ -142,22 +174,37 @@ export class PromptTemplate<
   /**
    * Load prompt template from a template f-string
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromTemplate<RunInput extends InputValues = any>(
-    template: string,
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(
+    template: T,
     {
       templateFormat = "f-string",
       ...rest
-    }: Omit<PromptTemplateInput, "template" | "inputVariables"> = {}
+    }: Omit<
+      PromptTemplateInput<RunInput, string>,
+      "template" | "inputVariables"
+    > = {}
   ) {
+    if (templateFormat === "jinja2") {
+      throw new Error("jinja2 templates are not currently supported.");
+    }
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
     });
-    return new PromptTemplate<RunInput>({
-      inputVariables: [...names] as Extract<keyof RunInput, string>[],
+    return new PromptTemplate<
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
+    >({
+      inputVariables: [...names] as Extract<
+        keyof ParamsFromFString<T>,
+        string
+      >[],
       templateFormat,
       template,
       ...rest,
