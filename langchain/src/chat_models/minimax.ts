@@ -111,7 +111,7 @@ declare interface ConfigurationParameters {
 /**
  * Interface defining the input to the ChatMinimax class.
  */
-declare interface MinimaxChatInput {
+declare interface MinimaxChatInputBase {
   /** Model name to use
    * @default "abab5.5"
    */
@@ -119,11 +119,6 @@ declare interface MinimaxChatInput {
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
-
-  /**
-   *  Dialogue setting, characters, or functionality setting.
-   */
-  prompt?: string;
 
   prefixMessages?: ChatCompletionRequestMessage[];
 
@@ -153,6 +148,26 @@ declare interface MinimaxChatInput {
   topP?: number;
 
   /**
+   * Enable Chatcompletion pro
+   */
+  proVersion?: boolean;
+
+  /**
+   *  Pay attention to the maximum number of tokens generated,
+   *  this parameter does not affect the generation effect of the model itself,
+   *  but only realizes the function by truncating the tokens exceeding the limit.
+   *  It is necessary to ensure that the number of tokens of the input context plus this value is less than 6144 or 16384,
+   *  otherwise the request will fail.
+   */
+  tokensToGenerate?: number;
+}
+
+declare interface MinimaxChatInputNormal {
+  /**
+   *  Dialogue setting, characters, or functionality setting.
+   */
+  prompt?: string;
+  /**
    *  Sensitize text information in the output that may involve privacy issues,
    *  currently including but not limited to emails, domain names,
    *  links, ID numbers, home addresses, etc. Default false, ie. enable sensitization.
@@ -160,23 +175,11 @@ declare interface MinimaxChatInput {
   skipInfoMask?: boolean;
 
   /**
-   *  For the text information in the output that may involve privacy issues,
-   *  code masking is currently included but not limited to emails, domains, links, ID numbers, home addresses, etc.,
-   *  with the default being true, that is, code masking is enabled.
-   */
-  maskSensitiveInfo?: boolean;
-
-  /**
    *  Whether to use the standard SSE format, when set to true,
    *  the streaming results will be separated by two line breaks.
    *  This parameter only takes effect when stream is set to true.
    */
   useStandardSse?: boolean;
-
-  /**
-   * Enable Chatcompletion pro
-   */
-  proVersion?: boolean;
 
   /**
    *  If it is true, this indicates that the current request is set to continuation mode,
@@ -194,24 +197,33 @@ declare interface MinimaxChatInput {
   beamWidth?: number;
 
   /**
-   *  Pay attention to the maximum number of tokens generated,
-   *  this parameter does not affect the generation effect of the model itself,
-   *  but only realizes the function by truncating the tokens exceeding the limit.
-   *  It is necessary to ensure that the number of tokens of the input context plus this value is less than 6144 or 16384,
-   *  otherwise the request will fail.
-   */
-  tokensToGenerate?: number;
-
-  /**
    * Dialogue Metadata
    */
   roleMeta?: RoleMeta;
+}
+
+declare interface MinimaxChatInputPro extends MinimaxChatInputBase {
+  /**
+   *  For the text information in the output that may involve privacy issues,
+   *  code masking is currently included but not limited to emails, domains, links, ID numbers, home addresses, etc.,
+   *  with the default being true, that is, code masking is enabled.
+   */
+  maskSensitiveInfo?: boolean;
+
+  //  Default bot name
+  defaultBotName?: string;
+
+  defaultUserName?: string;
 
   /**
    *  Setting for each robot, only available for pro version.
    */
   botSetting?: BotSetting[];
+
+  replyConstraints?: ReplyConstraints;
 }
+
+type MinimaxChatInput = MinimaxChatInputNormal & MinimaxChatInputPro;
 
 /**
  * Function that extracts the custom sender_type of a generic chat message.
@@ -255,7 +267,10 @@ function messageToMinimaxRole(message: BaseMessage): MessageRole {
 export interface ChatMinimaxCallOptions extends BaseLanguageModelCallOptions {
   functions?: ChatCompletionRequestFunctions[];
   tools?: StructuredTool[];
+  defaultUserName?: string;
+  defaultBotName?: string;
   plugins?: string[];
+  botSetting?: BotSetting[];
   replyConstraints?: ReplyConstraints;
   sampleMessages?: BaseMessage[];
 }
@@ -282,8 +297,10 @@ export class ChatMinimax
       ...(super.callKeys as (keyof ChatMinimaxCallOptions)[]),
       "functions",
       "tools",
+      "defaultBotName",
       "plugins",
       "replyConstraints",
+      "botSetting",
       "sampleMessages",
     ];
   }
@@ -309,7 +326,11 @@ export class ChatMinimax
 
   prompt?: string;
 
-  modelName = "abab5-chat";
+  modelName = "abab5.5-chat";
+
+  defaultBotName?: string = "Assistant";
+
+  defaultUserName?: string = "I";
 
   prefixMessages?: ChatCompletionRequestMessage[];
 
@@ -340,6 +361,8 @@ export class ChatMinimax
 
   useStandardSse?: boolean;
 
+  replyConstraints?: ReplyConstraints;
+
   constructor(
     fields?: Partial<MinimaxChatInput> &
       BaseChatModelParams & {
@@ -356,6 +379,7 @@ export class ChatMinimax
 
     this.minimaxApiKey =
       fields?.minimaxApiKey ?? getEnvironmentVariable("MINIMAX_API_KEY");
+
     if (!this.minimaxApiKey) {
       throw new Error("Minimax ApiKey not found");
     }
@@ -375,11 +399,14 @@ export class ChatMinimax
     this.roleMeta = fields?.roleMeta ?? this.roleMeta;
     this.botSetting = fields?.botSetting ?? this.botSetting;
     this.useStandardSse = fields?.useStandardSse ?? this.useStandardSse;
+    this.replyConstraints = fields?.replyConstraints ?? this.replyConstraints;
+    this.defaultBotName = fields?.defaultBotName ?? this.defaultBotName;
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;
     this.headers = fields?.configuration?.headers ?? this.headers;
     this.proVersion = fields?.proVersion ?? this.proVersion;
+
     const modelCompletion = this.proVersion
       ? "chatcompletion_pro"
       : "chatcompletion";
@@ -404,9 +431,17 @@ export class ChatMinimax
       beam_width: this.beamWidth,
       use_standard_sse: this.useStandardSse,
       role_meta: this.roleMeta,
-      bot_setting: this.botSetting,
-      reply_constraints: options?.replyConstraints,
-      sample_messages: this.messageToMinimaxMessage(options?.sampleMessages),
+      bot_setting: options?.botSetting ?? this.botSetting,
+      reply_constraints: options?.replyConstraints ??
+        this.replyConstraints ?? {
+          sender_type: "BOT",
+          sender_name:
+            options?.defaultBotName ?? this.defaultBotName ?? "Assistant",
+        },
+      sample_messages: this.messageToMinimaxMessage(
+        options?.sampleMessages,
+        options
+      ),
       functions:
         options?.functions ??
         (options?.tools
@@ -428,15 +463,28 @@ export class ChatMinimax
   /**
    * Convert a list of messages to the format expected by the model.
    * @param messages
+   * @param options
    */
   messageToMinimaxMessage(
-    messages?: BaseMessage[]
+    messages?: BaseMessage[],
+    options?: this["ParsedCallOptions"]
   ): ChatCompletionRequestMessage[] | undefined {
-    return messages?.map((message) => ({
-      sender_type: messageToMinimaxRole(message),
-      text: message.content,
-      sender_name: message.name,
-    }));
+    return messages
+      ?.filter((message) => {
+        return message._getType() !== "system";
+      })
+      ?.map((message) => {
+        const sender_type = messageToMinimaxRole(message);
+        return {
+          sender_type: sender_type,
+          text: message.content,
+          sender_name:
+            message.name ??
+            (sender_type === "BOT"
+              ? options?.defaultBotName ?? this.defaultBotName
+              : options?.defaultUserName ?? this.defaultUserName),
+        };
+      });
   }
 
   /** @ignore */
@@ -446,10 +494,11 @@ export class ChatMinimax
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
+    this.botSettingFallback(options, messages);
 
     const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = [
-      ...(this.messageToMinimaxMessage(messages) ?? []),
+      ...(this.messageToMinimaxMessage(messages, options) ?? []),
       ...(this.prefixMessages ?? []),
     ];
 
@@ -666,6 +715,33 @@ export class ChatMinimax
   /** @ignore */
   _combineLLMOutput() {
     return [];
+  }
+
+  private botSettingFallback(
+    options?: this["ParsedCallOptions"],
+    messages?: BaseMessage[]
+  ) {
+    const botSettings = options?.botSetting ?? this.botSetting;
+    if (!botSettings) {
+      const systemMessages = messages?.filter((message) => {
+        return message._getType() === "system";
+      });
+
+      // get the last system message
+      if (!systemMessages?.length) {
+        return;
+      }
+      const lastSystemMessage = systemMessages[systemMessages.length - 1];
+
+      //  setting the default botSetting.
+      this.botSetting = [
+        {
+          content: lastSystemMessage.content,
+          bot_name:
+            options?.defaultBotName ?? this.defaultBotName ?? "Assistant",
+        },
+      ];
+    }
   }
 }
 
