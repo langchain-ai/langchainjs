@@ -904,15 +904,22 @@ export class TraceGroup {
     private options?: {
       projectName?: string;
       exampleId?: string;
+      tags?: string[];
     }
   ) {}
 
   private async getTraceGroupCallbackManager(
     group_name: string,
-    options?: LangChainTracerFields
+    options?: LangChainTracerFields,
+    tags?: string[]
   ): Promise<CallbackManagerForChainRun> {
     const cb = new LangChainTracer(options);
-    const cm = await CallbackManager.configure([cb]);
+    const cm = await CallbackManager.configure(
+      [cb],
+      undefined,
+      tags,
+      this.options?.tags
+    );
     const runManager = await cm?.handleChainStart(
       {
         lc: 1,
@@ -927,19 +934,27 @@ export class TraceGroup {
     return runManager;
   }
 
-  async start(): Promise<CallbackManager> {
+  async start(opts: { tags?: string[] } = {}): Promise<CallbackManager> {
     if (!this.runManager) {
       this.runManager = await this.getTraceGroupCallbackManager(
         this.groupName,
-        this.options
+        this.options,
+        opts?.tags
       );
     }
     return this.runManager.getChild();
   }
 
-  async end(): Promise<void> {
+  async error(err: Error | unknown): Promise<void> {
     if (this.runManager) {
-      await this.runManager.handleChainEnd({});
+      await this.runManager.handleChainError(err);
+      this.runManager = undefined;
+    }
+  }
+
+  async end(output: ChainValues): Promise<void> {
+    if (this.runManager) {
+      await this.runManager.handleChainEnd(output);
       this.runManager = undefined;
     }
   }
@@ -949,15 +964,26 @@ export class TraceGroup {
 export async function traceAsGroup<T, A extends any[]>(
   groupOptions: {
     name: string;
+    inheritableTags?: string[];
+    localTags?: string[];
   } & LangChainTracerFields,
   enclosedCode: (manager: CallbackManager, ...args: A) => Promise<T>,
   ...args: A
 ): Promise<T> {
-  const traceGroup = new TraceGroup(groupOptions.name, groupOptions);
-  const callbackManager = await traceGroup.start();
+  const traceGroup = new TraceGroup(groupOptions.name, {
+    tags: groupOptions.localTags,
+    ...groupOptions,
+  });
+  const callbackManager = await traceGroup.start({
+    tags: groupOptions.inheritableTags,
+  });
+  let result: T;
   try {
-    return await enclosedCode(callbackManager, ...args);
-  } finally {
-    await traceGroup.end();
+    result = await enclosedCode(callbackManager, ...args);
+  } catch (err) {
+    await traceGroup.error(err);
+    throw err;
   }
+  await traceGroup.end(result !== undefined ? { output: result } : {});
+  return result;
 }
