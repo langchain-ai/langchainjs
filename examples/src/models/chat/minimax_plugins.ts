@@ -4,26 +4,25 @@ import { ChatMinimax } from "langchain/chat_models/minimax";
 
 const model = new ChatMinimax({
   modelName: "abab5.5-chat",
-  proVersion: true,
-  verbose: true,
   botSetting: [
     {
       bot_name: "MM Assistant",
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
-  ]
-}).bind({
-  plugins: ["plugin_web_search"],
-  replyConstraints: {
-    sender_type: "BOT",
-    sender_name: "MM Assistant",
+  ],
+  configuration: {
+    basePath: "http://c-aiproxy-api.zpidc.com/minimax/v1",
+    headers: {
+      accessToken: process.env.MINIMAX_TOKEN || "",
+    },
   }
+}).bind({
+  plugins: ["plugin_web_search"]
 });
 
 const result = await model.invoke([
   new HumanMessage({
-    content: " What is the weather like in Shanghai tomorrow?",
-    name: "XiaoMing",
+    content: " What is the weather like in NewYork tomorrow?"
   }),
 ]);
 

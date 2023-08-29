@@ -1,36 +1,39 @@
-import { HumanMessage } from "langchain/schema";
 import { ChatMinimax } from "langchain/chat_models/minimax";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+} from "langchain/prompts";
 
-// const model = new ChatMinimax({
-//   modelName: "abab5.5-chat",
-//   proVersion: true,
-//   verbose: true,
-//   botSetting: [
-//     {
-//       bot_name: "MM Assistant",
-//       content: "MM Assistant is an AI Assistant developed by minimax."
-//     }
-//   ]
-// }).bind({
-//   replyConstraints: {
-//     sender_type: "BOT",
-//     sender_name: "MM Assistant",
-//     glyph: {
-//       type: "raw",
-//       raw_glyph: "The translated text：{{gen 'content'}}"
-//     }
-//   }
-// });
+const model = new ChatMinimax({
+  modelName: "abab5.5-chat",
+  botSetting: [
+    {
+      bot_name: "MM Assistant",
+      content: "MM Assistant is an AI Assistant developed by minimax.",
+    },
+  ],
+}).bind({
+  replyConstraints: {
+    sender_type: "BOT",
+    sender_name: "MM Assistant",
+    glyph: {
+      type: "raw",
+      raw_glyph: "The translated text：{{gen 'content'}}",
+    },
+  },
+});
 
-// const result = await model.invoke([
-//   new HumanMessage({
-//     content:
-//       " Please help me translate the following sentence in English.：我是谁",
-//     name: "XiaoMing",
-//   }),
-// ]);
+const messagesTemplate = ChatPromptTemplate.fromPromptMessages([
+  HumanMessagePromptTemplate.fromTemplate(
+    " Please help me translate the following sentence in English： {text}"
+  ),
+]);
 
-// console.log(result);
+const messages = await messagesTemplate.formatMessages({ text: "我是谁" });
+const result = await model.invoke(messages);
+
+console.log(result);
+
 
 /*
 AIMessage {
@@ -46,10 +49,9 @@ AIMessage {
 }
 */
 
+/*
 const model = new ChatMinimax({
   modelName: "abab5.5-chat",
-  proVersion: true,
-  verbose: true,
   botSetting: [
     {
       bot_name: "MM Assistant",
@@ -97,6 +99,7 @@ const result = await model.invoke([new HumanMessage({
 })]);
 
 console.log(result);
+ */
 
 /*
 AIMessage {

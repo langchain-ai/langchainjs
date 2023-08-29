@@ -5,21 +5,23 @@ import process from "process";
 
 dotenv.config();
 
-// Default model is abab5-chat
-// const abab5 = new ChatMinimax({
-//   proVersion:false,
-//   modelName: "abab5-chat",
-//   minimaxGroupId: process.env.MINIMAX_GROUP_ID, // In Node.js defaults to process.env.MINIMAX_GROUP_ID
-//   minimaxApiKey: process.env.MINIMAX_API_KEY, // In Node.js defaults to process.env.MINIMAX_API_KEY
-// });
-//
-// const result = await abab5.invoke([
-//   new HumanMessage({
-//     content: "Hello",
-//     name: "XiaoMing",
-//   })
-// ]);
-// console.log(result);
+/*
+ const abab5 = new ChatMinimax({
+   proVersion:false,
+   modelName: "abab5-chat",
+   minimaxGroupId: process.env.MINIMAX_GROUP_ID, // In Node.js defaults to process.env.MINIMAX_GROUP_ID
+   minimaxApiKey: process.env.MINIMAX_API_KEY, // In Node.js defaults to process.env.MINIMAX_API_KEY
+ });
+
+ const result = await abab5.invoke([
+   new HumanMessage({
+     content: "Hello",
+     name: "XiaoMing",
+   })
+ ]);
+ console.log(result);
+
+ */
 
 /*
 AIMessage {
@@ -44,22 +46,15 @@ const abab5_5 = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-}).bind({
-  replyConstraints: {
-    sender_type: "BOT",
-    sender_name: "MM Assistant",
-  },
 });
 const messages = [
   new HumanMessage({
     content: "Hello",
-    name: "XiaoMing",
   }),
 ];
 
 let res = await abab5_5.invoke(messages);
 console.log(res);
-
 
 /*
 AIChatMessage {

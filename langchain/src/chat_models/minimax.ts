@@ -14,12 +14,12 @@ import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 
 /**
- * Type representing the sender_type of a message in the Wenxin chat model.
+ * Type representing the sender_type of a message in the Minimax chat model.
  */
 export type MessageRole = "BOT" | "USER" | "FUNCTION";
 
 /**
- * Interface representing a message in the Wenxin chat model.
+ * Interface representing a message in the Minimax chat model.
  */
 interface ChatCompletionRequestMessage {
   sender_type: MessageRole;
@@ -210,9 +210,14 @@ declare interface MinimaxChatInputPro extends MinimaxChatInputBase {
    */
   maskSensitiveInfo?: boolean;
 
-  //  Default bot name
+  /**
+   *  Default bot name
+   */
   defaultBotName?: string;
 
+  /**
+   *  Default user name
+   */
   defaultUserName?: string;
 
   /**
@@ -239,9 +244,9 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
 }
 
 /**
- * Function that converts a base message to a Wenxin message sender_type.
+ * Function that converts a base message to a Minimax message sender_type.
  * @param message Base message to convert.
- * @returns The Wenxin message sender_type.
+ * @returns The Minimax message sender_type.
  */
 function messageToMinimaxRole(message: BaseMessage): MessageRole {
   const type = message._getType();
@@ -276,13 +281,10 @@ export interface ChatMinimaxCallOptions extends BaseLanguageModelCallOptions {
 }
 
 /**
- * Wrapper around Baidu ERNIE large language models that use the Chat endpoint.
+ * Wrapper around Minimax large language models that use the Chat endpoint.
  *
  * To use you should have the `MINIMAX_GROUP_ID` and `MINIMAX_API_KEY`
  * environment variable set.
- *
- * @augments BaseLLM
- * @augments BaiduERNIEInput
  */
 export class ChatMinimax
   extends BaseChatModel<ChatMinimaxCallOptions>
@@ -298,6 +300,7 @@ export class ChatMinimax
       "functions",
       "tools",
       "defaultBotName",
+      "defaultUserName",
       "plugins",
       "replyConstraints",
       "botSetting",
@@ -312,9 +315,9 @@ export class ChatMinimax
     };
   }
 
-  // get lc_aliases(): { [key: string]: string } | undefined {
-  //   return undefined;
-  // }
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return undefined;
+  }
 
   lc_serializable = true;
 
@@ -413,6 +416,31 @@ export class ChatMinimax
     this.apiUrl = `${this.basePath}/text/${modelCompletion}`;
   }
 
+  fallbackBotName(options?: this["ParsedCallOptions"]) {
+    let botName = options?.defaultBotName ?? this.defaultBotName ?? "Assistant";
+    if (this.botSetting) {
+      botName = this.botSetting[0].bot_name;
+    }
+    return botName;
+  }
+
+  defaultReplyConstraints(options?: this["ParsedCallOptions"]) {
+    const constraints = options?.replyConstraints ?? this.replyConstraints;
+    if (!constraints) {
+      let botName =
+        options?.defaultBotName ?? this.defaultBotName ?? "Assistant";
+      if (this.botSetting) {
+        botName = this.botSetting[0].bot_name;
+      }
+
+      return {
+        sender_type: "BOT",
+        sender_name: botName,
+      };
+    }
+    return constraints;
+  }
+
   /**
    * Get the parameters used to invoke the model
    */
@@ -432,12 +460,7 @@ export class ChatMinimax
       use_standard_sse: this.useStandardSse,
       role_meta: this.roleMeta,
       bot_setting: options?.botSetting ?? this.botSetting,
-      reply_constraints: options?.replyConstraints ??
-        this.replyConstraints ?? {
-          sender_type: "BOT",
-          sender_name:
-            options?.defaultBotName ?? this.defaultBotName ?? "Assistant",
-        },
+      reply_constraints: this.defaultReplyConstraints(options),
       sample_messages: this.messageToMinimaxMessage(
         options?.sampleMessages,
         options
@@ -481,7 +504,7 @@ export class ChatMinimax
           sender_name:
             message.name ??
             (sender_type === "BOT"
-              ? options?.defaultBotName ?? this.defaultBotName
+              ? this.fallbackBotName()
               : options?.defaultUserName ?? this.defaultUserName),
         };
       });
@@ -600,38 +623,32 @@ export class ChatMinimax
     const generations: ChatGeneration[] = [];
 
     if (this.proVersion) {
-      const lastChoiceMessages =
-        data.choices.length > 0
-          ? data.choices[data.choices.length - 1]?.messages ?? []
-          : [];
-      const lastMessage =
-        lastChoiceMessages.length > 0
-          ? lastChoiceMessages[lastChoiceMessages.length - 1]
-          : undefined;
-      const text = lastMessage?.text ?? "";
-      generations.push({
-        text,
-        message: minimaxResponseToChatMessage(
-          lastMessage ?? {
-            sender_type: "BOT",
-            sender_name: "Assistant",
-            text: "",
-          }
-        ),
-      });
+      for (const choice of data.choices) {
+        const messages = choice.messages ?? [];
+        // 取最后一条消息
+        if (messages) {
+          const message = messages[messages.length - 1];
+          const text = message?.text ?? "";
+          generations.push({
+            text,
+            message: minimaxResponseToChatMessage(message),
+          });
+        }
+      }
     } else {
-      const choice = data.choices[data.choices.length - 1];
-      const text = choice?.text ?? "";
-      generations.push({
-        text,
-        message: minimaxResponseToChatMessage({
-          sender_type: "BOT",
-          sender_name: "Assistant",
-          text: text,
-        }),
-      });
+      for (const choice of data.choices) {
+        const text = choice?.text ?? "";
+        generations.push({
+          text,
+          message: minimaxResponseToChatMessage({
+            sender_type: "BOT",
+            sender_name:
+              options?.defaultBotName ?? this.defaultBotName ?? "Assistant",
+            text: text,
+          }),
+        });
+      }
     }
-    console.log("generations:", generations);
     return {
       generations,
       llmOutput: data,
@@ -763,7 +780,7 @@ function minimaxResponseToChatMessage(
 
 /**---Response Model---**/
 /**
- * Interface representing a message responsed in the Wenxin chat model.
+ * Interface representing a message responsed in the Minimax chat model.
  */
 interface ChatCompletionResponseMessage {
   sender_type: MessageRole;

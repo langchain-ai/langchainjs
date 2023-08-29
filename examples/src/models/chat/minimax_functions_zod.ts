@@ -10,12 +10,9 @@ const extractionFunctionZodSchema = z.object({
 // Bind function arguments to the model.
 // "functions.parameters" must be formatted as JSON Schema.
 // We translate the above Zod schema into JSON schema using the "zodToJsonSchema" package.
-// Omit "function_call" if you want the model to choose a function to call.
 
 const model = new ChatMinimax({
   modelName: "abab5.5-chat",
-  proVersion: true,
-  verbose: true,
   botSetting: [
     {
       bot_name: "MM Assistant",
@@ -29,11 +26,7 @@ const model = new ChatMinimax({
       description: " Get weather information.",
       parameters: zodToJsonSchema(extractionFunctionZodSchema),
     },
-  ],
-  replyConstraints: {
-    sender_type: "BOT",
-    sender_name: "MM Assistant",
-  }
+  ]
 });
 
 const result = await model.invoke([
@@ -46,20 +39,14 @@ const result = await model.invoke([
 console.log(result);
 
 /*
-  AIMessage {
-    content: '',
-    name: undefined,
-    additional_kwargs: {
-      function_call: {
-        name: 'extractor',
-        arguments: '{\n' +
-          '  "tone": "positive",\n' +
-          '  "entity": "day",\n' +
-          '  "word_count": 4,\n' +
-          '  "chat_response": "It certainly is a gorgeous day!",\n' +
-          '  "final_punctuation": "!"\n' +
-          '}'
-      }
-    }
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: { content: '', additional_kwargs: { function_call: [Object] } },
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: '',
+  name: undefined,
+  additional_kwargs: {
+    function_call: { name: 'get_weather', arguments: '{"location": "Shanghai"}' }
   }
+}
 */
