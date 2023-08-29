@@ -1,6 +1,6 @@
 import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
 
-import { LLM, BaseLLMParams } from "./base.js";
+import { LLM, BaseLLMCallOptions, BaseLLMParams } from "./base.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -25,6 +25,12 @@ export interface LlamaCppInputs extends BaseLLMParams {
   modelPath: string;
   /** If null, a random seed will be used. */
   seed?: null | number;
+  /** The randomness of the responses, e.g. 0.1 deterministic, 1.5 creative, 0.8 balanced, 0 disables. */
+  temperature?: number;
+  /** Consider the n most likely tokens, where n is 1 to vocabulary size, 0 disables (uses full vocabulary). Note: only applies when `temperature` > 0. */
+  topK?: number;
+  /** Selects the smallest token set whose probability exceeds P, where P is between 0 - 1, 1 disables. Note: only applies when `temperature` > 0. */
+  topP?: number;
   /** Force system to keep model in RAM. */
   useMlock?: boolean;
   /** Use mmap if possible. */
@@ -33,13 +39,24 @@ export interface LlamaCppInputs extends BaseLLMParams {
   vocabOnly?: boolean;
 }
 
+export interface LlamaCppCallOptions extends BaseLLMCallOptions {
+  /** The maximum number of tokens the response should contain. */
+  maxTokens?: number;
+  /** A function called when matching the provided token array */
+  onToken?: (tokens: number[]) => void;
+}
+
 /**
  *  To use this model you need to have the `node-llama-cpp` module installed.
  *  This can be installed using `npm install -S node-llama-cpp` and the minimum
  *  version supported in version 2.0.0.
  *  This also requires that have a locally built version of Llama2 installed.
  */
-export class LlamaCpp extends LLM implements LlamaCppInputs {
+export class LlamaCpp extends LLM<LlamaCppCallOptions> {
+  declare CallOptions: LlamaCppCallOptions;
+
+  static inputs: LlamaCppInputs;
+
   batchSize?: number;
 
   contextSize?: number;
@@ -97,17 +114,33 @@ export class LlamaCpp extends LLM implements LlamaCppInputs {
   /** @ignore */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"]
   ): Promise<string> {
     const session = new LlamaChatSession({ context: this._context });
 
     try {
-      const completion = await session.prompt(prompt, {
-        signal: options.signal,
-      });
-      return completion;
+      const compleation = await session.prompt(prompt, options);
+      return compleation;
     } catch (e) {
-      throw new Error("Error getting completion.");
+      throw new Error("Error getting prompt compleation.");
+    }
+  }
+
+  /** @ignore */
+  static async imports(): Promise<{
+    LlamaModel: typeof LlamaModel;
+    LlamaContext: typeof LlamaContext;
+    LlamaChatSession: typeof LlamaChatSession;
+  }> {
+    try {
+      const { LlamaModel, LlamaContext, LlamaChatSession } = await import(
+        "node-llama-cpp"
+      );
+      return { LlamaModel, LlamaContext, LlamaChatSession };
+    } catch (e) {
+      throw new Error(
+        "Please install node-llama-cpp as a dependency with, e.g. 'npm install node-llama-cpp'"
+      );
     }
   }
 }
