@@ -9,12 +9,10 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { RedisVectorStore } from "../redis.js";
 import { Document } from "../../document.js";
 
-describe.skip("RedisVectorStore", () => {
+describe("RedisVectorStore", () => {
   let vectorStore: RedisVectorStore;
 
   beforeEach(async () => {
-    expect(process.env.REDIS_URL).toBeDefined();
-
     const client = createClient({ url: process.env.REDIS_URL });
     await client.connect();
 
