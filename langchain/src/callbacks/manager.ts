@@ -965,7 +965,7 @@ export async function traceAsGroup<T, A extends any[]>(
   const callbackManager = await traceGroup.start({ ...args });
   try {
     const result = await enclosedCode(callbackManager, ...args);
-    await traceGroup.end();
+    await traceGroup.end({ output: result });
     return result;
   } catch (err) {
     await traceGroup.error(err);

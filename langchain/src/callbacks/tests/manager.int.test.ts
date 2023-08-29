@@ -52,6 +52,6 @@ test("Test TraceGroup object", async () => {
   const childManager = await traceGroup.start({ input: "Hello, World" });
   const prompt = PromptTemplate.fromTemplate("Hello, world!");
   const result = await prompt.invoke({}, { callbacks: childManager });
-  await traceGroup.end(result);
+  await traceGroup.end({ value: result.value });
   expect(result.value).toBe("Hello, world!");
 });
