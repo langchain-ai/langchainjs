@@ -140,7 +140,7 @@ export class RecursiveUrlLoader
     visited: Set<string> = new Set<string>(),
     depth = 0
   ): Promise<Document[]> {
-    if (depth > this.maxDepth) return [];
+    if (depth >= this.maxDepth) return [];
 
     let url = inputUrl;
     if (!inputUrl.endsWith("/")) url += "/";
