@@ -29,6 +29,7 @@ import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { NewTokenIndices } from "../callbacks/base.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -366,8 +367,6 @@ export class ChatOpenAI
     };
   }
 
-  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
-  // when we integrate OpenAI's new SDK.
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -400,18 +399,20 @@ export class ChatOpenAI
       const { delta } = choice;
       const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
       defaultRole = delta.role ?? defaultRole;
+      const newTokenIndices = {
+        prompt: options.promptIndex ?? 0,
+        completion: choice.index ?? 0,
+      };
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
         text: chunk.content,
+        generationInfo: newTokenIndices,
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
-        {
-          prompt: 0,
-          completion: choice.index,
-        },
+        newTokenIndices,
         undefined,
         undefined,
         undefined,
@@ -447,64 +448,72 @@ export class ChatOpenAI
           .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
       }));
 
-    const data = params.stream
-      ? await (async () => {
-          const stream = await this._streamResponseChunks(messages, options, runManager);
-          let finalChunk: ChatGenerationChunk | undefined;
-          for await (const chunk of stream) {
-            if (!finalChunk) {
-              finalChunk = chunk;
-            } else {
-              finalChunk = finalChunk.concat(finalChunk);
-            }
-          }
-          return finalChunk;
-        })()
-      : await this.completionWithRetry(
-          {
-            ...params,
-            stream: false,
-            messages: messagesMapped,
-          },
-          {
-            signal: options?.signal,
-            ...options?.options,
-          }
-        );
+    if (params.stream) {
+      const stream = await this._streamResponseChunks(
+        messages,
+        options,
+        runManager
+      );
+      const finalChunks: Record<number, ChatGenerationChunk> = {};
+      for await (const chunk of stream) {
+        const index =
+          (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
+        if (finalChunks[index] === undefined) {
+          finalChunks[index] = chunk;
+        } else {
+          finalChunks[index] = finalChunks[index].concat(chunk);
+        }
+      }
+      const generations = Object.entries(finalChunks)
+        .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
+        .map(([_, value]) => value);
+      return { generations };
+    } else {
+      const data = await this.completionWithRetry(
+        {
+          ...params,
+          stream: false,
+          messages: messagesMapped,
+        },
+        {
+          signal: options?.signal,
+          ...options?.options,
+        }
+      );
+      const {
+        completion_tokens: completionTokens,
+        prompt_tokens: promptTokens,
+        total_tokens: totalTokens,
+      } = data?.usage ?? {};
 
-    const {
-      completion_tokens: completionTokens,
-      prompt_tokens: promptTokens,
-      total_tokens: totalTokens,
-    } = data?.usage ?? {};
+      if (completionTokens) {
+        tokenUsage.completionTokens =
+          (tokenUsage.completionTokens ?? 0) + completionTokens;
+      }
 
-    if (completionTokens) {
-      tokenUsage.completionTokens =
-        (tokenUsage.completionTokens ?? 0) + completionTokens;
+      if (promptTokens) {
+        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+      }
+
+      if (totalTokens) {
+        tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
+      }
+
+      const generations: ChatGeneration[] = [];
+      for (const part of data?.choices ?? []) {
+        const text = part.message?.content ?? "";
+        generations.push({
+          text,
+          message: openAIResponseToChatMessage(
+            part.message ?? { role: "assistant" }
+          ),
+        });
+      }
+      return {
+        generations,
+        llmOutput: { tokenUsage },
+      };
     }
-
-    if (promptTokens) {
-      tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
-    }
-
-    if (totalTokens) {
-      tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
-    }
-
-    const generations: ChatGeneration[] = [];
-    for (const part of data?.choices ?? []) {
-      const text = part.message?.content ?? "";
-      generations.push({
-        text,
-        message: openAIResponseToChatMessage(
-          part.message ?? { role: "assistant" }
-        ),
-      });
-    }
-    return {
-      generations,
-      llmOutput: { tokenUsage },
-    };
   }
 
   async getNumTokensFromMessages(messages: BaseMessage[]): Promise<{
