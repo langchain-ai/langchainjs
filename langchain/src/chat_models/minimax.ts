@@ -103,7 +103,7 @@ interface BotSetting {
   bot_name: string;
 }
 
-declare interface ConfigurationParameters {
+export declare interface ConfigurationParameters {
   basePath?: string;
   headers?: Record<string, string>;
 }
