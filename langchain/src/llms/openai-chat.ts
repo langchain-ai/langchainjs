@@ -531,7 +531,8 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
         const promptLayerRespBody = await promptLayerTrackRequest(
           this.caller,
           "langchain.PromptLayerOpenAIChat",
-          { ...this._identifyingParams(), prompt },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { ...this._identifyingParams(), prompt } as any,
           this.plTags,
           parsedResp,
           requestStartTime,

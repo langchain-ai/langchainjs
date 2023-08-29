@@ -572,7 +572,8 @@ export class PromptLayerOpenAI extends OpenAI {
       const promptLayerRespBody = await promptLayerTrackRequest(
         this.caller,
         "langchain.PromptLayerOpenAI",
-        { ...this._identifyingParams(), prompt: prompts[i] },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { ...this._identifyingParams(), prompt: prompts[i] } as any,
         this.plTags,
         parsedResp,
         requestStartTime,
