@@ -4,7 +4,7 @@ import { test } from "@jest/globals";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { LLM } from "../../llms/base.js";
-import { CallbackManager, traceAsGroup } from "../manager.js";
+import { CallbackManager, traceAsGroup, TraceGroup } from "../manager.js";
 import { ChainTool } from "../../tools/chain.js";
 
 class FakeLLM extends LLM {
@@ -44,4 +44,18 @@ test("Test grouping traces", async () => {
   );
 
   console.log(result);
+});
+
+test("Test TraceGroup object", async () => {
+  const traceGroup = new TraceGroup("my-group", {
+    projectName: "my-project",
+    exampleId: "my-example",
+  });
+
+  const childManager = await traceGroup.start({input: "Hell, World"});
+  const prompt = PromptTemplate.fromTemplate("Hello, world!");
+  const result = prompt.invoke({}, {callbacks: childManager});
+  await traceGroup.end(result);
+
+  expect(result).toBe("Hello, world!");
 });
