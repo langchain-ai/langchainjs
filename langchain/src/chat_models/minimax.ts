@@ -340,6 +340,7 @@ export class ChatMinimax
   apiUrl: string;
 
   basePath?: string = "https://api.minimax.chat/v1";
+
   headers?: Record<string, string>;
 
   temperature?: number = 0.9;
@@ -493,13 +494,11 @@ export class ChatMinimax
     options?: this["ParsedCallOptions"]
   ): MinimaxChatCompletionRequestMessage[] | undefined {
     return messages
-      ?.filter((message) => {
-        return message._getType() !== "system";
-      })
+      ?.filter((message) => message._getType() !== "system")
       ?.map((message) => {
         const sender_type = messageToMinimaxRole(message);
         return {
-          sender_type: sender_type,
+          sender_type,
           text: message.content,
           sender_name:
             message.name ??
@@ -603,8 +602,8 @@ export class ChatMinimax
       tokenUsage.total_tokens = (tokenUsage.total_tokens ?? 0) + totalTokens;
     }
 
-    if (data.base_resp?.status_code != 0) {
-      throw new Error("Minimax API error: " + data.base_resp?.status_msg);
+    if (data.base_resp?.status_code !== 0) {
+      throw new Error(`Minimax API error: ${  data.base_resp?.status_msg}`);
     }
     const generations: ChatGeneration[] = [];
 
@@ -630,7 +629,7 @@ export class ChatMinimax
             sender_type: "BOT",
             sender_name:
               options?.defaultBotName ?? this.defaultBotName ?? "Assistant",
-            text: text,
+            text,
           }),
         });
       }
@@ -655,7 +654,7 @@ export class ChatMinimax
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + this.minimaxApiKey,
+          Authorization: `Bearer ${  this.minimaxApiKey}`,
           ...this.headers,
         },
         body: JSON.stringify(request),
@@ -722,9 +721,7 @@ export class ChatMinimax
   ) {
     const botSettings = options?.botSetting ?? this.botSetting;
     if (!botSettings) {
-      const systemMessages = messages?.filter((message) => {
-        return message._getType() === "system";
-      });
+      const systemMessages = messages?.filter((message) => message._getType() === "system");
 
       // get the last system message
       if (!systemMessages?.length) {
@@ -764,7 +761,7 @@ function minimaxResponseToChatMessage(
   }
 }
 
-/**---Response Model---**/
+/** ---Response Model---* */
 /**
  * Interface representing a message responsed in the Minimax chat model.
  */
