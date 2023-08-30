@@ -38,15 +38,19 @@ export class ChatConversationalAgentOutputParser extends AgentActionOutputParser
    */
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     let jsonOutput = text.trim();
-    if (jsonOutput.includes("```json")) {
-      jsonOutput = jsonOutput.split("```json")[1].trimStart();
-    } else if (jsonOutput.includes("```")) {
-      const firstIndex = jsonOutput.indexOf("```");
-      jsonOutput = jsonOutput.slice(firstIndex + 3).trimStart();
-    }
-    const lastIndex = jsonOutput.lastIndexOf("```");
-    if (lastIndex !== -1) {
-      jsonOutput = jsonOutput.slice(0, lastIndex).trimEnd();
+    if (jsonOutput.includes("```json") || jsonOutput.includes("```")) {
+      const testString = jsonOutput.includes("```json") ? "```json" : "```";
+      const firstIndex = jsonOutput.indexOf(testString);
+      const actionInputIndex = jsonOutput.indexOf("action_input");
+      if (actionInputIndex > firstIndex) {
+        jsonOutput = jsonOutput
+          .slice(firstIndex + testString.length)
+          .trimStart();
+        const lastIndex = jsonOutput.lastIndexOf("```");
+        if (lastIndex !== -1) {
+          jsonOutput = jsonOutput.slice(0, lastIndex).trimEnd();
+        }
+      }
     }
 
     try {
