@@ -241,7 +241,7 @@ export class VectaraStore extends VectorStore {
     metadatas: Record<string, unknown> | undefined = undefined
   ) {
     if (this.corpusId.length > 1)
-      throw new Error("addDocuments does not support multiple corpus ids");
+      throw new Error("addFiles does not support multiple corpus ids");
 
     let numDocs = 0;
 
