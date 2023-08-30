@@ -48,7 +48,7 @@ export class Ollama extends LLM implements OllamaInput {
 
   numGpu?: number;
 
-  numGQA?: number;
+  numGqa?: number;
 
   numKeep?: number;
 
@@ -103,7 +103,7 @@ export class Ollama extends LLM implements OllamaInput {
     this.numBatch = fields.numBatch;
     this.numCtx = fields.numCtx;
     this.numGpu = fields.numGpu;
-    this.numGQA = fields.numGQA;
+    this.numGqa = fields.numGqa;
     this.numKeep = fields.numKeep;
     this.numThread = fields.numThread;
     this.penalizeNewline = fields.penalizeNewline;
@@ -143,7 +143,7 @@ export class Ollama extends LLM implements OllamaInput {
         num_batch: this.numBatch,
         num_ctx: this.numCtx,
         num_gpu: this.numGpu,
-        num_gqa: this.numGQA,
+        num_gqa: this.numGqa,
         num_keep: this.numKeep,
         num_thread: this.numThread,
         penalize_newline: this.penalizeNewline,

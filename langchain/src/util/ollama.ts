@@ -16,7 +16,7 @@ export interface OllamaInput {
   numBatch?: number;
   numCtx?: number;
   numGpu?: number;
-  numGQA?: number;
+  numGqa?: number;
   numKeep?: number;
   numThread?: number;
   penalizeNewline?: boolean;
