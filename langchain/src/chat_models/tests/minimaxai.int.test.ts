@@ -1,7 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { ChatMinimax } from "../minimax.js";
-import { HumanMessage } from "../../../dist/schema/index.js";
-import { ChatMessage, LLMResult, SystemMessage } from "../../schema/index.js";
+import { ChatMessage, HumanMessage, LLMResult, SystemMessage } from "../../schema/index.js";
 import { CallbackManager } from "../../callbacks/index.js";
 import {
   ChatPromptTemplate,
