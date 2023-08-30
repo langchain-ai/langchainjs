@@ -26,7 +26,7 @@ test("Test ChatAnthropic", async () => {
   }).bind({
     functions: [weatherFunction],
   });
-  const message = new HumanMessage("Hello, who are you?");
+  const message = new HumanMessage("What is the weather in Beijing?");
   const res = await chat.invoke([message]);
   console.log({ res });
 });

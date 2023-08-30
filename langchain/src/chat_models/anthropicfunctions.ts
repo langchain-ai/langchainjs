@@ -92,7 +92,7 @@ export class ChatAnthropicFunctions extends BaseChatModel<ChatOpenAICallOptions>
 
     const generations = await this.model._generate(
       messages,
-      options,
+      newOptions,
       runManager
     );
 
