@@ -1,25 +1,18 @@
 import monitor from "llmonitor";
 
-import {
-  BaseRun,
-  // RunCreate,
-  RunUpdate as BaseRunUpdate,
-  KVMap,
-} from "langsmith/schemas";
-import {
-  getEnvironmentVariable,
-  // getRuntimeEnvironment,
-} from "../../util/env.js";
+import { BaseRun, RunUpdate as BaseRunUpdate, KVMap } from "langsmith/schemas";
 
-import { BaseMessage, ChainValues, LLMResult } from "../../schema/index.js";
+import { getEnvironmentVariable } from "../../util/env.js";
+
+import {
+  BaseMessage,
+  ChainValues,
+  Generation,
+  LLMResult,
+} from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
 
-import {
-  BaseCallbackHandler,
-  BaseCallbackHandlerInput,
-  // HandleLLMNewTokenCallbackFields,
-  // NewTokenIndices,
-} from "../base.js";
+import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
 type Role = "user" | "ai" | "system" | "function";
 
@@ -28,7 +21,7 @@ type LLMonitorMessage =
   | {
       role: Role;
       text: string;
-      functionCall?: any;
+      functionCall?: Record<string, unknown>;
     };
 
 // Langchain Helpers
@@ -45,18 +38,18 @@ const parseRole = (id: string[]): Role => {
   return "ai";
 };
 
+type Message = BaseMessage | Generation | string;
+
 export const convertToLLMonitorMessages = (
-  input: any | any[] | any[][]
+  input: Message | Message[] | Message[][]
 ): LLMonitorMessage | LLMonitorMessage[] | LLMonitorMessage[][] => {
-  const parseMessage = (raw: any): LLMonitorMessage => {
+  const parseMessage = (raw: Message): LLMonitorMessage => {
     if (typeof raw === "string") return raw;
     // sometimes the message is nested in a "message" property
-    if (raw.message) return parseMessage(raw.message);
+    if ("message" in raw) return parseMessage(raw.message as Message);
 
     // Serialize
     const message = JSON.parse(JSON.stringify(raw));
-
-    console.log({ message });
 
     try {
       // "id" contains an array describing the constructor, with last item actual schema type
@@ -79,38 +72,35 @@ export const convertToLLMonitorMessages = (
   };
 
   if (Array.isArray(input)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore Confuses the compiler
     return input.length === 1
       ? convertToLLMonitorMessages(input[0])
-      : input.map(parseMessage);
+      : input.map(convertToLLMonitorMessages);
   }
   return parseMessage(input);
 };
 
-const cleanArray = (arr: Array<any>) => (arr.length === 1 ? arr[0] : arr);
-
-const parseInput = (rawInput: any) => {
+const parseInput = (rawInput: Record<string, unknown>) => {
   if (!rawInput) return null;
 
-  const { input, inputs, question, prompts, messages } = rawInput;
+  const { input, inputs, question } = rawInput;
 
   if (input) return input;
   if (inputs) return inputs;
   if (question) return question;
-  if (prompts) return cleanArray(prompts);
-  if (messages) return convertToLLMonitorMessages(messages);
 
   return rawInput;
 };
 
-const parseOutput = (rawOutput: any): any => {
+const parseOutput = (rawOutput: Record<string, unknown>) => {
   if (!rawOutput) return null;
 
-  const { generations, text, output, answer } = rawOutput;
+  const { text, output, answer } = rawOutput;
 
   if (text) return text;
   if (answer) return answer;
   if (output) return output;
-  if (generations) return convertToLLMonitorMessages(generations);
 
   return rawOutput;
 };
@@ -300,7 +290,7 @@ export class LLMonitorHandler
       runId,
       parentRunId,
       name: tool.id[tool.id.length - 1],
-      input: parseInput(input),
+      input,
       extra: metadata,
       tags,
       runtime: "langchain-js",
@@ -310,7 +300,7 @@ export class LLMonitorHandler
   async handleToolEnd(output: string, runId: string): Promise<void> {
     this.monitor.trackEvent("tool", "end", {
       runId,
-      output: parseOutput(output),
+      output,
     });
   }
 

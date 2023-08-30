@@ -15062,7 +15062,7 @@ __metadata:
     ioredis: ^5.3.2
     jsdom: "*"
     langchainhub: ~0.0.3
-    llmonitor: ^0.5.3
+    llmonitor: "*"
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -15194,8 +15194,6 @@ __metadata:
     jsdom:
       optional: true
     langchainhub:
-      optional: true
-    llmonitor:
       optional: true
     mammoth:
       optional: true
