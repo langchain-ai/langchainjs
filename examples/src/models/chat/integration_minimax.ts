@@ -17,7 +17,7 @@ const messages = [
   }),
 ];
 
-let res = await abab5_5.invoke(messages);
+const res = await abab5_5.invoke(messages);
 console.log(res);
 
 /*
@@ -29,10 +29,9 @@ AIChatMessage {
 }
 */
 
-
 // use abab5
 const abab5 = new ChatMinimax({
-  proVersion:false,
+  proVersion: false,
   modelName: "abab5-chat",
   minimaxGroupId: process.env.MINIMAX_GROUP_ID, // In Node.js defaults to process.env.MINIMAX_GROUP_ID
   minimaxApiKey: process.env.MINIMAX_API_KEY, // In Node.js defaults to process.env.MINIMAX_API_KEY
@@ -42,10 +41,9 @@ const result = await abab5.invoke([
   new HumanMessage({
     content: "Hello",
     name: "XiaoMing",
-  })
+  }),
 ]);
 console.log(result);
-
 
 /*
 AIMessage {

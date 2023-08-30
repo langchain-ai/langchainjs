@@ -18,7 +18,7 @@ const model = new ChatMinimax({
       bot_name: "MM Assistant",
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
-  ]
+  ],
 }).bind({
   functions: [
     {
@@ -26,7 +26,7 @@ const model = new ChatMinimax({
       description: " Get weather information.",
       parameters: zodToJsonSchema(extractionFunctionZodSchema),
     },
-  ]
+  ],
 });
 
 const result = await model.invoke([

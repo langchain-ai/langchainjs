@@ -25,9 +25,9 @@ const model = new ChatMinimax({
       bot_name: "MM Assistant",
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
-  ]
+  ],
 }).bind({
-  functions: [functionSchema]
+  functions: [functionSchema],
 });
 
 const result = await model.invoke([
@@ -38,7 +38,6 @@ const result = await model.invoke([
 ]);
 
 console.log(result);
-
 
 /*
 AIMessage {
@@ -61,14 +60,16 @@ const minimax = new ChatMinimax({
     {
       bot_name: "MM Assistant",
       content: "MM Assistant is an AI Assistant developed by minimax.",
-    }]
+    },
+  ],
 });
 
-const result2 = await minimax.call([
-  new HumanMessage("What is the weather like in NewYork tomorrow?")
-], {
-  functions: [functionSchema],
-});
+const result2 = await minimax.call(
+  [new HumanMessage("What is the weather like in NewYork tomorrow?")],
+  {
+    functions: [functionSchema],
+  }
+);
 console.log(result2);
 
 /*

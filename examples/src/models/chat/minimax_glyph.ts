@@ -35,7 +35,6 @@ const result = await model.invoke(messages);
 
 console.log(result);
 
-
 /*
 AIMessage {
   lc_serializable: true,
@@ -57,9 +56,9 @@ const modelMinimax = new ChatMinimax({
   botSetting: [
     {
       bot_name: "MM Assistant",
-      content: "MM Assistant is an AI Assistant developed by minimax."
-    }
-  ]
+      content: "MM Assistant is an AI Assistant developed by minimax.",
+    },
+  ],
 }).bind({
   replyConstraints: {
     sender_type: "BOT",
@@ -68,37 +67,40 @@ const modelMinimax = new ChatMinimax({
       type: "json_value",
       json_properties: {
         name: {
-          type: "string"
+          type: "string",
         },
         age: {
-          type: "number"
+          type: "number",
         },
         is_student: {
-          type: "boolean"
+          type: "boolean",
         },
         is_boy: {
-          type: "boolean"
+          type: "boolean",
         },
         courses: {
           type: "object",
           properties: {
             name: {
-              type: "string"
+              type: "string",
             },
             score: {
-              type: "number"
-            }
-          }
-        }
-      }
-    }
-  }
+              type: "number",
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
-const result2 = await modelMinimax.invoke([new HumanMessage({
-  content:" My name is Yue Wushuang, 18 years old this year, just finished the test with 99.99 points.",
-  name: "XiaoMing",
-})]);
+const result2 = await modelMinimax.invoke([
+  new HumanMessage({
+    content:
+      " My name is Yue Wushuang, 18 years old this year, just finished the test with 99.99 points.",
+    name: "XiaoMing",
+  }),
+]);
 
 console.log(result2);
 
