@@ -166,6 +166,7 @@ const entrypoints = {
   sql_db: "sql_db",
   // callbacks
   callbacks: "callbacks/index",
+  "callbacks/llmonitor": "callbacks/handlers/llmonitor",
   // output_parsers
   output_parsers: "output_parsers/index",
   "output_parsers/expression": "output_parsers/expression",
@@ -217,7 +218,7 @@ const entrypoints = {
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
   // hub
-  "hub": "hub",
+  hub: "hub",
   // utilities
   "util/math": "util/math",
   // experimental
