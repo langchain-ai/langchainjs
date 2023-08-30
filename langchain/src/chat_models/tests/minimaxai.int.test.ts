@@ -1,6 +1,5 @@
-import { test } from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import { ChatMinimax } from "../minimax.js";
-import { ChatMessage } from "../../schema/index.js";
 
 // test("Test ChatOpenAI", async () => {
 //   const chat = new ChatMinimax({
@@ -184,13 +183,32 @@ import { ChatMessage } from "../../schema/index.js";
 //   }).rejects.toThrow();
 // }, 5000);
 
-test("Test OpenAI with specific roles in ChatMessage", async () => {
-  const chat = new ChatMinimax({ tokensToGenerate: 10 });
-  const system_message = new ChatMessage(
-    "You are to chat with a user.",
-    "system"
-  );
-  const user_message = new ChatMessage("Hello!", "user");
-  const res = await chat.call([system_message, user_message]);
-  console.log({ res });
+// test("Test OpenAI with specific roles in ChatMessage", async () => {
+//   const chat = new ChatMinimax({ tokensToGenerate: 10 });
+//   const system_message = new ChatMessage(
+//     "You are to chat with a user.",
+//     "system"
+//   );
+//   const user_message = new ChatMessage("Hello!", "user");
+//   const res = await chat.call([system_message, user_message]);
+//   console.log({ res });
+// });
+
+test("Test ChatOpenAI stream method", async () => {
+  const model = new ChatMinimax({
+    tokensToGenerate: 50,
+    botSetting: [
+      {
+        bot_name: "MM Assistant",
+        content: "MM Assistant is an AI Assistant developed by minimax.",
+      },
+    ],
+  });
+  const stream = await model.stream("Print hello world.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
 });
