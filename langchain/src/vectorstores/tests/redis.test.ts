@@ -124,22 +124,30 @@ describe("RedisVectorStore dropIndex", () => {
   });
 
   test("without deleteDocuments param provided", async () => {
-    await store.dropIndex()
+    await store.dropIndex();
 
-    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", undefined)
-  })
+    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", undefined);
+  });
 
   test("with deleteDocuments as false", async () => {
-    await store.dropIndex(false)
+    await store.dropIndex(false);
 
-    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", undefined)
-  })
+    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", undefined);
+  });
 
   test("with deleteDocument as true", async () => {
-    await store.dropIndex(true)
+    await store.dropIndex(true);
 
     expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", {
-      DD: true
-    })
-  })
+      DD: true,
+    });
+  });
+
+  test("through delete convenience method", async () => {
+    await store.delete({ deleteAll: true });
+
+    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", {
+      DD: true,
+    });
+  });
 });

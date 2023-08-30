@@ -346,6 +346,19 @@ export class RedisVectorStore extends VectorStore {
     }
   }
 
+  /**
+   * Deletes vectors from the vector store.
+   * @param params The parameters for deleting vectors.
+   * @returns A promise that resolves when the vectors have been deleted.
+   */
+  async delete(params: { deleteAll: boolean }): Promise<void> {
+    if (params.deleteAll) {
+      await this.dropIndex(true);
+    } else {
+      throw new Error(`Invalid parameters passed to "delete".`);
+    }
+  }
+
   private buildQuery(
     query: number[],
     k: number,
