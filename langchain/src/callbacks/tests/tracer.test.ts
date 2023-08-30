@@ -86,11 +86,11 @@ test("Test Chat Model Run", async () => {
       "events": [
         {
           "name": "start",
-          "time": 1620000000000,
+          "time": "2021-05-03T00:00:00.000Z",
         },
         {
           "name": "end",
-          "time": 1620000000000,
+          "time": "2021-05-03T00:00:00.000Z",
         },
       ],
       "execution_order": 1,
