@@ -3,6 +3,7 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
+import { HumanMessage } from "langchain/schema";
 
 const model = new ChatMinimax({
   modelName: "abab5.5-chat",
@@ -49,8 +50,9 @@ AIMessage {
 }
 */
 
-/*
-const model = new ChatMinimax({
+// use json_value
+
+const modelMinimax = new ChatMinimax({
   modelName: "abab5.5-chat",
   botSetting: [
     {
@@ -93,13 +95,12 @@ const model = new ChatMinimax({
   }
 });
 
-const result = await model.invoke([new HumanMessage({
+const result2 = await modelMinimax.invoke([new HumanMessage({
   content:" My name is Yue Wushuang, 18 years old this year, just finished the test with 99.99 points.",
   name: "XiaoMing",
 })]);
 
-console.log(result);
- */
+console.log(result2);
 
 /*
 AIMessage {

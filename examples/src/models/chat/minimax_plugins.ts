@@ -9,13 +9,7 @@ const model = new ChatMinimax({
       bot_name: "MM Assistant",
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
-  ],
-  configuration: {
-    basePath: "http://c-aiproxy-api.zpidc.com/minimax/v1",
-    headers: {
-      accessToken: process.env.MINIMAX_TOKEN || "",
-    },
-  }
+  ]
 }).bind({
   plugins: ["plugin_web_search"]
 });

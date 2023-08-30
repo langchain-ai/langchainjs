@@ -55,8 +55,7 @@ AIMessage {
 
 // Alternatively, you can pass function call arguments as an additional argument as a one-off:
 
-/*
-const model = new ChatMinimax({
+const minimax = new ChatMinimax({
   modelName: "abab5.5-chat",
   botSetting: [
     {
@@ -65,14 +64,12 @@ const model = new ChatMinimax({
     }]
 });
 
-const result = await model.call([
+const result2 = await minimax.call([
   new HumanMessage("What is the weather like in NewYork tomorrow?")
 ], {
   functions: [functionSchema],
 });
-console.log(result);
- */
-
+console.log(result2);
 
 /*
 AIMessage {
