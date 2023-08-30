@@ -6,8 +6,8 @@ export interface OllamaInput {
   f16KV?: boolean;
   frequencyPenalty?: number;
   logitsAll?: boolean;
-  lowVRAM?: boolean;
-  mainGPU?: number;
+  lowVram?: boolean;
+  mainGpu?: number;
   model?: string;
   baseUrl?: string;
   mirostat?: number;

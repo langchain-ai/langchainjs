@@ -32,9 +32,9 @@ export class Ollama extends LLM implements OllamaInput {
 
   logitsAll?: boolean;
 
-  lowVRAM?: boolean;
+  lowVram?: boolean;
 
-  mainGPU?: number;
+  mainGpu?: number;
 
   mirostat?: number;
 
@@ -95,8 +95,8 @@ export class Ollama extends LLM implements OllamaInput {
     this.f16KV = fields.f16KV;
     this.frequencyPenalty = fields.frequencyPenalty;
     this.logitsAll = fields.logitsAll;
-    this.lowVRAM = fields.lowVRAM;
-    this.mainGPU = fields.mainGPU;
+    this.lowVram = fields.lowVram;
+    this.mainGpu = fields.mainGpu;
     this.mirostat = fields.mirostat;
     this.mirostatEta = fields.mirostatEta;
     this.mirostatTau = fields.mirostatTau;
@@ -135,8 +135,8 @@ export class Ollama extends LLM implements OllamaInput {
         f16_kv: this.f16KV,
         frequency_penalty: this.frequencyPenalty,
         logits_all: this.logitsAll,
-        low_vram: this.lowVRAM,
-        main_gpu: this.mainGPU,
+        low_vram: this.lowVram,
+        main_gpu: this.mainGpu,
         mirostat: this.mirostat,
         mirostat_eta: this.mirostatEta,
         mirostat_tau: this.mirostatTau,
