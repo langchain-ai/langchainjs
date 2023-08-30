@@ -340,9 +340,7 @@ export class VectaraStore extends VectorStore {
         combinedMetadata[item.name] = item.value;
       });
 
-      responses[i].metadata = Object.entries(combinedMetadata).map(
-        ([name, value]) => ({ name, value })
-      );
+      responses[i].metadata = combinedMetadata;
     }
 
     const documentsAndScores = responses.map(

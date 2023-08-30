@@ -53,6 +53,7 @@
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "uuid": "^9.0.0",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0",
     "zod": "^3.21.4",
@@ -61,6 +62,7 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
+    "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "dotenv": "^16.0.3",
