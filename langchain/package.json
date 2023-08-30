@@ -448,6 +448,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/multi_vector.cjs",
+    "retrievers/multi_vector.js",
+    "retrievers/multi_vector.d.ts",
     "retrievers/parent_document.cjs",
     "retrievers/parent_document.js",
     "retrievers/parent_document.d.ts",
@@ -1809,6 +1812,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/multi_vector": {
+      "types": "./retrievers/multi_vector.d.ts",
+      "import": "./retrievers/multi_vector.js",
+      "require": "./retrievers/multi_vector.cjs"
     },
     "./retrievers/parent_document": {
       "types": "./retrievers/parent_document.d.ts",
