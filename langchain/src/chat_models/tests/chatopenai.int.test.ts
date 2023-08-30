@@ -387,6 +387,22 @@ test("Test ChatOpenAI stream method with early break", async () => {
   }
 });
 
+test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () => {
+  await expect(async () => {
+    const model = new ChatOpenAI({
+      maxTokens: 50,
+      modelName: "gpt-3.5-turbo",
+      timeout: 1,
+    });
+    const stream = await model.stream(
+      "How is your day going? Be extremely verbose."
+    );
+    for await (const chunk of stream) {
+      console.log(chunk);
+    }
+  }).rejects.toThrow();
+});
+
 test("Function calling with streaming", async () => {
   let finalResult: BaseMessage | undefined;
   const modelForFunctionCalling = new ChatOpenAI({

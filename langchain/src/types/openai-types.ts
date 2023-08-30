@@ -98,7 +98,9 @@ export declare interface OpenAIInput extends OpenAIBaseInput {
  * @deprecated Use "baseURL", "defaultHeaders", and "defaultParams" instead.
  */
 export interface LegacyOpenAIInput {
+  /** @deprecated Use baseURL instead */
   basePath?: string;
+  /** @deprecated Use defaultHeaders and defaultQuery instead */
   baseOptions?: {
     headers?: Record<string, string>;
     params?: Record<string, string>;

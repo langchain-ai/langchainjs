@@ -16,6 +16,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { OpenAIChat } from "./openai-chat.js";
+import { wrapOpenAIEndpointError } from "../util/openai.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
@@ -317,7 +318,7 @@ export class OpenAI
         ? await (async () => {
             const choices: OpenAIClient.CompletionChoice[] = [];
             let response: Omit<OpenAIClient.Completion, "choices"> | undefined;
-            const stream = await this.streamingCompletionWithRetry(
+            const stream = await this.completionWithRetry(
               {
                 ...params,
                 stream: true,
@@ -420,7 +421,7 @@ export class OpenAI
       prompt: input,
       stream: true as const,
     };
-    const stream = await this.streamingCompletionWithRetry(params, options);
+    const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
       const choice = data.choices[0];
       const chunk = new GenerationChunk({
@@ -435,20 +436,6 @@ export class OpenAI
     }
   }
 
-  /** @ignore */
-  async streamingCompletionWithRetry(
-    request: OpenAIClient.CompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions
-  ): Promise<AsyncIterable<OpenAIClient.Completion>> {
-    const requestOptions = this._getClientOptions(options);
-    const fn: (
-      body: OpenAIClient.CompletionCreateParamsStreaming,
-      options?: OpenAICoreRequestOptions
-    ) => Promise<AsyncIterable<OpenAIClient.Completions.Completion>> =
-      this.client.completions.create.bind(this.client);
-    return this.caller.call(fn, request, requestOptions).then((res) => res);
-  }
-
   /**
    * Calls the OpenAI API with retry logic in case of failures.
    * @param request The request to send to the OpenAI API.
@@ -456,16 +443,36 @@ export class OpenAI
    * @returns The response from the OpenAI API.
    */
   async completionWithRetry(
+    request: OpenAIClient.CompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAIClient.Completion>>;
+
+  async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<OpenAIClient.Completions.Completion> {
+  ): Promise<OpenAIClient.Completions.Completion>;
+
+  async completionWithRetry(
+    request:
+      | OpenAIClient.CompletionCreateParamsStreaming
+      | OpenAIClient.CompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<
+    AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
+  > {
     const requestOptions = this._getClientOptions(options);
-    const fn: (
-      body: OpenAIClient.CompletionCreateParamsNonStreaming,
-      options?: OpenAICoreRequestOptions
-    ) => Promise<OpenAIClient.Completions.Completion> =
-      this.client.completions.create.bind(this.client);
-    return this.caller.call(fn, request, requestOptions).then((res) => res);
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.completions.create(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIEndpointError(e);
+        throw error;
+      }
+    });
   }
 
   /**

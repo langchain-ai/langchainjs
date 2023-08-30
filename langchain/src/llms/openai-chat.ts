@@ -12,6 +12,7 @@ import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseLLMParams, LLM } from "./base.js";
+import { wrapOpenAIEndpointError } from "../util/openai.js";
 
 export { AzureOpenAIInput, OpenAIChatInput };
 /**
@@ -302,7 +303,7 @@ export class OpenAIChat
       messages: this.formatMessages(prompt),
       stream: true as const,
     };
-    const stream = await this.streamingCompletionWithRetry(params, options);
+    const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
       const choice = data.choices[0];
       const { delta } = choice;
@@ -328,7 +329,7 @@ export class OpenAIChat
           let response:
             | OpenAIClient.Chat.Completions.ChatCompletion
             | undefined;
-          const stream = await this.streamingCompletionWithRetry(
+          const stream = await this.completionWithRetry(
             {
               ...params,
               messages: this.formatMessages(prompt),
@@ -397,37 +398,38 @@ export class OpenAIChat
    * @param options Optional configuration for the API call.
    * @returns The response from the OpenAI API.
    */
-  async streamingCompletionWithRetry(
+  async completionWithRetry(
     request: OpenAIClient.Chat.CompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>> {
-    const requestOptions = this._getClientOptions(options);
-    const fn: (
-      body: OpenAIClient.Chat.CompletionCreateParamsStreaming,
-      options?: OpenAICoreRequestOptions
-    ) => Promise<
-      AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
-    > = this.client.chat.completions.create.bind(this.client);
-    return this.caller.call(fn, request, requestOptions).then((res) => res);
-  }
+  ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
-  /**
-   * Calls the OpenAI API with retry logic in case of failures.
-   * @param request The request to send to the OpenAI API.
-   * @param options Optional configuration for the API call.
-   * @returns The response from the OpenAI API.
-   */
   async completionWithRetry(
     request: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
-  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion> {
+  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
+
+  async completionWithRetry(
+    request:
+      | OpenAIClient.Chat.CompletionCreateParamsStreaming
+      | OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<
+    | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
+    | OpenAIClient.Chat.Completions.ChatCompletion
+  > {
     const requestOptions = this._getClientOptions(options);
-    const fn: (
-      body: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
-      options?: OpenAICoreRequestOptions
-    ) => Promise<OpenAIClient.Chat.Completions.ChatCompletion> =
-      this.client.chat.completions.create.bind(this.client);
-    return this.caller.call(fn, request, requestOptions).then((res) => res);
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.chat.completions.create(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIEndpointError(e);
+        throw error;
+      }
+    });
   }
 
   /** @ignore */
