@@ -2,6 +2,7 @@ import { HumanMessage } from "langchain/schema";
 import { ChatMinimax } from "langchain/chat_models/minimax";
 import * as dotenv from "dotenv";
 import process from "process";
+import { NewTokenIndices } from "langchain/callbacks";
 
 dotenv.config();
 
@@ -64,3 +65,47 @@ AIChatMessage {
   }
 }
 */
+
+/*
+
+const abab5_5 = new ChatMinimax({
+  streaming: true,
+  botSetting: [
+    {
+      bot_name: "MM Assistant",
+      content: "MM Assistant is an AI Assistant developed by minimax.",
+    },
+  ]
+});
+const messages = [new HumanMessage({ content: "Hello" })];
+
+let res = await abab5_5.call(messages, {
+  callbacks: [
+    {
+      handleLLMNewToken(token: string): Promise<void> | void {
+        console.log("New token: ", token);
+      },
+    },
+  ],
+});
+
+console.log(res);
+
+ */
+
+/*
+New token:  Hi there! I'm an AI language
+New token:   model, designed to help with various tasks and provide information. If you have any questions or need assistance
+New token:  , feel free to ask!
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: {
+    content: "Hi there! I'm an AI language model, designed to help with various tasks and provide information. If you have any questions or need assistance, feel free to ask!",
+    additional_kwargs: { function_call: undefined }
+  },
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: "Hi there! I'm an AI language model, designed to help with various tasks and provide information. If you have any questions or need assistance, feel free to ask!",
+  name: undefined,
+  additional_kwargs: { function_call: undefined }
+}
+ */

@@ -24,13 +24,8 @@ export interface MinimaxEmbeddingsParams extends EmbeddingsParams {
   minimaxApiKey?: string;
 
   /**
-   * Timeout to use when making requests to Minimax.
-   */
-  timeout?: number;
-
-  /**
    * The maximum number of documents to embed in a single request. This is
-   * limited by the Minimax API to a maximum of 2048.
+   * limited by the Minimax API to a maximum of 4096.
    */
   batchSize?: number;
 
@@ -39,6 +34,16 @@ export interface MinimaxEmbeddingsParams extends EmbeddingsParams {
    * Minimax, but may not be suitable for all use cases.
    */
   stripNewLines?: boolean;
+
+  /**
+   *  The target scenario after generating the vector.
+   *  When using embeddings, the vector of the target content is first generated through the db and stored in the vector database,
+   *  and then the vector of the retrieval text is generated through the query.
+   *  Note: For the parameters of the partial algorithm, we adopted a separate algorithm plan for query and db.
+   *  Therefore, for a paragraph of text, if it is to be used as a retrieval text, it should use the db,
+   *  and if it is used as a retrieval text, it should use the query.
+   */
+  type?: "db" | "query";
 }
 
 export interface CreateMinimaxEmbeddingRequest {
@@ -86,7 +91,7 @@ export class MinimaxEmbeddings
 
   minimaxApiKey?: string;
 
-  timeout?: number;
+  type: "db" | "query" = "db";
 
   apiUrl: string;
 
@@ -116,9 +121,9 @@ export class MinimaxEmbeddings
 
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
+    this.type = fieldsWithDefaults?.type ?? this.type;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
-    this.timeout = fieldsWithDefaults?.timeout;
     this.apiUrl = `${this.basePath}/embeddings`;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;
     this.headers = fields?.configuration?.headers ?? this.headers;
@@ -141,7 +146,7 @@ export class MinimaxEmbeddings
       this.embeddingWithRetry({
         model: this.modelName,
         texts: batch,
-        type: "db",
+        type: this.type,
       })
     );
     const batchResponses = await Promise.all(batchRequests);
@@ -167,7 +172,7 @@ export class MinimaxEmbeddings
     const { vectors } = await this.embeddingWithRetry({
       model: this.modelName,
       texts: [this.stripNewLines ? text.replace(/\n/g, " ") : text],
-      type: "db",
+      type: this.type,
     });
     return vectors[0];
   }

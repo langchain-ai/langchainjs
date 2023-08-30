@@ -315,9 +315,9 @@ export class ChatMinimax
     };
   }
 
-  get lc_aliases(): { [key: string]: string } | undefined {
-    return undefined;
-  }
+  // get lc_aliases(): { [key: string]: string } | undefined {
+  //   return undefined;
+  // }
 
   lc_serializable = true;
 
@@ -549,51 +549,37 @@ export class ChatMinimax
                 return;
               }
 
-              const message = data as {
-                id: string;
-                object: string;
-                created: number;
-                sentence_id?: number;
-                is_end: boolean;
-                result: string;
-                need_clear_history: boolean;
-                usage: TokenUsage;
-              };
-
+              const message = data as ChatCompletionResponse;
               // on the first message set the response properties
-              if (!response) {
-                response = {
-                  base_resp: {},
-                  choices: [],
-                  input_sensitive_type: 0,
-                  model: "",
-                  output_sensitive: false,
-                  output_sensitive_type: 0,
-                  id: message.id,
-                  created: message.created,
-                  reply: message.result,
-                  input_sensitive: message.need_clear_history,
-                  usage: message.usage,
-                };
-              } else {
-                response.reply += message.result;
-                response.created = message.created;
-                response.input_sensitive = message.need_clear_history;
-                response.usage = message.usage;
-              }
 
               // TODO this should pass part.index to the callback
               // when that's supported there
               // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(message.result ?? "");
 
-              if (message.is_end) {
-                if (resolved || rejected) {
-                  return;
+              if (!message.choices[0].finish_reason) {
+                // the last stream message
+                let streamText;
+                if (this.proVersion) {
+                  const messages = message.choices[0].messages ?? [];
+                  streamText = messages[0].text;
+                } else {
+                  streamText = message.choices[0].delta;
                 }
-                resolved = true;
-                resolve(response);
+
+                void runManager?.handleLLMNewToken(streamText ?? "");
+                return;
               }
+
+              response = message;
+              if (!this.proVersion) {
+                response.choices[0].text = message.reply;
+              }
+
+              if (resolved || rejected) {
+                return;
+              }
+              resolved = true;
+              resolve(response);
             }
           ).catch((error) => {
             if (!rejected) {
@@ -617,8 +603,8 @@ export class ChatMinimax
       tokenUsage.total_tokens = (tokenUsage.total_tokens ?? 0) + totalTokens;
     }
 
-    if (data.base_resp.status_code != 0) {
-      throw new Error("Minimax API error: " + data.base_resp.status_msg);
+    if (data.base_resp?.status_code != 0) {
+      throw new Error("Minimax API error: " + data.base_resp?.status_msg);
     }
     const generations: ChatGeneration[] = [];
 
@@ -843,25 +829,25 @@ export interface ChatCompletionResponseChoicesPro {
 }
 
 interface ChatCompletionResponseChoices {
-  text: string;
-  index: number;
-  finish_reason: string;
+  delta?: string;
+  text?: string;
+  index?: number;
+  finish_reason?: string;
 }
 
 /**
  * Interface representing a response from a chat completion.
  */
 interface ChatCompletionResponse {
-  id: string;
   model: string;
   created: number;
   reply: string;
-  input_sensitive: boolean;
-  input_sensitive_type: number;
-  output_sensitive: boolean;
-  output_sensitive_type: number;
-  usage: TokenUsage;
-  base_resp: BaseResp;
+  input_sensitive?: boolean;
+  input_sensitive_type?: number;
+  output_sensitive?: boolean;
+  output_sensitive_type?: number;
+  usage?: TokenUsage;
+  base_resp?: BaseResp;
   choices: Array<
     ChatCompletionResponseChoicesPro & ChatCompletionResponseChoices
   >;
