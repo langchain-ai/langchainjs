@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.135",
+  "version": "0.0.137",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -145,6 +145,9 @@
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/llama_cpp.cjs",
+    "llms/llama_cpp.js",
+    "llms/llama_cpp.d.ts",
     "llms/writer.cjs",
     "llms/writer.js",
     "llms/writer.d.ts",
@@ -448,6 +451,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/multi_vector.cjs",
+    "retrievers/multi_vector.js",
+    "retrievers/multi_vector.d.ts",
     "retrievers/parent_document.cjs",
     "retrievers/parent_document.js",
     "retrievers/parent_document.d.ts",
@@ -687,6 +693,7 @@
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "node-llama-cpp": "^2.1.2",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
@@ -772,6 +779,7 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
@@ -962,6 +970,9 @@
       "optional": true
     },
     "mysql2": {
+      "optional": true
+    },
+    "node-llama-cpp": {
       "optional": true
     },
     "notion-to-md": {
@@ -1296,6 +1307,11 @@
       "types": "./llms/bedrock.d.ts",
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
+    },
+    "./llms/llama_cpp": {
+      "types": "./llms/llama_cpp.d.ts",
+      "import": "./llms/llama_cpp.js",
+      "require": "./llms/llama_cpp.cjs"
     },
     "./llms/writer": {
       "types": "./llms/writer.d.ts",
@@ -1809,6 +1825,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/multi_vector": {
+      "types": "./retrievers/multi_vector.d.ts",
+      "import": "./retrievers/multi_vector.js",
+      "require": "./retrievers/multi_vector.cjs"
     },
     "./retrievers/parent_document": {
       "types": "./retrievers/parent_document.d.ts",

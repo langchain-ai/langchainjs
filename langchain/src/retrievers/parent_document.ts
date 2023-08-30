@@ -20,6 +20,7 @@ export interface ParentDocumentRetrieverFields extends BaseRetrieverInput {
   parentK?: number;
 }
 
+// TODO: Change this to subclass MultiVectorRetriever
 /**
  * A type of document retriever that splits input documents into smaller chunks
  * while separately storing and preserving the original documents.

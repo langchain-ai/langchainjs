@@ -133,6 +133,9 @@ llms/sagemaker_endpoint.d.ts
 llms/bedrock.cjs
 llms/bedrock.js
 llms/bedrock.d.ts
+llms/llama_cpp.cjs
+llms/llama_cpp.js
+llms/llama_cpp.d.ts
 llms/writer.cjs
 llms/writer.js
 llms/writer.d.ts
@@ -436,6 +439,9 @@ retrievers/contextual_compression.d.ts
 retrievers/document_compressors.cjs
 retrievers/document_compressors.js
 retrievers/document_compressors.d.ts
+retrievers/multi_vector.cjs
+retrievers/multi_vector.js
+retrievers/multi_vector.d.ts
 retrievers/parent_document.cjs
 retrievers/parent_document.js
 retrievers/parent_document.d.ts

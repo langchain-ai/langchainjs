@@ -8,7 +8,7 @@ describe("RecursiveUrlLoader", () => {
   test("loading valid url", async () => {
     const url = "https://js.langchain.com/docs/get_started/introduction";
 
-    const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string;) => string;
+    const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string) => string;
 
     const loader = new RecursiveUrlLoader(url, {
       extractor: compiledConvert,
@@ -17,7 +17,23 @@ describe("RecursiveUrlLoader", () => {
     });
 
     const docs = await loader.load();
-    expect(docs.length).toBeGreaterThan(0);
+    expect(docs.length).toBeGreaterThan(1);
+    expect(docs[0].pageContent).toContain("LangChain");
+  });
+
+  test("loading single page", async () => {
+    const url = "https://js.langchain.com/docs/get_started/introduction";
+
+    const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string) => string;
+
+    const loader = new RecursiveUrlLoader(url, {
+      extractor: compiledConvert,
+      maxDepth: 0,
+      excludeDirs: ["https://js.langchain.com/docs/api/"],
+    });
+
+    const docs = await loader.load();
+    expect(docs.length).toBe(1);
     expect(docs[0].pageContent).toContain("LangChain");
   });
 

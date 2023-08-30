@@ -159,10 +159,15 @@ export class RedisVectorStore extends VectorStore {
     // check if the index exists and create it if it doesn't
     await this.createIndex(vectors[0].length);
 
+    const info = await this.redisClient.ft.info(this.indexName);
+    const lastKeyCount = parseInt(info.numDocs, 10) || 0;
     const multi = this.redisClient.multi();
 
     vectors.map(async (vector, idx) => {
-      const key = keys && keys.length ? keys[idx] : `${this.keyPrefix}${idx}`;
+      const key =
+        keys && keys.length
+          ? keys[idx]
+          : `${this.keyPrefix}${idx + lastKeyCount}`;
       const metadata =
         documents[idx] && documents[idx].metadata
           ? documents[idx].metadata
@@ -284,6 +289,12 @@ export class RedisVectorStore extends VectorStore {
     try {
       await this.redisClient.ft.info(this.indexName);
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((err as any)?.message.includes("unknown command")) {
+        throw new Error(
+          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/redis#setup"
+        );
+      }
       // index doesn't exist
       return false;
     }
