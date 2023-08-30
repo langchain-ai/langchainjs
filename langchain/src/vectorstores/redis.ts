@@ -332,11 +332,13 @@ export class RedisVectorStore extends VectorStore {
 
   /**
    * Method for dropping an index from the RedisVectorStore.
+   * @param deleteDocuments Optional boolean indicating whether to drop the associated documents.
    * @returns A promise that resolves to a boolean indicating whether the index was dropped.
    */
-  async dropIndex(): Promise<boolean> {
+  async dropIndex(deleteDocuments?: boolean): Promise<boolean> {
     try {
-      await this.redisClient.ft.dropIndex(this.indexName);
+      const options = deleteDocuments ? { DD: deleteDocuments } : undefined;
+      await this.redisClient.ft.dropIndex(this.indexName, options);
 
       return true;
     } catch (err) {
