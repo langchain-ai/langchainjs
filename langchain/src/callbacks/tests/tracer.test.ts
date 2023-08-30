@@ -49,11 +49,11 @@ test("Test LLMRun", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     inputs: { prompts: ["test"] },
@@ -86,11 +86,11 @@ test("Test Chat Model Run", async () => {
       "events": [
         {
           "name": "start",
-          "time": 1620000000000,
+          "time": "2021-05-03T00:00:00.000Z",
         },
         {
           "name": "end",
-          "time": 1620000000000,
+          "time": "2021-05-03T00:00:00.000Z",
         },
       ],
       "execution_order": 1,
@@ -158,11 +158,11 @@ test("Test Chain Run", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     inputs: { foo: "bar" },
@@ -193,11 +193,11 @@ test("Test Tool Run", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     inputs: { input: "test" },
@@ -232,11 +232,11 @@ test("Test Retriever Run", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     inputs: { query: "bar" },
@@ -305,11 +305,11 @@ test("Test nested runs", async () => {
             events: [
               {
                 name: "start",
-                time: 1620000000000,
+                time: "2021-05-03T00:00:00.000Z",
               },
               {
                 name: "end",
-                time: 1620000000000,
+                time: "2021-05-03T00:00:00.000Z",
               },
             ],
             start_time: 1620000000000,
@@ -327,11 +327,11 @@ test("Test nested runs", async () => {
         events: [
           {
             name: "start",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
           {
             name: "end",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
         ],
         start_time: 1620000000000,
@@ -355,11 +355,11 @@ test("Test nested runs", async () => {
         events: [
           {
             name: "start",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
           {
             name: "end",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
         ],
         start_time: 1620000000000,
@@ -382,11 +382,11 @@ test("Test nested runs", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     name: "test",

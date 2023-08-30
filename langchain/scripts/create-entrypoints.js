@@ -59,6 +59,7 @@ const entrypoints = {
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   "llms/bedrock": "llms/bedrock",
+  "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
   // prompts
   prompts: "prompts/index",
@@ -180,6 +181,7 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
@@ -271,6 +273,7 @@ const requiresOptionalDependency = [
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "llms/bedrock",
+  "llms/llama_cpp",
   "llms/writer",
   "prompts/load",
   "vectorstores/analyticdb",

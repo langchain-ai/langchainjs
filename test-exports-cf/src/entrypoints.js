@@ -45,6 +45,7 @@ export * from "langchain/retrievers/remote";
 export * from "langchain/retrievers/databerry";
 export * from "langchain/retrievers/contextual_compression";
 export * from "langchain/retrievers/document_compressors";
+export * from "langchain/retrievers/multi_vector";
 export * from "langchain/retrievers/parent_document";
 export * from "langchain/retrievers/time_weighted";
 export * from "langchain/retrievers/document_compressors/chain_extract";

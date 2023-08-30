@@ -79,6 +79,9 @@ export interface OptionalImportMap {
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock.js")
     | Promise<typeof import("../llms/bedrock.js")>;
+  "langchain/llms/llama_cpp"?:
+    | typeof import("../llms/llama_cpp.js")
+    | Promise<typeof import("../llms/llama_cpp.js")>;
   "langchain/llms/writer"?:
     | typeof import("../llms/writer.js")
     | Promise<typeof import("../llms/writer.js")>;
