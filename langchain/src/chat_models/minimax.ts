@@ -113,7 +113,7 @@ export declare interface ConfigurationParameters {
  */
 declare interface MinimaxChatInputBase {
   /** Model name to use
-   * @default "abab5.5"
+   * @default "abab5.5-chat"
    */
   modelName: string;
 
