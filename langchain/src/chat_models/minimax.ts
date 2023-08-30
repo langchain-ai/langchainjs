@@ -507,7 +507,6 @@ export class ChatMinimax
       })
       ?.map((message) => {
         const sender_type = messageToMinimaxRole(message);
-        console.log("sender_type", sender_type);
         return {
           sender_type,
           text: message.content,
@@ -535,7 +534,6 @@ export class ChatMinimax
       ...(this.prefixMessages ?? []),
     ];
 
-    console.log("messagesMapped", messagesMapped);
     const data = params.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
           let response: ChatCompletionResponse;

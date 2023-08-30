@@ -192,7 +192,7 @@ export class MinimaxEmbeddings
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${  this.minimaxApiKey}`,
+          Authorization: `Bearer ${this.minimaxApiKey}`,
           ...this.headers,
         },
         body: JSON.stringify(request),
