@@ -36,4 +36,6 @@ const vectorStore = await RedisVectorStore.fromDocuments(
   }
 );
 
+await vectorStore.delete({ deleteAll: true });
+
 await client.disconnect();
