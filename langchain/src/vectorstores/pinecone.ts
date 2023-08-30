@@ -7,14 +7,12 @@ import { Document } from "../document.js";
 import { chunkArray } from "../util/chunk.js";
 import { AsyncCaller, type AsyncCallerParams } from "../util/async_caller.js";
 
+import { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch"
+
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
-type VectorOperationsApi = ReturnType<
-  import("@pinecone-database/pinecone").PineconeClient["Index"]
->;
-
-export interface PineconeLibArgs extends AsyncCallerParams {
+export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
   textKey?: string;
   namespace?: string;
@@ -246,13 +244,13 @@ export class PineconeStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig:
       | {
-          /**
-           * @deprecated Use pineconeIndex instead
-           */
-          pineconeClient: VectorOperationsApi;
-          textKey?: string;
-          namespace?: string | undefined;
-        }
+        /**
+         * @deprecated Use pineconeIndex instead
+         */
+        pineconeClient: VectorOperationsApi;
+        textKey?: string;
+        namespace?: string | undefined;
+      }
       | PineconeLibArgs
   ): Promise<PineconeStore> {
     const docs: Document[] = [];
