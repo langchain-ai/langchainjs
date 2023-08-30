@@ -157,6 +157,7 @@ const entrypoints = {
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
+  "chat_models/anthropicfunctions": "chat_models/anthropicfunctions",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
