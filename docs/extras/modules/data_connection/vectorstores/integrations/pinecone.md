@@ -17,7 +17,7 @@ npm install -S dotenv @pinecone-database/pinecone
 ## Index docs
 
 ```typescript
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import * as dotenv from "dotenv";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -25,11 +25,14 @@ import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 dotenv.config();
 
-const client = new PineconeClient();
-await client.init({
-  apiKey: process.env.PINECONE_API_KEY,
-  environment: process.env.PINECONE_ENVIRONMENT,
-});
+const env = process.env.PINECONE_ENVIRONMENT!
+const key = process.env.PINECONE_API_KEY!
+
+const client = await Pinecone.createClient({
+  apiKey: key,
+  environment: env,
+})
+
 const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
 
 const docs = [
@@ -60,7 +63,7 @@ await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
 ## Query docs
 
 ```typescript
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import * as dotenv from "dotenv";
 import { VectorDBQAChain } from "langchain/chains";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -69,11 +72,14 @@ import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 dotenv.config();
 
-const client = new PineconeClient();
-await client.init({
-  apiKey: process.env.PINECONE_API_KEY,
-  environment: process.env.PINECONE_ENVIRONMENT,
-});
+const env = process.env.PINECONE_ENVIRONMENT!
+const key = process.env.PINECONE_API_KEY!
+
+const client = await Pinecone.createClient({
+  apiKey: key,
+  environment: env,
+})
+
 const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
 
 const vectorStore = await PineconeStore.fromExistingIndex(
@@ -119,7 +125,7 @@ console.log(response);
 ## Delete docs
 
 ```typescript
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import * as dotenv from "dotenv";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -127,11 +133,14 @@ import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 dotenv.config();
 
-const client = new PineconeClient();
-await client.init({
-  apiKey: process.env.PINECONE_API_KEY,
-  environment: process.env.PINECONE_ENVIRONMENT,
-});
+const env = process.env.PINECONE_ENVIRONMENT!
+const key = process.env.PINECONE_API_KEY!
+
+const client = await Pinecone.createClient({
+  apiKey: key,
+  environment: env,
+})
+
 const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
 const embeddings = new OpenAIEmbeddings();
 const pineconeStore = new PineconeStore(embeddings, { pineconeIndex });

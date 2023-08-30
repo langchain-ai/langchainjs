@@ -652,7 +652,7 @@
     "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "0.1.6-dev.20230829000534",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",

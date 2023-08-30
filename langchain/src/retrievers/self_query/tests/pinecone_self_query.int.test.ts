@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "../../../document.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
@@ -106,11 +106,14 @@ test("Pinecone Store Self Query Retriever Test", async () => {
     );
   }
 
-  const client = new PineconeClient();
-  await client.init({
-    apiKey: process.env.PINECONE_API_KEY,
-    environment: process.env.PINECONE_ENVIRONMENT,
-  });
+  const env = process.env.PINECONE_ENVIRONMENT!
+  const key = process.env.PINECONE_API_KEY!
+
+  const client = await Pinecone.createClient({
+    apiKey: key,
+    environment: env,
+  })
+
   const index = client.Index(process.env.PINECONE_INDEX);
 
   const embeddings = new OpenAIEmbeddings();
@@ -253,11 +256,14 @@ test("Pinecone Store Self Query Retriever Test With Default Filter Or Merge Oper
     );
   }
 
-  const client = new PineconeClient();
-  await client.init({
-    apiKey: process.env.PINECONE_API_KEY,
-    environment: process.env.PINECONE_ENVIRONMENT,
-  });
+  const env = process.env.PINECONE_ENVIRONMENT!
+  const key = process.env.PINECONE_API_KEY!
+
+  const client = await Pinecone.createClient({
+    apiKey: key,
+    environment: env,
+  })
+
   const index = client.Index(process.env.PINECONE_INDEX);
 
   const embeddings = new OpenAIEmbeddings();
@@ -406,11 +412,14 @@ test("Pinecone Store Self Query Retriever Test With Default Filter And Merge Ope
     );
   }
 
-  const client = new PineconeClient();
-  await client.init({
-    apiKey: process.env.PINECONE_API_KEY,
-    environment: process.env.PINECONE_ENVIRONMENT,
-  });
+  const env = process.env.PINECONE_ENVIRONMENT!
+  const key = process.env.PINECONE_API_KEY!
+
+  const client = await Pinecone.createClient({
+    apiKey: key,
+    environment: env,
+  })
+
   const index = client.Index(process.env.PINECONE_INDEX);
 
   const embeddings = new OpenAIEmbeddings();

@@ -1,4 +1,4 @@
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
@@ -18,11 +18,14 @@ export const run = async () => {
     );
   }
 
-  const client = new PineconeClient();
-  await client.init({
-    apiKey: process.env.PINECONE_API_KEY,
-    environment: process.env.PINECONE_ENVIRONMENT,
-  });
+  const env = process.env.PINECONE_ENVIRONMENT!
+  const key = process.env.PINECONE_API_KEY!
+
+  const client = await Pinecone.createClient({
+    apiKey: key,
+    environment: env,
+  })
+
   const index = client.Index(process.env.PINECONE_INDEX);
 
   const vectorStore = await PineconeStore.fromTexts(

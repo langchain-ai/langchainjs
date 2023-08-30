@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { faker } from "@faker-js/faker";
-import { PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import * as uuid from "uuid";
 import { Document } from "../../document.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
@@ -12,12 +12,14 @@ describe("PineconeStore", () => {
   let pineconeStore: PineconeStore;
 
   beforeEach(async () => {
-    const client = new PineconeClient();
 
-    await client.init({
-      environment: process.env.PINECONE_ENVIRONMENT!,
-      apiKey: process.env.PINECONE_API_KEY!,
-    });
+    const env = process.env.PINECONE_ENVIRONMENT!
+    const key = process.env.PINECONE_API_KEY!
+
+    const client = await Pinecone.createClient({
+      apiKey: key,
+      environment: env,
+    })
 
     const embeddings = new OpenAIEmbeddings();
     const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);

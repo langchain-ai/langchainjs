@@ -5,6 +5,7 @@ import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { PineconeTranslator } from "langchain/retrievers/self_query/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 import { OpenAI } from "langchain/llms/openai";
 
@@ -96,11 +97,14 @@ if (
   );
 }
 
-const client = new PineconeClient();
-await client.init({
-  apiKey: process.env.PINECONE_API_KEY,
-  environment: process.env.PINECONE_ENVIRONMENT,
-});
+const env = process.env.PINECONE_ENVIRONMENT!
+const key = process.env.PINECONE_API_KEY!
+
+const client = await Pinecone.createClient({
+  apiKey: key,
+  environment: env,
+})
+
 const index = client.Index(process.env.PINECONE_INDEX);
 
 const embeddings = new OpenAIEmbeddings();
