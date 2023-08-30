@@ -59,6 +59,7 @@ const entrypoints = {
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   "llms/bedrock": "llms/bedrock",
+  "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
   // prompts
   prompts: "prompts/index",
@@ -270,6 +271,7 @@ const requiresOptionalDependency = [
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "llms/bedrock",
+  "llms/llama_cpp",
   "llms/writer",
   "prompts/load",
   "vectorstores/analyticdb",

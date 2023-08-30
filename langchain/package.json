@@ -145,6 +145,9 @@
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/llama_cpp.cjs",
+    "llms/llama_cpp.js",
+    "llms/llama_cpp.d.ts",
     "llms/writer.cjs",
     "llms/writer.js",
     "llms/writer.d.ts",
@@ -687,6 +690,7 @@
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "node-llama-cpp": "^2.1.2",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
@@ -772,6 +776,7 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
@@ -962,6 +967,9 @@
       "optional": true
     },
     "mysql2": {
+      "optional": true
+    },
+    "node-llama-cpp": {
       "optional": true
     },
     "notion-to-md": {
@@ -1296,6 +1304,11 @@
       "types": "./llms/bedrock.d.ts",
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
+    },
+    "./llms/llama_cpp": {
+      "types": "./llms/llama_cpp.d.ts",
+      "import": "./llms/llama_cpp.js",
+      "require": "./llms/llama_cpp.cjs"
     },
     "./llms/writer": {
       "types": "./llms/writer.d.ts",
