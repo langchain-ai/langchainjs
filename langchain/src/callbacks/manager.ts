@@ -945,12 +945,20 @@ export class TraceGroup {
       this.runManager = undefined;
     }
   }
+
   async end(output?: ChainValues): Promise<void> {
     if (this.runManager) {
       await this.runManager.handleChainEnd(output ?? {});
       this.runManager = undefined;
     }
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function _coerceToDict(value: any, defaultKey: string) {
+  return value && !Array.isArray(value) && typeof value === "object"
+    ? value
+    : { [defaultKey]: value };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -965,7 +973,7 @@ export async function traceAsGroup<T, A extends any[]>(
   const callbackManager = await traceGroup.start({ ...args });
   try {
     const result = await enclosedCode(callbackManager, ...args);
-    await traceGroup.end({ output: result });
+    await traceGroup.end(_coerceToDict(result, "output"));
     return result;
   } catch (err) {
     await traceGroup.error(err);
