@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 import { ZepMemory } from "langchain/memory/zep";
-import {randomUUID} from "crypto";
+import { randomUUID } from "crypto";
 
 const sessionId = randomUUID(); // This should be unique for each user or each user's session.
 const zepURL = "http://localhost:8000";
