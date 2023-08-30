@@ -16,34 +16,34 @@ import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 /**
  * Type representing the sender_type of a message in the Minimax chat model.
  */
-export type MessageRole = "BOT" | "USER" | "FUNCTION";
+export type MinimaxMessageRole = "BOT" | "USER" | "FUNCTION";
 
 /**
  * Interface representing a message in the Minimax chat model.
  */
-interface ChatCompletionRequestMessage {
-  sender_type: MessageRole;
+interface MinimaxChatCompletionRequestMessage {
+  sender_type: MinimaxMessageRole;
   sender_name?: string;
   text: string;
 }
 
-export interface ChatCompletionRequestFunctions {
+export interface MinimaxChatCompletionRequestFunctions {
   /**
    * The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
    * @type {string}
-   * @memberof ChatCompletionRequestFunctions
+   * @memberof MinimaxChatCompletionRequestFunctions
    */
   name: string;
   /**
    * The description of what the function does.
    * @type {string}
-   * @memberof ChatCompletionRequestFunctions
+   * @memberof MinimaxChatCompletionRequestFunctions
    */
   description?: string;
   /**
-   * The parameters the functions accepts, described as a JSON Schema object. See the [guide](/docs/guides/gpt/function-calling) for examples, and the [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for documentation about the format.
+   * The parameters the functions accepts, described as a JSON Schema object.
    * @type {{ [key: string]: any; }}
-   * @memberof ChatCompletionRequestFunctions
+   * @memberof MinimaxChatCompletionRequestFunctions
    */
   parameters?: { [key: string]: any };
 }
@@ -51,9 +51,9 @@ export interface ChatCompletionRequestFunctions {
 /**
  * Interface representing a request for a chat completion.
  */
-interface ChatCompletionRequest {
+interface MinimaxChatCompletionRequest {
   model: string;
-  messages: ChatCompletionRequestMessage[];
+  messages: MinimaxChatCompletionRequestMessage[];
   stream?: boolean;
   prompt?: string;
   temperature?: number;
@@ -66,12 +66,12 @@ interface ChatCompletionRequest {
   role_meta?: RoleMeta;
   bot_setting?: BotSetting[];
   reply_constraints?: ReplyConstraints;
-  sample_messages?: ChatCompletionRequestMessage[];
+  sample_messages?: MinimaxChatCompletionRequestMessage[];
   /**
    * A list of functions the model may generate JSON inputs for.
-   * @type {Array<ChatCompletionRequestFunctions>}
+   * @type {Array<MinimaxChatCompletionRequestFunctions>}
    */
-  functions?: Array<ChatCompletionRequestFunctions>;
+  functions?: Array<MinimaxChatCompletionRequestFunctions>;
   plugins?: string[];
 }
 
@@ -120,7 +120,7 @@ declare interface MinimaxChatInputBase {
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
 
-  prefixMessages?: ChatCompletionRequestMessage[];
+  prefixMessages?: MinimaxChatCompletionRequestMessage[];
 
   /**
    * API key to use when making requests. Defaults to the value of
@@ -240,7 +240,7 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
     console.warn(`Unknown message role: ${message.role}`);
   }
 
-  return message.role as MessageRole;
+  return message.role as MinimaxMessageRole;
 }
 
 /**
@@ -248,7 +248,7 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
  * @param message Base message to convert.
  * @returns The Minimax message sender_type.
  */
-function messageToMinimaxRole(message: BaseMessage): MessageRole {
+function messageToMinimaxRole(message: BaseMessage): MinimaxMessageRole {
   const type = message._getType();
   switch (type) {
     case "ai":
@@ -270,7 +270,7 @@ function messageToMinimaxRole(message: BaseMessage): MessageRole {
 }
 
 export interface ChatMinimaxCallOptions extends BaseLanguageModelCallOptions {
-  functions?: ChatCompletionRequestFunctions[];
+  functions?: MinimaxChatCompletionRequestFunctions[];
   tools?: StructuredTool[];
   defaultUserName?: string;
   defaultBotName?: string;
@@ -335,7 +335,7 @@ export class ChatMinimax
 
   defaultUserName?: string = "I";
 
-  prefixMessages?: ChatCompletionRequestMessage[];
+  prefixMessages?: MinimaxChatCompletionRequestMessage[];
 
   apiUrl: string;
 
@@ -446,7 +446,7 @@ export class ChatMinimax
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<ChatCompletionRequest, "messages"> {
+  ): Omit<MinimaxChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       stream: this.streaming,
@@ -491,7 +491,7 @@ export class ChatMinimax
   messageToMinimaxMessage(
     messages?: BaseMessage[],
     options?: this["ParsedCallOptions"]
-  ): ChatCompletionRequestMessage[] | undefined {
+  ): MinimaxChatCompletionRequestMessage[] | undefined {
     return messages
       ?.filter((message) => {
         return message._getType() !== "system";
@@ -520,7 +520,7 @@ export class ChatMinimax
     this.botSettingFallback(options, messages);
 
     const params = this.invocationParams(options);
-    const messagesMapped: ChatCompletionRequestMessage[] = [
+    const messagesMapped: MinimaxChatCompletionRequestMessage[] = [
       ...(this.messageToMinimaxMessage(messages, options) ?? []),
       ...(this.prefixMessages ?? []),
     ];
@@ -643,7 +643,7 @@ export class ChatMinimax
 
   /** @ignore */
   async completionWithRetry(
-    request: ChatCompletionRequest,
+    request: MinimaxChatCompletionRequest,
     stream: boolean,
     signal?: AbortSignal,
     onmessage?: (event: MessageEvent) => void
@@ -769,7 +769,7 @@ function minimaxResponseToChatMessage(
  * Interface representing a message responsed in the Minimax chat model.
  */
 interface ChatCompletionResponseMessage {
-  sender_type: MessageRole;
+  sender_type: MinimaxMessageRole;
   sender_name?: string;
   text: string;
   function_call?: ChatCompletionResponseMessageFunctionCall;
