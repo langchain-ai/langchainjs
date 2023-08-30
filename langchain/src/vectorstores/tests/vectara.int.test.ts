@@ -76,7 +76,8 @@ describe("VectaraStore", () => {
   describe("fromTexts", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId:
+        process.env.VECTARA_CORPUS_ID?.split(",").map((id) => Number(id)) || 0,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -90,7 +91,8 @@ describe("VectaraStore", () => {
   describe("fromDocuments", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId:
+        process.env.VECTARA_CORPUS_ID?.split(",").map((id) => Number(id)) || 0,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -107,7 +109,9 @@ describe("VectaraStore", () => {
     beforeAll(async () => {
       store = new VectaraStore({
         customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-        corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+        corpusId:
+          process.env.VECTARA_CORPUS_ID?.split(",").map((id) => Number(id)) ||
+          0,
         apiKey: process.env.VECTARA_API_KEY || "",
       });
     });
