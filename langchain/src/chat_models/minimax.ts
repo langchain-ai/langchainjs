@@ -236,10 +236,15 @@ type MinimaxChatInput = MinimaxChatInputNormal & MinimaxChatInputPro;
  * @returns The custom sender_type of the chat message.
  */
 function extractGenericMessageCustomRole(message: ChatMessage) {
-  if (message.role !== "BOT" && message.role !== "USER") {
+  if (message.role !== "ai" && message.role !== "user") {
     console.warn(`Unknown message role: ${message.role}`);
   }
-
+  if (message.role === "ai") {
+    return "BOT" as MinimaxMessageRole;
+  }
+  if (message.role === "user") {
+    return "USER" as MinimaxMessageRole;
+  }
   return message.role as MinimaxMessageRole;
 }
 
@@ -494,9 +499,15 @@ export class ChatMinimax
     options?: this["ParsedCallOptions"]
   ): MinimaxChatCompletionRequestMessage[] | undefined {
     return messages
-      ?.filter((message) => message._getType() !== "system")
+      ?.filter((message) => {
+        if (ChatMessage.isInstance(message)) {
+          return message.role !== "system";
+        }
+        return message._getType() !== "system";
+      })
       ?.map((message) => {
         const sender_type = messageToMinimaxRole(message);
+        console.log("sender_type", sender_type);
         return {
           sender_type,
           text: message.content,
@@ -515,7 +526,7 @@ export class ChatMinimax
     options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const tokenUsage: TokenUsage = {};
+    const tokenUsage = { totalTokens: 0 };
     this.botSettingFallback(options, messages);
 
     const params = this.invocationParams(options);
@@ -524,6 +535,7 @@ export class ChatMinimax
       ...(this.prefixMessages ?? []),
     ];
 
+    console.log("messagesMapped", messagesMapped);
     const data = params.stream
       ? await new Promise<ChatCompletionResponse>((resolve, reject) => {
           let response: ChatCompletionResponse;
@@ -599,11 +611,11 @@ export class ChatMinimax
     const { total_tokens: totalTokens } = data.usage ?? {};
 
     if (totalTokens) {
-      tokenUsage.total_tokens = (tokenUsage.total_tokens ?? 0) + totalTokens;
+      tokenUsage.totalTokens = totalTokens;
     }
 
     if (data.base_resp?.status_code !== 0) {
-      throw new Error(`Minimax API error: ${  data.base_resp?.status_msg}`);
+      throw new Error(`Minimax API error: ${data.base_resp?.status_msg}`);
     }
     const generations: ChatGeneration[] = [];
 
@@ -636,7 +648,7 @@ export class ChatMinimax
     }
     return {
       generations,
-      llmOutput: data,
+      llmOutput: { tokenUsage },
     };
   }
 
@@ -654,7 +666,7 @@ export class ChatMinimax
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${  this.minimaxApiKey}`,
+          Authorization: `Bearer ${this.minimaxApiKey}`,
           ...this.headers,
         },
         body: JSON.stringify(request),
@@ -721,7 +733,12 @@ export class ChatMinimax
   ) {
     const botSettings = options?.botSetting ?? this.botSetting;
     if (!botSettings) {
-      const systemMessages = messages?.filter((message) => message._getType() === "system");
+      const systemMessages = messages?.filter((message) => {
+        if (ChatMessage.isInstance(message)) {
+          return message.role === "system";
+        }
+        return message._getType() === "system";
+      });
 
       // get the last system message
       if (!systemMessages?.length) {
