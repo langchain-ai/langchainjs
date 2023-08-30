@@ -11671,6 +11671,7 @@ __metadata:
     "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/js-yaml": ^4
+    "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     "@upstash/redis": ^1.20.6
@@ -11700,6 +11701,7 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ^5.0.0
     typesense: ^1.5.3
+    uuid: ^9.0.0
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.0.0
     zod: ^3.21.4
