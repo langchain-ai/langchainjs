@@ -400,6 +400,9 @@
     "chat_models/minimax.cjs",
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
+    "chat_models/anthropicfunctions.cjs",
+    "chat_models/anthropicfunctions.js",
+    "chat_models/anthropicfunctions.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -1749,6 +1752,11 @@
       "types": "./chat_models/minimax.d.ts",
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
+    },
+    "./chat_models/anthropicfunctions": {
+      "types": "./chat_models/anthropicfunctions.d.ts",
+      "import": "./chat_models/anthropicfunctions.js",
+      "require": "./chat_models/anthropicfunctions.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",

@@ -1,4 +1,8 @@
 import { type Tiktoken } from "js-tiktoken/lite";
+import {
+  ChatCompletionFunctions,
+  CreateChatCompletionRequestFunctionCall,
+} from "openai";
 import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseCallbackConfig,
@@ -11,6 +15,7 @@ import { encodingForModel } from "../util/tiktoken.js";
 import { Runnable, RunnableConfig } from "../schema/runnable.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
+import { StructuredTool } from "../tools/index.js";
 
 const getVerbosity = () => false;
 
@@ -97,6 +102,15 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
+}
+
+/**
+ *  for Model that supports function calling.
+ */
+export interface FunctionCallOptions extends BaseLanguageModelCallOptions {
+  function_call?: CreateChatCompletionRequestFunctionCall;
+  functions?: ChatCompletionFunctions[];
+  tools?: StructuredTool[];
 }
 
 export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];

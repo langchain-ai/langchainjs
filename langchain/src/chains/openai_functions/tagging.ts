@@ -2,13 +2,14 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
-import { ChatOpenAI } from "../../chat_models/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   FunctionParameters,
   JsonOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain, LLMChainInput } from "../llm_chain.js";
+import { FunctionCallOptions } from "../../base_language/index.js";
+import { BaseChatModel } from "../../chat_models/index.js";
 
 /**
  * Type representing the options for creating a tagging chain.
@@ -50,7 +51,7 @@ Passage:
  */
 export function createTaggingChain(
   schema: FunctionParameters,
-  llm: ChatOpenAI,
+  llm: BaseChatModel<FunctionCallOptions>,
   options: TaggingChainOptions = {}
 ) {
   const { prompt = PromptTemplate.fromTemplate(TAGGING_TEMPLATE), ...rest } =
@@ -79,7 +80,7 @@ export function createTaggingChain(
 export function createTaggingChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodObject<any, any, any, any>,
-  llm: ChatOpenAI,
+  llm: BaseChatModel<FunctionCallOptions>,
   options?: TaggingChainOptions
 ) {
   return createTaggingChain(

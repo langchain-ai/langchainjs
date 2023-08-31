@@ -1,5 +1,4 @@
 import {
-  ChatCompletionFunctions,
   ChatCompletionRequestMessage,
   ChatCompletionRequestMessageFunctionCall,
   ChatCompletionResponseMessage,
@@ -7,7 +6,6 @@ import {
   Configuration,
   ConfigurationParameters,
   CreateChatCompletionRequest,
-  CreateChatCompletionRequestFunctionCall,
   CreateChatCompletionResponse,
   OpenAIApi,
 } from "openai";
@@ -28,7 +26,6 @@ import {
   SystemMessage,
   SystemMessageChunk,
 } from "../schema/index.js";
-import { StructuredTool } from "../tools/base.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 import {
   AzureOpenAIInput,
@@ -42,6 +39,7 @@ import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { readableStreamToAsyncIterable } from "../util/stream.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { FunctionCallOptions } from "../base_language/index.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -140,10 +138,7 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-export interface ChatOpenAICallOptions extends OpenAICallOptions {
-  function_call?: CreateChatCompletionRequestFunctionCall;
-  functions?: ChatCompletionFunctions[];
-  tools?: StructuredTool[];
+export interface ChatOpenAICallOptions extends OpenAICallOptions,FunctionCallOptions {
   promptIndex?: number;
 }
 

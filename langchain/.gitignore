@@ -388,6 +388,9 @@ chat_models/ollama.d.ts
 chat_models/minimax.cjs
 chat_models/minimax.js
 chat_models/minimax.d.ts
+chat_models/anthropicfunctions.cjs
+chat_models/anthropicfunctions.js
+chat_models/anthropicfunctions.d.ts
 schema.cjs
 schema.js
 schema.d.ts

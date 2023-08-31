@@ -1,15 +1,11 @@
-import {
-  ChatCompletionFunctions,
-  CreateChatCompletionRequestFunctionCall,
-} from "openai";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { AIMessage, BaseMessage, ChatResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { AnthropicInput, ChatAnthropic } from "./anthropic.js";
-import { StructuredTool } from "../tools/index.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { FunctionCallOptions } from "../base_language/index.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import { SystemMessagePromptTemplate } from "../prompts/index.js";
+import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 
 const prompt = `In addition to responding, you can use tools. 
 You have access to the following tools.
@@ -34,17 +30,11 @@ else:
   You will get back a response in the normal format without xml form. 
 `;
 
-export interface ChatOpenAICallOptions extends BaseLanguageModelCallOptions {
-  function_call?: CreateChatCompletionRequestFunctionCall;
-  functions?: ChatCompletionFunctions[];
-  tools?: StructuredTool[];
-}
-
 /**
  * Wrapper around Minimax large language models that use the Chat endpoint.
  *
  */
-export class ChatAnthropicFunctions extends BaseChatModel<ChatOpenAICallOptions> {
+export class ChatAnthropicFunctions extends BaseChatModel<FunctionCallOptions> {
   model: ChatAnthropic;
 
   functionEnabled: boolean;
@@ -77,6 +67,16 @@ export class ChatAnthropicFunctions extends BaseChatModel<ChatOpenAICallOptions>
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const newOptions = { ...options };
+
+    // convert tools to functions if functions not provided
+    if (
+      !newOptions.functions &&
+      newOptions.tools &&
+      newOptions.tools.length > 0
+    ) {
+      newOptions.functions = newOptions.tools.map(formatToOpenAIFunction);
+    }
+
     if (newOptions.functions && newOptions.functions.length > 0) {
       this.functionEnabled = true;
 
@@ -89,13 +89,12 @@ export class ChatAnthropicFunctions extends BaseChatModel<ChatOpenAICallOptions>
       if (newOptions.function_call) {
         // if options.function_call is string , this.function_call = options.function_call
         // else if options.function_call is object , this.function_call = options.function_call.name
-        let function_call: CreateChatCompletionRequestFunctionCall = "auto";
+        let function_call = "auto";
         if (typeof newOptions.function_call === "string") {
           function_call = newOptions.function_call;
         } else if (typeof newOptions.function_call === "object") {
           function_call = newOptions.function_call.name;
         }
-
 
         if (function_call === "none") {
           newOptions.functions = [];

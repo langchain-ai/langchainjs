@@ -35,6 +35,7 @@ export * from "langchain/chat_models/anthropic";
 export * from "langchain/chat_models/baiduwenxin";
 export * from "langchain/chat_models/ollama";
 export * from "langchain/chat_models/minimax";
+export * from "langchain/chat_models/anthropicfunctions";
 export * from "langchain/schema";
 export * from "langchain/schema/output_parser";
 export * from "langchain/schema/query_constructor";

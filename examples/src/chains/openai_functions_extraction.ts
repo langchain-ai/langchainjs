@@ -9,6 +9,7 @@ const zodSchema = z.object({
   "dog-name": z.string().optional(),
   "dog-breed": z.string().optional(),
 });
+
 const chatModel = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-0613",
   temperature: 0,
