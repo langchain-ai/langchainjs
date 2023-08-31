@@ -14965,7 +14965,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.3
-    langsmith: ~0.0.26
+    langsmith: ~0.0.28
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -15265,9 +15265,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:~0.0.26":
-  version: 0.0.26
-  resolution: "langsmith@npm:0.0.26"
+"langsmith@npm:~0.0.28":
+  version: 0.0.28
+  resolution: "langsmith@npm:0.0.28"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -15276,7 +15276,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 5b155ae09e6c0b09bdef25a2af93728bf994944d7a487a3943b69a0aa74a51ee3758cf145acebae1b2687b363aa8cf5fd99e147588fb1b4152ecb0e69ba62baf
+  checksum: 0b7b93cacd2b62cdb6239fa92e2227654f35cfb09fe7804dd7e95489ef8cc574aecca52ea22a8cea5bf6a30ed07230d0f52b0730ee2e680585e9527ba1f8d4fb
   languageName: node
   linkType: hard
 
