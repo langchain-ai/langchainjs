@@ -48,7 +48,7 @@ You can now use the callback handler with LLM calls, chains and agents.
 ## Quick Start
 
 ```ts
-import { LLMonitorHandler } from "langchain/callbacks//llmonitor";
+import { LLMonitorHandler } from "langchain/callbacks/llmonitor";
 
 const model = new ChatOpenAI({
   callbacks: [new LLMonitorHandler()],
