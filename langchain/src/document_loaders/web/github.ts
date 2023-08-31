@@ -51,13 +51,37 @@ interface GetContentResponse {
 }
 
 /**
+ * An interface describing the submodules of a Git repository.
+ */
+interface SubmoduleInfo {
+  name: string;
+  path: string;
+  url: string;
+  ref: string;
+}
+
+/**
  * An interface that represents the parameters for the GithubRepoLoader
  * class. It extends the AsyncCallerParams interface and adds additional
  * properties specific to the GitHub repository loader.
  */
 export interface GithubRepoLoaderParams extends AsyncCallerParams {
+  /**
+   * The base URL of the GitHub instance.
+   * To be used when you are not targeting github.com, e.g. a GitHub Enterprise instance.
+   */
+  baseUrl?: string;
+  /**
+   * The API endpoint URL of the GitHub instance.
+   * To be used when you are not targeting github.com, e.g. a GitHub Enterprise instance.
+   */
+  apiUrl?: string;
   branch?: string;
   recursive?: boolean;
+  /**
+   * Set to true to recursively process submodules. Is only effective, when recursive=true.
+   */
+  processSubmodules?: boolean;
   unknown?: UnknownHandling;
   accessToken?: string;
   ignoreFiles?: (string | RegExp)[];
@@ -81,8 +105,11 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
  */
 export class GithubRepoLoader
   extends BaseDocumentLoader
-  implements GithubRepoLoaderParams
-{
+  implements GithubRepoLoaderParams {
+  public baseUrl: string;
+
+  public apiUrl: string;
+
   private readonly owner: string;
 
   private readonly repo: string;
@@ -95,6 +122,8 @@ export class GithubRepoLoader
 
   public recursive: boolean;
 
+  public processSubmodules: boolean;
+
   public unknown: UnknownHandling;
 
   public accessToken?: string;
@@ -105,14 +134,25 @@ export class GithubRepoLoader
 
   public verbose?: boolean;
 
+  public maxConcurrency?: number;
+
+  public maxRetries?: number;
+
   protected caller: AsyncCaller;
+
+  public ignorePaths?: string[];
+
+  private submoduleInfos: SubmoduleInfo[];
 
   constructor(
     githubUrl: string,
     {
       accessToken = getEnvironmentVariable("GITHUB_ACCESS_TOKEN"),
+      baseUrl = "https://github.com",
+      apiUrl = "https://api.github.com",
       branch = "main",
       recursive = true,
+      processSubmodules = false,
       unknown = UnknownHandling.Warn,
       ignoreFiles = [],
       ignorePaths,
@@ -123,27 +163,34 @@ export class GithubRepoLoader
     }: GithubRepoLoaderParams = {}
   ) {
     super();
+    this.baseUrl = baseUrl;
+    this.apiUrl = apiUrl;
     const { owner, repo, path } = this.extractOwnerAndRepoAndPath(githubUrl);
     this.owner = owner;
     this.repo = repo;
     this.initialPath = path;
     this.branch = branch;
     this.recursive = recursive;
+    // processing submodules without processing contents of other directories makes no sense
+    this.processSubmodules = processSubmodules && recursive;
     this.unknown = unknown;
     this.accessToken = accessToken;
     this.ignoreFiles = ignoreFiles;
     this.verbose = verbose;
+    this.maxConcurrency = maxConcurrency;
+    this.maxRetries = maxRetries;
     this.caller = new AsyncCaller({
       maxConcurrency,
       maxRetries,
-      ...rest,
+      ...rest
     });
+    this.ignorePaths = ignorePaths;
     if (ignorePaths) {
       this.ignore = ignore.default().add(ignorePaths);
     }
     if (this.accessToken) {
       this.headers = {
-        Authorization: `Bearer ${this.accessToken}`,
+        Authorization: `Bearer ${this.accessToken}`
       };
     }
   }
@@ -159,7 +206,7 @@ export class GithubRepoLoader
     path: string;
   } {
     const match = url.match(
-      /https:\/\/github.com\/([^/]+)\/([^/]+)(\/tree\/[^/]+\/(.+))?/i
+      new RegExp(this.baseUrl + "/([^/]+)/([^/]+)(/tree/[^/]+/(.+))?", "i")
     );
 
     if (!match) {
@@ -176,13 +223,146 @@ export class GithubRepoLoader
    * @returns A promise that resolves to an array of Document instances.
    */
   public async load(): Promise<Document[]> {
-    return (await this.processRepo()).map(
+    this.log(
+      `Loading documents from ${this.baseUrl}/${this.owner}/${this.repo}/${this.initialPath}...`
+    );
+    // process repository without submodules
+    const documents: Document[] = (await this.processRepo()).map(
       (fileResponse) =>
         new Document({
           pageContent: fileResponse.contents,
-          metadata: fileResponse.metadata,
+          metadata: fileResponse.metadata
         })
     );
+    if (this.processSubmodules) {
+      // process submodules
+      await this.getSubmoduleInfo();
+      for (const submoduleInfo of this.submoduleInfos) {
+        documents.push(...(await this.loadSubmodule(submoduleInfo)));
+      }
+    }
+    return documents;
+  }
+
+  /**
+   * Loads the information about Git submodules from the repository, if available.
+   */
+  private async getSubmoduleInfo(): Promise<void> {
+    this.log("Loading info about submodules...");
+    // we have to fetch the files of the root directory to get the download url of the .gitmodules file
+    // however, we cannot reuse the files retrieved in processRepo() as initialPath may be != ""
+    // so it may be that we end up fetching this file list twice
+    const repoFiles = await this.fetchRepoFiles("");
+    let gitmodulesFile = repoFiles.filter(
+      ({ name }) => name === ".gitmodules"
+    )?.[0];
+    if (gitmodulesFile) {
+      let gitmodulesContent = await this.fetchFileContent({
+        download_url: gitmodulesFile.download_url
+      } as GithubFile);
+      this.submoduleInfos = await this.parseGitmodules(gitmodulesContent);
+    } else {
+      this.submoduleInfos = [];
+    }
+    this.log(`Found ${this.submoduleInfos.length} submodules:`);
+    for (const submoduleInfo of this.submoduleInfos) {
+      this.log(JSON.stringify(submoduleInfo));
+    }
+  }
+
+  /**
+   * Parses the given content of a .gitmodules file. Furthermore, queries the current SHA ref of all submodules.
+   * Returns the submodule information as array.
+   * @param gitmodulesContent the content of a .gitmodules file
+   */
+  private async parseGitmodules(gitmodulesContent: string): Promise<SubmoduleInfo[]> {
+    // catches the initial line of submodule entries
+    const submodulePattern = new RegExp(
+      `\\[submodule "(.*?)"]\n((\\s+.*?\\s*=\\s*.*?\n)*)`,
+      "g"
+    );
+    // catches the properties of a submodule
+    const keyValuePattern = new RegExp(`\\s+(.*?)\\s*=\\s*(.*?)\\s`, "g");
+
+    const submoduleInfos = [];
+    for (const [, name, propertyLines] of gitmodulesContent.matchAll(
+      submodulePattern
+    )) {
+      if (!name || !propertyLines) {
+        throw new Error("Could not parse submodule entry");
+      }
+      const submodulePropertyLines = propertyLines.matchAll(keyValuePattern);
+      let path = undefined;
+      let url = undefined;
+      for (const [, key, value] of submodulePropertyLines) {
+        if (!key || !value) {
+          throw new Error(
+            `Could not parse key/value pairs for submodule ${name}`
+          );
+        }
+        switch (key) {
+          case "path":
+            path = value;
+            break;
+          case "url":
+            url = value;
+            if (url.endsWith(".git")) {
+              url = url.substring(0, url.length - 4);
+            }
+            break;
+          default:
+          // ignoring unused keys
+        }
+      }
+      if (!path || !url) {
+        throw new Error(`Missing properties for submodule ${name}`);
+      }
+      // fetch the current ref of the submodule
+      const files = await this.fetchRepoFiles(path);
+      const submoduleInfo: SubmoduleInfo = {
+        name: name,
+        path: path,
+        url: url,
+        ref: files[0].sha
+      };
+      submoduleInfos.push(submoduleInfo);
+    }
+    return submoduleInfos;
+  }
+
+  /**
+   * Loads the documents of the given submodule. Uses the same parameters as for the current repository.
+   * External submodules, i.e. submodules pointing to another GitHub instance, are ignored.
+   * @param submoduleInfo the info about the submodule to be loaded
+   */
+  private async loadSubmodule(
+    submoduleInfo: SubmoduleInfo
+  ): Promise<Document[]> {
+    if (!submoduleInfo.url.startsWith(this.baseUrl)) {
+      this.log(`Ignoring external submodule ${submoduleInfo.url}.`);
+      return [];
+    } else if (!submoduleInfo.path.startsWith(this.initialPath)) {
+      this.log(
+        `Ignoring submodule ${submoduleInfo.url}, as it is not on initial path.`
+      );
+      return [];
+    } else {
+      this.log(`Accessing submodule ${submoduleInfo.name} (${submoduleInfo.url})...`);
+      return new GithubRepoLoader(submoduleInfo.url, {
+        accessToken: this.accessToken,
+        apiUrl: this.apiUrl,
+        baseUrl: this.baseUrl,
+        branch: submoduleInfo.ref,
+        recursive: this.recursive,
+        processSubmodules: this.processSubmodules,
+        unknown: this.unknown,
+        ignoreFiles: this.ignoreFiles,
+        ignorePaths: this.ignorePaths,
+        verbose: this.verbose,
+        maxConcurrency: this.maxConcurrency,
+        maxRetries: this.maxRetries
+      }).load();
+    }
   }
 
   /**
@@ -228,7 +408,7 @@ export class GithubRepoLoader
     });
     return {
       contents: fileContent || "",
-      metadata: { source: file.path },
+      metadata: { source: file.path }
     };
   }
 
@@ -245,22 +425,23 @@ export class GithubRepoLoader
     >[] = [];
 
     for (const file of files) {
-      if (!this.shouldIgnore(file.path, file.type)) {
-        if (file.type !== "dir") {
-          try {
-            currentDirectoryFilePromises.push(
-              this.fetchFileContentWrapper(file)
-            );
-          } catch (e) {
-            this.handleError(
-              `Failed to fetch file content: ${file.path}, ${e}`
-            );
-          }
-        } else if (this.recursive) {
-          currentDirectoryDirectoryPromises.push(
-            this.processDirectory(file.path)
-          );
+      if (this.shouldIgnore(file.path, file.type)) {
+        continue;
+      }
+      if (file.type === "file" && file.size === 0) {
+        // this is a submodule. ignoring for the moment. submodule processing is done separately
+        continue;
+      }
+      if (file.type !== "dir") {
+        try {
+          currentDirectoryFilePromises.push(this.fetchFileContentWrapper(file));
+        } catch (e) {
+          this.handleError(`Failed to fetch file content: ${file.path}, ${e}`);
         }
+      } else if (this.recursive) {
+        currentDirectoryDirectoryPromises.push(
+          this.processDirectory(file.path)
+        );
       }
     }
 
@@ -309,15 +490,14 @@ export class GithubRepoLoader
 
   /**
    * Fetches the files from a GitHub repository.
+   * If the path denotes a single file, the resulting array contains only one element.
    * @param path The path of the repository to fetch the files from.
    * @returns A promise that resolves to an array of GithubFile instances.
    */
   private async fetchRepoFiles(path: string): Promise<GithubFile[]> {
-    const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
+    const url = `${this.apiUrl}/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
     return this.caller.call(async () => {
-      if (this.verbose) {
-        console.log("Fetching", url);
-      }
+      this.log(`Fetching ${url}`);
       const response = await fetch(url, { headers: this.headers });
       const data = await response.json();
       if (!response.ok) {
@@ -328,11 +508,12 @@ export class GithubRepoLoader
         );
       }
 
-      if (!Array.isArray(data)) {
-        throw new Error("Unable to fetch repository files.");
+      if (Array.isArray(data)) {
+        return data as GithubFile[];
       }
-
-      return data as GithubFile[];
+      else {
+        return [data as GithubFile];
+      }
     });
   }
 
@@ -343,11 +524,9 @@ export class GithubRepoLoader
    */
   private async fetchFileContent(file: GithubFile): Promise<string> {
     return this.caller.call(async () => {
-      if (this.verbose) {
-        console.log("Fetching", file.download_url);
-      }
+      this.log(`Fetching ${file.download_url}`);
       const response = await fetch(file.download_url, {
-        headers: this.headers,
+        headers: this.headers
       });
       return response.text();
     });
@@ -369,6 +548,16 @@ export class GithubRepoLoader
         throw new Error(message);
       default:
         throw new Error(`Unknown unknown handling: ${this.unknown}`);
+    }
+  }
+
+  /**
+   * Logs the given message to the console, if parameter 'verbose' is set to true.
+   * @param message the message to be logged.
+   */
+  private log(message: string): void {
+    if (this.verbose) {
+      console.log(message);
     }
   }
 }
