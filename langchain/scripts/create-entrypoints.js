@@ -43,6 +43,7 @@ const entrypoints = {
   "embeddings/hf": "embeddings/hf",
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
+  "embeddings/minimax": "embeddings/minimax",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -156,6 +157,7 @@ const entrypoints = {
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
+  "chat_models/minimax": "chat_models/minimax",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",

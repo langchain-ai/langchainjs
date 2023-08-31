@@ -377,6 +377,8 @@ export interface SecretMap {
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
+  MINIMAX_API_KEY?: string;
+  MINIMAX_GROUP_ID?: string;
   OPENAI_API_KEY?: string;
   OPENAI_ORGANIZATION?: string;
   PLANETSCALE_DATABASE_URL?: string;

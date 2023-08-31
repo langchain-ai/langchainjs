@@ -1,4 +1,9 @@
-import { DocumentCollection, IDocument, ZepClient } from "@getzep/zep-js";
+import {
+  DocumentCollection,
+  IDocument,
+  NotFoundError,
+  ZepClient,
+} from "@getzep/zep-js";
 
 import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -96,7 +101,8 @@ export class ZepVectorStore extends VectorStore {
     } catch (err) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (err instanceof Error) {
-        if (err.name === "NotFoundError") {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (err instanceof NotFoundError || err.name === "NotFoundError") {
           await this.createCollection(args);
         } else {
           throw err;

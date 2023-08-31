@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.137",
+  "version": "0.0.138",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -100,6 +100,9 @@
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
+    "embeddings/minimax.cjs",
+    "embeddings/minimax.js",
+    "embeddings/minimax.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -394,6 +397,9 @@
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
+    "chat_models/minimax.cjs",
+    "chat_models/minimax.js",
+    "chat_models/minimax.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -625,7 +631,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.6.3",
+    "@getzep/zep-js": "^0.7.0",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -740,7 +746,7 @@
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.6.3",
+    "@getzep/zep-js": "^0.7.0",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -1239,6 +1245,11 @@
       "import": "./embeddings/googlepalm.js",
       "require": "./embeddings/googlepalm.cjs"
     },
+    "./embeddings/minimax": {
+      "types": "./embeddings/minimax.d.ts",
+      "import": "./embeddings/minimax.js",
+      "require": "./embeddings/minimax.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -1736,6 +1747,11 @@
       "types": "./chat_models/ollama.d.ts",
       "import": "./chat_models/ollama.js",
       "require": "./chat_models/ollama.cjs"
+    },
+    "./chat_models/minimax": {
+      "types": "./chat_models/minimax.d.ts",
+      "import": "./chat_models/minimax.js",
+      "require": "./chat_models/minimax.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
