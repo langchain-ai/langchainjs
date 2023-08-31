@@ -10,6 +10,7 @@ const embeddings_base = require("langchain/embeddings/base");
 const embeddings_cache_backed = require("langchain/embeddings/cache_backed");
 const embeddings_fake = require("langchain/embeddings/fake");
 const embeddings_openai = require("langchain/embeddings/openai");
+const embeddings_minimax = require("langchain/embeddings/minimax");
 const llms_base = require("langchain/llms/base");
 const llms_openai = require("langchain/llms/openai");
 const llms_ai21 = require("langchain/llms/ai21");

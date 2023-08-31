@@ -36,7 +36,7 @@ export interface MinimaxEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 
   /**
-   *  The target scenario after generating the vector.
+   *  The target use-case after generating the vector.
    *  When using embeddings, the vector of the target content is first generated through the db and stored in the vector database,
    *  and then the vector of the retrieval text is generated through the query.
    *  Note: For the parameters of the partial algorithm, we adopted a separate algorithm plan for query and db.
@@ -61,10 +61,10 @@ export interface CreateMinimaxEmbeddingRequest {
   texts: string[];
 
   /**
-   *  The target use scene after generating the vector. When using embeddings,
+   *  The target use-case after generating the vector. When using embeddings,
    *  first generate the vector of the target content through the db and store it in the vector database,
    *  and then generate the vector of the retrieval text through the query.
-   *  Note: For the parameter of the algorithm,we use the algorithm scheme of query and db separation,
+   *  Note: For the parameter of the algorithm, we use the algorithm scheme of query and db separation,
    *  so a text, if it is to be retrieved as a text, should use the db,
    *  if it is used as a retrieval text, should use the query.
    * @type {string}

@@ -11,6 +11,7 @@ export * as embeddings__base from "../embeddings/base.js";
 export * as embeddings__cache_backed from "../embeddings/cache_backed.js";
 export * as embeddings__fake from "../embeddings/fake.js";
 export * as embeddings__openai from "../embeddings/openai.js";
+export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as llms__base from "../llms/base.js";
 export * as llms__openai from "../llms/openai.js";
 export * as llms__ai21 from "../llms/ai21.js";

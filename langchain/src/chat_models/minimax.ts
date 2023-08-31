@@ -45,6 +45,7 @@ export interface MinimaxChatCompletionRequestFunctions {
    * @type {{ [key: string]: any; }}
    * @memberof MinimaxChatCompletionRequestFunctions
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parameters?: { [key: string]: any };
 }
 
@@ -87,6 +88,7 @@ interface RawGlyph {
 
 interface JsonGlyph {
   type: "json_value";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   json_properties: any;
 }
 
@@ -320,10 +322,6 @@ export class ChatMinimax
     };
   }
 
-  // get lc_aliases(): { [key: string]: string } | undefined {
-  //   return undefined;
-  // }
-
   lc_serializable = true;
 
   minimaxGroupId?: string;
@@ -383,7 +381,7 @@ export class ChatMinimax
     this.minimaxGroupId =
       fields?.minimaxGroupId ?? getEnvironmentVariable("MINIMAX_GROUP_ID");
     if (!this.minimaxGroupId) {
-      throw new Error("Minimax GroupID  not found");
+      throw new Error("Minimax GroupID not found");
     }
 
     this.minimaxApiKey =
@@ -561,10 +559,6 @@ export class ChatMinimax
               const message = data as ChatCompletionResponse;
               // on the first message set the response properties
 
-              // TODO this should pass part.index to the callback
-              // when that's supported there
-              // eslint-disable-next-line no-void
-
               if (!message.choices[0].finish_reason) {
                 // the last stream message
                 let streamText;
@@ -575,6 +569,9 @@ export class ChatMinimax
                   streamText = message.choices[0].delta;
                 }
 
+                // TODO this should pass part.index to the callback
+                // when that's supported there
+                // eslint-disable-next-line no-void
                 void runManager?.handleLLMNewToken(streamText ?? "");
                 return;
               }

@@ -909,6 +909,7 @@ export class TraceGroup {
 
   private async getTraceGroupCallbackManager(
     group_name: string,
+    inputs?: ChainValues,
     options?: LangChainTracerFields
   ): Promise<CallbackManagerForChainRun> {
     const cb = new LangChainTracer(options);
@@ -919,7 +920,7 @@ export class TraceGroup {
         type: "not_implemented",
         id: ["langchain", "callbacks", "groups", group_name],
       },
-      {}
+      inputs ?? {}
     );
     if (!runManager) {
       throw new Error("Failed to create run group callback manager.");
@@ -927,22 +928,37 @@ export class TraceGroup {
     return runManager;
   }
 
-  async start(): Promise<CallbackManager> {
+  async start(inputs?: ChainValues): Promise<CallbackManager> {
     if (!this.runManager) {
       this.runManager = await this.getTraceGroupCallbackManager(
         this.groupName,
+        inputs,
         this.options
       );
     }
     return this.runManager.getChild();
   }
 
-  async end(): Promise<void> {
+  async error(err: Error | unknown): Promise<void> {
     if (this.runManager) {
-      await this.runManager.handleChainEnd({});
+      await this.runManager.handleChainError(err);
       this.runManager = undefined;
     }
   }
+
+  async end(output?: ChainValues): Promise<void> {
+    if (this.runManager) {
+      await this.runManager.handleChainEnd(output ?? {});
+      this.runManager = undefined;
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function _coerceToDict(value: any, defaultKey: string) {
+  return value && !Array.isArray(value) && typeof value === "object"
+    ? value
+    : { [defaultKey]: value };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -954,10 +970,13 @@ export async function traceAsGroup<T, A extends any[]>(
   ...args: A
 ): Promise<T> {
   const traceGroup = new TraceGroup(groupOptions.name, groupOptions);
-  const callbackManager = await traceGroup.start();
+  const callbackManager = await traceGroup.start({ ...args });
   try {
-    return await enclosedCode(callbackManager, ...args);
-  } finally {
-    await traceGroup.end();
+    const result = await enclosedCode(callbackManager, ...args);
+    await traceGroup.end(_coerceToDict(result, "output"));
+    return result;
+  } catch (err) {
+    await traceGroup.error(err);
+    throw err;
   }
 }

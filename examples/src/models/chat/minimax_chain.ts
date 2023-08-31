@@ -26,4 +26,3 @@ const resB = await chainB.call({
   text: "I love programming.",
 });
 console.log({ resB });
-// { resB: { text: "J'adore la programmation." } }
