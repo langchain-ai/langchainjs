@@ -134,7 +134,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       tags: tags || [],
     };
 
-    console.log("STARTIGN LLM", run);
     this._startTrace(run);
     await this.onLLMStart?.(run);
   }
@@ -239,7 +238,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
-    console.log("STARTIGN RUN", run);
     this._startTrace(run);
     await this.onChainStart?.(run);
   }
@@ -264,7 +262,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (kwargs?.inputs !== undefined) {
       run.inputs = _coerceToDict(kwargs.inputs, "input");
     }
-    console.log(run);
     await this.onChainEnd?.(run);
     await this._endTrace(run);
   }
@@ -289,7 +286,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (kwargs?.inputs !== undefined) {
       run.inputs = _coerceToDict(kwargs.inputs, "input");
     }
-    console.log(run);
     await this.onChainError?.(run);
     await this._endTrace(run);
   }
