@@ -37,6 +37,13 @@ export interface AgentRun extends Run {
   actions: AgentAction[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function _coerceToDict(value: any, defaultKey: string) {
+  return value && !Array.isArray(value) && typeof value === "object"
+    ? value
+    : { [defaultKey]: value };
+}
+
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected runMap: Map<string, Run> = new Map();
 
@@ -59,6 +66,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       const parentRun = this.runMap.get(run.parent_run_id);
       if (parentRun) {
         this._addChildRun(parentRun, run);
+        parentRun.child_execution_order = Math.max(
+          parentRun.child_execution_order,
+          run.child_execution_order
+        );
       }
     }
     this.runMap.set(run.id, run);
@@ -123,6 +134,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       tags: tags || [],
     };
 
+    console.log("STARTIGN LLM", run);
     this._startTrace(run);
     await this.onLLMStart?.(run);
   }
@@ -227,27 +239,43 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
-
+    console.log("STARTIGN RUN", run);
     this._startTrace(run);
     await this.onChainStart?.(run);
   }
 
-  async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
+  async handleChainEnd(
+    outputs: ChainValues,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run) {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.outputs = outputs;
+    run.outputs = _coerceToDict(outputs, "output");
     run.events.push({
       name: "end",
       time: new Date(run.end_time).toISOString(),
     });
+    if (kwargs?.inputs !== undefined) {
+      run.inputs = _coerceToDict(kwargs.inputs, "input");
+    }
+    console.log(run);
     await this.onChainEnd?.(run);
     await this._endTrace(run);
   }
 
-  async handleChainError(error: Error, runId: string): Promise<void> {
+  async handleChainError(
+    error: Error,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run) {
       throw new Error("No chain run to end.");
@@ -258,6 +286,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: "error",
       time: new Date(run.end_time).toISOString(),
     });
+    if (kwargs?.inputs !== undefined) {
+      run.inputs = _coerceToDict(kwargs.inputs, "input");
+    }
+    console.log(run);
     await this.onChainError?.(run);
     await this._endTrace(run);
   }

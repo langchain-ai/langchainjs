@@ -83,7 +83,8 @@ export class LangChainTracer
       error: run.error,
       outputs: run.outputs,
       events: run.events,
-    };
+      inputs: run.inputs,
+    } as any;
     await this.client.updateRun(run.id, runUpdate);
   }
 
