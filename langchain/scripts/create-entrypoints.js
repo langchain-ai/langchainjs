@@ -56,16 +56,13 @@ const entrypoints = {
   "llms/raycast": "llms/raycast",
   "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
-<<<<<<< HEAD
   "llms/googlevertexai": "llms/googlevertexai",
   "llms/googlepalm": "llms/googlepalm",
+  "llms/gpt4all": "llms/gpt4all",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   "llms/bedrock": "llms/bedrock",
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
-=======
-  "llms/gpt4all": "llms/gpt4all",
->>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -276,14 +273,11 @@ const requiresOptionalDependency = [
   "llms/hf",
   "llms/raycast",
   "llms/replicate",
-<<<<<<< HEAD
   "llms/sagemaker_endpoint",
   "llms/bedrock",
   "llms/llama_cpp",
   "llms/writer",
-=======
   "llms/gpt4all",
->>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
