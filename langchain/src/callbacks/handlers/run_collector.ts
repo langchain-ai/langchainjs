@@ -1,4 +1,4 @@
-import { BaseRun } from "langsmith/schemas";
+import { BaseRun, Run } from "langsmith/schemas";
 import { BaseTracer } from "./tracer.js";
 
 /**
@@ -13,7 +13,7 @@ export class RunCollectorCallbackHandler extends BaseTracer {
   exampleId?: string;
 
   /** An array of traced runs. */
-  tracedRuns: BaseRun[];
+  tracedRuns: Run[];
 
   /**
    * Creates a new instance of the RunCollectorCallbackHandler class.
@@ -30,7 +30,7 @@ export class RunCollectorCallbackHandler extends BaseTracer {
    * @param run The run object to persist.
    */
   protected async persistRun(run: BaseRun): Promise<void> {
-    const run_ = { ...run };
+    const run_ = { ...run } as Run;
     run_.reference_example_id = this.exampleId;
     this.tracedRuns.push(run_);
   }
