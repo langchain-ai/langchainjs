@@ -7264,6 +7264,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/fluent-ffmpeg@npm:^2":
+  version: 2.1.21
+  resolution: "@types/fluent-ffmpeg@npm:2.1.21"
+  dependencies:
+    "@types/node": "*"
+  checksum: 412e29bf578a2619b6600a0c0977568b3e3c7dafb155e80a2743a5f2a8169d2e3654a6db526e7a35bd03c6437fb6f7542db5ca869b5f3b028438219ae933e593
+  languageName: node
+  linkType: hard
+
 "@types/fs-extra@npm:^11.0.1":
   version: 11.0.1
   resolution: "@types/fs-extra@npm:11.0.1"
@@ -8635,7 +8644,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"async@npm:^3.2.3":
+"async@npm:>=0.2.9, async@npm:^3.2.3":
   version: 3.2.4
   resolution: "async@npm:3.2.4"
   checksum: 43d07459a4e1d09b84a20772414aa684ff4de085cbcaec6eea3c7a8f8150e8c62aa6cd4e699fe8ee93c3a5b324e777d34642531875a0817a35697522c1b02e89
@@ -12168,6 +12177,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fluent-ffmpeg@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "fluent-ffmpeg@npm:2.1.2"
+  dependencies:
+    async: ">=0.2.9"
+    which: ^1.1.1
+  checksum: ab7ed909486298f33b991af051c38e40410ae5b03b0b6d33d0855636a0b56330ffe9efed6c7eedb00f1c6c713c795cbdb283f6f2216db925ae5e737a22c6a97f
+  languageName: node
+  linkType: hard
+
 "fn.name@npm:1.x.x":
   version: 1.1.0
   resolution: "fn.name@npm:1.1.0"
@@ -14926,6 +14945,7 @@ __metadata:
     "@types/d3-dsv": ^2
     "@types/decamelize": ^1.2.0
     "@types/flat": ^5.0.2
+    "@types/fluent-ffmpeg": ^2
     "@types/html-to-text": ^9
     "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
@@ -14965,6 +14985,7 @@ __metadata:
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     flat: ^5.0.2
+    fluent-ffmpeg: ^2.1.2
     google-auth-library: ^8.9.0
     graphql: ^16.6.0
     hnswlib-node: ^1.4.2
@@ -15054,6 +15075,7 @@ __metadata:
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@tigrisdata/vector": ^1.1.0
+    "@types/fluent-ffmpeg": ^2
     "@upstash/redis": ^1.20.6
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
@@ -15068,6 +15090,7 @@ __metadata:
     faiss-node: ^0.3.0
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
+    fluent-ffmpeg: ^2.1.2
     google-auth-library: ^8.9.0
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
@@ -15166,6 +15189,8 @@ __metadata:
       optional: true
     "@tigrisdata/vector":
       optional: true
+    "@types/fluent-ffmpeg":
+      optional: true
     "@upstash/redis":
       optional: true
     "@writerai/writer-sdk":
@@ -15193,6 +15218,8 @@ __metadata:
     fast-xml-parser:
       optional: true
     firebase-admin:
+      optional: true
+    fluent-ffmpeg:
       optional: true
     google-auth-library:
       optional: true
@@ -21473,6 +21500,17 @@ __metadata:
     has-tostringtag: ^1.0.0
     is-typed-array: ^1.1.10
   checksum: fe0178ca44c57699ca2c0e657b64eaa8d2db2372a4e2851184f568f98c478ae3dc3fdb5f7e46c384487046b0cf9e23241423242b277e03e8ba3dabc7c84c98ef
+  languageName: node
+  linkType: hard
+
+"which@npm:^1.1.1":
+  version: 1.3.1
+  resolution: "which@npm:1.3.1"
+  dependencies:
+    isexe: ^2.0.0
+  bin:
+    which: ./bin/which
+  checksum: f2e185c6242244b8426c9df1510e86629192d93c1a986a7d2a591f2c24869e7ffd03d6dac07ca863b2e4c06f59a4cc9916c585b72ee9fa1aa609d0124df15e04
   languageName: node
   linkType: hard
 

@@ -349,6 +349,9 @@ document_loaders/fs/csv.d.ts
 document_loaders/fs/notion.cjs
 document_loaders/fs/notion.js
 document_loaders/fs/notion.d.ts
+document_loaders/fs/openai_whisper_video.cjs
+document_loaders/fs/openai_whisper_video.js
+document_loaders/fs/openai_whisper_video.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts

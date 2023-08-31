@@ -361,6 +361,9 @@
     "document_loaders/fs/notion.cjs",
     "document_loaders/fs/notion.js",
     "document_loaders/fs/notion.d.ts",
+    "document_loaders/fs/openai_whisper_video.cjs",
+    "document_loaders/fs/openai_whisper_video.js",
+    "document_loaders/fs/openai_whisper_video.d.ts",
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
@@ -660,6 +663,7 @@
     "@types/d3-dsv": "^2",
     "@types/decamelize": "^1.2.0",
     "@types/flat": "^5.0.2",
+    "@types/fluent-ffmpeg": "^2",
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
@@ -693,6 +697,7 @@
     "faiss-node": "^0.3.0",
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
+    "fluent-ffmpeg": "^2.1.2",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -768,6 +773,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@tigrisdata/vector": "^1.1.0",
+    "@types/fluent-ffmpeg": "^2",
     "@upstash/redis": "^1.20.6",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
@@ -782,6 +788,7 @@
     "faiss-node": "^0.3.0",
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
+    "fluent-ffmpeg": "^2.1.2",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -915,6 +922,9 @@
     "@tigrisdata/vector": {
       "optional": true
     },
+    "@types/fluent-ffmpeg": {
+      "optional": true
+    },
     "@upstash/redis": {
       "optional": true
     },
@@ -955,6 +965,9 @@
       "optional": true
     },
     "firebase-admin": {
+      "optional": true
+    },
+    "fluent-ffmpeg": {
       "optional": true
     },
     "google-auth-library": {
@@ -1684,6 +1697,11 @@
       "types": "./document_loaders/fs/notion.d.ts",
       "import": "./document_loaders/fs/notion.js",
       "require": "./document_loaders/fs/notion.cjs"
+    },
+    "./document_loaders/fs/openai_whisper_video": {
+      "types": "./document_loaders/fs/openai_whisper_video.d.ts",
+      "import": "./document_loaders/fs/openai_whisper_video.js",
+      "require": "./document_loaders/fs/openai_whisper_video.cjs"
     },
     "./document_loaders/fs/unstructured": {
       "types": "./document_loaders/fs/unstructured.d.ts",
