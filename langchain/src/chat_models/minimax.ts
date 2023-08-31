@@ -1,3 +1,4 @@
+import { ChatCompletionFunctions } from "openai";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIMessage,
@@ -9,8 +10,7 @@ import {
 } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { getEnvironmentVariable } from "../util/env.js";
-import { StructuredTool } from "../tools/index.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { FunctionCallOptions } from "../base_language/index.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 
 /**
@@ -27,27 +27,6 @@ interface MinimaxChatCompletionRequestMessage {
   text: string;
 }
 
-export interface MinimaxChatCompletionRequestFunctions {
-  /**
-   * The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
-   * @type {string}
-   * @memberof MinimaxChatCompletionRequestFunctions
-   */
-  name: string;
-  /**
-   * The description of what the function does.
-   * @type {string}
-   * @memberof MinimaxChatCompletionRequestFunctions
-   */
-  description?: string;
-  /**
-   * The parameters the functions accepts, described as a JSON Schema object.
-   * @type {{ [key: string]: any; }}
-   * @memberof MinimaxChatCompletionRequestFunctions
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parameters?: { [key: string]: any };
-}
 
 /**
  * Interface representing a request for a chat completion.
@@ -70,9 +49,9 @@ interface MinimaxChatCompletionRequest {
   sample_messages?: MinimaxChatCompletionRequestMessage[];
   /**
    * A list of functions the model may generate JSON inputs for.
-   * @type {Array<MinimaxChatCompletionRequestFunctions>}
+   * @type {Array<ChatCompletionFunctions>}
    */
-  functions?: Array<MinimaxChatCompletionRequestFunctions>;
+  functions?: Array<ChatCompletionFunctions>;
   plugins?: string[];
 }
 
@@ -276,9 +255,7 @@ function messageToMinimaxRole(message: BaseMessage): MinimaxMessageRole {
   }
 }
 
-export interface ChatMinimaxCallOptions extends BaseLanguageModelCallOptions {
-  functions?: MinimaxChatCompletionRequestFunctions[];
-  tools?: StructuredTool[];
+export interface ChatMinimaxCallOptions extends FunctionCallOptions {
   defaultUserName?: string;
   defaultBotName?: string;
   plugins?: string[];
