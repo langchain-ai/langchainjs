@@ -43,6 +43,7 @@ const entrypoints = {
   "embeddings/hf": "embeddings/hf",
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
+  "embeddings/minimax": "embeddings/minimax",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",

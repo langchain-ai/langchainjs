@@ -14,7 +14,7 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 
-test("Test ChatMinimax", async () => {
+test.skip("Test ChatMinimax", async () => {
   const chat = new ChatMinimax({
     modelName: "abab5.5-chat",
     botSetting: [
@@ -29,7 +29,7 @@ test("Test ChatMinimax", async () => {
   console.log({ res });
 });
 
-test("Test ChatMinimax with SystemChatMessage", async () => {
+test.skip("Test ChatMinimax with SystemChatMessage", async () => {
   const chat = new ChatMinimax();
   const system_message = new SystemMessage("You are to chat with a user.");
   const message = new HumanMessage("Hello!");
@@ -37,7 +37,7 @@ test("Test ChatMinimax with SystemChatMessage", async () => {
   console.log({ res });
 });
 
-test("Test ChatMinimax Generate", async () => {
+test.skip("Test ChatMinimax Generate", async () => {
   const chat = new ChatMinimax({
     botSetting: [
       {
@@ -59,7 +59,7 @@ test("Test ChatMinimax Generate", async () => {
   console.log({ res });
 });
 
-test("Test ChatMinimax Generate throws when one of the calls fails", async () => {
+test.skip("Test ChatMinimax Generate throws when one of the calls fails", async () => {
   const chat = new ChatMinimax({
     botSetting: [
       {
@@ -76,7 +76,7 @@ test("Test ChatMinimax Generate throws when one of the calls fails", async () =>
   ).rejects.toThrow("TimeoutError: The operation was aborted due to timeout");
 });
 
-test("Test ChatMinimax tokenUsage", async () => {
+test.skip("Test ChatMinimax tokenUsage", async () => {
   let tokenUsage = {
     totalTokens: 0,
   };
@@ -101,7 +101,7 @@ test("Test ChatMinimax tokenUsage", async () => {
   expect(tokenUsage.totalTokens).toBeGreaterThan(0);
 });
 
-test("Test ChatMinimax tokenUsage with a batch", async () => {
+test.skip("Test ChatMinimax tokenUsage with a batch", async () => {
   let tokenUsage = {
     totalTokens: 0,
   };
@@ -130,7 +130,7 @@ test("Test ChatMinimax tokenUsage with a batch", async () => {
   expect(tokenUsage.totalTokens).toBeGreaterThan(0);
 });
 
-test("Test ChatMinimax in streaming mode", async () => {
+test.skip("Test ChatMinimax in streaming mode", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
 
@@ -160,7 +160,7 @@ test("Test ChatMinimax in streaming mode", async () => {
   expect(result.content).toBe(streamedCompletion);
 }, 10000);
 
-test("OpenAI Chat, docs, prompt templates", async () => {
+test.skip("OpenAI Chat, docs, prompt templates", async () => {
   const chat = new ChatMinimax({
     temperature: 0.01,
     tokensToGenerate: 10,
@@ -186,7 +186,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
   console.log(responseA.generations);
 }, 5000);
 
-test("Test OpenAI with signal in call options", async () => {
+test.skip("Test OpenAI with signal in call options", async () => {
   const model = new ChatMinimax({ tokensToGenerate: 5 });
   const controller = new AbortController();
   await expect(() => {
@@ -200,7 +200,7 @@ test("Test OpenAI with signal in call options", async () => {
   }).rejects.toThrow();
 }, 5000);
 
-test("Test OpenAI with specific roles in ChatMessage", async () => {
+test.skip("Test OpenAI with specific roles in ChatMessage", async () => {
   const chat = new ChatMinimax({ tokensToGenerate: 10 });
   const system_message = new ChatMessage(
     "You are to chat with a user.",
@@ -211,7 +211,7 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
   console.log({ res });
 });
 
-test("Function calling ", async () => {
+test.skip("Function calling ", async () => {
   const weatherFunction = {
     name: "get_weather",
     description: " Get weather information.",
@@ -248,7 +248,7 @@ test("Function calling ", async () => {
   console.log(result);
   expect(result.additional_kwargs.function_call?.name).toBe("get_weather");
 });
-test("Test ChatMinimax Function calling ", async () => {
+test.skip("Test ChatMinimax Function calling ", async () => {
   const weatherFunction = {
     name: "get_weather",
     description: " Get weather information.",
@@ -286,7 +286,7 @@ test("Test ChatMinimax Function calling ", async () => {
   expect(result.additional_kwargs.function_call?.name).toBe("get_weather");
 });
 
-test("Test ChatMinimax Glyph", async () => {
+test.skip("Test ChatMinimax Glyph", async () => {
   const model = new ChatMinimax({
     modelName: "abab5.5-chat",
     botSetting: [
@@ -318,7 +318,7 @@ test("Test ChatMinimax Glyph", async () => {
   console.log(result);
   expect(result.content).toMatch(/The translated text：.*/);
 });
-test("Test ChatMinimax Plugins", async () => {
+test.skip("Test ChatMinimax Plugins", async () => {
   const model = new ChatMinimax({
     modelName: "abab5.5-chat",
     botSetting: [

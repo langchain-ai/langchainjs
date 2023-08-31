@@ -1,4 +1,4 @@
-import { MinimaxEmbeddings } from "langchain/embeddings";
+import { MinimaxEmbeddings } from "langchain/embeddings/minimax";
 
 export const run = async () => {
   /* Embed queries */

@@ -2,16 +2,14 @@
 
 The `MinimaxEmbeddings` class uses the Minimax API to generate embeddings for a given text.
 
-
 # Setup
 
-To use minimax model, you'll need a [Minimax account](https://api.minimax.chat), an [API key](https://api.minimax.chat/user-center/basic-information/interface-key), and a [Group ID](https://api.minimax.chat/user-center/basic-information)
-
+To use Minimax model, you'll need a [Minimax account](https://api.minimax.chat), an [API key](https://api.minimax.chat/user-center/basic-information/interface-key), and a [Group ID](https://api.minimax.chat/user-center/basic-information)
 
 # Usage
 
 ```typescript
-import { MinimaxEmbeddings } from "langchain/embeddings";
+import { MinimaxEmbeddings } from "langchain/embeddings/minimax";
 
 export const run = async () => {
   /* Embed queries */
@@ -25,6 +23,5 @@ export const run = async () => {
   ]);
   console.log({ documentRes });
 };
-
 ```
 

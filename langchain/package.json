@@ -100,6 +100,9 @@
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
+    "embeddings/minimax.cjs",
+    "embeddings/minimax.js",
+    "embeddings/minimax.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -1233,6 +1236,11 @@
       "types": "./embeddings/googlepalm.d.ts",
       "import": "./embeddings/googlepalm.js",
       "require": "./embeddings/googlepalm.cjs"
+    },
+    "./embeddings/minimax": {
+      "types": "./embeddings/minimax.d.ts",
+      "import": "./embeddings/minimax.js",
+      "require": "./embeddings/minimax.cjs"
     },
     "./llms": {
       "node": {
