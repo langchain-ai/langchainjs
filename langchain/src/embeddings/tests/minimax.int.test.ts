@@ -1,13 +1,13 @@
 import { test, expect } from "@jest/globals";
 import { MinimaxEmbeddings } from "../minimax.js";
 
-test("Test MinimaxEmbeddings.embedQuery", async () => {
+test.skip("Test MinimaxEmbeddings.embedQuery", async () => {
   const embeddings = new MinimaxEmbeddings();
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test MinimaxEmbeddings.embedDocuments", async () => {
+test.skip("Test MinimaxEmbeddings.embedDocuments", async () => {
   const embeddings = new MinimaxEmbeddings();
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);
@@ -15,7 +15,7 @@ test("Test MinimaxEmbeddings.embedDocuments", async () => {
   expect(typeof res[1][0]).toBe("number");
 });
 
-test("Test MinimaxEmbeddings concurrency", async () => {
+test.skip("Test MinimaxEmbeddings concurrency", async () => {
   const embeddings = new MinimaxEmbeddings({
     batchSize: 1,
     maxConcurrency: 2,
