@@ -47,7 +47,7 @@ export interface GithubFile {
  */
 interface GetContentResponse {
   contents: string;
-  metadata: { source: string };
+  metadata: { source: string; repository: string; branch: string };
 }
 
 /**
@@ -105,7 +105,8 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
  */
 export class GithubRepoLoader
   extends BaseDocumentLoader
-  implements GithubRepoLoaderParams {
+  implements GithubRepoLoaderParams
+{
   public baseUrl: string;
 
   public apiUrl: string;
@@ -182,7 +183,7 @@ export class GithubRepoLoader
     this.caller = new AsyncCaller({
       maxConcurrency,
       maxRetries,
-      ...rest
+      ...rest,
     });
     this.ignorePaths = ignorePaths;
     if (ignorePaths) {
@@ -190,7 +191,7 @@ export class GithubRepoLoader
     }
     if (this.accessToken) {
       this.headers = {
-        Authorization: `Bearer ${this.accessToken}`
+        Authorization: `Bearer ${this.accessToken}`,
       };
     }
   }
@@ -206,7 +207,7 @@ export class GithubRepoLoader
     path: string;
   } {
     const match = url.match(
-      new RegExp(this.baseUrl + "/([^/]+)/([^/]+)(/tree/[^/]+/(.+))?", "i")
+      new RegExp(`${this.baseUrl}/([^/]+)/([^/]+)(/tree/[^/]+/(.+))?`, "i")
     );
 
     if (!match) {
@@ -231,7 +232,7 @@ export class GithubRepoLoader
       (fileResponse) =>
         new Document({
           pageContent: fileResponse.contents,
-          metadata: fileResponse.metadata
+          metadata: fileResponse.metadata,
         })
     );
     if (this.processSubmodules) {
@@ -253,12 +254,12 @@ export class GithubRepoLoader
     // however, we cannot reuse the files retrieved in processRepo() as initialPath may be != ""
     // so it may be that we end up fetching this file list twice
     const repoFiles = await this.fetchRepoFiles("");
-    let gitmodulesFile = repoFiles.filter(
+    const gitmodulesFile = repoFiles.filter(
       ({ name }) => name === ".gitmodules"
     )?.[0];
     if (gitmodulesFile) {
-      let gitmodulesContent = await this.fetchFileContent({
-        download_url: gitmodulesFile.download_url
+      const gitmodulesContent = await this.fetchFileContent({
+        download_url: gitmodulesFile.download_url,
       } as GithubFile);
       this.submoduleInfos = await this.parseGitmodules(gitmodulesContent);
     } else {
@@ -275,14 +276,13 @@ export class GithubRepoLoader
    * Returns the submodule information as array.
    * @param gitmodulesContent the content of a .gitmodules file
    */
-  private async parseGitmodules(gitmodulesContent: string): Promise<SubmoduleInfo[]> {
+  private async parseGitmodules(
+    gitmodulesContent: string
+  ): Promise<SubmoduleInfo[]> {
     // catches the initial line of submodule entries
-    const submodulePattern = new RegExp(
-      `\\[submodule "(.*?)"]\n((\\s+.*?\\s*=\\s*.*?\n)*)`,
-      "g"
-    );
+    const submodulePattern = /\[submodule "(.*?)"]\n((\s+.*?\s*=\s*.*?\n)*)/g;
     // catches the properties of a submodule
-    const keyValuePattern = new RegExp(`\\s+(.*?)\\s*=\\s*(.*?)\\s`, "g");
+    const keyValuePattern = /\s+(.*?)\s*=\s*(.*?)\s/g;
 
     const submoduleInfos = [];
     for (const [, name, propertyLines] of gitmodulesContent.matchAll(
@@ -292,8 +292,8 @@ export class GithubRepoLoader
         throw new Error("Could not parse submodule entry");
       }
       const submodulePropertyLines = propertyLines.matchAll(keyValuePattern);
-      let path = undefined;
-      let url = undefined;
+      let path;
+      let url;
       for (const [, key, value] of submodulePropertyLines) {
         if (!key || !value) {
           throw new Error(
@@ -320,10 +320,10 @@ export class GithubRepoLoader
       // fetch the current ref of the submodule
       const files = await this.fetchRepoFiles(path);
       const submoduleInfo: SubmoduleInfo = {
-        name: name,
-        path: path,
-        url: url,
-        ref: files[0].sha
+        name,
+        path,
+        url,
+        ref: files[0].sha,
       };
       submoduleInfos.push(submoduleInfo);
     }
@@ -347,7 +347,9 @@ export class GithubRepoLoader
       );
       return [];
     } else {
-      this.log(`Accessing submodule ${submoduleInfo.name} (${submoduleInfo.url})...`);
+      this.log(
+        `Accessing submodule ${submoduleInfo.name} (${submoduleInfo.url})...`
+      );
       return new GithubRepoLoader(submoduleInfo.url, {
         accessToken: this.accessToken,
         apiUrl: this.apiUrl,
@@ -360,7 +362,7 @@ export class GithubRepoLoader
         ignorePaths: this.ignorePaths,
         verbose: this.verbose,
         maxConcurrency: this.maxConcurrency,
-        maxRetries: this.maxRetries
+        maxRetries: this.maxRetries,
       }).load();
     }
   }
@@ -408,7 +410,11 @@ export class GithubRepoLoader
     });
     return {
       contents: fileContent || "",
-      metadata: { source: file.path }
+      metadata: {
+        source: file.path,
+        repository: `${this.baseUrl}/${this.owner}/${this.repo}`,
+        branch: this.branch,
+      },
     };
   }
 
@@ -510,8 +516,7 @@ export class GithubRepoLoader
 
       if (Array.isArray(data)) {
         return data as GithubFile[];
-      }
-      else {
+      } else {
         return [data as GithubFile];
       }
     });
@@ -526,7 +531,7 @@ export class GithubRepoLoader
     return this.caller.call(async () => {
       this.log(`Fetching ${file.download_url}`);
       const response = await fetch(file.download_url, {
-        headers: this.headers
+        headers: this.headers,
       });
       return response.text();
     });

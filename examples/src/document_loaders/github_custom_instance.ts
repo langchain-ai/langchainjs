@@ -9,7 +9,7 @@ export const run = async () => {
       accessToken: "ghp_A1B2C3D4E5F6a7b8c9d0",
       branch: "main",
       recursive: true,
-      unknown: "warn"
+      unknown: "warn",
     }
   );
   const docs = await loader.load();
