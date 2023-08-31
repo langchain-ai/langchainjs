@@ -119,6 +119,7 @@ export class LLMonitorHandler
   implements LLMonitorHandlerFields
 {
   name = "llmonitor_handler";
+
   monitor: typeof monitor;
 
   constructor(fields: LLMonitorHandlerFields = {}) {
@@ -157,7 +158,7 @@ export class LLMonitorHandler
     const userId = params?.userId || undefined;
     const userProps = params?.userProps || undefined;
 
-    this.monitor.trackEvent("llm", "start", {
+    await this.monitor.trackEvent("llm", "start", {
       runId,
       parentRunId,
       name,
@@ -190,7 +191,7 @@ export class LLMonitorHandler
     const userId = params?.userId || undefined;
     const userProps = params?.userProps || undefined;
 
-    this.monitor.trackEvent("llm", "start", {
+    await this.monitor.trackEvent("llm", "start", {
       runId,
       parentRunId,
       name,
@@ -206,7 +207,7 @@ export class LLMonitorHandler
   async handleLLMEnd(output: LLMResult, runId: string): Promise<void> {
     const { generations, llmOutput } = output;
 
-    this.monitor.trackEvent("llm", "end", {
+    await this.monitor.trackEvent("llm", "end", {
       runId,
       output: convertToLLMonitorMessages(generations),
       tokensUsage: {
@@ -217,7 +218,7 @@ export class LLMonitorHandler
   }
 
   async handleLLMError(error: Error, runId: string): Promise<void> {
-    this.monitor.trackEvent("llm", "error", {
+    await this.monitor.trackEvent("llm", "error", {
       runId,
       error,
     });
@@ -243,28 +244,28 @@ export class LLMonitorHandler
         ? "agent"
         : "chain";
 
-    delete metadata?.agentName;
+    const { agentName, ...rest } = metadata || {};
 
-    this.monitor.trackEvent(runType, "start", {
+    await this.monitor.trackEvent(runType, "start", {
       runId,
       parentRunId,
       name,
       input: parseInput(inputs) as cJSON,
-      extra: metadata,
+      extra: rest,
       tags,
       runtime: "langchain-js",
     });
   }
 
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
-    this.monitor.trackEvent("chain", "end", {
+    await this.monitor.trackEvent("chain", "end", {
       runId,
       output: parseOutput(outputs) as cJSON,
     });
   }
 
   async handleChainError(error: Error, runId: string): Promise<void> {
-    this.monitor.trackEvent("chain", "error", {
+    await this.monitor.trackEvent("chain", "error", {
       runId,
       error,
     });
@@ -278,7 +279,7 @@ export class LLMonitorHandler
     tags?: string[],
     metadata?: KVMap
   ): Promise<void> {
-    this.monitor.trackEvent("tool", "start", {
+    await this.monitor.trackEvent("tool", "start", {
       runId,
       parentRunId,
       name: tool.id[tool.id.length - 1],
@@ -290,14 +291,14 @@ export class LLMonitorHandler
   }
 
   async handleToolEnd(output: string, runId: string): Promise<void> {
-    this.monitor.trackEvent("tool", "end", {
+    await this.monitor.trackEvent("tool", "end", {
       runId,
       output,
     });
   }
 
   async handleToolError(error: Error, runId: string): Promise<void> {
-    this.monitor.trackEvent("tool", "error", {
+    await this.monitor.trackEvent("tool", "error", {
       runId,
       error,
     });
