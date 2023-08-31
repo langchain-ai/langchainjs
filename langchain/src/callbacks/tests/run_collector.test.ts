@@ -8,6 +8,7 @@ import { LLMResult } from "../../schema/index.js";
 import { StringOutputParser } from "../../schema/output_parser.js";
 import { RunCollectorCallbackHandler } from "../handlers/run_collector.js";
 import { v4 as uuidv4, validate } from "uuid";
+import { Run } from "langsmith/schemas";
 
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;
@@ -47,7 +48,12 @@ describe("RunCollectorCallbackHandler", () => {
     await chain.invoke({ input: "foo" }, { callbacks: [collector] });
 
     expect(collector.tracedRuns.length).toBe(1);
-    expect(validate(collector.tracedRuns[0].id ?? "")).toBe(true);
-    expect(collector.tracedRuns[0].reference_example_id).toBe(exampleId);
+    const tracedRun = collector.tracedRuns[0];
+    expect(tracedRun.id).toBeDefined();
+    if (tracedRun.id && validate(tracedRun.id)) {
+      expect(validate(tracedRun.id)).toBe(true);
+    }
+    expect(tracedRun.reference_example_id).toBe(exampleId);
+    expect((tracedRun as Run)?.child_runs?.length).toBe(3);
   });
 });
