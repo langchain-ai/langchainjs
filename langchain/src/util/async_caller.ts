@@ -90,8 +90,9 @@ export class AsyncCaller {
               if ((error as any)?.code === "ECONNABORTED") {
                 throw error;
               }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const status = (error as any)?.response?.status;
+              const status =
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (error as any)?.response?.status ?? (error as any)?.status;
               if (status && STATUS_NO_RETRY.includes(+status)) {
                 throw error;
               }

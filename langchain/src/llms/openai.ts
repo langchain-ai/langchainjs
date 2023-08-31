@@ -353,6 +353,9 @@ export class OpenAI
                 });
               }
             }
+            if (options.signal?.aborted) {
+              throw new Error("AbortError");
+            }
             return { ...response, choices };
           })()
         : await this.completionWithRetry(
@@ -409,8 +412,7 @@ export class OpenAI
     };
   }
 
-  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
-  // when we integrate OpenAI's new SDK.
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation?
   async *_streamResponseChunks(
     input: string,
     options: this["ParsedCallOptions"],
@@ -424,6 +426,9 @@ export class OpenAI
     const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
       const choice = data.choices[0];
+      if (!choice) {
+        continue;
+      }
       const chunk = new GenerationChunk({
         text: choice.text,
         generationInfo: {
@@ -433,6 +438,9 @@ export class OpenAI
       yield chunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
     }
   }
 
@@ -493,12 +501,18 @@ export class OpenAI
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      this.client = new OpenAIClient({
+      const params = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
-      });
+      };
+
+      if (!params.baseURL) {
+        delete params.baseURL;
+      }
+
+      this.client = new OpenAIClient(params);
     }
     const requestOptions = {
       ...this.clientConfig,

@@ -291,8 +291,6 @@ export class OpenAIChat
     return this.prefixMessages ? [...this.prefixMessages, message] : [message];
   }
 
-  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
-  // when we integrate OpenAI's new SDK.
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
@@ -306,13 +304,26 @@ export class OpenAIChat
     const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
       const choice = data.choices[0];
+      if (!choice) {
+        continue;
+      }
       const { delta } = choice;
       const generationChunk = new GenerationChunk({
         text: delta.content ?? "",
       });
       yield generationChunk;
+      const newTokenIndices = {
+        prompt: options.promptIndex ?? 0,
+        completion: choice.index ?? 0,
+      };
       // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+      void runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        newTokenIndices
+      );
+    }
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
     }
   }
 
@@ -324,72 +335,35 @@ export class OpenAIChat
   ): Promise<string> {
     const params = this.invocationParams(options);
 
-    const response = params.stream
-      ? await (async () => {
-          let response:
-            | OpenAIClient.Chat.Completions.ChatCompletion
-            | undefined;
-          const stream = await this.completionWithRetry(
-            {
-              ...params,
-              messages: this.formatMessages(prompt),
-              stream: true,
-            },
-            options
-          );
-          for await (const message of stream) {
-            // on the first message set the response properties
-            if (!response) {
-              response = {
-                id: message.id,
-                object: message.object,
-                created: message.created,
-                model: message.model,
-                choices: [],
-              };
-            }
-
-            // on all messages, update choice
-            for (const part of message.choices) {
-              let choice = response.choices.find((c) => c.index === part.index);
-
-              if (!choice) {
-                choice = {
-                  index: part.index,
-                  finish_reason: part.finish_reason as
-                    | "stop"
-                    | "function_call"
-                    | "length",
-                  message: {
-                    role: part.delta.role ?? "assistant",
-                    content: part.delta.content ?? "",
-                  },
-                };
-                response.choices.push(choice);
-              }
-
-              choice.message.content += part.delta?.content ?? "";
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(part.delta.content ?? "", {
-                prompt: options.promptIndex ?? 0,
-                completion: part.index,
-              });
-            }
-          }
-          return response;
-        })()
-      : await this.completionWithRetry(
-          {
-            ...params,
-            stream: false,
-            messages: this.formatMessages(prompt),
-          },
-          {
-            signal: options.signal,
-            ...options.options,
-          }
-        );
-    return response?.choices[0]?.message?.content ?? "";
+    if (params.stream) {
+      const stream = await this._streamResponseChunks(
+        prompt,
+        options,
+        runManager
+      );
+      let finalChunk: GenerationChunk | undefined;
+      for await (const chunk of stream) {
+        if (finalChunk === undefined) {
+          finalChunk = chunk;
+        } else {
+          finalChunk = finalChunk.concat(chunk);
+        }
+      }
+      return finalChunk?.text ?? "";
+    } else {
+      const response = await this.completionWithRetry(
+        {
+          ...params,
+          stream: false,
+          messages: this.formatMessages(prompt),
+        },
+        {
+          signal: options.signal,
+          ...options.options,
+        }
+      );
+      return response?.choices[0]?.message?.content ?? "";
+    }
   }
 
   /**
@@ -445,12 +419,17 @@ export class OpenAIChat
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      this.client = new OpenAIClient({
+      const params = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
-      });
+      };
+      if (!params.baseURL) {
+        delete params.baseURL;
+      }
+
+      this.client = new OpenAIClient(params);
     }
     const requestOptions = {
       ...this.clientConfig,
