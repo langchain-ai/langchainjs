@@ -8,6 +8,7 @@ import {
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
+import { wrapOpenAIClientError } from "../util/openai.js";
 
 /**
  * Interface for OpenAIEmbeddings parameters. Extends EmbeddingsParams and
@@ -208,12 +209,18 @@ export class OpenAIEmbeddings
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      this.client = new OpenAIClient({
+      const params = {
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
         maxRetries: 0,
-      });
+      };
+
+      if (!params.baseURL) {
+        delete params.baseURL;
+      }
+
+      this.client = new OpenAIClient(params);
     }
     const requestOptions: OpenAICoreRequestOptions = {};
     if (this.azureOpenAIApiKey) {
@@ -226,10 +233,17 @@ export class OpenAIEmbeddings
         ...requestOptions.query,
       };
     }
-    return this.caller.call(
-      this.client.embeddings.create.bind(this.client),
-      request,
-      requestOptions
-    );
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.embeddings.create(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
   }
 }

@@ -12,7 +12,7 @@ import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseLLMParams, LLM } from "./base.js";
-import { wrapOpenAIEndpointError } from "../util/openai.js";
+import { wrapOpenAIClientError } from "../util/openai.js";
 
 export { AzureOpenAIInput, OpenAIChatInput };
 /**
@@ -400,7 +400,7 @@ export class OpenAIChat
         );
         return res;
       } catch (e) {
-        const error = wrapOpenAIEndpointError(e);
+        const error = wrapOpenAIClientError(e);
         throw error;
       }
     });

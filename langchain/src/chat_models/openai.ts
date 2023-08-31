@@ -31,7 +31,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import { NewTokenIndices } from "../callbacks/base.js";
-import { wrapOpenAIEndpointError } from "../util/openai.js";
+import { wrapOpenAIClientError } from "../util/openai.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -586,7 +586,7 @@ export class ChatOpenAI
         );
         return res;
       } catch (e) {
-        const error = wrapOpenAIEndpointError(e);
+        const error = wrapOpenAIClientError(e);
         throw error;
       }
     });

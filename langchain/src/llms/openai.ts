@@ -16,7 +16,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { OpenAIChat } from "./openai-chat.js";
-import { wrapOpenAIEndpointError } from "../util/openai.js";
+import { wrapOpenAIClientError } from "../util/openai.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
@@ -477,7 +477,7 @@ export class OpenAI
         );
         return res;
       } catch (e) {
-        const error = wrapOpenAIEndpointError(e);
+        const error = wrapOpenAIClientError(e);
         throw error;
       }
     });
