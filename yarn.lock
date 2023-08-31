@@ -11977,6 +11977,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-xml-parser@npm:^4.2.7":
+  version: 4.2.7
+  resolution: "fast-xml-parser@npm:4.2.7"
+  dependencies:
+    strnum: ^1.0.5
+  bin:
+    fxparser: src/cli/cli.js
+  checksum: d8b0c9e04756f6c43fa0399428f30149acadae21350e42e26e8fe98e24e6afa6b9b00aa554453795036b00e9fee974a1b556fe2ba18be391d51a9bf1ab790e7c
+  languageName: node
+  linkType: hard
+
 "fastq@npm:^1.6.0":
   version: 1.15.0
   resolution: "fastq@npm:1.15.0"
@@ -14951,6 +14962,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
     faiss-node: ^0.3.0
+    fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     flat: ^5.0.2
     google-auth-library: ^8.9.0
@@ -15054,6 +15066,7 @@ __metadata:
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     faiss-node: ^0.3.0
+    fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     google-auth-library: ^8.9.0
     hnswlib-node: ^1.4.2
@@ -15177,6 +15190,8 @@ __metadata:
     epub2:
       optional: true
     faiss-node:
+      optional: true
+    fast-xml-parser:
       optional: true
     firebase-admin:
       optional: true
