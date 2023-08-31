@@ -38,6 +38,8 @@ import { LLMonitorHandler } from "langchain/callbacks/llmonitor";
 
 const handler = new LLMonitorHandler({
   appId: "app ID",
+  // verbose: true,
+  // apiUrl: 'custom self hosting url'
 });
 ```
 
@@ -81,7 +83,7 @@ const result = await executor.run(
 
 ## Usage with custom agents
 
-You can use the callback handler in combo with the `llmonitor` module to track custom agents that don't fully use LangChain:
+You can use the callback handler combined with the `llmonitor` module to track custom agents that partially use LangChain:
 
 ```ts
 import { ChatOpenAI } from "langchain/chat_models/openai";
