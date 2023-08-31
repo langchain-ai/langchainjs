@@ -647,6 +647,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
 > {
+  static lc_name() {
+    return "RunnableLambda";
+  }
+
   lc_namespace = ["langchain", "schema", "runnable"];
 
   protected func: RunnableFunc<RunInput, RunOutput>;
