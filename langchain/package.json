@@ -682,6 +682,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.3.0",
+    "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
@@ -771,6 +772,7 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.3.0",
+    "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
@@ -940,6 +942,9 @@
       "optional": true
     },
     "faiss-node": {
+      "optional": true
+    },
+    "fast-xml-parser": {
       "optional": true
     },
     "firebase-admin": {
