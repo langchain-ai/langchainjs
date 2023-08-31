@@ -27,7 +27,7 @@ test("Test traced agent with openai functions", async () => {
   const result = await executor.run(
     "What is the approximate result of 78 to the power of 5?",
     {
-      callbacks: [new LLMonitorHandler()],
+      callbacks: [new LLMonitorHandler({ verbose: true })],
       metadata: { agentName: "SuperCalculator" },
     }
   );
@@ -62,13 +62,16 @@ test("Test traced chain with tags", async () => {
     {
       question: "What is the meaning of life?",
     },
-    { tags: ["test-for-tags"], callbacks: [new LLMonitorHandler()] }
+    {
+      tags: ["test-for-tags"],
+      callbacks: [new LLMonitorHandler({ verbose: true })],
+    }
   );
 });
 
 test("Test traced chat call with tags", async () => {
   const chat = new ChatOpenAI({
-    callbacks: [new LLMonitorHandler()],
+    callbacks: [new LLMonitorHandler({ verbose: true })],
   });
 
   const response = await chat.call([
@@ -76,7 +79,7 @@ test("Test traced chat call with tags", async () => {
       "What is a good name for a company that makes colorful socks?"
     ),
   ]);
-  console.log(response);
+  console.log(response.content);
 
   const response2 = await chat.call([
     new SystemMessage(
@@ -84,5 +87,5 @@ test("Test traced chat call with tags", async () => {
     ),
     new HumanMessage("Translate: I love programming."),
   ]);
-  console.log(response2);
+  console.log(response2.content);
 });

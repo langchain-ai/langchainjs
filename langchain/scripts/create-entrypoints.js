@@ -257,6 +257,7 @@ const requiresOptionalDependency = [
   "tools/calculator",
   "tools/sql",
   "tools/webbrowser",
+  "callbacks/llmonitor",
   "chains/load",
   "chains/sql_db",
   "embeddings/cohere",

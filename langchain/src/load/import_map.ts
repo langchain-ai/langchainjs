@@ -41,7 +41,6 @@ export * as schema__retriever from "../schema/retriever.js";
 export * as schema__runnable from "../schema/runnable.js";
 export * as schema__storage from "../schema/storage.js";
 export * as callbacks from "../callbacks/index.js";
-export * as callbacks__llmonitor from "../callbacks/handlers/llmonitor.js";
 export * as output_parsers from "../output_parsers/index.js";
 export * as retrievers__remote from "../retrievers/remote/index.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";

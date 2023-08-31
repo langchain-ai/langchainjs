@@ -418,6 +418,9 @@
     "callbacks.cjs",
     "callbacks.js",
     "callbacks.d.ts",
+    "callbacks/llmonitor.cjs",
+    "callbacks/llmonitor.js",
+    "callbacks/llmonitor.d.ts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
@@ -689,6 +692,7 @@
     "jest": "^29.5.0",
     "jsdom": "^22.1.0",
     "langchainhub": "~0.0.3",
+    "llmonitor": "^0.5.4",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
@@ -776,7 +780,7 @@
     "ioredis": "^5.3.2",
     "jsdom": "*",
     "langchainhub": "~0.0.3",
-    "llmonitor": "^0.5.3",
+    "llmonitor": "^0.5.4",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -1772,6 +1776,11 @@
       "types": "./callbacks.d.ts",
       "import": "./callbacks.js",
       "require": "./callbacks.cjs"
+    },
+    "./callbacks/llmonitor": {
+      "types": "./callbacks/llmonitor.d.ts",
+      "import": "./callbacks/llmonitor.js",
+      "require": "./callbacks/llmonitor.cjs"
     },
     "./output_parsers": {
       "types": "./output_parsers.d.ts",

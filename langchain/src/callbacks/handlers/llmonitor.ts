@@ -1,4 +1,5 @@
 import monitor from "llmonitor";
+import { LLMonitorOptions, ChatMessage, cJSON } from "llmonitor/types";
 
 import { BaseRun, RunUpdate as BaseRunUpdate, KVMap } from "langsmith/schemas";
 
@@ -16,14 +17,6 @@ import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
 type Role = "user" | "ai" | "system" | "function";
 
-type LLMonitorMessage =
-  | string
-  | {
-      role: Role;
-      text: string;
-      functionCall?: Record<string, unknown>;
-    };
-
 // Langchain Helpers
 // Input can be either a single message, an array of message, or an array of array of messages (batch requests)
 
@@ -40,10 +33,12 @@ const parseRole = (id: string[]): Role => {
 
 type Message = BaseMessage | Generation | string;
 
+type OutputMessage = ChatMessage | string;
+
 export const convertToLLMonitorMessages = (
   input: Message | Message[] | Message[][]
-): LLMonitorMessage | LLMonitorMessage[] | LLMonitorMessage[][] => {
-  const parseMessage = (raw: Message): LLMonitorMessage => {
+): OutputMessage | OutputMessage[] | OutputMessage[][] => {
+  const parseMessage = (raw: Message): OutputMessage => {
     if (typeof raw === "string") return raw;
     // sometimes the message is nested in a "message" property
     if ("message" in raw) return parseMessage(raw.message as Message);
@@ -115,30 +110,31 @@ export interface RunUpdate extends BaseRunUpdate {
   events: BaseRun["events"];
 }
 
-export interface LLMonitorHandlerFields extends BaseCallbackHandlerInput {
-  appId?: string;
-  apiUrl?: string;
-}
+export interface LLMonitorHandlerFields
+  extends BaseCallbackHandlerInput,
+    LLMonitorOptions {}
 
 export class LLMonitorHandler
   extends BaseCallbackHandler
   implements LLMonitorHandlerFields
 {
   name = "llmonitor_handler";
-
   monitor: typeof monitor;
 
   constructor(fields: LLMonitorHandlerFields = {}) {
     super(fields);
-    const { appId, apiUrl } = fields;
 
     this.monitor = monitor;
 
-    this.monitor.init({
-      verbose: true,
-      appId: appId ?? getEnvironmentVariable("LLMONITOR_APP_ID"),
-      apiUrl: apiUrl ?? getEnvironmentVariable("LLMONITOR_API_URL"),
-    });
+    if (fields) {
+      const { appId, apiUrl, verbose } = fields;
+
+      this.monitor.init({
+        verbose,
+        appId: appId ?? getEnvironmentVariable("LLMONITOR_APP_ID"),
+        apiUrl: apiUrl ?? getEnvironmentVariable("LLMONITOR_API_URL"),
+      });
+    }
   }
 
   async handleLLMStart(
@@ -155,11 +151,8 @@ export class LLMonitorHandler
       ...(metadata || {}),
     };
 
-    const name =
-      params?.model ||
-      params?.name ||
-      params?.model_name ||
-      llm.id[llm.id.length - 1];
+    const name: string =
+      params?.model || params?.name || params?.model_name || llm.id.at(-1);
 
     const userId = params?.userId || undefined;
     const userProps = params?.userProps || undefined;
@@ -192,10 +185,7 @@ export class LLMonitorHandler
     };
 
     const name =
-      params?.model ||
-      params?.name ||
-      params?.model_name ||
-      llm.id[llm.id.length - 1];
+      params?.model || params?.name || params?.model_name || llm.id.at(-1);
 
     const userId = params?.userId || undefined;
     const userProps = params?.userProps || undefined;
@@ -243,8 +233,8 @@ export class LLMonitorHandler
     // runType?: string
   ): Promise<void> {
     // allow the user to specify an agent name
-    const chainName = chain.id[chain.id.length - 1];
-    const name = metadata?.agentName ?? chainName;
+    const chainName = chain.id.at(-1) as string;
+    const name = (metadata?.agentName ?? chainName) as string;
 
     // Attempt to automatically detect if this is an agent or chain
     const runType =
@@ -253,11 +243,13 @@ export class LLMonitorHandler
         ? "agent"
         : "chain";
 
+    delete metadata?.agentName;
+
     this.monitor.trackEvent(runType, "start", {
       runId,
       parentRunId,
       name,
-      input: parseInput(inputs),
+      input: parseInput(inputs) as cJSON,
       extra: metadata,
       tags,
       runtime: "langchain-js",
@@ -267,7 +259,7 @@ export class LLMonitorHandler
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
     this.monitor.trackEvent("chain", "end", {
       runId,
-      output: parseOutput(outputs),
+      output: parseOutput(outputs) as cJSON,
     });
   }
 
