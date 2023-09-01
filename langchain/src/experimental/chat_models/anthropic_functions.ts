@@ -68,11 +68,12 @@ export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCall
     let forced = false;
     let functionCall: string | undefined;
     if (options.tools) {
+      // eslint-disable-next-line no-param-reassign
       options.functions = (options.functions ?? []).concat(
         options.tools.map(formatToOpenAIFunction)
       );
     }
-    if (options.functions !== undefined) {
+    if (options.functions !== undefined && options.functions.length > 0) {
       const content = await TOOL_SYSTEM_PROMPT.format({
         tools: JSON.stringify(options.functions, null, 2),
       });
@@ -82,6 +83,7 @@ export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCall
         options?.stop?.concat(DEFAULT_STOP_SEQUENCES) ??
         this.stopSequences ??
         DEFAULT_STOP_SEQUENCES;
+      // eslint-disable-next-line no-param-reassign
       options.stop = stopSequences.concat(["</tool_input>"]);
       if (options.function_call) {
         if (typeof options.function_call === "string") {
@@ -103,8 +105,10 @@ export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCall
             content: `<tool>${functionCall}</tool>`,
           }),
         ]);
+        // eslint-disable-next-line no-param-reassign
         delete options.function_call;
       }
+      // eslint-disable-next-line no-param-reassign
       delete options.functions;
     } else if (options.function_call !== undefined) {
       throw new Error(

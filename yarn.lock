@@ -15191,6 +15191,8 @@ __metadata:
       optional: true
     faiss-node:
       optional: true
+    fast-xml-parser:
+      optional: true
     firebase-admin:
       optional: true
     google-auth-library:

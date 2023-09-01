@@ -947,10 +947,10 @@
     "epub2": {
       "optional": true
     },
-    "fast-xml-parser": {
+    "faiss-node": {
       "optional": true
     },
-    "faiss-node": {
+    "fast-xml-parser": {
       "optional": true
     },
     "firebase-admin": {
