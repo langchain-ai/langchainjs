@@ -161,10 +161,14 @@ export abstract class BaseTransformOutputParser<
     inputGenerator: AsyncGenerator<string | BaseMessage>,
     options: BaseCallbackConfig
   ): AsyncGenerator<T> {
-    yield* this._streamWithConfig(this._transform(inputGenerator), {
-      ...options,
-      runType: "parser",
-    });
+    yield* this._transformStreamWithConfig(
+      inputGenerator,
+      this._transform.bind(this),
+      {
+        ...options,
+        runType: "parser",
+      }
+    );
   }
 }
 
