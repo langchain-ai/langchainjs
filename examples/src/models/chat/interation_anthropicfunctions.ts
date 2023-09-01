@@ -1,39 +1,37 @@
 import { ChatAnthropicFunctions } from "langchain/chat_models/anthropicfunctions";
 import { HumanMessage } from "langchain/schema";
 import {
-  createExtractionChain,
   createExtractionChainFromZod,
   createTaggingChain,
 } from "langchain/chains";
 import { z } from "zod";
 import { FunctionParameters } from "langchain/output_parsers";
-import { ChatOpenAI } from "langchain/chat_models";
 
-// const functionSchema = {
-//   name: "get_weather",
-//   description: " Get weather information.",
-//   parameters: {
-//     type: "object",
-//     properties: {
-//       location: {
-//         type: "string",
-//         description: " The location to get the weather",
-//       },
-//     },
-//     required: ["location"],
-//   },
-// };
-//
-// // Passing in functions
-// const model = new ChatAnthropicFunctions({ modelName: "claude-2" }).bind({
-//   functions: [functionSchema],
-// });
-//
-// const result = await model.invoke([
-//   new HumanMessage({ content: "whats the weater in boston?" }),
-// ]);
-//
-// console.log(result);
+const functionSchema = {
+  name: "get_weather",
+  description: " Get weather information.",
+  parameters: {
+    type: "object",
+    properties: {
+      location: {
+        type: "string",
+        description: " The location to get the weather",
+      },
+    },
+    required: ["location"],
+  },
+};
+
+// Passing in functions
+const model = new ChatAnthropicFunctions({ modelName: "claude-2" }).bind({
+  functions: [functionSchema],
+});
+
+const result = await model.invoke([
+  new HumanMessage({ content: "whats the weater in boston?" }),
+]);
+
+console.log(result);
 
 /*
 AIMessage {
@@ -50,25 +48,25 @@ AIMessage {
 
 // Using for extraction
 
-// const zodSchema = z.object({
-//   "person-name": z.string().optional(),
-//   "person-age": z.number().optional(),
-//   "person-hair_color": z.string().optional(),
-//   "dog-name": z.string().optional(),
-//   "dog-breed": z.string().optional(),
-// });
-//
-// const chatModel = new ChatAnthropicFunctions({
-//   modelName: "claude-2",
-//   temperature: 0,
-// });
-//
-// const chain = createExtractionChainFromZod(zodSchema, chatModel);
-//
-// console.log(
-//   await chain.run(`Alex is 5 feet tall. Claudia is 4 feet taller Alex and jumps higher than him. Claudia is a brunette and Alex is blonde.
-// Alex's dog Frosty is a labrador and likes to play hide and seek.`)
-// );
+const zodSchema = z.object({
+  "person-name": z.string().optional(),
+  "person-age": z.number().optional(),
+  "person-hair_color": z.string().optional(),
+  "dog-name": z.string().optional(),
+  "dog-breed": z.string().optional(),
+});
+
+const chatModel = new ChatAnthropicFunctions({
+  modelName: "claude-2",
+  temperature: 0,
+});
+
+const chain = createExtractionChainFromZod(zodSchema, chatModel);
+
+console.log(
+  await chain.run(`Alex is 5 feet tall. Claudia is 4 feet taller Alex and jumps higher than him. Claudia is a brunette and Alex is blonde.
+Alex's dog Frosty is a labrador and likes to play hide and seek.`)
+);
 
 /*
 {
