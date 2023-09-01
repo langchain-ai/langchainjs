@@ -1,0 +1,43 @@
+---
+sidebar_label: Anthropic Functions
+---
+
+# Anthropic Functions
+
+LangChain offers an experimental wrapper around Anthropic that gives it the same API as OpenAI Functions.
+
+## Setup
+
+First, you'll need to install the popular [`fast-xml-parser`](https://www.npmjs.com/package/fast-xml-parser) package as a peer dependency:
+
+```bash npm2yarn
+npm install fast-xml-parser
+```
+
+## Initialize model
+
+You can initialize this wrapper the same way you'd initialize a standard `ChatAnthropic` instance:
+
+```typescript
+import { AnthropicFunctions } from "langchain/experimental/chat_models/anthropic_functions";
+
+const model = new AnthropicFunctions({
+  temperature: 0.1,
+  anthropicApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ANTHROPIC_API_KEY
+});
+```
+
+## Passing in functions
+
+You can now pass in functions the same way as OpenAI:
+
+import CodeBlock from "@theme/CodeBlock";
+import AnthropicFunctionsCalling from "@examples/models/chat/anthropic_functions/function_calling.ts";
+
+<CodeBlock language="typescript">{AnthropicFunctionsCalling}</CodeBlock>
+
+## Using for extraction
+
+import AnthropicFunctionsExtraction from "@examples/models/chat/anthropic_functions/extraction.ts";
+
+<CodeBlock language="typescript">{AnthropicFunctionsExtraction}</CodeBlock>

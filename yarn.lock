@@ -15,9 +15,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.5.7":
-  version: 0.5.7
-  resolution: "@anthropic-ai/sdk@npm:0.5.7"
+"@anthropic-ai/sdk@npm:^0.6.2":
+  version: 0.6.2
+  resolution: "@anthropic-ai/sdk@npm:0.6.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -27,7 +27,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-  checksum: b4c55d8c962438516a035e8d08c4e6bc1f34f93df6254dc0e12db3d21cf265df3416cbfe976e9fad9ecc22f15aa1f58048465f9a298f80b71efcb6c872a35583
+  checksum: a07dd0d42fe83b79bec506399755161cb12d26df756093df7f6189d062d01bd944a4d909d9d13b178567e7778b8966fe6f4b7051b9397cbd035c3fc184289c36
   languageName: node
   linkType: hard
 
@@ -11977,6 +11977,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-xml-parser@npm:^4.2.7":
+  version: 4.2.7
+  resolution: "fast-xml-parser@npm:4.2.7"
+  dependencies:
+    strnum: ^1.0.5
+  bin:
+    fxparser: src/cli/cli.js
+  checksum: d8b0c9e04756f6c43fa0399428f30149acadae21350e42e26e8fe98e24e6afa6b9b00aa554453795036b00e9fee974a1b556fe2ba18be391d51a9bf1ab790e7c
+  languageName: node
+  linkType: hard
+
 "fastq@npm:^1.6.0":
   version: 1.15.0
   resolution: "fastq@npm:1.15.0"
@@ -14872,7 +14883,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
-    "@anthropic-ai/sdk": ^0.5.7
+    "@anthropic-ai/sdk": ^0.6.2
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-dynamodb": ^3.310.0
     "@aws-sdk/client-kendra": ^3.352.0
@@ -14951,6 +14962,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
     faiss-node: ^0.3.0
+    fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     flat: ^5.0.2
     google-auth-library: ^8.9.0
@@ -15054,6 +15066,7 @@ __metadata:
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     faiss-node: ^0.3.0
+    fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     google-auth-library: ^8.9.0
     hnswlib-node: ^1.4.2
