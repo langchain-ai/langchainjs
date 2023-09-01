@@ -3,6 +3,7 @@ import {
   BaseRun,
   RunCreate,
   RunUpdate as BaseRunUpdate,
+  KVMap,
 } from "langsmith/schemas";
 import {
   getEnvironmentVariable,
@@ -19,6 +20,7 @@ export interface Run extends BaseRun {
 
 export interface RunUpdate extends BaseRunUpdate {
   events: BaseRun["events"];
+  inputs: KVMap;
 }
 
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
