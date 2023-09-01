@@ -143,3 +143,16 @@ test("Test run with error", async () => {
     await db.run("SELECT * FROM userss");
   }).rejects.toThrow("SQLITE_ERROR: no such table: userss");
 });
+
+test("Test customDescription initialization from DataSourceParams", async () => {
+  const db = await SqlDatabase.fromDataSourceParams({
+    appDataSource: datasource,
+    customDescription: {
+      products: "this is a customDescription for table in db",
+      productss: "this customDescription should be skipped as table not in db",
+    },
+  });
+  expect(db.customDescription).toStrictEqual({
+    products: "this is a customDescription for table in db",
+  });
+});

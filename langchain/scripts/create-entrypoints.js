@@ -231,6 +231,7 @@ const entrypoints = {
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   "experimental/multimodal_embeddings/googlevertexai":
     "experimental/multimodal_embeddings/googlevertexai",
+  "experimental/chat_models/anthropic_functions": "experimental/chat_models/anthropic_functions",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -368,6 +369,7 @@ const requiresOptionalDependency = [
   "storage/ioredis",
   "hub",
   "experimental/multimodal_embeddings/googlevertexai",
+  "experimental/chat_models/anthropic_functions",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
