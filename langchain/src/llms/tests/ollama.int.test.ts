@@ -47,9 +47,7 @@ test.skip("should stream through with a bytes output parser", async () => {
   User: {input}
   AI:`;
 
-  const prompt = PromptTemplate.fromTemplate<{
-    input: string;
-  }>(TEMPLATE);
+  const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
   const ollama = new Ollama({
     model: "llama2",

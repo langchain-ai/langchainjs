@@ -4,6 +4,8 @@ import {
   AgentFinish,
   BaseMessage,
   ChainValues,
+  ChatGenerationChunk,
+  GenerationChunk,
   LLMResult,
 } from "../schema/index.js";
 import {
@@ -39,6 +41,11 @@ export interface NewTokenIndices {
   completion: number;
 }
 
+// TODO: Add all additional callback fields here
+export type HandleLLMNewTokenCallbackFields = {
+  chunk?: GenerationChunk | ChatGenerationChunk;
+};
+
 /**
  * Abstract class that provides a set of optional methods that can be
  * overridden in derived classes to handle various events during the
@@ -73,7 +80,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     idx: NewTokenIndices,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
   ): Promise<void> | void;
 
   /**
@@ -131,7 +139,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> | void;
 
   /**
@@ -141,7 +150,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     outputs: ChainValues,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> | void;
 
   /**

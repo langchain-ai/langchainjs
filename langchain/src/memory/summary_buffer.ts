@@ -50,7 +50,7 @@ export class ConversationSummaryBufferMemory
    * @param _ InputValues object, not used in this method.
    * @returns Promise that resolves with MemoryVariables object containing the loaded chat messages.
    */
-  async loadMemoryVariables(_: InputValues): Promise<MemoryVariables> {
+  async loadMemoryVariables(_?: InputValues): Promise<MemoryVariables> {
     let buffer = await this.chatHistory.getMessages();
     if (this.movingSummaryBuffer) {
       buffer = [

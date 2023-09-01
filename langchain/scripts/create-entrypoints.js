@@ -43,6 +43,7 @@ const entrypoints = {
   "embeddings/hf": "embeddings/hf",
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
+  "embeddings/minimax": "embeddings/minimax",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -59,6 +60,8 @@ const entrypoints = {
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   "llms/bedrock": "llms/bedrock",
+  "llms/llama_cpp": "llms/llama_cpp",
+  "llms/writer": "llms/writer",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -120,6 +123,7 @@ const entrypoints = {
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/notionapi": "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url": "document_loaders/web/recursive_url",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
@@ -153,6 +157,7 @@ const entrypoints = {
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
+  "chat_models/minimax": "chat_models/minimax",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
@@ -177,11 +182,13 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
+  "retrievers/score_threshold": "retrievers/score_threshold",
   "retrievers/self_query": "retrievers/self_query/index",
   "retrievers/self_query/chroma": "retrievers/self_query/chroma",
   "retrievers/self_query/functional": "retrievers/self_query/functional",
@@ -204,6 +211,7 @@ const entrypoints = {
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/firestore": "stores/message/firestore",
   "stores/message/momento": "stores/message/momento",
+  "stores/message/mongodb": "stores/message/mongodb",
   "stores/message/redis": "stores/message/redis",
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
@@ -212,6 +220,8 @@ const entrypoints = {
   // storage
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  // hub
+  "hub": "hub",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -221,6 +231,7 @@ const entrypoints = {
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   "experimental/multimodal_embeddings/googlevertexai":
     "experimental/multimodal_embeddings/googlevertexai",
+  "experimental/chat_models/anthropic_functions": "experimental/chat_models/anthropic_functions",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -264,6 +275,8 @@ const requiresOptionalDependency = [
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "llms/bedrock",
+  "llms/llama_cpp",
+  "llms/writer",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
@@ -304,6 +317,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
   "document_loaders/web/notionapi",
+  "document_loaders/web/recursive_url",
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
@@ -346,13 +360,16 @@ const requiresOptionalDependency = [
   "stores/message/dynamodb",
   "stores/message/firestore",
   "stores/message/momento",
+  "stores/message/mongodb",
   "stores/message/redis",
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  "hub",
   "experimental/multimodal_embeddings/googlevertexai",
+  "experimental/chat_models/anthropic_functions",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

@@ -20,6 +20,7 @@ export interface SqlDatabaseParams {
   includesTables?: Array<string>;
   ignoreTables?: Array<string>;
   sampleRowsInTableInfo?: number;
+  customDescription?: Record<string, string>;
 }
 
 export interface SqlDatabaseOptionsParams extends SqlDatabaseParams {
@@ -238,7 +239,8 @@ const formatSqlResponseToSimpleTableString = (rawResult: unknown): string => {
 export const generateTableInfoFromTables = async (
   tables: Array<SqlTable> | undefined,
   appDataSource: DataSource,
-  nbSampleRow: number
+  nbSampleRow: number,
+  customDescription?: Record<string, string>
 ): Promise<string> => {
   if (!tables) {
     return "";
@@ -246,6 +248,12 @@ export const generateTableInfoFromTables = async (
 
   let globalString = "";
   for (const currentTable of tables) {
+    // Add the custom info of the table
+    const tableCustomDescription =
+      customDescription &&
+      Object.keys(customDescription).includes(currentTable.tableName)
+        ? `${customDescription[currentTable.tableName]}\n`
+        : "";
     // Add the creation of the table in SQL
     let schema = null;
     if (appDataSource.options.type === "postgres") {
@@ -305,7 +313,8 @@ export const generateTableInfoFromTables = async (
     }
 
     globalString = globalString.concat(
-      sqlCreateTableQuery +
+      tableCustomDescription +
+        sqlCreateTableQuery +
         sqlSelectInfoQuery +
         columnNamesConcatString +
         sample

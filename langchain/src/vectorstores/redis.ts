@@ -159,10 +159,15 @@ export class RedisVectorStore extends VectorStore {
     // check if the index exists and create it if it doesn't
     await this.createIndex(vectors[0].length);
 
+    const info = await this.redisClient.ft.info(this.indexName);
+    const lastKeyCount = parseInt(info.numDocs, 10) || 0;
     const multi = this.redisClient.multi();
 
     vectors.map(async (vector, idx) => {
-      const key = keys && keys.length ? keys[idx] : `${this.keyPrefix}${idx}`;
+      const key =
+        keys && keys.length
+          ? keys[idx]
+          : `${this.keyPrefix}${idx + lastKeyCount}`;
       const metadata =
         documents[idx] && documents[idx].metadata
           ? documents[idx].metadata
@@ -284,6 +289,12 @@ export class RedisVectorStore extends VectorStore {
     try {
       await this.redisClient.ft.info(this.indexName);
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((err as any)?.message.includes("unknown command")) {
+        throw new Error(
+          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/redis#setup"
+        );
+      }
       // index doesn't exist
       return false;
     }
@@ -321,15 +332,30 @@ export class RedisVectorStore extends VectorStore {
 
   /**
    * Method for dropping an index from the RedisVectorStore.
+   * @param deleteDocuments Optional boolean indicating whether to drop the associated documents.
    * @returns A promise that resolves to a boolean indicating whether the index was dropped.
    */
-  async dropIndex(): Promise<boolean> {
+  async dropIndex(deleteDocuments?: boolean): Promise<boolean> {
     try {
-      await this.redisClient.ft.dropIndex(this.indexName);
+      const options = deleteDocuments ? { DD: deleteDocuments } : undefined;
+      await this.redisClient.ft.dropIndex(this.indexName, options);
 
       return true;
     } catch (err) {
       return false;
+    }
+  }
+
+  /**
+   * Deletes vectors from the vector store.
+   * @param params The parameters for deleting vectors.
+   * @returns A promise that resolves when the vectors have been deleted.
+   */
+  async delete(params: { deleteAll: boolean }): Promise<void> {
+    if (params.deleteAll) {
+      await this.dropIndex(true);
+    } else {
+      throw new Error(`Invalid parameters passed to "delete".`);
     }
   }
 

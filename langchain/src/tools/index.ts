@@ -36,6 +36,7 @@ export {
   WikipediaQueryRun,
   WikipediaQueryRunParams,
 } from "./wikipedia_query_run.js";
+export { WolframAlphaTool } from "./wolframalpha.js";
 export {
   DataForSeoAPISearch,
   DataForSeoApiConfig,
