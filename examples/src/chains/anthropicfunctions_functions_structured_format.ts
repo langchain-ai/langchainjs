@@ -32,7 +32,10 @@ const prompt = new ChatPromptTemplate({
   inputVariables: ["inputText"],
 });
 
-const llm = new ChatAnthropicFunctions({ modelName: "claude-2", temperature: 0 });
+const llm = new ChatAnthropicFunctions({
+  modelName: "claude-2",
+  temperature: 0,
+});
 
 // Binding "function_call" below makes the model always call the specified function.
 // If you want to allow the model to call functions selectively, omit it.

@@ -4,10 +4,10 @@ import { test } from "@jest/globals";
 import { ChatAnthropicFunctions } from "../anthropicfunctions.js";
 import {
   ChatPromptTemplate,
-  HumanMessagePromptTemplate, PromptTemplate,
-  SystemMessagePromptTemplate
+  HumanMessagePromptTemplate,
+  PromptTemplate,
+  SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
-
 
 test("Test ChatAnthropicFunctions call", async () => {
   const functions = [
@@ -113,7 +113,6 @@ test("Test ChatAnthropicFunctions call", async () => {
       text: " It cost me $10 for lunch.",
     })
   );
-  console.log({res});
+  console.log({ res });
   expect(res.additional_kwargs.function_call?.name).toBe("accounting_tool");
-
 });

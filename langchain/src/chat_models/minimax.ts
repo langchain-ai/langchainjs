@@ -12,6 +12,7 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { FunctionCallOptions } from "../base_language/index.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
+import { StructuredTool } from "../tools/index.js";
 
 /**
  * Type representing the sender_type of a message in the Minimax chat model.
@@ -26,7 +27,6 @@ interface MinimaxChatCompletionRequestMessage {
   sender_name?: string;
   text: string;
 }
-
 
 /**
  * Interface representing a request for a chat completion.
@@ -262,6 +262,7 @@ export interface ChatMinimaxCallOptions extends FunctionCallOptions {
   botSetting?: BotSetting[];
   replyConstraints?: ReplyConstraints;
   sampleMessages?: BaseMessage[];
+  tools?: StructuredTool[];
 }
 
 /**

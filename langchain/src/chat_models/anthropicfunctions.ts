@@ -6,6 +6,7 @@ import { FunctionCallOptions } from "../base_language/index.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import { SystemMessagePromptTemplate } from "../prompts/index.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
+import { StructuredTool } from "../tools/index.js";
 
 const prompt = `In addition to responding, you can use tools. 
 You have access to the following tools.
@@ -35,7 +36,12 @@ else:
  * Wrapper around Minimax large language models that use the Chat endpoint.
  *
  */
-export class ChatAnthropicFunctions extends BaseChatModel<FunctionCallOptions> {
+
+export interface ChatAnthropicFunctionsCallOptions extends FunctionCallOptions {
+  tools?: StructuredTool[];
+}
+
+export class ChatAnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
   model: ChatAnthropic;
 
   functionEnabled: boolean;

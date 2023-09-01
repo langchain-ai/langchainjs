@@ -40,6 +40,7 @@ import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { readableStreamToAsyncIterable } from "../util/stream.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import { FunctionCallOptions } from "../base_language/index.js";
+import { StructuredTool } from "../tools/index.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -138,7 +139,10 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-export interface ChatOpenAICallOptions extends OpenAICallOptions,FunctionCallOptions {
+export interface ChatOpenAICallOptions
+  extends OpenAICallOptions,
+    FunctionCallOptions {
+  tools?: StructuredTool[];
   promptIndex?: number;
 }
 
