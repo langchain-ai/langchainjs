@@ -13,9 +13,7 @@ import {
   DEFAULT_STOP_SEQUENCES,
   type AnthropicInput,
 } from "../../chat_models/anthropic.js";
-import {
-  BaseFunctionCallOptions,
-} from "../../base_language/index.js";
+import { BaseFunctionCallOptions } from "../../base_language/index.js";
 import { StructuredTool } from "../../tools/base.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";

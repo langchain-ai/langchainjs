@@ -28,7 +28,6 @@ interface MinimaxChatCompletionRequestMessage {
   text: string;
 }
 
-
 /**
  * Interface representing a request for a chat completion.
  */

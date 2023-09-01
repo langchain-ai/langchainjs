@@ -1,5 +1,8 @@
 import { type Tiktoken } from "js-tiktoken/lite";
-import { ChatCompletionFunctions, CreateChatCompletionRequestFunctionCall } from "openai";
+import {
+  ChatCompletionFunctions,
+  CreateChatCompletionRequestFunctionCall,
+} from "openai";
 import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseCallbackConfig,
@@ -79,7 +82,6 @@ export interface BaseLanguageModelParams
    */
   callbackManager?: CallbackManager;
 }
-
 
 export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   /**

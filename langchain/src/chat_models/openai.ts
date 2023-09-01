@@ -139,7 +139,9 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-export interface ChatOpenAICallOptions extends OpenAICallOptions,BaseFunctionCallOptions {
+export interface ChatOpenAICallOptions
+  extends OpenAICallOptions,
+    BaseFunctionCallOptions {
   tools?: StructuredTool[];
   promptIndex?: number;
 }
