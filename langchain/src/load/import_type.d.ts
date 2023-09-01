@@ -268,7 +268,7 @@ export interface OptionalImportMap {
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;
-  "langchain/callbacks/llmonitor"?:
+  "langchain/callbacks/handlers/llmonitor"?:
     | typeof import("../callbacks/handlers/llmonitor.js")
     | Promise<typeof import("../callbacks/handlers/llmonitor.js")>;
   "langchain/output_parsers/expression"?:

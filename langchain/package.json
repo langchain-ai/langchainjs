@@ -424,9 +424,9 @@
     "callbacks.cjs",
     "callbacks.js",
     "callbacks.d.ts",
-    "callbacks/llmonitor.cjs",
-    "callbacks/llmonitor.js",
-    "callbacks/llmonitor.d.ts",
+    "callbacks/handlers/llmonitor.cjs",
+    "callbacks/handlers/llmonitor.js",
+    "callbacks/handlers/llmonitor.d.ts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
@@ -1801,10 +1801,10 @@
       "import": "./callbacks.js",
       "require": "./callbacks.cjs"
     },
-    "./callbacks/llmonitor": {
-      "types": "./callbacks/llmonitor.d.ts",
-      "import": "./callbacks/llmonitor.js",
-      "require": "./callbacks/llmonitor.cjs"
+    "./callbacks/handlers/llmonitor": {
+      "types": "./callbacks/handlers/llmonitor.d.ts",
+      "import": "./callbacks/handlers/llmonitor.js",
+      "require": "./callbacks/handlers/llmonitor.cjs"
     },
     "./output_parsers": {
       "types": "./output_parsers.d.ts",

@@ -90,7 +90,7 @@ export const optionalImportEntrypoints = [
   "langchain/chat_models/googlevertexai",
   "langchain/chat_models/googlepalm",
   "langchain/sql_db",
-  "langchain/callbacks/llmonitor",
+  "langchain/callbacks/handlers/llmonitor",
   "langchain/output_parsers/expression",
   "langchain/retrievers/amazon_kendra",
   "langchain/retrievers/supabase",

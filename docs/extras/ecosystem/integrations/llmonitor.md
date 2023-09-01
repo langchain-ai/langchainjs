@@ -34,7 +34,7 @@ LLMONITOR_APP_ID="..."
 If you prefer not to use environment variables, you can set your app ID explictly like this:
 
 ```ts
-import { LLMonitorHandler } from "langchain/callbacks/llmonitor";
+import { LLMonitorHandler } from "langchain/callbacks/handlers/llmonitor";
 
 const handler = new LLMonitorHandler({
   appId: "app ID",
@@ -48,7 +48,7 @@ You can now use the callback handler with LLM calls, chains and agents.
 ## Quick Start
 
 ```ts
-import { LLMonitorHandler } from "langchain/callbacks/llmonitor";
+import { LLMonitorHandler } from "langchain/callbacks/handlers/llmonitor";
 
 const model = new ChatOpenAI({
   callbacks: [new LLMonitorHandler()],
@@ -60,7 +60,7 @@ const model = new ChatOpenAI({
 When tracing chains or agents, make sure to include the callback at the run level so that all sub LLM calls & chain runs are reported as well.
 
 ```ts
-import { LLMonitorHandler } from "langchain/callbacks/llmonitor";
+import { LLMonitorHandler } from "langchain/callbacks/handlers/llmonitor";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Calculator } from "langchain/tools/calculator";
@@ -89,7 +89,7 @@ You can use the callback handler combined with the `llmonitor` module to track c
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
-import { LLMonitorHandler } from "langchain/callbacks/llmonitor";
+import { LLMonitorHandler } from "langchain/callbacks/handlers/llmonitor";
 import monitor from "llmonitor";
 
 const chat = new ChatOpenAI({
