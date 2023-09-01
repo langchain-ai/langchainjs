@@ -367,7 +367,6 @@ const requiresOptionalDependency = [
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
-  "hub",
   "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions",
 ];
