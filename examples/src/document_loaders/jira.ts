@@ -1,7 +1,7 @@
 import { JiraProjectLoader } from "langchain/document_loaders/web/jira";
 
-const username = process.env.CONFLUENCE_USERNAME;
-const accessToken = process.env.CONFLUENCE_ACCESS_TOKEN;
+const username = process.env.JIRA_USERNAME;
+const accessToken = process.env.JIRA_ACCESS_TOKEN;
 
 if (username && accessToken) {
   const loader = new JiraProjectLoader({
