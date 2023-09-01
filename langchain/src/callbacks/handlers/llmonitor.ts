@@ -231,7 +231,6 @@ export class LLMonitorHandler
     parentRunId?: string,
     tags?: string[],
     metadata?: KVMap
-    // runType?: string
   ): Promise<void> {
     // allow the user to specify an agent name
     const chainName = chain.id.at(-1) as string;
@@ -244,6 +243,7 @@ export class LLMonitorHandler
         ? "agent"
         : "chain";
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { agentName, ...rest } = metadata || {};
 
     await this.monitor.trackEvent(runType, "start", {
