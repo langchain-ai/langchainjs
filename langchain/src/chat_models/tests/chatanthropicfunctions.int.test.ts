@@ -1,13 +1,13 @@
 /* eslint-disable no-process-env */
 
-import { expect, test } from "@jest/globals";
+import { test } from "@jest/globals";
 import { ChatAnthropicFunctions } from "../anthropicfunctions.js";
 import {
   ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate, PromptTemplate,
+  SystemMessagePromptTemplate
 } from "../../prompts/index.js";
+
 
 test("Test ChatAnthropicFunctions call", async () => {
   const functions = [

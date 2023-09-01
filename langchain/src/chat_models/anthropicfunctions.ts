@@ -14,9 +14,10 @@ You have access to the following tools.
 
 In order to use a tool, you can use <tool></tool> to specify the name, 
 and the <tool_input></tool_input> tags to specify the parameters. 
-Each parameter should be passed in as <$param_name>$value</$param_name>, 
-Where $param_name is the name of the specific parameter, and $value 
-is the value for that parameter.
+Each parameter should be passed in as <param_name>value</param_name>, 
+Where param_name is the name of the specific parameter, and value 
+is the value for that parameter. 
+
 
 If a tool is chosen: 
   You will get back a response in the XML format only about the tool. 
@@ -106,7 +107,10 @@ export class ChatAnthropicFunctions extends BaseChatModel<FunctionCallOptions> {
         }
       }
 
-      const builder = new XMLBuilder();
+      const builder = new XMLBuilder({
+        arrayNodeName: "tool",
+        oneListGroup: true,
+      });
       const functionsXml = builder.build(newOptions.functions);
 
       const systemMessage = await SystemMessagePromptTemplate.fromTemplate(
@@ -130,7 +134,7 @@ export class ChatAnthropicFunctions extends BaseChatModel<FunctionCallOptions> {
 
     const { generations: resultGenerations } = chatResult;
     const { message } = resultGenerations[0];
-    const result = `here is the result: ${message.content.trim()}`;
+    const result = `${message.content.trim()}`;
     const trimmedResult = result.trim();
 
     let generations = resultGenerations;
@@ -139,6 +143,7 @@ export class ChatAnthropicFunctions extends BaseChatModel<FunctionCallOptions> {
     if (this.functionEnabled && trimmedResult.includes("<tool>")) {
       const xmlParser = new XMLParser();
       const jObj = xmlParser.parse(`${trimmedResult}</tool_input>`);
+
       const aiMessage = new AIMessage("", {
         function_call: {
           name: jObj.tool,

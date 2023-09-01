@@ -11686,6 +11686,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     faiss-node: ^0.2.1
+    fast-xml-parser: ^4.2.7
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
