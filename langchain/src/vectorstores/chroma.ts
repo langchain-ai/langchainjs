@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
-import type { Where } from "chromadb/dist/main/types.js";
+import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
 
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
@@ -21,12 +21,14 @@ export type ChromaLibArgs =
       numDimensions?: number;
       collectionName?: string;
       filter?: object;
+      collectionMetadata?: CollectionMetadata;
     }
   | {
       index?: ChromaClientT;
       numDimensions?: number;
       collectionName?: string;
       filter?: object;
+      collectionMetadata?: CollectionMetadata;
     };
 
 /**
@@ -53,6 +55,8 @@ export class Chroma extends VectorStore {
 
   collectionName: string;
 
+  collectionMetadata?: CollectionMetadata;
+
   numDimensions?: number;
 
   url: string;
@@ -68,6 +72,7 @@ export class Chroma extends VectorStore {
     this.numDimensions = args.numDimensions;
     this.embeddings = embeddings;
     this.collectionName = ensureCollectionName(args.collectionName);
+    this.collectionMetadata = args.collectionMetadata;
     if ("index" in args) {
       this.index = args.index;
     } else if ("url" in args) {
@@ -108,6 +113,7 @@ export class Chroma extends VectorStore {
       try {
         this.collection = await this.index.getOrCreateCollection({
           name: this.collectionName,
+          ...(this.collectionMetadata && { metadata: this.collectionMetadata }),
         });
       } catch (err) {
         throw new Error(`Chroma getOrCreateCollection error: ${err}`);

@@ -9,12 +9,10 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { RedisVectorStore } from "../redis.js";
 import { Document } from "../../document.js";
 
-describe.skip("RedisVectorStore", () => {
+describe("RedisVectorStore", () => {
   let vectorStore: RedisVectorStore;
 
   beforeEach(async () => {
-    expect(process.env.REDIS_URL).toBeDefined();
-
     const client = createClient({ url: process.env.REDIS_URL });
     await client.connect();
 
@@ -25,7 +23,7 @@ describe.skip("RedisVectorStore", () => {
     });
   });
 
-  test("auto-generated ids", async () => {
+  test.skip("auto-generated ids", async () => {
     const pageContent = faker.lorem.sentence(5);
 
     await vectorStore.addDocuments([{ pageContent, metadata: { foo: "bar" } }]);
@@ -37,7 +35,7 @@ describe.skip("RedisVectorStore", () => {
     ]);
   });
 
-  test("user-provided keys", async () => {
+  test.skip("user-provided keys", async () => {
     const documentKey = `test:${uuidv4()}`;
     const pageContent = faker.lorem.sentence(5);
 
@@ -50,7 +48,7 @@ describe.skip("RedisVectorStore", () => {
     expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
   });
 
-  test("metadata filtering", async () => {
+  test.skip("metadata filtering", async () => {
     await vectorStore.dropIndex();
     const pageContent = faker.lorem.sentence(5);
     const uuid = uuidv4();

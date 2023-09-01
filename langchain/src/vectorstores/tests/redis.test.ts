@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { jest, test, expect, describe } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 import { RedisVectorStore } from "../redis.js";
@@ -9,12 +9,15 @@ const createRedisClientMockup = () => {
 
   return {
     ft: {
-      info: jest.fn(),
+      info: jest.fn<any>().mockResolvedValue({
+        numDocs: 0,
+      }),
       create: jest.fn(),
       search: jest.fn<any>().mockResolvedValue({
         total: 0,
         documents: [],
       }),
+      dropIndex: jest.fn(),
     },
     hSet: hSetMock,
     multi: jest.fn<any>().mockImplementation(() => ({
@@ -109,4 +112,42 @@ test("RedisVectorStore with filters", async () => {
       },
     }
   );
+});
+
+describe("RedisVectorStore dropIndex", () => {
+  const client = createRedisClientMockup();
+  const embeddings = new FakeEmbeddings();
+
+  const store = new RedisVectorStore(embeddings, {
+    redisClient: client as any,
+    indexName: "documents",
+  });
+
+  test("without deleteDocuments param provided", async () => {
+    await store.dropIndex();
+
+    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", undefined);
+  });
+
+  test("with deleteDocuments as false", async () => {
+    await store.dropIndex(false);
+
+    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", undefined);
+  });
+
+  test("with deleteDocument as true", async () => {
+    await store.dropIndex(true);
+
+    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", {
+      DD: true,
+    });
+  });
+
+  test("through delete convenience method", async () => {
+    await store.delete({ deleteAll: true });
+
+    expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", {
+      DD: true,
+    });
+  });
 });
