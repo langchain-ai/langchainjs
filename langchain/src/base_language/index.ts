@@ -1,4 +1,5 @@
 import { type Tiktoken } from "js-tiktoken/lite";
+import { ChatCompletionFunctions, CreateChatCompletionRequestFunctionCall } from "openai";
 import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseCallbackConfig,
@@ -79,6 +80,7 @@ export interface BaseLanguageModelParams
   callbackManager?: CallbackManager;
 }
 
+
 export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   /**
    * Stop tokens to use for this call.
@@ -97,6 +99,11 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
+}
+
+export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
+  function_call?: CreateChatCompletionRequestFunctionCall;
+  functions?: ChatCompletionFunctions[];
 }
 
 export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
