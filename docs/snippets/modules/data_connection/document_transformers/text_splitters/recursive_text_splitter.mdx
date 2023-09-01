@@ -32,3 +32,10 @@ const docOutput = await splitter.splitDocuments([
   new Document({ pageContent: text }),
 ]);
 ```
+
+You can customize the `RecursiveCharacterTextSplitter` with arbitrary separators by passing a `separators` parameter like this:
+
+import CodeBlock from "@theme/CodeBlock";
+import CustomSeparatorExample from "@examples/indexes/recursive_text_splitter_custom_separators.ts";
+
+<CodeBlock language="typescript">{CustomSeparatorExample}</CodeBlock>

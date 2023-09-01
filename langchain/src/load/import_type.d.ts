@@ -358,6 +358,9 @@ export interface OptionalImportMap {
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
+  "langchain/experimental/chat_models/anthropic_functions"?:
+    | typeof import("../experimental/chat_models/anthropic_functions.js")
+    | Promise<typeof import("../experimental/chat_models/anthropic_functions.js")>;
 }
 
 export interface SecretMap {

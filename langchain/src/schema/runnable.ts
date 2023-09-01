@@ -1,4 +1,8 @@
-import { BaseCallbackConfig, CallbackManager } from "../callbacks/manager.js";
+import {
+  BaseCallbackConfig,
+  CallbackManager,
+  CallbackManagerForChainRun,
+} from "../callbacks/manager.js";
 import { Serializable } from "../load/serializable.js";
 import { IterableReadableStream } from "../util/stream.js";
 
@@ -185,10 +189,28 @@ export abstract class Runnable<
     return output;
   }
 
-  protected async *_streamWithConfig<T extends RunOutput>(
-    generator: AsyncGenerator<T>,
+  /**
+   * Helper method to transform an Iterator of Input values into an Iterator of
+   * Output values, with callbacks.
+   * Use this to implement `stream()` or `transform()` in Runnable subclasses.
+   */
+  protected async *_transformStreamWithConfig<
+    I extends RunInput,
+    O extends RunOutput
+  >(
+    inputGenerator: AsyncGenerator<I>,
+    transformer: (
+      generator: AsyncGenerator<I>,
+      runManager?: CallbackManagerForChainRun,
+      options?: Partial<RunnableConfig>
+    ) => AsyncGenerator<O>,
     options?: RunnableConfig & { runType?: string }
-  ) {
+  ): AsyncGenerator<O> {
+    let finalInput: I | undefined;
+    let finalInputSupported = true;
+    let finalOutput: O | undefined;
+    let finalOutputSupported = true;
+
     const callbackManager_ = await CallbackManager.configure(
       options?.callbacks,
       undefined,
@@ -196,37 +218,73 @@ export abstract class Runnable<
       undefined,
       options?.metadata
     );
-    // TODO: Find a way to pass the entire streamed value into the callback.
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      _coerceToDict("<streamed value>", "input"),
-      undefined,
-      options?.runType
-    );
-    let output;
-    let concatSupported = true;
-    try {
-      for await (const chunk of generator) {
-        yield chunk;
-        if (concatSupported) {
-          if (output === undefined) {
-            output = chunk;
+    let runManager: CallbackManagerForChainRun | undefined;
+    const serializedRepresentation = this.toJSON();
+    async function* wrapInputForTracing() {
+      for await (const chunk of inputGenerator) {
+        if (!runManager) {
+          // Start the run manager AFTER the iterator starts to preserve
+          // tracing order
+          runManager = await callbackManager_?.handleChainStart(
+            serializedRepresentation,
+            { input: "" },
+            undefined,
+            options?.runType
+          );
+        }
+        if (finalInputSupported) {
+          if (finalInput === undefined) {
+            finalInput = chunk;
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              output = (output as any).concat(chunk);
-            } catch (e) {
-              output = undefined;
-              concatSupported = false;
+              finalInput = (finalInput as any).concat(chunk);
+            } catch {
+              finalInput = undefined;
+              finalInputSupported = false;
+            }
+          }
+        }
+        yield chunk;
+      }
+    }
+
+    const wrappedInputGenerator = wrapInputForTracing();
+    try {
+      const outputIterator = transformer(
+        wrappedInputGenerator,
+        runManager,
+        options
+      );
+      for await (const chunk of outputIterator) {
+        yield chunk;
+        if (finalOutputSupported) {
+          if (finalOutput === undefined) {
+            finalOutput = chunk;
+          } else {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              finalOutput = (finalOutput as any).concat(chunk);
+            } catch {
+              finalOutput = undefined;
+              finalOutputSupported = false;
             }
           }
         }
       }
     } catch (e) {
-      await runManager?.handleChainError(e);
+      await runManager?.handleChainError(e, undefined, undefined, undefined, {
+        inputs: _coerceToDict(finalInput, "input"),
+      });
       throw e;
     }
-    await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+    await runManager?.handleChainEnd(
+      finalOutput ?? {},
+      undefined,
+      undefined,
+      undefined,
+      { inputs: _coerceToDict(finalInput, "input") }
+    );
   }
 
   _patchConfig(
@@ -589,6 +647,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
 > {
+  static lc_name() {
+    return "RunnableLambda";
+  }
+
   lc_namespace = ["langchain", "schema", "runnable"];
 
   protected func: RunnableFunc<RunInput, RunOutput>;

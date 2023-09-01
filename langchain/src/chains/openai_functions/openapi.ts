@@ -16,6 +16,7 @@ import {
 } from "../../prompts/chat.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
+import { AnthropicFunctions } from "../../experimental/chat_models/anthropic_functions.js";
 
 /**
  * Type representing a function for executing OpenAPI requests.
@@ -430,7 +431,7 @@ class SimpleRequestChain extends BaseChain {
  * Type representing the options for creating an OpenAPI chain.
  */
 export type OpenAPIChainOptions = {
-  llm?: ChatOpenAI;
+  llm?: ChatOpenAI | AnthropicFunctions;
   prompt?: BasePromptTemplate;
   requestChain?: BaseChain;
   llmChainInputs?: LLMChainInput;
