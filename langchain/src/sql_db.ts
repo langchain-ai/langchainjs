@@ -49,11 +49,6 @@ export class SqlDatabase
     this.ignoreTables = fields?.ignoreTables ?? [];
     this.sampleRowsInTableInfo =
       fields?.sampleRowsInTableInfo ?? this.sampleRowsInTableInfo;
-    this.customDescription = Object.fromEntries(
-      Object.entries(fields?.customDescription ?? {}).filter(([key, _]) =>
-        this.allTables.map((table: SqlTable) => table.tableName).includes(key)
-      )
-    );
   }
 
   static async fromDataSourceParams(
@@ -65,6 +60,13 @@ export class SqlDatabase
     }
     sqlDatabase.allTables = await getTableAndColumnsName(
       sqlDatabase.appDataSource
+    );
+    sqlDatabase.customDescription = Object.fromEntries(
+      Object.entries(fields?.customDescription ?? {}).filter(([key, _]) =>
+        sqlDatabase.allTables
+          .map((table: SqlTable) => table.tableName)
+          .includes(key)
+      )
     );
     verifyIncludeTablesExistInDatabase(
       sqlDatabase.allTables,
