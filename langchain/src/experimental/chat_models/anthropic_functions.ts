@@ -1,8 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import type {
-  ChatCompletionFunctions,
-  CreateChatCompletionRequestFunctionCall,
-} from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 
 import { BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
@@ -45,8 +42,8 @@ for the weather in SF you would respond:
 
 export interface ChatAnthropicFunctionsCallOptions
   extends BaseLanguageModelCallOptions {
-  function_call?: CreateChatCompletionRequestFunctionCall;
-  functions?: ChatCompletionFunctions[];
+  function_call?: OpenAIClient.Chat.CompletionCreateParams.FunctionCallOption;
+  functions?: OpenAIClient.Chat.CompletionCreateParams.Function[];
   tools?: StructuredTool[];
 }
 
@@ -124,6 +121,9 @@ export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCall
     if (forced) {
       const parser = new XMLParser();
       const result = parser.parse(`${chatGenerationContent}</tool_input>`);
+      if (functionCall === undefined) {
+        throw new Error(`Could not parse called function from model output.`);
+      }
       const responseMessageWithFunctions = new AIMessage({
         content: "",
         additional_kwargs: {
