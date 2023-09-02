@@ -14986,7 +14986,7 @@ __metadata:
     node-llama-cpp: ^2.1.2
     notion-to-md: ^3.1.0
     object-hash: ^3.0.0
-    openai: ^4.3.1
+    openai: ^4.4.0
     openapi-types: ^12.1.3
     p-queue: ^6.6.2
     p-retry: 4
@@ -17170,9 +17170,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^4.3.1":
-  version: 4.3.1
-  resolution: "openai@npm:4.3.1"
+"openai@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "openai@npm:4.4.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -17184,7 +17184,7 @@ __metadata:
     node-fetch: ^2.6.7
   bin:
     openai: bin/cli
-  checksum: c14d52b01285645d344a8d2a244110b9241759e5a40ac2a38c02c02da1989b6f2e2717b08e1239d8781e91015d974c5f829cae3765f5e3322cf5564194870a72
+  checksum: c89b47f3d66c41d8a2080c23192573e8ce985aa3ba099bbe410fac2facf62f665aefad9ea3a7a210e35e650d8568ed1186e12806472d8242fc3dc31e930e6084
   languageName: node
   linkType: hard
 
