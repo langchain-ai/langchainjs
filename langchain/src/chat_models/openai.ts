@@ -132,8 +132,8 @@ function _convertDeltaToMessageChunk(
 }
 
 export interface ChatOpenAICallOptions extends OpenAICallOptions {
-  function_call?: OpenAIClient.Chat.CompletionCreateParams.FunctionCallOption;
-  functions?: OpenAIClient.Chat.CompletionCreateParams.Function[];
+  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   tools?: StructuredTool[];
   promptIndex?: number;
 }
@@ -332,7 +332,7 @@ export class ChatOpenAI
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<OpenAIClient.Chat.CompletionCreateParams, "messages"> {
+  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -357,7 +357,7 @@ export class ChatOpenAI
 
   /** @ignore */
   _identifyingParams(): Omit<
-    OpenAIClient.Chat.CompletionCreateParams,
+    OpenAIClient.Chat.ChatCompletionCreateParams,
     "messages"
   > & {
     model_name: string;
@@ -374,7 +374,7 @@ export class ChatOpenAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: OpenAIClient.Chat.CreateChatCompletionRequestMessage[] =
+    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
       messages.map((message) => ({
         role: messageToOpenAIRole(message),
         content: message.content,
@@ -438,7 +438,7 @@ export class ChatOpenAI
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped: OpenAIClient.Chat.CreateChatCompletionRequestMessage[] =
+    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
       messages.map((message) => ({
         role: messageToOpenAIRole(message),
         content: message.content,
@@ -559,19 +559,19 @@ export class ChatOpenAI
    * @returns The response from the OpenAI API.
    */
   async completionWithRetry(
-    request: OpenAIClient.Chat.CompletionCreateParamsStreaming,
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
-    request: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request:
-      | OpenAIClient.Chat.CompletionCreateParamsStreaming
-      | OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
+      | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
+      | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
@@ -715,7 +715,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _convertMessageToDict = (message: BaseMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let messageDict: OpenAIClient.Chat.CreateChatCompletionRequestMessage;
+      let messageDict: OpenAIClient.Chat.ChatCompletionMessageParam;
 
       if (message._getType() === "human") {
         messageDict = { role: "user", content: message.content };

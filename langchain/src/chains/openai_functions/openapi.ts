@@ -196,7 +196,7 @@ function convertOpenAPISchemaToJSONSchema(
  * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
  */
 function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
-  openAIFunctions: OpenAIClient.Chat.CompletionCreateParams.Function[];
+  openAIFunctions: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {
   if (!spec.document.paths) {
@@ -274,7 +274,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
           };
         }
       }
-      const openAIFunction: OpenAIClient.Chat.CompletionCreateParams.Function =
+      const openAIFunction: OpenAIClient.Chat.ChatCompletionCreateParams.Function =
         {
           name: OpenAPISpec.getCleanedOperationId(operation, path, method),
           description: operation.description ?? operation.summary ?? "",

@@ -11,7 +11,7 @@ import { StructuredTool } from "./base.js";
  */
 export function formatToOpenAIFunction(
   tool: StructuredTool
-): OpenAIClient.Chat.CompletionCreateParams.Function {
+): OpenAIClient.Chat.ChatCompletionCreateParams.Function {
   return {
     name: tool.name,
     description: tool.description,

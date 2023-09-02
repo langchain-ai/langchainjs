@@ -42,8 +42,8 @@ for the weather in SF you would respond:
 
 export interface ChatAnthropicFunctionsCallOptions
   extends BaseLanguageModelCallOptions {
-  function_call?: OpenAIClient.Chat.CompletionCreateParams.FunctionCallOption;
-  functions?: OpenAIClient.Chat.CompletionCreateParams.Function[];
+  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   tools?: StructuredTool[];
 }
 

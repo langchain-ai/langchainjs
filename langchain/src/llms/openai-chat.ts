@@ -99,7 +99,7 @@ export class OpenAIChat
 
   modelName = "gpt-3.5-turbo";
 
-  prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
+  prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[];
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -229,7 +229,7 @@ export class OpenAIChat
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<OpenAIClient.Chat.CompletionCreateParams, "messages"> {
+  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -248,7 +248,7 @@ export class OpenAIChat
 
   /** @ignore */
   _identifyingParams(): Omit<
-    OpenAIClient.Chat.CompletionCreateParams,
+    OpenAIClient.Chat.ChatCompletionCreateParams,
     "messages"
   > & {
     model_name: string;
@@ -264,7 +264,7 @@ export class OpenAIChat
    * Get the identifying parameters for the model
    */
   identifyingParams(): Omit<
-    OpenAIClient.Chat.CompletionCreateParams,
+    OpenAIClient.Chat.ChatCompletionCreateParams,
     "messages"
   > & {
     model_name: string;
@@ -283,8 +283,8 @@ export class OpenAIChat
    */
   private formatMessages(
     prompt: string
-  ): OpenAIClient.Chat.CreateChatCompletionRequestMessage[] {
-    const message: OpenAIClient.Chat.CreateChatCompletionRequestMessage = {
+  ): OpenAIClient.Chat.ChatCompletionMessageParam[] {
+    const message: OpenAIClient.Chat.ChatCompletionMessageParam = {
       role: "user",
       content: prompt,
     };
@@ -373,19 +373,19 @@ export class OpenAIChat
    * @returns The response from the OpenAI API.
    */
   async completionWithRetry(
-    request: OpenAIClient.Chat.CompletionCreateParamsStreaming,
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
     options?: OpenAICoreRequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
-    request: OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request:
-      | OpenAIClient.Chat.CompletionCreateParamsStreaming
-      | OpenAIClient.Chat.CompletionCreateParamsNonStreaming,
+      | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
+      | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
