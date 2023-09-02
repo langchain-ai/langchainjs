@@ -355,6 +355,9 @@ export interface OptionalImportMap {
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
+  "langchain/experimental/chat_models/anthropic_functions"?:
+    | typeof import("../experimental/chat_models/anthropic_functions.js")
+    | Promise<typeof import("../experimental/chat_models/anthropic_functions.js")>;
 }
 
 export interface SecretMap {
@@ -374,6 +377,8 @@ export interface SecretMap {
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
+  MINIMAX_API_KEY?: string;
+  MINIMAX_GROUP_ID?: string;
   OPENAI_API_KEY?: string;
   OPENAI_ORGANIZATION?: string;
   PLANETSCALE_DATABASE_URL?: string;

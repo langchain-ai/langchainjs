@@ -88,6 +88,9 @@ embeddings/googlevertexai.d.ts
 embeddings/googlepalm.cjs
 embeddings/googlepalm.js
 embeddings/googlepalm.d.ts
+embeddings/minimax.cjs
+embeddings/minimax.js
+embeddings/minimax.d.ts
 llms.cjs
 llms.js
 llms.d.ts
@@ -382,6 +385,9 @@ chat_models/baiduwenxin.d.ts
 chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts
+chat_models/minimax.cjs
+chat_models/minimax.js
+chat_models/minimax.d.ts
 schema.cjs
 schema.js
 schema.d.ts
@@ -562,6 +568,9 @@ experimental/plan_and_execute.d.ts
 experimental/multimodal_embeddings/googlevertexai.cjs
 experimental/multimodal_embeddings/googlevertexai.js
 experimental/multimodal_embeddings/googlevertexai.d.ts
+experimental/chat_models/anthropic_functions.cjs
+experimental/chat_models/anthropic_functions.js
+experimental/chat_models/anthropic_functions.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

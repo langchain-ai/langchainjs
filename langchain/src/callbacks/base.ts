@@ -139,7 +139,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> | void;
 
   /**
@@ -149,7 +150,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     outputs: ChainValues,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> | void;
 
   /**

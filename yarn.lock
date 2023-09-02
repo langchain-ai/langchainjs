@@ -15,9 +15,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.5.7":
-  version: 0.5.7
-  resolution: "@anthropic-ai/sdk@npm:0.5.7"
+"@anthropic-ai/sdk@npm:^0.6.2":
+  version: 0.6.2
+  resolution: "@anthropic-ai/sdk@npm:0.6.2"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -27,7 +27,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-  checksum: b4c55d8c962438516a035e8d08c4e6bc1f34f93df6254dc0e12db3d21cf265df3416cbfe976e9fad9ecc22f15aa1f58048465f9a298f80b71efcb6c872a35583
+  checksum: a07dd0d42fe83b79bec506399755161cb12d26df756093df7f6189d062d01bd944a4d909d9d13b178567e7778b8966fe6f4b7051b9397cbd035c3fc184289c36
   languageName: node
   linkType: hard
 
@@ -4546,13 +4546,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.6.3":
-  version: 0.6.3
-  resolution: "@getzep/zep-js@npm:0.6.3"
+"@getzep/zep-js@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@getzep/zep-js@npm:0.7.0"
   dependencies:
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: 37b18e9dbd7899eefe56888f1fd1ffb89112be80455d5ddb9c75db27250764455e035567065a7ac6fdfc0e18b5877a3ef60a53a9d5e0f77b5395469b0389fcb7
+  checksum: aa5d68babb6b8bc40886f7f4fd4c502cf0eb407e2781b9e91934865faba83bc2efb4ba21ef304209d4919f7bfad05c50bab6e8da4e3e37eb6095c77e7d24de8c
   languageName: node
   linkType: hard
 
@@ -11977,6 +11977,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-xml-parser@npm:^4.2.7":
+  version: 4.2.7
+  resolution: "fast-xml-parser@npm:4.2.7"
+  dependencies:
+    strnum: ^1.0.5
+  bin:
+    fxparser: src/cli/cli.js
+  checksum: d8b0c9e04756f6c43fa0399428f30149acadae21350e42e26e8fe98e24e6afa6b9b00aa554453795036b00e9fee974a1b556fe2ba18be391d51a9bf1ab790e7c
+  languageName: node
+  linkType: hard
+
 "fastq@npm:^1.6.0":
   version: 1.15.0
   resolution: "fastq@npm:1.15.0"
@@ -14872,7 +14883,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
-    "@anthropic-ai/sdk": ^0.5.7
+    "@anthropic-ai/sdk": ^0.6.2
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-dynamodb": ^3.310.0
     "@aws-sdk/client-kendra": ^3.352.0
@@ -14889,7 +14900,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.6.3
+    "@getzep/zep-js": ^0.7.0
     "@gomomento/sdk": ^1.23.0
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
@@ -14951,6 +14962,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
     faiss-node: ^0.3.0
+    fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     flat: ^5.0.2
     google-auth-library: ^8.9.0
@@ -14964,8 +14976,8 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langchainhub: ~0.0.3
-    langsmith: ~0.0.26
+    langchainhub: ~0.0.6
+    langsmith: ~0.0.31
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -15022,7 +15034,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.6.3
+    "@getzep/zep-js": ^0.7.0
     "@gomomento/sdk": ^1.23.0
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
@@ -15054,6 +15066,7 @@ __metadata:
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     faiss-node: ^0.3.0
+    fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     google-auth-library: ^8.9.0
     hnswlib-node: ^1.4.2
@@ -15061,7 +15074,6 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    langchainhub: ~0.0.3
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -15178,6 +15190,8 @@ __metadata:
       optional: true
     faiss-node:
       optional: true
+    fast-xml-parser:
+      optional: true
     firebase-admin:
       optional: true
     google-auth-library:
@@ -15191,8 +15205,6 @@ __metadata:
     ioredis:
       optional: true
     jsdom:
-      optional: true
-    langchainhub:
       optional: true
     mammoth:
       optional: true
@@ -15243,10 +15255,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainhub@npm:~0.0.3":
-  version: 0.0.3
-  resolution: "langchainhub@npm:0.0.3"
-  checksum: 0962c6088a0cef8635335b735beae5e8654b9b506b4f8a144baba37f4798b1d197a34a1ff5368a982e204cdb9f4e0cb6cf8975b8baf742872829eb4bdb6eb552
+"langchainhub@npm:~0.0.6":
+  version: 0.0.6
+  resolution: "langchainhub@npm:0.0.6"
+  checksum: f771e5375b7ae9cc6fc59d5e2b1fd35c29e5759f4595617e3a235142bc2ca12c4135aa1631d85ee4e25c89968696242dd6380f6b90e87ffbc9006efc3cdc53c4
   languageName: node
   linkType: hard
 
@@ -15265,9 +15277,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:~0.0.26":
-  version: 0.0.26
-  resolution: "langsmith@npm:0.0.26"
+"langsmith@npm:~0.0.31":
+  version: 0.0.31
+  resolution: "langsmith@npm:0.0.31"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -15276,7 +15288,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 5b155ae09e6c0b09bdef25a2af93728bf994944d7a487a3943b69a0aa74a51ee3758cf145acebae1b2687b363aa8cf5fd99e147588fb1b4152ecb0e69ba62baf
+  checksum: 26c09a122c8541c92fdacae47d73621a975a69a4003b35c82a2a59f302cecff66e521cb9c0283055da1aa0d9cf37db4258e561314ac4cbba10997258cc480874
   languageName: node
   linkType: hard
 

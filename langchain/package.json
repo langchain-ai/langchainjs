@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.137",
+  "version": "0.0.140",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -100,6 +100,9 @@
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
+    "embeddings/minimax.cjs",
+    "embeddings/minimax.js",
+    "embeddings/minimax.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -394,6 +397,9 @@
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
+    "chat_models/minimax.cjs",
+    "chat_models/minimax.js",
+    "chat_models/minimax.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -574,6 +580,9 @@
     "experimental/multimodal_embeddings/googlevertexai.cjs",
     "experimental/multimodal_embeddings/googlevertexai.js",
     "experimental/multimodal_embeddings/googlevertexai.d.ts",
+    "experimental/chat_models/anthropic_functions.cjs",
+    "experimental/chat_models/anthropic_functions.js",
+    "experimental/chat_models/anthropic_functions.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -622,7 +631,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.6.3",
+    "@getzep/zep-js": "^0.7.0",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -679,6 +688,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.3.0",
+    "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
@@ -688,7 +698,6 @@
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "jsdom": "^22.1.0",
-    "langchainhub": "~0.0.3",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
@@ -736,7 +745,7 @@
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.6.3",
+    "@getzep/zep-js": "^0.7.0",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -768,6 +777,7 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.3.0",
+    "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
@@ -775,7 +785,6 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "langchainhub": "~0.0.3",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -939,6 +948,9 @@
     "faiss-node": {
       "optional": true
     },
+    "fast-xml-parser": {
+      "optional": true
+    },
     "firebase-admin": {
       "optional": true
     },
@@ -958,9 +970,6 @@
       "optional": true
     },
     "jsdom": {
-      "optional": true
-    },
-    "langchainhub": {
       "optional": true
     },
     "mammoth": {
@@ -1034,7 +1043,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.5.7",
+    "@anthropic-ai/sdk": "^0.6.2",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",
@@ -1044,7 +1053,8 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "~0.0.26",
+    "langchainhub": "~0.0.6",
+    "langsmith": "~0.0.31",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^4.3.1",
@@ -1230,6 +1240,11 @@
       "types": "./embeddings/googlepalm.d.ts",
       "import": "./embeddings/googlepalm.js",
       "require": "./embeddings/googlepalm.cjs"
+    },
+    "./embeddings/minimax": {
+      "types": "./embeddings/minimax.d.ts",
+      "import": "./embeddings/minimax.js",
+      "require": "./embeddings/minimax.cjs"
     },
     "./llms": {
       "node": {
@@ -1729,6 +1744,11 @@
       "import": "./chat_models/ollama.js",
       "require": "./chat_models/ollama.cjs"
     },
+    "./chat_models/minimax": {
+      "types": "./chat_models/minimax.d.ts",
+      "import": "./chat_models/minimax.js",
+      "require": "./chat_models/minimax.cjs"
+    },
     "./schema": {
       "types": "./schema.d.ts",
       "import": "./schema.js",
@@ -2030,6 +2050,11 @@
       "types": "./experimental/multimodal_embeddings/googlevertexai.d.ts",
       "import": "./experimental/multimodal_embeddings/googlevertexai.js",
       "require": "./experimental/multimodal_embeddings/googlevertexai.cjs"
+    },
+    "./experimental/chat_models/anthropic_functions": {
+      "types": "./experimental/chat_models/anthropic_functions.d.ts",
+      "import": "./experimental/chat_models/anthropic_functions.js",
+      "require": "./experimental/chat_models/anthropic_functions.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",

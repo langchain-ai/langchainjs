@@ -291,7 +291,13 @@ export class CallbackManagerForChainRun
     return manager;
   }
 
-  async handleChainError(err: Error | unknown): Promise<void> {
+  async handleChainError(
+    err: Error | unknown,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -301,7 +307,8 @@ export class CallbackManagerForChainRun
                 err,
                 this.runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                kwargs
               );
             } catch (err) {
               console.error(
@@ -314,7 +321,13 @@ export class CallbackManagerForChainRun
     );
   }
 
-  async handleChainEnd(output: ChainValues): Promise<void> {
+  async handleChainEnd(
+    output: ChainValues,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -324,7 +337,8 @@ export class CallbackManagerForChainRun
                 output,
                 this.runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                kwargs
               );
             } catch (err) {
               console.error(
