@@ -698,7 +698,6 @@
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "jsdom": "^22.1.0",
-    "langchainhub": "~0.0.3",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
@@ -786,7 +785,6 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "langchainhub": "~0.0.3",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -974,9 +972,6 @@
     "jsdom": {
       "optional": true
     },
-    "langchainhub": {
-      "optional": true
-    },
     "mammoth": {
       "optional": true
     },
@@ -1058,6 +1053,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
+    "langchainhub": "~0.0.6",
     "langsmith": "~0.0.31",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
