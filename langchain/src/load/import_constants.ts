@@ -27,6 +27,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/googlepalm",
   "langchain/llms/sagemaker_endpoint",
   "langchain/llms/bedrock",
+  "langchain/llms/llama_cpp",
   "langchain/llms/writer",
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
@@ -118,4 +119,5 @@ export const optionalImportEntrypoints = [
   "langchain/storage/ioredis",
   "langchain/hub",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
+  "langchain/experimental/chat_models/anthropic_functions",
 ];

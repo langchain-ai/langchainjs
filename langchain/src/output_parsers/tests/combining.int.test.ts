@@ -1,12 +1,12 @@
 import { test } from "@jest/globals";
 
-import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import {
   StructuredOutputParser,
   RegexParser,
   CombiningOutputParser,
 } from "../index.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
 
 test("CombiningOutputParser", async () => {
   const answerParser = StructuredOutputParser.fromNamesAndDescriptions({
@@ -30,7 +30,7 @@ test("CombiningOutputParser", async () => {
     partialVariables: { format_instructions: formatInstructions },
   });
 
-  const model = new OpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ temperature: 0 });
 
   const input = await prompt.format({
     question: "What is the capital of France?",
@@ -38,9 +38,9 @@ test("CombiningOutputParser", async () => {
 
   console.log(input);
 
-  const response = await model.call(input);
+  const response = await model.invoke(input);
 
   console.log(response);
 
-  console.log(await parser.parse(response));
+  console.log(await parser.parse(response.content));
 });

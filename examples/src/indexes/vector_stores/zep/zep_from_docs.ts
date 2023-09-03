@@ -23,6 +23,20 @@ export const run = async () => {
     zepConfig
   );
 
+  // Wait for the documents to be embedded
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const c = await vectorStore.client.document.getCollection(collectionName);
+    console.log(
+      `Embedding status: ${c.document_embedded_count}/${c.document_count} documents embedded`
+    );
+    // eslint-disable-next-line no-promise-executor-return
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (c.status === "ready") {
+      break;
+    }
+  }
+
   const results = await vectorStore.similaritySearchWithScore("bar", 3);
 
   console.log("Similarity Results:");

@@ -1,4 +1,4 @@
-import { createClient, createCluster } from "redis";
+import { createClient } from "redis";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RedisVectorStore } from "langchain/vectorstores/redis";
