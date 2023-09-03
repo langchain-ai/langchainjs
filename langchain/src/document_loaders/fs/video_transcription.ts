@@ -15,7 +15,7 @@ async function extractAudio(rawVideo: Buffer): Promise<Buffer> {
       .audioCodec("pcm_s16le")
       .toFormat("wav")
       .audioChannels(1)
-      .on("error", (err) => {
+      .on("error", (err: unknown) => {
         reject(err);
       })
       .pipe(audioStream, { end: true });
@@ -36,12 +36,12 @@ async function extractAudio(rawVideo: Buffer): Promise<Buffer> {
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads transcription from video files using OpenAI Whisper.
  */
-export class OpenAIWhisperVideo extends BufferLoader {
+export class VideoTranscriptionLoader extends BufferLoader {
   private readonly openAiApi: OpenAI;
 
   constructor(
     filePathOrBlob: string | Blob,
-    openAIConfiguration: ClientOptions
+    openAIConfiguration?: ClientOptions
   ) {
     super(filePathOrBlob);
     this.openAiApi = new OpenAI(openAIConfiguration);

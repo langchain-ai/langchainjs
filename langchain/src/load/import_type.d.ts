@@ -250,9 +250,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/notion"?:
     | typeof import("../document_loaders/fs/notion.js")
     | Promise<typeof import("../document_loaders/fs/notion.js")>;
-  "langchain/document_loaders/fs/openai_whisper_video"?:
-    | typeof import("../document_loaders/fs/openai_whisper_video.js")
-    | Promise<typeof import("../document_loaders/fs/openai_whisper_video.js")>;
+  "langchain/document_loaders/fs/video_transcription"?:
+    | typeof import("../document_loaders/fs/video_transcription.js")
+    | Promise<typeof import("../document_loaders/fs/video_transcription.js")>;
   "langchain/document_loaders/fs/unstructured"?:
     | typeof import("../document_loaders/fs/unstructured.js")
     | Promise<typeof import("../document_loaders/fs/unstructured.js")>;

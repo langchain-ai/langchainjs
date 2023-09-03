@@ -1,0 +1,28 @@
+---
+hide_table_of_contents: true
+---
+
+# Video File Transcription loader
+
+This covers how to load video transcript into LangChain documents using OpenAI Whisper.
+
+## Setup
+
+You'll need to install the [FFmpeg](https://ffmpeg.org/) and the [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg) package.
+
+To run this loader you will need to create an account on the Open AI and obtain an auth key from the https://platform.openai.com/account page.
+
+```bash npm2yarn
+npm install youtube-transcript fluent-ffmpeg
+```
+
+## Usage
+
+You need to specify a path to the video file.
+
+Then, configure the Open AI API key as the OPENAI_API_KEY environment variable or the apiKey options parameter.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/video_transcription.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

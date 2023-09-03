@@ -141,7 +141,7 @@ const entrypoints = {
   "document_loaders/fs/epub": "document_loaders/fs/epub",
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
-  "document_loaders/fs/openai_whisper_video": "document_loaders/fs/openai_whisper_video",
+  "document_loaders/fs/video_transcription": "document_loaders/fs/video_transcription",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
@@ -334,7 +334,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/epub",
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
-  "document_loaders/fs/openai_whisper_video",
+  "document_loaders/fs/video_transcription",
   "document_loaders/fs/unstructured",
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",

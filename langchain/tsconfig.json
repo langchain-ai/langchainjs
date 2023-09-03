@@ -145,7 +145,7 @@
       "src/document_loaders/fs/epub.ts",
       "src/document_loaders/fs/csv.ts",
       "src/document_loaders/fs/notion.ts",
-      "src/document_loaders/fs/openai_whisper_video.ts",
+      "src/document_loaders/fs/video_transcription.ts",
       "src/document_loaders/fs/unstructured.ts",
       "src/document_transformers/html_to_text.ts",
       "src/document_transformers/mozilla_readability.ts",

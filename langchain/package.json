@@ -361,9 +361,9 @@
     "document_loaders/fs/notion.cjs",
     "document_loaders/fs/notion.js",
     "document_loaders/fs/notion.d.ts",
-    "document_loaders/fs/openai_whisper_video.cjs",
-    "document_loaders/fs/openai_whisper_video.js",
-    "document_loaders/fs/openai_whisper_video.d.ts",
+    "document_loaders/fs/video_transcription.cjs",
+    "document_loaders/fs/video_transcription.js",
+    "document_loaders/fs/video_transcription.d.ts",
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
@@ -1698,10 +1698,10 @@
       "import": "./document_loaders/fs/notion.js",
       "require": "./document_loaders/fs/notion.cjs"
     },
-    "./document_loaders/fs/openai_whisper_video": {
-      "types": "./document_loaders/fs/openai_whisper_video.d.ts",
-      "import": "./document_loaders/fs/openai_whisper_video.js",
-      "require": "./document_loaders/fs/openai_whisper_video.cjs"
+    "./document_loaders/fs/video_transcription": {
+      "types": "./document_loaders/fs/video_transcription.d.ts",
+      "import": "./document_loaders/fs/video_transcription.js",
+      "require": "./document_loaders/fs/video_transcription.cjs"
     },
     "./document_loaders/fs/unstructured": {
       "types": "./document_loaders/fs/unstructured.d.ts",
