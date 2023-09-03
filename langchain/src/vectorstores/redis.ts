@@ -46,33 +46,33 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
   }
 >;
 export enum RedisSearchLanguages {
-    ARABIC = "Arabic",
-    BASQUE = "Basque",
-    CATALANA = "Catalan",
-    DANISH = "Danish",
-    DUTCH = "Dutch",
-    ENGLISH = "English",
-    FINNISH = "Finnish",
-    FRENCH = "French",
-    GERMAN = "German",
-    GREEK = "Greek",
-    HUNGARIAN = "Hungarian",
-    INDONESAIN = "Indonesian",
-    IRISH = "Irish",
-    ITALIAN = "Italian",
-    LITHUANIAN = "Lithuanian",
-    NEPALI = "Nepali",
-    NORWEIGAN = "Norwegian",
-    PORTUGUESE = "Portuguese",
-    ROMANIAN = "Romanian",
-    RUSSIAN = "Russian",
-    SPANISH = "Spanish",
-    SWEDISH = "Swedish",
-    TAMIL = "Tamil",
-    TURKISH = "Turkish",
-    CHINESE = "Chinese"
+  ARABIC = "Arabic",
+  BASQUE = "Basque",
+  CATALANA = "Catalan",
+  DANISH = "Danish",
+  DUTCH = "Dutch",
+  ENGLISH = "English",
+  FINNISH = "Finnish",
+  FRENCH = "French",
+  GERMAN = "German",
+  GREEK = "Greek",
+  HUNGARIAN = "Hungarian",
+  INDONESAIN = "Indonesian",
+  IRISH = "Irish",
+  ITALIAN = "Italian",
+  LITHUANIAN = "Lithuanian",
+  NEPALI = "Nepali",
+  NORWEIGAN = "Norwegian",
+  PORTUGUESE = "Portuguese",
+  ROMANIAN = "Romanian",
+  RUSSIAN = "Russian",
+  SPANISH = "Spanish",
+  SWEDISH = "Swedish",
+  TAMIL = "Tamil",
+  TURKISH = "Turkish",
+  CHINESE = "Chinese",
 }
-export type PropertyName = `${'@' | '$.'}${string}`;
+export type PropertyName = `${"@" | "$."}${string}`;
 export interface RedisVectorStoreIndexOptions {
   ON?: "HASH" | "JSON";
   PREFIX?: string | Array<string>;
@@ -377,7 +377,11 @@ export class RedisVectorStore extends VectorStore {
       [this.metadataKey]: SchemaFieldTypes.TEXT,
     };
 
-    await this.redisClient.ft.create(this.indexName, schema, this.createIndexOptions);
+    await this.redisClient.ft.create(
+      this.indexName,
+      schema,
+      this.createIndexOptions
+    );
   }
 
   /**

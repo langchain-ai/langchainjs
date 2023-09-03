@@ -159,7 +159,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
     const store = new RedisVectorStore(embeddings, {
       redisClient: client as any,
       indexName: "documents",
-    })
+    });
     store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
 
     await store.createIndex();
@@ -169,8 +169,8 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       expect.any(Object),
       {
         ON: "HASH",
-        PREFIX: "doc:documents:"
-      },
+        PREFIX: "doc:documents:",
+      }
     );
   });
 
@@ -182,7 +182,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       indexName: "documents",
       createIndexOptions: {
         ON: "JSON",
-        FILTER: "@indexName == \"documents\"",
+        FILTER: '@indexName == "documents"',
         LANGUAGE: RedisSearchLanguages.HUNGARIAN,
         LANGUAGE_FIELD: "@.language",
         SCORE: 0.5,
@@ -194,7 +194,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         NOFREQS: true,
         SKIPINITIALSCAN: true,
         STOPWORDS: ["a", "b"],
-      }
+      },
     });
     store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
 
@@ -206,7 +206,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       {
         ON: "JSON",
         PREFIX: "doc:documents:",
-        FILTER: "@indexName == \"documents\"",
+        FILTER: '@indexName == "documents"',
         LANGUAGE: "Hungarian",
         LANGUAGE_FIELD: "@.language",
         SCORE: 0.5,
@@ -218,7 +218,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         NOFREQS: true,
         SKIPINITIALSCAN: true,
         STOPWORDS: ["a", "b"],
-      },
+      }
     );
   });
 });
