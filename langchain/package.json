@@ -403,6 +403,9 @@
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
+    "schema/document.cjs",
+    "schema/document.js",
+    "schema/document.d.ts",
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
@@ -1753,6 +1756,11 @@
       "types": "./schema.d.ts",
       "import": "./schema.js",
       "require": "./schema.cjs"
+    },
+    "./schema/document": {
+      "types": "./schema/document.d.ts",
+      "import": "./schema/document.js",
+      "require": "./schema/document.cjs"
     },
     "./schema/output_parser": {
       "types": "./schema/output_parser.d.ts",
