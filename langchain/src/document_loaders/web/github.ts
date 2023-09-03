@@ -135,7 +135,7 @@ export class GithubRepoLoader
     this.verbose = verbose;
     this.headers = {
       "User-Agent": "langchain" 
-    }
+    };
     this.caller = new AsyncCaller({
       maxConcurrency,
       maxRetries,
