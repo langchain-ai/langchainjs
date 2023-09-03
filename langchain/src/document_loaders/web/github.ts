@@ -134,7 +134,7 @@ export class GithubRepoLoader
     this.ignoreFiles = ignoreFiles;
     this.verbose = verbose;
     this.headers = {
-      "User-Agent": "langchain" 
+      "User-Agent": "langchain",
     };
     this.caller = new AsyncCaller({
       maxConcurrency,
