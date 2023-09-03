@@ -16,7 +16,7 @@ test("HuggingFaceTransformersEmbeddings", async () => {
   ];
 
   const queryEmbedding = await embeddings.embedQuery(documents[0]);
-  expect(queryEmbedding).toHaveLength(768);
+  expect(queryEmbedding).toHaveLength(384);
   expect(typeof queryEmbedding[0]).toBe("number");
 
   const store = new MemoryVectorStore(embeddings);

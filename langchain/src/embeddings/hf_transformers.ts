@@ -1,4 +1,4 @@
-import { TransformersEmbeddingFunction } from "chromadb";
+import { Pipeline, pipeline } from "@xenova/transformers";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
@@ -30,23 +30,18 @@ export class HuggingFaceTransformersEmbeddings
 {
   modelName = "Xenova/all-MiniLM-L6-v2";
 
-  embedder = new TransformersEmbeddingFunction({
-    model: this.modelName,
-  });
-
   batchSize = 512;
 
   stripNewLines = true;
 
   timeout?: number;
 
+  private pipelinePromise: Promise<Pipeline>;
+
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.embedder = new TransformersEmbeddingFunction({
-      model: this.modelName,
-    });
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
   }
@@ -61,7 +56,7 @@ export class HuggingFaceTransformersEmbeddings
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const input = subPrompts[i];
-      const data = await this.embedder.generate(input);
+      const data = await this.runEmbedding(input);
 
       for (let j = 0; j < input.length; j += 1) {
         embeddings.push(data[j]);
@@ -72,9 +67,19 @@ export class HuggingFaceTransformersEmbeddings
   }
 
   async embedQuery(text: string): Promise<number[]> {
-    const data = await this.embedder.generate([
+    const data = await this.runEmbedding([
       this.stripNewLines ? text.replace(/\n/g, " ") : text,
     ]);
     return data[0];
+  }
+
+  private async runEmbedding(texts: string[]) {
+    const pipe = await (this.pipelinePromise ??= pipeline(
+      "feature-extraction",
+      this.modelName
+    ));
+
+    const output = await pipe(texts, { pooling: "mean", normalize: true });
+    return output.tolist();
   }
 }
