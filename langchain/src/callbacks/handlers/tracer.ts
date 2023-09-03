@@ -28,13 +28,20 @@ export interface Run extends BaseRun {
   child_execution_order: number;
   events: Array<{
     name: string;
-    time: number;
+    time: string;
     kwargs?: Record<string, unknown>;
   }>;
 }
 
 export interface AgentRun extends Run {
   actions: AgentAction[];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function _coerceToDict(value: any, defaultKey: string) {
+  return value && !Array.isArray(value) && typeof value === "object"
+    ? value
+    : { [defaultKey]: value };
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
@@ -59,6 +66,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       const parentRun = this.runMap.get(run.parent_run_id);
       if (parentRun) {
         this._addChildRun(parentRun, run);
+        parentRun.child_execution_order = Math.max(
+          parentRun.child_execution_order,
+          run.child_execution_order
+        );
       }
     }
     this.runMap.set(run.id, run);
@@ -111,7 +122,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       events: [
         {
           name: "start",
-          time: start_time,
+          time: new Date(start_time).toISOString(),
         },
       ],
       inputs: { prompts },
@@ -150,7 +161,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       events: [
         {
           name: "start",
-          time: start_time,
+          time: new Date(start_time).toISOString(),
         },
       ],
       inputs: { messages },
@@ -175,7 +186,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.outputs = output;
     run.events.push({
       name: "end",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
     await this.onLLMEnd?.(run);
     await this._endTrace(run);
@@ -190,7 +201,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.error = error.message;
     run.events.push({
       name: "error",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
     await this.onLLMError?.(run);
     await this._endTrace(run);
@@ -216,7 +227,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       events: [
         {
           name: "start",
-          time: start_time,
+          time: new Date(start_time).toISOString(),
         },
       ],
       inputs,
@@ -227,27 +238,41 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
-
     this._startTrace(run);
     await this.onChainStart?.(run);
   }
 
-  async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
+  async handleChainEnd(
+    outputs: ChainValues,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run) {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
-    run.outputs = outputs;
+    run.outputs = _coerceToDict(outputs, "output");
     run.events.push({
       name: "end",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
+    if (kwargs?.inputs !== undefined) {
+      run.inputs = _coerceToDict(kwargs.inputs, "input");
+    }
     await this.onChainEnd?.(run);
     await this._endTrace(run);
   }
 
-  async handleChainError(error: Error, runId: string): Promise<void> {
+  async handleChainError(
+    error: Error,
+    runId: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run) {
       throw new Error("No chain run to end.");
@@ -256,8 +281,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.error = error.message;
     run.events.push({
       name: "error",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
+    if (kwargs?.inputs !== undefined) {
+      run.inputs = _coerceToDict(kwargs.inputs, "input");
+    }
     await this.onChainError?.(run);
     await this._endTrace(run);
   }
@@ -281,7 +309,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       events: [
         {
           name: "start",
-          time: start_time,
+          time: new Date(start_time).toISOString(),
         },
       ],
       inputs: { input },
@@ -306,7 +334,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.outputs = { output };
     run.events.push({
       name: "end",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
     await this.onToolEnd?.(run);
     await this._endTrace(run);
@@ -321,7 +349,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.error = error.message;
     run.events.push({
       name: "error",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
     await this.onToolError?.(run);
     await this._endTrace(run);
@@ -337,7 +365,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     agentRun.actions.push(action);
     agentRun.events.push({
       name: "agent_action",
-      time: Date.now(),
+      time: new Date().toISOString(),
       kwargs: { action },
     });
     await this.onAgentAction?.(run as AgentRun);
@@ -350,7 +378,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.events.push({
       name: "agent_end",
-      time: Date.now(),
+      time: new Date().toISOString(),
       kwargs: { action },
     });
     await this.onAgentEnd?.(run);
@@ -375,7 +403,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       events: [
         {
           name: "start",
-          time: start_time,
+          time: new Date(start_time).toISOString(),
         },
       ],
       inputs: { query },
@@ -403,7 +431,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.outputs = { documents };
     run.events.push({
       name: "end",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
     await this.onRetrieverEnd?.(run);
     await this._endTrace(run);
@@ -418,7 +446,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     run.error = error.message;
     run.events.push({
       name: "error",
-      time: run.end_time,
+      time: new Date(run.end_time).toISOString(),
     });
     await this.onRetrieverError?.(run);
     await this._endTrace(run);
@@ -431,7 +459,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.events.push({
       name: "text",
-      time: Date.now(),
+      time: new Date().toISOString(),
       kwargs: { text },
     });
     await this.onText?.(run);
@@ -451,7 +479,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.events.push({
       name: "new_token",
-      time: Date.now(),
+      time: new Date().toISOString(),
       kwargs: { token, idx, chunk: fields?.chunk },
     });
     await this.onLLMNewToken?.(run);

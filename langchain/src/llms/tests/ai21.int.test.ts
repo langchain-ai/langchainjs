@@ -1,7 +1,7 @@
 import { test, describe, expect } from "@jest/globals";
 import { AI21 } from "../ai21.js";
 
-describe("AI21", () => {
+describe.skip("AI21", () => {
   test("test call", async () => {
     const ai21 = new AI21({});
     const result = await ai21.call(

@@ -1,11 +1,12 @@
-import { CreateCompletionRequestPrompt, CreateCompletionRequest } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { AsyncCaller } from "../util/async_caller.js";
 
 export const promptLayerTrackRequest = async (
   callerFunc: AsyncCaller,
   functionName: string,
-  prompt: CreateCompletionRequestPrompt,
-  kwargs: CreateCompletionRequest,
+  kwargs:
+    | OpenAIClient.CompletionCreateParams
+    | OpenAIClient.Chat.CompletionCreateParams,
   plTags: string[] | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestResponse: any,
@@ -26,7 +27,6 @@ export const promptLayerTrackRequest = async (
       body: JSON.stringify({
         function_name: functionName,
         provider: "langchain",
-        args: prompt,
         kwargs,
         tags: plTags,
         request_response: requestResponse,

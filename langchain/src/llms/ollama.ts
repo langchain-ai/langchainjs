@@ -24,21 +24,47 @@ export class Ollama extends LLM implements OllamaInput {
 
   baseUrl = "http://localhost:11434";
 
+  embeddingOnly?: boolean;
+
+  f16KV?: boolean;
+
+  frequencyPenalty?: number;
+
+  logitsAll?: boolean;
+
+  lowVram?: boolean;
+
+  mainGpu?: number;
+
   mirostat?: number;
 
   mirostatEta?: number;
 
   mirostatTau?: number;
 
+  numBatch?: number;
+
   numCtx?: number;
 
   numGpu?: number;
 
+  numGqa?: number;
+
+  numKeep?: number;
+
   numThread?: number;
+
+  penalizeNewline?: boolean;
+
+  presencePenalty?: number;
 
   repeatLastN?: number;
 
   repeatPenalty?: number;
+
+  ropeFrequencyBase?: number;
+
+  ropeFrequencyScale?: number;
 
   temperature?: number;
 
@@ -50,25 +76,51 @@ export class Ollama extends LLM implements OllamaInput {
 
   topP?: number;
 
+  typicalP?: number;
+
+  useMLock?: boolean;
+
+  useMMap?: boolean;
+
+  vocabOnly?: boolean;
+
   constructor(fields: OllamaInput & BaseLLMParams) {
     super(fields);
     this.model = fields.model ?? this.model;
     this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
       : fields.baseUrl ?? this.baseUrl;
+
+    this.embeddingOnly = fields.embeddingOnly;
+    this.f16KV = fields.f16KV;
+    this.frequencyPenalty = fields.frequencyPenalty;
+    this.logitsAll = fields.logitsAll;
+    this.lowVram = fields.lowVram;
+    this.mainGpu = fields.mainGpu;
     this.mirostat = fields.mirostat;
     this.mirostatEta = fields.mirostatEta;
     this.mirostatTau = fields.mirostatTau;
+    this.numBatch = fields.numBatch;
     this.numCtx = fields.numCtx;
     this.numGpu = fields.numGpu;
+    this.numGqa = fields.numGqa;
+    this.numKeep = fields.numKeep;
     this.numThread = fields.numThread;
+    this.penalizeNewline = fields.penalizeNewline;
+    this.presencePenalty = fields.presencePenalty;
     this.repeatLastN = fields.repeatLastN;
     this.repeatPenalty = fields.repeatPenalty;
+    this.ropeFrequencyBase = fields.ropeFrequencyBase;
+    this.ropeFrequencyScale = fields.ropeFrequencyScale;
     this.temperature = fields.temperature;
     this.stop = fields.stop;
     this.tfsZ = fields.tfsZ;
     this.topK = fields.topK;
     this.topP = fields.topP;
+    this.typicalP = fields.typicalP;
+    this.useMLock = fields.useMLock;
+    this.useMMap = fields.useMMap;
+    this.vocabOnly = fields.vocabOnly;
   }
 
   _llmType() {
@@ -79,19 +131,36 @@ export class Ollama extends LLM implements OllamaInput {
     return {
       model: this.model,
       options: {
+        embedding_only: this.embeddingOnly,
+        f16_kv: this.f16KV,
+        frequency_penalty: this.frequencyPenalty,
+        logits_all: this.logitsAll,
+        low_vram: this.lowVram,
+        main_gpu: this.mainGpu,
         mirostat: this.mirostat,
         mirostat_eta: this.mirostatEta,
         mirostat_tau: this.mirostatTau,
+        num_batch: this.numBatch,
         num_ctx: this.numCtx,
         num_gpu: this.numGpu,
+        num_gqa: this.numGqa,
+        num_keep: this.numKeep,
         num_thread: this.numThread,
+        penalize_newline: this.penalizeNewline,
+        presence_penalty: this.presencePenalty,
         repeat_last_n: this.repeatLastN,
         repeat_penalty: this.repeatPenalty,
+        rope_frequency_base: this.ropeFrequencyBase,
+        rope_frequency_scale: this.ropeFrequencyScale,
         temperature: this.temperature,
         stop: options?.stop ?? this.stop,
         tfs_z: this.tfsZ,
         top_k: this.topK,
         top_p: this.topP,
+        typical_p: this.typicalP,
+        use_mlock: this.useMLock,
+        use_mmap: this.useMMap,
+        vocab_only: this.vocabOnly,
       },
     };
   }

@@ -12,6 +12,7 @@ import {
 } from "../../schema/output_parser.js";
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 import { ChatGeneration } from "../../schema/index.js";
+import { AnthropicFunctions } from "../../experimental/chat_models/anthropic_functions.js";
 
 /**
  * Type representing the input for creating a structured output chain. It
@@ -25,7 +26,7 @@ export type StructuredOutputChainInput = Omit<
 > & {
   outputSchema: JsonSchema7Type;
   prompt: BasePromptTemplate;
-  llm?: ChatOpenAI;
+  llm?: ChatOpenAI | AnthropicFunctions;
 };
 
 /**
