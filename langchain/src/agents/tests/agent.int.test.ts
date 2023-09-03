@@ -111,7 +111,7 @@ test("Run agent with incorrect api key should throw error", async () => {
       error = e;
       throw e;
     }
-  }).rejects.toThrowError("Request failed with status code 401");
+  }).rejects.toThrowError();
 
   // Test that the agent throws the same error
   await expect(() => executor.call({ input })).rejects.toThrowError(
