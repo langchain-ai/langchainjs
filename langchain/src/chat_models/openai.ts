@@ -501,12 +501,16 @@ export class ChatOpenAI
       const generations: ChatGeneration[] = [];
       for (const part of data?.choices ?? []) {
         const text = part.message?.content ?? "";
-        generations.push({
+        const generation: ChatGeneration = {
           text,
           message: openAIResponseToChatMessage(
             part.message ?? { role: "assistant" }
           ),
-        });
+        };
+        if (part.finish_reason) {
+          generation.generationInfo = { finish_reason: part.finish_reason };
+        }
+        generations.push(generation);
       }
       return {
         generations,
