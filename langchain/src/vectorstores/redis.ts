@@ -45,6 +45,51 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
     EF_RUNTIME?: number;
   }
 >;
+export enum RedisSearchLanguages {
+    ARABIC = "Arabic",
+    BASQUE = "Basque",
+    CATALANA = "Catalan",
+    DANISH = "Danish",
+    DUTCH = "Dutch",
+    ENGLISH = "English",
+    FINNISH = "Finnish",
+    FRENCH = "French",
+    GERMAN = "German",
+    GREEK = "Greek",
+    HUNGARIAN = "Hungarian",
+    INDONESAIN = "Indonesian",
+    IRISH = "Irish",
+    ITALIAN = "Italian",
+    LITHUANIAN = "Lithuanian",
+    NEPALI = "Nepali",
+    NORWEIGAN = "Norwegian",
+    PORTUGUESE = "Portuguese",
+    ROMANIAN = "Romanian",
+    RUSSIAN = "Russian",
+    SPANISH = "Spanish",
+    SWEDISH = "Swedish",
+    TAMIL = "Tamil",
+    TURKISH = "Turkish",
+    CHINESE = "Chinese"
+}
+export type PropertyName = `${'@' | '$.'}${string}`;
+export interface RedisVectorStoreIndexOptions {
+  ON?: "HASH" | "JSON";
+  PREFIX?: string | Array<string>;
+  FILTER?: string;
+  LANGUAGE?: RedisSearchLanguages;
+  LANGUAGE_FIELD?: PropertyName;
+  SCORE?: number;
+  SCORE_FIELD?: PropertyName;
+  MAXTEXTFIELDS?: true;
+  TEMPORARY?: number;
+  NOOFFSETS?: true;
+  NOHL?: true;
+  NOFIELDS?: true;
+  NOFREQS?: true;
+  SKIPINITIALSCAN?: true;
+  STOPWORDS?: string | Array<string>;
+}
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -57,6 +102,7 @@ export interface RedisVectorStoreConfig {
     | ReturnType<typeof createCluster>;
   indexName: string;
   indexOptions?: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
+  createIndexOptions?: Omit<RedisVectorStoreIndexOptions, "PREFIX">; // PREFIX must be set with keyPrefix
   keyPrefix?: string;
   contentKey?: string;
   metadataKey?: string;
@@ -95,6 +141,8 @@ export class RedisVectorStore extends VectorStore {
 
   indexOptions: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
 
+  createIndexOptions: RedisVectorStoreIndexOptions;
+
   keyPrefix: string;
 
   contentKey: string;
@@ -123,6 +171,11 @@ export class RedisVectorStore extends VectorStore {
     this.metadataKey = _dbConfig.metadataKey ?? "metadata";
     this.vectorKey = _dbConfig.vectorKey ?? "content_vector";
     this.filter = _dbConfig.filter;
+    this.createIndexOptions = {
+      ON: "HASH",
+      PREFIX: this.keyPrefix,
+      ..._dbConfig.createIndexOptions,
+    };
   }
 
   /**
@@ -324,10 +377,7 @@ export class RedisVectorStore extends VectorStore {
       [this.metadataKey]: SchemaFieldTypes.TEXT,
     };
 
-    await this.redisClient.ft.create(this.indexName, schema, {
-      ON: "HASH",
-      PREFIX: this.keyPrefix,
-    });
+    await this.redisClient.ft.create(this.indexName, schema, this.createIndexOptions);
   }
 
   /**

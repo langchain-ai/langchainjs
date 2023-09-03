@@ -2,7 +2,7 @@
 import { jest, test, expect, describe } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 
-import { RedisVectorStore } from "../redis.js";
+import { RedisSearchLanguages, RedisVectorStore } from "../redis.js";
 
 const createRedisClientMockup = () => {
   const hSetMock = jest.fn();
@@ -149,5 +149,76 @@ describe("RedisVectorStore dropIndex", () => {
     expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", {
       DD: true,
     });
+  });
+});
+
+describe("RedisVectorStore createIndex when index does not exist", () => {
+  test("calls ft.create with default create options", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+    })
+    store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
+
+    await store.createIndex();
+
+    expect(client.ft.create).toHaveBeenCalledWith(
+      "documents",
+      expect.any(Object),
+      {
+        ON: "HASH",
+        PREFIX: "doc:documents:"
+      },
+    );
+  });
+
+  test("calls ft.create with custom options", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+      createIndexOptions: {
+        ON: "JSON",
+        FILTER: "@indexName == \"documents\"",
+        LANGUAGE: RedisSearchLanguages.HUNGARIAN,
+        LANGUAGE_FIELD: "@.language",
+        SCORE: 0.5,
+        MAXTEXTFIELDS: true,
+        TEMPORARY: 1000,
+        NOOFFSETS: true,
+        NOHL: true,
+        NOFIELDS: true,
+        NOFREQS: true,
+        SKIPINITIALSCAN: true,
+        STOPWORDS: ["a", "b"],
+      }
+    });
+    store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
+
+    await store.createIndex();
+
+    expect(client.ft.create).toHaveBeenCalledWith(
+      "documents",
+      expect.any(Object),
+      {
+        ON: "JSON",
+        PREFIX: "doc:documents:",
+        FILTER: "@indexName == \"documents\"",
+        LANGUAGE: "Hungarian",
+        LANGUAGE_FIELD: "@.language",
+        SCORE: 0.5,
+        MAXTEXTFIELDS: true,
+        TEMPORARY: 1000,
+        NOOFFSETS: true,
+        NOHL: true,
+        NOFIELDS: true,
+        NOFREQS: true,
+        SKIPINITIALSCAN: true,
+        STOPWORDS: ["a", "b"],
+      },
+    );
   });
 });
