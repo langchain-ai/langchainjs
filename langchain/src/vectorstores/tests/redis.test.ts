@@ -2,7 +2,7 @@
 import { jest, test, expect, describe } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 
-import { RedisSearchLanguages, RedisVectorStore } from "../redis.js";
+import { RedisVectorStore } from "../redis.js";
 
 const createRedisClientMockup = () => {
   const hSetMock = jest.fn();
@@ -183,8 +183,6 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       createIndexOptions: {
         ON: "JSON",
         FILTER: '@indexName == "documents"',
-        LANGUAGE: RedisSearchLanguages.HUNGARIAN,
-        LANGUAGE_FIELD: "@.language",
         SCORE: 0.5,
         MAXTEXTFIELDS: true,
         TEMPORARY: 1000,
@@ -207,8 +205,6 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         ON: "JSON",
         PREFIX: "doc:documents:",
         FILTER: '@indexName == "documents"',
-        LANGUAGE: "Hungarian",
-        LANGUAGE_FIELD: "@.language",
         SCORE: 0.5,
         MAXTEXTFIELDS: true,
         TEMPORARY: 1000,
