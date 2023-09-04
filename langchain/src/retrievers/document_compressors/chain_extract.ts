@@ -14,6 +14,13 @@ function defaultGetInput(
 }
 
 class NoOutputParser extends BaseOutputParser<string> {
+  lc_namespace = [
+    "langchain",
+    "retrievers",
+    "document_compressors",
+    "chain_extract",
+  ];
+
   noOutputStr = "NO_OUTPUT";
 
   parse(text: string): Promise<string> {
@@ -39,11 +46,19 @@ function getDefaultChainPrompt(): PromptTemplate {
   });
 }
 
+/**
+ * Interface for the arguments required to create an instance of
+ * LLMChainExtractor.
+ */
 export interface LLMChainExtractorArgs {
   llmChain: LLMChain;
   getInput: (query: string, doc: Document) => Record<string, unknown>;
 }
 
+/**
+ * A class that uses an LLM chain to extract relevant parts of documents.
+ * It extends the BaseDocumentCompressor class.
+ */
 export class LLMChainExtractor extends BaseDocumentCompressor {
   llmChain: LLMChain;
 
@@ -56,27 +71,39 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
     this.getInput = getInput;
   }
 
+  /**
+   * Compresses a list of documents based on the output of an LLM chain.
+   * @param documents The list of documents to be compressed.
+   * @param query The query to be used for document compression.
+   * @returns A list of compressed documents.
+   */
   async compressDocuments(
     documents: Document[],
     query: string
   ): Promise<Document[]> {
-    const compressedDocs: Document[] = [];
-    for (const doc of documents) {
-      const input = this.getInput(query, doc);
-      const output = await this.llmChain.predict(input);
-      if (output.length === 0) {
-        continue;
-      }
-      compressedDocs.push(
-        new Document({
-          pageContent: output,
-          metadata: doc.metadata,
-        })
-      );
-    }
-    return compressedDocs;
+    const compressedDocs = await Promise.all(
+      documents.map(async (doc) => {
+        const input = this.getInput(query, doc);
+        const output = await this.llmChain.predict(input);
+        return output.length > 0
+          ? new Document({
+              pageContent: output,
+              metadata: doc.metadata,
+            })
+          : undefined;
+      })
+    );
+    return compressedDocs.filter((doc): doc is Document => doc !== undefined);
   }
 
+  /**
+   * Creates a new instance of LLMChainExtractor from a given LLM, prompt
+   * template, and getInput function.
+   * @param llm The BaseLanguageModel instance used for document extraction.
+   * @param prompt The PromptTemplate instance used for document extraction.
+   * @param getInput A function used for constructing the chain input from the query and a Document.
+   * @returns A new instance of LLMChainExtractor.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     prompt?: PromptTemplate,

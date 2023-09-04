@@ -3,18 +3,37 @@ import { SerializedLLMChain } from "../chains/serde.js";
 import { AgentAction, AgentFinish } from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
 
+/**
+ * Interface defining the input for creating an agent. It includes the
+ * LLMChain instance, an optional output parser, and an optional list of
+ * allowed tools.
+ */
 export interface AgentInput {
   llmChain: LLMChain;
-  outputParser: AgentActionOutputParser;
+  outputParser: AgentActionOutputParser | undefined;
   allowedTools?: string[];
 }
 
+/**
+ * Abstract class representing an output parser specifically for agent
+ * actions and finishes in LangChain. It extends the `BaseOutputParser`
+ * class.
+ */
 export abstract class AgentActionOutputParser extends BaseOutputParser<
   AgentAction | AgentFinish
 > {}
 
+/**
+ * Type representing the stopping method for an agent. It can be either
+ * 'force' or 'generate'.
+ */
 export type StoppingMethod = "force" | "generate";
 
+/**
+ * Generic type representing a serialized agent in LangChain. It includes
+ * the type of the agent, the serialized form of the LLMChain, and
+ * additional properties specific to the agent type.
+ */
 export type SerializedAgentT<
   TType extends string = string,
   FromLLMInput extends Record<string, unknown> = Record<string, unknown>,
@@ -33,10 +52,19 @@ export type SerializedFromLLMAndTools = {
   input_variables?: string[];
 };
 
+/**
+ * Type representing a serialized ZeroShotAgent in LangChain. It extends
+ * the `SerializedAgentT` type and includes additional properties specific
+ * to the ZeroShotAgent.
+ */
 export type SerializedZeroShotAgent = SerializedAgentT<
   "zero-shot-react-description",
   SerializedFromLLMAndTools,
   AgentInput
 >;
 
+/**
+ * Type representing a serialized agent in LangChain. It is currently
+ * synonymous with `SerializedZeroShotAgent`.
+ */
 export type SerializedAgent = SerializedZeroShotAgent;

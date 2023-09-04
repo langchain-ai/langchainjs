@@ -37,9 +37,50 @@ test("Test SqlDatabaseChain", async () => {
 
   expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
 
-  const res = await chain.run("How many users are there?");
-  console.log(res);
+  const run = await chain.run("How many users are there?");
+  console.log(run);
 
+  await datasource.destroy();
+});
+
+test("Test SqlDatabaseChain with sqlOutputKey", async () => {
+  const datasource = new DataSource({
+    type: "sqlite",
+    database: ":memory:",
+    synchronize: true,
+  });
+
+  await datasource.initialize();
+  await datasource.query(`
+        CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Alice', 20);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Bob', 21);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Charlie', 22);
+    `);
+
+  const db = await SqlDatabase.fromDataSourceParams({
+    appDataSource: datasource,
+  });
+
+  const chain = new SqlDatabaseChain({
+    llm: new OpenAI({ temperature: 0 }),
+    database: db,
+    inputKey: "query",
+    sqlOutputKey: "sql",
+  });
+
+  expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
+
+  const run = await chain.call({ query: "How many users are there?" });
+  console.log(run);
+
+  expect(run).toHaveProperty("sql");
   await datasource.destroy();
 });
 

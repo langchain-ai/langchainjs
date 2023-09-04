@@ -2,7 +2,19 @@ import { Parser } from "expr-eval";
 
 import { Tool } from "./base.js";
 
+/**
+ * The Calculator class is a tool used to evaluate mathematical
+ * expressions. It extends the base Tool class.
+ */
 export class Calculator extends Tool {
+  static lc_name() {
+    return "Calculator";
+  }
+
+  get lc_namespace() {
+    return [...super.lc_namespace, "calculator"];
+  }
+
   name = "calculator";
 
   /** @ignore */

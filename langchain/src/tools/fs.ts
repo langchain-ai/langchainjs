@@ -2,11 +2,22 @@ import { z } from "zod";
 import { BaseFileStore } from "../schema/index.js";
 import { StructuredTool, ToolParams } from "./base.js";
 
+/**
+ * Interface for parameters required by the ReadFileTool class.
+ */
 interface ReadFileParams extends ToolParams {
   store: BaseFileStore;
 }
 
+/**
+ * Class for reading files from the disk. Extends the StructuredTool
+ * class.
+ */
 export class ReadFileTool extends StructuredTool {
+  static lc_name() {
+    return "ReadFileTool";
+  }
+
   schema = z.object({
     file_path: z.string().describe("name of file"),
   });
@@ -17,8 +28,8 @@ export class ReadFileTool extends StructuredTool {
 
   store: BaseFileStore;
 
-  constructor({ store, ...rest }: ReadFileParams) {
-    super(rest);
+  constructor({ store }: ReadFileParams) {
+    super(...arguments);
 
     this.store = store;
   }
@@ -28,11 +39,22 @@ export class ReadFileTool extends StructuredTool {
   }
 }
 
+/**
+ * Interface for parameters required by the WriteFileTool class.
+ */
 interface WriteFileParams extends ToolParams {
   store: BaseFileStore;
 }
 
+/**
+ * Class for writing data to files on the disk. Extends the StructuredTool
+ * class.
+ */
 export class WriteFileTool extends StructuredTool {
+  static lc_name() {
+    return "WriteFileTool";
+  }
+
   schema = z.object({
     file_path: z.string().describe("name of file"),
     text: z.string().describe("text to write to file"),

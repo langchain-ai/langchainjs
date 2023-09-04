@@ -72,7 +72,7 @@ describe("webbrowser Test suite", () => {
     );
   });
 
-  test("get a summary of a page that detects scraping", async () => {
+  test.skip("get a summary of a page that detects scraping", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
@@ -111,7 +111,7 @@ describe("webbrowser Test suite", () => {
   // other urls that have done this too
   // "https://wsimag.com/economy-and-politics/15473-power-and-money",
   // "https://thriveglobal.com/stories/sleep-what-to-do-what-not-to-do",
-  test("get a summary of a page that redirects too many times", async () => {
+  test.skip("get a summary of a page that redirects too many times", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 

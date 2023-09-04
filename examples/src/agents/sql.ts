@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain/llms/openai";
 import { SqlDatabase } from "langchain/sql_db";
-import { createSqlAgent, SqlToolkit } from "langchain/agents";
+import { createSqlAgent, SqlToolkit } from "langchain/agents/toolkits/sql";
 import { DataSource } from "typeorm";
 
 /** This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
@@ -15,8 +15,8 @@ export const run = async () => {
   const db = await SqlDatabase.fromDataSourceParams({
     appDataSource: datasource,
   });
-  const toolkit = new SqlToolkit(db);
   const model = new OpenAI({ temperature: 0 });
+  const toolkit = new SqlToolkit(db, model);
   const executor = createSqlAgent(model, toolkit);
 
   const input = `List the total sales per country. Which country's customers spent the most?`;

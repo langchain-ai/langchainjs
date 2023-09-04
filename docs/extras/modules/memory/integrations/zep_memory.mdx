@@ -1,0 +1,26 @@
+---
+hide_table_of_contents: true
+---
+
+# Zep Memory
+
+[Zep](https://github.com/getzep/zep) is a memory server that stores, summarizes, embeds, indexes, and enriches conversational AI chat histories, autonomous agent histories, document Q&A histories and exposes them via simple, low-latency APIs.
+
+Key Features:
+
+- Long-term memory persistence, with access to historical messages irrespective of your summarization strategy.
+- Auto-summarization of memory messages based on a configurable message window. A series of summaries are stored, providing flexibility for future summarization strategies.
+- Vector search over memories, with messages automatically embedded on creation.
+- Auto-token counting of memories and summaries, allowing finer-grained control over prompt assembly.
+- [Python](https://github.com/getzep/zep-python) and [JavaScript](https://github.com/getzep/zep-js) SDKs.
+
+## Setup
+
+See the instructions from [Zep](https://github.com/getzep/zep) for running the server locally or through an automated hosting provider.
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/memory/zep.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

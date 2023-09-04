@@ -29,6 +29,22 @@ test("JsonListKeysTool", async () => {
   expect(await jsonListKeysTool.call("/bar")).toContain("not a dictionary");
 });
 
+test("JsonListKeysTool, paths containing escaped characters", async () => {
+  const jsonSpec = new JsonSpec({
+    paths: {
+      "a~b": 1,
+      "a/b": 2,
+      "a~/b": 3,
+      "a//~b": 4,
+    },
+  });
+
+  const jsonListKeyTool = new JsonListKeysTool(jsonSpec);
+  expect(await jsonListKeyTool.call("/paths")).toBe(
+    "a~0b, a~1b, a~0~1b, a~1~1~0b"
+  );
+});
+
 test("JsonGetValueTool", async () => {
   const jsonSpec = new JsonSpec({
     foo: "bar",
@@ -72,4 +88,32 @@ test("JsonGetValueTool, large values", async () => {
   );
   expect(await jsonGetValueTool.call("/baz/test/foo")).toBe("[1,2,...");
   expect(await jsonGetValueTool.call("/baz/test/foo/0")).toBe("1");
+});
+
+test("JsonGetValueTool, paths containing escaped characters", async () => {
+  const jsonSpec = new JsonSpec({
+    paths: {
+      "~IDSGenericFXCrossRate": 1,
+      "/IDSGenericFXCrossRate": 2,
+      "~/IDSGenericFXCrossRate": 3,
+      "/~IDSGenericFXCrossRate": 4,
+    },
+  });
+
+  const jsonGetValueTool = new JsonGetValueTool(jsonSpec);
+  expect(await jsonGetValueTool.call("/paths/~0IDSGenericFXCrossRate")).toBe(
+    "1"
+  );
+
+  expect(await jsonGetValueTool.call("/paths/~1IDSGenericFXCrossRate")).toBe(
+    "2"
+  );
+
+  expect(await jsonGetValueTool.call("/paths/~0~1IDSGenericFXCrossRate")).toBe(
+    "3"
+  );
+
+  expect(await jsonGetValueTool.call("/paths/~1~0IDSGenericFXCrossRate")).toBe(
+    "4"
+  );
 });

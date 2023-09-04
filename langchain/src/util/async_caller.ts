@@ -4,6 +4,7 @@ import PQueueMod from "p-queue";
 const STATUS_NO_RETRY = [
   400, // Bad Request
   401, // Unauthorized
+  402, // Payment Required
   403, // Forbidden
   404, // Not Found
   405, // Method Not Allowed
@@ -24,6 +25,10 @@ export interface AsyncCallerParams {
    * with an exponential backoff between each attempt. Defaults to 6.
    */
   maxRetries?: number;
+}
+
+export interface AsyncCallerCallOptions {
+  signal?: AbortSignal;
 }
 
 /**
@@ -76,7 +81,9 @@ export class AsyncCaller {
               if (
                 error.message.startsWith("Cancel") ||
                 error.message.startsWith("TimeoutError") ||
-                error.message.startsWith("AbortError")
+                error.name === "TimeoutError" ||
+                error.message.startsWith("AbortError") ||
+                error.name === "AbortError"
               ) {
                 throw error;
               }
@@ -84,10 +91,17 @@ export class AsyncCaller {
               if ((error as any)?.code === "ECONNABORTED") {
                 throw error;
               }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const status = (error as any)?.response?.status;
+              const status =
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (error as any)?.response?.status ?? (error as any)?.status;
               if (status && STATUS_NO_RETRY.includes(+status)) {
                 throw error;
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              if ((error as any)?.error?.code === "insufficient_quota") {
+                const err = new Error(error?.message);
+                err.name = "InsufficientQuotaError";
+                throw err;
               }
             },
             retries: this.maxRetries,
@@ -98,6 +112,27 @@ export class AsyncCaller {
         ),
       { throwOnTimeout: true }
     );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callWithOptions<A extends any[], T extends (...args: A) => Promise<any>>(
+    options: AsyncCallerCallOptions,
+    callable: T,
+    ...args: Parameters<T>
+  ): Promise<Awaited<ReturnType<T>>> {
+    // Note this doesn't cancel the underlying request,
+    // when available prefer to use the signal option of the underlying call
+    if (options.signal) {
+      return Promise.race([
+        this.call<A, T>(callable, ...args),
+        new Promise<never>((_, reject) => {
+          options.signal?.addEventListener("abort", () => {
+            reject(new Error("AbortError"));
+          });
+        }),
+      ]);
+    }
+    return this.call<A, T>(callable, ...args);
   }
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {

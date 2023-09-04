@@ -1,11 +1,10 @@
-import type { TiktokenModel } from "@dqbd/tiktoken";
+import type { TiktokenModel } from "js-tiktoken/lite";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain, ChainInputs } from "../base.js";
 import type { OpenAI } from "../../llms/openai.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";
-import { SerializedSqlDatabaseChain } from "../serde.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import {
   calculateMaxTokens,
@@ -15,16 +14,31 @@ import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { getPromptTemplateFromDataSource } from "../../util/sql_utils.js";
 import { PromptTemplate } from "../../prompts/index.js";
 
+/**
+ * Interface that extends the ChainInputs interface and defines additional
+ * fields specific to a SQL database chain. It represents the input fields
+ * for a SQL database chain.
+ */
 export interface SqlDatabaseChainInput extends ChainInputs {
   llm: BaseLanguageModel;
   database: SqlDatabase;
   topK?: number;
   inputKey?: string;
   outputKey?: string;
+  sqlOutputKey?: string;
   prompt?: PromptTemplate;
 }
 
+/**
+ * Class that represents a SQL database chain in the LangChain framework.
+ * It extends the BaseChain class and implements the functionality
+ * specific to a SQL database chain.
+ */
 export class SqlDatabaseChain extends BaseChain {
+  static lc_name() {
+    return "SqlDatabaseChain";
+  }
+
   // LLM wrapper to use
   llm: BaseLanguageModel;
 
@@ -41,6 +55,8 @@ export class SqlDatabaseChain extends BaseChain {
 
   outputKey = "result";
 
+  sqlOutputKey: string | undefined = undefined;
+
   // Whether to return the result of querying the SQL table directly.
   returnDirect = false;
 
@@ -51,6 +67,7 @@ export class SqlDatabaseChain extends BaseChain {
     this.topK = fields.topK ?? this.topK;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
+    this.sqlOutputKey = fields.sqlOutputKey ?? this.sqlOutputKey;
     this.prompt =
       fields.prompt ??
       getPromptTemplateFromDataSource(this.database.appDataSource);
@@ -84,16 +101,13 @@ export class SqlDatabaseChain extends BaseChain {
     };
     await this.verifyNumberOfTokens(inputText, tableInfo);
 
-    const intermediateStep: string[] = [];
     const sqlCommand = await llmChain.predict(
       llmInputs,
-      runManager?.getChild()
+      runManager?.getChild("sql_generation")
     );
-    intermediateStep.push(sqlCommand);
     let queryResult = "";
     try {
       queryResult = await this.database.appDataSource.query(sqlCommand);
-      intermediateStep.push(queryResult);
     } catch (error) {
       console.error(error);
     }
@@ -109,9 +123,13 @@ export class SqlDatabaseChain extends BaseChain {
       finalResult = {
         [this.outputKey]: await llmChain.predict(
           llmInputs,
-          runManager?.getChild()
+          runManager?.getChild("result_generation")
         ),
       };
+    }
+
+    if (this.sqlOutputKey != null) {
+      finalResult[this.sqlOutputKey] = sqlCommand;
     }
 
     return finalResult;
@@ -126,30 +144,20 @@ export class SqlDatabaseChain extends BaseChain {
   }
 
   get outputKeys(): string[] {
+    if (this.sqlOutputKey != null) {
+      return [this.outputKey, this.sqlOutputKey];
+    }
     return [this.outputKey];
   }
 
-  static async deserialize(
-    data: SerializedSqlDatabaseChain,
-    SqlDatabaseFromOptionsParams: (typeof SqlDatabase)["fromOptionsParams"]
-  ) {
-    const llm = await BaseLanguageModel.deserialize(data.llm);
-    const sqlDataBase = await SqlDatabaseFromOptionsParams(data.sql_database);
-
-    return new SqlDatabaseChain({
-      llm,
-      database: sqlDataBase,
-    });
-  }
-
-  serialize(): SerializedSqlDatabaseChain {
-    return {
-      _type: this._chainType(),
-      llm: this.llm.serialize(),
-      sql_database: this.database.serialize(),
-    };
-  }
-
+  /**
+   * Private method that verifies the number of tokens in the input text and
+   * table information. It throws an error if the number of tokens exceeds
+   * the maximum allowed by the language model.
+   * @param inputText The input text.
+   * @param tableinfo The table information.
+   * @returns A promise that resolves when the verification is complete.
+   */
   private async verifyNumberOfTokens(
     inputText: string,
     tableinfo: string

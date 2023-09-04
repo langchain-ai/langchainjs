@@ -3,7 +3,7 @@ import Metal from "@getmetal/metal-sdk";
 import { MetalRetriever } from "langchain/retrievers/metal";
 
 export const run = async () => {
-  const MetalSDK = Metal.default;
+  const MetalSDK = Metal;
 
   const client = new MetalSDK(
     process.env.METAL_API_KEY!,

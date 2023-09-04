@@ -16,6 +16,7 @@ export const run = async () => {
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "chat-zero-shot-react-description",
+    returnIntermediateSteps: true,
   });
   console.log("Loaded agent.");
 

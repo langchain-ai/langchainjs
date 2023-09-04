@@ -13,15 +13,26 @@ import { AgentInput } from "../types.js";
 import { ChatAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
+const DEFAULT_HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}";
+
+/**
+ * Interface for arguments used to create a chat prompt.
+ */
 export interface ChatCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
   prefix?: string;
+  /** String to use directly as the human message template. */
+  humanMessageTemplate?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
 }
 
+/**
+ * Type for input data for creating a ChatAgent, extending AgentInput with
+ * optional 'outputParser'.
+ */
 export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
@@ -29,6 +40,14 @@ export type ChatAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ChatAgent extends Agent {
+  static lc_name() {
+    return "ChatAgent";
+  }
+
+  lc_namespace = ["langchain", "agents", "chat"];
+
+  declare ToolType: Tool;
+
   constructor(input: ChatAgentInput) {
     const outputParser =
       input?.outputParser ?? ChatAgent.getDefaultOutputParser();
@@ -51,20 +70,37 @@ export class ChatAgent extends Agent {
     return ["Observation:"];
   }
 
+  /**
+   * Validates that all tools have descriptions. Throws an error if a tool
+   * without a description is found.
+   * @param tools Array of Tool instances to validate.
+   * @returns void
+   */
   static validateTools(tools: Tool[]) {
-    const invalidTool = tools.find((tool) => !tool.description);
-    if (invalidTool) {
+    const descriptionlessTool = tools.find((tool) => !tool.description);
+    if (descriptionlessTool) {
       const msg =
-        `Got a tool ${invalidTool.name} without a description.` +
+        `Got a tool ${descriptionlessTool.name} without a description.` +
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }
   }
 
+  /**
+   * Returns a default output parser for the ChatAgent.
+   * @param _fields Optional OutputParserArgs to customize the output parser.
+   * @returns ChatAgentOutputParser instance
+   */
   static getDefaultOutputParser(_fields?: OutputParserArgs) {
     return new ChatAgentOutputParser();
   }
 
+  /**
+   * Constructs the agent's scratchpad, which is a string representation of
+   * the agent's previous steps.
+   * @param steps Array of AgentStep instances representing the agent's previous steps.
+   * @returns Promise resolving to a string representing the agent's scratchpad.
+   */
   async constructScratchPad(steps: AgentStep[]): Promise<string> {
     const agentScratchpad = await super.constructScratchPad(steps);
     if (agentScratchpad) {
@@ -80,9 +116,14 @@ export class ChatAgent extends Agent {
    * @param args - Arguments to create the prompt with.
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
+   * @param args.humanMessageTemplate - String to use directly as the human message template
    */
   static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
-    const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
+    const {
+      prefix = PREFIX,
+      suffix = SUFFIX,
+      humanMessageTemplate = DEFAULT_HUMAN_MESSAGE_TEMPLATE,
+    } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
@@ -91,11 +132,19 @@ export class ChatAgent extends Agent {
     );
     const messages = [
       SystemMessagePromptTemplate.fromTemplate(template),
-      HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
+      HumanMessagePromptTemplate.fromTemplate(humanMessageTemplate),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
   }
 
+  /**
+   * Creates a ChatAgent instance using a language model, tools, and
+   * optional arguments.
+   * @param llm BaseLanguageModel instance to use in the agent.
+   * @param tools Array of Tool instances to include in the agent.
+   * @param args Optional arguments to customize the agent and prompt.
+   * @returns ChatAgent instance
+   */
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],

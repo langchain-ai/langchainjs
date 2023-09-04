@@ -1,9 +1,23 @@
-version: '3'
+version: "3"
 services:
+  test-exports-esbuild:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - ./test-exports-esbuild:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
     image: node:18
     working_dir: /app
     volumes:
+      - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
       - ./test-exports-esm:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -12,15 +26,10 @@ services:
     image: node:18
     working_dir: /app
     volumes:
+      - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
       - ./test-exports-cjs:/package
-      - ./langchain:/langchain
-      - ./scripts:/scripts
-    command: bash /scripts/docker-ci-entrypoint.sh
-  test-exports-cra:
-    image: node:18
-    working_dir: /app
-    volumes:
-      - ./test-exports-cra:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
     command: bash /scripts/docker-ci-entrypoint.sh
@@ -28,6 +37,9 @@ services:
     image: node:18
     working_dir: /app
     volumes:
+      - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
       - ./test-exports-cf:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -36,6 +48,9 @@ services:
     image: node:18
     working_dir: /app
     volumes:
+      - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
       - ./test-exports-vercel:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -44,6 +59,9 @@ services:
     image: node:18
     working_dir: /app
     volumes:
+      - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
       - ./test-exports-vite:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -52,11 +70,11 @@ services:
     image: alpine:3.14
     command: echo "Success"
     depends_on:
+      test-exports-esbuild:
+        condition: service_completed_successfully
       test-exports-esm:
         condition: service_completed_successfully
       test-exports-cjs:
-        condition: service_completed_successfully
-      test-exports-cra:
         condition: service_completed_successfully
       test-exports-cf:
         condition: service_completed_successfully

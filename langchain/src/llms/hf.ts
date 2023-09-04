@@ -1,5 +1,10 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
+/**
+ * Interface defining the parameters for configuring the Hugging Face
+ * model for text generation.
+ */
 export interface HFInput {
   /** Model to use */
   model: string;
@@ -25,7 +30,17 @@ export interface HFInput {
   apiKey?: string;
 }
 
+/**
+ * Class implementing the Large Language Model (LLM) interface using the
+ * Hugging Face Inference API for text generation.
+ */
 export class HuggingFaceInference extends LLM implements HFInput {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "HUGGINGFACEHUB_API_KEY",
+    };
+  }
+
   model = "gpt2";
 
   temperature: number | undefined = undefined;
@@ -50,11 +65,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     this.topK = fields?.topK ?? this.topK;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.apiKey =
-      fields?.apiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.HUGGINGFACEHUB_API_KEY
-        : undefined);
+      fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for HuggingFace Hub in the environment variable HUGGINGFACEHUB_API_KEY or in the apiKey field of the HuggingFaceInference constructor."
@@ -63,26 +74,33 @@ export class HuggingFaceInference extends LLM implements HFInput {
   }
 
   _llmType() {
-    return "huggingface_hub";
+    return "hf";
   }
 
   /** @ignore */
-  async _call(prompt: string, _stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = new HfInference(this.apiKey);
-    const res = await this.caller.call(hf.textGeneration.bind(hf), {
-      model: this.model,
-      parameters: {
-        // make it behave similar to openai, returning only the generated text
-        return_full_text: false,
-        temperature: this.temperature,
-        max_new_tokens: this.maxTokens,
-        top_p: this.topP,
-        top_k: this.topK,
-        repetition_penalty: this.frequencyPenalty,
-      },
-      inputs: prompt,
-    });
+    const res = await this.caller.callWithOptions(
+      { signal: options.signal },
+      hf.textGeneration.bind(hf),
+      {
+        model: this.model,
+        parameters: {
+          // make it behave similar to openai, returning only the generated text
+          return_full_text: false,
+          temperature: this.temperature,
+          max_new_tokens: this.maxTokens,
+          top_p: this.topP,
+          top_k: this.topK,
+          repetition_penalty: this.frequencyPenalty,
+        },
+        inputs: prompt,
+      }
+    );
     return res.generated_text;
   }
 

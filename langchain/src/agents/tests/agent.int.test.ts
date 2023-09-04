@@ -60,6 +60,26 @@ test("Run agent locally", async () => {
   console.log(`Got output ${result.output}`);
 });
 
+test("Run agent with an abort signal", async () => {
+  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
+  const tools = [new Calculator()];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+  });
+  console.log("Loaded agent.");
+
+  const input = `What is 3 to the fourth power?`;
+  console.log(`Executing with input "${input}"...`);
+
+  const controller = new AbortController();
+  await expect(() => {
+    const result = executor.call({ input, signal: controller.signal });
+    controller.abort();
+    return result;
+  }).rejects.toThrow();
+});
+
 test("Run agent with incorrect api key should throw error", async () => {
   const model = new OpenAI({
     temperature: 0,
@@ -82,14 +102,21 @@ test("Run agent with incorrect api key should throw error", async () => {
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
+  let error;
   // Test that the model throws an error
-  await expect(() => model.call(input)).rejects.toThrowError(
-    "Request failed with status code 401"
-  );
+  await expect(async () => {
+    try {
+      await model.call(input);
+    } catch (e) {
+      error = e;
+      throw e;
+    }
+  }).rejects.toThrowError();
 
   // Test that the agent throws the same error
   await expect(() => executor.call({ input })).rejects.toThrowError(
-    "Request failed with status code 401"
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (error as any).message
   );
 }, 10000);
 

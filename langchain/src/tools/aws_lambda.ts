@@ -1,5 +1,8 @@
 import { DynamicTool, DynamicToolInput } from "./dynamic.js";
 
+/**
+ * Interface for the configuration of the AWS Lambda function.
+ */
 interface LambdaConfig {
   functionName: string;
   region?: string;
@@ -7,6 +10,9 @@ interface LambdaConfig {
   secretAccessKey?: string;
 }
 
+/**
+ * Interface for the arguments to the LambdaClient constructor.
+ */
 interface LambdaClientConstructorArgs {
   region?: string;
   credentials?: {
@@ -15,7 +21,22 @@ interface LambdaClientConstructorArgs {
   };
 }
 
+/**
+ * Class for invoking AWS Lambda functions within the LangChain framework.
+ * Extends the DynamicTool class.
+ */
 class AWSLambda extends DynamicTool {
+  get lc_namespace(): string[] {
+    return [...super.lc_namespace, "aws_lambda"];
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      accessKeyId: "AWS_ACCESS_KEY_ID",
+      secretAccessKey: "AWS_SECRET_ACCESS_KEY",
+    };
+  }
+
   private lambdaConfig: LambdaConfig;
 
   constructor({
@@ -77,6 +98,11 @@ class AWSLambda extends DynamicTool {
   }
 }
 
+/**
+ * Helper function that imports the necessary AWS SDK modules for invoking
+ * the Lambda function. Returns an object that includes the LambdaClient
+ * and InvokeCommand classes from the AWS SDK.
+ */
 async function LambdaImports() {
   try {
     const { LambdaClient, InvokeCommand } = await import(

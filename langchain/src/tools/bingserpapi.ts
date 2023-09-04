@@ -1,6 +1,25 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
+/**
+ * A tool for web search functionality using Bing's search engine. It
+ * extends the base `Tool` class and implements the `_call` method to
+ * perform the search operation. Requires an API key for Bing's search
+ * engine, which can be set in the environment variables. Also accepts
+ * additional parameters for the search query.
+ */
 class BingSerpAPI extends Tool {
+  static lc_name() {
+    return "BingSerpAPI";
+  }
+
+  /**
+   * Not implemented. Will throw an error if called.
+   */
+  toJSON() {
+    return this.toJSONNotImplemented();
+  }
+
   name = "bing-search";
 
   description =
@@ -11,13 +30,10 @@ class BingSerpAPI extends Tool {
   params: Record<string, string>;
 
   constructor(
-    apiKey: string | undefined = typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.BingApiKey
-      : undefined,
+    apiKey: string | undefined = getEnvironmentVariable("BingApiKey"),
     params: Record<string, string> = {}
   ) {
-    super();
+    super(...arguments);
 
     if (!apiKey) {
       throw new Error(

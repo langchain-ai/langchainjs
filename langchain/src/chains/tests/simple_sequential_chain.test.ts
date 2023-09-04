@@ -19,7 +19,7 @@ class FakeLLM1 extends BaseLLM {
     return "fake_1";
   }
 
-  async _generate(_prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(_prompts: string[]): Promise<LLMResult> {
     return {
       generations: [
         [
@@ -41,7 +41,7 @@ class FakeLLM2 extends BaseLLM {
     return "fake_2";
   }
 
-  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(prompts: string[]): Promise<LLMResult> {
     let response = "I don't know what you are talking about.";
     if (prompts[0].includes("XXX")) {
       response = "final answer";
@@ -84,7 +84,7 @@ test("Test SimpleSequentialChain input chains' single input validation", async (
     /* eslint-disable no-new */
     new SimpleSequentialChain({ chains: [chain1, chain2] });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"Chains used in SimpleSequentialChain should all have one input, got 2 for llm_chain."`
+    `"Chains used in SimpleSequentialChain should all have one input, got 2 for llm."`
   );
 });
 

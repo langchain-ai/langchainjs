@@ -34,3 +34,18 @@ console.log(response);
   }
 ]
 */
+
+// You can also filter by metadata
+const filteredResponse = await vectorStore.similaritySearch("scared", 2, {
+  id: 1,
+});
+
+console.log(filteredResponse);
+/*
+[
+  Document {
+    pageContent: 'Achilles: Yiikes! What is that?',
+    metadata: { id: 1 }
+  }
+]
+*/

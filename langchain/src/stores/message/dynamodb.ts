@@ -11,15 +11,21 @@ import {
 } from "@aws-sdk/client-dynamodb";
 
 import {
-  BaseChatMessage,
+  StoredMessage,
+  BaseMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
-  StoredMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * Interface defining the fields required to create an instance of
+ * `DynamoDBChatMessageHistory`. It includes the DynamoDB table name,
+ * session ID, partition key, sort key, message attribute name, and
+ * DynamoDB client configuration.
+ */
 export interface DynamoDBChatMessageHistoryFields {
   tableName: string;
   sessionId: string;
@@ -29,6 +35,10 @@ export interface DynamoDBChatMessageHistoryFields {
   config?: DynamoDBClientConfig;
 }
 
+/**
+ * Interface defining the structure of a chat message as it is stored in
+ * DynamoDB.
+ */
 interface DynamoDBSerializedChatMessage {
   M: {
     type: {
@@ -43,7 +53,22 @@ interface DynamoDBSerializedChatMessage {
   };
 }
 
+/**
+ * Class providing methods to interact with a DynamoDB table to store and
+ * retrieve chat messages. It extends the `BaseListChatMessageHistory`
+ * class.
+ */
 export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "dynamodb"];
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "config.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "config.credentials.secretAccessKey": "AWS_SECRETE_ACCESS_KEY",
+      "config.credentials.sessionToken": "AWS_SESSION_TOKEN",
+    };
+  }
+
   private tableName: string;
 
   private sessionId: string;
@@ -82,7 +107,12 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  /**
+   * Retrieves all messages from the DynamoDB table and returns them as an
+   * array of `BaseMessage` instances.
+   * @returns Array of stored messages
+   */
+  async getMessages(): Promise<BaseMessage[]> {
     const params: GetItemCommandInput = {
       TableName: this.tableName,
       Key: this.dynamoKey,
@@ -95,15 +125,21 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     const messages = items
       .map((item) => ({
         type: item.M?.type.S,
-        role: item.M?.role?.S,
-        text: item.M?.text.S,
+        data: {
+          role: item.M?.role?.S,
+          content: item.M?.text.S,
+        },
       }))
       .filter(
-        (x): x is StoredMessage => x.type !== undefined && x.text !== undefined
+        (x): x is StoredMessage =>
+          x.type !== undefined && x.data.content !== undefined
       );
     return mapStoredMessagesToChatMessages(messages);
   }
 
+  /**
+   * Deletes all messages from the DynamoDB table.
+   */
   async clear(): Promise<void> {
     const params: DeleteItemCommandInput = {
       TableName: this.tableName,
@@ -112,7 +148,11 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     await this.client.send(new DeleteItemCommand(params));
   }
 
-  protected async addMessage(message: BaseChatMessage) {
+  /**
+   * Adds a new message to the DynamoDB table.
+   * @param message The message to be added to the DynamoDB table.
+   */
+  async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
 
     const params: UpdateItemCommandInput = {
@@ -133,12 +173,12 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
                   S: message.type,
                 },
                 text: {
-                  S: message.text,
+                  S: message.data.content,
                 },
               },
             };
-            if (message.role) {
-              dynamoSerializedMessage.M.role = { S: message.role };
+            if (message.data.role) {
+              dynamoSerializedMessage.M.role = { S: message.data.role };
             }
             return dynamoSerializedMessage;
           }),

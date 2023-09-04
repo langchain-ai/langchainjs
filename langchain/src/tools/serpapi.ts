@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 /**
@@ -289,6 +290,14 @@ type UrlParameters = Record<
  * To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY environment variable set.
  */
 export class SerpAPI extends Tool {
+  static lc_name() {
+    return "SerpAPI";
+  }
+
+  toJSON() {
+    return this.toJSONNotImplemented();
+  }
+
   protected key: string;
 
   protected params: Partial<SerpAPIParameters>;
@@ -296,14 +305,11 @@ export class SerpAPI extends Tool {
   protected baseUrl: string;
 
   constructor(
-    apiKey: string | undefined = typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.SERPAPI_API_KEY
-      : undefined,
+    apiKey: string | undefined = getEnvironmentVariable("SERPAPI_API_KEY"),
     params: Partial<SerpAPIParameters> = {},
     baseUrl = "https://serpapi.com"
   ) {
-    super();
+    super(...arguments);
 
     if (!apiKey) {
       throw new Error(
@@ -318,6 +324,13 @@ export class SerpAPI extends Tool {
 
   name = "search";
 
+  /**
+   * Builds a URL for the SerpAPI request.
+   * @param path The path for the request.
+   * @param parameters The parameters for the request.
+   * @param baseUrl The base URL for the request.
+   * @returns A string representing the built URL.
+   */
   protected buildUrl<P extends UrlParameters>(
     path: string,
     parameters: P,

@@ -1,0 +1,30 @@
+{
+  "name": "test-exports-esbuild",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tests for the things exported by the langchain package",
+  "main": "./index.mjs",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "yarn run test:esm && yarn run test:cjs",
+    "test:esm": "rm -rf dist-esm && esbuild --bundle src/* --outdir=dist-esm --platform=node --format=esm --external:'../node_modules/*' --external:'./node_modules/*' --supported:top-level-await=true && bash ./entrypoint.sh dist-esm",
+    "test:cjs": "rm -rf dist-cjs && esbuild --bundle src/*.cjs --outdir=dist-cjs --platform=node --format=cjs --external:'../node_modules/*' --external:'./node_modules/*' --out-extension:.js=.cjs && bash ./entrypoint.sh dist-cjs",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
+  },
+  "author": "LangChain",
+  "license": "MIT",
+  "dependencies": {
+    "d3-dsv": "2",
+    "hnswlib-node": "^1.4.2",
+    "langchain": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^18.15.11",
+    "esbuild": "^0.17.18",
+    "prettier": "^2.8.3",
+    "typescript": "^5.0.0"
+  }
+}

@@ -8,16 +8,16 @@ import {
 } from "../../prompts/chat.js";
 import { renderTemplate } from "../../prompts/template.js";
 import {
-  AIChatMessage,
+  AIMessage,
   AgentStep,
-  BaseChatMessage,
-  HumanChatMessage,
+  BaseMessage,
+  HumanMessage,
 } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
-import { ChatConversationalAgentOutputParser } from "./outputParser.js";
+import { ChatConversationalAgentOutputParserWithRetries } from "./outputParser.js";
 import {
   PREFIX_END,
   DEFAULT_PREFIX,
@@ -25,6 +25,10 @@ import {
   TEMPLATE_TOOL_RESPONSE,
 } from "./prompt.js";
 
+/**
+ * Interface defining the structure of arguments used to create a prompt
+ * for the ChatConversationalAgent class.
+ */
 export interface ChatConversationalCreatePromptArgs {
   /** String to put after the list of tools. */
   systemMessage?: string;
@@ -36,6 +40,11 @@ export interface ChatConversationalCreatePromptArgs {
   outputParser?: AgentActionOutputParser;
 }
 
+/**
+ * Type that extends the AgentInput interface for the
+ * ChatConversationalAgent class, making the outputParser property
+ * optional.
+ */
 export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
@@ -43,6 +52,14 @@ export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ChatConversationalAgent extends Agent {
+  static lc_name() {
+    return "ChatConversationalAgent";
+  }
+
+  lc_namespace = ["langchain", "agents", "chat_convo"];
+
+  declare ToolType: Tool;
+
   constructor(input: ChatConversationalAgentInput) {
     const outputParser =
       input.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();
@@ -66,21 +83,27 @@ export class ChatConversationalAgent extends Agent {
   }
 
   static validateTools(tools: Tool[]) {
-    const invalidTool = tools.find((tool) => !tool.description);
-    if (invalidTool) {
+    const descriptionlessTool = tools.find((tool) => !tool.description);
+    if (descriptionlessTool) {
       const msg =
-        `Got a tool ${invalidTool.name} without a description.` +
+        `Got a tool ${descriptionlessTool.name} without a description.` +
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }
   }
 
-  async constructScratchPad(steps: AgentStep[]): Promise<BaseChatMessage[]> {
-    const thoughts: BaseChatMessage[] = [];
+  /**
+   * Constructs the agent scratchpad based on the agent steps. It returns an
+   * array of base messages representing the thoughts of the agent.
+   * @param steps The agent steps to construct the scratchpad from.
+   * @returns An array of base messages representing the thoughts of the agent.
+   */
+  async constructScratchPad(steps: AgentStep[]): Promise<BaseMessage[]> {
+    const thoughts: BaseMessage[] = [];
     for (const step of steps) {
-      thoughts.push(new AIChatMessage(step.action.log));
+      thoughts.push(new AIMessage(step.action.log));
       thoughts.push(
-        new HumanChatMessage(
+        new HumanMessage(
           renderTemplate(TEMPLATE_TOOL_RESPONSE, "f-string", {
             observation: step.observation,
           })
@@ -90,10 +113,29 @@ export class ChatConversationalAgent extends Agent {
     return thoughts;
   }
 
+  /**
+   * Returns the default output parser for the ChatConversationalAgent
+   * class. It takes optional fields as arguments to customize the output
+   * parser.
+   * @param fields Optional fields to customize the output parser.
+   * @returns The default output parser for the ChatConversationalAgent class.
+   */
   static getDefaultOutputParser(
-    _fields?: OutputParserArgs
+    fields?: OutputParserArgs & {
+      toolNames: string[];
+    }
   ): AgentActionOutputParser {
-    return new ChatConversationalAgentOutputParser();
+    if (fields?.llm) {
+      return ChatConversationalAgentOutputParserWithRetries.fromLLM(
+        fields.llm,
+        {
+          toolNames: fields.toolNames,
+        }
+      );
+    }
+    return new ChatConversationalAgentOutputParserWithRetries({
+      toolNames: fields?.toolNames,
+    });
   }
 
   /**
@@ -103,6 +145,7 @@ export class ChatConversationalAgent extends Agent {
    * @param args - Arguments to create the prompt with.
    * @param args.systemMessage - String to put before the list of tools.
    * @param args.humanMessage - String to put after the list of tools.
+   * @param args.outputParser - Output parser to use for formatting.
    */
   static createPrompt(
     tools: Tool[],
@@ -110,43 +153,59 @@ export class ChatConversationalAgent extends Agent {
   ) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
     const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
-    const outputParser =
-      args?.outputParser ?? new ChatConversationalAgentOutputParser();
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const formatInstructions = renderTemplate(humanMessage, "f-string", {
-      format_instructions: outputParser.getFormatInstructions(),
+    const toolNames = tools.map((tool) => tool.name);
+    const outputParser =
+      args?.outputParser ??
+      ChatConversationalAgent.getDefaultOutputParser({ toolNames });
+    const formatInstructions = outputParser.getFormatInstructions({
+      toolNames,
     });
-    const toolNames = tools.map((tool) => tool.name).join("\n");
-    const finalPrompt = renderTemplate(formatInstructions, "f-string", {
+    const renderedHumanMessage = renderTemplate(humanMessage, "f-string", {
+      format_instructions: formatInstructions,
       tools: toolStrings,
-      tool_names: toolNames,
     });
     const messages = [
       SystemMessagePromptTemplate.fromTemplate(systemMessage),
       new MessagesPlaceholder("chat_history"),
-      HumanMessagePromptTemplate.fromTemplate(finalPrompt),
+      HumanMessagePromptTemplate.fromTemplate(renderedHumanMessage),
       new MessagesPlaceholder("agent_scratchpad"),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
   }
 
+  /**
+   * Creates an instance of the ChatConversationalAgent class from a
+   * BaseLanguageModel and a set of tools. It takes optional arguments to
+   * customize the agent.
+   * @param llm The BaseLanguageModel to create the agent from.
+   * @param tools The set of tools to create the agent from.
+   * @param args Optional arguments to customize the agent.
+   * @returns An instance of the ChatConversationalAgent class.
+   */
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
     args?: ChatConversationalCreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);
-    const prompt = ChatConversationalAgent.createPrompt(tools, args);
+    const outputParser =
+      args?.outputParser ??
+      ChatConversationalAgent.getDefaultOutputParser({
+        llm,
+        toolNames: tools.map((tool) => tool.name),
+      });
+    const prompt = ChatConversationalAgent.createPrompt(tools, {
+      ...args,
+      outputParser,
+    });
     const chain = new LLMChain({
       prompt,
       llm,
       callbacks: args?.callbacks ?? args?.callbackManager,
     });
-    const outputParser =
-      args?.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();
-
     return new ChatConversationalAgent({
       llmChain: chain,
       outputParser,

@@ -1,29 +1,49 @@
 import { BaseDocumentCompressor } from "./document_compressors/index.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
+import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
-export interface ContextualCompressionRetrieverArgs {
+/**
+ * Interface for the arguments required to construct a
+ * ContextualCompressionRetriever. It extends the BaseRetrieverInput
+ * interface with two additional fields: baseCompressor and baseRetriever.
+ */
+export interface ContextualCompressionRetrieverArgs extends BaseRetrieverInput {
   baseCompressor: BaseDocumentCompressor;
   baseRetriever: BaseRetriever;
 }
 
+/**
+ * A retriever that wraps a base retriever and compresses the results. It
+ * retrieves relevant documents based on a given query and then compresses
+ * these documents using a specified document compressor.
+ */
 export class ContextualCompressionRetriever extends BaseRetriever {
+  static lc_name() {
+    return "ContextualCompressionRetriever";
+  }
+
+  lc_namespace = ["langchain", "retrievers", "contextual_compression"];
+
   baseCompressor: BaseDocumentCompressor;
 
   baseRetriever: BaseRetriever;
 
-  constructor({
-    baseCompressor,
-    baseRetriever,
-  }: ContextualCompressionRetrieverArgs) {
-    super();
+  constructor(fields: ContextualCompressionRetrieverArgs) {
+    super(fields);
 
-    this.baseCompressor = baseCompressor;
-    this.baseRetriever = baseRetriever;
+    this.baseCompressor = fields.baseCompressor;
+    this.baseRetriever = fields.baseRetriever;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
-    const docs = await this.baseRetriever.getRelevantDocuments(query);
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
+    const docs = await this.baseRetriever._getRelevantDocuments(
+      query,
+      runManager
+    );
     const compressedDocs = await this.baseCompressor.compressDocuments(
       docs,
       query

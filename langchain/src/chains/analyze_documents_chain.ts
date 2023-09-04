@@ -10,6 +10,10 @@ import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
+/**
+ * Interface for the input parameters required by the AnalyzeDocumentChain
+ * class.
+ */
 export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
   combineDocumentsChain: BaseChain;
   textSplitter?: TextSplitter;
@@ -25,6 +29,10 @@ export class AnalyzeDocumentChain
   extends BaseChain
   implements AnalyzeDocumentChainInput
 {
+  static lc_name() {
+    return "AnalyzeDocumentChain";
+  }
+
   inputKey = "input_document";
 
   combineDocumentsChain: BaseChain;
@@ -63,7 +71,7 @@ export class AnalyzeDocumentChain
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentsChain.call(
       newInputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     return result;
   }

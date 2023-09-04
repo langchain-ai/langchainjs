@@ -1,15 +1,10 @@
 import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
-import {
-  BaseTracer,
-  LLMRun,
-  ChainRun,
-  ToolRun,
-  TracerSession,
-  TracerSessionCreate,
-} from "../handlers/tracers.js";
+import { BaseTracer, Run } from "../handlers/tracer.js";
+import { HumanMessage } from "../../schema/index.js";
+import { Serialized } from "../../load/serializable.js";
+import { Document } from "../../document.js";
 
-const TEST_SESSION_ID = 2023;
 const _DATE = 1620000000000;
 
 Date.now = jest.fn(() => _DATE);
@@ -17,69 +12,132 @@ Date.now = jest.fn(() => _DATE);
 class FakeTracer extends BaseTracer {
   name = "fake_tracer";
 
-  runs: (LLMRun | ChainRun | ToolRun)[] = [];
+  runs: Run[] = [];
 
   constructor() {
     super();
   }
 
-  protected persistRun(run: LLMRun | ChainRun | ToolRun): Promise<void> {
+  protected persistRun(run: Run): Promise<void> {
     this.runs.push(run);
     return Promise.resolve();
   }
-
-  protected persistSession(
-    session: TracerSessionCreate
-  ): Promise<TracerSession> {
-    return Promise.resolve({
-      id: TEST_SESSION_ID,
-      ...session,
-    });
-  }
-
-  async loadSession(sessionName: string): Promise<TracerSession> {
-    return Promise.resolve({
-      id: TEST_SESSION_ID,
-      name: sessionName,
-      start_time: _DATE,
-    });
-  }
-
-  async loadDefaultSession(): Promise<TracerSession> {
-    return Promise.resolve({
-      id: TEST_SESSION_ID,
-      name: "default",
-      start_time: _DATE,
-    });
-  }
 }
+
+const serialized: Serialized = {
+  lc: 1,
+  type: "constructor",
+  id: ["test"],
+  kwargs: {},
+};
 
 test("Test LLMRun", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
-  await tracer.handleLLMStart({ name: "test" }, ["test"], runId);
+  await tracer.handleLLMStart(serialized, ["test"], runId);
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  const compareRun: LLMRun = {
-    uuid: runId,
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
     start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
     child_execution_order: 1,
-    serialized: { name: "test" },
-    session_id: TEST_SESSION_ID,
-    prompts: ["test"],
-    type: "llm",
-    response: { generations: [] },
+    serialized,
+    events: [
+      {
+        name: "start",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+      {
+        name: "end",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+    ],
+    inputs: { prompts: ["test"] },
+    run_type: "llm",
+    outputs: { generations: [] },
+    child_runs: [],
+    extra: {},
+    tags: [],
   };
   expect(run).toEqual(compareRun);
 });
 
+test("Test Chat Model Run", async () => {
+  const tracer = new FakeTracer();
+  const runId = uuid.v4();
+  const messages = [[new HumanMessage("Avast")]];
+  await tracer.handleChatModelStart(serialized, messages, runId);
+  await tracer.handleLLMEnd({ generations: [] }, runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0];
+  expect(run).toMatchInlineSnapshot(
+    {
+      id: expect.any(String),
+    },
+    `
+    {
+      "child_execution_order": 1,
+      "child_runs": [],
+      "end_time": 1620000000000,
+      "events": [
+        {
+          "name": "start",
+          "time": "2021-05-03T00:00:00.000Z",
+        },
+        {
+          "name": "end",
+          "time": "2021-05-03T00:00:00.000Z",
+        },
+      ],
+      "execution_order": 1,
+      "extra": {},
+      "id": Any<String>,
+      "inputs": {
+        "messages": [
+          [
+            {
+              "id": [
+                "langchain",
+                "schema",
+                "HumanMessage",
+              ],
+              "kwargs": {
+                "additional_kwargs": {},
+                "content": "Avast",
+              },
+              "lc": 1,
+              "type": "constructor",
+            },
+          ],
+        ],
+      },
+      "name": "test",
+      "outputs": {
+        "generations": [],
+      },
+      "parent_run_id": undefined,
+      "run_type": "llm",
+      "serialized": {
+        "id": [
+          "test",
+        ],
+        "kwargs": {},
+        "lc": 1,
+        "type": "constructor",
+      },
+      "start_time": 1620000000000,
+      "tags": [],
+    }
+  `
+  );
+});
+
 test("Test LLM Run no start", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
   await expect(tracer.handleLLMEnd({ generations: [] }, runId)).rejects.toThrow(
     "No LLM run to end"
@@ -88,24 +146,33 @@ test("Test LLM Run no start", async () => {
 
 test("Test Chain Run", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
-  const compareRun: ChainRun = {
-    uuid: runId,
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
     start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
     child_execution_order: 1,
-    serialized: { name: "test" },
-    session_id: TEST_SESSION_ID,
+    serialized,
+    events: [
+      {
+        name: "start",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+      {
+        name: "end",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+    ],
     inputs: { foo: "bar" },
     outputs: { foo: "bar" },
-    type: "chain",
-    child_llm_runs: [],
-    child_chain_runs: [],
-    child_tool_runs: [],
+    run_type: "chain",
+    child_runs: [],
+    extra: {},
+    tags: [],
   };
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, runId);
+  await tracer.handleChainStart(serialized, { foo: "bar" }, runId);
   await tracer.handleChainEnd({ foo: "bar" }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
@@ -114,26 +181,74 @@ test("Test Chain Run", async () => {
 
 test("Test Tool Run", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
-  const compareRun: ToolRun = {
-    uuid: runId,
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
     start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
     child_execution_order: 1,
-    serialized: { name: "test" },
-    session_id: TEST_SESSION_ID,
-    tool_input: "test",
-    output: "output",
-    type: "tool",
-    action: JSON.stringify({ name: "test" }),
-    child_llm_runs: [],
-    child_chain_runs: [],
-    child_tool_runs: [],
+    serialized,
+    events: [
+      {
+        name: "start",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+      {
+        name: "end",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+    ],
+    inputs: { input: "test" },
+    outputs: { output: "output" },
+    run_type: "tool",
+    child_runs: [],
+    extra: {},
+    tags: [],
   };
-  await tracer.handleToolStart({ name: "test" }, "test", runId);
+  await tracer.handleToolStart(serialized, "test", runId);
   await tracer.handleToolEnd("output", runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0];
+  expect(run).toEqual(compareRun);
+});
+
+test("Test Retriever Run", async () => {
+  const tracer = new FakeTracer();
+  const runId = uuid.v4();
+  const document = new Document({
+    pageContent: "test",
+    metadata: { test: "test" },
+  });
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
+    child_execution_order: 1,
+    serialized,
+    events: [
+      {
+        name: "start",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+      {
+        name: "end",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+    ],
+    inputs: { query: "bar" },
+    outputs: { documents: [document] },
+    run_type: "retriever",
+    child_runs: [],
+    extra: {},
+    tags: [],
+  };
+
+  await tracer.handleRetrieverStart(serialized, "bar", runId);
+  await tracer.handleRetrieverEnd([document], runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   expect(run).toEqual(compareRun);
@@ -141,85 +256,120 @@ test("Test Tool Run", async () => {
 
 test("Test nested runs", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const chainRunId = uuid.v4();
   const toolRunId = uuid.v4();
   const llmRunId = uuid.v4();
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
-  await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
-  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
+  await tracer.handleChainStart(serialized, { foo: "bar" }, chainRunId);
+  await tracer.handleToolStart(
+    { ...serialized, id: ["test_tool"] },
+    "test",
+    toolRunId,
+    chainRunId
+  );
+  await tracer.handleLLMStart(
+    { ...serialized, id: ["test_llm_child_run"] },
+    ["test"],
+    llmRunId,
+    toolRunId
+  );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
   await tracer.handleToolEnd("output", toolRunId);
   const llmRunId2 = uuid.v4();
   await tracer.handleLLMStart(
-    { name: "test2" },
+    { ...serialized, id: ["test_llm2"] },
     ["test"],
     llmRunId2,
     chainRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
   await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
-  const compareRun: ChainRun = {
-    child_chain_runs: [],
-    child_llm_runs: [
+  const compareRun: Run = {
+    child_runs: [
       {
-        uuid: llmRunId2,
-        parent_uuid: chainRunId,
-        end_time: 1620000000000,
-        execution_order: 4,
-        child_execution_order: 4,
-        prompts: ["test"],
-        response: {
-          generations: [[]],
-        },
-        serialized: {
-          name: "test2",
-        },
-        session_id: 2023,
-        start_time: 1620000000000,
-        type: "llm",
-      },
-    ],
-    child_tool_runs: [
-      {
-        uuid: toolRunId,
-        parent_uuid: chainRunId,
-        action: '{"name":"test"}',
-        child_chain_runs: [],
-        child_llm_runs: [
+        id: toolRunId,
+        name: "test_tool",
+        parent_run_id: chainRunId,
+        child_runs: [
           {
-            uuid: llmRunId,
-            parent_uuid: toolRunId,
+            id: llmRunId,
+            name: "test_llm_child_run",
+            parent_run_id: toolRunId,
             end_time: 1620000000000,
             execution_order: 3,
             child_execution_order: 3,
-            prompts: ["test"],
-            response: {
+            inputs: { prompts: ["test"] },
+            outputs: {
               generations: [[]],
             },
-            serialized: {
-              name: "test",
-            },
-            session_id: 2023,
+            serialized: { ...serialized, id: ["test_llm_child_run"] },
+            events: [
+              {
+                name: "start",
+                time: "2021-05-03T00:00:00.000Z",
+              },
+              {
+                name: "end",
+                time: "2021-05-03T00:00:00.000Z",
+              },
+            ],
             start_time: 1620000000000,
-            type: "llm",
+            run_type: "llm",
+            child_runs: [],
+            extra: {},
+            tags: [],
           },
         ],
-        child_tool_runs: [],
         end_time: 1620000000000,
         execution_order: 2,
         child_execution_order: 3,
-        output: "output",
-        serialized: {
-          name: "test",
-        },
-        session_id: 2023,
+        outputs: { output: "output" },
+        serialized: { ...serialized, id: ["test_tool"] },
+        events: [
+          {
+            name: "start",
+            time: "2021-05-03T00:00:00.000Z",
+          },
+          {
+            name: "end",
+            time: "2021-05-03T00:00:00.000Z",
+          },
+        ],
         start_time: 1620000000000,
-        tool_input: "test",
-        type: "tool",
+        inputs: { input: "test" },
+        run_type: "tool",
+        extra: {},
+        tags: [],
+      },
+      {
+        id: llmRunId2,
+        name: "test_llm2",
+        parent_run_id: chainRunId,
+        end_time: 1620000000000,
+        execution_order: 4,
+        child_execution_order: 4,
+        inputs: { prompts: ["test"] },
+        outputs: {
+          generations: [[]],
+        },
+        serialized: { ...serialized, id: ["test_llm2"] },
+        events: [
+          {
+            name: "start",
+            time: "2021-05-03T00:00:00.000Z",
+          },
+          {
+            name: "end",
+            time: "2021-05-03T00:00:00.000Z",
+          },
+        ],
+        start_time: 1620000000000,
+        run_type: "llm",
+        child_runs: [],
+        extra: {},
+        tags: [],
       },
     ],
-    uuid: chainRunId,
+    id: chainRunId,
     end_time: 1620000000000,
     execution_order: 1,
     child_execution_order: 4,
@@ -229,18 +379,28 @@ test("Test nested runs", async () => {
     outputs: {
       foo: "bar",
     },
-    serialized: {
-      name: "test",
-    },
-    session_id: 2023,
+    events: [
+      {
+        name: "start",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+      {
+        name: "end",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+    ],
+    name: "test",
+    serialized,
     start_time: 1620000000000,
-    type: "chain",
+    run_type: "chain",
+    extra: {},
+    tags: [],
   };
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);
 
   const llmRunId3 = uuid.v4();
-  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId3);
+  await tracer.handleLLMStart(serialized, ["test"], llmRunId3);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
   expect(tracer.runs.length).toBe(2);
 });

@@ -38,7 +38,9 @@ export class MyCustomChain extends BaseChain implements MyCustomChainInputs {
     // `runManager?.getChild()` as shown below.
     const result = await this.llm.generatePrompt(
       [promptValue],
-      runManager?.getChild()
+      {},
+      // This tag "a-tag" will be attached to this inner LLM call
+      runManager?.getChild("a-tag")
     );
 
     // If you want to log something about this run, you can do so by calling

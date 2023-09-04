@@ -5,7 +5,10 @@ import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "../../prompts/chat.js";
-import { ConditionalPromptSelector, isChatModel } from "../prompt_selector.js";
+import {
+  ConditionalPromptSelector,
+  isChatModel,
+} from "../../prompts/selectors/conditional.js";
 
 const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.

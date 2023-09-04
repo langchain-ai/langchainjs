@@ -4,6 +4,7 @@
 // Adapted from https://github.com/gfortaine/fetch-event-source/blob/main/src/parse.ts
 // due to a packaging issue in the original.
 // MIT License
+import { type Readable } from "stream";
 
 export const EventStreamContentType = "text/event-stream";
 
@@ -22,6 +23,10 @@ export interface EventSourceMessage {
   retry?: number;
 }
 
+function isNodeJSReadable(x: unknown): x is Readable {
+  return x != null && typeof x === "object" && "on" in x;
+}
+
 /**
  * Converts a ReadableStream into a callback pattern.
  * @param stream The input ReadableStream.
@@ -30,12 +35,42 @@ export interface EventSourceMessage {
  */
 export async function getBytes(
   stream: ReadableStream<Uint8Array>,
-  onChunk: (arr: Uint8Array) => void
+  onChunk: (arr: Uint8Array, flush?: boolean) => void
 ) {
+  // stream is a Node.js Readable / PassThrough stream
+  // this can happen if node-fetch is polyfilled
+  if (isNodeJSReadable(stream)) {
+    return new Promise<void>((resolve) => {
+      stream.on("readable", () => {
+        let chunk;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          chunk = stream.read();
+          if (chunk == null) {
+            onChunk(new Uint8Array(), true);
+            break;
+          }
+          onChunk(chunk);
+        }
+
+        resolve();
+      });
+    });
+  }
+
   const reader = stream.getReader();
-  let result: ReadableStreamReadResult<Uint8Array>;
-  // eslint-disable-next-line no-cond-assign
-  while (!(result = await reader.read()).done) {
+  // CHANGED: Introduced a "flush" mechanism to process potential pending messages when the stream ends.
+  //          This change is essential to ensure that we capture every last piece of information from streams,
+  //          such as those from Azure OpenAI, which may not terminate with a blank line. Without this
+  //          mechanism, we risk ignoring a possibly significant last message.
+  //          See https://github.com/hwchase17/langchainjs/issues/1299 for details.
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const result = await reader.read();
+    if (result.done) {
+      onChunk(new Uint8Array(), true);
+      break;
+    }
     onChunk(result.value);
   }
 }
@@ -54,7 +89,7 @@ const enum ControlChars {
  * @returns A function that should be called for each incoming byte chunk.
  */
 export function getLines(
-  onLine: (line: Uint8Array, fieldLength: number) => void
+  onLine: (line: Uint8Array, fieldLength: number, flush?: boolean) => void
 ) {
   let buffer: Uint8Array | undefined;
   let position: number; // current read position
@@ -62,7 +97,12 @@ export function getLines(
   let discardTrailingNewline = false;
 
   // return a function that can process each incoming byte chunk:
-  return function onChunk(arr: Uint8Array) {
+  return function onChunk(arr: Uint8Array, flush?: boolean) {
+    if (flush) {
+      onLine(arr, 0, true);
+      return;
+    }
+
     if (buffer === undefined) {
       buffer = arr;
       position = 0;
@@ -143,7 +183,19 @@ export function getMessages(
   const decoder = new TextDecoder();
 
   // return a function that can process each incoming line buffer:
-  return function onLine(line: Uint8Array, fieldLength: number) {
+  return function onLine(
+    line: Uint8Array,
+    fieldLength: number,
+    flush?: boolean
+  ) {
+    if (flush) {
+      if (!isEmpty(message)) {
+        onMessage?.(message);
+        message = newMessage();
+      }
+      return;
+    }
+
     if (line.length === 0) {
       // empty line denotes end of message. Trigger the callback and start a new message:
       onMessage?.(message);
@@ -200,4 +252,13 @@ function newMessage(): EventSourceMessage {
     id: "",
     retry: undefined,
   };
+}
+
+function isEmpty(message: EventSourceMessage): boolean {
+  return (
+    message.data === "" &&
+    message.event === "" &&
+    message.id === "" &&
+    message.retry === undefined
+  );
 }

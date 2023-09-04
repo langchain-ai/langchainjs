@@ -14,6 +14,9 @@ import {
 import { ZeroShotAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
+/**
+ * Interface for creating a prompt for the ZeroShotAgent.
+ */
 export interface ZeroShotCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
@@ -23,6 +26,10 @@ export interface ZeroShotCreatePromptArgs {
   inputVariables?: string[];
 }
 
+/**
+ * Type for the input to the ZeroShotAgent, with the 'outputParser'
+ * property made optional.
+ */
 export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
@@ -30,6 +37,14 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ZeroShotAgent extends Agent {
+  static lc_name() {
+    return "ZeroShotAgent";
+  }
+
+  lc_namespace = ["langchain", "agents", "mrkl"];
+
+  declare ToolType: Tool;
+
   constructor(input: ZeroShotAgentInput) {
     const outputParser =
       input?.outputParser ?? ZeroShotAgent.getDefaultOutputParser();
@@ -48,15 +63,25 @@ export class ZeroShotAgent extends Agent {
     return "Thought:";
   }
 
+  /**
+   * Returns the default output parser for the ZeroShotAgent.
+   * @param fields Optional arguments for the output parser.
+   * @returns An instance of ZeroShotAgentOutputParser.
+   */
   static getDefaultOutputParser(fields?: OutputParserArgs) {
     return new ZeroShotAgentOutputParser(fields);
   }
 
+  /**
+   * Validates the tools for the ZeroShotAgent. Throws an error if any tool
+   * does not have a description.
+   * @param tools List of tools to validate.
+   */
   static validateTools(tools: Tool[]) {
-    const invalidTool = tools.find((tool) => !tool.description);
-    if (invalidTool) {
+    const descriptionlessTool = tools.find((tool) => !tool.description);
+    if (descriptionlessTool) {
       const msg =
-        `Got a tool ${invalidTool.name} without a description.` +
+        `Got a tool ${descriptionlessTool.name} without a description.` +
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }
@@ -97,6 +122,13 @@ export class ZeroShotAgent extends Agent {
     });
   }
 
+  /**
+   * Creates a ZeroShotAgent from a Large Language Model and a set of tools.
+   * @param llm The Large Language Model to use.
+   * @param tools The tools for the agent to use.
+   * @param args Optional arguments for creating the agent.
+   * @returns A new instance of ZeroShotAgent.
+   */
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],

@@ -2,6 +2,7 @@ import pRetry from "p-retry";
 
 import { FileLoader, LoadValues } from "./load.js";
 import { extname } from "./extname.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 const fetchWithTimeout = async (
   url: string,
@@ -27,15 +28,9 @@ export const loadFromHub = async <T>(
   values: LoadValues = {}
 ): Promise<T | undefined> => {
   const LANGCHAIN_HUB_DEFAULT_REF =
-    (typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_HUB_DEFAULT_REF
-      : undefined) ?? "master";
+    getEnvironmentVariable("LANGCHAIN_HUB_DEFAULT_REF") ?? "master";
   const LANGCHAIN_HUB_URL_BASE =
-    (typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_HUB_URL_BASE
-      : undefined) ??
+    getEnvironmentVariable("LANGCHAIN_HUB_URL_BASE") ??
     "https://raw.githubusercontent.com/hwchase17/langchain-hub/";
 
   const match = uri.match(HUB_PATH_REGEX);

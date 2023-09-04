@@ -1,13 +1,20 @@
 import { BaseChain, ChainInputs } from "./base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { ChainValues, BaseRetriever } from "../schema/index.js";
-import { loadQAStuffChain } from "./question_answering/load.js";
+import { ChainValues } from "../schema/index.js";
+import { BaseRetriever } from "../schema/retriever.js";
+import {
+  StuffQAChainParams,
+  loadQAStuffChain,
+} from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
+/**
+ * Interface for the input parameters of the RetrievalQAChain class.
+ */
 export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
@@ -15,10 +22,18 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
   returnSourceDocuments?: boolean;
 }
 
+/**
+ * Class representing a chain for performing question-answering tasks with
+ * a retrieval component.
+ */
 export class RetrievalQAChain
   extends BaseChain
   implements RetrievalQAChainInput
 {
+  static lc_name() {
+    return "RetrievalQAChain";
+  }
+
   inputKey = "query";
 
   get inputKeys() {
@@ -52,14 +67,17 @@ export class RetrievalQAChain
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
-      throw new Error(`Question key ${this.inputKey} not found.`);
+      throw new Error(`Question key "${this.inputKey}" not found.`);
     }
     const question: string = values[this.inputKey];
-    const docs = await this.retriever.getRelevantDocuments(question);
-    const inputs = { question, input_documents: docs };
+    const docs = await this.retriever.getRelevantDocuments(
+      question,
+      runManager?.getChild("retriever")
+    );
+    const inputs = { question, input_documents: docs, ...values };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {
@@ -85,18 +103,32 @@ export class RetrievalQAChain
     throw new Error("Not implemented");
   }
 
+  /**
+   * Creates a new instance of RetrievalQAChain using a BaseLanguageModel
+   * and a BaseRetriever.
+   * @param llm The BaseLanguageModel used to generate a new question.
+   * @param retriever The BaseRetriever used to retrieve relevant documents.
+   * @param options Optional parameters for the RetrievalQAChain.
+   * @returns A new instance of RetrievalQAChain.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options?: Partial<
-      Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index">
-    >
+      Omit<
+        RetrievalQAChainInput,
+        "retriever" | "combineDocumentsChain" | "index"
+      >
+    > &
+      StuffQAChainParams
   ): RetrievalQAChain {
-    const qaChain = loadQAStuffChain(llm);
+    const qaChain = loadQAStuffChain(llm, {
+      prompt: options?.prompt,
+    });
     return new this({
+      ...options,
       retriever,
       combineDocumentsChain: qaChain,
-      ...options,
     });
   }
 }

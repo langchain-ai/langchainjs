@@ -26,13 +26,13 @@ const reviewTemplate = `You are a play critic from the New York Times. Given the
    Play Synopsis:
    {synopsis}
    Review from a New York Times play critic of the above play:`;
-const reviewPromptTempalte = new PromptTemplate({
+const reviewPromptTemplate = new PromptTemplate({
   template: reviewTemplate,
   inputVariables: ["synopsis"],
 });
 const reviewChain = new LLMChain({
   llm: reviewLLM,
-  prompt: reviewPromptTempalte,
+  prompt: reviewPromptTemplate,
   outputKey: "review",
 });
 

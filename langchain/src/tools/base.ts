@@ -3,10 +3,29 @@ import {
   CallbackManager,
   CallbackManagerForToolRun,
   Callbacks,
+  parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
+import { RunnableConfig } from "../schema/runnable.js";
 
+/**
+ * Parameters for the Tool classes.
+ */
 export interface ToolParams extends BaseLangChainParams {}
+
+/**
+ * Custom error class used to handle exceptions related to tool input parsing.
+ * It extends the built-in `Error` class and adds an optional `output`
+ * property that can hold the output that caused the exception.
+ */
+export class ToolInputParsingException extends Error {
+  output?: string;
+
+  constructor(message: string, output?: string) {
+    super(message);
+    this.output = output;
+  }
+}
 
 /**
  * Base class for Tools that accept input of any shape defined by a Zod schema.
@@ -14,8 +33,15 @@ export interface ToolParams extends BaseLangChainParams {}
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> extends BaseLangChain {
+> extends BaseLangChain<
+  (z.output<T> extends string ? string : never) | z.input<T>,
+  string
+> {
   abstract schema: T | z.ZodEffects<T>;
+
+  get lc_namespace() {
+    return ["langchain", "tools"];
+  }
 
   constructor(fields?: ToolParams) {
     super(fields ?? {});
@@ -26,18 +52,55 @@ export abstract class StructuredTool<
     runManager?: CallbackManagerForToolRun
   ): Promise<string>;
 
+  /**
+   * Invokes the tool with the provided input and configuration.
+   * @param input The input for the tool.
+   * @param config Optional configuration for the tool.
+   * @returns A Promise that resolves with a string.
+   */
+  async invoke(
+    input: (z.output<T> extends string ? string : never) | z.input<T>,
+    config?: RunnableConfig
+  ): Promise<string> {
+    return this.call(input, config);
+  }
+
+  /**
+   * Calls the tool with the provided argument, configuration, and tags. It
+   * parses the input according to the schema, handles any errors, and
+   * manages callbacks.
+   * @param arg The input argument for the tool.
+   * @param configArg Optional configuration or callbacks for the tool.
+   * @param tags Optional tags for the tool.
+   * @returns A Promise that resolves with a string.
+   */
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
-    callbacks?: Callbacks
+    configArg?: Callbacks | RunnableConfig,
+    /** @deprecated */
+    tags?: string[]
   ): Promise<string> {
-    const parsed = await this.schema.parseAsync(arg);
+    let parsed;
+    try {
+      parsed = await this.schema.parseAsync(arg);
+    } catch (e) {
+      throw new ToolInputParsingException(
+        `Received tool input did not match expected schema`,
+        JSON.stringify(arg)
+      );
+    }
+    const config = parseCallbackConfigArg(configArg);
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      config.callbacks,
       this.callbacks,
+      config.tags || tags,
+      this.tags,
+      config.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
-      { name: this.name },
+      this.toJSON(),
       typeof parsed === "string" ? parsed : JSON.stringify(parsed)
     );
     let result;
@@ -66,10 +129,17 @@ export abstract class Tool extends StructuredTool {
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
 
-  constructor(verbose?: boolean, callbacks?: Callbacks) {
-    super({ verbose, callbacks });
+  constructor(fields?: ToolParams) {
+    super(fields);
   }
 
+  /**
+   * Calls the tool with the provided argument and callbacks. It handles
+   * string inputs specifically.
+   * @param arg The input argument for the tool, which can be a string, undefined, or an input of the tool's schema.
+   * @param callbacks Optional callbacks for the tool.
+   * @returns A Promise that resolves with a string.
+   */
   call(
     arg: string | undefined | z.input<this["schema"]>,
     callbacks?: Callbacks

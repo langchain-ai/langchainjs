@@ -332,6 +332,12 @@ function createRequest(config) {
       headers.delete("Content-Type");
     }
   }
+  // Some `fetch` implementations will override the Content-Type to text/plain
+  // when body is a string.
+  // See https://github.com/hwchase17/langchainjs/issues/1010
+  if (typeof options.body === "string") {
+    options.body = new TextEncoder().encode(options.body);
+  }
   if (config.mode) {
     options.mode = config.mode;
   }

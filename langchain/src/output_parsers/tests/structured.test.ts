@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { expect, test } from "@jest/globals";
 
+import { OutputParserException } from "../../schema/output_parser.js";
 import { StructuredOutputParser } from "../structured.js";
 
 test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
@@ -64,6 +65,16 @@ Here is the JSON Schema instance your output must adhere to. Include the enclosi
 \`\`\`
 "
 `);
+});
+
+test("StructuredOutputParser.fromZodSchema", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({ answer: z.enum(["yes", "no"]).describe("yes or no") })
+  );
+
+  await expect(parser.parse('```\n{"answer": "YES"}```')).rejects.toThrow(
+    OutputParserException
+  );
 });
 
 test("StructuredOutputParser.fromZodSchema", async () => {

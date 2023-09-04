@@ -1,14 +1,11 @@
 import { OpenAI } from "langchain/llms/openai";
 
-export const run = async () => {
-  const model = new OpenAI(
-    { temperature: 1, timeout: 1000 } // 1s timeout
-  );
+const model = new OpenAI({ temperature: 1 });
 
-  const resA = await model.call(
-    "What would be a good company name a company that makes colorful socks?"
-  );
+const resA = await model.call(
+  "What would be a good company name a company that makes colorful socks?",
+  { timeout: 1000 } // 1s timeout
+);
 
-  console.log({ resA });
-  // '\n\nSocktastic Colors' }
-};
+console.log({ resA });
+// '\n\nSocktastic Colors' }

@@ -10,6 +10,9 @@ import {
 } from "./constitutional_principle.js";
 import { CRITIQUE_PROMPT, REVISION_PROMPT } from "./constitutional_prompts.js";
 
+/**
+ * Interface for the input of a ConstitutionalChain. Extends ChainInputs.
+ */
 export interface ConstitutionalChainInput extends ChainInputs {
   chain: LLMChain;
   constitutionalPrinciples: ConstitutionalPrinciple[];
@@ -17,10 +20,18 @@ export interface ConstitutionalChainInput extends ChainInputs {
   revisionChain: LLMChain;
 }
 
+/**
+ * Class representing a ConstitutionalChain. Extends BaseChain and
+ * implements ConstitutionalChainInput.
+ */
 export class ConstitutionalChain
   extends BaseChain
   implements ConstitutionalChainInput
 {
+  static lc_name() {
+    return "ConstitutionalChain";
+  }
+
   chain: LLMChain;
 
   constitutionalPrinciples: ConstitutionalPrinciple[];
@@ -38,7 +49,7 @@ export class ConstitutionalChain
   }
 
   constructor(fields: ConstitutionalChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.chain = fields.chain;
     this.constitutionalPrinciples = fields.constitutionalPrinciples;
     this.critiqueChain = fields.critiqueChain;
@@ -51,7 +62,7 @@ export class ConstitutionalChain
   ): Promise<ChainValues> {
     let { [this.chain.outputKey]: response } = await this.chain.call(
       values,
-      runManager?.getChild()
+      runManager?.getChild("original")
     );
     const inputPrompt = await this.chain.prompt.format(values);
 
@@ -63,7 +74,7 @@ export class ConstitutionalChain
             output_from_model: response,
             critique_request: this.constitutionalPrinciples[i].critiqueRequest,
           },
-          runManager?.getChild()
+          runManager?.getChild("critique")
         );
 
       const critique = ConstitutionalChain._parseCritique(rawCritique);
@@ -77,7 +88,7 @@ export class ConstitutionalChain
             critique,
             revision_request: this.constitutionalPrinciples[i].revisionRequest,
           },
-          runManager?.getChild()
+          runManager?.getChild("revision")
         );
       response = revisionRaw;
     }
@@ -87,6 +98,12 @@ export class ConstitutionalChain
     };
   }
 
+  /**
+   * Static method that returns an array of ConstitutionalPrinciple objects
+   * based on the provided names.
+   * @param names Optional array of principle names.
+   * @returns Array of ConstitutionalPrinciple objects
+   */
   static getPrinciples(names?: string[]) {
     if (names) {
       return names.map((name) => PRINCIPLES[name]);
@@ -94,6 +111,13 @@ export class ConstitutionalChain
     return Object.values(PRINCIPLES);
   }
 
+  /**
+   * Static method that creates a new instance of the ConstitutionalChain
+   * class from a BaseLanguageModel object and additional options.
+   * @param llm BaseLanguageModel instance.
+   * @param options Options for the ConstitutionalChain.
+   * @returns New instance of ConstitutionalChain
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     options: Omit<

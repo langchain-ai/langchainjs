@@ -1,16 +1,20 @@
 import { Tool } from "./base.js";
 
+/**
+ * The DadJokeAPI class is a tool for generating dad jokes based on a
+ * specific topic. It fetches jokes from an external API and returns a
+ * random joke from the results. If no jokes are found for the given
+ * search term, it returns a message indicating that no jokes were found.
+ */
 class DadJokeAPI extends Tool {
-  name: string;
-
-  description: string;
-
-  constructor() {
-    super();
-    this.name = "dadjoke";
-    this.description =
-      "a dad joke generator. get a dad joke about a specific topic. input should be a search term.";
+  static lc_name() {
+    return "DadJokeAPI";
   }
+
+  name = "dadjoke";
+
+  description =
+    "a dad joke generator. get a dad joke about a specific topic. input should be a search term.";
 
   /** @ignore */
   async _call(input: string): Promise<string> {

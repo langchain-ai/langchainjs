@@ -1,11 +1,12 @@
 import { BaseCallbackHandler } from "langchain/callbacks";
+import { Serialized } from "langchain/load/serializable";
 import { AgentAction, AgentFinish, ChainValues } from "langchain/schema";
 
 export class MyCallbackHandler extends BaseCallbackHandler {
   name = "MyCallbackHandler";
 
-  async handleChainStart(chain: { name: string }) {
-    console.log(`Entering new ${chain.name} chain...`);
+  async handleChainStart(chain: Serialized) {
+    console.log(`Entering new ${chain.id} chain...`);
   }
 
   async handleChainEnd(_output: ChainValues) {

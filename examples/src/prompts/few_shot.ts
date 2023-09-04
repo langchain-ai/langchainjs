@@ -19,7 +19,7 @@ export const run = async () => {
     examples,
     /* This is how we want to format the examples when we insert them into the prompt. */
     examplePrompt,
-    /* The prefix is some text that goes before the examples in the prompt. Usually, this consists of intructions. */
+    /* The prefix is some text that goes before the examples in the prompt. Usually, this consists of instructions. */
     prefix: "Give the antonym of every input",
     /* The suffix is some text that goes after the examples in the prompt. Usually, this is where the user input will go */
     suffix: "Word: {input}\nAntonym:",

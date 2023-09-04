@@ -7,6 +7,12 @@ export {
 } from "./base.js";
 export { PromptTemplate, PromptTemplateInput } from "./prompt.js";
 export {
+  BasePromptSelector,
+  ConditionalPromptSelector,
+  isChatModel,
+  isLLM,
+} from "./selectors/conditional.js";
+export {
   LengthBasedExampleSelector,
   LengthBasedExampleSelectorInput,
 } from "./selectors/LengthBasedExampleSelector.js";
@@ -31,8 +37,6 @@ export {
   SerializedPromptTemplate,
   SerializedBasePromptTemplate,
   SerializedFewShotTemplate,
-  SerializedMessagePromptTemplate,
-  SerializedChatPromptTemplate,
 } from "./serde.js";
 export {
   parseTemplate,
@@ -40,3 +44,8 @@ export {
   checkValidTemplate,
   TemplateFormat,
 } from "./template.js";
+export {
+  PipelinePromptParams,
+  PipelinePromptTemplate,
+  PipelinePromptTemplateInput,
+} from "./pipeline.js";

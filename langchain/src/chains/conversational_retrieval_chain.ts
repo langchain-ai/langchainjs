@@ -1,10 +1,16 @@
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import { ChainValues, BaseRetriever } from "../schema/index.js";
+import {
+  ChainValues,
+  BaseMessage,
+  HumanMessage,
+  AIMessage,
+} from "../schema/index.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
-import { loadQAStuffChain } from "./question_answering/load.js";
+import { QAChainParams, loadQAChain } from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,15 +23,11 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:`;
 
-const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
-{context}
-
-Question: {question}
-Helpful Answer:`;
-
-export interface ConversationalRetrievalQAChainInput
-  extends Omit<ChainInputs, "memory"> {
+/**
+ * Interface for the input parameters of the
+ * ConversationalRetrievalQAChain class.
+ */
+export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
@@ -33,10 +35,19 @@ export interface ConversationalRetrievalQAChainInput
   inputKey?: string;
 }
 
+/**
+ * Class for conducting conversational question-answering tasks with a
+ * retrieval component. Extends the BaseChain class and implements the
+ * ConversationalRetrievalQAChainInput interface.
+ */
 export class ConversationalRetrievalQAChain
   extends BaseChain
   implements ConversationalRetrievalQAChainInput
 {
+  static lc_name() {
+    return "ConversationalRetrievalQAChain";
+  }
+
   inputKey = "question";
 
   chatHistoryKey = "chat_history";
@@ -69,6 +80,50 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /**
+   * Static method to convert the chat history input into a formatted
+   * string.
+   * @param chatHistory Chat history input which can be a string, an array of BaseMessage instances, or an array of string arrays.
+   * @returns A formatted string representing the chat history.
+   */
+  static getChatHistoryString(
+    chatHistory: string | BaseMessage[] | string[][]
+  ) {
+    let historyMessages: BaseMessage[];
+    if (Array.isArray(chatHistory)) {
+      // TODO: Deprecate on a breaking release
+      if (
+        Array.isArray(chatHistory[0]) &&
+        typeof chatHistory[0][0] === "string"
+      ) {
+        console.warn(
+          "Passing chat history as an array of strings is deprecated.\nPlease see https://js.langchain.com/docs/modules/chains/popular/chat_vector_db#externally-managed-memory for more information."
+        );
+        historyMessages = chatHistory.flat().map((stringMessage, i) => {
+          if (i % 2 === 0) {
+            return new HumanMessage(stringMessage);
+          } else {
+            return new AIMessage(stringMessage);
+          }
+        });
+      } else {
+        historyMessages = chatHistory as BaseMessage[];
+      }
+      return historyMessages
+        .map((chatMessage) => {
+          if (chatMessage._getType() === "human") {
+            return `Human: ${chatMessage.content}`;
+          } else if (chatMessage._getType() === "ai") {
+            return `Assistant: ${chatMessage.content}`;
+          } else {
+            return `${chatMessage.content}`;
+          }
+        })
+        .join("\n");
+    }
+    return chatHistory;
+  }
+
   /** @ignore */
   async _call(
     values: ChainValues,
@@ -78,10 +133,13 @@ export class ConversationalRetrievalQAChain
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     if (!(this.chatHistoryKey in values)) {
-      throw new Error(`chat history key ${this.inputKey} not found.`);
+      throw new Error(`Chat history key ${this.chatHistoryKey} not found.`);
     }
     const question: string = values[this.inputKey];
-    const chatHistory: string = values[this.chatHistoryKey];
+    const chatHistory: string =
+      ConversationalRetrievalQAChain.getChatHistoryString(
+        values[this.chatHistoryKey]
+      );
     let newQuestion = question;
     if (chatHistory.length > 0) {
       const result = await this.questionGeneratorChain.call(
@@ -89,7 +147,7 @@ export class ConversationalRetrievalQAChain
           question,
           chat_history: chatHistory,
         },
-        runManager?.getChild()
+        runManager?.getChild("question_generator")
       );
       const keys = Object.keys(result);
       if (keys.length === 1) {
@@ -100,7 +158,10 @@ export class ConversationalRetrievalQAChain
         );
       }
     }
-    const docs = await this.retriever.getRelevantDocuments(newQuestion);
+    const docs = await this.retriever.getRelevantDocuments(
+      newQuestion,
+      runManager?.getChild("retriever")
+    );
     const inputs = {
       question: newQuestion,
       input_documents: docs,
@@ -108,7 +169,7 @@ export class ConversationalRetrievalQAChain
     };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {
@@ -134,29 +195,60 @@ export class ConversationalRetrievalQAChain
     throw new Error("Not implemented.");
   }
 
+  /**
+   * Static method to create a new ConversationalRetrievalQAChain from a
+   * BaseLanguageModel and a BaseRetriever.
+   * @param llm {@link BaseLanguageModel} instance used to generate a new question.
+   * @param retriever {@link BaseRetriever} instance used to retrieve relevant documents.
+   * @param options.returnSourceDocuments Whether to return source documents in the final output
+   * @param options.questionGeneratorChainOptions Options to initialize the standalone question generation chain used as the first internal step
+   * @param options.qaChainOptions {@link QAChainParams} used to initialize the QA chain used as the second internal step
+   * @returns A new instance of ConversationalRetrievalQAChain.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options: {
       outputKey?: string; // not used
       returnSourceDocuments?: boolean;
+      /** @deprecated Pass in questionGeneratorChainOptions.template instead */
       questionGeneratorTemplate?: string;
+      /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
+      questionGeneratorChainOptions?: {
+        llm?: BaseLanguageModel;
+        template?: string;
+      };
+      qaChainOptions?: QAChainParams;
     } & Omit<
       ConversationalRetrievalQAChainInput,
       "retriever" | "combineDocumentsChain" | "questionGeneratorChain"
     > = {}
   ): ConversationalRetrievalQAChain {
-    const { questionGeneratorTemplate, qaTemplate, verbose, ...rest } = options;
-    const question_generator_prompt = PromptTemplate.fromTemplate(
-      questionGeneratorTemplate || question_generator_template
-    );
-    const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
+    const {
+      questionGeneratorTemplate,
+      qaTemplate,
+      qaChainOptions = {
+        type: "stuff",
+        prompt: qaTemplate
+          ? PromptTemplate.fromTemplate(qaTemplate)
+          : undefined,
+      },
+      questionGeneratorChainOptions,
+      verbose,
+      ...rest
+    } = options;
 
-    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt, verbose });
+    const qaChain = loadQAChain(llm, qaChainOptions);
+
+    const questionGeneratorChainPrompt = PromptTemplate.fromTemplate(
+      questionGeneratorChainOptions?.template ??
+        questionGeneratorTemplate ??
+        question_generator_template
+    );
     const questionGeneratorChain = new LLMChain({
-      prompt: question_generator_prompt,
-      llm,
+      prompt: questionGeneratorChainPrompt,
+      llm: questionGeneratorChainOptions?.llm ?? llm,
       verbose,
     });
     const instance = new this({
