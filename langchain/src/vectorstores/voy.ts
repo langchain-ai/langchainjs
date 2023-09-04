@@ -1,16 +1,9 @@
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
+import type {Voy as VoyOriginClient, SearchResult} from 'voy-search';
 
-export interface VoyClient {
-  index: (input: {
-    embeddings: {
-      id: string;
-      embeddings: number[];
-    }[];
-  }) => string;
-  search: (index: string, query: number[], k: number) => { id: string }[];
-}
+export type VoyClient = Omit<VoyOriginClient,"remove"|"clear"|"size"|"serialize"|"free">;
 
 interface InternalDoc {
   embeddings: number[];
@@ -18,8 +11,6 @@ interface InternalDoc {
 }
 
 export class Voy extends VectorStore {
-  rawIndex = "";
-
   client: VoyClient;
 
   numDimensions: number | null = null;
@@ -61,7 +52,7 @@ export class Voy extends VectorStore {
     }
 
     if (vectors.length !== documents.length) {
-      throw new Error(`Vectors and metadatas must have the same length`);
+      throw new Error(`Vectors and metadata must have the same length`);
     }
     if (!vectors.every((v) => v.length === this.numDimensions)) {
       throw new Error(
@@ -76,8 +67,10 @@ export class Voy extends VectorStore {
     const embeddings = this.docstore.map((item, idx) => ({
       id: String(idx),
       embeddings: item.embeddings,
+      title:"",
+      url:""
     }));
-    this.rawIndex = this.client.index({ embeddings });
+    this.client.index({ embeddings });
   }
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
@@ -95,12 +88,11 @@ export class Voy extends VectorStore {
         `k (${k}) is greater than the number of elements in the index (${this.docstore.length}), setting k to ${itemsToQuery}`
       );
     }
-    const results: { id: string }[] = this.client.search(
-      this.rawIndex,
-      query,
+    const results: SearchResult = this.client.search(
+      new Float32Array(query),
       itemsToQuery
     );
-    return results.map(
+    return results.neighbors.map(
       ({ id }, idx) =>
         [this.docstore[parseInt(id, 10)].document, idx] as [Document, number]
     );

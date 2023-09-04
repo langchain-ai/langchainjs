@@ -369,6 +369,7 @@
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
+    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -402,7 +403,8 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
-    "weaviate-ts-client": "^1.0.0"
+    "weaviate-ts-client": "^1.0.0",
+    "voy-search": "0.6.2"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {
@@ -496,6 +498,9 @@
       "optional": true
     },
     "weaviate-ts-client": {
+      "optional": true
+    },
+    "voy-search": {
       "optional": true
     }
   },

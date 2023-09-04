@@ -1,24 +1,18 @@
-import { test, expect } from "@jest/globals";
+import { expect, test } from "@jest/globals";
+import {Voy as VoyOriginClient} from 'voy-search/voy_search.js';
 import { Document } from "../../document.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Voy, VoyClient } from "../voy.js";
 
-const fakeClient: VoyClient = {
-  index: ({ embeddings }) => embeddings.map((i) => i.id).join(","),
-  add:(_)=>{},
-  search: () => ({
-    neighbors:[{ id: "0", title:"",url:"" }, { id: "1", title:"",url:"" }]
-  }),
-};
+const client:VoyClient = new VoyOriginClient();
 
 test("it can create index using Voy.from text, add new elements to the index and get queried documents", async () => {
   const vectorStore = await Voy.fromTexts(
     ["initial first page", "initial second page"],
     [{ id: 1 }, { id: 2 }],
     new FakeEmbeddings(),
-    fakeClient
+    client
   );
-  
   // the number of dimensions is produced by fake embeddings
   expect(vectorStore.numDimensions).toBe(4);
   await vectorStore.addVectors(
@@ -47,6 +41,6 @@ test("it can create index using Voy.from text, add new elements to the index and
     [1, 0, 0, 0],
     3
   );
-  expect(results[0][0].metadata.id).toBe(1);
-  expect(results[1][0].metadata.id).toBe(2);
+  expect(results[0][0].metadata.id).toBe(4);
+  expect(results[1][0].metadata.id).toBe(6);
 });
