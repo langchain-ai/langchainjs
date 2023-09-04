@@ -180,6 +180,9 @@ export class GithubRepoLoader
     this.verbose = verbose;
     this.maxConcurrency = maxConcurrency;
     this.maxRetries = maxRetries;
+    this.headers = {
+      "User-Agent": "langchain",
+    };
     this.caller = new AsyncCaller({
       maxConcurrency,
       maxRetries,
@@ -191,6 +194,7 @@ export class GithubRepoLoader
     }
     if (this.accessToken) {
       this.headers = {
+        ...this.headers,
         Authorization: `Bearer ${this.accessToken}`,
       };
     }

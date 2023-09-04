@@ -1,4 +1,4 @@
-import { ChatCompletionFunctions } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
@@ -16,6 +16,7 @@ import {
 } from "../../prompts/chat.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
+import { AnthropicFunctions } from "../../experimental/chat_models/anthropic_functions.js";
 
 /**
  * Type representing a function for executing OpenAPI requests.
@@ -195,7 +196,7 @@ function convertOpenAPISchemaToJSONSchema(
  * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
  */
 function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
-  openAIFunctions: ChatCompletionFunctions[];
+  openAIFunctions: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {
   if (!spec.document.paths) {
@@ -273,16 +274,17 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
           };
         }
       }
-      const openAIFunction: ChatCompletionFunctions = {
-        name: OpenAPISpec.getCleanedOperationId(operation, path, method),
-        description: operation.description ?? operation.summary ?? "",
-        parameters: {
-          type: "object",
-          properties: requestArgsSchema,
-          // All remaining top-level parameters are required
-          required: Object.keys(requestArgsSchema),
-        },
-      };
+      const openAIFunction: OpenAIClient.Chat.ChatCompletionCreateParams.Function =
+        {
+          name: OpenAPISpec.getCleanedOperationId(operation, path, method),
+          description: operation.description ?? operation.summary ?? "",
+          parameters: {
+            type: "object",
+            properties: requestArgsSchema,
+            // All remaining top-level parameters are required
+            required: Object.keys(requestArgsSchema),
+          },
+        };
 
       openAIFunctions.push(openAIFunction);
       const baseUrl = (spec.baseUrl ?? "").endsWith("/")
@@ -430,7 +432,7 @@ class SimpleRequestChain extends BaseChain {
  * Type representing the options for creating an OpenAPI chain.
  */
 export type OpenAPIChainOptions = {
-  llm?: ChatOpenAI;
+  llm?: ChatOpenAI | AnthropicFunctions;
   prompt?: BasePromptTemplate;
   requestChain?: BaseChain;
   llmChainInputs?: LLMChainInput;

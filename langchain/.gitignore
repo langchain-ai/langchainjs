@@ -391,6 +391,9 @@ chat_models/minimax.d.ts
 schema.cjs
 schema.js
 schema.d.ts
+schema/document.cjs
+schema/document.js
+schema/document.d.ts
 schema/output_parser.cjs
 schema/output_parser.js
 schema/output_parser.d.ts
@@ -568,6 +571,9 @@ experimental/plan_and_execute.d.ts
 experimental/multimodal_embeddings/googlevertexai.cjs
 experimental/multimodal_embeddings/googlevertexai.js
 experimental/multimodal_embeddings/googlevertexai.d.ts
+experimental/chat_models/anthropic_functions.cjs
+experimental/chat_models/anthropic_functions.js
+experimental/chat_models/anthropic_functions.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

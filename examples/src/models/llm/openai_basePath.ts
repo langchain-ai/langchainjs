@@ -2,7 +2,7 @@ import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI(
   { temperature: 0 },
-  { basePath: "https://oai.hconeai.com/v1" }
+  { baseURL: "https://oai.hconeai.com/v1" }
 );
 
 const res = await model.call(

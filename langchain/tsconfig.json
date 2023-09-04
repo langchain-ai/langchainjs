@@ -158,6 +158,7 @@
       "src/chat_models/ollama.ts",
       "src/chat_models/minimax.ts",
       "src/schema/index.ts",
+      "src/schema/document.ts",
       "src/schema/output_parser.ts",
       "src/schema/query_constructor.ts",
       "src/schema/retriever.ts",
@@ -216,6 +217,7 @@
       "src/experimental/generative_agents/index.ts",
       "src/experimental/plan_and_execute/index.ts",
       "src/experimental/multimodal_embeddings/googlevertexai.ts",
+      "src/experimental/chat_models/anthropic_functions.ts",
       "src/evaluation/index.ts"
     ],
     "sort": [
