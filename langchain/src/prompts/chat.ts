@@ -395,7 +395,7 @@ export interface ChatPromptTemplateInput<
   /**
    * The prompt messages
    */
-  promptMessages: BaseMessagePromptTemplate[];
+  promptMessages: Array<BaseMessagePromptTemplate | BaseMessage>;
 
   /**
    * Whether to try validating the template on initialization
@@ -429,7 +429,7 @@ export class ChatPromptTemplate<
     };
   }
 
-  promptMessages: BaseMessagePromptTemplate[];
+  promptMessages: Array<BaseMessagePromptTemplate | BaseMessage>;
 
   validateTemplate = true;
 
@@ -440,6 +440,8 @@ export class ChatPromptTemplate<
     if (this.validateTemplate) {
       const inputVariablesMessages = new Set<string>();
       for (const promptMessage of this.promptMessages) {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (promptMessage instanceof BaseMessage) continue;
         for (const inputVariable of promptMessage.inputVariables) {
           inputVariablesMessages.add(inputVariable);
         }
@@ -490,20 +492,25 @@ export class ChatPromptTemplate<
     let resultMessages: BaseMessage[] = [];
 
     for (const promptMessage of this.promptMessages) {
-      const inputValues = promptMessage.inputVariables.reduce(
-        (acc, inputVariable) => {
-          if (!(inputVariable in allValues)) {
-            throw new Error(
-              `Missing value for input variable \`${inputVariable.toString()}\``
-            );
-          }
-          acc[inputVariable] = allValues[inputVariable];
-          return acc;
-        },
-        {} as InputValues
-      );
-      const message = await promptMessage.formatMessages(inputValues);
-      resultMessages = resultMessages.concat(message);
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (promptMessage instanceof BaseMessage) {
+        resultMessages.push(promptMessage);
+      } else {
+        const inputValues = promptMessage.inputVariables.reduce(
+          (acc, inputVariable) => {
+            if (!(inputVariable in allValues)) {
+              throw new Error(
+                `Missing value for input variable \`${inputVariable.toString()}\``
+              );
+            }
+            acc[inputVariable] = allValues[inputVariable];
+            return acc;
+          },
+          {} as InputValues
+        );
+        const message = await promptMessage.formatMessages(inputValues);
+        resultMessages = resultMessages.concat(message);
+      }
     }
     return resultMessages;
   }
@@ -537,6 +544,7 @@ export class ChatPromptTemplate<
     promptMessages: (
       | BaseMessagePromptTemplate<InputValues>
       | ChatPromptTemplate<InputValues, string>
+      | BaseMessage
     )[]
   ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
@@ -547,7 +555,7 @@ export class ChatPromptTemplate<
             ? promptMessage.promptMessages
             : [promptMessage]
         ),
-      [] as BaseMessagePromptTemplate[]
+      [] as Array<BaseMessagePromptTemplate | BaseMessage>
     );
     const flattenedPartialVariables = promptMessages.reduce(
       (acc, promptMessage) =>
@@ -560,6 +568,8 @@ export class ChatPromptTemplate<
 
     const inputVariables = new Set<string>();
     for (const promptMessage of flattenedMessages) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (promptMessage instanceof BaseMessage) continue;
       for (const inputVariable of promptMessage.inputVariables) {
         if (inputVariable in flattenedPartialVariables) {
           continue;
