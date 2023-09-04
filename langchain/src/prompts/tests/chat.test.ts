@@ -13,6 +13,7 @@ import {
   ChatMessage,
   HumanMessage,
   SystemMessage,
+  FunctionMessage,
 } from "../../schema/index.js";
 
 function createChatPromptTemplate() {
@@ -258,4 +259,23 @@ test("Test using partial", async () => {
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
     `"[{"lc":1,"type":"constructor","id":["langchain","schema","HumanMessage"],"kwargs":{"content":"foobaz","additional_kwargs":{}}}]"`
   );
+});
+
+test("Test BaseMessage", async () => {
+  const prompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessage("You are a chatbot {mock_variable}"),
+    AIMessagePromptTemplate.fromTemplate("{name} is my name."),
+    new FunctionMessage({ content: "{}", name: "get_weather" }),
+  ]);
+
+  const messages = await prompt.formatPromptValue({ name: "Bob" });
+
+  expect(prompt.inputVariables).toEqual(["name"]);
+  expect(prompt.partialVariables).toEqual({});
+
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage("You are a chatbot {mock_variable}"),
+    new AIMessage("Bob is my name."),
+    new FunctionMessage({ content: "{}", name: "get_weather" }),
+  ]);
 });
