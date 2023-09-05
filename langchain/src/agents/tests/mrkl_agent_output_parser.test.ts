@@ -1,8 +1,9 @@
-import { ZeroShotAgentOutputParser } from "./outputParser.js";
+import { ZeroShotAgentOutputParser } from "../mrkl/outputParser.js";
 
 describe("ZeroShotAgentOutputParser", () => {
   describe("when action and action input are separated by a space", () => {
-    const TEXT = "Observation: Xyz\n\nAction: ToolX\nAction Input: what is your name?";
+    const TEXT =
+      "Observation: Xyz\n\nAction: ToolX\nAction Input: what is your name?";
 
     it("parses agent action", async () => {
       const parser = new ZeroShotAgentOutputParser();
@@ -13,7 +14,8 @@ describe("ZeroShotAgentOutputParser", () => {
   });
 
   describe("when action and action input are not separated by a space", () => {
-    const TEXT = "Observation:Xyz\n\nAction:ToolX\nAction Input:what is your name?";
+    const TEXT =
+      "Observation:Xyz\n\nAction:ToolX\nAction Input:what is your name?";
 
     it("parses agent action", async () => {
       const parser = new ZeroShotAgentOutputParser();
