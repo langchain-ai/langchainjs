@@ -1,33 +1,34 @@
 import { OllamaInput, OllamaRequestParams } from "../util/ollama.js";
-import { Embeddings, EmbeddingsParams } from "./base.js";
-
-type BaseUrl = {
-  url?: string;
-};
-
-type Model = {
-  model: string;
-};
+import { Embeddings } from "./base.js";
 
 type CamelCasedRequestOptions = Omit<OllamaInput, "baseUrl" | "model">;
 
-type OllamaRequestOptions = {
-  requestOptions?: CamelCasedRequestOptions;
-};
-
-export default class OllamaEmbeddings extends Embeddings {
-  // Embeddings model to use, example: "llama2:13b".
+/**
+ * Interface for OllamaEmbeddings parameters. Extends EmbeddingsParams and
+ * defines additional parameters specific to the OllamaEmbeddings class.
+ */
+interface OllamaEmbeddingsParams {
+  /** The Ollama model to use, e.g: "llama2:13b" */
   model: string;
 
-  // Other model api options, see https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
+  /** Base URL of the Ollama server, defaults to "http://localhost:11434" */
+  url?: string;
+
+  /** Advanced Ollama API request parameters in camelCase, see
+   * https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
+   * for details of the available parameters.
+   */
+  requestOptions?: CamelCasedRequestOptions;
+}
+
+export class OllamaEmbeddings extends Embeddings {
+  model: string;
+
   requestOptions?: OllamaRequestParams["options"];
 
-  // base url of the ollama server, defaults to "http://localhost:11434"
   baseUrl = "http://localhost:11434";
 
-  constructor(
-    params: EmbeddingsParams & Model & BaseUrl & OllamaRequestOptions
-  ) {
+  constructor(params: OllamaEmbeddingsParams) {
     super(params);
 
     this.model = params.model;
@@ -41,9 +42,10 @@ export default class OllamaEmbeddings extends Embeddings {
     }
   }
 
-  // convert camelCased Ollama request options like "useMMap" to
-  // the snake_cased equivalent which the ollama API actually uses.
-  // Used only for consistency with the llms/Ollama and chatModels/Ollama classes
+  /** convert camelCased Ollama request options like "useMMap" to
+   * the snake_cased equivalent which the ollama API actually uses.
+   * Used only for consistency with the llms/Ollama and chatModels/Ollama classes
+   */
   _convertOptions(requestOptions?: CamelCasedRequestOptions) {
     if (!requestOptions) {
       return;
