@@ -445,6 +445,66 @@ export class ChatMessage
   }
 }
 
+export type BaseMessageLike =
+  | BaseMessage
+  | {
+      role:
+        | MessageType
+        | "user"
+        | "assistant"
+        | (string & Record<never, never>);
+      content: string;
+      name?: string;
+    }
+  | [
+      MessageType | "user" | "assistant" | (string & Record<never, never>),
+      string
+    ]
+  | string;
+
+export function isBaseMessage(
+  messageLike: BaseMessageLike
+): messageLike is BaseMessage {
+  return typeof (messageLike as BaseMessage)._getType === "function";
+}
+
+export function coerceMessageLikeToMessage(
+  messageLike: BaseMessageLike
+): BaseMessage {
+  if (typeof messageLike === "string") {
+    return new HumanMessage(messageLike);
+  } else if (isBaseMessage(messageLike)) {
+    return messageLike;
+  }
+  let role;
+  let content;
+  let name;
+  if (Array.isArray(messageLike)) {
+    [role, content] = messageLike;
+    name = "";
+  } else {
+    role = messageLike.role;
+    content = messageLike.content;
+    name = messageLike.name;
+  }
+  if (role === "human" || role === "user") {
+    return new HumanMessage({ content });
+  } else if (role === "ai" || role === "assistant") {
+    return new AIMessage({ content });
+  } else if (role === "system") {
+    return new SystemMessage({ content });
+  } else if (role === "function") {
+    if (!name) {
+      throw new Error(
+        `Unable to coerce function message from object: no "name" field provided.`
+      );
+    }
+    return new FunctionMessage({ content, name });
+  } else {
+    return new ChatMessage({ content, role });
+  }
+}
+
 /**
  * Represents a chunk of a chat message, which can be concatenated with
  * other chat message chunks.
