@@ -35,7 +35,7 @@ export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
       };
     }
 
-    const match = /Action: ([\s\S]*?)(?:\nAction Input: ([\s\S]*?))?$/.exec(
+    const match = /Action:([\s\S]*?)(?:\nAction Input:([\s\S]*?))?$/.exec(
       text
     );
     if (!match) {
