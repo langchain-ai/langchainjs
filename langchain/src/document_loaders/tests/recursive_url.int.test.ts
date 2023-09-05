@@ -46,4 +46,42 @@ describe("RecursiveUrlLoader", () => {
     const docs = await loader.load();
     expect(docs.length).toBe(0);
   });
+
+  test("excludeDirs works for top-level calls", async () => {
+    const url = "https://js.langchain.com/docs/";
+    const compiledConvert = compile({ wordwrap: 130 });
+
+    const excludeDir = "https://js.langchain.com/docs/api/";
+
+    const loader = new RecursiveUrlLoader(url, {
+      extractor: compiledConvert,
+      maxDepth: 1,
+      excludeDirs: [excludeDir],
+    });
+
+    const docs = await loader.load();
+
+    expect(docs.some((doc) => doc.metadata.source.startsWith(excludeDir))).toBe(
+      false
+    );
+  });
+
+  test("excludeDirs works for recursive calls", async () => {
+    const url = "https://js.langchain.com/docs/";
+    const compiledConvert = compile({ wordwrap: 130 });
+
+    const excludeDir = "https://js.langchain.com/docs/api/";
+
+    const loader = new RecursiveUrlLoader(url, {
+      extractor: compiledConvert,
+      maxDepth: 2,
+      excludeDirs: [excludeDir],
+    });
+
+    const docs = await loader.load();
+
+    expect(docs.some((doc) => doc.metadata.source.startsWith(excludeDir))).toBe(
+      false
+    );
+  });
 });
