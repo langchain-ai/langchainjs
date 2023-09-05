@@ -175,11 +175,21 @@ export class CriteriaEvalChain extends StringEvaluator {
     }
 
     static async fromLLM(llm: BaseLanguageModel, criteria: string, chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>) {
+        if (criteria === Criteria.CORRECTNESS) {
+            throw new Error(
+                "Correctness should not be used in the reference-free" +
+                " 'criteria' evaluator (CriteriaEvalChain)." +
+                " Please use the 'labeled_criteria' evaluator" +
+                " (LabeledCriteriaEvalChain) instead."
+            );
+        }
+
         let prompt = this.resolvePrompt(chainOptions?.prompt);
 
         const criteria_ = this.resolveCriteria(criteria);
         const criteriaStr = Object.entries(criteria_).map(([k, v]) => `${k}: ${v}`).join("\n");
         console.log("criteriaStr", criteriaStr);
+
 
         prompt = await prompt.partial({criteria: criteriaStr});
 
@@ -257,5 +267,4 @@ export class LabeledCriteriaEvalChain extends CriteriaEvalChain {
         }
         return _prompt;
     }
-
 }
