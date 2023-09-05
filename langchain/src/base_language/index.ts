@@ -1,4 +1,6 @@
 import { type Tiktoken } from "js-tiktoken/lite";
+import type { OpenAI as OpenAIClient } from "openai";
+
 import {
   BaseMessage,
   BaseMessageLike,
@@ -103,6 +105,11 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
+}
+
+export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
+  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
 }
 
 export type BaseLanguageModelInput =
