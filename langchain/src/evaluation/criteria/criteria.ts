@@ -1,9 +1,10 @@
 import {BaseLLMOutputParser} from "../../schema/output_parser.js";
 import {
     LLMEvalChainInput,
-    StringEvaluator,
+    LLMStringEvaluator,
     StringEvaluatorArgs,
 } from "../base.js";
+
 import {ChainValues, ChatGeneration, Generation, RUN_KEY} from "../../schema/index.js";
 import {CRITERIA_PROMPT, PROMPT_WITH_REFERENCES} from "./prompt.js";
 import {BaseLanguageModel} from "../../base_language/index.js";
@@ -111,7 +112,7 @@ const eqSet = (xs: Set<string>, ys: Set<string>) =>
     xs.size === ys.size && [...xs].every((x) => ys.has(x));
 
 
-export class CriteriaEvalChain extends StringEvaluator {
+export class CriteriaEvalChain extends LLMStringEvaluator {
 
     criterionName?: string;
 
