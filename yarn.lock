@@ -7062,30 +7062,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tigrisdata/core@npm:latest":
-  version: 1.2.4
-  resolution: "@tigrisdata/core@npm:1.2.4"
-  dependencies:
-    "@grpc/grpc-js": ^1.8.14
-    app-root-path: ^3.1.0
-    chalk: 4.1.2
-    dotenv: ^16.0.3
-    google-protobuf: ^3.21.0
-    json-bigint: "github:sidorares/json-bigint"
-    reflect-metadata: ^0.1.13
-  checksum: 0a6905418dd7d01b0d1db235bb92c924a845f76ccecdee2693d875b907d1c428d9e22cece009ad8ecc2c38ad63abf4f681c89c1c0dbb5a6ce75f669ea29a8de7
-  languageName: node
-  linkType: hard
-
-"@tigrisdata/vector@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@tigrisdata/vector@npm:1.1.0"
-  dependencies:
-    "@tigrisdata/core": latest
-  checksum: 8e2baa880a0620267bc09740bb8f99f988725bbc66c4619236b39061618579f3ff184949e5542651961a03d7650f7d8a2c24bc9de4be061d92150e6970a883eb
-  languageName: node
-  linkType: hard
-
 "@tootallnate/once@npm:1":
   version: 1.1.2
   resolution: "@tootallnate/once@npm:1.1.2"
@@ -9306,16 +9282,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:4.1.2, chalk@npm:^4.0.0, chalk@npm:^4.1.0, chalk@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "chalk@npm:4.1.2"
-  dependencies:
-    ansi-styles: ^4.1.0
-    supports-color: ^7.1.0
-  checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
-  languageName: node
-  linkType: hard
-
 "chalk@npm:5.2.0, chalk@npm:^5.0.0, chalk@npm:^5.0.1, chalk@npm:^5.2.0":
   version: 5.2.0
   resolution: "chalk@npm:5.2.0"
@@ -9331,6 +9297,16 @@ __metadata:
     escape-string-regexp: ^1.0.5
     supports-color: ^5.3.0
   checksum: ec3661d38fe77f681200f878edbd9448821924e0f93a9cefc0e26a33b145f1027a2084bf19967160d11e1f03bfe4eaffcabf5493b89098b2782c3fe0b03d80c2
+  languageName: node
+  linkType: hard
+
+"chalk@npm:^4.0.0, chalk@npm:^4.1.0, chalk@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "chalk@npm:4.1.2"
+  dependencies:
+    ansi-styles: ^4.1.0
+    supports-color: ^7.1.0
+  checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
   languageName: node
   linkType: hard
 
@@ -11668,7 +11644,6 @@ __metadata:
     "@raycast/api": ^1.55.2
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
-    "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/js-yaml": ^4
     "@types/uuid": ^9
@@ -12854,7 +12829,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-protobuf@npm:3.21.2, google-protobuf@npm:^3.21.0":
+"google-protobuf@npm:3.21.2":
   version: 3.21.2
   resolution: "google-protobuf@npm:3.21.2"
   checksum: 3caa2e1e2654714cc1a201ac5e5faabcaa48f5fba3d8ff9b64ca66fe19e4e0506b94053f32eddc77bf3a7a47ac1660315c6744185c1e2bb27654fd76fe91b988
@@ -14620,15 +14595,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-bigint@github:sidorares/json-bigint":
-  version: 1.0.0
-  resolution: "json-bigint@https://github.com/sidorares/json-bigint.git#commit=3391780b2a3f613bb51536c47e6cddbca31013eb"
-  dependencies:
-    bignumber.js: ^9.0.0
-  checksum: ea2e403b224460496e58d0396029faafc68af9c73c8f4a1b737d6473eb310f9e223a78c1d9e532fd19df9cd67a2fd4a7be069429bf73207b11b4805df240d4cd
-  languageName: node
-  linkType: hard
-
 "json-bigint@npm:^1.0.0":
   version: 1.0.0
   resolution: "json-bigint@npm:1.0.0"
@@ -14921,7 +14887,6 @@ __metadata:
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tensorflow/tfjs-converter": ^4.4.0
     "@tensorflow/tfjs-core": ^4.4.0
-    "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
     "@types/decamelize": ^1.2.0
@@ -15053,7 +15018,6 @@ __metadata:
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
-    "@tigrisdata/vector": ^1.1.0
     "@upstash/redis": ^1.20.6
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
@@ -15163,8 +15127,6 @@ __metadata:
     "@tensorflow/tfjs-converter":
       optional: true
     "@tensorflow/tfjs-core":
-      optional: true
-    "@tigrisdata/vector":
       optional: true
     "@upstash/redis":
       optional: true
