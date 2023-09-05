@@ -1,5 +1,11 @@
 import { type Tiktoken } from "js-tiktoken/lite";
-import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
+import {
+  BaseMessage,
+  BaseMessageLike,
+  BasePromptValue,
+  LLMResult,
+  coerceBaseMessageLikeToMessage,
+} from "../schema/index.js";
 import {
   BaseCallbackConfig,
   CallbackManager,
@@ -99,7 +105,10 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   signal?: AbortSignal;
 }
 
-export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
+export type BaseLanguageModelInput =
+  | BasePromptValue
+  | string
+  | BaseMessageLike[];
 
 /**
  * Base class for language models.
@@ -195,7 +204,7 @@ export abstract class BaseLanguageModel<
     if (typeof input === "string") {
       return new StringPromptValue(input);
     } else if (Array.isArray(input)) {
-      return new ChatPromptValue(input);
+      return new ChatPromptValue(input.map(coerceBaseMessageLikeToMessage));
     } else {
       return input;
     }
