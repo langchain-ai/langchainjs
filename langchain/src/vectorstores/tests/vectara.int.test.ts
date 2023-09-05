@@ -172,12 +172,11 @@ describe("VectaraStore", () => {
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
-      expect(results[0].metadata.length).toBeGreaterThan(0);
       // Query filtered on French, so we expect only French results
       const hasEnglish = results.some(
         (result) =>
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          result.metadata.find((m: any) => m.name === "lang")?.value === "eng"
+          esult.metadata.lang === "eng"
       );
       expect(hasEnglish).toBe(false);
     });
