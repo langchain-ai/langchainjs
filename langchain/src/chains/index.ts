@@ -63,6 +63,7 @@ export {
   SerializedMapReduceDocumentsChain,
   SerializedStuffDocumentsChain,
   SerializedVectorDBQAChain,
+  SerializedGraphQAChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
 export { OpenAIModerationChain } from "./openai_moderation.js";

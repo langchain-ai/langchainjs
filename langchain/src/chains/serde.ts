@@ -43,6 +43,16 @@ export type SerializedVectorDBQAChain = {
 };
 
 /**
+ * Represents the serialized form of a GraphQAChain. It includes
+ * properties such as `_type`, `k`, and `combine_documents_chain`.
+ */
+export type SerializedGraphQAChain = {
+  _type: "graph_qa";
+  k: number;
+  combine_documents_chain: SerializedBaseChain;
+};
+
+/**
  * Represents the serialized form of an APIChain. It includes properties
  * such as `_type`, `api_request_chain`, `api_answer_chain`, and
  * `api_docs`.
@@ -139,6 +149,7 @@ export type SerializedBaseChain =
   | SerializedSequentialChain
   | SerializedSimpleSequentialChain
   | SerializedVectorDBQAChain
+  | SerializedGraphQAChain  
   | SerializedAPIChain
   | SerializedStuffDocumentsChain
   | SerializedChatVectorDBQAChain
