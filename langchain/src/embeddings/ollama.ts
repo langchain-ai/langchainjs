@@ -9,8 +9,8 @@ import {
  * defines additional parameters specific to the OllamaEmbeddings class.
  */
 export interface OllamaEmbeddingsParams extends EmbeddingsParams {
-    baseUrl: "http://localhost:11434",
-    model: "llama2"
+    baseUrl?: string,
+    model?: string
 }
 
 export class OllamaEmbeddings
