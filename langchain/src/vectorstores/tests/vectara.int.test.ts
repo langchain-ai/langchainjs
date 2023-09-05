@@ -65,7 +65,7 @@ const getDocs = (): Document[] => {
 };
 
 let corpusId: number[] = [];
-const envValue = process.env.Vectara_CORPUS_ID;
+const envValue = process.env.VECTARA_CORPUS_ID;
 if (envValue) {
   corpusId = envValue.split(",").map((id) => {
     const num = Number(id);
@@ -176,7 +176,7 @@ describe("VectaraStore", () => {
       const hasEnglish = results.some(
         (result) =>
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          esult.metadata.lang === "eng"
+          result.metadata.lang === "eng"
       );
       expect(hasEnglish).toBe(false);
     });
