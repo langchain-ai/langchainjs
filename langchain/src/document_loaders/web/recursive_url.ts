@@ -81,7 +81,7 @@ export class RecursiveUrlLoader
         invalidSuffixes.some((suffix) => link.endsWith(suffix))
       )
         continue;
-  
+
       let standardizedLink: string;
 
       if (link.startsWith("http")) {
@@ -95,7 +95,7 @@ export class RecursiveUrlLoader
 
       if (this.excludeDirs.some((exDir) => standardizedLink.startsWith(exDir)))
         continue;
-  
+
       if (link.startsWith("http")) {
         const isAllowed = !this.preventOutside || link.startsWith(baseUrl);
         if (isAllowed) absolutePaths.push(link);
@@ -107,10 +107,10 @@ export class RecursiveUrlLoader
         absolutePaths.push(newLink);
       }
     }
-  
+
     return Array.from(new Set(absolutePaths));
   }
-  
+
   private extractMetadata(rawHtml: string, url: string) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadata: Record<string, any> = { source: url };

@@ -46,7 +46,7 @@ describe("RecursiveUrlLoader", () => {
     const docs = await loader.load();
     expect(docs.length).toBe(0);
   });
-  
+
   test("excludeDirs works for top-level calls", async () => {
     const url = "https://js.langchain.com/docs/";
     const compiledConvert = compile({ wordwrap: 130 });
@@ -61,7 +61,9 @@ describe("RecursiveUrlLoader", () => {
 
     const docs = await loader.load();
 
-    expect(docs.some(doc => doc.metadata.source.startsWith(excludeDir))).toBe(false);
+    expect(docs.some((doc) => doc.metadata.source.startsWith(excludeDir))).toBe(
+      false
+    );
   });
 
   test("excludeDirs works for recursive calls", async () => {
@@ -77,7 +79,9 @@ describe("RecursiveUrlLoader", () => {
     });
 
     const docs = await loader.load();
-    
-    expect(docs.some(doc => doc.metadata.source.startsWith(excludeDir))).toBe(false);
+
+    expect(docs.some((doc) => doc.metadata.source.startsWith(excludeDir))).toBe(
+      false
+    );
   });
 });
