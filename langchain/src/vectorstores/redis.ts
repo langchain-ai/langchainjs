@@ -46,13 +46,18 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
   }
 >;
 
-type CreateIndexOptions = NonNullable<Parameters<
-  ReturnType<typeof createClient>["ft"]["create"]
->[3]>;
+type CreateIndexOptions = NonNullable<
+  Parameters<ReturnType<typeof createClient>["ft"]["create"]>[3]
+>;
 
-export type RedisSearchLanguages = `${NonNullable<CreateIndexOptions["LANGUAGE"]>}`;
+export type RedisSearchLanguages = `${NonNullable<
+  CreateIndexOptions["LANGUAGE"]
+>}`;
 
-export type RedisVectorStoreIndexOptions = Omit<CreateIndexOptions, "LANGUAGE"> & { LANGUAGE?: RedisSearchLanguages };
+export type RedisVectorStoreIndexOptions = Omit<
+  CreateIndexOptions,
+  "LANGUAGE"
+> & { LANGUAGE?: RedisSearchLanguages };
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -137,7 +142,7 @@ export class RedisVectorStore extends VectorStore {
     this.createIndexOptions = {
       ON: "HASH",
       PREFIX: this.keyPrefix,
-      ..._dbConfig.createIndexOptions as CreateIndexOptions,
+      ...(_dbConfig.createIndexOptions as CreateIndexOptions),
     };
   }
 
