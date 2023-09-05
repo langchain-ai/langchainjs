@@ -143,6 +143,31 @@ test("Test fromPromptMessages", async () => {
   ]);
 });
 
+test("Test fromPromptMessages with a variety of ways to declare prompt messages", async () => {
+  const systemPrompt = new PromptTemplate({
+    template: "Here's some context: {context}",
+    inputVariables: ["context"],
+  });
+  // TODO: Fix autocomplete for the fromPromptMessages method
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessagePromptTemplate(systemPrompt),
+    "Hello {foo}, I'm {bar}",
+    { role: "ai", content: "Nice to meet you, {bar}!" },
+    ["human", "Thanks {foo}!!"],
+  ]);
+  const messages = await chatPrompt.formatPromptValue({
+    context: "This is a context",
+    foo: "Foo",
+    bar: "Bar",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+    new AIMessage("Nice to meet you, Bar!"),
+    new HumanMessage("Thanks Foo!!"),
+  ]);
+});
+
 test("Test fromPromptMessages with an extra input variable", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
