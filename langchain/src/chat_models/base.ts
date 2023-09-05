@@ -9,6 +9,8 @@ import {
   LLMResult,
   RUN_KEY,
   ChatGenerationChunk,
+  BaseMessageLike,
+  coerceBaseMessageLikeToMessage,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
@@ -205,7 +207,7 @@ export abstract class BaseChatModel<
    * @returns A Promise that resolves to an LLMResult.
    */
   async generate(
-    messages: BaseMessage[][],
+    messages: BaseMessageLike[][],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
@@ -216,6 +218,10 @@ export abstract class BaseChatModel<
     } else {
       parsedOptions = options;
     }
+
+    const baseMessages = messages.map((messageList) =>
+      messageList.map(coerceBaseMessageLikeToMessage)
+    );
 
     const [runnableConfig, callOptions] =
       this._separateRunnableConfigFromCallOptions(parsedOptions);
@@ -235,14 +241,14 @@ export abstract class BaseChatModel<
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
-      messages,
+      baseMessages,
       undefined,
       undefined,
       extra
     );
     // generate results
     const results = await Promise.allSettled(
-      messages.map((messageList, i) =>
+      baseMessages.map((messageList, i) =>
         this._generate(
           messageList,
           { ...callOptions, promptIndex: i },
@@ -332,11 +338,15 @@ export abstract class BaseChatModel<
    * @returns A Promise that resolves to a BaseMessage.
    */
   async call(
-    messages: BaseMessage[],
+    messages: BaseMessageLike[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {
-    const result = await this.generate([messages], options, callbacks);
+    const result = await this.generate(
+      [messages.map(coerceBaseMessageLikeToMessage)],
+      options,
+      callbacks
+    );
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
   }
