@@ -47,4 +47,17 @@ describe("GithubRepoLoader recursion", () => {
       "dir1/dir1_1/nested_file.txt",
     ]);
   });
+
+  test("Expect an error if processSubmodules set without recursive with GithubRepoLoader", async () => {
+    expect(
+      () =>
+        new GithubRepoLoader("https://github.com/hwchase17/langchainjs", {
+          branch: "main",
+          recursive: false,
+          processSubmodules: true,
+          unknown: "warn",
+          ignorePaths: ["*.md"],
+        })
+    ).toThrow();
+  });
 });

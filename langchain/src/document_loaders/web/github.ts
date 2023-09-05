@@ -173,7 +173,12 @@ export class GithubRepoLoader
     this.branch = branch;
     this.recursive = recursive;
     // processing submodules without processing contents of other directories makes no sense
-    this.processSubmodules = processSubmodules && recursive;
+    if (processSubmodules && !recursive) {
+      throw new Error(
+        `Input property "recursive" must be true if "processSubmodules" is true.`
+      );
+    }
+    this.processSubmodules = processSubmodules;
     this.unknown = unknown;
     this.accessToken = accessToken;
     this.ignoreFiles = ignoreFiles;
