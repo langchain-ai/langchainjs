@@ -215,6 +215,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         NOFREQS: true,
         SKIPINITIALSCAN: true,
         STOPWORDS: ["a", "b"],
+        LANGUAGE: "German",
       }
     );
   });
