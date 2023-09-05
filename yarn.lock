@@ -14964,7 +14964,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langchainhub: ~0.0.3
+    langchainhub: ~0.0.6
     langsmith: ~0.0.31
     llmonitor: ^0.5.4
     mammoth: ^1.5.1
@@ -15062,7 +15062,6 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    langchainhub: ~0.0.3
     llmonitor: ^0.5.4
     mammoth: "*"
     mongodb: ^5.2.0
@@ -15194,8 +15193,6 @@ __metadata:
       optional: true
     jsdom:
       optional: true
-    langchainhub:
-      optional: true
     llmonitor:
       optional: true
     mammoth:
@@ -15247,7 +15244,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainhub@npm:~0.0.3":
+"langchainhub@npm:~0.0.6":
   version: 0.0.6
   resolution: "langchainhub@npm:0.0.6"
   checksum: f771e5375b7ae9cc6fc59d5e2b1fd35c29e5759f4595617e3a235142bc2ca12c4135aa1631d85ee4e25c89968696242dd6380f6b90e87ffbc9006efc3cdc53c4

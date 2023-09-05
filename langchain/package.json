@@ -703,7 +703,6 @@
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "jsdom": "^22.1.0",
-    "langchainhub": "~0.0.3",
     "llmonitor": "^0.5.4",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
@@ -791,7 +790,6 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "langchainhub": "~0.0.3",
     "llmonitor": "^0.5.4",
     "mammoth": "*",
     "mongodb": "^5.2.0",
@@ -975,9 +973,6 @@
       "optional": true
     },
     "jsdom": {
-      "optional": true
-    },
-    "langchainhub": {
       "optional": true
     },
     "llmonitor": {
