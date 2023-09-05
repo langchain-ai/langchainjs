@@ -45,22 +45,14 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
     EF_RUNTIME?: number;
   }
 >;
-export type PropertyName = `${"@" | "$."}${string}`;
-export interface RedisVectorStoreIndexOptions {
-  ON?: "HASH" | "JSON";
-  PREFIX?: string | Array<string>;
-  FILTER?: string;
-  SCORE?: number;
-  SCORE_FIELD?: PropertyName;
-  MAXTEXTFIELDS?: true;
-  TEMPORARY?: number;
-  NOOFFSETS?: true;
-  NOHL?: true;
-  NOFIELDS?: true;
-  NOFREQS?: true;
-  SKIPINITIALSCAN?: true;
-  STOPWORDS?: string | Array<string>;
-}
+
+type CreateIndexOptions = NonNullable<Parameters<
+  ReturnType<typeof createClient>["ft"]["create"]
+>[3]>;
+
+export type RedisSearchLanguages = `${NonNullable<CreateIndexOptions["LANGUAGE"]>}`;
+
+export type RedisVectorStoreIndexOptions = Omit<CreateIndexOptions, "LANGUAGE"> & { LANGUAGE?: RedisSearchLanguages };
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -112,7 +104,7 @@ export class RedisVectorStore extends VectorStore {
 
   indexOptions: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
 
-  createIndexOptions: RedisVectorStoreIndexOptions;
+  createIndexOptions: CreateIndexOptions;
 
   keyPrefix: string;
 
@@ -145,7 +137,7 @@ export class RedisVectorStore extends VectorStore {
     this.createIndexOptions = {
       ON: "HASH",
       PREFIX: this.keyPrefix,
-      ..._dbConfig.createIndexOptions,
+      ..._dbConfig.createIndexOptions as CreateIndexOptions,
     };
   }
 

@@ -192,6 +192,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         NOFREQS: true,
         SKIPINITIALSCAN: true,
         STOPWORDS: ["a", "b"],
+        LANGUAGE: "German",
       },
     });
     store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
