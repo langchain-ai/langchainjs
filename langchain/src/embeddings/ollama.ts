@@ -1,5 +1,5 @@
 import { OllamaInput, OllamaRequestParams } from "../util/ollama.js";
-import { Embeddings } from "./base.js";
+import { Embeddings, EmbeddingsParams } from "./base.js";
 
 type CamelCasedRequestOptions = Omit<OllamaInput, "baseUrl" | "model">;
 
@@ -7,7 +7,7 @@ type CamelCasedRequestOptions = Omit<OllamaInput, "baseUrl" | "model">;
  * Interface for OllamaEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the OllamaEmbeddings class.
  */
-interface OllamaEmbeddingsParams {
+interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /** The Ollama model to use, e.g: "llama2:13b" */
   model: string;
 
