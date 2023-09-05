@@ -5,12 +5,15 @@ import { BaseCallbackConfig } from "../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
+  BaseMessageLike,
   BasePromptValue,
   ChatMessage,
   HumanMessage,
   InputValues,
   PartialValues,
   SystemMessage,
+  coerceMessageLikeToMessage,
+  isBaseMessage,
 } from "../schema/index.js";
 import { Runnable } from "../schema/runnable.js";
 import {
@@ -405,6 +408,47 @@ export interface ChatPromptTemplateInput<
   validateTemplate?: boolean;
 }
 
+export type BaseMessagePromptTemplateLike =
+  | BaseMessagePromptTemplate
+  | BaseMessageLike;
+
+function _isBaseMessagePromptTemplate(
+  baseMessagePromptTemplateLike: BaseMessagePromptTemplateLike
+): baseMessagePromptTemplateLike is BaseMessagePromptTemplate {
+  return (
+    typeof (baseMessagePromptTemplateLike as BaseMessagePromptTemplate)
+      .formatMessages === "function"
+  );
+}
+
+function _coerceMessagePromptTemplateLike(
+  messagePromptTemplateLike: BaseMessagePromptTemplateLike
+): BaseMessagePromptTemplate | BaseMessage {
+  if (
+    _isBaseMessagePromptTemplate(messagePromptTemplateLike) ||
+    isBaseMessage(messagePromptTemplateLike)
+  ) {
+    return messagePromptTemplateLike;
+  }
+  const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
+  if (message._getType() === "human") {
+    return HumanMessagePromptTemplate.fromTemplate(message.content);
+  } else if (message._getType() === "ai") {
+    return AIMessagePromptTemplate.fromTemplate(message.content);
+  } else if (message._getType() === "system") {
+    return SystemMessagePromptTemplate.fromTemplate(message.content);
+  } else if (ChatMessage.isInstance(message)) {
+    return ChatMessagePromptTemplate.fromTemplate(
+      message.content,
+      message.role
+    );
+  } else {
+    throw new Error(
+      `Could not coerce message prompt template from input. Received message type: "${message._getType()}".`
+    );
+  }
+}
+
 /**
  * Class that represents a chat prompt. It extends the
  * BaseChatPromptTemplate and uses an array of BaseMessagePromptTemplate
@@ -542,20 +586,19 @@ export class ChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static fromPromptMessages<RunInput extends InputValues = any>(
     promptMessages: (
-      | BaseMessagePromptTemplate<InputValues>
       | ChatPromptTemplate<InputValues, string>
-      | BaseMessage
+      | BaseMessagePromptTemplateLike
     )[]
   ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
-      (acc, promptMessage) =>
+      (acc: Array<BaseMessagePromptTemplate | BaseMessage>, promptMessage) =>
         acc.concat(
           // eslint-disable-next-line no-instanceof/no-instanceof
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
-            : [promptMessage]
+            : [_coerceMessagePromptTemplateLike(promptMessage)]
         ),
-      [] as Array<BaseMessagePromptTemplate | BaseMessage>
+      []
     );
     const flattenedPartialVariables = promptMessages.reduce(
       (acc, promptMessage) =>
