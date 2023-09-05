@@ -8,6 +8,9 @@ export interface BaseDynamicToolInput extends ToolParams {
   returnDirect?: boolean;
 }
 
+/**
+ * Interface for the input parameters of the DynamicTool class.
+ */
 export interface DynamicToolInput extends BaseDynamicToolInput {
   func: (
     input: string,
@@ -15,6 +18,9 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
   ) => Promise<string>;
 }
 
+/**
+ * Interface for the input parameters of the DynamicStructuredTool class.
+ */
 export interface DynamicStructuredToolInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
@@ -30,6 +36,10 @@ export interface DynamicStructuredToolInput<
  * A tool that can be created dynamically from a function, name, and description.
  */
 export class DynamicTool extends Tool {
+  static lc_name() {
+    return "DynamicTool";
+  }
+
   name: string;
 
   description: string;
@@ -53,10 +63,20 @@ export class DynamicTool extends Tool {
   }
 }
 
+/**
+ * A tool that can be created dynamically from a function, name, and
+ * description, designed to work with structured data. It extends the
+ * StructuredTool class and overrides the _call method to execute the
+ * provided function when the tool is called.
+ */
 export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends StructuredTool {
+  static lc_name() {
+    return "DynamicStructuredTool";
+  }
+
   name: string;
 
   description: string;

@@ -1,4 +1,8 @@
-import { BaseCallbackConfig, CallbackManager } from "../callbacks/manager.js";
+import {
+  BaseCallbackConfig,
+  CallbackManager,
+  CallbackManagerForChainRun,
+} from "../callbacks/manager.js";
 import { Serializable } from "../load/serializable.js";
 import { IterableReadableStream } from "../util/stream.js";
 
@@ -21,6 +25,10 @@ function _coerceToDict(value: any, defaultKey: string) {
     : { [defaultKey]: value };
 }
 
+/**
+ * A Runnable is a generic unit of work that can be invoked, batched, streamed, and/or
+ * transformed.
+ */
 export abstract class Runnable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
@@ -35,11 +43,32 @@ export abstract class Runnable<
     options?: Partial<CallOptions>
   ): Promise<RunOutput>;
 
+  /**
+   * Bind arguments to a Runnable, returning a new Runnable.
+   * @param kwargs
+   * @returns A new RunnableBinding that, when invoked, will apply the bound args.
+   */
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({ bound: this, kwargs });
+  }
+
+  /**
+   * Create a new runnable from the current one that will try invoking
+   * other passed fallback runnables if the initial invocation fails.
+   * @param fields.fallbacks Other runnables to call if the runnable errors.
+   * @returns A new RunnableWithFallbacks.
+   */
+  withFallbacks(fields: {
+    fallbacks: Runnable<RunInput, RunOutput>[];
+  }): RunnableWithFallbacks<RunInput, RunOutput> {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableWithFallbacks<RunInput, RunOutput>({
+      runnable: this,
+      fallbacks: fields.fallbacks,
+    });
   }
 
   protected _getOptionsList(
@@ -57,6 +86,14 @@ export abstract class Runnable<
     return Array.from({ length }, () => options);
   }
 
+  /**
+   * Default implementation of batch, which calls invoke N times.
+   * Subclasses should override this method if they can batch more efficiently.
+   * @param inputs Array of inputs to each batch call.
+   * @param options Either a single call options object to apply to each batch call or an array for each call.
+   * @param batchOptions.maxConcurrency Maximum number of calls to run at once.
+   * @returns An array of RunOutputs
+   */
   async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
@@ -73,13 +110,19 @@ export abstract class Runnable<
     for (let i = 0; i < inputs.length; i += batchSize) {
       const batchPromises = inputs
         .slice(i, i + batchSize)
-        .map((input, i) => this.invoke(input, configList[i]));
+        .map((input, j) => this.invoke(input, configList[j]));
       const batchResult = await Promise.all(batchPromises);
       batchResults.push(batchResult);
     }
     return batchResults.flat();
   }
 
+  /**
+   * Default streaming implementation.
+   * Subclasses should override this method if they support streaming output.
+   * @param input
+   * @param options
+   */
   async *_streamIterator(
     input: RunInput,
     options?: Partial<CallOptions>
@@ -87,6 +130,12 @@ export abstract class Runnable<
     yield this.invoke(input, options);
   }
 
+  /**
+   * Stream output in chunks.
+   * @param input
+   * @param options
+   * @returns A readable stream that is also an iterable.
+   */
   async stream(
     input: RunInput,
     options?: Partial<CallOptions>
@@ -140,10 +189,28 @@ export abstract class Runnable<
     return output;
   }
 
-  protected async *_streamWithConfig<T extends RunOutput>(
-    generator: AsyncGenerator<T>,
+  /**
+   * Helper method to transform an Iterator of Input values into an Iterator of
+   * Output values, with callbacks.
+   * Use this to implement `stream()` or `transform()` in Runnable subclasses.
+   */
+  protected async *_transformStreamWithConfig<
+    I extends RunInput,
+    O extends RunOutput
+  >(
+    inputGenerator: AsyncGenerator<I>,
+    transformer: (
+      generator: AsyncGenerator<I>,
+      runManager?: CallbackManagerForChainRun,
+      options?: Partial<RunnableConfig>
+    ) => AsyncGenerator<O>,
     options?: RunnableConfig & { runType?: string }
-  ) {
+  ): AsyncGenerator<O> {
+    let finalInput: I | undefined;
+    let finalInputSupported = true;
+    let finalOutput: O | undefined;
+    let finalOutputSupported = true;
+
     const callbackManager_ = await CallbackManager.configure(
       options?.callbacks,
       undefined,
@@ -151,37 +218,73 @@ export abstract class Runnable<
       undefined,
       options?.metadata
     );
-    // TODO: Find a way to pass the entire streamed value into the callback.
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      _coerceToDict("<streamed value>", "input"),
-      undefined,
-      options?.runType
-    );
-    let output;
-    let concatSupported = true;
-    try {
-      for await (const chunk of generator) {
-        yield chunk;
-        if (concatSupported) {
-          if (output === undefined) {
-            output = chunk;
+    let runManager: CallbackManagerForChainRun | undefined;
+    const serializedRepresentation = this.toJSON();
+    async function* wrapInputForTracing() {
+      for await (const chunk of inputGenerator) {
+        if (!runManager) {
+          // Start the run manager AFTER the iterator starts to preserve
+          // tracing order
+          runManager = await callbackManager_?.handleChainStart(
+            serializedRepresentation,
+            { input: "" },
+            undefined,
+            options?.runType
+          );
+        }
+        if (finalInputSupported) {
+          if (finalInput === undefined) {
+            finalInput = chunk;
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              output = (output as any).concat(chunk);
-            } catch (e) {
-              output = undefined;
-              concatSupported = false;
+              finalInput = (finalInput as any).concat(chunk);
+            } catch {
+              finalInput = undefined;
+              finalInputSupported = false;
+            }
+          }
+        }
+        yield chunk;
+      }
+    }
+
+    const wrappedInputGenerator = wrapInputForTracing();
+    try {
+      const outputIterator = transformer(
+        wrappedInputGenerator,
+        runManager,
+        options
+      );
+      for await (const chunk of outputIterator) {
+        yield chunk;
+        if (finalOutputSupported) {
+          if (finalOutput === undefined) {
+            finalOutput = chunk;
+          } else {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              finalOutput = (finalOutput as any).concat(chunk);
+            } catch {
+              finalOutput = undefined;
+              finalOutputSupported = false;
             }
           }
         }
       }
     } catch (e) {
-      await runManager?.handleChainError(e);
+      await runManager?.handleChainError(e, undefined, undefined, undefined, {
+        inputs: _coerceToDict(finalInput, "input"),
+      });
       throw e;
     }
-    await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+    await runManager?.handleChainEnd(
+      finalOutput ?? {},
+      undefined,
+      undefined,
+      undefined,
+      { inputs: _coerceToDict(finalInput, "input") }
+    );
   }
 
   _patchConfig(
@@ -191,6 +294,12 @@ export abstract class Runnable<
     return { ...config, callbacks: callbackManager };
   }
 
+  /**
+   * Create a new runnable sequence that runs each individual runnable in series,
+   * piping the output of one runnable into another runnable or runnable-like.
+   * @param coerceable A runnable, function, or object whose values are functions or runnables.
+   * @returns A new runnable sequence.
+   */
   pipe<NewRunOutput>(
     coerceable: RunnableLike<RunOutput, NewRunOutput>
   ): RunnableSequence<RunInput, NewRunOutput> {
@@ -201,6 +310,13 @@ export abstract class Runnable<
     });
   }
 
+  /**
+   * Default implementation of transform, which buffers input and then calls stream.
+   * Subclasses should override this method if they can start producing output while
+   * input is still being generated.
+   * @param generator
+   * @param options
+   */
   transform?(
     generator: AsyncGenerator<RunInput>,
     options: Partial<CallOptions>
@@ -212,12 +328,19 @@ export abstract class Runnable<
   }
 }
 
+/**
+ * A sequence of runnables, where the output of each is the input of the next.
+ */
 export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any
 > extends Runnable<RunInput, RunOutput> {
+  static lc_name() {
+    return "RunnableSequence";
+  }
+
   protected first: Runnable<RunInput>;
 
   protected middle: Runnable[] = [];
@@ -227,7 +350,7 @@ export class RunnableSequence<
 
   lc_serializable = true;
 
-  lc_namespace = ["schema", "runnable"];
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   constructor(fields: {
     first: Runnable<RunInput>;
@@ -312,23 +435,21 @@ export class RunnableSequence<
         const step = this.steps[i];
         nextStepInputs = await step.batch(
           nextStepInputs,
-          runManagers.map(
-            (runManager) =>
-              this._patchConfig(configList[i], runManager?.getChild()),
-            batchOptions
-          )
+          runManagers.map((runManager, j) =>
+            this._patchConfig(configList[j], runManager?.getChild())
+          ),
+          batchOptions
         );
       }
       finalOutputs = await this.last.batch(
         nextStepInputs,
-        runManagers.map(
-          (runManager) =>
-            this._patchConfig(
-              configList[this.steps.length - 1],
-              runManager?.getChild()
-            ),
-          batchOptions
-        )
+        runManagers.map((runManager) =>
+          this._patchConfig(
+            configList[this.steps.length - 1],
+            runManager?.getChild()
+          )
+        ),
+        batchOptions
       );
     } catch (e) {
       await Promise.all(
@@ -458,12 +579,20 @@ export class RunnableSequence<
   }
 }
 
+/**
+ * A runnable that runs a mapping of runnables in parallel,
+ * and returns a mapping of their outputs.
+ */
 export class RunnableMap<RunInput> extends Runnable<
   RunInput,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Record<string, any>
 > {
-  lc_namespace = ["schema", "runnable"];
+  static lc_name() {
+    return "RunnableMap";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -511,11 +640,18 @@ export class RunnableMap<RunInput> extends Runnable<
   }
 }
 
+/**
+ * A runnable that runs a callable.
+ */
 export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
 > {
-  lc_namespace = ["schema", "runnable"];
+  static lc_name() {
+    return "RunnableLambda";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   protected func: RunnableFunc<RunInput, RunOutput>;
 
@@ -536,11 +672,18 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   }
 }
 
+/**
+ * A runnable that passes through the input.
+ */
 export class RunnablePassthrough<RunInput> extends Runnable<
   RunInput,
   RunInput
 > {
-  lc_namespace = ["schema", "runnable"];
+  static lc_name() {
+    return "RunnablePassthrough";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -556,35 +699,19 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   }
 }
 
-function _coerceToRunnable<RunInput, RunOutput>(
-  coerceable: RunnableLike<RunInput, RunOutput>
-): Runnable<RunInput, RunOutput> {
-  if (typeof coerceable === "function") {
-    return new RunnableLambda({ func: coerceable });
-  } else if (Runnable.isRunnable(coerceable)) {
-    return coerceable;
-  } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
-    const runnables: Record<string, Runnable<RunInput>> = {};
-    for (const [key, value] of Object.entries(coerceable)) {
-      runnables[key] = _coerceToRunnable(value);
-    }
-    return new RunnableMap<RunInput>({ steps: runnables }) as Runnable<
-      RunInput,
-      RunOutput
-    >;
-  } else {
-    throw new Error(
-      `Expected a Runnable, function or object.\nInstead got an unsupported type.`
-    );
-  }
-}
-
+/**
+ * A runnable that delegates calls to another runnable with a set of kwargs.
+ */
 export class RunnableBinding<
   RunInput,
   RunOutput,
   CallOptions extends BaseCallbackConfig
 > extends Runnable<RunInput, RunOutput, CallOptions> {
-  lc_namespace = ["schema", "runnable"];
+  static lc_name() {
+    return "RunnableBinding";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -631,6 +758,13 @@ export class RunnableBinding<
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<CallOptions> | undefined
+  ) {
+    yield* this.bound._streamIterator(input, { ...options, ...this.kwargs });
+  }
+
   async stream(
     input: RunInput,
     options?: Partial<CallOptions> | undefined
@@ -645,12 +779,20 @@ export type RouterInput = {
   input: any;
 };
 
+/**
+ * A runnable that routes to a set of runnables based on Input['key'].
+ * Returns the output of the selected runnable.
+ */
 export class RouterRunnable<
   RunInput extends RouterInput,
   RunnableInput,
   RunOutput
 > extends Runnable<RunInput, RunOutput> {
-  lc_namespace = ["schema", "langchain"];
+  static lc_name() {
+    return "RouterRunnable";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
 
   lc_serializable = true;
 
@@ -715,5 +857,159 @@ export class RouterRunnable<
       throw new Error(`No runnable associated with key "${key}".`);
     }
     return runnable.stream(actualInput, options);
+  }
+}
+
+/**
+ * A Runnable that can fallback to other Runnables if it fails.
+ */
+export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  static lc_name() {
+    return "RunnableWithFallbacks";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
+
+  lc_serializable = true;
+
+  protected runnable: Runnable<RunInput, RunOutput>;
+
+  protected fallbacks: Runnable<RunInput, RunOutput>[];
+
+  constructor(fields: {
+    runnable: Runnable<RunInput, RunOutput>;
+    fallbacks: Runnable<RunInput, RunOutput>[];
+  }) {
+    super(fields);
+    this.runnable = fields.runnable;
+    this.fallbacks = fields.fallbacks;
+  }
+
+  *runnables() {
+    yield this.runnable;
+    for (const fallback of this.fallbacks) {
+      yield fallback;
+    }
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<RunOutput> {
+    const callbackManager_ = await CallbackManager.configure(
+      options?.callbacks,
+      undefined,
+      options?.tags,
+      undefined,
+      options?.metadata
+    );
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input")
+    );
+    let firstError;
+    for (const runnable of this.runnables()) {
+      try {
+        const output = await runnable.invoke(
+          input,
+          this._patchConfig(options, runManager?.getChild())
+        );
+        await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+        return output;
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (firstError === undefined) {
+      throw new Error("No error stored at end of fallback.");
+    }
+    await runManager?.handleChainError(firstError);
+    throw firstError;
+  }
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: { maxConcurrency?: number }
+  ): Promise<RunOutput[]> {
+    const configList = this._getOptionsList(options ?? {}, inputs.length);
+    const callbackManagers = await Promise.all(
+      configList.map((config) =>
+        CallbackManager.configure(
+          config?.callbacks,
+          undefined,
+          config?.tags,
+          undefined,
+          config?.metadata
+        )
+      )
+    );
+    const runManagers = await Promise.all(
+      callbackManagers.map((callbackManager, i) =>
+        callbackManager?.handleChainStart(
+          this.toJSON(),
+          _coerceToDict(inputs[i], "input")
+        )
+      )
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let firstError: any;
+    for (const runnable of this.runnables()) {
+      try {
+        const outputs = await runnable.batch(
+          inputs,
+          runManagers.map((runManager, j) =>
+            this._patchConfig(configList[j], runManager?.getChild())
+          ),
+          batchOptions
+        );
+        await Promise.all(
+          runManagers.map((runManager, i) =>
+            runManager?.handleChainEnd(_coerceToDict(outputs[i], "output"))
+          )
+        );
+        return outputs;
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (!firstError) {
+      throw new Error("No error stored at end of fallbacks.");
+    }
+    await Promise.all(
+      runManagers.map((runManager) => runManager?.handleChainError(firstError))
+    );
+    throw firstError;
+  }
+}
+
+function _coerceToRunnable<RunInput, RunOutput>(
+  coerceable: RunnableLike<RunInput, RunOutput>
+): Runnable<RunInput, RunOutput> {
+  if (typeof coerceable === "function") {
+    return new RunnableLambda({ func: coerceable });
+  } else if (Runnable.isRunnable(coerceable)) {
+    return coerceable;
+  } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
+    const runnables: Record<string, Runnable<RunInput>> = {};
+    for (const [key, value] of Object.entries(coerceable)) {
+      runnables[key] = _coerceToRunnable(value);
+    }
+    return new RunnableMap<RunInput>({ steps: runnables }) as Runnable<
+      RunInput,
+      RunOutput
+    >;
+  } else {
+    throw new Error(
+      `Expected a Runnable, function or object.\nInstead got an unsupported type.`
+    );
   }
 }

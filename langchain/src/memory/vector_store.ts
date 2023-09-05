@@ -8,6 +8,10 @@ import {
   OutputValues,
 } from "./base.js";
 
+/**
+ * Interface for the parameters required to initialize a
+ * VectorStoreRetrieverMemory instance.
+ */
 export interface VectorStoreRetrieverMemoryParams {
   vectorStoreRetriever: VectorStoreRetriever;
   inputKey?: string;
@@ -16,6 +20,13 @@ export interface VectorStoreRetrieverMemoryParams {
   returnDocs?: boolean;
 }
 
+/**
+ * Class for managing long-term memory in Large Language Model (LLM)
+ * applications. It provides a way to persist and retrieve relevant
+ * documents from a vector store database, which can be useful for
+ * maintaining conversation history or other types of memory in an LLM
+ * application.
+ */
 export class VectorStoreRetrieverMemory
   extends BaseMemory
   implements VectorStoreRetrieverMemoryParams
@@ -40,6 +51,13 @@ export class VectorStoreRetrieverMemory
     return [this.memoryKey];
   }
 
+  /**
+   * Method to load memory variables. It uses the vectorStoreRetriever to
+   * get relevant documents based on the query obtained from the input
+   * values.
+   * @param values An InputValues object.
+   * @returns A Promise that resolves to a MemoryVariables object.
+   */
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
     const query = getInputValue(values, this.inputKey);
     const results = await this.vectorStoreRetriever.getRelevantDocuments(query);
@@ -50,6 +68,14 @@ export class VectorStoreRetrieverMemory
     };
   }
 
+  /**
+   * Method to save context. It constructs a document from the input and
+   * output values (excluding the memory key) and adds it to the vector
+   * store database using the vectorStoreRetriever.
+   * @param inputValues An InputValues object.
+   * @param outputValues An OutputValues object.
+   * @returns A Promise that resolves to void.
+   */
   async saveContext(
     inputValues: InputValues,
     outputValues: OutputValues

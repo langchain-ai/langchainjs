@@ -1,11 +1,25 @@
 import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
+/**
+ * Interface for the parameters required to instantiate a BraveSearch
+ * instance.
+ */
 export interface BraveSearchParams {
   apiKey?: string;
 }
 
+/**
+ * Class for interacting with the Brave Search engine. It extends the Tool
+ * class and requires an API key to function. The API key can be passed in
+ * during instantiation or set as an environment variable named
+ * 'BRAVE_SEARCH_API_KEY'.
+ */
 export class BraveSearch extends Tool {
+  static lc_name() {
+    return "BraveSearch";
+  }
+
   name = "brave-search";
 
   description =

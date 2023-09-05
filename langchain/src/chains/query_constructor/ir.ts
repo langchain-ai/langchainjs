@@ -1,18 +1,52 @@
 import { VectorStore } from "../../vectorstores/base.js";
 
+/**
+ * Represents logical AND operator.
+ */
 export type AND = "and";
+/**
+ * Represents logical OR operator.
+ */
 export type OR = "or";
+/**
+ * Represents logical NOT operator.
+ */
 export type NOT = "not";
 
+/**
+ * Represents a logical operator which can be AND, OR, or NOT.
+ */
 export type Operator = AND | OR | NOT;
 
+/**
+ * Represents equality comparison operator.
+ */
 export type EQ = "eq";
+/**
+ * Represents inequality comparison operator.
+ */
 export type NE = "ne";
+/**
+ * Represents less than comparison operator.
+ */
 export type LT = "lt";
+/**
+ * Represents greater than comparison operator.
+ */
 export type GT = "gt";
+/**
+ * Represents less than or equal to comparison operator.
+ */
 export type LTE = "lte";
+/**
+ * Represents greater than or equal to comparison operator.
+ */
 export type GTE = "gte";
 
+/**
+ * Represents a comparison operator which can be EQ, NE, LT, GT, LTE, or
+ * GTE.
+ */
 export type Comparator = EQ | NE | LT | GT | LTE | GTE;
 
 export const Operators: { [key: string]: Operator } = {
@@ -30,22 +64,39 @@ export const Comparators: { [key: string]: Comparator } = {
   gte: "gte",
 };
 
+/**
+ * Represents the result of visiting an operation or comparison
+ * expression.
+ */
 export type VisitorResult = VisitorOperationResult | VisitorComparisonResult;
 
+/**
+ * Represents the result of visiting an operation expression.
+ */
 export type VisitorOperationResult = {
   [operator: string]: VisitorResult[];
 };
 
+/**
+ * Represents the result of visiting a comparison expression.
+ */
 export type VisitorComparisonResult = {
   [attr: string]: {
     [comparator: string]: string | number;
   };
 };
 
+/**
+ * Represents the result of visiting a structured query expression.
+ */
 export type VisitorStructuredQueryResult = {
   filter?: VisitorComparisonResult | VisitorOperationResult;
 };
 
+/**
+ * Abstract class for visiting expressions. Subclasses must implement
+ * visitOperation, visitComparison, and visitStructuredQuery methods.
+ */
 export abstract class Visitor<T extends VectorStore = VectorStore> {
   declare VisitOperationOutput: object;
 
@@ -68,6 +119,10 @@ export abstract class Visitor<T extends VectorStore = VectorStore> {
   ): this["VisitStructuredQueryOutput"];
 }
 
+/**
+ * Abstract class representing an expression. Subclasses must implement
+ * the exprName property and the accept method.
+ */
 export abstract class Expression {
   abstract exprName: "Operation" | "Comparison" | "StructuredQuery";
 
@@ -84,8 +139,16 @@ export abstract class Expression {
   }
 }
 
+/**
+ * Abstract class representing a filter directive. It extends the
+ * Expression class.
+ */
 export abstract class FilterDirective extends Expression {}
 
+/**
+ * Class representing a comparison filter directive. It extends the
+ * FilterDirective class.
+ */
 export class Comparison extends FilterDirective {
   exprName = "Comparison" as const;
 
@@ -98,6 +161,10 @@ export class Comparison extends FilterDirective {
   }
 }
 
+/**
+ * Class representing an operation filter directive. It extends the
+ * FilterDirective class.
+ */
 export class Operation extends FilterDirective {
   exprName = "Operation" as const;
 
@@ -106,6 +173,10 @@ export class Operation extends FilterDirective {
   }
 }
 
+/**
+ * Class representing a structured query expression. It extends the
+ * Expression class.
+ */
 export class StructuredQuery extends Expression {
   exprName = "StructuredQuery" as const;
 

@@ -439,3 +439,20 @@ test("override name of objects when serialising", async () => {
   );
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
 });
+
+test("Should load traces even if the constructor name changes (minified environments)", async () => {
+  const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
+  Object.defineProperty(llm.constructor, "name", {
+    value: "x",
+  });
+  const str = JSON.stringify(llm, null, 2);
+  console.log(str);
+
+  const llm2 = await load<Cohere>(
+    str,
+    { COHERE_API_KEY: "cohere-key" },
+    { "langchain/llms/cohere": { Cohere } }
+  );
+  console.log(JSON.stringify(llm2, null, 2));
+  expect(JSON.stringify(llm2, null, 2)).toBe(str);
+});

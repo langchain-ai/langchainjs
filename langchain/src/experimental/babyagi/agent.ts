@@ -10,11 +10,21 @@ import { TaskCreationChain } from "./task_creation.js";
 import { TaskExecutionChain } from "./task_execution.js";
 import { TaskPrioritizationChain } from "./task_prioritization.js";
 
+/**
+ * Interface defining the structure of a task. A task has a `taskID` and a
+ * `taskName`.
+ */
 export interface Task {
   taskID: string;
   taskName: string;
 }
 
+/**
+ * Interface defining the structure of the inputs for the `BabyAGI` class.
+ * It extends the `ChainInputs` interface, omitting the 'memory' and
+ * 'callbackManager' properties, and adds properties specific to
+ * `BabyAGI`.
+ */
 export interface BabyAGIInputs
   extends Omit<ChainInputs, "memory" | "callbackManager"> {
   creationChain: BaseChain;
@@ -24,7 +34,17 @@ export interface BabyAGIInputs
   maxIterations?: number;
 }
 
+/**
+ * Class responsible for managing tasks, including their creation,
+ * prioritization, and execution. It uses three chains for these
+ * operations: `creationChain`, `prioritizationChain`, and
+ * `executionChain`.
+ */
 export class BabyAGI extends BaseChain implements BabyAGIInputs {
+  static lc_name() {
+    return "BabyAGI";
+  }
+
   taskList: Task[];
 
   creationChain: BaseChain;
@@ -70,10 +90,19 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     return [];
   }
 
+  /**
+   * Adds a task to the task list.
+   * @param task The task to be added.
+   * @returns Promise resolving to void.
+   */
   async addTask(task: Task) {
     this.taskList.push(task);
   }
 
+  /**
+   * Prints the current task list to the console.
+   * @returns void
+   */
   printTaskList() {
     console.log("\x1b[95m\x1b[1m\n*****TASK LIST*****\n\x1b[0m\x1b[0m");
     for (const t of this.taskList) {
@@ -81,16 +110,35 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     }
   }
 
+  /**
+   * Prints the next task to the console.
+   * @param task The next task to be printed.
+   * @returns void
+   */
   printNextTask(task: Task) {
     console.log("\x1b[92m\x1b[1m\n*****NEXT TASK*****\n\x1b[0m\x1b[0m");
     console.log(`${task.taskID}: ${task.taskName}`);
   }
 
+  /**
+   * Prints the result of a task to the console.
+   * @param result The result of the task.
+   * @returns void
+   */
   printTaskResult(result: string) {
     console.log("\x1b[93m\x1b[1m\n*****TASK RESULT*****\n\x1b[0m\x1b[0m");
     console.log(result.trim());
   }
 
+  /**
+   * Generates the next tasks based on the result of the previous task, the
+   * task description, and the objective.
+   * @param result The result of the previous task.
+   * @param task_description The description of the task.
+   * @param objective The objective of the task.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns Promise resolving to an array of tasks without taskID.
+   */
   async getNextTasks(
     result: string,
     task_description: string,
@@ -115,6 +163,13 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
       .map((taskName) => ({ taskName }));
   }
 
+  /**
+   * Prioritizes the tasks based on the current task ID and the objective.
+   * @param thisTaskID The ID of the current task.
+   * @param objective The objective of the task.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns Promise resolving to an array of prioritized tasks.
+   */
   async prioritizeTasks(
     thisTaskID: number,
     objective: string,
@@ -144,6 +199,12 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     return prioritizedTaskList;
   }
 
+  /**
+   * Retrieves the top tasks that are most similar to the given query.
+   * @param query The query to search for.
+   * @param k The number of top tasks to retrieve.
+   * @returns Promise resolving to an array of top tasks.
+   */
   async getTopTasks(query: string, k = 5) {
     const results = await this.vectorstore.similaritySearch(query, k);
     if (!results) {
@@ -152,6 +213,13 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     return results.map((item) => String(item.metadata.task));
   }
 
+  /**
+   * Executes a task based on the objective and the task description.
+   * @param objective The objective of the task.
+   * @param task The task to be executed.
+   * @param runManager Optional CallbackManagerForChainRun instance.
+   * @returns Promise resolving to the result of the task execution as a string.
+   */
   async executeTask(
     objective: string,
     task: string,
@@ -227,6 +295,17 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     throw new Error("Method not implemented.");
   }
 
+  /**
+   * Static method to create a new BabyAGI instance from a
+   * BaseLanguageModel.
+   * @param llm BaseLanguageModel instance used to generate a new BabyAGI instance.
+   * @param vectorstore VectorStore instance used to store and retrieve vectors.
+   * @param executionChain Optional BaseChain instance used to execute tasks.
+   * @param verbose Optional boolean indicating whether to log verbose output.
+   * @param callbacks Optional callbacks to be used during the execution of tasks.
+   * @param rest Optional additional parameters.
+   * @returns A new instance of BabyAGI.
+   */
   static fromLLM({
     llm,
     vectorstore,

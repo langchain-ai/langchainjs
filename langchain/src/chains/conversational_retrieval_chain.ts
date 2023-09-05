@@ -23,6 +23,10 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:`;
 
+/**
+ * Interface for the input parameters of the
+ * ConversationalRetrievalQAChain class.
+ */
 export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
@@ -31,10 +35,19 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   inputKey?: string;
 }
 
+/**
+ * Class for conducting conversational question-answering tasks with a
+ * retrieval component. Extends the BaseChain class and implements the
+ * ConversationalRetrievalQAChainInput interface.
+ */
 export class ConversationalRetrievalQAChain
   extends BaseChain
   implements ConversationalRetrievalQAChainInput
 {
+  static lc_name() {
+    return "ConversationalRetrievalQAChain";
+  }
+
   inputKey = "question";
 
   chatHistoryKey = "chat_history";
@@ -67,6 +80,12 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /**
+   * Static method to convert the chat history input into a formatted
+   * string.
+   * @param chatHistory Chat history input which can be a string, an array of BaseMessage instances, or an array of string arrays.
+   * @returns A formatted string representing the chat history.
+   */
   static getChatHistoryString(
     chatHistory: string | BaseMessage[] | string[][]
   ) {
@@ -176,6 +195,16 @@ export class ConversationalRetrievalQAChain
     throw new Error("Not implemented.");
   }
 
+  /**
+   * Static method to create a new ConversationalRetrievalQAChain from a
+   * BaseLanguageModel and a BaseRetriever.
+   * @param llm {@link BaseLanguageModel} instance used to generate a new question.
+   * @param retriever {@link BaseRetriever} instance used to retrieve relevant documents.
+   * @param options.returnSourceDocuments Whether to return source documents in the final output
+   * @param options.questionGeneratorChainOptions Options to initialize the standalone question generation chain used as the first internal step
+   * @param options.qaChainOptions {@link QAChainParams} used to initialize the QA chain used as the second internal step
+   * @returns A new instance of ConversationalRetrievalQAChain.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     retriever: BaseRetriever,
@@ -186,11 +215,11 @@ export class ConversationalRetrievalQAChain
       questionGeneratorTemplate?: string;
       /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
-      qaChainOptions?: QAChainParams;
       questionGeneratorChainOptions?: {
         llm?: BaseLanguageModel;
         template?: string;
       };
+      qaChainOptions?: QAChainParams;
     } & Omit<
       ConversationalRetrievalQAChainInput,
       "retriever" | "combineDocumentsChain" | "questionGeneratorChain"

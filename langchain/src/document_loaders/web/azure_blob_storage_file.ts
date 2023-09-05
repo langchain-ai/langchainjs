@@ -8,17 +8,31 @@ import {
   UnstructuredLoaderOptions,
 } from "../fs/unstructured.js";
 
+/**
+ * Interface representing the configuration for accessing a specific file
+ * in Azure Blob Storage.
+ */
 interface AzureBlobStorageFileConfig {
   connectionString: string;
   container: string;
   blobName: string;
 }
 
+/**
+ * Interface representing the configuration for the
+ * AzureBlobStorageFileLoader. It contains the Azure Blob Storage file
+ * configuration and the options for the UnstructuredLoader.
+ */
 interface AzureBlobStorageFileLoaderConfig {
   azureConfig: AzureBlobStorageFileConfig;
   unstructuredConfig?: UnstructuredLoaderOptions;
 }
 
+/**
+ * Class representing a document loader that loads a specific file from
+ * Azure Blob Storage. It extends the BaseDocumentLoader class and
+ * implements the DocumentLoader interface.
+ */
 export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
   private readonly connectionString: string;
 
@@ -39,6 +53,13 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
     this.unstructuredConfig = unstructuredConfig;
   }
 
+  /**
+   * Method to load a specific file from Azure Blob Storage. It creates a
+   * temporary directory, constructs the file path, downloads the file, and
+   * loads the documents using the UnstructuredLoader. The loaded documents
+   * are returned, and the temporary directory is deleted.
+   * @returns An array of documents loaded from the file in Azure Blob Storage.
+   */
   public async load() {
     const tempDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "azureblobfileloader-")

@@ -78,6 +78,11 @@ function withConnectAttributes(
   return result;
 }
 
+/**
+ * Class for interacting with SingleStoreDB, a high-performance
+ * distributed SQL database. It provides vector storage and vector
+ * functions.
+ */
 export class SingleStoreVectorStore extends VectorStore {
   connectionPool: Pool;
 
@@ -105,6 +110,10 @@ export class SingleStoreVectorStore extends VectorStore {
     this.distanceMetric = config.distanceMetric ?? "DOT_PRODUCT";
   }
 
+  /**
+   * Creates a new table in the SingleStoreDB database if it does not
+   * already exist.
+   */
   async createTableIfNotExists(): Promise<void> {
     await this.connectionPool
       .execute(`CREATE TABLE IF NOT EXISTS ${this.tableName} (
@@ -113,16 +122,28 @@ export class SingleStoreVectorStore extends VectorStore {
       ${this.metadataColumnName} JSON);`);
   }
 
+  /**
+   * Ends the connection to the SingleStoreDB database.
+   */
   async end(): Promise<void> {
     return this.connectionPool.end();
   }
 
+  /**
+   * Adds new documents to the SingleStoreDB database.
+   * @param documents An array of Document objects.
+   */
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     const vectors = await this.embeddings.embedDocuments(texts);
     return this.addVectors(vectors, documents);
   }
 
+  /**
+   * Adds new vectors to the SingleStoreDB database.
+   * @param vectors An array of vectors.
+   * @param documents An array of Document objects.
+   */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     await this.createTableIfNotExists();
     const { tableName } = this;
@@ -147,6 +168,14 @@ export class SingleStoreVectorStore extends VectorStore {
     );
   }
 
+  /**
+   * Performs a similarity search on the vectors stored in the SingleStoreDB
+   * database.
+   * @param query An array of numbers representing the query vector.
+   * @param k The number of nearest neighbors to return.
+   * @param filter Optional metadata to filter the vectors by.
+   * @returns Top matching vectors with score
+   */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
@@ -220,6 +249,15 @@ export class SingleStoreVectorStore extends VectorStore {
     return result;
   }
 
+  /**
+   * Creates a new instance of the SingleStoreVectorStore class from a list
+   * of texts.
+   * @param texts An array of strings.
+   * @param metadatas An array of metadata objects.
+   * @param embeddings An Embeddings object.
+   * @param dbConfig A SingleStoreVectorStoreConfig object.
+   * @returns A new SingleStoreVectorStore instance
+   */
   static async fromTexts(
     texts: string[],
     metadatas: object[],
@@ -236,6 +274,14 @@ export class SingleStoreVectorStore extends VectorStore {
     return SingleStoreVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
+  /**
+   * Creates a new instance of the SingleStoreVectorStore class from a list
+   * of Document objects.
+   * @param docs An array of Document objects.
+   * @param embeddings An Embeddings object.
+   * @param dbConfig A SingleStoreVectorStoreConfig object.
+   * @returns A new SingleStoreVectorStore instance
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,

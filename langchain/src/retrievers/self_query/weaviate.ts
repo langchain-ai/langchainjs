@@ -11,7 +11,7 @@ import {
 } from "../../chains/query_constructor/ir.js";
 import { WeaviateFilter, WeaviateStore } from "../../vectorstores/weaviate.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty } from "./utils.js";
+import { isFilterEmpty, isString, isInt, isFloat } from "./utils.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
@@ -50,20 +50,11 @@ export type WeaviateStructuredQueryResult = {
   };
 };
 
-function isInt(value: unknown): boolean {
-  const numberValue = parseFloat(value as string);
-  return !Number.isNaN(numberValue) && numberValue % 1 === 0;
-}
-
-function isFloat(value: unknown): boolean {
-  const numberValue = parseFloat(value as string);
-  return !Number.isNaN(numberValue) && numberValue % 1 !== 0;
-}
-
-function isString(value: unknown): boolean {
-  return typeof value === "string" && Number.isNaN(parseFloat(value as string));
-}
-
+/**
+ * A class that translates or converts data into a format that can be used
+ * with Weaviate, a vector search engine. It extends the `BaseTranslator`
+ * class and provides specific implementation for Weaviate.
+ */
 export class WeaviateTranslator<
   T extends WeaviateStore
 > extends BaseTranslator<T> {
@@ -82,6 +73,13 @@ export class WeaviateTranslator<
     Comparators.gte,
   ];
 
+  /**
+   * Formats the given function into a string representation. Throws an
+   * error if the function is not a known comparator or operator, or if it
+   * is not allowed.
+   * @param func The function to format, which can be an Operator or Comparator.
+   * @returns A string representation of the function.
+   */
   formatFunction(func: Operator | Comparator): string {
     if (func in Comparators) {
       if (
@@ -121,6 +119,12 @@ export class WeaviateTranslator<
     return dict[func as Comparator | AllowedOperator];
   }
 
+  /**
+   * Visits an operation and returns a WeaviateOperationResult. The
+   * operation's arguments are visited and the operator is formatted.
+   * @param operation The operation to visit.
+   * @returns A WeaviateOperationResult.
+   */
   visitOperation(operation: Operation): this["VisitOperationOutput"] {
     const args = operation.args?.map((arg) =>
       arg.accept(this as Visitor)
@@ -131,6 +135,13 @@ export class WeaviateTranslator<
     };
   }
 
+  /**
+   * Visits a comparison and returns a WeaviateComparisonResult. The
+   * comparison's value is checked for type and the comparator is formatted.
+   * Throws an error if the value type is not supported.
+   * @param comparison The comparison to visit.
+   * @returns A WeaviateComparisonResult.
+   */
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
     if (isString(comparison.value)) {
       return {
@@ -157,6 +168,12 @@ export class WeaviateTranslator<
     throw new Error("Value type is not supported");
   }
 
+  /**
+   * Visits a structured query and returns a WeaviateStructuredQueryResult.
+   * If the query has a filter, it is visited.
+   * @param query The structured query to visit.
+   * @returns A WeaviateStructuredQueryResult.
+   */
   visitStructuredQuery(
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
@@ -169,6 +186,17 @@ export class WeaviateTranslator<
     return nextArg;
   }
 
+  /**
+   * Merges two filters into one. If both filters are empty, returns
+   * undefined. If one filter is empty or the merge type is 'replace',
+   * returns the other filter. If the merge type is 'and' or 'or', returns a
+   * new filter with the merged results. Throws an error for unknown merge
+   * types.
+   * @param defaultFilter The default filter to merge.
+   * @param generatedFilter The generated filter to merge.
+   * @param mergeType The type of merge to perform. Can be 'and', 'or', or 'replace'. Defaults to 'and'.
+   * @returns A merged WeaviateFilter, or undefined if both filters are empty.
+   */
   mergeFilters(
     defaultFilter: WeaviateFilter | undefined,
     generatedFilter: WeaviateFilter | undefined,

@@ -63,7 +63,7 @@ test("Test ChatOpenAI Generate throws when one of the calls fails", async () => 
     chat.generate([[message], [message]], {
       signal: AbortSignal.timeout(10),
     })
-  ).rejects.toThrow("Cancel: canceled");
+  ).rejects.toThrow();
 });
 
 test("Test ChatOpenAI tokenUsage", async () => {
@@ -242,7 +242,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   await expect(() =>
     model.call([new HumanMessage("Print hello world")], {
-      options: { timeout: 10, adapter: undefined },
+      options: { timeout: 10 },
     })
   ).rejects.toThrow();
 }, 5000);
@@ -266,7 +266,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call([new HumanMessage("Print hello world")], {
-      options: { signal: controller.signal, adapter: undefined },
+      options: { signal: controller.signal },
     });
 
     controller.abort();
@@ -385,6 +385,22 @@ test("Test ChatOpenAI stream method with early break", async () => {
       break;
     }
   }
+});
+
+test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () => {
+  await expect(async () => {
+    const model = new ChatOpenAI({
+      maxTokens: 50,
+      modelName: "gpt-3.5-turbo",
+      timeout: 1,
+    });
+    const stream = await model.stream(
+      "How is your day going? Be extremely verbose."
+    );
+    for await (const chunk of stream) {
+      console.log(chunk);
+    }
+  }).rejects.toThrow();
 });
 
 test("Function calling with streaming", async () => {

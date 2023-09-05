@@ -2,6 +2,10 @@ import { chunkArray } from "../util/chunk.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
+/**
+ * Interface that extends EmbeddingsParams and defines additional
+ * parameters specific to the CohereEmbeddings class.
+ */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
   modelName: string;
 
@@ -37,16 +41,19 @@ export class CohereEmbeddings
       apiKey?: string;
     }
   ) {
-    super(fields ?? {});
+    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
-    const apiKey = fields?.apiKey || getEnvironmentVariable("COHERE_API_KEY");
+    super(fieldsWithDefaults);
+
+    const apiKey =
+      fieldsWithDefaults?.apiKey || getEnvironmentVariable("COHERE_API_KEY");
 
     if (!apiKey) {
       throw new Error("Cohere API key not found");
     }
 
-    this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
   }
 
@@ -58,18 +65,24 @@ export class CohereEmbeddings
   async embedDocuments(texts: string[]): Promise<number[][]> {
     await this.maybeInitClient();
 
-    const subPrompts = chunkArray(texts, this.batchSize);
+    const batches = chunkArray(texts, this.batchSize);
+
+    const batchRequests = batches.map((batch) =>
+      this.embeddingWithRetry({
+        model: this.modelName,
+        texts: batch,
+      })
+    );
+
+    const batchResponses = await Promise.all(batchRequests);
 
     const embeddings: number[][] = [];
 
-    for (let i = 0; i < subPrompts.length; i += 1) {
-      const input = subPrompts[i];
-      const { body } = await this.embeddingWithRetry({
-        model: this.modelName,
-        texts: input,
-      });
-      for (let j = 0; j < input.length; j += 1) {
-        embeddings.push(body.embeddings[j]);
+    for (let i = 0; i < batchResponses.length; i += 1) {
+      const batch = batches[i];
+      const { body: batchResponse } = batchResponses[i];
+      for (let j = 0; j < batch.length; j += 1) {
+        embeddings.push(batchResponse.embeddings[j]);
       }
     }
 

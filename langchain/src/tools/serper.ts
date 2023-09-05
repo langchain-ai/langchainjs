@@ -1,6 +1,10 @@
 import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
+/**
+ * Defines the parameters that can be passed to the Serper class during
+ * instantiation. It includes `gl` and `hl` which are optional.
+ */
 export type SerperParameters = {
   gl?: string;
   hl?: string;
@@ -14,6 +18,15 @@ export type SerperParameters = {
  * To use, you should have the SERPER_API_KEY environment variable set.
  */
 export class Serper extends Tool {
+  static lc_name() {
+    return "Serper";
+  }
+
+  /**
+   * Converts the Serper instance to JSON. This method is not implemented
+   * and will throw an error if called.
+   * @returns Throws an error.
+   */
   toJSON() {
     return this.toJSONNotImplemented();
   }

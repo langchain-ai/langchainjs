@@ -12,13 +12,25 @@ export const UnknownHandling = {
   Error: "error",
 } as const;
 // eslint-disable-next-line @typescript-eslint/no-redeclare
+/**
+ * An enumeration of possible handling strategies for unknown file types.
+ */
 export type UnknownHandling =
   (typeof UnknownHandling)[keyof typeof UnknownHandling];
 
+/**
+ * A mapping of file extensions to loader functions. Each loader function
+ * takes a file path as a parameter and returns a `BaseDocumentLoader`
+ * instance.
+ */
 export interface LoadersMapping {
   [extension: string]: (filePath: string) => BaseDocumentLoader;
 }
 
+/**
+ * A document loader that loads documents from a directory. It extends the
+ * `BaseDocumentLoader` class and implements the `load()` method.
+ */
 export class DirectoryLoader extends BaseDocumentLoader {
   constructor(
     public directoryPath: string,
@@ -40,6 +52,16 @@ export class DirectoryLoader extends BaseDocumentLoader {
     }
   }
 
+  /**
+   * Loads the documents from the directory. If a file is a directory and
+   * `recursive` is `true`, it recursively loads documents from the
+   * subdirectory. If a file is a file, it checks if there is a
+   * corresponding loader function for the file extension in the `loaders`
+   * mapping. If there is, it loads the documents. If there is no
+   * corresponding loader function and `unknown` is set to `Warn`, it logs a
+   * warning message. If `unknown` is set to `Error`, it throws an error.
+   * @returns A promise that resolves to an array of loaded documents.
+   */
   public async load(): Promise<Document[]> {
     const { readdir, extname, resolve } = await DirectoryLoader.imports();
     const files = await readdir(this.directoryPath, { withFileTypes: true });
@@ -84,6 +106,13 @@ export class DirectoryLoader extends BaseDocumentLoader {
     return documents;
   }
 
+  /**
+   * Imports the necessary functions from the `node:path` and
+   * `node:fs/promises` modules. It is used to dynamically import the
+   * functions when needed. If the import fails, it throws an error
+   * indicating that the modules failed to load.
+   * @returns A promise that resolves to an object containing the imported functions.
+   */
   static async imports(): Promise<{
     readdir: typeof ReaddirT;
     extname: typeof ExtnameT;

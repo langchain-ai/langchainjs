@@ -12,16 +12,27 @@ import {
 } from "../../schema/output_parser.js";
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 import { ChatGeneration } from "../../schema/index.js";
+import { AnthropicFunctions } from "../../experimental/chat_models/anthropic_functions.js";
 
+/**
+ * Type representing the input for creating a structured output chain. It
+ * extends the LLMChainInput type and includes an additional
+ * 'outputSchema' field representing the JSON schema for the expected
+ * output.
+ */
 export type StructuredOutputChainInput = Omit<
   LLMChainInput,
   "outputParser" | "llm"
 > & {
   outputSchema: JsonSchema7Type;
   prompt: BasePromptTemplate;
-  llm?: ChatOpenAI;
+  llm?: ChatOpenAI | AnthropicFunctions;
 };
 
+/**
+ * Class that extends the BaseLLMOutputParser class. It provides
+ * functionality for parsing the structured output based on a JSON schema.
+ */
 export class FunctionCallStructuredOutputParser<
   T extends z.AnyZodObject
 > extends BaseLLMOutputParser<z.infer<T>> {
@@ -36,6 +47,14 @@ export class FunctionCallStructuredOutputParser<
     this.jsonSchemaValidator = new Validator(schema, "7");
   }
 
+  /**
+   * Method to parse the result of chat generations. It first parses the
+   * result using the functionOutputParser, then validates the parsed result
+   * against the JSON schema. If the result is valid, it returns the parsed
+   * result. Otherwise, it throws an OutputParserException.
+   * @param generations Array of ChatGeneration instances to be parsed.
+   * @returns The parsed result if it is valid according to the JSON schema.
+   */
   async parseResult(generations: ChatGeneration[]) {
     const initialResult = await this.functionOutputParser.parseResult(
       generations

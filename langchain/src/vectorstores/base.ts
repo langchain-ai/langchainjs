@@ -7,9 +7,15 @@ import {
   Callbacks,
 } from "../callbacks/manager.js";
 
+/**
+ * Type for options when adding a document to the VectorStore.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
+/**
+ * Type for options when performing a maximal marginal relevance search.
+ */
 export type MaxMarginalRelevanceSearchOptions<FilterType> = {
   k: number;
   fetchK?: number;
@@ -17,11 +23,18 @@ export type MaxMarginalRelevanceSearchOptions<FilterType> = {
   filter?: FilterType;
 };
 
+/**
+ * Type for options when performing a maximal marginal relevance search
+ * with the VectorStoreRetriever.
+ */
 export type VectorStoreRetrieverMMRSearchKwargs = {
   fetchK?: number;
   lambda?: number;
 };
 
+/**
+ * Type for input when creating a VectorStoreRetriever instance.
+ */
 export type VectorStoreRetrieverInput<V extends VectorStore> =
   BaseRetrieverInput &
     (
@@ -40,9 +53,17 @@ export type VectorStoreRetrieverInput<V extends VectorStore> =
         }
     );
 
+/**
+ * Class for performing document retrieval from a VectorStore. Can perform
+ * similarity search or maximal marginal relevance search.
+ */
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
 > extends BaseRetriever {
+  static lc_name() {
+    return "VectorStoreRetriever";
+  }
+
   get lc_namespace() {
     return ["langchain", "retrievers", "base"];
   }
@@ -108,6 +129,11 @@ export class VectorStoreRetriever<
   }
 }
 
+/**
+ * Abstract class representing a store of vectors. Provides methods for
+ * adding vectors and documents, deleting from the store, and searching
+ * the store.
+ */
 export abstract class VectorStore extends Serializable {
   declare FilterType: object | string;
 
@@ -257,6 +283,10 @@ export abstract class VectorStore extends Serializable {
   }
 }
 
+/**
+ * Abstract class extending VectorStore with functionality for saving and
+ * loading the vector store.
+ */
 export abstract class SaveableVectorStore extends VectorStore {
   abstract save(directory: string): Promise<void>;
 

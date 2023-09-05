@@ -9,6 +9,8 @@ import {
   LLMResult,
   RUN_KEY,
   ChatGenerationChunk,
+  BaseMessageLike,
+  coerceMessageLikeToMessage,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
@@ -23,6 +25,9 @@ import {
 } from "../callbacks/manager.js";
 import { RunnableConfig } from "../schema/runnable.js";
 
+/**
+ * Represents a serialized chat model.
+ */
 export type SerializedChatModel = {
   _model: string;
   _type: string;
@@ -30,16 +35,30 @@ export type SerializedChatModel = {
 } & Record<string, any>;
 
 // todo?
+/**
+ * Represents a serialized large language model.
+ */
 export type SerializedLLM = {
   _model: string;
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+/**
+ * Represents the parameters for a base chat model.
+ */
 export type BaseChatModelParams = BaseLanguageModelParams;
 
+/**
+ * Represents the call options for a base chat model.
+ */
 export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 
+/**
+ * Creates a transform stream for encoding chat message chunks.
+ * @deprecated Use {@link BytesOutputParser} instead
+ * @returns A TransformStream instance that encodes chat message chunks.
+ */
 export function createChatMessageChunkEncoderStream() {
   const textEncoder = new TextEncoder();
   return new TransformStream<BaseMessageChunk>({
@@ -49,6 +68,10 @@ export function createChatMessageChunkEncoderStream() {
   });
 }
 
+/**
+ * Base class for chat models. It extends the BaseLanguageModel class and
+ * provides methods for generating chat based on input messages.
+ */
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
 > extends BaseLanguageModel<BaseMessageChunk, CallOptions> {
@@ -78,6 +101,12 @@ export abstract class BaseChatModel<
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
 
+  /**
+   * Invokes the chat model with a single input.
+   * @param input The input for the language model.
+   * @param options The call options.
+   * @returns A Promise that resolves to a BaseMessageChunk.
+   */
   async invoke(
     input: BaseLanguageModelInput,
     options?: CallOptions
@@ -170,8 +199,15 @@ export abstract class BaseChatModel<
     }
   }
 
+  /**
+   * Generates chat based on the input messages.
+   * @param messages An array of arrays of BaseMessage instances.
+   * @param options The call options or an array of stop sequences.
+   * @param callbacks The callbacks for the language model.
+   * @returns A Promise that resolves to an LLMResult.
+   */
   async generate(
-    messages: BaseMessage[][],
+    messages: BaseMessageLike[][],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
@@ -182,6 +218,10 @@ export abstract class BaseChatModel<
     } else {
       parsedOptions = options;
     }
+
+    const baseMessages = messages.map((messageList) =>
+      messageList.map(coerceMessageLikeToMessage)
+    );
 
     const [runnableConfig, callOptions] =
       this._separateRunnableConfigFromCallOptions(parsedOptions);
@@ -201,14 +241,14 @@ export abstract class BaseChatModel<
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
-      messages,
+      baseMessages,
       undefined,
       undefined,
       extra
     );
     // generate results
     const results = await Promise.allSettled(
-      messages.map((messageList, i) =>
+      baseMessages.map((messageList, i) =>
         this._generate(
           messageList,
           { ...callOptions, promptIndex: i },
@@ -266,6 +306,13 @@ export abstract class BaseChatModel<
 
   abstract _llmType(): string;
 
+  /**
+   * Generates a prompt based on the input prompt values.
+   * @param promptValues An array of BasePromptValue instances.
+   * @param options The call options or an array of stop sequences.
+   * @param callbacks The callbacks for the language model.
+   * @returns A Promise that resolves to an LLMResult.
+   */
   async generatePrompt(
     promptValues: BasePromptValue[],
     options?: string[] | CallOptions,
@@ -283,16 +330,34 @@ export abstract class BaseChatModel<
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
+  /**
+   * Makes a single call to the chat model.
+   * @param messages An array of BaseMessage instances.
+   * @param options The call options or an array of stop sequences.
+   * @param callbacks The callbacks for the language model.
+   * @returns A Promise that resolves to a BaseMessage.
+   */
   async call(
-    messages: BaseMessage[],
+    messages: BaseMessageLike[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {
-    const result = await this.generate([messages], options, callbacks);
+    const result = await this.generate(
+      [messages.map(coerceMessageLikeToMessage)],
+      options,
+      callbacks
+    );
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
   }
 
+  /**
+   * Makes a single call to the chat model with a prompt value.
+   * @param promptValue The value of the prompt.
+   * @param options The call options or an array of stop sequences.
+   * @param callbacks The callbacks for the language model.
+   * @returns A Promise that resolves to a BaseMessage.
+   */
   async callPrompt(
     promptValue: BasePromptValue,
     options?: string[] | CallOptions,
@@ -302,6 +367,13 @@ export abstract class BaseChatModel<
     return this.call(promptMessages, options, callbacks);
   }
 
+  /**
+   * Predicts the next message based on the input messages.
+   * @param messages An array of BaseMessage instances.
+   * @param options The call options or an array of stop sequences.
+   * @param callbacks The callbacks for the language model.
+   * @returns A Promise that resolves to a BaseMessage.
+   */
   async predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,
@@ -310,6 +382,13 @@ export abstract class BaseChatModel<
     return this.call(messages, options, callbacks);
   }
 
+  /**
+   * Predicts the next message based on a text input.
+   * @param text The text input.
+   * @param options The call options or an array of stop sequences.
+   * @param callbacks The callbacks for the language model.
+   * @returns A Promise that resolves to a string.
+   */
   async predict(
     text: string,
     options?: string[] | CallOptions,
@@ -321,6 +400,10 @@ export abstract class BaseChatModel<
   }
 }
 
+/**
+ * An abstract class that extends BaseChatModel and provides a simple
+ * implementation of _generate.
+ */
 export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
     messages: BaseMessage[],

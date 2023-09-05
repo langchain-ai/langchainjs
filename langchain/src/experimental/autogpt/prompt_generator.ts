@@ -3,6 +3,10 @@ import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js"
 
 import { ObjectTool, FINISH_NAME } from "./schema.js";
 
+/**
+ * Class that generates prompts for generative agents. It maintains a list
+ * of constraints, commands, resources, and performance evaluations.
+ */
 export class PromptGenerator {
   constraints: string[];
 
@@ -31,10 +35,20 @@ export class PromptGenerator {
     };
   }
 
+  /**
+   * Adds a constraint to the list of constraints.
+   * @param constraint The constraint to add.
+   * @returns void
+   */
   add_constraint(constraint: string): void {
     this.constraints.push(constraint);
   }
 
+  /**
+   * Adds a tool to the list of commands.
+   * @param tool The tool to add.
+   * @returns void
+   */
   add_tool(tool: ObjectTool): void {
     this.commands.push(tool);
   }
@@ -47,10 +61,20 @@ export class PromptGenerator {
     return output;
   }
 
+  /**
+   * Adds a resource to the list of resources.
+   * @param resource The resource to add.
+   * @returns void
+   */
   add_resource(resource: string): void {
     this.resources.push(resource);
   }
 
+  /**
+   * Adds a performance evaluation to the list of performance evaluations.
+   * @param evaluation The performance evaluation to add.
+   * @returns void
+   */
   add_performance_evaluation(evaluation: string): void {
     this.performance_evaluation.push(evaluation);
   }
@@ -74,6 +98,11 @@ export class PromptGenerator {
     return items.map((item, i) => `${i + 1}. ${item}`).join("\n");
   }
 
+  /**
+   * Generates a prompt string that includes the constraints, commands,
+   * resources, performance evaluations, and response format.
+   * @returns A string representing the prompt.
+   */
   generate_prompt_string(): string {
     const formatted_response_format = JSON.stringify(
       this.response_format,
@@ -98,6 +127,9 @@ export class PromptGenerator {
   }
 }
 
+/**
+ * Function that generates a prompt string for a given list of tools.
+ */
 export function getPrompt(tools: ObjectTool[]): string {
   const prompt_generator = new PromptGenerator();
 

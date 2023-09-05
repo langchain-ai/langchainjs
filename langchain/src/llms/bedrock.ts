@@ -1,46 +1,69 @@
 import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { HttpRequest } from "@aws-sdk/protocol-http";
+import { EventStreamCodec } from "@smithy/eventstream-codec";
+import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
 import { Sha256 } from "@aws-crypto/sha256-js";
 import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { GenerationChunk } from "../schema/index.js";
 
 type Dict = { [key: string]: unknown };
 type CredentialType = AwsCredentialIdentity | Provider<AwsCredentialIdentity>;
 
+/**
+ * A helper class used within the `Bedrock` class. It is responsible for
+ * preparing the input and output for the Bedrock service. It formats the
+ * input prompt based on the provider (e.g., "anthropic", "ai21",
+ * "amazon") and extracts the generated text from the service response.
+ */
 class BedrockLLMInputOutputAdapter {
   /** Adapter class to prepare the inputs from Langchain to a format
   that LLM model expects. Also, provides a helper function to extract
   the generated text from the model response. */
 
-  static prepareInput(provider: string, prompt: string): Dict {
+  static prepareInput(
+    provider: string,
+    prompt: string,
+    maxTokens = 50,
+    temperature = 0
+  ): Dict {
     const inputBody: Dict = {};
 
-    if (provider === "anthropic" || provider === "ai21") {
+    if (provider === "anthropic") {
       inputBody.prompt = prompt;
+      inputBody.max_tokens_to_sample = maxTokens;
+      inputBody.temperature = temperature;
+    } else if (provider === "ai21") {
+      inputBody.prompt = prompt;
+      inputBody.maxTokens = maxTokens;
+      inputBody.temperature = temperature;
     } else if (provider === "amazon") {
       inputBody.inputText = prompt;
-      inputBody.textGenerationConfig = {};
-    } else {
-      inputBody.inputText = prompt;
+      inputBody.textGenerationConfig = {
+        maxTokenCount: maxTokens,
+        temperature,
+      };
     }
-
-    if (provider === "anthropic" && !("max_tokens_to_sample" in inputBody)) {
-      inputBody.max_tokens_to_sample = 50;
-    }
-
     return inputBody;
   }
 
+  /**
+   * Extracts the generated text from the service response.
+   * @param provider The provider name.
+   * @param responseBody The response body from the service.
+   * @returns The generated text.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static prepareOutput(provider: string, responseBody: any): string {
     if (provider === "anthropic") {
       return responseBody.completion;
     } else if (provider === "ai21") {
-      return responseBody.completions[0].data.text;
+      return responseBody.data.text;
     }
-    return responseBody.results[0].outputText;
+    return responseBody.outputText;
   }
 }
 
@@ -76,6 +99,15 @@ export interface BedrockInput {
   fetchFn?: typeof fetch;
 }
 
+/**
+ * A type of Large Language Model (LLM) that interacts with the Bedrock
+ * service. It extends the base `LLM` class and implements the
+ * `BedrockInput` interface. The class is designed to authenticate and
+ * interact with the Bedrock service, which is a part of Amazon Web
+ * Services (AWS). It uses AWS credentials for authentication and can be
+ * configured with various parameters such as the model to use, the AWS
+ * region, and the maximum number of tokens to generate.
+ */
 export class Bedrock extends LLM implements BedrockInput {
   model = "amazon.titan-tg1-large";
 
@@ -88,6 +120,8 @@ export class Bedrock extends LLM implements BedrockInput {
   maxTokens?: number | undefined = undefined;
 
   fetchFn: typeof fetch;
+
+  codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {};
@@ -131,17 +165,39 @@ export class Bedrock extends LLM implements BedrockInput {
     Example:
       response = model.call("Tell me a joke.")
   */
-  async _call(prompt: string): Promise<string> {
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
+    const chunks = [];
+    for await (const chunk of this._streamResponseChunks(
+      prompt,
+      options,
+      runManager
+    )) {
+      chunks.push(chunk);
+    }
+    return chunks.map((chunk) => chunk.text).join("");
+  }
+
+  async *_streamResponseChunks(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
     const provider = this.model.split(".")[0];
     const service = "bedrock";
 
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
-      prompt
+      prompt,
+      this.maxTokens,
+      this.temperature
     );
 
     const url = new URL(
-      `https://${service}.${this.region}.amazonaws.com/model/${this.model}/invoke`
+      `https://${service}.${this.region}.amazonaws.com/model/${this.model}/invoke-with-response-stream`
     );
 
     const request = new HttpRequest({
@@ -169,11 +225,15 @@ export class Bedrock extends LLM implements BedrockInput {
     const signedRequest = await signer.sign(request);
 
     // Send request to AWS using the low-level fetch API
-    const response = await this.fetchFn(url, {
-      headers: signedRequest.headers,
-      body: signedRequest.body,
-      method: signedRequest.method,
-    });
+    const response = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () =>
+        this.fetchFn(url, {
+          headers: signedRequest.headers,
+          body: signedRequest.body,
+          method: signedRequest.method,
+        })
+    );
 
     if (response.status < 200 || response.status >= 300) {
       throw Error(
@@ -183,13 +243,40 @@ export class Bedrock extends LLM implements BedrockInput {
       );
     }
 
-    const responseJson = await response.json();
+    const reader = response.body?.getReader();
+    for await (const chunk of this._readChunks(reader)) {
+      const event = this.codec.decode(chunk);
+      if (
+        event.headers[":event-type"].value !== "chunk" ||
+        event.headers[":content-type"].value !== "application/json"
+      ) {
+        throw Error(`Failed to get event chunk: got ${chunk}`);
+      }
+      const body = JSON.parse(
+        Buffer.from(
+          JSON.parse(new TextDecoder("utf-8").decode(event.body)).bytes,
+          "base64"
+        ).toString()
+      );
+      const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, body);
+      yield new GenerationChunk({
+        text,
+        generationInfo: {},
+      });
+      await runManager?.handleLLMNewToken(text);
+    }
+  }
 
-    const text = BedrockLLMInputOutputAdapter.prepareOutput(
-      provider,
-      responseJson
-    );
-
-    return text;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _readChunks(reader: any) {
+    return {
+      async *[Symbol.asyncIterator]() {
+        let readResult = await reader.read();
+        while (!readResult.done) {
+          yield readResult.value;
+          readResult = await reader.read();
+        }
+      },
+    };
   }
 }

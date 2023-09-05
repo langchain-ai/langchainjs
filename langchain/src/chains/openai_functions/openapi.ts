@@ -1,4 +1,4 @@
-import { ChatCompletionFunctions } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
@@ -16,7 +16,11 @@ import {
 } from "../../prompts/chat.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
+import { AnthropicFunctions } from "../../experimental/chat_models/anthropic_functions.js";
 
+/**
+ * Type representing a function for executing OpenAPI requests.
+ */
 type OpenAPIExecutionMethod = (
   name: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,6 +31,13 @@ type OpenAPIExecutionMethod = (
   }
 ) => Promise<string>;
 
+/**
+ * Formats a URL by replacing path parameters with their corresponding
+ * values.
+ * @param url The URL to format.
+ * @param pathParams The path parameters to replace in the URL.
+ * @returns The formatted URL.
+ */
 function formatURL(url: string, pathParams: Record<string, string>): string {
   const expectedPathParamNames = [...url.matchAll(/{(.*?)}/g)].map(
     (match) => match[1]
@@ -81,6 +92,12 @@ function formatURL(url: string, pathParams: Record<string, string>): string {
   return formattedUrl;
 }
 
+/**
+ * Converts OpenAPI parameters to JSON schema format.
+ * @param params The OpenAPI parameters to convert.
+ * @param spec The OpenAPI specification that contains the parameters.
+ * @returns The JSON schema representation of the OpenAPI parameters.
+ */
 function convertOpenAPIParamsToJSONSchema(
   params: OpenAPIV3_1.ParameterObject[],
   spec: OpenAPISpec
@@ -129,6 +146,12 @@ function convertOpenAPIParamsToJSONSchema(
 }
 
 // OpenAI throws errors on extraneous schema properties, e.g. if "required" is set on individual ones
+/**
+ * Converts OpenAPI schemas to JSON schema format.
+ * @param schema The OpenAPI schema to convert.
+ * @param spec The OpenAPI specification that contains the schema.
+ * @returns The JSON schema representation of the OpenAPI schema.
+ */
 function convertOpenAPISchemaToJSONSchema(
   schema: OpenAPIV3_1.SchemaObject,
   spec: OpenAPISpec
@@ -167,8 +190,13 @@ function convertOpenAPISchemaToJSONSchema(
   );
 }
 
+/**
+ * Converts an OpenAPI specification to OpenAI functions.
+ * @param spec The OpenAPI specification to convert.
+ * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
+ */
 function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
-  openAIFunctions: ChatCompletionFunctions[];
+  openAIFunctions: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {
   if (!spec.document.paths) {
@@ -246,16 +274,17 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
           };
         }
       }
-      const openAIFunction: ChatCompletionFunctions = {
-        name: OpenAPISpec.getCleanedOperationId(operation, path, method),
-        description: operation.description ?? operation.summary ?? "",
-        parameters: {
-          type: "object",
-          properties: requestArgsSchema,
-          // All remaining top-level parameters are required
-          required: Object.keys(requestArgsSchema),
-        },
-      };
+      const openAIFunction: OpenAIClient.Chat.ChatCompletionCreateParams.Function =
+        {
+          name: OpenAPISpec.getCleanedOperationId(operation, path, method),
+          description: operation.description ?? operation.summary ?? "",
+          parameters: {
+            type: "object",
+            properties: requestArgsSchema,
+            // All remaining top-level parameters are required
+            required: Object.keys(requestArgsSchema),
+          },
+        };
 
       openAIFunctions.push(openAIFunction);
       const baseUrl = (spec.baseUrl ?? "").endsWith("/")
@@ -346,13 +375,23 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
   };
 }
 
+/**
+ * Type representing a function for executing simple requests.
+ */
 type SimpleRequestChainExecutionMethod = (
   name: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestArgs: Record<string, any>
 ) => Promise<string>;
 
+/**
+ * A chain for making simple API requests.
+ */
 class SimpleRequestChain extends BaseChain {
+  static lc_name() {
+    return "SimpleRequestChain";
+  }
+
   private requestMethod: SimpleRequestChainExecutionMethod;
 
   inputKey = "function";
@@ -389,8 +428,11 @@ class SimpleRequestChain extends BaseChain {
   }
 }
 
+/**
+ * Type representing the options for creating an OpenAPI chain.
+ */
 export type OpenAPIChainOptions = {
-  llm?: ChatOpenAI;
+  llm?: ChatOpenAI | AnthropicFunctions;
   prompt?: BasePromptTemplate;
   requestChain?: BaseChain;
   llmChainInputs?: LLMChainInput;
