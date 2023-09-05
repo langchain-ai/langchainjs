@@ -2,13 +2,11 @@ import { OpenAIWhisperAudio } from "langchain/document_loaders/fs/openai_whisper
 import * as fs from "fs";
 
 const filePath = "PATH TO AUDIO FILE";
-const audioFile = fs.createReadStream(filePath) as unknown as File;
 
-const loader = new OpenAIWhisperAudio({
-  openAIConfiguration: {
+const loader = new OpenAIWhisperAudio(filePath, {
+  clientOptions: {
     apiKey: "OPENAI_API_KEY",
   },
-  audioFile,
 });
 
 const docs = await loader.load();
