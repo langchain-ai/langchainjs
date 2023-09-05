@@ -37,6 +37,7 @@ const entrypoints = {
   "embeddings/base": "embeddings/base",
   "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/fake": "embeddings/fake",
+  "embeddings/ollama": "embeddings/ollama",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
   "embeddings/tensorflow": "embeddings/tensorflow",
@@ -222,7 +223,7 @@ const entrypoints = {
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
   // hub
-  "hub": "hub",
+  hub: "hub",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -232,7 +233,8 @@ const entrypoints = {
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   "experimental/multimodal_embeddings/googlevertexai":
     "experimental/multimodal_embeddings/googlevertexai",
-  "experimental/chat_models/anthropic_functions": "experimental/chat_models/anthropic_functions",
+  "experimental/chat_models/anthropic_functions":
+    "experimental/chat_models/anthropic_functions",
   // evaluation
   evaluation: "evaluation/index",
 };

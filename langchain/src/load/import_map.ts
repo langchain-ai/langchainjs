@@ -10,6 +10,7 @@ export * as chains__openai_functions from "../chains/openai_functions/index.js";
 export * as embeddings__base from "../embeddings/base.js";
 export * as embeddings__cache_backed from "../embeddings/cache_backed.js";
 export * as embeddings__fake from "../embeddings/fake.js";
+export * as embeddings__ollama from "../embeddings/ollama.js";
 export * as embeddings__openai from "../embeddings/openai.js";
 export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as llms__base from "../llms/base.js";
