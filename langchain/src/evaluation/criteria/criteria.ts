@@ -10,6 +10,7 @@ import {BaseLanguageModel} from "../../base_language/index.js";
 import {Callbacks} from "../../callbacks/index.js";
 import {BaseCallbackConfig} from "../../callbacks/manager.js";
 import {BasePromptTemplate} from "../../prompts/index.js";
+import {ConstitutionalPrinciple} from "../../chains/index.js";
 
 export enum Criteria {
     CONCISENESS = "conciseness",
@@ -52,12 +53,6 @@ const SUPPORTED_CRITERIA: Record<Criteria, string> = {
     [Criteria.DETAIL]: "Does the submission demonstrate attention to detail?",
 };
 
-
-export interface ConstitutionalPrinciple {
-    critiqueRequest: string;
-    revisionRequest: string;
-    name?: string;
-}
 
 export type CRITERIA_TYPE = { [key: string]: string } | Criteria | ConstitutionalPrinciple;
 
@@ -138,11 +133,16 @@ export class CriteriaEvalChain extends StringEvaluator {
         let criteria_: { [key: string]: string } = {};
 
         console.log("criteria", typeof criteria, criteria);
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        console.log("ConstitutionalPrinciple", criteria instanceof ConstitutionalPrinciple);
 
         if (typeof criteria === "string") {
             if (criteria in Criteria) {
                 criteria_ = {[criteria]: SUPPORTED_CRITERIA[criteria as Criteria]};
             }
+            // eslint-disable-next-line no-instanceof/no-instanceof
+        } else if (criteria instanceof ConstitutionalPrinciple) {
+            criteria_ = {[criteria.name]: criteria.critiqueRequest};
         } else {
             if (!criteria) {
                 throw new Error(
