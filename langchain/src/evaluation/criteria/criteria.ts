@@ -11,7 +11,7 @@ import {Callbacks} from "../../callbacks/index.js";
 import {BaseCallbackConfig} from "../../callbacks/manager.js";
 import {BasePromptTemplate} from "../../prompts/index.js";
 
-enum Criteria {
+export enum Criteria {
     CONCISENESS = "conciseness",
     RELEVANCE = "relevance",
     CORRECTNESS = "correctness",
@@ -129,7 +129,7 @@ export class CriteriaEvalChain extends StringEvaluator {
     skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.
     To use references, use the labeled_criteria instead.`;
 
-    static resolveCriteria(criteria?: CRITERIA_TYPE | string): Record<string, string> {
+    static resolveCriteria(criteria?: CRITERIA_TYPE): Record<string, string> {
         if (criteria === undefined) {
             return {
                 "helpfulness": SUPPORTED_CRITERIA[Criteria.HELPFULNESS],
@@ -140,12 +140,10 @@ export class CriteriaEvalChain extends StringEvaluator {
         console.log("criteria", typeof criteria, criteria);
 
         if (typeof criteria === "string") {
-            criteria_ = {[criteria]: SUPPORTED_CRITERIA[criteria as Criteria]};
-        }
-            // else if (criteria instanceof ConstitutionalPrinciple) {
-            //     criteria_ = {[criteria.name]: criteria.critiqueRequest};
-        // }
-        else {
+            if (criteria in Criteria) {
+                criteria_ = {[criteria]: SUPPORTED_CRITERIA[criteria as Criteria]};
+            }
+        } else {
             if (!criteria) {
                 throw new Error(
                     "Criteria cannot be empty. " +
@@ -174,7 +172,7 @@ export class CriteriaEvalChain extends StringEvaluator {
         return _prompt;
     }
 
-    static async fromLLM(llm: BaseLanguageModel, criteria: string, chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>) {
+    static async fromLLM(llm: BaseLanguageModel, criteria: CRITERIA_TYPE, chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>) {
         if (criteria === Criteria.CORRECTNESS) {
             throw new Error(
                 "Correctness should not be used in the reference-free" +
