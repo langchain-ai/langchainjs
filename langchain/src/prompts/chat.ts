@@ -422,27 +422,11 @@ function _isBaseMessagePromptTemplate(
 
 export function coerceBaseMessagePromptTemplateLikeToMessage(
   baseMessagePromptTemplateLike: BaseMessagePromptTemplateLike
-): BaseMessagePromptTemplate {
+): BaseMessagePromptTemplate | BaseMessage {
   if (_isBaseMessagePromptTemplate(baseMessagePromptTemplateLike)) {
     return baseMessagePromptTemplateLike;
   }
-  const message = coerceBaseMessageLikeToMessage(baseMessagePromptTemplateLike);
-  if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content);
-  } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content);
-  } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content);
-  } else if (ChatMessage.isInstance(message)) {
-    return ChatMessagePromptTemplate.fromTemplate(
-      message.content,
-      message.role
-    );
-  } else {
-    throw new Error(
-      `Could not coerce message prompt template from input. Received message type: "${message._getType()}".`
-    );
-  }
+  return coerceBaseMessageLikeToMessage(baseMessagePromptTemplateLike);
 }
 
 /**
