@@ -1,7 +1,7 @@
 import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
 
 const model = new HuggingFaceTransformersEmbeddings({
-  modelName: "Xenova/all-MiniLM-L6-v2", // In Node.js defaults to process.env.OPENAI_API_KEY
+  modelName: "Xenova/all-MiniLM-L6-v2",
 });
 
 /* Embed queries */
