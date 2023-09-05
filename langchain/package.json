@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.142",
+  "version": "0.0.143",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -658,7 +658,6 @@
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@tensorflow/tfjs-converter": "^4.4.0",
     "@tensorflow/tfjs-core": "^4.4.0",
-    "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
     "@types/decamelize": "^1.2.0",
@@ -772,7 +771,6 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
-    "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
@@ -917,9 +915,6 @@
       "optional": true
     },
     "@tensorflow/tfjs-core": {
-      "optional": true
-    },
-    "@tigrisdata/vector": {
       "optional": true
     },
     "@upstash/redis": {
