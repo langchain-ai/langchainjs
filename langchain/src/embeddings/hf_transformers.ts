@@ -47,19 +47,19 @@ export class HuggingFaceTransformersEmbeddings
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    const subPrompts = chunkArray(
+    const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
 
+    const batchRequests = batches.map((batch) => this.runEmbedding(batch));
+    const batchResponses = await Promise.all(batchRequests);
     const embeddings: number[][] = [];
 
-    for (let i = 0; i < subPrompts.length; i += 1) {
-      const input = subPrompts[i];
-      const data = await this.runEmbedding(input);
-
-      for (let j = 0; j < input.length; j += 1) {
-        embeddings.push(data[j]);
+    for (let i = 0; i < batchResponses.length; i += 1) {
+      const batchResponse = batchResponses[i];
+      for (let j = 0; j < batchResponse.length; j += 1) {
+        embeddings.push(batchResponse[j]);
       }
     }
 
