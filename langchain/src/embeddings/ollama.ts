@@ -9,7 +9,7 @@ type CamelCasedRequestOptions = Omit<OllamaInput, "baseUrl" | "model">;
  */
 interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /** The Ollama model to use, e.g: "llama2:13b" */
-  model: string;
+  model?: string;
 
   /** Base URL of the Ollama server, defaults to "http://localhost:11434" */
   url?: string;
@@ -22,7 +22,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
 }
 
 export class OllamaEmbeddings extends Embeddings {
-  model: string;
+  model = "llama2";
 
   baseUrl = "http://localhost:11434";
 
@@ -31,7 +31,9 @@ export class OllamaEmbeddings extends Embeddings {
   constructor(params: OllamaEmbeddingsParams) {
     super(params);
 
-    this.model = params.model;
+    if (params.model) {
+      this.model = params.model;
+    }
 
     if (params.url) {
       this.baseUrl = params.url;
@@ -46,11 +48,7 @@ export class OllamaEmbeddings extends Embeddings {
    * the snake_cased equivalent which the ollama API actually uses.
    * Used only for consistency with the llms/Ollama and chatModels/Ollama classes
    */
-  _convertOptions(requestOptions?: CamelCasedRequestOptions) {
-    if (!requestOptions) {
-      return;
-    }
-
+  _convertOptions(requestOptions: CamelCasedRequestOptions) {
     const snakeCasedOptions: Record<string, unknown> = {};
     const mapping: Record<keyof CamelCasedRequestOptions, string> = {
       embeddingOnly: "embedding_only",
@@ -120,15 +118,18 @@ export class OllamaEmbeddings extends Embeddings {
     const embeddings: number[][] = [];
 
     for await (const prompt of strings) {
-      const embedding = await this._request(prompt);
+      const embedding = await this.caller.call(() => this._request(prompt));
       embeddings.push(embedding);
     }
 
     return embeddings;
   }
 
-  embedDocuments = async (documents: string[]) => this._embed(documents);
+  async embedDocuments(documents: string[]) {
+    return this._embed(documents);
+  }
 
-  embedQuery = async (document: string) =>
-    (await this.embedDocuments([document]))[0];
+  async embedQuery(document: string) {
+    return (await this.embedDocuments([document]))[0];
+  }
 }
