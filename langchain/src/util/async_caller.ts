@@ -4,6 +4,7 @@ import PQueueMod from "p-queue";
 const STATUS_NO_RETRY = [
   400, // Bad Request
   401, // Unauthorized
+  402, // Payment Required
   403, // Forbidden
   404, // Not Found
   405, // Method Not Allowed
@@ -80,7 +81,9 @@ export class AsyncCaller {
               if (
                 error.message.startsWith("Cancel") ||
                 error.message.startsWith("TimeoutError") ||
-                error.message.startsWith("AbortError")
+                error.name === "TimeoutError" ||
+                error.message.startsWith("AbortError") ||
+                error.name === "AbortError"
               ) {
                 throw error;
               }
@@ -88,17 +91,17 @@ export class AsyncCaller {
               if ((error as any)?.code === "ECONNABORTED") {
                 throw error;
               }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const status = (error as any)?.response?.status;
+              const status =
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (error as any)?.response?.status ?? (error as any)?.status;
               if (status && STATUS_NO_RETRY.includes(+status)) {
                 throw error;
               }
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const data = (error as any)?.response?.data;
-              if (data?.error?.code === "insufficient_quota") {
-                const error = new Error(data?.error?.message);
-                error.name = "InsufficientQuotaError";
-                throw error;
+              if ((error as any)?.error?.code === "insufficient_quota") {
+                const err = new Error(error?.message);
+                err.name = "InsufficientQuotaError";
+                throw err;
               }
             },
             retries: this.maxRetries,
