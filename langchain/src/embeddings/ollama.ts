@@ -12,7 +12,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   model?: string;
 
   /** Base URL of the Ollama server, defaults to "http://localhost:11434" */
-  url?: string;
+  baseUrl?: string;
 
   /** Advanced Ollama API request parameters in camelCase, see
    * https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
@@ -35,8 +35,8 @@ export class OllamaEmbeddings extends Embeddings {
       this.model = params.model;
     }
 
-    if (params?.url) {
-      this.baseUrl = params.url;
+    if (params?.baseUrl) {
+      this.baseUrl = params.baseUrl;
     }
 
     if (params?.requestOptions) {
