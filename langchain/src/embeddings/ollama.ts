@@ -28,18 +28,18 @@ export class OllamaEmbeddings extends Embeddings {
 
   requestOptions?: OllamaRequestParams["options"];
 
-  constructor(params: OllamaEmbeddingsParams) {
-    super(params);
+  constructor(params?: OllamaEmbeddingsParams) {
+    super(params || {});
 
-    if (params.model) {
+    if (params?.model) {
       this.model = params.model;
     }
 
-    if (params.url) {
+    if (params?.url) {
       this.baseUrl = params.url;
     }
 
-    if (params.requestOptions) {
+    if (params?.requestOptions) {
       this.requestOptions = this._convertOptions(params.requestOptions);
     }
   }
