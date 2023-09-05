@@ -462,7 +462,7 @@ export type BaseMessageLike =
     ]
   | string;
 
-function _isBaseMessage(
+export function isBaseMessage(
   messageLike: BaseMessageLike
 ): messageLike is BaseMessage {
   return typeof (messageLike as BaseMessage)._getType === "function";
@@ -473,7 +473,7 @@ export function coerceBaseMessageLikeToMessage(
 ): BaseMessage {
   if (typeof messageLike === "string") {
     return new HumanMessage(messageLike);
-  } else if (_isBaseMessage(messageLike)) {
+  } else if (isBaseMessage(messageLike)) {
     return messageLike;
   }
   let role;

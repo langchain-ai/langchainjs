@@ -13,6 +13,7 @@ import {
   PartialValues,
   SystemMessage,
   coerceBaseMessageLikeToMessage,
+  isBaseMessage,
 } from "../schema/index.js";
 import { Runnable } from "../schema/runnable.js";
 import {
@@ -420,13 +421,32 @@ function _isBaseMessagePromptTemplate(
   );
 }
 
-export function coerceBaseMessagePromptTemplateLikeToMessage(
+export function coerceBaseMessagePromptTemplateLikeToPromptTemplateOrMessage(
   baseMessagePromptTemplateLike: BaseMessagePromptTemplateLike
 ): BaseMessagePromptTemplate | BaseMessage {
-  if (_isBaseMessagePromptTemplate(baseMessagePromptTemplateLike)) {
+  if (
+    _isBaseMessagePromptTemplate(baseMessagePromptTemplateLike) ||
+    isBaseMessage(baseMessagePromptTemplateLike)
+  ) {
     return baseMessagePromptTemplateLike;
   }
-  return coerceBaseMessageLikeToMessage(baseMessagePromptTemplateLike);
+  const message = coerceBaseMessageLikeToMessage(baseMessagePromptTemplateLike);
+  if (message._getType() === "human") {
+    return HumanMessagePromptTemplate.fromTemplate(message.content);
+  } else if (message._getType() === "ai") {
+    return AIMessagePromptTemplate.fromTemplate(message.content);
+  } else if (message._getType() === "system") {
+    return SystemMessagePromptTemplate.fromTemplate(message.content);
+  } else if (ChatMessage.isInstance(message)) {
+    return ChatMessagePromptTemplate.fromTemplate(
+      message.content,
+      message.role
+    );
+  } else {
+    throw new Error(
+      `Could not coerce message prompt template from input. Received message type: "${message._getType()}".`
+    );
+  }
 }
 
 /**
@@ -576,7 +596,11 @@ export class ChatPromptTemplate<
           // eslint-disable-next-line no-instanceof/no-instanceof
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
-            : [coerceBaseMessagePromptTemplateLikeToMessage(promptMessage)]
+            : [
+                coerceBaseMessagePromptTemplateLikeToPromptTemplateOrMessage(
+                  promptMessage
+                ),
+              ]
         ),
       []
     );
