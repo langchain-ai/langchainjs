@@ -1,5 +1,5 @@
 import { type Tiktoken } from "js-tiktoken/lite";
-import { OpenAI as OpenAIClient } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseCallbackConfig,

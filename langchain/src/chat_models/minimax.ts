@@ -1,4 +1,5 @@
-import { ChatCompletionFunctions } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
+
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIMessage,
@@ -49,9 +50,9 @@ interface MinimaxChatCompletionRequest {
   sample_messages?: MinimaxChatCompletionRequestMessage[];
   /**
    * A list of functions the model may generate JSON inputs for.
-   * @type {Array<ChatCompletionFunctions>}
+   * @type {Array<OpenAIClient.Chat.ChatCompletionCreateParams.Function[]>}
    */
-  functions?: Array<ChatCompletionFunctions>;
+  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   plugins?: string[];
 }
 
