@@ -1,50 +1,47 @@
-import {
-  Configuration,
-  ConfigurationParameters,
-  CreateTranscriptionResponse,
-  OpenAIApi,
-} from "openai";
+// import {
+//   Configuration,
+//   ConfigurationParameters,
+//   CreateTranscriptionResponse,
+//   OpenAIApi,
+// } from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient, toFile } from "openai";
 import { Document } from "../../document.js";
-import { BaseDocumentLoader } from "../base.js";
+import { BufferLoader } from "./buffer.js";
 
 const MODEL_NAME = "whisper-1";
 
-export class OpenAIWhisperAudio extends BaseDocumentLoader {
-  private readonly openAiApi: OpenAIApi;
+export class OpenAIWhisperAudio extends BufferLoader {
+  private readonly openAIClient: OpenAIClient;
 
   private readonly audioFile: File;
 
-  constructor({
-    openAIConfiguration,
-    audioFile,
-  }: {
-    openAIConfiguration: ConfigurationParameters;
-    audioFile: File;
-  }) {
-    super();
-    this.openAiApi = new OpenAIApi(new Configuration(openAIConfiguration));
-    this.audioFile = audioFile;
+  constructor(
+    filePathOrBlob: string | Blob,
+    {
+      clientOptions,
+    }: {
+      clientOptions: ClientOptions;
+    }
+  ) {
+    super(filePathOrBlob);
+    this.openAIClient = new OpenAIClient(clientOptions);
   }
 
-  async load(): Promise<Document[]> {
-    try {
-      const response = await this.openAiApi.createTranscription(
-        this.audioFile,
-        MODEL_NAME
-      );
-      const transcriptionResponse: CreateTranscriptionResponse = response.data;
-      const document = new Document({
-        pageContent: transcriptionResponse.text,
-        metadata: {
-          fileName: this.audioFile.name,
-        },
+  protected async parse(
+    raw: Buffer,
+    metadata: Record<string, any>
+  ): Promise<Document<Record<string, any>>[]> {
+    const fileName =
+      metadata.source === "blob" ? metadata.blobType : metadata.source;
+    const transcriptionResponse =
+      await this.openAIClient.audio.transcriptions.create({
+        file: await toFile(raw, fileName),
+        model: MODEL_NAME,
       });
-
-      return [document];
-    } catch (e) {
-      throw new Error(
-        `Failed to transcribe audio file. Error: ${(e as Error).message}`
-      );
-    }
+    const document = new Document({
+      pageContent: transcriptionResponse.text,
+      metadata,
+    });
+    return [document];
   }
 }

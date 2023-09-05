@@ -8,9 +8,11 @@ import {
 import { VectorStoreRetriever } from "../../vectorstores/base.js";
 import { ObjectTool } from "./schema.js";
 import { getPrompt } from "./prompt_generator.js";
-import { BasePromptTemplate } from "../../index.js";
 import { SerializedBasePromptTemplate } from "../../prompts/serde.js";
 
+/**
+ * Interface for the input parameters of the AutoGPTPrompt class.
+ */
 export interface AutoGPTPromptInput {
   aiName: string;
   aiRole: string;
@@ -19,6 +21,12 @@ export interface AutoGPTPromptInput {
   sendTokenLimit?: number;
 }
 
+/**
+ * Class used to generate prompts for the AutoGPT model. It takes into
+ * account the AI's name, role, tools, token counter, and send token
+ * limit. The class also handles the formatting of messages and the
+ * construction of the full prompt.
+ */
 export class AutoGPTPrompt
   extends BaseChatPromptTemplate
   implements AutoGPTPromptInput
@@ -46,11 +54,16 @@ export class AutoGPTPrompt
     return "autogpt" as const;
   }
 
+  /**
+   * Constructs the full prompt based on the provided goals.
+   * @param goals An array of goals.
+   * @returns The full prompt as a string.
+   */
   constructFullPrompt(goals: string[]): string {
-    const promptStart = `Your decisions must always be made independently 
-            without seeking user assistance. Play to your strengths 
-            as an LLM and pursue simple strategies with no legal complications. 
-            If you have completed all your tasks, 
+    const promptStart = `Your decisions must always be made independently
+            without seeking user assistance. Play to your strengths
+            as an LLM and pursue simple strategies with no legal complications.
+            If you have completed all your tasks,
             make sure to use the "finish" command.`;
 
     let fullPrompt = `You are ${this.aiName}, ${this.aiRole}\n${promptStart}\n\nGOALS:\n\n`;
@@ -62,6 +75,14 @@ export class AutoGPTPrompt
     return fullPrompt;
   }
 
+  /**
+   * Formats the messages based on the provided parameters.
+   * @param goals An array of goals.
+   * @param memory A VectorStoreRetriever instance.
+   * @param messages An array of previous messages.
+   * @param user_input The user's input.
+   * @returns An array of formatted messages.
+   */
   async formatMessages({
     goals,
     memory,
@@ -124,7 +145,13 @@ export class AutoGPTPrompt
     return messages;
   }
 
-  async partial(_values: PartialValues): Promise<BasePromptTemplate> {
+  /**
+   * This method is not implemented in the AutoGPTPrompt class and will
+   * throw an error if called.
+   * @param _values Partial values.
+   * @returns Throws an error.
+   */
+  async partial(_values: PartialValues): Promise<BaseChatPromptTemplate> {
     throw new Error("Method not implemented.");
   }
 

@@ -18,6 +18,10 @@ import { AgentInput } from "../types.js";
 import { StructuredChatOutputParserWithRetries } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
+/**
+ * Interface for arguments used to create a prompt for a
+ * StructuredChatAgent.
+ */
 export interface StructuredChatCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
@@ -29,6 +33,10 @@ export interface StructuredChatCreatePromptArgs {
   memoryPrompts?: BaseMessagePromptTemplate[];
 }
 
+/**
+ * Type for input data for creating a StructuredChatAgent, with the
+ * 'outputParser' property made optional.
+ */
 export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
@@ -36,6 +44,10 @@ export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class StructuredChatAgent extends Agent {
+  static lc_name() {
+    return "StructuredChatAgent";
+  }
+
   lc_namespace = ["langchain", "agents", "structured_chat"];
 
   constructor(input: StructuredChatAgentInput) {
@@ -60,6 +72,11 @@ export class StructuredChatAgent extends Agent {
     return ["Observation:"];
   }
 
+  /**
+   * Validates that all provided tools have a description. Throws an error
+   * if any tool lacks a description.
+   * @param tools Array of StructuredTool instances to validate.
+   */
   static validateTools(tools: StructuredTool[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
@@ -70,6 +87,12 @@ export class StructuredChatAgent extends Agent {
     }
   }
 
+  /**
+   * Returns a default output parser for the StructuredChatAgent. If an LLM
+   * is provided, it creates an output parser with retry logic from the LLM.
+   * @param fields Optional fields to customize the output parser. Can include an LLM and a list of tool names.
+   * @returns An instance of StructuredChatOutputParserWithRetries.
+   */
   static getDefaultOutputParser(
     fields?: OutputParserArgs & {
       toolNames: string[];
@@ -85,6 +108,13 @@ export class StructuredChatAgent extends Agent {
     });
   }
 
+  /**
+   * Constructs the agent's scratchpad from a list of steps. If the agent's
+   * scratchpad is not empty, it prepends a message indicating that the
+   * agent has not seen any previous work.
+   * @param steps Array of AgentStep instances to construct the scratchpad from.
+   * @returns A Promise that resolves to a string representing the agent's scratchpad.
+   */
   async constructScratchPad(steps: AgentStep[]): Promise<string> {
     const agentScratchpad = await super.constructScratchPad(steps);
     if (agentScratchpad) {
@@ -93,6 +123,11 @@ export class StructuredChatAgent extends Agent {
     return agentScratchpad;
   }
 
+  /**
+   * Creates a string representation of the schemas of the provided tools.
+   * @param tools Array of StructuredTool instances to create the schemas string from.
+   * @returns A string representing the schemas of the provided tools.
+   */
   static createToolSchemasString(tools: StructuredTool[]) {
     return tools
       .map(
@@ -148,6 +183,15 @@ export class StructuredChatAgent extends Agent {
     return ChatPromptTemplate.fromPromptMessages(messages);
   }
 
+  /**
+   * Creates a StructuredChatAgent from an LLM and a list of tools.
+   * Validates the tools, creates a prompt, and sets up an LLM chain for the
+   * agent.
+   * @param llm BaseLanguageModel instance to create the agent from.
+   * @param tools Array of StructuredTool instances to create the agent from.
+   * @param args Optional arguments to customize the creation of the agent. Can include arguments for creating the prompt and AgentArgs.
+   * @returns A new instance of StructuredChatAgent.
+   */
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: StructuredTool[],

@@ -3,6 +3,7 @@ import * as uuid from "uuid";
 import { BaseTracer, Run } from "../handlers/tracer.js";
 import { HumanMessage } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
+import { Document } from "../../document.js";
 
 const _DATE = 1620000000000;
 
@@ -48,11 +49,11 @@ test("Test LLMRun", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     inputs: { prompts: ["test"] },
@@ -85,11 +86,11 @@ test("Test Chat Model Run", async () => {
       "events": [
         {
           "name": "start",
-          "time": 1620000000000,
+          "time": "2021-05-03T00:00:00.000Z",
         },
         {
           "name": "end",
-          "time": 1620000000000,
+          "time": "2021-05-03T00:00:00.000Z",
         },
       ],
       "execution_order": 1,
@@ -157,11 +158,11 @@ test("Test Chain Run", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     inputs: { foo: "bar" },
@@ -192,11 +193,11 @@ test("Test Tool Run", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     inputs: { input: "test" },
@@ -208,6 +209,46 @@ test("Test Tool Run", async () => {
   };
   await tracer.handleToolStart(serialized, "test", runId);
   await tracer.handleToolEnd("output", runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0];
+  expect(run).toEqual(compareRun);
+});
+
+test("Test Retriever Run", async () => {
+  const tracer = new FakeTracer();
+  const runId = uuid.v4();
+  const document = new Document({
+    pageContent: "test",
+    metadata: { test: "test" },
+  });
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
+    child_execution_order: 1,
+    serialized,
+    events: [
+      {
+        name: "start",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+      {
+        name: "end",
+        time: "2021-05-03T00:00:00.000Z",
+      },
+    ],
+    inputs: { query: "bar" },
+    outputs: { documents: [document] },
+    run_type: "retriever",
+    child_runs: [],
+    extra: {},
+    tags: [],
+  };
+
+  await tracer.handleRetrieverStart(serialized, "bar", runId);
+  await tracer.handleRetrieverEnd([document], runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   expect(run).toEqual(compareRun);
@@ -264,11 +305,11 @@ test("Test nested runs", async () => {
             events: [
               {
                 name: "start",
-                time: 1620000000000,
+                time: "2021-05-03T00:00:00.000Z",
               },
               {
                 name: "end",
-                time: 1620000000000,
+                time: "2021-05-03T00:00:00.000Z",
               },
             ],
             start_time: 1620000000000,
@@ -286,11 +327,11 @@ test("Test nested runs", async () => {
         events: [
           {
             name: "start",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
           {
             name: "end",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
         ],
         start_time: 1620000000000,
@@ -314,11 +355,11 @@ test("Test nested runs", async () => {
         events: [
           {
             name: "start",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
           {
             name: "end",
-            time: 1620000000000,
+            time: "2021-05-03T00:00:00.000Z",
           },
         ],
         start_time: 1620000000000,
@@ -341,11 +382,11 @@ test("Test nested runs", async () => {
     events: [
       {
         name: "start",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
       {
         name: "end",
-        time: 1620000000000,
+        time: "2021-05-03T00:00:00.000Z",
       },
     ],
     name: "test",

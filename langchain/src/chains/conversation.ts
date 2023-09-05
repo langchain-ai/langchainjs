@@ -10,7 +10,15 @@ Current conversation:
 Human: {input}
 AI:`;
 
+/**
+ * A class for conducting conversations between a human and an AI. It
+ * extends the {@link LLMChain} class.
+ */
 export class ConversationChain extends LLMChain {
+  static lc_name() {
+    return "ConversationChain";
+  }
+
   constructor({
     prompt,
     outputKey,

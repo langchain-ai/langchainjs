@@ -2,6 +2,11 @@ import { CallbackManagerForChainRun, Callbacks } from "../callbacks/manager.js";
 import { ChainValues } from "../schema/index.js";
 import { ChainInputs, BaseChain } from "./base.js";
 
+/**
+ * Interface that extends the `ChainInputs` interface and defines the
+ * fields required for a transform chain. It includes the `transform`
+ * function, `inputVariables`, and `outputVariables` properties.
+ */
 export interface TransformChainFields<
   I extends ChainValues,
   O extends ChainValues
@@ -11,11 +16,21 @@ export interface TransformChainFields<
   outputVariables: (keyof O extends string ? keyof O : never)[];
 }
 
-export class TransformChain<I extends ChainValues, O extends ChainValues>
-  extends BaseChain
-  implements TransformChainFields<I, O>
-{
-  transform: (values: I, callbacks?: Callbacks) => O | Promise<O>;
+/**
+ * Class that represents a transform chain. It extends the `BaseChain`
+ * class and implements the `TransformChainFields` interface. It provides
+ * a way to transform input values to output values using a specified
+ * transform function.
+ */
+export class TransformChain<
+  I extends ChainValues,
+  O extends ChainValues
+> extends BaseChain {
+  static lc_name() {
+    return "TransformChain";
+  }
+
+  transformFunc: (values: I, callbacks?: Callbacks) => O | Promise<O>;
 
   inputVariables: (keyof I extends string ? keyof I : never)[];
 
@@ -35,12 +50,12 @@ export class TransformChain<I extends ChainValues, O extends ChainValues>
 
   constructor(fields: TransformChainFields<I, O>) {
     super(fields);
-    this.transform = fields.transform;
+    this.transformFunc = fields.transform;
     this.inputVariables = fields.inputVariables;
     this.outputVariables = fields.outputVariables;
   }
 
   async _call(values: I, runManager?: CallbackManagerForChainRun): Promise<O> {
-    return this.transform(values, runManager?.getChild("transform"));
+    return this.transformFunc(values, runManager?.getChild("transform"));
   }
 }

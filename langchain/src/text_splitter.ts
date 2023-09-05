@@ -7,6 +7,9 @@ export interface TextSplitterParams {
   chunkSize: number;
   chunkOverlap: number;
   keepSeparator: boolean;
+  lengthFunction?:
+    | ((text: string) => number)
+    | ((text: string) => Promise<number>);
 }
 
 export type TextSplitterChunkHeaderOptions = {
@@ -27,11 +30,17 @@ export abstract class TextSplitter
 
   keepSeparator = false;
 
+  lengthFunction:
+    | ((text: string) => number)
+    | ((text: string) => Promise<number>);
+
   constructor(fields?: Partial<TextSplitterParams>) {
     super(fields);
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
     this.keepSeparator = fields?.keepSeparator ?? this.keepSeparator;
+    this.lengthFunction =
+      fields?.lengthFunction ?? ((text: string) => text.length);
     if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
@@ -90,7 +99,8 @@ export abstract class TextSplitter
         let numberOfIntermediateNewLines = 0;
         if (prevChunk) {
           const indexChunk = text.indexOf(chunk);
-          const indexEndPrevChunk = text.indexOf(prevChunk) + prevChunk.length;
+          const indexEndPrevChunk =
+            text.indexOf(prevChunk) + (await this.lengthFunction(prevChunk));
           const removedNewlinesFromSplittingText = text.slice(
             indexEndPrevChunk,
             indexChunk
@@ -149,12 +159,12 @@ export abstract class TextSplitter
     return text === "" ? null : text;
   }
 
-  mergeSplits(splits: string[], separator: string): string[] {
+  async mergeSplits(splits: string[], separator: string): Promise<string[]> {
     const docs: string[] = [];
     const currentDoc: string[] = [];
     let total = 0;
     for (const d of splits) {
-      const _len = d.length;
+      const _len = await this.lengthFunction(d);
       if (
         total + _len + (currentDoc.length > 0 ? separator.length : 0) >
         this.chunkSize
@@ -177,7 +187,7 @@ which is longer than the specified ${this.chunkSize}`
             total > this.chunkOverlap ||
             (total + _len > this.chunkSize && total > 0)
           ) {
-            total -= currentDoc[0].length;
+            total -= await this.lengthFunction(currentDoc[0]);
             currentDoc.shift();
           }
         }
@@ -201,6 +211,10 @@ export class CharacterTextSplitter
   extends TextSplitter
   implements CharacterTextSplitterParams
 {
+  static lc_name() {
+    return "CharacterTextSplitter";
+  }
+
   separator = "\n\n";
 
   constructor(fields?: Partial<CharacterTextSplitterParams>) {
@@ -246,6 +260,10 @@ export class RecursiveCharacterTextSplitter
   extends TextSplitter
   implements RecursiveCharacterTextSplitterParams
 {
+  static lc_name() {
+    return "RecursiveCharacterTextSplitter";
+  }
+
   separators: string[] = ["\n\n", "\n", " ", ""];
 
   constructor(fields?: Partial<RecursiveCharacterTextSplitterParams>) {
@@ -280,11 +298,11 @@ export class RecursiveCharacterTextSplitter
     let goodSplits: string[] = [];
     const _separator = this.keepSeparator ? "" : separator;
     for (const s of splits) {
-      if (s.length < this.chunkSize) {
+      if ((await this.lengthFunction(s)) < this.chunkSize) {
         goodSplits.push(s);
       } else {
         if (goodSplits.length) {
-          const mergedText = this.mergeSplits(goodSplits, _separator);
+          const mergedText = await this.mergeSplits(goodSplits, _separator);
           finalChunks.push(...mergedText);
           goodSplits = [];
         }
@@ -297,7 +315,7 @@ export class RecursiveCharacterTextSplitter
       }
     }
     if (goodSplits.length) {
-      const mergedText = this.mergeSplits(goodSplits, _separator);
+      const mergedText = await this.mergeSplits(goodSplits, _separator);
       finalChunks.push(...mergedText);
     }
     return finalChunks;
@@ -309,7 +327,7 @@ export class RecursiveCharacterTextSplitter
 
   static fromLanguage(
     language: SupportedTextSplitterLanguage,
-    options: Partial<RecursiveCharacterTextSplitterParams>
+    options?: Partial<RecursiveCharacterTextSplitterParams>
   ) {
     return new RecursiveCharacterTextSplitter({
       ...options,
@@ -681,6 +699,10 @@ export class TokenTextSplitter
   extends TextSplitter
   implements TokenTextSplitterParams
 {
+  static lc_name() {
+    return "TokenTextSplitter";
+  }
+
   encodingName: tiktoken.TiktokenEncoding;
 
   allowedSpecial: "all" | Array<string>;

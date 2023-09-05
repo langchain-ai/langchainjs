@@ -17,6 +17,7 @@ export const run = async () => {
       }),
       func: async ({ low, high }) =>
         (Math.random() * (high - low) + low).toString(), // Outputs still must be strings
+      returnDirect: false, // This is an option that allows the tool to return the output directly
     }),
   ];
 

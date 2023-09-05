@@ -1,6 +1,13 @@
 import jsonpointer from "jsonpointer";
 import { TextLoader } from "./text.js";
 
+/**
+ * Class that extends the `TextLoader` class. It represents a document
+ * loader that loads documents from JSON files. It has a constructor that
+ * takes a `filePathOrBlob` parameter representing the path to the JSON
+ * file or a `Blob` object, and an optional `pointers` parameter that
+ * specifies the JSON pointers to extract.
+ */
 export class JSONLoader extends TextLoader {
   public pointers: string[];
 
@@ -9,6 +16,15 @@ export class JSONLoader extends TextLoader {
     this.pointers = Array.isArray(pointers) ? pointers : [pointers];
   }
 
+  /**
+   * Method that takes a `raw` string as a parameter and returns a promise
+   * that resolves to an array of strings. It parses the raw JSON string and
+   * extracts the values based on the specified JSON pointers. If no JSON
+   * pointers are specified, it extracts all the strings from the JSON
+   * object.
+   * @param raw The raw JSON string to parse.
+   * @returns A promise that resolves to an array of strings.
+   */
   protected async parse(raw: string): Promise<string[]> {
     const json = JSON.parse(raw.trim());
     // If there is no pointers specified we extract all strings we found
@@ -103,6 +119,15 @@ export class JSONLoader extends TextLoader {
     return [];
   }
 
+  /**
+   * Method that takes a `json` object and an array of `pointers` as
+   * parameters and returns an array of targeted entries. It iterates over
+   * the JSON pointers and uses the `jsonpointer.get()` function to get the
+   * targeted entries from the JSON object.
+   * @param json The JSON object to get targeted entries from.
+   * @param pointers The JSON pointers to get targeted entries.
+   * @returns An array of targeted entries.
+   */
   private getTargetedEntries(json: object, pointers: jsonpointer[]): object[] {
     const targetEntries = [];
     for (const pointer of pointers) {
@@ -116,11 +141,26 @@ export class JSONLoader extends TextLoader {
   }
 }
 
+/**
+ * Class that extends the `TextLoader` class. It represents a document
+ * loader that loads documents from JSON Lines files. It has a constructor
+ * that takes a `filePathOrBlob` parameter representing the path to the
+ * JSON Lines file or a `Blob` object, and a `pointer` parameter that
+ * specifies the JSON pointer to extract.
+ */
 export class JSONLinesLoader extends TextLoader {
   constructor(filePathOrBlob: string | Blob, public pointer: string) {
     super(filePathOrBlob);
   }
 
+  /**
+   * Method that takes a `raw` string as a parameter and returns a promise
+   * that resolves to an array of strings. It parses the raw JSON Lines
+   * string, splits it into lines, parses each line as JSON, and extracts
+   * the values based on the specified JSON pointer.
+   * @param raw The raw JSON Lines string to parse.
+   * @returns A promise that resolves to an array of strings.
+   */
   protected async parse(raw: string): Promise<string[]> {
     const lines = raw.split("\n");
     const jsons = lines

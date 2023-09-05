@@ -1,0 +1,20 @@
+# OpenAI
+
+Here's how you can initialize an `OpenAI` LLM instance:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+
+const model = new OpenAI({
+  modelName: "text-davinci-003", // Defaults to "text-davinci-003" if no model provided.
+  temperature: 0.9,
+  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+});
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+console.log({ res });
+```
+
+If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` to your OpenAI organization id, or pass it in as `organization` when
+initializing the model.

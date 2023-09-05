@@ -11,7 +11,19 @@ import {
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
 
-export interface ConversationSummaryMemoryInput extends BaseChatMemoryInput {
+/**
+ * Interface for the input parameters of the ConversationSummaryMemory
+ * class.
+ */
+export interface ConversationSummaryMemoryInput
+  extends BaseConversationSummaryMemoryInput {}
+
+/**
+ * Interface for the input parameters of the BaseConversationSummaryMemory
+ * class.
+ */
+export interface BaseConversationSummaryMemoryInput
+  extends BaseChatMemoryInput {
   llm: BaseLanguageModel;
   memoryKey?: string;
   humanPrefix?: string;
@@ -20,9 +32,12 @@ export interface ConversationSummaryMemoryInput extends BaseChatMemoryInput {
   summaryChatMessageClass?: new (content: string) => BaseMessage;
 }
 
-export class ConversationSummaryMemory extends BaseChatMemory {
-  buffer = "";
-
+/**
+ * Abstract class that provides a structure for storing and managing the
+ * memory of a conversation. It includes methods for predicting a new
+ * summary for the conversation given the existing messages and summary.
+ */
+export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
   memoryKey = "history";
 
   humanPrefix = "Human";
@@ -35,7 +50,7 @@ export class ConversationSummaryMemory extends BaseChatMemory {
 
   summaryChatMessageClass: new (content: string) => BaseMessage = SystemMessage;
 
-  constructor(fields: ConversationSummaryMemoryInput) {
+  constructor(fields: BaseConversationSummaryMemoryInput) {
     const {
       returnMessages,
       inputKey,
@@ -59,10 +74,13 @@ export class ConversationSummaryMemory extends BaseChatMemory {
       summaryChatMessageClass ?? this.summaryChatMessageClass;
   }
 
-  get memoryKeys() {
-    return [this.memoryKey];
-  }
-
+  /**
+   * Predicts a new summary for the conversation given the existing messages
+   * and summary.
+   * @param messages Existing messages in the conversation.
+   * @param existingSummary Current summary of the conversation.
+   * @returns A promise that resolves to a new summary string.
+   */
   async predictNewSummary(
     messages: BaseMessage[],
     existingSummary: string
@@ -74,7 +92,28 @@ export class ConversationSummaryMemory extends BaseChatMemory {
       new_lines: newLines,
     });
   }
+}
 
+/**
+ * Class that provides a concrete implementation of the conversation
+ * memory. It includes methods for loading memory variables, saving
+ * context, and clearing the memory.
+ */
+export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
+  buffer = "";
+
+  constructor(fields: ConversationSummaryMemoryInput) {
+    super(fields);
+  }
+
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
+  /**
+   * Loads the memory variables for the conversation memory.
+   * @returns A promise that resolves to an object containing the memory variables.
+   */
   async loadMemoryVariables(_: InputValues): Promise<MemoryVariables> {
     if (this.returnMessages) {
       const result = {
@@ -86,6 +125,12 @@ export class ConversationSummaryMemory extends BaseChatMemory {
     return result;
   }
 
+  /**
+   * Saves the context of the conversation memory.
+   * @param inputValues Input values for the conversation.
+   * @param outputValues Output values from the conversation.
+   * @returns A promise that resolves when the context has been saved.
+   */
   async saveContext(
     inputValues: InputValues,
     outputValues: OutputValues
@@ -95,6 +140,10 @@ export class ConversationSummaryMemory extends BaseChatMemory {
     this.buffer = await this.predictNewSummary(messages.slice(-2), this.buffer);
   }
 
+  /**
+   * Clears the conversation memory.
+   * @returns A promise that resolves when the memory has been cleared.
+   */
   async clear() {
     await super.clear();
     this.buffer = "";

@@ -144,6 +144,12 @@ const DEFAULT_HEADERS = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Headers = Record<string, any>;
 
+/**
+ * Defines the arguments that can be passed to the WebBrowser constructor.
+ * It extends the ToolParams interface and includes properties for a
+ * language model, embeddings, HTTP headers, an Axios configuration, a
+ * callback manager, and a text splitter.
+ */
 export interface WebBrowserArgs extends ToolParams {
   model: BaseLanguageModel;
 
@@ -159,7 +165,17 @@ export interface WebBrowserArgs extends ToolParams {
   textSplitter?: TextSplitter;
 }
 
+/**
+ * A class designed to interact with web pages, either to extract
+ * information from them or to summarize their content. It uses the axios
+ * library to send HTTP requests and the cheerio library to parse the
+ * returned HTML.
+ */
 export class WebBrowser extends Tool {
+  static lc_name() {
+    return "WebBrowser";
+  }
+
   get lc_namespace() {
     return [...super.lc_namespace, "webbrowser"];
   }
@@ -236,7 +252,12 @@ export class WebBrowser extends Tool {
         docs,
         this.embeddings
       );
-      const results = await vectorStore.similaritySearch(task, 4);
+      const results = await vectorStore.similaritySearch(
+        task,
+        4,
+        undefined,
+        runManager?.getChild("vectorstore")
+      );
       context = results.map((res) => res.pageContent).join("\n");
     }
 

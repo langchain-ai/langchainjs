@@ -9,6 +9,9 @@ import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
+/**
+ * Interface for the response hit from a vector search in Typesense.
+ */
 interface VectorSearchResponseHit<T extends DocumentSchema>
   extends SearchResponseHit<T> {
   vector_distance?: number;
@@ -87,6 +90,10 @@ export class Typesense extends VectorStore {
     data: Record<string, unknown>[],
     collectionName: string
   ) => Promise<void>;
+
+  _vectorstoreType(): string {
+    return "typesense";
+  }
 
   constructor(embeddings: Embeddings, config: TypesenseConfig) {
     super(embeddings, config);
@@ -203,6 +210,11 @@ export class Typesense extends VectorStore {
     await this.import(typesenseDocuments, this.schemaName);
   }
 
+  /**
+   * Adds vectors to the vector store.
+   * @param vectors Vectors to add.
+   * @param documents Documents associated with the vectors.
+   */
   async addVectors(vectors: number[][], documents: Document[]) {
     const typesenseDocuments = this._documentsToTypesenseRecords(
       documents,

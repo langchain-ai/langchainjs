@@ -1,23 +1,39 @@
 import { BaseLLM } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
-import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
   GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
+/**
+ * Interface representing the input to the Google Vertex AI model.
+ */
 export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
 
+/**
+ * Interface representing the instance of text input to the Google Vertex
+ * AI model.
+ */
 interface GoogleVertexAILLMTextInstance {
   content: string;
 }
 
+/**
+ * Interface representing the instance of code input to the Google Vertex
+ * AI model.
+ */
 interface GoogleVertexAILLMCodeInstance {
   prefix: string;
 }
 
+/**
+ * Type representing an instance of either text or code input to the
+ * Google Vertex AI model.
+ */
 type GoogleVertexAILLMInstance =
   | GoogleVertexAILLMTextInstance
   | GoogleVertexAILLMCodeInstance;
@@ -54,8 +70,8 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
 
   topK = 40;
 
-  private connection: GoogleVertexAIConnection<
-    this["CallOptions"],
+  private connection: GoogleVertexAILLMConnection<
+    BaseLanguageModelCallOptions,
     GoogleVertexAILLMInstance,
     TextPrediction
   >;
@@ -66,7 +82,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     this.model = fields?.model ?? this.model;
 
     // Change the defaults for code models
-    if (this.model === "code-gecko") {
+    if (this.model.startsWith("code-gecko")) {
       this.maxOutputTokens = 64;
     }
     if (this.model.startsWith("code-")) {
@@ -78,7 +94,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
 
-    this.connection = new GoogleVertexAIConnection(
+    this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller
     );
@@ -123,20 +139,43 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     ];
   }
 
+  /**
+   * Formats the input instance as a text instance for the Google Vertex AI
+   * model.
+   * @param prompt Prompt to be formatted as a text instance.
+   * @returns A GoogleVertexAILLMInstance object representing the formatted text instance.
+   */
   formatInstanceText(prompt: string): GoogleVertexAILLMInstance {
     return { content: prompt };
   }
 
+  /**
+   * Formats the input instance as a code instance for the Google Vertex AI
+   * model.
+   * @param prompt Prompt to be formatted as a code instance.
+   * @returns A GoogleVertexAILLMInstance object representing the formatted code instance.
+   */
   formatInstanceCode(prompt: string): GoogleVertexAILLMInstance {
     return { prefix: prompt };
   }
 
+  /**
+   * Formats the input instance for the Google Vertex AI model based on the
+   * model type (text or code).
+   * @param prompt Prompt to be formatted as an instance.
+   * @returns A GoogleVertexAILLMInstance object representing the formatted instance.
+   */
   formatInstance(prompt: string): GoogleVertexAILLMInstance {
     return this.model.startsWith("code-")
       ? this.formatInstanceCode(prompt)
       : this.formatInstanceText(prompt);
   }
 
+  /**
+   * Extracts the prediction from the API response.
+   * @param result The API response from which to extract the prediction.
+   * @returns A TextPrediction object representing the extracted prediction.
+   */
   extractPredictionFromResponse(
     result: GoogleVertexAILLMResponse<TextPrediction>
   ): TextPrediction {

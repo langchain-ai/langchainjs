@@ -38,7 +38,6 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
-      options: { adapter: undefined },
     })
   ).rejects.toThrow();
 }, 5000);
@@ -63,7 +62,6 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   await expect(() => {
     const ret = model.call("Print hello world", {
       signal: controller.signal,
-      options: { adapter: undefined },
     });
 
     controller.abort();
@@ -217,4 +215,44 @@ test("Test OpenAI prompt value", async () => {
     }
   }
   console.log({ res });
+});
+
+test("Test OpenAI stream method", async () => {
+  const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
+  const stream = await model.stream("Print hello world.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+});
+
+test("Test OpenAI stream method with abort", async () => {
+  await expect(async () => {
+    const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
+    const stream = await model.stream(
+      "How is your day going? Be extremely verbose.",
+      {
+        signal: AbortSignal.timeout(1000),
+      }
+    );
+    for await (const chunk of stream) {
+      console.log(chunk);
+    }
+  }).rejects.toThrow();
+});
+
+test("Test OpenAI stream method with early break", async () => {
+  const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
+  const stream = await model.stream(
+    "How is your day going? Be extremely verbose."
+  );
+  let i = 0;
+  for await (const chunk of stream) {
+    console.log(chunk);
+    i += 1;
+    if (i > 5) {
+      break;
+    }
+  }
 });

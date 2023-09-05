@@ -4,28 +4,53 @@ import {
   NotFoundError,
   ZepClient,
 } from "@getzep/zep-js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
-export type ZepRetrieverConfig = {
+/**
+ * Configuration interface for the ZepRetriever class. Extends the
+ * BaseRetrieverInput interface.
+ */
+export interface ZepRetrieverConfig extends BaseRetrieverInput {
   sessionId: string;
   url: string;
   topK?: number;
   apiKey?: string;
-};
+}
 
+/**
+ * Class for retrieving information from a Zep long-term memory store.
+ * Extends the BaseRetriever class.
+ */
 export class ZepRetriever extends BaseRetriever {
-  private zepClient: ZepClient;
+  static lc_name() {
+    return "ZepRetriever";
+  }
+
+  lc_namespace = ["langchain", "retrievers", "zep"];
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "ZEP_API_KEY",
+      url: "ZEP_API_URL",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return { apiKey: "api_key" };
+  }
+
+  zepClientPromise: Promise<ZepClient>;
 
   private sessionId: string;
 
   private topK?: number;
 
   constructor(config: ZepRetrieverConfig) {
-    super();
-    this.zepClient = new ZepClient(config.url, config.apiKey);
+    super(config);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
+    this.zepClientPromise = ZepClient.init(config.url, config.apiKey);
   }
 
   /**
@@ -50,10 +75,15 @@ export class ZepRetriever extends BaseRetriever {
    *  @param {string} query - The query string.
    *  @returns {Promise<Document[]>} A promise that resolves to an array of relevant Document objects.
    */
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     const payload: MemorySearchPayload = { text: query, metadata: {} };
+    // Wait for ZepClient to be initialized
+    const zepClient = await this.zepClientPromise;
+    if (!zepClient) {
+      throw new Error("ZepClient is not initialized");
+    }
     try {
-      const results: MemorySearchResult[] = await this.zepClient.searchMemory(
+      const results: MemorySearchResult[] = await zepClient.memory.searchMemory(
         this.sessionId,
         payload,
         this.topK

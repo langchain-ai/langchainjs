@@ -4,29 +4,53 @@ import {
   AgentFinish,
   BaseMessage,
   ChainValues,
+  ChatGenerationChunk,
+  GenerationChunk,
   LLMResult,
 } from "../schema/index.js";
 import {
   Serializable,
   Serialized,
   SerializedNotImplemented,
+  get_lc_unique_name,
 } from "../load/serializable.js";
 import { SerializedFields } from "../load/map_keys.js";
+import { Document } from "../document.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
 
+/**
+ * Interface for the input parameters of the BaseCallbackHandler class. It
+ * allows to specify which types of events should be ignored by the
+ * callback handler.
+ */
 export interface BaseCallbackHandlerInput {
   ignoreLLM?: boolean;
   ignoreChain?: boolean;
   ignoreAgent?: boolean;
+  ignoreRetriever?: boolean;
 }
 
+/**
+ * Interface for the indices of a new token produced by an LLM or Chat
+ * Model in streaming mode.
+ */
 export interface NewTokenIndices {
   prompt: number;
   completion: number;
 }
 
+// TODO: Add all additional callback fields here
+export type HandleLLMNewTokenCallbackFields = {
+  chunk?: GenerationChunk | ChatGenerationChunk;
+};
+
+/**
+ * Abstract class that provides a set of optional methods that can be
+ * overridden in derived classes to handle various events during the
+ * execution of a LangChain application.
+ */
 abstract class BaseCallbackHandlerMethodsClass {
   /**
    * Called at the start of an LLM or Chat Model run, with the prompt(s)
@@ -56,7 +80,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     idx: NewTokenIndices,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
   ): Promise<void> | void;
 
   /**
@@ -103,7 +128,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    runType?: string
   ): Promise<void> | void;
 
   /**
@@ -113,7 +139,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> | void;
 
   /**
@@ -123,7 +150,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     outputs: ChainValues,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> | void;
 
   /**
@@ -187,6 +215,29 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[]
   ): Promise<void> | void;
+
+  handleRetrieverStart?(
+    retriever: Serialized,
+    query: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: Record<string, unknown>
+  ): Promise<void> | void;
+
+  handleRetrieverEnd?(
+    documents: Document[],
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): Promise<void> | void;
+
+  handleRetrieverError?(
+    err: Error,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): Promise<void> | void;
 }
 
 /**
@@ -200,6 +251,12 @@ abstract class BaseCallbackHandlerMethodsClass {
  */
 export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
+/**
+ * Abstract base class for creating callback handlers in the LangChain
+ * framework. It provides a set of optional methods that can be overridden
+ * in derived classes to handle various events during the execution of a
+ * LangChain application.
+ */
 export abstract class BaseCallbackHandler
   extends BaseCallbackHandlerMethodsClass
   implements BaseCallbackHandlerInput, Serializable
@@ -222,6 +279,26 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
+  /**
+   * The name of the serializable. Override to provide an alias or
+   * to preserve the serialized module name in minified environments.
+   *
+   * Implemented as a static method to support loading logic.
+   */
+  static lc_name(): string {
+    return this.name;
+  }
+
+  /**
+   * The final serialized identifier for the module.
+   */
+  get lc_id(): string[] {
+    return [
+      ...this.lc_namespace,
+      get_lc_unique_name(this.constructor as typeof BaseCallbackHandler),
+    ];
+  }
+
   lc_kwargs: SerializedFields;
 
   abstract name: string;
@@ -231,6 +308,8 @@ export abstract class BaseCallbackHandler
   ignoreChain = false;
 
   ignoreAgent = false;
+
+  ignoreRetriever = false;
 
   awaitHandlers =
     typeof process !== "undefined"
@@ -245,6 +324,7 @@ export abstract class BaseCallbackHandler
       this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
+      this.ignoreRetriever = input.ignoreRetriever ?? this.ignoreRetriever;
     }
   }
 

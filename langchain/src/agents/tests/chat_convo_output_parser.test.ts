@@ -43,6 +43,54 @@ test("Can parse JSON with text in front of it", async () => {
       toolInput:
         "```sql\nSELECT * FROM orders\nJOIN users ON users.id = orders.user_id\nWHERE users.email = 'bud'```",
     },
+    {
+      input:
+        '{\n \t\r\n"action":"Final Answer",\n\t\r  "action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"\n\t\r}',
+      output:
+        '{"action":"Final Answer","action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"}',
+      tool: "Final Answer",
+      toolInput: 'The tool input ```json\\n{\\"yes\\":true}\\n```',
+    },
+    {
+      input:
+        '```json\n{\n \t\r\n"action":"Final Answer",\n\t\r  "action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"\n\t\r}\n\n\n\t\r```',
+      output:
+        '{"action":"Final Answer","action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"}',
+      tool: "Final Answer",
+      toolInput: 'The tool input ```json\\n{\\"yes\\":true}\\n```',
+    },
+    {
+      input:
+        'Here we have some boilerplate nonsense```json\n{\n \t\r\n"action":"Final Answer",\n\t\r  "action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"\n\t\r}\n\n\n\t\r``` and at the end there is more nonsense',
+      output:
+        '{"action":"Final Answer","action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"}',
+      tool: "Final Answer",
+      toolInput: 'The tool input ```json\\n{\\"yes\\":true}\\n```',
+    },
+    {
+      input:
+        'Here we have some boilerplate nonsense```\n{\n \t\r\n"action":"Final Answer",\n\t\r  "action_input":"The tool input ```javascript\\n{\\"yes\\":true}\\n```"\n\t\r}\n\n\n\t\r``` and at the end there is more nonsense',
+      output:
+        '{"action":"Final Answer","action_input":"The tool input ```javascript\\n{\\"yes\\":true}\\n```"}',
+      tool: "Final Answer",
+      toolInput: 'The tool input ```javascript\\n{\\"yes\\":true}\\n```',
+    },
+    {
+      input:
+        '{\n \t\r\n"action":"Final Answer",\n\t\r  "action_input":"The tool input ```javascript\\n{\\"yes\\":true}\\n```"\n\t\r}',
+      output:
+        '{"action":"Final Answer","action_input":"The tool input ```javascript\\n{\\"yes\\":true}\\n```"}',
+      tool: "Final Answer",
+      toolInput: 'The tool input ```javascript\\n{\\"yes\\":true}\\n```',
+    },
+    {
+      input:
+        '{\n \t\r\n"action":"Final Answer",\n\t\r  "action_input":"this is a regular text response"\n\t\r}',
+      output:
+        '{"action":"Final Answer","action_input":"this is a regular text response"}',
+      tool: "Final Answer",
+      toolInput: "this is a regular text response",
+    },
   ];
 
   const p = new ChatConversationalAgentOutputParser({

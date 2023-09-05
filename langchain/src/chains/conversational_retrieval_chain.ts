@@ -1,7 +1,13 @@
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import { ChainValues, BaseRetriever, BaseMessage } from "../schema/index.js";
+import {
+  ChainValues,
+  BaseMessage,
+  HumanMessage,
+  AIMessage,
+} from "../schema/index.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
@@ -17,6 +23,10 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:`;
 
+/**
+ * Interface for the input parameters of the
+ * ConversationalRetrievalQAChain class.
+ */
 export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
@@ -25,10 +35,19 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   inputKey?: string;
 }
 
+/**
+ * Class for conducting conversational question-answering tasks with a
+ * retrieval component. Extends the BaseChain class and implements the
+ * ConversationalRetrievalQAChainInput interface.
+ */
 export class ConversationalRetrievalQAChain
   extends BaseChain
   implements ConversationalRetrievalQAChainInput
 {
+  static lc_name() {
+    return "ConversationalRetrievalQAChain";
+  }
+
   inputKey = "question";
 
   chatHistoryKey = "chat_history";
@@ -61,9 +80,36 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
-  static getChatHistoryString(chatHistory: string | BaseMessage[]) {
+  /**
+   * Static method to convert the chat history input into a formatted
+   * string.
+   * @param chatHistory Chat history input which can be a string, an array of BaseMessage instances, or an array of string arrays.
+   * @returns A formatted string representing the chat history.
+   */
+  static getChatHistoryString(
+    chatHistory: string | BaseMessage[] | string[][]
+  ) {
+    let historyMessages: BaseMessage[];
     if (Array.isArray(chatHistory)) {
-      return chatHistory
+      // TODO: Deprecate on a breaking release
+      if (
+        Array.isArray(chatHistory[0]) &&
+        typeof chatHistory[0][0] === "string"
+      ) {
+        console.warn(
+          "Passing chat history as an array of strings is deprecated.\nPlease see https://js.langchain.com/docs/modules/chains/popular/chat_vector_db#externally-managed-memory for more information."
+        );
+        historyMessages = chatHistory.flat().map((stringMessage, i) => {
+          if (i % 2 === 0) {
+            return new HumanMessage(stringMessage);
+          } else {
+            return new AIMessage(stringMessage);
+          }
+        });
+      } else {
+        historyMessages = chatHistory as BaseMessage[];
+      }
+      return historyMessages
         .map((chatMessage) => {
           if (chatMessage._getType() === "human") {
             return `Human: ${chatMessage.content}`;
@@ -112,7 +158,10 @@ export class ConversationalRetrievalQAChain
         );
       }
     }
-    const docs = await this.retriever.getRelevantDocuments(newQuestion);
+    const docs = await this.retriever.getRelevantDocuments(
+      newQuestion,
+      runManager?.getChild("retriever")
+    );
     const inputs = {
       question: newQuestion,
       input_documents: docs,
@@ -146,6 +195,16 @@ export class ConversationalRetrievalQAChain
     throw new Error("Not implemented.");
   }
 
+  /**
+   * Static method to create a new ConversationalRetrievalQAChain from a
+   * BaseLanguageModel and a BaseRetriever.
+   * @param llm {@link BaseLanguageModel} instance used to generate a new question.
+   * @param retriever {@link BaseRetriever} instance used to retrieve relevant documents.
+   * @param options.returnSourceDocuments Whether to return source documents in the final output
+   * @param options.questionGeneratorChainOptions Options to initialize the standalone question generation chain used as the first internal step
+   * @param options.qaChainOptions {@link QAChainParams} used to initialize the QA chain used as the second internal step
+   * @returns A new instance of ConversationalRetrievalQAChain.
+   */
   static fromLLM(
     llm: BaseLanguageModel,
     retriever: BaseRetriever,
@@ -156,11 +215,11 @@ export class ConversationalRetrievalQAChain
       questionGeneratorTemplate?: string;
       /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
-      qaChainOptions?: QAChainParams;
       questionGeneratorChainOptions?: {
         llm?: BaseLanguageModel;
         template?: string;
       };
+      qaChainOptions?: QAChainParams;
     } & Omit<
       ConversationalRetrievalQAChainInput,
       "retriever" | "combineDocumentsChain" | "questionGeneratorChain"

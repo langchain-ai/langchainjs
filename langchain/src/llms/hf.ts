@@ -1,6 +1,10 @@
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
+/**
+ * Interface defining the parameters for configuring the Hugging Face
+ * model for text generation.
+ */
 export interface HFInput {
   /** Model to use */
   model: string;
@@ -26,6 +30,10 @@ export interface HFInput {
   apiKey?: string;
 }
 
+/**
+ * Class implementing the Large Language Model (LLM) interface using the
+ * Hugging Face Inference API for text generation.
+ */
 export class HuggingFaceInference extends LLM implements HFInput {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {

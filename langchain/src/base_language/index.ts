@@ -1,5 +1,13 @@
 import { type Tiktoken } from "js-tiktoken/lite";
-import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
+import type { OpenAI as OpenAIClient } from "openai";
+
+import {
+  BaseMessage,
+  BaseMessageLike,
+  BasePromptValue,
+  LLMResult,
+  coerceMessageLikeToMessage,
+} from "../schema/index.js";
 import {
   BaseCallbackConfig,
   CallbackManager,
@@ -8,7 +16,9 @@ import {
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
-import { Serializable } from "../load/serializable.js";
+import { Runnable, RunnableConfig } from "../schema/runnable.js";
+import { StringPromptValue } from "../prompts/base.js";
+import { ChatPromptValue } from "../prompts/chat.js";
 
 const getVerbosity = () => false;
 
@@ -28,8 +38,12 @@ export interface BaseLangChainParams {
 /**
  * Base class for language models, chains, tools.
  */
-export abstract class BaseLangChain
-  extends Serializable
+export abstract class BaseLangChain<
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput, CallOptions>
   implements BaseLangChainParams
 {
   /**
@@ -93,14 +107,28 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   signal?: AbortSignal;
 }
 
+export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
+  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
+}
+
+export type BaseLanguageModelInput =
+  | BasePromptValue
+  | string
+  | BaseMessageLike[];
+
 /**
  * Base class for language models.
  */
-export abstract class BaseLanguageModel
-  extends BaseLangChain
+export abstract class BaseLanguageModel<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput = any,
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+  >
+  extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
   implements BaseLanguageModelParams
 {
-  declare CallOptions: BaseLanguageModelCallOptions;
+  declare CallOptions: CallOptions;
 
   /**
    * Keys that the language model accepts as call options.
@@ -129,19 +157,19 @@ export abstract class BaseLanguageModel
 
   abstract generatePrompt(
     promptValues: BasePromptValue[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
   abstract predict(
     text: string,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
   abstract predictMessages(
     messages: BaseMessage[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage>;
 
@@ -177,6 +205,18 @@ export abstract class BaseLanguageModel
     return numTokens;
   }
 
+  protected static _convertInputToPromptValue(
+    input: BaseLanguageModelInput
+  ): BasePromptValue {
+    if (typeof input === "string") {
+      return new StringPromptValue(input);
+    } else if (Array.isArray(input)) {
+      return new ChatPromptValue(input.map(coerceMessageLikeToMessage));
+    } else {
+      return input;
+    }
+  }
+
   /**
    * Get the identifying parameters of the LLM.
    */
@@ -210,7 +250,7 @@ export abstract class BaseLanguageModel
       openai: (await import("../chat_models/openai.js")).ChatOpenAI,
     }[_type];
     if (Cls === undefined) {
-      throw new Error(`Cannot load  LLM with type ${_type}`);
+      throw new Error(`Cannot load LLM with type ${_type}`);
     }
     return new Cls(rest);
   }

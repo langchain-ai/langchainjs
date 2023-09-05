@@ -50,9 +50,7 @@ export async function run() {
     }),
   ];
 
-  const embeddings = new OpenAIEmbeddings(undefined, {
-    baseOptions: { temperature: 0 },
-  });
+  const embeddings = new OpenAIEmbeddings();
 
   // await ElasticVectorSearch.fromDocuments(docs, embeddings, clientArgs);
   const vectorStore = new ElasticVectorSearch(embeddings, clientArgs);
