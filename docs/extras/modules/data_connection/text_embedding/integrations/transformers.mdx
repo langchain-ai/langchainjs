@@ -1,3 +1,5 @@
+import CodeBlock from "@theme/CodeBlock";
+
 # HuggingFace Transformers
 
 The `TransformerEmbeddings` class uses the Transformers.js API to generate embeddings for a given text.
@@ -12,10 +14,6 @@ npm install @xenova/transformers
 
 ## Example
 
-```typescript
-import { TransformerEmbeddings } from "langchain/embeddings/hf_transformers";
+import HFTransformersExample from "@examples/models/embeddings/hf_transformers.ts";
 
-const embeddings = new TransformerEmbeddings({
-  modelName: "Xenova/all-MiniLM-L6-v2", // In Node.js defaults to process.env.OPENAI_API_KEY
-});
-```
+<CodeBlock language="typescript">{HFTransformersExample}</CodeBlock>
