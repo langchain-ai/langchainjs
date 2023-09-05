@@ -42,7 +42,7 @@ export interface OllamaEmbeddingsRequestParams {
 }
 
 export interface OllamaEmbeddingsReturnParams {
-  embedding: number[]
+  embedding: number[];
 }
 
 export interface OllamaRequestParams {
