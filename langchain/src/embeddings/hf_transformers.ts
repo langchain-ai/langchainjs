@@ -79,7 +79,9 @@ export class HuggingFaceTransformersEmbeddings
       this.modelName
     ));
 
-    const output = await pipe(texts, { pooling: "mean", normalize: true });
-    return output.tolist();
+    return this.caller.call(async () => {
+      const output = await pipe(texts, { pooling: "mean", normalize: true });
+      return output.tolist();
+    });
   }
 }

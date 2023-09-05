@@ -59,6 +59,7 @@
       "src/embeddings/cohere.ts",
       "src/embeddings/tensorflow.ts",
       "src/embeddings/hf.ts",
+      "src/embeddings/hf_transformers.ts",
       "src/embeddings/googlevertexai.ts",
       "src/embeddings/googlepalm.ts",
       "src/embeddings/minimax.ts",
