@@ -70,6 +70,9 @@ embeddings/cache_backed.d.ts
 embeddings/fake.cjs
 embeddings/fake.js
 embeddings/fake.d.ts
+embeddings/ollama.cjs
+embeddings/ollama.js
+embeddings/ollama.d.ts
 embeddings/openai.cjs
 embeddings/openai.js
 embeddings/openai.d.ts

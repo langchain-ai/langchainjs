@@ -36,6 +36,15 @@ export interface OllamaInput {
   vocabOnly?: boolean;
 }
 
+export interface OllamaEmbeddingsRequestParams {
+  model: string;
+  prompt: string;
+}
+
+export interface OllamaEmbeddingsReturnParams {
+  embedding: number[]
+}
+
 export interface OllamaRequestParams {
   model: string;
   prompt: string;

@@ -37,6 +37,7 @@ const entrypoints = {
   "embeddings/base": "embeddings/base",
   "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/fake": "embeddings/fake",
+  "embeddings/ollama": "embeddings/ollama",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
   "embeddings/tensorflow": "embeddings/tensorflow",

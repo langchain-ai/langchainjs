@@ -9,6 +9,7 @@ export * from "langchain/chains/openai_functions";
 export * from "langchain/embeddings/base";
 export * from "langchain/embeddings/cache_backed";
 export * from "langchain/embeddings/fake";
+export * from "langchain/embeddings/ollama";
 export * from "langchain/embeddings/openai";
 export * from "langchain/embeddings/minimax";
 export * from "langchain/llms/base";
