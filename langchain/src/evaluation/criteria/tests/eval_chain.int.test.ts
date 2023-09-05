@@ -1,9 +1,9 @@
 import {test} from "@jest/globals";
-import {CriteriaEvalChain} from "../criteria.js";
+import {CriteriaEvalChain, LabeledCriteriaEvalChain} from "../criteria.js";
 import {ChatOpenAI} from "../../../chat_models/openai.js";
 
-test("Test CriteriaEvalChain", async () => {
-    const model = new ChatOpenAI({modelName: "gpt-4",verbose:true}, {baseURL: "https://ai.openreader.xyz/v1"});
+test.skip("Test CriteriaEvalChain", async () => {
+    const model = new ChatOpenAI({modelName: "gpt-4", verbose: true}, {baseURL: "https://ai.openreader.xyz/v1"});
 
     const chain = await CriteriaEvalChain.fromLLM(model, "conciseness");
 
@@ -15,4 +15,19 @@ test("Test CriteriaEvalChain", async () => {
     });
 
     console.log({res});
+});
+
+test("Test LabeledCriteriaEvalChain", async () => {
+    const model = new ChatOpenAI({modelName: "gpt-4", verbose: true}, {baseURL: "https://ai.openreader.xyz/v1"});
+
+    const chain = await LabeledCriteriaEvalChain.fromLLM(model, "correctness");
+
+    console.log("beginning evaluation");
+    const res = await chain.evaluateStrings({
+        input: "What is the capital of the US?",
+        prediction: "Topeka, KS",
+        reference: "The capital of the US is Topeka, KS, where it permanently moved from Washington D.C. on May 16, 2023",
+    });
+
+    console.log(res);
 });

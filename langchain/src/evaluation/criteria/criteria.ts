@@ -4,8 +4,8 @@ import {
     StringEvaluator,
     StringEvaluatorArgs,
 } from "../base.js";
-import {ChainValues, ChatGeneration, Generation} from "../../schema/index.js";
-import {CRITERIA_PROMPT} from "./prompt.js";
+import {ChainValues, ChatGeneration, Generation, RUN_KEY} from "../../schema/index.js";
+import {CRITERIA_PROMPT, PROMPT_WITH_REFERENCES} from "./prompt.js";
 import {BaseLanguageModel} from "../../base_language/index.js";
 import {Callbacks} from "../../callbacks/index.js";
 import {BaseCallbackConfig} from "../../callbacks/manager.js";
@@ -222,9 +222,40 @@ export class CriteriaEvalChain extends StringEvaluator {
     }
 
 
-    _evaluateStrings(args: StringEvaluatorArgs, callOptions: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
-        const reuslt = this.call({...this.getEvalInput(args), ...callOptions}, config);
-
-        return reuslt;
+    _prepareOutput(result: ChainValues) {
+        const parsed = result[this.outputKey];
+        if (RUN_KEY in result && result[RUN_KEY]) {
+            parsed[RUN_KEY] = result[RUN_KEY];
+        }
+        return parsed;
     }
+
+    async _evaluateStrings(args: StringEvaluatorArgs, callOptions: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
+        const result = await this.call({...this.getEvalInput(args), ...callOptions}, config);
+
+        return this._prepareOutput(result);
+    }
+}
+
+
+export class LabeledCriteriaEvalChain extends CriteriaEvalChain {
+
+    requiresReference = true;
+
+    static resolvePrompt(prompt?: BasePromptTemplate) {
+        const _prompt = prompt || PROMPT_WITH_REFERENCES;
+        const expectedInputVars: Set<string> = new Set(["input", "output", "criteria", "reference"]);
+        // Create a Set from inputVariables for a valid comparison
+        const inputVarsSet: Set<string> = new Set(_prompt.inputVariables);
+
+        if (!eqSet(expectedInputVars, inputVarsSet)) {
+            throw new Error(
+                `Input variables should be ${[...expectedInputVars]}, but got ${
+                    _prompt.inputVariables
+                }`
+            );
+        }
+        return _prompt;
+    }
+
 }
