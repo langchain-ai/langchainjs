@@ -166,6 +166,7 @@
       "src/schema/storage.ts",
       "src/sql_db.ts",
       "src/callbacks/index.ts",
+      "src/callbacks/handlers/llmonitor.ts",
       "src/output_parsers/index.ts",
       "src/output_parsers/expression.ts",
       "src/retrievers/amazon_kendra.ts",

@@ -170,6 +170,7 @@ const entrypoints = {
   sql_db: "sql_db",
   // callbacks
   callbacks: "callbacks/index",
+  "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
   // output_parsers
   output_parsers: "output_parsers/index",
   "output_parsers/expression": "output_parsers/expression",
@@ -260,6 +261,7 @@ const requiresOptionalDependency = [
   "tools/calculator",
   "tools/sql",
   "tools/webbrowser",
+  "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
   "embeddings/cohere",
