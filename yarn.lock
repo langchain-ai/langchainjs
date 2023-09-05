@@ -14976,7 +14976,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langchainhub: ~0.0.3
+    langchainhub: ~0.0.6
     langsmith: ~0.0.31
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
@@ -14986,7 +14986,7 @@ __metadata:
     node-llama-cpp: ^2.1.2
     notion-to-md: ^3.1.0
     object-hash: ^3.0.0
-    openai: ^3.3.0
+    openai: ^4.4.0
     openapi-types: ^12.1.3
     p-queue: ^6.6.2
     p-retry: 4
@@ -15074,7 +15074,6 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    langchainhub: ~0.0.3
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -15207,8 +15206,6 @@ __metadata:
       optional: true
     jsdom:
       optional: true
-    langchainhub:
-      optional: true
     mammoth:
       optional: true
     mongodb:
@@ -15258,10 +15255,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainhub@npm:~0.0.3":
-  version: 0.0.3
-  resolution: "langchainhub@npm:0.0.3"
-  checksum: 0962c6088a0cef8635335b735beae5e8654b9b506b4f8a144baba37f4798b1d197a34a1ff5368a982e204cdb9f4e0cb6cf8975b8baf742872829eb4bdb6eb552
+"langchainhub@npm:~0.0.6":
+  version: 0.0.6
+  resolution: "langchainhub@npm:0.0.6"
+  checksum: f771e5375b7ae9cc6fc59d5e2b1fd35c29e5759f4595617e3a235142bc2ca12c4135aa1631d85ee4e25c89968696242dd6380f6b90e87ffbc9006efc3cdc53c4
   languageName: node
   linkType: hard
 
@@ -17173,13 +17170,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^3.3.0":
-  version: 3.3.0
-  resolution: "openai@npm:3.3.0"
+"openai@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "openai@npm:4.4.0"
   dependencies:
-    axios: ^0.26.0
-    form-data: ^4.0.0
-  checksum: 28ccff8c09b6f47828c9583bb3bafc38a8459c76ea10eb9e08ca880f65523c5a9cc6c5f3c7669dded6f4c93e7cf49dd5c4dbfd12732a0f958c923117740d677b
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+  bin:
+    openai: bin/cli
+  checksum: c89b47f3d66c41d8a2080c23192573e8ce985aa3ba099bbe410fac2facf62f665aefad9ea3a7a210e35e650d8568ed1186e12806472d8242fc3dc31e930e6084
   languageName: node
   linkType: hard
 

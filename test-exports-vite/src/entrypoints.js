@@ -37,6 +37,7 @@ export * from "langchain/chat_models/baiduwenxin";
 export * from "langchain/chat_models/ollama";
 export * from "langchain/chat_models/minimax";
 export * from "langchain/schema";
+export * from "langchain/schema/document";
 export * from "langchain/schema/output_parser";
 export * from "langchain/schema/query_constructor";
 export * from "langchain/schema/retriever";

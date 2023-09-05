@@ -394,6 +394,9 @@ chat_models/minimax.d.ts
 schema.cjs
 schema.js
 schema.d.ts
+schema/document.cjs
+schema/document.js
+schema/document.d.ts
 schema/output_parser.cjs
 schema/output_parser.js
 schema/output_parser.d.ts
