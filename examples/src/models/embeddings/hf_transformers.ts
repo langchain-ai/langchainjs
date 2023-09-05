@@ -1,9 +1,9 @@
-import { GooglePaLMEmbeddings } from "langchain/embeddings/googlepalm";
+import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
 
-const model = new GooglePaLMEmbeddings({
-  apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLE_PALM_API_KEY`
-  modelName: "models/embedding-gecko-001", // OPTIONAL
+const model = new HuggingFaceTransformersEmbeddings({
+  modelName: "Xenova/all-MiniLM-L6-v2",
 });
+
 /* Embed queries */
 const res = await model.embedQuery(
   "What would be a good company name for a company that makes colorful socks?"

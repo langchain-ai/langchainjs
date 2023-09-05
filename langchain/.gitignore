@@ -82,6 +82,9 @@ embeddings/tensorflow.d.ts
 embeddings/hf.cjs
 embeddings/hf.js
 embeddings/hf.d.ts
+embeddings/hf_transformers.cjs
+embeddings/hf_transformers.js
+embeddings/hf_transformers.d.ts
 embeddings/googlevertexai.cjs
 embeddings/googlevertexai.js
 embeddings/googlevertexai.d.ts

@@ -16,6 +16,7 @@ export const optionalImportEntrypoints = [
   "langchain/embeddings/cohere",
   "langchain/embeddings/tensorflow",
   "langchain/embeddings/hf",
+  "langchain/embeddings/hf_transformers",
   "langchain/embeddings/googlevertexai",
   "langchain/embeddings/googlepalm",
   "langchain/llms/load",

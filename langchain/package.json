@@ -94,6 +94,9 @@
     "embeddings/hf.cjs",
     "embeddings/hf.js",
     "embeddings/hf.d.ts",
+    "embeddings/hf_transformers.cjs",
+    "embeddings/hf_transformers.js",
+    "embeddings/hf_transformers.d.ts",
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
@@ -676,6 +679,7 @@
     "@upstash/redis": "^1.20.6",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
+    "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
@@ -702,6 +706,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
+    "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
     "llmonitor": "^0.5.4",
     "mammoth": "^1.5.1",
@@ -773,6 +778,7 @@
     "@upstash/redis": "^1.20.6",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
+    "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
@@ -922,6 +928,9 @@
       "optional": true
     },
     "@xata.io/client": {
+      "optional": true
+    },
+    "@xenova/transformers": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -1236,6 +1245,11 @@
       "types": "./embeddings/hf.d.ts",
       "import": "./embeddings/hf.js",
       "require": "./embeddings/hf.cjs"
+    },
+    "./embeddings/hf_transformers": {
+      "types": "./embeddings/hf_transformers.d.ts",
+      "import": "./embeddings/hf_transformers.js",
+      "require": "./embeddings/hf_transformers.cjs"
     },
     "./embeddings/googlevertexai": {
       "types": "./embeddings/googlevertexai.d.ts",

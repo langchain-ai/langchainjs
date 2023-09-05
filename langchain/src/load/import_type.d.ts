@@ -46,6 +46,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/hf"?:
     | typeof import("../embeddings/hf.js")
     | Promise<typeof import("../embeddings/hf.js")>;
+  "langchain/embeddings/hf_transformers"?:
+    | typeof import("../embeddings/hf_transformers.js")
+    | Promise<typeof import("../embeddings/hf_transformers.js")>;
   "langchain/embeddings/googlevertexai"?:
     | typeof import("../embeddings/googlevertexai.js")
     | Promise<typeof import("../embeddings/googlevertexai.js")>;
