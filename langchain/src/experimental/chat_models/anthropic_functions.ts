@@ -118,6 +118,9 @@ export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCall
     if (forced) {
       const parser = new XMLParser();
       const result = parser.parse(`${chatGenerationContent}</tool_input>`);
+      if (functionCall === undefined) {
+        throw new Error(`Could not parse called function from model output.`);
+      }
       const responseMessageWithFunctions = new AIMessage({
         content: "",
         additional_kwargs: {

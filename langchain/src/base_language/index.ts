@@ -1,8 +1,5 @@
 import { type Tiktoken } from "js-tiktoken/lite";
-import {
-  ChatCompletionFunctions,
-  CreateChatCompletionRequestFunctionCall,
-} from "openai";
+import { OpenAI as OpenAIClient } from "openai";
 import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseCallbackConfig,
@@ -104,8 +101,8 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
 }
 
 export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
-  function_call?: CreateChatCompletionRequestFunctionCall;
-  functions?: ChatCompletionFunctions[];
+  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
 }
 
 export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
