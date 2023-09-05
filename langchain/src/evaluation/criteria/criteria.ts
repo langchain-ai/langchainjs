@@ -173,7 +173,8 @@ export class CriteriaEvalChain extends StringEvaluator {
     }
 
     static async fromLLM(llm: BaseLanguageModel, criteria: CRITERIA_TYPE, chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>) {
-        if (criteria === Criteria.CORRECTNESS) {
+
+        if (this.name === "CriteriaEvalChain" && criteria === Criteria.CORRECTNESS) {
             throw new Error(
                 "Correctness should not be used in the reference-free" +
                 " 'criteria' evaluator (CriteriaEvalChain)." +
