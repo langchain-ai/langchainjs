@@ -10,7 +10,7 @@ import {
   RUN_KEY,
   ChatGenerationChunk,
   BaseMessageLike,
-  coerceBaseMessageLikeToMessage,
+  coerceMessageLikeToMessage,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
@@ -220,7 +220,7 @@ export abstract class BaseChatModel<
     }
 
     const baseMessages = messages.map((messageList) =>
-      messageList.map(coerceBaseMessageLikeToMessage)
+      messageList.map(coerceMessageLikeToMessage)
     );
 
     const [runnableConfig, callOptions] =
@@ -343,7 +343,7 @@ export abstract class BaseChatModel<
     callbacks?: Callbacks
   ): Promise<BaseMessage> {
     const result = await this.generate(
-      [messages.map(coerceBaseMessageLikeToMessage)],
+      [messages.map(coerceMessageLikeToMessage)],
       options,
       callbacks
     );

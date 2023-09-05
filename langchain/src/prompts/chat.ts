@@ -12,7 +12,7 @@ import {
   InputValues,
   PartialValues,
   SystemMessage,
-  coerceBaseMessageLikeToMessage,
+  coerceMessageLikeToMessage,
   isBaseMessage,
 } from "../schema/index.js";
 import { Runnable } from "../schema/runnable.js";
@@ -421,16 +421,16 @@ function _isBaseMessagePromptTemplate(
   );
 }
 
-export function coerceBaseMessagePromptTemplateLikeToPromptTemplateOrMessage(
-  baseMessagePromptTemplateLike: BaseMessagePromptTemplateLike
+function _coerceMessagePromptTemplateLike(
+  messagePromptTemplateLike: BaseMessagePromptTemplateLike
 ): BaseMessagePromptTemplate | BaseMessage {
   if (
-    _isBaseMessagePromptTemplate(baseMessagePromptTemplateLike) ||
-    isBaseMessage(baseMessagePromptTemplateLike)
+    _isBaseMessagePromptTemplate(messagePromptTemplateLike) ||
+    isBaseMessage(messagePromptTemplateLike)
   ) {
-    return baseMessagePromptTemplateLike;
+    return messagePromptTemplateLike;
   }
-  const message = coerceBaseMessageLikeToMessage(baseMessagePromptTemplateLike);
+  const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   if (message._getType() === "human") {
     return HumanMessagePromptTemplate.fromTemplate(message.content);
   } else if (message._getType() === "ai") {
@@ -596,11 +596,7 @@ export class ChatPromptTemplate<
           // eslint-disable-next-line no-instanceof/no-instanceof
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
-            : [
-                coerceBaseMessagePromptTemplateLikeToPromptTemplateOrMessage(
-                  promptMessage
-                ),
-              ]
+            : [_coerceMessagePromptTemplateLike(promptMessage)]
         ),
       []
     );

@@ -468,7 +468,7 @@ export function isBaseMessage(
   return typeof (messageLike as BaseMessage)._getType === "function";
 }
 
-export function coerceBaseMessageLikeToMessage(
+export function coerceMessageLikeToMessage(
   messageLike: BaseMessageLike
 ): BaseMessage {
   if (typeof messageLike === "string") {

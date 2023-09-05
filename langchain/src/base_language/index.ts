@@ -4,7 +4,7 @@ import {
   BaseMessageLike,
   BasePromptValue,
   LLMResult,
-  coerceBaseMessageLikeToMessage,
+  coerceMessageLikeToMessage,
 } from "../schema/index.js";
 import {
   BaseCallbackConfig,
@@ -204,7 +204,7 @@ export abstract class BaseLanguageModel<
     if (typeof input === "string") {
       return new StringPromptValue(input);
     } else if (Array.isArray(input)) {
-      return new ChatPromptValue(input.map(coerceBaseMessageLikeToMessage));
+      return new ChatPromptValue(input.map(coerceMessageLikeToMessage));
     } else {
       return input;
     }
