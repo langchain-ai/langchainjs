@@ -33,9 +33,9 @@ import IgnoreExample from "@examples/document_loaders/github_ignore_paths.ts";
 
 <CodeBlock language="typescript">{IgnoreExample}</CodeBlock>
 
-### Using Different GitHub Instance
+### Using a Different GitHub Instance
 
-You may want to target a different GitHub instance than `github.com`, e.g. you have a GitHub Enterprise instance in your company.
+You may want to target a different GitHub instance than `github.com`, e.g. if you have a GitHub Enterprise instance for your company.
 For this you need two additional parameters:
 
 - `baseUrl` - the base URL of your GitHub instance, so the githubUrl matches `<baseUrl>/<owner>/<repo>/...`
@@ -47,7 +47,7 @@ import CustomInstanceExample from "@examples/document_loaders/github_custom_inst
 
 ### Dealing with Submodules
 
-In case your repository has submodules, you have to decide if the loader should follow them or not. You can control this with the Boolean `processSubmodules` parameter. By default, submodules are not processed.
+In case your repository has submodules, you have to decide if the loader should follow them or not. You can control this with the boolean `processSubmodules` parameter. By default, submodules are not processed.
 Note that processing submodules works only in conjunction with setting the `recursive` parameter to true.
 
 import SubmodulesExample from "@examples/document_loaders/github_submodules.ts";
