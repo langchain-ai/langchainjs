@@ -367,6 +367,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_loaders/fs/openai_whisper_audio.cjs",
+    "document_loaders/fs/openai_whisper_audio.js",
+    "document_loaders/fs/openai_whisper_audio.d.ts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",
@@ -1706,6 +1709,11 @@
       "types": "./document_loaders/fs/unstructured.d.ts",
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
+    },
+    "./document_loaders/fs/openai_whisper_audio": {
+      "types": "./document_loaders/fs/openai_whisper_audio.d.ts",
+      "import": "./document_loaders/fs/openai_whisper_audio.js",
+      "require": "./document_loaders/fs/openai_whisper_audio.cjs"
     },
     "./document_transformers/html_to_text": {
       "types": "./document_transformers/html_to_text.d.ts",
