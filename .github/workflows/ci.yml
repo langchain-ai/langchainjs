@@ -39,8 +39,8 @@ jobs:
       - name: Check linting
         run: yarn run lint
 
-  build:
-    name: Build and check types
+  build-docs:
+    name: Build and check docs
     runs-on: ubuntu-latest
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -54,8 +54,8 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build and check types
-        run: yarn run build
+      - name: Build and check docs
+        run: yarn docs
 
   test:
     name: Unit Tests
