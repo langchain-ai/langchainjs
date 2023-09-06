@@ -1,5 +1,4 @@
 import { type ClientOptions, OpenAI as OpenAIClient, toFile } from "openai";
-import * as path from "path";
 
 import { Document } from "../../document.js";
 import { BufferLoader } from "./buffer.js";
@@ -25,10 +24,9 @@ export class OpenAIWhisperAudio extends BufferLoader {
   ): Promise<Document<Record<string, any>>[]> {
     const fileName =
       metadata.source === "blob" ? metadata.blobType : metadata.source;
-    const pathSegments = fileName.split(path.sep);
     const transcriptionResponse =
       await this.openAIClient.audio.transcriptions.create({
-        file: await toFile(raw, pathSegments[pathSegments.length - 1]),
+        file: await toFile(raw, fileName),
         model: MODEL_NAME,
       });
     const document = new Document({
