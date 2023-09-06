@@ -22,7 +22,7 @@
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "build": "turbo run build --filter=\"!docs_skeleton\"",
+    "build": "turbo run build --filter=\"!docs_skeleton\" --filter=\"!test-exports-*\"",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --filter=\"!docs_skeleton\"",
