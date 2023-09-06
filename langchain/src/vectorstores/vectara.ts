@@ -107,7 +107,8 @@ export class VectaraStore extends VectorStore {
         ?.split(",")
         .map((id) => {
           const num = Number(id);
-          if (Number.isNaN(num)) throw new Error("Vectara corpus id is not a number.");
+          if (Number.isNaN(num))
+            throw new Error("Vectara corpus id is not a number.");
           return num;
         });
     if (!corpusId) {
@@ -117,7 +118,8 @@ export class VectaraStore extends VectorStore {
     if (typeof corpusId === "number") {
       this.corpusId = [corpusId];
     } else {
-      if (corpusId.length === 0) throw new Error("Vectara corpus id is not provided.");
+      if (corpusId.length === 0)
+        throw new Error("Vectara corpus id is not provided.");
       this.corpusId = corpusId;
     }
 
