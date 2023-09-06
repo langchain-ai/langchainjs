@@ -162,11 +162,7 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
 
         const criteria_ = this.resolvePairwiseCriteria(criteria);
         const criteriaStr = Object.entries(criteria_).map(([k, v]) => `${k}: ${v}`).join("\n");
-        console.log("criteriaStr", criteriaStr);
-
-
         prompt = await prompt.partial({criteria: criteriaStr});
-
 
         const options = chainOptions;
         if (options) {

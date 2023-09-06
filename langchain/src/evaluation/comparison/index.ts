@@ -1,1 +1,1 @@
-export { CriteriaEvalChain } from "./pairwise.js";
+export * from "./pairwise.js";

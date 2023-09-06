@@ -3,7 +3,7 @@ import {ChatOpenAI} from "../../../chat_models/openai.js";
 import {LabeledPairwiseStringEvalChain, PairwiseStringEvalChain} from "../pairwise.js";
 import {Criteria} from "../../criteria/criteria.js";
 
-test.skip("Test PairwiseStringEvalChain", async () => {
+test.skip("Test TrajectoryEvalChain", async () => {
     const model = new ChatOpenAI({
         modelName: "gpt-4",
         verbose: true

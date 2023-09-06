@@ -1,5 +1,5 @@
 import {BaseChain, LLMChain, LLMChainInput} from "../chains/index.js";
-import {ChainValues} from "../schema/index.js";
+import {AgentStep, ChainValues} from "../schema/index.js";
 import {BaseLanguageModel} from "../base_language/index.js";
 import {Callbacks} from "../callbacks/index.js";
 import {BaseCallbackConfig} from "../callbacks/manager.js";
@@ -12,11 +12,13 @@ export interface LLMEvalChainInput<T extends Record<string, string> = Record<str
 }
 
 
+export type EvalOutputType = Record<string, string | number | boolean>
+
 /**
  * Base class for evaluators.
  */
 export abstract class LLMEvalChain<
-    T extends Record<string, string> = Record<string, string>,
+    T extends EvalOutputType = EvalOutputType,
     L extends BaseLanguageModel = BaseLanguageModel
 >
     extends LLMChain<T, L> {
@@ -252,5 +254,50 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
     evaluateStringPairs(args: LLMPairwiseStringEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
         this.checkEvaluationArgs(args.reference, args.input);
         return this._evaluateStringPairs(args, callOptions, config);
+    }
+}
+
+export interface LLMTrajectoryEvaluatorArgs {
+    input: string;
+    prediction: string;
+    reference?: string;
+    agentTrajectory: AgentStep[];
+}
+
+
+export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
+
+    requiresInput = true;
+
+    /**
+     * The name of the evaluation.
+     */
+    evaluationName?: string = this.constructor.name;
+
+    /**
+     * Evaluate Chain or LLM output, based on optional input and label.
+     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
+     * - score: the score of the evaluation, if applicable.
+     * - value: the string value of the evaluation, if applicable.
+     * - reasoning: the reasoning for the evaluation, if applicable.
+     * @param args
+     * @param callOptions
+     * @param config
+     */
+    abstract _evaluateAgentTrajectory(args: LLMTrajectoryEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues>
+
+    /**
+     * Evaluate Chain or LLM output, based on optional input and label.
+     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
+     * - score: the score of the evaluation, if applicable.
+     * - value: the string value of the evaluation, if applicable.
+     * - reasoning: the reasoning for the evaluation, if applicable.
+     * @param args
+     * @param callOptions
+     * @param config
+     */
+    evaluateAgentTrajectory(args: LLMTrajectoryEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
+        this.checkEvaluationArgs(args.reference, args.input);
+        return this._evaluateAgentTrajectory(args, callOptions, config);
     }
 }

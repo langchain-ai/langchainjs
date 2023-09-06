@@ -1,1 +1,1 @@
-export { CriteriaEvalChain } from "./criteria.js";
+export * from "./criteria.js";
