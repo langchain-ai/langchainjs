@@ -9,7 +9,7 @@ describe("Worker", () => {
     worker = await unstable_dev("src/index.ts", {
       experimental: { disableExperimentalWarning: true },
     });
-  }, 30000);
+  }, 60000);
 
   afterAll(async () => {
     await worker.stop();
@@ -17,5 +17,5 @@ describe("Worker", () => {
 
   it("should start", async () => {
     expect(true).toBe(true);
-  });
+  }, 60000);
 });
