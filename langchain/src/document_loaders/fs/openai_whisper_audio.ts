@@ -20,8 +20,8 @@ export class OpenAIWhisperAudio extends BufferLoader {
 
   protected async parse(
     raw: Buffer,
-    metadata: Record<string, any>
-  ): Promise<Document<Record<string, any>>[]> {
+    metadata: Record<string, string>
+  ): Promise<Document[]> {
     const fileName =
       metadata.source === "blob" ? metadata.blobType : metadata.source;
     const transcriptionResponse =
