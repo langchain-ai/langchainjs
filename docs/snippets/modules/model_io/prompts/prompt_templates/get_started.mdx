@@ -3,7 +3,8 @@ Here's a simple example:
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
 
-const prompt = PromptTemplate.fromTemplate<{product: string}>(
+// If a template is passed in, the input variables are inferred automatically from the template.
+const prompt = PromptTemplate.fromTemplate(
   `You are a naming consultant for new companies.
 What is a good name for a company that makes {product}?`
 );
@@ -79,14 +80,6 @@ const formattedPromptTemplate = await promptTemplate.format({
 });
 console.log(formattedPromptTemplate);
 // "Tell me a funny joke about chickens."
-```
-
-**Note:** If you're using TypeScript, keep in mind if you use `.fromTemplate` in this way, the compiler will not be able to automatically infer what inputs
-are required. To get around this, you can manually specify a type parameter like this:
-
-```typescript
-const template = "Tell me a {adjective} joke about {content}.";
-const promptTemplate = PromptTemplate.fromTemplate<{ adjective: string, content: string }>(template);
 ```
 
 You can create custom prompt templates that format the prompt in any way you want. For more information, see [Custom Prompt Templates](/docs/modules/model_io/prompts/prompt_templates).

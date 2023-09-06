@@ -3,6 +3,7 @@ import {
   BaseRun,
   RunCreate,
   RunUpdate as BaseRunUpdate,
+  KVMap,
 } from "langsmith/schemas";
 import {
   getEnvironmentVariable,
@@ -19,6 +20,7 @@ export interface Run extends BaseRun {
 
 export interface RunUpdate extends BaseRunUpdate {
   events: BaseRun["events"];
+  inputs: KVMap;
 }
 
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
@@ -83,6 +85,7 @@ export class LangChainTracer
       error: run.error,
       outputs: run.outputs,
       events: run.events,
+      inputs: run.inputs,
     };
     await this.client.updateRun(run.id, runUpdate);
   }

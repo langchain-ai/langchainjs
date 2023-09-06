@@ -111,7 +111,7 @@ export class SageMakerEndpoint extends LLM {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       "clientOptions.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
-      "clientOptions.credentials.secretAccessKey": "AWS_SECRETE_ACCESS_KEY",
+      "clientOptions.credentials.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
       "clientOptions.credentials.sessionToken": "AWS_SESSION_TOKEN",
     };
   }

@@ -1,4 +1,4 @@
-import { ChatCompletionRequestMessageFunctionCall } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
@@ -42,7 +42,7 @@ type FunctionsAgentAction = AgentAction & {
 function parseOutput(message: BaseMessage): FunctionsAgentAction | AgentFinish {
   if (message.additional_kwargs.function_call) {
     // eslint-disable-next-line prefer-destructuring
-    const function_call: ChatCompletionRequestMessageFunctionCall =
+    const function_call: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall =
       message.additional_kwargs.function_call;
     try {
       const toolInput = function_call.arguments

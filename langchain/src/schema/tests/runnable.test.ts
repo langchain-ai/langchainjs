@@ -175,9 +175,7 @@ test("Create a runnable sequence and run it", async () => {
 });
 
 test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
-  const promptTemplate = PromptTemplate.fromTemplate<{ input: string }>(
-    "{input}"
-  );
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
   const llm = new FakeChatModel({});
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ outputValue: z.string().describe("A test value") })
@@ -338,4 +336,16 @@ test("RunnableWithFallbacks batch", async () => {
     "What up 3",
   ]);
   expect(result2).toEqual(["What up 1", "What up 2", "What up 3"]);
+});
+
+test("Stream with RunnableBinding", async () => {
+  const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
+  const stream = await llm.pipe(new StringOutputParser()).stream("Hi there!");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(chunks.length).toEqual("Hi there!".length);
+  expect(chunks.join("")).toEqual("Hi there!");
 });

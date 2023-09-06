@@ -34,7 +34,6 @@
     "@raycast/api": "^1.55.2",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
-    "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
     "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": "^2.2.7",
@@ -53,6 +52,7 @@
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "uuid": "^9.0.0",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0",
     "zod": "^3.21.4",
@@ -61,6 +61,7 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
+    "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "dotenv": "^16.0.3",

@@ -38,7 +38,6 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
-      options: { adapter: undefined },
     })
   ).rejects.toThrow();
 }, 5000);
@@ -63,7 +62,6 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   await expect(() => {
     const ret = model.call("Print hello world", {
       signal: controller.signal,
-      options: { adapter: undefined },
     });
 
     controller.abort();

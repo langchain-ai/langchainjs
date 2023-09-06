@@ -4,7 +4,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { StructuredOutputParser } from "langchain/output_parsers";
 
-const prompt = PromptTemplate.fromTemplate<{ input: string }>(
+const prompt = PromptTemplate.fromTemplate(
   `Return a JSON object containing the following value wrapped in an "input" key. Do not return anything else:\n{input}`
 );
 

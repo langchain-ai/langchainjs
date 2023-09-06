@@ -33,3 +33,19 @@ test("Test OpenAIEmbeddings concurrency", async () => {
     undefined
   );
 });
+
+test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () => {
+  await expect(async () => {
+    const model = new OpenAIEmbeddings({
+      timeout: 1,
+    });
+    await model.embedDocuments([
+      "Hello world",
+      "Bye bye",
+      "Hello world",
+      "Bye bye",
+      "Hello world",
+      "Bye bye",
+    ]);
+  }).rejects.toThrow();
+});
