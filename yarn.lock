@@ -11703,6 +11703,7 @@ __metadata:
     typesense: ^1.5.3
     uuid: ^9.0.0
     vectordb: ^0.1.4
+    voy-search: 0.6.2
     weaviate-ts-client: ^1.0.0
     zod: ^3.21.4
     zod-to-json-schema: ^3.21.4
@@ -15013,6 +15014,7 @@ __metadata:
     usearch: ^1.1.1
     uuid: ^9.0.0
     vectordb: ^0.1.4
+    voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
@@ -15094,6 +15096,7 @@ __metadata:
     typesense: ^1.5.3
     usearch: ^1.1.1
     vectordb: ^0.1.4
+    voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
@@ -15245,6 +15248,8 @@ __metadata:
     usearch:
       optional: true
     vectordb:
+      optional: true
+    voy-search:
       optional: true
     weaviate-ts-client:
       optional: true
@@ -21262,6 +21267,20 @@ __metadata:
   bin:
     vm2: bin/vm2
   checksum: 1ed7481e07ce8e03055101b382bfbf0d725a5c9b9bbe8bf75f71501cb43a6bd22f6a0a151975ff7cea8cad136d47e66d64f0a3248913f6d3ca3c405db12bacc0
+  languageName: node
+  linkType: hard
+
+"voy-search@npm:0.6.2":
+  version: 0.6.2
+  resolution: "voy-search@npm:0.6.2"
+  checksum: 94d1906afc3d64912a6b31950a1a303bddee1fe3f519ee406b857bde320e400d5d7bca7a415fdbe096d9ca68c2c7ecc0886b59d2c0deb84312ce9d118642ddbb
+  languageName: node
+  linkType: hard
+
+"voy-search@patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch::locator=langchainjs%40workspace%3A.":
+  version: 0.6.2
+  resolution: "voy-search@patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch::version=0.6.2&hash=d0cd9c&locator=langchainjs%40workspace%3A."
+  checksum: c680c904a19f72d78482da05d3f5fd3b96c8ccf1171f5273c593a29cae272c03d34f38f9f9e8bd2f656c48b1a12a5b6b3c8f858ad30d3aec287f8214c0f9e359
   languageName: node
   linkType: hard
 

@@ -229,6 +229,9 @@ vectorstores/usearch.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
+vectorstores/voy.cjs
+vectorstores/voy.js
+vectorstores/voy.d.ts
 vectorstores/xata.cjs
 vectorstores/xata.js
 vectorstores/xata.d.ts

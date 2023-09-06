@@ -93,6 +93,7 @@ const entrypoints = {
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
+  "vectorstores/voy": "vectorstores/voy",
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
   // text_splitter

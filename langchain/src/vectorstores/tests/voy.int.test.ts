@@ -1,10 +1,10 @@
 import { expect, test } from "@jest/globals";
-import {Voy as VoyOriginClient} from 'voy-search/voy_search.js';
+import { Voy as VoyOriginClient } from "voy-search";
 import { Document } from "../../document.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Voy, VoyClient } from "../voy.js";
 
-const client:VoyClient = new VoyOriginClient();
+const client: VoyClient = new VoyOriginClient();
 
 test("it can create index using Voy.from text, add new elements to the index and get queried documents", async () => {
   const vectorStore = await Voy.fromTexts(

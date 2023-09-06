@@ -1,15 +1,25 @@
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
-import type {Voy as VoyOriginClient, SearchResult} from 'voy-search';
+import type { Voy as VoyOriginClient, SearchResult } from "voy-search";
 
-export type VoyClient = Omit<VoyOriginClient,"remove"|"clear"|"size"|"serialize"|"free">;
+export type VoyClient = Omit<
+  VoyOriginClient,
+  "remove" | "clear" | "size" | "serialize" | "free"
+>;
 
+/**
+ * Internal interface for storing documents mappings.
+ */
 interface InternalDoc {
   embeddings: number[];
   document: Document;
 }
 
+/**
+ * Class that extends `VectorStore`. It allows to perform similarity search using
+ * Voi similarity search engine. The class requires passing Voy Client as an input parameter.
+ */
 export class Voy extends VectorStore {
   client: VoyClient;
 
@@ -17,12 +27,20 @@ export class Voy extends VectorStore {
 
   docstore: InternalDoc[] = [];
 
+  _vectorstoreType(): string {
+    return "voi";
+  }
+
   constructor(client: VoyClient, embeddings: Embeddings) {
     super(embeddings, {});
     this.client = client;
     this.embeddings = embeddings;
   }
 
+  /**
+   * Adds documents to the Voy database. The documents are embedded using embeddings provided while instantiating the class.
+   * @param documents An array of `Document` instances associated with the vectors.
+   */
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     if (documents.length === 0) {
@@ -43,7 +61,13 @@ export class Voy extends VectorStore {
     await this.addVectors([firstVector, ...restResults], documents);
   }
 
-  async addVectors(vectors: number[][], documents: Document[]) {
+  /**
+   * Adds vectors to the Voy database. The vectors are associated with
+   * the provided documents.
+   * @param vectors An array of vectors to be added to the database.
+   * @param documents An array of `Document` instances associated with the vectors.
+   */
+  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     if (vectors.length === 0) {
       return;
     }
@@ -67,12 +91,19 @@ export class Voy extends VectorStore {
     const embeddings = this.docstore.map((item, idx) => ({
       id: String(idx),
       embeddings: item.embeddings,
-      title:"",
-      url:""
+      title: "",
+      url: "",
     }));
     this.client.index({ embeddings });
   }
 
+  /**
+   * Searches for vectors in the Voy database that are similar to the
+   * provided query vector.
+   * @param query The query vector.
+   * @param k The number of similar vectors to return.
+   * @returns A promise that resolves with an array of tuples, each containing a `Document` instance and a similarity score.
+   */
   async similaritySearchVectorWithScore(query: number[], k: number) {
     if (this.numDimensions === null) {
       throw new Error("There aren't any elements in the index yet.");
@@ -98,6 +129,16 @@ export class Voy extends VectorStore {
     );
   }
 
+  /**
+   * Creates a new `Voy` instance from an array of text strings. The text
+   * strings are converted to `Document` instances and added to the Voy
+   * database.
+   * @param texts An array of text strings.
+   * @param metadatas An array of metadata objects or a single metadata object. If an array is provided, it must have the same length as the `texts` array.
+   * @param embeddings An `Embeddings` instance used to generate embeddings for the documents.
+   * @param client An instance of Voy client to use in the underlying operations.
+   * @returns A promise that resolves with a new `Voy` instance.
+   */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
@@ -116,6 +157,14 @@ export class Voy extends VectorStore {
     return Voy.fromDocuments(docs, embeddings, client);
   }
 
+  /**
+   * Creates a new `Voy` instance from an array of `Document` instances.
+   * The documents are added to the Voy database.
+   * @param docs An array of `Document` instances.
+   * @param embeddings An `Embeddings` instance used to generate embeddings for the documents.
+   * @param client An instance of Voy client to use in the underlying operations.
+   * @returns A promise that resolves with a new `Voy` instance.
+   */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,

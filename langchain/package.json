@@ -241,6 +241,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/voy.cjs",
+    "vectorstores/voy.js",
+    "vectorstores/voy.d.ts",
     "vectorstores/xata.cjs",
     "vectorstores/xata.js",
     "vectorstores/xata.d.ts",
@@ -726,10 +729,10 @@
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
-    "voy-search": "0.6.2",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
+    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
@@ -806,10 +809,10 @@
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
-    "voy-search": "0.6.2",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
+    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
@@ -1037,10 +1040,10 @@
     "vectordb": {
       "optional": true
     },
-    "weaviate-ts-client": {
+    "voy-search": {
       "optional": true
     },
-    "voy-search": {
+    "weaviate-ts-client": {
       "optional": true
     },
     "youtube-transcript": {
@@ -1487,6 +1490,11 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/voy": {
+      "types": "./vectorstores/voy.d.ts",
+      "import": "./vectorstores/voy.js",
+      "require": "./vectorstores/voy.cjs"
     },
     "./vectorstores/xata": {
       "types": "./vectorstores/xata.d.ts",

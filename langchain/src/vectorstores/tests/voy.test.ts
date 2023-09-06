@@ -5,9 +5,12 @@ import { Voy, VoyClient } from "../voy.js";
 
 const fakeClient: VoyClient = {
   index: ({ embeddings }) => embeddings.map((i) => i.id).join(","),
-  add:(_)=>{},
+  add: (_) => {},
   search: () => ({
-    neighbors:[{ id: "0", title:"",url:"" }, { id: "1", title:"",url:"" }]
+    neighbors: [
+      { id: "0", title: "", url: "" },
+      { id: "1", title: "", url: "" },
+    ],
   }),
 };
 
@@ -18,7 +21,7 @@ test("it can create index using Voy.from text, add new elements to the index and
     new FakeEmbeddings(),
     fakeClient
   );
-  
+
   // the number of dimensions is produced by fake embeddings
   expect(vectorStore.numDimensions).toBe(4);
   await vectorStore.addVectors(
