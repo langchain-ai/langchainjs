@@ -10,7 +10,7 @@ import { JSONLoader } from "../fs/json.js";
 test("Test Directory loader", async () => {
   const directoryPath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data"
+    "./example_data/dir_loader"
   );
   const loader = new DirectoryLoader(
     directoryPath,

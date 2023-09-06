@@ -1,0 +1,16 @@
+{
+  "1": {
+    "body": "BD 2023 SUMMER",
+    "from": "LinkedIn Job",
+    "labels": ["IMPORTANT", "CATEGORY_UPDATES", "INBOX"]
+  },
+  "2": {
+    "body": "Intern, Treasury and other roles are available",
+    "from": "LinkedIn Job2",
+    "labels": ["IMPORTANT"],
+    "other": {
+      "name": "plop",
+      "surname": "bob"
+    }
+  }
+}
