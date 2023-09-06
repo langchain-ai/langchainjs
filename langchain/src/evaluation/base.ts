@@ -93,6 +93,13 @@ export interface PairwiseStringEvaluatorArgs {
     predictionB: string;
 }
 
+export interface LLMPairwiseStringEvaluatorArgs {
+    input: string;
+    prediction: string;
+    predictionB: string;
+    reference?: string;
+}
+
 /**
  * Grade, tag, or otherwise evaluate predictions relative to their inputs
  * and/or reference labels
@@ -210,5 +217,40 @@ export abstract class PairwiseStringEvaluator extends EvalChain {
      */
     evaluateStringPairs(args: PairwiseStringEvaluatorArgs, config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
         return this._evaluateStringPairs(args, config);
+    }
+}
+
+export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
+
+    /**
+     * The name of the evaluation.
+     */
+    evaluationName?: string = this.constructor.name;
+
+    /**
+     * Evaluate Chain or LLM output, based on optional input and label.
+     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
+     * - score: the score of the evaluation, if applicable.
+     * - value: the string value of the evaluation, if applicable.
+     * - reasoning: the reasoning for the evaluation, if applicable.
+     * @param args
+     * @param callOptions
+     * @param config
+     */
+    abstract _evaluateStringPairs(args: LLMPairwiseStringEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues>
+
+    /**
+     * Evaluate Chain or LLM output, based on optional input and label.
+     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
+     * - score: the score of the evaluation, if applicable.
+     * - value: the string value of the evaluation, if applicable.
+     * - reasoning: the reasoning for the evaluation, if applicable.
+     * @param args
+     * @param callOptions
+     * @param config
+     */
+    evaluateStringPairs(args: LLMPairwiseStringEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
+        this.checkEvaluationArgs(args.reference, args.input);
+        return this._evaluateStringPairs(args, callOptions, config);
     }
 }

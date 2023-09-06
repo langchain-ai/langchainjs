@@ -36,7 +36,6 @@ test("Test Pairwise Embedding Distance", async () => {
         prediction: "Seattle is hot in June", predictionB: "Seattle is cool in June."
     });
 
-
     console.log({res});
 
     const res1 = await chain.evaluateStringPairs({
