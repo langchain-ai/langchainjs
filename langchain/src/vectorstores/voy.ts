@@ -1,7 +1,7 @@
+import type { Voy as VoyOriginClient, SearchResult } from "voy-search";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
-import type { Voy as VoyOriginClient, SearchResult } from "voy-search";
 
 export type VoyClient = Omit<
   VoyOriginClient,
