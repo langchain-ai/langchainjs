@@ -79,8 +79,6 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn run build --filter="!docs"
       - name: Test
         run: yarn run test:unit
 
