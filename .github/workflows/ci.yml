@@ -7,6 +7,10 @@ on:
   push:
     branches: ["main"]
   pull_request:
+    # Do not run this workflow if only docs changed.
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 jobs:
   format:
@@ -38,24 +42,6 @@ jobs:
         run: yarn install --immutable --mode=skip-build
       - name: Check linting
         run: yarn run lint
-
-  build-docs:
-    name: Build and check docs
-    runs-on: ubuntu-latest
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Build and check docs
-        run: yarn docs
 
   test:
     name: Unit Tests
