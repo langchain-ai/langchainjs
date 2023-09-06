@@ -64,6 +64,20 @@ const getDocs = (): Document[] => {
   return documents;
 };
 
+let corpusId: number[] = [];
+const envValue = process.env.VECTARA_CORPUS_ID;
+if (envValue) {
+  corpusId = envValue.split(",").map((id) => {
+    const num = Number(id);
+    if (Number.isNaN(num)) corpusId = [0];
+    return num;
+  });
+
+  if (corpusId.length === 0) corpusId = [0];
+} else {
+  corpusId = [0];
+}
+
 describe("VectaraStore", () => {
   ["VECTARA_CUSTOMER_ID", "VECTARA_CORPUS_ID", "VECTARA_API_KEY"].forEach(
     (envVar) => {
@@ -76,7 +90,7 @@ describe("VectaraStore", () => {
   describe("fromTexts", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -90,7 +104,7 @@ describe("VectaraStore", () => {
   describe("fromDocuments", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -107,7 +121,7 @@ describe("VectaraStore", () => {
     beforeAll(async () => {
       store = new VectaraStore({
         customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-        corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+        corpusId,
         apiKey: process.env.VECTARA_API_KEY || "",
       });
     });

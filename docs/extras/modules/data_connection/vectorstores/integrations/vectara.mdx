@@ -42,6 +42,9 @@ VECTARA_CORPUS_ID=your_corpus_id
 VECTARA_API_KEY=your-vectara-api-key
 ```
 
+Note that you can provide multiple corpus IDs separated by commas for querying multiple corpora at once. For example: `VECTARA_CORPUS_ID=3,8,9,43`.
+For indexing multiple corpora, you'll need to create a separate VectaraStore instance for each corpus.
+
 ## Usage
 
 import Example from "@examples/indexes/vector_stores/vectara.ts";
