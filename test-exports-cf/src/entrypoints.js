@@ -28,7 +28,6 @@ export * from "langchain/document";
 export * from "langchain/document_loaders/base";
 export * from "langchain/document_loaders/web/serpapi";
 export * from "langchain/document_loaders/web/sort_xyz_blockchain";
-export * from "langchain/document_loaders/fs/openai_whisper_audio";
 export * from "langchain/document_transformers/openai_functions";
 export * from "langchain/chat_models/base";
 export * from "langchain/chat_models/openai";

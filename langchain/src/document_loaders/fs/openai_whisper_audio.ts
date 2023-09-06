@@ -8,8 +8,6 @@ const MODEL_NAME = "whisper-1";
 export class OpenAIWhisperAudio extends BufferLoader {
   private readonly openAIClient: OpenAIClient;
 
-  private readonly audioFile: File;
-
   constructor(
     filePathOrBlob: string | Blob,
     {

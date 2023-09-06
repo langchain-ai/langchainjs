@@ -28,7 +28,6 @@ const document = require("langchain/document");
 const document_loaders_base = require("langchain/document_loaders/base");
 const document_loaders_web_serpapi = require("langchain/document_loaders/web/serpapi");
 const document_loaders_web_sort_xyz_blockchain = require("langchain/document_loaders/web/sort_xyz_blockchain");
-const document_loaders_fs_openai_whisper_audio = require("langchain/document_loaders/fs/openai_whisper_audio");
 const document_transformers_openai_functions = require("langchain/document_transformers/openai_functions");
 const chat_models_base = require("langchain/chat_models/base");
 const chat_models_openai = require("langchain/chat_models/openai");

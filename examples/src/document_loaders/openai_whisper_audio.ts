@@ -1,5 +1,4 @@
 import { OpenAIWhisperAudio } from "langchain/document_loaders/fs/openai_whisper_audio";
-import * as fs from "fs";
 
 const filePath = "PATH TO AUDIO FILE";
 

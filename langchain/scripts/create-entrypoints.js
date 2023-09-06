@@ -337,6 +337,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "document_loaders/fs/openai_whisper_audio",
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/googlevertexai",
