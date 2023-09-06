@@ -61,9 +61,6 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
 }
 
 
-const eqSet = (xs: Set<string>, ys: Set<string>) =>
-    xs.size === ys.size && [...xs].every((x) => ys.has(x));
-
 export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
 
     criterionName?: string;
@@ -82,7 +79,6 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
 
     static resolveTrajectoryPrompt(prompt?: BasePromptTemplate | undefined, agentTools?: StructuredTool[]) {
         let _prompt;
-        let expectedVars;
         if (prompt) {
             _prompt = prompt;
         } else if (agentTools) {
@@ -90,23 +86,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
         } else {
             _prompt = TOOL_FREE_EVAL_CHAT_PROMPT;
         }
-        if (agentTools) {
-            expectedVars = ["answer", "agentTrajectory", "question", "toolDescriptions", "reference"];
-        } else {
-            expectedVars = ["answer", "agentTrajectory", "question", "reference"];
-        }
 
-        const expectedInputVars: Set<string> = new Set(expectedVars);
-        // Create a Set from inputVariables for a valid comparison
-        const inputVarsSet: Set<string> = new Set(_prompt.inputVariables);
-
-        if (!eqSet(expectedInputVars, inputVarsSet)) {
-            throw new Error(
-                `Input variables should be ${[...expectedInputVars]}, but got ${
-                    _prompt.inputVariables
-                }`
-            );
-        }
         return _prompt;
     }
 
