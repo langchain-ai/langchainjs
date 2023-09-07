@@ -11,13 +11,16 @@ interface LineList {
 }
 
 class LineListOutputParser extends BaseOutputParser<LineList> {
-    lc_namespace: string[] = ["langchain", "output_parsers", "linelist"];
+    static lc_name() {
+        return "LineListOutputParser";
+    }
+    lc_namespace: string[] = ["langchain", "retrievers", "multiquery"];
     async parse(text: string): Promise<LineList> {
         const lines = text.trim().split("\n");
         return { lines };
     }
     getFormatInstructions() {
-        return '{"lines": []}';
+        return "";
     }
 }
 
@@ -25,12 +28,12 @@ class LineListOutputParser extends BaseOutputParser<LineList> {
 const DEFAULT_QUERY_PROMPT = new PromptTemplate({
     inputVariables: ["question","k"],
     template: `You are an AI language model assistant. Your task is 
-      to generate {k} different versions of the given user 
-      question to retrieve relevant documents from a vector  database. 
-      By generating multiple perspectives on the user question, 
-      your goal is to help the user overcome some of the limitations 
-      of distance-based similarity search. Provide these alternative 
-      questions separated by newlines. Original question: {question}`,
+to generate {k} different versions of the given user 
+question to retrieve relevant documents from a vector  database. 
+By generating multiple perspectives on the user question, 
+your goal is to help the user overcome some of the limitations 
+of distance-based similarity search. Provide these alternative 
+questions separated by newlines. Original question: {question}`,
 })
 
 // Export class
@@ -57,7 +60,8 @@ export class MultiQueryRetriever extends BaseRetriever {
         k?: number
         parserKey?: string
     }) {
-        super();
+        //@ts-ignore
+        super({retriever,llmChain,verbose,k,parserKey});
         this.retriever = retriever;
         this.llmChain = llmChain;
         this.verbose = verbose;
@@ -83,6 +87,7 @@ export class MultiQueryRetriever extends BaseRetriever {
         return new MultiQueryRetriever({ retriever, llmChain, k, parserKey });
     }
 
+    // Generate the different queries for each retrieval, using our llmChain
     private async generateQueries(question: string, k: number, runManager?: CallbackManagerForRetrieverRun): Promise<string[]> {
         const response = await this.llmChain._call({ question, k }, runManager?.getChainChild());
         const lines = response.text[this.parserKey] || [];
@@ -92,6 +97,7 @@ export class MultiQueryRetriever extends BaseRetriever {
         return lines;
     }
 
+    // Retrieve documents using the original retriever
     private async retrieveDocuments(queries: string[], runManager?: CallbackManagerForRetrieverRun): Promise<Document[]> {
         const documents: Document[] = [];
         for (const query of queries) {
@@ -101,6 +107,7 @@ export class MultiQueryRetriever extends BaseRetriever {
         return documents;
     }
 
+    // Deduplicate the documents that were returned in multiple retrievals
     private uniqueUnion(documents: Document[]): Document[] {
         const uniqueDocumentsDict: { [key: string]: Document } = {};
 
@@ -113,8 +120,7 @@ export class MultiQueryRetriever extends BaseRetriever {
         return uniqueDocuments;
     }
 
-    // @ts-ignore
-    async getRelevantDocuments(question: string, runManager?: CallbackManagerForRetrieverRun): Promise<Document[]> {
+    async _getRelevantDocuments(question: string, runManager?: CallbackManagerForRetrieverRun): Promise<Document[]> {
         const queries = await this.generateQueries(question, this.k, runManager);
         const documents = await this.retrieveDocuments(queries, runManager);
         const uniqueDocuments = this.uniqueUnion(documents);
