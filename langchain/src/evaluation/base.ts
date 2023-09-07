@@ -7,15 +7,27 @@ import {BaseCallbackConfig} from "../callbacks/manager.js";
 /**
  * Base input for evaluators.
  */
-export interface LLMEvalChainInput<T extends Record<string, string> = Record<string, string>, L extends BaseLanguageModel = BaseLanguageModel> extends LLMChainInput<T, L> {
+export interface LLMEvalChainInput<T extends EvalOutputType = EvalOutputType, L extends BaseLanguageModel = BaseLanguageModel> extends LLMChainInput<T, L> {
 
 }
 
-
-export type EvalOutputType = Record<string, string | number | boolean>
+/**
+ * Compare two sets for equality
+ *
+ * @param xs
+ * @param ys
+ */
+export const eqSet = (xs: Set<string>, ys: Set<string>) =>
+    xs.size === ys.size && [...xs].every((x) => ys.has(x));
 
 /**
- * Base class for evaluators.
+ * The type of the output of an evaluation evaluator.
+ */
+export type EvalOutputType = Record<string, string | number | boolean>
+
+
+/**
+ * Base llm chain class for evaluators.
  */
 export abstract class LLMEvalChain<
     T extends EvalOutputType = EvalOutputType,
@@ -51,6 +63,9 @@ export abstract class LLMEvalChain<
     }
 }
 
+/**
+ * Base chain class for evaluators.
+ */
 export abstract class EvalChain<
     RunInput extends ChainValues = ChainValues,
     RunOutput extends ChainValues = ChainValues> extends BaseChain<RunInput, RunOutput> {
@@ -84,17 +99,33 @@ export abstract class EvalChain<
 }
 
 
+/**
+ * @field prediction The output string from the  model.
+ * @field reference The expected output / reference string.
+ * @field input The input string.
+ */
 export interface StringEvaluatorArgs {
     prediction: string;
     reference?: string;
     input?: string;
 }
 
+
+/**
+ * @field prediction The output string from the first model.
+ * @field predictionB The output string from the second model.
+ */
 export interface PairwiseStringEvaluatorArgs {
     prediction: string;
     predictionB: string;
 }
 
+/**
+ * @field The input string.
+ * @field prediction The output string from the first model.
+ * @field predictionB The output string from the second model.
+ * @field reference The expected output / reference string.
+ */
 export interface LLMPairwiseStringEvaluatorArgs {
     input: string;
     prediction: string;
@@ -102,12 +133,28 @@ export interface LLMPairwiseStringEvaluatorArgs {
     reference?: string;
 }
 
+
+/**
+ * Args for AgentTrajectoryEvaluator
+ * @field input The input to the agent.
+ * @field prediction The final predicted response.
+ * @field reference The reference answer.
+ * @field agentTrajectory  The intermediate steps forming the agent trajectory.
+ */
+export interface LLMTrajectoryEvaluatorArgs {
+    input: string;
+    prediction: string;
+    reference?: string;
+    agentTrajectory: AgentStep[];
+}
+
+
 /**
  * Grade, tag, or otherwise evaluate predictions relative to their inputs
  * and/or reference labels
  */
 export abstract class LLMStringEvaluator<
-    T extends Record<string, string> = Record<string, string>,
+    T extends EvalOutputType = EvalOutputType,
     L extends BaseLanguageModel = BaseLanguageModel
 > extends LLMEvalChain<T, L> {
 
@@ -162,7 +209,6 @@ export abstract class StringEvaluator extends EvalChain {
      * - value: the string value of the evaluation, if applicable.
      * - reasoning: the reasoning for the evaluation, if applicable.
      * @param args
-     * @param callOptions
      * @param config
      */
     abstract _evaluateStrings(args: StringEvaluatorArgs, config?: Callbacks | BaseCallbackConfig): Promise<ChainValues>
@@ -174,7 +220,6 @@ export abstract class StringEvaluator extends EvalChain {
      * - value: the string value of the evaluation, if applicable.
      * - reasoning: the reasoning for the evaluation, if applicable.
      * @param args
-     * @param callOptions
      * @param config
      */
     evaluateStrings(args: StringEvaluatorArgs, config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
@@ -185,8 +230,7 @@ export abstract class StringEvaluator extends EvalChain {
 
 
 /**
- * Grade, tag, or otherwise evaluate predictions relative to their inputs
- * and/or reference labels
+ * Compare the output of two models (or two outputs of the same model).
  */
 export abstract class PairwiseStringEvaluator extends EvalChain {
 
@@ -196,32 +240,27 @@ export abstract class PairwiseStringEvaluator extends EvalChain {
     evaluationName?: string = this.constructor.name;
 
     /**
-     * Evaluate Chain or LLM output, based on optional input and label.
-     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
-     * - score: the score of the evaluation, if applicable.
-     * - value: the string value of the evaluation, if applicable.
-     * - reasoning: the reasoning for the evaluation, if applicable.
+     * Evaluate the output string pairs.
      * @param args
-     * @param callOptions
      * @param config
+     * @return A dictionary containing the preference, scores, and/or other information.
      */
     abstract _evaluateStringPairs(args: PairwiseStringEvaluatorArgs, config?: Callbacks | BaseCallbackConfig): Promise<ChainValues>
 
     /**
-     * Evaluate Chain or LLM output, based on optional input and label.
-     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
-     * - score: the score of the evaluation, if applicable.
-     * - value: the string value of the evaluation, if applicable.
-     * - reasoning: the reasoning for the evaluation, if applicable.
+     * Evaluate the output string pairs.
      * @param args
-     * @param callOptions
      * @param config
+     * @return A dictionary containing the preference, scores, and/or other information.
      */
     evaluateStringPairs(args: PairwiseStringEvaluatorArgs, config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
         return this._evaluateStringPairs(args, config);
     }
 }
 
+/**
+ * Compare the output of two models (or two outputs of the same model).
+ */
 export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
 
     /**
@@ -230,26 +269,20 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
     evaluationName?: string = this.constructor.name;
 
     /**
-     * Evaluate Chain or LLM output, based on optional input and label.
-     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
-     * - score: the score of the evaluation, if applicable.
-     * - value: the string value of the evaluation, if applicable.
-     * - reasoning: the reasoning for the evaluation, if applicable.
+     * Evaluate the output string pairs.
      * @param args
      * @param callOptions
      * @param config
+     * @return A dictionary containing the preference, scores, and/or other information.
      */
     abstract _evaluateStringPairs(args: LLMPairwiseStringEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues>
 
     /**
-     * Evaluate Chain or LLM output, based on optional input and label.
-     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
-     * - score: the score of the evaluation, if applicable.
-     * - value: the string value of the evaluation, if applicable.
-     * - reasoning: the reasoning for the evaluation, if applicable.
+     * Evaluate the output string pairs.
      * @param args
      * @param callOptions
      * @param config
+     * @return A dictionary containing the preference, scores, and/or other information.
      */
     evaluateStringPairs(args: LLMPairwiseStringEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
         this.checkEvaluationArgs(args.reference, args.input);
@@ -257,14 +290,10 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
     }
 }
 
-export interface LLMTrajectoryEvaluatorArgs {
-    input: string;
-    prediction: string;
-    reference?: string;
-    agentTrajectory: AgentStep[];
-}
 
-
+/**
+ * Interface for evaluating agent trajectories.
+ */
 export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
 
     requiresInput = true;
@@ -275,11 +304,8 @@ export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
     evaluationName?: string = this.constructor.name;
 
     /**
-     * Evaluate Chain or LLM output, based on optional input and label.
-     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
-     * - score: the score of the evaluation, if applicable.
-     * - value: the string value of the evaluation, if applicable.
-     * - reasoning: the reasoning for the evaluation, if applicable.
+     * Evaluate a trajectory.
+     * @return The evaluation result.
      * @param args
      * @param callOptions
      * @param config
@@ -287,11 +313,8 @@ export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
     abstract _evaluateAgentTrajectory(args: LLMTrajectoryEvaluatorArgs, callOptions?: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues>
 
     /**
-     * Evaluate Chain or LLM output, based on optional input and label.
-     * @returns The evaluation results containing the score or value. It is recommended that the dictionary contain the following keys:
-     * - score: the score of the evaluation, if applicable.
-     * - value: the string value of the evaluation, if applicable.
-     * - reasoning: the reasoning for the evaluation, if applicable.
+     * Evaluate a trajectory.
+     * @return The evaluation result.
      * @param args
      * @param callOptions
      * @param config

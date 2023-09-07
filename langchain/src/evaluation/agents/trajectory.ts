@@ -15,7 +15,7 @@ import {BaseChatModel} from "../../chat_models/index.js";
 
 
 /**
- * A parser for the output of the CriteriaEvalChain.
+ * A parser for the output of the TrajectoryEvalChain.
  */
 export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> {
     lc_namespace: string[];
@@ -61,6 +61,12 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
 }
 
 
+/**
+ * A chain for evaluating ReAct style agents.
+ *
+ * This chain is used to evaluate ReAct style agents by reasoning about
+ * the sequence of actions taken and their outcomes.
+ */
 export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
 
     criterionName?: string;
@@ -70,9 +76,6 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
     requiresInput = true;
 
     requiresReference = false;
-
-    skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.
-    To use references, use the labeled_criteria instead.`;
 
     outputParser = new TrajectoryOutputParser();
 
@@ -90,6 +93,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
         return _prompt;
     }
 
+
     /**
      * Get the description of the agent tools.
      *
@@ -102,6 +106,12 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
             `Description: ${tool.description}`).join("\n\n");
     }
 
+    /**
+     * Create a new TrajectoryEvalChain.
+     * @param llm
+     * @param agentTools - The tools used by the agent.
+     * @param chainOptions - The options for the chain.
+     */
     static async fromLLM(llm: BaseChatModel, agentTools?: StructuredTool[], chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>) {
 
         const prompt = this.resolveTrajectoryPrompt(chainOptions?.prompt, agentTools);
@@ -151,6 +161,18 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
         }).join("\n\n");
     }
 
+    formatReference(reference?: string): string {
+        if (!reference) {
+            return "";
+        }
+        return `
+The following is the expected answer. Use this to measure correctness:
+[GROUND_TRUTH]
+${reference}
+[END_GROUND_TRUTH]
+        `;
+    }
+
     async _evaluateAgentTrajectory(args: LLMTrajectoryEvaluatorArgs, callOptions: this["llm"]["CallOptions"], config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {
         const {input, prediction, reference, agentTrajectory} = args;
 
@@ -158,7 +180,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
             "question": input,
             "agentTrajectory": this.getAgentTrajectory(agentTrajectory),
             "answer": prediction,
-            "reference": reference,
+            "reference": this.formatReference(reference),
         };
 
         const result = await this.call({...inputs, ...callOptions}, config);
@@ -169,5 +191,3 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
 }
 
 
-export class LabeledPairwiseStringEvalChain {
-}

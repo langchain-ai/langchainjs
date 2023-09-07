@@ -1,6 +1,7 @@
 import {BaseLLMOutputParser} from "../../schema/output_parser.js";
 import {
-    LLMEvalChainInput,
+    eqSet,
+    EvalOutputType, LLMEvalChainInput,
     LLMStringEvaluator,
     StringEvaluatorArgs,
 } from "../base.js";
@@ -13,6 +14,9 @@ import {BaseCallbackConfig} from "../../callbacks/manager.js";
 import {BasePromptTemplate} from "../../prompts/index.js";
 import {ConstitutionalPrinciple} from "../../chains/index.js";
 
+/**
+ * A Criteria to evaluate.
+ */
 export enum Criteria {
     CONCISENESS = "conciseness",
     RELEVANCE = "relevance",
@@ -61,21 +65,15 @@ export type CRITERIA_TYPE = { [key: string]: string } | Criteria | Constitutiona
 /**
  * A parser for the output of the CriteriaEvalChain.
  */
-export class CriteriaResultOutputParser extends BaseLLMOutputParser<
-    Record<string, string>
-> {
+export class CriteriaResultOutputParser extends BaseLLMOutputParser<EvalOutputType> {
     lc_namespace: string[];
 
-    parseResult(generations: Generation[] | ChatGeneration[], callbacks: Callbacks | undefined): Promise<Record<string, string>> {
-        console.log("generations", generations);
-        console.log("callbacks", callbacks);
+    parseResult(generations: Generation[] | ChatGeneration[], _callbacks: Callbacks | undefined): Promise<EvalOutputType> {
         const {text} = generations[0];
-        console.log("text", text);
 
         const parsed = text.trim().split("\n");
         let reasoning = "";
         let verdict = "";
-        console.log("parsed", parsed);
 
         if (parsed.length === 1) {
             [verdict] = parsed;
@@ -102,15 +100,13 @@ export class CriteriaResultOutputParser extends BaseLLMOutputParser<
 
 }
 
+
+
 export interface CriteriaEvalInput {
     input?: string;
     output: string;
     reference?: string;
 }
-
-const eqSet = (xs: Set<string>, ys: Set<string>) =>
-    xs.size === ys.size && [...xs].every((x) => ys.has(x));
-
 
 export class CriteriaEvalChain extends LLMStringEvaluator {
 
@@ -125,7 +121,18 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
     skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.
     To use references, use the labeled_criteria instead.`;
 
-    outputParser: BaseLLMOutputParser<Record<string, string>> = new CriteriaResultOutputParser();
+    // The output parser to use for the evaluation chain.
+    outputParser: BaseLLMOutputParser<EvalOutputType> = new CriteriaResultOutputParser();
+
+    /**
+     * Resolve the criteria to evaluate.
+     * @param criteria The criteria to evaluate the runs against. It can be:
+     *                 -  a mapping of a criterion name to its description
+     *                 -  a single criterion name present in one of the default criteria
+     *                 -  a single `ConstitutionalPrinciple` instance
+     *
+     * @return A dictionary mapping criterion names to descriptions.
+     */
 
     static resolveCriteria(criteria?: CRITERIA_TYPE): Record<string, string> {
         if (criteria === undefined) {
@@ -133,11 +140,8 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
                 "helpfulness": SUPPORTED_CRITERIA[Criteria.HELPFULNESS],
             };
         }
-        let criteria_: { [key: string]: string } = {};
 
-        console.log("criteria", typeof criteria, criteria);
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        console.log("ConstitutionalPrinciple", criteria instanceof ConstitutionalPrinciple);
+        let criteria_: { [key: string]: string } = {};
 
         if (typeof criteria === "string") {
             if (criteria in Criteria) {
@@ -159,6 +163,10 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
         return criteria_;
     }
 
+    /**
+     * Resolve the prompt to use for the evaluation.
+     * @param prompt
+     */
     static resolvePrompt(prompt?: BasePromptTemplate) {
         const _prompt = prompt || CRITERIA_PROMPT;
         const expectedInputVars: Set<string> = new Set(["input", "output", "criteria"]);
@@ -175,6 +183,12 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
         return _prompt;
     }
 
+    /**
+     * Create a new instance of the CriteriaEvalChain.
+     * @param llm
+     * @param criteria
+     * @param chainOptions Options to pass to the constructor of the LLMChain.
+     */
     static async fromLLM(llm: BaseLanguageModel, criteria: CRITERIA_TYPE, chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>) {
 
         if (this.name === "CriteriaEvalChain" && criteria === Criteria.CORRECTNESS) {
@@ -200,14 +214,11 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
             delete options.prompt;
         }
 
-
-        const criteriaEvalChain = new this({
+        return new this({
             llm,
             prompt,
             ...options,
         });
-
-        return criteriaEvalChain;
     }
 
 
@@ -228,6 +239,10 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
     }
 
 
+    /**
+     * Prepare the output of the evaluation.
+     * @param result
+     */
     _prepareOutput(result: ChainValues) {
         const parsed = result[this.outputKey];
         if (RUN_KEY in result && result[RUN_KEY]) {
@@ -244,8 +259,12 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
 }
 
 
+/**
+ * Criteria evaluation chain that requires references.
+ */
 export class LabeledCriteriaEvalChain extends CriteriaEvalChain {
 
+    // Whether the evaluation requires a reference text.
     requiresReference = true;
 
     static resolvePrompt(prompt?: BasePromptTemplate) {

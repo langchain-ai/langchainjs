@@ -12,6 +12,16 @@ import {CallbackManagerForChainRun, Callbacks} from "../../callbacks/index.js";
 import {BaseCallbackConfig} from "../../callbacks/manager.js";
 
 
+/**
+ *
+ * Embedding Distance Metric.
+ *
+ * COSINE: Cosine distance metric.
+ * EUCLIDEAN: Euclidean distance metric.
+ * MANHATTAN: Manhattan distance metric.
+ * CHEBYSHEV: Chebyshev distance metric.
+ * HAMMING: Hamming distance metric.
+ */
 export enum EmbeddingDistance {
     COSINE = "cosine",
     EUCLIDEAN = "euclidean",
@@ -19,18 +29,37 @@ export enum EmbeddingDistance {
     CHEBYSHEV = "chebyshev"
 }
 
+
+/**
+ * Embedding Distance Evaluation Chain Input.
+ */
 export interface EmbeddingDistanceEvalChainInput {
+    /**
+     * The embedding objects to vectorize the outputs.
+     */
     embedding?: Embeddings;
 
+    /**
+     * The distance metric to use
+     * for comparing the embeddings.
+     */
     distanceMetric?: EmbeddingDistance;
 }
+
 
 type VectorFunction = (xVector: number[], yVector: number[]) => number;
 
 
-// 创建一个混入，包含共享的方法
+/**
+ * Shared functionality for embedding distance evaluators.
+ */
 class EmbeddingDistanceMixin {
 
+    /**
+     * Get the metric function for the given metric name.
+     * @param metric The metric name.
+     * @return The metric function.
+     */
     _get_metric(metric: EmbeddingDistance): VectorFunction {
         const metrics: { [key in EmbeddingDistance]: VectorFunction } = {
             [EmbeddingDistance.COSINE]: this._cosine_distance,
@@ -46,6 +75,12 @@ class EmbeddingDistanceMixin {
         }
     }
 
+    /**
+     * Compute the score based on the distance metric.
+     * @param vectors The input vectors.
+     * @param distanceMetric The distance metric.
+     * @return The computed score.
+     */
     _compute_score(vectors: number[][], distanceMetric: EmbeddingDistance): number {
         const metric = this._get_metric(distanceMetric);
         if (!metric) throw new Error("Metric is undefined");
@@ -75,6 +110,10 @@ class EmbeddingDistanceMixin {
 }
 
 
+/**
+ * Use embedding distances to score semantic difference between
+ * a prediction and reference.
+ */
 export class EmbeddingDistanceEvalChain extends StringEvaluator implements EmbeddingDistanceEvalChainInput {
 
     requiresReference = true;
@@ -98,7 +137,7 @@ export class EmbeddingDistanceEvalChain extends StringEvaluator implements Embed
 
 
     _chainType() {
-        return "embedding_distance_eval_chain" as const;
+        return `embedding_${this.distanceMetric}_distance` as const;
     }
 
     async _evaluateStrings(args: StringEvaluatorArgs, config: Callbacks | BaseCallbackConfig | undefined): Promise<ChainValues> {
@@ -126,11 +165,13 @@ export class EmbeddingDistanceEvalChain extends StringEvaluator implements Embed
 
         return {[this.outputKey]: score};
     }
-
 }
 
-export class PairwiseEmbeddingDistanceEvalChain extends PairwiseStringEvaluator implements EmbeddingDistanceEvalChainInput {
 
+/**
+ * Use embedding distances to score semantic difference between two predictions.
+ */
+export class PairwiseEmbeddingDistanceEvalChain extends PairwiseStringEvaluator implements EmbeddingDistanceEvalChainInput {
 
     requiresReference = false;
 
@@ -153,7 +194,7 @@ export class PairwiseEmbeddingDistanceEvalChain extends PairwiseStringEvaluator 
 
 
     _chainType() {
-        return "embedding_distance_eval_chain" as const;
+        return `pairwise_embedding_${this.distanceMetric}_distance` as const;
     }
 
     async _evaluateStringPairs(args: PairwiseStringEvaluatorArgs, config?: Callbacks | BaseCallbackConfig): Promise<ChainValues> {

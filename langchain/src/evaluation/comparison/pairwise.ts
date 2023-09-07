@@ -1,5 +1,6 @@
 import {BaseLLMOutputParser} from "../../schema/output_parser.js";
 import {
+    eqSet,
     LLMEvalChainInput,
     LLMPairwiseStringEvaluator,
     LLMPairwiseStringEvaluatorArgs,
@@ -34,23 +35,19 @@ const SUPPORTED_CRITERIA: Record<Criteria, string> = {
 
 
 /**
- * A parser for the output of the CriteriaEvalChain.
+ * A parser for the output of the PairwiseStringEvalChain.
  */
 export class PairwiseResultOutputParser extends BaseLLMOutputParser<
     Record<string, string>
 > {
     lc_namespace: string[];
 
-    parseResult(generations: Generation[] | ChatGeneration[], callbacks: Callbacks | undefined): Promise<Record<string, string>> {
-        console.log("generations", generations);
-        console.log("callbacks", callbacks);
+    parseResult(generations: Generation[] | ChatGeneration[], _callbacks: Callbacks | undefined): Promise<Record<string, string>> {
         const {text} = generations[0];
-        console.log("text", text);
 
         const parsed = text.trim().split("\n");
         let reasoning;
         let verdict;
-        console.log("parsed", parsed);
 
         if (parsed.length === 1) {
             [verdict] = parsed;
@@ -61,7 +58,6 @@ export class PairwiseResultOutputParser extends BaseLLMOutputParser<
         }
 
         verdict = verdict.replace(/\[+/, "").replace(/]+/, "");
-        console.log("verdict", verdict);
         if (!["A", "B", "C"].includes(verdict)) {
             throw new Error(
                 `Invalid verdict: ${verdict}. ` +
@@ -85,10 +81,10 @@ export class PairwiseResultOutputParser extends BaseLLMOutputParser<
 }
 
 
-const eqSet = (xs: Set<string>, ys: Set<string>) =>
-    xs.size === ys.size && [...xs].every((x) => ys.has(x));
-
-
+/**
+ * A chain for comparing two outputs, such as the outputs
+ * of two models, prompts, or outputs of a single model on similar inputs.
+ */
 export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
 
     criterionName?: string;
@@ -100,7 +96,7 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
     requiresReference = false;
 
     skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.
-    To use references, use the labeled_criteria instead.`;
+    To use references, use the LabeledPairwiseStringEvalChain instead.`;
 
     outputParser = new PairwiseResultOutputParser();
 
@@ -156,6 +152,12 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
         return _prompt;
     }
 
+    /**
+     * Create a new instance of the PairwiseStringEvalChain.
+     * @param llm
+     * @param criteria The criteria to use for evaluation.
+     * @param chainOptions Options to pass to the chain.
+     */
     static async fromLLM(llm: BaseLanguageModel, criteria?: CRITERIA_TYPE, chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>) {
 
         let prompt = this.resolvePairwisePrompt(chainOptions?.prompt);
@@ -195,6 +197,11 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
 
 }
 
+/**
+ * A chain for comparing two outputs, such as the outputs
+ * of two models, prompts, or outputs of a single model on similar inputs,
+ * with labeled preferences.
+ */
 export class LabeledPairwiseStringEvalChain extends PairwiseStringEvalChain {
     requiresReference = true;
 
