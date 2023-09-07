@@ -443,7 +443,7 @@ const updateConfig = () => {
     ...json,
     exports: Object.assign(
       Object.fromEntries(
-        ["index", ...Object.keys(entrypoints)].map((key) => {
+        [...Object.keys(entrypoints)].map((key) => {
           let entryPoint = {
             types: `./${key}.d.ts`,
             import: `./${key}.js`,
@@ -456,7 +456,7 @@ const updateConfig = () => {
             };
           }
 
-          return [key === "index" ? "." : `./${key}`, entryPoint];
+          return [`./${key}`, entryPoint];
         })
       ),
       { "./package.json": "./package.json" }
