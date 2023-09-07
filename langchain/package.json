@@ -82,6 +82,9 @@
     "embeddings/fake.cjs",
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
+    "embeddings/ollama.cjs",
+    "embeddings/ollama.js",
+    "embeddings/ollama.d.ts",
     "embeddings/openai.cjs",
     "embeddings/openai.js",
     "embeddings/openai.d.ts",
@@ -1228,6 +1231,11 @@
       "types": "./embeddings/fake.d.ts",
       "import": "./embeddings/fake.js",
       "require": "./embeddings/fake.cjs"
+    },
+    "./embeddings/ollama": {
+      "types": "./embeddings/ollama.d.ts",
+      "import": "./embeddings/ollama.js",
+      "require": "./embeddings/ollama.cjs"
     },
     "./embeddings/openai": {
       "types": "./embeddings/openai.d.ts",
