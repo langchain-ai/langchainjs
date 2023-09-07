@@ -15025,7 +15025,7 @@ __metadata:
     apify-client: ^2.7.1
     axios: "*"
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.5.3
+    chromadb: "*"
     cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
