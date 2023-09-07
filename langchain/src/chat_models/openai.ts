@@ -30,6 +30,7 @@ import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { BaseFunctionCallOptions } from "../base_language/index.js";
 import { NewTokenIndices } from "../callbacks/base.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
 
@@ -131,9 +132,9 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-export interface ChatOpenAICallOptions extends OpenAICallOptions {
-  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
-  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
+export interface ChatOpenAICallOptions
+  extends OpenAICallOptions,
+    BaseFunctionCallOptions {
   tools?: StructuredTool[];
   promptIndex?: number;
 }
@@ -309,6 +310,7 @@ export class ChatOpenAI
       if (!this.azureOpenAIApiVersion) {
         throw new Error("Azure OpenAI API version not found");
       }
+      this.openAIApiKey = this.openAIApiKey ?? "";
     }
 
     this.clientConfig = {

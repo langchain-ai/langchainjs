@@ -9,10 +9,7 @@ import {
 } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { Document } from "langchain/document";
-
-// Import the TensorFlow backend.
-import "@tensorflow/tfjs-node";
-import { TensorFlowEmbeddings } from "langchain/embeddings/tensorflow";
+import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
 
 const loader = new CheerioWebBaseLoader(
   "https://lilianweng.github.io/posts/2023-06-23-agent/"
@@ -28,7 +25,7 @@ const splitDocuments = await splitter.splitDocuments(docs);
 
 const vectorstore = await HNSWLib.fromDocuments(
   splitDocuments,
-  new TensorFlowEmbeddings()
+  new HuggingFaceTransformersEmbeddings()
 );
 
 const retriever = vectorstore.asRetriever();
@@ -66,11 +63,9 @@ const result = await chain.invoke(
 console.log(result);
 
 /*
-  Thank you for providing the context! Based on the information provided, there are three approaches to task decomposition:
+  Based on the provided context, there are three approaches to task decomposition:
 
-  1. Simple Prompting: This approach involves providing LLMs with simple prompts like "Steps for XYZ" or "What are the subgoals for achieving XYZ?" The LLM can then generate the steps required to complete the task based on its training data.
-  2. Task-Specific Instructions: This approach involves providing LLMs with specific instructions for completing a particular task, such as "Write a story outline" or "Solve this math problem." The LLM will then use its language generation capabilities to produce the required steps for completing the task.
-  3. Human Inputs: This approach involves using human inputs to guide the task decomposition process. For example, a human can provide a list of tasks that need to be completed and the LLM can then generate the subtasks or steps required to complete each task.
-
-  I hope this helps! Let me know if you have any further questions.
+  1. Using simple prompts like "Steps for XYZ" or "What are the subgoals for achieving XYZ?" to elicit a list of tasks from a language model (LLM).
+  2. Providing task-specific instructions, such as "Write a story outline" for writing a novel, to guide the LLM in decomposing the task into smaller subtasks.
+  3. Incorporating human inputs to help the LLM learn and improve its decomposition abilities over time.
 */

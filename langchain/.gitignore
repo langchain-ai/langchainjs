@@ -70,6 +70,9 @@ embeddings/cache_backed.d.ts
 embeddings/fake.cjs
 embeddings/fake.js
 embeddings/fake.d.ts
+embeddings/ollama.cjs
+embeddings/ollama.js
+embeddings/ollama.d.ts
 embeddings/openai.cjs
 embeddings/openai.js
 embeddings/openai.d.ts
@@ -82,6 +85,9 @@ embeddings/tensorflow.d.ts
 embeddings/hf.cjs
 embeddings/hf.js
 embeddings/hf.d.ts
+embeddings/hf_transformers.cjs
+embeddings/hf_transformers.js
+embeddings/hf_transformers.d.ts
 embeddings/googlevertexai.cjs
 embeddings/googlevertexai.js
 embeddings/googlevertexai.d.ts
@@ -355,6 +361,9 @@ document_loaders/fs/notion.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts
+document_loaders/fs/openai_whisper_audio.cjs
+document_loaders/fs/openai_whisper_audio.js
+document_loaders/fs/openai_whisper_audio.d.ts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
@@ -418,6 +427,9 @@ sql_db.d.ts
 callbacks.cjs
 callbacks.js
 callbacks.d.ts
+callbacks/handlers/llmonitor.cjs
+callbacks/handlers/llmonitor.js
+callbacks/handlers/llmonitor.d.ts
 output_parsers.cjs
 output_parsers.js
 output_parsers.d.ts

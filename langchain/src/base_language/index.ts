@@ -1,5 +1,13 @@
 import { type Tiktoken } from "js-tiktoken/lite";
-import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
+import type { OpenAI as OpenAIClient } from "openai";
+
+import {
+  BaseMessage,
+  BaseMessageLike,
+  BasePromptValue,
+  LLMResult,
+  coerceMessageLikeToMessage,
+} from "../schema/index.js";
 import {
   BaseCallbackConfig,
   CallbackManager,
@@ -99,7 +107,15 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   signal?: AbortSignal;
 }
 
-export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
+export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
+  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
+}
+
+export type BaseLanguageModelInput =
+  | BasePromptValue
+  | string
+  | BaseMessageLike[];
 
 /**
  * Base class for language models.
@@ -195,7 +211,7 @@ export abstract class BaseLanguageModel<
     if (typeof input === "string") {
       return new StringPromptValue(input);
     } else if (Array.isArray(input)) {
-      return new ChatPromptValue(input);
+      return new ChatPromptValue(input.map(coerceMessageLikeToMessage));
     } else {
       return input;
     }

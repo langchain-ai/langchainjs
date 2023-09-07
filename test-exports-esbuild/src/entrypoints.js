@@ -9,6 +9,7 @@ import * as chains_openai_functions from "langchain/chains/openai_functions";
 import * as embeddings_base from "langchain/embeddings/base";
 import * as embeddings_cache_backed from "langchain/embeddings/cache_backed";
 import * as embeddings_fake from "langchain/embeddings/fake";
+import * as embeddings_ollama from "langchain/embeddings/ollama";
 import * as embeddings_openai from "langchain/embeddings/openai";
 import * as embeddings_minimax from "langchain/embeddings/minimax";
 import * as llms_base from "langchain/llms/base";

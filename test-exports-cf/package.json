@@ -4,8 +4,8 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
     "typescript": "^5.0.3",
-    "vitest": "^0.29.8",
-    "wrangler": "2.14.0"
+    "vitest": "0.34.3",
+    "wrangler": "3.7.0"
   },
   "dependencies": {
     "langchain": "workspace:*"
@@ -13,8 +13,8 @@
   "private": true,
   "scripts": {
     "start": "wrangler dev",
-    "deploy": "wrangler publish",
-    "build": "wrangler publish --dry-run --outdir=dist",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir=dist",
     "test": "vitest run **/*.unit.test.ts",
     "test:integration": "vitest run **/*.int.test.ts"
   }

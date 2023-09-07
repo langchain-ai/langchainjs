@@ -107,6 +107,7 @@ export class OpenAIModerationChain
     const output = this._moderate(text, mod.results[0]);
     return {
       [this.outputKey]: output,
+      results: mod.results,
     };
   }
 

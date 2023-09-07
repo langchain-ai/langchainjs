@@ -35,9 +35,7 @@ export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
       };
     }
 
-    const match = /Action: ([\s\S]*?)(?:\nAction Input: ([\s\S]*?))?$/.exec(
-      text
-    );
+    const match = /Action:([\s\S]*?)(?:\nAction Input:([\s\S]*?))?$/.exec(text);
     if (!match) {
       throw new OutputParserException(`Could not parse LLM output: ${text}`);
     }

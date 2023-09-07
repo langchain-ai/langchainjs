@@ -91,7 +91,7 @@ These chat messages differ from raw string (which you would pass into a [LLM](/d
 
 For example, in OpenAI [Chat Completion API](https://platform.openai.com/docs/guides/chat/introduction), a chat message can be associated with an AI, human or system role. The model is supposed to follow instruction from system chat message more closely.
 
-LangChain provides several prompt templates to make constructing and working with prompts easily. You are encouraged to use these chat related prompt templates instead of `PromptTemplate` when querying chat models to fully explore the potential of underlying chat model.
+LangChain provides several prompt templates to make constructing and working with prompts easily. You are encouraged to use these chat related prompt templates instead of `PromptTemplate` when invoking chat models to fully explore the model's potential.
 
 ```typescript
 import {
@@ -108,38 +108,17 @@ import {
 } from "langchain/schema";
 ```
 
-To create a message template associated with a role, you use the corresponding `<ROLE>MessagePromptTemplate`.
+To create a message template associated with a role, you would use the corresponding `<ROLE>MessagePromptTemplate`.
 
-For convenience, there is a `fromTemplate` method exposed on these classes. If you were to use this template, this is what it would look like:
-
+For convenience, you can also declare message prompt templates as tuples. These will be coerced to the proper prompt template types:
 
 ```typescript
-const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
-const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
+const systemTemplate = "You are a helpful assistant that translates {input_language} to {output_language}.";
 const humanTemplate = "{text}";
-const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(humanTemplate);
-```
 
-If you wanted to construct the `MessagePromptTemplate` more directly, you could create a PromptTemplate externally and then pass it in, e.g.:
-
-
-```typescript
-const prompt = new PromptTemplate({
-  template: "You are a helpful assistant that translates {input_language} to {output_language}.",
-  inputVariables: ["input_language", "output_language"],
-});
-const systemMessagePrompt2 = new SystemMessagePromptTemplate({
-  prompt,
-});
-```
-
-After that, you can build a `ChatPromptTemplate` from one or more `MessagePromptTemplates`. You can use `ChatPromptTemplate`'s `formatPrompt` method -- this returns a `PromptValue`, which you can convert to a string or Message object, depending on whether you want to use the formatted value as input to an llm or chat model.
-
-
-```typescript
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-  systemMessagePrompt,
-  humanMessagePrompt
+  ["system", systemTemplate],
+  ["human", humanTemplate],
 ]);
 
 // Format the messages
@@ -163,7 +142,34 @@ console.log(formattedChatPrompt);
 */
 ```
 
-**Note:** Similarly to the `PromptTemplate` example, if using TypeScript, you can add typing to prompts created with `.fromPromptMessages` by passing a type parameter like this:
+You can also use `ChatPromptTemplate`'s `.formatPrompt()` method -- this returns a `PromptValue`, which you can convert to a string or Message object,
+depending on whether you want to use the formatted value as input to an LLM or chat model.
+
+If you prefer to use the message classes, there is a `fromTemplate` method exposed on these classes.
+This is what it would look like:
+
+
+```typescript
+const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
+const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
+const humanTemplate = "{text}";
+const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(humanTemplate);
+```
+
+If you wanted to construct the `MessagePromptTemplate` more directly, you could create a PromptTemplate externally and then pass it in, e.g.:
+
+
+```typescript
+const prompt = new PromptTemplate({
+  template: "You are a helpful assistant that translates {input_language} to {output_language}.",
+  inputVariables: ["input_language", "output_language"],
+});
+const systemMessagePrompt2 = new SystemMessagePromptTemplate({
+  prompt,
+});
+```
+
+**Note:** If using TypeScript, you can add typing to prompts created with `.fromPromptMessages` by passing a type parameter like this:
 
 ```typescript
 const chatPrompt = ChatPromptTemplate.fromPromptMessages<{

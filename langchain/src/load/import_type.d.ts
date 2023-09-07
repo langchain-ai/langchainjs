@@ -46,6 +46,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/hf"?:
     | typeof import("../embeddings/hf.js")
     | Promise<typeof import("../embeddings/hf.js")>;
+  "langchain/embeddings/hf_transformers"?:
+    | typeof import("../embeddings/hf_transformers.js")
+    | Promise<typeof import("../embeddings/hf_transformers.js")>;
   "langchain/embeddings/googlevertexai"?:
     | typeof import("../embeddings/googlevertexai.js")
     | Promise<typeof import("../embeddings/googlevertexai.js")>;
@@ -253,6 +256,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/unstructured"?:
     | typeof import("../document_loaders/fs/unstructured.js")
     | Promise<typeof import("../document_loaders/fs/unstructured.js")>;
+  "langchain/document_loaders/fs/openai_whisper_audio"?:
+    | typeof import("../document_loaders/fs/openai_whisper_audio.js")
+    | Promise<typeof import("../document_loaders/fs/openai_whisper_audio.js")>;
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
@@ -268,6 +274,9 @@ export interface OptionalImportMap {
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;
+  "langchain/callbacks/handlers/llmonitor"?:
+    | typeof import("../callbacks/handlers/llmonitor.js")
+    | Promise<typeof import("../callbacks/handlers/llmonitor.js")>;
   "langchain/output_parsers/expression"?:
     | typeof import("../output_parsers/expression.js")
     | Promise<typeof import("../output_parsers/expression.js")>;

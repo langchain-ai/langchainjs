@@ -10,7 +10,7 @@ import { VectorStore } from "./base.js";
  */
 export interface VectaraLibArgs {
   customerId: number;
-  corpusId: number;
+  corpusId: number | number[];
   apiKey: string;
   verbose?: boolean;
 }
@@ -78,7 +78,7 @@ export class VectaraStore extends VectorStore {
 
   private apiKey: string;
 
-  private corpusId: number;
+  private corpusId: number[];
 
   private customerId: number;
 
@@ -102,11 +102,26 @@ export class VectaraStore extends VectorStore {
     this.apiKey = apiKey;
 
     const corpusId =
-      args.corpusId ?? getEnvironmentVariable("VECTARA_CORPUS_ID");
+      args.corpusId ??
+      getEnvironmentVariable("VECTARA_CORPUS_ID")
+        ?.split(",")
+        .map((id) => {
+          const num = Number(id);
+          if (Number.isNaN(num))
+            throw new Error("Vectara corpus id is not a number.");
+          return num;
+        });
     if (!corpusId) {
       throw new Error("Vectara corpus id is not provided.");
     }
-    this.corpusId = corpusId;
+
+    if (typeof corpusId === "number") {
+      this.corpusId = [corpusId];
+    } else {
+      if (corpusId.length === 0)
+        throw new Error("Vectara corpus id is not provided.");
+      this.corpusId = corpusId;
+    }
 
     const customerId =
       args.customerId ?? getEnvironmentVariable("VECTARA_CUSTOMER_ID");
@@ -154,12 +169,15 @@ export class VectaraStore extends VectorStore {
    * @returns A Promise that resolves when the documents have been added.
    */
   async addDocuments(documents: Document[]): Promise<void> {
+    if (this.corpusId.length > 1)
+      throw new Error("addDocuments does not support multiple corpus ids");
+
     const headers = await this.getJsonHeader();
     let countAdded = 0;
     for (const [index, document] of documents.entries()) {
       const data = {
         customer_id: this.customerId,
-        corpus_id: this.corpusId,
+        corpus_id: this.corpusId[0],
         document: {
           document_id:
             document.metadata?.document_id ?? `${Date.now()}${index}`,
@@ -229,6 +247,9 @@ export class VectaraStore extends VectorStore {
     filePaths: Blob[],
     metadatas: Record<string, unknown> | undefined = undefined
   ) {
+    if (this.corpusId.length > 1)
+      throw new Error("addFiles does not support multiple corpus ids");
+
     let numDocs = 0;
 
     for (const [index, fileBlob] of filePaths.entries()) {
@@ -240,7 +261,7 @@ export class VectaraStore extends VectorStore {
 
       try {
         const response = await fetch(
-          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`,
+          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId[0]}`,
           {
             method: "POST",
             headers: {
@@ -286,6 +307,14 @@ export class VectaraStore extends VectorStore {
     filter: VectaraFilter | undefined = undefined
   ): Promise<[Document, number][]> {
     const headers = await this.getJsonHeader();
+
+    const corpusKeys = this.corpusId.map((corpusId) => ({
+      customerId: this.customerId,
+      corpusId,
+      metadataFilter: filter?.filter ?? "",
+      lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
+    }));
+
     const data = {
       query: [
         {
@@ -295,14 +324,7 @@ export class VectaraStore extends VectorStore {
             sentencesAfter: filter?.contextConfig?.sentencesAfter ?? 2,
             sentencesBefore: filter?.contextConfig?.sentencesBefore ?? 2,
           },
-          corpusKey: [
-            {
-              customerId: this.customerId,
-              corpusId: this.corpusId,
-              metadataFilter: filter?.filter ?? "",
-              lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
-            },
-          ],
+          corpusKey: corpusKeys,
         },
       ],
     };
