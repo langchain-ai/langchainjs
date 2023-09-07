@@ -76,6 +76,7 @@
       "src/llms/replicate.ts",
       "src/llms/googlevertexai.ts",
       "src/llms/googlepalm.ts",
+      "src/llms/gpt4all.ts",
       "src/llms/sagemaker_endpoint.ts",
       "src/llms/bedrock.ts",
       "src/llms/llama_cpp.ts",

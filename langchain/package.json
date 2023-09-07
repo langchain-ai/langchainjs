@@ -148,6 +148,9 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
+    "llms/gpt4all.cjs",
+    "llms/gpt4all.js",
+    "llms/gpt4all.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
@@ -706,6 +709,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "gpt4all": "^1.0.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -797,6 +801,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "gpt4all": "^1.0.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -973,6 +978,9 @@
       "optional": true
     },
     "google-auth-library": {
+      "optional": true
+    },
+    "gpt4all": {
       "optional": true
     },
     "hnswlib-node": {
@@ -1343,6 +1351,11 @@
       "types": "./llms/googlepalm.d.ts",
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
+    },
+    "./llms/gpt4all": {
+      "types": "./llms/gpt4all.d.ts",
+      "import": "./llms/gpt4all.js",
+      "require": "./llms/gpt4all.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",

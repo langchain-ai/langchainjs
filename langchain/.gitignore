@@ -136,6 +136,9 @@ llms/googlevertexai.d.ts
 llms/googlepalm.cjs
 llms/googlepalm.js
 llms/googlepalm.d.ts
+llms/gpt4all.cjs
+llms/gpt4all.js
+llms/gpt4all.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
