@@ -4,7 +4,6 @@ import {
   LabeledPairwiseStringEvalChain,
   PairwiseStringEvalChain,
 } from "../pairwise.js";
-import { Criteria } from "../../criteria/criteria.js";
 
 test.skip("Test TrajectoryEvalChain", async () => {
   const model = new ChatOpenAI(
@@ -15,10 +14,7 @@ test.skip("Test TrajectoryEvalChain", async () => {
     { baseURL: process.env.BASE_URL }
   );
 
-  const chain = await PairwiseStringEvalChain.fromLLM(
-    model,
-    Criteria.CONCISENESS
-  );
+  const chain = await PairwiseStringEvalChain.fromLLM(model, "conciseness");
 
   console.log("beginning evaluation");
   const res = await chain.evaluateStringPairs({
@@ -42,7 +38,7 @@ test.skip("Test LabeledPairwiseStringEvalChain", async () => {
 
   const chain = await LabeledPairwiseStringEvalChain.fromLLM(
     model,
-    Criteria.CORRECTNESS
+    "correctness"
   );
 
   console.log("beginning evaluation");

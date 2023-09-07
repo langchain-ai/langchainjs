@@ -112,7 +112,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
     return agentTools
       .map(
         (tool, i) =>
-          `Tool ${i + 1}: ${tool.name}\n` + `Description: ${tool.description}`
+          `Tool ${i + 1}: ${tool.name}\n Description: ${tool.description}`
       )
       .join("\n\n");
   }

@@ -24,12 +24,7 @@ import { BaseCallbackConfig } from "../../callbacks/manager.js";
  * CHEBYSHEV: Chebyshev distance metric.
  * HAMMING: Hamming distance metric.
  */
-export enum EmbeddingDistance {
-  COSINE = "cosine",
-  EUCLIDEAN = "euclidean",
-  MANHATTAN = "manhattan",
-  CHEBYSHEV = "chebyshev",
-}
+type EmbeddingDistance = "cosine" | "euclidean" | "manhattan" | "chebyshev";
 
 /**
  * Embedding Distance Evaluation Chain Input.
@@ -60,10 +55,10 @@ class EmbeddingDistanceMixin {
    */
   _get_metric(metric: EmbeddingDistance): VectorFunction {
     const metrics: { [key in EmbeddingDistance]: VectorFunction } = {
-      [EmbeddingDistance.COSINE]: this._cosine_distance,
-      [EmbeddingDistance.EUCLIDEAN]: this._euclidean_distance,
-      [EmbeddingDistance.MANHATTAN]: this._manhattan_distance,
-      [EmbeddingDistance.CHEBYSHEV]: this._chebyshev_distance,
+      cosine: this._cosine_distance,
+      euclidean: this._euclidean_distance,
+      manhattan: this._manhattan_distance,
+      chebyshev: this._chebyshev_distance,
     };
 
     if (metric in metrics) {
@@ -125,14 +120,14 @@ export class EmbeddingDistanceEvalChain
 
   embedding?: Embeddings;
 
-  distanceMetric: EmbeddingDistance = EmbeddingDistance.COSINE;
+  distanceMetric: EmbeddingDistance = "cosine";
 
   mixin: EmbeddingDistanceMixin;
 
   constructor(fields: EmbeddingDistanceEvalChainInput) {
     super();
     this.embedding = fields?.embedding || new OpenAIEmbeddings();
-    this.distanceMetric = fields?.distanceMetric || EmbeddingDistance.COSINE;
+    this.distanceMetric = fields?.distanceMetric || "cosine";
     this.mixin = new EmbeddingDistanceMixin();
   }
 
@@ -191,14 +186,14 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   embedding?: Embeddings;
 
-  distanceMetric: EmbeddingDistance = EmbeddingDistance.COSINE;
+  distanceMetric: EmbeddingDistance = "cosine";
 
   mixin: EmbeddingDistanceMixin;
 
   constructor(fields: EmbeddingDistanceEvalChainInput) {
     super();
     this.embedding = fields?.embedding || new OpenAIEmbeddings();
-    this.distanceMetric = fields?.distanceMetric || EmbeddingDistance.COSINE;
+    this.distanceMetric = fields?.distanceMetric || "cosine";
     this.mixin = new EmbeddingDistanceMixin();
   }
 

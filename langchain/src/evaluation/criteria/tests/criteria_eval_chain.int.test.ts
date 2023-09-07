@@ -1,9 +1,5 @@
 import { test } from "@jest/globals";
-import {
-  Criteria,
-  CriteriaEvalChain,
-  LabeledCriteriaEvalChain,
-} from "../criteria.js";
+import { CriteriaEvalChain, LabeledCriteriaEvalChain } from "../criteria.js";
 import { ChatOpenAI } from "../../../chat_models/openai.js";
 import { PRINCIPLES } from "../../../chains/index.js";
 import { ChatAnthropic } from "../../../chat_models/index.js";
@@ -18,7 +14,7 @@ test.skip("Test CriteriaEvalChain", async () => {
     { baseURL: process.env.BASE_URL }
   );
 
-  const chain = await CriteriaEvalChain.fromLLM(model, Criteria.CONCISENESS);
+  const chain = await CriteriaEvalChain.fromLLM(model, "conciseness");
 
   console.log("beginning evaluation");
   const res = await chain.evaluateStrings({
@@ -39,10 +35,7 @@ test.skip("Test LabeledCriteriaEvalChain", async () => {
     { baseURL: process.env.BASE_URL }
   );
 
-  const chain = await LabeledCriteriaEvalChain.fromLLM(
-    model,
-    Criteria.CORRECTNESS
-  );
+  const chain = await LabeledCriteriaEvalChain.fromLLM(model, "correctness");
 
   console.log("beginning evaluation");
   const res = await chain.evaluateStrings({
@@ -160,13 +153,9 @@ test("Test Configuring the Prompt", async () => {
     ---------
         Write out your explanation for each criterion, then respond with Y or N on a new line.`;
 
-  const chain = await LabeledCriteriaEvalChain.fromLLM(
-    model,
-    Criteria.CORRECTNESS,
-    {
-      prompt: PromptTemplate.fromTemplate(template),
-    }
-  );
+  const chain = await LabeledCriteriaEvalChain.fromLLM(model, "correctness", {
+    prompt: PromptTemplate.fromTemplate(template),
+  });
 
   console.log("beginning evaluation");
 
