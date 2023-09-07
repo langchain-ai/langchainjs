@@ -4571,16 +4571,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:0.4.1":
-  version: 0.4.1
-  resolution: "@getzep/zep-js@npm:0.4.1"
-  dependencies:
-    axios: ^1.4.0
-    typescript: ^5.0.4
-  checksum: 17296ddcff196ff2b8d9386775d14cdb104cebef07eabf0d6efc26d1d4824350eb902918a453fcfb6f4527f31d7312a157e9a09d1a8c151434701c2f5182d772
-  languageName: node
-  linkType: hard
-
 "@getzep/zep-js@npm:^0.7.0":
   version: 0.7.0
   resolution: "@getzep/zep-js@npm:0.7.0"
@@ -9347,15 +9337,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chromadb@npm:^1.4.0":
-  version: 1.4.1
-  resolution: "chromadb@npm:1.4.1"
-  dependencies:
-    axios: ^0.26.0
-  checksum: 2b8e02e86577947e9f32d3faadb614b1a0ce60114d383ba7dd9997b519b1ff8e0b38f1a5c132371636ab07ed53f57b45cde3b454bcaa6710d5468358e1634114
-  languageName: node
-  linkType: hard
-
 "chromadb@npm:^1.5.3":
   version: 1.5.3
   resolution: "chromadb@npm:1.5.3"
@@ -11587,7 +11568,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": 0.4.1
+    "@getzep/zep-js": ^0.7.0
     "@gomomento/sdk": ^1.23.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
@@ -11605,14 +11586,14 @@ __metadata:
     "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
-    chromadb: ^1.4.0
+    chromadb: ^1.5.3
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
-    faiss-node: ^0.2.1
+    faiss-node: ^0.3.0
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
@@ -11797,18 +11778,6 @@ __metadata:
   bin:
     extract-zip: cli.js
   checksum: 8cbda9debdd6d6980819cc69734d874ddd71051c9fe5bde1ef307ebcedfe949ba57b004894b585f758b7c9eeeea0e3d87f2dda89b7d25320459c2c9643ebb635
-  languageName: node
-  linkType: hard
-
-"faiss-node@npm:^0.2.1":
-  version: 0.2.1
-  resolution: "faiss-node@npm:0.2.1"
-  dependencies:
-    bindings: ^1.5.0
-    node-addon-api: ^6.0.0
-    node-gyp: latest
-    prebuild-install: ^7.1.1
-  checksum: 1f17d0e4c9e3eabdb9b2e0df78770fad58d22d208bf643e55f198fe9a217dd1de583ff5bb43d342b6cdcf82dcaef2532922b5738cd55353ac3ff69e783db30fc
   languageName: node
   linkType: hard
 
@@ -15045,7 +15014,7 @@ __metadata:
     axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
-    cohere-ai: ^5.0.2
+    cohere-ai: ">=6.2.2"
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     faiss-node: ^0.3.0
@@ -20791,7 +20760,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.0.0, typescript@npm:^5.0.4":
+"typescript@npm:^5.0.0":
   version: 5.0.4
   resolution: "typescript@npm:5.0.4"
   bin:
@@ -20831,7 +20800,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.0.0#~builtin<compat/typescript>, typescript@patch:typescript@^5.0.4#~builtin<compat/typescript>":
+"typescript@patch:typescript@^5.0.0#~builtin<compat/typescript>":
   version: 5.0.4
   resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=1f5320"
   bin:

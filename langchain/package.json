@@ -787,7 +787,7 @@
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
-    "cohere-ai": "^5.0.2",
+    "cohere-ai": ">=6.2.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.3.0",
