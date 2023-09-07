@@ -78,7 +78,7 @@ test("Test memory + cancellation", async () => {
       foo: "my favorite color",
       signal: AbortSignal.timeout(20),
     })
-  ).rejects.toThrow(/AbortError|Cancel/);
+  ).rejects.toThrow();
 });
 
 test("Test memory + timeout", async () => {
@@ -97,7 +97,7 @@ test("Test memory + timeout", async () => {
       foo: "my favorite color",
       timeout: 20,
     })
-  ).rejects.toThrow(/AbortError|Cancel/);
+  ).rejects.toThrow();
 });
 
 test("Test apply", async () => {

@@ -1,0 +1,56 @@
+# Ollama
+
+The `OllamaEmbeddings` class uses the `/api/embeddings` route of a locally hosted [Ollama](https://ollama.ai) server to generate embeddings for given texts.
+
+# Setup
+
+Follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance.
+
+# Usage
+
+Basic usage:
+
+```typescript
+import { OllamaEmbeddings } from "langchain/embeddings/ollama";
+
+const embeddings = new OllamaEmbeddings({
+  model: "llama2", // default value
+  baseUrl: "http://localhost:11434", // default value
+});
+```
+
+Ollama [model parameters](https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values) are also supported:
+
+```typescript
+import { OllamaEmbeddings } from "langchain/embeddings/ollama";
+
+const embeddings = new OllamaEmbeddings({
+  model: "llama2", // default value
+  baseUrl: "http://localhost:11434", // default value
+  requestOptions: {
+    useMMap: true, // use_mmap 1
+    numThreads: 6, // num_thread 6
+    numGpu: 1, // num_gpu 1
+  },
+});
+```
+
+# Example usage:
+
+```typescript
+import { OllamaEmbeddings } from "langchain/embeddings/ollama";
+
+const embeddings = new OllamaEmbeddings({
+  model: "llama2", // default value
+  baseUrl: "http://localhost:11434", // default value
+  requestOptions: {
+    useMMap: true,
+    numThreads: 6,
+    numGpu: 1,
+  },
+});
+
+const documents = ["Hello World!", "Bye Bye"];
+
+const documentEmbeddings = await embeddings.embedDocuments(documents);
+```

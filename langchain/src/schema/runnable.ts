@@ -758,6 +758,13 @@ export class RunnableBinding<
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<CallOptions> | undefined
+  ) {
+    yield* this.bound._streamIterator(input, { ...options, ...this.kwargs });
+  }
+
   async stream(
     input: RunInput,
     options?: Partial<CallOptions> | undefined

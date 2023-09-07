@@ -1,5 +1,4 @@
-import { AxiosRequestConfig } from "axios";
-import { ChatCompletionRequestMessage } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
@@ -59,11 +58,29 @@ export declare interface OpenAIBaseInput {
   openAIApiKey?: string;
 }
 
+// TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available
+export type OpenAICoreRequestOptions<
+  Req extends object = Record<string, unknown>
+> = {
+  path?: string;
+  query?: Req | undefined;
+  body?: Req | undefined;
+  headers?: Record<string, string | null | undefined> | undefined;
+
+  maxRetries?: number;
+  stream?: boolean | undefined;
+  timeout?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  httpAgent?: any;
+  signal?: AbortSignal | undefined | null;
+  idempotencyKey?: string;
+};
+
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
    * Additional options to pass to the underlying axios request.
    */
-  options?: AxiosRequestConfig;
+  options?: OpenAICoreRequestOptions;
 }
 
 /**
@@ -77,9 +94,22 @@ export declare interface OpenAIInput extends OpenAIBaseInput {
   batchSize: number;
 }
 
+/**
+ * @deprecated Use "baseURL", "defaultHeaders", and "defaultParams" instead.
+ */
+export interface LegacyOpenAIInput {
+  /** @deprecated Use baseURL instead */
+  basePath?: string;
+  /** @deprecated Use defaultHeaders and defaultQuery instead */
+  baseOptions?: {
+    headers?: Record<string, string>;
+    params?: Record<string, string>;
+  };
+}
+
 export interface OpenAIChatInput extends OpenAIBaseInput {
   /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: ChatCompletionRequestMessage[];
+  prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
 }
 
 export declare interface AzureOpenAIInput {

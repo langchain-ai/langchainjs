@@ -37,10 +37,12 @@ const entrypoints = {
   "embeddings/base": "embeddings/base",
   "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/fake": "embeddings/fake",
+  "embeddings/ollama": "embeddings/ollama",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
   "embeddings/tensorflow": "embeddings/tensorflow",
   "embeddings/hf": "embeddings/hf",
+  "embeddings/hf_transformers": "embeddings/hf_transformers",
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
   "embeddings/minimax": "embeddings/minimax",
@@ -142,6 +144,7 @@ const entrypoints = {
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
+  "document_loaders/fs/openai_whisper_audio": "document_loaders/fs/openai_whisper_audio",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/mozilla_readability":
@@ -160,6 +163,7 @@ const entrypoints = {
   "chat_models/minimax": "chat_models/minimax",
   // schema
   schema: "schema/index",
+  "schema/document": "schema/document",
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
@@ -169,6 +173,7 @@ const entrypoints = {
   sql_db: "sql_db",
   // callbacks
   callbacks: "callbacks/index",
+  "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
   // output_parsers
   output_parsers: "output_parsers/index",
   "output_parsers/expression": "output_parsers/expression",
@@ -221,7 +226,7 @@ const entrypoints = {
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
   // hub
-  "hub": "hub",
+  hub: "hub",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -231,7 +236,8 @@ const entrypoints = {
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   "experimental/multimodal_embeddings/googlevertexai":
     "experimental/multimodal_embeddings/googlevertexai",
-  "experimental/chat_models/anthropic_functions": "experimental/chat_models/anthropic_functions",
+  "experimental/chat_models/anthropic_functions":
+    "experimental/chat_models/anthropic_functions",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -259,6 +265,7 @@ const requiresOptionalDependency = [
   "tools/calculator",
   "tools/sql",
   "tools/webbrowser",
+  "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
   "embeddings/cohere",
@@ -266,6 +273,7 @@ const requiresOptionalDependency = [
   "embeddings/googlepalm",
   "embeddings/tensorflow",
   "embeddings/hf",
+  "embeddings/hf_transformers",
   "llms/load",
   "llms/cohere",
   "llms/googlevertexai",
@@ -333,6 +341,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "document_loaders/fs/openai_whisper_audio",
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/googlevertexai",
@@ -367,6 +376,7 @@ const requiresOptionalDependency = [
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  // Prevent export due to circular dependency with "load" entrypoint
   "hub",
   "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions",

@@ -31,10 +31,8 @@ describe("ElasticVectorSearch", () => {
 
     const indexName = "test_index";
 
-    const embeddings = new OpenAIEmbeddings(undefined, {
-      baseOptions: { temperature: 0 },
-    });
-    store = new ElasticVectorSearch(embeddings, { client, indexName });
+    const embeddings = new OpenAIEmbeddings();
+    const store = new ElasticVectorSearch(embeddings, { client, indexName });
     await store.deleteIfExists();
 
     expect(store).toBeDefined();
