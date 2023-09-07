@@ -97,7 +97,7 @@ Judgment: Given the good reasoning in the final answer but otherwise poor perfor
 
 Score: 2`;
 
-export const EVAL_CHAT_PROMPT = ChatPromptTemplate.fromPromptMessages([
+export const EVAL_CHAT_PROMPT = /* #__PURE__ */ChatPromptTemplate.fromPromptMessages([
   SystemMessagePromptTemplate.fromTemplate(
     "You are a helpful assistant that evaluates language models."
   ),
@@ -133,7 +133,7 @@ i. Is the final answer helpful?
     iv. Does the AI language model use too many steps to answer the question?
     v. Are the appropriate tools used to answer the question?`;
 
-export const TOOL_FREE_EVAL_CHAT_PROMPT = ChatPromptTemplate.fromPromptMessages(
+export const TOOL_FREE_EVAL_CHAT_PROMPT = /* #__PURE__ */ChatPromptTemplate.fromPromptMessages(
   [
     SystemMessagePromptTemplate.fromTemplate(
       "You are a helpful assistant that evaluates language models."

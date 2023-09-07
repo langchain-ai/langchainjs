@@ -30,7 +30,7 @@ After giving your rationale, make your final decision using this format:\
 {predictionB}
 [/RESPONSE B]`;
 
-export const PROMPT = new PromptTemplate({
+export const PROMPT = /* #__PURE__ */new PromptTemplate({
   inputVariables: ["input", "prediction", "predictionB", "criteria"],
   template,
 });
@@ -64,7 +64,7 @@ After giving your rationale, make your final decision using this format:\
 {predictionB}
 [/RESPONSE B]`;
 
-export const PROMPT_WITH_REFERENCES = new PromptTemplate({
+export const PROMPT_WITH_REFERENCES = /* #__PURE__ */new PromptTemplate({
   inputVariables: [
     "input",
     "prediction",
