@@ -486,7 +486,7 @@ const updateConfig = () => {
   testExports.forEach(([pkg, importStatement]) => {
     const contents =
       entrypointsToTest.map((key) => importStatement(key)).join("\n") + "\n";
-    fs.writeFileSync(`../${pkg}/src/entrypoints.js`, contents);
+    fs.writeFileSync(`../environment_tests/${pkg}/src/entrypoints.js`, contents);
   });
 };
 
