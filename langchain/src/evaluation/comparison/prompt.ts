@@ -6,8 +6,7 @@
  * Zheng, et. al. https://arxiv.org/abs/2306.05685
  */
 
-import {PromptTemplate} from "../../prompts/index.js";
-
+import { PromptTemplate } from "../../prompts/index.js";
 
 const template = `Act as a fair judge and rate the two responses to the question below.\
  Choose the response that best followed the instructions and answered the question.\
@@ -31,13 +30,10 @@ After giving your rationale, make your final decision using this format:\
 {predictionB}
 [/RESPONSE B]`;
 
-
-export const PROMPT =
-    new PromptTemplate({
-        inputVariables: ["input", "prediction", "predictionB", "criteria"],
-        template,
-    });
-
+export const PROMPT = new PromptTemplate({
+  inputVariables: ["input", "prediction", "predictionB", "criteria"],
+  template,
+});
 
 const referenceTemplate = `Act as a fair judge and rate the two responses to the question below.\
  Choose the response that best followed the instructions and answered the question.\
@@ -68,9 +64,13 @@ After giving your rationale, make your final decision using this format:\
 {predictionB}
 [/RESPONSE B]`;
 
-
-export const PROMPT_WITH_REFERENCES =
-    new PromptTemplate({
-        inputVariables: ["input", "prediction", "predictionB", "reference", "criteria"],
-        template: referenceTemplate
-    });
+export const PROMPT_WITH_REFERENCES = new PromptTemplate({
+  inputVariables: [
+    "input",
+    "prediction",
+    "predictionB",
+    "reference",
+    "criteria",
+  ],
+  template: referenceTemplate,
+});

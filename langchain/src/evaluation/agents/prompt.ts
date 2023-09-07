@@ -3,10 +3,10 @@
  */
 
 import {
-    AIMessagePromptTemplate,
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate
+  AIMessagePromptTemplate,
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 
 const EVAL_TEMPLATE = `An AI language model has been given access to the following set of tools to help answer a user's question.
@@ -97,15 +97,14 @@ Judgment: Given the good reasoning in the final answer but otherwise poor perfor
 
 Score: 2`;
 
-export const EVAL_CHAT_PROMPT = ChatPromptTemplate.fromPromptMessages(
-    [
-        SystemMessagePromptTemplate.fromTemplate("You are a helpful assistant that evaluates language models."),
-        HumanMessagePromptTemplate.fromTemplate(EXAMPLE_INPUT),
-        AIMessagePromptTemplate.fromTemplate(EXAMPLE_OUTPUT),
-        HumanMessagePromptTemplate.fromTemplate(EVAL_TEMPLATE),
-    ]
-);
-
+export const EVAL_CHAT_PROMPT = ChatPromptTemplate.fromPromptMessages([
+  SystemMessagePromptTemplate.fromTemplate(
+    "You are a helpful assistant that evaluates language models."
+  ),
+  HumanMessagePromptTemplate.fromTemplate(EXAMPLE_INPUT),
+  AIMessagePromptTemplate.fromTemplate(EXAMPLE_OUTPUT),
+  HumanMessagePromptTemplate.fromTemplate(EVAL_TEMPLATE),
+]);
 
 const TOOL_FREE_EVAL_TEMPLATE = `An AI language model has been given access to a set of tools to help answer a user's question.
 
@@ -134,14 +133,13 @@ i. Is the final answer helpful?
     iv. Does the AI language model use too many steps to answer the question?
     v. Are the appropriate tools used to answer the question?`;
 
-
 export const TOOL_FREE_EVAL_CHAT_PROMPT = ChatPromptTemplate.fromPromptMessages(
-    [
-        SystemMessagePromptTemplate.fromTemplate(
-            "You are a helpful assistant that evaluates language models."
-        ),
-        HumanMessagePromptTemplate.fromTemplate(EXAMPLE_INPUT),
-        AIMessagePromptTemplate.fromTemplate(EXAMPLE_OUTPUT),
-        HumanMessagePromptTemplate.fromTemplate(TOOL_FREE_EVAL_TEMPLATE),
-    ]
+  [
+    SystemMessagePromptTemplate.fromTemplate(
+      "You are a helpful assistant that evaluates language models."
+    ),
+    HumanMessagePromptTemplate.fromTemplate(EXAMPLE_INPUT),
+    AIMessagePromptTemplate.fromTemplate(EXAMPLE_OUTPUT),
+    HumanMessagePromptTemplate.fromTemplate(TOOL_FREE_EVAL_TEMPLATE),
+  ]
 );
