@@ -55,6 +55,7 @@
       "src/embeddings/base.ts",
       "src/embeddings/cache_backed.ts",
       "src/embeddings/fake.ts",
+      "src/embeddings/ollama.ts",
       "src/embeddings/openai.ts",
       "src/embeddings/cohere.ts",
       "src/embeddings/tensorflow.ts",

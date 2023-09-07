@@ -12,12 +12,12 @@ To contribute to this project, please follow a ["fork and pull request"](https:/
 
 If you are not sure what to work on, we have a few suggestions:
 
-- Look at the issues with the [help wanted](https://github.com/hwchase17/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for new contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And any questions let us know, we're happy to guide you!
-- At the moment our main focus is reaching parity with the Python version across both [integrations](https://langchain.com/integrations.html) and [features](https://langchain.com/features.html). If you are interested in working on a specific integration or feature, just pick anything from those lists not done yet, please let us know and we can help you get started.
+- Look at the issues with the [help wanted](https://github.com/hwchase17/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And if you have any questions let us know, we're happy to guide you!
+- At the moment our main focus is reaching parity with the Python version for features and base functionality. If you are interested in working on a specific integration or feature, please let us know and we can help you get started.
 
 ### New abstractions
 
-We are currently trying to keep API parity between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
+We aim to keep the same APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
 
 ## Want to add a specific integration?
 
@@ -63,8 +63,6 @@ feel free to contact a maintainer for help - we do not want these to get in the 
 good code into the codebase.
 
 ### 🏭Release process
-
-> TODO:
 
 As of now, LangChain has an ad hoc release process: releases are cut with high frequency via by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).
@@ -140,7 +138,7 @@ yarn format:check
 Tests should be added within a `tests/` folder alongside the modules they
 are testing.
 
-To run all tests, run:
+To run all unit and environment tests, run:
 
 ```bash
 yarn test
@@ -157,19 +155,6 @@ To run only unit tests, run:
 yarn test:unit
 ```
 
-**Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
-
-If you add support for a new external API, please add a new integration test.
-Integration tests should be called `*.int.test.ts`.
-
-To run only integration tests, run:
-
-```bash
-yarn test:int
-```
-
-Note that many integration tests require credentials or other setup. You may need to set up a `langchain/.env` file like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
-
 **Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
 
 To run the environment tests with Docker run:
@@ -185,6 +170,19 @@ To run a single test, run:
 ```bash
 yarn test:single ./path/to/yourtest.test.ts
 ```
+
+**Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
+
+If you add support for a new external API, please add a new integration test.
+Integration tests should be called `*.int.test.ts`.
+
+To run only integration tests, run:
+
+```bash
+yarn test:int
+```
+
+Note that many integration tests require credentials or other setup. You may need to set up a `langchain/.env` file like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
 
 ### Building
 

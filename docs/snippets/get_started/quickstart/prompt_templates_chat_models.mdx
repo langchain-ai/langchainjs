@@ -10,6 +10,11 @@ const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
 const humanTemplate = "{text}";
 const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(humanTemplate);
 
+// You can also pass ["{role}", "{template}"] tuples into the `.fromPromptMessages()` method
+// and they will be automatically converted into message prompts.
+// const systemMessagePrompt = ["system", template];
+// const humanMessagePrompt = ["user", humanTemplate];
+
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([systemMessagePrompt, humanMessagePrompt]);
 
 const formattedPrompt = await chatPrompt.formatMessages({
