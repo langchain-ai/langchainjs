@@ -447,15 +447,6 @@ export class ChatMessage
 
 export type BaseMessageLike =
   | BaseMessage
-  | {
-      role:
-        | MessageType
-        | "user"
-        | "assistant"
-        | (string & Record<never, never>);
-      content: string;
-      name?: string;
-    }
   | [
       MessageType | "user" | "assistant" | (string & Record<never, never>),
       string
@@ -476,32 +467,17 @@ export function coerceMessageLikeToMessage(
   } else if (isBaseMessage(messageLike)) {
     return messageLike;
   }
-  let role;
-  let content;
-  let name;
-  if (Array.isArray(messageLike)) {
-    [role, content] = messageLike;
-    name = "";
-  } else {
-    role = messageLike.role;
-    content = messageLike.content;
-    name = messageLike.name;
-  }
-  if (role === "human" || role === "user") {
+  const [type, content] = messageLike;
+  if (type === "human" || type === "user") {
     return new HumanMessage({ content });
-  } else if (role === "ai" || role === "assistant") {
+  } else if (type === "ai" || type === "assistant") {
     return new AIMessage({ content });
-  } else if (role === "system") {
+  } else if (type === "system") {
     return new SystemMessage({ content });
-  } else if (role === "function") {
-    if (!name) {
-      throw new Error(
-        `Unable to coerce function message from object: no "name" field provided.`
-      );
-    }
-    return new FunctionMessage({ content, name });
   } else {
-    return new ChatMessage({ content, role });
+    throw new Error(
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+    );
   }
 }
 
