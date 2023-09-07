@@ -8,7 +8,7 @@ import {
   API_URL_PROMPT_TEMPLATE,
   API_RESPONSE_PROMPT_TEMPLATE,
 } from "./prompts.js";
-import { BasePromptTemplate } from "../../index.js";
+import { BasePromptTemplate } from "../../prompts/base.js";
 
 /**
  * Interface that extends ChainInputs and defines additional input

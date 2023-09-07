@@ -75,6 +75,8 @@ If you have a Twitter account you would like us to mention, please let us know i
 
 ## 🚀Quick Start
 
+LangChain's source code is under `langchain/src`.
+
 ### Tooling
 
 This project uses the following tools, which are worth getting familiar
@@ -92,8 +94,8 @@ Now, you should be able to run the common tasks in the following section.
 
 ## ✅Common Tasks
 
-Our primary goal is to make it as easy as possible for you to contribute to this project.
-To that end, we have configured the most common actions to be directly runnable from the root of the project (unless otherwise noted).
+Our goal is to make it as easy as possible for you to contribute to this project.
+All of the below commands should be run from within the `langchain/` directory unless otherwise noted.
 
 ### Setup
 
@@ -135,14 +137,8 @@ yarn format:check
 
 ### Testing
 
-Tests should be added within a `tests/` folder alongside the modules they
+In general, tests should be added within a `tests/` folder alongside the modules they
 are testing.
-
-To run all unit and environment tests, run:
-
-```bash
-yarn test
-```
 
 **Unit tests** cover modular logic that does not require calls to outside APIs.
 
@@ -152,15 +148,7 @@ Unit tests should be called `*.test.ts`.
 To run only unit tests, run:
 
 ```bash
-yarn test:unit
-```
-
-**Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
-
-To run the environment tests with Docker run:
-
-```bash
-yarn test:exports:docker
+yarn test
 ```
 
 #### Running a single test
@@ -168,8 +156,10 @@ yarn test:exports:docker
 To run a single test, run:
 
 ```bash
-yarn test:single ./path/to/yourtest.test.ts
+yarn test:single /path/to/yourtest.test.ts
 ```
+
+This is useful for developing individual features.
 
 **Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
 
@@ -179,10 +169,11 @@ Integration tests should be called `*.int.test.ts`.
 To run only integration tests, run:
 
 ```bash
-yarn test:int
+yarn test:integration
 ```
 
-Note that many integration tests require credentials or other setup. You may need to set up a `langchain/.env` file like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
+Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` file
+like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
 
 ### Building
 
@@ -238,13 +229,23 @@ For that reason, we ask that you add good documentation to all classes and metho
 
 Similar to linting, we recognize documentation can be annoying. If you do not want to do it, please contact a project maintainer, and they can help you with it. We do not want this to be a blocker for good code getting contributed.
 
+Documentation and the skeleton lives under the `docs/` folder. Example code is imported from under the `examples/` folder.
+
 ### Build Documentation Locally
 
-You can run a hot-reloading dev version of the docs static site by
-running:
-
-To generate and view the documentation locally, run:
+To generate and view the documentation locally, change to the project root and run `yarn` to ensure dependencies get installed
+in both the `docs/` and `examples/` workspaces. Then run:
 
 ```bash
 yarn docs
+```
+
+## Advanced
+
+**Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
+
+To run the environment tests with Docker, run the following command from the project root:
+
+```bash
+yarn test:exports:docker
 ```

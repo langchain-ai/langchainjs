@@ -70,9 +70,6 @@
     "chains/sql_db.cjs",
     "chains/sql_db.js",
     "chains/sql_db.d.ts",
-    "embeddings.cjs",
-    "embeddings.js",
-    "embeddings.d.ts",
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
@@ -109,9 +106,6 @@
     "embeddings/minimax.cjs",
     "embeddings/minimax.js",
     "embeddings/minimax.d.ts",
-    "llms.cjs",
-    "llms.js",
-    "llms.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -166,9 +160,6 @@
     "prompts/load.cjs",
     "prompts/load.js",
     "prompts/load.d.ts",
-    "vectorstores.cjs",
-    "vectorstores.js",
-    "vectorstores.d.ts",
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
@@ -268,9 +259,6 @@
     "document.cjs",
     "document.js",
     "document.d.ts",
-    "document_loaders.cjs",
-    "document_loaders.js",
-    "document_loaders.d.ts",
     "document_loaders/base.cjs",
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
@@ -385,9 +373,6 @@
     "document_transformers/openai_functions.cjs",
     "document_transformers/openai_functions.js",
     "document_transformers/openai_functions.d.ts",
-    "chat_models.cjs",
-    "chat_models.js",
-    "chat_models.d.ts",
     "chat_models/base.cjs",
     "chat_models/base.js",
     "chat_models/base.d.ts",
@@ -448,9 +433,6 @@
     "output_parsers/expression.cjs",
     "output_parsers/expression.js",
     "output_parsers/expression.d.ts",
-    "retrievers.cjs",
-    "retrievers.js",
-    "retrievers.d.ts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
@@ -806,7 +788,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "llmonitor": "^0.5.4",
+    "llmonitor": "*",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -1113,11 +1095,6 @@
     "vectorstores"
   ],
   "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js",
-      "require": "./index.cjs"
-    },
     "./load": {
       "types": "./load.d.ts",
       "import": "./load.js",
@@ -1218,13 +1195,6 @@
       "import": "./chains/sql_db.js",
       "require": "./chains/sql_db.cjs"
     },
-    "./embeddings": {
-      "node": {
-        "types": "./embeddings.d.ts",
-        "import": "./embeddings.js",
-        "require": "./embeddings.cjs"
-      }
-    },
     "./embeddings/base": {
       "types": "./embeddings/base.d.ts",
       "import": "./embeddings/base.js",
@@ -1284,13 +1254,6 @@
       "types": "./embeddings/minimax.d.ts",
       "import": "./embeddings/minimax.js",
       "require": "./embeddings/minimax.cjs"
-    },
-    "./llms": {
-      "node": {
-        "types": "./llms.d.ts",
-        "import": "./llms.js",
-        "require": "./llms.cjs"
-      }
     },
     "./llms/load": {
       "types": "./llms/load.d.ts",
@@ -1381,13 +1344,6 @@
       "types": "./prompts/load.d.ts",
       "import": "./prompts/load.js",
       "require": "./prompts/load.cjs"
-    },
-    "./vectorstores": {
-      "node": {
-        "types": "./vectorstores.d.ts",
-        "import": "./vectorstores.js",
-        "require": "./vectorstores.cjs"
-      }
     },
     "./vectorstores/analyticdb": {
       "types": "./vectorstores/analyticdb.d.ts",
@@ -1553,13 +1509,6 @@
       "types": "./document.d.ts",
       "import": "./document.js",
       "require": "./document.cjs"
-    },
-    "./document_loaders": {
-      "node": {
-        "types": "./document_loaders.d.ts",
-        "import": "./document_loaders.js",
-        "require": "./document_loaders.cjs"
-      }
     },
     "./document_loaders/base": {
       "types": "./document_loaders/base.d.ts",
@@ -1751,13 +1700,6 @@
       "import": "./document_transformers/openai_functions.js",
       "require": "./document_transformers/openai_functions.cjs"
     },
-    "./chat_models": {
-      "node": {
-        "types": "./chat_models.d.ts",
-        "import": "./chat_models.js",
-        "require": "./chat_models.cjs"
-      }
-    },
     "./chat_models/base": {
       "types": "./chat_models/base.d.ts",
       "import": "./chat_models/base.js",
@@ -1857,13 +1799,6 @@
       "types": "./output_parsers/expression.d.ts",
       "import": "./output_parsers/expression.js",
       "require": "./output_parsers/expression.cjs"
-    },
-    "./retrievers": {
-      "node": {
-        "types": "./retrievers.d.ts",
-        "import": "./retrievers.js",
-        "require": "./retrievers.cjs"
-      }
     },
     "./retrievers/amazon_kendra": {
       "types": "./retrievers/amazon_kendra.d.ts",

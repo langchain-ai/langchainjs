@@ -152,7 +152,7 @@ test("Test fromPromptMessages with a variety of ways to declare prompt messages"
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     "Hello {foo}, I'm {bar}",
-    { role: "ai", content: "Nice to meet you, {bar}!" },
+    ["assistant", "Nice to meet you, {bar}!"],
     ["human", "Thanks {foo}!!"],
   ]);
   const messages = await chatPrompt.formatPromptValue({

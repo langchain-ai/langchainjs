@@ -8,7 +8,7 @@ import {
   JsonKeyOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain } from "../llm_chain.js";
-import { BaseChatModel } from "../../chat_models/index.js";
+import { BaseChatModel } from "../../chat_models/base.js";
 import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**

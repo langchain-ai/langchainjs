@@ -4,7 +4,7 @@ import { beforeEach, expect, test } from "@jest/globals";
 import { SyntheticEmbeddings } from "../../embeddings/fake.js";
 import { InMemoryDocstore } from "../../stores/doc/in_memory.js";
 import { MatchingEngineArgs, MatchingEngine } from "../googlevertexai.js";
-import { Embeddings } from "../../embeddings/index.js";
+import { Embeddings } from "../../embeddings/base.js";
 
 describe("Vertex AI matching", () => {
   let embeddings: Embeddings;
