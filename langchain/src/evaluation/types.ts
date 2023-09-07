@@ -1,43 +1,54 @@
-export enum EvaluatorType {
-  /** Question answering evaluator, which grades answers to questions
-     directly using an LLM. */
-  QA = "qa",
+import {
+    AgentTrajectoryEvaluator,
+    LLMPairwiseStringEvaluator, LLMStringEvaluator,
+    PairwiseStringEvaluator, StringEvaluator
+} from "./base.js";
 
-  /** Chain of thought question answering evaluator, which grades
-     answers to questions using chain of thought 'reasoning'. */
-  COT_QA = "cot_qa",
+export interface EvaluatorType {
 
-  /** Question answering evaluator that incorporates 'context' in the response. */
-  CONTEXT_QA = "context_qa",
+    /**
+     * The criteria evaluator, which evaluates a model based on a
+     * custom set of criteria without any reference labels.
+     * */
+    "criteria": LLMStringEvaluator;
 
-  /** The pairwise string evaluator, which predicts the preferred prediction from
-     between two models. */
-  PAIRWISE_STRING = "pairwise_string",
+    /**
+     * The labeled criteria evaluator, which evaluates a model based on a
+     * custom set of criteria, with a reference label.
+     * */
 
-  /** The labeled pairwise string evaluator, which predicts the preferred prediction
-     from between two models based on a ground truth reference label. */
-  LABELED_PAIRWISE_STRING = "labeled_pairwise_string",
+    "labeled_criteria": LLMStringEvaluator;
 
-  /** The agent trajectory evaluator, which grades the agent's intermediate steps. */
-  AGENT_TRAJECTORY = "trajectory",
+    /**
+     *  The pairwise string evaluator, which predicts the preferred prediction from
+     *  between two models.
+     */
+    "pairwise_string": LLMPairwiseStringEvaluator;
 
-  /** The criteria evaluator, which evaluates a model based on a
-     custom set of criteria without any reference labels. */
-  CRITERIA = "criteria",
 
-  /** The labeled criteria evaluator, which evaluates a model based on a
-     custom set of criteria, with a reference label. */
-  LABELED_CRITERIA = "labeled_criteria",
+    /**
+     * The labeled pairwise string evaluator, which predicts the preferred prediction
+     * from between two models based on a ground truth reference label.
+     * */
+    "labeled_pairwise_string": LLMPairwiseStringEvaluator;
 
-  /** Compare predictions to a reference answer using string edit distances. */
-  STRING_DISTANCE = "string_distance",
 
-  /** Compare predictions based on string edit distances. */
-  PAIRWISE_STRING_DISTANCE = "pairwise_string_distance",
+    /**
+     * The agent trajectory evaluator, which grades the agent's intermediate steps.
+     */
+    "trajectory": AgentTrajectoryEvaluator;
 
-  /** Compare a prediction to a reference label using embedding distance. */
-  EMBEDDING_DISTANCE = "embedding_distance",
 
-  /** Compare two predictions using embedding distance. */
-  PAIRWISE_EMBEDDING_DISTANCE = "pairwise_embedding_distance",
+    /**
+     * Compare a prediction to a reference label using embedding distance.
+     * */
+    "embedding_distance": StringEvaluator;
+
+    /**
+     * Compare two predictions using embedding distance.
+     * */
+    "pairwise_embedding_distance": PairwiseStringEvaluator;
+
 }
+
+
