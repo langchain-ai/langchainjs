@@ -110,7 +110,7 @@ export class CriteriaResultOutputParser extends BaseLLMOutputParser<EvalOutputTy
     return Promise.resolve({
       reasoning,
       value: verdict,
-      score: score.toString(),
+      score,
     });
   }
 }
@@ -208,7 +208,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
    */
   static async fromLLM(
     llm: BaseLanguageModel,
-    criteria: CRITERIA_TYPE,
+    criteria?: CRITERIA_TYPE,
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     if (this.name === "CriteriaEvalChain" && criteria === "correctness") {

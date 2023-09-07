@@ -1,73 +1,74 @@
-import { BaseLLMOutputParser } from "../../schema/output_parser.js";
+import {BaseLLMOutputParser} from "../../schema/output_parser.js";
 import {
-  AgentTrajectoryEvaluator,
-  EvalOutputType,
-  LLMEvalChainInput,
-  LLMTrajectoryEvaluatorArgs,
+    AgentTrajectoryEvaluator,
+    EvalOutputType,
+    LLMEvalChainInput,
+    LLMTrajectoryEvaluatorArgs,
 } from "../base.js";
 
 import {
-  AgentStep,
-  ChainValues,
-  ChatGeneration,
-  Generation,
-  RUN_KEY,
+    AgentStep,
+    ChainValues,
+    ChatGeneration,
+    Generation,
+    RUN_KEY,
 } from "../../schema/index.js";
-import { Callbacks } from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
-import { StructuredTool } from "../../tools/index.js";
-import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
-import { BaseChatModel } from "../../chat_models/index.js";
+import {Callbacks} from "../../callbacks/index.js";
+import {BaseCallbackConfig} from "../../callbacks/manager.js";
+import {BasePromptTemplate} from "../../prompts/index.js";
+import {StructuredTool} from "../../tools/index.js";
+import {EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT} from "./prompt.js";
+import {BaseLanguageModel} from "../../base_language/index.js";
+import {BaseChatModel} from "../../chat_models/index.js";
 
 /**
  * A parser for the output of the TrajectoryEvalChain.
  */
 export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> {
-  lc_namespace: string[];
+    lc_namespace: string[];
 
-  parseResult(
-    generations: Generation[] | ChatGeneration[],
-    _callbacks: Callbacks | undefined
-  ): Promise<EvalOutputType> {
-    console.log("generations", generations);
-    const { text } = generations[0];
-    console.log("text", text);
+    parseResult(
+        generations: Generation[] | ChatGeneration[],
+        _callbacks: Callbacks | undefined
+    ): Promise<EvalOutputType> {
+        console.log("generations", generations);
+        const {text} = generations[0];
+        console.log("text", text);
 
-    if (!text.includes("Score:")) {
-      throw new Error(`Could not find score in model eval output: ${text}`);
+        if (!text.includes("Score:")) {
+            throw new Error(`Could not find score in model eval output: ${text}`);
+        }
+
+        let [reasoning, scoreStr] = text.split("Score:", 2);
+        reasoning = reasoning.trim();
+        scoreStr = scoreStr.trim();
+
+        // Use regex to extract the score.
+        // This will get the number in the string, even if it is a float or more than 10.
+        // E.g. "Score: 1" will return 1, "Score: 3.5" will return 3.5, and
+        // "Score: 10" will return 10.
+        // The score should be an integer digit in the range 1-5.
+
+        const scoreMatch = scoreStr.match(/(\d+(\.\d+)?)/);
+        console.log("scoreMatch", scoreMatch);
+        if (scoreMatch === null || scoreMatch[1].includes(".")) {
+            throw new Error(
+                `Score is not an integer digit in the range 1-5: ${text}`
+            );
+        }
+
+        const score = +scoreMatch[1];
+        if (score < 1 || score > 5) {
+            throw new Error(`Score is not a digit in the range 1-5: ${text}`);
+        }
+
+        const normalizedScore = (score - 1) / 4;
+
+        return Promise.resolve({
+            reasoning,
+            score: normalizedScore,
+        });
     }
-
-    let [reasoning, scoreStr] = text.split("Score:", 2);
-    reasoning = reasoning.trim();
-    scoreStr = scoreStr.trim();
-
-    // Use regex to extract the score.
-    // This will get the number in the string, even if it is a float or more than 10.
-    // E.g. "Score: 1" will return 1, "Score: 3.5" will return 3.5, and
-    // "Score: 10" will return 10.
-    // The score should be an integer digit in the range 1-5.
-
-    const scoreMatch = scoreStr.match(/(\d+(\.\d+)?)/);
-    console.log("scoreMatch", scoreMatch);
-    if (scoreMatch === null || scoreMatch[1].includes(".")) {
-      throw new Error(
-        `Score is not an integer digit in the range 1-5: ${text}`
-      );
-    }
-
-    const score = +scoreMatch[1];
-    if (score < 1 || score > 5) {
-      throw new Error(`Score is not a digit in the range 1-5: ${text}`);
-    }
-
-    const normalizedScore = (score - 1) / 4;
-
-    return Promise.resolve({
-      reasoning,
-      score: normalizedScore,
-    });
-  }
 }
 
 /**
@@ -77,136 +78,142 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
  * the sequence of actions taken and their outcomes.
  */
 export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
-  criterionName?: string;
+    criterionName?: string;
 
-  evaluationName?: string = this.criterionName;
+    evaluationName?: string = this.criterionName;
 
-  requiresInput = true;
+    requiresInput = true;
 
-  requiresReference = false;
+    requiresReference = false;
 
-  outputParser = new TrajectoryOutputParser();
+    outputParser = new TrajectoryOutputParser();
 
-  static resolveTrajectoryPrompt(
-    prompt?: BasePromptTemplate | undefined,
-    agentTools?: StructuredTool[]
-  ) {
-    let _prompt;
-    if (prompt) {
-      _prompt = prompt;
-    } else if (agentTools) {
-      _prompt = EVAL_CHAT_PROMPT;
-    } else {
-      _prompt = TOOL_FREE_EVAL_CHAT_PROMPT;
+    static resolveTrajectoryPrompt(
+        prompt?: BasePromptTemplate | undefined,
+        agentTools?: StructuredTool[]
+    ) {
+        let _prompt;
+        if (prompt) {
+            _prompt = prompt;
+        } else if (agentTools) {
+            _prompt = EVAL_CHAT_PROMPT;
+        } else {
+            _prompt = TOOL_FREE_EVAL_CHAT_PROMPT;
+        }
+
+        return _prompt;
     }
 
-    return _prompt;
-  }
-
-  /**
-   * Get the description of the agent tools.
-   *
-   * @returns The description of the agent tools.
-   */
-  static toolsDescription(agentTools: StructuredTool[]): string {
-    return agentTools
-      .map(
-        (tool, i) =>
-          `Tool ${i + 1}: ${tool.name}\n Description: ${tool.description}`
-      )
-      .join("\n\n");
-  }
-
-  /**
-   * Create a new TrajectoryEvalChain.
-   * @param llm
-   * @param agentTools - The tools used by the agent.
-   * @param chainOptions - The options for the chain.
-   */
-  static async fromLLM(
-    llm: BaseChatModel,
-    agentTools?: StructuredTool[],
-    chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
-  ) {
-    const prompt = this.resolveTrajectoryPrompt(
-      chainOptions?.prompt,
-      agentTools
-    );
-    if (agentTools) {
-      const toolDescriptions = this.toolsDescription(agentTools);
-      await prompt.partial({ toolDescriptions });
+    /**
+     * Get the description of the agent tools.
+     *
+     * @returns The description of the agent tools.
+     */
+    static toolsDescription(agentTools: StructuredTool[]): string {
+        return agentTools
+            .map(
+                (tool, i) =>
+                    `Tool ${i + 1}: ${tool.name}\n Description: ${tool.description}`
+            )
+            .join("\n\n");
     }
 
-    const options = chainOptions;
-    if (options) {
-      // remove prompt from chainOptions
-      delete options.prompt;
-    }
+    /**
+     * Create a new TrajectoryEvalChain.
+     * @param llm
+     * @param agentTools - The tools used by the agent.
+     * @param chainOptions - The options for the chain.
+     */
+    static async fromLLM(
+        llm: BaseLanguageModel,
+        agentTools?: StructuredTool[],
+        chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
+    ) {
 
-    return new this({
-      llm,
-      prompt,
-      ...options,
-    });
-  }
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (!(llm instanceof BaseChatModel<never>)) {
+            throw new Error("LLM must be a chat model");
+        }
 
-  _prepareOutput(result: ChainValues) {
-    const parsed = result[this.outputKey];
-    if (RUN_KEY in result && result[RUN_KEY]) {
-      parsed[RUN_KEY] = result[RUN_KEY];
-    }
-    return parsed;
-  }
-
-  /**
-   * Get the agent trajectory as a formatted string.
-   *
-   * @param steps - The agent trajectory.
-   * @returns The formatted agent trajectory.
-   */
-  getAgentTrajectory(steps: AgentStep[]): string {
-    return steps
-      .map((step, i) => {
-        const { action, observation } = step;
-
-        return (
-          `Step ${i + 1}:\n` +
-          `Tool used: ${action.tool}\n` +
-          `Tool input: ${action.toolInput}\n` +
-          `Tool output: ${observation}`
+        const prompt = this.resolveTrajectoryPrompt(
+            chainOptions?.prompt,
+            agentTools
         );
-      })
-      .join("\n\n");
-  }
+        if (agentTools) {
+            const toolDescriptions = this.toolsDescription(agentTools);
+            await prompt.partial({toolDescriptions});
+        }
 
-  formatReference(reference?: string): string {
-    if (!reference) {
-      return "";
+        const options = chainOptions;
+        if (options) {
+            // remove prompt from chainOptions
+            delete options.prompt;
+        }
+
+        return new this({
+            llm,
+            prompt,
+            ...options,
+        });
     }
-    return `
+
+    _prepareOutput(result: ChainValues) {
+        const parsed = result[this.outputKey];
+        if (RUN_KEY in result && result[RUN_KEY]) {
+            parsed[RUN_KEY] = result[RUN_KEY];
+        }
+        return parsed;
+    }
+
+    /**
+     * Get the agent trajectory as a formatted string.
+     *
+     * @param steps - The agent trajectory.
+     * @returns The formatted agent trajectory.
+     */
+    getAgentTrajectory(steps: AgentStep[]): string {
+        return steps
+            .map((step, i) => {
+                const {action, observation} = step;
+
+                return (
+                    `Step ${i + 1}:\n` +
+                    `Tool used: ${action.tool}\n` +
+                    `Tool input: ${action.toolInput}\n` +
+                    `Tool output: ${observation}`
+                );
+            })
+            .join("\n\n");
+    }
+
+    formatReference(reference?: string): string {
+        if (!reference) {
+            return "";
+        }
+        return `
 The following is the expected answer. Use this to measure correctness:
 [GROUND_TRUTH]
 ${reference}
 [END_GROUND_TRUTH]
         `;
-  }
+    }
 
-  async _evaluateAgentTrajectory(
-    args: LLMTrajectoryEvaluatorArgs,
-    callOptions: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig
-  ): Promise<ChainValues> {
-    const { input, prediction, reference, agentTrajectory } = args;
+    async _evaluateAgentTrajectory(
+        args: LLMTrajectoryEvaluatorArgs,
+        callOptions: this["llm"]["CallOptions"],
+        config?: Callbacks | BaseCallbackConfig
+    ): Promise<ChainValues> {
+        const {input, prediction, reference, agentTrajectory} = args;
 
-    const inputs = {
-      question: input,
-      agentTrajectory: this.getAgentTrajectory(agentTrajectory),
-      answer: prediction,
-      reference: this.formatReference(reference),
-    };
+        const inputs = {
+            question: input,
+            agentTrajectory: this.getAgentTrajectory(agentTrajectory),
+            answer: prediction,
+            reference: this.formatReference(reference),
+        };
 
-    const result = await this.call({ ...inputs, ...callOptions }, config);
+        const result = await this.call({...inputs, ...callOptions}, config);
 
-    return this._prepareOutput(result);
-  }
+        return this._prepareOutput(result);
+    }
 }

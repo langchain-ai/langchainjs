@@ -1,43 +1,35 @@
-import {test} from "@jest/globals";
+import {expect, test} from "@jest/globals";
 import {CriteriaEvalChain, LabeledCriteriaEvalChain} from "../criteria.js";
 import {ChatOpenAI} from "../../../chat_models/openai.js";
 import {PRINCIPLES} from "../../../chains/index.js";
-import {ChatAnthropic} from "../../../chat_models/index.js";
+import {ChatAnthropic} from "../../../chat_models/anthropic.js";
 import {PromptTemplate} from "../../../prompts/index.js";
 import {loadEvaluator} from "../../loader.js";
 
-test("Test CriteriaEvalChain", async () => {
+test.skip("Test CriteriaEvalChain", async () => {
 
-    const evaluator = await loadEvaluator("criteria");
+    const evaluator = await loadEvaluator("criteria", {criteria: "conciseness"});
 
-    console.log("beginning evaluation");
     const res = await evaluator.evaluateStrings({
         input: "What's 2+2?",
         prediction: "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four.",
     });
 
+    expect(res.score).toBe(0);
     console.log({res});
 });
 
-test.skip("Test LabeledCriteriaEvalChain", async () => {
-    const model = new ChatOpenAI(
-        {
-            modelName: "gpt-4",
-            verbose: true,
-        },
-        {baseURL: process.env.BASE_URL}
-    );
+test("Test LabeledCriteriaEvalChain", async () => {
+    const evaluator = await loadEvaluator("labeled_criteria", {criteria: "correctness"});
 
-    const chain = await LabeledCriteriaEvalChain.fromLLM(model, "correctness");
-
-    console.log("beginning evaluation");
-    const res = await chain.evaluateStrings({
+    const res = await evaluator.evaluateStrings({
         input: "What is the capital of the US?",
         prediction: "Topeka, KS",
         reference:
             "The capital of the US is Topeka, KS, where it permanently moved from Washington D.C. on May 16, 2023",
     });
 
+    expect(res.score).toBe(1);
     console.log(res);
 });
 

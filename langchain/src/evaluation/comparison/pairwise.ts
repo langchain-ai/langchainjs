@@ -1,9 +1,9 @@
 import { BaseLLMOutputParser } from "../../schema/output_parser.js";
 import {
-  eqSet,
-  LLMEvalChainInput,
-  LLMPairwiseStringEvaluator,
-  LLMPairwiseStringEvaluatorArgs,
+    eqSet, EvalOutputType,
+    LLMEvalChainInput,
+    LLMPairwiseStringEvaluator,
+    LLMPairwiseStringEvaluatorArgs,
 } from "../base.js";
 
 import {
@@ -40,15 +40,13 @@ const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
 /**
  * A parser for the output of the PairwiseStringEvalChain.
  */
-export class PairwiseResultOutputParser extends BaseLLMOutputParser<
-  Record<string, string>
-> {
+export class PairwiseResultOutputParser extends BaseLLMOutputParser<EvalOutputType> {
   lc_namespace: string[];
 
   parseResult(
     generations: Generation[] | ChatGeneration[],
     _callbacks: Callbacks | undefined
-  ): Promise<Record<string, string>> {
+  ): Promise<EvalOutputType> {
     const { text } = generations[0];
 
     const parsed = text.trim().split("\n");
@@ -80,7 +78,7 @@ export class PairwiseResultOutputParser extends BaseLLMOutputParser<
     return Promise.resolve({
       reasoning: reasoning || "",
       value: verdict,
-      score: score.toString(),
+      score,
     });
   }
 }
