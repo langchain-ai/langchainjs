@@ -33,7 +33,6 @@ const entrypoints = {
   "chains/query_constructor/ir": "chains/query_constructor/ir",
   "chains/sql_db": "chains/sql_db/index",
   // embeddings
-  embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
   "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/fake": "embeddings/fake",
@@ -47,7 +46,6 @@ const entrypoints = {
   "embeddings/googlepalm": "embeddings/googlepalm",
   "embeddings/minimax": "embeddings/minimax",
   // llms
-  llms: "llms/index",
   "llms/load": "llms/load",
   "llms/base": "llms/base",
   "llms/openai": "llms/openai",
@@ -68,7 +66,6 @@ const entrypoints = {
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
   // vectorstores
-  vectorstores: "vectorstores/index",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
@@ -105,7 +102,6 @@ const entrypoints = {
   // document
   document: "document",
   // document_loaders
-  document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
   "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
@@ -152,7 +148,6 @@ const entrypoints = {
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
-  chat_models: "chat_models/index",
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
@@ -178,7 +173,6 @@ const entrypoints = {
   output_parsers: "output_parsers/index",
   "output_parsers/expression": "output_parsers/expression",
   // retrievers
-  retrievers: "retrievers/index",
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
   "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
@@ -449,7 +443,7 @@ const updateConfig = () => {
     ...json,
     exports: Object.assign(
       Object.fromEntries(
-        ["index", ...Object.keys(entrypoints)].map((key) => {
+        [...Object.keys(entrypoints)].map((key) => {
           let entryPoint = {
             types: `./${key}.d.ts`,
             import: `./${key}.js`,
@@ -462,7 +456,7 @@ const updateConfig = () => {
             };
           }
 
-          return [key === "index" ? "." : `./${key}`, entryPoint];
+          return [`./${key}`, entryPoint];
         })
       ),
       { "./package.json": "./package.json" }

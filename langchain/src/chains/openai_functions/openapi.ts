@@ -16,7 +16,7 @@ import {
 } from "../../prompts/chat.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
-import { BaseChatModel } from "../../chat_models/index.js";
+import { BaseChatModel } from "../../chat_models/base.js";
 import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
