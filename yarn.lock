@@ -4571,16 +4571,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:0.4.1":
-  version: 0.4.1
-  resolution: "@getzep/zep-js@npm:0.4.1"
-  dependencies:
-    axios: ^1.4.0
-    typescript: ^5.0.4
-  checksum: 17296ddcff196ff2b8d9386775d14cdb104cebef07eabf0d6efc26d1d4824350eb902918a453fcfb6f4527f31d7312a157e9a09d1a8c151434701c2f5182d772
-  languageName: node
-  linkType: hard
-
 "@getzep/zep-js@npm:^0.7.0":
   version: 0.7.0
   resolution: "@getzep/zep-js@npm:0.7.0"
@@ -6915,6 +6905,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tensorflow/tfjs-backend-cpu@npm:^3":
+  version: 3.21.0
+  resolution: "@tensorflow/tfjs-backend-cpu@npm:3.21.0"
+  dependencies:
+    "@types/seedrandom": ^2.4.28
+    seedrandom: ^3.0.5
+  peerDependencies:
+    "@tensorflow/tfjs-core": 3.21.0
+  checksum: 0c2d7ae1ba651fe29acb8b8381d886ce28c2b81364eb9245f4fa142816167a483f34715e8106cbecb6ef398b7fb9cb30f9c0626dd5ea514f99baa30a41cb59a0
+  languageName: node
+  linkType: hard
+
 "@tensorflow/tfjs-backend-cpu@npm:^4.4.0":
   version: 4.4.0
   resolution: "@tensorflow/tfjs-backend-cpu@npm:4.4.0"
@@ -6927,28 +6929,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tensorflow/tfjs-converter@npm:^4.4.0":
-  version: 4.4.0
-  resolution: "@tensorflow/tfjs-converter@npm:4.4.0"
+"@tensorflow/tfjs-converter@npm:^3.6.0":
+  version: 3.21.0
+  resolution: "@tensorflow/tfjs-converter@npm:3.21.0"
   peerDependencies:
-    "@tensorflow/tfjs-core": 4.4.0
-  checksum: 5e0c71f53ed9ee48122f6580ae35ef3b82ed84caeab3ee5f6ea24d88f9761c01649d9fe5d2603558fa9c133bf0cc55e60b17db2e62ea1a38349e123418852fdf
+    "@tensorflow/tfjs-core": 3.21.0
+  checksum: b31e010f53ba860fa852376ad50ed9ef66ecd940e59620c47e127c1a1dc9b0c0fd748e5c691e7066c117d97f4bd4cd47201c02c92ad5f10f26e5541426cabb4a
   languageName: node
   linkType: hard
 
-"@tensorflow/tfjs-core@npm:^4.4.0":
-  version: 4.4.0
-  resolution: "@tensorflow/tfjs-core@npm:4.4.0"
+"@tensorflow/tfjs-core@npm:^3.6.0":
+  version: 3.21.0
+  resolution: "@tensorflow/tfjs-core@npm:3.21.0"
   dependencies:
     "@types/long": ^4.0.1
-    "@types/offscreencanvas": ~2019.7.0
+    "@types/offscreencanvas": ~2019.3.0
     "@types/seedrandom": ^2.4.28
     "@types/webgl-ext": 0.0.30
-    "@webgpu/types": 0.1.30
+    "@webgpu/types": 0.1.16
     long: 4.0.0
     node-fetch: ~2.6.1
     seedrandom: ^3.0.5
-  checksum: 89b1c7a726cf0d640bc0dcc7404fc29b3b8ee229de52ab0c58f665b9933958f9ec140684e4ceb868860cdf97b9e4fa70c5df679a81bfae7c77f3783ba71c02c2
+  checksum: 58a6686662902d4df09c804a7a0243f8f2d81750795767ecabdb72b50636a0d3805827608e0c02197bdf2b5c7c3faed6909fe84b91d8149b2a61e5ea6a65c767
   languageName: node
   linkType: hard
 
@@ -7388,10 +7390,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/offscreencanvas@npm:~2019.7.0":
-  version: 2019.7.0
-  resolution: "@types/offscreencanvas@npm:2019.7.0"
-  checksum: 018cfcd19e0c59c44d14ba61caaca7246f77fbb512839c7881654b7f2b6591dbdd5857362eccbf49f29cdc93724e71a4b37c8b6cf203388f9c04e913a53ea390
+"@types/offscreencanvas@npm:~2019.3.0":
+  version: 2019.3.0
+  resolution: "@types/offscreencanvas@npm:2019.3.0"
+  checksum: 006361d170aac80925b16a8c0421d5ee7bfe6acb5cd6b22407e2c28be091becc7de5ba1fd21293a1fdff70648918d9c035001ffafd4d6c49d1c5a22dab88ed0d
   languageName: node
   linkType: hard
 
@@ -8015,10 +8017,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@webgpu/types@npm:0.1.30":
-  version: 0.1.30
-  resolution: "@webgpu/types@npm:0.1.30"
-  checksum: c07516879c60617214717d63789f4a512004d004e845ed0439449f564fb8b94bd48882d599918e7db26914d584c70aecda25e90a327aabc32e57c90aa818ac06
+"@webgpu/types@npm:0.1.16":
+  version: 0.1.16
+  resolution: "@webgpu/types@npm:0.1.16"
+  checksum: 550732f427def1147ddcfa4f833e27f9c3c2263dd7fad28a084a151d9125065b64e7c56f7ac349fc8f87238445e312dd019d5469dc15202e61b2e9c1e37622cc
   languageName: node
   linkType: hard
 
@@ -9347,15 +9349,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chromadb@npm:^1.4.0":
-  version: 1.4.1
-  resolution: "chromadb@npm:1.4.1"
-  dependencies:
-    axios: ^0.26.0
-  checksum: 2b8e02e86577947e9f32d3faadb614b1a0ce60114d383ba7dd9997b519b1ff8e0b38f1a5c132371636ab07ed53f57b45cde3b454bcaa6710d5468358e1634114
-  languageName: node
-  linkType: hard
-
 "chromadb@npm:^1.5.3":
   version: 1.5.3
   resolution: "chromadb@npm:1.5.3"
@@ -9543,10 +9536,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cohere-ai@npm:^5.0.2":
-  version: 5.1.0
-  resolution: "cohere-ai@npm:5.1.0"
-  checksum: c408572a055dbd300ed200cab5d50072fe682606710c30f4a668d8f7ffea27354f56d6b0ad021643b0eb3eac96570868af88b2e5e561fa766407fc616d2c41e0
+"cohere-ai@npm:>=6.0.0":
+  version: 6.2.2
+  resolution: "cohere-ai@npm:6.2.2"
+  checksum: 5a7ea2bb6f2a6b83de7ec90612a38f0b215bfc199b5fe749842c6e771a1b183681a3a0e351d75c22eb6d929ea45cf03b1cdf4ed3a907c401186e73c392749310
   languageName: node
   linkType: hard
 
@@ -11587,7 +11580,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": 0.4.1
+    "@getzep/zep-js": ^0.7.0
     "@gomomento/sdk": ^1.23.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
@@ -11605,14 +11598,14 @@ __metadata:
     "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
-    chromadb: ^1.4.0
+    chromadb: ^1.5.3
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
-    faiss-node: ^0.2.1
+    faiss-node: ^0.3.0
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
@@ -11797,18 +11790,6 @@ __metadata:
   bin:
     extract-zip: cli.js
   checksum: 8cbda9debdd6d6980819cc69734d874ddd71051c9fe5bde1ef307ebcedfe949ba57b004894b585f758b7c9eeeea0e3d87f2dda89b7d25320459c2c9643ebb635
-  languageName: node
-  linkType: hard
-
-"faiss-node@npm:^0.2.1":
-  version: 0.2.1
-  resolution: "faiss-node@npm:0.2.1"
-  dependencies:
-    bindings: ^1.5.0
-    node-addon-api: ^6.0.0
-    node-gyp: latest
-    prebuild-install: ^7.1.1
-  checksum: 1f17d0e4c9e3eabdb9b2e0df78770fad58d22d208bf643e55f198fe9a217dd1de583ff5bb43d342b6cdcf82dcaef2532922b5738cd55353ac3ff69e783db30fc
   languageName: node
   linkType: hard
 
@@ -14899,9 +14880,9 @@ __metadata:
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
-    "@tensorflow/tfjs-backend-cpu": ^4.4.0
-    "@tensorflow/tfjs-converter": ^4.4.0
-    "@tensorflow/tfjs-core": ^4.4.0
+    "@tensorflow/tfjs-backend-cpu": ^3
+    "@tensorflow/tfjs-converter": ^3.6.0
+    "@tensorflow/tfjs-core": ^3.6.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
     "@types/decamelize": ^1.2.0
@@ -14929,7 +14910,7 @@ __metadata:
     camelcase: 6
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
-    cohere-ai: ^5.0.2
+    cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     decamelize: ^1.2.0
     dotenv: ^16.0.3
@@ -15044,8 +15025,8 @@ __metadata:
     apify-client: ^2.7.1
     axios: "*"
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.5.3
-    cohere-ai: ^5.0.2
+    chromadb: "*"
+    cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
     faiss-node: ^0.3.0
@@ -20791,7 +20772,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.0.0, typescript@npm:^5.0.4":
+"typescript@npm:^5.0.0":
   version: 5.0.4
   resolution: "typescript@npm:5.0.4"
   bin:
@@ -20831,7 +20812,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.0.0#~builtin<compat/typescript>, typescript@patch:typescript@^5.0.4#~builtin<compat/typescript>":
+"typescript@patch:typescript@^5.0.0#~builtin<compat/typescript>":
   version: 5.0.4
   resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=1f5320"
   bin:
