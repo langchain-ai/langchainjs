@@ -27,15 +27,10 @@ await store.addDocuments([
 ]);
 
 const model = new OpenAIEmbeddings();
-const query = await model.embedQuery(
-  "And I took it personally"
-);
+const query = await model.embedQuery("And I took it personally");
 
 // Perform a similarity search.
-const resultsWithScore = await store.similaritySearchVectorWithScore(
-  query,
-  1
-);
+const resultsWithScore = await store.similaritySearchVectorWithScore(query, 1);
 
 // Print the results.
 console.log(JSON.stringify(resultsWithScore, null, 2));
