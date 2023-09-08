@@ -23,7 +23,6 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
           "parameters": [
             {
               "name": "stringParam",
-              "description": "A string param",
               "in": "query",
               "schema": {
                 "type": "string"
@@ -31,7 +30,6 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
             },
             {
               "name": "objectParam",
-              "description": "An object param",
               "in": "query",
               "schema": {
                 "type": "object",
@@ -47,12 +45,69 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
             },
             {
               "name": "stringArrayParam",
-              "description": "An string array param",
               "in": "query",
               "schema": {
                 "type": "array",
                 "items": {
                   "type": "string"
+                }
+              }
+            },
+            {
+              "name": "nestedObjectInArrayParam",
+              "in": "query",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "baz": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "nestedArrayInObjectParam",
+              "in": "query",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "qux": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "inceptionParam",
+              "in": "query",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "nestedArray": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "nestedObject": {
+                            "type": "object",
+                            "properties": {
+                              "inception": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -127,5 +182,43 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
     getParamSchema(createWidget, "stringArrayParam"),
     spec,
   );
-  expect(expectType("array", stringArrayParamSchema).items).not.toBeUndefined();
+  const typedStringArrayParamSchema = expectType("array", stringArrayParamSchema);
+  expect(typedStringArrayParamSchema.items).not.toBeUndefined();
+  expectType("string", typedStringArrayParamSchema.items);
+
+  const nestedObjectInArrayParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "nestedObjectInArrayParam"),
+    spec,
+  );
+  expectType("number",
+    expectType("object",
+      expectType("array", nestedObjectInArrayParamSchema).items
+    ).properties.baz
+  );
+
+  const nestedArrayInObjectParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "nestedArrayInObjectParam"),
+    spec,
+  );
+  expectType("string",
+    expectType("array",
+      expectType("object", nestedArrayInObjectParamSchema).properties.qux
+    ).items
+  );
+
+  const inceptionParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "inceptionParam"),
+    spec,
+  );
+  expectType("number",
+    expectType("object",
+      expectType("object",
+        expectType("array",
+          expectType("object",
+            expectType("array", inceptionParamSchema).items
+          ).properties.nestedArray
+        ).items
+      ).properties.nestedObject
+    ).properties.inception
+  );
 });
