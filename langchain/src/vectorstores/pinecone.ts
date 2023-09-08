@@ -4,7 +4,8 @@ import flatten from "flat";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { chunk } from "lodash";
+import { chunkArray } from "../util/chunk.js";
+import { AsyncCaller, type AsyncCallerParams } from "../util/async_caller.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
@@ -13,7 +14,7 @@ type VectorOperationsApi = ReturnType<
   import("@pinecone-database/pinecone").PineconeClient["Index"]
 >;
 
-export interface PineconeLibArgs {
+export interface PineconeLibArgs extends AsyncCallerParams {
   pineconeIndex: VectorOperationsApi;
   textKey?: string;
   namespace?: string;
@@ -45,6 +46,8 @@ export class PineconeStore extends VectorStore {
 
   filter?: PineconeMetadata;
 
+  caller: AsyncCaller;
+
   _vectorstoreType(): string {
     return "pinecone";
   }
@@ -53,10 +56,13 @@ export class PineconeStore extends VectorStore {
     super(embeddings, args);
 
     this.embeddings = embeddings;
-    this.namespace = args.namespace;
-    this.pineconeIndex = args.pineconeIndex;
-    this.textKey = args.textKey ?? "text";
-    this.filter = args.filter;
+    const { namespace, pineconeIndex, textKey, filter, ...asyncCallerArgs } =
+      args;
+    this.namespace = namespace;
+    this.pineconeIndex = pineconeIndex;
+    this.textKey = textKey ?? "text";
+    this.filter = filter;
+    this.caller = new AsyncCaller(asyncCallerArgs);
   }
 
   /**
@@ -134,10 +140,9 @@ export class PineconeStore extends VectorStore {
 
     // Pinecone recommends a limit of 100 vectors per upsert request
     const chunkSize = 100;
-    const chunkedVectors = chunk(pineconeVectors, chunkSize);
-
-    await Promise.all(
-      chunkedVectors.map((chunk) =>
+    const chunkedVectors = chunkArray(pineconeVectors, chunkSize);
+    const batchRequests = chunkedVectors.map((chunk) =>
+      this.caller.call(async () =>
         this.pineconeIndex.upsert({
           upsertRequest: {
             vectors: chunk,
@@ -146,6 +151,8 @@ export class PineconeStore extends VectorStore {
         })
       )
     );
+
+    await Promise.all(batchRequests);
 
     return documentIds;
   }
@@ -165,10 +172,9 @@ export class PineconeStore extends VectorStore {
       });
     } else if (ids) {
       const batchSize = 1000;
-      const batchedIds = chunk(ids, batchSize);
-
-      await Promise.all(
-        batchedIds.map((batchIds) =>
+      const batchedIds = chunkArray(ids, batchSize);
+      const batchRequests = batchedIds.map((batchIds) =>
+        this.caller.call(async () =>
           this.pineconeIndex.delete1({
             ids: batchIds,
             namespace,
@@ -176,6 +182,8 @@ export class PineconeStore extends VectorStore {
           })
         )
       );
+
+      await Promise.all(batchRequests);
     } else {
       throw new Error("Either ids or delete_all must be provided.");
     }
