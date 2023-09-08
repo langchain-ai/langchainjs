@@ -1,46 +1,49 @@
 import { expect, test } from "@jest/globals";
 import { Voy as VoyOriginClient } from "voy-search";
 import { Document } from "../../document.js";
-import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { Voy, VoyClient } from "../voy.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+import { VoyVectorStore } from "../voy.js";
 
-const client: VoyClient = new VoyOriginClient();
+const client = new VoyOriginClient();
 
 test("it can create index using Voy.from text, add new elements to the index and get queried documents", async () => {
-  const vectorStore = await Voy.fromTexts(
+  const vectorStore = await VoyVectorStore.fromTexts(
     ["initial first page", "initial second page"],
     [{ id: 1 }, { id: 2 }],
-    new FakeEmbeddings(),
+    new OpenAIEmbeddings(),
     client
   );
-  // the number of dimensions is produced by fake embeddings
-  expect(vectorStore.numDimensions).toBe(4);
-  await vectorStore.addVectors(
-    [
-      [0, 1, 0, 0],
-      [1, 0, 0, 0],
-      [0.5, 0.5, 0.5, 0.5],
-    ],
-    [
-      new Document({
-        pageContent: "added first page",
-        metadata: { id: 5 },
-      }),
-      new Document({
-        pageContent: "added second page",
-        metadata: { id: 4 },
-      }),
-      new Document({
-        pageContent: "added third page",
-        metadata: { id: 6 },
-      }),
-    ]
-  );
+  // the number of dimensions is produced by OpenAI
+  expect(vectorStore.numDimensions).toBe(1536);
+  await vectorStore.addDocuments([
+    new Document({
+      pageContent: "added first page",
+      metadata: { id: 5 },
+    }),
+    new Document({
+      pageContent: "added second page",
+      metadata: { id: 4 },
+    }),
+    new Document({
+      pageContent: "added third page",
+      metadata: { id: 6 },
+    }),
+  ]);
   expect(vectorStore.docstore.length).toBe(5);
-  const results = await vectorStore.similaritySearchVectorWithScore(
-    [1, 0, 0, 0],
-    3
+  await vectorStore.addDocuments([
+    new Document({
+      pageContent: "added another first page",
+      metadata: { id: 7 },
+    }),
+  ]);
+  const results = await vectorStore.similaritySearchWithScore("added first", 6);
+  expect(results.length).toBe(6);
+  await vectorStore.delete({
+    deleteAll: true,
+  });
+  const results2 = await vectorStore.similaritySearchWithScore(
+    "added first",
+    6
   );
-  expect(results[0][0].metadata.id).toBe(4);
-  expect(results[1][0].metadata.id).toBe(6);
+  expect(results2.length).toBe(0);
 });

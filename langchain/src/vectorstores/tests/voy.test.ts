@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "../../document.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { Voy, VoyClient } from "../voy.js";
+import { VoyVectorStore, VoyClient } from "../voy.js";
 
 const fakeClient: VoyClient = {
   index: ({ embeddings }) => embeddings.map((i) => i.id).join(","),
@@ -12,10 +12,11 @@ const fakeClient: VoyClient = {
       { id: "1", title: "", url: "" },
     ],
   }),
+  clear: () => {},
 };
 
 test("it can create index using Voy.from text, add new elements to the index and get queried documents", async () => {
-  const vectorStore = await Voy.fromTexts(
+  const vectorStore = await VoyVectorStore.fromTexts(
     ["initial first page", "initial second page"],
     [{ id: 1 }, { id: 2 }],
     new FakeEmbeddings(),
