@@ -4,6 +4,7 @@ import flatten from "flat";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { chunk } from "lodash";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
@@ -132,16 +133,20 @@ export class PineconeStore extends VectorStore {
     });
 
     // Pinecone recommends a limit of 100 vectors per upsert request
-    const chunkSize = 50;
-    for (let i = 0; i < pineconeVectors.length; i += chunkSize) {
-      const chunk = pineconeVectors.slice(i, i + chunkSize);
-      await this.pineconeIndex.upsert({
-        upsertRequest: {
-          vectors: chunk,
-          namespace: this.namespace,
-        },
-      });
-    }
+    const chunkSize = 100;
+    const chunkedVectors = chunk(pineconeVectors, chunkSize);
+
+    await Promise.all(
+      chunkedVectors.map((chunk) =>
+        this.pineconeIndex.upsert({
+          upsertRequest: {
+            vectors: chunk,
+            namespace: this.namespace,
+          },
+        })
+      )
+    );
+
     return documentIds;
   }
 
@@ -160,14 +165,17 @@ export class PineconeStore extends VectorStore {
       });
     } else if (ids) {
       const batchSize = 1000;
-      for (let i = 0; i < ids.length; i += batchSize) {
-        const batchIds = ids.slice(i, i + batchSize);
-        await this.pineconeIndex.delete1({
-          ids: batchIds,
-          namespace,
-          ...rest,
-        });
-      }
+      const batchedIds = chunk(ids, batchSize);
+
+      await Promise.all(
+        batchedIds.map((batchIds) =>
+          this.pineconeIndex.delete1({
+            ids: batchIds,
+            namespace,
+            ...rest,
+          })
+        )
+      );
     } else {
       throw new Error("Either ids or delete_all must be provided.");
     }
