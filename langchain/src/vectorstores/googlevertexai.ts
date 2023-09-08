@@ -1,5 +1,6 @@
 import * as uuid from "uuid";
 import flatten from "flat";
+import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document, DocumentInput } from "../document.js";
@@ -34,7 +35,8 @@ export class IdDocument extends Document implements IdDocumentInput {
   }
 }
 
-interface IndexEndpointConnectionParams extends GoogleVertexAIConnectionParams {
+interface IndexEndpointConnectionParams
+  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   indexEndpoint: string;
 }
 
@@ -54,12 +56,13 @@ interface IndexEndpointResponse extends GoogleVertexAIResponse {
 
 class IndexEndpointConnection extends GoogleVertexAIConnection<
   AsyncCallerCallOptions,
-  IndexEndpointResponse
+  IndexEndpointResponse,
+  GoogleAuthOptions
 > {
   indexEndpoint: string;
 
   constructor(fields: IndexEndpointConnectionParams, caller: AsyncCaller) {
-    super(fields, caller);
+    super(fields, caller, new GoogleAuth(fields.authOptions));
 
     this.indexEndpoint = fields.indexEndpoint;
   }
@@ -89,7 +92,8 @@ export interface MatchingEngineDeleteParams {
   ids: string[];
 }
 
-interface RemoveDatapointParams extends GoogleVertexAIConnectionParams {
+interface RemoveDatapointParams
+  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   index: string;
 }
 
@@ -103,12 +107,13 @@ interface RemoveDatapointResponse extends GoogleVertexAIResponse {
 
 class RemoveDatapointConnection extends GoogleVertexAIConnection<
   AsyncCallerCallOptions,
-  RemoveDatapointResponse
+  RemoveDatapointResponse,
+  GoogleAuthOptions
 > {
   index: string;
 
   constructor(fields: RemoveDatapointParams, caller: AsyncCaller) {
-    super(fields, caller);
+    super(fields, caller, new GoogleAuth(fields.authOptions));
 
     this.index = fields.index;
   }
@@ -134,7 +139,8 @@ class RemoveDatapointConnection extends GoogleVertexAIConnection<
   }
 }
 
-interface UpsertDatapointParams extends GoogleVertexAIConnectionParams {
+interface UpsertDatapointParams
+  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   index: string;
 }
 
@@ -165,12 +171,13 @@ interface UpsertDatapointResponse extends GoogleVertexAIResponse {
 
 class UpsertDatapointConnection extends GoogleVertexAIConnection<
   AsyncCallerCallOptions,
-  UpsertDatapointResponse
+  UpsertDatapointResponse,
+  GoogleAuthOptions
 > {
   index: string;
 
   constructor(fields: UpsertDatapointParams, caller: AsyncCaller) {
-    super(fields, caller);
+    super(fields, caller, new GoogleAuth(fields.authOptions));
 
     this.index = fields.index;
   }
@@ -196,7 +203,8 @@ class UpsertDatapointConnection extends GoogleVertexAIConnection<
   }
 }
 
-interface FindNeighborsConnectionParams extends GoogleVertexAIConnectionParams {
+interface FindNeighborsConnectionParams
+  extends GoogleVertexAIConnectionParams<GoogleAuthOptions> {
   indexEndpoint: string;
 
   deployedIndexId: string;
@@ -240,7 +248,8 @@ interface FindNeighborsResponse extends GoogleVertexAIResponse {
 class FindNeighborsConnection
   extends GoogleVertexAIConnection<
     AsyncCallerCallOptions,
-    FindNeighborsResponse
+    FindNeighborsResponse,
+    GoogleAuthOptions
   >
   implements FindNeighborsConnectionParams
 {
@@ -249,7 +258,7 @@ class FindNeighborsConnection
   deployedIndexId: string;
 
   constructor(params: FindNeighborsConnectionParams, caller: AsyncCaller) {
-    super(params, caller);
+    super(params, caller, new GoogleAuth(params.authOptions));
 
     this.indexEndpoint = params.indexEndpoint;
     this.deployedIndexId = params.deployedIndexId;
@@ -287,7 +296,7 @@ export interface PublicAPIEndpointInfo {
  * Parameters necessary to configure the Matching Engine.
  */
 export interface MatchingEngineArgs
-  extends GoogleVertexAIConnectionParams,
+  extends GoogleVertexAIConnectionParams<GoogleAuthOptions>,
     IndexEndpointConnectionParams,
     UpsertDatapointParams {
   docstore: Docstore;

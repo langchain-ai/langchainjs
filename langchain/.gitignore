@@ -373,6 +373,9 @@ chat_models/anthropic.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts
+chat_models/googlevertexai/web.cjs
+chat_models/googlevertexai/web.js
+chat_models/googlevertexai/web.d.ts
 chat_models/googlepalm.cjs
 chat_models/googlepalm.js
 chat_models/googlepalm.d.ts

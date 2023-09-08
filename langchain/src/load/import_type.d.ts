@@ -271,6 +271,9 @@ export interface OptionalImportMap {
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;
+  "langchain/chat_models/googlevertexai/web"?:
+    | typeof import("../chat_models/googlevertexai/web.js")
+    | Promise<typeof import("../chat_models/googlevertexai/web.js")>;
   "langchain/chat_models/googlepalm"?:
     | typeof import("../chat_models/googlepalm.js")
     | Promise<typeof import("../chat_models/googlepalm.js")>;

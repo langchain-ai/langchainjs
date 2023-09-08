@@ -9,11 +9,15 @@ import {
   GoogleVertexAIModelParams,
   GoogleVertexAIResponse,
 } from "../types/googlevertexai-types.js";
+import { WebGoogleAuth } from "./googlevertexai-webauth.js";
+
+export type GoogleAuthType = WebGoogleAuth | GoogleAuth;
 
 export abstract class GoogleVertexAIConnection<
   CallOptions extends AsyncCallerCallOptions,
-  ResponseType extends GoogleVertexAIResponse
-> implements GoogleVertexAIConnectionParams
+  ResponseType extends GoogleVertexAIResponse,
+  AuthOptions
+> implements GoogleVertexAIConnectionParams<AuthOptions>
 {
   caller: AsyncCaller;
 
@@ -23,22 +27,19 @@ export abstract class GoogleVertexAIConnection<
 
   apiVersion = "v1";
 
-  auth: GoogleAuth;
+  auth: GoogleAuthType;
 
   constructor(
-    fields: GoogleVertexAIConnectionParams | undefined,
-    caller: AsyncCaller
+    fields: GoogleVertexAIConnectionParams<AuthOptions> | undefined,
+    caller: AsyncCaller,
+    auth: GoogleAuthType
   ) {
     this.caller = caller;
 
     this.endpoint = fields?.endpoint ?? this.endpoint;
     this.location = fields?.location ?? this.location;
     this.apiVersion = fields?.apiVersion ?? this.apiVersion;
-
-    this.auth = new GoogleAuth({
-      scopes: "https://www.googleapis.com/auth/cloud-platform",
-      ...fields?.authOptions,
-    });
+    this.auth = auth;
   }
 
   abstract buildUrl(): Promise<string>;
@@ -85,18 +86,20 @@ export abstract class GoogleVertexAIConnection<
 export class GoogleVertexAILLMConnection<
     CallOptions extends BaseLanguageModelCallOptions,
     InstanceType,
-    PredictionType extends GoogleVertexAIBasePrediction
+    PredictionType extends GoogleVertexAIBasePrediction,
+    AuthOptions
   >
-  extends GoogleVertexAIConnection<CallOptions, PredictionType>
-  implements GoogleVertexAIBaseLLMInput
+  extends GoogleVertexAIConnection<CallOptions, PredictionType, AuthOptions>
+  implements GoogleVertexAIBaseLLMInput<AuthOptions>
 {
   model: string;
 
   constructor(
-    fields: GoogleVertexAIBaseLLMInput | undefined,
-    caller: AsyncCaller
+    fields: GoogleVertexAIBaseLLMInput<AuthOptions> | undefined,
+    caller: AsyncCaller,
+    auth: GoogleAuthType
   ) {
-    super(fields, caller);
+    super(fields, caller, auth);
     this.model = fields?.model ?? this.model;
   }
 

@@ -1,3 +1,4 @@
+import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import { BaseLLM } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
 import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
@@ -12,7 +13,8 @@ import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 /**
  * Interface representing the input to the Google Vertex AI model.
  */
-export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
+export interface GoogleVertexAITextInput
+  extends GoogleVertexAIBaseLLMInput<GoogleAuthOptions> {}
 
 /**
  * Interface representing the instance of text input to the Google Vertex
@@ -73,7 +75,8 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
   private connection: GoogleVertexAILLMConnection<
     BaseLanguageModelCallOptions,
     GoogleVertexAILLMInstance,
-    TextPrediction
+    TextPrediction,
+    GoogleAuthOptions
   >;
 
   constructor(fields?: GoogleVertexAITextInput) {
@@ -96,7 +99,8 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
 
     this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
-      this.caller
+      this.caller,
+      new GoogleAuth(fields?.authOptions)
     );
   }
 

@@ -141,7 +141,8 @@ const entrypoints = {
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
-  "document_loaders/fs/openai_whisper_audio": "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/openai_whisper_audio":
+    "document_loaders/fs/openai_whisper_audio",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/mozilla_readability":
@@ -153,6 +154,7 @@ const entrypoints = {
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/googlevertexai": "chat_models/googlevertexai",
+  "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
@@ -344,6 +346,7 @@ const requiresOptionalDependency = [
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/googlevertexai",
+  "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
   "sql_db",
   "retrievers/amazon_kendra",
@@ -487,7 +490,10 @@ const updateConfig = () => {
   testExports.forEach(([pkg, importStatement]) => {
     const contents =
       entrypointsToTest.map((key) => importStatement(key)).join("\n") + "\n";
-    fs.writeFileSync(`../environment_tests/${pkg}/src/entrypoints.js`, contents);
+    fs.writeFileSync(
+      `../environment_tests/${pkg}/src/entrypoints.js`,
+      contents
+    );
   });
 };
 

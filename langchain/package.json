@@ -385,6 +385,9 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/googlevertexai/web.cjs",
+    "chat_models/googlevertexai/web.js",
+    "chat_models/googlevertexai/web.d.ts",
     "chat_models/googlepalm.cjs",
     "chat_models/googlepalm.js",
     "chat_models/googlepalm.d.ts",
@@ -736,6 +739,7 @@
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
+    "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
@@ -817,6 +821,7 @@
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
+    "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
@@ -1050,6 +1055,9 @@
       "optional": true
     },
     "weaviate-ts-client": {
+      "optional": true
+    },
+    "web-auth-library": {
       "optional": true
     },
     "youtube-transcript": {
@@ -1725,6 +1733,11 @@
       "types": "./chat_models/googlevertexai.d.ts",
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
+    },
+    "./chat_models/googlevertexai/web": {
+      "types": "./chat_models/googlevertexai/web.d.ts",
+      "import": "./chat_models/googlevertexai/web.js",
+      "require": "./chat_models/googlevertexai/web.cjs"
     },
     "./chat_models/googlepalm": {
       "types": "./chat_models/googlepalm.d.ts",
