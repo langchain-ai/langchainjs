@@ -238,6 +238,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/voy.cjs",
+    "vectorstores/voy.js",
+    "vectorstores/voy.d.ts",
     "vectorstores/xata.cjs",
     "vectorstores/xata.js",
     "vectorstores/xata.d.ts",
@@ -725,6 +728,7 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
+    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
@@ -805,6 +809,7 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
+    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
@@ -1033,6 +1038,9 @@
       "optional": true
     },
     "vectordb": {
+      "optional": true
+    },
+    "voy-search": {
       "optional": true
     },
     "weaviate-ts-client": {
@@ -1466,6 +1474,11 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/voy": {
+      "types": "./vectorstores/voy.d.ts",
+      "import": "./vectorstores/voy.js",
+      "require": "./vectorstores/voy.cjs"
     },
     "./vectorstores/xata": {
       "types": "./vectorstores/xata.d.ts",
