@@ -303,6 +303,7 @@ const requiresOptionalDependency = [
   "vectorstores/typesense",
   "vectorstores/tigris",
   "vectorstores/usearch",
+  "vectorstores/voy",
   "vectorstores/zep",
   "memory/zep",
   "document_loaders/web/apify_dataset",
