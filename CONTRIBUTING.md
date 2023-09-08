@@ -97,6 +97,10 @@ Now, you should be able to run the common tasks in the following section.
 Our goal is to make it as easy as possible for you to contribute to this project.
 All of the below commands should be run from within the `langchain/` directory unless otherwise noted.
 
+```bash
+cd langchain
+```
+
 ### Setup
 
 To get started, you will need to install the dependencies for the project. To do so, run:
@@ -234,7 +238,14 @@ Documentation and the skeleton lives under the `docs/` folder. Example code is i
 ### Build Documentation Locally
 
 To generate and view the documentation locally, change to the project root and run `yarn` to ensure dependencies get installed
-in both the `docs/` and `examples/` workspaces. Then run:
+in both the `docs/` and `examples/` workspaces:
+
+```bash
+cd ..
+yarn
+```
+
+Then run:
 
 ```bash
 yarn docs
