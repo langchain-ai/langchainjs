@@ -151,10 +151,10 @@ function convertOpenAPIParamsToJSONSchema(
  * @param spec The OpenAPI specification that contains the schema.
  * @returns The JSON schema representation of the OpenAPI schema.
  */
-function convertOpenAPISchemaToJSONSchema(
+export function convertOpenAPISchemaToJSONSchema(
   schema: OpenAPIV3_1.SchemaObject,
   spec: OpenAPISpec
-) {
+): JsonSchema7Type {
   if (schema.type !== "object" && schema.type !== "array") {
     return {
       type: schema.type ?? "string",
