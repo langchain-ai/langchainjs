@@ -93,7 +93,7 @@ export type CreateTranscriptParams = {
   /**
    * The list of PII Redaction policies to enable. See [PII redaction]{@link https://www.assemblyai.com/docs/Models/pii_redaction} for more details.
    */
-  redact_pii_policies?: (typeof PiiPolicy)[keyof typeof PiiPolicy];
+  redact_pii_policies?: Array<(typeof PiiPolicy)[keyof typeof PiiPolicy]>;
 
   /**
    * The replacement logic for detected PII, can be "entity_type" or "hash". See [PII redaction]{@link https://www.assemblyai.com/docs/Models/pii_redaction} for more details.
@@ -119,6 +119,11 @@ export type CreateTranscriptParams = {
    * Enable [Topic Detection]{@link https://www.assemblyai.com/docs/Models/iab_classification}, can be true or false
    */
   iab_categories?: boolean;
+
+  /**
+   * Whether [Automatic language detection]{@link https://www.assemblyai.com/docs/Models/speech_recognition#automatic-language-detection} was enabled in the transcription request, either true or false
+   */
+  language_detection?: boolean;
 
   /**
    * Customize how words are spelled and formatted using to and from values
@@ -386,10 +391,11 @@ export type Transcript = {
    */
   webhook_url: string | null;
 
+  // TOOD: find out possible status codes
   /**
    * The status code we received from your server when delivering your webhook, if a webhook URL was provided in the transcription request
    */
-  webhook_status_code: string | null;
+  webhook_status_code: number | null;
 
   /**
    * Whether webhook authentication details were provided in the transcription request
@@ -403,8 +409,13 @@ export type Transcript = {
 
   /**
    * Whether speed boost was enabled in the transcription request
-   * */
+   */
   speed_boost: boolean;
+
+  /**
+   * Whether Key Phrases was enabled in the transcription request, either true or false
+   */
+  auto_highlights: boolean;
 
   /**
    * An array of results for the Key Phrases model, if it was enabled during the transcription request.
@@ -441,11 +452,6 @@ export type Transcript = {
       timestamps: Timestamp[];
     }>;
   } | null;
-
-  /**
-   * Whether Key Phrases was enabled in the transcription request, either true or false
-   */
-  auto_highlights: boolean;
 
   /**
    * The point in time, in milliseconds, in the file at which the transcription was started,
@@ -520,15 +526,16 @@ export type Transcript = {
   content_safety: boolean;
 
   /**
-   * Whether [Topic Detection]{@link https://www.assemblyai.com/docs/Models/iab_classification} was enabled in the transcription request, either true or false
-   */
-  iab_categories: boolean;
-
-  /**
    * An array of results for the Content Moderation model, if it was enabled during the transcription request.
    * See [Content moderation]{@link https://www.assemblyai.com/docs/Models/content_moderation} for more information.
    */
-  content_safety_labels?: unknown[]; // Replace 'unknown' with the actual type for content moderation results
+  content_safety_labels?: unknown[];
+  // TODO: Replace 'unknown' with the actual type for content moderation results
+
+  /**
+   * Whether [Topic Detection]{@link https://www.assemblyai.com/docs/Models/iab_classification} was enabled in the transcription request, either true or false
+   */
+  iab_categories: boolean;
 
   /**
    * An array of results for the Topic Detection model, if it was enabled during the transcription request.
@@ -593,6 +600,11 @@ export type Transcript = {
    * if [Summarization]{@link https://www.assemblyai.com/docs/Models/summarization} was enabled in the transcription request
    */
   summary_model: string | null;
+
+  /**
+   * The generated summary of the media file, if [Summarization]{@link https://www.assemblyai.com/docs/Models/summarization} was enabled in the transcription request
+   */
+  summary: string | null;
 
   /**
    * Whether custom topics was enabled in the transcription request, either true or false
@@ -685,11 +697,6 @@ export type Transcript = {
      */
     end: number;
   }> | null;
-
-  /**
-   * The generated summary of the media file, if [Summarization]{@link https://www.assemblyai.com/docs/Models/summarization} was enabled in the transcription request
-   */
-  summary: string | null;
 
   /**
    * True while a request is throttled and false when a request is no longer throttled
