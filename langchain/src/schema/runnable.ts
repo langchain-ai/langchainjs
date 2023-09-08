@@ -317,10 +317,23 @@ export abstract class Runnable<
    * @param generator
    * @param options
    */
-  transform?(
+  async *transform(
     generator: AsyncGenerator<RunInput>,
     options: Partial<CallOptions>
-  ): AsyncGenerator<RunOutput>;
+  ): AsyncGenerator<RunOutput> {
+    let finalChunk;
+    for await (const chunk of generator) {
+      if (!finalChunk) {
+        finalChunk = chunk;
+      } else {
+        // Make a best effort to gather, for any type that supports concat.
+        // This method should throw an error if gathering fails.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        finalChunk = (finalChunk as any).concat(chunk);
+      }
+    }
+    yield *this._streamIterator(finalChunk, options);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isRunnable(thing: any): thing is Runnable {
@@ -482,14 +495,15 @@ export class RunnableSequence<
     );
     let nextStepInput = input;
     const steps = [this.first, ...this.middle, this.last];
-    // Find the index of the last runnable in the sequence that doesn't have a .transform() method
+    // Find the index of the last runnable in the sequence that doesn't have an overridden .transform() method
     // and start streaming from there
-    const streamingStartStepIndex =
-      steps.length -
+    const streamingStartStepIndex = Math.min(steps.length - 1, steps.length -
       [...steps]
         .reverse()
-        .findIndex((step) => typeof step.transform !== "function") -
-      1;
+        .findIndex((step) => {
+          return step.transform === Runnable.prototype.transform || (step as RunnableBinding<any, any, any>).bound
+        }) - 1);
+
     try {
       for (const step of steps.slice(0, streamingStartStepIndex)) {
         nextStepInput = await step.invoke(
@@ -504,13 +518,13 @@ export class RunnableSequence<
     let concatSupported = true;
     let finalOutput;
     try {
+      console.log(streamingStartStepIndex, steps[streamingStartStepIndex], steps)
       let finalGenerator = await steps[streamingStartStepIndex]._streamIterator(
         nextStepInput,
         this._patchConfig(options, runManager?.getChild())
       );
       for (const step of steps.slice(streamingStartStepIndex + 1)) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        finalGenerator = await step.transform!(
+        finalGenerator = await step.transform(
           finalGenerator,
           this._patchConfig(options, runManager?.getChild())
         );
@@ -770,6 +784,14 @@ export class RunnableBinding<
     options?: Partial<CallOptions> | undefined
   ): Promise<IterableReadableStream<RunOutput>> {
     return this.bound.stream(input, { ...options, ...this.kwargs });
+  }
+
+  async *transform(generator: AsyncGenerator<RunInput, any, unknown>, options: Partial<CallOptions>): AsyncGenerator<RunOutput> {
+    yield *this.bound.transform(generator, options);
+  }
+
+  static isRunnableBinding(thing: any): thing is RunnableBinding<any, any, any> {
+    return Runnable.isRunnable(thing.bound);
   }
 }
 
