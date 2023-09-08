@@ -628,6 +628,7 @@
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
+    "@cloudflare/workers-types": "^4.20230904.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
