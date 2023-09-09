@@ -9,17 +9,19 @@ import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
  * Enables calls to the Google Cloud's Vertex AI API to access
  * Large Language Models in a chat-like fashion.
  *
- * To use, you will need to have one of the following authentication
- * methods in place:
- * - You are logged into an account permitted to the Google Cloud project
- *   using Vertex AI.
- * - You are running this on a machine using a service account permitted to
- *   the Google Cloud project using Vertex AI.
- * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
- *   path of a credentials file for a service account permitted to the
- *   Google Cloud project using Vertex AI.
+ * This entrypoint and class are intended to be used in web environments like Edge
+ * functions where you do not have access to the file system. It supports passing
+ * service account credentials directly as a "GOOGLE_VERTEX_AI_WEB_CREDENTIALS"
+ * environment variable or directly as "authOptions.credentials".
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOptions> {
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      "authOptions.credentials": "GOOGLE_VERTEX_AI_WEB_CREDENTIALS",
+      "authOptions.scopes": "GOOGLE_VERTEX_AI_WEB_SCOPES",
+    };
+  }
+
   constructor(fields?: GoogleVertexAIChatInput<WebGoogleAuthOptions>) {
     super(fields);
 

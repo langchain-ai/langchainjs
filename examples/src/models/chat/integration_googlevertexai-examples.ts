@@ -1,5 +1,8 @@
-import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai";
 import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
+
+import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai";
+// Or, if using the web entrypoint:
+// import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai/web";
 
 export const run = async () => {
   const examples = [

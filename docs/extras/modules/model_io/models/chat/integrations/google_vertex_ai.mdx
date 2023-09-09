@@ -6,10 +6,17 @@ import CodeBlock from "@theme/CodeBlock";
 
 # ChatGoogleVertexAI
 
-The Vertex AI implementation is meant to be used in Node.js and not
-directly from a browser, since it requires a service account to use.
+LangChain.js supports Google Vertex AI chat models as an integration.
+It supports two different methods of authentication based on whether you're running
+in a Node environment or a web environment.
 
-Before running this code, you should make sure the Vertex AI API is
+## Setup
+
+### Node
+
+To call Vertex AI models in Node, you'll need to install [Google's official auth client](https://www.npmjs.com/package/google-auth-library) as a peer dependency.
+
+You should make sure the Vertex AI API is
 enabled for the relevant project and that you've authenticated to
 Google Cloud using one of these methods:
 
@@ -24,6 +31,35 @@ Google Cloud using one of these methods:
 ```bash npm2yarn
 npm install google-auth-library
 ```
+
+### Web
+
+To call Vertex AI models in web environments (like Edge functions), you'll need to install
+the [`web-auth-library`](https://github.com/kriasoft/web-auth-library) pacakge as a peer dependency:
+
+```bash npm2yarn
+npm install web-auth-library
+```
+
+Then, you'll need to add your service account credentials directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
+
+```
+GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
+```
+
+You can also pass your credentials directly in code like this:
+
+```typescript
+import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai/web";
+
+const model = new ChatGoogleVertexAI({
+  authOptions: {
+    credentials: {"type":"service_account","project_id":"YOUR_PROJECT-12345",...},
+  },
+});
+```
+
+## Usage
 
 Several models are available and can be specified by the `model` attribute
 in the constructor. These include:
