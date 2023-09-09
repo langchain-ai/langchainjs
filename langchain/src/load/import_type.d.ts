@@ -269,8 +269,8 @@ export interface OptionalImportMap {
     | typeof import("../document_transformers/mozilla_readability.js")
     | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
   "langchain/chat_models/googlevertexai"?:
-    | typeof import("../chat_models/googlevertexai.js")
-    | Promise<typeof import("../chat_models/googlevertexai.js")>;
+    | typeof import("../chat_models/googlevertexai/index.js")
+    | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
   "langchain/chat_models/googlevertexai/web"?:
     | typeof import("../chat_models/googlevertexai/web.js")
     | Promise<typeof import("../chat_models/googlevertexai/web.js")>;

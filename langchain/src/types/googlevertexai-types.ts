@@ -70,3 +70,12 @@ export interface GoogleVertexAILLMResponse<
     predictions: PredictionType[];
   };
 }
+
+export interface GoogleVertexAIAbstractedClient {
+  request: (opts: {
+    url?: string;
+    method?: "GET" | "POST";
+    data?: unknown;
+  }) => unknown;
+  getProjectId: () => Promise<string>;
+}

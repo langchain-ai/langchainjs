@@ -156,7 +156,7 @@
       "src/chat_models/base.ts",
       "src/chat_models/openai.ts",
       "src/chat_models/anthropic.ts",
-      "src/chat_models/googlevertexai.ts",
+      "src/chat_models/googlevertexai/index.ts",
       "src/chat_models/googlevertexai/web.ts",
       "src/chat_models/googlepalm.ts",
       "src/chat_models/baiduwenxin.ts",

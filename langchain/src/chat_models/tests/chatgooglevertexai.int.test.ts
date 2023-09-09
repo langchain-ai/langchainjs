@@ -10,7 +10,7 @@ import {
 } from "../../prompts/index.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { ChatGoogleVertexAI } from "../googlevertexai.js";
+import { ChatGoogleVertexAI } from "../googlevertexai/index.js";
 
 describe("ChatGoogleVertexAI", () => {
   test("call", async () => {

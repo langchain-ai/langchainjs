@@ -1,9 +1,6 @@
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
-import {
-  BaseChatGoogleVertexAI,
-  GoogleVertexAIChatInput,
-} from "./googlevertexai/common.js";
-import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
+import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
+import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
 
 /**
  * Enables calls to the Google Cloud's Vertex AI API to access
@@ -23,10 +20,15 @@ export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<GoogleAuthOptions
   constructor(fields?: GoogleVertexAIChatInput<GoogleAuthOptions>) {
     super(fields);
 
+    const client = new GoogleAuth({
+      scopes: "https://www.googleapis.com/auth/cloud-platform",
+      ...fields?.authOptions,
+    });
+
     this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller,
-      new GoogleAuth(fields?.authOptions)
+      client
     );
   }
 }
@@ -39,4 +41,4 @@ export {
   GoogleVertexAIChatMessage,
   GoogleVertexAIChatMessageFields,
   GoogleVertexAIChatPrediction,
-} from "./googlevertexai/common.js";
+} from "./common.js";

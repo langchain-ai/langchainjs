@@ -68,7 +68,7 @@ class IndexEndpointConnection extends GoogleVertexAIConnection<
   }
 
   async buildUrl(): Promise<string> {
-    const projectId = await this.auth.getProjectId();
+    const projectId = await this.client.getProjectId();
     const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/indexEndpoints/${this.indexEndpoint}`;
     return url;
   }
@@ -119,7 +119,7 @@ class RemoveDatapointConnection extends GoogleVertexAIConnection<
   }
 
   async buildUrl(): Promise<string> {
-    const projectId = await this.auth.getProjectId();
+    const projectId = await this.client.getProjectId();
     const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/indexes/${this.index}:removeDatapoints`;
     return url;
   }
@@ -183,7 +183,7 @@ class UpsertDatapointConnection extends GoogleVertexAIConnection<
   }
 
   async buildUrl(): Promise<string> {
-    const projectId = await this.auth.getProjectId();
+    const projectId = await this.client.getProjectId();
     const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/indexes/${this.index}:upsertDatapoints`;
     return url;
   }
@@ -265,7 +265,7 @@ class FindNeighborsConnection
   }
 
   async buildUrl(): Promise<string> {
-    const projectId = await this.auth.getProjectId();
+    const projectId = await this.client.getProjectId();
     const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/indexEndpoints/${this.indexEndpoint}:findNeighbors`;
     return url;
   }

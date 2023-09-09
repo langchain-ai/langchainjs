@@ -23,10 +23,12 @@ export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOpti
   constructor(fields?: GoogleVertexAIChatInput<WebGoogleAuthOptions>) {
     super(fields);
 
+    const client = new WebGoogleAuth(fields?.authOptions);
+
     this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller,
-      new WebGoogleAuth(fields?.authOptions)
+      client
     );
   }
 }

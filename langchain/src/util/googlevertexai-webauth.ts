@@ -1,17 +1,17 @@
-import { OAuth2Client } from "google-auth-library";
 import {
   getAccessToken,
   Credentials,
   getCredentials,
 } from "web-auth-library/google";
 import { getEnvironmentVariable } from "./env.js";
+import type { GoogleVertexAIAbstractedClient } from "../types/googlevertexai-types.js";
 
 export interface WebGoogleAuthOptions {
-  scopes: string | string[];
+  scopes?: string | string[];
   credentials: Credentials | string;
 }
 
-export class WebGoogleAuth {
+export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
   scopes: string | string[];
 
   credentials: Credentials;
@@ -22,46 +22,49 @@ export class WebGoogleAuth {
 
     const credentials =
       options?.credentials ??
-      getEnvironmentVariable("GOOGLE_CLOUD_CREDENTIALS");
-    if (!credentials) throw new Error("GOOGLE_CLOUD_CREDENTIALS not found");
+      getEnvironmentVariable("GOOGLE_VERTEX_AI_WEB_CREDENTIALS");
+    if (credentials === undefined)
+      throw new Error(
+        `Credentials not found. Please set the GOOGLE_VERTEX_AI_WEB_CREDENTIALS or pass credentials into "authOptions.credentials".`
+      );
     this.credentials = getCredentials(credentials);
+    console.log(this.credentials);
   }
 
   async getProjectId() {
     return this.credentials.project_id;
   }
 
-  async getClient() {
-    const request: OAuth2Client["request"] = async <T>(opts: {
-      url?: string;
+  async request(opts: { url?: string; method?: string; data?: unknown }) {
+    const accessToken = await getAccessToken({
+      credentials: this.credentials,
+      scope: this.scopes,
+    });
+
+    if (opts.url == null) throw new Error("Missing URL");
+    const fetchOptions: {
       method?: string;
-      data?: unknown;
-    }) => {
-      const accessToken = await getAccessToken({
-        credentials: this.credentials,
-        scope: this.scopes,
-      });
-
-      if (opts.url == null) throw new Error("Missing URL");
-      const res = await fetch(opts.url, {
-        method: opts.method,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(opts.data),
-      });
-
-      return {
-        data: (await res.json()) as T,
-        config: {},
-        status: res.status,
-        statusText: res.statusText,
-        headers: res.headers,
-        request: { responseURL: res.url },
-      };
+      headers: Record<string, string>;
+      body?: string;
+    } = {
+      method: opts.method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
     };
+    if (opts.data !== undefined) {
+      fetchOptions.body = JSON.stringify(opts.data);
+    }
+    const res = await fetch(opts.url, fetchOptions);
 
-    return { request };
+    return {
+      data: await res.json(),
+      config: {},
+      status: res.status,
+      statusText: res.statusText,
+      headers: res.headers,
+      request: { responseURL: res.url },
+    };
   }
 }

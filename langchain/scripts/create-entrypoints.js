@@ -153,7 +153,7 @@ const entrypoints = {
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
-  "chat_models/googlevertexai": "chat_models/googlevertexai",
+  "chat_models/googlevertexai": "chat_models/googlevertexai/index",
   "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",

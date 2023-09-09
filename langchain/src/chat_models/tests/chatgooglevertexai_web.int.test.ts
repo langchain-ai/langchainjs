@@ -1,3 +1,6 @@
+// Requires corepack: https://nodejs.org/api/corepack.html
+// Enable with:
+// $ corepack enable
 import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "../../schema/index.js";
 import {
@@ -12,7 +15,7 @@ import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatGoogleVertexAI } from "../googlevertexai/web.js";
 
-describe("ChatGoogleVertexAI", () => {
+describe.skip("ChatGoogleVertexAIWeb", () => {
   test("call", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
