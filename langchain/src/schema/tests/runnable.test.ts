@@ -340,7 +340,7 @@ test("RunnableWithFallbacks batch", async () => {
 
 test("Stream with RunnableBinding", async () => {
   const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
-  const stream = await llm.pipe(new StringOutputParser()).stream("Hi there");
+  const stream = await llm.pipe(new StringOutputParser()).stream("Hi there!");
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
@@ -350,10 +350,10 @@ test("Stream with RunnableBinding", async () => {
   expect(chunks.join("")).toEqual("Hi there!");
 });
 
-test.only("Stream through a RunnableBinding if the bound runnable implements transform", async () => {
+test("Stream through a RunnableBinding if the bound runnable implements transform", async () => {
   const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
-  const outputParser = (new StringOutputParser()).bind({ callbacks: [] });
-  const stream = await llm.pipe(outputParser).stream("Hi there");
+  const outputParser = new StringOutputParser().bind({ callbacks: [] });
+  const stream = await llm.pipe(outputParser).stream("Hi there!");
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);

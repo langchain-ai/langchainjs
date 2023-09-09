@@ -332,12 +332,102 @@ export abstract class Runnable<
         finalChunk = (finalChunk as any).concat(chunk);
       }
     }
-    yield *this._streamIterator(finalChunk, options);
+    yield* this._streamIterator(finalChunk, options);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isRunnable(thing: any): thing is Runnable {
     return thing.lc_runnable;
+  }
+}
+
+/**
+ * A runnable that delegates calls to another runnable with a set of kwargs.
+ */
+export class RunnableBinding<
+  RunInput,
+  RunOutput,
+  CallOptions extends BaseCallbackConfig
+> extends Runnable<RunInput, RunOutput, CallOptions> {
+  static lc_name() {
+    return "RunnableBinding";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
+
+  lc_serializable = true;
+
+  bound: Runnable<RunInput, RunOutput, CallOptions>;
+
+  protected kwargs: Partial<CallOptions>;
+
+  constructor(fields: {
+    bound: Runnable<RunInput, RunOutput, CallOptions>;
+    kwargs: Partial<CallOptions>;
+  }) {
+    super(fields);
+    this.bound = fields.bound;
+    this.kwargs = fields.kwargs;
+  }
+
+  bind(
+    kwargs: Partial<CallOptions>
+  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+    return new RunnableBinding({
+      bound: this.bound,
+      kwargs: { ...this.kwargs, ...kwargs },
+    });
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    return this.bound.invoke(input, { ...options, ...this.kwargs });
+  }
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: { maxConcurrency?: number }
+  ): Promise<RunOutput[]> {
+    const mergedOptions = Array.isArray(options)
+      ? options.map((individualOption) => ({
+          ...individualOption,
+          ...this.kwargs,
+        }))
+      : { ...options, ...this.kwargs };
+    return this.bound.batch(inputs, mergedOptions, batchOptions);
+  }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<CallOptions> | undefined
+  ) {
+    yield* this.bound._streamIterator(input, { ...options, ...this.kwargs });
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<CallOptions> | undefined
+  ): Promise<IterableReadableStream<RunOutput>> {
+    return this.bound.stream(input, { ...options, ...this.kwargs });
+  }
+
+  async *transform(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput> {
+    yield* this.bound.transform(generator, options);
+  }
+
+  static isRunnableBinding(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    thing: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): thing is RunnableBinding<any, any, any> {
+    return thing.bound && Runnable.isRunnable(thing.bound);
   }
 }
 
@@ -497,12 +587,21 @@ export class RunnableSequence<
     const steps = [this.first, ...this.middle, this.last];
     // Find the index of the last runnable in the sequence that doesn't have an overridden .transform() method
     // and start streaming from there
-    const streamingStartStepIndex = Math.min(steps.length - 1, steps.length -
-      [...steps]
-        .reverse()
-        .findIndex((step) => {
-          return step.transform === Runnable.prototype.transform || (step as RunnableBinding<any, any, any>).bound
-        }) - 1);
+    const streamingStartStepIndex = Math.min(
+      steps.length - 1,
+      steps.length -
+        [...steps].reverse().findIndex((step) => {
+          const isDefaultImplementation =
+            step.transform === Runnable.prototype.transform;
+          const boundRunnableIsDefaultImplementation =
+            RunnableBinding.isRunnableBinding(step) &&
+            step.bound?.transform === Runnable.prototype.transform;
+          return (
+            isDefaultImplementation || boundRunnableIsDefaultImplementation
+          );
+        }) -
+        1
+    );
 
     try {
       for (const step of steps.slice(0, streamingStartStepIndex)) {
@@ -518,7 +617,6 @@ export class RunnableSequence<
     let concatSupported = true;
     let finalOutput;
     try {
-      console.log(streamingStartStepIndex, steps[streamingStartStepIndex], steps)
       let finalGenerator = await steps[streamingStartStepIndex]._streamIterator(
         nextStepInput,
         this._patchConfig(options, runManager?.getChild())
@@ -710,88 +808,6 @@ export class RunnablePassthrough<RunInput> extends Runnable<
       input,
       options
     );
-  }
-}
-
-/**
- * A runnable that delegates calls to another runnable with a set of kwargs.
- */
-export class RunnableBinding<
-  RunInput,
-  RunOutput,
-  CallOptions extends BaseCallbackConfig
-> extends Runnable<RunInput, RunOutput, CallOptions> {
-  static lc_name() {
-    return "RunnableBinding";
-  }
-
-  lc_namespace = ["langchain", "schema", "runnable"];
-
-  lc_serializable = true;
-
-  protected bound: Runnable<RunInput, RunOutput, CallOptions>;
-
-  protected kwargs: Partial<CallOptions>;
-
-  constructor(fields: {
-    bound: Runnable<RunInput, RunOutput, CallOptions>;
-    kwargs: Partial<CallOptions>;
-  }) {
-    super(fields);
-    this.bound = fields.bound;
-    this.kwargs = fields.kwargs;
-  }
-
-  bind(
-    kwargs: Partial<CallOptions>
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return new RunnableBinding({
-      bound: this.bound,
-      kwargs: { ...this.kwargs, ...kwargs },
-    });
-  }
-
-  async invoke(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): Promise<RunOutput> {
-    return this.bound.invoke(input, { ...options, ...this.kwargs });
-  }
-
-  async batch(
-    inputs: RunInput[],
-    options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: { maxConcurrency?: number }
-  ): Promise<RunOutput[]> {
-    const mergedOptions = Array.isArray(options)
-      ? options.map((individualOption) => ({
-          ...individualOption,
-          ...this.kwargs,
-        }))
-      : { ...options, ...this.kwargs };
-    return this.bound.batch(inputs, mergedOptions, batchOptions);
-  }
-
-  async *_streamIterator(
-    input: RunInput,
-    options?: Partial<CallOptions> | undefined
-  ) {
-    yield* this.bound._streamIterator(input, { ...options, ...this.kwargs });
-  }
-
-  async stream(
-    input: RunInput,
-    options?: Partial<CallOptions> | undefined
-  ): Promise<IterableReadableStream<RunOutput>> {
-    return this.bound.stream(input, { ...options, ...this.kwargs });
-  }
-
-  async *transform(generator: AsyncGenerator<RunInput, any, unknown>, options: Partial<CallOptions>): AsyncGenerator<RunOutput> {
-    yield *this.bound.transform(generator, options);
-  }
-
-  static isRunnableBinding(thing: any): thing is RunnableBinding<any, any, any> {
-    return Runnable.isRunnable(thing.bound);
   }
 }
 
