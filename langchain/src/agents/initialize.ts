@@ -8,7 +8,13 @@ import { StructuredChatAgent } from "./structured_chat/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 import { OpenAIAgent } from "./openai/index.js";
+import { XMLAgent } from "./xml/index.js";
 
+/**
+ * Represents the type of an agent in LangChain. It can be
+ * "zero-shot-react-description", "chat-zero-shot-react-description", or
+ * "chat-conversational-react-description".
+ */
 type AgentType =
   | "zero-shot-react-description"
   | "chat-zero-shot-react-description"
@@ -73,6 +79,10 @@ export type InitializeAgentExecutorOptions =
   | ({
       agentType: "chat-conversational-react-description";
       agentArgs?: Parameters<typeof ChatConversationalAgent.fromLLMAndTools>[2];
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
+  | ({
+      agentType: "xml";
+      agentArgs?: Parameters<typeof XMLAgent.fromLLMAndTools>[2];
     } & Omit<AgentExecutorInput, "agent" | "tools">);
 
 /**
@@ -157,6 +167,16 @@ export async function initializeAgentExecutorWithOptions(
             inputKey: "input",
             outputKey: "output",
           }),
+        ...rest,
+      });
+      return executor;
+    }
+    case "xml": {
+      const { agentArgs, tags, ...rest } = options;
+      const executor = AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "xml"],
+        agent: XMLAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
+        tools,
         ...rest,
       });
       return executor;

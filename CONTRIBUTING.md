@@ -1,6 +1,6 @@
 # Contributing to LangChain
 
-👋 Hi there! Thank you for even being interested in contributing to LangChain.
+👋 Hi there! Thank you for being interested in contributing to LangChain.
 As an open source project in a rapidly developing field, we are extremely open
 to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
 
@@ -12,12 +12,12 @@ To contribute to this project, please follow a ["fork and pull request"](https:/
 
 If you are not sure what to work on, we have a few suggestions:
 
-- Look at the issues with the [help wanted](https://github.com/hwchase17/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for new contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And any questions let us know, we're happy to guide you!
-- At the moment our main focus is reaching parity with the Python version across both [integrations](https://langchain.com/integrations.html) and [features](https://langchain.com/features.html). If you are interested in working on a specific integration or feature, just pick anything from those lists not done yet, please let us know and we can help you get started.
+- Look at the issues with the [help wanted](https://github.com/hwchase17/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And if you have any questions let us know, we're happy to guide you!
+- At the moment our main focus is reaching parity with the Python version for features and base functionality. If you are interested in working on a specific integration or feature, please let us know and we can help you get started.
 
 ### New abstractions
 
-We are currently trying to keep API parity between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
+We aim to keep the same APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
 
 ## Want to add a specific integration?
 
@@ -25,21 +25,12 @@ LangChain supports several different types of integrations with third-party prov
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
-## 🗺️Contributing Guidelines
+## 🗺️ Contributing Guidelines
 
-### 🚩GitHub Issues
+### 🚩 GitHub Issues
 
-Our [issues](https://github.com/hwchase17/langchainjs/issues) page is kept up to date
-with bugs, improvements, and feature requests. There is a taxonomy of labels to help
-with sorting and discovery of issues of interest. These include:
-
-- prompts: related to prompt tooling/infra.
-- llms: related to LLM wrappers/tooling/infra.
-- chains
-- utilities: related to different types of utilities to integrate with (Python, SQL, etc.).
-- agents
-- memory
-- applications: related to example applications to build
+Our [issues](https://github.com/hwchase17/langchainjs/issues) page contains
+with bugs, improvements, and feature requests.
 
 If you start working on an issue, please assign it to yourself.
 
@@ -50,7 +41,7 @@ We will try to keep these issues as up to date as possible, though
 with the rapid rate of develop in this field some may get out of date.
 If you notice this happening, please just let us know.
 
-### 🙋Getting Help
+### 🙋 Getting Help
 
 Although we try to have a developer setup to make it as easy as possible for others to contribute (see below)
 it is possible that some pain point may arise around environment setup, linting, documentation, or other.
@@ -62,9 +53,7 @@ If you are finding these difficult (or even just annoying) to work with,
 feel free to contact a maintainer for help - we do not want these to get in the way of getting
 good code into the codebase.
 
-### 🏭Release process
-
-> TODO:
+### 🏭 Release process
 
 As of now, LangChain has an ad hoc release process: releases are cut with high frequency via by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).
@@ -75,9 +64,7 @@ even patch releases may contain [non-backwards-compatible changes](https://semve
 If your contribution has made its way into a release, we will want to give you credit on Twitter (only if you want though)!
 If you have a Twitter account you would like us to mention, please let us know in the PR or in another manner.
 
-## 🚀Quick Start
-
-### Tooling
+### 🛠️ Tooling
 
 This project uses the following tools, which are worth getting familiar
 with if you plan to contribute:
@@ -90,12 +77,24 @@ with if you plan to contribute:
   comments
 - **[Docusaurus](https://docusaurus.io/)** - static site generation for documentation
 
-Now, you should be able to run the common tasks in the following section.
+## 🚀 Quick Start
 
-## ✅Common Tasks
+Clone this repo, then cd into it:
 
-Our primary goal is to make it as easy as possible for you to contribute to this project.
-To that end, we have configured the most common actions to be directly runnable from the root of the project (unless otherwise noted).
+```bash
+cd langchainjs
+```
+
+Next, try running the following common tasks:
+
+## ✅ Common Tasks
+
+Our goal is to make it as easy as possible for you to contribute to this project.
+All of the below commands should be run from within the `langchain/` directory unless otherwise noted.
+
+```bash
+cd langchain
+```
 
 ### Setup
 
@@ -112,12 +111,6 @@ To run the linter, run:
 
 ```bash
 yarn lint
-```
-
-To automatically fix linting errors, run:
-
-```bash
-yarn lint:fix
 ```
 
 ### Formatting
@@ -137,14 +130,8 @@ yarn format:check
 
 ### Testing
 
-Tests should be added within a `tests/` folder alongside the modules they
+In general, tests should be added within a `tests/` folder alongside the modules they
 are testing.
-
-To run all tests, run:
-
-```bash
-yarn test
-```
 
 **Unit tests** cover modular logic that does not require calls to outside APIs.
 
@@ -154,28 +141,7 @@ Unit tests should be called `*.test.ts`.
 To run only unit tests, run:
 
 ```bash
-yarn test:unit
-```
-
-**Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
-
-If you add support for a new external API, please add a new integration test.
-Integration tests should be called `*.int.test.ts`.
-
-To run only integration tests, run:
-
-```bash
-yarn test:int
-```
-
-Note that many integration tests require credentials or other setup. You may need to set up a `langchain/.env` file like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
-
-**Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
-
-To run the environment tests with Docker run:
-
-```bash
-yarn test:exports:docker
+yarn test
 ```
 
 #### Running a single test
@@ -183,7 +149,23 @@ yarn test:exports:docker
 To run a single test, run:
 
 ```bash
-yarn test:single ./path/to/yourtest.test.ts
+yarn test:single /path/to/yourtest.test.ts
+```
+
+This is useful for developing individual features.
+
+**Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
+
+If you add support for a new external API, please add a new integration test.
+Integration tests should be called `*.int.test.ts`.
+
+Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` file
+like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
+
+We generally recommend only running integration tests with `yarn test:single`, but if you want to run all integration tests, run:
+
+```bash
+yarn test:integration
 ```
 
 ### Building
@@ -193,17 +175,6 @@ To build the project, run:
 ```bash
 yarn build
 ```
-
-### Running examples
-
-If you add a new major piece of functionality, it is helpful to add an
-example to showcase how to use it. Most of our users find examples to be the
-most helpful kind of documentation.
-
-Examples can be added in the `examples/src` directory, e.g.
-`examples/src/path/to/example` and should export a `run` function. This
-example can then be invoked with `yarn example path/to/example` at the top
-level of the repo.
 
 ### Adding an Entrypoint
 
@@ -240,13 +211,43 @@ For that reason, we ask that you add good documentation to all classes and metho
 
 Similar to linting, we recognize documentation can be annoying. If you do not want to do it, please contact a project maintainer, and they can help you with it. We do not want this to be a blocker for good code getting contributed.
 
+Documentation and the skeleton lives under the `docs/` folder. Example code is imported from under the `examples/` folder.
+
+### Running examples
+
+If you add a new major piece of functionality, it is helpful to add an
+example to showcase how to use it. Most of our users find examples to be the
+most helpful kind of documentation.
+
+Examples can be added in the `examples/src` directory, e.g.
+`examples/src/path/to/example` and should export a `run` function. This
+example can then be invoked with `yarn example path/to/example` at the top
+level of the repo.
+
+To run examples that require an environment variable, you'll need to add a `.env` file under `examples/.env`
+
 ### Build Documentation Locally
 
-You can run a hot-reloading dev version of the docs static site by
-running:
+To generate and view the documentation locally, change to the project root and run `yarn` to ensure dependencies get installed
+in both the `docs/` and `examples/` workspaces:
 
-To generate and view the documentation locally, run:
+```bash
+cd ..
+yarn
+```
+
+Then run:
 
 ```bash
 yarn docs
+```
+
+## Advanced
+
+**Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
+
+To run the environment tests with Docker, run the following command from the project root:
+
+```bash
+yarn test:exports:docker
 ```

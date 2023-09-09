@@ -19,6 +19,13 @@ const retriever = new ParentDocumentRetriever({
     chunkOverlap: 0,
     chunkSize: 50,
   }),
+  // Optional `k` parameter to search for more child documents in VectorStore.
+  // Note that this does not exactly correspond to the number of final (parent) documents
+  // retrieved, as multiple child documents can point to the same parent.
+  childK: 20,
+  // Optional `k` parameter to limit number of final, parent documents returned from this
+  // retriever and sent to LLM. This is an upper-bound, and the final count may be lower than this.
+  parentK: 5,
 });
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();

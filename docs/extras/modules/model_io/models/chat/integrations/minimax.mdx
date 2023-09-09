@@ -1,0 +1,72 @@
+---
+sidebar_label: Minimax
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Minimax
+
+[Minimax](https://api.minimax.chat) is a Chinese startup that provides natural language processing models for companies and individuals.
+
+This example demonstrates using LangChain.js to interact with Minimax.
+
+## Setup
+
+To use Minimax models, you'll need a [Minimax account](https://api.minimax.chat), an [API key](https://api.minimax.chat/user-center/basic-information/interface-key), and a [Group ID](https://api.minimax.chat/user-center/basic-information)
+
+## Basic usage
+
+import Minimax from "@examples/models/chat/integration_minimax.ts";
+
+<CodeBlock language="typescript">{Minimax}</CodeBlock>
+
+## Chain model calls
+
+import MinimaxChain from "@examples/models/chat/minimax_chain.ts";
+
+<CodeBlock language="typescript">{MinimaxChain}</CodeBlock>
+
+
+##  With function calls
+
+import MinimaxFunctions from "@examples/models/chat/minimax_functions.ts";
+import MinimaxFunctionsZod from "@examples/models/chat/minimax_functions_zod.ts";
+
+<CodeBlock language="typescript">{MinimaxFunctions}</CodeBlock>
+
+
+## Functions with Zod
+
+<CodeBlock language="typescript">{MinimaxFunctionsZod}</CodeBlock>
+
+
+## With glyph
+
+This feature can help users force the model to return content in the requested format.
+
+import MinimaxGlyph from "@examples/models/chat/minimax_glyph.ts";
+
+<CodeBlock language="typescript">{MinimaxGlyph}</CodeBlock>
+
+
+## With sample messages
+
+This feature can help the model better understand the return information the user wants to get,
+including but not limited to the content, format, and response mode of the information.
+
+
+import MinimaxSampleMessages from "@examples/models/chat/minimax_sample_messages.ts";
+
+<CodeBlock language="typescript">{MinimaxSampleMessages}</CodeBlock>
+
+
+## With plugins
+
+This feature supports calling tools like a search engine to get additional data that can assist the model.
+
+
+import MinimaxPlugins from "@examples/models/chat/minimax_plugins.ts";
+
+<CodeBlock language="typescript">{MinimaxPlugins}</CodeBlock>
+
+

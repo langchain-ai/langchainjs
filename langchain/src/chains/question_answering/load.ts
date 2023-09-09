@@ -17,6 +17,10 @@ import {
   REFINE_PROMPT_SELECTOR,
 } from "./refine_prompts.js";
 
+/**
+ * Represents the parameters for creating a QAChain. It can be of three
+ * types: "stuff", "map_reduce", or "refine".
+ */
 export type QAChainParams =
   | ({
       type?: "stuff";
@@ -45,11 +49,21 @@ export const loadQAChain = (
   throw new Error(`Invalid _type: ${type}`);
 };
 
+/**
+ * Represents the parameters for creating a StuffQAChain.
+ */
 export interface StuffQAChainParams {
   prompt?: BasePromptTemplate;
   verbose?: boolean;
 }
 
+/**
+ * Loads a StuffQAChain based on the provided parameters. It takes an LLM
+ * instance and StuffQAChainParams as parameters.
+ * @param llm An instance of BaseLanguageModel.
+ * @param params Parameters for creating a StuffQAChain.
+ * @returns A StuffQAChain instance.
+ */
 export function loadQAStuffChain(
   llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
@@ -60,6 +74,9 @@ export function loadQAStuffChain(
   return chain;
 }
 
+/**
+ * Represents the parameters for creating a MapReduceQAChain.
+ */
 export interface MapReduceQAChainParams {
   returnIntermediateSteps?: MapReduceDocumentsChainInput["returnIntermediateSteps"];
   combineMapPrompt?: BasePromptTemplate;
@@ -67,6 +84,13 @@ export interface MapReduceQAChainParams {
   verbose?: boolean;
 }
 
+/**
+ * Loads a MapReduceQAChain based on the provided parameters. It takes an
+ * LLM instance and MapReduceQAChainParams as parameters.
+ * @param llm An instance of BaseLanguageModel.
+ * @param params Parameters for creating a MapReduceQAChain.
+ * @returns A MapReduceQAChain instance.
+ */
 export function loadQAMapReduceChain(
   llm: BaseLanguageModel,
   params: MapReduceQAChainParams = {}
@@ -93,12 +117,22 @@ export function loadQAMapReduceChain(
   return chain;
 }
 
+/**
+ * Represents the parameters for creating a RefineQAChain.
+ */
 export interface RefineQAChainParams {
   questionPrompt?: BasePromptTemplate;
   refinePrompt?: BasePromptTemplate;
   verbose?: boolean;
 }
 
+/**
+ * Loads a RefineQAChain based on the provided parameters. It takes an LLM
+ * instance and RefineQAChainParams as parameters.
+ * @param llm An instance of BaseLanguageModel.
+ * @param params Parameters for creating a RefineQAChain.
+ * @returns A RefineQAChain instance.
+ */
 export function loadQARefineChain(
   llm: BaseLanguageModel,
   params: RefineQAChainParams = {}

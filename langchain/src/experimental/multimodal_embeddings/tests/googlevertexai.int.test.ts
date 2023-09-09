@@ -6,7 +6,7 @@ import { GoogleVertexAIMultimodalEmbeddings } from "../googlevertexai.js";
 import { Document } from "../../../document.js";
 import { FaissStore } from "../../../vectorstores/faiss.js";
 
-test("embedding text", async () => {
+test.skip("embedding text", async () => {
   const e = new GoogleVertexAIMultimodalEmbeddings();
 
   const vector: number[] = await e.embedQuery("test 1");
@@ -14,7 +14,7 @@ test("embedding text", async () => {
   console.log(vector);
 });
 
-test("embedding multiple texts", async () => {
+test.skip("embedding multiple texts", async () => {
   const e = new GoogleVertexAIMultimodalEmbeddings();
 
   const docs = ["test 1", "test 2"];
@@ -25,7 +25,7 @@ test("embedding multiple texts", async () => {
   console.log(vector);
 });
 
-test("embedding image", async () => {
+test.skip("embedding image", async () => {
   const e = new GoogleVertexAIMultimodalEmbeddings();
 
   const pathname = path.join(
@@ -39,7 +39,7 @@ test("embedding image", async () => {
   console.log(vector);
 });
 
-test("embedding image with text in a vector store", async () => {
+test.skip("embedding image with text in a vector store", async () => {
   const e = new GoogleVertexAIMultimodalEmbeddings();
 
   const vectorStore = await FaissStore.fromTexts(

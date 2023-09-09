@@ -14,6 +14,8 @@ const vectorStore = await MyScaleStore.fromTexts(
     port: process.env.MYSCALE_PORT || "8443",
     username: process.env.MYSCALE_USERNAME || "username",
     password: process.env.MYSCALE_PASSWORD || "password",
+    database: "default", // defaults to "default"
+    table: "your_table", // defaults to "vector_table"
   }
 );
 

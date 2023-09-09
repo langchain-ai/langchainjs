@@ -9,9 +9,8 @@ import { Document } from "../document.js";
 import { Runnable, RunnableConfig } from "./runnable.js";
 
 /**
- * Base Index class. All indexes should extend this class.
+ * Base Retriever class. All indexes should extend this class.
  */
-
 export interface BaseRetrieverInput {
   callbacks?: Callbacks;
   tags?: string[];
@@ -19,6 +18,11 @@ export interface BaseRetrieverInput {
   verbose?: boolean;
 }
 
+/**
+ * Abstract base class for a Document retrieval system. A retrieval system
+ * is defined as something that can take string queries and return the
+ * most 'relevant' Documents from some source.
+ */
 export abstract class BaseRetriever extends Runnable<string, Document[]> {
   callbacks?: Callbacks;
 
@@ -52,6 +56,16 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
     return this.getRelevantDocuments(input, options);
   }
 
+  /**
+   * Main method used to retrieve relevant documents. It takes a query
+   * string and an optional configuration object, and returns a promise that
+   * resolves to an array of `Document` objects. This method handles the
+   * retrieval process, including starting and ending callbacks, and error
+   * handling.
+   * @param query The query string to retrieve relevant documents for.
+   * @param config Optional configuration object for the retrieval process.
+   * @returns A promise that resolves to an array of `Document` objects.
+   */
   async getRelevantDocuments(
     query: string,
     config?: Callbacks | BaseCallbackConfig

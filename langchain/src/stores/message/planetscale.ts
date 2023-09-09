@@ -14,6 +14,10 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
+/**
+ * Type definition for the input parameters required when instantiating a
+ * PlanetScaleChatMessageHistory object.
+ */
 export type PlanetScaleChatMessageHistoryInput = {
   tableName?: string;
   sessionId: string;
@@ -21,6 +25,10 @@ export type PlanetScaleChatMessageHistoryInput = {
   client?: PlanetScaleClient;
 };
 
+/**
+ * Interface for the data transfer object used when selecting stored
+ * messages from the PlanetScale database.
+ */
 interface selectStoredMessagesDTO {
   id: string;
   session_id: string;
@@ -31,6 +39,10 @@ interface selectStoredMessagesDTO {
   additional_kwargs: string;
 }
 
+/**
+ * Class for storing and retrieving chat message history from a
+ * PlanetScale database. Extends the BaseListChatMessageHistory class.
+ */
 export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "planetscale"];
 
@@ -75,6 +87,12 @@ export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
     this.sessionId = sessionId;
   }
 
+  /**
+   * Private method to ensure that the necessary table exists in the
+   * PlanetScale database before performing any operations. If the table
+   * does not exist, it is created.
+   * @returns Promise that resolves to void.
+   */
   private async ensureTable(): Promise<void> {
     if (this.tableInitialized) {
       return;
@@ -91,6 +109,11 @@ export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
     this.tableInitialized = true;
   }
 
+  /**
+   * Method to retrieve all messages from the PlanetScale database for the
+   * current session.
+   * @returns Promise that resolves to an array of BaseMessage objects.
+   */
   async getMessages(): Promise<BaseMessage[]> {
     await this.ensureTable();
 
@@ -127,6 +150,12 @@ export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
+  /**
+   * Method to add a new message to the PlanetScale database for the current
+   * session.
+   * @param message The BaseMessage object to be added to the database.
+   * @returns Promise that resolves to void.
+   */
   async addMessage(message: BaseMessage): Promise<void> {
     await this.ensureTable();
 
@@ -146,6 +175,11 @@ export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
     await this.connection.execute(query, params);
   }
 
+  /**
+   * Method to delete all messages from the PlanetScale database for the
+   * current session.
+   * @returns Promise that resolves to void.
+   */
   async clear(): Promise<void> {
     await this.ensureTable();
 

@@ -1,4 +1,9 @@
-import { DocumentCollection, IDocument, ZepClient } from "@getzep/zep-js";
+import {
+  DocumentCollection,
+  IDocument,
+  NotFoundError,
+  ZepClient,
+} from "@getzep/zep-js";
 
 import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -7,10 +12,17 @@ import { FakeEmbeddings } from "../embeddings/fake.js";
 import { Callbacks } from "../callbacks/index.js";
 import { maximalMarginalRelevance } from "../util/math.js";
 
+/**
+ * Interface for the arguments required to initialize a ZepVectorStore
+ * instance.
+ */
 export interface IZepArgs {
   collection: DocumentCollection;
 }
 
+/**
+ * Interface for the configuration options for a ZepVectorStore instance.
+ */
 export interface IZepConfig {
   apiUrl: string;
   apiKey?: string;
@@ -21,6 +33,10 @@ export interface IZepConfig {
   isAutoEmbedded?: boolean;
 }
 
+/**
+ * Interface for the parameters required to delete documents from a
+ * ZepVectorStore instance.
+ */
 export interface IZepDeleteParams {
   uuids: string[];
 }
@@ -85,7 +101,8 @@ export class ZepVectorStore extends VectorStore {
     } catch (err) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (err instanceof Error) {
-        if (err.name === "NotFoundError") {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (err instanceof NotFoundError || err.name === "NotFoundError") {
           await this.createCollection(args);
         } else {
           throw err;

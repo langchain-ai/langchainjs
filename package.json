@@ -8,13 +8,7 @@
   "workspaces": [
     "langchain",
     "examples",
-    "docs",
-    "test-exports-esbuild",
-    "test-exports-esm",
-    "test-exports-cjs",
-    "test-exports-cf",
-    "test-exports-vercel",
-    "test-exports-vite"
+    "docs"
   ],
   "repository": {
     "type": "git",
@@ -22,19 +16,18 @@
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "ci": "turbo run ci",
-    "build": "turbo run build --filter=\"!docs_skeleton\"",
+    "build": "turbo run build --filter=\"!docs_skeleton\" --filter=\"!test-exports-*\"",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --filter=\"!docs_skeleton\"",
     "lint:fix": "yarn lint -- --fix",
-    "test": "turbo run test && yarn test:exports:docker",
-    "test:unit": "turbo run test",
+    "test": "yarn test:unit && yarn workspace langchain build && yarn test:exports:docker",
+    "test:unit": "turbo run test --filter langchain",
     "test:int": "yarn run test:int:deps && turbo run test:integration ; yarn run test:int:deps:down",
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
     "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
     "test:exports:docker": "docker compose up --force-recreate",
-    "publish": "bash scripts/release-branch.sh && turbo run --filter langchain build lint test && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
+    "publish": "bash langchain/scripts/release-branch.sh && turbo run --filter langchain build lint test && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs dev",
@@ -56,7 +49,8 @@
   },
   "resolutions": {
     "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
-    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch"
+    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch",
+    "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

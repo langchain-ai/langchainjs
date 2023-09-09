@@ -57,7 +57,16 @@ export interface SupabaseHybridSearchParams {
   keywordK: number;
 }
 
+/**
+ * Class for performing hybrid search operations on a Supabase database.
+ * It extends the `BaseRetriever` class and implements methods for
+ * similarity search, keyword search, and hybrid search.
+ */
 export class SupabaseHybridSearch extends BaseRetriever {
+  static lc_name() {
+    return "SupabaseHybridSearch";
+  }
+
   lc_namespace = ["langchain", "retrievers", "supabase"];
 
   similarityK: number;
@@ -87,6 +96,14 @@ export class SupabaseHybridSearch extends BaseRetriever {
     this.keywordK = args.keywordK || 2;
   }
 
+  /**
+   * Performs a similarity search on the Supabase database using the
+   * provided query and returns the top 'k' similar documents.
+   * @param query The query to use for the similarity search.
+   * @param k The number of top similar documents to return.
+   * @param _callbacks Optional callbacks to pass to the embedQuery method.
+   * @returns A promise that resolves to an array of search results. Each result is a tuple containing a Document, its similarity score, and its ID.
+   */
   protected async similaritySearch(
     query: string,
     k: number,
@@ -124,6 +141,13 @@ export class SupabaseHybridSearch extends BaseRetriever {
     ]);
   }
 
+  /**
+   * Performs a keyword search on the Supabase database using the provided
+   * query and returns the top 'k' documents that match the keywords.
+   * @param query The query to use for the keyword search.
+   * @param k The number of top documents to return that match the keywords.
+   * @returns A promise that resolves to an array of search results. Each result is a tuple containing a Document, its similarity score multiplied by 10, and its ID.
+   */
   protected async keywordSearch(
     query: string,
     k: number
@@ -154,6 +178,16 @@ export class SupabaseHybridSearch extends BaseRetriever {
     ]);
   }
 
+  /**
+   * Combines the results of the `similaritySearch` and `keywordSearch`
+   * methods and returns the top 'k' documents based on a combination of
+   * similarity and keyword matching.
+   * @param query The query to use for the hybrid search.
+   * @param similarityK The number of top similar documents to return.
+   * @param keywordK The number of top documents to return that match the keywords.
+   * @param callbacks Optional callbacks to pass to the similaritySearch method.
+   * @returns A promise that resolves to an array of search results. Each result is a tuple containing a Document, its combined score, and its ID.
+   */
   protected async hybridSearch(
     query: string,
     similarityK: number,

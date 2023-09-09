@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-process-env */
-import { test, expect, beforeAll } from "@jest/globals";
+import fs from "fs";
+import { expect, beforeAll } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
 import { VectaraLibArgs, VectaraStore } from "../vectara.js";
@@ -62,6 +64,20 @@ const getDocs = (): Document[] => {
   return documents;
 };
 
+let corpusId: number[] = [];
+const envValue = process.env.VECTARA_CORPUS_ID;
+if (envValue) {
+  corpusId = envValue.split(",").map((id) => {
+    const num = Number(id);
+    if (Number.isNaN(num)) corpusId = [0];
+    return num;
+  });
+
+  if (corpusId.length === 0) corpusId = [0];
+} else {
+  corpusId = [0];
+}
+
 describe("VectaraStore", () => {
   ["VECTARA_CUSTOMER_ID", "VECTARA_CORPUS_ID", "VECTARA_API_KEY"].forEach(
     (envVar) => {
@@ -74,7 +90,7 @@ describe("VectaraStore", () => {
   describe("fromTexts", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -88,7 +104,7 @@ describe("VectaraStore", () => {
   describe("fromDocuments", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -105,7 +121,7 @@ describe("VectaraStore", () => {
     beforeAll(async () => {
       store = new VectaraStore({
         customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-        corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+        corpusId,
         apiKey: process.env.VECTARA_API_KEY || "",
       });
     });
@@ -123,6 +139,11 @@ describe("VectaraStore", () => {
       expect(resultsWithScore.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].pageContent.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].metadata.length).toBeGreaterThan(0);
+      expect(
+        resultsWithScore[0][0].metadata.find(
+          (item: { name: string }) => item.name === "title"
+        ).value
+      ).toBe("Lord of the Rings");
       expect(resultsWithScore[0][1]).toBeGreaterThan(0);
     });
 
@@ -151,14 +172,50 @@ describe("VectaraStore", () => {
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
-      expect(results[0].metadata.length).toBeGreaterThan(0);
       // Query filtered on French, so we expect only French results
       const hasEnglish = results.some(
         (result) =>
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          result.metadata.find((m: any) => m.name === "lang")?.value === "eng"
+          result.metadata.lang === "eng"
       );
       expect(hasEnglish).toBe(false);
+    });
+
+    it("addFiles", async () => {
+      const docs = getDocs();
+      const englishOneContent = docs[0].pageContent;
+      const frenchOneContent = docs[2].pageContent;
+
+      const files = [
+        { filename: "englishOne.txt", content: englishOneContent },
+        { filename: "frenchOne.txt", content: frenchOneContent },
+      ];
+
+      const blobs = [];
+      for (const file of files) {
+        fs.writeFileSync(file.filename, file.content);
+
+        const buffer = fs.readFileSync(file.filename);
+        blobs.push(new Blob([buffer], { type: "text/plain" }));
+      }
+
+      const bitcoinBuffer = fs.readFileSync(
+        "../examples/src/document_loaders/example_data/bitcoin.pdf"
+      );
+      blobs.push(new Blob([bitcoinBuffer], { type: "application/pdf" }));
+
+      const results = await store.addFiles(blobs);
+
+      for (const file of files) {
+        fs.unlinkSync(file.filename);
+      }
+
+      expect(results).toEqual(3);
+      const searchResults = await store.similaritySearch("What is bitcoin");
+      expect(searchResults.length).toBeGreaterThan(0);
+      expect(searchResults[0].pageContent).toContain(
+        "A Peer-to-Peer Electronic Cash System"
+      );
     });
   });
 });

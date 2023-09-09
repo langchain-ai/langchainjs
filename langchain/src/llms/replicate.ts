@@ -1,6 +1,11 @@
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
+/**
+ * Interface defining the structure of the input data for the Replicate
+ * class. It includes details about the model to be used, any additional
+ * input parameters, and the API key for the Replicate service.
+ */
 export interface ReplicateInput {
   // owner/model_name:version
   model: `${string}/${string}:${string}`;
@@ -13,7 +18,17 @@ export interface ReplicateInput {
   apiKey?: string;
 }
 
+/**
+ * Class responsible for managing the interaction with the Replicate API.
+ * It handles the API key and model details, makes the actual API calls,
+ * and converts the API response into a format usable by the rest of the
+ * LangChain framework.
+ */
 export class Replicate extends LLM implements ReplicateInput {
+  static lc_name() {
+    return "Replicate";
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "REPLICATE_API_TOKEN",

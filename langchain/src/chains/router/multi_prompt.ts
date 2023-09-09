@@ -11,6 +11,11 @@ import { ConversationChain } from "../../chains/conversation.js";
 import { zipEntries } from "./utils.js";
 import { RouterOutputParser } from "../../output_parsers/router.js";
 
+/**
+ * A class that represents a multi-prompt chain in the LangChain
+ * framework. It extends the MultiRouteChain class and provides additional
+ * functionality specific to multi-prompt chains.
+ */
 export class MultiPromptChain extends MultiRouteChain {
   /**
    * @deprecated Use `fromLLMAndPrompts` instead
@@ -32,6 +37,20 @@ export class MultiPromptChain extends MultiRouteChain {
     });
   }
 
+  /**
+   * A static method that creates an instance of MultiPromptChain from a
+   * BaseLanguageModel and a set of prompts. It takes in optional parameters
+   * for the default chain and additional options.
+   * @param llm A BaseLanguageModel instance.
+   * @param promptNames An array of prompt names.
+   * @param promptDescriptions An array of prompt descriptions.
+   * @param promptTemplates An array of prompt templates.
+   * @param defaultChain An optional BaseChain instance to be used as the default chain.
+   * @param llmChainOpts Optional parameters for the LLMChainInput, excluding 'llm' and 'prompt'.
+   * @param conversationChainOpts Optional parameters for the LLMChainInput, excluding 'llm' and 'outputKey'.
+   * @param multiRouteChainOpts Optional parameters for the MultiRouteChainInput, excluding 'defaultChain'.
+   * @returns An instance of MultiPromptChain.
+   */
   static fromLLMAndPrompts(
     llm: BaseLanguageModel,
     {

@@ -56,6 +56,9 @@ export interface DataForSeoApiConfig {
   topCount?: number;
 }
 
+/**
+ * Represents a task in the API response.
+ */
 type Task = {
   id: string;
   status_code: number;
@@ -64,6 +67,9 @@ type Task = {
   result: Result[];
 };
 
+/**
+ * Represents a result in the API response.
+ */
 type Result = {
   keyword: string;
   check_url: string;
@@ -76,6 +82,9 @@ type Result = {
   items: any[];
 };
 
+/**
+ * Represents the API response.
+ */
 type ApiResponse = {
   status_code: number;
   status_message: string;
@@ -88,6 +97,10 @@ type ApiResponse = {
  * @description Represents a wrapper class to work with DataForSEO SERP API.
  */
 export class DataForSeoAPISearch extends Tool {
+  static lc_name() {
+    return "DataForSeoAPISearch";
+  }
+
   name = "dataforseo-api-wrapper";
 
   description =

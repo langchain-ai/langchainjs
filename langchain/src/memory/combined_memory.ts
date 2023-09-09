@@ -6,6 +6,11 @@ import {
 } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
+/**
+ * Interface that defines the shape of the input object that the
+ * CombinedMemory constructor accepts. It extends the BaseChatMemoryInput
+ * interface and adds additional properties.
+ */
 export interface CombinedMemoryInput extends BaseChatMemoryInput {
   memories: BaseMemory[];
   humanPrefix?: string;
@@ -13,6 +18,11 @@ export interface CombinedMemoryInput extends BaseChatMemoryInput {
   memoryKey?: string;
 }
 
+/**
+ * Class that manages and manipulates previous chat messages. It extends
+ * from the BaseChatMemory class and implements the CombinedMemoryInput
+ * interface.
+ */
 export class CombinedMemory
   extends BaseChatMemory
   implements CombinedMemoryInput
@@ -41,6 +51,10 @@ export class CombinedMemory
     this.checkInputKey();
   }
 
+  /**
+   * Checks for repeated memory variables across all memory objects. Throws
+   * an error if any are found.
+   */
   checkRepeatedMemoryVariable() {
     const allVariables: string[] = [];
     for (const memory of this.memories) {
@@ -56,6 +70,10 @@ export class CombinedMemory
     }
   }
 
+  /**
+   * Checks if input keys are set for all memory objects. Logs a warning if
+   * any are missing.
+   */
   checkInputKey() {
     for (const memory of this.memories) {
       if (
@@ -69,6 +87,11 @@ export class CombinedMemory
     }
   }
 
+  /**
+   * Loads memory variables from all memory objects.
+   * @param inputValues Input values to load memory variables from.
+   * @returns Promise that resolves with an object containing the loaded memory variables.
+   */
   async loadMemoryVariables(
     inputValues: InputValues
   ): Promise<MemoryVariables> {
@@ -84,12 +107,22 @@ export class CombinedMemory
     return memoryData;
   }
 
+  /**
+   * Saves the context to all memory objects.
+   * @param inputValues Input values to save.
+   * @param outputValues Output values to save.
+   * @returns Promise that resolves when the context has been saved to all memory objects.
+   */
   async saveContext(inputValues: InputValues, outputValues: OutputValues) {
     for (const memory of this.memories) {
       await memory.saveContext(inputValues, outputValues);
     }
   }
 
+  /**
+   * Clears all memory objects.
+   * @returns Promise that resolves when all memory objects have been cleared.
+   */
   async clear() {
     for (const memory of this.memories) {
       if (typeof (memory as BaseChatMemory).clear === "function") {

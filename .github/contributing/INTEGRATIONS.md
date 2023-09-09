@@ -2,7 +2,7 @@
 
 In addition to the [general contribution guidelines](https://github.com/hwchase17/langchainjs/blob/main/CONTRIBUTING.md), there are a few extra things to consider when contributing third-party integrations to LangChain that will be covered here. The goal of this page is to help you draft PRs that take these considerations into account, and can therefore be merged sooner.
 
-Integrations tend to fall into a set number of categories, each of which will have their own section below. Please read the [general guidelines](#general-concepts), then see the section at the end of this page specific to what you're building for additional information and examples.
+Integrations tend to fall into a set number of categories, each of which will have their own section below. Please read the [general guidelines](#general-concepts), then see the [integration-specific guidelines and example PRs](#integration-specific-guidelines-and-example-prs) section at the end of this page for additional information and examples.
 
 ## General concepts
 

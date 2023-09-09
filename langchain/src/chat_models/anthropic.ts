@@ -5,6 +5,7 @@ import {
   ClientOptions,
 } from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
+import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
@@ -18,7 +19,13 @@ import {
 } from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
+/**
+ * Extracts the custom role of a generic chat message.
+ * @param message The chat message from which to extract the custom role.
+ * @returns The custom role of the chat message.
+ */
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
     message.role !== AI_PROMPT &&
@@ -31,6 +38,11 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
   return message.role;
 }
 
+/**
+ * Gets the Anthropic prompt from a base message.
+ * @param message The base message from which to get the Anthropic prompt.
+ * @returns The Anthropic prompt from the base message.
+ */
 function getAnthropicPromptFromMessage(message: BaseMessage): string {
   const type = message._getType();
   switch (type) {
@@ -50,7 +62,7 @@ function getAnthropicPromptFromMessage(message: BaseMessage): string {
   }
 }
 
-const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
+export const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
 
 /**
  * Input to AnthropicChat class.
@@ -110,6 +122,10 @@ export interface AnthropicInput {
   invocationKwargs?: Kwargs;
 }
 
+/**
+ * A type representing additional parameters that can be passed to the
+ * Anthropic API.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
 
@@ -126,7 +142,16 @@ type Kwargs = Record<string, any>;
  * even if not explicitly available on this class.
  *
  */
-export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
+export class ChatAnthropic<
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+  >
+  extends BaseChatModel<CallOptions>
+  implements AnthropicInput
+{
+  static lc_name() {
+    return "ChatAnthropic";
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       anthropicApiKey: "ANTHROPIC_API_KEY",
@@ -153,7 +178,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   maxTokensToSample = 2048;
 
-  modelName = "claude-v1";
+  modelName = "claude-2";
 
   invocationKwargs?: Kwargs;
 
@@ -164,10 +189,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   clientOptions: ClientOptions;
 
   // Used for non-streaming requests
-  private batchClient: Anthropic;
+  protected batchClient: Anthropic;
 
   // Used for streaming requests
-  private streamingClient: Anthropic;
+  protected streamingClient: Anthropic;
 
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
@@ -274,7 +299,12 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     }
   }
 
-  private formatMessagesAsPrompt(messages: BaseMessage[]): string {
+  /**
+   * Formats messages as a prompt for the model.
+   * @param messages The base messages to format as a prompt.
+   * @returns The formatted prompt.
+   */
+  protected formatMessagesAsPrompt(messages: BaseMessage[]): string {
     return (
       messages
         .map((message) => {
@@ -340,24 +370,33 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     };
   }
 
-  private async createStreamWithRetry(
+  /**
+   * Creates a streaming request with retry.
+   * @param request The parameters for creating a completion.
+   * @returns A streaming request.
+   */
+  protected async createStreamWithRetry(
     request: CompletionCreateParams & Kwargs
-  ) {
+  ): Promise<Stream<Anthropic.Completions.Completion>> {
     if (!this.streamingClient) {
-      const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+      const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.streamingClient = new Anthropic({
         ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
+        maxRetries: 0,
       });
     }
     const makeCompletionRequest = async () =>
-      this.streamingClient.completions.create({ ...request, stream: true });
+      this.streamingClient.completions.create(
+        { ...request, stream: true },
+        { headers: request.headers }
+      );
     return this.caller.call(makeCompletionRequest);
   }
 
   /** @ignore */
-  private async completionWithRetry(
+  protected async completionWithRetry(
     request: CompletionCreateParams & Kwargs,
     options: { signal?: AbortSignal }
   ): Promise<Anthropic.Completions.Completion> {
@@ -365,15 +404,19 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       throw new Error("Missing Anthropic API key.");
     }
     if (!this.batchClient) {
-      const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+      const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.batchClient = new Anthropic({
         ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
+        maxRetries: 0,
       });
     }
     const makeCompletionRequest = async () =>
-      this.batchClient.completions.create({ ...request, stream: false });
+      this.batchClient.completions.create(
+        { ...request, stream: false },
+        { headers: request.headers }
+      );
     return this.caller.callWithOptions(
       { signal: options.signal },
       makeCompletionRequest

@@ -28,6 +28,10 @@ Thought: I should look at state machines within AWS Step Functions to see what a
 
 export interface AWSSfnCreatePromptArgs extends ZeroShotCreatePromptArgs {}
 
+/**
+ * Interface for the arguments required to create an AWS Step Functions
+ * toolkit.
+ */
 export interface AWSSfnToolkitArgs {
   name: string;
   description: string;
@@ -36,6 +40,11 @@ export interface AWSSfnToolkitArgs {
   llm?: BaseLanguageModel;
 }
 
+/**
+ * Class representing a toolkit for interacting with AWS Step Functions.
+ * It initializes the AWS Step Functions tools and provides them as tools
+ * for the agent.
+ */
 export class AWSSfnToolkit extends Toolkit {
   tools: Tool[];
 

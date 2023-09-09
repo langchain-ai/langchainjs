@@ -1,9 +1,15 @@
 import { Callbacks } from "../callbacks/manager.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
 
+/**
+ * Type for the combined output of the CombiningOutputParser class.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CombinedOutput = Record<string, any>;
 
+/**
+ * Interface for the fields required by the CombiningOutputParser class.
+ */
 export interface CombiningOutputParserFields {
   parsers: BaseOutputParser[];
 }
@@ -13,6 +19,10 @@ export interface CombiningOutputParserFields {
  * @augments BaseOutputParser
  */
 export class CombiningOutputParser extends BaseOutputParser<object> {
+  static lc_name() {
+    return "CombiningOutputParser";
+  }
+
   lc_namespace = ["langchain", "output_parsers", "combining"];
 
   lc_serializable = true;
@@ -39,6 +49,13 @@ export class CombiningOutputParser extends BaseOutputParser<object> {
     this.parsers = fields.parsers;
   }
 
+  /**
+   * Method to parse an input string using the parsers in the parsers array.
+   * The parsed outputs are combined into a single object and returned.
+   * @param input The input string to parse.
+   * @param callbacks Optional Callbacks object.
+   * @returns A Promise that resolves to a CombinedOutput object.
+   */
   async parse(input: string, callbacks?: Callbacks): Promise<CombinedOutput> {
     const inputs = input
       .trim()
@@ -65,6 +82,11 @@ export class CombiningOutputParser extends BaseOutputParser<object> {
     return ret;
   }
 
+  /**
+   * Method to get instructions on how to format the LLM output. The
+   * instructions are based on the parsers array and the outputDelimiter.
+   * @returns A string with format instructions.
+   */
   getFormatInstructions(): string {
     return `${[
       `Return the following ${this.parsers.length} outputs, each formatted as described below. Include the delimiter characters "${this.outputDelimiter}" in your response:`,
