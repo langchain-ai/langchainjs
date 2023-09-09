@@ -24,6 +24,7 @@
     "@docusaurus/remark-plugin-npm2yarn": "^2.4.1",
     "@mdx-js/react": "^1.6.22",
     "@mendable/search": "^0.0.150",
+    "@vercel/analytics": "^1.0.2",
     "clsx": "^1.2.1",
     "json-loader": "^0.5.7",
     "process": "^0.11.10",
