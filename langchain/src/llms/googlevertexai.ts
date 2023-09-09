@@ -100,7 +100,10 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller,
-      new GoogleAuth(fields?.authOptions)
+      new GoogleAuth({
+        scopes: "https://www.googleapis.com/auth/cloud-platform",
+        ...fields?.authOptions,
+      })
     );
   }
 

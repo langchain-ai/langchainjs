@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { GoogleVertexAI } from "../googlevertexai.js";
 
-describe.skip("Vertex AI", () => {
+describe("Vertex AI", () => {
   test("Test Google Vertex", async () => {
     const model = new GoogleVertexAI({ maxOutputTokens: 50 });
     const res = await model.call("1 + 1 = ");
