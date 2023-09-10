@@ -392,7 +392,7 @@ export class ChatOpenAI
     let defaultRole: OpenAIRoleEnum | undefined;
     const streamIterable = await this.completionWithRetry(params, options);
     for await (const data of streamIterable) {
-      const choice = data.choices[0];
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }
