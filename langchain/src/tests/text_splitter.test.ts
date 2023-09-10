@@ -323,7 +323,61 @@ test("Test lines loc on iterative text splitter.", async () => {
     }),
     new Document({
       pageContent: "How?\na\nb",
-      metadata: { loc: { lines: { from: 4, to: 6 } } },
+      metadata: { loc: { lines: { from: 2, to: 6 } } },
+    }),
+  ];
+
+  expect(docs).toEqual(expectedDocs);
+});
+
+test("Test lines loc counts correct amount of new lines.", async () => {
+  const text = `Hi.\nI'm Harrison.\n\nHi.\nI'm Harrison.\n\n\n\nHow?\na\nb`;
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 20,
+    chunkOverlap: 0,
+  });
+
+  const docs = await splitter.createDocuments([text]);
+  
+  const expectedDocs = [
+    new Document({
+      pageContent: "Hi.\nI'm Harrison.",
+      metadata: { loc: { lines: { from: 1, to: 2 } } },
+    }),
+    new Document({
+      pageContent: "Hi.\nI'm Harrison.",
+      metadata: { loc: { lines: { from: 2, to: 6 } } },
+    }),
+    new Document({
+      pageContent: "How?\na\nb",
+      metadata: { loc: { lines: { from: 6, to: 11 } } },
+    }),
+  ];
+
+  expect(docs).toEqual(expectedDocs);
+});
+
+test("Returns correct loc for equal block strings", async () => {
+  const text = `\n    {\n    {\nhello`;
+
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 6,
+    chunkOverlap: 0,
+  });
+  const docs = await splitter.createDocuments([text]);
+
+  const expectedDocs = [
+    new Document({
+      pageContent: "{",
+      metadata: { loc: { lines: { from: 2, to: 3 } } },
+    }),
+    new Document({
+      pageContent: "{",
+      metadata: { loc: { lines: { from: 3, to: 4 } } },
+    }),
+    new Document({
+      pageContent: "hello",
+      metadata: { loc: { lines: { from: 4, to: 5 } } },
     }),
   ];
 

@@ -53,7 +53,7 @@ export abstract class TextSplitter
     return this.splitDocuments(documents, chunkHeaderOptions);
   }
 
-  abstract splitText(text: string): Promise<string[]>;
+  abstract splitText(text: string, trim?:boolean): Promise<string[]>;
 
   protected splitOnSeparator(text: string, separator: string): string[] {
     let splits;
@@ -91,16 +91,19 @@ export abstract class TextSplitter
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
       let lineCounterIndex = 1;
-      let prevChunk = null;
-      for (const chunk of await this.splitText(text)) {
+      let prevChunk:string|null = null;
+      let textTraverser = "" // used to get the latest index of a chunk if they are the same
+      
+      for (const chunk of await this.splitText(text, false)) {    
+        textTraverser += chunk
         let pageContent = chunkHeader;
 
         // we need to count the \n that are in the text before getting removed by the splitting
         let numberOfIntermediateNewLines = 0;
         if (prevChunk) {
-          const indexChunk = text.indexOf(chunk);
+          const indexChunk = textTraverser.lastIndexOf(chunk);
           const indexEndPrevChunk =
-            text.indexOf(prevChunk) + (await this.lengthFunction(prevChunk));
+          textTraverser.lastIndexOf(prevChunk) + (await this.lengthFunction(prevChunk));
           const removedNewlinesFromSplittingText = text.slice(
             indexEndPrevChunk,
             indexChunk
@@ -112,6 +115,11 @@ export abstract class TextSplitter
             pageContent += chunkOverlapHeader;
           }
         }
+        else {
+          // get the newlines from the beginning of the text
+          lineCounterIndex += (text.match(/^\n/g) || []).length;
+        }
+        
         lineCounterIndex += numberOfIntermediateNewLines;
         const newLinesCount = (chunk.match(/\n/g) || []).length;
 
@@ -128,7 +136,7 @@ export abstract class TextSplitter
           loc,
         };
 
-        pageContent += chunk;
+        pageContent += chunk.trim();
         documents.push(
           new Document({
             pageContent,
@@ -154,12 +162,13 @@ export abstract class TextSplitter
     return this.createDocuments(texts, metadatas, chunkHeaderOptions);
   }
 
-  private joinDocs(docs: string[], separator: string): string | null {
-    const text = docs.join(separator).trim();
+  private joinDocs(docs: string[], separator: string, trim?: boolean): string | null {
+    let text = docs.join(separator);   
+    if (trim) text = text.trim();
     return text === "" ? null : text;
   }
 
-  async mergeSplits(splits: string[], separator: string): Promise<string[]> {
+  async mergeSplits(splits: string[], separator: string, trim = true): Promise<string[]> {   
     const docs: string[] = [];
     const currentDoc: string[] = [];
     let total = 0;
@@ -176,7 +185,7 @@ which is longer than the specified ${this.chunkSize}`
           );
         }
         if (currentDoc.length > 0) {
-          const doc = this.joinDocs(currentDoc, separator);
+          const doc = this.joinDocs(currentDoc, separator, trim);
           if (doc !== null) {
             docs.push(doc);
           }
@@ -195,7 +204,7 @@ which is longer than the specified ${this.chunkSize}`
       currentDoc.push(d);
       total += _len;
     }
-    const doc = this.joinDocs(currentDoc, separator);
+    const doc = this.joinDocs(currentDoc, separator, trim);
     if (doc !== null) {
       docs.push(doc);
     }
@@ -222,10 +231,10 @@ export class CharacterTextSplitter
     this.separator = fields?.separator ?? this.separator;
   }
 
-  async splitText(text: string): Promise<string[]> {
+  async splitText(text: string, trim = true): Promise<string[]> {   
     // First we naively split the large input into a bunch of smaller ones.
     const splits = this.splitOnSeparator(text, this.separator);
-    return this.mergeSplits(splits, this.keepSeparator ? "" : this.separator);
+    return this.mergeSplits(splits, this.keepSeparator ? "" : this.separator, trim);
   }
 }
 
@@ -272,7 +281,7 @@ export class RecursiveCharacterTextSplitter
     this.keepSeparator = fields?.keepSeparator ?? true;
   }
 
-  private async _splitText(text: string, separators: string[]) {
+  private async _splitText(text: string, separators: string[], trim = true) {
     const finalChunks: string[] = [];
 
     // Get appropriate separator to use
@@ -302,27 +311,27 @@ export class RecursiveCharacterTextSplitter
         goodSplits.push(s);
       } else {
         if (goodSplits.length) {
-          const mergedText = await this.mergeSplits(goodSplits, _separator);
+          const mergedText = await this.mergeSplits(goodSplits, _separator, trim);
           finalChunks.push(...mergedText);
           goodSplits = [];
         }
         if (!newSeparators) {
           finalChunks.push(s);
         } else {
-          const otherInfo = await this._splitText(s, newSeparators);
+          const otherInfo = await this._splitText(s, newSeparators, trim);
           finalChunks.push(...otherInfo);
         }
       }
     }
     if (goodSplits.length) {
-      const mergedText = await this.mergeSplits(goodSplits, _separator);
+      const mergedText = await this.mergeSplits(goodSplits, _separator, trim);
       finalChunks.push(...mergedText);
     }
     return finalChunks;
   }
 
-  async splitText(text: string): Promise<string[]> {
-    return this._splitText(text, this.separators);
+  async splitText(text: string, trim = true): Promise<string[]> {
+    return this._splitText(text, this.separators, trim);
   }
 
   static fromLanguage(
