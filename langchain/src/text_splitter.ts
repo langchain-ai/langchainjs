@@ -115,9 +115,6 @@ export abstract class TextSplitter
           if (appendChunkOverlapHeader) {
             pageContent += chunkOverlapHeader;
           }
-        } else {
-          // get the newlines from the beginning of the text
-          lineCounterIndex += (text.match(/^\n/g) || []).length;
         }
 
         lineCounterIndex += numberOfIntermediateNewLines;
@@ -136,7 +133,7 @@ export abstract class TextSplitter
           loc,
         };
 
-        pageContent += chunk.trim();
+        pageContent += chunk; //.trim();
         documents.push(
           new Document({
             pageContent,

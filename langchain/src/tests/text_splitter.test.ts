@@ -331,9 +331,21 @@ test("Test lines loc on iterative text splitter.", async () => {
 });
 
 test("Test lines loc counts correct amount of new lines.", async () => {
-  const text = `Hi.\nI'm Harrison.\n\nHi.\nI'm Harrison.\n\n\n\nHow?\na\nb`;
+  // lines logic: start from 1. locTo is the line number(starting from 1) of the last line in the chunk.
+
+  let startNewLineCount = 2;
+  let startNewLines = "";
+  for (let i = 0; i < startNewLineCount; i++) {
+    startNewLines += "\n";
+  }
+
+  // first \n\nHi.\nI'm Harrison. - 4 lines (from 1 to 4)
+  // second \n\nHi.\nI'm Harrison. - 4 lines (from 5 to 8)
+  // third \n\n\n\nHow?\na\nb (12 chars) - 7 lines (from 9 to 16)
+
+  const text = `${startNewLines}Hi.\nI'm Harrison.\n\nHi.\nI'm Harrison.\n\n\n\nHow?\na\nb`;
   const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 20,
+    chunkSize: startNewLineCount + 17,
     chunkOverlap: 0,
   });
 
@@ -341,16 +353,16 @@ test("Test lines loc counts correct amount of new lines.", async () => {
 
   const expectedDocs = [
     new Document({
-      pageContent: "Hi.\nI'm Harrison.",
-      metadata: { loc: { lines: { from: 1, to: 2 } } },
+      pageContent: "\n\nHi.\nI'm Harrison.",
+      metadata: { loc: { lines: { from: 1, to: 4 } } },
     }),
     new Document({
-      pageContent: "Hi.\nI'm Harrison.",
-      metadata: { loc: { lines: { from: 2, to: 6 } } },
+      pageContent: "\n\nHi.\nI'm Harrison.",
+      metadata: { loc: { lines: { from: 5, to: 8 } } },
     }),
     new Document({
-      pageContent: "How?\na\nb",
-      metadata: { loc: { lines: { from: 6, to: 11 } } },
+      pageContent: "\n\n\n\nHow?\na\nb",
+      metadata: { loc: { lines: { from: 9, to: 16 } } },
     }),
   ];
 
