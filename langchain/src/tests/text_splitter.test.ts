@@ -338,7 +338,7 @@ test("Test lines loc counts correct amount of new lines.", async () => {
   });
 
   const docs = await splitter.createDocuments([text]);
-  
+
   const expectedDocs = [
     new Document({
       pageContent: "Hi.\nI'm Harrison.",
