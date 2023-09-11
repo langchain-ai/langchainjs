@@ -1,6 +1,4 @@
 import {expect, test} from "@jest/globals";
-import {CriteriaEvalChain, LabeledCriteriaEvalChain} from "../criteria.js";
-import {ChatOpenAI} from "../../../chat_models/openai.js";
 import {PRINCIPLES} from "../../../chains/index.js";
 import {ChatAnthropic} from "../../../chat_models/anthropic.js";
 import {PromptTemplate} from "../../../prompts/index.js";
@@ -19,7 +17,7 @@ test.skip("Test CriteriaEvalChain", async () => {
     console.log({res});
 });
 
-test("Test LabeledCriteriaEvalChain", async () => {
+test.skip("Test LabeledCriteriaEvalChain", async () => {
     const evaluator = await loadEvaluator("labeled_criteria", {criteria: "correctness"});
 
     const res = await evaluator.evaluateStrings({
@@ -34,36 +32,24 @@ test("Test LabeledCriteriaEvalChain", async () => {
 });
 
 test.skip("Test Custom Criteria", async () => {
-    const model = new ChatOpenAI(
-        {
-            modelName: "gpt-4",
-            verbose: true,
-        },
-        {baseURL: process.env.BASE_URL}
-    );
+
     const customCriterion = {
         numeric: "Does the output contain numeric or mathematical information?",
     };
 
-    const chain = await CriteriaEvalChain.fromLLM(model, customCriterion);
+    const evaluator = await loadEvaluator("criteria", {criteria: customCriterion});
 
-    console.log("beginning evaluation");
-    const res = await chain.evaluateStrings({
+    const res = await evaluator.evaluateStrings({
         input: "Tell me a joke",
         prediction: "I ate some square pie but I don't know the square of pi.",
     });
 
+    expect(res.score).toBe(1);
     console.log(res);
 });
 
 test.skip("Test Custom Multiple Criteria", async () => {
-    const model = new ChatOpenAI(
-        {
-            modelName: "gpt-4",
-            verbose: true,
-        },
-        {baseURL: process.env.BASE_URL}
-    );
+
     const customCriterion = {
         numeric: "Does the output contain numeric information?",
         mathematical: "Does the output contain mathematical information?",
@@ -71,60 +57,46 @@ test.skip("Test Custom Multiple Criteria", async () => {
         logical: "Is the output logical?",
     };
 
-    const chain = await CriteriaEvalChain.fromLLM(model, customCriterion);
+    const chain = await loadEvaluator("criteria", {criteria: customCriterion});
 
-    console.log("beginning evaluation");
     const res = await chain.evaluateStrings({
         input: "Tell me a joke",
         prediction: "I ate some square pie but I don't know the square of pi.",
     });
 
+    expect(res.score).toBe(0);
     console.log(res);
 });
 
 test.skip("Test Using Constitutional Principles ", async () => {
-    const model = new ChatOpenAI(
-        {
-            modelName: "gpt-4",
-            verbose: true,
-        },
-        {baseURL: process.env.BASE_URL}
-    );
 
-    const chain = await CriteriaEvalChain.fromLLM(model, PRINCIPLES.harmful1);
+    const chain = await loadEvaluator("criteria", {criteria: PRINCIPLES.harmful1});
 
     console.log("beginning evaluation");
     const res = await chain.evaluateStrings({
         input: "What do you think of Will?",
         prediction: "I say that man is a lilly-livered nincompoop",
     });
-
+    expect(res.score).toBe(1);
     console.log(res);
 });
 
 test.skip("Test Configuring the LLM", async () => {
     const model = new ChatAnthropic();
 
-    const chain = await CriteriaEvalChain.fromLLM(model, PRINCIPLES.harmful1);
+    const chain = await loadEvaluator("criteria", {criteria: PRINCIPLES.harmful1, llm: model});
 
-    console.log("beginning evaluation");
     const res = await chain.evaluateStrings({
         input: "What's 2+2?",
         prediction:
             "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four.",
     });
 
+    expect(res.score).toBe(0);
     console.log(res);
 });
 
-test.skip("Test Configuring the Prompt", async () => {
-    const model = new ChatOpenAI(
-        {
-            modelName: "gpt-4",
-            verbose: true,
-        },
-        {baseURL: process.env.BASE_URL}
-    );
+test("Test Configuring the Prompt", async () => {
 
     const template = `Respond Y or N based on how well the following response follows the specified rubric. Grade only based on the rubric and expected response:
 
@@ -138,11 +110,11 @@ test.skip("Test Configuring the Prompt", async () => {
     ---------
         Write out your explanation for each criterion, then respond with Y or N on a new line.`;
 
-    const chain = await LabeledCriteriaEvalChain.fromLLM(model, "correctness", {
-        prompt: PromptTemplate.fromTemplate(template),
+    const chain = await loadEvaluator("labeled_criteria", {
+        criteria: "correctness", chainOptions: {
+            prompt: PromptTemplate.fromTemplate(template)
+        }
     });
-
-    console.log("beginning evaluation");
 
     const res = await chain.evaluateStrings({
         prediction:
@@ -151,5 +123,6 @@ test.skip("Test Configuring the Prompt", async () => {
         reference: "It's 17 now.",
     });
 
+    expect(res.score).toBe(0);
     console.log(res);
 });
