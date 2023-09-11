@@ -24,7 +24,7 @@ import { BaseCallbackConfig } from "../../callbacks/manager.js";
  * CHEBYSHEV: Chebyshev distance metric.
  * HAMMING: Hamming distance metric.
  */
-type EmbeddingDistance = "cosine" | "euclidean" | "manhattan" | "chebyshev";
+export type EmbeddingDistance = "cosine" | "euclidean" | "manhattan" | "chebyshev";
 
 /**
  * Embedding Distance Evaluation Chain Input.

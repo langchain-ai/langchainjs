@@ -6,12 +6,12 @@ import {StructuredTool} from "../tools/index.js";
 import {LLMEvalChainInput} from "./base.js";
 import {LabeledPairwiseStringEvalChain, PairwiseStringEvalChain} from "./comparison/index.js";
 import {
-    EmbeddingDistanceEvalChain,
+    EmbeddingDistanceEvalChain, EmbeddingDistanceEvalChainInput,
     PairwiseEmbeddingDistanceEvalChain
 } from "./embedding_distance/index.js";
 import {TrajectoryEvalChain} from "./agents/index.js";
 
-interface LoadEvaluatorOptions {
+interface LoadEvaluatorOptions extends EmbeddingDistanceEvalChainInput {
     llm?: BaseLanguageModel,
 
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
@@ -61,7 +61,10 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(type: T, opti
             evaluator = await TrajectoryEvalChain.fromLLM(llm_, agentTools, chainOptions);
             break;
         case "embedding_distance":
-            evaluator = new EmbeddingDistanceEvalChain({});
+            evaluator = new EmbeddingDistanceEvalChain({
+                embedding: options?.embedding,
+                distanceMetric: options?.distanceMetric
+            });
             break;
         case "pairwise_embedding_distance":
             evaluator = new PairwiseEmbeddingDistanceEvalChain({});
