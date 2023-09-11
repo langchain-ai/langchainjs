@@ -28,7 +28,6 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
         `Credentials not found. Please set the GOOGLE_VERTEX_AI_WEB_CREDENTIALS or pass credentials into "authOptions.credentials".`
       );
     this.credentials = getCredentials(credentials);
-    console.log(this.credentials);
   }
 
   async getProjectId() {
