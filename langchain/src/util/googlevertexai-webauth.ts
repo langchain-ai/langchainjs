@@ -6,20 +6,17 @@ import {
 import { getEnvironmentVariable } from "./env.js";
 import type { GoogleVertexAIAbstractedClient } from "../types/googlevertexai-types.js";
 
-export interface WebGoogleAuthOptions {
-  scopes?: string | string[];
-  credentials: Credentials | string;
-}
+export type WebGoogleAuthOptions = Omit<
+  Parameters<typeof getAccessToken>[0],
+  "waitUntil" | "cache" | "env"
+>;
 
 export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
-  scopes: string | string[];
+  options: WebGoogleAuthOptions;
 
-  credentials: Credentials;
+  #credentials: Credentials;
 
   constructor(options?: WebGoogleAuthOptions) {
-    this.scopes =
-      options?.scopes ?? "https://www.googleapis.com/auth/cloud-platform";
-
     const credentials =
       options?.credentials ??
       getEnvironmentVariable("GOOGLE_VERTEX_AI_WEB_CREDENTIALS");
@@ -27,18 +24,21 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
       throw new Error(
         `Credentials not found. Please set the GOOGLE_VERTEX_AI_WEB_CREDENTIALS or pass credentials into "authOptions.credentials".`
       );
-    this.credentials = getCredentials(credentials);
+
+    this.#credentials = getCredentials(credentials);
+    this.options = {
+      ...options,
+      credentials,
+      scope: "https://www.googleapis.com/auth/cloud-platform",
+    };
   }
 
   async getProjectId() {
-    return this.credentials.project_id;
+    return this.#credentials.project_id;
   }
 
   async request(opts: { url?: string; method?: string; data?: unknown }) {
-    const accessToken = await getAccessToken({
-      credentials: this.credentials,
-      scope: this.scopes,
-    });
+    const accessToken = await getAccessToken(this.options);
 
     if (opts.url == null) throw new Error("Missing URL");
     const fetchOptions: {
