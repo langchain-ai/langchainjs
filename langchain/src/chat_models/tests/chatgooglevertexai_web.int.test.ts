@@ -15,7 +15,7 @@ import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatGoogleVertexAI } from "../googlevertexai/web.js";
 
-describe.skip("ChatGoogleVertexAIWeb", () => {
+describe("ChatGoogleVertexAIWeb", () => {
   test("call", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
