@@ -66,6 +66,14 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
     command: bash /scripts/docker-ci-entrypoint.sh
+  test-exports-bun:
+    image: oven/bun
+    working_dir: /app
+    volumes:
+      - ./environment_tests/test-exports-bun:/package
+      - ./environment_tests/scripts:/scripts
+      - ./langchain:/langchain-workspace
+    command: bash /scripts/docker-bun-ci-entrypoint.sh
   success:
     image: alpine:3.14
     command: echo "Success"
@@ -81,4 +89,6 @@ services:
       test-exports-vercel:
         condition: service_completed_successfully
       test-exports-vite:
+        condition: service_completed_successfully
+      test-exports-bun:
         condition: service_completed_successfully

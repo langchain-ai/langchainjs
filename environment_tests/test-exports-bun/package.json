@@ -1,0 +1,29 @@
+{
+  "name": "test-exports-bun",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tests for the things exported by the langchain package",
+  "main": "./index.mjs",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "bun run test:esm && bun run test:cjs && bun run test:cjs:import && bun run test:entrypoints && bun run test:ts",
+    "test:esm": "bun src/index.js",
+    "test:cjs": "bun src/require.cjs",
+    "test:cjs:import": "bun src/import.cjs",
+    "test:entrypoints": "bun src/entrypoints.js",
+    "test:ts": "bun dist/index.js"
+  },
+  "author": "LangChain",
+  "license": "MIT",
+  "dependencies": {
+    "d3-dsv": "2",
+    "hnswlib-node": "^1.4.2",
+    "langchain": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^18.15.11",
+    "typescript": "^5.0.0"
+  }
+}

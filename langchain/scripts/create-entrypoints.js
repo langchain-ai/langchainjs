@@ -397,6 +397,7 @@ const testExports = [
   ["test-exports-cf", (p) => `export * from "langchain/${p}";`],
   ["test-exports-vercel", (p) => `export * from "langchain/${p}";`],
   ["test-exports-vite", (p) => `export * from "langchain/${p}";`],
+  ["test-exports-bun", (p) => `export * from "langchain/${p}";`],
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {
