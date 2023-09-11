@@ -1,7 +1,7 @@
 import {expect, test} from "@jest/globals";
 import {loadEvaluator} from "../../loader.js";
 
-test.skip("Test Embedding Distance", async () => {
+test("Test Embedding Distance", async () => {
 
     const chain = await loadEvaluator("embedding_distance");
 

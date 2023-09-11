@@ -1,47 +1,22 @@
-import { test } from "@jest/globals";
-import { ChatOpenAI } from "../../../chat_models/openai.js";
-import {
-  LabeledPairwiseStringEvalChain,
-  PairwiseStringEvalChain,
-} from "../pairwise.js";
+import {expect, test} from "@jest/globals";
+import {loadEvaluator} from "../../loader.js";
 
-test.skip("Test TrajectoryEvalChain", async () => {
-  const model = new ChatOpenAI(
-    {
-      modelName: "gpt-4",
-      verbose: true,
-    },
-    { baseURL: process.env.BASE_URL }
-  );
+test.skip("Test PairwiseStringEvalChain", async () => {
+  const chain = await loadEvaluator("pairwise_string",{criteria: "conciseness"}) ;
 
-  const chain = await PairwiseStringEvalChain.fromLLM(model, "conciseness");
-
-  console.log("beginning evaluation");
   const res = await chain.evaluateStringPairs({
     prediction: "Addition is a mathematical operation.",
     predictionB:
       "Addition is a mathematical operation that adds two numbers to create a third number, the 'sum'.",
     input: "What is addition?",
   });
-
+  expect(res.score).toBe(0);
   console.log({ res });
 });
 
 test.skip("Test LabeledPairwiseStringEvalChain", async () => {
-  const model = new ChatOpenAI(
-    {
-      modelName: "gpt-4",
-      verbose: true,
-    },
-    { baseURL: process.env.BASE_URL }
-  );
+  const chain = await loadEvaluator("labeled_pairwise_string",{criteria: "correctness"}) ;
 
-  const chain = await LabeledPairwiseStringEvalChain.fromLLM(
-    model,
-    "correctness"
-  );
-
-  console.log("beginning evaluation");
   const res = await chain.evaluateStringPairs({
     prediction: "there are three dogs",
     predictionB: "4",
@@ -49,17 +24,11 @@ test.skip("Test LabeledPairwiseStringEvalChain", async () => {
     reference: "four",
   });
 
+  expect(res.score).toBe(0);
   console.log(res);
 });
 
 test("Test Custom  Criteria", async () => {
-  const model = new ChatOpenAI(
-    {
-      modelName: "gpt-4",
-      verbose: true,
-    },
-    { baseURL: process.env.BASE_URL }
-  );
 
   const customCriterion = {
     simplicity: "Is the language straightforward and unpretentious?",
@@ -69,9 +38,8 @@ test("Test Custom  Criteria", async () => {
     subtext: "Does the writing suggest deeper meanings or themes?",
   };
 
-  const chain = await PairwiseStringEvalChain.fromLLM(model, customCriterion);
+  const chain = await loadEvaluator("pairwise_string",{criteria: customCriterion});
 
-  console.log("beginning evaluation");
   const res = await chain.evaluateStringPairs({
     prediction:
       "Every cheerful household shares a similar rhythm of joy; but sorrow, in each household, plays a unique, haunting melody.",
@@ -79,6 +47,7 @@ test("Test Custom  Criteria", async () => {
       "Where one finds a symphony of joy, every domicile of happiness resounds in harmonious, identical notes; yet, every abode of despair conducts a dissonant orchestra, each playing an elegy of grief that is peculiar and profound to its own existence.",
     input: "Write some prose about families.",
   });
+  expect(res.score).toBe(1);
 
   console.log(res);
 });
