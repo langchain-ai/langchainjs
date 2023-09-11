@@ -158,8 +158,8 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
     "array": JsonSchema7ArrayType,
   };
 
-  function expectType<T extends keyof TypeMap>(type: T, schema: JsonSchema7Type): TypeMap[T] {
-    if (!('type' in schema)) {
+  function expectType<T extends keyof TypeMap>(type: T, schema: JsonSchema7Type | undefined): TypeMap[T] {
+    if (!schema || !('type' in schema)) {
       throw new Error(`Schema has no type`);
     }
     if (schema.type !== type) {
