@@ -15,6 +15,10 @@ import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
  * environment variable or directly as "authOptions.credentials".
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOptions> {
+  static lc_name() {
+    return "ChatVertexAI";
+  }
+
   get lc_secrets(): { [key: string]: string } {
     return {
       "authOptions.credentials": "GOOGLE_VERTEX_AI_WEB_CREDENTIALS",

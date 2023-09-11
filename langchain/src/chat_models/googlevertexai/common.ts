@@ -166,10 +166,6 @@ export class BaseChatGoogleVertexAI<AuthOptions>
   extends BaseChatModel
   implements GoogleVertexAIChatInput<AuthOptions>
 {
-  static lc_name() {
-    return "ChatGoogleVertexAI";
-  }
-
   lc_serializable = true;
 
   model = "chat-bison";
@@ -190,6 +186,12 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     GoogleVertexAIChatPrediction,
     AuthOptions
   >;
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_name",
+    };
+  }
 
   constructor(fields?: GoogleVertexAIChatInput<AuthOptions>) {
     super(fields ?? {});
@@ -237,7 +239,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
   }
 
   _llmType(): string {
-    return "googlevertexai";
+    return "vertexai";
   }
 
   /**

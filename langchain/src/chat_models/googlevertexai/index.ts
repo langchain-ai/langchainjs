@@ -17,6 +17,10 @@ import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connectio
  *   Google Cloud project using Vertex AI.
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<GoogleAuthOptions> {
+  static lc_name() {
+    return "ChatVertexAI";
+  }
+
   constructor(fields?: GoogleVertexAIChatInput<GoogleAuthOptions>) {
     super(fields);
 
