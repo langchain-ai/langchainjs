@@ -31,9 +31,7 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
         generations: Generation[] | ChatGeneration[],
         _callbacks: Callbacks | undefined
     ): Promise<EvalOutputType> {
-        console.log("generations", generations);
         const {text} = generations[0];
-        console.log("text", text);
 
         if (!text.includes("Score:")) {
             throw new Error(`Could not find score in model eval output: ${text}`);
@@ -50,7 +48,6 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
         // The score should be an integer digit in the range 1-5.
 
         const scoreMatch = scoreStr.match(/(\d+(\.\d+)?)/);
-        console.log("scoreMatch", scoreMatch);
         if (scoreMatch === null || scoreMatch[1].includes(".")) {
             throw new Error(
                 `Score is not an integer digit in the range 1-5: ${text}`
@@ -135,13 +132,13 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
             throw new Error("LLM must be a chat model");
         }
 
-        const prompt = this.resolveTrajectoryPrompt(
+        let prompt = this.resolveTrajectoryPrompt(
             chainOptions?.prompt,
             agentTools
         );
         if (agentTools) {
             const toolDescriptions = this.toolsDescription(agentTools);
-            await prompt.partial({toolDescriptions});
+            prompt = await prompt.partial({toolDescriptions});
         }
 
         const options = chainOptions;
