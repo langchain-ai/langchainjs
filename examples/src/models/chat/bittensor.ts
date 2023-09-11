@@ -1,4 +1,5 @@
 import { NIBittensorLLM } from "langchain/experimental/chat_models/bittensor";
+
 const model = new NIBittensorLLM();
 
 const res = await model.call(`What is Bittensor?`);
