@@ -370,6 +370,9 @@ export interface OptionalImportMap {
   "langchain/experimental/chat_models/anthropic_functions"?:
     | typeof import("../experimental/chat_models/anthropic_functions.js")
     | Promise<typeof import("../experimental/chat_models/anthropic_functions.js")>;
+  "langchain/experimental/chat_models/bittensor"?:
+    | typeof import("../experimental/chat_models/bittensor.js")
+    | Promise<typeof import("../experimental/chat_models/bittensor.js")>;
 }
 
 export interface SecretMap {

@@ -223,6 +223,7 @@
       "src/experimental/plan_and_execute/index.ts",
       "src/experimental/multimodal_embeddings/googlevertexai.ts",
       "src/experimental/chat_models/anthropic_functions.ts",
+      "src/experimental/chat_models/bittensor.ts",
       "src/evaluation/index.ts"
     ],
     "sort": [
