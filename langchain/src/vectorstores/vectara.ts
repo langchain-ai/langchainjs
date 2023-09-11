@@ -269,31 +269,24 @@ export class VectaraStore extends VectorStore {
       data.append("file", file.blob, file.fileName);
       data.append("doc-metadata", JSON.stringify(md));
 
-      try {
-        const response = await fetch(
-          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId[0]}`,
-          {
-            method: "POST",
-            headers: {
-              "x-api-key": this.apiKey,
-            },
-            body: data,
-          }
-        );
-
-        const result = await response.json();
-        const { status } = response;
-        if (status === 409) {
-          throw new Error(`File at index ${index} already exists in Vectara`);
-        } else if (status !== 200) {
-          throw new Error(
-            `Vectara API returned status code ${status}: ${result}`
-          );
-        } else {
-          numDocs += 1;
+      const response = await fetch(
+        `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId[0]}`,
+        {
+          method: "POST",
+          headers: {
+            "x-api-key": this.apiKey,
+          },
+          body: data,
         }
-      } catch (err) {
-        throw new Error(`Failed to upload file at index ${index}: ${err}`);
+      );
+
+      const { status } = response;
+      if (status === 409) {
+        throw new Error(`File at index ${index} already exists in Vectara`);
+      } else if (status !== 200) {
+        throw new Error(`Vectara API returned status code ${status}`);
+      } else {
+        numDocs += 1;
       }
     }
 
