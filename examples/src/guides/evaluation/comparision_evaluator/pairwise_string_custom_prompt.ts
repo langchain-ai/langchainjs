@@ -1,5 +1,5 @@
 import {loadEvaluator} from "langchain/evaluation";
-import {PromptTemplate} from "langchain";
+import {PromptTemplate} from "langchain/prompts";
 
 
 const promptTemplate = PromptTemplate.fromTemplate(

@@ -40,7 +40,7 @@ const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
 /**
  * A parser for the output of the PairwiseStringEvalChain.
  */
-export class PairwiseResultOutputParser extends BaseLLMOutputParser<EvalOutputType> {
+export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOutputType> {
   lc_namespace: string[];
 
   parseResult(
@@ -99,7 +99,7 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
   skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.
     To use references, use the LabeledPairwiseStringEvalChain instead.`;
 
-  outputParser = new PairwiseResultOutputParser();
+  outputParser = new PairwiseStringResultOutputParser();
 
   static resolvePairwiseCriteria(
     criteria?: CRITERIA_TYPE

@@ -1,4 +1,4 @@
-import {OpenAI} from "langchain";
+import {OpenAI} from "langchain/llms/openai";
 import {SerpAPI} from "langchain/tools";
 import {Calculator} from "langchain/tools/calculator";
 import {initializeAgentExecutorWithOptions} from "langchain/agents";
@@ -37,15 +37,15 @@ const result = await executor.call({input});
 // Evaluate Trajectory
 
 
-// const chain = await loadEvaluator("trajectory");
-//
-// const res = await chain.evaluateAgentTrajectory({
-//     prediction: result.output,
-//     input,
-//     agentTrajectory: result.intermediateSteps,
-// });
-//
-// console.log({res});
+const chain = await loadEvaluator("trajectory");
+
+const res = await chain.evaluateAgentTrajectory({
+    prediction: result.output,
+    input,
+    agentTrajectory: result.intermediateSteps,
+});
+
+console.log({res});
 
 
 /*
