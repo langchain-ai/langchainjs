@@ -391,6 +391,8 @@ export interface SecretMap {
   DATABERRY_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
+  GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
+  GOOGLE_VERTEX_AI_WEB_SCOPE?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
