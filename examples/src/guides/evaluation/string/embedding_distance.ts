@@ -1,5 +1,4 @@
 import {loadEvaluator} from "langchain/evaluation";
-import {OpenAIEmbeddings} from "langchain/embeddings/openai";
 import {FakeEmbeddings} from "langchain/embeddings/fake";
 
 

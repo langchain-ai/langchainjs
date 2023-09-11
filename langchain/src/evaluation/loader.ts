@@ -40,8 +40,7 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(type: T, opti
     const llm_ = llm || new ChatOpenAI({
         modelName: "gpt-4",
         temperature: 0.0
-    }, {baseURL: process.env.BASE_URL});
-
+    });
 
     let evaluator: unknown;
     switch (type) {
