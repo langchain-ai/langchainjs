@@ -115,9 +115,9 @@ export class PineconeStore extends VectorStore {
       const metadata: {
         [key: string]: string | number | boolean | string[] | null;
       } = {
-        ...flatten(documentMetadata),
-        ...stringArrays,
         [this.textKey]: documents[idx].pageContent,
+        ...flatten(documentMetadata),
+        ...stringArrays
       };
       // Pinecone doesn't support null values, so we remove them
       for (const key of Object.keys(metadata)) {
