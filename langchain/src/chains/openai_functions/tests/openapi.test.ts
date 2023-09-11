@@ -5,6 +5,7 @@ import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js"
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
+import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import { OpenAPISpec } from "../../../util/openapi.js";
 import { convertOpenAPISchemaToJSONSchema } from "../openapi.js";
 
@@ -157,7 +158,10 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
     "array": JsonSchema7ArrayType,
   };
 
-  function expectType<T extends keyof TypeMap>(type: T, schema: any): TypeMap[T] {
+  function expectType<T extends keyof TypeMap>(type: T, schema: JsonSchema7Type): TypeMap[T] {
+    if (!('type' in schema)) {
+      throw new Error(`Schema has no type`);
+    }
     if (schema.type !== type) {
       throw new Error(`Unexpected type: ${schema.type}`);
     }
