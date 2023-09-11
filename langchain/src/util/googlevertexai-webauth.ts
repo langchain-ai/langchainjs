@@ -6,9 +6,9 @@ import {
 import { getEnvironmentVariable } from "./env.js";
 import type { GoogleVertexAIAbstractedClient } from "../types/googlevertexai-types.js";
 
-export type WebGoogleAuthOptions = Omit<
+export type WebGoogleAuthOptions = Pick<
   Parameters<typeof getAccessToken>[0],
-  "waitUntil" | "cache" | "env"
+  "credentials" | "scope"
 >;
 
 export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
@@ -25,12 +25,13 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
         `Credentials not found. Please set the GOOGLE_VERTEX_AI_WEB_CREDENTIALS or pass credentials into "authOptions.credentials".`
       );
 
+    const scope =
+      options?.scope ??
+      getEnvironmentVariable("GOOGLE_VERTEX_AI_WEB_SCOPE") ??
+      "https://www.googleapis.com/auth/cloud-platform";
+
     this.#credentials = getCredentials(credentials);
-    this.options = {
-      ...options,
-      credentials,
-      scope: "https://www.googleapis.com/auth/cloud-platform",
-    };
+    this.options = { ...options, credentials, scope };
   }
 
   async getProjectId() {
