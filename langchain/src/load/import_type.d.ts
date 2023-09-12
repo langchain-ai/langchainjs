@@ -71,8 +71,11 @@ export interface OptionalImportMap {
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
   "langchain/llms/googlevertexai"?:
-    | typeof import("../llms/googlevertexai.js")
-    | Promise<typeof import("../llms/googlevertexai.js")>;
+    | typeof import("../llms/googlevertexai/index.js")
+    | Promise<typeof import("../llms/googlevertexai/index.js")>;
+  "langchain/llms/googlevertexai/web"?:
+    | typeof import("../llms/googlevertexai/web.js")
+    | Promise<typeof import("../llms/googlevertexai/web.js")>;
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;

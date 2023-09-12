@@ -162,6 +162,11 @@ export interface GoogleVertexAIChatInput<AuthOptions>
   examples?: ChatExample[];
 }
 
+/**
+ * Base class for Google Vertex AI chat models.
+ * Implemented subclasses must provide a GoogleVertexAILLMConnection
+ * with appropriate auth client.
+ */
 export class BaseChatGoogleVertexAI<AuthOptions>
   extends BaseChatModel
   implements GoogleVertexAIChatInput<AuthOptions>

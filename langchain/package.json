@@ -139,6 +139,9 @@
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
+    "llms/googlevertexai/web.cjs",
+    "llms/googlevertexai/web.js",
+    "llms/googlevertexai/web.d.ts",
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
@@ -1323,6 +1326,11 @@
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
       "require": "./llms/googlevertexai.cjs"
+    },
+    "./llms/googlevertexai/web": {
+      "types": "./llms/googlevertexai/web.d.ts",
+      "import": "./llms/googlevertexai/web.js",
+      "require": "./llms/googlevertexai/web.cjs"
     },
     "./llms/googlepalm": {
       "types": "./llms/googlepalm.d.ts",
