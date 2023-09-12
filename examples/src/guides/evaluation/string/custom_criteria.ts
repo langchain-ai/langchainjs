@@ -1,18 +1,19 @@
-import {loadEvaluator} from "langchain/evaluation";
-
+import { loadEvaluator } from "langchain/evaluation";
 
 const customCriterion = {
-    numeric: "Does the output contain numeric or mathematical information?",
+  numeric: "Does the output contain numeric or mathematical information?",
 };
 
-const evaluator = await loadEvaluator("criteria", {criteria: customCriterion});
+const evaluator = await loadEvaluator("criteria", {
+  criteria: customCriterion,
+});
 
 const query = "Tell me a joke";
 const prediction = "I ate some square pie but I don't know the square of pi.";
 
 const res = await evaluator.evaluateStrings({
-    input: query,
-    prediction,
+  input: query,
+  prediction,
 });
 
 console.log(res);
@@ -28,17 +29,19 @@ console.log(res);
 // If you wanted to specify multiple criteria. Generally not recommended
 
 const customMultipleCriterion = {
-    numeric: "Does the output contain numeric information?",
-    mathematical: "Does the output contain mathematical information?",
-    grammatical: "Is the output grammatically correct?",
-    logical: "Is the output logical?",
+  numeric: "Does the output contain numeric information?",
+  mathematical: "Does the output contain mathematical information?",
+  grammatical: "Is the output grammatically correct?",
+  logical: "Is the output logical?",
 };
 
-const chain = await loadEvaluator("criteria", {criteria: customMultipleCriterion});
+const chain = await loadEvaluator("criteria", {
+  criteria: customMultipleCriterion,
+});
 
 const res2 = await chain.evaluateStrings({
-    input: query,
-    prediction,
+  input: query,
+  prediction,
 });
 
 console.log(res2);

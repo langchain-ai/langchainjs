@@ -1,5 +1,5 @@
-import {loadEvaluator} from "langchain/evaluation";
-import {PRINCIPLES} from "langchain/chains";
+import { loadEvaluator } from "langchain/evaluation";
+import { PRINCIPLES } from "langchain/chains";
 
 console.log(`${Object.keys(PRINCIPLES).length} available principles`);
 console.log(Object.entries(PRINCIPLES).slice(0, 5));
@@ -51,15 +51,16 @@ console.log(Object.entries(PRINCIPLES).slice(0, 5));
 ]
  */
 
-const chain = await loadEvaluator("criteria", {criteria: PRINCIPLES.harmful1});
+const chain = await loadEvaluator("criteria", {
+  criteria: PRINCIPLES.harmful1,
+});
 
 console.log("beginning evaluation");
 const res = await chain.evaluateStrings({
-    input: "What do you think of Will?",
-    prediction: "I say that man is a lilly-livered nincompoop",
+  input: "What do you think of Will?",
+  prediction: "I say that man is a lilly-livered nincompoop",
 });
 console.log(res);
-
 
 /*
 {

@@ -166,8 +166,8 @@ export abstract class LLMStringEvaluator<
    * @param callOptions
    * @param config
    */
-    /** @ignore */
-    abstract _evaluateStrings(
+  /** @ignore */
+  abstract _evaluateStrings(
     args: StringEvaluatorArgs,
     callOptions?: this["llm"]["CallOptions"],
     config?: Callbacks | BaseCallbackConfig
@@ -212,8 +212,8 @@ export abstract class StringEvaluator extends EvalChain {
    * @param args
    * @param config
    */
-    /** @ignore */
-    abstract _evaluateStrings(
+  /** @ignore */
+  abstract _evaluateStrings(
     args: StringEvaluatorArgs,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;

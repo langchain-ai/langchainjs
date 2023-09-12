@@ -1,15 +1,15 @@
-import {loadEvaluator} from "langchain/evaluation";
-import {ChatAnthropic} from "langchain/chat_models/anthropic";
+import { loadEvaluator } from "langchain/evaluation";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 
-const model = new ChatAnthropic({temperature: 0});
+const model = new ChatAnthropic({ temperature: 0 });
 
-const chain = await loadEvaluator("labeled_pairwise_string",{llm:model});
+const chain = await loadEvaluator("labeled_pairwise_string", { llm: model });
 
 const res = await chain.evaluateStringPairs({
-    prediction: "there are three dogs",
-    predictionB: "4",
-    input: "how many dogs are in the park?",
-    reference: "four",
+  prediction: "there are three dogs",
+  predictionB: "4",
+  input: "how many dogs are in the park?",
+  reference: "four",
 });
 
 console.log(res);

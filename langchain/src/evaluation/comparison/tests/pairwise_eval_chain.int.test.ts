@@ -1,8 +1,10 @@
-import {expect, test} from "@jest/globals";
-import {loadEvaluator} from "../../loader.js";
+import { expect, test } from "@jest/globals";
+import { loadEvaluator } from "../../loader.js";
 
 test.skip("Test PairwiseStringEvalChain", async () => {
-  const chain = await loadEvaluator("pairwise_string",{criteria: "conciseness"}) ;
+  const chain = await loadEvaluator("pairwise_string", {
+    criteria: "conciseness",
+  });
 
   const res = await chain.evaluateStringPairs({
     prediction: "Addition is a mathematical operation.",
@@ -15,7 +17,9 @@ test.skip("Test PairwiseStringEvalChain", async () => {
 });
 
 test.skip("Test LabeledPairwiseStringEvalChain", async () => {
-  const chain = await loadEvaluator("labeled_pairwise_string",{criteria: "correctness"}) ;
+  const chain = await loadEvaluator("labeled_pairwise_string", {
+    criteria: "correctness",
+  });
 
   const res = await chain.evaluateStringPairs({
     prediction: "there are three dogs",
@@ -29,7 +33,6 @@ test.skip("Test LabeledPairwiseStringEvalChain", async () => {
 });
 
 test("Test Custom  Criteria", async () => {
-
   const customCriterion = {
     simplicity: "Is the language straightforward and unpretentious?",
     clarity: "Are the sentences clear and easy to understand?",
@@ -38,7 +41,9 @@ test("Test Custom  Criteria", async () => {
     subtext: "Does the writing suggest deeper meanings or themes?",
   };
 
-  const chain = await loadEvaluator("pairwise_string",{criteria: customCriterion});
+  const chain = await loadEvaluator("pairwise_string", {
+    criteria: customCriterion,
+  });
 
   const res = await chain.evaluateStringPairs({
     prediction:

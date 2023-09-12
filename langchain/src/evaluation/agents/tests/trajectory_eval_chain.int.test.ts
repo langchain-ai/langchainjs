@@ -1,14 +1,12 @@
-import {expect, test} from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../../llms/openai.js";
 import { Calculator } from "../../../tools/calculator.js";
 import { SerpAPI } from "../../../tools/index.js";
 import { initializeAgentExecutorWithOptions } from "../../../agents/index.js";
-import {loadEvaluator} from "../../loader.js";
+import { loadEvaluator } from "../../loader.js";
 
 test("Test TrajectoryEvalChain", async () => {
-  const model = new OpenAI(
-    { temperature: 0 },
-  );
+  const model = new OpenAI({ temperature: 0 });
 
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -24,14 +22,11 @@ test("Test TrajectoryEvalChain", async () => {
     returnIntermediateSteps: true,
   });
 
-
-
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
   const result = await executor.call({ input });
 
-
-  const chain = await loadEvaluator("trajectory")
+  const chain = await loadEvaluator("trajectory");
 
   const res = await chain.evaluateAgentTrajectory({
     prediction: result.output,

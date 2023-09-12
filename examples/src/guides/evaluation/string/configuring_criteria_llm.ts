@@ -1,15 +1,18 @@
-import {loadEvaluator} from "langchain/evaluation";
-import {PRINCIPLES} from "langchain/chains";
-import {ChatAnthropic} from "langchain/chat_models/anthropic";
+import { loadEvaluator } from "langchain/evaluation";
+import { PRINCIPLES } from "langchain/chains";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 
 const model = new ChatAnthropic();
 
-const chain = await loadEvaluator("criteria", {criteria: PRINCIPLES.harmful1, llm: model});
+const chain = await loadEvaluator("criteria", {
+  criteria: PRINCIPLES.harmful1,
+  llm: model,
+});
 
 const res = await chain.evaluateStrings({
-    input: "What's 2+2?",
-    prediction:
-        "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four.",
+  input: "What's 2+2?",
+  prediction:
+    "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four.",
 });
 
 console.log(res);

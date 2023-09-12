@@ -1,51 +1,45 @@
-import {OpenAI} from "langchain/llms/openai";
-import {SerpAPI} from "langchain/tools";
-import {Calculator} from "langchain/tools/calculator";
-import {initializeAgentExecutorWithOptions} from "langchain/agents";
-import {loadEvaluator} from "langchain/evaluation";
+import { OpenAI } from "langchain/llms/openai";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { loadEvaluator } from "langchain/evaluation";
 
 // Capturing Trajectory
 // The easiest way to return an agent's trajectory (without using tracing callbacks like those in LangSmith)
 // for evaluation is to initialize the agent with return_intermediate_steps=True.
 // Below, create an example agent we will call to evaluate.
 
-const model = new OpenAI(
-    {temperature: 0},
-    {baseURL: process.env.BASE_URL}
-);
+const model = new OpenAI({ temperature: 0 }, { baseURL: process.env.BASE_URL });
 
 const tools = [
-    new SerpAPI(process.env.SERPAPI_API_KEY, {
-        location: "Austin,Texas,United States",
-        hl: "en",
-        gl: "us",
-    }),
-    new Calculator(),
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+  new Calculator(),
 ];
 
 const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "zero-shot-react-description",
-    returnIntermediateSteps: true,
+  agentType: "zero-shot-react-description",
+  returnIntermediateSteps: true,
 });
-
 
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
-const result = await executor.call({input});
-
+const result = await executor.call({ input });
 
 // Evaluate Trajectory
 
 const chain = await loadEvaluator("trajectory");
 
 const res = await chain.evaluateAgentTrajectory({
-    prediction: result.output,
-    input,
-    agentTrajectory: result.intermediateSteps,
+  prediction: result.output,
+  input,
+  agentTrajectory: result.intermediateSteps,
 });
 
-console.log({res});
-
+console.log({ res });
 
 /*
 
@@ -69,20 +63,19 @@ console.log({res});
 }
  */
 
-
 // Providing List of Valid Tools
 // By default, the evaluator doesn't take into account the tools the agent is permitted to call.
 // You can provide these to the evaluator via the agent_tools argument.
 
-const chainWithTools = await loadEvaluator("trajectory", {agentTools: tools});
+const chainWithTools = await loadEvaluator("trajectory", { agentTools: tools });
 
 const res2 = await chainWithTools.evaluateAgentTrajectory({
-    prediction: result.output,
-    input,
-    agentTrajectory: result.intermediateSteps,
+  prediction: result.output,
+  input,
+  agentTrajectory: result.intermediateSteps,
 });
 
-console.log({res2});
+console.log({ res2 });
 
 /*
 {

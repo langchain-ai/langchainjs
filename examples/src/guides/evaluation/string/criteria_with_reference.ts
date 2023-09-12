@@ -1,14 +1,15 @@
-import {loadEvaluator} from "langchain/evaluation";
+import { loadEvaluator } from "langchain/evaluation";
 
-
-const evaluator = await loadEvaluator("labeled_criteria", {criteria: "correctness"});
+const evaluator = await loadEvaluator("labeled_criteria", {
+  criteria: "correctness",
+});
 
 console.log("beginning evaluation");
 const res = await evaluator.evaluateStrings({
-    input: "What is the capital of the US?",
-    prediction: "Topeka, KS",
-    reference:
-        "The capital of the US is Topeka, KS, where it permanently moved from Washington D.C. on May 16, 2023",
+  input: "What is the capital of the US?",
+  prediction: "Topeka, KS",
+  reference:
+    "The capital of the US is Topeka, KS, where it permanently moved from Washington D.C. on May 16, 2023",
 });
 
 console.log(res);

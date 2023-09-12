@@ -1,14 +1,14 @@
-import {loadEvaluator} from "langchain/evaluation";
+import { loadEvaluator } from "langchain/evaluation";
 
-
-const evaluator = await loadEvaluator("criteria", {criteria: "conciseness"});
+const evaluator = await loadEvaluator("criteria", { criteria: "conciseness" });
 
 const res = await evaluator.evaluateStrings({
-    input: "What's 2+2?",
-    prediction: "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four.",
+  input: "What's 2+2?",
+  prediction:
+    "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four.",
 });
 
-console.log({res});
+console.log({ res });
 
 /*
 {

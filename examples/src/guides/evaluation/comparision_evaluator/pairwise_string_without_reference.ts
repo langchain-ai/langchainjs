@@ -1,16 +1,17 @@
-import {loadEvaluator} from "langchain/evaluation";
+import { loadEvaluator } from "langchain/evaluation";
 
-
-const chain = await loadEvaluator("pairwise_string", {criteria: "conciseness"});
-
-const res = await chain.evaluateStringPairs({
-    prediction: "Addition is a mathematical operation.",
-    predictionB:
-        "Addition is a mathematical operation that adds two numbers to create a third number, the 'sum'.",
-    input: "What is addition?",
+const chain = await loadEvaluator("pairwise_string", {
+  criteria: "conciseness",
 });
 
-console.log({res});
+const res = await chain.evaluateStringPairs({
+  prediction: "Addition is a mathematical operation.",
+  predictionB:
+    "Addition is a mathematical operation that adds two numbers to create a third number, the 'sum'.",
+  input: "What is addition?",
+});
+
+console.log({ res });
 
 /*
 {

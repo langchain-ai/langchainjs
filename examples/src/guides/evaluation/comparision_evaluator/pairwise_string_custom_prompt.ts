@@ -1,9 +1,8 @@
-import {loadEvaluator} from "langchain/evaluation";
-import {PromptTemplate} from "langchain/prompts";
-
+import { loadEvaluator } from "langchain/evaluation";
+import { PromptTemplate } from "langchain/prompts";
 
 const promptTemplate = PromptTemplate.fromTemplate(
-    `Given the input context, which do you prefer: A or B?
+  `Given the input context, which do you prefer: A or B?
 Evaluate based on the following criteria:
 {criteria}
 Reason step by step and finally, respond with either [[A]] or [[B]] on its own line.
@@ -21,16 +20,16 @@ B: {predictionB}
 );
 
 const chain = await loadEvaluator("labeled_pairwise_string", {
-    chainOptions: {
-        prompt: promptTemplate,
-    }
+  chainOptions: {
+    prompt: promptTemplate,
+  },
 });
 
 const res = await chain.evaluateStringPairs({
-    prediction:"The dog that ate the ice cream was named fido.",
-    predictionB:"The dog's name is spot",
-    input:"What is the name of the dog that ate the ice cream?",
-    reference:"The dog's name is fido",
+  prediction: "The dog that ate the ice cream was named fido.",
+  predictionB: "The dog's name is spot",
+  input: "What is the name of the dog that ate the ice cream?",
+  reference: "The dog's name is fido",
 });
 
 console.log(res);

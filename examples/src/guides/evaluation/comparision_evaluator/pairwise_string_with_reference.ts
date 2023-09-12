@@ -1,13 +1,14 @@
-import {loadEvaluator} from "langchain/evaluation";
+import { loadEvaluator } from "langchain/evaluation";
 
-
-const chain = await loadEvaluator("labeled_pairwise_string",{criteria: "correctness"}) ;
+const chain = await loadEvaluator("labeled_pairwise_string", {
+  criteria: "correctness",
+});
 
 const res = await chain.evaluateStringPairs({
-    prediction: "there are three dogs",
-    predictionB: "4",
-    input: "how many dogs are in the park?",
-    reference: "four",
+  prediction: "there are three dogs",
+  predictionB: "4",
+  input: "how many dogs are in the park?",
+  reference: "four",
 });
 
 console.log(res);

@@ -1,22 +1,23 @@
-import {loadEvaluator} from "langchain/evaluation";
-
+import { loadEvaluator } from "langchain/evaluation";
 
 const customCriterion = {
-    simplicity: "Is the language straightforward and unpretentious?",
-    clarity: "Are the sentences clear and easy to understand?",
-    precision: "Is the writing precise, with no unnecessary words or details?",
-    truthfulness: "Does the writing feel honest and sincere?",
-    subtext: "Does the writing suggest deeper meanings or themes?",
+  simplicity: "Is the language straightforward and unpretentious?",
+  clarity: "Are the sentences clear and easy to understand?",
+  precision: "Is the writing precise, with no unnecessary words or details?",
+  truthfulness: "Does the writing feel honest and sincere?",
+  subtext: "Does the writing suggest deeper meanings or themes?",
 };
 
-const chain = await loadEvaluator("pairwise_string",{criteria: customCriterion});
+const chain = await loadEvaluator("pairwise_string", {
+  criteria: customCriterion,
+});
 
 const res = await chain.evaluateStringPairs({
-    prediction:
-        "Every cheerful household shares a similar rhythm of joy; but sorrow, in each household, plays a unique, haunting melody.",
-    predictionB:
-        "Where one finds a symphony of joy, every domicile of happiness resounds in harmonious, identical notes; yet, every abode of despair conducts a dissonant orchestra, each playing an elegy of grief that is peculiar and profound to its own existence.",
-    input: "Write some prose about families.",
+  prediction:
+    "Every cheerful household shares a similar rhythm of joy; but sorrow, in each household, plays a unique, haunting melody.",
+  predictionB:
+    "Where one finds a symphony of joy, every domicile of happiness resounds in harmonious, identical notes; yet, every abode of despair conducts a dissonant orchestra, each playing an elegy of grief that is peculiar and profound to its own existence.",
+  input: "Write some prose about families.",
 });
 
 console.log(res);
