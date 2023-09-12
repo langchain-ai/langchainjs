@@ -6,7 +6,7 @@ import {
   parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
-import { RunnableConfig } from "../schema/runnable.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 
 /**
  * Parameters for the Tool classes.
