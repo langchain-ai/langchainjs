@@ -4,7 +4,7 @@ import { ChatAnthropic } from "../../../chat_models/anthropic.js";
 import { PromptTemplate } from "../../../prompts/index.js";
 import { loadEvaluator } from "../../loader.js";
 
-test.skip("Test CriteriaEvalChain", async () => {
+test("Test CriteriaEvalChain", async () => {
   const evaluator = await loadEvaluator("criteria", {
     criteria: "conciseness",
   });
@@ -19,7 +19,7 @@ test.skip("Test CriteriaEvalChain", async () => {
   console.log({ res });
 });
 
-test.skip("Test LabeledCriteriaEvalChain", async () => {
+test("Test LabeledCriteriaEvalChain", async () => {
   const evaluator = await loadEvaluator("labeled_criteria", {
     criteria: "correctness",
   });
@@ -35,7 +35,7 @@ test.skip("Test LabeledCriteriaEvalChain", async () => {
   console.log(res);
 });
 
-test.skip("Test Custom Criteria", async () => {
+test("Test Custom Criteria", async () => {
   const customCriterion = {
     numeric: "Does the output contain numeric or mathematical information?",
   };
@@ -53,7 +53,7 @@ test.skip("Test Custom Criteria", async () => {
   console.log(res);
 });
 
-test.skip("Test Custom Multiple Criteria", async () => {
+test("Test Custom Multiple Criteria", async () => {
   const customCriterion = {
     numeric: "Does the output contain numeric information?",
     mathematical: "Does the output contain mathematical information?",
@@ -72,7 +72,7 @@ test.skip("Test Custom Multiple Criteria", async () => {
   console.log(res);
 });
 
-test.skip("Test Using Constitutional Principles ", async () => {
+test("Test Using Constitutional Principles ", async () => {
   const chain = await loadEvaluator("criteria", {
     criteria: PRINCIPLES.harmful1,
   });
@@ -86,7 +86,7 @@ test.skip("Test Using Constitutional Principles ", async () => {
   console.log(res);
 });
 
-test.skip("Test Configuring the LLM", async () => {
+test("Test Configuring the LLM", async () => {
   const model = new ChatAnthropic();
 
   const chain = await loadEvaluator("criteria", {

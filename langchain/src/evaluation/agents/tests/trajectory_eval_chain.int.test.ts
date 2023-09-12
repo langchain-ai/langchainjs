@@ -1,4 +1,5 @@
 import { expect, test } from "@jest/globals";
+import process from "process";
 import { OpenAI } from "../../../llms/openai.js";
 import { Calculator } from "../../../tools/calculator.js";
 import { SerpAPI } from "../../../tools/index.js";
@@ -9,6 +10,7 @@ test("Test TrajectoryEvalChain", async () => {
   const model = new OpenAI({ temperature: 0 });
 
   const tools = [
+    // eslint-disable-next-line no-process-env
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
       hl: "en",

@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { loadEvaluator } from "../../loader.js";
 
-test.skip("Test PairwiseStringEvalChain", async () => {
+test("Test PairwiseStringEvalChain", async () => {
   const chain = await loadEvaluator("pairwise_string", {
     criteria: "conciseness",
   });
@@ -16,7 +16,7 @@ test.skip("Test PairwiseStringEvalChain", async () => {
   console.log({ res });
 });
 
-test.skip("Test LabeledPairwiseStringEvalChain", async () => {
+test("Test LabeledPairwiseStringEvalChain", async () => {
   const chain = await loadEvaluator("labeled_pairwise_string", {
     criteria: "correctness",
   });
