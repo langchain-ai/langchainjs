@@ -36,7 +36,6 @@ const result = await executor.call({input});
 
 // Evaluate Trajectory
 
-
 const chain = await loadEvaluator("trajectory");
 
 const res = await chain.evaluateAgentTrajectory({
