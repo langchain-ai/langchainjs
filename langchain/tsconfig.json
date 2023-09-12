@@ -108,6 +108,7 @@
       "src/vectorstores/tigris.ts",
       "src/vectorstores/usearch.ts",
       "src/vectorstores/vectara.ts",
+      "src/vectorstores/voy.ts",
       "src/vectorstores/xata.ts",
       "src/vectorstores/zep.ts",
       "src/text_splitter.ts",
@@ -165,7 +166,7 @@
       "src/schema/output_parser.ts",
       "src/schema/query_constructor.ts",
       "src/schema/retriever.ts",
-      "src/schema/runnable.ts",
+      "src/schema/runnable/index.ts",
       "src/schema/storage.ts",
       "src/sql_db.ts",
       "src/callbacks/index.ts",
@@ -223,6 +224,7 @@
       "src/experimental/plan_and_execute/index.ts",
       "src/experimental/multimodal_embeddings/googlevertexai.ts",
       "src/experimental/chat_models/anthropic_functions.ts",
+      "src/experimental/llms/bittensor.ts",
       "src/evaluation/index.ts"
     ],
     "sort": [

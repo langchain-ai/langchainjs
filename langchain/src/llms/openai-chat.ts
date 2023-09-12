@@ -304,7 +304,7 @@ export class OpenAIChat
     };
     const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
-      const choice = data.choices[0];
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }

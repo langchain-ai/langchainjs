@@ -1,6 +1,6 @@
 import { Client, ClientConfiguration, HubPushOptions } from "langchainhub";
 import { load } from "./load/index.js";
-import { Runnable } from "./schema/runnable.js";
+import { Runnable } from "./schema/runnable/index.js";
 
 /**
  * Push a prompt to the hub.

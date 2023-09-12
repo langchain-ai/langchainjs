@@ -53,6 +53,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/singlestore",
   "langchain/vectorstores/tigris",
   "langchain/vectorstores/usearch",
+  "langchain/vectorstores/voy",
   "langchain/vectorstores/zep",
   "langchain/memory/zep",
   "langchain/document_loaders/web/apify_dataset",
@@ -123,4 +124,5 @@ export const optionalImportEntrypoints = [
   "langchain/hub",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
   "langchain/experimental/chat_models/anthropic_functions",
+  "langchain/experimental/llms/bittensor",
 ];
