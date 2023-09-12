@@ -1,6 +1,7 @@
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { CohereEmbeddings } from "langchain/embeddings/cohere";
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
 
 const vectorstore = await MemoryVectorStore.fromTexts(
   [
@@ -24,3 +25,30 @@ const retriever = MultiQueryRetriever.fromLLM({
 
 const query = "What are mitochondria made of?";
 const retrievedDocs = await retriever.getRelevantDocuments(query);
+
+/*
+  Generated queries: What are the components of mitochondria?,What substances comprise the mitochondria organelle?  ,What is the molecular composition of mitochondria?
+*/
+
+console.log(retrievedDocs);
+
+/*
+  [
+    Document {
+      pageContent: 'mitochondria is the powerhouse of the cell',
+      metadata: {}
+    },
+    Document {
+      pageContent: 'mitochondria is made of lipids',
+      metadata: {}
+    },
+    Document {
+      pageContent: 'Buildings are made out of brick',
+      metadata: { id: 1 }
+    },
+    Document {
+      pageContent: 'Buildings are made out of wood',
+      metadata: { id: 2 }
+    }
+  ]
+*/

@@ -5,7 +5,7 @@ import { BaseOutputParser } from "../schema/output_parser.js";
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { CallbackManagerForRetrieverRun } from "../callbacks/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-import { BasePromptTemplate } from "../index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 
 interface LineList {
   lines: string[];
