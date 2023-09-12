@@ -22,7 +22,7 @@ import {
   Callbacks,
 } from "../callbacks/manager.js";
 import { getBufferString } from "../memory/base.js";
-import { RunnableConfig } from "../schema/runnable.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 
 export type SerializedLLM = {
   _model: string;

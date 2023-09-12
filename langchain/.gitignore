@@ -58,9 +58,6 @@ chains/query_constructor/ir.d.ts
 chains/sql_db.cjs
 chains/sql_db.js
 chains/sql_db.d.ts
-embeddings.cjs
-embeddings.js
-embeddings.d.ts
 embeddings/base.cjs
 embeddings/base.js
 embeddings/base.d.ts
@@ -97,9 +94,6 @@ embeddings/googlepalm.d.ts
 embeddings/minimax.cjs
 embeddings/minimax.js
 embeddings/minimax.d.ts
-llms.cjs
-llms.js
-llms.d.ts
 llms/load.cjs
 llms/load.js
 llms/load.d.ts
@@ -154,9 +148,6 @@ prompts.d.ts
 prompts/load.cjs
 prompts/load.js
 prompts/load.d.ts
-vectorstores.cjs
-vectorstores.js
-vectorstores.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
@@ -235,6 +226,9 @@ vectorstores/usearch.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
+vectorstores/voy.cjs
+vectorstores/voy.js
+vectorstores/voy.d.ts
 vectorstores/xata.cjs
 vectorstores/xata.js
 vectorstores/xata.d.ts
@@ -253,9 +247,6 @@ memory/zep.d.ts
 document.cjs
 document.js
 document.d.ts
-document_loaders.cjs
-document_loaders.js
-document_loaders.d.ts
 document_loaders/base.cjs
 document_loaders/base.js
 document_loaders/base.d.ts
@@ -370,9 +361,6 @@ document_transformers/mozilla_readability.d.ts
 document_transformers/openai_functions.cjs
 document_transformers/openai_functions.js
 document_transformers/openai_functions.d.ts
-chat_models.cjs
-chat_models.js
-chat_models.d.ts
 chat_models/base.cjs
 chat_models/base.js
 chat_models/base.d.ts
@@ -433,9 +421,6 @@ output_parsers.d.ts
 output_parsers/expression.cjs
 output_parsers/expression.js
 output_parsers/expression.d.ts
-retrievers.cjs
-retrievers.js
-retrievers.d.ts
 retrievers/amazon_kendra.cjs
 retrievers/amazon_kendra.js
 retrievers/amazon_kendra.d.ts
@@ -586,6 +571,9 @@ experimental/multimodal_embeddings/googlevertexai.d.ts
 experimental/chat_models/anthropic_functions.cjs
 experimental/chat_models/anthropic_functions.js
 experimental/chat_models/anthropic_functions.d.ts
+experimental/llms/bittensor.cjs
+experimental/llms/bittensor.js
+experimental/llms/bittensor.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

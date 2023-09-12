@@ -157,6 +157,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/usearch"?:
     | typeof import("../vectorstores/usearch.js")
     | Promise<typeof import("../vectorstores/usearch.js")>;
+  "langchain/vectorstores/voy"?:
+    | typeof import("../vectorstores/voy.js")
+    | Promise<typeof import("../vectorstores/voy.js")>;
   "langchain/vectorstores/zep"?:
     | typeof import("../vectorstores/zep.js")
     | Promise<typeof import("../vectorstores/zep.js")>;
@@ -367,6 +370,9 @@ export interface OptionalImportMap {
   "langchain/experimental/chat_models/anthropic_functions"?:
     | typeof import("../experimental/chat_models/anthropic_functions.js")
     | Promise<typeof import("../experimental/chat_models/anthropic_functions.js")>;
+  "langchain/experimental/llms/bittensor"?:
+    | typeof import("../experimental/llms/bittensor.js")
+    | Promise<typeof import("../experimental/llms/bittensor.js")>;
 }
 
 export interface SecretMap {
