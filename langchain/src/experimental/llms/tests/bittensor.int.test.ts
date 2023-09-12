@@ -1,7 +1,7 @@
 import { test, describe } from "@jest/globals";
 import { NIBittensorLLM } from "../bittensor.js";
 
-describe("NIBittensorLLM", () => {
+describe.skip("NIBittensorLLM", () => {
   test("test with no params", async () => {
     const niBittensorLLM = new NIBittensorLLM();
     const result = await niBittensorLLM.call("What is Bittensor?");

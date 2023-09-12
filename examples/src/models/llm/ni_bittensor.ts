@@ -1,4 +1,4 @@
-import { NIBittensorLLM } from "langchain/experimental/chat_models/bittensor";
+import { NIBittensorLLM } from "langchain/experimental/llms/bittensor";
 
 const model = new NIBittensorLLM();
 

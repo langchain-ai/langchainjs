@@ -30,6 +30,10 @@ interface ChatResponse {
  *      https://api.neuralinternet.ai/logs
  */
 export class NIBittensorLLM extends LLM implements BittensorInput {
+  static lc_name(): string {
+    return "NIBittensorLLM";
+  }
+
   systemPrompt: string;
 
   topResponses: number | undefined;
@@ -152,6 +156,7 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
       if (this.topResponses) {
         return <string>responseData;
       } else if ((<ChatResponse>responseData).choices) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const temp: any = (<ChatResponse>responseData).choices;
         return <string>temp[0].message.content;
       }
