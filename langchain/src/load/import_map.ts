@@ -42,7 +42,7 @@ export * as schema__document from "../schema/document.js";
 export * as schema__output_parser from "../schema/output_parser.js";
 export * as schema__query_constructor from "../schema/query_constructor.js";
 export * as schema__retriever from "../schema/retriever.js";
-export * as schema__runnable from "../schema/runnable.js";
+export * as schema__runnable from "../schema/runnable/index.js";
 export * as schema__storage from "../schema/storage.js";
 export * as callbacks from "../callbacks/index.js";
 export * as output_parsers from "../output_parsers/index.js";

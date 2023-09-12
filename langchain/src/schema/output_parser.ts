@@ -5,7 +5,8 @@ import {
   ChatGeneration,
   BaseMessage,
 } from "./index.js";
-import { Runnable, RunnableConfig } from "./runnable.js";
+import { Runnable } from "./runnable/index.js";
+import { RunnableConfig } from "./runnable/config.js";
 
 /**
  * Options for formatting instructions.

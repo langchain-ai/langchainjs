@@ -163,7 +163,7 @@ const entrypoints = {
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
-  "schema/runnable": "schema/runnable",
+  "schema/runnable": "schema/runnable/index",
   "schema/storage": "schema/storage",
   // sql_db
   sql_db: "sql_db",

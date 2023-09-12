@@ -166,7 +166,7 @@
       "src/schema/output_parser.ts",
       "src/schema/query_constructor.ts",
       "src/schema/retriever.ts",
-      "src/schema/runnable.ts",
+      "src/schema/runnable/index.ts",
       "src/schema/storage.ts",
       "src/sql_db.ts",
       "src/callbacks/index.ts",

@@ -16,7 +16,8 @@ import {
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
-import { Runnable, RunnableConfig } from "../schema/runnable.js";
+import { Runnable } from "../schema/runnable/index.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
 
