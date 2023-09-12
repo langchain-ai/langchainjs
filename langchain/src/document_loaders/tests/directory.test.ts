@@ -10,7 +10,7 @@ import { JSONLoader } from "../fs/json.js";
 test("Test Directory loader", async () => {
   const directoryPath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/dir_loader"
+    "./example_data"
   );
   const loader = new DirectoryLoader(
     directoryPath,
@@ -25,7 +25,7 @@ test("Test Directory loader", async () => {
       ".txt": (p) => new TextLoader(p),
       ".json": (p) => new JSONLoader(p),
     },
-    true,
+    false,
     UnknownHandling.Ignore
   );
   const docs = await loader.load();

@@ -19,7 +19,7 @@ test("Properties Parser", async () => {
 
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/notion_page_response.json"
+    "./example_data/notion_api/notion_page_response.json"
   );
 
   const pageDetails: PageObjectResponse = JSON.parse(
