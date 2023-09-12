@@ -7,15 +7,14 @@ Evaluate based on the following criteria:
 {criteria}
 Reason step by step and finally, respond with either [[A]] or [[B]] on its own line.
 
-    DATA
+DATA
 ----
-    input: {input}
+input: {input}
 reference: {reference}
 A: {prediction}
 B: {predictionB}
 ---
-    Reasoning:
-
+Reasoning:
 `
 );
 

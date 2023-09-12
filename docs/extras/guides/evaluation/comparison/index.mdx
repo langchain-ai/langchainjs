@@ -9,7 +9,7 @@ Comparison evaluators in LangChain help measure two different chains or LLM outp
 
 These evaluators inherit from the `PairwiseStringEvaluator` or `LLMPairwiseStringEvaluator` class, providing a comparison interface for two strings - typically, the outputs from two different prompts or models, or two versions of the same model. In essence, a comparison evaluator performs an evaluation on a pair of strings and returns a dictionary containing the evaluation score and other relevant details.
 
-To create a custom comparison evaluator, inherit from the `PairwiseStringEvaluator` or `LLMPairwiseStringEvaluator` class and overwrite the `_evaluateStringPairs` method.
+To create a custom comparison evaluator, inherit from the `PairwiseStringEvaluator` or `LLMPairwiseStringEvaluator` abstract classes exported from `langchain/evaluation` and overwrite the `_evaluateStringPairs` method.
 
 Here's a summary of the key methods and properties of a comparison evaluator:
 

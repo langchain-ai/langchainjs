@@ -17,7 +17,7 @@ In scenarios where you wish to assess a model's output using a specific rubric o
 
 ### Usage without references
 
-In this example, you will use the `CriteriaEvalChain` to check whether an output is concise. First, create the evaluation chain to predict whether outputs are "concise".
+In the below example, we use the `CriteriaEvalChain` to check whether an output is concise:
 
 <CodeBlock language="typescript">{WithoutReference}</CodeBlock>
 
@@ -30,7 +30,7 @@ All string evaluators expose an `evaluateStrings` method, which accepts:
 - prediction (string) – The predicted response.
 
 The criteria evaluators return a dictionary with the following values:
-- score: Binary integeer 0 to 1, where 1 would mean that the output is compliant with the criteria, and 0 otherwise
+- score: Binary integer 0 to 1, where 1 would mean that the output is compliant with the criteria, and 0 otherwise
 - value: A "Y" or "N" corresponding to the score
 - reasoning: String "chain of thought reasoning" from the LLM generated prior to creating the score
 
