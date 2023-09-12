@@ -36,10 +36,10 @@ Let's do a detailed evaluation of the AI language model's answer step by step.
 We consider the following criteria before giving a score from 1 to 5:
 
 i. Is the final answer helpful?
-    ii. Does the AI language use a logical sequence of tools to answer the question?
-    iii. Does the AI language model use the tools in a helpful way?
-    iv. Does the AI language model use too many steps to answer the question?
-    v. Are the appropriate tools used to answer the question?`;
+ii. Does the AI language use a logical sequence of tools to answer the question?
+iii. Does the AI language model use the tools in a helpful way?
+iv. Does the AI language model use too many steps to answer the question?
+v. Are the appropriate tools used to answer the question?`;
 
 const EXAMPLE_INPUT = `An AI language model has been given access to the following set of tools to help answer a user's question.
 
@@ -81,10 +81,10 @@ Let's do a detailed evaluation of the AI language model's answer step by step.
 We consider the following criteria before giving a score from 1 to 5:
 
 i. Is the final answer helpful?
-    ii. Does the AI language use a logical sequence of tools to answer the question?
-    iii. Does the AI language model use the tools in a helpful way?
-    iv. Does the AI language model use too many steps to answer the question?
-    v. Are the appropriate tools used to answer the question?`;
+ii. Does the AI language use a logical sequence of tools to answer the question?
+iii. Does the AI language model use the tools in a helpful way?
+iv. Does the AI language model use too many steps to answer the question?
+v. Are the appropriate tools used to answer the question?`;
 
 const EXAMPLE_OUTPUT = `First, let's evaluate the final answer. The final uses good reasoning but is wrong. 2,857 divided by 305 is not 17.5.\
 The model should have used the calculator to figure this out. Second does the model use a logical sequence of tools to answer the question?\
