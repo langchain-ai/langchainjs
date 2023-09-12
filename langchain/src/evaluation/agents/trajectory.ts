@@ -19,7 +19,7 @@ import { BasePromptTemplate } from "../../prompts/index.js";
 import { StructuredTool } from "../../tools/index.js";
 import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
-import {BaseChatModel} from "../../chat_models/base.js";
+import { BaseChatModel } from "../../chat_models/base.js";
 
 /**
  * A parser for the output of the TrajectoryEvalChain.

@@ -12,7 +12,7 @@ import {
   Callbacks,
 } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import {Embeddings} from "../../embeddings/base.js";
+import { Embeddings } from "../../embeddings/base.js";
 
 /**
  *
