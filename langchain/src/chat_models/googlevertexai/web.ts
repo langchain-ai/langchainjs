@@ -22,7 +22,6 @@ export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOpti
   get lc_secrets(): { [key: string]: string } {
     return {
       "authOptions.credentials": "GOOGLE_VERTEX_AI_WEB_CREDENTIALS",
-      "authOptions.scope": "GOOGLE_VERTEX_AI_WEB_SCOPE",
     };
   }
 
