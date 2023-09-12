@@ -349,3 +349,16 @@ test("Stream with RunnableBinding", async () => {
   expect(chunks.length).toEqual("Hi there!".length);
   expect(chunks.join("")).toEqual("Hi there!");
 });
+
+test("Stream through a RunnableBinding if the bound runnable implements transform", async () => {
+  const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
+  const outputParser = new StringOutputParser().bind({ callbacks: [] });
+  const stream = await llm.pipe(outputParser).stream("Hi there!");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(chunks.length).toEqual("Hi there!".length);
+  expect(chunks.join("")).toEqual("Hi there!");
+});
