@@ -30,6 +30,8 @@ export abstract class TextSplitter
 
   keepSeparator = false;
 
+  private trimOnJoin = true;
+
   lengthFunction:
     | ((text: string) => number)
     | ((text: string) => Promise<number>);
@@ -53,7 +55,7 @@ export abstract class TextSplitter
     return this.splitDocuments(documents, chunkHeaderOptions);
   }
 
-  abstract splitText(text: string, trim?: boolean): Promise<string[]>;
+  abstract splitText(text: string): Promise<string[]>;
 
   protected splitOnSeparator(text: string, separator: string): string[] {
     let splits;
@@ -87,6 +89,10 @@ export abstract class TextSplitter
       chunkOverlapHeader = "(cont'd) ",
       appendChunkOverlapHeader = false,
     } = chunkHeaderOptions;
+
+    let prevTrimOnJoin = this.trimOnJoin;
+    this.trimOnJoin = false;
+
     const documents = new Array<Document>();
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
@@ -94,7 +100,7 @@ export abstract class TextSplitter
       let prevChunk: string | null = null;
       let textTraverser = ""; // used to get the latest index of a chunk if they are the same
 
-      for (const chunk of await this.splitText(text, false)) {
+      for (const chunk of await this.splitText(text)) {
         textTraverser += chunk;
         let pageContent = chunkHeader;
 
@@ -133,18 +139,119 @@ export abstract class TextSplitter
           loc,
         };
 
-        pageContent += chunk; //.trim();
+        pageContent += chunk.trim();
+        // can happen if last chunk is only new lines
+        if (pageContent === "") continue;
+
         documents.push(
-          new Document({
-            pageContent,
-            metadata: metadataWithLinesNumber,
-          })
+          this.fixLoc(
+            new Document({
+              pageContent,
+              metadata: metadataWithLinesNumber,
+            }),
+            text
+          )
         );
         lineCounterIndex += newLinesCount;
         prevChunk = chunk;
       }
     }
+
+    this.trimOnJoin = prevTrimOnJoin;
     return documents;
+  }
+
+  // find the correct loc by brute force
+  fixLoc(document: Document, fullText: string): Document {
+    let pageContent = document.pageContent;
+
+    // find all the matching page contents in the original text
+    let matches = this.findSubstrings(fullText, pageContent);
+
+    // now find the line numbers for these characters
+    let pageContentCounter = 0;
+    let lineNr = 1;
+    let lineStart = -1;
+    let currentMatchCharIndex: number = Number.MAX_SAFE_INTEGER;
+    let matchedLines: { from: number; to: number }[] = [];
+
+    for (let i = 0; i < fullText.length; i++) {
+      if (matches.some((matchCharIndex) => matchCharIndex === i)) {
+        lineStart = lineNr;
+        currentMatchCharIndex = i;
+      }
+
+      if (
+        i >= currentMatchCharIndex &&
+        i < currentMatchCharIndex + pageContent.length
+      ) {
+        pageContentCounter++;
+
+        if (pageContentCounter === pageContent.length) {
+          let lineEnd = lineNr;
+          if (fullText[i] === "\n") {
+            matchedLines.push({ from: lineStart, to: lineEnd + 1 });
+          }
+          {
+            matchedLines.push({ from: lineStart, to: lineEnd });
+          }
+
+          pageContentCounter = 0;
+          currentMatchCharIndex = -1;
+        }
+      }
+
+      if (fullText[i] === "\n") {
+        lineNr++;
+      }
+    }
+
+    let docMiddle =
+      document.metadata.loc.lines.from +
+      Math.ceil(
+        (document.metadata.loc.lines.to - document.metadata.loc.lines.from) / 2
+      );
+
+    // out of these matches, find the closest one to the docMiddle
+    let closestMatch = matchedLines[0];
+    for (let i = 1; i < matchedLines.length; i++) {
+      let match = matchedLines[i];
+      if (
+        Math.abs(match.from - docMiddle) <
+        Math.abs(closestMatch.from - docMiddle)
+      ) {
+        closestMatch = match;
+      }
+    }
+
+    if (!closestMatch) {
+      // this happened with a chunk header
+      return document;
+    }
+
+    return new Document({
+      pageContent,
+      metadata: {
+        ...document.metadata,
+        loc: {
+          ...document.metadata.loc,
+          lines: {
+            from: closestMatch.from,
+            to: closestMatch.to,
+          },
+        },
+      },
+    });
+  }
+
+  findSubstrings(str: string, subStr: string) {
+    let indices = [];
+    let idx = str.indexOf(subStr);
+    while (idx != -1) {
+      indices.push(idx);
+      idx = str.indexOf(subStr, idx + 1);
+    }
+    return indices;
   }
 
   async splitDocuments(
@@ -159,21 +266,13 @@ export abstract class TextSplitter
     return this.createDocuments(texts, metadatas, chunkHeaderOptions);
   }
 
-  private joinDocs(
-    docs: string[],
-    separator: string,
-    trim?: boolean
-  ): string | null {
+  private joinDocs(docs: string[], separator: string): string | null {
     let text = docs.join(separator);
-    if (trim) text = text.trim();
+    if (this.trimOnJoin) text = text.trim();
     return text === "" ? null : text;
   }
 
-  async mergeSplits(
-    splits: string[],
-    separator: string,
-    trim = true
-  ): Promise<string[]> {
+  async mergeSplits(splits: string[], separator: string): Promise<string[]> {
     const docs: string[] = [];
     const currentDoc: string[] = [];
     let total = 0;
@@ -190,7 +289,7 @@ which is longer than the specified ${this.chunkSize}`
           );
         }
         if (currentDoc.length > 0) {
-          const doc = this.joinDocs(currentDoc, separator, trim);
+          const doc = this.joinDocs(currentDoc, separator);
           if (doc !== null) {
             docs.push(doc);
           }
@@ -209,7 +308,7 @@ which is longer than the specified ${this.chunkSize}`
       currentDoc.push(d);
       total += _len;
     }
-    const doc = this.joinDocs(currentDoc, separator, trim);
+    const doc = this.joinDocs(currentDoc, separator);
     if (doc !== null) {
       docs.push(doc);
     }
@@ -236,14 +335,10 @@ export class CharacterTextSplitter
     this.separator = fields?.separator ?? this.separator;
   }
 
-  async splitText(text: string, trim = true): Promise<string[]> {
+  async splitText(text: string): Promise<string[]> {
     // First we naively split the large input into a bunch of smaller ones.
     const splits = this.splitOnSeparator(text, this.separator);
-    return this.mergeSplits(
-      splits,
-      this.keepSeparator ? "" : this.separator,
-      trim
-    );
+    return this.mergeSplits(splits, this.keepSeparator ? "" : this.separator);
   }
 }
 
@@ -290,7 +385,7 @@ export class RecursiveCharacterTextSplitter
     this.keepSeparator = fields?.keepSeparator ?? true;
   }
 
-  private async _splitText(text: string, separators: string[], trim = true) {
+  private async _splitText(text: string, separators: string[]) {
     const finalChunks: string[] = [];
 
     // Get appropriate separator to use
@@ -320,31 +415,27 @@ export class RecursiveCharacterTextSplitter
         goodSplits.push(s);
       } else {
         if (goodSplits.length) {
-          const mergedText = await this.mergeSplits(
-            goodSplits,
-            _separator,
-            trim
-          );
+          const mergedText = await this.mergeSplits(goodSplits, _separator);
           finalChunks.push(...mergedText);
           goodSplits = [];
         }
         if (!newSeparators) {
           finalChunks.push(s);
         } else {
-          const otherInfo = await this._splitText(s, newSeparators, trim);
+          const otherInfo = await this._splitText(s, newSeparators);
           finalChunks.push(...otherInfo);
         }
       }
     }
     if (goodSplits.length) {
-      const mergedText = await this.mergeSplits(goodSplits, _separator, trim);
+      const mergedText = await this.mergeSplits(goodSplits, _separator);
       finalChunks.push(...mergedText);
     }
     return finalChunks;
   }
 
-  async splitText(text: string, trim = true): Promise<string[]> {
-    return this._splitText(text, this.separators, trim);
+  async splitText(text: string): Promise<string[]> {
+    return this._splitText(text, this.separators);
   }
 
   static fromLanguage(
