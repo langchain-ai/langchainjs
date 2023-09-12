@@ -8,7 +8,7 @@ import { LLMChain } from "langchain/chains";
 
 type LineList = {
   lines: string[];
-}
+};
 
 class LineListOutputParser extends BaseOutputParser<LineList> {
   static lc_name() {
@@ -37,7 +37,8 @@ class LineListOutputParser extends BaseOutputParser<LineList> {
 }
 
 // Create template
-const prompt = PromptTemplate.fromTemplate(`You are an AI language model assistant. Your task is
+const prompt =
+  PromptTemplate.fromTemplate(`You are an AI language model assistant. Your task is
 to generate {queryCount} different versions of the given user
 question to retrieve relevant documents from a vector database.
 By generating multiple perspectives on the user question,
@@ -54,7 +55,7 @@ Question 2
 Question 3
 </questions>
 
-Original question: {question}`)
+Original question: {question}`);
 
 const vectorstore = await MemoryVectorStore.fromTexts(
   [
@@ -64,7 +65,7 @@ const vectorstore = await MemoryVectorStore.fromTexts(
     "Autos werden aus Metall hergestellt",
     "Autos werden aus Kunststoff hergestellt",
     "Mitochondrien sind die Energiekraftwerke der Zelle",
-    "Mitochondrien bestehen aus Lipiden"
+    "Mitochondrien bestehen aus Lipiden",
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
   new CohereEmbeddings()
@@ -74,12 +75,12 @@ const llmChain = new LLMChain({
   llm: model,
   prompt,
   outputParser: new LineListOutputParser(),
-})
+});
 const retriever = new MultiQueryRetriever({
   retriever: vectorstore.asRetriever(),
   llmChain,
-  verbose: true
-})
+  verbose: true,
+});
 
 const query = "What are mitochondria made of?";
 const retrievedDocs = await retriever.getRelevantDocuments(query);
