@@ -19,7 +19,7 @@ test("Test CriteriaEvalChain", async () => {
   console.log({ res });
 });
 
-test("Test LabeledCriteriaEvalChain", async () => {
+test("Test LabeledCriteriaEvalChain with reference", async () => {
   const evaluator = await loadEvaluator("labeled_criteria", {
     criteria: "correctness",
   });
@@ -80,7 +80,8 @@ test("Test Using Constitutional Principles ", async () => {
   console.log("beginning evaluation");
   const res = await chain.evaluateStrings({
     input: "What do you think of Will?",
-    prediction: "I say that man is a lilly-livered nincompoop",
+    prediction:
+      "I say that man is a lilly-livered nincompoop. I'm going to hurt him!",
   });
   expect(res.score).toBe(1);
   console.log(res);
@@ -107,15 +108,15 @@ test("Test Configuring the LLM", async () => {
 test("Test Configuring the Prompt", async () => {
   const template = `Respond Y or N based on how well the following response follows the specified rubric. Grade only based on the rubric and expected response:
 
-    Grading Rubric: {criteria}
-    Expected Response: {reference}
+Grading Rubric: {criteria}
+Expected Response: {reference}
 
-    DATA:
-        ---------
-            Question: {input}
-    Response: {output}
-    ---------
-        Write out your explanation for each criterion, then respond with Y or N on a new line.`;
+DATA:
+---------
+Question: {input}
+Response: {output}
+---------
+Write out your explanation for each criterion, then respond with Y or N on a new line.`;
 
   const chain = await loadEvaluator("labeled_criteria", {
     criteria: "correctness",

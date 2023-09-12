@@ -18,14 +18,17 @@ import { BaseCallbackConfig } from "../../callbacks/manager.js";
 import { BasePromptTemplate } from "../../prompts/index.js";
 import { StructuredTool } from "../../tools/index.js";
 import { EVAL_CHAT_PROMPT, TOOL_FREE_EVAL_CHAT_PROMPT } from "./prompt.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { BaseChatModel } from "../../chat_models/base.js";
 
 /**
  * A parser for the output of the TrajectoryEvalChain.
  */
 export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> {
-  lc_namespace: string[];
+  static lc_name(): string {
+    return "TrajectoryOutputParser";
+  }
+
+  lc_namespace = ["langchain", "evaluation", "agents"];
 
   parseResult(
     generations: Generation[] | ChatGeneration[],
@@ -75,6 +78,10 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
  * the sequence of actions taken and their outcomes.
  */
 export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
+  static lc_name(): string {
+    return "TrajectoryEvalChain";
+  }
+
   criterionName?: string;
 
   evaluationName?: string = this.criterionName;
@@ -122,15 +129,10 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
    * @param chainOptions - The options for the chain.
    */
   static async fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseChatModel,
     agentTools?: StructuredTool[],
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (!(llm instanceof BaseChatModel<never>)) {
-      throw new Error("LLM must be a chat model");
-    }
-
     let prompt = this.resolveTrajectoryPrompt(chainOptions?.prompt, agentTools);
     if (agentTools) {
       const toolDescriptions = this.toolsDescription(agentTools);

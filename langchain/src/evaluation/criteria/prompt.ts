@@ -1,7 +1,7 @@
 import { PromptTemplate } from "../../prompts/index.js";
 
 const template = `You are assessing a submitted answer on a given task or input based on a set of criteria. Here is the data:
-    [BEGIN DATA]
+[BEGIN DATA]
 ***
 [Input]: {input}
 ***
@@ -18,7 +18,7 @@ export const CRITERIA_PROMPT = /* #__PURE__ */ new PromptTemplate({
 });
 
 const referenceTemplate = `You are assessing a submitted answer on a given task or input based on a set of criteria. Here is the data:
-    [BEGIN DATA]
+[BEGIN DATA]
 ***
 [Input]: {input}
 ***

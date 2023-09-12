@@ -1,11 +1,11 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import {
-  CRITERIA_TYPE,
+  CriteriaLike,
   CriteriaEvalChain,
   LabeledCriteriaEvalChain,
 } from "./criteria/index.js";
 import { ChatOpenAI } from "../chat_models/openai.js";
-import { EvaluatorType } from "./types.js";
+import type { EvaluatorType } from "./types.js";
 import { StructuredTool } from "../tools/index.js";
 import { LLMEvalChainInput } from "./base.js";
 import {
@@ -18,21 +18,22 @@ import {
   PairwiseEmbeddingDistanceEvalChain,
 } from "./embedding_distance/index.js";
 import { TrajectoryEvalChain } from "./agents/index.js";
+import { BaseChatModel } from "../chat_models/base.js";
 
-interface LoadEvaluatorOptions extends EmbeddingDistanceEvalChainInput {
+export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
   llm?: BaseLanguageModel;
 
   chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>;
   /**
    * The criteria to use for the evaluator.
    */
-  criteria?: CRITERIA_TYPE;
+  criteria?: CriteriaLike;
 
   /**
-   * A list of tools available to the agent,for TrajectoryEvalChain.
+   * A list of tools available to the agent, for TrajectoryEvalChain.
    */
   agentTools?: StructuredTool[];
-}
+};
 
 /**
  * Load the requested evaluation chain specified by a string
@@ -49,7 +50,7 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(
   const { llm, chainOptions, criteria, agentTools } = options || {};
 
   const llm_ =
-    llm ||
+    llm ??
     new ChatOpenAI({
       modelName: "gpt-4",
       temperature: 0.0,
@@ -82,6 +83,10 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(
       );
       break;
     case "trajectory":
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (!(llm_ instanceof BaseChatModel)) {
+        throw new Error("LLM must be an instance of a base chat model.");
+      }
       evaluator = await TrajectoryEvalChain.fromLLM(
         llm_,
         agentTools,

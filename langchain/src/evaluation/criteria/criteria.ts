@@ -70,7 +70,7 @@ const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
   detail: "Does the submission demonstrate attention to detail?",
 };
 
-export type CRITERIA_TYPE =
+export type CriteriaLike =
   | { [key: string]: string }
   | Criteria
   | ConstitutionalPrinciple;
@@ -94,7 +94,6 @@ export class CriteriaResultOutputParser extends BaseLLMOutputParser<EvalOutputTy
     if (parsed.length === 1) {
       [verdict] = parsed;
     } else {
-      // 最后一个是verdict,前面的是reasoning
       reasoning = parsed.slice(0, parsed.length - 1).join("");
       verdict = parsed[parsed.length - 1];
     }
@@ -122,6 +121,10 @@ export interface CriteriaEvalInput {
 }
 
 export class CriteriaEvalChain extends LLMStringEvaluator {
+  static lc_name(): string {
+    return "CriteriaEvalChain";
+  }
+
   criterionName?: string;
 
   evaluationName?: string = this.criterionName;
@@ -130,8 +133,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
 
   requiresReference = false;
 
-  skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.
-    To use references, use the labeled_criteria instead.`;
+  skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.\nTo use references, use the labeled_criteria instead.`;
 
   // The output parser to use for the evaluation chain.
   outputParser: BaseLLMOutputParser<EvalOutputType> =
@@ -146,8 +148,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
    *
    * @return A dictionary mapping criterion names to descriptions.
    */
-
-  static resolveCriteria(criteria?: CRITERIA_TYPE): Record<string, string> {
+  static resolveCriteria(criteria?: CriteriaLike): Record<string, string> {
     if (criteria === undefined) {
       return {
         helpfulness: SUPPORTED_CRITERIA.helpfulness,
@@ -208,7 +209,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
    */
   static async fromLLM(
     llm: BaseLanguageModel,
-    criteria?: CRITERIA_TYPE,
+    criteria?: CriteriaLike,
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     if (this.name === "CriteriaEvalChain" && criteria === "correctness") {
@@ -287,6 +288,10 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
  * Criteria evaluation chain that requires references.
  */
 export class LabeledCriteriaEvalChain extends CriteriaEvalChain {
+  static lc_name(): string {
+    return "CriteriaEvalChain";
+  }
+
   // Whether the evaluation requires a reference text.
   requiresReference = true;
 

@@ -19,7 +19,7 @@ import { Callbacks } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
 import { BasePromptTemplate } from "../../prompts/index.js";
 import { ConstitutionalPrinciple } from "../../chains/index.js";
-import { Criteria, CRITERIA_TYPE } from "../criteria/criteria.js";
+import { Criteria, CriteriaLike } from "../criteria/criteria.js";
 
 const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
   conciseness: "Is the submission concise and to the point?",
@@ -42,7 +42,11 @@ const SUPPORTED_CRITERIA: Record<Criteria, string> = /* #__PURE__ */ {
  * A parser for the output of the PairwiseStringEvalChain.
  */
 export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOutputType> {
-  lc_namespace: string[];
+  static lc_name(): string {
+    return "PairwiseStringResultOutputParser";
+  }
+
+  lc_namespace = ["langchain", "evaluation", "comparison"];
 
   parseResult(
     generations: Generation[] | ChatGeneration[],
@@ -74,7 +78,11 @@ export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOu
       A: 1,
       B: 0,
       C: 0.5,
-    }[verdict]!;
+    }[verdict];
+
+    if (score === undefined) {
+      throw new Error("Could not parse score from evaluator output.");
+    }
 
     return Promise.resolve({
       reasoning: reasoning || "",
@@ -89,6 +97,10 @@ export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOu
  * of two models, prompts, or outputs of a single model on similar inputs.
  */
 export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
+  static lc_name(): string {
+    return "PairwiseStringEvalChain";
+  }
+
   criterionName?: string;
 
   evaluationName?: string = this.criterionName;
@@ -98,12 +110,12 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
   requiresReference = false;
 
   skipReferenceWarning = `Ignoring reference in ${this.constructor.name}, as it is not expected.
-    To use references, use the LabeledPairwiseStringEvalChain instead.`;
+To use references, use the LabeledPairwiseStringEvalChain instead.`;
 
   outputParser = new PairwiseStringResultOutputParser();
 
   static resolvePairwiseCriteria(
-    criteria?: CRITERIA_TYPE
+    criteria?: CriteriaLike
   ): Record<string, string> {
     if (criteria === undefined) {
       const defaultCriteria: Criteria[] = [
@@ -173,7 +185,7 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
    */
   static async fromLLM(
     llm: BaseLanguageModel,
-    criteria?: CRITERIA_TYPE,
+    criteria?: CriteriaLike,
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     let prompt = this.resolvePairwisePrompt(chainOptions?.prompt);
@@ -222,6 +234,10 @@ export class PairwiseStringEvalChain extends LLMPairwiseStringEvaluator {
  * with labeled preferences.
  */
 export class LabeledPairwiseStringEvalChain extends PairwiseStringEvalChain {
+  static lc_name(): string {
+    return "LabeledPairwiseStringEvalChain";
+  }
+
   requiresReference = true;
 
   static resolvePairwisePrompt(prompt?: BasePromptTemplate) {

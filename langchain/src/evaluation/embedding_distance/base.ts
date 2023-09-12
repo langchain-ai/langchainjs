@@ -24,7 +24,7 @@ import { Embeddings } from "../../embeddings/base.js";
  * CHEBYSHEV: Chebyshev distance metric.
  * HAMMING: Hamming distance metric.
  */
-export type EmbeddingDistance =
+export type EmbeddingDistanceType =
   | "cosine"
   | "euclidean"
   | "manhattan"
@@ -43,69 +43,42 @@ export interface EmbeddingDistanceEvalChainInput {
    * The distance metric to use
    * for comparing the embeddings.
    */
-  distanceMetric?: EmbeddingDistance;
+  distanceMetric?: EmbeddingDistanceType;
 }
 
 type VectorFunction = (xVector: number[], yVector: number[]) => number;
 
 /**
- * Shared functionality for embedding distance evaluators.
+ * Get the distance function for the given distance type.
+ * @param distance The distance type.
+ * @return The distance function.
  */
-class EmbeddingDistanceMixin {
-  /**
-   * Get the metric function for the given metric name.
-   * @param metric The metric name.
-   * @return The metric function.
-   */
-  _get_metric(metric: EmbeddingDistance): VectorFunction {
-    const metrics: { [key in EmbeddingDistance]: VectorFunction } = {
-      cosine: this._cosine_distance,
-      euclidean: this._euclidean_distance,
-      manhattan: this._manhattan_distance,
-      chebyshev: this._chebyshev_distance,
+export function getDistanceCalculationFunction(
+  distanceType: EmbeddingDistanceType
+): VectorFunction {
+  const distanceFunctions: { [key in EmbeddingDistanceType]: VectorFunction } =
+    {
+      cosine: (X: number[], Y: number[]) => 1.0 - similarity.cosine(X, Y),
+      euclidean: distance.euclidean,
+      manhattan: distance.manhattan,
+      chebyshev: distance.chebyshev,
     };
 
-    if (metric in metrics) {
-      return metrics[metric];
-    } else {
-      throw new Error(`Invalid metric: ${metric}`);
-    }
-  }
+  return distanceFunctions[distanceType];
+}
 
-  /**
-   * Compute the score based on the distance metric.
-   * @param vectors The input vectors.
-   * @param distanceMetric The distance metric.
-   * @return The computed score.
-   */
-  _compute_score(
-    vectors: number[][],
-    distanceMetric: EmbeddingDistance
-  ): number {
-    const metric = this._get_metric(distanceMetric);
-    if (!metric) throw new Error("Metric is undefined");
-    return metric(vectors[0], vectors[1]);
-  }
-
-  _cosine_distance(X: number[], Y: number[]) {
-    return 1.0 - similarity.cosine(X, Y);
-  }
-
-  _euclidean_distance(X: number[], Y: number[]) {
-    return distance.euclidean(X, Y);
-  }
-
-  _manhattan_distance(X: number[], Y: number[]) {
-    return distance.manhattan(X, Y);
-  }
-
-  _chebyshev_distance(X: number[], Y: number[]) {
-    return distance.chebyshev(X, Y);
-  }
-
-  _prepareOutput(result: ChainValues, outputKey: string) {
-    return { [outputKey]: result[outputKey] };
-  }
+/**
+ * Compute the score based on the distance metric.
+ * @param vectors The input vectors.
+ * @param distanceMetric The distance metric.
+ * @return The computed score.
+ */
+export function computeEvaluationScore(
+  vectors: number[][],
+  distanceMetric: EmbeddingDistanceType
+): number {
+  const metricFunction = getDistanceCalculationFunction(distanceMetric);
+  return metricFunction(vectors[0], vectors[1]);
 }
 
 /**
@@ -124,15 +97,12 @@ export class EmbeddingDistanceEvalChain
 
   embedding?: Embeddings;
 
-  distanceMetric: EmbeddingDistance = "cosine";
-
-  mixin: EmbeddingDistanceMixin;
+  distanceMetric: EmbeddingDistanceType = "cosine";
 
   constructor(fields: EmbeddingDistanceEvalChainInput) {
     super();
     this.embedding = fields?.embedding || new OpenAIEmbeddings();
     this.distanceMetric = fields?.distanceMetric || "cosine";
-    this.mixin = new EmbeddingDistanceMixin();
   }
 
   _chainType() {
@@ -145,7 +115,7 @@ export class EmbeddingDistanceEvalChain
   ): Promise<ChainValues> {
     const result = await this.call(args, config);
 
-    return this.mixin._prepareOutput(result, this.outputKey);
+    return { [this.outputKey]: result[this.outputKey] };
   }
 
   get inputKeys(): string[] {
@@ -169,7 +139,7 @@ export class EmbeddingDistanceEvalChain
       reference,
     ]);
 
-    const score = this.mixin._compute_score(vectors, this.distanceMetric);
+    const score = computeEvaluationScore(vectors, this.distanceMetric);
 
     return { [this.outputKey]: score };
   }
@@ -190,15 +160,12 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   embedding?: Embeddings;
 
-  distanceMetric: EmbeddingDistance = "cosine";
-
-  mixin: EmbeddingDistanceMixin;
+  distanceMetric: EmbeddingDistanceType = "cosine";
 
   constructor(fields: EmbeddingDistanceEvalChainInput) {
     super();
     this.embedding = fields?.embedding || new OpenAIEmbeddings();
     this.distanceMetric = fields?.distanceMetric || "cosine";
-    this.mixin = new EmbeddingDistanceMixin();
   }
 
   _chainType() {
@@ -211,7 +178,7 @@ export class PairwiseEmbeddingDistanceEvalChain
   ): Promise<ChainValues> {
     const result = await this.call(args, config);
 
-    return this.mixin._prepareOutput(result, this.outputKey);
+    return { [this.outputKey]: result[this.outputKey] };
   }
 
   get inputKeys(): string[] {
@@ -235,7 +202,7 @@ export class PairwiseEmbeddingDistanceEvalChain
       predictionB,
     ]);
 
-    const score = this.mixin._compute_score(vectors, this.distanceMetric);
+    const score = computeEvaluationScore(vectors, this.distanceMetric);
 
     return { [this.outputKey]: score };
   }

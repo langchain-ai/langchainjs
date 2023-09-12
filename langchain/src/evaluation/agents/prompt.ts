@@ -31,9 +31,9 @@ The AI language model's final answer to the question was:
 {answer}
 [END_RESPONSE]
 
-Let's to do a detailed evaluation of the AI language model's answer step by step.
+Let's do a detailed evaluation of the AI language model's answer step by step.
 
-    We consider the following criteria before giving a score from 1 to 5:
+We consider the following criteria before giving a score from 1 to 5:
 
 i. Is the final answer helpful?
     ii. Does the AI language use a logical sequence of tools to answer the question?
@@ -76,9 +76,9 @@ Tool output: The Statue of Liberty was given to the United States by France, as 
 The AI language model's final answer to the question was: There are different ways to measure the length of the United States, but if we use the distance between the Statue of Liberty and the westernmost point of the contiguous United States (Cape Alava, Washington), which is approximately 2,857 miles (4,596 km), and assume that the Statue of Liberty is 305 feet (93 meters) tall, then the statue would stretch across the United States approximately 17.5 times if laid end to end.
 [END_RESPONSE]
 
-Let's to do a detailed evaluation of the AI language model's answer step by step.
+Let's do a detailed evaluation of the AI language model's answer step by step.
 
-    We consider the following criteria before giving a score from 1 to 5:
+We consider the following criteria before giving a score from 1 to 5:
 
 i. Is the final answer helpful?
     ii. Does the AI language use a logical sequence of tools to answer the question?
@@ -124,9 +124,9 @@ The AI language model's final answer to the question was:
 {answer}
 [END_RESPONSE]
 
-Let's to do a detailed evaluation of the AI language model's answer step by step.
+Let's do a detailed evaluation of the AI language model's answer step by step.
 
-    We consider the following criteria before giving a score from 1 to 5:
+We consider the following criteria before giving a score from 1 to 5:
 
 i. Is the final answer helpful?
     ii. Does the AI language use a logical sequence of tools to answer the question?
