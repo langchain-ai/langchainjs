@@ -37,3 +37,10 @@ import InvokeExample from "@examples/guides/expression_language/interface_invoke
 import BatchExample from "@examples/guides/expression_language/interface_batch.ts";
 
 <CodeBlock language="typescript">{BatchExample}</CodeBlock>
+
+You can also pass a `batchOptions` argument to the call. There are options to set maximum concurrency
+and whether or not to return exceptions instead of throwing them (useful for gracefully handling failures!):
+
+import BatchExampleWithOptions from "@examples/guides/expression_language/interface_batch_with_options.ts";
+
+<CodeBlock language="typescript">{BatchExampleWithOptions}</CodeBlock>
