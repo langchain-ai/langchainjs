@@ -169,7 +169,10 @@ export function convertOpenAPISchemaToJSONSchema(
           return jsonSchema;
         }
         // eslint-disable-next-line no-param-reassign
-        jsonSchema.properties[propertyName] = convertOpenAPISchemaToJSONSchema(openAPIProperty, spec);
+        jsonSchema.properties[propertyName] = convertOpenAPISchemaToJSONSchema(
+          openAPIProperty,
+          spec
+        );
         if (openAPIProperty.required && jsonSchema.required !== undefined) {
           jsonSchema.required.push(propertyName);
         }
