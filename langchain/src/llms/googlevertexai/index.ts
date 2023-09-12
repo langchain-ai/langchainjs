@@ -24,9 +24,9 @@ export interface GoogleVertexAITextInput
  *   Google Cloud project using Vertex AI.
  */
 export class GoogleVertexAI extends BaseGoogleVertexAI<GoogleAuthOptions> {
-  // static lc_name() {
-  //   return "VertexAI";
-  // }
+  static lc_name() {
+    return "VertexAI";
+  }
 
   constructor(fields?: GoogleVertexAITextInput) {
     super(fields);

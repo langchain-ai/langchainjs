@@ -22,9 +22,9 @@ export interface GoogleVertexAITextInput
  * environment variable or directly as "authOptions.credentials".
  */
 export class GoogleVertexAI extends BaseGoogleVertexAI<WebGoogleAuthOptions> {
-  // static lc_name() {
-  //   return "VertexAI";
-  // }
+  static lc_name() {
+    return "VertexAI";
+  }
 
   get lc_secrets(): { [key: string]: string } {
     return {
