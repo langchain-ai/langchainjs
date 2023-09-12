@@ -21,9 +21,14 @@ class LineListOutputParser extends BaseOutputParser<LineList> {
   async parse(text: string): Promise<LineList> {
     const startKeyIndex = text.indexOf("<questions>");
     const endKeyIndex = text.indexOf("</questions>");
-    const questionsStartIndex = startKeyIndex === -1 ? 0 : startKeyIndex + "<questions>".length;
+    const questionsStartIndex =
+      startKeyIndex === -1 ? 0 : startKeyIndex + "<questions>".length;
     const questionsEndIndex = endKeyIndex === -1 ? text.length : endKeyIndex;
-    const lines = text.slice(questionsStartIndex, questionsEndIndex).trim().split("\n").filter((line) => line.trim() !== "");
+    const lines = text
+      .slice(questionsStartIndex, questionsEndIndex)
+      .trim()
+      .split("\n")
+      .filter((line) => line.trim() !== "");
     return { lines };
   }
 
