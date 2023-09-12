@@ -10,13 +10,13 @@ export interface TextSplitterParams {
   lengthFunction?:
     | ((text: string) => number)
     | ((text: string) => Promise<number>);
+  trimPageContent?: boolean // whether to trim the final pageContent of the document
 }
 
-export type TextSplitterOptions = {
+export type TextSplitterChunkHeaderOptions = {
   chunkHeader?: string;
   chunkOverlapHeader?: string;
   appendChunkOverlapHeader?: boolean;
-  trimPageContent?: boolean // whether to trim the final pageContent of the document
 };
 
 export abstract class TextSplitter
@@ -33,6 +33,8 @@ export abstract class TextSplitter
 
   private trimOnJoin = true;
 
+  trimPageContent = true;
+
   lengthFunction:
     | ((text: string) => number)
     | ((text: string) => Promise<number>);
@@ -44,14 +46,15 @@ export abstract class TextSplitter
     this.keepSeparator = fields?.keepSeparator ?? this.keepSeparator;
     this.lengthFunction =
       fields?.lengthFunction ?? ((text: string) => text.length);
-    if (this.chunkOverlap >= this.chunkSize) {
+    this.trimPageContent = fields?.trimPageContent ?? this.trimPageContent;
+        if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
   }
 
   async transformDocuments(
     documents: Document[],
-    textSplitterOptions: TextSplitterOptions = {}
+    textSplitterOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]> {
     return this.splitDocuments(documents, textSplitterOptions);
   }
@@ -80,7 +83,7 @@ export abstract class TextSplitter
     texts: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: Record<string, any>[] = [],
-    splitterOptions: TextSplitterOptions = {}
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]> {
     // if no metadata is provided, we create an empty one for each text
     const _metadatas =
@@ -89,8 +92,7 @@ export abstract class TextSplitter
       chunkHeader = "",
       chunkOverlapHeader = "(cont'd) ",
       appendChunkOverlapHeader = false,
-      trimPageContent = true,
-    } = splitterOptions;
+    } = chunkHeaderOptions;
 
     let prevTrimOnJoin = this.trimOnJoin;
     this.trimOnJoin = false;
@@ -141,7 +143,7 @@ export abstract class TextSplitter
           loc,
         };
 
-        if (trimPageContent)  {
+        if (this.trimPageContent)  {
           pageContent += chunk.trim();
         }
         else {
@@ -265,7 +267,7 @@ export abstract class TextSplitter
 
   async splitDocuments(
     documents: Document[],
-    chunkHeaderOptions: TextSplitterOptions = {}
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]> {
     const selectedDocuments = documents.filter(
       (doc) => doc.pageContent !== undefined
