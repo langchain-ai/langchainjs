@@ -460,6 +460,9 @@ retrievers/contextual_compression.d.ts
 retrievers/document_compressors.cjs
 retrievers/document_compressors.js
 retrievers/document_compressors.d.ts
+retrievers/multi_query.cjs
+retrievers/multi_query.js
+retrievers/multi_query.d.ts
 retrievers/multi_vector.cjs
 retrievers/multi_vector.js
 retrievers/multi_vector.d.ts

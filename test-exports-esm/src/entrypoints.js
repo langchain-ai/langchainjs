@@ -49,6 +49,7 @@ import * as retrievers_remote from "langchain/retrievers/remote";
 import * as retrievers_databerry from "langchain/retrievers/databerry";
 import * as retrievers_contextual_compression from "langchain/retrievers/contextual_compression";
 import * as retrievers_document_compressors from "langchain/retrievers/document_compressors";
+import * as retrievers_multi_query from "langchain/retrievers/multi_query";
 import * as retrievers_multi_vector from "langchain/retrievers/multi_vector";
 import * as retrievers_parent_document from "langchain/retrievers/parent_document";
 import * as retrievers_time_weighted from "langchain/retrievers/time_weighted";

@@ -130,75 +130,66 @@ class BaseRunManager {
  * Manages callbacks for retriever runs.
  */
 export class CallbackManagerForRetrieverRun
-    extends BaseRunManager {
-    getChild(tag?: string): CallbackManager {
-        const manager = new CallbackManager(this.runId);
-        manager.setHandlers(this.inheritableHandlers);
-        manager.addTags(this.inheritableTags);
-        manager.addMetadata(this.inheritableMetadata);
-        if (tag) {
-            manager.addTags([tag], false);
-        }
-        return manager;
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
+  getChild(tag?: string): CallbackManager {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    const manager = new CallbackManager(this.runId);
+    manager.setHandlers(this.inheritableHandlers);
+    manager.addTags(this.inheritableTags);
+    manager.addMetadata(this.inheritableMetadata);
+    if (tag) {
+      manager.addTags([tag], false);
     }
-    getChainChild(tag?: string): CallbackManagerForChainRun {
-        const manager = new CallbackManagerForChainRun(
-            this.runId,
-            [],
-            this.inheritableHandlers,
-            (tag ? [tag] : []),
-            this.inheritableTags,
-            this.inheritableMetadata,
-            this.inheritableMetadata
-        );
-        return manager;
-    }
+    return manager;
+  }
 
-    async handleRetrieverEnd(documents: Document[]): Promise<void> {
-        await Promise.all(
-            this.handlers.map((handler) =>
-                consumeCallback(async () => {
-                    if (!handler.ignoreRetriever) {
-                        try {
-                            await handler.handleRetrieverEnd?.(
-                                documents,
-                                this.runId,
-                                this._parentRunId,
-                                this.tags
-                            );
-                        } catch (err) {
-                            console.error(
-                                `Error in handler ${handler.constructor.name}, handleRetriever`
-                            );
-                        }
-                    }
-                }, handler.awaitHandlers)
-            )
-        );
-    }
+  async handleRetrieverEnd(documents: Document[]): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverEnd?.(
+                documents,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetriever`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
 
-    async handleRetrieverError(err: Error | unknown): Promise<void> {
-        await Promise.all(
-            this.handlers.map((handler) =>
-                consumeCallback(async () => {
-                    if (!handler.ignoreRetriever) {
-                        try {
-                            await handler.handleRetrieverError?.(
-                                err,
-                                this.runId,
-                                this._parentRunId,
-                                this.tags
-                            );
-                        } catch (error) {
-                            console.error(
-                                `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
-                            );
-                        }
-                    }
-                }, handler.awaitHandlers)
-            )
-        );
-    }
+  async handleRetrieverError(err: Error | unknown): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverError?.(
+                err,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (error) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
 }
 
 export class CallbackManagerForLLMRun

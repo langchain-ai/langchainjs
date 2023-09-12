@@ -187,6 +187,7 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
   "retrievers/time_weighted": "retrievers/time_weighted",
