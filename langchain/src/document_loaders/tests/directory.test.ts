@@ -25,7 +25,7 @@ test("Test Directory loader", async () => {
       ".txt": (p) => new TextLoader(p),
       ".json": (p) => new JSONLoader(p),
     },
-    true,
+    false,
     UnknownHandling.Ignore
   );
   const docs = await loader.load();
