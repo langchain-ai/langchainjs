@@ -343,6 +343,14 @@
     {
       "source": "/docs/modules/data_connection/caching_embeddings(/?)",
       "destination": "/docs/modules/data_connection/text_embedding/caching_embeddings"
+    },
+    {
+      "source": "/docs/guides/expression_language/cookbook(/?)",
+      "destination": "/docs/expression_language/cookbook/"
+    },
+    {
+      "source": "/docs/guides/expression_language/interface(/?)",
+      "destination": "/docs/expression_language/interface/"
     }
   ]
 }

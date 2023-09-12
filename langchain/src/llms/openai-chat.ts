@@ -1,29 +1,20 @@
-import {
-  ChatCompletionRequestMessage,
-  ChatCompletionResponseMessageRoleEnum,
-  Configuration,
-  ConfigurationParameters,
-  CreateChatCompletionRequest,
-  CreateChatCompletionResponse,
-  OpenAIApi,
-} from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, GenerationChunk, LLMResult } from "../schema/index.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
+  OpenAICoreRequestOptions,
+  LegacyOpenAIInput,
 } from "../types/openai-types.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { readableStreamToAsyncIterable } from "../util/stream.js";
 import { BaseLLMParams, LLM } from "./base.js";
+import { wrapOpenAIClientError } from "../util/openai.js";
 
 export { AzureOpenAIInput, OpenAIChatInput };
-
 /**
  * Interface that extends the OpenAICallOptions interface and includes an
  * optional promptIndex property. It represents the options that can be
@@ -108,7 +99,7 @@ export class OpenAIChat
 
   modelName = "gpt-3.5-turbo";
 
-  prefixMessages?: ChatCompletionRequestMessage[];
+  prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[];
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
@@ -134,18 +125,18 @@ export class OpenAIChat
 
   organization?: string;
 
-  private client: OpenAIApi;
+  private client: OpenAIClient;
 
-  private clientConfig: ConfigurationParameters;
+  private clientConfig: ClientOptions;
 
   constructor(
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        configuration?: ConfigurationParameters;
+        configuration?: ClientOptions & LegacyOpenAIInput;
       },
     /** @deprecated */
-    configuration?: ConfigurationParameters
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     super(fields ?? {});
 
@@ -215,11 +206,20 @@ export class OpenAIChat
       if (!this.azureOpenAIApiVersion) {
         throw new Error("Azure OpenAI API version not found");
       }
+      this.openAIApiKey = this.openAIApiKey ?? "";
     }
 
     this.clientConfig = {
       apiKey: this.openAIApiKey,
       organization: this.organization,
+      baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders:
+        configuration?.baseOptions?.headers ??
+        fields?.configuration?.baseOptions?.headers,
+      defaultQuery:
+        configuration?.baseOptions?.params ??
+        fields?.configuration?.baseOptions?.params,
       ...configuration,
       ...fields?.configuration,
     };
@@ -230,7 +230,7 @@ export class OpenAIChat
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<CreateChatCompletionRequest, "messages"> {
+  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -248,7 +248,12 @@ export class OpenAIChat
   }
 
   /** @ignore */
-  _identifyingParams() {
+  _identifyingParams(): Omit<
+    OpenAIClient.Chat.ChatCompletionCreateParams,
+    "messages"
+  > & {
+    model_name: string;
+  } & ClientOptions {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
@@ -259,7 +264,12 @@ export class OpenAIChat
   /**
    * Get the identifying parameters for the model
    */
-  identifyingParams() {
+  identifyingParams(): Omit<
+    OpenAIClient.Chat.ChatCompletionCreateParams,
+    "messages"
+  > & {
+    model_name: string;
+  } & ClientOptions {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
@@ -272,16 +282,16 @@ export class OpenAIChat
    * @param prompt The prompt to be formatted.
    * @returns Array of formatted messages.
    */
-  private formatMessages(prompt: string): ChatCompletionRequestMessage[] {
-    const message: ChatCompletionRequestMessage = {
+  private formatMessages(
+    prompt: string
+  ): OpenAIClient.Chat.ChatCompletionMessageParam[] {
+    const message: OpenAIClient.Chat.ChatCompletionMessageParam = {
       role: "user",
       content: prompt,
     };
     return this.prefixMessages ? [...this.prefixMessages, message] : [message];
   }
 
-  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
-  // when we integrate OpenAI's new SDK.
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
@@ -290,93 +300,32 @@ export class OpenAIChat
     const params = {
       ...this.invocationParams(options),
       messages: this.formatMessages(prompt),
-      stream: true,
+      stream: true as const,
     };
-    const streamIterable = this.startStream(params, options);
-    for await (const streamedResponse of streamIterable) {
-      const data = JSON.parse(streamedResponse) as {
-        choices?: Array<{
-          index: number;
-          finish_reason: string | null;
-          delta: {
-            role?: string;
-            content?: string;
-            function_call?: { name: string; arguments: string };
-          };
-        }>;
-      };
-
-      const choice = data.choices?.[0];
+    const stream = await this.completionWithRetry(params, options);
+    for await (const data of stream) {
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }
-
       const { delta } = choice;
       const generationChunk = new GenerationChunk({
         text: delta.content ?? "",
       });
       yield generationChunk;
+      const newTokenIndices = {
+        prompt: options.promptIndex ?? 0,
+        completion: choice.index ?? 0,
+      };
       // eslint-disable-next-line no-void
-      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+      void runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        newTokenIndices
+      );
     }
-  }
-
-  /**
-   * Starts a stream of responses from the OpenAI API.
-   * @param request The request to be sent to the OpenAI API.
-   * @param options Optional configuration for the Axios request.
-   * @returns An iterable object that can be used to iterate over the response chunks.
-   */
-  startStream(
-    request: CreateChatCompletionRequest,
-    options?: StreamingAxiosConfiguration
-  ) {
-    let done = false;
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const iterable = readableStreamToAsyncIterable(stream.readable);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let err: any;
-    this.completionWithRetry(request, {
-      ...options,
-      adapter: fetchAdapter, // default adapter doesn't do streaming
-      responseType: "stream",
-      onmessage: (event) => {
-        if (done) return;
-        if (event.data?.trim?.() === "[DONE]") {
-          done = true;
-          // eslint-disable-next-line no-void
-          void writer.close();
-        } else {
-          const data = JSON.parse(event.data);
-          if (data.error) {
-            done = true;
-            throw data.error;
-          }
-          // eslint-disable-next-line no-void
-          void writer.write(event.data);
-        }
-      },
-    }).catch((error) => {
-      if (!done) {
-        err = error;
-        done = true;
-        // eslint-disable-next-line no-void
-        void writer.close();
-      }
-    });
-    return {
-      async next() {
-        const chunk = await iterable.next();
-        if (err) {
-          throw err;
-        }
-        return chunk;
-      },
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    };
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
+    }
   }
 
   /** @ignore */
@@ -387,179 +336,117 @@ export class OpenAIChat
   ): Promise<string> {
     const params = this.invocationParams(options);
 
-    const data = params.stream
-      ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
-          let response: CreateChatCompletionResponse;
-          let rejected = false;
-          let resolved = false;
-          this.completionWithRetry(
-            {
-              ...params,
-              messages: this.formatMessages(prompt),
-            },
-            {
-              signal: options.signal,
-              ...options.options,
-              adapter: fetchAdapter, // default adapter doesn't do streaming
-              responseType: "stream",
-              onmessage: (event) => {
-                if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved || rejected) {
-                    return;
-                  }
-                  resolved = true;
-                  resolve(response);
-                } else {
-                  const data = JSON.parse(event.data);
+    if (params.stream) {
+      const stream = await this._streamResponseChunks(
+        prompt,
+        options,
+        runManager
+      );
+      let finalChunk: GenerationChunk | undefined;
+      for await (const chunk of stream) {
+        if (finalChunk === undefined) {
+          finalChunk = chunk;
+        } else {
+          finalChunk = finalChunk.concat(chunk);
+        }
+      }
+      return finalChunk?.text ?? "";
+    } else {
+      const response = await this.completionWithRetry(
+        {
+          ...params,
+          stream: false,
+          messages: this.formatMessages(prompt),
+        },
+        {
+          signal: options.signal,
+          ...options.options,
+        }
+      );
+      return response?.choices[0]?.message?.content ?? "";
+    }
+  }
 
-                  if (data?.error) {
-                    if (rejected) {
-                      return;
-                    }
-                    rejected = true;
-                    reject(data.error);
-                    return;
-                  }
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
+  async completionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
-                  const message = data as {
-                    id: string;
-                    object: string;
-                    created: number;
-                    model: string;
-                    choices: Array<{
-                      index: number;
-                      finish_reason: string | null;
-                      delta: { content?: string; role?: string };
-                    }>;
-                  };
+  async completionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
-                  // on the first message set the response properties
-                  if (!response) {
-                    response = {
-                      id: message.id,
-                      object: message.object,
-                      created: message.created,
-                      model: message.model,
-                      choices: [],
-                    };
-                  }
-
-                  // on all messages, update choice
-                  for (const part of message.choices) {
-                    if (part != null) {
-                      let choice = response.choices.find(
-                        (c) => c.index === part.index
-                      );
-
-                      if (!choice) {
-                        choice = {
-                          index: part.index,
-                          finish_reason: part.finish_reason ?? undefined,
-                        };
-                        response.choices.push(choice);
-                      }
-
-                      if (!choice.message) {
-                        choice.message = {
-                          role: part.delta
-                            ?.role as ChatCompletionResponseMessageRoleEnum,
-                          content: part.delta?.content ?? "",
-                        };
-                      }
-
-                      choice.message.content += part.delta?.content ?? "";
-                      // eslint-disable-next-line no-void
-                      void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? "",
-                        {
-                          prompt: options.promptIndex ?? 0,
-                          completion: part.index,
-                        }
-                      );
-                    }
-                  }
-
-                  // when all messages are finished, resolve
-                  if (
-                    !resolved &&
-                    !rejected &&
-                    message.choices.every((c) => c.finish_reason != null)
-                  ) {
-                    resolved = true;
-                    resolve(response);
-                  }
-                }
-              },
-            }
-          ).catch((error) => {
-            if (!rejected) {
-              rejected = true;
-              reject(error);
-            }
-          });
-        })
-      : await this.completionWithRetry(
-          {
-            ...params,
-            messages: this.formatMessages(prompt),
-          },
-          {
-            signal: options.signal,
-            ...options.options,
-          }
+  async completionWithRetry(
+    request:
+      | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
+      | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<
+    | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
+    | OpenAIClient.Chat.Completions.ChatCompletion
+  > {
+    const requestOptions = this._getClientOptions(options);
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.chat.completions.create(
+          request,
+          requestOptions
         );
-
-    return data.choices[0].message?.content ?? "";
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
   }
 
   /** @ignore */
-  async completionWithRetry(
-    request: CreateChatCompletionRequest,
-    options?: StreamingAxiosConfiguration
-  ) {
+  private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        basePath: this.clientConfig.basePath,
+        baseURL: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
 
-      const clientConfig = new Configuration({
+      const params = {
         ...this.clientConfig,
-        basePath: endpoint,
-        baseOptions: {
-          timeout: this.timeout,
-          ...this.clientConfig.baseOptions,
-        },
-      });
-      this.client = new OpenAIApi(clientConfig);
+        baseURL: endpoint,
+        timeout: this.timeout,
+        maxRetries: 0,
+      };
+      if (!params.baseURL) {
+        delete params.baseURL;
+      }
+
+      this.client = new OpenAIClient(params);
     }
-    const axiosOptions = {
-      adapter: isNode() ? undefined : fetchAdapter,
-      ...this.clientConfig.baseOptions,
+    const requestOptions = {
+      ...this.clientConfig,
       ...options,
-    } as StreamingAxiosConfiguration;
+    } as OpenAICoreRequestOptions;
     if (this.azureOpenAIApiKey) {
-      axiosOptions.headers = {
+      requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...axiosOptions.headers,
+        ...requestOptions.headers,
       };
-      axiosOptions.params = {
+      requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...axiosOptions.params,
+        ...requestOptions.query,
       };
     }
-    return this.caller
-      .call(
-        this.client.createChatCompletion.bind(this.client),
-        request,
-        axiosOptions
-      )
-      .then((res) => res.data);
+    return requestOptions;
   }
 
   _llmType() {
@@ -605,25 +492,6 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     }
   }
 
-  /**
-   * Makes a call to the OpenAI API with retry logic in case of failures.
-   * @param request The request to be sent to the OpenAI API.
-   * @param options Optional configuration for the Axios request.
-   * @returns The response from the OpenAI API.
-   */
-  async completionWithRetry(
-    request: CreateChatCompletionRequest,
-    options?: StreamingAxiosConfiguration
-  ) {
-    if (request.stream) {
-      return super.completionWithRetry(request, options);
-    }
-
-    const response = await super.completionWithRetry(request);
-
-    return response;
-  }
-
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
@@ -645,8 +513,8 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
         const promptLayerRespBody = await promptLayerTrackRequest(
           this.caller,
           "langchain.PromptLayerOpenAIChat",
-          [prompt],
-          this._identifyingParams(),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { ...this._identifyingParams(), prompt } as any,
           this.plTags,
           parsedResp,
           requestStartTime,

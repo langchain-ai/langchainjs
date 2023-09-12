@@ -5,6 +5,7 @@ import {
   ClientOptions,
 } from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
+import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
@@ -18,6 +19,7 @@ import {
 } from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 /**
  * Extracts the custom role of a generic chat message.
@@ -60,7 +62,7 @@ function getAnthropicPromptFromMessage(message: BaseMessage): string {
   }
 }
 
-const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
+export const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
 
 /**
  * Input to AnthropicChat class.
@@ -140,7 +142,12 @@ type Kwargs = Record<string, any>;
  * even if not explicitly available on this class.
  *
  */
-export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
+export class ChatAnthropic<
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+  >
+  extends BaseChatModel<CallOptions>
+  implements AnthropicInput
+{
   static lc_name() {
     return "ChatAnthropic";
   }
@@ -171,7 +178,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   maxTokensToSample = 2048;
 
-  modelName = "claude-v1";
+  modelName = "claude-2";
 
   invocationKwargs?: Kwargs;
 
@@ -182,10 +189,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   clientOptions: ClientOptions;
 
   // Used for non-streaming requests
-  private batchClient: Anthropic;
+  protected batchClient: Anthropic;
 
   // Used for streaming requests
-  private streamingClient: Anthropic;
+  protected streamingClient: Anthropic;
 
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
@@ -297,7 +304,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
    * @param messages The base messages to format as a prompt.
    * @returns The formatted prompt.
    */
-  private formatMessagesAsPrompt(messages: BaseMessage[]): string {
+  protected formatMessagesAsPrompt(messages: BaseMessage[]): string {
     return (
       messages
         .map((message) => {
@@ -368,15 +375,16 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
    * @param request The parameters for creating a completion.
    * @returns A streaming request.
    */
-  private async createStreamWithRetry(
+  protected async createStreamWithRetry(
     request: CompletionCreateParams & Kwargs
-  ) {
+  ): Promise<Stream<Anthropic.Completions.Completion>> {
     if (!this.streamingClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.streamingClient = new Anthropic({
         ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
+        maxRetries: 0,
       });
     }
     const makeCompletionRequest = async () =>
@@ -388,7 +396,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   }
 
   /** @ignore */
-  private async completionWithRetry(
+  protected async completionWithRetry(
     request: CompletionCreateParams & Kwargs,
     options: { signal?: AbortSignal }
   ): Promise<Anthropic.Completions.Completion> {
@@ -401,6 +409,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
+        maxRetries: 0,
       });
     }
     const makeCompletionRequest = async () =>

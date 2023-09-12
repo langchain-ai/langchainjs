@@ -1,5 +1,4 @@
 import * as uuid from "uuid";
-import type { VectorDocumentStore as VectorDocumentStoreT } from "@tigrisdata/vector";
 
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
@@ -10,7 +9,8 @@ import { Document } from "../document.js";
  * TigrisVectorStore instance.
  */
 export type TigrisLibArgs = {
-  index: VectorDocumentStoreT;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  index: any;
 };
 
 /**
@@ -18,7 +18,8 @@ export type TigrisLibArgs = {
  * Tigris, an open-source Serverless NoSQL Database and Search Platform.
  */
 export class TigrisVectorStore extends VectorStore {
-  index?: VectorDocumentStoreT;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  index?: any;
 
   _vectorstoreType(): string {
     return "tigris";
@@ -104,7 +105,8 @@ export class TigrisVectorStore extends VectorStore {
       return [];
     }
 
-    return result.map(([document, score]) => [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return result.map(([document, score]: [any, any]) => [
       new Document({
         pageContent: document.content,
         metadata: document.metadata,

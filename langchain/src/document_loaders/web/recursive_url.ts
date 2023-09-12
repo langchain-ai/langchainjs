@@ -82,6 +82,20 @@ export class RecursiveUrlLoader
       )
         continue;
 
+      let standardizedLink: string;
+
+      if (link.startsWith("http")) {
+        standardizedLink = link;
+      } else if (link.startsWith("//")) {
+        const base = new URL(baseUrl);
+        standardizedLink = base.protocol + link;
+      } else {
+        standardizedLink = new URL(link, baseUrl).href;
+      }
+
+      if (this.excludeDirs.some((exDir) => standardizedLink.startsWith(exDir)))
+        continue;
+
       if (link.startsWith("http")) {
         const isAllowed = !this.preventOutside || link.startsWith(baseUrl);
         if (isAllowed) absolutePaths.push(link);

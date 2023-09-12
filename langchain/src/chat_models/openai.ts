@@ -1,16 +1,5 @@
-import {
-  ChatCompletionFunctions,
-  ChatCompletionRequestMessage,
-  ChatCompletionRequestMessageFunctionCall,
-  ChatCompletionResponseMessage,
-  ChatCompletionResponseMessageRoleEnum,
-  Configuration,
-  ConfigurationParameters,
-  CreateChatCompletionRequest,
-  CreateChatCompletionRequestFunctionCall,
-  CreateChatCompletionResponse,
-  OpenAIApi,
-} from "openai";
+import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
@@ -34,14 +23,16 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
+  OpenAICoreRequestOptions,
+  LegacyOpenAIInput,
 } from "../types/openai-types.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
-import { readableStreamToAsyncIterable } from "../util/stream.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { BaseFunctionCallOptions } from "../base_language/index.js";
+import { NewTokenIndices } from "../callbacks/base.js";
+import { wrapOpenAIClientError } from "../util/openai.js";
 
 export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -55,6 +46,9 @@ interface OpenAILLMOutput {
   tokenUsage: TokenUsage;
 }
 
+// TODO import from SDK when available
+type OpenAIRoleEnum = "system" | "assistant" | "user" | "function";
+
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
     message.role !== "system" &&
@@ -65,12 +59,10 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
     console.warn(`Unknown message role: ${message.role}`);
   }
 
-  return message.role as ChatCompletionResponseMessageRoleEnum;
+  return message.role as OpenAIRoleEnum;
 }
 
-function messageToOpenAIRole(
-  message: BaseMessage
-): ChatCompletionResponseMessageRoleEnum {
+function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   const type = message._getType();
   switch (type) {
     case "system":
@@ -92,7 +84,7 @@ function messageToOpenAIRole(
 }
 
 function openAIResponseToChatMessage(
-  message: ChatCompletionResponseMessage
+  message: OpenAIClient.Chat.Completions.ChatCompletionMessage
 ): BaseMessage {
   switch (message.role) {
     case "user":
@@ -111,7 +103,7 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  defaultRole?: ChatCompletionResponseMessageRoleEnum
+  defaultRole?: OpenAIRoleEnum
 ) {
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
@@ -140,9 +132,9 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-export interface ChatOpenAICallOptions extends OpenAICallOptions {
-  function_call?: CreateChatCompletionRequestFunctionCall;
-  functions?: ChatCompletionFunctions[];
+export interface ChatOpenAICallOptions
+  extends OpenAICallOptions,
+    BaseFunctionCallOptions {
   tools?: StructuredTool[];
   promptIndex?: number;
 }
@@ -246,18 +238,18 @@ export class ChatOpenAI
 
   organization?: string;
 
-  private client: OpenAIApi;
+  private client: OpenAIClient;
 
-  private clientConfig: ConfigurationParameters;
+  private clientConfig: ClientOptions;
 
   constructor(
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseChatModelParams & {
-        configuration?: ConfigurationParameters;
+        configuration?: ClientOptions & LegacyOpenAIInput;
       },
     /** @deprecated */
-    configuration?: ConfigurationParameters
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     super(fields ?? {});
 
@@ -318,11 +310,20 @@ export class ChatOpenAI
       if (!this.azureOpenAIApiVersion) {
         throw new Error("Azure OpenAI API version not found");
       }
+      this.openAIApiKey = this.openAIApiKey ?? "";
     }
 
     this.clientConfig = {
       apiKey: this.openAIApiKey,
       organization: this.organization,
+      baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders:
+        configuration?.baseOptions?.headers ??
+        fields?.configuration?.baseOptions?.headers,
+      defaultQuery:
+        configuration?.baseOptions?.params ??
+        fields?.configuration?.baseOptions?.params,
       ...configuration,
       ...fields?.configuration,
     };
@@ -333,7 +334,7 @@ export class ChatOpenAI
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<CreateChatCompletionRequest, "messages"> {
+  ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -357,7 +358,12 @@ export class ChatOpenAI
   }
 
   /** @ignore */
-  _identifyingParams() {
+  _identifyingParams(): Omit<
+    OpenAIClient.Chat.ChatCompletionCreateParams,
+    "messages"
+  > & {
+    model_name: string;
+  } & ClientOptions {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
@@ -365,121 +371,58 @@ export class ChatOpenAI
     };
   }
 
-  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
-  // when we integrate OpenAI's new SDK.
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
-      (message) => ({
+    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
+      messages.map((message) => ({
         role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
-          .function_call as ChatCompletionRequestMessageFunctionCall,
-      })
-    );
+          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
+      }));
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
-      stream: true,
+      stream: true as const,
     };
-    let defaultRole: ChatCompletionResponseMessageRoleEnum = "assistant";
-    const streamIterable = this.startStream(params, options);
-    for await (const streamedResponse of streamIterable) {
-      const data = JSON.parse(streamedResponse) as {
-        choices?: Array<{
-          index: number;
-          finish_reason: string | null;
-          delta: {
-            role?: string;
-            content?: string;
-            function_call?: { name: string; arguments: string };
-          };
-        }>;
-      };
-
-      const choice = data.choices?.[0];
+    let defaultRole: OpenAIRoleEnum | undefined;
+    const streamIterable = await this.completionWithRetry(params, options);
+    for await (const data of streamIterable) {
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }
 
       const { delta } = choice;
       const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
-      defaultRole = (delta.role ??
-        defaultRole) as ChatCompletionResponseMessageRoleEnum;
+      defaultRole = delta.role ?? defaultRole;
+      const newTokenIndices = {
+        prompt: options.promptIndex ?? 0,
+        completion: choice.index ?? 0,
+      };
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
         text: chunk.content,
+        generationInfo: newTokenIndices,
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
-        {
-          prompt: 0,
-          completion: choice.index,
-        },
+        newTokenIndices,
         undefined,
         undefined,
         undefined,
         { chunk: generationChunk }
       );
     }
-  }
-
-  startStream(
-    request: CreateChatCompletionRequest,
-    options?: StreamingAxiosConfiguration
-  ) {
-    let done = false;
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const iterable = readableStreamToAsyncIterable(stream.readable);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let err: any;
-    this.completionWithRetry(request, {
-      ...options,
-      adapter: fetchAdapter, // default adapter doesn't do streaming
-      responseType: "stream",
-      onmessage: (event) => {
-        if (done) return;
-        if (event.data?.trim?.() === "[DONE]") {
-          done = true;
-          // eslint-disable-next-line no-void
-          void writer.close();
-        } else {
-          const data = JSON.parse(event.data);
-          if (data.error) {
-            done = true;
-            throw data.error;
-          }
-          // eslint-disable-next-line no-void
-          void writer.write(event.data);
-        }
-      },
-    }).catch((error) => {
-      if (!done) {
-        err = error;
-        done = true;
-        // eslint-disable-next-line no-void
-        void writer.close();
-      }
-    });
-    return {
-      async next() {
-        const chunk = await iterable.next();
-        if (err) {
-          throw err;
-        }
-        return chunk;
-      },
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    };
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
+    }
   }
 
   /**
@@ -497,203 +440,85 @@ export class ChatOpenAI
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
-      (message) => ({
+    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
+      messages.map((message) => ({
         role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
-          .function_call as ChatCompletionRequestMessageFunctionCall,
-      })
-    );
+          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
+      }));
 
-    const data = params.stream
-      ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
-          let response: CreateChatCompletionResponse;
-          let rejected = false;
-          let resolved = false;
-          this.completionWithRetry(
-            {
-              ...params,
-              messages: messagesMapped,
-            },
-            {
-              signal: options?.signal,
-              ...options?.options,
-              adapter: fetchAdapter, // default adapter doesn't do streaming
-              responseType: "stream",
-              onmessage: (event) => {
-                if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved || rejected) {
-                    return;
-                  }
-                  resolved = true;
-                  resolve(response);
-                } else {
-                  const data = JSON.parse(event.data);
-                  if (!data.id) return;
-                  if (data?.error) {
-                    if (rejected) {
-                      return;
-                    }
-                    rejected = true;
-                    reject(data.error);
-                    return;
-                  }
+    if (params.stream) {
+      const stream = await this._streamResponseChunks(
+        messages,
+        options,
+        runManager
+      );
+      const finalChunks: Record<number, ChatGenerationChunk> = {};
+      for await (const chunk of stream) {
+        const index =
+          (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
+        if (finalChunks[index] === undefined) {
+          finalChunks[index] = chunk;
+        } else {
+          finalChunks[index] = finalChunks[index].concat(chunk);
+        }
+      }
+      const generations = Object.entries(finalChunks)
+        .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
+        .map(([_, value]) => value);
+      return { generations };
+    } else {
+      const data = await this.completionWithRetry(
+        {
+          ...params,
+          stream: false,
+          messages: messagesMapped,
+        },
+        {
+          signal: options?.signal,
+          ...options?.options,
+        }
+      );
+      const {
+        completion_tokens: completionTokens,
+        prompt_tokens: promptTokens,
+        total_tokens: totalTokens,
+      } = data?.usage ?? {};
 
-                  const message = data as {
-                    id: string;
-                    object: string;
-                    created: number;
-                    model: string;
-                    choices?: Array<{
-                      index: number;
-                      finish_reason: string | null;
-                      delta: {
-                        role?: string;
-                        content?: string;
-                        function_call?: { name: string; arguments: string };
-                      };
-                    }>;
-                  };
+      if (completionTokens) {
+        tokenUsage.completionTokens =
+          (tokenUsage.completionTokens ?? 0) + completionTokens;
+      }
 
-                  // on the first message set the response properties
-                  if (!response) {
-                    response = {
-                      id: message.id,
-                      object: message.object,
-                      created: message.created,
-                      model: message.model,
-                      choices: [],
-                    };
-                  }
+      if (promptTokens) {
+        tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+      }
 
-                  // on all messages, update choice
-                  for (const part of message.choices ?? []) {
-                    if (part != null) {
-                      let choice = response.choices.find(
-                        (c) => c.index === part.index
-                      );
+      if (totalTokens) {
+        tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
+      }
 
-                      if (!choice) {
-                        choice = {
-                          index: part.index,
-                          finish_reason: part.finish_reason ?? undefined,
-                        };
-                        response.choices[part.index] = choice;
-                      }
-
-                      if (!choice.message) {
-                        choice.message = {
-                          role: part.delta
-                            ?.role as ChatCompletionResponseMessageRoleEnum,
-                          content: "",
-                        };
-                      }
-
-                      if (
-                        part.delta.function_call &&
-                        !choice.message.function_call
-                      ) {
-                        choice.message.function_call = {
-                          name: "",
-                          arguments: "",
-                        };
-                      }
-
-                      choice.message.content += part.delta?.content ?? "";
-                      if (choice.message.function_call) {
-                        choice.message.function_call.name +=
-                          part.delta?.function_call?.name ?? "";
-                        choice.message.function_call.arguments +=
-                          part.delta?.function_call?.arguments ?? "";
-                      }
-
-                      const chunk = _convertDeltaToMessageChunk(
-                        part.delta,
-                        "assistant"
-                      );
-                      const generationChunk = new ChatGenerationChunk({
-                        message: chunk,
-                        text: chunk.content,
-                      });
-
-                      void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? "",
-                        {
-                          prompt: options.promptIndex ?? 0,
-                          completion: part.index,
-                        },
-                        undefined,
-                        undefined,
-                        undefined,
-                        { chunk: generationChunk }
-                      );
-                    }
-                  }
-                  // when all messages are finished, resolve
-                  if (
-                    !resolved &&
-                    !rejected &&
-                    message.choices?.every((c) => c.finish_reason != null)
-                  ) {
-                    resolved = true;
-                    resolve(response);
-                  }
-                }
-              },
-            }
-          ).catch((error) => {
-            if (!rejected) {
-              rejected = true;
-              reject(error);
-            }
-          });
-        })
-      : await this.completionWithRetry(
-          {
-            ...params,
-            messages: messagesMapped,
-          },
-          {
-            signal: options?.signal,
-            ...options?.options,
-          }
-        );
-
-    const {
-      completion_tokens: completionTokens,
-      prompt_tokens: promptTokens,
-      total_tokens: totalTokens,
-    } = data.usage ?? {};
-
-    if (completionTokens) {
-      tokenUsage.completionTokens =
-        (tokenUsage.completionTokens ?? 0) + completionTokens;
+      const generations: ChatGeneration[] = [];
+      for (const part of data?.choices ?? []) {
+        const text = part.message?.content ?? "";
+        const generation: ChatGeneration = {
+          text,
+          message: openAIResponseToChatMessage(
+            part.message ?? { role: "assistant" }
+          ),
+        };
+        if (part.finish_reason) {
+          generation.generationInfo = { finish_reason: part.finish_reason };
+        }
+        generations.push(generation);
+      }
+      return {
+        generations,
+        llmOutput: { tokenUsage },
+      };
     }
-
-    if (promptTokens) {
-      tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
-    }
-
-    if (totalTokens) {
-      tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
-    }
-
-    const generations: ChatGeneration[] = [];
-    for (const part of data.choices) {
-      const text = part.message?.content ?? "";
-      generations.push({
-        text,
-        message: openAIResponseToChatMessage(
-          part.message ?? { role: "assistant" }
-        ),
-      });
-    }
-    return {
-      generations,
-      llmOutput: { tokenUsage },
-    };
   }
 
   async getNumTokensFromMessages(messages: BaseMessage[]): Promise<{
@@ -733,56 +558,84 @@ export class ChatOpenAI
     return { totalCount, countPerMessage };
   }
 
-  /** @ignore */
+  /**
+   * Calls the OpenAI API with retry logic in case of failures.
+   * @param request The request to send to the OpenAI API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the OpenAI API.
+   */
   async completionWithRetry(
-    request: CreateChatCompletionRequest,
-    options?: StreamingAxiosConfiguration
-  ) {
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
+
+  async completionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
+
+  async completionWithRetry(
+    request:
+      | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
+      | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<
+    | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
+    | OpenAIClient.Chat.Completions.ChatCompletion
+  > {
+    const requestOptions = this._getClientOptions(options);
+    return this.caller.call(async () => {
+      try {
+        const res = await this.client.chat.completions.create(
+          request,
+          requestOptions
+        );
+        return res;
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
+      }
+    });
+  }
+
+  private _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        basePath: this.clientConfig.basePath,
+        baseURL: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
-
-      const clientConfig = new Configuration({
+      const params = {
         ...this.clientConfig,
-        basePath: endpoint,
-        baseOptions: {
-          timeout: this.timeout,
-          ...this.clientConfig.baseOptions,
-        },
-      });
+        baseURL: endpoint,
+        timeout: this.timeout,
+        maxRetries: 0,
+      };
+      if (!params.baseURL) {
+        delete params.baseURL;
+      }
 
-      this.client = new OpenAIApi(clientConfig);
+      this.client = new OpenAIClient(params);
     }
-
-    const axiosOptions = {
-      adapter: isNode() ? undefined : fetchAdapter,
-      ...this.clientConfig.baseOptions,
+    const requestOptions = {
+      ...this.clientConfig,
       ...options,
-    } as StreamingAxiosConfiguration;
+    } as OpenAICoreRequestOptions;
     if (this.azureOpenAIApiKey) {
-      axiosOptions.headers = {
+      requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...axiosOptions.headers,
+        ...requestOptions.headers,
       };
-      axiosOptions.params = {
+      requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...axiosOptions.params,
+        ...requestOptions.query,
       };
     }
-    return this.caller
-      .call(
-        this.client.createChatCompletion.bind(this.client),
-        request,
-        axiosOptions
-      )
-      .then((res) => res.data);
+    return requestOptions;
   }
 
   _llmType() {
@@ -868,7 +721,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _convertMessageToDict = (message: BaseMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let messageDict: Record<string, any>;
+      let messageDict: OpenAIClient.Chat.ChatCompletionMessageParam;
 
       if (message._getType() === "human") {
         messageDict = { role: "user", content: message.content };
@@ -880,7 +733,11 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
         messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {
         messageDict = {
-          role: (message as ChatMessage).role,
+          role: (message as ChatMessage).role as
+            | "system"
+            | "assistant"
+            | "user"
+            | "function",
           content: message.content,
         };
       } else {
@@ -925,8 +782,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const promptLayerRespBody = await promptLayerTrackRequest(
         this.caller,
         "langchain.PromptLayerChatOpenAI",
-        messageDicts,
-        this._identifyingParams(),
+        { ...this._identifyingParams(), messages: messageDicts, stream: false },
         this.plTags,
         parsedResp,
         requestStartTime,

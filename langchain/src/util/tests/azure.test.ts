@@ -48,7 +48,7 @@ describe("getEndpoint", () => {
 
   it("should return the custom basePath when neither azureOpenAIBasePath nor azureOpenAIApiKey is provided", () => {
     const config: OpenAIEndpointConfig = {
-      basePath: "https://basepath.com",
+      baseURL: "https://basepath.com",
     };
     const result = getEndpoint(config);
     expect(result).toBe("https://basepath.com");

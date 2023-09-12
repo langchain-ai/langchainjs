@@ -1,4 +1,4 @@
-import { ChatCompletionRequestMessageFunctionCall } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { Document } from "../document.js";
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 
@@ -100,7 +100,7 @@ export interface BaseMessageFields {
   content: string;
   name?: string;
   additional_kwargs?: {
-    function_call?: ChatCompletionRequestMessageFunctionCall;
+    function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
     [key: string]: unknown;
   };
 }
@@ -442,6 +442,42 @@ export class ChatMessage
 
   static isInstance(message: BaseMessage): message is ChatMessage {
     return message._getType() === "generic";
+  }
+}
+
+export type BaseMessageLike =
+  | BaseMessage
+  | [
+      MessageType | "user" | "assistant" | (string & Record<never, never>),
+      string
+    ]
+  | string;
+
+export function isBaseMessage(
+  messageLike: BaseMessageLike
+): messageLike is BaseMessage {
+  return typeof (messageLike as BaseMessage)._getType === "function";
+}
+
+export function coerceMessageLikeToMessage(
+  messageLike: BaseMessageLike
+): BaseMessage {
+  if (typeof messageLike === "string") {
+    return new HumanMessage(messageLike);
+  } else if (isBaseMessage(messageLike)) {
+    return messageLike;
+  }
+  const [type, content] = messageLike;
+  if (type === "human" || type === "user") {
+    return new HumanMessage({ content });
+  } else if (type === "ai" || type === "assistant") {
+    return new AIMessage({ content });
+  } else if (type === "system") {
+    return new SystemMessage({ content });
+  } else {
+    throw new Error(
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+    );
   }
 }
 

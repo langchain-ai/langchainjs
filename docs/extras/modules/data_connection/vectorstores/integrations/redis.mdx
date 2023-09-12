@@ -35,3 +35,17 @@ import IndexExample from "@examples/indexes/vector_stores/redis/redis.ts";
 import QueryExample from "@examples/indexes/vector_stores/redis/redis_query.ts";
 
 <CodeBlock language="typescript">{QueryExample}</CodeBlock>
+
+## Create index with options
+
+To pass arguments for [index creation](https://redis.io/commands/ft.create/), you can utilize the [available options](https://github.com/redis/node-redis/blob/294cbf8367295ac81cbe51ce2932493ab80493f1/packages/search/lib/commands/CREATE.ts#L4) offered by [node-redis](https://github.com/redis/node-redis) through `createIndexOptions` parameter.
+
+import IndexOptions from "@examples/indexes/vector_stores/redis/redis_index_options.ts";
+
+<CodeBlock language="typescript">{IndexOptions}</CodeBlock>
+
+## Delete an index
+
+import DeleteExample from "@examples/indexes/vector_stores/redis/redis_delete.ts";
+
+<CodeBlock language="typescript">{DeleteExample}</CodeBlock>

@@ -4,7 +4,7 @@ import fs from "fs";
 import { expect, beforeAll } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
-import { VectaraLibArgs, VectaraStore } from "../vectara.js";
+import { VectaraFile, VectaraLibArgs, VectaraStore } from "../vectara.js";
 
 const getDocs = (): Document[] => {
   const hashCode = (s: string) =>
@@ -64,6 +64,20 @@ const getDocs = (): Document[] => {
   return documents;
 };
 
+let corpusId: number[] = [];
+const envValue = process.env.VECTARA_CORPUS_ID;
+if (envValue) {
+  corpusId = envValue.split(",").map((id) => {
+    const num = Number(id);
+    if (Number.isNaN(num)) corpusId = [0];
+    return num;
+  });
+
+  if (corpusId.length === 0) corpusId = [0];
+} else {
+  corpusId = [0];
+}
+
 describe("VectaraStore", () => {
   ["VECTARA_CUSTOMER_ID", "VECTARA_CORPUS_ID", "VECTARA_API_KEY"].forEach(
     (envVar) => {
@@ -76,7 +90,7 @@ describe("VectaraStore", () => {
   describe("fromTexts", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -90,7 +104,7 @@ describe("VectaraStore", () => {
   describe("fromDocuments", () => {
     const args: VectaraLibArgs = {
       customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+      corpusId,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
@@ -107,7 +121,7 @@ describe("VectaraStore", () => {
     beforeAll(async () => {
       store = new VectaraStore({
         customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-        corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
+        corpusId,
         apiKey: process.env.VECTARA_API_KEY || "",
       });
     });
@@ -177,20 +191,26 @@ describe("VectaraStore", () => {
         { filename: "frenchOne.txt", content: frenchOneContent },
       ];
 
-      const blobs = [];
+      const vectaraFiles: VectaraFile[] = [];
       for (const file of files) {
         fs.writeFileSync(file.filename, file.content);
 
         const buffer = fs.readFileSync(file.filename);
-        blobs.push(new Blob([buffer], { type: "text/plain" }));
+        vectaraFiles.push({
+          blob: new Blob([buffer], { type: "text/plain" }),
+          fileName: file.filename,
+        });
       }
 
       const bitcoinBuffer = fs.readFileSync(
         "../examples/src/document_loaders/example_data/bitcoin.pdf"
       );
-      blobs.push(new Blob([bitcoinBuffer], { type: "application/pdf" }));
+      vectaraFiles.push({
+        blob: new Blob([bitcoinBuffer], { type: "application/pdf" }),
+        fileName: "bitcoin.pdf",
+      });
 
-      const results = await store.addFiles(blobs);
+      const results = await store.addFiles(vectaraFiles);
 
       for (const file of files) {
         fs.unlinkSync(file.filename);

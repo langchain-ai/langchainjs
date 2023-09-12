@@ -10,7 +10,7 @@ import {
   IdDocument,
   Restriction,
 } from "../googlevertexai.js";
-import { Embeddings } from "../../embeddings/index.js";
+import { Embeddings } from "../../embeddings/base.js";
 
 describe("Vertex AI matching", () => {
   let embeddings: Embeddings;
