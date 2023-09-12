@@ -1,11 +1,15 @@
-import { getAccessToken, getCredentials } from "web-auth-library/google";
+import {
+  getAccessToken,
+  getCredentials,
+  Credentials,
+} from "web-auth-library/google";
 import { getEnvironmentVariable } from "./env.js";
 import type { GoogleVertexAIAbstractedClient } from "../types/googlevertexai-types.js";
 
-export type WebGoogleAuthOptions = Pick<
-  Parameters<typeof getAccessToken>[0],
-  "credentials" | "scope"
->;
+export type WebGoogleAuthOptions = {
+  credentials: string | Credentials;
+  scope?: string | string[];
+};
 
 export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
   options: WebGoogleAuthOptions;
@@ -20,9 +24,7 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
       );
 
     const scope =
-      options?.scope ??
-      getEnvironmentVariable("GOOGLE_VERTEX_AI_WEB_SCOPE") ??
-      "https://www.googleapis.com/auth/cloud-platform";
+      options?.scope ?? "https://www.googleapis.com/auth/cloud-platform";
 
     this.options = { ...options, credentials, scope };
   }
