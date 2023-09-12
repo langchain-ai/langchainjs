@@ -457,6 +457,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/multi_query.cjs",
+    "retrievers/multi_query.js",
+    "retrievers/multi_query.d.ts",
     "retrievers/multi_vector.cjs",
     "retrievers/multi_vector.js",
     "retrievers/multi_vector.d.ts",
@@ -641,7 +644,7 @@
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@mozilla/readability": "^0.4.4",
-    "@notionhq/client": "^2.2.5",
+    "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@planetscale/database": "^1.8.0",
@@ -757,7 +760,7 @@
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@mozilla/readability": "*",
-    "@notionhq/client": "^2.2.5",
+    "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
@@ -1842,6 +1845,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/multi_query": {
+      "types": "./retrievers/multi_query.d.ts",
+      "import": "./retrievers/multi_query.js",
+      "require": "./retrievers/multi_query.cjs"
     },
     "./retrievers/multi_vector": {
       "types": "./retrievers/multi_vector.d.ts",

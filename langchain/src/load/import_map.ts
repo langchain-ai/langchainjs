@@ -50,6 +50,7 @@ export * as retrievers__remote from "../retrievers/remote/index.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";
 export * as retrievers__contextual_compression from "../retrievers/contextual_compression.js";
 export * as retrievers__document_compressors from "../retrievers/document_compressors/index.js";
+export * as retrievers__multi_query from "../retrievers/multi_query.js";
 export * as retrievers__multi_vector from "../retrievers/multi_vector.js";
 export * as retrievers__parent_document from "../retrievers/parent_document.js";
 export * as retrievers__time_weighted from "../retrievers/time_weighted.js";
