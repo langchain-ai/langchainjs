@@ -411,10 +411,10 @@ test("Doesn't trim results if configured so", async () => {
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 6,
     chunkOverlap: 0,
+    trimPageContent: false
   });
-  const docs = await splitter.createDocuments([text], [], {
-    trimPageContent: false,
-  });
+  
+  const docs = await splitter.createDocuments([text]);
 
   const expectedDocs = [
     new Document({
