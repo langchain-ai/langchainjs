@@ -6,13 +6,13 @@ import {
   StringEvaluatorArgs,
 } from "../base.js";
 import { ChainValues } from "../../schema/index.js";
-import { Embeddings } from "../../embeddings/index.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import {
   CallbackManagerForChainRun,
   Callbacks,
 } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
+import {Embeddings} from "../../embeddings/base.js";
 
 /**
  *
