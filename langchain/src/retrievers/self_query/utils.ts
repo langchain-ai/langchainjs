@@ -48,3 +48,23 @@ export function isFloat(value: unknown): boolean {
 export function isString(value: unknown): boolean {
   return typeof value === "string" && Number.isNaN(parseFloat(value as string));
 }
+
+/**
+ * Casts an unknown value to a string or number. Since LLM might return back an
+ * integer/float as a string, we need to cast it back to a number, as many
+ * vector databases can't handle number as string values as comparator.
+ */
+export function castValue(input: unknown): string | number {
+  let value;
+  if (isString(input)) {
+    value = input as string;
+  } else if (isInt(input)) {
+    value = parseInt(input as string);
+  } else if (isFloat(input)) {
+    value = parseFloat(input as string);
+  } else {
+    throw new Error("Unsupported value type");
+  }
+
+  return value;
+}
