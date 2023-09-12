@@ -25,9 +25,9 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | RunnableFunc<RunInput, RunOutput>
   | { [key: string]: RunnableLike<RunInput, RunOutput> };
 
-export type RunnableBatchOptions<ReturnExceptions extends boolean> = {
+export type RunnableBatchOptions = {
   maxConcurrency?: number;
-  returnExceptions?: ReturnExceptions;
+  returnExceptions?: boolean;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,13 +130,29 @@ export abstract class Runnable<
    * @param batchOptions.returnExceptions Whether to return errors rather than throwing on the first one
    * @returns An array of RunOutputs, or mixed RunOutputs and errors if batchOptions.returnExceptions is set
    */
-  async batch<ReturnExceptions extends boolean = false>(
+  async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
-  ): Promise<
-    ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-  > {
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const caller = new AsyncCaller({
       maxConcurrency: batchOptions?.maxConcurrency,
@@ -157,9 +173,7 @@ export abstract class Runnable<
         }
       })
     );
-    return Promise.all(batchCalls) as Promise<
-      ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-    >;
+    return Promise.all(batchCalls);
   }
 
   /**
@@ -243,26 +257,19 @@ export abstract class Runnable<
    * @param config Optional configuration for the function execution.
    * @returns A promise that resolves to the output values.
    */
-  async _batchWithConfig<
-    T extends RunInput,
-    ReturnExceptions extends boolean = false
-  >(
+  async _batchWithConfig<T extends RunInput>(
     func: (
       inputs: T[],
       configs?: RunnableConfig[],
       runManagers?: (CallbackManagerForChainRun | undefined)[],
-      batchOptions?: RunnableBatchOptions<ReturnExceptions>
-    ) => Promise<
-      ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-    >,
+      batchOptions?: RunnableBatchOptions
+    ) => Promise<(RunOutput | Error)[]>,
     inputs: T[],
     options?:
       | Partial<RunnableConfigAndOptions>
       | Partial<RunnableConfigAndOptions>[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
-  ): Promise<
-    ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-  > {
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
     const configs = this._getOptionsList(
       (options ?? {}) as CallOptions,
       inputs.length
@@ -278,9 +285,7 @@ export abstract class Runnable<
         )
       )
     );
-    let outputs: ReturnExceptions extends false
-      ? RunOutput[]
-      : (RunOutput | Error)[];
+    let outputs: (RunOutput | Error)[];
     try {
       outputs = await func(inputs, configs, runManagers, batchOptions);
     } catch (e) {
@@ -494,13 +499,29 @@ export class RunnableBinding<
     return this.bound.invoke(input, { ...options, ...this.kwargs });
   }
 
-  async batch<ReturnExceptions extends boolean = false>(
+  async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
-  ): Promise<
-    ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-  > {
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
     const mergedOptions = Array.isArray(options)
       ? options.map((individualOption) => ({
           ...individualOption,
@@ -621,7 +642,7 @@ export class RunnableRetry<
     inputs: RunInput[],
     configs?: RunnableConfig[],
     runManagers?: (CallbackManagerForChainRun | undefined)[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
+    batchOptions?: RunnableBatchOptions
   ) {
     const resultsMap: Record<string, RunOutput | Error> = {};
     try {
@@ -682,13 +703,29 @@ export class RunnableRetry<
       ) as ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[];
   }
 
-  async batch<ReturnExceptions extends boolean = false>(
+  async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
-  ): Promise<
-    ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-  > {
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
     return this._batchWithConfig(
       this._batch.bind(this),
       inputs,
@@ -766,13 +803,29 @@ export class RunnableSequence<
     return finalOutput;
   }
 
-  async batch<ReturnExceptions extends boolean = false>(
+  async batch(
     inputs: RunInput[],
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
-  ): Promise<
-    ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-  > {
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
       configList.map(getCallbackMangerForConfig)
@@ -787,9 +840,7 @@ export class RunnableSequence<
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let nextStepInputs: any = inputs;
-    let finalOutputs: ReturnExceptions extends false
-      ? RunOutput[]
-      : (RunOutput | Error)[];
+    let finalOutputs: (RunOutput | Error)[];
     try {
       for (let i = 0; i < [this.first, ...this.middle].length; i += 1) {
         const step = this.steps[i];
@@ -1100,13 +1151,29 @@ export class RouterRunnable<
     return runnable.invoke(actualInput, options);
   }
 
-  async batch<ReturnExceptions extends boolean = false>(
+  async batch(
     inputs: RunInput[],
     options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
-  ): Promise<
-    ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-  > {
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
     const keys = inputs.map((input) => input.key);
     const actualInputs = inputs.map((input) => input.input);
     const missingKey = keys.find((key) => this.runnables[key] === undefined);
@@ -1217,13 +1284,29 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     throw firstError;
   }
 
-  async batch<ReturnExceptions extends boolean = false>(
+  async batch(
     inputs: RunInput[],
     options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
-    batchOptions?: RunnableBatchOptions<ReturnExceptions>
-  ): Promise<
-    ReturnExceptions extends false ? RunOutput[] : (RunOutput | Error)[]
-  > {
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
       configList.map((config) =>
