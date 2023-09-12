@@ -233,6 +233,8 @@ const entrypoints = {
     "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
+  "experimental/llms/bittensor":
+    "experimental/llms/bittensor",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -376,6 +378,7 @@ const requiresOptionalDependency = [
   "hub",
   "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions",
+  "experimental/llms/bittensor",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
