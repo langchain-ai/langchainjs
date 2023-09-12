@@ -5,14 +5,17 @@ import { BaseCallbackConfig } from "../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
+  BaseMessageLike,
   BasePromptValue,
   ChatMessage,
   HumanMessage,
   InputValues,
   PartialValues,
   SystemMessage,
+  coerceMessageLikeToMessage,
+  isBaseMessage,
 } from "../schema/index.js";
-import { Runnable } from "../schema/runnable.js";
+import { Runnable } from "../schema/runnable/index.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
@@ -395,7 +398,7 @@ export interface ChatPromptTemplateInput<
   /**
    * The prompt messages
    */
-  promptMessages: BaseMessagePromptTemplate[];
+  promptMessages: Array<BaseMessagePromptTemplate | BaseMessage>;
 
   /**
    * Whether to try validating the template on initialization
@@ -403,6 +406,47 @@ export interface ChatPromptTemplateInput<
    * @defaultValue `true`
    */
   validateTemplate?: boolean;
+}
+
+export type BaseMessagePromptTemplateLike =
+  | BaseMessagePromptTemplate
+  | BaseMessageLike;
+
+function _isBaseMessagePromptTemplate(
+  baseMessagePromptTemplateLike: BaseMessagePromptTemplateLike
+): baseMessagePromptTemplateLike is BaseMessagePromptTemplate {
+  return (
+    typeof (baseMessagePromptTemplateLike as BaseMessagePromptTemplate)
+      .formatMessages === "function"
+  );
+}
+
+function _coerceMessagePromptTemplateLike(
+  messagePromptTemplateLike: BaseMessagePromptTemplateLike
+): BaseMessagePromptTemplate | BaseMessage {
+  if (
+    _isBaseMessagePromptTemplate(messagePromptTemplateLike) ||
+    isBaseMessage(messagePromptTemplateLike)
+  ) {
+    return messagePromptTemplateLike;
+  }
+  const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
+  if (message._getType() === "human") {
+    return HumanMessagePromptTemplate.fromTemplate(message.content);
+  } else if (message._getType() === "ai") {
+    return AIMessagePromptTemplate.fromTemplate(message.content);
+  } else if (message._getType() === "system") {
+    return SystemMessagePromptTemplate.fromTemplate(message.content);
+  } else if (ChatMessage.isInstance(message)) {
+    return ChatMessagePromptTemplate.fromTemplate(
+      message.content,
+      message.role
+    );
+  } else {
+    throw new Error(
+      `Could not coerce message prompt template from input. Received message type: "${message._getType()}".`
+    );
+  }
 }
 
 /**
@@ -429,7 +473,7 @@ export class ChatPromptTemplate<
     };
   }
 
-  promptMessages: BaseMessagePromptTemplate[];
+  promptMessages: Array<BaseMessagePromptTemplate | BaseMessage>;
 
   validateTemplate = true;
 
@@ -440,6 +484,8 @@ export class ChatPromptTemplate<
     if (this.validateTemplate) {
       const inputVariablesMessages = new Set<string>();
       for (const promptMessage of this.promptMessages) {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (promptMessage instanceof BaseMessage) continue;
         for (const inputVariable of promptMessage.inputVariables) {
           inputVariablesMessages.add(inputVariable);
         }
@@ -490,20 +536,25 @@ export class ChatPromptTemplate<
     let resultMessages: BaseMessage[] = [];
 
     for (const promptMessage of this.promptMessages) {
-      const inputValues = promptMessage.inputVariables.reduce(
-        (acc, inputVariable) => {
-          if (!(inputVariable in allValues)) {
-            throw new Error(
-              `Missing value for input variable \`${inputVariable.toString()}\``
-            );
-          }
-          acc[inputVariable] = allValues[inputVariable];
-          return acc;
-        },
-        {} as InputValues
-      );
-      const message = await promptMessage.formatMessages(inputValues);
-      resultMessages = resultMessages.concat(message);
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (promptMessage instanceof BaseMessage) {
+        resultMessages.push(promptMessage);
+      } else {
+        const inputValues = promptMessage.inputVariables.reduce(
+          (acc, inputVariable) => {
+            if (!(inputVariable in allValues)) {
+              throw new Error(
+                `Missing value for input variable \`${inputVariable.toString()}\``
+              );
+            }
+            acc[inputVariable] = allValues[inputVariable];
+            return acc;
+          },
+          {} as InputValues
+        );
+        const message = await promptMessage.formatMessages(inputValues);
+        resultMessages = resultMessages.concat(message);
+      }
     }
     return resultMessages;
   }
@@ -535,19 +586,19 @@ export class ChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static fromPromptMessages<RunInput extends InputValues = any>(
     promptMessages: (
-      | BaseMessagePromptTemplate<InputValues>
       | ChatPromptTemplate<InputValues, string>
+      | BaseMessagePromptTemplateLike
     )[]
   ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
-      (acc, promptMessage) =>
+      (acc: Array<BaseMessagePromptTemplate | BaseMessage>, promptMessage) =>
         acc.concat(
           // eslint-disable-next-line no-instanceof/no-instanceof
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
-            : [promptMessage]
+            : [_coerceMessagePromptTemplateLike(promptMessage)]
         ),
-      [] as BaseMessagePromptTemplate[]
+      []
     );
     const flattenedPartialVariables = promptMessages.reduce(
       (acc, promptMessage) =>
@@ -560,6 +611,8 @@ export class ChatPromptTemplate<
 
     const inputVariables = new Set<string>();
     for (const promptMessage of flattenedMessages) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (promptMessage instanceof BaseMessage) continue;
       for (const inputVariable of promptMessage.inputVariables) {
         if (inputVariable in flattenedPartialVariables) {
           continue;

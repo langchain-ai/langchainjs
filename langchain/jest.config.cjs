@@ -1,7 +1,7 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: "ts-jest/presets/default-esm",
-  testEnvironment: "node",
+  testEnvironment: "./jest.env.cjs",
   modulePathIgnorePatterns: ["dist/", "docs/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",

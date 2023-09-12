@@ -151,3 +151,72 @@ describe("RedisVectorStore dropIndex", () => {
     });
   });
 });
+
+describe("RedisVectorStore createIndex when index does not exist", () => {
+  test("calls ft.create with default create options", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+    });
+    store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
+
+    await store.createIndex();
+
+    expect(client.ft.create).toHaveBeenCalledWith(
+      "documents",
+      expect.any(Object),
+      {
+        ON: "HASH",
+        PREFIX: "doc:documents:",
+      }
+    );
+  });
+
+  test("calls ft.create with custom options", async () => {
+    const client = createRedisClientMockup();
+    const embeddings = new FakeEmbeddings();
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "documents",
+      createIndexOptions: {
+        ON: "JSON",
+        FILTER: '@indexName == "documents"',
+        SCORE: 0.5,
+        MAXTEXTFIELDS: true,
+        TEMPORARY: 1000,
+        NOOFFSETS: true,
+        NOHL: true,
+        NOFIELDS: true,
+        NOFREQS: true,
+        SKIPINITIALSCAN: true,
+        STOPWORDS: ["a", "b"],
+        LANGUAGE: "German",
+      },
+    });
+    store.checkIndexExists = jest.fn<any>().mockResolvedValue(false);
+
+    await store.createIndex();
+
+    expect(client.ft.create).toHaveBeenCalledWith(
+      "documents",
+      expect.any(Object),
+      {
+        ON: "JSON",
+        PREFIX: "doc:documents:",
+        FILTER: '@indexName == "documents"',
+        SCORE: 0.5,
+        MAXTEXTFIELDS: true,
+        TEMPORARY: 1000,
+        NOOFFSETS: true,
+        NOHL: true,
+        NOFIELDS: true,
+        NOFREQS: true,
+        SKIPINITIALSCAN: true,
+        STOPWORDS: ["a", "b"],
+        LANGUAGE: "German",
+      }
+    );
+  });
+});

@@ -1,20 +1,14 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import {
-  ChatPromptTemplate,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
-} from "langchain/prompts";
+import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages<{ animal: string }>([
-  SystemMessagePromptTemplate.fromTemplate(
-    "You're a nice assistant who always includes a compliment in your response"
-  ),
-  HumanMessagePromptTemplate.fromTemplate(
-    "Why did the {animal} cross the road?"
-  ),
+  [
+    "system",
+    "You're a nice assistant who always includes a compliment in your response",
+  ],
+  ["human", "Why did the {animal} cross the road?"],
 ]);
 
 // Use a fake model name that will always throw an error

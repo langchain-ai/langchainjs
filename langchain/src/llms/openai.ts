@@ -212,6 +212,7 @@ export class OpenAI
       if (!this.azureOpenAIApiVersion) {
         throw new Error("Azure OpenAI API version not found");
       }
+      this.openAIApiKey = this.openAIApiKey ?? "";
     }
 
     this.clientConfig = {
@@ -425,7 +426,7 @@ export class OpenAI
     };
     const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
-      const choice = data.choices[0];
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }

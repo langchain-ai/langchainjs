@@ -445,6 +445,42 @@ export class ChatMessage
   }
 }
 
+export type BaseMessageLike =
+  | BaseMessage
+  | [
+      MessageType | "user" | "assistant" | (string & Record<never, never>),
+      string
+    ]
+  | string;
+
+export function isBaseMessage(
+  messageLike: BaseMessageLike
+): messageLike is BaseMessage {
+  return typeof (messageLike as BaseMessage)._getType === "function";
+}
+
+export function coerceMessageLikeToMessage(
+  messageLike: BaseMessageLike
+): BaseMessage {
+  if (typeof messageLike === "string") {
+    return new HumanMessage(messageLike);
+  } else if (isBaseMessage(messageLike)) {
+    return messageLike;
+  }
+  const [type, content] = messageLike;
+  if (type === "human" || type === "user") {
+    return new HumanMessage({ content });
+  } else if (type === "ai" || type === "assistant") {
+    return new AIMessage({ content });
+  } else if (type === "system") {
+    return new SystemMessage({ content });
+  } else {
+    throw new Error(
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+    );
+  }
+}
+
 /**
  * Represents a chunk of a chat message, which can be concatenated with
  * other chat message chunks.

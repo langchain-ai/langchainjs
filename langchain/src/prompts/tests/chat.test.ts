@@ -13,6 +13,7 @@ import {
   ChatMessage,
   HumanMessage,
   SystemMessage,
+  FunctionMessage,
 } from "../../schema/index.js";
 
 function createChatPromptTemplate() {
@@ -142,6 +143,31 @@ test("Test fromPromptMessages", async () => {
   ]);
 });
 
+test("Test fromPromptMessages with a variety of ways to declare prompt messages", async () => {
+  const systemPrompt = new PromptTemplate({
+    template: "Here's some context: {context}",
+    inputVariables: ["context"],
+  });
+  // TODO: Fix autocomplete for the fromPromptMessages method
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessagePromptTemplate(systemPrompt),
+    "Hello {foo}, I'm {bar}",
+    ["assistant", "Nice to meet you, {bar}!"],
+    ["human", "Thanks {foo}!!"],
+  ]);
+  const messages = await chatPrompt.formatPromptValue({
+    context: "This is a context",
+    foo: "Foo",
+    bar: "Bar",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+    new AIMessage("Nice to meet you, Bar!"),
+    new HumanMessage("Thanks Foo!!"),
+  ]);
+});
+
 test("Test fromPromptMessages with an extra input variable", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
@@ -258,4 +284,23 @@ test("Test using partial", async () => {
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
     `"[{"lc":1,"type":"constructor","id":["langchain","schema","HumanMessage"],"kwargs":{"content":"foobaz","additional_kwargs":{}}}]"`
   );
+});
+
+test("Test BaseMessage", async () => {
+  const prompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessage("You are a chatbot {mock_variable}"),
+    AIMessagePromptTemplate.fromTemplate("{name} is my name."),
+    new FunctionMessage({ content: "{}", name: "get_weather" }),
+  ]);
+
+  const messages = await prompt.formatPromptValue({ name: "Bob" });
+
+  expect(prompt.inputVariables).toEqual(["name"]);
+  expect(prompt.partialVariables).toEqual({});
+
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage("You are a chatbot {mock_variable}"),
+    new AIMessage("Bob is my name."),
+    new FunctionMessage({ content: "{}", name: "get_weather" }),
+  ]);
 });
