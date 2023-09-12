@@ -346,7 +346,7 @@ test("Test lines loc counts correct amount of new lines.", async () => {
     chunkOverlap: 0,
   });
 
-  const docs = await splitter.createDocuments([text], [], {});
+  const docs = await splitter.createDocuments([text], []);
 
   const expectedDocs = [
     new Document({
@@ -373,7 +373,7 @@ test("Test lines loc counts correct amount of new lines.", async () => {
 });
 
 test("Returns correct loc for equal block strings", async () => {
-  const text = `\n    {\n    {\nhello`;
+  const text = `\n    {\n    {\n    {\nhello`;
 
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 6,
@@ -388,11 +388,46 @@ test("Returns correct loc for equal block strings", async () => {
     }),
     new Document({
       pageContent: "{",
+      metadata: { loc: { lines: { from: 2, to: 2 } } },
+    }),
+    // ^^ this should actually be 3:3, but you cannot find the precise match in all cases if there
+    // are only 1 line splits.
+    new Document({
+      pageContent: "{",
       metadata: { loc: { lines: { from: 3, to: 3 } } },
     }),
     new Document({
       pageContent: "hello",
-      metadata: { loc: { lines: { from: 4, to: 4 } } },
+      metadata: { loc: { lines: { from: 5, to: 5 } } },
+    }),
+  ];
+
+  expect(docs).toEqual(expectedDocs);
+});
+
+test("Doesn't trim results if configured so", async () => {
+  const text = `\n    {\n    {\nhello`;
+
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 6,
+    chunkOverlap: 0,
+  });
+  const docs = await splitter.createDocuments([text], [], {
+    trimPageContent: false,
+  });
+
+  const expectedDocs = [
+    new Document({
+      pageContent: "\n    {",
+      metadata: { loc: { lines: { from: 1, to: 2 } } },
+    }),
+    new Document({
+      pageContent: "\n    {",
+      metadata: { loc: { lines: { from: 2, to: 3 } } },
+    }),
+    new Document({
+      pageContent: "\nhello",
+      metadata: { loc: { lines: { from: 3, to: 4 } } },
     }),
   ];
 

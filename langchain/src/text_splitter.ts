@@ -12,10 +12,11 @@ export interface TextSplitterParams {
     | ((text: string) => Promise<number>);
 }
 
-export type TextSplitterChunkHeaderOptions = {
+export type TextSplitterOptions = {
   chunkHeader?: string;
   chunkOverlapHeader?: string;
   appendChunkOverlapHeader?: boolean;
+  trimPageContent?: boolean // whether to trim the final pageContent of the document
 };
 
 export abstract class TextSplitter
@@ -50,9 +51,9 @@ export abstract class TextSplitter
 
   async transformDocuments(
     documents: Document[],
-    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+    textSplitterOptions: TextSplitterOptions = {}
   ): Promise<Document[]> {
-    return this.splitDocuments(documents, chunkHeaderOptions);
+    return this.splitDocuments(documents, textSplitterOptions);
   }
 
   abstract splitText(text: string): Promise<string[]>;
@@ -79,7 +80,7 @@ export abstract class TextSplitter
     texts: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: Record<string, any>[] = [],
-    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+    splitterOptions: TextSplitterOptions = {}
   ): Promise<Document[]> {
     // if no metadata is provided, we create an empty one for each text
     const _metadatas =
@@ -88,7 +89,8 @@ export abstract class TextSplitter
       chunkHeader = "",
       chunkOverlapHeader = "(cont'd) ",
       appendChunkOverlapHeader = false,
-    } = chunkHeaderOptions;
+      trimPageContent = true,
+    } = splitterOptions;
 
     let prevTrimOnJoin = this.trimOnJoin;
     this.trimOnJoin = false;
@@ -139,7 +141,12 @@ export abstract class TextSplitter
           loc,
         };
 
-        pageContent += chunk.trim();
+        if (trimPageContent)  {
+          pageContent += chunk.trim();
+        }
+        else {
+          pageContent += chunk;
+        }
         // can happen if last chunk is only new lines
         if (pageContent === "") continue;
 
@@ -208,7 +215,7 @@ export abstract class TextSplitter
 
     let docMiddle =
       document.metadata.loc.lines.from +
-      Math.ceil(
+      Math.floor(
         (document.metadata.loc.lines.to - document.metadata.loc.lines.from) / 2
       );
 
@@ -216,9 +223,11 @@ export abstract class TextSplitter
     let closestMatch = matchedLines[0];
     for (let i = 1; i < matchedLines.length; i++) {
       let match = matchedLines[i];
+      let matchMiddle = match.from + Math.floor((match.to - match.from) / 2);
+      let closestMiddle = closestMatch.from + Math.floor((closestMatch.to - closestMatch.from) / 2);
       if (
-        Math.abs(match.from - docMiddle) <
-        Math.abs(closestMatch.from - docMiddle)
+        Math.abs(matchMiddle - docMiddle) <
+        Math.abs(closestMiddle - docMiddle)
       ) {
         closestMatch = match;
       }
@@ -256,7 +265,7 @@ export abstract class TextSplitter
 
   async splitDocuments(
     documents: Document[],
-    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+    chunkHeaderOptions: TextSplitterOptions = {}
   ): Promise<Document[]> {
     const selectedDocuments = documents.filter(
       (doc) => doc.pageContent !== undefined
