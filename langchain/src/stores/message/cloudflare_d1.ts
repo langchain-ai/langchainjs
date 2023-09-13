@@ -6,10 +6,9 @@ import {
   StoredMessage,
   StoredMessageData,
 } from "../../schema/index.js";
-import {
-  mapChatMessagesToStoredMessages,
-  mapStoredMessagesToChatMessages,
+mapStoredMessagesToChatMessages,
 } from "./utils.js";
+import { v4 } from "uuid";
 
 /**
  * Type definition for the input parameters required when instantiating a
@@ -23,7 +22,7 @@ export type CloudflareD1MessageHistoryInput = {
 
 /**
  * Interface for the data transfer object used when selecting stored
- * messages from the PlanetScale database.
+ * messages from the Cloudflare D1 database.
  */
 interface selectStoredMessagesDTO {
   id: string;
@@ -37,7 +36,7 @@ interface selectStoredMessagesDTO {
 
 /**
  * Class for storing and retrieving chat message history from a
- * PlanetScale database. Extends the BaseListChatMessageHistory class.
+ * Cloudflare D1 database. Extends the BaseListChatMessageHistory class.
  */
 export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "cloudflare_d1"];
@@ -70,7 +69,7 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
 
   /**
    * Private method to ensure that the necessary table exists in the
-   * PlanetScale database before performing any operations. If the table
+   * Cloudflare D1 database before performing any operations. If the table
    * does not exist, it is created.
    * @returns Promise that resolves to void.
    */
@@ -79,27 +78,28 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
       return;
     }
 
-    const query = `CREATE TABLE IF NOT EXISTS ? (id BINARY(16) PRIMARY KEY, session_id VARCHAR(255), type VARCHAR(255), content VARCHAR(255), role VARCHAR(255), name VARCHAR(255), additional_kwargs VARCHAR(255));`;
+    const query = `CREATE TABLE IF NOT EXISTS ${this.tableName} (id TEXT PRIMARY KEY, session_id TEXT, type TEXT, content TEXT, role TEXT, name TEXT, additional_kwargs TEXT);`;
+    await this.database.prepare(query).bind().all();
 
-    await this.database.prepare(query).bind(this.tableName).all();
+    const idIndexQuery = `CREATE INDEX IF NOT EXISTS id_index ON ${this.tableName} (id);`;
+    await this.database.prepare(idIndexQuery).bind().all();
 
-    const indexQuery = `ALTER TABLE ? MODIFY id BINARY(16) DEFAULT (UUID_TO_BIN(UUID()));`;
-
-    await this.database.prepare(indexQuery).bind(this.tableName).all();
+    const sessionIdIndexQuery = `CREATE INDEX IF NOT EXISTS session_id_index ON ${this.tableName} (session_id);`;
+    await this.database.prepare(sessionIdIndexQuery).bind().all();
 
     this.tableInitialized = true;
   }
 
   /**
-   * Method to retrieve all messages from the PlanetScale database for the
+   * Method to retrieve all messages from the Cloudflare D1 database for the
    * current session.
    * @returns Promise that resolves to an array of BaseMessage objects.
    */
   async getMessages(): Promise<BaseMessage[]> {
     await this.ensureTable();
 
-    const query = `SELECT * FROM ? WHERE session_id = ?`;
-    const rawStoredMessages = await this.database.prepare(query).bind(this.tableName, this.sessionId).all()
+    const query = `SELECT * FROM ${this.tableName} WHERE session_id = ?`;
+    const rawStoredMessages = await this.database.prepare(query).bind(this.sessionId).all()
     const storedMessagesObject =
       rawStoredMessages.results as unknown as selectStoredMessagesDTO[];
 
@@ -124,11 +124,12 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
         };
       }
     );
+
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
   /**
-   * Method to add a new message to the PlanetScale database for the current
+   * Method to add a new message to the Cloudflare D1 database for the current
    * session.
    * @param message The BaseMessage object to be added to the database.
    * @returns Promise that resolves to void.
@@ -138,27 +139,30 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
 
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
 
-    const query = `INSERT INTO ${this.tableName} (session_id, type, content, role, name, additional_kwargs) VALUES (?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO ${this.tableName} (id, session_id, type, content, role, name, additional_kwargs) VALUES(?, ?, ?, ?, ?, ?, ?)`;
+
+    const id = v4();
 
     await this.database.prepare(query).bind(
+      id,
       this.sessionId,
-      messageToAdd[0].type,
-      messageToAdd[0].data.content,
-      messageToAdd[0].data.role,
-      messageToAdd[0].data.name,
+      messageToAdd[0].type || null,
+      messageToAdd[0].data.content || null,
+      messageToAdd[0].data.role || null,
+      messageToAdd[0].data.name || null,
       JSON.stringify(messageToAdd[0].data.additional_kwargs),
-    ).all()
+    ).all();
   }
 
   /**
-   * Method to delete all messages from the PlanetScale database for the
+   * Method to delete all messages from the Cloudflare D1 database for the
    * current session.
    * @returns Promise that resolves to void.
    */
   async clear(): Promise<void> {
     await this.ensureTable();
 
-    const query = `DELETE FROM ? WHERE session_id = ?`;
+    const query = `DELETE FROM ? WHERE session_id = ? `;
     await this.database.prepare(query).bind(this.tableName, this.sessionId).all();
   }
 }
