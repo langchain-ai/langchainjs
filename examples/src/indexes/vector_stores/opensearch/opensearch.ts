@@ -49,10 +49,17 @@ export async function run() {
       },
     }),
   ];
-  const vectors = Array.from({ length: documents.length }, (_, i) => [i, i + 1, i + 2]);
+  const vectors = Array.from({ length: documents.length }, (_, i) => [
+    i,
+    i + 1,
+    i + 2,
+  ]);
   const ids = Array.from({ length: documents.length }, () => uuid.v4());
   await vectorStore2.addVectors(vectors, documents, { ids });
 
-  const resultTwo = await vectorStore2.similaritySearchVectorWithScore(vectors[0], 3);
+  const resultTwo = await vectorStore2.similaritySearchVectorWithScore(
+    vectors[0],
+    3
+  );
   console.log(resultTwo);
 }

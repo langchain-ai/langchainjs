@@ -102,9 +102,9 @@ export class OpenSearchVectorStore extends VectorStore {
    * @returns Promise resolving to void.
    */
   async addVectors(
-      vectors: number[][],
-      documents: Document[],
-      options?: { ids?: string[] }
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
   ): Promise<void> {
     await this.ensureIndexExists(
       vectors[0].length,
