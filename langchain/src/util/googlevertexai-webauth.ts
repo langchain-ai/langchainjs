@@ -52,7 +52,17 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
     if (opts.data !== undefined) {
       fetchOptions.body = JSON.stringify(opts.data);
     }
+
     const res = await fetch(opts.url, fetchOptions);
+
+    if (!res.ok) {
+      const error = new Error(
+        `Could not get access token for Vertex AI with status code: ${res.status}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).response = res;
+      throw error;
+    }
 
     return {
       data: await res.json(),
