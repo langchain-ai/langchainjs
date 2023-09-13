@@ -47,9 +47,9 @@ const res2 = await chain.evaluateStrings({
 console.log(res2);
 
 /*
-{
-  reasoning: `Let's assess the submission based on the given criteria:1. Numeric: The output does not contain any numeric information. There are no numbers present in the joke.2. Mathematical: The output does contain mathematical information. The joke refers to the mathematical concept of squaring a number, and also mentions pi, a mathematical constant.3. Grammatical: The output is grammatically correct. The sentence structure and word usage are appropriate.4. Logical: The output is logical. The joke makes sense in that it plays on the words "square pie" and "square of pi".Based on this analysis, the submission does not meet all the criteria because it does not contain numeric information.N`,
-  value: 'N',
-  score: 0
-}
- */
+  {
+    reasoning: `Let's assess the submission based on the given criteria:1. Numeric: The output does not contain any numeric information. There are no numbers present in the joke.2. Mathematical: The output does contain mathematical information. The joke refers to the mathematical concept of squaring a number, and also mentions pi, a mathematical constant.3. Grammatical: The output is grammatically correct. The sentence structure and word usage are appropriate.4. Logical: The output is logical. The joke makes sense in that it plays on the words "square pie" and "square of pi".Based on this analysis, the submission does not meet all the criteria because it does not contain numeric information.N`,
+    value: 'N',
+    score: 0
+  }
+*/

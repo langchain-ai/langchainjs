@@ -34,9 +34,9 @@ const res = await chain.evaluateStringPairs({
 console.log(res);
 
 /*
-{
-  reasoning: 'Helpfulness: Both A and B are helpful as they provide a direct answer to the question.Relevance: Both A and B refer to the question, but only A matches the reference text.Correctness: Only A is correct as it matches the reference text.Depth: Both A and B are straightforward and do not demonstrate depth of thought.Based on these criteria, the preferred response is A. ',
-  value: 'A',
-  score: 1
-}
- */
+  {
+    reasoning: 'Helpfulness: Both A and B are helpful as they provide a direct answer to the question.Relevance: Both A and B refer to the question, but only A matches the reference text.Correctness: Only A is correct as it matches the reference text.Depth: Both A and B are straightforward and do not demonstrate depth of thought.Based on these criteria, the preferred response is A. ',
+    value: 'A',
+    score: 1
+  }
+*/

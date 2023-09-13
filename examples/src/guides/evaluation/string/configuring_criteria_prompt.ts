@@ -30,9 +30,9 @@ const res = await chain.evaluateStrings({
 console.log(res);
 
 /*
-{
-  reasoning: `Correctness: The response is not correct. The expected response was "It's 17 now." but the response given was "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four."`,
-  value: 'N',
-  score: 0
-}
- */
+  {
+    reasoning: `Correctness: The response is not correct. The expected response was "It's 17 now." but the response given was "What's 2+2? That's an elementary question. The answer you're looking for is that two and two is four."`,
+    value: 'N',
+    score: 0
+  }
+*/

@@ -15,11 +15,9 @@ const res = await evaluator.evaluateStrings({
 console.log(res);
 
 /*
-{
-  res: {
-    reasoning: `The criterion is conciseness, which means the submission should be brief and to the point. Looking at the submission, the answer to the question "What's 2+2?" is indeed "four". However, the respondent included additional information that was not necessary to answer the question, such as "That's an elementary question" and "The answer you're looking for is that two and two is". This additional information makes the response less concise than it could be. Therefore, the submission does not meet the criterion of conciseness.N`,
-    value: 'N',
-    score: 0
+  {
+    reasoning: 'The criterion for this task is the correctness of the submitted answer. The submission states that the capital of the US is Topeka, KS. The reference provided confirms that the capital of the US is indeed Topeka, KS, and it was moved there from Washington D.C. on May 16, 2023. Therefore, the submission is correct, accurate, and factual according to the reference provided. The submission meets the criterion.Y',
+    value: 'Y',
+    score: 1
   }
-}
- */
+*/

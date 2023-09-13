@@ -14,11 +14,11 @@ const res = await chain.evaluateStringPairs({
 console.log({ res });
 
 /*
-{
-  res: {
-    reasoning: 'Response A is concise, but it lacks detail. Response B, while slightly longer, provides a more complete and informative answer by explaining what addition does. It is still concise and to the point.Final decision: [[B]]',
-    value: 'B',
-    score: 0
+  {
+    res: {
+      reasoning: 'Response A is concise, but it lacks detail. Response B, while slightly longer, provides a more complete and informative answer by explaining what addition does. It is still concise and to the point.Final decision: [[B]]',
+      value: 'B',
+      score: 0
+    }
   }
-}
- */
+*/
