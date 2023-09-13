@@ -23,9 +23,9 @@ const res = await chain.evaluateStringPairs({
 console.log(res);
 
 /*
-{
-  reasoning: "Response A is simple, clear, and precise. It uses straightforward language to convey a deep and universal truth about families. The metaphor of joy and sorrow as music is effective and easy to understand. Response B, on the other hand, is more complex and less clear. It uses more sophisticated language and a more elaborate metaphor, which may make it harder for some readers to understand. It also includes unnecessary words and details that don't add to the overall meaning of the prose.Both responses are truthful and sincere, and both suggest deeper meanings about the nature of family life. However, Response A does a better job of conveying these meanings in a simple, clear, and precise way.Therefore, the better response is [[A]].",
-  value: 'A',
-  score: 1
-}
- */
+  {
+    reasoning: "Response A is simple, clear, and precise. It uses straightforward language to convey a deep and universal truth about families. The metaphor of joy and sorrow as music is effective and easy to understand. Response B, on the other hand, is more complex and less clear. It uses more sophisticated language and a more elaborate metaphor, which may make it harder for some readers to understand. It also includes unnecessary words and details that don't add to the overall meaning of the prose.Both responses are truthful and sincere, and both suggest deeper meanings about the nature of family life. However, Response A does a better job of conveying these meanings in a simple, clear, and precise way.Therefore, the better response is [[A]].",
+    value: 'A',
+    score: 1
+  }
+*/
