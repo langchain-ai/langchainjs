@@ -106,7 +106,6 @@ export class Replicate extends LLM implements ReplicateInput {
             return orderA - orderB;
           }
         );
-        console.log(sortedInputProperties);
         this.promptKey = sortedInputProperties[0][0] ?? "prompt";
       }
     }
