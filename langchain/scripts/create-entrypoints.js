@@ -198,6 +198,7 @@ const entrypoints = {
   "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
+  "cache/cloudflare_kv": "cache/cloudflare_kv",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
   "cache/ioredis": "cache/ioredis",
@@ -207,6 +208,7 @@ const entrypoints = {
   "stores/doc/gcs": "stores/doc/gcs",
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
   "stores/message/in_memory": "stores/message/in_memory",
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/firestore": "stores/message/firestore",
