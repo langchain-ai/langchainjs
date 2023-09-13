@@ -53,7 +53,11 @@ test("serialize + deserialize custom classes", async () => {
 
   class SpecialPerson extends Person {
     get lc_secrets(): { [key: string]: string } | undefined {
-      return { anotherApiKey: "SPECIAL_PERSON_API_KEY" };
+      return {
+        anotherApiKey: "SPECIAL_PERSON_API_KEY",
+        inherited: "SPECIAL_PERSON_INHERITED_API_KEY",
+        "nested.api.key": "SPECIAL_PERSON_NESTED_API_KEY",
+      };
     }
 
     get lc_attributes(): { [key: string]: unknown } | undefined {
@@ -62,14 +66,23 @@ test("serialize + deserialize custom classes", async () => {
 
     bye = 4;
 
+    inherited: string;
+
+    nested: { api: { key: string } };
+
     constructor(fields: {
       aField: string;
       apiKey: string;
       anotherApiKey: string;
+      inehrited?: string;
+      nested?: { api: { key: string } };
       hello?: number;
       bye?: number;
     }) {
       super(fields);
+
+      this.inherited = fields.inehrited ?? "i-key";
+      this.nested = fields.nested ?? { api: { key: "n-key" } };
     }
   }
 
@@ -96,6 +109,13 @@ test("serialize + deserialize custom classes", async () => {
     aField: "hello",
     apiKey: "a-key",
     anotherApiKey: "b-key",
+
+    // We explicitly do not provide the inherited and nested key
+    // to test that it has been extracted during serialisation
+    // simulating obtaining value from environment value
+
+    // inherited: "i-key",
+    // nested: { api: { key: "n-key" } },
   });
   const sstr = JSON.stringify(sperson, null, 2);
   expect(stringify(JSON.parse(sstr))).toMatchSnapshot();
@@ -104,6 +124,8 @@ test("serialize + deserialize custom classes", async () => {
     {
       PERSON_API_KEY: "a-key",
       SPECIAL_PERSON_API_KEY: "b-key",
+      SPECIAL_PERSON_NESTED_API_KEY: "n-key",
+      SPECIAL_PERSON_INHERITED_API_KEY: "i-key",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
     {

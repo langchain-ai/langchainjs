@@ -24,39 +24,36 @@ type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
   ? U
   : never;
 
-type GetBlockResponse = Parameters<typeof isFullBlock>[0];
-type GetPageResponse = Parameters<typeof isFullPage>[0];
-type GetDatabaseResponse = Parameters<typeof isFullDatabase>[0];
+export type GetBlockResponse = Parameters<typeof isFullBlock>[0];
+export type GetPageResponse = Parameters<typeof isFullPage>[0];
+export type GetDatabaseResponse = Parameters<typeof isFullDatabase>[0];
 
-type BlockObjectResponse = GuardType<typeof isFullBlock>;
-type PageObjectResponse = GuardType<typeof isFullPage>;
-type DatabaseObjectResponse = GuardType<typeof isFullDatabase>;
+export type BlockObjectResponse = GuardType<typeof isFullBlock>;
+export type PageObjectResponse = GuardType<typeof isFullPage>;
+export type DatabaseObjectResponse = GuardType<typeof isFullDatabase>;
 
-type GetResponse =
+export type GetResponse =
   | GetBlockResponse
   | GetPageResponse
   | GetDatabaseResponse
   | APIResponseError;
 
-const isPageResponse = (res: GetResponse): res is GetPageResponse =>
+export type PagePropertiesType = PageObjectResponse["properties"];
+export type PagePropertiesValue = PagePropertiesType[keyof PagePropertiesType];
+
+export const isPageResponse = (res: GetResponse): res is GetPageResponse =>
   !isNotionClientError(res) && res.object === "page";
-const isDatabaseResponse = (res: GetResponse): res is GetDatabaseResponse =>
+export const isDatabaseResponse = (
+  res: GetResponse
+): res is GetDatabaseResponse =>
   !isNotionClientError(res) && res.object === "database";
-const isErrorResponse = (res: GetResponse): res is APIResponseError =>
+export const isErrorResponse = (res: GetResponse): res is APIResponseError =>
   isNotionClientError(res);
 
-const isPage = (res: GetResponse): res is PageObjectResponse =>
+export const isPage = (res: GetResponse): res is PageObjectResponse =>
   isPageResponse(res) && isFullPage(res);
-const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
+export const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
   isDatabaseResponse(res) && isFullDatabase(res);
-
-const getTitle = (obj: GetResponse) => {
-  if (isPage(obj) && obj.properties.title.type === "title") {
-    return obj.properties.title.title[0]?.plain_text;
-  }
-  if (isDatabase(obj)) return obj.title[0]?.plain_text;
-  return null;
-};
 
 /**
  * Represents the type of Notion API to load documents from. The options
@@ -129,6 +126,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.onDocumentLoaded = options.onDocumentLoaded ?? ((_ti, _cu) => {});
   }
 
+  /**
+   * Adds a selection of page ids to the pageQueue and removes duplicates.
+   * @param items An array of string ids
+   */
   private addToQueue(...items: string[]) {
     const deDuped = items.filter(
       (item) => !this.pageCompleted.concat(this.pageQueue).includes(item)
@@ -138,73 +139,94 @@ export class NotionAPILoader extends BaseDocumentLoader {
   }
 
   /**
+   * Parses a Notion GetResponse object (page or database) and returns a string of the title.
+   * @param obj The Notion GetResponse object to parse.
+   * @returns The string of the title.
+   */
+  private getTitle(obj: GetResponse) {
+    if (isPage(obj) && obj.properties.title.type === "title") {
+      return obj.properties.title.title[0]?.plain_text;
+    }
+    if (isDatabase(obj)) return obj.title[0]?.plain_text;
+    return null;
+  }
+
+  /**
+   * Parses the property type and returns a string
+   * @param page The Notion page property to parse.
+   * @returns A string of parsed property.
+   */
+  private getPropValue(prop: PagePropertiesValue) {
+    switch (prop.type) {
+      case "number": {
+        const propNumber = prop[prop.type];
+        return propNumber !== null ? propNumber.toString() : "";
+      }
+      case "url":
+        return prop[prop.type] || "";
+      case "select":
+        return prop[prop.type]?.name ?? "";
+      case "multi_select":
+        return `[${prop[prop.type].map((v) => `"${v.name}"`).join(", ")}]`;
+      case "status":
+        return prop[prop.type]?.name ?? "";
+      case "date":
+        return `${prop[prop.type]?.start ?? ""}${
+          prop[prop.type]?.end ? ` - ${prop[prop.type]?.end}` : ""
+        }`;
+      case "email":
+        return prop[prop.type] || "";
+      case "phone_number":
+        return prop[prop.type] || "";
+      case "checkbox":
+        return prop[prop.type].toString();
+      case "files":
+        return `[${prop[prop.type].map((v) => `"${v.name}"`).join(", ")}]`;
+      case "created_by":
+        return `["${prop[prop.type].object}", "${prop[prop.type].id}"]`;
+      case "created_time":
+        return prop[prop.type];
+      case "last_edited_by":
+        return `["${prop[prop.type].object}", "${prop[prop.type].id}"]`;
+      case "last_edited_time":
+        return prop[prop.type];
+      case "title":
+        return prop[prop.type]
+          .map((v) =>
+            this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+          )
+          .join("");
+      case "rich_text":
+        return prop[prop.type]
+          .map((v) =>
+            this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+          )
+          .join("");
+      case "people":
+        return `[${prop[prop.type]
+          .map((v) => `["${v.object}", "${v.id}"]`)
+          .join(", ")}]`;
+      case "unique_id":
+        return `${prop[prop.type].prefix || ""}${prop[prop.type].number}`;
+      case "relation":
+        return `[${prop[prop.type].map((v) => `"${v.id}"`).join(", ")}]`;
+      default:
+        return `Unsupported type: ${prop.type}`;
+    }
+  }
+
+  /**
    * Parses the properties of a Notion page and returns them as key-value
    * pairs.
    * @param page The Notion page to parse.
    * @returns An object containing the parsed properties as key-value pairs.
    */
-  private parsePageProperties(page: PageObjectResponse): {
-    [key: string]: string;
-  } {
-    return Object.fromEntries(
-      Object.entries(page.properties).map(([_, prop]) => {
-        switch (prop.type) {
-          case "number":
-            return [prop.type, prop[prop.type]];
-          case "url":
-            return [prop.type, prop[prop.type]];
-          case "select":
-            return [prop.type, prop[prop.type]?.name ?? ""];
-          case "multi_select":
-            return [
-              prop.type,
-              prop[prop.type].map((select) => select.name).join(", "),
-            ];
-          case "status":
-            return [prop.type, prop[prop.type]?.name ?? ""];
-          case "date":
-            return [
-              prop.type,
-              `${prop[prop.type]?.start ?? ""}${
-                prop[prop.type]?.end ? `-  ${prop[prop.type]?.end}` : ""
-              }`,
-            ];
-          case "email":
-            return [prop.type, prop[prop.type]];
-          case "phone_number":
-            return [prop.type, prop[prop.type]];
-          case "checkbox":
-            return [prop.type, prop[prop.type].toString()];
-          // case "files":
-          case "created_by":
-            return [prop.type, prop[prop.type]];
-          case "created_time":
-            return [prop.type, prop[prop.type]];
-          case "last_edited_by":
-            return [prop.type, prop[prop.type]];
-          case "last_edited_time":
-            return [prop.type, prop[prop.type]];
-          // case "formula":
-          case "title":
-            return [
-              prop.type,
-              prop[prop.type].map((v) => v.plain_text).join(""),
-            ];
-          case "rich_text":
-            return [
-              prop.type,
-              prop[prop.type].map((v) => v.plain_text).join(""),
-            ];
-          case "people":
-            return [prop.type, prop[prop.type]];
-          // case "relation":
-          // case "rollup":
-
-          default:
-            return [prop.type, "Unsupported type"];
-        }
-      })
-    );
+  private parsePageProperties(page: PageObjectResponse) {
+    return Object.entries(page.properties).reduce((accum, [propName, prop]) => {
+      const value = this.getPropValue(prop);
+      const props = { ...accum, [propName]: value };
+      return prop.type === "title" ? { ...props, _title: value } : props;
+    }, {} as { [key: string]: string });
   }
 
   /**
@@ -213,12 +235,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * @returns An object containing the parsed details of the page.
    */
   private parsePageDetails(page: PageObjectResponse) {
-    const metadata = Object.fromEntries(
-      Object.entries(page).filter(([key, _]) => key !== "id")
-    );
+    const { id, ...rest } = page;
     return {
-      ...metadata,
-      notionId: page.id,
+      ...rest,
+      notionId: id,
       properties: this.parsePageProperties(page),
     };
   }
@@ -392,7 +412,8 @@ export class NotionAPILoader extends BaseDocumentLoader {
       throw new AggregateError(errors);
     }
 
-    this.rootTitle = getTitle(resPage) || getTitle(resDatabase) || this.id;
+    this.rootTitle =
+      this.getTitle(resPage) || this.getTitle(resDatabase) || this.id;
 
     let pageId = this.pageQueue.shift();
     while (pageId) {

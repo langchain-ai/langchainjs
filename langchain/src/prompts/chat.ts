@@ -15,7 +15,7 @@ import {
   coerceMessageLikeToMessage,
   isBaseMessage,
 } from "../schema/index.js";
-import { Runnable } from "../schema/runnable.js";
+import { Runnable } from "../schema/runnable/index.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,

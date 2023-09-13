@@ -1,0 +1,112 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import WithoutReference from "@examples/guides/evaluation/string/criteria_without_reference.ts";
+import WithReference from "@examples/guides/evaluation/string/criteria_with_reference.ts";
+import Constitutional from "@examples/guides/evaluation/string/constitutional_criteria.ts";
+import CustomCriteria from "@examples/guides/evaluation/string/custom_criteria.ts";
+import ConfiguringLLM from "@examples/guides/evaluation/string/configuring_criteria_llm.ts";
+import ConfiguringPrompt from "@examples/guides/evaluation/string/configuring_criteria_prompt.ts";
+
+# Criteria Evaluation
+
+In scenarios where you wish to assess a model's output using a specific rubric or criteria set, the `criteria` evaluator proves to be a handy tool. It allows you to verify if an LLM or Chain's output complies with a defined set of criteria.
+
+
+### Usage without references
+
+In the below example, we use the `CriteriaEvalChain` to check whether an output is concise:
+
+<CodeBlock language="typescript">{WithoutReference}</CodeBlock>
+
+
+#### Output Format
+
+All string evaluators expose an `evaluateStrings` method, which accepts:
+
+- input (string) – The input to the agent.
+- prediction (string) – The predicted response.
+
+The criteria evaluators return a dictionary with the following values:
+- score: Binary integer 0 to 1, where 1 would mean that the output is compliant with the criteria, and 0 otherwise
+- value: A "Y" or "N" corresponding to the score
+- reasoning: String "chain of thought reasoning" from the LLM generated prior to creating the score
+
+
+## Using Reference Labels
+
+Some criteria (such as correctness) require reference labels to work correctly. To do this, initialize the `labeled_criteria` evaluator and call the evaluator with a `reference` string.
+
+<CodeBlock language="typescript">{WithReference}</CodeBlock>
+
+
+**Default Criteria**
+
+Most of the time, you'll want to define your own custom criteria (see below), but we also provide some common criteria you can load with a single string.
+Here's a list of pre-implemented criteria. Note that in the absence of labels, the LLM merely predicts what it thinks the best answer is and is not grounded in actual law or context.
+
+```
+/**
+ * A Criteria to evaluate.
+ */
+export type Criteria =
+  | "conciseness"
+  | "relevance"
+  | "correctness"
+  | "coherence"
+  | "harmfulness"
+  | "maliciousness"
+  | "helpfulness"
+  | "controversiality"
+  | "misogyny"
+  | "criminality"
+  | "insensitivity"
+  | "depth"
+  | "creativity"
+  | "detail";
+
+```
+
+
+## Custom Criteria
+
+To evaluate outputs against your own custom criteria, or to be more explicit the definition of any of the default criteria, pass in a dictionary of `"criterion name": "criterion description"`
+
+Note: it's recommended that you create a single evaluator per criterion. This way, separate feedback can be provided for each aspect. Additionally, if you provide antagonistic criteria, the evaluator won't be very useful, as it will be configured to predict compliance for ALL of the criteria provided.
+
+
+<CodeBlock language="typescript">{CustomCriteria}</CodeBlock>
+
+
+## Using Constitutional Principles
+
+Custom rubrics are similar to principles from [Constitutional AI](https://arxiv.org/abs/2212.08073). You can directly use your `ConstitutionalPrinciple` objects to
+instantiate the chain and take advantage of the many existing principles in LangChain.
+
+
+<CodeBlock language="typescript">{Constitutional}</CodeBlock>
+
+
+## Configuring the LLM
+
+If you don't specify an eval LLM, the `loadEvaluator` method will initialize a `gpt-4` LLM to power the grading chain. Below, use an anthropic model instead.
+
+<CodeBlock language="typescript">{ConfiguringLLM}</CodeBlock>
+
+
+# Configuring the Prompt
+
+If you want to completely customize the prompt, you can initialize the evaluator with a custom prompt template as follows.
+
+
+<CodeBlock language="typescript">{ConfiguringPrompt}</CodeBlock>
+
+
+
+## Conclusion
+
+In these examples, you used the `CriteriaEvalChain` to evaluate model outputs against custom criteria, including a custom rubric and constitutional principles.
+
+Remember when selecting criteria to decide whether they ought to require ground truth labels or not. Things like "correctness" are best evaluated with ground truth or with extensive context. Also, remember to pick aligned principles for a given chain so that the classification makes sense.

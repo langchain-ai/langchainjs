@@ -1,0 +1,16 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import EmbeddingDistance from "@examples/guides/evaluation/string/embedding_distance.ts";
+
+# Embedding Distance
+
+To measure semantic similarity (or dissimilarity) between a prediction and a reference label string, you could use a vector distance metric between the two embedded representations using the `embedding_distance` evaluator.
+
+
+**Note:** This returns a **distance** score, meaning that the lower the number, the **more** similar the prediction is to the reference, according to their embedded representation.
+
+<CodeBlock language="typescript">{EmbeddingDistance}</CodeBlock>
+

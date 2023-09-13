@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.146",
+  "version": "0.0.148",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -139,6 +139,9 @@
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
+    "llms/googlevertexai/web.cjs",
+    "llms/googlevertexai/web.js",
+    "llms/googlevertexai/web.d.ts",
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
@@ -385,6 +388,9 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/googlevertexai/web.cjs",
+    "chat_models/googlevertexai/web.js",
+    "chat_models/googlevertexai/web.d.ts",
     "chat_models/googlepalm.cjs",
     "chat_models/googlepalm.js",
     "chat_models/googlepalm.d.ts",
@@ -457,6 +463,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/multi_query.cjs",
+    "retrievers/multi_query.js",
+    "retrievers/multi_query.d.ts",
     "retrievers/multi_vector.cjs",
     "retrievers/multi_vector.js",
     "retrievers/multi_vector.d.ts",
@@ -583,6 +592,9 @@
     "experimental/chat_models/anthropic_functions.cjs",
     "experimental/chat_models/anthropic_functions.js",
     "experimental/chat_models/anthropic_functions.d.ts",
+    "experimental/llms/bittensor.cjs",
+    "experimental/llms/bittensor.js",
+    "experimental/llms/bittensor.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -638,7 +650,7 @@
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@mozilla/readability": "^0.4.4",
-    "@notionhq/client": "^2.2.5",
+    "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@planetscale/database": "^1.8.0",
@@ -730,6 +742,7 @@
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
+    "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
@@ -754,7 +767,7 @@
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@mozilla/readability": "*",
-    "@notionhq/client": "^2.2.5",
+    "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
@@ -811,6 +824,7 @@
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
+    "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
@@ -1044,6 +1058,9 @@
       "optional": true
     },
     "weaviate-ts-client": {
+      "optional": true
+    },
+    "web-auth-library": {
       "optional": true
     },
     "youtube-transcript": {
@@ -1309,6 +1326,11 @@
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
       "require": "./llms/googlevertexai.cjs"
+    },
+    "./llms/googlevertexai/web": {
+      "types": "./llms/googlevertexai/web.d.ts",
+      "import": "./llms/googlevertexai/web.js",
+      "require": "./llms/googlevertexai/web.cjs"
     },
     "./llms/googlepalm": {
       "types": "./llms/googlepalm.d.ts",
@@ -1720,6 +1742,11 @@
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
     },
+    "./chat_models/googlevertexai/web": {
+      "types": "./chat_models/googlevertexai/web.d.ts",
+      "import": "./chat_models/googlevertexai/web.js",
+      "require": "./chat_models/googlevertexai/web.cjs"
+    },
     "./chat_models/googlepalm": {
       "types": "./chat_models/googlepalm.d.ts",
       "import": "./chat_models/googlepalm.js",
@@ -1839,6 +1866,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/multi_query": {
+      "types": "./retrievers/multi_query.d.ts",
+      "import": "./retrievers/multi_query.js",
+      "require": "./retrievers/multi_query.cjs"
     },
     "./retrievers/multi_vector": {
       "types": "./retrievers/multi_vector.d.ts",
@@ -2049,6 +2081,11 @@
       "types": "./experimental/chat_models/anthropic_functions.d.ts",
       "import": "./experimental/chat_models/anthropic_functions.js",
       "require": "./experimental/chat_models/anthropic_functions.cjs"
+    },
+    "./experimental/llms/bittensor": {
+      "types": "./experimental/llms/bittensor.d.ts",
+      "import": "./experimental/llms/bittensor.js",
+      "require": "./experimental/llms/bittensor.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
