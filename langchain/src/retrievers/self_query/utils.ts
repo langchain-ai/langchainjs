@@ -73,9 +73,9 @@ export function isString(value: unknown): boolean {
 }
 
 /**
- * Casts a value that might be string or number to actual string or number. 
- * Since LLM might return back an integer/float as a string, we need to cast 
- * it back to a number, as many vector databases can't handle number as string 
+ * Casts a value that might be string or number to actual string or number.
+ * Since LLM might return back an integer/float as a string, we need to cast
+ * it back to a number, as many vector databases can't handle number as string
  * values as a comparator.
  */
 export function castValue(input: unknown): string | number {
