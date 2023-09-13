@@ -32,7 +32,7 @@ export function isInt(value: unknown): boolean {
   if (typeof value === "number") {
     return value % 1 === 0;
   } else if (typeof value === "string") {
-    const numberValue = parseInt(value);
+    const numberValue = parseInt(value, 10);
     return (
       !Number.isNaN(numberValue) &&
       numberValue % 1 === 0 &&
@@ -82,7 +82,7 @@ export function castValue(input: unknown): string | number {
   if (isString(input)) {
     value = input as string;
   } else if (isInt(input)) {
-    value = parseInt(input as string);
+    value = parseInt(input as string, 10);
   } else if (isFloat(input)) {
     value = parseFloat(input as string);
   } else {
