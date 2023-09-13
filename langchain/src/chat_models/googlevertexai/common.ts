@@ -1,19 +1,21 @@
 import { BaseChatModel } from "../base.js";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   ChatGeneration,
-  ChatMessage,
+  ChatGenerationChunk,
   ChatResult,
   LLMResult,
 } from "../../schema/index.js";
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection, GoogleVertexAIChatMessage, GoogleVertexAIChatInstance } from "../../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
   GoogleVertexAIModelParams,
 } from "../../types/googlevertexai-types.js";
 import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
@@ -22,124 +24,6 @@ import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
 export interface ChatExample {
   input: BaseMessage;
   output: BaseMessage;
-}
-
-/**
- * Represents a single example exchange in the Google Vertex AI chat
- * model.
- */
-interface GoogleVertexAIChatExample {
-  input: GoogleVertexAIChatMessage;
-  output: GoogleVertexAIChatMessage;
-}
-
-/**
- * Represents the author of a chat message in the Google Vertex AI chat
- * model.
- */
-export type GoogleVertexAIChatAuthor =
-  | "user" // Represents the human for Code and CodeChat models
-  | "bot" // Represents the AI for Code models
-  | "system" // Represents the AI for CodeChat models
-  | "context"; // Represents contextual instructions
-
-export type GoogleVertexAIChatMessageFields = {
-  author?: GoogleVertexAIChatAuthor;
-  content: string;
-  name?: string;
-};
-
-/**
- * Represents a chat message in the Google Vertex AI chat model.
- */
-export class GoogleVertexAIChatMessage {
-  public author?: GoogleVertexAIChatAuthor;
-
-  public content: string;
-
-  public name?: string;
-
-  constructor(fields: GoogleVertexAIChatMessageFields) {
-    this.author = fields.author;
-    this.content = fields.content;
-    this.name = fields.name;
-  }
-
-  /**
-   * Extracts the role of a generic message and maps it to a Google Vertex
-   * AI chat author.
-   * @param message The chat message to extract the role from.
-   * @returns The role of the message mapped to a Google Vertex AI chat author.
-   */
-  static extractGenericMessageCustomRole(message: ChatMessage) {
-    if (
-      message.role !== "system" &&
-      message.role !== "bot" &&
-      message.role !== "user" &&
-      message.role !== "context"
-    ) {
-      console.warn(`Unknown message role: ${message.role}`);
-    }
-
-    return message.role as GoogleVertexAIChatAuthor;
-  }
-
-  /**
-   * Maps a message type to a Google Vertex AI chat author.
-   * @param message The message to map.
-   * @param model The model to use for mapping.
-   * @returns The message type mapped to a Google Vertex AI chat author.
-   */
-  static mapMessageTypeToVertexChatAuthor(
-    message: BaseMessage,
-    model: string
-  ): GoogleVertexAIChatAuthor {
-    const type = message._getType();
-    switch (type) {
-      case "ai":
-        return model.startsWith("codechat-") ? "system" : "bot";
-      case "human":
-        return "user";
-      case "system":
-        throw new Error(
-          `System messages are only supported as the first passed message for Google Vertex AI.`
-        );
-      case "generic": {
-        if (!ChatMessage.isInstance(message))
-          throw new Error("Invalid generic chat message");
-        return GoogleVertexAIChatMessage.extractGenericMessageCustomRole(
-          message
-        );
-      }
-      default:
-        throw new Error(`Unknown / unsupported message type: ${message}`);
-    }
-  }
-
-  /**
-   * Creates a new Google Vertex AI chat message from a base message.
-   * @param message The base message to convert.
-   * @param model The model to use for conversion.
-   * @returns A new Google Vertex AI chat message.
-   */
-  static fromChatMessage(message: BaseMessage, model: string) {
-    return new GoogleVertexAIChatMessage({
-      author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
-        message,
-        model
-      ),
-      content: message.content,
-    });
-  }
-}
-
-/**
- * Represents an instance of the Google Vertex AI chat model.
- */
-export interface GoogleVertexAIChatInstance {
-  context?: string;
-  examples?: GoogleVertexAIChatExample[];
-  messages: GoogleVertexAIChatMessage[];
 }
 
 /**
@@ -214,7 +98,6 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     return [];
   }
 
-  // TODO: Add streaming support
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"]
@@ -241,6 +124,58 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     return {
       generations,
     };
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const instance: GoogleVertexAIChatInstance = this.createInstance(messages);
+
+    const parameters: GoogleVertexAIModelParams = {
+      temperature: this.temperature,
+      topK: this.topK,
+      topP: this.topP,
+      maxOutputTokens: this.maxOutputTokens,
+    };
+
+    const stream = this.connection.stream([instance], parameters, options);
+    for await (const chunk of stream) {
+      const generationChunk = new ChatGenerationChunk({
+        message: new AIMessageChunk({ content: JSON.stringify(chunk) }),
+        text: JSON.stringify(chunk),
+        generationInfo: {}
+      });
+      yield generationChunk;
+      // const choice = chunk?.choices[0];
+      // if (!choice) {
+      //   continue;
+      // }
+
+      // const { delta } = choice;
+      // const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
+      // defaultRole = delta.role ?? defaultRole;
+      // const newTokenIndices = {
+      //   prompt: options.promptIndex ?? 0,
+      //   completion: choice.index ?? 0,
+      // };
+      // const generationChunk = new ChatGenerationChunk({
+      //   message: chunk,
+      //   text: chunk.content,
+      //   generationInfo: newTokenIndices,
+      // });
+      // yield generationChunk;
+      // // eslint-disable-next-line no-void
+      // void runManager?.handleLLMNewToken(
+      //   generationChunk.text ?? "",
+      //   newTokenIndices,
+      //   undefined,
+      //   undefined,
+      //   undefined,
+      //   { chunk: generationChunk }
+      // );
+    }
   }
 
   _llmType(): string {

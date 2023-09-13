@@ -13,6 +13,15 @@ import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatGoogleVertexAI } from "../googlevertexai/index.js";
 
 describe("ChatGoogleVertexAI", () => {
+  test.only("stream", async () => {
+    const chat = new ChatGoogleVertexAI();
+    const message = new HumanMessage("Why is the sky blue? Be extremely verbose.");
+    const stream = await chat.stream([message]);
+    for await (const _chunk of stream) {
+      // console.log(chunk);
+    }
+  });
+
   test("call", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");

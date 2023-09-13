@@ -1,4 +1,5 @@
 import { BaseLLMParams } from "../llms/base.js";
+import { ChatGenerationChunk } from "../schema/index.js";
 
 export interface GoogleVertexAIConnectionParams<AuthOptions> {
   /** Hostname for the API call */
@@ -77,5 +78,10 @@ export interface GoogleVertexAIAbstractedClient {
     method?: "GET" | "POST";
     data?: unknown;
   }) => unknown;
+  stream: (opts: {
+    url?: string;
+    method?: "GET" | "POST";
+    data?: unknown;
+  }) => AsyncGenerator<any>;
   getProjectId: () => Promise<string>;
 }

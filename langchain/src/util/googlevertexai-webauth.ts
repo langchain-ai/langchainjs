@@ -5,6 +5,7 @@ import {
 } from "web-auth-library/google";
 import { getEnvironmentVariable } from "./env.js";
 import type { GoogleVertexAIAbstractedClient } from "../types/googlevertexai-types.js";
+import { IterableReadableStream } from "./stream.js";
 
 export type WebGoogleAuthOptions = {
   credentials: string | Credentials;
@@ -34,7 +35,7 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
     return credentials.project_id;
   }
 
-  async request(opts: { url?: string; method?: string; data?: unknown }) {
+  async _request(opts: { url?: string; method?: string; data?: unknown }) {
     const accessToken = await getAccessToken(this.options);
 
     if (opts.url == null) throw new Error("Missing URL");
@@ -64,6 +65,20 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
       throw error;
     }
 
+    return res;
+  }
+
+  async *stream(opts: { url?: string; method?: string; data?: unknown }) {
+    const res = await this._request(opts);
+    const body = res.body;
+    if (!body) {
+      throw new Error("No body returned in VertexAI stream request.");
+    }
+    yield *IterableReadableStream.fromReadableStream(body);
+  }
+
+  async request(opts: { url?: string; method?: string; data?: unknown }) {
+    const res = await this._request(opts);
     return {
       data: await res.json(),
       config: {},
