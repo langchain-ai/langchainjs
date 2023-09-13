@@ -113,7 +113,6 @@ export class Replicate extends LLM implements ReplicateInput {
       { signal: options.signal },
       () =>
         replicate.run(this.model, {
-          wait: true,
           input: {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             [this.promptKey!]: prompt,
