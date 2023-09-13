@@ -6,7 +6,9 @@ import {
   StoredMessage,
   StoredMessageData,
 } from "../../schema/index.js";
-mapStoredMessagesToChatMessages,
+import {
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
 } from "./utils.js";
 import { v4 } from "uuid";
 
