@@ -49,6 +49,8 @@ export class BaseGoogleVertexAI<AuthOptions>
   extends BaseLLM
   implements GoogleVertexAIBaseLLMInput<AuthOptions>
 {
+  lc_serializable = true;
+
   model = "text-bison";
 
   temperature = 0.7;
