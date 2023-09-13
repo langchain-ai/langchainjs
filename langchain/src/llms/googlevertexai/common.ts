@@ -1,18 +1,13 @@
-import { BaseLLM } from "./base.js";
-import { Generation, LLMResult } from "../schema/index.js";
-import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
+import { BaseLLM } from "../base.js";
+import { Generation, LLMResult } from "../../schema/index.js";
+import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
   GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
-} from "../types/googlevertexai-types.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-
-/**
- * Interface representing the input to the Google Vertex AI model.
- */
-export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
+} from "../../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
 
 /**
  * Interface representing the instance of text input to the Google Vertex
@@ -46,20 +41,16 @@ interface TextPrediction extends GoogleVertexAIBasePrediction {
 }
 
 /**
- * Enables calls to the Google Cloud's Vertex AI API to access
- * Large Language Models.
- *
- * To use, you will need to have one of the following authentication
- * methods in place:
- * - You are logged into an account permitted to the Google Cloud project
- *   using Vertex AI.
- * - You are running this on a machine using a service account permitted to
- *   the Google Cloud project using Vertex AI.
- * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
- *   path of a credentials file for a service account permitted to the
- *   Google Cloud project using Vertex AI.
+ * Base class for Google Vertex AI LLMs.
+ * Implemented subclasses must provide a GoogleVertexAILLMConnection
+ * with an appropriate auth client.
  */
-export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
+export class BaseGoogleVertexAI<AuthOptions>
+  extends BaseLLM
+  implements GoogleVertexAIBaseLLMInput<AuthOptions>
+{
+  lc_serializable = true;
+
   model = "text-bison";
 
   temperature = 0.7;
@@ -70,13 +61,20 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
 
   topK = 40;
 
-  private connection: GoogleVertexAILLMConnection<
+  protected connection: GoogleVertexAILLMConnection<
     BaseLanguageModelCallOptions,
     GoogleVertexAILLMInstance,
-    TextPrediction
+    TextPrediction,
+    AuthOptions
   >;
 
-  constructor(fields?: GoogleVertexAITextInput) {
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_name",
+    };
+  }
+
+  constructor(fields?: GoogleVertexAIBaseLLMInput<AuthOptions>) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -93,15 +91,10 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
-
-    this.connection = new GoogleVertexAILLMConnection(
-      { ...fields, ...this },
-      this.caller
-    );
   }
 
   _llmType(): string {
-    return "googlevertexai";
+    return "vertexai";
   }
 
   async _generate(

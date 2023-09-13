@@ -5,7 +5,7 @@ import {
   HumanMessage,
   AIMessage,
 } from "../../schema/index.js";
-import { ChatExample, ChatGoogleVertexAI } from "../googlevertexai/index.js";
+import { ChatExample, ChatGoogleVertexAI } from "../googlevertexai/web.js";
 
 test("Google messages", async () => {
   const messages: BaseMessage[] = [
@@ -13,7 +13,11 @@ test("Google messages", async () => {
     new AIMessage("AI1"),
     new HumanMessage("Human2"),
   ];
-  const model = new ChatGoogleVertexAI();
+  const model = new ChatGoogleVertexAI({
+    authOptions: {
+      credentials: "{}",
+    },
+  });
   const instance = model.createInstance(messages);
   expect(instance.context).toBe("");
   expect(instance.messages[0].author).toBe("user");
@@ -27,7 +31,11 @@ test("Google messages with a system message", async () => {
     new AIMessage("AI1"),
     new HumanMessage("Human2"),
   ];
-  const model = new ChatGoogleVertexAI();
+  const model = new ChatGoogleVertexAI({
+    authOptions: {
+      credentials: "{}",
+    },
+  });
   const instance = model.createInstance(messages);
   expect(instance.context).toBe("System1");
   expect(instance.messages[0].author).toBe("user");
@@ -49,6 +57,9 @@ test("Google examples", async () => {
   ];
   const model = new ChatGoogleVertexAI({
     examples,
+    authOptions: {
+      credentials: "{}",
+    },
   });
   const instance = model.createInstance(messages);
   console.log(JSON.stringify(instance, null, 2));
@@ -63,7 +74,11 @@ test("Google Throw an error for input messages where SystemMessage is not first"
     new AIMessage("AI1"),
     new HumanMessage("Human2"),
   ];
-  const model = new ChatGoogleVertexAI();
+  const model = new ChatGoogleVertexAI({
+    authOptions: {
+      credentials: "{}",
+    },
+  });
   expect(() => model.createInstance(messages)).toThrow();
 });
 
@@ -74,7 +89,11 @@ test("Google Throw an error for input messages where messages the same type of m
     new HumanMessage("Human2"),
     new AIMessage("AI1"),
   ];
-  const model = new ChatGoogleVertexAI();
+  const model = new ChatGoogleVertexAI({
+    authOptions: {
+      credentials: "{}",
+    },
+  });
   expect(() => model.createInstance(messages)).toThrow();
 });
 
@@ -84,7 +103,11 @@ test("Google Throw an error for an even number of non-system input messages", as
     new HumanMessage("Human2"),
     new AIMessage("AI1"),
   ];
-  const model = new ChatGoogleVertexAI();
+  const model = new ChatGoogleVertexAI({
+    authOptions: {
+      credentials: "{}",
+    },
+  });
   expect(() => model.createInstance(messages)).toThrow();
 });
 
@@ -94,7 +117,12 @@ test("Google code messages", async () => {
     new AIMessage("AI1"),
     new HumanMessage("Human2"),
   ];
-  const model = new ChatGoogleVertexAI({ model: "codechat-bison" });
+  const model = new ChatGoogleVertexAI({
+    model: "codechat-bison",
+    authOptions: {
+      credentials: "{}",
+    },
+  });
   const instance = model.createInstance(messages);
   expect(instance.context).toBe("");
   expect(instance.messages[0].author).toBe("user");
@@ -108,7 +136,12 @@ test("Google code messages with a system message", async () => {
     new AIMessage("AI1"),
     new HumanMessage("Human2"),
   ];
-  const model = new ChatGoogleVertexAI({ model: "codechat-bison" });
+  const model = new ChatGoogleVertexAI({
+    model: "codechat-bison",
+    authOptions: {
+      credentials: "{}",
+    },
+  });
   const instance = model.createInstance(messages);
   expect(instance.context).toBe("System1");
   expect(instance.messages[0].author).toBe("user");

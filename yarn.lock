@@ -12920,6 +12920,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jose@npm:>= 4.12.0 < 5.0.0":
+  version: 4.14.6
+  resolution: "jose@npm:4.14.6"
+  checksum: eae81a234e7bf1446b1bd80722b3462b014e3835b155c3a7799c1c5043163a53a0dc28d347004151b031e6b7b863403aabf8814d9cc217ce21f8c2f3ebd4b335
+  languageName: node
+  linkType: hard
+
 "jose@npm:^4.10.4":
   version: 4.14.4
   resolution: "jose@npm:4.14.4"
@@ -13416,6 +13423,7 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
+    web-auth-library: ^1.0.3
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
@@ -13499,6 +13507,7 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
+    web-auth-library: ^1.0.3
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
   peerDependenciesMeta:
@@ -13655,6 +13664,8 @@ __metadata:
     voy-search:
       optional: true
     weaviate-ts-client:
+      optional: true
+    web-auth-library:
       optional: true
     youtube-transcript:
       optional: true
@@ -16968,6 +16979,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rfc4648@npm:^1.5.2":
+  version: 1.5.2
+  resolution: "rfc4648@npm:1.5.2"
+  checksum: bc3d9c4fbfdbbb363c640f9cb56fc01d2e1ca64305b2b6409aaf59cb85c1adecb2545c03deee8889cce2685e15fb7dd47581665c288e4f45068ffece2642f2e8
+  languageName: node
+  linkType: hard
+
 "rfdc@npm:^1.3.0":
   version: 1.3.0
   resolution: "rfdc@npm:1.3.0"
@@ -19077,6 +19095,16 @@ __metadata:
     isomorphic-fetch: ^3.0.0
     uuid: ^9.0.0
   checksum: aef68e7d77ac8b3d42e1a3dd3c4dcb7a0c74b96c1a3d7b11e52313c7dfa9a9b3fc9ba5f3048628d67193ca6c84bb8a7eca641dacfdc459cfe26ac2fe20b07f11
+  languageName: node
+  linkType: hard
+
+"web-auth-library@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "web-auth-library@npm:1.0.3"
+  dependencies:
+    jose: ">= 4.12.0 < 5.0.0"
+    rfc4648: ^1.5.2
+  checksum: 9e2b303a43ac040037b952c8130260edd44c34956e34277e28faa23ebf63fc40ba3a22b7a3cab5f36ea6f7aac16573415ccacb6e5a970fe4f4d2ee5751ae01d1
   languageName: node
   linkType: hard
 

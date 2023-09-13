@@ -71,8 +71,11 @@ export interface OptionalImportMap {
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
   "langchain/llms/googlevertexai"?:
-    | typeof import("../llms/googlevertexai.js")
-    | Promise<typeof import("../llms/googlevertexai.js")>;
+    | typeof import("../llms/googlevertexai/index.js")
+    | Promise<typeof import("../llms/googlevertexai/index.js")>;
+  "langchain/llms/googlevertexai/web"?:
+    | typeof import("../llms/googlevertexai/web.js")
+    | Promise<typeof import("../llms/googlevertexai/web.js")>;
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
@@ -269,8 +272,11 @@ export interface OptionalImportMap {
     | typeof import("../document_transformers/mozilla_readability.js")
     | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
   "langchain/chat_models/googlevertexai"?:
-    | typeof import("../chat_models/googlevertexai.js")
-    | Promise<typeof import("../chat_models/googlevertexai.js")>;
+    | typeof import("../chat_models/googlevertexai/index.js")
+    | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
+  "langchain/chat_models/googlevertexai/web"?:
+    | typeof import("../chat_models/googlevertexai/web.js")
+    | Promise<typeof import("../chat_models/googlevertexai/web.js")>;
   "langchain/chat_models/googlepalm"?:
     | typeof import("../chat_models/googlepalm.js")
     | Promise<typeof import("../chat_models/googlepalm.js")>;
@@ -388,6 +394,7 @@ export interface SecretMap {
   DATABERRY_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
+  GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
