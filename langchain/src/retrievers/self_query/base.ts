@@ -142,7 +142,9 @@ export class BasicTranslator<
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
     return {
       [comparison.attribute]: {
-        [this.formatFunction(comparison.comparator)]: castValue(comparison.value),
+        [this.formatFunction(comparison.comparator)]: castValue(
+          comparison.value
+        ),
       },
     };
   }
