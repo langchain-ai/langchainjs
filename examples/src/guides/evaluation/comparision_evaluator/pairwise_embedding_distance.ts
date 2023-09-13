@@ -13,8 +13,8 @@ const res = await chain.evaluateStringPairs({
 console.log({ res });
 
 /*
-{ res: { score: 0.03633645503883243 } }
- */
+  { res: { score: 0.03633645503883243 } }
+*/
 
 const res1 = await chain.evaluateStringPairs({
   prediction: "Seattle is warm in June",
@@ -24,5 +24,5 @@ const res1 = await chain.evaluateStringPairs({
 console.log({ res1 });
 
 /*
-{ res1: { score: 0.03657957473761331 } }
- */
+  { res1: { score: 0.03657957473761331 } }
+*/

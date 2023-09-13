@@ -32,7 +32,7 @@ const evaluator = await loadEvaluator("embedding_distance", {
 });
 
 // Select Embeddings to Use
-// The constructor uses OpenAI embeddings by default, but you can configure this however you want. Below, use huggingface local embeddings
+// The constructor uses OpenAI embeddings by default, but you can configure this however you want.
 
 const embedding = new FakeEmbeddings();
 
