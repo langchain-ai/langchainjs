@@ -6,7 +6,8 @@ import {
   parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { Document } from "../document.js";
-import { Runnable, RunnableConfig } from "./runnable.js";
+import { Runnable } from "./runnable/index.js";
+import { RunnableConfig } from "./runnable/config.js";
 
 /**
  * Base Retriever class. All indexes should extend this class.

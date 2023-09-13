@@ -1,6 +1,6 @@
 import { BaseCallbackConfig } from "../callbacks/manager.js";
 import { Document } from "../document.js";
-import { Runnable } from "./runnable.js";
+import { Runnable } from "./runnable/index.js";
 
 /**
  * Abstract base class for document transformation systems.

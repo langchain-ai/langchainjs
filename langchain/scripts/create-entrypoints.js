@@ -56,7 +56,8 @@ const entrypoints = {
   "llms/raycast": "llms/raycast",
   "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
-  "llms/googlevertexai": "llms/googlevertexai",
+  "llms/googlevertexai": "llms/googlevertexai/index",
+  "llms/googlevertexai/web": "llms/googlevertexai/web",
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   "llms/bedrock": "llms/bedrock",
@@ -141,7 +142,8 @@ const entrypoints = {
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
-  "document_loaders/fs/openai_whisper_audio": "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/openai_whisper_audio":
+    "document_loaders/fs/openai_whisper_audio",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/mozilla_readability":
@@ -152,7 +154,8 @@ const entrypoints = {
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
-  "chat_models/googlevertexai": "chat_models/googlevertexai",
+  "chat_models/googlevertexai": "chat_models/googlevertexai/index",
+  "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
@@ -163,7 +166,7 @@ const entrypoints = {
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
-  "schema/runnable": "schema/runnable",
+  "schema/runnable": "schema/runnable/index",
   "schema/storage": "schema/storage",
   // sql_db
   sql_db: "sql_db",
@@ -182,6 +185,7 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
   "retrievers/time_weighted": "retrievers/time_weighted",
@@ -233,6 +237,8 @@ const entrypoints = {
     "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
+  "experimental/llms/bittensor":
+    "experimental/llms/bittensor",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -272,6 +278,7 @@ const requiresOptionalDependency = [
   "llms/load",
   "llms/cohere",
   "llms/googlevertexai",
+  "llms/googlevertexai/web",
   "llms/googlepalm",
   "llms/hf",
   "llms/raycast",
@@ -341,6 +348,7 @@ const requiresOptionalDependency = [
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/googlevertexai",
+  "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
   "sql_db",
   "retrievers/amazon_kendra",
@@ -376,6 +384,7 @@ const requiresOptionalDependency = [
   "hub",
   "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions",
+  "experimental/llms/bittensor",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
@@ -483,7 +492,10 @@ const updateConfig = () => {
   testExports.forEach(([pkg, importStatement]) => {
     const contents =
       entrypointsToTest.map((key) => importStatement(key)).join("\n") + "\n";
-    fs.writeFileSync(`../environment_tests/${pkg}/src/entrypoints.js`, contents);
+    fs.writeFileSync(
+      `../environment_tests/${pkg}/src/entrypoints.js`,
+      contents
+    );
   });
 };
 

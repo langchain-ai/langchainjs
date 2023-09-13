@@ -23,7 +23,7 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
-import { RunnableConfig } from "../schema/runnable.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 
 /**
  * Represents a serialized chat model.

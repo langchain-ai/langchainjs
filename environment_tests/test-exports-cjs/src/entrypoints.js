@@ -49,6 +49,7 @@ const retrievers_remote = require("langchain/retrievers/remote");
 const retrievers_databerry = require("langchain/retrievers/databerry");
 const retrievers_contextual_compression = require("langchain/retrievers/contextual_compression");
 const retrievers_document_compressors = require("langchain/retrievers/document_compressors");
+const retrievers_multi_query = require("langchain/retrievers/multi_query");
 const retrievers_multi_vector = require("langchain/retrievers/multi_vector");
 const retrievers_parent_document = require("langchain/retrievers/parent_document");
 const retrievers_time_weighted = require("langchain/retrievers/time_weighted");

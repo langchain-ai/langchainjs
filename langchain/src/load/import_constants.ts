@@ -25,6 +25,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/raycast",
   "langchain/llms/replicate",
   "langchain/llms/googlevertexai",
+  "langchain/llms/googlevertexai/web",
   "langchain/llms/googlepalm",
   "langchain/llms/sagemaker_endpoint",
   "langchain/llms/bedrock",
@@ -91,6 +92,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_transformers/html_to_text",
   "langchain/document_transformers/mozilla_readability",
   "langchain/chat_models/googlevertexai",
+  "langchain/chat_models/googlevertexai/web",
   "langchain/chat_models/googlepalm",
   "langchain/sql_db",
   "langchain/callbacks/handlers/llmonitor",
@@ -124,4 +126,5 @@ export const optionalImportEntrypoints = [
   "langchain/hub",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
   "langchain/experimental/chat_models/anthropic_functions",
+  "langchain/experimental/llms/bittensor",
 ];
