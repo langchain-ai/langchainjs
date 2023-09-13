@@ -338,3 +338,49 @@ function buildResponse(tokens: string, keys = "outputText") {
 
   return mockReader;
 }
+
+test("Test Bedrock LLM: custom endpoint url", async () => {
+  const region = "us-east-1";
+  const model = "ai21.j2-grande-instruct";
+  const prompt = "What is your name?";
+  const answer = "Hello! My name is Claude.";
+  const endpointUrl = "custom.endpoint.awsamazon.com";
+
+  const bedrock = new Bedrock({
+    maxTokens: 20,
+    region,
+    model,
+    endpointUrl,
+    async fetchFn(
+      input: RequestInfo | URL,
+      init?: RequestInit | undefined
+    ): Promise<Response> {
+      expect(input).toBeInstanceOf(URL);
+      expect((input as URL).href).toBe(
+        `https://${endpointUrl}/model/${model}/invoke-with-response-stream`
+      );
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toMatchObject({
+        host: endpointUrl,
+        accept: "application/json",
+        "Content-Type": "application/json",
+      });
+      expect(init?.body).toBe(
+        `{"prompt":"${prompt}","maxTokens":20,"temperature":0}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return new Promise<any>((resolve) => {
+        resolve({
+          status: 200,
+          body: {
+            getReader: () => buildResponse(answer, "data.text"),
+          },
+        });
+      });
+    },
+  });
+
+  const res = await bedrock.call(prompt);
+  expect(typeof res).toBe("string");
+  expect(res).toBe(answer);
+}, 5000);
