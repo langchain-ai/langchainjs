@@ -1,0 +1,17 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import PairwiseEmbeddingDistance from "@examples/guides/evaluation/comparision_evaluator/pairwise_embedding_distance.ts";
+
+# Pairwise Embedding Distance
+
+One way to measure the similarity (or dissimilarity) between two predictions on a shared or similar input is to embed the predictions and compute a vector distance between the two embeddings.
+
+You can load the `pairwise_embedding_distance` evaluator to do this.
+
+**Note:** This returns a **distance** score, meaning that the lower the number, the **more** similar the outputs are, according to their embedded representation.
+
+
+<CodeBlock language="typescript">{PairwiseEmbeddingDistance}</CodeBlock>
