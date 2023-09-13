@@ -16,13 +16,13 @@ const combineModel = new ChatOpenAI({
       handleLLMNewToken(token: string): Promise<void> | void {
         console.log("token", token);
         /*
-                  token President
-                  token  Biden
-                  ...
-                  ...
-                  token  protections
-                  token .
-                 */
+          token President
+          token  Biden
+          ...
+          ...
+          token  protections
+          token .
+        */
       },
     },
   ],
@@ -40,10 +40,9 @@ const res = await chain.call({
 });
 console.log({ res });
 /*
-{
-  res: {
-    text: "President Biden delivered his first State of the Union address, focusing on the Russian invasion of Ukraine, domestic economic challenges, and his administration's efforts to revitalize American manufacturing and infrastructure. He announced new sanctions against Russia and the deployment of U.S. forces to NATO countries. Biden also outlined his plan to fight inflation, lower costs for American families, and reduce the deficit. He emphasized the need to pass the Bipartisan Innovation Act, confirmed his Federal Reserve nominees, and called for the end of COVID shutdowns. Biden also addressed issues such as gun violence, voting rights, immigration reform, women's rights, and privacy protections."
+  {
+    res: {
+      text: "President Biden delivered his first State of the Union address, focusing on the Russian invasion of Ukraine, domestic economic challenges, and his administration's efforts to revitalize American manufacturing and infrastructure. He announced new sanctions against Russia and the deployment of U.S. forces to NATO countries. Biden also outlined his plan to fight inflation, lower costs for American families, and reduce the deficit. He emphasized the need to pass the Bipartisan Innovation Act, confirmed his Federal Reserve nominees, and called for the end of COVID shutdowns. Biden also addressed issues such as gun violence, voting rights, immigration reform, women's rights, and privacy protections."
+    }
   }
-}
-
 */
