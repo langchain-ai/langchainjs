@@ -28,12 +28,12 @@ dotenv.config();
 const env = process.env.PINECONE_ENVIRONMENT!
 const key = process.env.PINECONE_API_KEY!
 
-const client = await Pinecone.createClient({
+const pinecone = new Pinecone({
   apiKey: key,
   environment: env,
-})
+});
 
-const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
+const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
 const docs = [
   new Document({
@@ -75,12 +75,12 @@ dotenv.config();
 const env = process.env.PINECONE_ENVIRONMENT!
 const key = process.env.PINECONE_API_KEY!
 
-const client = await Pinecone.createClient({
+const pinecone = new Pinecone({
   apiKey: key,
   environment: env,
 })
 
-const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
+const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
 const vectorStore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
@@ -136,12 +136,12 @@ dotenv.config();
 const env = process.env.PINECONE_ENVIRONMENT!
 const key = process.env.PINECONE_API_KEY!
 
-const client = await Pinecone.createClient({
+const pinecone = new Pinecone({
   apiKey: key,
   environment: env,
 })
 
-const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
+const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 const embeddings = new OpenAIEmbeddings();
 const pineconeStore = new PineconeStore(embeddings, { pineconeIndex });
 

@@ -6,14 +6,27 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { chunkArray } from "../util/chunk.js";
 import { AsyncCaller, type AsyncCallerParams } from "../util/async_caller.js";
+import {
+  Pinecone,
+  RecordMetadata,
+  PineconeRecord,
+  Index as PineconeIndex,
+} from "@pinecone-database/pinecone"
 
-import { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch"
+const env = process.env.PINECONE_ENVIRONMENT!
+const key = process.env.PINECONE_API_KEY!
+
+const pinecone = new Pinecone({
+  apiKey: key,
+  environment: env
+})
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
 export interface PineconeLibArgs {
-  pineconeIndex: VectorOperationsApi;
+  pineconeIndex: PineconeIndex;
+  pineconeIndexName?: string;
   textKey?: string;
   namespace?: string;
   filter?: PineconeMetadata;
@@ -40,7 +53,9 @@ export class PineconeStore extends VectorStore {
 
   namespace?: string;
 
-  pineconeIndex: VectorOperationsApi;
+  pineconeIndexName: string;
+
+  pineconeIndex: PineconeIndex;
 
   filter?: PineconeMetadata;
 
@@ -54,10 +69,10 @@ export class PineconeStore extends VectorStore {
     super(embeddings, args);
 
     this.embeddings = embeddings;
-    const { namespace, pineconeIndex, textKey, filter, ...asyncCallerArgs } =
-      args;
+    const { namespace, pineconeIndex, pineconeIndexName, textKey, filter, ...asyncCallerArgs } = args;
     this.namespace = namespace;
-    this.pineconeIndex = pineconeIndex;
+    this.pineconeIndexName = pineconeIndexName as string
+    this.pineconeIndex = pinecone.Index(this.pineconeIndexName)
     this.textKey = textKey ?? "text";
     this.filter = filter;
     this.caller = new AsyncCaller(asyncCallerArgs);
@@ -130,13 +145,13 @@ export class PineconeStore extends VectorStore {
       }
 
       return {
-        id: documentIds[idx],
-        metadata,
-        values,
-      };
+        id: documentIds[idx], metadata, values,
+      } as PineconeRecord<RecordMetadata>
     });
 
+    const namespace = this.pineconeIndex.namespace(this.namespace ?? '')
     // Pinecone recommends a limit of 100 vectors per upsert request
+<<<<<<< HEAD
     const chunkSize = 100;
     const chunkedVectors = chunkArray(pineconeVectors, chunkSize);
     const batchRequests = chunkedVectors.map((chunk) =>
@@ -153,6 +168,14 @@ export class PineconeStore extends VectorStore {
     await Promise.all(batchRequests);
 
     return documentIds;
+=======
+    const chunkSize = 50;
+    for (let i = 0; i < pineconeVectors.length; i += chunkSize) {
+      const chunk = pineconeVectors.slice(i, i + chunkSize);
+      await namespace.upsert(chunk)
+    }
+    return documentIds
+>>>>>>> 02b04183 (Upgrade Pinecone vectorstore to use Pinecone SDK v1.0.0)
   }
 
   /**
@@ -161,27 +184,17 @@ export class PineconeStore extends VectorStore {
    * @returns Promise that resolves when the delete operation is complete.
    */
   async delete(params: PineconeDeleteParams): Promise<void> {
-    const { namespace = this.namespace, deleteAll, ids, ...rest } = params;
+    const { deleteAll, ids } = params;
+    const namespace = this.pineconeIndex.namespace(this.namespace ?? '')
+
     if (deleteAll) {
-      await this.pineconeIndex.delete1({
-        deleteAll: true,
-        namespace,
-        ...rest,
-      });
+      await namespace.deleteAll();
     } else if (ids) {
       const batchSize = 1000;
-      const batchedIds = chunkArray(ids, batchSize);
-      const batchRequests = batchedIds.map((batchIds) =>
-        this.caller.call(async () =>
-          this.pineconeIndex.delete1({
-            ids: batchIds,
-            namespace,
-            ...rest,
-          })
-        )
-      );
-
-      await Promise.all(batchRequests);
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const batchIds = ids.slice(i, i + batchSize);
+        await namespace.deleteMany([batchIds]);
+      }
     } else {
       throw new Error("Either ids or delete_all must be provided.");
     }
@@ -204,14 +217,13 @@ export class PineconeStore extends VectorStore {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
     const _filter = filter ?? this.filter;
-    const results = await this.pineconeIndex.query({
-      queryRequest: {
-        includeMetadata: true,
-        namespace: this.namespace,
-        topK: k,
-        vector: query,
-        filter: _filter,
-      },
+    const namespace = this.pineconeIndex.namespace(this.namespace ?? '')
+
+    const results = await namespace.query({
+      includeMetadata: true,
+      topK: k,
+      vector: query,
+      filter: _filter,
     });
 
     const result: [Document, number][] = [];
@@ -244,10 +256,7 @@ export class PineconeStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig:
       | {
-        /**
-         * @deprecated Use pineconeIndex instead
-         */
-        pineconeClient: VectorOperationsApi;
+        pineconeIndex: PineconeIndex,
         textKey?: string;
         namespace?: string | undefined;
       }
@@ -264,10 +273,7 @@ export class PineconeStore extends VectorStore {
     }
 
     const args: PineconeLibArgs = {
-      pineconeIndex:
-        "pineconeIndex" in dbConfig
-          ? dbConfig.pineconeIndex
-          : dbConfig.pineconeClient,
+      pineconeIndex: dbConfig.pineconeIndex,
       textKey: dbConfig.textKey,
       namespace: dbConfig.namespace,
     };
