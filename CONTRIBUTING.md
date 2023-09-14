@@ -25,9 +25,9 @@ LangChain supports several different types of integrations with third-party prov
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
-### Want to add a feature already in Python?
+### Want to add a feature that's already in Python?
 
-If there's a Python feature you're interested in using that isn't currently in JS and you'd like some help getting started, you can try pasting code snippets and classes from the [Python repo](https://github.com/langchain-ai/langchain) into the [LangChain Python to JS translator](https://langchain-translator.vercel.app/).
+If you're interested in contributing a feature that's already in the [LangChain Python repo](https://github.com/langchain-ai/langchain) and you'd like some help getting started, you can try pasting code snippets and classes into the [LangChain Python to JS translator](https://langchain-translator.vercel.app/).
 
 It's a chat interface wrapping a fine-tuned `gpt-3.5-turbo` instance trained on prior ported features. This allows the model to innately take into account LangChain-specific code style and imports.
 
