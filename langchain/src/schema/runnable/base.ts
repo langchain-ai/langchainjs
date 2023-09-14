@@ -567,12 +567,6 @@ export class RunnableBinding<
 }
 
 /**
- * A type that represents a function that takes an input of type `I` and
- * returns a promise that resolves to a value of type `O`.
- */
-export type AsyncFunction<I, O> = (input: I) => Promise<O>;
-
-/**
  * A runnable that delegates calls to another runnable
  * with each element of the input sequence.
  */

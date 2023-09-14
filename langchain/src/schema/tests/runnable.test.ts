@@ -464,7 +464,7 @@ test("RunnableRetry batch should not retry successful requests", async () => {
   expect(result.sort()).toEqual([3, 4, 5]);
 });
 
-test.only("RunnableEach", async () => {
+test("RunnableEach", async () => {
   const parser = new FakeSplitIntoListParser();
   expect(await parser.invoke("first item, second item")).toEqual([
     "first item",
