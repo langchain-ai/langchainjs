@@ -779,16 +779,21 @@ export class RunnableSequence<
     let nextStepInput = input;
     let finalOutput: RunOutput;
     try {
-      for (const step of [this.first, ...this.middle]) {
+      const initialSteps = [this.first, ...this.middle];
+      for (let i = 0; i < initialSteps.length; i += 1) {
+        const step = initialSteps[i];
         nextStepInput = await step.invoke(
           nextStepInput,
-          this._patchConfig(options, runManager?.getChild())
+          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
         );
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       finalOutput = await this.last.invoke(
         nextStepInput,
-        this._patchConfig(options, runManager?.getChild())
+        this._patchConfig(
+          options,
+          runManager?.getChild(`seq:step:${this.steps.length}`)
+        )
       );
     } catch (e) {
       await runManager?.handleChainError(e);
@@ -837,12 +842,16 @@ export class RunnableSequence<
     let nextStepInputs: any = inputs;
     let finalOutputs: (RunOutput | Error)[];
     try {
-      for (let i = 0; i < [this.first, ...this.middle].length; i += 1) {
-        const step = this.steps[i];
+      const initialSteps = [this.first, ...this.middle];
+      for (let i = 0; i < initialSteps.length; i += 1) {
+        const step = initialSteps[i];
         nextStepInputs = await step.batch(
           nextStepInputs,
           runManagers.map((runManager, j) =>
-            this._patchConfig(configList[j], runManager?.getChild())
+            this._patchConfig(
+              configList[j],
+              runManager?.getChild(`seq:step:${i + 1}`)
+            )
           ),
           batchOptions
         );
@@ -852,7 +861,7 @@ export class RunnableSequence<
         runManagers.map((runManager) =>
           this._patchConfig(
             configList[this.steps.length - 1],
-            runManager?.getChild()
+            runManager?.getChild(`seq:step:${this.steps.length}`)
           )
         ),
         batchOptions
@@ -901,10 +910,12 @@ export class RunnableSequence<
     );
 
     try {
-      for (const step of steps.slice(0, streamingStartStepIndex)) {
+      const invokeSteps = steps.slice(0, streamingStartStepIndex);
+      for (let i = 0; i < invokeSteps.length; i += 1) {
+        const step = invokeSteps[i];
         nextStepInput = await step.invoke(
           nextStepInput,
-          this._patchConfig(options, runManager?.getChild())
+          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
         );
       }
     } catch (e) {
@@ -916,12 +927,20 @@ export class RunnableSequence<
     try {
       let finalGenerator = await steps[streamingStartStepIndex]._streamIterator(
         nextStepInput,
-        this._patchConfig(options, runManager?.getChild())
+        this._patchConfig(
+          options,
+          runManager?.getChild(`seq:step:${streamingStartStepIndex + 1}`)
+        )
       );
-      for (const step of steps.slice(streamingStartStepIndex + 1)) {
+      const finalSteps = steps.slice(streamingStartStepIndex + 1);
+      for (let i = 0; i < finalSteps.length; i += 1) {
+        const step = finalSteps[i];
         finalGenerator = await step.transform(
           finalGenerator,
-          this._patchConfig(options, runManager?.getChild())
+          this._patchConfig(
+            options,
+            runManager?.getChild(`seq:step:${streamingStartStepIndex + i + 2}`)
+          )
         );
       }
       for await (const chunk of finalGenerator) {
