@@ -1070,7 +1070,8 @@ export class RunnableSequence<
     return Array.isArray(thing.middle) && Runnable.isRunnable(thing);
   }
 
-  static from<RunInput, RunOutput>([first, ...runnables]: [
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static from<RunInput = any, RunOutput = any>([first, ...runnables]: [
     RunnableLike<RunInput>,
     ...RunnableLike[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

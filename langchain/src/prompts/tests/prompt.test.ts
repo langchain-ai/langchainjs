@@ -21,7 +21,7 @@ test("Test using partial with an extra variable", async () => {
 
 test("Test fromTemplate", async () => {
   const prompt = PromptTemplate.fromTemplate("{foo}{bar}");
-  expect(await prompt.format({ foo: "foo", bar: "baz", unused: "eee" })).toBe(
+  expect(await prompt.invoke({ foo: "foo", bar: "baz", unused: "eee" })).toBe(
     "foobaz"
   );
 });
@@ -35,6 +35,20 @@ test("Test fromTemplate with type parameter", async () => {
   const prompt = PromptTemplate.fromTemplate<{ foo: string }>("test");
   // @ts-expect-error TS compiler should flag
   expect(await prompt.format({ unused: "eee" })).toBe("test");
+});
+
+test("Test fromTemplate with missing variable should raise compiler error", async () => {
+  const prompt = PromptTemplate.fromTemplate("{foo}");
+  // @ts-expect-error TS compiler should flag missing variable
+  expect(await prompt.format({ unused: "eee" })).toBe("");
+  // @ts-expect-error TS compiler should flag missing variable
+  expect(await prompt.invoke({ unused: "eee" })).toBe("");
+});
+
+test("Test fromTemplate with extra variable should work", async () => {
+  const prompt = PromptTemplate.fromTemplate("{foo}");
+  expect(await prompt.format({ foo: "test", unused: "eee" })).toBe("test");
+  expect(await prompt.invoke({ foo: "test", unused: "eee" })).toBe("test");
 });
 
 test("Test using full partial", async () => {
