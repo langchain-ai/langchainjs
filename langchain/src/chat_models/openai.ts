@@ -198,7 +198,7 @@ export class ChatOpenAI
     };
   }
 
-  temperature = 1;
+  temperature = 0;
 
   topP = 1;
 
