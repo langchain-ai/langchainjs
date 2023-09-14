@@ -28,7 +28,27 @@ import {
 } from "../runnable/index.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
-import { OutputParserException, StringOutputParser } from "../output_parser.js";
+import {
+  BaseOutputParser,
+  OutputParserException,
+  StringOutputParser,
+} from "../output_parser.js";
+
+/**
+ * Parser for comma-separated values. It splits the input text by commas
+ * and trims the resulting values.
+ */
+export class FakeSplitIntoListParser extends BaseOutputParser<string[]> {
+  lc_namespace = ["tests", "fake"];
+
+  getFormatInstructions() {
+    return "";
+  }
+
+  async parse(text: string): Promise<string[]> {
+    return text.split(",").map((value) => value.trim());
+  }
+}
 
 class FakeLLM extends LLM {
   response?: string;
@@ -442,4 +462,19 @@ test("RunnableRetry batch should not retry successful requests", async () => {
   const result = await runnableRetry.batch(["", "", ""]);
   expect(attemptCount).toEqual(5);
   expect(result.sort()).toEqual([3, 4, 5]);
+});
+
+test("RunnableEach", async () => {
+  const parser = new FakeSplitIntoListParser();
+  expect(await parser.invoke("first item, second item")).toEqual([
+    "first item",
+    "second item",
+  ]);
+  expect(await parser.map().invoke(["a, b", "c"])).toEqual([["a", "b"], ["c"]]);
+  expect(
+    await parser
+      .map()
+      .map()
+      .invoke([["a, b", "c"], ["c, e"]])
+  ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
 });

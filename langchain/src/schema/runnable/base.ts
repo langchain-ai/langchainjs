@@ -62,9 +62,18 @@ export abstract class Runnable<
    */
   bind(
     kwargs: Partial<CallOptions>
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+  ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({ bound: this, kwargs });
+  }
+
+  /**
+   * Return a new Runnable that maps a list of inputs to a list of outputs,
+   * by calling invoke() with each input.
+   */
+  map(): Runnable<RunInput[], RunOutput[], CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableEach({ bound: this });
   }
 
   /**
@@ -554,6 +563,74 @@ export class RunnableBinding<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): thing is RunnableBinding<any, any, any> {
     return thing.bound && Runnable.isRunnable(thing.bound);
+  }
+}
+
+/**
+ * A runnable that delegates calls to another runnable
+ * with each element of the input sequence.
+ */
+export class RunnableEach<
+  RunInputItem,
+  RunOutputItem,
+  CallOptions extends BaseCallbackConfig
+> extends Runnable<RunInputItem[], RunOutputItem[], CallOptions> {
+  static lc_name() {
+    return "RunnableEach";
+  }
+
+  lc_serializable = true;
+
+  lc_namespace = ["langchain", "schema", "runnable"];
+
+  bound: Runnable<RunInputItem, RunOutputItem, CallOptions>;
+
+  constructor(fields: {
+    bound: Runnable<RunInputItem, RunOutputItem, CallOptions>;
+  }) {
+    super(fields);
+    this.bound = fields.bound;
+  }
+
+  /**
+   * Binds the runnable with the specified arguments.
+   * @param args The arguments to bind the runnable with.
+   * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
+   */
+  bind(kwargs: Partial<CallOptions>) {
+    return new RunnableEach({
+      bound: this.bound.bind(kwargs),
+    });
+  }
+
+  /**
+   * Invokes the runnable with the specified input and configuration.
+   * @param input The input to invoke the runnable with.
+   * @param config The configuration to invoke the runnable with.
+   * @returns A promise that resolves to the output of the runnable.
+   */
+  async invoke(
+    inputs: RunInputItem[],
+    config?: Partial<CallOptions>
+  ): Promise<RunOutputItem[]> {
+    return this._callWithConfig(this._invoke, inputs, config);
+  }
+
+  /**
+   * A helper method that is used to invoke the runnable with the specified input and configuration.
+   * @param input The input to invoke the runnable with.
+   * @param config The configuration to invoke the runnable with.
+   * @returns A promise that resolves to the output of the runnable.
+   */
+  protected async _invoke(
+    inputs: RunInputItem[],
+    config?: Partial<CallOptions>,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<RunOutputItem[]> {
+    return this.bound.batch(
+      inputs,
+      this._patchConfig(config, runManager?.getChild())
+    );
   }
 }
 
@@ -1189,6 +1266,9 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
+    if (batchOptions?.returnExceptions) {
+      throw new Error("Not implemented.");
+    }
     const configList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
       configList.map((config) =>
