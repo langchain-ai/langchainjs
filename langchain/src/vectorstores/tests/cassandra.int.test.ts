@@ -8,11 +8,11 @@ import { Document } from "../../document.js";
 describe.only("CassandraStore", () => {
   const cassandraConfig = {
     cloud: {
-      secureConnectBundle: process.env.CASSANDRA_SCB!,
+      secureConnectBundle: process.env.CASSANDRA_SCB,
     },
     credentials: {
       username: "token",
-      password: process.env.CASSANDRA_TOKEN!,
+      password: process.env.CASSANDRA_TOKEN,
     },
     keyspace: "test",
     dimensions: 1536,
@@ -30,7 +30,7 @@ describe.only("CassandraStore", () => {
 
   test("CassandraStore.fromText", async () => {
     const vectorStore = await CassandraStore.fromTexts(
-      ["Hello world", "Bye bye", "hello nice world"],
+      ["I am blue", "Green yellow purple", "Hello there hello"],
       [
         { id: 2, name: "2" },
         { id: 1, name: "1" },
@@ -40,10 +40,10 @@ describe.only("CassandraStore", () => {
       cassandraConfig
     );
 
-    const results = await vectorStore.similaritySearch("hello world", 1);
+    const results = await vectorStore.similaritySearch("Green buffalo world", 1);
     expect(results).toEqual([
       new Document({
-        pageContent: "Hello world",
+        pageContent: "Green buffalo world",
         metadata: { id: 2, name: "2" },
       }),
     ]);
@@ -51,7 +51,7 @@ describe.only("CassandraStore", () => {
 
   test("CassandraStore.fromExistingIndex", async () => {
     await CassandraStore.fromTexts(
-      ["Hello world", "Bye bye", "hello nice world"],
+      ["Hey", "Whats up", "Hello"],
       [
         { id: 2, name: "2" },
         { id: 1, name: "1" },
@@ -66,10 +66,10 @@ describe.only("CassandraStore", () => {
       cassandraConfig,
     );
 
-    const results = await vectorStore.similaritySearch("hello world", 1);
+    const results = await vectorStore.similaritySearch("Hey what's up hello", 1);
     expect(results).toEqual([
       new Document({
-        pageContent: "Hello world",
+        pageContent: "Hey what's up hello",
         metadata: { id: 2, name: "2" },
       }),
     ]);

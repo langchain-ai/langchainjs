@@ -32,6 +32,7 @@ export class CassandraStore extends VectorStore {
   private readonly keyspace: string;
 
   private primaryKey: Column;
+
   private metadataColumns: Column[];
 
   private readonly table: string;
