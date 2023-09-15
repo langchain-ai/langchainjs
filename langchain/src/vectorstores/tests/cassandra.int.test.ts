@@ -8,22 +8,22 @@ import { Document } from "../../document.js";
 describe.only("CassandraStore", () => {
   const cassandraConfig = {
     cloud: {
-      secureConnectBundle: process.env.CASSANDRA_SCB,
+      secureConnectBundle: process.env.CASSANDRA_SCB as string,
     },
     credentials: {
       username: "token",
-      password: process.env.CASSANDRA_TOKEN,
+      password: process.env.CASSANDRA_TOKEN  as string,
     },
     keyspace: "test",
     dimensions: 1536,
     table: "test",
     primaryKey: {
-      name: 'id',
-      type: 'int',
+      name: "id",
+      type: "int",
     },
     metadataColumns: [{
-      name: 'name',
-      type: 'text'
+      name: "name",
+      type: "text"
     }]
   }
 
