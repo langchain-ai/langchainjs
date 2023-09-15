@@ -5251,18 +5251,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@pinecone-database/pinecone@npm:1.0.0"
-  dependencies:
-    "@sinclair/typebox": ^0.28.15
-    "@types/web": ^0.0.99
-    ajv: ^8.12.0
-    cross-fetch: ^3.1.5
-  checksum: 555b9f7e51e7996e67a23831606f2dab4e5c7a3ec83cead56db31385a505449d09930031c3e55a32d3a12149df06bb84625d2593a2466a38b3e0dcd5d3887680
-  languageName: node
-  linkType: hard
-
 "@pinecone-database/pinecone@npm:^1.0.1":
   version: 1.0.1
   resolution: "@pinecone-database/pinecone@npm:1.0.1"
@@ -5544,13 +5532,6 @@ __metadata:
   version: 0.27.8
   resolution: "@sinclair/typebox@npm:0.27.8"
   checksum: 00bd7362a3439021aa1ea51b0e0d0a0e8ca1351a3d54c606b115fdcc49b51b16db6e5f43b4fe7a28c38688523e22a94d49dd31168868b655f0d4d50f032d07a1
-  languageName: node
-  linkType: hard
-
-"@sinclair/typebox@npm:^0.28.15":
-  version: 0.28.20
-  resolution: "@sinclair/typebox@npm:0.28.20"
-  checksum: 97d866c3fb3bd5ac7f8519f4a1891dfb9e05c32891f77db89d8d34c7c69696ba4599f7c3ac38a83ebdaf287dc1fd1051699929628deed9db437ba64b372bf538
   languageName: node
   linkType: hard
 
@@ -6932,13 +6913,6 @@ __metadata:
   version: 9.0.2
   resolution: "@types/uuid@npm:9.0.2"
   checksum: 1754bcf3444e1e3aeadd6e774fc328eb53bc956665e2e8fb6ec127aa8e1f43d9a224c3d22a9a6233dca8dd81a12dc7fed4d84b8876dd5ec82d40f574f7ff8b68
-  languageName: node
-  linkType: hard
-
-"@types/web@npm:^0.0.99":
-  version: 0.0.99
-  resolution: "@types/web@npm:0.0.99"
-  checksum: 5298e64fc9db63f7da840dff77cd770c0568d3162eac406aa74e3a251c58377d370398a1d9402feb4fc49afa615808ac85be966e59fa96677a23dfd1df89ef9a
   languageName: node
   linkType: hard
 
@@ -13404,7 +13378,7 @@ __metadata:
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^1.0.0
+    "@pinecone-database/pinecone": ^1.0.1
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
