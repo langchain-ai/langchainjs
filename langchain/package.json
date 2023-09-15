@@ -686,6 +686,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "cohere-ai": ">=6.0.0",
@@ -787,6 +788,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
     "cohere-ai": ">=6.0.0",
@@ -947,6 +949,9 @@
       "optional": true
     },
     "axios": {
+      "optional": true
+    },
+    "cassandra-driver": {
       "optional": true
     },
     "cheerio": {

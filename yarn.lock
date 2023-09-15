@@ -6670,6 +6670,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:>=8":
+  version: 20.6.0
+  resolution: "@types/node@npm:20.6.0"
+  checksum: 52611801af5cf151c6fac1963aa4a8a8ca2e388a9e9ed82b01b70bca762088ded5b32cc789c5564220d5d7dccba2b8dd34446a3d4fc74736805e1f2cf262e29d
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^18.11.18":
   version: 18.16.19
   resolution: "@types/node@npm:18.16.19"
@@ -7297,7 +7304,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"adm-zip@npm:^0.5.9":
+"adm-zip@npm:^0.5.3, adm-zip@npm:^0.5.9":
   version: 0.5.10
   resolution: "adm-zip@npm:0.5.10"
   checksum: 07ed91cf6423bf5dca4ee63977bc7635e91b8d21829c00829d48dce4c6932e1b19e6cfcbe44f1931c956e68795ae97183fc775913883fa48ce88a1ac11fb2034
@@ -8242,6 +8249,18 @@ __metadata:
   version: 1.0.30001462
   resolution: "caniuse-lite@npm:1.0.30001462"
   checksum: e4a57d7851eec65e7c9b6c11c4bbcecdc49d87b1b01bff3c15ea27efb05f959891b4c70ac169842067c134d6fa126d9ad5a91d0f85c7387c5bd912eaf41ea647
+  languageName: node
+  linkType: hard
+
+"cassandra-driver@npm:^4.6.4":
+  version: 4.6.4
+  resolution: "cassandra-driver@npm:4.6.4"
+  dependencies:
+    "@types/long": ^4.0.0
+    "@types/node": ">=8"
+    adm-zip: ^0.5.3
+    long: ^2.2.0
+  checksum: 44e889496472e0cca5bbf70b0cb4b945db164dd3ac6193c62a7157033b987828cd6df14e06248221414ef2b4856e1cdebb3b6f131f3929dacbf02e2e69c8dec3
   languageName: node
   linkType: hard
 
@@ -13352,6 +13371,7 @@ __metadata:
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     camelcase: 6
+    cassandra-driver: ^4.6.4
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
     cohere-ai: ">=6.0.0"
@@ -13470,6 +13490,7 @@ __metadata:
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"
+    cassandra-driver: ^4.6.4
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
     cohere-ai: ">=6.0.0"
@@ -13590,6 +13611,8 @@ __metadata:
     apify-client:
       optional: true
     axios:
+      optional: true
+    cassandra-driver:
       optional: true
     cheerio:
       optional: true
@@ -14031,6 +14054,13 @@ __metadata:
   version: 4.0.0
   resolution: "long@npm:4.0.0"
   checksum: 16afbe8f749c7c849db1f4de4e2e6a31ac6e617cead3bdc4f9605cb703cd20e1e9fc1a7baba674ffcca57d660a6e5b53a9e236d7b25a295d3855cca79cc06744
+  languageName: node
+  linkType: hard
+
+"long@npm:^2.2.0":
+  version: 2.4.0
+  resolution: "long@npm:2.4.0"
+  checksum: e24fd5e14be90ba6ec3faa43b3b0f1c4ac88bfdc52471d90f63e173572f6db27c45873e847f8af58283ca3140eb42d7ba11708102f3cc0956793b03305c737e0
   languageName: node
   linkType: hard
 
