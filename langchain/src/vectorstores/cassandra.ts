@@ -1,4 +1,4 @@
-import {DseClientOptions, Client as CassandraClient} from 'cassandra-driver';
+import {Client as CassandraClient, DseClientOptions} from 'cassandra-driver';
 
 import {Embeddings} from "../embeddings/base.js";
 import {VectorStore} from "./base.js";
@@ -99,19 +99,19 @@ export class CassandraStore extends VectorStore {
     }
 
     const queryStr = this.buildSearchQuery(query, k);
-    console.log(queryStr);
-
     const queryResultSet = await this.client.execute(queryStr);
 
-    const results: [Document, number][] = queryResultSet.rows.map((row, index) => [
-      new Document({ pageContent: row.text, metadata: row }),
-      index,
-    ]);
+    return queryResultSet?.rows.map((row, index) => {
+      const textContent = row.text;
+      const sanitizedRow = Object.assign(row, {});
+      delete sanitizedRow.vector;
+      delete sanitizedRow.text;
 
-    console.log("RESULTS")
-    console.log(results);
-
-    return results;
+      return [
+        new Document({pageContent: textContent, metadata: sanitizedRow}),
+        index,
+      ]
+    });
   }
 
   /**
@@ -194,11 +194,11 @@ export class CassandraStore extends VectorStore {
   }
 
   /**
-   * Method to build an SQL query for inserting vectors and documents into
+   * Method to build an CQL query for inserting vectors and documents into
    * the Cassandra database.
    * @param vectors The vectors to insert.
    * @param documents The documents to insert.
-   * @returns The SQL query string.
+   * @returns The CQL query string.
    */
   private buildInsertQuery(vectors: number[][], documents: Document[]): string[] {
     const queries: string[] = [];
@@ -216,17 +216,16 @@ export class CassandraStore extends VectorStore {
   }
 
   /**
-   * Method to build an SQL query for searching for similar vectors in the
+   * Method to build an CQL query for searching for similar vectors in the
    * Cassandra database.
    * @param query The query vector.
    * @param k The number of similar vectors to return.
-   * @returns The SQL query string.
+   * @returns The CQL query string.
    */
   private buildSearchQuery(
     query: number[],
     k: number,
   ): string {
-
     return `SELECT * FROM ${this.keyspace}.${this.table} ORDER BY vector ANN OF [${query}] LIMIT ${k || 1};`;
   }
 }

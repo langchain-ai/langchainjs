@@ -6,7 +6,6 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
 describe.only("CassandraStore", () => {
-
   const cassandraConfig = {
     cloud: {
       secureConnectBundle: process.env.CASSANDRA_SCB!,
@@ -29,7 +28,7 @@ describe.only("CassandraStore", () => {
   }
 
 
-  test.only("CassandraStore.fromText", async () => {
+  test("CassandraStore.fromText", async () => {
     const vectorStore = await CassandraStore.fromTexts(
       ["Hello world", "Bye bye", "hello nice world"],
       [
@@ -42,8 +41,6 @@ describe.only("CassandraStore", () => {
     );
 
     const results = await vectorStore.similaritySearch("hello world", 1);
-    console.log("RESULTS:")
-    console.log(results)
     expect(results).toEqual([
       new Document({
         pageContent: "Hello world",
