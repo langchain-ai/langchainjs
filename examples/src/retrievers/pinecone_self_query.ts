@@ -95,13 +95,13 @@ if (
   );
 }
 
-const env = process.env.PINECONE_ENVIRONMENT!
-const key = process.env.PINECONE_API_KEY!
+const env = process.env.PINECONE_ENVIRONMENT;
+const key = process.env.PINECONE_API_KEY;
 
 const pinecone = new Pinecone({
   apiKey: key,
   environment: env,
-})
+});
 
 const index = pinecone.Index(process.env.PINECONE_INDEX);
 

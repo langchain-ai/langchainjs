@@ -106,15 +106,15 @@ test("Pinecone Store Self Query Retriever Test", async () => {
     );
   }
 
-  const env = process.env.PINECONE_ENVIRONMENT!
-  const key = process.env.PINECONE_API_KEY!
+  const env = process.env.PINECONE_ENVIRONMENT
+  const key = process.env.PINECONE_API_KEY
 
-  const client = await Pinecone.createClient({
+  const pinecone = new Pinecone({
     apiKey: key,
     environment: env,
   })
 
-  const index = client.Index(process.env.PINECONE_INDEX);
+  const index = pinecone.Index(process.env.PINECONE_INDEX);
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI();
@@ -256,15 +256,15 @@ test("Pinecone Store Self Query Retriever Test With Default Filter Or Merge Oper
     );
   }
 
-  const env = process.env.PINECONE_ENVIRONMENT!
-  const key = process.env.PINECONE_API_KEY!
+  const env = process.env.PINECONE_ENVIRONMENT
+  const key = process.env.PINECONE_API_KEY
 
-  const client = await Pinecone.createClient({
+  const pinecone = new Pinecone({
     apiKey: key,
     environment: env,
   })
 
-  const index = client.Index(process.env.PINECONE_INDEX);
+  const index = pinecone.Index(process.env.PINECONE_INDEX);
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI();
@@ -412,15 +412,15 @@ test("Pinecone Store Self Query Retriever Test With Default Filter And Merge Ope
     );
   }
 
-  const env = process.env.PINECONE_ENVIRONMENT!
-  const key = process.env.PINECONE_API_KEY!
+  const env = process.env.PINECONE_ENVIRONMENT
+  const key = process.env.PINECONE_API_KEY
 
-  const client = await Pinecone.createClient({
+  const pinecone = new Pinecone({
     apiKey: key,
     environment: env,
   })
 
-  const index = client.Index(process.env.PINECONE_INDEX);
+  const index = pinecone.Index(process.env.PINECONE_INDEX);
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI();

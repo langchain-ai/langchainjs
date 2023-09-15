@@ -1,11 +1,7 @@
+/* eslint-disable no-process-env */
 import * as uuid from "uuid";
 import flatten from "flat";
 
-import { VectorStore } from "./base.js";
-import { Embeddings } from "../embeddings/base.js";
-import { Document } from "../document.js";
-import { chunkArray } from "../util/chunk.js";
-import { AsyncCaller, type AsyncCallerParams } from "../util/async_caller.js";
 import {
   Pinecone,
   RecordMetadata,
@@ -13,12 +9,17 @@ import {
   Index as PineconeIndex,
 } from "@pinecone-database/pinecone"
 
-const env = process.env.PINECONE_ENVIRONMENT!
-const key = process.env.PINECONE_API_KEY!
+import { VectorStore } from "./base.js";
+import { Embeddings } from "../embeddings/base.js";
+import { Document } from "../document.js";
+import { AsyncCaller } from "../util/async_caller.js";
+
+const env = process.env.PINECONE_ENVIRONMENT;
+const key = process.env.PINECONE_API_KEY;
 
 const pinecone = new Pinecone({
-  apiKey: key,
-  environment: env
+  apiKey: key as string,
+  environment: env as string
 })
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
@@ -71,7 +72,7 @@ export class PineconeStore extends VectorStore {
     this.embeddings = embeddings;
     const { namespace, pineconeIndex, pineconeIndexName, textKey, filter, ...asyncCallerArgs } = args;
     this.namespace = namespace;
-    this.pineconeIndexName = pineconeIndexName as string
+    this.pineconeIndexName = args.pineconeIndexName ?? ''
     this.pineconeIndex = pinecone.Index(this.pineconeIndexName)
     this.textKey = textKey ?? "text";
     this.filter = filter;
@@ -151,31 +152,12 @@ export class PineconeStore extends VectorStore {
 
     const namespace = this.pineconeIndex.namespace(this.namespace ?? '')
     // Pinecone recommends a limit of 100 vectors per upsert request
-<<<<<<< HEAD
-    const chunkSize = 100;
-    const chunkedVectors = chunkArray(pineconeVectors, chunkSize);
-    const batchRequests = chunkedVectors.map((chunk) =>
-      this.caller.call(async () =>
-        this.pineconeIndex.upsert({
-          upsertRequest: {
-            vectors: chunk,
-            namespace: this.namespace,
-          },
-        })
-      )
-    );
-
-    await Promise.all(batchRequests);
-
-    return documentIds;
-=======
     const chunkSize = 50;
     for (let i = 0; i < pineconeVectors.length; i += chunkSize) {
       const chunk = pineconeVectors.slice(i, i + chunkSize);
       await namespace.upsert(chunk)
     }
     return documentIds
->>>>>>> 02b04183 (Upgrade Pinecone vectorstore to use Pinecone SDK v1.0.0)
   }
 
   /**
