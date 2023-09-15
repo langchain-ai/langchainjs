@@ -92,10 +92,9 @@ export class Replicate extends LLM implements ReplicateInput {
         versionString
       );
       const openapiSchema = version.openapi_schema;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const inputProperties: { "x-order": number | undefined }[] = (
-        openapiSchema as any
-      )?.components?.schemas?.Input?.properties;
+      const inputProperties: { "x-order": number | undefined }[] =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (openapiSchema as any)?.components?.schemas?.Input?.properties;
       if (inputProperties === undefined) {
         this.promptKey = "prompt";
       } else {
