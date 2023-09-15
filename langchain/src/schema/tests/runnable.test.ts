@@ -25,6 +25,7 @@ import {
   RunnableSequence,
   RouterRunnable,
   RunnableLambda,
+  RunnableItemgetter,
 } from "../runnable/index.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
@@ -477,4 +478,34 @@ test("RunnableEach", async () => {
       .map()
       .invoke([["a, b", "c"], ["c, e"]])
   ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
+});
+
+test("RunnableItemgetter", async () => {
+  const prompt1 = PromptTemplate.fromTemplate(
+    `What is the city {person} is from? Only respond with the name of the city.`
+  );
+  const prompt2 = PromptTemplate.fromTemplate(
+    `What country is the city {city} in? Respond in {language}.`
+  );
+
+  const model = new FakeLLM({ response: "TESTING" });
+
+  const chain = prompt1.pipe(model).pipe(new StringOutputParser());
+
+  const combinedChain = RunnableSequence.from([
+    {
+      city: chain,
+      language: new RunnableItemgetter("language"),
+    },
+    prompt2,
+  ]);
+
+  const result = await combinedChain.invoke({
+    person: "Obama",
+    language: "German",
+  });
+
+  expect(await result.value).toEqual(
+    "What country is the city TESTING in? Respond in German."
+  );
 });

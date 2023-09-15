@@ -1172,6 +1172,40 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 }
 
 /**
+ * A runnable that extracts a key from an input object.
+ */
+export class RunnableItemgetter<
+  RunInput extends Record<string, RunOutput>,
+  RunOutput
+> extends Runnable<RunInput, RunOutput> {
+  static lc_name() {
+    return "RunnableItemgetter";
+  }
+
+  lc_namespace = ["langchain", "schema", "runnable"];
+
+  lc_serializable = true;
+
+  key: string;
+
+  constructor(key: string) {
+    super({ key });
+    this.key = key;
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<RunOutput> {
+    return this._callWithConfig(
+      async (input: RunInput) => input[this.key],
+      input,
+      options
+    );
+  }
+}
+
+/**
  * A Runnable that can fallback to other Runnables if it fails.
  */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
