@@ -45,7 +45,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@pinecone-database/pinecone": "^1.0.0",
+    "@pinecone-database/pinecone": "^1.0.1",
     "turbo": "latest"
   },
   "resolutions": {
