@@ -3642,6 +3642,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@edge-runtime/primitives@npm:4.0.1":
+  version: 4.0.1
+  resolution: "@edge-runtime/primitives@npm:4.0.1"
+  checksum: f0a1b49c440a60ddda960645a8ed0d68e4f8914ad1d6275f42c29cff54a255c050479f4d87c1d069eb99c879a65f22911ddd6c35276401f8951ac85995c611f5
+  languageName: node
+  linkType: hard
+
+"@edge-runtime/types@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "@edge-runtime/types@npm:2.2.3"
+  dependencies:
+    "@edge-runtime/primitives": 4.0.1
+  checksum: e689d2cd95adf3977d8b01317c243d2c53831df514dd63726daf44389bddc34deda49a8db661250f1e5e2a806a4103051dc3a9615e1c3ee00cd167826da02ae7
+  languageName: node
+  linkType: hard
+
 "@elastic/elasticsearch@npm:^8.4.0":
   version: 8.8.1
   resolution: "@elastic/elasticsearch@npm:8.8.1"
@@ -5247,6 +5263,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pinecone-database/pinecone@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@pinecone-database/pinecone@npm:1.0.1"
+  dependencies:
+    "@edge-runtime/types": ^2.2.3
+    "@sinclair/typebox": ^0.29.0
+    "@types/node": ^18.11.17
+    ajv: ^8.12.0
+    cross-fetch: ^3.1.5
+    typescript: ^4.9.4
+  checksum: 74722a6a174da52f123a285750e90dfed1d7a890f6d11d6e5d84c46709b5eba91abb6bf29f849f4e48e6531abd7fc04521762bd5a0f78b82f917269a5c71ab2f
+  languageName: node
+  linkType: hard
+
 "@pkgjs/parseargs@npm:^0.11.0":
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
@@ -5521,6 +5551,13 @@ __metadata:
   version: 0.28.20
   resolution: "@sinclair/typebox@npm:0.28.20"
   checksum: 97d866c3fb3bd5ac7f8519f4a1891dfb9e05c32891f77db89d8d34c7c69696ba4599f7c3ac38a83ebdaf287dc1fd1051699929628deed9db437ba64b372bf538
+  languageName: node
+  linkType: hard
+
+"@sinclair/typebox@npm:^0.29.0":
+  version: 0.29.6
+  resolution: "@sinclair/typebox@npm:0.29.6"
+  checksum: 02c2ee9e8bcb4e03a2497fc208a5a2ae4f4991347e6f2b2a217027b33eb8ca2bc74e80bfb2654da537453e9e5c25d59dbad2d32d4fe47ffec357330bf343bf7a
   languageName: node
   linkType: hard
 
@@ -6686,6 +6723,13 @@ __metadata:
   version: 18.15.11
   resolution: "@types/node@npm:18.15.11"
   checksum: 977b4ad04708897ff0eb049ecf82246d210939c82461922d20f7d2dcfd81bbc661582ba3af28869210f7e8b1934529dcd46bff7d448551400f9d48b9d3bddec3
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.11.17":
+  version: 18.17.16
+  resolution: "@types/node@npm:18.17.16"
+  checksum: 8f9dbaf4a67a14110e2a0d805f9b57f3a5cda774dbcb7b1e7973efe31d5eeea358482dbe36a5bfadb0dde99f065f1ae0531f25a032f015871aa0b2896eb3c4ae
   languageName: node
   linkType: hard
 
@@ -13729,7 +13773,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
-    "@pinecone-database/pinecone": ^1.0.0
+    "@pinecone-database/pinecone": ^1.0.1
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3
