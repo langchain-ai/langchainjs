@@ -13408,7 +13408,7 @@ __metadata:
     puppeteer: ^19.7.2
     redis: ^4.6.6
     release-it: ^15.10.1
-    replicate: ^0.12.3
+    replicate: ^0.18.0
     rimraf: ^5.0.1
     rollup: ^3.19.1
     sonix-speech-recognition: ^2.1.1
@@ -13498,7 +13498,7 @@ __metadata:
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
-    replicate: ^0.12.3
+    replicate: ^0.18.0
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
@@ -16826,10 +16826,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"replicate@npm:^0.12.3":
-  version: 0.12.3
-  resolution: "replicate@npm:0.12.3"
-  checksum: 3eb1522315dba74a7fa35661985ba25a0fe1e723a0250996afeabd6224f9e43b142e4ff8f6b1280260ec7879ae7c9b84bc4384dc25522696e1f74ea0d7ecefa5
+"replicate@npm:^0.18.0":
+  version: 0.18.0
+  resolution: "replicate@npm:0.18.0"
+  checksum: 547a8b386418aedf6e5be2086a63090e5a5f6cda36202a0122c4036a2af8a80efea420393e5efa4810c9cff0616a7df5adbd40fd4a0560f4aa1b4eda60a34794
   languageName: node
   linkType: hard
 
