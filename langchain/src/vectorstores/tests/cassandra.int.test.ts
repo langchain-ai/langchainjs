@@ -27,7 +27,6 @@ describe.only("CassandraStore", () => {
     }]
   }
 
-
   test("CassandraStore.fromText", async () => {
     const vectorStore = await CassandraStore.fromTexts(
       ["I am blue", "Green yellow purple", "Hello there hello"],
@@ -40,11 +39,11 @@ describe.only("CassandraStore", () => {
       cassandraConfig
     );
 
-    const results = await vectorStore.similaritySearch("Green buffalo world", 1);
+    const results = await vectorStore.similaritySearch("Green yellow purple", 1);
     expect(results).toEqual([
       new Document({
-        pageContent: "Green buffalo world",
-        metadata: { id: 2, name: "2" },
+        pageContent: "Green yellow purple",
+        metadata: { id: 1, name: "1" },
       }),
     ]);
   });
@@ -66,11 +65,11 @@ describe.only("CassandraStore", () => {
       cassandraConfig,
     );
 
-    const results = await vectorStore.similaritySearch("Hey what's up hello", 1);
+    const results = await vectorStore.similaritySearch("Whats up", 1);
     expect(results).toEqual([
       new Document({
-        pageContent: "Hey what's up hello",
-        metadata: { id: 2, name: "2" },
+        pageContent: "Whats up",
+        metadata: { id: 1, name: "1" },
       }),
     ]);
   });
