@@ -1,5 +1,4 @@
 import { DataSource } from "typeorm";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { SqlDatabase } from "langchain/sql_db";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { PromptTemplate } from "langchain/prompts";

@@ -38,7 +38,7 @@ class LineListOutputParser extends BaseOutputParser<LineList> {
 }
 
 // Default prompt is available at: https://smith.langchain.com/hub/jacob/multi-vector-retriever
-const prompt = await hub.pull<PromptTemplate>(
+const prompt: PromptTemplate = await hub.pull(
   "jacob/multi-vector-retriever-german"
 );
 
