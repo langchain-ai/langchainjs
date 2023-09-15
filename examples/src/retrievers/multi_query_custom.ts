@@ -5,7 +5,7 @@ import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
 import { BaseOutputParser } from "langchain/schema/output_parser";
 import { PromptTemplate } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";
-import * as hub from "langchain/hub";
+import { pull } from "langchain/hub";
 
 type LineList = {
   lines: string[];
@@ -38,7 +38,7 @@ class LineListOutputParser extends BaseOutputParser<LineList> {
 }
 
 // Default prompt is available at: https://smith.langchain.com/hub/jacob/multi-vector-retriever
-const prompt: PromptTemplate = await hub.pull(
+const prompt: PromptTemplate = await pull(
   "jacob/multi-vector-retriever-german"
 );
 
