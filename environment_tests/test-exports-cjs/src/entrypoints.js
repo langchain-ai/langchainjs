@@ -67,4 +67,5 @@ const experimental_autogpt = require("langchain/experimental/autogpt");
 const experimental_babyagi = require("langchain/experimental/babyagi");
 const experimental_generative_agents = require("langchain/experimental/generative_agents");
 const experimental_plan_and_execute = require("langchain/experimental/plan_and_execute");
+const experimental_chat_models_bittensor = require("langchain/experimental/chat_models/bittensor");
 const evaluation = require("langchain/evaluation");
