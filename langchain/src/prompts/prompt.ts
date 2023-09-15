@@ -69,12 +69,14 @@ type ExtractTemplateParamsRecursive<
   Result extends string[] = []
 > = T extends `${string}{${infer Param}}${infer Rest}`
   ? Param extends `${NonAlphanumeric}${string}`
-    ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that looks like template variables e.g. see https://github.com/hwchase17/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
+    ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that look like template variables e.g. see https://github.com/hwchase17/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
     : ExtractTemplateParamsRecursive<Rest, [...Result, Param]>
   : Result;
 
 export type ParamsFromFString<T extends string> = {
-  [Key in ExtractTemplateParamsRecursive<T>[number]]: string;
+  [Key in
+    | ExtractTemplateParamsRecursive<T>[number]
+    | (string & Record<never, never>)]: string;
 };
 
 /**
@@ -201,10 +203,9 @@ export class PromptTemplate<
       // eslint-disable-next-line @typescript-eslint/ban-types
       RunInput extends Symbol ? ParamsFromFString<T> : RunInput
     >({
-      inputVariables: [...names] as Extract<
-        keyof ParamsFromFString<T>,
-        string
-      >[],
+      // Rely on extracted types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inputVariables: [...names] as any[],
       templateFormat,
       template,
       ...rest,

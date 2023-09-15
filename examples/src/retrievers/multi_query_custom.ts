@@ -5,6 +5,7 @@ import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
 import { BaseOutputParser } from "langchain/schema/output_parser";
 import { PromptTemplate } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";
+import { pull } from "langchain/hub";
 
 type LineList = {
   lines: string[];
@@ -36,26 +37,10 @@ class LineListOutputParser extends BaseOutputParser<LineList> {
   }
 }
 
-// Create template
-const prompt =
-  PromptTemplate.fromTemplate(`You are an AI language model assistant. Your task is
-to generate {queryCount} different versions of the given user
-question to retrieve relevant documents from a vector database.
-By generating multiple perspectives on the user question,
-your goal is to help the user overcome some of the limitations
-of distance-based similarity search.
-
-All questions should be in German.
-
-Provide these alternative questions separated by newlines between XML tags. For example:
-
-<questions>
-Question 1
-Question 2
-Question 3
-</questions>
-
-Original question: {question}`);
+// Default prompt is available at: https://smith.langchain.com/hub/jacob/multi-vector-retriever
+const prompt: PromptTemplate = await pull(
+  "jacob/multi-vector-retriever-german"
+);
 
 const vectorstore = await MemoryVectorStore.fromTexts(
   [
