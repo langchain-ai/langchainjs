@@ -14,13 +14,6 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { AsyncCaller } from "../util/async_caller.js";
 
-const env = process.env.PINECONE_ENVIRONMENT;
-const key = process.env.PINECONE_API_KEY;
-
-const pinecone = new Pinecone({
-  apiKey: key as string,
-  environment: env as string
-})
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
@@ -68,6 +61,13 @@ export class PineconeStore extends VectorStore {
 
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
+
+    const env = process.env.PINECONE_ENVIRONMENT;
+    const key = process.env.PINECONE_API_KEY;
+    const pinecone = new Pinecone({
+      apiKey: key as string,
+      environment: env as string
+    })
 
     this.embeddings = embeddings;
     const { namespace, pineconeIndex, pineconeIndexName, textKey, filter, ...asyncCallerArgs } = args;

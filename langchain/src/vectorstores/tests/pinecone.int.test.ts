@@ -13,16 +13,16 @@ describe("PineconeStore", () => {
 
   beforeEach(async () => {
 
-    const env = process.env.PINECONE_ENVIRONMENT!
-    const key = process.env.PINECONE_API_KEY!
+    const env = process.env.PINECONE_ENVIRONMENT
+    const key = process.env.PINECONE_API_KEY
 
-    const client = await Pinecone.createClient({
-      apiKey: key,
-      environment: env,
+    const pinecone = new Pinecone({
+      apiKey: key as string,
+      environment: env as string,
     })
 
     const embeddings = new OpenAIEmbeddings();
-    const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
+    const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string);
     pineconeStore = new PineconeStore(embeddings, { pineconeIndex });
   });
 
