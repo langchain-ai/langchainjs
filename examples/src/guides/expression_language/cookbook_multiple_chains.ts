@@ -14,15 +14,10 @@ const model = new ChatAnthropic({});
 
 const chain = prompt1.pipe(model).pipe(new StringOutputParser());
 
-type CombinedChainInput = {
-  person: string;
-  language: string;
-};
-
 const combinedChain = RunnableSequence.from([
   {
     city: chain,
-    language: (input: CombinedChainInput) => input.language,
+    language: (input) => input.language,
   },
   prompt2,
   model,
