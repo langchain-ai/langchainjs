@@ -1,11 +1,13 @@
 import { protos } from "@google-ai/generativelanguage";
+import { google } from "@google-ai/generativelanguage/build/protos/protos.js";
 
 import { GooglePaLM } from "../llms/googlepalm.js";
 import { ChatGooglePaLM } from "../chat_models/googlepalm.js";
 import { PromptTemplate } from "../prompts/index.js";
 import { BaseChatModel } from "../chat_models/base.js";
 import { LLM } from "../llms/base.js";
-import {Runnable} from "../schema/runnable/index.js";
+import { Runnable } from "../schema/runnable/index.js";
+import IExample = google.ai.generativelanguage.v1beta2.IExample;
 
 export interface MakerSuiteHubConfig {
   cacheTimeout: number,
@@ -155,7 +157,7 @@ export class MakerSuitePrompt {
   }
 
   _promptValueChat(): string {
-    return "FIXME";
+    return (this.promptData as MakerSuiteChatPromptData)?.multiturnPrompt?.preamble ?? "";
   }
 
   _promptValue(): string {
@@ -173,14 +175,47 @@ export class MakerSuitePrompt {
     return PromptTemplate.fromTemplate(promptString);
   }
 
+  _modelName(): string {
+    let ret = this.promptData?.runSettings?.model;
+    if (!ret) {
+      ret = this.promptType === "chat" ?
+        "models/chat-bison-001" :
+        "models/text-bison-001";
+    }
+    return ret;
+  }
+
+  _examples(): IExample[] {
+    const promptData: MakerSuiteChatPromptData = this.promptData as MakerSuiteChatPromptData;
+    const ret: IExample[] = promptData?.multiturnPrompt?.primingExchanges.map( exchange => {
+      const example:IExample = {};
+      if (exchange?.request) {
+        example.input = {
+          content: exchange.request
+        }
+      }
+      if (exchange?.response) {
+        example.output = {
+          content: exchange.response
+        }
+      }
+      return example;
+    }).filter( value => Object.keys(value).length );
+    return ret;
+  }
+
   toModel(): LLM | BaseChatModel {
-    const modelName = this.promptData?.runSettings?.model || "models/text-bison-001";
+    const modelName = this._modelName();
     const modelSettings = {
       modelName,
       ...this.promptData?.runSettings
     }
     if (this.promptType === "chat") {
-      return new ChatGooglePaLM(modelSettings);
+      const examples = this._examples();
+      return new ChatGooglePaLM({
+        examples,
+        ...modelSettings
+      });
     } else {
       return new GooglePaLM(modelSettings);
     }

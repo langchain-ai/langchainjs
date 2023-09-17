@@ -4,6 +4,7 @@ import * as path from "path";
 
 import { describe, test } from "@jest/globals";
 import { MakerSuitePrompt } from "../googlemakersuitehub.js";
+import {ChatGooglePaLM} from "../../chat_models/googlepalm.js";
 
 describe("Google Maker Suite Hub", () => {
 
@@ -57,13 +58,24 @@ describe("Google Maker Suite Hub", () => {
     test("data model", () => {
       const prompt = new MakerSuitePrompt(dataFile);
       const model = prompt.toModel();
-      // console.log(model.lc_namespace);
       expect(model.lc_namespace).toEqual(["langchain", "llms", "googlepalm"]);
     })
 
     test("chat type", () => {
       const prompt = new MakerSuitePrompt(chatFile);
       expect(prompt.promptType).toEqual("chat");
+    })
+
+    test("chat model", () => {
+      const prompt = new MakerSuitePrompt(chatFile);
+      const model = prompt.toModel();
+      expect(model.lc_namespace).toEqual(["langchain", "chat_models", "googlepalm"]);
+      expect((model as ChatGooglePaLM).examples).toEqual([
+        {
+          input: { content: 'What time is it?' },
+          output: { content: '2023-09-16T02:03:04-0500' }
+        }
+      ]);
     })
 
   });
