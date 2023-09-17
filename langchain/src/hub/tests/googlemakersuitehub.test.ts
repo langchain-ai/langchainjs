@@ -39,6 +39,28 @@ describe("Google Maker Suite Hub", () => {
       expect(prompt.promptType).toEqual("data")
     });
 
+    test("data template", () => {
+      const prompt = new MakerSuitePrompt(dataFile);
+      const template = prompt.toTemplate();
+      // console.log("data template", template.template);
+      expect(template.template).toEqual(
+        "Given a product description, you should return a name for that product that includes something about rainbows.\n" +
+        "description: socks\n" +
+        "product: spectrum socks\n" +
+        "description: hair ties\n" +
+        "product: rainbows^2\n" +
+        "description: {description}\n" +
+        "product: "
+      );
+    })
+
+    test("data model", () => {
+      const prompt = new MakerSuitePrompt(dataFile);
+      const model = prompt.toModel();
+      // console.log(model.lc_namespace);
+      expect(model.lc_namespace).toEqual(["langchain", "llms", "googlepalm"]);
+    })
+
     test("chat type", () => {
       const prompt = new MakerSuitePrompt(chatFile);
       expect(prompt.promptType).toEqual("chat");

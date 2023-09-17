@@ -115,7 +115,43 @@ export class MakerSuitePrompt {
   }
 
   _promptValueData(): string {
-    return "FIXME";
+    const promptData: MakerSuiteDataPromptData = this.promptData as MakerSuiteDataPromptData;
+    const dataPrompt = promptData?.dataPrompt;
+    let prompt = `${dataPrompt?.preamble}\n` || "";
+
+    dataPrompt?.rows.forEach( row => {
+      // Add the data for each row, as long as it is listed as used
+      if (dataPrompt?.rowsUsed.includes(row.rowId)) {
+
+        // Add each input column
+        dataPrompt?.columns.forEach( column => {
+          if (column.isInput) {
+            prompt += `${column.displayName} ${row.columnBindings[column.columnId]}\n`;
+          }
+        });
+
+        // Add each output column
+        dataPrompt?.columns.forEach( column => {
+          if (!column.isInput) {
+            prompt += `${column.displayName} ${row.columnBindings[column.columnId]}\n`;
+          }
+        });
+
+      }
+    });
+
+    // Add the input column prompts
+    dataPrompt?.columns.forEach( column => {
+      if (column.isInput) {
+        prompt += `${column.displayName} {${column.displayName.replace(":", "")}}\n`
+      }
+    })
+
+    // Add just the first output column
+    const firstOutput = dataPrompt?.columns.find( column => !column.isInput );
+    prompt += `${firstOutput?.displayName} `;
+
+    return prompt;
   }
 
   _promptValueChat(): string {
