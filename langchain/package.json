@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.148",
+  "version": "0.0.150",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -731,7 +731,7 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.12.3",
+    "replicate": "^0.18.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
@@ -818,7 +818,7 @@
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
-    "replicate": "^0.12.3",
+    "replicate": "^0.18.0",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
