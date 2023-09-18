@@ -523,7 +523,7 @@ test("RunnableBranch handles error", async () => {
           error = e;
         },
       },
-    ]
+    ],
   });
   expect(result).toBe("branch passed");
   expect(error).toBeUndefined();
