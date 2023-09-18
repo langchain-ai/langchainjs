@@ -3,15 +3,15 @@ import { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { PGVectorStore } from "../pgvector.js";
 
-test.skip("Test embeddings creation", async () => {
+test("Test embeddings creation", async () => {
   const config = {
     postgresConnectionOptions: {
       type: "postgres",
       host: "127.0.0.1",
       port: 5433,
-      user: "admin",
-      password: "admin",
-      database: "test",
+      user: "myuser",
+      password: "ChangeMe",
+      database: "api",
     } as PoolConfig,
     tableName: "testlangchain",
     columns: {

@@ -1,4 +1,4 @@
-import pg, { Pool, PoolConfig } from "pg";
+import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -49,6 +49,8 @@ export class PGVectorStore extends VectorStore {
 
   pool: Pool;
 
+  client?: PoolClient;
+
   _vectorstoreType(): string {
     return "pgvector";
   }
@@ -86,10 +88,14 @@ export class PGVectorStore extends VectorStore {
   ): Promise<PGVectorStore> {
     const postgresqlVectorStore = new PGVectorStore(embeddings, config);
 
-    await postgresqlVectorStore.pool.connect();
+    await postgresqlVectorStore._initializeClient();
     await postgresqlVectorStore.ensureTableInDatabase();
 
     return postgresqlVectorStore;
+  }
+
+  protected async _initializeClient() {
+    this.client = await this.pool.connect();
   }
 
   /**
@@ -297,6 +303,7 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when all clients are closed and the pool is terminated.
    */
   async end(): Promise<void> {
+    await this.client?.release();
     return this.pool.end();
   }
 }
