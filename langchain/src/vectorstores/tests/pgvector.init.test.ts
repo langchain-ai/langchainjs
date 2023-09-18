@@ -19,7 +19,7 @@ test.skip("Test embeddings creation", async () => {
       vectorColumnName: "vector",
       contentColumnName: "content",
       metadataColumnName: "metadata",
-    }
+    },
   };
 
   const pgvectorVectorStore = await PGVectorStore.initialize(

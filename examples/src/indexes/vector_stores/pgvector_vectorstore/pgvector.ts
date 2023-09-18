@@ -21,7 +21,7 @@ export const run = async () => {
       vectorColumnName: "vector",
       contentColumnName: "content",
       metadataColumnName: "metadata",
-    }
+    },
   };
 
   const pgvectorStore = await PGVectorStore.initialize(
