@@ -16,10 +16,12 @@ export const run = async () => {
       database: "test",
     } as PoolConfig,
     tableName: "testlangchain",
-    idColumnName: "id",
-    vectorColumnName: "vector",
-    contentColumnName: "content",
-    metadataColumnName: "metadata",
+    columns: {
+      idColumnName: "id",
+      vectorColumnName: "vector",
+      contentColumnName: "content",
+      metadataColumnName: "metadata",
+    }
   };
 
   const pgvectorStore = await PGVectorStore.initialize(
