@@ -1,9 +1,10 @@
-import { Metadata } from "@opensearch-project/opensearch/api/types.js";
 import pg, { Pool, PoolConfig } from "pg";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { getEnvironmentVariable } from "../util/env.js";
+
+type Metadata = Record<string, unknown>;
 
 /**
  * Interface that defines the arguments required to create a
