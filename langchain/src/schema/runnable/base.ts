@@ -1325,7 +1325,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 }
 
 // TODO: Figure out why the compiler needs help eliminating Error as a RunOutput type
-function _coerceToRunnable<RunInput, RunOutput>(
+export function _coerceToRunnable<RunInput, RunOutput>(
   coerceable: RunnableLike<RunInput, RunOutput>
 ): Runnable<RunInput, Exclude<RunOutput, Error>> {
   if (typeof coerceable === "function") {

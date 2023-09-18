@@ -33,6 +33,7 @@ import {
   OutputParserException,
   StringOutputParser,
 } from "../output_parser.js";
+import { RunnableBranch } from "../runnable/branch.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -477,4 +478,17 @@ test("RunnableEach", async () => {
       .map()
       .invoke([["a, b", "c"], ["c, e"]])
   ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
+});
+
+test("RunnableBranch", async () => {
+  const condition = (x: number) => x > 0;
+  const add = (x: number) => x + 1;
+  const subtract = (x: number) => x - 1;
+  const branch = RunnableBranch.from([
+    [condition, add],
+    [condition, subtract],
+    subtract,
+  ]);
+  const result = await branch.invoke(1);
+  console.log(result);
 });
