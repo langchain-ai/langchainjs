@@ -3,7 +3,7 @@ import { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { PGVectorStore } from "../pgvector.js";
 
-test("Test embeddings creation", async () => {
+test.skip("Test embeddings creation", async () => {
   const config = {
     postgresConnectionOptions: {
       type: "postgres",

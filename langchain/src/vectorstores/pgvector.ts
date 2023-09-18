@@ -21,8 +21,6 @@ export interface PGVectorStoreArgs {
   verbose?: boolean;
 }
 
-const defaultDocumentTableName = "documents";
-
 /**
  * Class that provides an interface to a Postgres vector database. It
  * extends the `VectorStore` base class and implements methods for adding
@@ -54,7 +52,7 @@ export class PGVectorStore extends VectorStore {
 
   private constructor(embeddings: Embeddings, config: PGVectorStoreArgs) {
     super(embeddings, config);
-    this.tableName = config.tableName || defaultDocumentTableName;
+    this.tableName = config.tableName;
     this.filter = config.filter;
 
     this.vectorColumnName = config.vectorColumnName;
@@ -75,8 +73,9 @@ export class PGVectorStore extends VectorStore {
    * Static method to create a new `PGVectorStore` instance from a
    * connection. It creates a table if one does not exist, and calls
    * `connect` to return a new instance of `PGVectorStore`.
-   * @param embeddings Embeddings instance.
-   * @param fields `PGVectorStoreArgs` instance.
+   * 
+   * @param embeddings - Embeddings instance.
+   * @param fields - `PGVectorStoreArgs` instance.
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
@@ -92,10 +91,10 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
-   * Method to add documents to the vector store. It ensures the existence
-   * of the table in the database, converts the documents into vectors, and
-   * adds them to the store.
-   * @param documents Array of `Document` instances.
+   * Method to add documents to the vector store. It converts the documents into
+   * vectors, and adds them to the store.
+   * 
+   * @param documents - Array of `Document` instances.
    * @returns Promise that resolves when the documents have been added.
    */
   async addDocuments(documents: Document[]): Promise<void> {
@@ -113,7 +112,7 @@ export class PGVectorStore extends VectorStore {
    * @param index - The index of the row for which placeholders need to be generated.
    * @returns The SQL placeholders for the row values.
    */
-  generatePlaceholderForRowAt(index: number): string {
+  private generatePlaceholderForRowAt(index: number): string {
     const base = index * 3;
     return `($${base + 1}, $${base + 2}, $${base + 3})`;
   }
@@ -125,8 +124,8 @@ export class PGVectorStore extends VectorStore {
    * @param chunkIndex - The starting index for generating query placeholders based on chunk positioning.
    * @returns The complete SQL INSERT INTO query string.
    */
-  buildInsertQuery(
-    rows: (string | Record<string, any>)[][],
+  private buildInsertQuery(
+    rows: (string | Record<string, unknown>)[][],
     chunkIndex: number
   ) {
     const valuesPlaceholders = rows
@@ -147,6 +146,7 @@ export class PGVectorStore extends VectorStore {
   /**
    * Method to add vectors to the vector store. It converts the vectors into
    * rows and inserts them into the database.
+   * 
    * @param vectors - Array of vectors.
    * @param documents - Array of `Document` instances.
    * @returns Promise that resolves when the vectors have been added.
@@ -181,9 +181,10 @@ export class PGVectorStore extends VectorStore {
    * Method to perform a similarity search in the vector store. It returns
    * the `k` most similar documents to the query vector, along with their
    * similarity scores.
-   * @param query Query vector.
-   * @param k Number of most similar documents to return.
-   * @param filter Optional filter to apply to the search.
+   * 
+   * @param query - Query vector.
+   * @param k - Number of most similar documents to return.
+   * @param filter - Optional filter to apply to the search.
    * @returns Promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
    */
   async similaritySearchVectorWithScore(
@@ -221,6 +222,7 @@ export class PGVectorStore extends VectorStore {
   /**
    * Method to ensure the existence of the table in the database. It creates
    * the table if it does not already exist.
+   * 
    * @returns Promise that resolves when the table has been ensured.
    */
   async ensureTableInDatabase(): Promise<void> {
@@ -241,10 +243,11 @@ export class PGVectorStore extends VectorStore {
    * Static method to create a new `PGVectorStore` instance from an
    * array of texts and their metadata. It converts the texts into
    * `Document` instances and adds them to the store.
-   * @param texts Array of texts.
-   * @param metadatas Array of metadata objects or a single metadata object.
-   * @param embeddings Embeddings instance.
-   * @param dbConfig `PGVectorStoreArgs` instance.
+   * 
+   * @param texts - Array of texts.
+   * @param metadatas - Array of metadata objects or a single metadata object.
+   * @param embeddings - Embeddings instance.
+   * @param dbConfig - `PGVectorStoreArgs` instance.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
   static async fromTexts(
@@ -269,9 +272,10 @@ export class PGVectorStore extends VectorStore {
   /**
    * Static method to create a new `PGVectorStore` instance from an
    * array of `Document` instances. It adds the documents to the store.
-   * @param docs Array of `Document` instances.
-   * @param embeddings Embeddings instance.
-   * @param dbConfig `PGVectorStoreArgs` instance.
+   * 
+   * @param docs - Array of `Document` instances.
+   * @param embeddings - Embeddings instance.
+   * @param dbConfig - `PGVectorStoreArgs` instance.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
   static async fromDocuments(
@@ -287,6 +291,7 @@ export class PGVectorStore extends VectorStore {
 
   /**
    * Closes all the clients in the pool and terminates the pool.
+   * 
    * @returns Promise that resolves when all clients are closed and the pool is terminated.
    */
   async end(): Promise<void> {
