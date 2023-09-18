@@ -10155,6 +10155,7 @@ __metadata:
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
+    pg: ^8.11.0
     pickleparser: ^0.1.0
     prettier: ^2.8.3
     prisma: ^4.11.0
