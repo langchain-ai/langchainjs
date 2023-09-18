@@ -25,17 +25,22 @@ export type BranchLike<RunInput, RunOutput> = [
  * corresponding branch if the condition is true. If none of the conditions
  * are true, it executes the default branch.
  */
-export class RunnableBranch<RunInput, RunOutput> extends Runnable<
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
   RunInput,
   RunOutput
 > {
-  branches: Branch<RunInput, RunOutput>[];
+  static lc_name() {
+    return "RunnableBranch";
+  }
 
-  default: Runnable<RunInput, RunOutput>;
+  lc_namespace = ["langchain", "runnable", "branch"];
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain", "runnable", "branch"];
+  default: Runnable<RunInput, RunOutput>;
+
+  branches: Branch<RunInput, RunOutput>[];
 
   constructor(fields: {
     branches: Branch<RunInput, RunOutput>[];
@@ -46,7 +51,32 @@ export class RunnableBranch<RunInput, RunOutput> extends Runnable<
     this.default = fields.default;
   }
 
-  static from<RunInput, RunOutput>(
+  /**
+   * Convenience method for instantiating a RunnableBranch from
+   * RunnableLikes (objects, functions, or Runnables).
+   *
+   * Each item in the input except for the last one should be a
+   * tuple with two items. The first is a "condition" RunnableLike that
+   * returns "true" if the second RunnableLike in the tuple should run.
+   *
+   * The final item in the input should be a RunnableLike that acts as a
+   * default branch if no other branches match.
+   *
+   * @example
+   * ```ts
+   * import { RunnableBranch } from "langchain/schema/runnable";
+   *
+   * const branch = RunnableBranch.from([
+   *   [(x: number) => x > 0, (x: number) => x + 1],
+   *   [(x: number) => x < 0, (x: number) => x - 1],
+   *   (x: number) => x
+   * ]);
+   * ```
+   * @param branches
+   * @returns
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static from<RunInput = any, RunOutput = any>(
     branches: [
       ...BranchLike<RunInput, RunOutput>[],
       RunnableLike<RunInput, RunOutput>
