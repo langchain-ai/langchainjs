@@ -217,6 +217,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notionapi"?:
     | typeof import("../document_loaders/web/notionapi.js")
     | Promise<typeof import("../document_loaders/web/notionapi.js")>;
+  "langchain/document_loaders/web/pdf"?:
+    | typeof import("../document_loaders/web/pdf.js")
+    | Promise<typeof import("../document_loaders/web/pdf.js")>;
   "langchain/document_loaders/web/recursive_url"?:
     | typeof import("../document_loaders/web/recursive_url.js")
     | Promise<typeof import("../document_loaders/web/recursive_url.js")>;
