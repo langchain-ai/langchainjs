@@ -14,6 +14,12 @@ For longer-term persistence across chat sessions, you can swap out the default i
 
 ## Setup
 
+If you are using TypeScript, you may need to install Cloudflare types if they aren't already present:
+
+```bash npm2yarn
+npm install -S @cloudflare/workers-types
+```
+
 Set up a D1 instance for your worker by following [the official documentation](https://developers.cloudflare.com/d1/). Your project's `wrangler.toml` file should
 look something like this:
 

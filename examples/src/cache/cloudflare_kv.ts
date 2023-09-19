@@ -21,7 +21,6 @@ export default {
       return new Response(JSON.stringify(response), {
         headers: { "content-type": "application/json" },
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.log(err.message);
       return new Response(err.message, { status: 500 });

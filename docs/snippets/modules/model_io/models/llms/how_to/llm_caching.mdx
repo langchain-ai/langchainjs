@@ -114,6 +114,12 @@ If you're deploying your project as a Cloudflare Worker, you can use LangChain's
 
 For information on how to set up KV in Cloudflare, see [the official documentation](https://developers.cloudflare.com/kv/).
 
+**Note:** If you are using TypeScript, you may need to install types if they aren't already present:
+
+```bash npm2yarn
+npm install -S @cloudflare/workers-types
+```
+
 import CloudflareExample from "@examples/cache/cloudflare_kv.ts";
 
 <CodeBlock language="typescript">{CloudflareExample}</CodeBlock>

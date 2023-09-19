@@ -13451,6 +13451,7 @@ __metadata:
     "@aws-sdk/signature-v4": ^3.374.0
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.0.14
+    "@cloudflare/workers-types": ^4.20230904.0
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.7.0
@@ -13543,6 +13544,8 @@ __metadata:
     "@azure/storage-blob":
       optional: true
     "@clickhouse/client":
+      optional: true
+    "@cloudflare/workers-types":
       optional: true
     "@elastic/elasticsearch":
       optional: true
