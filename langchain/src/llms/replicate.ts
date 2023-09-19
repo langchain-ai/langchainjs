@@ -16,6 +16,9 @@ export interface ReplicateInput {
   };
 
   apiKey?: string;
+
+  /** The key used to pass prompts to the model. */
+  promptKey?: string;
 }
 
 /**
@@ -43,6 +46,8 @@ export class Replicate extends LLM implements ReplicateInput {
 
   apiKey: string;
 
+  promptKey?: string;
+
   constructor(fields: ReplicateInput & BaseLLMParams) {
     super(fields);
 
@@ -60,6 +65,7 @@ export class Replicate extends LLM implements ReplicateInput {
     this.apiKey = apiKey;
     this.model = fields.model;
     this.input = fields.input ?? {};
+    this.promptKey = fields.promptKey;
   }
 
   _llmType() {
@@ -78,14 +84,38 @@ export class Replicate extends LLM implements ReplicateInput {
       auth: this.apiKey,
     });
 
+    if (this.promptKey === undefined) {
+      const [modelString, versionString] = this.model.split(":");
+      const version = await replicate.models.versions.get(
+        modelString.split("/")[0],
+        modelString.split("/")[1],
+        versionString
+      );
+      const openapiSchema = version.openapi_schema;
+      const inputProperties: { "x-order": number | undefined }[] =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (openapiSchema as any)?.components?.schemas?.Input?.properties;
+      if (inputProperties === undefined) {
+        this.promptKey = "prompt";
+      } else {
+        const sortedInputProperties = Object.entries(inputProperties).sort(
+          ([_keyA, valueA], [_keyB, valueB]) => {
+            const orderA = valueA["x-order"] || 0;
+            const orderB = valueB["x-order"] || 0;
+            return orderA - orderB;
+          }
+        );
+        this.promptKey = sortedInputProperties[0][0] ?? "prompt";
+      }
+    }
     const output = await this.caller.callWithOptions(
       { signal: options.signal },
       () =>
         replicate.run(this.model, {
-          wait: true,
           input: {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            [this.promptKey!]: prompt,
             ...this.input,
-            prompt,
           },
         })
     );

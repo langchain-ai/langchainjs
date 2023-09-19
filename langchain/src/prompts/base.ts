@@ -12,7 +12,7 @@ import { BaseOutputParser } from "../schema/output_parser.js";
 import { Serializable } from "../load/serializable.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 import { SerializedFields } from "../load/map_keys.js";
-import { Runnable } from "../schema/runnable.js";
+import { Runnable } from "../schema/runnable/index.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
 
 export type TypedPromptInputValues<RunInput> = InputValues<

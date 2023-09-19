@@ -29,10 +29,12 @@ export type SummarizationChainParams = BaseParams &
         type?: "map_reduce";
         combineMapPrompt?: BasePromptTemplate;
         combinePrompt?: BasePromptTemplate;
+        combineLLM?: BaseLanguageModel;
       } & Pick<MapReduceDocumentsChainInput, "returnIntermediateSteps">)
     | {
         type?: "refine";
         refinePrompt?: BasePromptTemplate;
+        refineLLM?: BaseLanguageModel;
         questionPrompt?: BasePromptTemplate;
       }
   );
@@ -56,12 +58,13 @@ export const loadSummarizationChain = (
     const {
       combineMapPrompt = DEFAULT_PROMPT,
       combinePrompt = DEFAULT_PROMPT,
+      combineLLM,
       returnIntermediateSteps,
     } = params;
     const llmChain = new LLMChain({ prompt: combineMapPrompt, llm, verbose });
     const combineLLMChain = new LLMChain({
       prompt: combinePrompt,
-      llm,
+      llm: combineLLM ?? llm,
       verbose,
     });
     const combineDocumentChain = new StuffDocumentsChain({
@@ -79,10 +82,17 @@ export const loadSummarizationChain = (
     return chain;
   }
   if (params.type === "refine") {
-    const { refinePrompt = REFINE_PROMPT, questionPrompt = DEFAULT_PROMPT } =
-      params;
+    const {
+      refinePrompt = REFINE_PROMPT,
+      refineLLM,
+      questionPrompt = DEFAULT_PROMPT,
+    } = params;
     const llmChain = new LLMChain({ prompt: questionPrompt, llm, verbose });
-    const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm, verbose });
+    const refineLLMChain = new LLMChain({
+      prompt: refinePrompt,
+      llm: refineLLM ?? llm,
+      verbose,
+    });
     const chain = new RefineDocumentsChain({
       llmChain,
       refineLLMChain,

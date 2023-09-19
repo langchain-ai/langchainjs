@@ -1,4 +1,4 @@
-import { BaseChatModel } from "./base.js";
+import { BaseChatModel } from "../base.js";
 import {
   AIMessage,
   BaseMessage,
@@ -6,14 +6,14 @@ import {
   ChatMessage,
   ChatResult,
   LLMResult,
-} from "../schema/index.js";
-import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
+} from "../../schema/index.js";
+import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
   GoogleVertexAIModelParams,
-} from "../types/googlevertexai-types.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+} from "../../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
@@ -153,7 +153,8 @@ export interface GoogleVertexAIChatPrediction
 /**
  * Defines the input to the Google Vertex AI chat model.
  */
-export interface GoogleVertexAIChatInput extends GoogleVertexAIBaseLLMInput {
+export interface GoogleVertexAIChatInput<AuthOptions>
+  extends GoogleVertexAIBaseLLMInput<AuthOptions> {
   /** Instructions how the model should respond */
   context?: string;
 
@@ -162,27 +163,14 @@ export interface GoogleVertexAIChatInput extends GoogleVertexAIBaseLLMInput {
 }
 
 /**
- * Enables calls to the Google Cloud's Vertex AI API to access
- * Large Language Models in a chat-like fashion.
- *
- * To use, you will need to have one of the following authentication
- * methods in place:
- * - You are logged into an account permitted to the Google Cloud project
- *   using Vertex AI.
- * - You are running this on a machine using a service account permitted to
- *   the Google Cloud project using Vertex AI.
- * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
- *   path of a credentials file for a service account permitted to the
- *   Google Cloud project using Vertex AI.
+ * Base class for Google Vertex AI chat models.
+ * Implemented subclasses must provide a GoogleVertexAILLMConnection
+ * with appropriate auth client.
  */
-export class ChatGoogleVertexAI
+export class BaseChatGoogleVertexAI<AuthOptions>
   extends BaseChatModel
-  implements GoogleVertexAIChatInput
+  implements GoogleVertexAIChatInput<AuthOptions>
 {
-  static lc_name() {
-    return "ChatGoogleVertexAI";
-  }
-
   lc_serializable = true;
 
   model = "chat-bison";
@@ -200,10 +188,17 @@ export class ChatGoogleVertexAI
   connection: GoogleVertexAILLMConnection<
     BaseLanguageModelCallOptions,
     GoogleVertexAIChatInstance,
-    GoogleVertexAIChatPrediction
+    GoogleVertexAIChatPrediction,
+    AuthOptions
   >;
 
-  constructor(fields?: GoogleVertexAIChatInput) {
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_name",
+    };
+  }
+
+  constructor(fields?: GoogleVertexAIChatInput<AuthOptions>) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -212,14 +207,6 @@ export class ChatGoogleVertexAI
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
     this.examples = fields?.examples ?? this.examples;
-
-    this.connection = new GoogleVertexAILLMConnection(
-      {
-        ...fields,
-        ...this,
-      },
-      this.caller
-    );
   }
 
   _combineLLMOutput(): LLMResult["llmOutput"] {
@@ -249,7 +236,7 @@ export class ChatGoogleVertexAI
 
     const generations =
       result?.data?.predictions?.map((prediction) =>
-        ChatGoogleVertexAI.convertPrediction(prediction)
+        BaseChatGoogleVertexAI.convertPrediction(prediction)
       ) ?? [];
     return {
       generations,
@@ -257,7 +244,7 @@ export class ChatGoogleVertexAI
   }
 
   _llmType(): string {
-    return "googlevertexai";
+    return "vertexai";
   }
 
   /**

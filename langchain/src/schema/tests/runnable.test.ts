@@ -20,10 +20,36 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
-import { RunnableMap, RunnableSequence, RouterRunnable } from "../runnable.js";
+import {
+  RunnableMap,
+  RunnableSequence,
+  RouterRunnable,
+  RunnableLambda,
+} from "../runnable/index.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
-import { OutputParserException, StringOutputParser } from "../output_parser.js";
+import {
+  BaseOutputParser,
+  OutputParserException,
+  StringOutputParser,
+} from "../output_parser.js";
+import { RunnableBranch } from "../runnable/branch.js";
+
+/**
+ * Parser for comma-separated values. It splits the input text by commas
+ * and trims the resulting values.
+ */
+export class FakeSplitIntoListParser extends BaseOutputParser<string[]> {
+  lc_namespace = ["tests", "fake"];
+
+  getFormatInstructions() {
+    return "";
+  }
+
+  async parse(text: string): Promise<string[]> {
+    return text.split(",").map((value) => value.trim());
+  }
+}
 
 class FakeLLM extends LLM {
   response?: string;
@@ -348,4 +374,180 @@ test("Stream with RunnableBinding", async () => {
   }
   expect(chunks.length).toEqual("Hi there!".length);
   expect(chunks.join("")).toEqual("Hi there!");
+});
+
+test("Stream through a RunnableBinding if the bound runnable implements transform", async () => {
+  const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
+  const outputParser = new StringOutputParser().bind({ callbacks: [] });
+  const stream = await llm.pipe(outputParser).stream("Hi there!");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(chunks.length).toEqual("Hi there!".length);
+  expect(chunks.join("")).toEqual("Hi there!");
+});
+
+test("RunnableRetry invoke", async () => {
+  let attemptCount = 0;
+  const runnable = new RunnableLambda({
+    func: (_thing: unknown) => {
+      attemptCount += 1;
+      if (attemptCount < 3) {
+        throw new Error("TEST ERROR");
+      } else {
+        return attemptCount;
+      }
+    },
+  });
+  const runnableRetry = runnable.withRetry();
+  const result = await runnableRetry.invoke("");
+  expect(result).toEqual(3);
+});
+
+test("RunnableRetry batch with thrown errors", async () => {
+  const runnable = new RunnableLambda({
+    func: (_thing: unknown) => {
+      throw new Error("TEST ERROR");
+    },
+  });
+  const runnableRetry = runnable.withRetry({
+    stopAfterAttempt: 1,
+  });
+  await expect(async () => {
+    await runnableRetry.batch(["", "", ""]);
+  }).rejects.toThrow();
+});
+
+test("RunnableRetry batch with all returned errors", async () => {
+  let attemptCount = 0;
+  const runnable = new RunnableLambda({
+    func: (_thing: unknown) => {
+      attemptCount += 1;
+      if (attemptCount < 5) {
+        throw new Error("TEST ERROR");
+      } else {
+        return attemptCount;
+      }
+    },
+  });
+  const runnableRetry = runnable.withRetry({
+    stopAfterAttempt: 1,
+  });
+  const result = await runnableRetry.batch(["", "", ""], undefined, {
+    returnExceptions: true,
+  });
+  expect(result).toEqual([
+    new Error("TEST ERROR"),
+    new Error("TEST ERROR"),
+    new Error("TEST ERROR"),
+  ]);
+});
+
+test("RunnableRetry batch should not retry successful requests", async () => {
+  let attemptCount = 0;
+  const runnable = new RunnableLambda({
+    func: (_thing: unknown) => {
+      attemptCount += 1;
+      if (attemptCount < 3) {
+        throw new Error("TEST ERROR");
+      } else {
+        return attemptCount;
+      }
+    },
+  });
+  const runnableRetry = runnable.withRetry({
+    stopAfterAttempt: 2,
+  });
+  const result = await runnableRetry.batch(["", "", ""]);
+  expect(attemptCount).toEqual(5);
+  expect(result.sort()).toEqual([3, 4, 5]);
+});
+
+test("RunnableLambda that returns a runnable should invoke the runnable", async () => {
+  const runnable = new RunnableLambda({
+    func: () =>
+      new RunnableLambda({
+        func: () => "testing",
+      }),
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+});
+
+test("RunnableEach", async () => {
+  const parser = new FakeSplitIntoListParser();
+  expect(await parser.invoke("first item, second item")).toEqual([
+    "first item",
+    "second item",
+  ]);
+  expect(await parser.map().invoke(["a, b", "c"])).toEqual([["a", "b"], ["c"]]);
+  expect(
+    await parser
+      .map()
+      .map()
+      .invoke([["a, b", "c"], ["c, e"]])
+  ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
+});
+
+test("RunnableBranch invoke", async () => {
+  const condition = (x: number) => x > 0;
+  const add = (x: number) => x + 1;
+  const subtract = (x: number) => x - 1;
+  const branch = RunnableBranch.from([
+    [condition, add],
+    [condition, add],
+    subtract,
+  ]);
+  const result = await branch.invoke(1);
+  expect(result).toEqual(2);
+  const result2 = await branch.invoke(-1);
+  expect(result2).toEqual(-2);
+});
+
+test("RunnableBranch batch", async () => {
+  const branch = RunnableBranch.from([
+    [(x: number) => x > 0 && x < 5, (x: number) => x + 1],
+    [(x: number) => x > 5, (x: number) => x * 10],
+    (x: number) => x - 1,
+  ]);
+  const batchResult = await branch.batch([1, 10, 0]);
+  expect(batchResult).toEqual([2, 100, -1]);
+});
+
+test("RunnableBranch handles error", async () => {
+  let error;
+  const branch = RunnableBranch.from([
+    [
+      (x: string) => x.startsWith("a"),
+      () => {
+        throw new Error("Testing");
+      },
+    ],
+    (x) => `${x} passed`,
+  ]);
+  const result = await branch.invoke("branch", {
+    callbacks: [
+      {
+        handleChainError: (e) => {
+          error = e;
+        },
+      },
+    ],
+  });
+  expect(result).toBe("branch passed");
+  expect(error).toBeUndefined();
+  await expect(async () => {
+    await branch.invoke("alpha", {
+      callbacks: [
+        {
+          handleChainError: (e) => {
+            error = e;
+          },
+        },
+      ],
+    });
+  }).rejects.toThrow();
+  expect(error).toBeDefined();
 });

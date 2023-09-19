@@ -5,7 +5,7 @@ import {
   HumanMessage,
   AIMessage,
 } from "../../schema/index.js";
-import { ChatExample, ChatGoogleVertexAI } from "../googlevertexai.js";
+import { ChatExample, ChatGoogleVertexAI } from "../googlevertexai/index.js";
 
 test("Google messages", async () => {
   const messages: BaseMessage[] = [

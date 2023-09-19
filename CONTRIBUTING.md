@@ -19,11 +19,21 @@ If you are not sure what to work on, we have a few suggestions:
 
 We aim to keep the same APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
 
-## Want to add a specific integration?
+### Want to add a specific integration?
 
 LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/llms/openai.ts)), vector stores (e.g. [FAISS](https://github.com/ewfian/langchainjs/blob/main/langchain/src/vectorstores/faiss.ts)), document loaders (e.g. [Apify](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/stores/message/redis.ts)), and more.
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
+
+### Want to add a feature that's already in Python?
+
+If you're interested in contributing a feature that's already in the [LangChain Python repo](https://github.com/langchain-ai/langchain) and you'd like some help getting started, you can try pasting code snippets and classes into the [LangChain Python to JS translator](https://langchain-translator.vercel.app/).
+
+It's a chat interface wrapping a fine-tuned `gpt-3.5-turbo` instance trained on prior ported features. This allows the model to innately take into account LangChain-specific code style and imports.
+
+It's an ongoing project, and feedback on runs will be used to improve the [LangSmith dataset](https://smith.langchain.com) for further fine-tuning! Try it out below:
+
+https://langchain-translator.vercel.app/
 
 ## 🗺️ Contributing Guidelines
 

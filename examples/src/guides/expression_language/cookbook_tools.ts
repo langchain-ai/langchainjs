@@ -1,5 +1,5 @@
 import { SerpAPI } from "langchain/tools";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
 
@@ -10,7 +10,7 @@ const prompt =
 
 {input}`);
 
-const model = new ChatOpenAI({});
+const model = new ChatAnthropic({});
 
 const chain = prompt.pipe(model).pipe(new StringOutputParser()).pipe(search);
 

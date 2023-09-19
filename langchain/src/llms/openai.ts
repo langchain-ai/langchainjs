@@ -138,9 +138,9 @@ export class OpenAI
     configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     if (
-      fields?.modelName?.startsWith("gpt-3.5-turbo") ||
-      fields?.modelName?.startsWith("gpt-4") ||
-      fields?.modelName?.startsWith("gpt-4-32k")
+      (fields?.modelName?.startsWith("gpt-3.5-turbo") ||
+        fields?.modelName?.startsWith("gpt-4")) &&
+      !fields?.modelName?.includes("-instruct")
     ) {
       // eslint-disable-next-line no-constructor-return, @typescript-eslint/no-explicit-any
       return new OpenAIChat(fields, configuration) as any as OpenAI;
@@ -426,7 +426,7 @@ export class OpenAI
     };
     const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
-      const choice = data.choices[0];
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }
