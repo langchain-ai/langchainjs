@@ -1,4 +1,5 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
+// Needs to be a hard import for the test
+import { KVNamespace } from "@cloudflare/workers-types";
 
 import { test, expect, jest } from "@jest/globals";
 import hash from "object-hash";
