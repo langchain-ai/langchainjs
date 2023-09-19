@@ -1,3 +1,4 @@
+import { v4 } from "uuid";
 import type { D1Database } from "@cloudflare/workers-types";
 
 import {
@@ -10,7 +11,6 @@ import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
-import { v4 } from "uuid";
 
 /**
  * Type definition for the input parameters required when instantiating a
