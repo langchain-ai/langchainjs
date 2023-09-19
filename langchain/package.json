@@ -511,6 +511,9 @@
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
+    "cache/cloudflare_kv.cjs",
+    "cache/cloudflare_kv.js",
+    "cache/cloudflare_kv.d.ts",
     "cache/momento.cjs",
     "cache/momento.js",
     "cache/momento.d.ts",
@@ -535,6 +538,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/cloudflare_d1.cjs",
+    "stores/message/cloudflare_d1.js",
+    "stores/message/cloudflare_d1.d.ts",
     "stores/message/in_memory.cjs",
     "stores/message/in_memory.js",
     "stores/message/in_memory.d.ts",
@@ -646,6 +652,7 @@
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
+    "@cloudflare/workers-types": "^4.20230904.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -765,6 +772,7 @@
     "@aws-sdk/signature-v4": "^3.374.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
+    "@cloudflare/workers-types": "^4.20230904.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.7.0",
@@ -869,6 +877,9 @@
       "optional": true
     },
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@cloudflare/workers-types": {
       "optional": true
     },
     "@elastic/elasticsearch": {
@@ -1953,6 +1964,11 @@
       "import": "./cache.js",
       "require": "./cache.cjs"
     },
+    "./cache/cloudflare_kv": {
+      "types": "./cache/cloudflare_kv.d.ts",
+      "import": "./cache/cloudflare_kv.js",
+      "require": "./cache/cloudflare_kv.cjs"
+    },
     "./cache/momento": {
       "types": "./cache/momento.d.ts",
       "import": "./cache/momento.js",
@@ -1992,6 +2008,11 @@
       "types": "./stores/file/node.d.ts",
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
+    },
+    "./stores/message/cloudflare_d1": {
+      "types": "./stores/message/cloudflare_d1.d.ts",
+      "import": "./stores/message/cloudflare_d1.js",
+      "require": "./stores/message/cloudflare_d1.cjs"
     },
     "./stores/message/in_memory": {
       "types": "./stores/message/in_memory.d.ts",
