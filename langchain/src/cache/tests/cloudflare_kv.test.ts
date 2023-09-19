@@ -1,3 +1,5 @@
+import type { KVNamespace } from "@cloudflare/workers-types";
+
 import { test, expect, jest } from "@jest/globals";
 import hash from "object-hash";
 
@@ -14,7 +16,6 @@ test("CloudflareKVCache", async () => {
       return null;
     }),
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cache = new CloudflareKVCache(kv as any);
+  const cache = new CloudflareKVCache(kv as unknown as KVNamespace);
   expect(await cache.lookup("foo", "bar")).toEqual([{ text: "baz" }]);
 });
