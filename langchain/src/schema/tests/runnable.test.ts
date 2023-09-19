@@ -465,6 +465,17 @@ test("RunnableRetry batch should not retry successful requests", async () => {
   expect(result.sort()).toEqual([3, 4, 5]);
 });
 
+test("RunnableLambda that returns a runnable should invoke the runnable", async () => {
+  const runnable = new RunnableLambda({
+    func: () =>
+      new RunnableLambda({
+        func: () => "testing",
+      }),
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+});
+
 test("RunnableEach", async () => {
   const parser = new FakeSplitIntoListParser();
   expect(await parser.invoke("first item, second item")).toEqual([

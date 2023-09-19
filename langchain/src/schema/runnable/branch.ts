@@ -72,8 +72,9 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
    *   (x: number) => x
    * ]);
    * ```
-   * @param branches
-   * @returns
+   * @param branches An array where the every item except the last is a tuple of [condition, runnable]
+   *   pairs. The last item is a default runnable which is invoked if no other condition matches.
+   * @returns A new RunnableBranch.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static from<RunInput = any, RunOutput = any>(
