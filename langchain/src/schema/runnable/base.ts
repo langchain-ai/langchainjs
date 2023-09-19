@@ -1160,15 +1160,26 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     this.func = fields.func;
   }
 
+  async _invoke(
+    input: RunInput,
+    config?: Partial<BaseCallbackConfig>,
+    runManager?: CallbackManagerForChainRun
+  ) {
+    let output = await this.func(input);
+    if (output && Runnable.isRunnable(output)) {
+      output = await output.invoke(
+        input,
+        this._patchConfig(config, runManager?.getChild())
+      );
+    }
+    return output;
+  }
+
   async invoke(
     input: RunInput,
     options?: Partial<BaseCallbackConfig>
   ): Promise<RunOutput> {
-    return this._callWithConfig(
-      async (input: RunInput) => this.func(input),
-      input,
-      options
-    );
+    return this._callWithConfig(this._invoke, input, options);
   }
 }
 
@@ -1325,7 +1336,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 }
 
 // TODO: Figure out why the compiler needs help eliminating Error as a RunOutput type
-function _coerceToRunnable<RunInput, RunOutput>(
+export function _coerceToRunnable<RunInput, RunOutput>(
   coerceable: RunnableLike<RunInput, RunOutput>
 ): Runnable<RunInput, Exclude<RunOutput, Error>> {
   if (typeof coerceable === "function") {
