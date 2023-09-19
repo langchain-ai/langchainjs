@@ -199,6 +199,9 @@ vectorstores/supabase.d.ts
 vectorstores/opensearch.cjs
 vectorstores/opensearch.js
 vectorstores/opensearch.d.ts
+vectorstores/pgvector.cjs
+vectorstores/pgvector.js
+vectorstores/pgvector.d.ts
 vectorstores/milvus.cjs
 vectorstores/milvus.js
 vectorstores/milvus.d.ts

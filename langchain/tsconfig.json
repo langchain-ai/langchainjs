@@ -99,6 +99,7 @@
       "src/vectorstores/qdrant.ts",
       "src/vectorstores/supabase.ts",
       "src/vectorstores/opensearch.ts",
+      "src/vectorstores/pgvector.ts",
       "src/vectorstores/milvus.ts",
       "src/vectorstores/prisma.ts",
       "src/vectorstores/typeorm.ts",
