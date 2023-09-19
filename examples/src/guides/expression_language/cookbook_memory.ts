@@ -4,7 +4,7 @@ import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { BufferMemory } from "langchain/memory";
 
 const model = new ChatAnthropic();
-const prompt = ChatPromptTemplate.fromPromptMessages([
+const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a helpful chatbot"],
   new MessagesPlaceholder("history"),
   ["human", "{input}"],

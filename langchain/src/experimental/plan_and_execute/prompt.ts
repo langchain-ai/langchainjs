@@ -17,7 +17,7 @@ export const PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE = [
 ].join(" ");
 
 export const PLANNER_CHAT_PROMPT =
-  /* #__PURE__ */ ChatPromptTemplate.fromPromptMessages([
+  /* #__PURE__ */ ChatPromptTemplate.fromMessages([
     /* #__PURE__ */ SystemMessagePromptTemplate.fromTemplate(
       PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE
     ),

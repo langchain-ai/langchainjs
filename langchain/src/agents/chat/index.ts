@@ -134,7 +134,7 @@ export class ChatAgent extends Agent {
       SystemMessagePromptTemplate.fromTemplate(template),
       HumanMessagePromptTemplate.fromTemplate(humanMessageTemplate),
     ];
-    return ChatPromptTemplate.fromPromptMessages(messages);
+    return ChatPromptTemplate.fromMessages(messages);
   }
 
   /**

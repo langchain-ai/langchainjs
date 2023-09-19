@@ -3,7 +3,7 @@ import { OpenAI } from "langchain/llms/openai";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
 
-const chatPrompt = ChatPromptTemplate.fromPromptMessages<{ animal: string }>([
+const chatPrompt = ChatPromptTemplate.fromMessages<{ animal: string }>([
   [
     "system",
     "You're a nice assistant who always includes a compliment in your response",

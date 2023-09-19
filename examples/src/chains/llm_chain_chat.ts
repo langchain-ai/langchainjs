@@ -4,7 +4,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 
 // We can also construct an LLMChain from a ChatPromptTemplate and a chat model.
 const chat = new ChatOpenAI({ temperature: 0 });
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+const chatPrompt = ChatPromptTemplate.fromMessages([
   [
     "system",
     "You are a helpful assistant that translates {input_language} to {output_language}.",
