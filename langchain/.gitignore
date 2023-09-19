@@ -502,6 +502,9 @@ retrievers/vespa.d.ts
 cache.cjs
 cache.js
 cache.d.ts
+cache/cloudflare_kv.cjs
+cache/cloudflare_kv.js
+cache/cloudflare_kv.d.ts
 cache/momento.cjs
 cache/momento.js
 cache/momento.d.ts
@@ -526,6 +529,9 @@ stores/file/in_memory.d.ts
 stores/file/node.cjs
 stores/file/node.js
 stores/file/node.d.ts
+stores/message/cloudflare_d1.cjs
+stores/message/cloudflare_d1.js
+stores/message/cloudflare_d1.d.ts
 stores/message/in_memory.cjs
 stores/message/in_memory.js
 stores/message/in_memory.d.ts

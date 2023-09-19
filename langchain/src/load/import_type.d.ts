@@ -325,6 +325,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/weaviate"?:
     | typeof import("../retrievers/self_query/weaviate.js")
     | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
+  "langchain/cache/cloudflare_kv"?:
+    | typeof import("../cache/cloudflare_kv.js")
+    | Promise<typeof import("../cache/cloudflare_kv.js")>;
   "langchain/cache/momento"?:
     | typeof import("../cache/momento.js")
     | Promise<typeof import("../cache/momento.js")>;
@@ -343,6 +346,9 @@ export interface OptionalImportMap {
   "langchain/stores/file/node"?:
     | typeof import("../stores/file/node.js")
     | Promise<typeof import("../stores/file/node.js")>;
+  "langchain/stores/message/cloudflare_d1"?:
+    | typeof import("../stores/message/cloudflare_d1.js")
+    | Promise<typeof import("../stores/message/cloudflare_d1.js")>;
   "langchain/stores/message/dynamodb"?:
     | typeof import("../stores/message/dynamodb.js")
     | Promise<typeof import("../stores/message/dynamodb.js")>;

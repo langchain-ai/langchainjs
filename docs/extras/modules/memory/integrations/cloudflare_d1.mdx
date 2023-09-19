@@ -1,0 +1,46 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Cloudflare D1-Backed Chat Memory
+
+:::info
+This integration is only supported in Cloudflare Workers.
+:::
+
+For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory` for a Cloudflare D1 instance.
+
+## Setup
+
+If you are using TypeScript, you may need to install Cloudflare types if they aren't already present:
+
+```bash npm2yarn
+npm install -S @cloudflare/workers-types
+```
+
+Set up a D1 instance for your worker by following [the official documentation](https://developers.cloudflare.com/d1/). Your project's `wrangler.toml` file should
+look something like this:
+
+```toml
+name = "YOUR_PROJECT_NAME"
+main = "src/index.ts"
+compatibility_date = "2023-09-18"
+
+[vars]
+ANTHROPIC_API_KEY = "YOUR_ANTHROPIC_KEY"
+
+[[d1_databases]]
+binding = "DB"                                       # available in your Worker as env.DB
+database_name = "YOUR_D1_DB_NAME"
+database_id = "YOUR_D1_DB_ID"
+```
+
+## Usage
+
+You can then use D1 to store your history as follows:
+
+import Example from "@examples/memory/cloudflare_d1.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

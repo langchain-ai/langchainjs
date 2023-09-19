@@ -33,7 +33,7 @@ export const run = async () => {
     }
     */
 
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
       "You are a helpful assistant that translates {input_language} to {output_language}."
     ),

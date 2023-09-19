@@ -42,7 +42,7 @@ const messages = [
 ];
 
 export const CHAT_REFINE_PROMPT =
-  /*#__PURE__*/ ChatPromptTemplate.fromPromptMessages(messages);
+  /*#__PURE__*/ ChatPromptTemplate.fromMessages(messages);
 
 export const REFINE_PROMPT_SELECTOR =
   /*#__PURE__*/ new ConditionalPromptSelector(DEFAULT_REFINE_PROMPT, [
@@ -71,7 +71,7 @@ const chat_messages = [
   /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
 ];
 export const CHAT_QUESTION_PROMPT =
-  /*#__PURE__*/ ChatPromptTemplate.fromPromptMessages(chat_messages);
+  /*#__PURE__*/ ChatPromptTemplate.fromMessages(chat_messages);
 export const QUESTION_PROMPT_SELECTOR =
   /*#__PURE__*/ new ConditionalPromptSelector(DEFAULT_TEXT_QA_PROMPT, [
     [isChatModel, CHAT_QUESTION_PROMPT],

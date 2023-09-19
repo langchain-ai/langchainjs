@@ -3615,6 +3615,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudflare/workers-types@npm:^4.20230904.0":
+  version: 4.20230904.0
+  resolution: "@cloudflare/workers-types@npm:4.20230904.0"
+  checksum: 4cfe7dd7419716233dad0937766d7b33ee709b12578d0def7cee8b005e79142f22f8675a40119957448073aff416e8376a768115af420b7f54d11635a6cb38a2
+  languageName: node
+  linkType: hard
+
 "@colors/colors@npm:1.5.0":
   version: 1.5.0
   resolution: "@colors/colors@npm:1.5.0"
@@ -13304,6 +13311,7 @@ __metadata:
     "@aws-sdk/types": ^3.357.0
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.0.14
+    "@cloudflare/workers-types": ^4.20230904.0
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
@@ -13443,6 +13451,7 @@ __metadata:
     "@aws-sdk/signature-v4": ^3.374.0
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.0.14
+    "@cloudflare/workers-types": ^4.20230904.0
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.7.0
@@ -13535,6 +13544,8 @@ __metadata:
     "@azure/storage-blob":
       optional: true
     "@clickhouse/client":
+      optional: true
+    "@cloudflare/workers-types":
       optional: true
     "@elastic/elasticsearch":
       optional: true
