@@ -16,4 +16,4 @@ export {
 export { RunnableConfig } from "./config.js";
 export { RunnablePassthrough } from "./passthrough.js";
 export { RouterRunnable } from "./router.js";
-export { RunnableBranch } from "./branch.js";
+export { RunnableBranch, Branch, BranchLike } from "./branch.js";
