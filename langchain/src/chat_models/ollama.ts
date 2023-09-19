@@ -236,21 +236,16 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const stream = await this.caller.call(async () =>
-      createOllamaStream(
-        this.baseUrl,
-        {
-          ...this.invocationParams(options),
-          prompt: this._formatMessagesAsPrompt(messages),
-        },
-        options
-      )
-    );
     const chunks = [];
-    for await (const chunk of stream) {
-      chunks.push(chunk.response);
+    for await (const chunk of this._streamResponseChunks(
+      messages,
+      options,
+      runManager
+    )) {
+      chunks.push(chunk.message.content);
     }
     return chunks.join("");
   }
