@@ -214,7 +214,7 @@ test("Create a runnable sequence with a static method with invalid output and ca
 });
 
 test("Create a runnable sequence with a runnable map", async () => {
-  const promptTemplate = ChatPromptTemplate.fromPromptMessages<{
+  const promptTemplate = ChatPromptTemplate.fromMessages<{
     documents: string;
     question: string;
   }>([

@@ -50,7 +50,7 @@ describe("ChatGoogleVertexAI", () => {
       "You are a helpful assistant who must always respond like a {job}."
     );
 
-    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    const chatPrompt = ChatPromptTemplate.fromMessages([
       new SystemMessagePromptTemplate(systemPrompt),
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
@@ -68,7 +68,7 @@ describe("ChatGoogleVertexAI", () => {
   test("longer chain of messages", async () => {
     const chat = new ChatGoogleVertexAI();
 
-    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    const chatPrompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
       AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
       HumanMessagePromptTemplate.fromTemplate("{text}"),
@@ -84,7 +84,7 @@ describe("ChatGoogleVertexAI", () => {
   });
 
   test("with a memory in a chain", async () => {
-    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    const chatPrompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
         "You are a helpful assistant who must always respond like a pirate"
       ),
@@ -114,7 +114,7 @@ describe("ChatGoogleVertexAI", () => {
   test("code, chain of messages", async () => {
     const chat = new ChatGoogleVertexAI({ model: "codechat-bison" });
 
-    const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    const chatPrompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
         `Answer all questions using Python and just show the code without an explanation.`
       ),

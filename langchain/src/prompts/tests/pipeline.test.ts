@@ -103,12 +103,12 @@ test("Test with chat prompts", async () => {
     pipelinePrompts: [
       {
         name: "foo",
-        prompt: ChatPromptTemplate.fromPromptMessages([
+        prompt: ChatPromptTemplate.fromMessages([
           HumanMessagePromptTemplate.fromTemplate(`{name} halpert`),
         ]),
       },
     ],
-    finalPrompt: ChatPromptTemplate.fromPromptMessages([
+    finalPrompt: ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate("What is your name?"),
       new MessagesPlaceholder("foo"),
     ]),
