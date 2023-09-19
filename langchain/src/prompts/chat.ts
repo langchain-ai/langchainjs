@@ -632,7 +632,7 @@ export class ChatPromptTemplate<
     });
   }
 
-  /** @deprecated Use .fromMessages instead */
+  /** @deprecated Renamed to .fromMessages */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static fromPromptMessages<RunInput extends InputValues = any>(
     promptMessages: (
