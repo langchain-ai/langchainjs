@@ -105,6 +105,14 @@ test("Test OpenAI with instruct model returns OpenAI", async () => {
   expect(typeof res).toBe("string");
 });
 
+test("Test OpenAI with versioned instruct model returns OpenAI", async () => {
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct-0914" });
+  expect(model).toBeInstanceOf(OpenAI);
+  const res = await model.call("Print hello world");
+  console.log({ res });
+  expect(typeof res).toBe("string");
+});
+
 test("Test ChatOpenAI tokenUsage", async () => {
   let tokenUsage = {
     completionTokens: 0,
