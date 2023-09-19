@@ -101,7 +101,10 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
     await this.ensureTable();
 
     const query = `SELECT * FROM ${this.tableName} WHERE session_id = ?`;
-    const rawStoredMessages = await this.database.prepare(query).bind(this.sessionId).all()
+    const rawStoredMessages = await this.database
+      .prepare(query)
+      .bind(this.sessionId)
+      .all();
     const storedMessagesObject =
       rawStoredMessages.results as unknown as selectStoredMessagesDTO[];
 
@@ -145,15 +148,18 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
 
     const id = v4();
 
-    await this.database.prepare(query).bind(
-      id,
-      this.sessionId,
-      messageToAdd[0].type || null,
-      messageToAdd[0].data.content || null,
-      messageToAdd[0].data.role || null,
-      messageToAdd[0].data.name || null,
-      JSON.stringify(messageToAdd[0].data.additional_kwargs),
-    ).all();
+    await this.database
+      .prepare(query)
+      .bind(
+        id,
+        this.sessionId,
+        messageToAdd[0].type || null,
+        messageToAdd[0].data.content || null,
+        messageToAdd[0].data.role || null,
+        messageToAdd[0].data.name || null,
+        JSON.stringify(messageToAdd[0].data.additional_kwargs)
+      )
+      .all();
   }
 
   /**
@@ -165,6 +171,9 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
     await this.ensureTable();
 
     const query = `DELETE FROM ? WHERE session_id = ? `;
-    await this.database.prepare(query).bind(this.tableName, this.sessionId).all();
+    await this.database
+      .prepare(query)
+      .bind(this.tableName, this.sessionId)
+      .all();
   }
 }
