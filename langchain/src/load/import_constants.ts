@@ -73,6 +73,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/web/github",
   "langchain/document_loaders/web/notiondb",
   "langchain/document_loaders/web/notionapi",
+  "langchain/document_loaders/web/pdf",
   "langchain/document_loaders/web/recursive_url",
   "langchain/document_loaders/web/s3",
   "langchain/document_loaders/web/sonix_audio",

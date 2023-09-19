@@ -8,9 +8,7 @@ import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 
 /**
- * A document loader for loading data from YouTube videos. It uses the
- * youtube-transcript and youtubei.js libraries to fetch the transcript
- * and video metadata.
+ * A document loader for loading data from PDFs.
  */
 export class WebPDFLoader extends BaseDocumentLoader {
   protected blob: Blob;

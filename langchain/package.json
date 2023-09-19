@@ -313,6 +313,9 @@
     "document_loaders/web/notionapi.cjs",
     "document_loaders/web/notionapi.js",
     "document_loaders/web/notionapi.d.ts",
+    "document_loaders/web/pdf.cjs",
+    "document_loaders/web/pdf.js",
+    "document_loaders/web/pdf.d.ts",
     "document_loaders/web/recursive_url.cjs",
     "document_loaders/web/recursive_url.js",
     "document_loaders/web/recursive_url.d.ts",
@@ -1622,6 +1625,11 @@
       "types": "./document_loaders/web/notionapi.d.ts",
       "import": "./document_loaders/web/notionapi.js",
       "require": "./document_loaders/web/notionapi.cjs"
+    },
+    "./document_loaders/web/pdf": {
+      "types": "./document_loaders/web/pdf.d.ts",
+      "import": "./document_loaders/web/pdf.js",
+      "require": "./document_loaders/web/pdf.cjs"
     },
     "./document_loaders/web/recursive_url": {
       "types": "./document_loaders/web/recursive_url.d.ts",
