@@ -583,6 +583,9 @@ experimental/multimodal_embeddings/googlevertexai.d.ts
 experimental/chat_models/anthropic_functions.cjs
 experimental/chat_models/anthropic_functions.js
 experimental/chat_models/anthropic_functions.d.ts
+experimental/chat_models/bittensor.cjs
+experimental/chat_models/bittensor.js
+experimental/chat_models/bittensor.d.ts
 experimental/llms/bittensor.cjs
 experimental/llms/bittensor.js
 experimental/llms/bittensor.d.ts

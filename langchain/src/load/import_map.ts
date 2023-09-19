@@ -68,4 +68,5 @@ export * as experimental__autogpt from "../experimental/autogpt/index.js";
 export * as experimental__babyagi from "../experimental/babyagi/index.js";
 export * as experimental__generative_agents from "../experimental/generative_agents/index.js";
 export * as experimental__plan_and_execute from "../experimental/plan_and_execute/index.js";
+export * as experimental__chat_models__bittensor from "../experimental/chat_models/bittensor.js";
 export * as evaluation from "../evaluation/index.js";

@@ -595,6 +595,9 @@
     "experimental/chat_models/anthropic_functions.cjs",
     "experimental/chat_models/anthropic_functions.js",
     "experimental/chat_models/anthropic_functions.d.ts",
+    "experimental/chat_models/bittensor.cjs",
+    "experimental/chat_models/bittensor.js",
+    "experimental/chat_models/bittensor.d.ts",
     "experimental/llms/bittensor.cjs",
     "experimental/llms/bittensor.js",
     "experimental/llms/bittensor.d.ts",
@@ -2089,6 +2092,11 @@
       "types": "./experimental/chat_models/anthropic_functions.d.ts",
       "import": "./experimental/chat_models/anthropic_functions.js",
       "require": "./experimental/chat_models/anthropic_functions.cjs"
+    },
+    "./experimental/chat_models/bittensor": {
+      "types": "./experimental/chat_models/bittensor.d.ts",
+      "import": "./experimental/chat_models/bittensor.js",
+      "require": "./experimental/chat_models/bittensor.cjs"
     },
     "./experimental/llms/bittensor": {
       "types": "./experimental/llms/bittensor.d.ts",
