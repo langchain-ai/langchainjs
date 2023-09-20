@@ -13,6 +13,10 @@ type FireworksUnsupportedArgs =
 
 type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
 
+export type ChatFireworksCallOptions = Partial<
+  Omit<ChatOpenAICallOptions, FireworksUnsupportedCallOptions>
+>;
+
 /**
  * Wrapper around Fireworks API for large language models fine-tuned for chat
  *
@@ -22,7 +26,7 @@ type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
  * To use, you should have the `openai` package installed and
  * the `FIREWORKS_API_KEY` environment variable set.
  */
-export class ChatFireworks extends ChatOpenAI {
+export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
   static lc_name() {
     return "ChatFireworks";
   }
@@ -119,13 +123,5 @@ export class ChatFireworks extends ChatOpenAI {
     }
 
     return super.completionWithRetry(request, options);
-  }
-
-  bind(
-    kwargs: Partial<
-      Omit<ChatOpenAICallOptions, FireworksUnsupportedCallOptions>
-    >
-  ) {
-    return super.bind(kwargs);
   }
 }

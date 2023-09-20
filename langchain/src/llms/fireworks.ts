@@ -13,6 +13,10 @@ type FireworksUnsupportedArgs =
 
 type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
 
+export type FireworksCallOptions = Partial<
+  Omit<OpenAICallOptions, FireworksUnsupportedCallOptions>
+>;
+
 /**
  * Wrapper around Fireworks API for large language models
  *
@@ -22,7 +26,7 @@ type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
  * To use, you should have the `openai` package installed and
  * the `FIREWORKS_API_KEY` environment variable set.
  */
-export class Fireworks extends OpenAI {
+export class Fireworks extends OpenAI<FireworksCallOptions> {
   static lc_name() {
     return "Fireworks";
   }
@@ -131,11 +135,5 @@ export class Fireworks extends OpenAI {
     }
 
     return super.completionWithRetry(request, options);
-  }
-
-  bind(
-    kwargs: Partial<Omit<OpenAICallOptions, FireworksUnsupportedCallOptions>>
-  ) {
-    return super.bind(kwargs);
   }
 }
