@@ -48,6 +48,8 @@ export class ChatFireworks extends ChatOpenAI {
 
     super({
       ...fields,
+      modelName:
+        fields.modelName || "accounts/fireworks/models/llama-v2-13b-chat",
       openAIApiKey: fireworksApiKey,
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",
