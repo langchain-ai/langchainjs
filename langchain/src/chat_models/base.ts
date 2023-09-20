@@ -11,6 +11,7 @@ import {
   ChatGenerationChunk,
   BaseMessageLike,
   coerceMessageLikeToMessage,
+  BaseCache,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
@@ -19,11 +20,13 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
+  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
+import { InMemoryCache } from "../cache/index.js";
 
 /**
  * Represents a serialized chat model.
@@ -47,7 +50,9 @@ export type SerializedLLM = {
 /**
  * Represents the parameters for a base chat model.
  */
-export type BaseChatModelParams = BaseLanguageModelParams;
+export type BaseChatModelParams = BaseLanguageModelParams & {
+  cache?: BaseCache | boolean;
+};
 
 /**
  * Represents the call options for a base chat model.
@@ -82,8 +87,17 @@ export abstract class BaseChatModel<
 
   lc_namespace = ["langchain", "chat_models", this._llmType()];
 
+  cache?: BaseCache;
+
   constructor(fields: BaseChatModelParams) {
     super(fields);
+    if (typeof fields.cache === "object") {
+      this.cache = fields.cache;
+    } else if (fields.cache) {
+      this.cache = InMemoryCache.global();
+    } else {
+      this.cache = undefined;
+    }
   }
 
   abstract _combineLLMOutput?(
@@ -200,43 +214,25 @@ export abstract class BaseChatModel<
   }
 
   /**
-   * Generates chat based on the input messages.
-   * @param messages An array of arrays of BaseMessage instances.
-   * @param options The call options or an array of stop sequences.
-   * @param callbacks The callbacks for the language model.
-   * @returns A Promise that resolves to an LLMResult.
+   * @TODO fix jsdoc
    */
-  async generate(
-    messages: BaseMessageLike[][],
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
+  async _generateUncached(
+    baseMessages: BaseMessage[][],
+    parsedOptions: this["ParsedCallOptions"],
+    handledOptions: BaseCallbackConfig
   ): Promise<LLMResult> {
-    // parse call options
-    let parsedOptions: CallOptions | undefined;
-    if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as CallOptions;
-    } else {
-      parsedOptions = options;
-    }
-
-    const baseMessages = messages.map((messageList) =>
-      messageList.map(coerceMessageLikeToMessage)
-    );
-
-    const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptions(parsedOptions);
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
-      runnableConfig.callbacks ?? callbacks,
+      handledOptions.callbacks,
       this.callbacks,
-      runnableConfig.tags,
+      handledOptions.tags,
       this.tags,
-      runnableConfig.metadata,
+      handledOptions.metadata,
       this.metadata,
       { verbose: this.verbose }
     );
     const extra = {
-      options: callOptions,
+      options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
@@ -251,7 +247,7 @@ export abstract class BaseChatModel<
       baseMessages.map((messageList, i) =>
         this._generate(
           messageList,
-          { ...callOptions, promptIndex: i },
+          parsedOptions,
           runManagers?.[i]
         )
       )
@@ -291,6 +287,106 @@ export abstract class BaseChatModel<
     });
     return output;
   }
+
+    /**
+   * Generates chat based on the input messages.
+   * @param messages An array of arrays of BaseMessage instances.
+   * @param options The call options or an array of stop sequences.
+   * @param callbacks The callbacks for the language model.
+   * @returns A Promise that resolves to an LLMResult.
+   */
+    async generate(
+      messages: BaseMessageLike[][],
+      options?: string[] | CallOptions,
+      callbacks?: Callbacks
+    ): Promise<LLMResult> {
+      // parse call options
+      let parsedOptions: CallOptions | undefined;
+      if (Array.isArray(options)) {
+        parsedOptions = { stop: options } as CallOptions;
+      } else {
+        parsedOptions = options;
+      }
+  
+      const baseMessages = messages.map((messageList) =>
+        messageList.map(coerceMessageLikeToMessage)
+      );
+  
+      const [runnableConfig, callOptions] =
+        this._separateRunnableConfigFromCallOptions(parsedOptions);
+
+      if (!this.cache) {
+        return this._generateUncached(baseMessages, callOptions, runnableConfig);
+      }
+
+      const { cache } = this;
+
+      // create callback manager and start run
+      const callbackManager_ = await CallbackManager.configure(
+        runnableConfig.callbacks ?? callbacks,
+        this.callbacks,
+        runnableConfig.tags,
+        this.tags,
+        runnableConfig.metadata,
+        this.metadata,
+        { verbose: this.verbose }
+      );
+      const extra = {
+        options: callOptions,
+        invocation_params: this?.invocationParams(parsedOptions),
+      };
+      const runManagers = await callbackManager_?.handleChatModelStart(
+        this.toJSON(),
+        baseMessages,
+        undefined,
+        undefined,
+        extra
+      );
+      // generate results
+      const results = await Promise.allSettled(
+        baseMessages.map((messageList, i) =>
+          this._generate(
+            messageList,
+            { ...callOptions, promptIndex: i },
+            runManagers?.[i]
+          )
+        )
+      );
+      // handle results
+      const generations: ChatGeneration[][] = [];
+      const llmOutputs: LLMResult["llmOutput"][] = [];
+      await Promise.all(
+        results.map(async (pResult, i) => {
+          if (pResult.status === "fulfilled") {
+            const result = pResult.value;
+            generations[i] = result.generations;
+            llmOutputs[i] = result.llmOutput;
+            return runManagers?.[i]?.handleLLMEnd({
+              generations: [result.generations],
+              llmOutput: result.llmOutput,
+            });
+          } else {
+            // status === "rejected"
+            await runManagers?.[i]?.handleLLMError(pResult.reason);
+            return Promise.reject(pResult.reason);
+          }
+        })
+      );
+      // create combined output
+      const output: LLMResult = {
+        generations,
+        llmOutput: llmOutputs.length
+          ? this._combineLLMOutput?.(...llmOutputs)
+          : undefined,
+      };
+      Object.defineProperty(output, RUN_KEY, {
+        value: runManagers
+          ? { runIds: runManagers?.map((manager) => manager.runId) }
+          : undefined,
+        configurable: true,
+      });
+      return output;
+    }
 
   /**
    * Get the parameters used to invoke the model
