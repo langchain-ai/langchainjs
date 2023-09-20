@@ -589,6 +589,7 @@ export class ChatPromptTemplate<
    * @param promptMessages Messages to be passed to the chat model
    * @returns A new ChatPromptTemplate
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static fromMessages<RunInput extends InputValues = any>(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
