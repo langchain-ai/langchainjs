@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { Fireworks } from "../fireworks.js";
 
-describe("Vertex AI", () => {
+describe("Fireworks", () => {
   test("call", async () => {
     const model = new Fireworks({ maxTokens: 50 });
     const res = await model.call("1 + 1 = ");
