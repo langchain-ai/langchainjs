@@ -1,17 +1,27 @@
-import { ChatOpenAI } from "./openai.js";
-import type { BaseChatModelParams } from "./base.js";
+import type { OpenAI as OpenAIClient } from "openai";
 import type { ChatOpenAICallOptions, OpenAIChatInput } from "./openai.js";
+import type { OpenAICoreRequestOptions } from "../types/openai-types.js";
+import type { BaseChatModelParams } from "./base.js";
+import { ChatOpenAI } from "./openai.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
 type FireworksUnsupportedArgs =
   | "frequencyPenalty"
   | "presencePenalty"
-  | "bestOf"
   | "logitBias"
   | "functions";
 
 type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
 
+/**
+ * Wrapper around Fireworks API for large language models fine-tuned for chat
+ *
+ * Fireworks API is compatible to the OpenAI API with some limitations described in
+ * https://readme.fireworks.ai/docs/openai-compatibility.
+ *
+ * To use, you should have the `openai` package installed and
+ * the `FIREWORKS_API_KEY` environment variable set.
+ */
 export class ChatFireworks extends ChatOpenAI {
   static lc_name() {
     return "ChatFireworks";
@@ -74,22 +84,39 @@ export class ChatFireworks extends ChatOpenAI {
     return result;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error TODO: fix wrong response type
-  async completionWithRetry(request, options) {
-    // https://readme.fireworks.ai/docs/openai-compatibility#api-compatibility
-    if (Array.isArray(request.prompt)) {
-      if (request.prompt.length > 1) {
-        throw new Error("Multiple prompts are not supported by Fireworks");
-      }
-      [request.prompt] = request.prompt;
-    }
+  async completionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
+  async completionWithRetry(
+    request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
+
+  /**
+   * Calls the Fireworks API with retry logic in case of failures.
+   * @param request The request to send to the Fireworks API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the Fireworks API.
+   */
+  async completionWithRetry(
+    request:
+      | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
+      | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<
+    | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
+    | OpenAIClient.Chat.Completions.ChatCompletion
+  > {
     delete request.frequency_penalty;
     delete request.presence_penalty;
-    delete request.best_of;
     delete request.logit_bias;
     delete request.functions;
+
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
 
     return super.completionWithRetry(request, options);
   }

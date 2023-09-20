@@ -1,17 +1,27 @@
-import { OpenAI } from "./openai.js";
+import type { OpenAI as OpenAIClient } from "openai";
 import type { BaseLLMParams } from "./base.js";
 import type { OpenAICallOptions, OpenAIInput } from "./openai.js";
+import type { OpenAICoreRequestOptions } from "../types/openai-types.js";
 import { getEnvironmentVariable } from "../util/env.js";
+import { OpenAI } from "./openai.js";
 
 type FireworksUnsupportedArgs =
   | "frequencyPenalty"
   | "presencePenalty"
   | "bestOf"
-  | "logitBias"
-  | "functions";
+  | "logitBias";
 
 type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
 
+/**
+ * Wrapper around Fireworks API for large language models
+ *
+ * Fireworks API is compatible to the OpenAI API with some limitations described in
+ * https://readme.fireworks.ai/docs/openai-compatibility.
+ *
+ * To use, you should have the `openai` package installed and
+ * the `FIREWORKS_API_KEY` environment variable set.
+ */
 export class Fireworks extends OpenAI {
   static lc_name() {
     return "Fireworks";
@@ -73,22 +83,52 @@ export class Fireworks extends OpenAI {
     return result;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error TODO: fix wrong response type
-  async completionWithRetry(request, options) {
+  async completionWithRetry(
+    request: OpenAIClient.CompletionCreateParamsStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<AsyncIterable<OpenAIClient.Completion>>;
+
+  async completionWithRetry(
+    request: OpenAIClient.CompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<OpenAIClient.Completions.Completion>;
+
+  /**
+   * Calls the Fireworks API with retry logic in case of failures.
+   * @param request The request to send to the Fireworks API.
+   * @param options Optional configuration for the API call.
+   * @returns The response from the Fireworks API.
+   */
+  async completionWithRetry(
+    request:
+      | OpenAIClient.CompletionCreateParamsStreaming
+      | OpenAIClient.CompletionCreateParamsNonStreaming,
+    options?: OpenAICoreRequestOptions
+  ): Promise<
+    AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
+  > {
     // https://readme.fireworks.ai/docs/openai-compatibility#api-compatibility
     if (Array.isArray(request.prompt)) {
       if (request.prompt.length > 1) {
         throw new Error("Multiple prompts are not supported by Fireworks");
       }
-      [request.prompt] = request.prompt;
+
+      const prompt = request.prompt[0];
+      if (typeof prompt !== "string") {
+        throw new Error("Only string prompts are supported by Fireworks");
+      }
+
+      request.prompt = prompt;
     }
 
     delete request.frequency_penalty;
     delete request.presence_penalty;
     delete request.best_of;
     delete request.logit_bias;
-    delete request.functions;
+
+    if (request.stream === true) {
+      return super.completionWithRetry(request, options);
+    }
 
     return super.completionWithRetry(request, options);
   }
