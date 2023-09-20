@@ -452,4 +452,17 @@ export class RedisVectorStore extends VectorStore {
   private getFloat32Buffer(vector: number[]) {
     return Buffer.from(new Float32Array(vector).buffer);
   }
+
+  static async fromExistingIndex(
+    embeddings: Embeddings,
+    dbConfig: RedisVectorStoreConfig
+  ): Promise<RedisVectorStore> {
+    const instance = new this(embeddings, dbConfig);
+    const indexExists = await instance.checkIndexExists();
+    if (indexExists) {
+      return instance;
+    } else {
+      throw new Error(`Index ${instance.indexName} does not exist.`);
+    }
+  }
 }

@@ -1,7 +1,12 @@
-import type { createCluster, createClient } from "redis";
+import { createCluster, createClient } from "redis";
 
-import { BaseCache, Generation } from "../schema/index.js";
+import crypto from "crypto";
+import { BaseCache, Generation, GenerationChunk } from "../schema/index.js";
 import { getCacheKey } from "./base.js";
+import { Embeddings } from "../embeddings/base.js";
+import { RedisVectorStore } from "../vectorstores/redis.js";
+import { Document } from "../../document.js";
+import { ScoreThresholdRetriever } from "../retrievers/score_threshold.js";
 
 /**
  * Represents the type of the Redis client used to interact with the Redis
@@ -65,5 +70,186 @@ export class RedisCache extends BaseCache {
       const key = getCacheKey(prompt, llmKey, String(i));
       await this.redisClient.set(key, value[i].text);
     }
+  }
+}
+
+interface CacheDict {
+  [index: string]: RedisVectorStore;
+}
+
+function hash(input: string) {
+  return crypto.createHash("md5").update(input, "utf8").digest("hex");
+}
+
+/**
+ * Load generations from json.
+ *
+ * @param {string} generationsJson - A string of json representing a list of generations.
+ * @throws {Error} Could not decode json string to list of generations.
+ * @returns {Generation[]} A list of generations.
+ */
+function loadGenerationsFromJson(generationsJson: string): GenerationChunk[] {
+  try {
+    const results = JSON.parse(generationsJson);
+    return results.map(
+      (generationDict: {
+        text: string;
+        generationInfo?: Record<string, any>;
+      }) => {
+        if (typeof generationDict.text !== "string") {
+          throw new Error(`Invalid generation text: ${generationDict.text}`);
+        }
+        return new GenerationChunk(generationDict);
+      }
+    );
+  } catch (error) {
+    throw new Error(
+      `Could not decode json to list of generations: ${generationsJson}`
+    );
+  }
+}
+
+function dumpGenerationsToJson(generations: Generation[]): string {
+  return JSON.stringify(
+    generations.map((generation) => ({ text: generation.text }))
+  );
+}
+
+export class RedisSemanticCache extends BaseCache {
+  private cacheDict: CacheDict;
+
+  private redisUrl: string;
+
+  private embedding: Embeddings;
+
+  // ts-expect-error TODO: fix this
+  private scoreThreshold: number;
+
+  constructor(redisUrl: string, embedding: Embeddings, scoreThreshold = 0.2) {
+    super();
+    this.cacheDict = {};
+    this.redisUrl = redisUrl;
+    this.embedding = embedding;
+    this.scoreThreshold = scoreThreshold;
+  }
+
+  private indexName(llmKey: string): string {
+    const hashedIndex = hash(llmKey);
+    return `cache:${hashedIndex}`;
+  }
+
+  // private async getLlmCache(llmKey: string): Promise<RedisVectorStore> {
+  //   const indexName = this.indexName(llmKey);
+
+  //   if (indexName in this.cacheDict) {
+  //     return this.cacheDict[indexName];
+  //   }
+
+  //   const client = createClient({ url: this.redisUrl });
+  //   await client.connect();
+
+  //   try {
+  //     this.cacheDict[indexName] = await RedisVectorStore.fromExistingIndex(
+  //       this.embedding,
+  //       {
+  //         indexName,
+  //         redisClient: client,
+  //       }
+  //     );
+  //   } catch (error) {
+  //     const redis = new RedisVectorStore(this.embedding, {
+  //       indexName,
+  //       redisClient: client,
+  //     });
+  //     const embedding = await this.embedding.embedQuery("test");
+  //     await redis.createIndex(embedding.length);
+  //     this.cacheDict[indexName] = redis;
+  //   }
+
+  //   return this.cacheDict[indexName];
+  // }
+
+  private async getLlmCache(
+    llmKey: string
+  ): Promise<ScoreThresholdRetriever<RedisVectorStore>> {
+    const indexName = this.indexName(llmKey);
+
+    if (indexName in this.cacheDict) {
+      return ScoreThresholdRetriever.fromVectorStore(
+        this.cacheDict[indexName],
+        { minSimilarityScore: this.scoreThreshold, maxK: 1 }
+      );
+    }
+
+    const client = createClient({ url: this.redisUrl });
+    await client.connect();
+
+    try {
+      this.cacheDict[indexName] = await RedisVectorStore.fromExistingIndex(
+        this.embedding,
+        {
+          indexName,
+          redisClient: client,
+        }
+      );
+    } catch (error) {
+      const redis = new RedisVectorStore(this.embedding, {
+        indexName,
+        redisClient: client,
+      });
+      const embedding = await this.embedding.embedQuery("test");
+      await redis.createIndex(embedding.length);
+      this.cacheDict[indexName] = redis;
+    }
+
+    return ScoreThresholdRetriever.fromVectorStore(this.cacheDict[indexName], {
+      minSimilarityScore: this.scoreThreshold,
+    });
+  }
+
+  async clear(llmKey: string): Promise<void> {
+    const indexName = this.indexName(llmKey);
+
+    if (indexName in this.cacheDict) {
+      await this.cacheDict[indexName].dropIndex(true);
+      delete this.cacheDict[indexName];
+    }
+  }
+
+  async lookup(prompt: string, llmKey: string): Promise<Generation[] | null> {
+    const llmCache = await this.getLlmCache(llmKey);
+    // const results = await llmCache.similaritySearch(prompt, 1);
+    const results = await llmCache.getRelevantDocuments(prompt);
+
+    let generations: Generation[] = [];
+    if (results) {
+      for (const document of results) {
+        generations = generations.concat(
+          loadGenerationsFromJson(document.metadata.return_val)
+        );
+      }
+    }
+
+    return generations.length > 0 ? generations : null;
+  }
+
+  async update(
+    prompt: string,
+    llmKey: string,
+    returnVal: Generation[]
+  ): Promise<void> {
+    const llmCache = await this.getLlmCache(llmKey);
+
+    const metadata = {
+      llm_string: llmKey,
+      prompt,
+      return_val: dumpGenerationsToJson(returnVal),
+    };
+    const document = new Document({
+      pageContent: prompt,
+      metadata,
+    });
+
+    await llmCache.addDocuments([document]);
   }
 }
