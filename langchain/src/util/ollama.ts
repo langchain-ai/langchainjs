@@ -112,7 +112,6 @@ export async function* createOllamaStream(
   });
   if (!response.ok) {
     const json = await response.json();
-    console.log(json);
     const error = new Error(
       `Ollama call failed with status code ${response.status}: ${json.error}`
     );
