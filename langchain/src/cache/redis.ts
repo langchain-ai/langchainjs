@@ -175,6 +175,7 @@ export class RedisSemanticCache extends BaseCache {
     const indexName = this.indexName(llmKey);
 
     if (indexName in this.cacheDict) {
+      console.log("this.cacheDict[indexName]", this.cacheDict[indexName]);
       return ScoreThresholdRetriever.fromVectorStore(
         this.cacheDict[indexName],
         { minSimilarityScore: this.scoreThreshold, maxK: 1 }
@@ -202,8 +203,10 @@ export class RedisSemanticCache extends BaseCache {
       this.cacheDict[indexName] = redis;
     }
 
+    console.log("this.cacheDict[indexName]", this.cacheDict[indexName]);
     return ScoreThresholdRetriever.fromVectorStore(this.cacheDict[indexName], {
       minSimilarityScore: this.scoreThreshold,
+      maxK: 1,
     });
   }
 

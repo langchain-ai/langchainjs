@@ -41,6 +41,12 @@ export class ScoreThresholdRetriever<
         currentK,
         this.filter
       );
+      console.log({
+        query,
+        currentK,
+        filter: this.filter
+      });
+      console.log(results);
       filteredResults = results.filter(
         ([, score]) => score >= this.minSimilarityScore
       );

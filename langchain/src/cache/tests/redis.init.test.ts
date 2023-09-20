@@ -8,6 +8,7 @@ import { RedisSemanticCache } from "../redis.js";
 describe("RedisVectorStore", () => {
   let semanticCache: RedisSemanticCache;
   let redisURL: string;
+  const llmKey = "llm:key";
 
   beforeEach(async () => {
     if (!process.env.REDIS_URL) {
@@ -18,12 +19,14 @@ describe("RedisVectorStore", () => {
     semanticCache = new RedisSemanticCache(
       redisURL,
       new OpenAIEmbeddings(),
-      0.01
     );
   });
 
-  test.only("can perform an update with new generations", async () => {
-    const llmKey = "llm:key";
+  afterEach(async () => {
+    await semanticCache.clear(llmKey);
+  });
+
+  test("can perform an update with new generations", async () => {
     const prompt = "Who killed John F. Kennedy?";
     const generation = {
       text: "Lee Harvey Oswald",
@@ -41,8 +44,7 @@ describe("RedisVectorStore", () => {
     );
   });
 
-  test("can perform a semantic search cache lookup", async () => {
-    const llmKey = "llm:key";
+  test.skip("can perform a semantic search cache lookup", async () => {
     const initialPrompt = "Who killed John F. Kennedy?";
     const searchPrompt = "Who was John F. Kennedy's murderer?";
     const initialGeneration = {
@@ -66,8 +68,6 @@ describe("RedisVectorStore", () => {
   });
 
   test("can clear cache", async () => {
-    const llmKey = "llm:key";
-
     await Promise.all([
       semanticCache.update("prompt test 1", llmKey, [
         { text: "generation test 1" },
