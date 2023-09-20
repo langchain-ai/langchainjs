@@ -15,7 +15,11 @@ describe("RedisVectorStore", () => {
     }
     redisURL = process.env.REDIS_URL;
 
-    semanticCache = new RedisSemanticCache(redisURL, new OpenAIEmbeddings(), 0.01);
+    semanticCache = new RedisSemanticCache(
+      redisURL,
+      new OpenAIEmbeddings(),
+      0.01
+    );
   });
 
   test.only("can perform an update with new generations", async () => {
