@@ -34,6 +34,7 @@ const document_transformers_openai_functions = require("langchain/document_trans
 const chat_models_base = require("langchain/chat_models/base");
 const chat_models_openai = require("langchain/chat_models/openai");
 const chat_models_anthropic = require("langchain/chat_models/anthropic");
+const chat_models_fireworks = require("langchain/chat_models/fireworks");
 const chat_models_baiduwenxin = require("langchain/chat_models/baiduwenxin");
 const chat_models_ollama = require("langchain/chat_models/ollama");
 const chat_models_minimax = require("langchain/chat_models/minimax");

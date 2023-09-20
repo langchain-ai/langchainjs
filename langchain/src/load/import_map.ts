@@ -35,6 +35,7 @@ export * as document_transformers__openai_functions from "../document_transforme
 export * as chat_models__base from "../chat_models/base.js";
 export * as chat_models__openai from "../chat_models/openai.js";
 export * as chat_models__anthropic from "../chat_models/anthropic.js";
+export * as chat_models__fireworks from "../chat_models/fireworks.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
 export * as chat_models__minimax from "../chat_models/minimax.js";

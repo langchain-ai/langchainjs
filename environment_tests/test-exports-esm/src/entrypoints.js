@@ -34,6 +34,7 @@ import * as document_transformers_openai_functions from "langchain/document_tran
 import * as chat_models_base from "langchain/chat_models/base";
 import * as chat_models_openai from "langchain/chat_models/openai";
 import * as chat_models_anthropic from "langchain/chat_models/anthropic";
+import * as chat_models_fireworks from "langchain/chat_models/fireworks";
 import * as chat_models_baiduwenxin from "langchain/chat_models/baiduwenxin";
 import * as chat_models_ollama from "langchain/chat_models/ollama";
 import * as chat_models_minimax from "langchain/chat_models/minimax";

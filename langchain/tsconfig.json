@@ -163,6 +163,7 @@
       "src/chat_models/googlevertexai/index.ts",
       "src/chat_models/googlevertexai/web.ts",
       "src/chat_models/googlepalm.ts",
+      "src/chat_models/fireworks.ts",
       "src/chat_models/baiduwenxin.ts",
       "src/chat_models/ollama.ts",
       "src/chat_models/minimax.ts",

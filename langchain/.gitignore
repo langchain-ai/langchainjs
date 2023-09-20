@@ -391,6 +391,9 @@ chat_models/googlevertexai/web.d.ts
 chat_models/googlepalm.cjs
 chat_models/googlepalm.js
 chat_models/googlepalm.d.ts
+chat_models/fireworks.cjs
+chat_models/fireworks.js
+chat_models/fireworks.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
