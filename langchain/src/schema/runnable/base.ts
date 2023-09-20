@@ -100,7 +100,9 @@ export abstract class Runnable<
    * @param config New configuration parameters to attach to the new runnable.
    * @returns A new RunnableBinding with a config matching what's passed.
    */
-  withConfig(config: RunnableConfig) {
+  withConfig(
+    config: RunnableConfig
+  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
       bound: this,
