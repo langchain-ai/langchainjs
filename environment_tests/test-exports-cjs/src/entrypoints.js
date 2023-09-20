@@ -17,6 +17,7 @@ const llms_openai = require("langchain/llms/openai");
 const llms_ai21 = require("langchain/llms/ai21");
 const llms_aleph_alpha = require("langchain/llms/aleph_alpha");
 const llms_ollama = require("langchain/llms/ollama");
+const llms_fireworks = require("langchain/llms/fireworks");
 const prompts = require("langchain/prompts");
 const vectorstores_base = require("langchain/vectorstores/base");
 const vectorstores_memory = require("langchain/vectorstores/memory");

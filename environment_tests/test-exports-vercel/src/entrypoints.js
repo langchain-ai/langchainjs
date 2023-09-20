@@ -17,6 +17,7 @@ export * from "langchain/llms/openai";
 export * from "langchain/llms/ai21";
 export * from "langchain/llms/aleph_alpha";
 export * from "langchain/llms/ollama";
+export * from "langchain/llms/fireworks";
 export * from "langchain/prompts";
 export * from "langchain/vectorstores/base";
 export * from "langchain/vectorstores/memory";

@@ -18,6 +18,7 @@ export * as llms__openai from "../llms/openai.js";
 export * as llms__ai21 from "../llms/ai21.js";
 export * as llms__aleph_alpha from "../llms/aleph_alpha.js";
 export * as llms__ollama from "../llms/ollama.js";
+export * as llms__fireworks from "../llms/fireworks.js";
 export * as prompts from "../prompts/index.js";
 export * as vectorstores__base from "../vectorstores/base.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";

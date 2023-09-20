@@ -145,6 +145,9 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
+    "llms/fireworks.cjs",
+    "llms/fireworks.js",
+    "llms/fireworks.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
@@ -1356,6 +1359,11 @@
       "types": "./llms/googlepalm.d.ts",
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
+    },
+    "./llms/fireworks": {
+      "types": "./llms/fireworks.d.ts",
+      "import": "./llms/fireworks.js",
+      "require": "./llms/fireworks.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
