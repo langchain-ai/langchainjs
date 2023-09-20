@@ -42,13 +42,13 @@ export class ChatFireworks extends ChatOpenAI {
   fireworksApiKey?: string;
 
   constructor(
-    fields: Partial<
+    fields?: Partial<
       Omit<OpenAIChatInput, "openAIApiKey" | FireworksUnsupportedArgs>
     > &
       BaseChatModelParams & { fireworksApiKey?: string }
   ) {
     const fireworksApiKey =
-      fields.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
+      fields?.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
       throw new Error(
@@ -59,7 +59,7 @@ export class ChatFireworks extends ChatOpenAI {
     super({
       ...fields,
       modelName:
-        fields.modelName || "accounts/fireworks/models/llama-v2-13b-chat",
+        fields?.modelName || "accounts/fireworks/models/llama-v2-13b-chat",
       openAIApiKey: fireworksApiKey,
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",

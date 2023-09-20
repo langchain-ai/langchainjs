@@ -42,13 +42,13 @@ export class Fireworks extends OpenAI {
   fireworksApiKey?: string;
 
   constructor(
-    fields: Partial<
+    fields?: Partial<
       Omit<OpenAIInput, "openAIApiKey" | FireworksUnsupportedArgs>
     > &
       BaseLLMParams & { fireworksApiKey?: string }
   ) {
     const fireworksApiKey =
-      fields.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
+      fields?.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
       throw new Error(
@@ -59,7 +59,7 @@ export class Fireworks extends OpenAI {
     super({
       ...fields,
       openAIApiKey: fireworksApiKey,
-      modelName: fields.modelName || "accounts/fireworks/models/llama-v2-13b",
+      modelName: fields?.modelName || "accounts/fireworks/models/llama-v2-13b",
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",
       },
