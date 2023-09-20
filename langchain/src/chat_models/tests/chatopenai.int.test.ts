@@ -196,7 +196,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
     "You are a helpful assistant that translates {input_language} to {output_language}."
   );
 
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
