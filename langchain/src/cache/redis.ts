@@ -5,7 +5,7 @@ import { BaseCache, Generation, GenerationChunk } from "../schema/index.js";
 import { getCacheKey } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { RedisVectorStore } from "../vectorstores/redis.js";
-import { Document } from "../../document.js";
+import { Document } from "../document.js";
 import { ScoreThresholdRetriever } from "../retrievers/score_threshold.js";
 
 /**
