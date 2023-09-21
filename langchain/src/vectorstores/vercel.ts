@@ -87,7 +87,7 @@ export class VercelPostgres extends VectorStore {
    * `connect` to return a new instance of `VercelPostgres`.
    *
    * @param embeddings - Embeddings instance.
-   * @param fields - `VercelPostgres` instance.
+   * @param fields - `VercelPostgres` configuration options.
    * @returns A new instance of `VercelPostgres`.
    */
   static async initialize(
@@ -96,6 +96,8 @@ export class VercelPostgres extends VectorStore {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }
   ): Promise<VercelPostgres> {
+    // Default maxUses to 1 for edge environments:
+    // https://github.com/vercel/storage/tree/main/packages/postgres#a-note-on-edge-environments
     const pool =
       config.pool ??
       createPool({ maxUses: 1, ...config.postgresConnectionOptions });
@@ -268,7 +270,7 @@ export class VercelPostgres extends VectorStore {
    * @param texts - Array of texts.
    * @param metadatas - Array of metadata objects or a single metadata object.
    * @param embeddings - Embeddings instance.
-   * @param dbConfig - `VercelPostgres` instance.
+   * @param fields - `VercelPostgres` configuration options.
    * @returns Promise that resolves with a new instance of `VercelPostgres`.
    */
   static async fromTexts(
@@ -289,7 +291,7 @@ export class VercelPostgres extends VectorStore {
       docs.push(newDoc);
     }
 
-    return VercelPostgres.fromDocuments(docs, embeddings, dbConfig);
+    return this.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
@@ -298,7 +300,7 @@ export class VercelPostgres extends VectorStore {
    *
    * @param docs - Array of `Document` instances.
    * @param embeddings - Embeddings instance.
-   * @param dbConfig - `VercelPostgres` instance.
+   * @param fields - `VercelPostgres` configuration options.
    * @returns Promise that resolves with a new instance of `VercelPostgres`.
    */
   static async fromDocuments(
@@ -308,7 +310,7 @@ export class VercelPostgres extends VectorStore {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }
   ): Promise<VercelPostgres> {
-    const instance = await VercelPostgres.initialize(embeddings, dbConfig);
+    const instance = await this.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs);
 
     return instance;
