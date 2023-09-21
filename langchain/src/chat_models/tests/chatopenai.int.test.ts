@@ -470,24 +470,36 @@ test("ChatOpenAI can cache generations", async () => {
   const memoryCache = new InMemoryCache();
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
-    maxTokens: 100,
+    maxTokens: 10,
     n: 2,
     cache: memoryCache,
   });
-  const message = new HumanMessage("What color is the sky?");
+  const message = new HumanMessage("Hello");
   const res = await chat.generate([[message], [message]]);
 
   expect(res.generations.length).toBe(2);
 
   const llmStringKey = `${Object.entries(chat.serialize()).sort()}`;
 
-  const cachedInput = await memoryCache.lookup(
-    "What color is the sky?",
-    llmStringKey
-  );
-  expect(cachedInput?.length).toBe(2); // 2 generations because we set n=2
+  const cachedInput = await memoryCache.lookup("Hello", llmStringKey);
+  expect(cachedInput?.length).toBe(2);
 });
 
 test("ChatOpenAI can read cached generations", async () => {
-  throw new Error("Not implemented");
+  const memoryCache = new InMemoryCache();
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 10,
+    n: 1,
+    cache: memoryCache,
+  });
+  const message = new HumanMessage("Hello");
+  const response1 = await chat.generate([[message]]);
+
+  expect(response1.generations.length).toBe(1);
+  const response1Texts = response1.generations.map((g) => g.map((gg) => gg.text))[0];
+
+  const response2 = await chat.generate([[message]]);
+  const response2Texts = response2.generations.map((g) => g.map((gg) => gg.text))[0];
+  expect(response2Texts).toEqual(expect.arrayContaining(response1Texts));
 });

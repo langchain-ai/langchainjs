@@ -355,15 +355,19 @@ export abstract class BaseChatModel<
     params.stop = callOptions.stop ?? params.stop;
 
     const llmStringKey = `${Object.entries(params).sort()}`;
+
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
       baseMessages.map(async (baseMessage, index) => {
-        const prompt =
-          BaseChatModel._convertInputToPromptValue(baseMessage).toString();
-        const result = await cache.lookup(prompt, llmStringKey);
+        // Join all content into one string for the prompt index
+        const messagePromptIndex = baseMessage
+          .map(({ content }) => content)
+          .join(" ");
+        const result = await cache.lookup(messagePromptIndex, llmStringKey);
         if (!result) {
           missingPromptIndices.push(index);
         }
+
         return result;
       })
     );
@@ -380,7 +384,10 @@ export abstract class BaseChatModel<
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
           // Join all content into one string for the prompt index
-          const messagePromptIndex = baseMessages[promptIndex].map(({ content }) => content).join(" ");
+          const messagePromptIndex = baseMessages[promptIndex]
+            .map(({ content }) => content)
+            .join(" ");
+
           return cache.update(messagePromptIndex, llmStringKey, generation);
         })
       );
