@@ -157,8 +157,14 @@ export class AgentExecutor extends BaseChain {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof OutputParserException) {
           let observation;
+          let text = e.message;
           if (this.handleParsingErrors === true) {
-            observation = "Invalid or incomplete response";
+            if (e.sendToLLM) {
+              observation = e.observation;
+              text = e.llmOutput ?? "";
+            } else {
+              observation = "Invalid or incomplete response";
+            }
           } else if (typeof this.handleParsingErrors === "string") {
             observation = this.handleParsingErrors;
           } else if (typeof this.handleParsingErrors === "function") {
@@ -169,8 +175,8 @@ export class AgentExecutor extends BaseChain {
           output = {
             tool: "_Exception",
             toolInput: observation,
-            log: e.message,
-          };
+            log: text,
+          } as AgentAction;
         } else {
           throw e;
         }

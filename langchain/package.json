@@ -145,6 +145,9 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
+    "llms/fireworks.cjs",
+    "llms/fireworks.js",
+    "llms/fireworks.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
@@ -400,6 +403,9 @@
     "chat_models/googlepalm.cjs",
     "chat_models/googlepalm.js",
     "chat_models/googlepalm.d.ts",
+    "chat_models/fireworks.cjs",
+    "chat_models/fireworks.js",
+    "chat_models/fireworks.d.ts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
@@ -1362,6 +1368,11 @@
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
     },
+    "./llms/fireworks": {
+      "types": "./llms/fireworks.d.ts",
+      "import": "./llms/fireworks.js",
+      "require": "./llms/fireworks.cjs"
+    },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
@@ -1786,6 +1797,11 @@
       "types": "./chat_models/googlepalm.d.ts",
       "import": "./chat_models/googlepalm.js",
       "require": "./chat_models/googlepalm.cjs"
+    },
+    "./chat_models/fireworks": {
+      "types": "./chat_models/fireworks.d.ts",
+      "import": "./chat_models/fireworks.js",
+      "require": "./chat_models/fireworks.cjs"
     },
     "./chat_models/baiduwenxin": {
       "types": "./chat_models/baiduwenxin.d.ts",
