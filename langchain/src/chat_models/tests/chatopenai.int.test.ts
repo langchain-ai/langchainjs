@@ -476,11 +476,9 @@ test("ChatOpenAI can cache generations", async () => {
   });
   const message = new HumanMessage("Hello");
   const res = await chat.generate([[message], [message]]);
-
   expect(res.generations.length).toBe(2);
 
   const llmStringKey = `${Object.entries(chat.serialize()).sort()}`;
-
   const cachedInput = await memoryCache.lookup("Hello", llmStringKey);
   expect(cachedInput?.length).toBe(2);
 });
