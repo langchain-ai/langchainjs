@@ -251,7 +251,12 @@ export class OutputParserException extends Error {
 
   sendToLLM: boolean;
 
-  constructor(message: string, llmOutput?: string, observation?: string, sendToLLM = false) {
+  constructor(
+    message: string,
+    llmOutput?: string,
+    observation?: string,
+    sendToLLM = false
+  ) {
     super(message);
     this.llmOutput = llmOutput;
     this.observation = observation;

@@ -161,7 +161,7 @@ export class AgentExecutor extends BaseChain {
           if (this.handleParsingErrors === true) {
             if (e.sendToLLM) {
               observation = e.observation;
-              text = e.output ?? "";
+              text = e.llmOutput ?? "";
             } else {
               observation = "Invalid or incomplete response";
             }
