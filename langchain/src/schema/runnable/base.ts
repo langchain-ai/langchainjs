@@ -64,7 +64,7 @@ export abstract class Runnable<
     kwargs: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new RunnableBinding({ bound: this, kwargs });
+    return new RunnableBinding({ bound: this, kwargs, config: {} });
   }
 
   /**
@@ -77,9 +77,9 @@ export abstract class Runnable<
   }
 
   /**
-   * Bind arguments to a Runnable, returning a new Runnable.
+   * Add retry logic to an existing runnable.
    * @param kwargs
-   * @returns A new RunnableBinding that, when invoked, will apply the bound args.
+   * @returns A new RunnableRetry that, when invoked, will retry according to the parameters.
    */
   withRetry(fields?: {
     stopAfterAttempt?: number;
@@ -89,8 +89,25 @@ export abstract class Runnable<
     return new RunnableRetry({
       bound: this,
       kwargs: {},
+      config: {},
       maxAttemptNumber: fields?.stopAfterAttempt,
       ...fields,
+    });
+  }
+
+  /**
+   * Bind config to a Runnable, returning a new Runnable.
+   * @param config New configuration parameters to attach to the new runnable.
+   * @returns A new RunnableBinding with a config matching what's passed.
+   */
+  withConfig(
+    config: RunnableConfig
+  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableBinding({
+      bound: this,
+      config,
+      kwargs: {},
     });
   }
 
@@ -459,6 +476,7 @@ export type RunnableBindingArgs<
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
   kwargs: Partial<CallOptions>;
+  config: RunnableConfig;
 };
 
 /**
@@ -467,7 +485,7 @@ export type RunnableBindingArgs<
 export class RunnableBinding<
   RunInput,
   RunOutput,
-  CallOptions extends BaseCallbackConfig
+  CallOptions extends RunnableConfig
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableBinding";
@@ -479,20 +497,63 @@ export class RunnableBinding<
 
   bound: Runnable<RunInput, RunOutput, CallOptions>;
 
+  config: RunnableConfig;
+
   protected kwargs: Partial<CallOptions>;
 
   constructor(fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>) {
     super(fields);
     this.bound = fields.bound;
     this.kwargs = fields.kwargs;
+    this.config = fields.config;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _mergeConfig(options?: Record<string, any>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const copy: Record<string, any> = { ...this.config };
+    if (options) {
+      for (const key of Object.keys(options)) {
+        if (key === "metadata") {
+          copy[key] = { ...copy[key], ...options[key] };
+        } else if (key === "tags") {
+          copy[key] = (copy[key] ?? []).concat(options[key] ?? []);
+        } else {
+          copy[key] = options[key] ?? copy[key];
+        }
+      }
+    }
+    return copy as Partial<CallOptions>;
   }
 
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return new RunnableBinding({
+    return this.constructor({
       bound: this.bound,
       kwargs: { ...this.kwargs, ...kwargs },
+      config: this.config,
+    });
+  }
+
+  withConfig(
+    config: RunnableConfig
+  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+    return this.constructor({
+      bound: this.bound,
+      kwargs: this.kwargs,
+      config: { ...this.config, ...config },
+    });
+  }
+
+  withRetry(fields?: {
+    stopAfterAttempt?: number;
+    onFailedAttempt?: RunnableRetryFailedAttemptHandler;
+  }): RunnableRetry<RunInput, RunOutput, CallOptions> {
+    return this.constructor({
+      bound: this.bound.withRetry(fields),
+      kwargs: this.kwargs,
+      config: this.config,
     });
   }
 
@@ -500,7 +561,10 @@ export class RunnableBinding<
     input: RunInput,
     options?: Partial<CallOptions>
   ): Promise<RunOutput> {
-    return this.bound.invoke(input, { ...options, ...this.kwargs });
+    return this.bound.invoke(
+      input,
+      this._mergeConfig({ ...options, ...this.kwargs })
+    );
   }
 
   async batch(
@@ -527,11 +591,13 @@ export class RunnableBinding<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const mergedOptions = Array.isArray(options)
-      ? options.map((individualOption) => ({
-          ...individualOption,
-          ...this.kwargs,
-        }))
-      : { ...options, ...this.kwargs };
+      ? options.map((individualOption) =>
+          this._mergeConfig({
+            ...individualOption,
+            ...this.kwargs,
+          })
+        )
+      : this._mergeConfig({ ...options, ...this.kwargs });
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
@@ -539,14 +605,20 @@ export class RunnableBinding<
     input: RunInput,
     options?: Partial<CallOptions> | undefined
   ) {
-    yield* this.bound._streamIterator(input, { ...options, ...this.kwargs });
+    yield* this.bound._streamIterator(
+      input,
+      this._mergeConfig({ ...options, ...this.kwargs })
+    );
   }
 
   async stream(
     input: RunInput,
     options?: Partial<CallOptions> | undefined
   ): Promise<IterableReadableStream<RunOutput>> {
-    return this.bound.stream(input, { ...options, ...this.kwargs });
+    return this.bound.stream(
+      input,
+      this._mergeConfig({ ...options, ...this.kwargs })
+    );
   }
 
   async *transform(
@@ -554,7 +626,10 @@ export class RunnableBinding<
     generator: AsyncGenerator<RunInput>,
     options: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
-    yield* this.bound.transform(generator, options);
+    yield* this.bound.transform(
+      generator,
+      this._mergeConfig({ ...options, ...this.kwargs })
+    );
   }
 
   static isRunnableBinding(
