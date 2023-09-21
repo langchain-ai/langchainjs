@@ -54,12 +54,8 @@ export class OpenAIChat
     return "OpenAIChat";
   }
 
-  get callKeys(): (keyof OpenAIChatCallOptions)[] {
-    return [
-      ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),
-      "options",
-      "promptIndex",
-    ];
+  get callKeys() {
+    return [...super.callKeys, "options", "promptIndex"];
   }
 
   lc_serializable = true;
