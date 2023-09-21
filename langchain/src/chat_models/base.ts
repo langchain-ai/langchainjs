@@ -360,10 +360,9 @@ export abstract class BaseChatModel<
     const generations = await Promise.all(
       baseMessages.map(async (baseMessage, index) => {
         // Join all content into one string for the prompt index
-        const messagePromptIndex = baseMessage
-          .map(({ content }) => content)
-          .join(" ");
-        const result = await cache.lookup(messagePromptIndex, llmStringKey);
+        const prompt =
+          BaseChatModel._convertInputToPromptValue(baseMessage).toString();
+        const result = await cache.lookup(prompt, llmStringKey);
         if (!result) {
           missingPromptIndices.push(index);
         }
@@ -384,11 +383,9 @@ export abstract class BaseChatModel<
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
           // Join all content into one string for the prompt index
-          const messagePromptIndex = baseMessages[promptIndex]
-            .map(({ content }) => content)
-            .join(" ");
-
-          return cache.update(messagePromptIndex, llmStringKey, generation);
+          const prompt =
+            BaseChatModel._convertInputToPromptValue(baseMessages[promptIndex]).toString();
+          return cache.update(prompt, llmStringKey, generation);
         })
       );
       llmOutput = results.llmOutput ?? {};
