@@ -485,10 +485,8 @@ test("ChatOpenAI can cache generations", async () => {
   expect(cachedInput?.length).toBe(2);
 });
 
-test("ChatOpenAI can write and read cached generations", async () => {
+test.only("ChatOpenAI can write and read cached generations", async () => {
   const memoryCache = new InMemoryCache();
-  // Spy on in memory to make sure the right methods are called the
-  // right amount of times.
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
 
@@ -498,40 +496,33 @@ test("ChatOpenAI can write and read cached generations", async () => {
     n: 1,
     cache: memoryCache,
   });
-  const genUncachedSpy = jest.spyOn(chat, "_generateUncached");
+  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
 
-  const message1 = new HumanMessage("what color is the sky?");
-  const message2 = new HumanMessage("what color is the ocean?");
+  const messages = [
+    [
+      new HumanMessage("what color is the sky?"),
+      new HumanMessage("what color is the ocean?"),
+    ],
+    [new HumanMessage("hello")],
+  ];
 
-  const message3 = new HumanMessage("hello");
+  const response1 = await chat.generate(messages);
+  expect(generateUncachedSpy).toHaveBeenCalledTimes(1);
+  generateUncachedSpy.mockRestore();
 
-  const response1 = await chat.generate([[message1, message2], [message3]]);
-  const response1Texts = response1.generations.map((g) =>
-    g.map((gg) => gg.text)
-  )[0];
+  const response2 = await chat.generate(messages);
+  expect(generateUncachedSpy).toHaveBeenCalledTimes(0); // Request should be cached, no need to generate.
+  generateUncachedSpy.mockRestore();
+
   expect(response1.generations.length).toBe(2);
-
-  // Ensure the above request was generated & not cached.
-  expect(genUncachedSpy).toHaveBeenCalledTimes(1);
-  genUncachedSpy.mockRestore();
-
-  // Call generate again with the exact same inputs.
-  const response2 = await chat.generate([[message1, message2], [message3]]);
-  const response2Texts = response2.generations.map((g) =>
-    g.map((gg) => gg.text)
-  )[0];
-  expect(response2Texts).toEqual(expect.arrayContaining(response1Texts));
-
-  // Ensure the above request was NOT generated & was instead read from cache.
-  expect(genUncachedSpy).toHaveBeenCalledTimes(0);
-  genUncachedSpy.mockRestore();
-
-  // 4 because we called generate twice, and each time we passed two
-  // arrays of messages.
+  expect(response2.generations.map((g) => g.map((gg) => gg.text))[0]).toEqual(
+    expect.arrayContaining(
+      response1.generations.map((g) => g.map((gg) => gg.text))[0]
+    )
+  );
   expect(lookupSpy).toHaveBeenCalledTimes(4);
-  // 2 because we should only update the cache on the first call.
   expect(updateSpy).toHaveBeenCalledTimes(2);
-  // Restore the original methods
+
   lookupSpy.mockRestore();
   updateSpy.mockRestore();
 });

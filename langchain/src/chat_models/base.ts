@@ -383,8 +383,9 @@ export abstract class BaseChatModel<
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
           // Join all content into one string for the prompt index
-          const prompt =
-            BaseChatModel._convertInputToPromptValue(baseMessages[promptIndex]).toString();
+          const prompt = BaseChatModel._convertInputToPromptValue(
+            baseMessages[promptIndex]
+          ).toString();
           return cache.update(prompt, llmStringKey, generation);
         })
       );
