@@ -17,6 +17,7 @@ import {
 } from "../../prompts/index.js";
 import { CallbackManager } from "../../callbacks/index.js";
 import { NewTokenIndices } from "../../callbacks/base.js";
+import { InMemoryCache } from "../../cache/index.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -463,4 +464,28 @@ test("Function calling with streaming", async () => {
     JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
       .location
   ).toBe("New York");
+});
+
+test.only("Test ChatOpenAI Generate Cached", async () => {
+  const memoryCache = new InMemoryCache();
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 100,
+    n: 2,
+    cache: memoryCache,
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const res = await chat.generate([[message], [message]]);
+
+  expect(res.generations.length).toBe(2);
+
+  const llmStringKey = `${Object.entries(chat.serialize()).sort()}`;
+  console.log("llmstringkey in test", {
+    llmStringKey,
+  });
+  const cachedInput = await memoryCache.lookup(
+    "What color is the sky?",
+    llmStringKey
+  );
+  expect(cachedInput?.length).toBe(2); // 2 generations because we set n=2
 });
