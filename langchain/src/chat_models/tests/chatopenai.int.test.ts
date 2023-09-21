@@ -487,7 +487,8 @@ test("ChatOpenAI can cache generations", async () => {
 
 test("ChatOpenAI can write and read cached generations", async () => {
   const memoryCache = new InMemoryCache();
-  // Spy on in memory to make sure the right methods are called the right amount of times.
+  // Spy on in memory to make sure the right methods are called the
+  // right amount of times.
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
 
@@ -525,7 +526,8 @@ test("ChatOpenAI can write and read cached generations", async () => {
   expect(genUncachedSpy).toHaveBeenCalledTimes(0);
   genUncachedSpy.mockRestore();
 
-  // 4 because we called generate twice, and each time we passed two arrays of messages.
+  // 4 because we called generate twice, and each time we passed two
+  // arrays of messages.
   expect(lookupSpy).toHaveBeenCalledTimes(4);
   // 2 because we should only update the cache on the first call.
   expect(updateSpy).toHaveBeenCalledTimes(2);
