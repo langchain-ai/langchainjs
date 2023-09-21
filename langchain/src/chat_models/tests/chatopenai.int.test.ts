@@ -485,7 +485,7 @@ test("ChatOpenAI can cache generations", async () => {
   expect(cachedInput?.length).toBe(2);
 });
 
-test.only("ChatOpenAI can write and read cached generations", async () => {
+test("ChatOpenAI can write and read cached generations", async () => {
   const memoryCache = new InMemoryCache();
   // Spy on in memory to make sure the right methods are called the right amount of times.
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
