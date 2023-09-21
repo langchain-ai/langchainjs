@@ -497,9 +497,13 @@ test("ChatOpenAI can read cached generations", async () => {
   const response1 = await chat.generate([[message]]);
 
   expect(response1.generations.length).toBe(1);
-  const response1Texts = response1.generations.map((g) => g.map((gg) => gg.text))[0];
+  const response1Texts = response1.generations.map((g) =>
+    g.map((gg) => gg.text)
+  )[0];
 
   const response2 = await chat.generate([[message]]);
-  const response2Texts = response2.generations.map((g) => g.map((gg) => gg.text))[0];
+  const response2Texts = response2.generations.map((g) =>
+    g.map((gg) => gg.text)
+  )[0];
   expect(response2Texts).toEqual(expect.arrayContaining(response1Texts));
 });
