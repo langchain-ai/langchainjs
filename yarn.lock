@@ -4711,6 +4711,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@neondatabase/serverless@npm:0.5.6":
+  version: 0.5.6
+  resolution: "@neondatabase/serverless@npm:0.5.6"
+  dependencies:
+    "@types/pg": 8.6.6
+  checksum: f3ef701572ab8487ef36d3506415c80d10f2d69d124a2ba783898e0dcb9959f94ef3b09c11dc4dc450c26b9f2a8b8b1e6d086ec6602066c32594124f9610dbef
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -6740,6 +6749,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/pg@npm:8.6.6":
+  version: 8.6.6
+  resolution: "@types/pg@npm:8.6.6"
+  dependencies:
+    "@types/node": "*"
+    pg-protocol: "*"
+    pg-types: ^2.2.0
+  checksum: ac145553a8ad2f357feacad1bceaf5d6ce904eb9d66233b84c469a2b4fa3738d4ebdf29b7ea45387be2d07f915fd873a229f90a2f766d7c377afa7c41fbcf8d1
+  languageName: node
+  linkType: hard
+
 "@types/phoenix@npm:^1.5.4":
   version: 1.5.5
   resolution: "@types/phoenix@npm:1.5.5"
@@ -7176,6 +7196,18 @@ __metadata:
   dependencies:
     isomorphic-fetch: ^3.0.0
   checksum: e4bcf1d61b0fa3dec5b2b730831a0d6939416bdafe1af753479e53b035aa70be49ca96a6f3f52473d488ec896588a0134ee71b4c71f0caecb6454648f2e3bd29
+  languageName: node
+  linkType: hard
+
+"@vercel/postgres@npm:^0.4.2":
+  version: 0.4.2
+  resolution: "@vercel/postgres@npm:0.4.2"
+  dependencies:
+    "@neondatabase/serverless": 0.5.6
+    bufferutil: 4.0.7
+    utf-8-validate: 6.0.3
+    ws: 8.14.1
+  checksum: 0fe4ddfda2a6518612c56c769dfa7560e028caf58c827206bb462ac370e766c20e4f04c5e58a5191ac1ee9d1a026ed80f0af0558dd843879853022cb3bc3b409
   languageName: node
   linkType: hard
 
@@ -8078,7 +8110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bufferutil@npm:^4.0.1":
+"bufferutil@npm:4.0.7, bufferutil@npm:^4.0.1":
   version: 4.0.7
   resolution: "bufferutil@npm:4.0.7"
   dependencies:
@@ -13352,6 +13384,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
+    "@vercel/postgres": ^0.4.2
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@xenova/transformers": ^2.5.4
@@ -13474,6 +13507,7 @@ __metadata:
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@upstash/redis": ^1.20.6
+    "@vercel/postgres": ^0.4.2
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@xenova/transformers": ^2.5.4
@@ -13590,6 +13624,8 @@ __metadata:
     "@tensorflow/tfjs-core":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@vercel/postgres":
       optional: true
     "@writerai/writer-sdk":
       optional: true
@@ -15978,7 +16014,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg-types@npm:^2.1.0":
+"pg-types@npm:^2.1.0, pg-types@npm:^2.2.0":
   version: 2.2.0
   resolution: "pg-types@npm:2.2.0"
   dependencies:
@@ -18972,6 +19008,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"utf-8-validate@npm:6.0.3":
+  version: 6.0.3
+  resolution: "utf-8-validate@npm:6.0.3"
+  dependencies:
+    node-gyp: latest
+    node-gyp-build: ^4.3.0
+  checksum: 5e21383c81ff7469c1912119ca69d07202d944c73ddd8a54b84dddcc546b939054e5101c78c294e494d206fe93bd43428adc635a0660816b3ec9c8ec89286ac4
+  languageName: node
+  linkType: hard
+
 "utf-8-validate@npm:^5.0.2":
   version: 5.0.10
   resolution: "utf-8-validate@npm:5.0.10"
@@ -19440,6 +19486,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 316b33aba32f317cd217df66dbfc5b281a2f09ff36815de222bc859e3424d83766d9eb2bd4d667de658b6ab7be151f258318fb1da812416b30be13103e5b5c67
+  languageName: node
+  linkType: hard
+
+"ws@npm:8.14.1":
+  version: 8.14.1
+  resolution: "ws@npm:8.14.1"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 9e310be2b0ff69e1f87d8c6d093ecd17a1ed4c37f281d17c35e8c30e2bd116401775b3d503249651374e6e0e1e9905db62fff096b694371c77561aee06bc3466
   languageName: node
   linkType: hard
 

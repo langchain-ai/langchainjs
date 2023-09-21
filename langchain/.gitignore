@@ -232,6 +232,9 @@ vectorstores/usearch.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
+vectorstores/vercel.cjs
+vectorstores/vercel.js
+vectorstores/vercel.d.ts
 vectorstores/voy.cjs
 vectorstores/voy.js
 vectorstores/voy.d.ts

@@ -244,6 +244,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/vercel.cjs",
+    "vectorstores/vercel.js",
+    "vectorstores/vercel.d.ts",
     "vectorstores/voy.cjs",
     "vectorstores/voy.js",
     "vectorstores/voy.d.ts",
@@ -696,6 +699,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@vercel/postgres": "^0.4.2",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
     "@xenova/transformers": "^2.5.4",
@@ -798,6 +802,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
+    "@vercel/postgres": "^0.4.2",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
     "@xenova/transformers": "^2.5.4",
@@ -949,6 +954,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@vercel/postgres": {
       "optional": true
     },
     "@writerai/writer-sdk": {
@@ -1521,6 +1529,11 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/vercel": {
+      "types": "./vectorstores/vercel.d.ts",
+      "import": "./vectorstores/vercel.js",
+      "require": "./vectorstores/vercel.cjs"
     },
     "./vectorstores/voy": {
       "types": "./vectorstores/voy.d.ts",
