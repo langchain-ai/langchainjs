@@ -466,7 +466,7 @@ test("Function calling with streaming", async () => {
   ).toBe("New York");
 });
 
-test.only("Test ChatOpenAI Generate Cached", async () => {
+test("ChatOpenAI can cache generations", async () => {
   const memoryCache = new InMemoryCache();
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
@@ -480,12 +480,14 @@ test.only("Test ChatOpenAI Generate Cached", async () => {
   expect(res.generations.length).toBe(2);
 
   const llmStringKey = `${Object.entries(chat.serialize()).sort()}`;
-  console.log("llmstringkey in test", {
-    llmStringKey,
-  });
+
   const cachedInput = await memoryCache.lookup(
     "What color is the sky?",
     llmStringKey
   );
   expect(cachedInput?.length).toBe(2); // 2 generations because we set n=2
+});
+
+test("ChatOpenAI can read cached generations", async () => {
+  throw new Error("Not implemented");
 });
