@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, jest, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
 import {
   BaseMessage,
@@ -485,25 +485,44 @@ test("ChatOpenAI can cache generations", async () => {
   expect(cachedInput?.length).toBe(2);
 });
 
-test("ChatOpenAI can read cached generations", async () => {
+test.only("ChatOpenAI can read cached generations", async () => {
   const memoryCache = new InMemoryCache();
+  // Spy on in memory to make sure the right methods are called the right amount of times.
+  const lookupSpy = jest.spyOn(memoryCache, 'lookup');
+  const updateSpy = jest.spyOn(memoryCache, 'update');
+
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
-    maxTokens: 10,
+    maxTokens: 100,
     n: 1,
     cache: memoryCache,
   });
-  const message = new HumanMessage("Hello");
-  const response1 = await chat.generate([[message]]);
 
-  expect(response1.generations.length).toBe(1);
+  const message1 = new HumanMessage("what color is the sky?");
+  const message2 = new HumanMessage("what color is the ocean?");
+
+  const message3 = new HumanMessage("hello");
+
+  const response1 = await chat.generate([[message1, message2], [message3]]);
+  expect(response1.generations.length).toBe(2);
+
   const response1Texts = response1.generations.map((g) =>
     g.map((gg) => gg.text)
   )[0];
 
-  const response2 = await chat.generate([[message]]);
+  // Call generate again with the exact same inputs.
+  const response2 = await chat.generate([[message1, message2], [message3]]);
   const response2Texts = response2.generations.map((g) =>
     g.map((gg) => gg.text)
   )[0];
   expect(response2Texts).toEqual(expect.arrayContaining(response1Texts));
+
+  // 4 because we called generate twice, and each time we passed two arrays of messages.
+  expect(lookupSpy).toHaveBeenCalledTimes(4); 
+  // 2 because we should only update the cache on the first call.
+  expect(updateSpy).toHaveBeenCalledTimes(2);
+
+  // Restore the original methods
+  lookupSpy.mockRestore();
+  updateSpy.mockRestore();
 });
