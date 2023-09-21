@@ -350,11 +350,6 @@ export abstract class BaseChatModel<
       return this._generateUncached(baseMessages, callOptions, callbacks);
     }
 
-    console.log("caching", {
-      baseMessages: baseMessages.map((message) =>
-        BaseChatModel._convertInputToPromptValue(message).toString()
-      ),
-    });
     const { cache } = this;
     const params = this.serialize();
     params.stop = callOptions.stop ?? params.stop;
@@ -384,13 +379,9 @@ export abstract class BaseChatModel<
         results.generations.map(async (generation, index) => {
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
-          const baseMessagePromptIndex = baseMessages[promptIndex].map(({ content }) => content).join(" ");
-          console.log("updating cache", {
-            baseMessagePromptIndex,
-            llmStringKey,
-            generation,
-          });
-          return cache.update(baseMessagePromptIndex, llmStringKey, generation);
+          // Join all content into one string for the prompt index
+          const messagePromptIndex = baseMessages[promptIndex].map(({ content }) => content).join(" ");
+          return cache.update(messagePromptIndex, llmStringKey, generation);
         })
       );
       llmOutput = results.llmOutput ?? {};
