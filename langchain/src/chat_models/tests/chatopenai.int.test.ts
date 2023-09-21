@@ -488,8 +488,8 @@ test("ChatOpenAI can cache generations", async () => {
 test.only("ChatOpenAI can read cached generations", async () => {
   const memoryCache = new InMemoryCache();
   // Spy on in memory to make sure the right methods are called the right amount of times.
-  const lookupSpy = jest.spyOn(memoryCache, 'lookup');
-  const updateSpy = jest.spyOn(memoryCache, 'update');
+  const lookupSpy = jest.spyOn(memoryCache, "lookup");
+  const updateSpy = jest.spyOn(memoryCache, "update");
 
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
@@ -518,7 +518,7 @@ test.only("ChatOpenAI can read cached generations", async () => {
   expect(response2Texts).toEqual(expect.arrayContaining(response1Texts));
 
   // 4 because we called generate twice, and each time we passed two arrays of messages.
-  expect(lookupSpy).toHaveBeenCalledTimes(4); 
+  expect(lookupSpy).toHaveBeenCalledTimes(4);
   // 2 because we should only update the cache on the first call.
   expect(updateSpy).toHaveBeenCalledTimes(2);
 
