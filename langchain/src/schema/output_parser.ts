@@ -234,27 +234,35 @@ export class BytesOutputParser extends BaseTransformOutputParser<Uint8Array> {
  * available to catch and handle in ways to fix the parsing error, while other
  * errors will be raised.
  *
- * Args:
- *     message: The error that's being re-raised or an error message.
- *     observation: String explanation of error which can be passed to a
- *         model to try and remediate the issue.
- *     output: String model output which is error-ing.
- *     sendToLLM: Whether to send the observation and llm_output back to an Agent
- *         after an OutputParserException has been raised. This gives the underlying
- *         model driving the agent the context that the previous output was improperly
- *         structured, in the hopes that it will update the output to the correct
- *         format.
+ * @param message - The error that's being re-raised or an error message.
+ * @param llmOutput - String model output which is error-ing.
+ * @param observation - String explanation of error which can be passed to a
+ *     model to try and remediate the issue.
+ * @param sendToLLM - Whether to send the observation and llm_output back to an Agent
+ *     after an OutputParserException has been raised. This gives the underlying
+ *     model driving the agent the context that the previous output was improperly
+ *     structured, in the hopes that it will update the output to the correct
+ *     format.
  */
 export class OutputParserException extends Error {
-  observation?: string;
+  llmOutput?: string;
 
-  output?: string;
+  observation?: string;
 
   sendToLLM: boolean;
 
-  constructor(message: string, output?: string, sendToLLM = false) {
+  constructor(message: string, llmOutput?: string, observation?: string, sendToLLM = false) {
     super(message);
-    this.output = output;
+    this.llmOutput = llmOutput;
+    this.observation = observation;
     this.sendToLLM = sendToLLM;
+
+    if (sendToLLM) {
+      if (observation === undefined || llmOutput === undefined) {
+        throw new Error(
+          "Arguments 'observation' & 'llmOutput' are required if 'sendToLlm' is true"
+        );
+      }
+    }
   }
 }
