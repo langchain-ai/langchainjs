@@ -133,6 +133,9 @@ llms/googlevertexai/web.d.ts
 llms/googlepalm.cjs
 llms/googlepalm.js
 llms/googlepalm.d.ts
+llms/fireworks.cjs
+llms/fireworks.js
+llms/fireworks.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
@@ -199,6 +202,9 @@ vectorstores/supabase.d.ts
 vectorstores/opensearch.cjs
 vectorstores/opensearch.js
 vectorstores/opensearch.d.ts
+vectorstores/pgvector.cjs
+vectorstores/pgvector.js
+vectorstores/pgvector.d.ts
 vectorstores/milvus.cjs
 vectorstores/milvus.js
 vectorstores/milvus.d.ts
@@ -298,6 +304,9 @@ document_loaders/web/notiondb.d.ts
 document_loaders/web/notionapi.cjs
 document_loaders/web/notionapi.js
 document_loaders/web/notionapi.d.ts
+document_loaders/web/pdf.cjs
+document_loaders/web/pdf.js
+document_loaders/web/pdf.d.ts
 document_loaders/web/recursive_url.cjs
 document_loaders/web/recursive_url.js
 document_loaders/web/recursive_url.d.ts
@@ -382,6 +391,9 @@ chat_models/googlevertexai/web.d.ts
 chat_models/googlepalm.cjs
 chat_models/googlepalm.js
 chat_models/googlepalm.d.ts
+chat_models/fireworks.cjs
+chat_models/fireworks.js
+chat_models/fireworks.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
@@ -496,6 +508,9 @@ retrievers/vespa.d.ts
 cache.cjs
 cache.js
 cache.d.ts
+cache/cloudflare_kv.cjs
+cache/cloudflare_kv.js
+cache/cloudflare_kv.d.ts
 cache/momento.cjs
 cache/momento.js
 cache/momento.d.ts
@@ -520,6 +535,9 @@ stores/file/in_memory.d.ts
 stores/file/node.cjs
 stores/file/node.js
 stores/file/node.d.ts
+stores/message/cloudflare_d1.cjs
+stores/message/cloudflare_d1.js
+stores/message/cloudflare_d1.d.ts
 stores/message/in_memory.cjs
 stores/message/in_memory.js
 stores/message/in_memory.d.ts
@@ -580,6 +598,9 @@ experimental/multimodal_embeddings/googlevertexai.d.ts
 experimental/chat_models/anthropic_functions.cjs
 experimental/chat_models/anthropic_functions.js
 experimental/chat_models/anthropic_functions.d.ts
+experimental/chat_models/bittensor.cjs
+experimental/chat_models/bittensor.js
+experimental/chat_models/bittensor.d.ts
 experimental/llms/bittensor.cjs
 experimental/llms/bittensor.js
 experimental/llms/bittensor.d.ts

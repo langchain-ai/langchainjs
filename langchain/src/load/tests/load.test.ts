@@ -231,7 +231,7 @@ test("serialize + deserialize llm chain chat prompt", async () => {
       },
     ],
   });
-  const prompt = ChatPromptTemplate.fromPromptMessages([
+  const prompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate("You are talking to {name}."),
     HumanMessagePromptTemplate.fromTemplate("Hello, nice model."),
   ]);

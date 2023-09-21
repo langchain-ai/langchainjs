@@ -583,8 +583,14 @@ export class ChatPromptTemplate<
     >(promptDict);
   }
 
+  /**
+   * Create a chat model-specific prompt from individual chat messages
+   * or message-like tuples.
+   * @param promptMessages Messages to be passed to the chat model
+   * @returns A new ChatPromptTemplate
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromPromptMessages<RunInput extends InputValues = any>(
+  static fromMessages<RunInput extends InputValues = any>(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
       | BaseMessagePromptTemplateLike
@@ -625,5 +631,16 @@ export class ChatPromptTemplate<
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,
     });
+  }
+
+  /** @deprecated Renamed to .fromMessages */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromPromptMessages<RunInput extends InputValues = any>(
+    promptMessages: (
+      | ChatPromptTemplate<InputValues, string>
+      | BaseMessagePromptTemplateLike
+    )[]
+  ): ChatPromptTemplate<RunInput> {
+    return this.fromMessages(promptMessages);
   }
 }

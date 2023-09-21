@@ -17,6 +17,7 @@ module.exports = {
     "@typescript-eslint/no-shadow": 0,
     "@typescript-eslint/no-use-before-define": ["error", "nofunc"],
     "@typescript-eslint/no-unused-vars": 0,
+    "@typescript-eslint/no-explicit-any": 0,
     camelcase: 0,
     "class-methods-use-this": 0,
     "import/extensions": 0,
@@ -37,6 +38,7 @@ module.exports = {
     "no-underscore-dangle": 0,
     "no-use-before-define": 0,
     "no-useless-constructor": 0,
+    "no-else-return": 0,
     semi: ["error", "always"],
   },
 };

@@ -1,4 +1,5 @@
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { z } from "zod";
 import { test } from "@jest/globals";
@@ -25,6 +26,7 @@ import {
   RunnableSequence,
   RouterRunnable,
   RunnableLambda,
+  Runnable,
 } from "../runnable/index.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
@@ -33,6 +35,8 @@ import {
   OutputParserException,
   StringOutputParser,
 } from "../output_parser.js";
+import { RunnableBranch } from "../runnable/branch.js";
+import { BaseCallbackConfig } from "../../callbacks/manager.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -47,6 +51,27 @@ export class FakeSplitIntoListParser extends BaseOutputParser<string[]> {
 
   async parse(text: string): Promise<string[]> {
     return text.split(",").map((value) => value.trim());
+  }
+}
+
+class FakeRunnable extends Runnable<string, Record<string, any>> {
+  lc_namespace = ["tests", "fake"];
+
+  returnOptions?: boolean;
+
+  constructor(fields: { returnOptions?: boolean }) {
+    super(fields);
+    this.returnOptions = fields.returnOptions;
+  }
+
+  async invoke(
+    input: string,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<Record<string, any>> {
+    if (this.returnOptions) {
+      return options ?? {};
+    }
+    return { input };
   }
 }
 
@@ -213,7 +238,7 @@ test("Create a runnable sequence with a static method with invalid output and ca
 });
 
 test("Create a runnable sequence with a runnable map", async () => {
-  const promptTemplate = ChatPromptTemplate.fromPromptMessages<{
+  const promptTemplate = ChatPromptTemplate.fromMessages<{
     documents: string;
     question: string;
   }>([
@@ -464,6 +489,17 @@ test("RunnableRetry batch should not retry successful requests", async () => {
   expect(result.sort()).toEqual([3, 4, 5]);
 });
 
+test("RunnableLambda that returns a runnable should invoke the runnable", async () => {
+  const runnable = new RunnableLambda({
+    func: () =>
+      new RunnableLambda({
+        func: () => "testing",
+      }),
+  });
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
+});
+
 test("RunnableEach", async () => {
   const parser = new FakeSplitIntoListParser();
   expect(await parser.invoke("first item, second item")).toEqual([
@@ -477,4 +513,89 @@ test("RunnableEach", async () => {
       .map()
       .invoke([["a, b", "c"], ["c, e"]])
   ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
+});
+
+test("RunnableBranch invoke", async () => {
+  const condition = (x: number) => x > 0;
+  const add = (x: number) => x + 1;
+  const subtract = (x: number) => x - 1;
+  const branch = RunnableBranch.from([
+    [condition, add],
+    [condition, add],
+    subtract,
+  ]);
+  const result = await branch.invoke(1);
+  expect(result).toEqual(2);
+  const result2 = await branch.invoke(-1);
+  expect(result2).toEqual(-2);
+});
+
+test("RunnableBranch batch", async () => {
+  const branch = RunnableBranch.from([
+    [(x: number) => x > 0 && x < 5, (x: number) => x + 1],
+    [(x: number) => x > 5, (x: number) => x * 10],
+    (x: number) => x - 1,
+  ]);
+  const batchResult = await branch.batch([1, 10, 0]);
+  expect(batchResult).toEqual([2, 100, -1]);
+});
+
+test("RunnableBranch handles error", async () => {
+  let error;
+  const branch = RunnableBranch.from([
+    [
+      (x: string) => x.startsWith("a"),
+      () => {
+        throw new Error("Testing");
+      },
+    ],
+    (x) => `${x} passed`,
+  ]);
+  const result = await branch.invoke("branch", {
+    callbacks: [
+      {
+        handleChainError: (e) => {
+          error = e;
+        },
+      },
+    ],
+  });
+  expect(result).toBe("branch passed");
+  expect(error).toBeUndefined();
+  await expect(async () => {
+    await branch.invoke("alpha", {
+      callbacks: [
+        {
+          handleChainError: (e) => {
+            error = e;
+          },
+        },
+      ],
+    });
+  }).rejects.toThrow();
+  expect(error).toBeDefined();
+});
+
+test("Runnable withConfig", async () => {
+  const fake = new FakeRunnable({
+    returnOptions: true,
+  });
+  const result = await fake.withConfig({ tags: ["a-tag"] }).invoke("hello");
+  expect(result.tags).toEqual(["a-tag"]);
+  const stream = await fake
+    .withConfig({
+      metadata: {
+        a: "b",
+        b: "c",
+      },
+      tags: ["a-tag"],
+    })
+    .stream("hi", { tags: ["b-tag"], metadata: { a: "updated" } });
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+  expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
+  expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
 });

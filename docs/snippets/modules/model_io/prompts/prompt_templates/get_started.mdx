@@ -116,7 +116,7 @@ For convenience, you can also declare message prompt templates as tuples. These 
 const systemTemplate = "You are a helpful assistant that translates {input_language} to {output_language}.";
 const humanTemplate = "{text}";
 
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+const chatPrompt = ChatPromptTemplate.fromMessages([
   ["system", systemTemplate],
   ["human", humanTemplate],
 ]);
@@ -169,10 +169,10 @@ const systemMessagePrompt2 = new SystemMessagePromptTemplate({
 });
 ```
 
-**Note:** If using TypeScript, you can add typing to prompts created with `.fromPromptMessages` by passing a type parameter like this:
+**Note:** If using TypeScript, you can add typing to prompts created with `.fromMessages` by passing a type parameter like this:
 
 ```typescript
-const chatPrompt = ChatPromptTemplate.fromPromptMessages<{
+const chatPrompt = ChatPromptTemplate.fromMessages<{
   input_language: string,
   output_language: string,
   text: string
