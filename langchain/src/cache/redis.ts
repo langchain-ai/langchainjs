@@ -122,7 +122,6 @@ export class RedisSemanticCache extends BaseCache {
 
   private embedding: Embeddings;
 
-  // ts-expect-error TODO: fix this
   private scoreThreshold: number;
 
   constructor(redisUrl: string, embedding: Embeddings, scoreThreshold = 0.2) {
@@ -174,11 +173,15 @@ export class RedisSemanticCache extends BaseCache {
   ): Promise<ScoreThresholdRetriever<RedisVectorStore>> {
     const indexName = this.indexName(llmKey);
 
+    const scoreThresholdOptions = {
+      minSimilarityScore: this.scoreThreshold,
+      maxK: 1,
+    };
+
     if (indexName in this.cacheDict) {
-      console.log("this.cacheDict[indexName]", this.cacheDict[indexName]);
       return ScoreThresholdRetriever.fromVectorStore(
         this.cacheDict[indexName],
-        { minSimilarityScore: this.scoreThreshold, maxK: 1 }
+        scoreThresholdOptions
       );
     }
 
@@ -203,11 +206,10 @@ export class RedisSemanticCache extends BaseCache {
       this.cacheDict[indexName] = redis;
     }
 
-    console.log("this.cacheDict[indexName]", this.cacheDict[indexName]);
-    return ScoreThresholdRetriever.fromVectorStore(this.cacheDict[indexName], {
-      minSimilarityScore: this.scoreThreshold,
-      maxK: 1,
-    });
+    return ScoreThresholdRetriever.fromVectorStore(
+      this.cacheDict[indexName],
+      scoreThresholdOptions
+    );
   }
 
   async clear(llmKey: string): Promise<void> {
