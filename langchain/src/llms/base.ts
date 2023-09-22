@@ -35,7 +35,6 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
    * @deprecated Use `maxConcurrency` instead
    */
   concurrency?: number;
-  cache?: BaseCache | boolean;
 }
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}

@@ -49,9 +49,7 @@ export type SerializedLLM = {
 /**
  * Represents the parameters for a base chat model.
  */
-export type BaseChatModelParams = BaseLanguageModelParams & {
-  cache?: BaseCache | boolean;
-};
+export type BaseChatModelParams = BaseLanguageModelParams;
 
 /**
  * Represents the call options for a base chat model.

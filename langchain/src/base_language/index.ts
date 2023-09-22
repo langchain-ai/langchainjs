@@ -2,6 +2,7 @@ import { type Tiktoken } from "js-tiktoken/lite";
 import type { OpenAI as OpenAIClient } from "openai";
 
 import {
+  BaseCache,
   BaseMessage,
   BaseMessageLike,
   BasePromptValue,
@@ -86,6 +87,8 @@ export interface BaseLanguageModelParams
    * @deprecated Use `callbacks` instead
    */
   callbackManager?: CallbackManager;
+
+  cache?: BaseCache | boolean;
 }
 
 export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
