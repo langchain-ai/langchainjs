@@ -405,7 +405,7 @@ export abstract class BaseLLM<
   /**
    * Return a json-like object representing this LLM.
    */
-  serialize(): SerializedLLM {
+  protected serialize(): SerializedLLM {
     return {
       ...this._identifyingParams(),
       _type: this._llmType(),

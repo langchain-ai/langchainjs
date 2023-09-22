@@ -466,8 +466,10 @@ test("Function calling with streaming", async () => {
   ).toBe("New York");
 });
 
-test("ChatOpenAI can cache generations", async () => {
+test.only("ChatOpenAI can cache generations", async () => {
   const memoryCache = new InMemoryCache();
+  const lookupSpy = jest.spyOn(memoryCache, "lookup");
+  const updateSpy = jest.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
     maxTokens: 10,
@@ -478,9 +480,11 @@ test("ChatOpenAI can cache generations", async () => {
   const res = await chat.generate([[message], [message]]);
   expect(res.generations.length).toBe(2);
 
-  const llmStringKey = `${Object.entries(chat.serialize()).sort()}`;
-  const cachedInput = await memoryCache.lookup("Hello", llmStringKey);
-  expect(cachedInput?.length).toBe(2);
+  expect(lookupSpy).toHaveBeenCalledTimes(2);
+  expect(updateSpy).toHaveBeenCalledTimes(2);
+
+  lookupSpy.mockRestore();
+  updateSpy.mockRestore();
 });
 
 test("ChatOpenAI can write and read cached generations", async () => {

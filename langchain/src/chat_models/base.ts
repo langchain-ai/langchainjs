@@ -399,7 +399,7 @@ export abstract class BaseChatModel<
   /**
    * Return a json-like object representing this LLM.
    */
-  serialize(): SerializedLLM {
+  protected serialize(): SerializedLLM {
     return {
       ...this.invocationParams(),
       _type: this._llmType(),
