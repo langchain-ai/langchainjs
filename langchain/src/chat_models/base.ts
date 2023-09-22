@@ -340,7 +340,9 @@ export abstract class BaseChatModel<
     const { cache } = this;
     const params = this.serialize();
     params.stop = callOptions.stop ?? params.stop;
-
+    console.log({
+      params,
+    });
     const llmStringKey = `${Object.entries(params).sort()}`;
 
     const missingPromptIndices: number[] = [];
@@ -399,7 +401,7 @@ export abstract class BaseChatModel<
   /**
    * Return a json-like object representing this LLM.
    */
-  protected serialize(): SerializedLLM {
+  serialize(): SerializedLLM {
     return {
       ...this.invocationParams(),
       _type: this._llmType(),
