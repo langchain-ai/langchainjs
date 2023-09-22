@@ -11,9 +11,7 @@ import { GenerationChunk } from "../schema/index.js";
  * Class that represents the Ollama language model. It extends the base
  * LLM class and implements the OllamaInput interface.
  */
-export class Ollama extends LLM implements OllamaInput {
-  declare CallOptions: OllamaCallOptions;
-
+export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   static lc_name() {
     return "Ollama";
   }
@@ -178,14 +176,29 @@ export class Ollama extends LLM implements OllamaInput {
       )
     );
     for await (const chunk of stream) {
-      yield new GenerationChunk({
-        text: chunk.response,
-        generationInfo: {
-          ...chunk,
-          response: undefined,
-        },
-      });
-      await runManager?.handleLLMNewToken(chunk.response ?? "");
+      if (!chunk.done) {
+        yield new GenerationChunk({
+          text: chunk.response,
+          generationInfo: {
+            ...chunk,
+            response: undefined,
+          },
+        });
+        await runManager?.handleLLMNewToken(chunk.response ?? "");
+      } else {
+        yield new GenerationChunk({
+          text: "",
+          generationInfo: {
+            model: chunk.model,
+            total_duration: chunk.total_duration,
+            load_duration: chunk.load_duration,
+            prompt_eval_count: chunk.prompt_eval_count,
+            prompt_eval_duration: chunk.prompt_eval_duration,
+            eval_count: chunk.eval_count,
+            eval_duration: chunk.eval_duration,
+          },
+        });
+      }
     }
   }
 

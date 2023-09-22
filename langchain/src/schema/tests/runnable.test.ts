@@ -1,4 +1,5 @@
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { z } from "zod";
 import { test } from "@jest/globals";
@@ -25,6 +26,7 @@ import {
   RunnableSequence,
   RouterRunnable,
   RunnableLambda,
+  Runnable,
 } from "../runnable/index.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
@@ -34,6 +36,7 @@ import {
   StringOutputParser,
 } from "../output_parser.js";
 import { RunnableBranch } from "../runnable/branch.js";
+import { BaseCallbackConfig } from "../../callbacks/manager.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -48,6 +51,27 @@ export class FakeSplitIntoListParser extends BaseOutputParser<string[]> {
 
   async parse(text: string): Promise<string[]> {
     return text.split(",").map((value) => value.trim());
+  }
+}
+
+class FakeRunnable extends Runnable<string, Record<string, any>> {
+  lc_namespace = ["tests", "fake"];
+
+  returnOptions?: boolean;
+
+  constructor(fields: { returnOptions?: boolean }) {
+    super(fields);
+    this.returnOptions = fields.returnOptions;
+  }
+
+  async invoke(
+    input: string,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<Record<string, any>> {
+    if (this.returnOptions) {
+      return options ?? {};
+    }
+    return { input };
   }
 }
 
@@ -550,4 +574,28 @@ test("RunnableBranch handles error", async () => {
     });
   }).rejects.toThrow();
   expect(error).toBeDefined();
+});
+
+test("Runnable withConfig", async () => {
+  const fake = new FakeRunnable({
+    returnOptions: true,
+  });
+  const result = await fake.withConfig({ tags: ["a-tag"] }).invoke("hello");
+  expect(result.tags).toEqual(["a-tag"]);
+  const stream = await fake
+    .withConfig({
+      metadata: {
+        a: "b",
+        b: "c",
+      },
+      tags: ["a-tag"],
+    })
+    .stream("hi", { tags: ["b-tag"], metadata: { a: "updated" } });
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+  expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
+  expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
 });

@@ -158,17 +158,19 @@ export interface ChatOpenAICallOptions
  * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
-export class ChatOpenAI
-  extends BaseChatModel<ChatOpenAICallOptions>
+export class ChatOpenAI<
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  >
+  extends BaseChatModel<CallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
   static lc_name() {
     return "ChatOpenAI";
   }
 
-  get callKeys(): (keyof ChatOpenAICallOptions)[] {
+  get callKeys() {
     return [
-      ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
+      ...super.callKeys,
       "options",
       "function_call",
       "functions",
