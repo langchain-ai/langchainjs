@@ -483,7 +483,7 @@ test("ChatOpenAI can cache generations", async () => {
   expect(cachedInput?.length).toBe(2);
 });
 
-test.only("ChatOpenAI can write and read cached generations", async () => {
+test("ChatOpenAI can write and read cached generations", async () => {
   const memoryCache = new InMemoryCache();
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
