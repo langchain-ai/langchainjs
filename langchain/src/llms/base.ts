@@ -1,7 +1,5 @@
-import { InMemoryCache } from "../cache/index.js";
 import {
   AIMessage,
-  BaseCache,
   BaseMessage,
   BasePromptValue,
   Generation,
@@ -52,17 +50,8 @@ export abstract class BaseLLM<
 
   lc_namespace = ["langchain", "llms", this._llmType()];
 
-  cache?: BaseCache;
-
   constructor({ cache, concurrency, ...rest }: BaseLLMParams) {
     super(concurrency ? { maxConcurrency: concurrency, ...rest } : rest);
-    if (typeof cache === "object") {
-      this.cache = cache;
-    } else if (cache) {
-      this.cache = InMemoryCache.global();
-    } else {
-      this.cache = undefined;
-    }
   }
 
   /**

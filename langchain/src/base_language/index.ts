@@ -21,6 +21,7 @@ import { Runnable } from "../schema/runnable/index.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
+import { InMemoryCache } from "../cache/index.js";
 
 const getVerbosity = () => false;
 
@@ -147,6 +148,8 @@ export abstract class BaseLanguageModel<
    */
   caller: AsyncCaller;
 
+  cache?: BaseCache;
+
   constructor({
     callbacks,
     callbackManager,
@@ -156,6 +159,13 @@ export abstract class BaseLanguageModel<
       callbacks: callbacks ?? callbackManager,
       ...params,
     });
+    if (typeof params.cache === "object") {
+      this.cache = params.cache;
+    } else if (params.cache) {
+      this.cache = InMemoryCache.global();
+    } else {
+      this.cache = undefined;
+    }
     this.caller = new AsyncCaller(params ?? {});
   }
 

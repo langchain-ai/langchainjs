@@ -11,7 +11,6 @@ import {
   ChatGenerationChunk,
   BaseMessageLike,
   coerceMessageLikeToMessage,
-  BaseCache,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
@@ -25,7 +24,6 @@ import {
   Callbacks,
 } from "../callbacks/manager.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
-import { InMemoryCache } from "../cache/index.js";
 
 /**
  * Represents a serialized chat model.
@@ -84,17 +82,8 @@ export abstract class BaseChatModel<
 
   lc_namespace = ["langchain", "chat_models", this._llmType()];
 
-  cache?: BaseCache;
-
   constructor(fields: BaseChatModelParams) {
     super(fields);
-    if (typeof fields.cache === "object") {
-      this.cache = fields.cache;
-    } else if (fields.cache) {
-      this.cache = InMemoryCache.global();
-    } else {
-      this.cache = undefined;
-    }
   }
 
   abstract _combineLLMOutput?(
