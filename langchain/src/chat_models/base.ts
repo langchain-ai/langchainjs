@@ -340,10 +340,7 @@ export abstract class BaseChatModel<
     const { cache } = this;
     const params = this.serialize();
     params.stop = callOptions.stop ?? params.stop;
-    console.log({
-      params,
-    });
-    const llmStringKey = `${Object.entries(params).sort()}`;
+    const llmStringKey = `${Object.entries(params).sort()}${Object.entries(callOptions).sort()}`;
 
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
