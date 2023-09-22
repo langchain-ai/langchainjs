@@ -3615,6 +3615,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudflare/workers-types@npm:^4.20230904.0":
+  version: 4.20230904.0
+  resolution: "@cloudflare/workers-types@npm:4.20230904.0"
+  checksum: 4cfe7dd7419716233dad0937766d7b33ee709b12578d0def7cee8b005e79142f22f8675a40119957448073aff416e8376a768115af420b7f54d11635a6cb38a2
+  languageName: node
+  linkType: hard
+
 "@colors/colors@npm:1.5.0":
   version: 1.5.0
   resolution: "@colors/colors@npm:1.5.0"
@@ -4731,13 +4738,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@notionhq/client@npm:^2.2.5":
-  version: 2.2.5
-  resolution: "@notionhq/client@npm:2.2.5"
+"@notionhq/client@npm:^2.2.10":
+  version: 2.2.10
+  resolution: "@notionhq/client@npm:2.2.10"
   dependencies:
     "@types/node-fetch": ^2.5.10
     node-fetch: ^2.6.1
-  checksum: e663e9dec58548226ea463fba1409ee9c5af26bdae71b2c5885c11b3c39b9238578ae067e31d5bd33b67cef492f603b264dcdad52692e33e03e0c0a085cb89f0
+  checksum: ce723de8d13898318af1fa375628b5c48904b2c3eaa5483d8995bd18c6c592f033014546b45e7bb54190ea31dc2b3fbd73ffce20917778a62d6e41a7b9fcc91f
   languageName: node
   linkType: hard
 
@@ -10155,6 +10162,7 @@ __metadata:
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
+    pg: ^8.11.0
     pickleparser: ^0.1.0
     prettier: ^2.8.3
     prisma: ^4.11.0
@@ -12920,6 +12928,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jose@npm:>= 4.12.0 < 5.0.0":
+  version: 4.14.6
+  resolution: "jose@npm:4.14.6"
+  checksum: eae81a234e7bf1446b1bd80722b3462b014e3835b155c3a7799c1c5043163a53a0dc28d347004151b031e6b7b863403aabf8814d9cc217ce21f8c2f3ebd4b335
+  languageName: node
+  linkType: hard
+
 "jose@npm:^4.10.4":
   version: 4.14.4
   resolution: "jose@npm:4.14.4"
@@ -13296,6 +13311,7 @@ __metadata:
     "@aws-sdk/types": ^3.357.0
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.0.14
+    "@cloudflare/workers-types": ^4.20230904.0
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
@@ -13306,7 +13322,7 @@ __metadata:
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@mozilla/readability": ^0.4.4
-    "@notionhq/client": ^2.2.5
+    "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
@@ -13401,7 +13417,7 @@ __metadata:
     puppeteer: ^19.7.2
     redis: ^4.6.6
     release-it: ^15.10.1
-    replicate: ^0.12.3
+    replicate: ^0.18.0
     rimraf: ^5.0.1
     rollup: ^3.19.1
     sonix-speech-recognition: ^2.1.1
@@ -13416,6 +13432,7 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
+    web-auth-library: ^1.0.3
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
@@ -13434,6 +13451,7 @@ __metadata:
     "@aws-sdk/signature-v4": ^3.374.0
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.0.14
+    "@cloudflare/workers-types": ^4.20230904.0
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.7.0
@@ -13442,7 +13460,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
     "@mozilla/readability": "*"
-    "@notionhq/client": ^2.2.5
+    "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
@@ -13490,7 +13508,7 @@ __metadata:
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
-    replicate: ^0.12.3
+    replicate: ^0.18.0
     sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
@@ -13499,6 +13517,7 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
+    web-auth-library: ^1.0.3
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
   peerDependenciesMeta:
@@ -13525,6 +13544,8 @@ __metadata:
     "@azure/storage-blob":
       optional: true
     "@clickhouse/client":
+      optional: true
+    "@cloudflare/workers-types":
       optional: true
     "@elastic/elasticsearch":
       optional: true
@@ -13655,6 +13676,8 @@ __metadata:
     voy-search:
       optional: true
     weaviate-ts-client:
+      optional: true
+    web-auth-library:
       optional: true
     youtube-transcript:
       optional: true
@@ -16815,10 +16838,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"replicate@npm:^0.12.3":
-  version: 0.12.3
-  resolution: "replicate@npm:0.12.3"
-  checksum: 3eb1522315dba74a7fa35661985ba25a0fe1e723a0250996afeabd6224f9e43b142e4ff8f6b1280260ec7879ae7c9b84bc4384dc25522696e1f74ea0d7ecefa5
+"replicate@npm:^0.18.0":
+  version: 0.18.0
+  resolution: "replicate@npm:0.18.0"
+  checksum: 547a8b386418aedf6e5be2086a63090e5a5f6cda36202a0122c4036a2af8a80efea420393e5efa4810c9cff0616a7df5adbd40fd4a0560f4aa1b4eda60a34794
   languageName: node
   linkType: hard
 
@@ -16965,6 +16988,13 @@ __metadata:
   version: 1.0.4
   resolution: "reusify@npm:1.0.4"
   checksum: c3076ebcc22a6bc252cb0b9c77561795256c22b757f40c0d8110b1300723f15ec0fc8685e8d4ea6d7666f36c79ccc793b1939c748bf36f18f542744a4e379fcc
+  languageName: node
+  linkType: hard
+
+"rfc4648@npm:^1.5.2":
+  version: 1.5.2
+  resolution: "rfc4648@npm:1.5.2"
+  checksum: bc3d9c4fbfdbbb363c640f9cb56fc01d2e1ca64305b2b6409aaf59cb85c1adecb2545c03deee8889cce2685e15fb7dd47581665c288e4f45068ffece2642f2e8
   languageName: node
   linkType: hard
 
@@ -19077,6 +19107,16 @@ __metadata:
     isomorphic-fetch: ^3.0.0
     uuid: ^9.0.0
   checksum: aef68e7d77ac8b3d42e1a3dd3c4dcb7a0c74b96c1a3d7b11e52313c7dfa9a9b3fc9ba5f3048628d67193ca6c84bb8a7eca641dacfdc459cfe26ac2fe20b07f11
+  languageName: node
+  linkType: hard
+
+"web-auth-library@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "web-auth-library@npm:1.0.3"
+  dependencies:
+    jose: ">= 4.12.0 < 5.0.0"
+    rfc4648: ^1.5.2
+  checksum: 9e2b303a43ac040037b952c8130260edd44c34956e34277e28faa23ebf63fc40ba3a22b7a3cab5f36ea6f7aac16573415ccacb6e5a970fe4f4d2ee5751ae01d1
   languageName: node
   linkType: hard
 

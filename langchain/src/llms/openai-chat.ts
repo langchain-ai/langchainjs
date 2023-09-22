@@ -54,12 +54,8 @@ export class OpenAIChat
     return "OpenAIChat";
   }
 
-  get callKeys(): (keyof OpenAIChatCallOptions)[] {
-    return [
-      ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),
-      "options",
-      "promptIndex",
-    ];
+  get callKeys() {
+    return [...super.callKeys, "options", "promptIndex"];
   }
 
   lc_serializable = true;
@@ -304,7 +300,7 @@ export class OpenAIChat
     };
     const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
-      const choice = data.choices[0];
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }

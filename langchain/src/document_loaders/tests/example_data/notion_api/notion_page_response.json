@@ -1,0 +1,460 @@
+{
+  "object": "page",
+  "id": "7a1c25f2-d8a7-46d9-a2da-c9e39e018a56",
+  "created_time": "2023-06-14T10:29:00.000Z",
+  "last_edited_time": "2023-08-09T16:06:00.000Z",
+  "created_by": {
+    "object": "user",
+    "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+  },
+  "last_edited_by": {
+    "object": "user",
+    "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+  },
+  "cover": null,
+  "icon": null,
+  "parent": {
+    "type": "database_id",
+    "database_id": "c393f19c-3903-440d-a0d3-4bf9c6c12ff2"
+  },
+  "archived": false,
+  "properties": {
+    "File": {
+      "id": "%3DAK%3F",
+      "type": "files",
+      "files": [
+        {
+          "name": "MetaLumna Logo Square.png",
+          "type": "file",
+          "file": {
+            "url": "https://s3.us-west-2.amazonaws.com/secure.notion-static.com/8ad37e93-7788-499e-8fe5-35c714c0022f/MetaLumna_Logo_Square.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20230809%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230809T160622Z&X-Amz-Expires=3600&X-Amz-Signature=164ce8273219415d078670e5fca017d7ee2ac3b421284fed8e8d5508e957deaf&X-Amz-SignedHeaders=host&x-id=GetObject",
+            "expiry_time": "2023-08-09T17:06:22.823Z"
+          }
+        }
+      ]
+    },
+    "Number": {
+      "id": "%3FD%7CI",
+      "type": "number",
+      "number": 1234
+    },
+    "Rollup": {
+      "id": "%3FROk",
+      "type": "rollup",
+      "rollup": {
+        "type": "array",
+        "array": [
+          {
+            "type": "title",
+            "title": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Another page in a database that acts as an example",
+                  "link": null
+                },
+                "annotations": {
+                  "bold": false,
+                  "italic": false,
+                  "strikethrough": false,
+                  "underline": false,
+                  "code": false,
+                  "color": "default"
+                },
+                "plain_text": "Another page in a database that acts as an example",
+                "href": null
+              }
+            ]
+          },
+          {
+            "type": "title",
+            "title": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "An example page in a database",
+                  "link": null
+                },
+                "annotations": {
+                  "bold": false,
+                  "italic": false,
+                  "strikethrough": false,
+                  "underline": false,
+                  "code": false,
+                  "color": "default"
+                },
+                "plain_text": "An example page in a database",
+                "href": null
+              }
+            ]
+          },
+          {
+            "type": "title",
+            "title": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "A database page that is an example",
+                  "link": null
+                },
+                "annotations": {
+                  "bold": false,
+                  "italic": false,
+                  "strikethrough": false,
+                  "underline": false,
+                  "code": false,
+                  "color": "default"
+                },
+                "plain_text": "A database page that is an example",
+                "href": null
+              }
+            ]
+          }
+        ],
+        "function": "show_original"
+      }
+    },
+    "Status": {
+      "id": "%40mqJ",
+      "type": "status",
+      "status": {
+        "id": "6d4f47e4-d554-485b-a3b5-38f41218502d",
+        "name": "In progress",
+        "color": "blue"
+      }
+    },
+    "Multi-select": {
+      "id": "GpEZ",
+      "type": "multi_select",
+      "multi_select": [
+        {
+          "id": "02733568-8d80-4b3e-8d7d-a2fcd547fc3f",
+          "name": "Red",
+          "color": "red"
+        },
+        {
+          "id": "426a6876-f5db-498b-a528-5d32ac11a57d",
+          "name": "Green",
+          "color": "green"
+        },
+        {
+          "id": "e4063033-ca88-4541-ac81-348f9f409443",
+          "name": "Blue",
+          "color": "blue"
+        }
+      ]
+    },
+    "Select": {
+      "id": "OMmU",
+      "type": "select",
+      "select": {
+        "id": "40278f77-e412-417a-a1d9-dad665e57242",
+        "name": "Magenta",
+        "color": "pink"
+      }
+    },
+    "Last edited time": {
+      "id": "Okfy",
+      "type": "last_edited_time",
+      "last_edited_time": "2023-08-09T16:06:00.000Z"
+    },
+    "Text": {
+      "id": "VWez",
+      "type": "rich_text",
+      "rich_text": [
+        {
+          "type": "text",
+          "text": {
+            "content": "This is just some ",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "This is just some ",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "text",
+            "link": null
+          },
+          "annotations": {
+            "bold": true,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "text",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": " with some formatting and new lines.\n\n",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": " with some formatting and new lines.\n\n",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "italic",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": true,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "italic",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "\n",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "\n",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "bold",
+            "link": null
+          },
+          "annotations": {
+            "bold": true,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "bold",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "\n",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "\n",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "inline code",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": true,
+            "color": "default"
+          },
+          "plain_text": "inline code",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "\n",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "\n",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": {
+            "content": "strike through",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": true,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "strike through",
+          "href": null
+        }
+      ]
+    },
+    "Last edited by": {
+      "id": "Yfu%7B",
+      "type": "last_edited_by",
+      "last_edited_by": {
+        "object": "user",
+        "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+      }
+    },
+    "Related Example Database": {
+      "id": "%5CtQ%5B",
+      "type": "relation",
+      "relation": [
+        {
+          "id": "7d9d1b96-34fa-4da3-b70d-9f71a75e1291"
+        },
+        {
+          "id": "7a1c25f2-d8a7-46d9-a2da-c9e39e018a56"
+        },
+        {
+          "id": "67662914-f22b-47fd-98aa-19988c40c77d"
+        }
+      ],
+      "has_more": false
+    },
+    "Created by": {
+      "id": "_qQv",
+      "type": "created_by",
+      "created_by": {
+        "object": "user",
+        "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+      }
+    },
+    "Checkbox": {
+      "id": "aSh%3F",
+      "type": "checkbox",
+      "checkbox": true
+    },
+    "Formula": {
+      "id": "cnSn",
+      "type": "formula",
+      "formula": {
+        "type": "boolean",
+        "boolean": false
+      }
+    },
+    "Phone": {
+      "id": "faWC",
+      "type": "phone_number",
+      "phone_number": "555-1234"
+    },
+    "Email": {
+      "id": "hMx%3C",
+      "type": "email",
+      "email": "skarard@gmail.com"
+    },
+    "URL": {
+      "id": "k~K%3C",
+      "type": "url",
+      "url": "https://example.com"
+    },
+    "Created time": {
+      "id": "lYCY",
+      "type": "created_time",
+      "created_time": "2023-06-14T10:29:00.000Z"
+    },
+    "ID": {
+      "id": "lsSy",
+      "type": "unique_id",
+      "unique_id": {
+        "prefix": null,
+        "number": 2
+      }
+    },
+    "Date": {
+      "id": "pbgc",
+      "type": "date",
+      "date": {
+        "start": "2023-08-09T00:00:00.000+01:00",
+        "end": "2023-08-09T00:00:00.000+01:00",
+        "time_zone": null
+      }
+    },
+    "Person": {
+      "id": "~GU~",
+      "type": "people",
+      "people": [
+        {
+          "object": "user",
+          "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+        },
+        {
+          "object": "user",
+          "id": "9d6b0c60-efdd-48d1-b63e-027d9b7d66a0"
+        }
+      ]
+    },
+    "Name": {
+      "id": "title",
+      "type": "title",
+      "title": [
+        {
+          "type": "text",
+          "text": {
+            "content": "An example page in a database",
+            "link": null
+          },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "An example page in a database",
+          "href": null
+        }
+      ]
+    }
+  },
+  "url": "https://www.notion.so/An-example-page-in-a-database-7a1c25f2d8a746d9a2dac9e39e018a56",
+  "public_url": "https://skarard.notion.site/An-example-page-in-a-database-7a1c25f2d8a746d9a2dac9e39e018a56",
+  "developer_survey": "https://notionup.typeform.com/to/bllBsoI4?utm_source=postman"
+}

@@ -27,6 +27,16 @@ interface VectaraCallHeader {
 }
 
 /**
+ * Interface for the file objects to be uploaded to Vectara.
+ */
+export interface VectaraFile {
+  // The contents of the file to be uploaded.
+  blob: Blob;
+  // The name of the file to be uploaded.
+  fileName: string;
+}
+
+/**
  * Interface for the filter options used in Vectara API calls.
  */
 export interface VectaraFilter {
@@ -239,12 +249,12 @@ export class VectaraStore extends VectorStore {
    * pre-processing and chunking internally in an optimal manner. This method is a wrapper
    * to utilize that API within LangChain.
    *
-   * @param filePaths An array of Blob objects representing the files to be uploaded to Vectara.
+   * @param files An array of VectaraFile objects representing the files and their respective file names to be uploaded to Vectara.
    * @param metadata Optional. An array of metadata objects corresponding to each file in the `filePaths` array.
    * @returns A Promise that resolves to the number of successfully uploaded files.
    */
   async addFiles(
-    filePaths: Blob[],
+    files: VectaraFile[],
     metadatas: Record<string, unknown> | undefined = undefined
   ) {
     if (this.corpusId.length > 1)
@@ -252,42 +262,36 @@ export class VectaraStore extends VectorStore {
 
     let numDocs = 0;
 
-    for (const [index, fileBlob] of filePaths.entries()) {
+    for (const [index, file] of files.entries()) {
       const md = metadatas ? metadatas[index] : {};
 
       const data = new FormData();
-      data.append("file", fileBlob, `file_${index}`);
+      data.append("file", file.blob, file.fileName);
       data.append("doc-metadata", JSON.stringify(md));
 
-      try {
-        const response = await fetch(
-          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId[0]}`,
-          {
-            method: "POST",
-            headers: {
-              "x-api-key": this.apiKey,
-            },
-            body: data,
-          }
-        );
-
-        const result = await response.json();
-        const { status } = response;
-
-        if (status !== 200 && status !== 409) {
-          throw new Error(
-            `Vectara API returned status code ${status}: ${result}`
-          );
-        } else {
-          numDocs += 1;
+      const response = await fetch(
+        `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId[0]}`,
+        {
+          method: "POST",
+          headers: {
+            "x-api-key": this.apiKey,
+          },
+          body: data,
         }
-      } catch (err) {
-        console.error(`Failed to upload file at index ${index}:`, err);
+      );
+
+      const { status } = response;
+      if (status === 409) {
+        throw new Error(`File at index ${index} already exists in Vectara`);
+      } else if (status !== 200) {
+        throw new Error(`Vectara API returned status code ${status}`);
+      } else {
+        numDocs += 1;
       }
     }
 
     if (this.verbose) {
-      console.log(`Uploaded ${filePaths.length} files to Vectara`);
+      console.log(`Uploaded ${files.length} files to Vectara`);
     }
 
     return numDocs;

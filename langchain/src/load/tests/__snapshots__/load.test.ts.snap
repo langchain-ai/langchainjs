@@ -39,6 +39,18 @@ kwargs:
       - SPECIAL_PERSON_API_KEY
   by: 4
   hello: 3
+  inherited:
+    lc: 1
+    type: secret
+    id:
+      - SPECIAL_PERSON_INHERITED_API_KEY
+  nested:
+    api:
+      key:
+        lc: 1
+        type: secret
+        id:
+          - SPECIAL_PERSON_NESTED_API_KEY
 "
 `;
 

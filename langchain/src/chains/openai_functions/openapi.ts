@@ -1,5 +1,6 @@
 import type { OpenAI as OpenAIClient } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
 
@@ -153,42 +154,49 @@ function convertOpenAPIParamsToJSONSchema(
  * @param spec The OpenAPI specification that contains the schema.
  * @returns The JSON schema representation of the OpenAPI schema.
  */
-function convertOpenAPISchemaToJSONSchema(
+export function convertOpenAPISchemaToJSONSchema(
   schema: OpenAPIV3_1.SchemaObject,
   spec: OpenAPISpec
-) {
-  if (schema.type !== "object" && schema.type !== "array") {
-    return {
-      type: schema.type ?? "string",
-    } as JsonSchema7Type;
+): JsonSchema7Type {
+  if (schema.type === "object") {
+    return Object.keys(schema.properties ?? {}).reduce(
+      (jsonSchema: JsonSchema7ObjectType, propertyName) => {
+        if (!schema.properties) {
+          return jsonSchema;
+        }
+        const openAPIProperty = spec.getSchema(schema.properties[propertyName]);
+        if (openAPIProperty.type === undefined) {
+          return jsonSchema;
+        }
+        // eslint-disable-next-line no-param-reassign
+        jsonSchema.properties[propertyName] = convertOpenAPISchemaToJSONSchema(
+          openAPIProperty,
+          spec
+        );
+        if (openAPIProperty.required && jsonSchema.required !== undefined) {
+          jsonSchema.required.push(propertyName);
+        }
+        return jsonSchema;
+      },
+      {
+        type: "object",
+        properties: {},
+        required: [],
+        additionalProperties: {},
+      }
+    );
   }
-  return Object.keys(schema.properties ?? {}).reduce(
-    (jsonSchema: JsonSchema7ObjectType, propertyName) => {
-      if (!schema.properties) {
-        return jsonSchema;
-      }
-      const openAPIProperty = spec.getSchema(schema.properties[propertyName]);
-      if (openAPIProperty.type === undefined) {
-        return jsonSchema;
-      }
-      // eslint-disable-next-line no-param-reassign
-      jsonSchema.properties[propertyName] = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        type: openAPIProperty.type as any,
-        description: openAPIProperty.description,
-      };
-      if (openAPIProperty.required && jsonSchema.required !== undefined) {
-        jsonSchema.required.push(propertyName);
-      }
-      return jsonSchema;
-    },
-    {
-      type: "object",
-      properties: {},
-      required: [],
-      additionalProperties: {},
-    }
-  );
+  if (schema.type === "array") {
+    return {
+      type: "array",
+      items: convertOpenAPISchemaToJSONSchema(schema.items ?? {}, spec),
+      minItems: schema.minItems,
+      maxItems: schema.maxItems,
+    } as JsonSchema7ArrayType;
+  }
+  return {
+    type: schema.type ?? "string",
+  } as JsonSchema7Type;
 }
 
 /**
@@ -475,7 +483,7 @@ export async function createOpenAPIChain(
   }
   const {
     llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }),
-    prompt = ChatPromptTemplate.fromPromptMessages([
+    prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
         "Use the provided API's to respond to this user query:\n\n{query}"
       ),

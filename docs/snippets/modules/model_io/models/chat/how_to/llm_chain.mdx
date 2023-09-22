@@ -6,7 +6,7 @@ import { ChatPromptTemplate } from "langchain/prompts";
 const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
 const humanTemplate = "{text}";
 
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+const chatPrompt = ChatPromptTemplate.fromMessages([
   ["system", template],
   ["human", humanTemplate],
 ]);

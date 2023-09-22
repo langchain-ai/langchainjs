@@ -32,7 +32,7 @@ export default async function handler(
   // Test a chain + prompt + model
   const chain = new LLMChain({
     llm: new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY }),
-    prompt: ChatPromptTemplate.fromPromptMessages([
+    prompt: ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate("{input}"),
     ]),
   });

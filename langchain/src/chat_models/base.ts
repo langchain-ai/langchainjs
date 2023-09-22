@@ -23,7 +23,7 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
-import { RunnableConfig } from "../schema/runnable.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 
 /**
  * Represents a serialized chat model.
@@ -404,7 +404,9 @@ export abstract class BaseChatModel<
  * An abstract class that extends BaseChatModel and provides a simple
  * implementation of _generate.
  */
-export abstract class SimpleChatModel extends BaseChatModel {
+export abstract class SimpleChatModel<
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
+> extends BaseChatModel<CallOptions> {
   abstract _call(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],

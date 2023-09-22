@@ -33,7 +33,7 @@ export default function Home() {
     // Test a chain + prompt + model
     const chain = new LLMChain({
       llm,
-      prompt: ChatPromptTemplate.fromPromptMessages([
+      prompt: ChatPromptTemplate.fromMessages([
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]),
     });

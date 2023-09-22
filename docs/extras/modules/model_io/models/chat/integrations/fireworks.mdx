@@ -1,0 +1,19 @@
+---
+sidebar_label: Fireworks
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatFireworks
+
+You can use models provided by Fireworks AI as follows:
+
+import Fireworks from "@examples/models/chat/integration_fireworks.ts";
+
+<CodeBlock language="typescript">{Fireworks}</CodeBlock>
+
+Behind the scenes, Fireworks AI uses the OpenAI SDK and OpenAI compatible API, with some caveats:
+
+- Certain properties are not supported by the Fireworks API, see [here](https://readme.fireworks.ai/docs/openai-compatibility#api-compatibility).
+- Generation using multiple prompts is not supported.
+

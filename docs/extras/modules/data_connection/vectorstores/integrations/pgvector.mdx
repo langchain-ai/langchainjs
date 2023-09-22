@@ -1,0 +1,35 @@
+# PGVector
+
+To enable vector search in a generic PostgreSQL database, LangChain.js supports using the [`pgvector`](https://github.com/pgvector/pgvector) Postgres extension.
+
+## Setup
+
+To work with PGVector, you need to install the `pg` package:
+
+```bash npm2yarn
+npm install pg
+```
+
+### Setup a `pgvector` self hosted instance with `docker-compose`
+
+`pgvector` provides a prebuilt Docker image that can be used to quickly setup a self-hosted Postgres instance.
+Create a file below named `docker-compose.yml`:
+
+import CodeBlock from "@theme/CodeBlock";
+import DockerExample from "@examples/indexes/vector_stores/pgvector_vectorstore/docker-compose.example.yml";
+
+<CodeBlock language="yml" name="docker-compose.yml">
+  {DockerExample}
+</CodeBlock>
+
+And then in the same directory, run `docker compose up` to start the container.
+
+You can find more information on how to setup `pgvector` in the [official repository](https://github.com/pgvector/pgvector).
+
+## Usage
+
+import Example from "@examples/indexes/vector_stores/pgvector_vectorstore/pgvector.ts";
+
+One complete example of using `PGVectorStore` is the following:
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

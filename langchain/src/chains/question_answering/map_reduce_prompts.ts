@@ -27,8 +27,7 @@ const messages = [
   /*#__PURE__*/ SystemMessagePromptTemplate.fromTemplate(system_template),
   /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
 ];
-const CHAT_QA_PROMPT =
-  /*#__PURE__*/ ChatPromptTemplate.fromPromptMessages(messages);
+const CHAT_QA_PROMPT = /*#__PURE__*/ ChatPromptTemplate.fromMessages(messages);
 
 export const COMBINE_QA_PROMPT_SELECTOR =
   /*#__PURE__*/ new ConditionalPromptSelector(DEFAULT_COMBINE_QA_PROMPT, [
@@ -79,7 +78,7 @@ const combine_messages = [
   /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
 ];
 const CHAT_COMBINE_PROMPT =
-  /*#__PURE__*/ ChatPromptTemplate.fromPromptMessages(combine_messages);
+  /*#__PURE__*/ ChatPromptTemplate.fromMessages(combine_messages);
 
 export const COMBINE_PROMPT_SELECTOR =
   /*#__PURE__*/ new ConditionalPromptSelector(COMBINE_PROMPT, [

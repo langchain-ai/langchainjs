@@ -20,9 +20,10 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
  * models in a chat-like fashion. It extends the SimpleChatModel class and
  * implements the OllamaInput interface.
  */
-export class ChatOllama extends SimpleChatModel implements OllamaInput {
-  declare CallOptions: OllamaCallOptions;
-
+export class ChatOllama
+  extends SimpleChatModel<OllamaCallOptions>
+  implements OllamaInput
+{
   static lc_name() {
     return "ChatOllama";
   }
@@ -199,11 +200,27 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
       )
     );
     for await (const chunk of stream) {
-      yield new ChatGenerationChunk({
-        text: chunk.response,
-        message: new AIMessageChunk({ content: chunk.response }),
-      });
-      await runManager?.handleLLMNewToken(chunk.response ?? "");
+      if (!chunk.done) {
+        yield new ChatGenerationChunk({
+          text: chunk.response,
+          message: new AIMessageChunk({ content: chunk.response }),
+        });
+        await runManager?.handleLLMNewToken(chunk.response ?? "");
+      } else {
+        yield new ChatGenerationChunk({
+          text: "",
+          message: new AIMessageChunk({ content: "" }),
+          generationInfo: {
+            model: chunk.model,
+            total_duration: chunk.total_duration,
+            load_duration: chunk.load_duration,
+            prompt_eval_count: chunk.prompt_eval_count,
+            prompt_eval_duration: chunk.prompt_eval_duration,
+            eval_count: chunk.eval_count,
+            eval_duration: chunk.eval_duration,
+          },
+        });
+      }
     }
   }
 
@@ -236,21 +253,16 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const stream = await this.caller.call(async () =>
-      createOllamaStream(
-        this.baseUrl,
-        {
-          ...this.invocationParams(options),
-          prompt: this._formatMessagesAsPrompt(messages),
-        },
-        options
-      )
-    );
     const chunks = [];
-    for await (const chunk of stream) {
-      chunks.push(chunk.response);
+    for await (const chunk of this._streamResponseChunks(
+      messages,
+      options,
+      runManager
+    )) {
+      chunks.push(chunk.message.content);
     }
     return chunks.join("");
   }

@@ -42,7 +42,7 @@ function createChatPromptTemplate() {
   //   ],
   //   inputVariables: ["context", "foo", "bar"],
   // });
-  return ChatPromptTemplate.fromPromptMessages<{
+  return ChatPromptTemplate.fromMessages<{
     foo: string;
     bar: string;
     context: string;
@@ -117,7 +117,7 @@ test("Test format with invalid input variables", async () => {
   );
 });
 
-test("Test fromPromptMessages", async () => {
+test("Test fromMessages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
@@ -126,8 +126,8 @@ test("Test fromPromptMessages", async () => {
     template: "Hello {foo}, I'm {bar}",
     inputVariables: ["foo", "bar"],
   });
-  // TODO: Fix autocomplete for the fromPromptMessages method
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  // TODO: Fix autocomplete for the fromMessages method
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     new HumanMessagePromptTemplate(userPrompt),
   ]);
@@ -143,13 +143,13 @@ test("Test fromPromptMessages", async () => {
   ]);
 });
 
-test("Test fromPromptMessages with a variety of ways to declare prompt messages", async () => {
+test("Test fromMessages with a variety of ways to declare prompt messages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
   });
-  // TODO: Fix autocomplete for the fromPromptMessages method
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  // TODO: Fix autocomplete for the fromMessages method
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     "Hello {foo}, I'm {bar}",
     ["assistant", "Nice to meet you, {bar}!"],
@@ -168,7 +168,7 @@ test("Test fromPromptMessages with a variety of ways to declare prompt messages"
   ]);
 });
 
-test("Test fromPromptMessages with an extra input variable", async () => {
+test("Test fromMessages with an extra input variable", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
@@ -177,8 +177,8 @@ test("Test fromPromptMessages with an extra input variable", async () => {
     template: "Hello {foo}, I'm {bar}",
     inputVariables: ["foo", "bar"],
   });
-  // TODO: Fix autocomplete for the fromPromptMessages method
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  // TODO: Fix autocomplete for the fromMessages method
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     new HumanMessagePromptTemplate(userPrompt),
   ]);
@@ -195,7 +195,7 @@ test("Test fromPromptMessages with an extra input variable", async () => {
   ]);
 });
 
-test("Test fromPromptMessages is composable", async () => {
+test("Test fromMessages is composable", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
@@ -204,11 +204,11 @@ test("Test fromPromptMessages is composable", async () => {
     template: "Hello {foo}, I'm {bar}",
     inputVariables: ["foo", "bar"],
   });
-  const chatPromptInner = ChatPromptTemplate.fromPromptMessages([
+  const chatPromptInner = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     new HumanMessagePromptTemplate(userPrompt),
   ]);
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     chatPromptInner,
     AIMessagePromptTemplate.fromTemplate("I'm an AI. I'm {foo}. I'm {bar}."),
   ]);
@@ -225,7 +225,7 @@ test("Test fromPromptMessages is composable", async () => {
   ]);
 });
 
-test("Test fromPromptMessages is composable with partial vars", async () => {
+test("Test fromMessages is composable with partial vars", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
@@ -234,11 +234,11 @@ test("Test fromPromptMessages is composable with partial vars", async () => {
     template: "Hello {foo}, I'm {bar}",
     inputVariables: ["foo", "bar"],
   });
-  const chatPromptInner = ChatPromptTemplate.fromPromptMessages([
+  const chatPromptInner = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     new HumanMessagePromptTemplate(userPrompt),
   ]);
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     await chatPromptInner.partial({
       context: "This is a context",
       foo: "Foo",
@@ -287,7 +287,7 @@ test("Test using partial", async () => {
 });
 
 test("Test BaseMessage", async () => {
-  const prompt = ChatPromptTemplate.fromPromptMessages([
+  const prompt = ChatPromptTemplate.fromMessages([
     new SystemMessage("You are a chatbot {mock_variable}"),
     AIMessagePromptTemplate.fromTemplate("{name} is my name."),
     new FunctionMessage({ content: "{}", name: "get_weather" }),

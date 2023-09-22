@@ -1,0 +1,11 @@
+services:
+  db:
+    image: ankane/pgvector
+    ports:
+      - 5433:5432
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=ChangeMe
+      - POSTGRES_USER=myuser
+      - POSTGRES_DB=api

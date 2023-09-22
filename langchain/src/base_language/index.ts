@@ -16,7 +16,8 @@ import {
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
-import { Runnable, RunnableConfig } from "../schema/runnable.js";
+import { Runnable } from "../schema/runnable/index.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
 
@@ -257,7 +258,8 @@ export abstract class BaseLanguageModel<
 }
 
 /*
- * Calculate max tokens for given model and prompt.
- * That is the model size - number of tokens in prompt.
+ * Export utility functions for token calculations:
+ * - calculateMaxTokens: Calculate max tokens for a given model and prompt (the model context size - tokens in prompt).
+ * - getModelContextSize: Get the context size for a specific model.
  */
-export { calculateMaxTokens } from "./count_tokens.js";
+export { calculateMaxTokens, getModelContextSize } from "./count_tokens.js";

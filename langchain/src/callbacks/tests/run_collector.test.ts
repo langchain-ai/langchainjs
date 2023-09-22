@@ -37,7 +37,7 @@ class FakeLLM extends BaseLLM {
 describe("RunCollectorCallbackHandler", () => {
   it("should persist the given run object and set the reference_example_id to the exampleId", async () => {
     // Create a chain that uses the dataset
-    const prompt = ChatPromptTemplate.fromPromptMessages([
+    const prompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate("You are in a rap battle."),
       HumanMessagePromptTemplate.fromTemplate("Write the following {input}"),
     ]);

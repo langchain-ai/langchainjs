@@ -58,7 +58,7 @@ export default {
     // Test a chain + prompt + model
     const chain = new LLMChain({
       llm: new ChatOpenAI(constructorParameters),
-      prompt: ChatPromptTemplate.fromPromptMessages([
+      prompt: ChatPromptTemplate.fromMessages([
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]),
     });
