@@ -466,7 +466,7 @@ test("Function calling with streaming", async () => {
   ).toBe("New York");
 });
 
-test.only("ChatOpenAI can cache generations", async () => {
+test("ChatOpenAI can cache generations", async () => {
   const memoryCache = new InMemoryCache();
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
