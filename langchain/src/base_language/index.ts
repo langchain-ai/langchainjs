@@ -240,6 +240,29 @@ export abstract class BaseLanguageModel<
   }
 
   /**
+   * Create a unique cache key for a specific call to a specific language model.
+   * @param callOptions Call options for the model
+   * @returns A unique cache key.
+   */
+  protected _buildCacheKeyForCall(callOptions: CallOptions): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const params: Record<string, any> = {
+      ...this._identifyingParams(),
+      ...callOptions,
+      _type: this._llmType(),
+      _model: this._modelType(),
+    };
+    const filteredEntries = Object.entries(params).filter(
+      ([_, value]) => value !== undefined
+    );
+    const serializedEntries = filteredEntries
+      .map(([key, value]) => `${key}:${JSON.stringify(value)}`)
+      .sort()
+      .join(",");
+    return serializedEntries;
+  }
+
+  /**
    * @deprecated
    * Return a json-like object representing this LLM.
    */

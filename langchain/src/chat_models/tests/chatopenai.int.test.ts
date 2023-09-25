@@ -517,13 +517,96 @@ test("ChatOpenAI can write and read cached generations", async () => {
   generateUncachedSpy.mockRestore();
 
   expect(response1.generations.length).toBe(2);
-  expect(response2.generations.map((g) => g.map((gg) => gg.text))[0]).toEqual(
-    expect.arrayContaining(
-      response1.generations.map((g) => g.map((gg) => gg.text))[0]
-    )
-  );
+  expect(response2.generations).toEqual(response1.generations);
   expect(lookupSpy).toHaveBeenCalledTimes(4);
   expect(updateSpy).toHaveBeenCalledTimes(2);
+
+  lookupSpy.mockRestore();
+  updateSpy.mockRestore();
+});
+
+test("ChatOpenAI should not reuse cache if function call args have changed", async () => {
+  const memoryCache = new InMemoryCache();
+  const lookupSpy = jest.spyOn(memoryCache, "lookup");
+  const updateSpy = jest.spyOn(memoryCache, "update");
+
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 100,
+    n: 1,
+    cache: memoryCache,
+  });
+
+  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
+
+  const messages = [
+    [
+      new HumanMessage("what color is the sky?"),
+      new HumanMessage("what color is the ocean?"),
+    ],
+    [new HumanMessage("hello")],
+  ];
+
+  const response1 = await chat.generate(messages);
+  expect(generateUncachedSpy).toHaveBeenCalledTimes(1);
+  generateUncachedSpy.mockRestore();
+
+  const response2 = await chat.generate(messages, {
+    functions: [
+      {
+        name: "extractor",
+        description: "Extract fields from the input",
+        parameters: {
+          type: "object",
+          properties: {
+            tone: {
+              type: "string",
+              description: "the tone of the input",
+            },
+          },
+          required: ["tone"],
+        },
+      },
+    ],
+    function_call: {
+      name: "extractor",
+    },
+  });
+
+  expect(generateUncachedSpy).toHaveBeenCalledTimes(0); // Request should not be cached since it's being called with different function call args
+
+  expect(response1.generations.length).toBe(2);
+  expect(
+    (response2.generations[0][0] as ChatGeneration).message.additional_kwargs
+      .function_call?.name ?? ""
+  ).toEqual("extractor");
+
+  const response3 = await chat.generate(messages, {
+    functions: [
+      {
+        name: "extractor",
+        description: "Extract fields from the input",
+        parameters: {
+          type: "object",
+          properties: {
+            tone: {
+              type: "string",
+              description: "the tone of the input",
+            },
+          },
+          required: ["tone"],
+        },
+      },
+    ],
+    function_call: {
+      name: "extractor",
+    },
+  });
+
+  expect(response2.generations).toEqual(response3.generations);
+
+  expect(lookupSpy).toHaveBeenCalledTimes(6);
+  expect(updateSpy).toHaveBeenCalledTimes(4);
 
   lookupSpy.mockRestore();
   updateSpy.mockRestore();
