@@ -203,27 +203,24 @@ export abstract class BaseChatModel<
   async _generateUncached(
     messages: BaseMessageLike[][],
     parsedOptions: this["ParsedCallOptions"],
-    callbacks?: Callbacks
+    handledOptions: RunnableConfig
   ): Promise<LLMResult> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
 
-    const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptions(parsedOptions);
-
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
-      runnableConfig.callbacks ?? callbacks,
+      handledOptions.callbacks,
       this.callbacks,
-      runnableConfig.tags,
+      handledOptions.tags,
       this.tags,
-      runnableConfig.metadata,
+      handledOptions.metadata,
       this.metadata,
       { verbose: this.verbose }
     );
     const extra = {
-      options: callOptions,
+      options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
@@ -238,7 +235,7 @@ export abstract class BaseChatModel<
       baseMessages.map((messageList, i) =>
         this._generate(
           messageList,
-          { ...callOptions, promptIndex: i },
+          { ...parsedOptions, promptIndex: i },
           runManagers?.[i]
         )
       )
@@ -308,15 +305,13 @@ export abstract class BaseChatModel<
     runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
-      return this._generateUncached(baseMessages, callOptions, callbacks);
+      return this._generateUncached(baseMessages, callOptions, runnableConfig);
     }
 
     const { cache } = this;
     const params = this.serialize();
     params.stop = callOptions.stop ?? params.stop;
-    const llmStringKey = `${Object.entries(params).sort()} ${Object.entries(
-      callOptions
-    ).sort()}`;
+    const llmStringKey = `${Object.entries(params).sort()}`;
 
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
@@ -338,7 +333,7 @@ export abstract class BaseChatModel<
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => baseMessages[i]),
         callOptions,
-        callbacks
+        runnableConfig
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {
