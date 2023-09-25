@@ -199,32 +199,6 @@ export abstract class BaseChatModel<
     }
   }
 
-  _flattenLLMResult(llmResult: LLMResult): LLMResult[] {
-    const llmResults: LLMResult[] = [];
-
-    for (let i = 0; i < llmResult.generations.length; i += 1) {
-      const genList = llmResult.generations[i];
-
-      if (i === 0) {
-        llmResults.push({
-          generations: [genList],
-          llmOutput: llmResult.llmOutput,
-        });
-      } else {
-        const llmOutput = llmResult.llmOutput
-          ? { ...llmResult.llmOutput, tokenUsage: {} }
-          : undefined;
-
-        llmResults.push({
-          generations: [genList],
-          llmOutput,
-        });
-      }
-    }
-
-    return llmResults;
-  }
-
   /** @ignore */
   async _generateUncached(
     messages: BaseMessageLike[][],
