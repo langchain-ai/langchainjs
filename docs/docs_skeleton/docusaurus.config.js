@@ -241,7 +241,6 @@ const config = {
     {
       src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
       async: true,
-      defer: true,
     }
   ]
 };
