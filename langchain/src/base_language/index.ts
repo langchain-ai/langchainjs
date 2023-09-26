@@ -244,7 +244,7 @@ export abstract class BaseLanguageModel<
    * @param callOptions Call options for the model
    * @returns A unique cache key.
    */
-  protected _buildCacheKeyForCall(callOptions: CallOptions): string {
+  protected _getCacheKeyParametersForCall(callOptions: CallOptions): string {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {
       ...this._identifyingParams(),

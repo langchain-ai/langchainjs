@@ -50,7 +50,7 @@ export abstract class BaseLLM<
 
   lc_namespace = ["langchain", "llms", this._llmType()];
 
-  constructor({ cache, concurrency, ...rest }: BaseLLMParams) {
+  constructor({ concurrency, ...rest }: BaseLLMParams) {
     super(concurrency ? { maxConcurrency: concurrency, ...rest } : rest);
   }
 
@@ -308,7 +308,7 @@ export abstract class BaseLLM<
     }
 
     const { cache } = this;
-    const llmStringKey = this._buildCacheKeyForCall(callOptions);
+    const llmStringKey = this._getCacheKeyParametersForCall(callOptions);
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
       prompts.map(async (prompt, index) => {
