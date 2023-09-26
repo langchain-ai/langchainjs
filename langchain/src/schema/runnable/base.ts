@@ -451,7 +451,7 @@ export abstract class Runnable<
   ): AsyncGenerator<RunOutput> {
     let finalChunk;
     for await (const chunk of generator) {
-      if (!finalChunk) {
+      if (finalChunk === undefined) {
         finalChunk = chunk;
       } else {
         // Make a best effort to gather, for any type that supports concat.
