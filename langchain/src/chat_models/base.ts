@@ -309,7 +309,8 @@ export abstract class BaseChatModel<
     }
 
     const { cache } = this;
-    const llmStringKey = this._getSerializedCacheKeyParametersForCall(callOptions);
+    const llmStringKey =
+      this._getSerializedCacheKeyParametersForCall(callOptions);
 
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
