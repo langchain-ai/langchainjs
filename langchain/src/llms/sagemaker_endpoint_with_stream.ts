@@ -1,5 +1,8 @@
 import {
-  InvokeEndpointCommand,
+  // InvokeEndpointCommand,
+  // InvokeEndpointCommandWith
+  InvokeEndpointWithResponseStreamCommand,
+  ResponseStream,
   SageMakerRuntimeClient,
   SageMakerRuntimeClientConfig,
 } from "@aws-sdk/client-sagemaker-runtime";
@@ -62,12 +65,12 @@ export type SageMakerLLMContentHandler = BaseSageMakerContentHandler<
 >;
 
 /**
- * The SageMakerEndpointInput interface defines the input parameters for
- * the SageMakerEndpoint class, which includes the endpoint name, client
+ * The SageMakerEndpointWithStreamInput interface defines the input parameters for
+ * the SageMakerEndpointWithStream class, which includes the endpoint name, client
  * options for the SageMaker client, the content handler, and optional
  * keyword arguments for the model and the endpoint.
  */
-export interface SageMakerEndpointInput extends BaseLLMParams {
+export interface SageMakerEndpointWithStreamInput extends BaseLLMParams {
   /**
    * The name of the endpoint from the deployed SageMaker model. Must be unique
    * within an AWS Region.
@@ -97,7 +100,7 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
 }
 
 /**
- * The SageMakerEndpoint class is used to interact with SageMaker
+ * The SageMakerEndpointWithStream class is used to interact with SageMaker
  * Inference Endpoint models. It extends the LLM class and overrides the
  * _call method to transform the input and output between the LLM and the
  * SageMaker endpoint using the provided content handler. The class uses
@@ -107,7 +110,7 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
  * roles used should have the required policies to access the SageMaker
  * endpoint.
  */
-export class SageMakerEndpoint extends LLM {
+export class SageMakerEndpointWithStream extends LLM {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       "clientOptions.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
@@ -126,7 +129,7 @@ export class SageMakerEndpoint extends LLM {
 
   client: SageMakerRuntimeClient;
 
-  constructor(fields: SageMakerEndpointInput) {
+  constructor(fields: SageMakerEndpointWithStreamInput) {
     super(fields ?? {});
 
     const regionName = fields.clientOptions.region;
@@ -160,10 +163,10 @@ export class SageMakerEndpoint extends LLM {
   }
 
   /** @ignore */
-  async _call(
+  async *_call(
     prompt: string,
     options: this["ParsedCallOptions"]
-  ): Promise<string> {
+): AsyncIterable<ResponseStream> {
     const body = await this.contentHandler.transformInput(
       prompt,
       this.modelKwargs ?? {}
@@ -172,7 +175,7 @@ export class SageMakerEndpoint extends LLM {
 
     const response = await this.caller.call(() =>
       this.client.send(
-        new InvokeEndpointCommand({
+        new InvokeEndpointWithResponseStreamCommand({
           EndpointName: this.endpointName,
           Body: body,
           ContentType: contentType,
@@ -187,6 +190,9 @@ export class SageMakerEndpoint extends LLM {
       throw new Error("Inference result missing Body");
     }
 
-    return this.contentHandler.transformOutput(response.Body);
-  }
+    // Assuming Body is of type AsyncIterable<ResponseStream>
+    for await (const chunk of response.Body) {
+      yield chunk;
+    }
+}
 }

@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect, test } from "@jest/globals";
 import {
-  SageMakerEndpoint,
-  SageMakerLLMContentHandler,
-} from "../sagemaker_endpoint.js";
+  SageMakerWithStream,
+  SageMakerWithStreamLLMContentHandler,
+} from "../sagemaker_with_stream.js";
 
 interface ResponseJsonInterface {
   generation: {
@@ -12,25 +12,9 @@ interface ResponseJsonInterface {
   }
 }
 
-class HuggingFaceTextGenerationGPT2ContentHandler
-  implements SageMakerLLMContentHandler
+class LLama2Handler
+  implements SageMakerWithStreamLLMContentHandler
 {
-  // contentType = "application/json";
-
-  // accepts = "application/json";
-
-  // async transformInput(prompt: string, modelKwargs: Record<string, unknown>) {
-  //   const inputString = JSON.stringify({
-  //     text_inputs: prompt,
-  //     ...modelKwargs,
-  //   });
-  //   return Buffer.from(inputString);
-  // }
-
-  // async transformOutput(output: Uint8Array) {
-  //   const responseJson = JSON.parse(Buffer.from(output).toString("utf-8"));
-  //   return responseJson.generated_texts[0];
-  // }
   contentType = 'application/json'
 
   accepts = 'application/json'
@@ -59,10 +43,10 @@ class HuggingFaceTextGenerationGPT2ContentHandler
 }
 
 // Requires a pre-configured sagemaker endpoint
-test("Test SageMakerEndpoint", async () => {
-  const contentHandler = new HuggingFaceTextGenerationGPT2ContentHandler();
+test("Test SageMakerWithStream", async () => {
+  const contentHandler = new LLama2Handler();
 
-  const model = new SageMakerEndpoint({
+  const model = new SageMakerWithStream({
     endpointName: 'aws-productbot-ai-dev-llama-2-13b-chat',
     modelKwargs: {
       temperature: 0.5,
@@ -82,25 +66,8 @@ test("Test SageMakerEndpoint", async () => {
     },
   });
 
-  const res = await model.call("Hello, my name is junior");
+  const res = await model.call("Ivo");
   console.log('res: ', res);
 
-  // const model = new SageMakerEndpoint({
-  //   endpointName:
-  //     "jumpstart-example-huggingface-textgener-2023-05-16-22-35-45-660",
-  //   modelKwargs: { temperature: 1e-10 },
-  //   contentHandler,
-  //   clientOptions: {
-  //     region: "us-east-2",
-  //     credentials: {
-  //       accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-  //       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  //     },
-  //   },
-  // });
-
-  // const res = await model.call("Hello, my name is ");
-
-  // expect(typeof res).toBe("string");
   expect(true).toBe(true);
 });

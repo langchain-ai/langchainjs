@@ -653,7 +653,7 @@
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/protocol-http": "^3.374.0",
