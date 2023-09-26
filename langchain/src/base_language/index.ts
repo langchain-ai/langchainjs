@@ -2,6 +2,7 @@ import { type Tiktoken } from "js-tiktoken/lite";
 import type { OpenAI as OpenAIClient } from "openai";
 
 import {
+  BaseCache,
   BaseMessage,
   BaseMessageLike,
   BasePromptValue,
@@ -20,6 +21,7 @@ import { Runnable } from "../schema/runnable/index.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
+import { InMemoryCache } from "../cache/index.js";
 
 const getVerbosity = () => false;
 
@@ -86,6 +88,8 @@ export interface BaseLanguageModelParams
    * @deprecated Use `callbacks` instead
    */
   callbackManager?: CallbackManager;
+
+  cache?: BaseCache | boolean;
 }
 
 export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
@@ -144,6 +148,8 @@ export abstract class BaseLanguageModel<
    */
   caller: AsyncCaller;
 
+  cache?: BaseCache;
+
   constructor({
     callbacks,
     callbackManager,
@@ -153,6 +159,13 @@ export abstract class BaseLanguageModel<
       callbacks: callbacks ?? callbackManager,
       ...params,
     });
+    if (typeof params.cache === "object") {
+      this.cache = params.cache;
+    } else if (params.cache) {
+      this.cache = InMemoryCache.global();
+    } else {
+      this.cache = undefined;
+    }
     this.caller = new AsyncCaller(params ?? {});
   }
 
@@ -224,6 +237,31 @@ export abstract class BaseLanguageModel<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _identifyingParams(): Record<string, any> {
     return {};
+  }
+
+  /**
+   * Create a unique cache key for a specific call to a specific language model.
+   * @param callOptions Call options for the model
+   * @returns A unique cache key.
+   */
+  protected _getSerializedCacheKeyParametersForCall(
+    callOptions: CallOptions
+  ): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const params: Record<string, any> = {
+      ...this._identifyingParams(),
+      ...callOptions,
+      _type: this._llmType(),
+      _model: this._modelType(),
+    };
+    const filteredEntries = Object.entries(params).filter(
+      ([_, value]) => value !== undefined
+    );
+    const serializedEntries = filteredEntries
+      .map(([key, value]) => `${key}:${JSON.stringify(value)}`)
+      .sort()
+      .join(",");
+    return serializedEntries;
   }
 
   /**
