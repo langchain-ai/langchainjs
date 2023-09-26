@@ -4,7 +4,9 @@ import { Redis } from "ioredis";
 
 const client = new Redis("redis://localhost:6379");
 
-const cache = new RedisCache(client);
+const cache = new RedisCache(client, {
+  ttl: 60, // Optional key expiration value
+});
 
 const model = new ChatOpenAI({ cache });
 
