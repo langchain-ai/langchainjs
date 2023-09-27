@@ -36,10 +36,8 @@ export abstract class BaseSageMakerContentHandler<InputType, OutputType> {
   abstract transformOutput(output: Uint8Array): Promise<OutputType>;
 }
 
-export type SageMakerEndpointWithStreamLLMContentHandler = BaseSageMakerContentHandler<
-  string,
-  string
->;
+export type SageMakerEndpointWithStreamLLMContentHandler =
+  BaseSageMakerContentHandler<string, string>;
 
 export interface SageMakerEndpointWithStreamParams extends BaseLLMParams {
   endpointName: string;
@@ -111,7 +109,7 @@ export class SageMakerEndpointWithStream extends LLM<BaseLLMCallOptions> {
    */
   async *_streamResponseChunks(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): AsyncGenerator<GenerationChunk> {
     const body = await this.contentHandler.transformInput(
       prompt,
@@ -180,24 +178,21 @@ export class SageMakerEndpointWithStream extends LLM<BaseLLMCallOptions> {
    * @param {CallbackManagerForLLMRun} _runManager Optional run manager.
    * @returns {Promise<string>} A promise that resolves to the generated string.
    */
-   /** @ignore */
-   async _call(
+  /** @ignore */
+  async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     try {
       const chunks = [];
-      for await (const chunk of this._streamResponseChunks(
-        prompt,
-        options,
-      )) {
+      for await (const chunk of this._streamResponseChunks(prompt, options)) {
         chunks.push(chunk.text);
       }
       return chunks.join("");
     } catch (error) {
-      console.log('error calling SageMakerEndpointWithStream: ', error);
-      return ""
+      console.log("error calling SageMakerEndpointWithStream: ", error);
+      return "";
     }
   }
 }
