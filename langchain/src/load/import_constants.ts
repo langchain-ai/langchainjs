@@ -28,6 +28,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/googlevertexai/web",
   "langchain/llms/googlepalm",
   "langchain/llms/sagemaker_endpoint",
+  "langchain/llms/sagemaker_endpoint_with_stream",
   "langchain/llms/bedrock",
   "langchain/llms/llama_cpp",
   "langchain/llms/writer",

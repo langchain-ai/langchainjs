@@ -82,6 +82,9 @@ export interface OptionalImportMap {
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
+  "langchain/llms/sagemaker_endpoint_with_stream"?:
+    | typeof import("../llms/sagemaker_endpoint_with_stream.js")
+    | Promise<typeof import("../llms/sagemaker_endpoint_with_stream.js")>;
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock.js")
     | Promise<typeof import("../llms/bedrock.js")>;

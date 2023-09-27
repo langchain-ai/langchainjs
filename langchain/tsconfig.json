@@ -79,6 +79,7 @@
       "src/llms/googlepalm.ts",
       "src/llms/fireworks.ts",
       "src/llms/sagemaker_endpoint.ts",
+      "src/llms/sagemaker_endpoint_with_stream.ts",
       "src/llms/bedrock.ts",
       "src/llms/llama_cpp.ts",
       "src/llms/writer.ts",
