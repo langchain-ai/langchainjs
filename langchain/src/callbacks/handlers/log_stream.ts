@@ -1,4 +1,7 @@
-import jsonpatch from "../../util/fast-json-patch/fast-json-patch.js";
+import {
+  applyPatch,
+  type Operation as JSONPatchOperation,
+} from "../../util/fast-json-patch/index.js";
 import { BaseTracer, type Run } from "./tracer.js";
 import { BaseCallbackHandlerInput } from "../base.js";
 import { IterableReadableStream } from "../../util/stream.js";
@@ -30,8 +33,7 @@ export type LogEntry = {
   end_time?: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunState = Record<string, any> & {
+export type RunState = {
   /** ID of the sub-run. */
   id: string;
   /** List of output chunks streamed by Runnable.stream() */
@@ -45,13 +47,6 @@ export type RunState = Record<string, any> & {
    * If filters were supplied, this list will contain only the runs that matched the filters.
    */
   logs: LogEntry[];
-};
-
-export type JSONPatchOperation = {
-  op: string;
-  path: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any;
 };
 
 /**
@@ -70,7 +65,7 @@ export class RunLogPatch {
 
   concat(other: RunLogPatch) {
     const ops = this.ops.concat(other.ops);
-    const states = jsonpatch.applyPatch({}, ops);
+    const states = applyPatch({}, ops);
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunLog({
       ops,
@@ -89,7 +84,7 @@ export class RunLog extends RunLogPatch {
 
   concat(other: RunLogPatch) {
     const ops = this.ops.concat(other.ops);
-    const states = jsonpatch.applyPatch(this.state, other.ops);
+    const states = applyPatch(this.state, other.ops);
     return new RunLog({ ops, state: states[states.length - 1].newDocument });
   }
 }

@@ -521,9 +521,7 @@ export abstract class Runnable<
     const runnableStreamPromise = consumeRunnableStream();
     try {
       for await (const log of stream) {
-        if (log !== undefined) {
-          yield log;
-        }
+        yield log;
       }
     } finally {
       await runnableStreamPromise;
