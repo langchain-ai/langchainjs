@@ -120,12 +120,16 @@ export class VercelPostgres extends VectorStore {
    * @param documents - Array of `Document` instances.
    * @returns Promise that resolves when the documents have been added.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
@@ -135,9 +139,13 @@ export class VercelPostgres extends VectorStore {
    * @param index - The index of the row for which placeholders need to be generated.
    * @returns The SQL placeholders for the row values.
    */
-  private generatePlaceholderForRowAt(index: number): string {
-    const base = index * 3;
-    return `($${base + 1}, $${base + 2}, $${base + 3})`;
+  protected generatePlaceholderForRowAt(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    row: (string | Record<string, any>)[],
+    index: number
+  ): string {
+    const base = index * row.length;
+    return `(${row.map((_, j) => `$${base + 1 + j}`)})`;
   }
 
   /**
@@ -147,23 +155,32 @@ export class VercelPostgres extends VectorStore {
    * @param chunkIndex - The starting index for generating query placeholders based on chunk positioning.
    * @returns The complete SQL INSERT INTO query string.
    */
-  private buildInsertQuery(
-    rows: (string | Record<string, unknown>)[][],
-    chunkIndex: number
+  protected async runInsertQuery(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rows: (string | Record<string, any>)[][],
+    useIdColumn: boolean
   ) {
-    const valuesPlaceholders = rows
-      .map((_, j) => this.generatePlaceholderForRowAt(chunkIndex + j))
-      .join(", ");
-
-    const text = `
-      INSERT INTO ${this.tableName}(
-        ${this.contentColumnName},
-        ${this.vectorColumnName},
-        ${this.metadataColumnName}
-      )
-      VALUES ${valuesPlaceholders}
-    `;
-    return text;
+    const values = rows.map((row, j) =>
+      this.generatePlaceholderForRowAt(row, j)
+    );
+    const flatValues = rows.flat();
+    return this.client.query(
+      `
+    INSERT INTO ${this.tableName} (
+      ${useIdColumn ? `${this.idColumnName},` : ""}
+      ${this.contentColumnName}, 
+      ${this.vectorColumnName}, 
+      ${this.metadataColumnName}
+    ) VALUES ${values.join(", ")}
+    ON CONFLICT (${this.idColumnName}) 
+    DO UPDATE 
+    SET 
+    ${this.contentColumnName} = EXCLUDED.${this.contentColumnName},
+    ${this.vectorColumnName} = EXCLUDED.${this.vectorColumnName},
+    ${this.metadataColumnName} = EXCLUDED.${this.metadataColumnName}
+    RETURNING ${this.idColumnName}`,
+      flatValues
+    );
   }
 
   /**
@@ -174,30 +191,47 @@ export class VercelPostgres extends VectorStore {
    * @param documents - Array of `Document` instances.
    * @returns Promise that resolves when the vectors have been added.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<string[]> {
+    if (options?.ids !== undefined && options?.ids.length !== vectors.length) {
+      throw new Error(
+        `If provided, the length of "ids" must be the same as the number of vectors.`
+      );
+    }
     const rows = vectors.map((embedding, idx) => {
       const embeddingString = `[${embedding.join(",")}]`;
-      return [
+      const row = [
         documents[idx].pageContent,
         embeddingString,
         documents[idx].metadata,
       ];
+      if (options?.ids) {
+        return [options.ids[idx], ...row];
+      }
+      return row;
     });
 
     const chunkSize = 500;
 
+    const ids = [];
+
     for (let i = 0; i < rows.length; i += chunkSize) {
       const chunk = rows.slice(i, i + chunkSize);
-      const insertQuery = this.buildInsertQuery(chunk, i);
-      const flatValues = chunk.flat();
-
       try {
-        await this.client?.query(insertQuery, flatValues);
+        const result = await this.runInsertQuery(
+          chunk,
+          options?.ids !== undefined
+        );
+        ids.push(...result.rows.map((row) => row[this.idColumnName]));
       } catch (e) {
         console.error(e);
-        throw new Error(`Error inserting: ${chunk[1]}`);
+        throw new Error(`Error inserting: ${(e as Error).message}`);
       }
     }
+    return ids;
   }
 
   /**
@@ -242,6 +276,19 @@ export class VercelPostgres extends VectorStore {
     return results;
   }
 
+  async delete(params: { ids?: string[]; deleteAll?: boolean }): Promise<void> {
+    if (params.ids !== undefined) {
+      await this.client.query(
+        `DELETE FROM ${this.tableName} WHERE ${
+          this.idColumnName
+        } IN (${params.ids.map((_, idx) => `$${idx + 1}`)})`,
+        params.ids
+      );
+    } else if (params.deleteAll) {
+      await this.client.query(`TRUNCATE TABLE ${this.tableName}`);
+    }
+  }
+
   /**
    * Method to ensure the existence of the table in the database. It creates
    * the table if it does not already exist.
@@ -249,17 +296,14 @@ export class VercelPostgres extends VectorStore {
    * @returns Promise that resolves when the table has been ensured.
    */
   async ensureTableInDatabase(): Promise<void> {
-    await this.client.query("CREATE EXTENSION IF NOT EXISTS vector;");
-    await this.client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-
-    await this.client.query(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-        "${this.contentColumnName}" text,
-        "${this.metadataColumnName}" jsonb,
-        "${this.vectorColumnName}" vector
-      );
-    `);
+    await this.client.query(`CREATE EXTENSION IF NOT EXISTS vector;`);
+    await this.client.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+    await this.client.query(`CREATE TABLE IF NOT EXISTS "${this.tableName}" (
+      "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+      "${this.contentColumnName}" text,
+      "${this.metadataColumnName}" jsonb,
+      "${this.vectorColumnName}" vector
+    );`);
   }
 
   /**

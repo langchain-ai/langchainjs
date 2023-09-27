@@ -2,45 +2,74 @@ import { expect, test } from "@jest/globals";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { VercelPostgres } from "../vercel.js";
 
-test("Test embeddings creation", async () => {
-  const config = {
-    tableName: "testlangchain",
-    columns: {
-      idColumnName: "id",
-      vectorColumnName: "vector",
-      contentColumnName: "content",
-      metadataColumnName: "metadata",
-    },
-  };
+let vercelPostgresStore: VercelPostgres;
 
-  const pgvectorVectorStore = await VercelPostgres.initialize(
-    new OpenAIEmbeddings(),
-    config
-  );
-
-  expect(pgvectorVectorStore).toBeDefined();
-
-  const docHello = {
-    pageContent: "hello",
-    metadata: { a: 1 },
-  };
-  const docCat = {
-    pageContent: "Cat drinks milk",
-    metadata: { a: 2 },
-  };
-  const docHi = { pageContent: "hi", metadata: { a: 1 } };
-
-  await pgvectorVectorStore.addDocuments([docHello, docHi, docCat]);
-
-  const results = await pgvectorVectorStore.similaritySearch("hello", 2, {
-    a: 2,
+describe("Test VercelPostgres store", () => {
+  afterAll(async () => {
+    await vercelPostgresStore.delete({ deleteAll: true });
+    await vercelPostgresStore.end();
   });
 
-  expect(results).toHaveLength(1);
+  test("Test embeddings creation", async () => {
+    const config = {
+      tableName: "testvercelvectorstorelangchain",
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
 
-  expect(results[0].pageContent).toEqual(docCat.pageContent);
+    vercelPostgresStore = await VercelPostgres.initialize(
+      new OpenAIEmbeddings(),
+      config
+    );
 
-  await pgvectorVectorStore.pool.query('TRUNCATE TABLE "testlangchain"');
+    expect(vercelPostgresStore).toBeDefined();
 
-  await pgvectorVectorStore.end();
+    const docHello = {
+      pageContent: "hello",
+      metadata: { a: 1 },
+    };
+    const docCat = {
+      pageContent: "Cat drinks milk",
+      metadata: { a: 2 },
+    };
+    const docHi = { pageContent: "hi", metadata: { a: 1 } };
+
+    const ids = await vercelPostgresStore.addDocuments([
+      docHello,
+      docHi,
+      docCat,
+    ]);
+
+    const results = await vercelPostgresStore.similaritySearch("hello", 2, {
+      a: 2,
+    });
+
+    expect(results).toHaveLength(1);
+
+    expect(results[0].pageContent).toEqual(docCat.pageContent);
+
+    await vercelPostgresStore.addDocuments(
+      [{ pageContent: "Dog drinks milk", metadata: { a: 2 } }],
+      { ids: [ids[2]] }
+    );
+
+    const results2 = await vercelPostgresStore.similaritySearch("hello", 2, {
+      a: 2,
+    });
+
+    expect(results2).toHaveLength(1);
+    expect(results2[0].pageContent).toEqual("Dog drinks milk");
+
+    await vercelPostgresStore.delete({ ids: [ids[2]] });
+
+    const results3 = await vercelPostgresStore.similaritySearch("hello", 2, {
+      a: 2,
+    });
+
+    expect(results3).toHaveLength(0);
+  });
 });
