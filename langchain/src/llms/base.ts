@@ -1,7 +1,5 @@
-import { InMemoryCache } from "../cache/index.js";
 import {
   AIMessage,
-  BaseCache,
   BaseMessage,
   BasePromptValue,
   Generation,
@@ -35,7 +33,6 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
    * @deprecated Use `maxConcurrency` instead
    */
   concurrency?: number;
-  cache?: BaseCache | boolean;
 }
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
@@ -53,17 +50,8 @@ export abstract class BaseLLM<
 
   lc_namespace = ["langchain", "llms", this._llmType()];
 
-  cache?: BaseCache;
-
-  constructor({ cache, concurrency, ...rest }: BaseLLMParams) {
+  constructor({ concurrency, ...rest }: BaseLLMParams) {
     super(concurrency ? { maxConcurrency: concurrency, ...rest } : rest);
-    if (typeof cache === "object") {
-      this.cache = cache;
-    } else if (cache) {
-      this.cache = InMemoryCache.global();
-    } else {
-      this.cache = undefined;
-    }
   }
 
   /**
@@ -320,10 +308,8 @@ export abstract class BaseLLM<
     }
 
     const { cache } = this;
-    const params = this.serialize();
-    params.stop = callOptions.stop ?? params.stop;
-
-    const llmStringKey = `${Object.entries(params).sort()}`;
+    const llmStringKey =
+      this._getSerializedCacheKeyParametersForCall(callOptions);
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
       prompts.map(async (prompt, index) => {
@@ -415,6 +401,7 @@ export abstract class BaseLLM<
   abstract _llmType(): string;
 
   /**
+   * @deprecated
    * Return a json-like object representing this LLM.
    */
   serialize(): SerializedLLM {
@@ -430,6 +417,7 @@ export abstract class BaseLLM<
   }
 
   /**
+   * @deprecated
    * Load an LLM from a json-like object describing it.
    */
   static async deserialize(data: SerializedLLM): Promise<BaseLLM> {

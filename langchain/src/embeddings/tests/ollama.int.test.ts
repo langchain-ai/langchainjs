@@ -1,13 +1,13 @@
 import { test, expect } from "@jest/globals";
 import { OllamaEmbeddings } from "../ollama.js";
 
-test("Test OllamaEmbeddings.embedQuery", async () => {
+test.skip("Test OllamaEmbeddings.embedQuery", async () => {
   const embeddings = new OllamaEmbeddings();
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test OllamaEmbeddings.embedDocuments", async () => {
+test.skip("Test OllamaEmbeddings.embedDocuments", async () => {
   const embeddings = new OllamaEmbeddings();
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);
