@@ -2,8 +2,8 @@ import fs from "fs";
 import { fileURLToPath } from "node:url";
 import * as path from "path";
 
-import { describe, test } from "@jest/globals";
-import { MakerSuitePrompt } from "../googlemakersuitehub.js";
+import {describe, expect, test} from "@jest/globals";
+import {MakerSuiteHub, MakerSuitePrompt} from "../googlemakersuitehub.js";
 import {ChatGooglePaLM} from "../../chat_models/googlepalm.js";
 
 describe("Google Maker Suite Hub", () => {
@@ -77,6 +77,67 @@ describe("Google Maker Suite Hub", () => {
         }
       ]);
     })
+
+  });
+
+  describe("MakerSuiteHub", () => {
+
+    test("isValid no entry", () => {
+      const nonexistentId = "nonexistent";
+      const hub = new MakerSuiteHub({cacheTimeout: 1000});
+      const entry = hub.cache[nonexistentId];
+      const isValid = hub.isValid(entry);
+      expect(isValid).toEqual(false);
+    });
+
+    test("isValid timeout 0", () => {
+      // This should never be valid because the cache timeout will be 0
+      const fakeId = "fake";
+      const hub = new MakerSuiteHub({cacheTimeout: 0});
+      const entry = {
+        updated: Date.now(),
+        prompt: new MakerSuitePrompt({
+          textPrompt: {
+            value: "test"
+          }
+        })
+      };
+      hub.cache[fakeId] = entry;
+      const isValid = hub.isValid(entry);
+      expect(isValid).toEqual(false);
+    });
+
+    test("isValid valid", () => {
+      const fakeId = "fake";
+      const hub = new MakerSuiteHub({cacheTimeout: 60000});
+      const entry = {
+        updated: Date.now(),
+        prompt: new MakerSuitePrompt({
+          textPrompt: {
+            value: "test"
+          }
+        })
+      };
+      hub.cache[fakeId] = entry;
+      const isValid = hub.isValid(entry);
+      expect(isValid).toEqual(true);
+    });
+
+    test("isValid timeout", () => {
+      const fakeId = "fake";
+      const hub = new MakerSuiteHub({cacheTimeout: 60000});
+      const entry = {
+        updated: Date.now() - 100000,
+        prompt: new MakerSuitePrompt({
+          textPrompt: {
+            value: "test"
+          }
+        })
+      };
+      hub.cache[fakeId] = entry;
+      const isValid = hub.isValid(entry);
+      expect(isValid).toEqual(false);
+    });
 
   });
 

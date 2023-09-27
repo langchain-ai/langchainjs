@@ -1,5 +1,6 @@
 import { protos } from "@google-ai/generativelanguage";
 import { google } from "@google-ai/generativelanguage/build/protos/protos.js";
+import {GoogleAuth, GoogleAuthOptions} from "google-auth-library";
 
 import { GooglePaLM } from "../llms/googlepalm.js";
 import { ChatGooglePaLM } from "../chat_models/googlepalm.js";
@@ -8,9 +9,14 @@ import { BaseChatModel } from "../chat_models/base.js";
 import { LLM } from "../llms/base.js";
 import { Runnable } from "../schema/runnable/index.js";
 import IExample = google.ai.generativelanguage.v1beta2.IExample;
+import {AsyncCaller, AsyncCallerCallOptions} from "../util/async_caller.js";
+import { GoogleResponse, GoogleVertexAIConnectionParams } from "../types/googlevertexai-types.js";
+import { GoogleConnection } from "../util/googlevertexai-connection.js";
 
 export interface MakerSuiteHubConfig {
   cacheTimeout: number,
+
+  caller?: AsyncCaller,
 }
 
 type MakerSuitePromptType = "text" | "data" | "chat";
@@ -227,19 +233,74 @@ export class MakerSuitePrompt {
 
 }
 
-interface CacheEntry {
+interface DriveFileReadParams extends GoogleVertexAIConnectionParams<GoogleAuthOptions>{
+  fileId: string;
+}
+
+interface DriveCallOptions extends AsyncCallerCallOptions {
+  // Empty, I think
+}
+
+interface DriveFileMakerSuiteResponse extends GoogleResponse {
+  data: MakerSuitePromptData;
+}
+
+export class DriveFileReadConnection
+  extends GoogleConnection<DriveCallOptions, DriveFileMakerSuiteResponse>
+  implements DriveFileReadParams
+{
+
+  endpoint: string;
+
+  apiVersion: string;
+
+  fileId: string;
+
+  constructor(
+    fields: DriveFileReadParams,
+    caller: AsyncCaller
+  ) {
+    super(caller, new GoogleAuth({
+      scopes: "https://www.googleapis.com/auth/drive.readonly",
+      ...fields.authOptions
+    }));
+
+    this.endpoint = fields.endpoint ?? "www.googleapis.com";
+    this.apiVersion = fields.apiVersion ?? "v3";
+
+    this.fileId = fields.fileId;
+  }
+
+  async buildUrl(): Promise<string> {
+    return `https://${this.endpoint}/drive/${this.apiVersion}/files/${this.fileId}?alt=media`;
+  }
+
+  buildMethod(): string {
+    return "GET";
+  }
+
+  async request(options?: DriveCallOptions): Promise<DriveFileMakerSuiteResponse> {
+    return this._request(undefined, options ?? {});
+  }
+
+}
+
+export interface CacheEntry {
   updated: number,
   prompt: MakerSuitePrompt,
 }
 
 export class MakerSuiteHub {
 
-  cache: Record<string, CacheEntry>;
+  cache: Record<string, CacheEntry> = {};
 
   cacheTimeout: number;
 
+  caller: AsyncCaller;
+
   constructor(config?: MakerSuiteHubConfig){
     this.cacheTimeout = config?.cacheTimeout ?? 0;
+    this.caller = config?.caller ?? new AsyncCaller({});
   }
 
   isValid(entry: CacheEntry): boolean {
@@ -251,14 +312,21 @@ export class MakerSuiteHub {
 
     const now = Date.now();
     const expiration = entry.updated + this.cacheTimeout;
-    return expiration < now;
+    return expiration > now;
   }
 
   async forceLoad(id: string): Promise<MakerSuitePrompt> {
-    console.log('forceLoad', id);
-    return new MakerSuitePrompt({
-      textPrompt: {}
-    });
+    const fields: DriveFileReadParams = {
+      fileId: id
+    };
+    const connection = new DriveFileReadConnection(fields,this.caller);
+    const result = await connection.request();
+    const ret = new MakerSuitePrompt(result.data);
+    this.cache[id] = {
+      prompt: ret,
+      updated: Date.now(),
+    };
+    return ret;
   }
 
   async load(id: string): Promise<MakerSuitePrompt> {
