@@ -12,7 +12,7 @@ interface ResponseJsonInterface {
   }
 }
 
-class LLama2Handler
+class LLama213BHandler
   implements SageMakerWithStreamLLMContentHandler
 {
   contentType = 'application/json'
@@ -44,7 +44,7 @@ class LLama2Handler
 
 // Requires a pre-configured sagemaker endpoint
 test("Test SageMakerWithStream", async () => {
-  const contentHandler = new LLama2Handler();
+  const contentHandler = new LLama213BHandler();
 
   const model = new SageMakerWithStream({
     endpointName: 'aws-productbot-ai-dev-llama-2-13b-chat',
@@ -66,8 +66,14 @@ test("Test SageMakerWithStream", async () => {
     },
   });
 
-  const res = await model.call("Ivo");
-  console.log('res: ', res);
+  const stream = await model.call("hello, my name is ivo, tell me a joke about AI");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunks.join(""));
+  }
+  console.log(chunks.join(""));
+  // console.log('res: ', res);
 
   expect(true).toBe(true);
 });
