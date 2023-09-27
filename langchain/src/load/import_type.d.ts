@@ -77,8 +77,8 @@ export interface OptionalImportMap {
     | typeof import("../llms/googlevertexai/web.js")
     | Promise<typeof import("../llms/googlevertexai/web.js")>;
   "langchain/llms/googlepalm"?:
-    | typeof import("../llms/googlepalm.js")
-    | Promise<typeof import("../llms/googlepalm.js")>;
+    | typeof import("../llms/googlepalm/index.js")
+    | Promise<typeof import("../llms/googlepalm/index.js")>;
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
@@ -284,8 +284,8 @@ export interface OptionalImportMap {
     | typeof import("../chat_models/googlevertexai/web.js")
     | Promise<typeof import("../chat_models/googlevertexai/web.js")>;
   "langchain/chat_models/googlepalm"?:
-    | typeof import("../chat_models/googlepalm.js")
-    | Promise<typeof import("../chat_models/googlepalm.js")>;
+    | typeof import("../chat_models/googlepalm/index.js")
+    | Promise<typeof import("../chat_models/googlepalm/index.js")>;
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;

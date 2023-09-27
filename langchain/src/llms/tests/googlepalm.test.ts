@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { GooglePaLM } from "../googlepalm.js";
+import { GooglePaLM } from "../googlepalm/index.js";
 
 test("Google Palm - `temperature` must be in range [0.0,1.0]", async () => {
   expect(

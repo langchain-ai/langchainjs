@@ -145,6 +145,9 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
+    "llms/googlepalm/web.cjs",
+    "llms/googlepalm/web.js",
+    "llms/googlepalm/web.d.ts",
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
@@ -403,6 +406,9 @@
     "chat_models/googlepalm.cjs",
     "chat_models/googlepalm.js",
     "chat_models/googlepalm.d.ts",
+    "chat_models/googlepalm/web.cjs",
+    "chat_models/googlepalm/web.js",
+    "chat_models/googlepalm/web.d.ts",
     "chat_models/fireworks.cjs",
     "chat_models/fireworks.js",
     "chat_models/fireworks.d.ts",
@@ -1363,6 +1369,11 @@
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
     },
+    "./llms/googlepalm/web": {
+      "types": "./llms/googlepalm/web.d.ts",
+      "import": "./llms/googlepalm/web.js",
+      "require": "./llms/googlepalm/web.cjs"
+    },
     "./llms/fireworks": {
       "types": "./llms/fireworks.d.ts",
       "import": "./llms/fireworks.js",
@@ -1792,6 +1803,11 @@
       "types": "./chat_models/googlepalm.d.ts",
       "import": "./chat_models/googlepalm.js",
       "require": "./chat_models/googlepalm.cjs"
+    },
+    "./chat_models/googlepalm/web": {
+      "types": "./chat_models/googlepalm/web.d.ts",
+      "import": "./chat_models/googlepalm/web.js",
+      "require": "./chat_models/googlepalm/web.cjs"
     },
     "./chat_models/fireworks": {
       "types": "./chat_models/fireworks.d.ts",

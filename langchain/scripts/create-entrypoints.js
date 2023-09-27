@@ -58,7 +58,8 @@ const entrypoints = {
   "llms/replicate": "llms/replicate",
   "llms/googlevertexai": "llms/googlevertexai/index",
   "llms/googlevertexai/web": "llms/googlevertexai/web",
-  "llms/googlepalm": "llms/googlepalm",
+  "llms/googlepalm": "llms/googlepalm/index",
+  "llms/googlepalm/web": "llms/googlepalm/web",
   "llms/fireworks": "llms/fireworks",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   "llms/bedrock": "llms/bedrock",
@@ -159,7 +160,8 @@ const entrypoints = {
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/googlevertexai": "chat_models/googlevertexai/index",
   "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
-  "chat_models/googlepalm": "chat_models/googlepalm",
+  "chat_models/googlepalm": "chat_models/googlepalm/index",
+  "chat_models/googlepalm/web": "chat_models/googlepalm/web",
   "chat_models/fireworks": "chat_models/fireworks",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
@@ -243,10 +245,8 @@ const entrypoints = {
     "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
-  "experimental/chat_models/bittensor":
-    "experimental/chat_models/bittensor",
-  "experimental/llms/bittensor":
-    "experimental/llms/bittensor",
+  "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
+  "experimental/llms/bittensor": "experimental/llms/bittensor",
   // evaluation
   evaluation: "evaluation/index",
 };
