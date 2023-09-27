@@ -1199,13 +1199,14 @@ export class RunnableMap<RunInput> extends Runnable<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
     try {
-      for (const [key, runnable] of Object.entries(this.steps)) {
-        const result = await runnable.invoke(
-          input,
-          this._patchConfig(options, runManager?.getChild())
-        );
-        output[key] = result;
-      }
+      await Promise.all(
+        Object.entries(this.steps).map(async ([key, runnable]) => {
+          output[key] = await runnable.invoke(
+            input,
+            this._patchConfig(options, runManager?.getChild(key))
+          );
+        })
+      );
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
