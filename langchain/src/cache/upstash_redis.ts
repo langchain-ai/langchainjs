@@ -1,7 +1,11 @@
 import { Redis, type RedisConfigNodejs } from "@upstash/redis";
 
 import { BaseCache, Generation } from "../schema/index.js";
-import { getCacheKey } from "./base.js";
+import {
+  deserializeStoredGeneration,
+  getCacheKey,
+  serializeGeneration,
+} from "./base.js";
 
 export type UpstashRedisCacheProps = {
   /**
@@ -46,11 +50,7 @@ export class UpstashRedisCache extends BaseCache {
     const generations: Generation[] = [];
 
     while (value) {
-      if (!value) {
-        break;
-      }
-
-      generations.push({ text: value });
+      generations.push(deserializeStoredGeneration(JSON.parse(value)));
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
       value = await this.redisClient.get(key);
@@ -67,7 +67,10 @@ export class UpstashRedisCache extends BaseCache {
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      await this.redisClient.set(key, value[i].text);
+      await this.redisClient.set(
+        key,
+        JSON.stringify(serializeGeneration(value[i]))
+      );
     }
   }
 }
