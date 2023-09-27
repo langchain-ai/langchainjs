@@ -4,7 +4,8 @@ export interface GoogleConnectionParams<AuthOptions> {
   authOptions?: AuthOptions;
 }
 
-export interface GoogleVertexAIConnectionParams<AuthOptions> extends GoogleConnectionParams<AuthOptions> {
+export interface GoogleVertexAIConnectionParams<AuthOptions>
+  extends GoogleConnectionParams<AuthOptions> {
   /** Hostname for the API call */
   endpoint?: string;
 

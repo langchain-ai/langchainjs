@@ -7,22 +7,18 @@ import type {
   GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
   GoogleResponse,
-  GoogleAbstractedClient
+  GoogleAbstractedClient,
 } from "../types/googlevertexai-types.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
   ResponseType extends GoogleResponse
->
-{
+> {
   caller: AsyncCaller;
 
   client: GoogleAbstractedClient;
 
-  constructor(
-    caller: AsyncCaller,
-    client: GoogleAbstractedClient
-  ) {
+  constructor(caller: AsyncCaller, client: GoogleAbstractedClient) {
     this.caller = caller;
     this.client = client;
   }
@@ -59,14 +55,13 @@ export abstract class GoogleConnection<
       throw x;
     }
   }
-
 }
 
 export abstract class GoogleVertexAIConnection<
-  CallOptions extends AsyncCallerCallOptions,
-  ResponseType extends GoogleResponse,
-  AuthOptions
->
+    CallOptions extends AsyncCallerCallOptions,
+    ResponseType extends GoogleResponse,
+    AuthOptions
+  >
   extends GoogleConnection<CallOptions, ResponseType>
   implements GoogleVertexAIConnectionParams<AuthOptions>
 {
@@ -93,7 +88,6 @@ export abstract class GoogleVertexAIConnection<
   buildMethod(): string {
     return "POST";
   }
-
 }
 
 export class GoogleVertexAILLMConnection<

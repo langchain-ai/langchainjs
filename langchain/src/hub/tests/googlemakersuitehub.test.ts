@@ -2,21 +2,34 @@ import fs from "fs";
 import { fileURLToPath } from "node:url";
 import * as path from "path";
 
-import {describe, expect, test} from "@jest/globals";
-import {MakerSuiteHub, MakerSuitePrompt} from "../googlemakersuitehub.js";
-import {ChatGooglePaLM} from "../../chat_models/googlepalm.js";
+import { describe, expect, test } from "@jest/globals";
+import { MakerSuiteHub, MakerSuitePrompt } from "../googlemakersuitehub.js";
+import { ChatGooglePaLM } from "../../chat_models/googlepalm.js";
 
 describe("Google Maker Suite Hub", () => {
-
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  const chatFile = JSON.parse(fs.readFileSync(`${__dirname}/googlemakersuite-files/chatPrompt.json`, "utf8"));
-  const dataFile = JSON.parse(fs.readFileSync(`${__dirname}/googlemakersuite-files/dataPrompt.json`, "utf8"));
-  const textFile = JSON.parse(fs.readFileSync(`${__dirname}/googlemakersuite-files/textPrompt.json`, "utf8"));
+  const chatFile = JSON.parse(
+    fs.readFileSync(
+      `${__dirname}/googlemakersuite-files/chatPrompt.json`,
+      "utf8"
+    )
+  );
+  const dataFile = JSON.parse(
+    fs.readFileSync(
+      `${__dirname}/googlemakersuite-files/dataPrompt.json`,
+      "utf8"
+    )
+  );
+  const textFile = JSON.parse(
+    fs.readFileSync(
+      `${__dirname}/googlemakersuite-files/textPrompt.json`,
+      "utf8"
+    )
+  );
 
   describe("Prompt", () => {
-
     test("text type", () => {
       const prompt = new MakerSuitePrompt(textFile);
       expect(prompt.promptType).toEqual("text");
@@ -25,7 +38,9 @@ describe("Google Maker Suite Hub", () => {
     test("text template", () => {
       const prompt = new MakerSuitePrompt(textFile);
       const template = prompt.toTemplate();
-      expect(template.template).toEqual("What would be a good name for a company that makes {product}?")
+      expect(template.template).toEqual(
+        "What would be a good name for a company that makes {product}?"
+      );
     });
 
     test("text model", () => {
@@ -33,11 +48,11 @@ describe("Google Maker Suite Hub", () => {
       const model = prompt.toModel();
       // console.log(model.lc_namespace);
       expect(model.lc_namespace).toEqual(["langchain", "llms", "googlepalm"]);
-    })
+    });
 
     test("data type", () => {
       const prompt = new MakerSuitePrompt(dataFile);
-      expect(prompt.promptType).toEqual("data")
+      expect(prompt.promptType).toEqual("data");
     });
 
     test("data template", () => {
@@ -46,45 +61,47 @@ describe("Google Maker Suite Hub", () => {
       // console.log("data template", template.template);
       expect(template.template).toEqual(
         "Given a product description, you should return a name for that product that includes something about rainbows.\n" +
-        "description: socks\n" +
-        "product: spectrum socks\n" +
-        "description: hair ties\n" +
-        "product: rainbows^2\n" +
-        "description: {description}\n" +
-        "product: "
+          "description: socks\n" +
+          "product: spectrum socks\n" +
+          "description: hair ties\n" +
+          "product: rainbows^2\n" +
+          "description: {description}\n" +
+          "product: "
       );
-    })
+    });
 
     test("data model", () => {
       const prompt = new MakerSuitePrompt(dataFile);
       const model = prompt.toModel();
       expect(model.lc_namespace).toEqual(["langchain", "llms", "googlepalm"]);
-    })
+    });
 
     test("chat type", () => {
       const prompt = new MakerSuitePrompt(chatFile);
       expect(prompt.promptType).toEqual("chat");
-    })
+    });
 
     test("chat model", () => {
       const prompt = new MakerSuitePrompt(chatFile);
       const model = prompt.toModel();
-      expect(model.lc_namespace).toEqual(["langchain", "chat_models", "googlepalm"]);
+      expect(model.lc_namespace).toEqual([
+        "langchain",
+        "chat_models",
+        "googlepalm",
+      ]);
       expect((model as ChatGooglePaLM).examples).toEqual([
         {
-          input: { content: 'What time is it?' },
-          output: { content: '2023-09-16T02:03:04-0500' }
-        }
+          input: { content: "What time is it?" },
+          output: { content: "2023-09-16T02:03:04-0500" },
+        },
       ]);
-    })
-
+    });
   });
 
   describe("MakerSuiteHub", () => {
-
     test("isValid no entry", () => {
       const nonexistentId = "nonexistent";
-      const hub = new MakerSuiteHub({cacheTimeout: 1000});
+      const hub = new MakerSuiteHub({ cacheTimeout: 1000 });
       const entry = hub.cache[nonexistentId];
       const isValid = hub.isValid(entry);
       expect(isValid).toEqual(false);
@@ -93,14 +110,14 @@ describe("Google Maker Suite Hub", () => {
     test("isValid timeout 0", () => {
       // This should never be valid because the cache timeout will be 0
       const fakeId = "fake";
-      const hub = new MakerSuiteHub({cacheTimeout: 0});
+      const hub = new MakerSuiteHub({ cacheTimeout: 0 });
       const entry = {
         updated: Date.now(),
         prompt: new MakerSuitePrompt({
           textPrompt: {
-            value: "test"
-          }
-        })
+            value: "test",
+          },
+        }),
       };
       hub.cache[fakeId] = entry;
       const isValid = hub.isValid(entry);
@@ -109,14 +126,14 @@ describe("Google Maker Suite Hub", () => {
 
     test("isValid valid", () => {
       const fakeId = "fake";
-      const hub = new MakerSuiteHub({cacheTimeout: 60000});
+      const hub = new MakerSuiteHub({ cacheTimeout: 60000 });
       const entry = {
         updated: Date.now(),
         prompt: new MakerSuitePrompt({
           textPrompt: {
-            value: "test"
-          }
-        })
+            value: "test",
+          },
+        }),
       };
       hub.cache[fakeId] = entry;
       const isValid = hub.isValid(entry);
@@ -125,20 +142,18 @@ describe("Google Maker Suite Hub", () => {
 
     test("isValid timeout", () => {
       const fakeId = "fake";
-      const hub = new MakerSuiteHub({cacheTimeout: 60000});
+      const hub = new MakerSuiteHub({ cacheTimeout: 60000 });
       const entry = {
         updated: Date.now() - 100000,
         prompt: new MakerSuitePrompt({
           textPrompt: {
-            value: "test"
-          }
-        })
+            value: "test",
+          },
+        }),
       };
       hub.cache[fakeId] = entry;
       const isValid = hub.isValid(entry);
       expect(isValid).toEqual(false);
     });
-
   });
-
-})
+});
