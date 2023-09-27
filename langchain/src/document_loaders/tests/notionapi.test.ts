@@ -101,3 +101,30 @@ test("Get Title (page)", async () => {
 
   expect(title).toBe("An example ~~page~~ in a database");
 });
+
+test("Get Title (database)", async () => {
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_PAGE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle) => {
+      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    },
+  });
+
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/notion_api/notion_database_response.json"
+  );
+
+  const dbDetails: DatabaseObjectResponse = JSON.parse(
+    fs.readFileSync(filePath).toString()
+  );
+
+  // Accessing private class method
+  // eslint-disable-next-line dot-notation
+  const title = loader["getTitle"](dbDetails);
+
+  expect(title).toBe("Example ~~_**Database**_~~");
+});

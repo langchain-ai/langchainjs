@@ -150,7 +150,12 @@ export class NotionAPILoader extends BaseDocumentLoader {
       );
       if (titleProp) return this.getPropValue(titleProp);
     }
-    if (isDatabase(obj)) return obj.title[0]?.plain_text;
+    if (isDatabase(obj))
+      return obj.title
+        .map((v) =>
+          this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+        )
+        .join("");
     return null;
   }
 
