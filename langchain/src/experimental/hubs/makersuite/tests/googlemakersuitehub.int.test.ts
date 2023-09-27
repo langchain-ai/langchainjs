@@ -10,10 +10,10 @@ import {
   MakerSuiteHub,
   MakerSuitePrompt,
 } from "../googlemakersuitehub.js";
-import { AsyncCaller } from "../../util/async_caller.js";
-import { HumanMessage } from "../../schema/index.js";
-import { ChatGooglePaLM } from "../../chat_models/googlepalm.js";
-import { GooglePaLM } from "../../llms/googlepalm.js";
+import { AsyncCaller } from "../../../../util/async_caller.js";
+import { HumanMessage } from "../../../../schema/index.js";
+import { ChatGooglePaLM } from "../../../../chat_models/googlepalm.js";
+import { GooglePaLM } from "../../../../llms/googlepalm.js";
 
 describe("Google Maker Suite Hub Integration", () => {
   describe("Prompt", () => {

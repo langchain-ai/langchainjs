@@ -4,7 +4,7 @@ import * as path from "path";
 
 import { describe, expect, test } from "@jest/globals";
 import { MakerSuiteHub, MakerSuitePrompt } from "../googlemakersuitehub.js";
-import { ChatGooglePaLM } from "../../chat_models/googlepalm.js";
+import { ChatGooglePaLM } from "../../../../chat_models/googlepalm.js";
 
 describe("Google Maker Suite Hub", () => {
   const __filename = fileURLToPath(import.meta.url);
