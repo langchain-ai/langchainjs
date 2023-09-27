@@ -62,7 +62,7 @@ const model = new SageMakerEndpointWithStream({
 
 const res = await model.call("Hello, my name is John Doe, tell me a joke about llamas ");
 
-console.log({ res });
+console.log(res);
 
 /*
   [
