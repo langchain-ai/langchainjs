@@ -47,7 +47,7 @@ test("Test SageMakerWithStream", async () => {
   const contentHandler = new LLama213BHandler();
 
   const model = new SageMakerWithStream({
-    endpointName: 'aws-productbot-ai-dev-llama-2-13b-chat',
+    endpointName: 'aws...llama-2-13b-chat',
     modelKwargs: {
       temperature: 0.5,
       max_new_tokens: 700,
@@ -60,8 +60,8 @@ test("Test SageMakerWithStream", async () => {
     clientOptions: {
       region: 'us-east-1',
       credentials: {
-        accessKeyId: 'AKIAQQMEQJVFGQX4OMUE',
-        secretAccessKey: '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',
+        accessKeyId: 'xx',
+        secretAccessKey: 'ccc',
       },
     },
   });
