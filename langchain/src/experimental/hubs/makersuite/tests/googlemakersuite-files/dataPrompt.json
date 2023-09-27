@@ -1,0 +1,108 @@
+{
+  "dataPrompt": {
+    "preamble": "Given a product description, you should return a name for that product that includes something about rainbows.",
+    "columns": [
+      {
+        "columnId": "CFA438B7-313B-4A50-AF74-3ACBC9216A4B",
+        "displayName": "description:",
+        "isInput": true
+      },
+      {
+        "columnId": "7D38B937-6636-4AAC-9DFD-B4A60D98C011",
+        "displayName": "product:"
+      }
+    ],
+    "rows": [
+      {
+        "columnBindings": {
+          "CFA438B7-313B-4A50-AF74-3ACBC9216A4B": "socks",
+          "7D38B937-6636-4AAC-9DFD-B4A60D98C011": "spectrum socks"
+        },
+        "rowId": "D412F0BE-5C81-401D-917C-758A6F14EEC4"
+      },
+      {
+        "columnBindings": {
+          "CFA438B7-313B-4A50-AF74-3ACBC9216A4B": "hair ties",
+          "7D38B937-6636-4AAC-9DFD-B4A60D98C011": "rainbows^2"
+        },
+        "rowId": "C77A45B4-74B4-41F3-AD8E-06F0C1D9D820"
+      }
+    ],
+    "rowsUsed": [
+      "D412F0BE-5C81-401D-917C-758A6F14EEC4",
+      "C77A45B4-74B4-41F3-AD8E-06F0C1D9D820"
+    ]
+  },
+  "runSettings": {
+    "temperature": 0.7,
+    "model": "models/text-bison-001",
+    "candidateCount": 1,
+    "topP": 0.95,
+    "topK": 40,
+    "maxOutputTokens": 1024,
+    "safetySettings": [
+      {
+        "category": "HARM_CATEGORY_DEROGATORY",
+        "threshold": "BLOCK_LOW_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_TOXICITY",
+        "threshold": "BLOCK_LOW_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_VIOLENCE",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_SEXUAL",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_MEDICAL",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_DANGEROUS",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      }
+    ]
+  },
+  "testExamples": [
+    {
+      "inputBindings": {
+        "CFA438B7-313B-4A50-AF74-3ACBC9216A4B": "condoms"
+      },
+      "modelResponses": [
+        {
+          "response": "rainbow rhapsody",
+          "safetyRatings": [
+            {
+              "category": "HARM_CATEGORY_DEROGATORY",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_TOXICITY",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_VIOLENCE",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_SEXUAL",
+              "probability": "LOW"
+            },
+            {
+              "category": "HARM_CATEGORY_MEDICAL",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_DANGEROUS",
+              "probability": "NEGLIGIBLE"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
