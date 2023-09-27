@@ -46,6 +46,19 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
   }
 >;
 
+type CreateIndexOptions = NonNullable<
+  Parameters<ReturnType<typeof createClient>["ft"]["create"]>[3]
+>;
+
+export type RedisSearchLanguages = `${NonNullable<
+  CreateIndexOptions["LANGUAGE"]
+>}`;
+
+export type RedisVectorStoreIndexOptions = Omit<
+  CreateIndexOptions,
+  "LANGUAGE"
+> & { LANGUAGE?: RedisSearchLanguages };
+
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
  * the Redis client, index name, index options, key prefix, content key,
@@ -57,6 +70,7 @@ export interface RedisVectorStoreConfig {
     | ReturnType<typeof createCluster>;
   indexName: string;
   indexOptions?: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
+  createIndexOptions?: Omit<RedisVectorStoreIndexOptions, "PREFIX">; // PREFIX must be set with keyPrefix
   keyPrefix?: string;
   contentKey?: string;
   metadataKey?: string;
@@ -95,6 +109,8 @@ export class RedisVectorStore extends VectorStore {
 
   indexOptions: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
 
+  createIndexOptions: CreateIndexOptions;
+
   keyPrefix: string;
 
   contentKey: string;
@@ -123,6 +139,11 @@ export class RedisVectorStore extends VectorStore {
     this.metadataKey = _dbConfig.metadataKey ?? "metadata";
     this.vectorKey = _dbConfig.vectorKey ?? "content_vector";
     this.filter = _dbConfig.filter;
+    this.createIndexOptions = {
+      ON: "HASH",
+      PREFIX: this.keyPrefix,
+      ...(_dbConfig.createIndexOptions as CreateIndexOptions),
+    };
   }
 
   /**
@@ -324,10 +345,11 @@ export class RedisVectorStore extends VectorStore {
       [this.metadataKey]: SchemaFieldTypes.TEXT,
     };
 
-    await this.redisClient.ft.create(this.indexName, schema, {
-      ON: "HASH",
-      PREFIX: this.keyPrefix,
-    });
+    await this.redisClient.ft.create(
+      this.indexName,
+      schema,
+      this.createIndexOptions
+    );
   }
 
   /**

@@ -1,0 +1,26 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Comparisons from "@examples/guides/evaluation/examples/comparisons.ts";
+
+# Comparing Chain Outputs
+
+Suppose you have two different prompts (or LLMs). How do you know which will generate "better" results?
+
+One automated way to predict the preferred configuration is to use a `PairwiseStringEvaluator` like the `PairwiseStringEvalChain`<a name="cite_ref-1"></a>[<sup>[1]</sup>](#cite_note-1). This chain prompts an LLM to select which output is preferred, given a specific input.
+
+For this evaluation, we will need 3 things:
+1. An evaluator
+2. A dataset of inputs
+3. 2 (or more) LLMs, Chains, or Agents to compare
+
+Then we will aggregate the restults to determine the preferred model.
+
+<CodeBlock language="typescript">{Comparisons}</CodeBlock>
+
+
+1. Note: Automated evals are still an open research topic and are best used alongside other evaluation approaches.
+LLM preferences exhibit biases, including banal ones like the order of outputs.
+In choosing preferences, "ground truth" may not be taken into account, which may lead to scores that aren't grounded in utility._

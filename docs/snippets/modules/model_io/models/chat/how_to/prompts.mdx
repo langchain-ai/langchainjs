@@ -17,7 +17,7 @@ const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
 const humanTemplate = "{text}";
 const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(humanTemplate);
 
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([systemMessagePrompt, humanMessagePrompt]);
+const chatPrompt = ChatPromptTemplate.fromMessages([systemMessagePrompt, humanMessagePrompt]);
 
 const chat = new ChatOpenAI({
   temperature: 0,

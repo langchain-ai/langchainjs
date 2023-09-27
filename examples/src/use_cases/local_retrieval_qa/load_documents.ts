@@ -1,10 +1,7 @@
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
-
-// Import the TensorFlow backend.
-import "@tensorflow/tfjs-node";
-import { TensorFlowEmbeddings } from "langchain/embeddings/tensorflow";
+import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
 
 const loader = new CheerioWebBaseLoader(
   "https://lilianweng.github.io/posts/2023-06-23-agent/"
@@ -20,7 +17,7 @@ const splitDocuments = await splitter.splitDocuments(docs);
 
 const vectorstore = await HNSWLib.fromDocuments(
   splitDocuments,
-  new TensorFlowEmbeddings()
+  new HuggingFaceTransformersEmbeddings()
 );
 
 const retrievedDocs = await vectorstore.similaritySearch(

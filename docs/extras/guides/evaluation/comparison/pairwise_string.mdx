@@ -1,0 +1,79 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import WithoutReference from "@examples/guides/evaluation/comparision_evaluator/pairwise_string_without_reference.ts";
+import WithReference from "@examples/guides/evaluation/comparision_evaluator/pairwise_string_with_reference.ts";
+import CustomCriteria from "@examples/guides/evaluation/comparision_evaluator/pairwise_string_custom_criteria.ts";
+import ConfiguringLLM from "@examples/guides/evaluation/comparision_evaluator/pairwise_string_custom_llm.ts";
+import ConfiguringPrompt from "@examples/guides/evaluation/comparision_evaluator/pairwise_string_custom_prompt.ts";
+
+# Pairwise String Comparison
+
+Often you will want to compare predictions of an LLM, Chain, or Agent for a given input. The `StringComparison` evaluators facilitate this so you can answer questions like:
+
+- Which LLM or prompt produces a preferred output for a given question?
+- Which examples should I include for few-shot example selection?
+- Which output is better to include for fintetuning?
+
+The simplest and often most reliable automated way to choose a preferred prediction for a given input is to use the `labeled_pairwise_string` evaluator.
+
+
+## With References
+
+<CodeBlock language="typescript">{WithReference}</CodeBlock>
+
+
+## Methods
+
+
+The pairwise string evaluator can be called using **evaluateStringPairs**  methods, which accept:
+
+- prediction (string) – The predicted response of the first model, chain, or prompt.
+- predictionB (string) – The predicted response of the second model, chain, or prompt.
+- input (string) – The input question, prompt, or other text.
+- reference (string) – (Only for the labeled_pairwise_string variant) The reference response.
+
+They return a dictionary with the following values:
+- value: 'A' or 'B', indicating whether `prediction` or `predictionB` is preferred, respectively
+- score: Integer 0 or 1 mapped from the 'value', where a score of 1 would mean that the first `prediction` is preferred, and a score of 0 would mean `predictionB` is preferred.
+- reasoning: String "chain of thought reasoning" from the LLM generated prior to creating the score
+
+
+
+## Without References
+
+When references aren't available, you can still predict the preferred response.
+The results will reflect the evaluation model's preference, which is less reliable and may result
+in preferences that are factually incorrect.
+
+<CodeBlock language="typescript">{WithoutReference}</CodeBlock>
+
+## Defining the Criteria
+
+By default, the LLM is instructed to select the 'preferred' response based on helpfulness, relevance, correctness, and depth of thought. You can customize the criteria by passing in a `criteria` argument, where the criteria could take any of the following forms:
+- `Criteria` - to use one of the default criteria and their descriptions
+- `Constitutional principal` - use one any of the constitutional principles defined in langchain
+- `Dictionary`: a list of custom criteria, where the key is the name of the criteria, and the value is the description.
+
+Below is an example for determining preferred writing responses based on a custom style.
+
+<CodeBlock language="typescript">{CustomCriteria}</CodeBlock>
+
+
+## Customize the LLM
+
+By default, the loader uses `gpt-4` in the evaluation chain. You can customize this when loading.
+
+<CodeBlock language="typescript">{ConfiguringLLM}</CodeBlock>
+
+## Customize the Evaluation Prompt
+
+You can use your own custom evaluation prompt to add more task-specific instructions or to instruct the evaluator to score the output.
+
+*Note: If you use a prompt that expects generates a result in a unique format, you may also have to pass in a custom output parser (`outputParser=yourParser()`) instead of the default `PairwiseStringResultOutputParser`
+
+<CodeBlock language="typescript">{ConfiguringPrompt}</CodeBlock>
+
+

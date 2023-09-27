@@ -2,14 +2,14 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
-import { ChatOpenAI } from "../../chat_models/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   FunctionParameters,
   JsonKeyOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
 import { LLMChain } from "../llm_chain.js";
-import { AnthropicFunctions } from "../../experimental/chat_models/anthropic_functions.js";
+import { BaseChatModel } from "../../chat_models/base.js";
+import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
  * Function that returns an array of extraction functions. These functions
@@ -55,7 +55,7 @@ Passage:
  */
 export function createExtractionChain(
   schema: FunctionParameters,
-  llm: ChatOpenAI | AnthropicFunctions
+  llm: BaseChatModel<BaseFunctionCallOptions>
 ) {
   const functions = getExtractionFunctions(schema);
   const prompt = PromptTemplate.fromTemplate(_EXTRACTION_TEMPLATE);
@@ -80,7 +80,7 @@ export function createExtractionChain(
 export function createExtractionChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodObject<any, any, any, any>,
-  llm: ChatOpenAI | AnthropicFunctions
+  llm: BaseChatModel<BaseFunctionCallOptions>
 ) {
   return createExtractionChain(
     zodToJsonSchema(schema) as JsonSchema7ObjectType,

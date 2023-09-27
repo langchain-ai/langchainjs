@@ -1,11 +1,10 @@
-import { GoogleAuthOptions } from "google-auth-library";
-import { BaseLLMParams } from "../llms/index.js";
+import { BaseLLMParams } from "../llms/base.js";
 
-export interface GoogleVertexAIConnectionParams {
+export interface GoogleVertexAIConnectionParams<AuthOptions> {
   /** Hostname for the API call */
   endpoint?: string;
 
-  authOptions?: GoogleAuthOptions;
+  authOptions?: AuthOptions;
 
   /** Region where the LLM is stored */
   location?: string;
@@ -49,9 +48,9 @@ export interface GoogleVertexAIModelParams {
   topK?: number;
 }
 
-export interface GoogleVertexAIBaseLLMInput
+export interface GoogleVertexAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
-    GoogleVertexAIConnectionParams,
+    GoogleVertexAIConnectionParams<AuthOptions>,
     GoogleVertexAIModelParams {}
 
 export interface GoogleVertexAIResponse {
@@ -70,4 +69,13 @@ export interface GoogleVertexAILLMResponse<
   data: {
     predictions: PredictionType[];
   };
+}
+
+export interface GoogleVertexAIAbstractedClient {
+  request: (opts: {
+    url?: string;
+    method?: "GET" | "POST";
+    data?: unknown;
+  }) => unknown;
+  getProjectId: () => Promise<string>;
 }

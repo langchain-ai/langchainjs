@@ -97,6 +97,9 @@ export interface BedrockInput {
 
   /** A custom fetch function for low-level access to AWS API. Defaults to fetch() */
   fetchFn?: typeof fetch;
+
+  /** Override the default endpoint url */
+  endpointUrl?: string;
 }
 
 /**
@@ -120,6 +123,8 @@ export class Bedrock extends LLM implements BedrockInput {
   maxTokens?: number | undefined = undefined;
 
   fetchFn: typeof fetch;
+
+  endpointUrl?: string;
 
   codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
 
@@ -153,6 +158,7 @@ export class Bedrock extends LLM implements BedrockInput {
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.fetchFn = fields?.fetchFn ?? fetch;
+    this.endpointUrl = fields?.endpointUrl;
   }
 
   /** Call out to Bedrock service model.
@@ -196,8 +202,11 @@ export class Bedrock extends LLM implements BedrockInput {
       this.temperature
     );
 
+    const endpointUrl =
+      this.endpointUrl ?? `${service}.${this.region}.amazonaws.com`;
+
     const url = new URL(
-      `https://${service}.${this.region}.amazonaws.com/model/${this.model}/invoke-with-response-stream`
+      `https://${endpointUrl}/model/${this.model}/invoke-with-response-stream`
     );
 
     const request = new HttpRequest({

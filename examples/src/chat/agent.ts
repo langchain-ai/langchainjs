@@ -22,7 +22,7 @@ export const run = async () => {
     suffix: `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"`,
   });
 
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(prompt),
     HumanMessagePromptTemplate.fromTemplate(`{input}
 

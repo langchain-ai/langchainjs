@@ -1,0 +1,53 @@
+---
+sidebar_position: 0
+title: Prompt + LLM
+hide_table_of_contents: true
+---
+
+# Prompt + LLM
+
+One of the most foundational Expression Language compositions is taking:
+
+`PromptTemplate` / `ChatPromptTemplate` -> `LLM` / `ChatModel` -> `OutputParser`
+
+Almost all other chains you build will use this building block.
+
+## Interactive walkthrough
+
+The below scrim from [Scrimba](https://scrimba.com/scrim/c6rD6Nt9) interactively walks through a simple prompt template + LLM chain.
+You can update and run the code as it's being written in the video:
+
+<iframe src="https://scrimba.com/scrim/c6rD6Nt9?embed=langchain,mini-header" width="100%" height="600px">
+</iframe>
+
+## PromptTemplate + LLM
+
+A PromptTemplate -> LLM is a core chain that is used in most other larger chains/systems.
+
+import CodeBlock from "@theme/CodeBlock";
+
+import BasicExample from "@examples/guides/expression_language/cookbook_basic.ts";
+
+<CodeBlock language="typescript">{BasicExample}</CodeBlock>
+
+Often times we want to attach kwargs to the model that's passed in. To do this, runnables contain a `.bind` method. Here's how you can use it:
+
+### Attaching stop sequences
+
+import StopSequenceExample from "@examples/guides/expression_language/cookbook_stop_sequence.ts";
+
+<CodeBlock language="typescript">{StopSequenceExample}</CodeBlock>
+
+### Attaching function call information
+
+import FunctionCallExample from "@examples/guides/expression_language/cookbook_function_call.ts";
+
+<CodeBlock language="typescript">{FunctionCallExample}</CodeBlock>
+
+## PromptTemplate + LLM + OutputParser
+
+We can also add in an output parser to conveniently transform the raw LLM/ChatModel output into a consistent string format:
+
+import OutputParserExample from "@examples/guides/expression_language/cookbook_output_parser.ts";
+
+<CodeBlock language="typescript">{OutputParserExample}</CodeBlock>

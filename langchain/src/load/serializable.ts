@@ -172,11 +172,32 @@ export abstract class Serializable {
 
     // include all secrets used, even if not in kwargs,
     // will be replaced with sentinel value in replaceSecrets
-    for (const key in secrets) {
-      if (key in this && this[key as keyof this] !== undefined) {
-        kwargs[key] = this[key as keyof this] || kwargs[key];
+    Object.keys(secrets).forEach((keyPath) => {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias, @typescript-eslint/no-explicit-any
+      let read: any = this;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let write: any = kwargs;
+
+      const [last, ...partsReverse] = keyPath.split(".").reverse();
+      for (const key of partsReverse.reverse()) {
+        if (!(key in read) || read[key] === undefined) return;
+        if (!(key in write) || write[key] === undefined) {
+          if (typeof read[key] === "object" && read[key] != null) {
+            write[key] = {};
+          } else if (Array.isArray(read[key])) {
+            write[key] = [];
+          }
+        }
+
+        read = read[key];
+        write = write[key];
       }
-    }
+
+      if (last in read && read[last] !== undefined) {
+        write[last] = write[last] || read[last];
+      }
+    });
 
     return {
       lc: 1,

@@ -13,7 +13,7 @@ import {
   VisitorStructuredQueryResult,
 } from "../../chains/query_constructor/ir.js";
 import { VectorStore } from "../../vectorstores/base.js";
-import { isFilterEmpty } from "./utils.js";
+import { isFilterEmpty, castValue } from "./utils.js";
 
 /**
  * Options object for the BasicTranslator class. Specifies the allowed
@@ -142,7 +142,9 @@ export class BasicTranslator<
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
     return {
       [comparison.attribute]: {
-        [this.formatFunction(comparison.comparator)]: comparison.value,
+        [this.formatFunction(comparison.comparator)]: castValue(
+          comparison.value
+        ),
       },
     };
   }

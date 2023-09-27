@@ -15,7 +15,7 @@ test("Test Notion API Loader Page", async () => {
   });
 
   const docs = await loader.load();
-  const titles = docs.map((doc) => doc.metadata.properties.title);
+  const titles = docs.map((doc) => doc.metadata.properties._title);
   console.log("Titles:", titles);
   console.log(`Loaded ${docs.length} pages`);
 });
@@ -32,7 +32,7 @@ test("Test Notion API Loader Database", async () => {
   });
 
   const docs = await loader.load();
-  const titles = docs.map((doc) => doc.metadata.properties.title);
+  const titles = docs.map((doc) => doc.metadata.properties._title);
   console.log("Titles:", titles);
   console.log(`Loaded ${docs.length} pages from the database`);
 });
