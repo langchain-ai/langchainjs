@@ -70,3 +70,30 @@ test("Properties Parser", async () => {
   expect(contents.Name).toBe("An example page in a database");
   expect(contents._title).toBe("An example page in a database");
 });
+
+test("Get Title", async () => {
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_PAGE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle) => {
+      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    },
+  });
+
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/notion_api/notion_page_response.json"
+  );
+
+  const pageDetails: PageObjectResponse = JSON.parse(
+    fs.readFileSync(filePath).toString()
+  );
+
+  // Accessing private class method
+  // eslint-disable-next-line dot-notation
+  const title = loader["getTitle"](pageDetails);
+
+  expect(title).toBe("An example page in a database");
+});
