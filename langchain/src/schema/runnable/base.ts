@@ -5,6 +5,11 @@ import {
   CallbackManagerForChainRun,
   BaseCallbackConfig,
 } from "../../callbacks/manager.js";
+import {
+  LogStreamCallbackHandler,
+  LogStreamCallbackHandlerInput,
+  RunLogPatch,
+} from "../../callbacks/handlers/log_stream.js";
 import { Serializable } from "../../load/serializable.js";
 import { IterableReadableStream } from "../../util/stream.js";
 import { RunnableConfig, getCallbackMangerForConfig } from "./config.js";
@@ -461,6 +466,68 @@ export abstract class Runnable<
       }
     }
     yield* this._streamIterator(finalChunk, options);
+  }
+
+  /**
+   * Stream all output from a runnable, as reported to the callback system.
+   * This includes all inner runs of LLMs, Retrievers, Tools, etc.
+   * Output is streamed as Log objects, which include a list of
+   * jsonpatch ops that describe how the state of the run has changed in each
+   * step, and the final state of the run.
+   * The jsonpatch ops can be applied in order to construct state.
+   * @param input
+   * @param options
+   * @param streamOptions
+   */
+  async *streamLog(
+    input: RunInput,
+    options?: Partial<CallOptions>,
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): AsyncGenerator<RunLogPatch> {
+    const stream = new LogStreamCallbackHandler({
+      ...streamOptions,
+      autoClose: false,
+    });
+    const config: Partial<CallOptions> = options ?? {};
+    const { callbacks } = config;
+    if (callbacks === undefined) {
+      config.callbacks = [stream];
+    } else if (Array.isArray(callbacks)) {
+      config.callbacks = callbacks.concat([stream]);
+    } else {
+      const copiedCallbacks = callbacks.copy();
+      copiedCallbacks.inheritableHandlers.push(stream);
+      config.callbacks = copiedCallbacks;
+    }
+    const runnableStream = await this.stream(input, config);
+    async function consumeRunnableStream() {
+      try {
+        for await (const chunk of runnableStream) {
+          const patch = new RunLogPatch({
+            ops: [
+              {
+                op: "add",
+                path: "/streamed_output/-",
+                value: chunk,
+              },
+            ],
+          });
+          await stream.writer.write(patch);
+        }
+      } finally {
+        await stream.writer.close();
+      }
+    }
+    const runnableStreamPromise = consumeRunnableStream();
+    try {
+      for await (const log of stream) {
+        if (log !== undefined) {
+          yield log;
+        }
+      }
+    } finally {
+      await runnableStreamPromise;
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

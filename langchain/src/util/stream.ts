@@ -79,8 +79,7 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     return new IterableReadableStream<T>({
       start(controller) {
         return pump();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        function pump(): any {
+        function pump(): Promise<T | undefined> {
           return reader.read().then(({ done, value }) => {
             // When no more data needs to be consumed, close the stream
             if (done) {
