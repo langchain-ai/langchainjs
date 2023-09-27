@@ -47,16 +47,16 @@ interface TokenUsage {
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
-export class OpenAI
-  extends BaseLLM<OpenAICallOptions>
+export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
+  extends BaseLLM<CallOptions>
   implements OpenAIInput, AzureOpenAIInput
 {
   static lc_name() {
     return "OpenAI";
   }
 
-  get callKeys(): (keyof OpenAICallOptions)[] {
-    return [...(super.callKeys as (keyof OpenAICallOptions)[]), "options"];
+  get callKeys() {
+    return [...super.callKeys, "options"];
   }
 
   lc_serializable = true;
@@ -142,8 +142,11 @@ export class OpenAI
         fields?.modelName?.startsWith("gpt-4")) &&
       !fields?.modelName?.includes("-instruct")
     ) {
-      // eslint-disable-next-line no-constructor-return, @typescript-eslint/no-explicit-any
-      return new OpenAIChat(fields, configuration) as any as OpenAI;
+      // eslint-disable-next-line no-constructor-return
+      return new OpenAIChat(
+        fields,
+        configuration
+      ) as unknown as OpenAI<CallOptions>;
     }
     super(fields ?? {});
 

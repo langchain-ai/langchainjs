@@ -1,4 +1,5 @@
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { z } from "zod";
 import { test } from "@jest/globals";
@@ -25,6 +26,7 @@ import {
   RunnableSequence,
   RouterRunnable,
   RunnableLambda,
+  Runnable,
 } from "../runnable/index.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
@@ -34,6 +36,8 @@ import {
   StringOutputParser,
 } from "../output_parser.js";
 import { RunnableBranch } from "../runnable/branch.js";
+import { BaseCallbackConfig } from "../../callbacks/manager.js";
+import { RunLog } from "../../callbacks/handlers/log_stream.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -48,6 +52,27 @@ export class FakeSplitIntoListParser extends BaseOutputParser<string[]> {
 
   async parse(text: string): Promise<string[]> {
     return text.split(",").map((value) => value.trim());
+  }
+}
+
+class FakeRunnable extends Runnable<string, Record<string, any>> {
+  lc_namespace = ["tests", "fake"];
+
+  returnOptions?: boolean;
+
+  constructor(fields: { returnOptions?: boolean }) {
+    super(fields);
+    this.returnOptions = fields.returnOptions;
+  }
+
+  async invoke(
+    input: string,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<Record<string, any>> {
+    if (this.returnOptions) {
+      return options ?? {};
+    }
+    return { input };
   }
 }
 
@@ -550,4 +575,91 @@ test("RunnableBranch handles error", async () => {
     });
   }).rejects.toThrow();
   expect(error).toBeDefined();
+});
+
+test("Runnable withConfig", async () => {
+  const fake = new FakeRunnable({
+    returnOptions: true,
+  });
+  const result = await fake.withConfig({ tags: ["a-tag"] }).invoke("hello");
+  expect(result.tags).toEqual(["a-tag"]);
+  const stream = await fake
+    .withConfig({
+      metadata: {
+        a: "b",
+        b: "c",
+      },
+      tags: ["a-tag"],
+    })
+    .stream("hi", { tags: ["b-tag"], metadata: { a: "updated" } });
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+  expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
+  expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
+});
+
+test("Runnable streamLog method", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeLLM({});
+  const runnable = promptTemplate.pipe(llm);
+  const result = await runnable.streamLog({ input: "Hello world!" });
+  let finalState;
+  for await (const chunk of result) {
+    if (finalState === undefined) {
+      finalState = chunk;
+    } else {
+      finalState = finalState.concat(chunk);
+    }
+  }
+  expect((finalState as RunLog).state.final_output).toEqual({
+    output: "Hello world!",
+  });
+});
+
+test("Runnable streamLog method with a more complicated sequence", async () => {
+  const promptTemplate = ChatPromptTemplate.fromMessages<{
+    documents: string;
+    question: string;
+  }>([
+    SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
+    HumanMessagePromptTemplate.fromTemplate(
+      `Context:\n{documents}\n\nQuestion:\n{question}`
+    ),
+  ]);
+  const llm = new FakeChatModel({});
+  const inputs = {
+    question: (input: string) => input,
+    documents: RunnableSequence.from([
+      new FakeRetriever(),
+      (docs: Document[]) => JSON.stringify(docs),
+    ]),
+    extraField: new FakeLLM({
+      response: "testing",
+    }).withConfig({ tags: ["only_one"] }),
+  };
+  const runnable = new RunnableMap({ steps: inputs })
+    .pipe(promptTemplate)
+    .pipe(llm);
+  const stream = await runnable.streamLog(
+    "Do you know the Muffin Man?",
+    {},
+    {
+      includeTags: ["only_one"],
+    }
+  );
+  let finalState;
+  for await (const chunk of stream) {
+    if (finalState === undefined) {
+      finalState = chunk;
+    } else {
+      finalState = finalState.concat(chunk);
+    }
+  }
+  expect((finalState as RunLog).state.logs.length).toEqual(1);
+  expect(
+    (finalState as RunLog).state.logs[0].final_output.generations[0][0].text
+  ).toEqual("testing");
 });

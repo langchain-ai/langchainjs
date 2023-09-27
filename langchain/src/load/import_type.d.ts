@@ -407,6 +407,7 @@ export interface SecretMap {
   BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
+  FIREWORKS_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;

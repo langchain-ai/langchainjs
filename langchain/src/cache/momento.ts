@@ -7,7 +7,11 @@ import {
 } from "@gomomento/sdk";
 
 import { BaseCache, Generation } from "../schema/index.js";
-import { getCacheKey } from "./base.js";
+import {
+  deserializeStoredGeneration,
+  getCacheKey,
+  serializeGeneration,
+} from "./base.js";
 import { ensureCacheExists } from "../util/momento.js";
 
 /**
@@ -103,7 +107,11 @@ export class MomentoCache extends BaseCache {
 
     if (getResponse instanceof CacheGet.Hit) {
       const value = getResponse.valueString();
-      return JSON.parse(value);
+      const parsedValue = JSON.parse(value);
+      if (!Array.isArray(parsedValue)) {
+        return null;
+      }
+      return JSON.parse(value).map(deserializeStoredGeneration);
     } else if (getResponse instanceof CacheGet.Miss) {
       return null;
     } else if (getResponse instanceof CacheGet.Error) {
@@ -131,7 +139,7 @@ export class MomentoCache extends BaseCache {
     const setResponse = await this.client.set(
       this.cacheName,
       key,
-      JSON.stringify(value),
+      JSON.stringify(value.map(serializeGeneration)),
       { ttl: this.ttlSeconds }
     );
 

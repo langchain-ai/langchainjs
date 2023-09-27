@@ -9,7 +9,7 @@ test("RedisCache", async () => {
   const redis = {
     get: jest.fn(async (key: string) => {
       if (key === sha256("foo_bar_0")) {
-        return "baz";
+        return JSON.stringify({ text: "baz" });
       }
       return null;
     }),

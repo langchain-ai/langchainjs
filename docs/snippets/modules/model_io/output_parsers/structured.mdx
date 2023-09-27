@@ -2,7 +2,7 @@ import CodeBlock from "@theme/CodeBlock";
 
 This output parser can be used when you want to return multiple fields. If you want complex schema returned (i.e. a JSON object with arrays of strings), use the Zod Schema detailed below.
 
-import Structured from "@examples/prompts/structured_parser.ts";
+import Structured from "@examples/prompts/structured_parser_sequence.ts";
 
 <CodeBlock language="typescript">{Structured}</CodeBlock>
 
@@ -10,6 +10,6 @@ import Structured from "@examples/prompts/structured_parser.ts";
 
 This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library. The Zod schema passed in needs be parseable from a JSON string, so eg. `z.date()` is not allowed.
 
-import StructuredZod from "@examples/prompts/structured_parser_zod.ts";
+import StructuredZod from "@examples/prompts/structured_parser_zod_sequence.ts";
 
 <CodeBlock language="typescript">{StructuredZod}</CodeBlock>
