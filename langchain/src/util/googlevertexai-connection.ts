@@ -6,44 +6,30 @@ import type {
   GoogleVertexAIConnectionParams,
   GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
-  GoogleVertexAIResponse,
-  GoogleVertexAIAbstractedClient,
+  GoogleResponse,
+  GoogleAbstractedClient
 } from "../types/googlevertexai-types.js";
 
-export abstract class GoogleVertexAIConnection<
+export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
-  ResponseType extends GoogleVertexAIResponse,
-  AuthOptions
-> implements GoogleVertexAIConnectionParams<AuthOptions>
+  ResponseType extends GoogleResponse
+>
 {
   caller: AsyncCaller;
 
-  endpoint = "us-central1-aiplatform.googleapis.com";
-
-  location = "us-central1";
-
-  apiVersion = "v1";
-
-  client: GoogleVertexAIAbstractedClient;
+  client: GoogleAbstractedClient;
 
   constructor(
-    fields: GoogleVertexAIConnectionParams<AuthOptions> | undefined,
     caller: AsyncCaller,
-    client: GoogleVertexAIAbstractedClient
+    client: GoogleAbstractedClient
   ) {
     this.caller = caller;
-
-    this.endpoint = fields?.endpoint ?? this.endpoint;
-    this.location = fields?.location ?? this.location;
-    this.apiVersion = fields?.apiVersion ?? this.apiVersion;
     this.client = client;
   }
 
   abstract buildUrl(): Promise<string>;
 
-  buildMethod(): string {
-    return "POST";
-  }
+  abstract buildMethod(): string;
 
   async _request(
     data: unknown | undefined,
@@ -73,6 +59,41 @@ export abstract class GoogleVertexAIConnection<
       throw x;
     }
   }
+
+}
+
+export abstract class GoogleVertexAIConnection<
+  CallOptions extends AsyncCallerCallOptions,
+  ResponseType extends GoogleResponse,
+  AuthOptions
+>
+  extends GoogleConnection<CallOptions, ResponseType>
+  implements GoogleVertexAIConnectionParams<AuthOptions>
+{
+  endpoint = "us-central1-aiplatform.googleapis.com";
+
+  location = "us-central1";
+
+  apiVersion = "v1";
+
+  constructor(
+    fields: GoogleVertexAIConnectionParams<AuthOptions> | undefined,
+    caller: AsyncCaller,
+    client: GoogleAbstractedClient
+  ) {
+    super(caller, client);
+    this.caller = caller;
+
+    this.endpoint = fields?.endpoint ?? this.endpoint;
+    this.location = fields?.location ?? this.location;
+    this.apiVersion = fields?.apiVersion ?? this.apiVersion;
+    this.client = client;
+  }
+
+  buildMethod(): string {
+    return "POST";
+  }
+
 }
 
 export class GoogleVertexAILLMConnection<
@@ -86,12 +107,12 @@ export class GoogleVertexAILLMConnection<
 {
   model: string;
 
-  client: GoogleVertexAIAbstractedClient;
+  client: GoogleAbstractedClient;
 
   constructor(
     fields: GoogleVertexAIBaseLLMInput<AuthOptions> | undefined,
     caller: AsyncCaller,
-    client: GoogleVertexAIAbstractedClient
+    client: GoogleAbstractedClient
   ) {
     super(fields, caller, client);
     this.client = client;
