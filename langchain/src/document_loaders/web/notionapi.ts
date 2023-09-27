@@ -354,7 +354,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.onDocumentLoaded(
       this.documents.length,
       this.pageQueueTotal,
-      pageDocument.metadata.properties.title,
+      this.getTitle(pageDetails) || undefined,
       this.rootTitle
     );
   }
