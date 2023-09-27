@@ -52,6 +52,9 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/google_calendar.cjs",
+    "tools/google_calendar.js",
+    "tools/google_calendar.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -725,6 +728,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -819,6 +823,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -1000,6 +1005,9 @@
       "optional": true
     },
     "google-auth-library": {
+      "optional": true
+    },
+    "googleapis": {
       "optional": true
     },
     "hnswlib-node": {
@@ -1207,6 +1215,11 @@
       "types": "./tools/webbrowser.d.ts",
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
+    },
+    "./tools/google_calendar": {
+      "types": "./tools/google_calendar.d.ts",
+      "import": "./tools/google_calendar.js",
+      "require": "./tools/google_calendar.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",
