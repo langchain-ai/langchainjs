@@ -112,6 +112,7 @@ export class MakerSuitePrompt {
       this.promptType = "chat";
     } else {
       const error = new Error("Unable to identify prompt type.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).promptData = this.promptData;
       throw error;
     }
