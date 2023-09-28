@@ -9,12 +9,15 @@ import type { GoogleVertexAIAbstractedClient } from "../types/googlevertexai-typ
 export type WebGoogleAuthOptions = {
   credentials: string | Credentials;
   scope?: string | string[];
+  accessToken?: string;
 };
 
 export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
   options: WebGoogleAuthOptions;
 
   constructor(options?: WebGoogleAuthOptions) {
+    const accessToken = options?.accessToken;
+
     const credentials =
       options?.credentials ??
       getEnvironmentVariable("GOOGLE_VERTEX_AI_WEB_CREDENTIALS");
@@ -26,7 +29,7 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
     const scope =
       options?.scope ?? "https://www.googleapis.com/auth/cloud-platform";
 
-    this.options = { ...options, credentials, scope };
+    this.options = { ...options, accessToken, credentials, scope };
   }
 
   async getProjectId() {
@@ -35,7 +38,11 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
   }
 
   async request(opts: { url?: string; method?: string; data?: unknown }) {
-    const accessToken = await getAccessToken(this.options);
+    let { accessToken } = this.options;
+
+    if (accessToken === undefined) {
+      accessToken = await getAccessToken(this.options);
+    }
 
     if (opts.url == null) throw new Error("Missing URL");
     const fetchOptions: {
