@@ -11,9 +11,71 @@ import {
   type CredentialType,
 } from "../util/bedrock.js";
 import { getEnvironmentVariable } from "../util/env.js";
-import { LLM, BaseLLMParams } from "./base.js";
+import { SimpleChatModel, BaseChatModelParams } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { GenerationChunk } from "../schema/index.js";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  AIMessage,
+  ChatGenerationChunk,
+  ChatMessage,
+} from "../schema/index.js";
+
+function convertOneMessageToText(
+  message: BaseMessage,
+  humanPrompt: string,
+  aiPrompt: string
+): string {
+  if (message._getType() === "human") {
+    return `${humanPrompt} ${message.content}`;
+  } else if (message._getType() === "ai") {
+    return `${aiPrompt} ${message.content}`;
+  } else if (message._getType() === "system") {
+    return `${humanPrompt} <admin>${message.content}</admin>`;
+  } else if (ChatMessage.isInstance(message)) {
+    return `\n\n${
+      message.role[0].toUpperCase() + message.role.slice(1)
+    }: {message.content}`;
+  }
+  throw new Error(`Unknown role: ${message._getType()}`);
+}
+
+export function convertMessagesToPromptAnthropic(
+  messages: BaseMessage[],
+  humanPrompt = "\n\nHuman:",
+  aiPrompt = "\n\nAssistant:"
+): string {
+  const messagesCopy = [...messages];
+
+  if (
+    messagesCopy.length === 0 ||
+    messagesCopy[messagesCopy.length - 1]._getType() !== "ai"
+  ) {
+    messagesCopy.push(new AIMessage({ content: "" }));
+  }
+
+  return messagesCopy
+    .map((message) => convertOneMessageToText(message, humanPrompt, aiPrompt))
+    .join("");
+}
+
+/**
+ * Function that converts an array of messages into a single string prompt
+ * that can be used as input for a chat model. It delegates the conversion
+ * logic to the appropriate provider-specific function.
+ * @param messages Array of messages to be converted.
+ * @param options Options to be used during the conversion.
+ * @returns A string prompt that can be used as input for a chat model.
+ */
+export function convertMessagesToPrompt(
+  messages: BaseMessage[],
+  provider: string
+): string {
+  if (provider === "anthropic") {
+    return convertMessagesToPromptAnthropic(messages);
+  }
+  throw new Error(`Provider ${provider} does not support chat.`);
+}
 
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
@@ -24,7 +86,7 @@ import { GenerationChunk } from "../schema/index.js";
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
  */
-export class Bedrock extends LLM implements BaseBedrockInput {
+export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";
 
   region: string;
@@ -52,10 +114,10 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   }
 
   static lc_name() {
-    return "Bedrock";
+    return "ChatBedrock";
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseLLMParams) {
+  constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -92,13 +154,13 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       response = model.call("Tell me a joke.")
   */
   async _call(
-    prompt: string,
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const chunks = [];
     for await (const chunk of this._streamResponseChunks(
-      prompt,
+      messages,
       options,
       runManager
     )) {
@@ -108,16 +170,16 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   }
 
   async *_streamResponseChunks(
-    prompt: string,
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<GenerationChunk> {
+  ): AsyncGenerator<ChatGenerationChunk> {
     const provider = this.model.split(".")[0];
     const service = "bedrock-runtime";
 
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
-      prompt,
+      convertMessagesToPromptAnthropic(messages),
       this.maxTokens,
       this.temperature,
       this.stopSequences
@@ -187,6 +249,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
         ) {
           throw Error(`Failed to get event chunk: got ${chunk}`);
         }
+        // console.log(decoder.decode(event.body));
         const body = JSON.parse(decoder.decode(event.body));
         if (body.message) {
           throw new Error(body.message);
@@ -199,9 +262,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
             provider,
             chunkResult
           );
-          yield new GenerationChunk({
+          yield new ChatGenerationChunk({
             text,
-            generationInfo: {},
+            message: new AIMessageChunk({ content: text }),
           });
           await runManager?.handleLLMNewToken(text);
         }
@@ -209,9 +272,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     } else {
       const json = await response.json();
       const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
-      yield new GenerationChunk({
+      yield new ChatGenerationChunk({
         text,
-        generationInfo: {},
+        message: new AIMessageChunk({ content: text }),
       });
       await runManager?.handleLLMNewToken(text);
     }
@@ -228,5 +291,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
         }
       },
     };
+  }
+
+  _combineLLMOutput() {
+    return {};
   }
 }
