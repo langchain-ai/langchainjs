@@ -43,6 +43,9 @@ export interface BaseBedrockInput {
 
   /** Optional additional stop sequences to pass to the model. Currently only supported for Anthropic and AI21. */
   stopSequences?: string[];
+
+  /** Additional kwargs to pass to the model. */
+  modelKwargs?: Record<string, unknown>;
 }
 
 type Dict = { [key: string]: unknown };
@@ -63,7 +66,8 @@ export class BedrockLLMInputOutputAdapter {
     prompt: string,
     maxTokens = 50,
     temperature = 0,
-    stopSequences: string[] | undefined = undefined
+    stopSequences: string[] | undefined = undefined,
+    modelKwargs: Record<string, unknown> = {}
   ): Dict {
     const inputBody: Dict = {};
 
@@ -84,7 +88,7 @@ export class BedrockLLMInputOutputAdapter {
         temperature,
       };
     }
-    return inputBody;
+    return { ...inputBody, ...modelKwargs };
   }
 
   /**

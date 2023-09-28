@@ -41,6 +41,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   stopSequences?: string[];
 
+  modelKwargs?: Record<string, unknown>;
+
   codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -79,6 +81,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     this.fetchFn = fields?.fetchFn ?? fetch;
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
+    this.modelKwargs = fields?.modelKwargs;
   }
 
   /** Call out to Bedrock service model.
@@ -120,7 +123,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       prompt,
       this.maxTokens,
       this.temperature,
-      this.stopSequences
+      this.stopSequences,
+      this.modelKwargs
     );
 
     const endpointHost =

@@ -10,7 +10,8 @@ const model = new ChatBedrock({
   // credentials: {
   //   accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
   //   secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-  // }
+  // },
+  // modelKwargs: {},
 });
 
 const res = await model.invoke([
