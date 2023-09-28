@@ -17,7 +17,7 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
 
   constructor(options?: WebGoogleAuthOptions) {
     const accessToken = options?.accessToken;
-    
+
     const credentials =
       options?.credentials ??
       getEnvironmentVariable("GOOGLE_VERTEX_AI_WEB_CREDENTIALS");
