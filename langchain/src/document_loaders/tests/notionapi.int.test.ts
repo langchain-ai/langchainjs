@@ -9,8 +9,10 @@ test("Test Notion API Loader Page", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_PAGE_ID ?? "",
-    onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
+      console.log(
+        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
+      );
     },
   });
 
@@ -26,8 +28,10 @@ test("Test Notion API Loader Database", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_DATABASE_ID ?? "",
-    onDocumentLoaded: (current, total, currentTitle) => {
-      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
+      console.log(
+        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
+      );
     },
   });
 
@@ -35,4 +39,25 @@ test("Test Notion API Loader Database", async () => {
   const titles = docs.map((doc) => doc.metadata.properties._title);
   console.log("Titles:", titles);
   console.log(`Loaded ${docs.length} pages from the database`);
+});
+
+test("Test Notion API Loader onDocumentLoad", async () => {
+  const onDocumentLoadedCheck: string[] = [];
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_DATABASE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
+      onDocumentLoadedCheck.push(
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+      );
+    },
+  });
+
+  await loader.load();
+
+  expect(onDocumentLoadedCheck.length).toBe(3);
+
+  console.log(onDocumentLoadedCheck);
 });

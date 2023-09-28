@@ -1,7 +1,11 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 
 import { BaseCache, Generation } from "../schema/index.js";
-import { getCacheKey } from "./base.js";
+import {
+  getCacheKey,
+  serializeGeneration,
+  deserializeStoredGeneration,
+} from "./base.js";
 
 /**
  * Represents a specific implementation of a caching mechanism using Cloudflare KV
@@ -31,11 +35,7 @@ export class CloudflareKVCache extends BaseCache {
     const generations: Generation[] = [];
 
     while (value) {
-      if (!value) {
-        break;
-      }
-
-      generations.push({ text: value });
+      generations.push(deserializeStoredGeneration(JSON.parse(value)));
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
       value = await this.binding.get(key);
@@ -55,7 +55,10 @@ export class CloudflareKVCache extends BaseCache {
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      await this.binding.put(key, value[i].text);
+      await this.binding.put(
+        key,
+        JSON.stringify(serializeGeneration(value[i]))
+      );
     }
   }
 }
