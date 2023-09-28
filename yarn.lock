@@ -13432,6 +13432,8 @@ __metadata:
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
     "@smithy/eventstream-codec": ^2.0.5
+    "@smithy/protocol-http": ^3.0.6
+    "@smithy/signature-v4": ^2.0.10
     "@smithy/util-utf8": ^2.0.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
@@ -13538,6 +13540,10 @@ __metadata:
     "@raycast/api":
       optional: true
     "@smithy/eventstream-codec":
+      optional: true
+    "@smithy/protocol-http":
+      optional: true
+    "@smithy/signature-v4":
       optional: true
     "@smithy/util-utf8":
       optional: true
