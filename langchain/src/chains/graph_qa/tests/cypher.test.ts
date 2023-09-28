@@ -33,10 +33,8 @@ describe("testCypherGeneratingRun", () => {
       graph,
     });
 
-    console.log("chain", chain);
-
-    // const output = await chain.run({ query: "Who played in Pulp Fiction?" });
-    // const expectedOutput = " Bruce Willis played in Pulp Fiction.";
-    // expect(output).toEqual(expectedOutput);
+    const output = await chain.run("Who played in Pulp Fiction?");
+    const expectedOutput = " Bruce Willis played in Pulp Fiction.";
+    expect(output).toEqual(expectedOutput);
   });
 });

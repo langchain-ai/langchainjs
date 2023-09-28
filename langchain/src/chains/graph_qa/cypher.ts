@@ -1,11 +1,35 @@
 import { LLMChain } from "../../chains/llm_chain.js";
+import { ChainValues } from "../../schema/index.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
+import { BaseChain, ChainInputs } from "../base.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
 
-export class GraphCypherQAChain {
+const INTERMEDIATE_STEPS_KEY = "intermediate_steps";
+
+export interface GraphCypherQAChainInput extends ChainInputs {
+  graph: Neo4jGraph;
+  cypherGenerationChain: LLMChain;
+  qaChain: LLMChain;
+  inputKey?: string;
+  outputKey?: string;
+  topK?: number;
+  returnIntermediateSteps?: boolean;
+  returnDirect?: boolean;
+}
+
+export interface FromLLMInput {
+  graph: Neo4jGraph;
+  llm?: BaseLanguageModel;
+  cypherLLM?: BaseLanguageModel;
+  qaLLM?: BaseLanguageModel;
+  qaPrompt?: BasePromptTemplate;
+  cypherPrompt?: BasePromptTemplate;
+}
+
+export class GraphCypherQAChain extends BaseChain {
   private graph: Neo4jGraph;
 
   private cypherGenerationChain: LLMChain;
@@ -20,18 +44,10 @@ export class GraphCypherQAChain {
 
   private returnDirect = false;
 
-  // private returnIntermediateSteps = false;
+  private returnIntermediateSteps = false;
 
-  constructor(props: {
-    graph: Neo4jGraph;
-    cypherGenerationChain: LLMChain;
-    qaChain: LLMChain;
-    inputKey?: string;
-    outputKey?: string;
-    topK?: number;
-    returnIntermediateSteps?: boolean;
-    returnDirect?: boolean;
-  }) {
+  constructor(props: GraphCypherQAChainInput) {
+    super(props);
     const {
       graph,
       cypherGenerationChain,
@@ -39,7 +55,7 @@ export class GraphCypherQAChain {
       inputKey,
       outputKey,
       topK,
-      // returnIntermediateSteps,
+      returnIntermediateSteps,
       returnDirect,
     } = props;
 
@@ -56,15 +72,18 @@ export class GraphCypherQAChain {
     if (topK) {
       this.topK = topK;
     }
-    // if (returnIntermediateSteps) {
-    //   this.returnIntermediateSteps = returnIntermediateSteps;
-    // }
+    if (returnIntermediateSteps) {
+      this.returnIntermediateSteps = returnIntermediateSteps;
+    }
     if (returnDirect) {
       this.returnDirect = returnDirect;
     }
   }
 
-  // Getters for input and output keys
+  _chainType() {
+    return "graph_cypher_chain" as const;
+  }
+
   get inputKeys(): string[] {
     return [this.inputKey];
   }
@@ -73,27 +92,14 @@ export class GraphCypherQAChain {
     return [this.outputKey];
   }
 
-  // Getter for chain type
-  get chainType(): string {
-    return "graph_cypher_chain";
-  }
-
-  // Static factory method for creating instances from LLM
-  static fromLLM(props: {
-    graph: Neo4jGraph;
-    llm: BaseLanguageModel;
-    qaPrompt?: BasePromptTemplate;
-    cypherPrompt?: BasePromptTemplate;
-    cypherLLM?: BaseLanguageModel | null;
-    qaLLM?: BaseLanguageModel | null;
-  }): GraphCypherQAChain {
+  static fromLLM(props: FromLLMInput): GraphCypherQAChain {
     const {
       graph,
       qaPrompt = CYPHER_QA_PROMPT,
       cypherPrompt = CYPHER_GENERATION_PROMPT,
       llm,
-      cypherLLM = null,
-      qaLLM = null,
+      cypherLLM,
+      qaLLM,
     } = props;
 
     if (!cypherLLM && !llm) {
@@ -101,9 +107,11 @@ export class GraphCypherQAChain {
         "Either 'llm' or 'cypherLLM' parameters must be provided"
       );
     }
+
     if (!qaLLM && !llm) {
       throw new Error("Either 'llm' or 'qaLLM' parameters must be provided");
     }
+
     if (cypherLLM && qaLLM && llm) {
       throw new Error(
         "You can specify up to two of 'cypherLLM', 'qaLLM', and 'llm', but not all three simultaneously."
@@ -111,11 +119,11 @@ export class GraphCypherQAChain {
     }
 
     const qaChain = new LLMChain({
-      llm: qaLLM || llm,
+      llm: (qaLLM || llm) as BaseLanguageModel,
       prompt: qaPrompt,
     });
     const cypherGenerationChain = new LLMChain({
-      llm: cypherLLM || llm,
+      llm: (cypherLLM || llm) as BaseLanguageModel,
       prompt: cypherPrompt,
     });
 
@@ -126,54 +134,57 @@ export class GraphCypherQAChain {
     });
   }
 
-  // Private method for extracting Cypher code from text
   private extractCypher(text: string): string {
     const pattern = /```(.*?)```/s;
     const matches = text.match(pattern);
     return matches ? matches[1] : text;
   }
 
-  // Main method for executing the chain
-  async run(
-    inputs: { [key: string]: any },
-    runManager: CallbackManagerForChainRun | null = null
-  ): Promise<{ [key: string]: any }> {
-    const _runManager = runManager;
-
-    if (!_runManager) {
-      throw new Error("'runManager' must be provided");
-    }
-
-    const callbacks = _runManager.getChild();
-    const question = inputs[this.inputKey];
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
+    const callbacks = runManager?.getChild();
+    const question = values[this.inputKey];
 
     const intermediateSteps = [];
 
-    let generatedCypher = await this.cypherGenerationChain.run(
+    const generatedCypher = await this.cypherGenerationChain.call(
       { question, schema: this.graph.getSchema() },
       callbacks
     );
-    console.log("generatedCypher", generatedCypher);
-    generatedCypher = this.extractCypher(generatedCypher);
 
-    await _runManager.handleText(`Generated Cypher:\n`);
-    await _runManager.handleText(`${generatedCypher} green\n`);
+    const extractedCypher = this.extractCypher(generatedCypher.text);
 
-    intermediateSteps.push({ query: generatedCypher });
+    await runManager?.handleText(`Generated Cypher:\n`);
+    await runManager?.handleText(`${extractedCypher} green\n`);
 
-    const context = await this.graph.query(generatedCypher, this.topK);
+    intermediateSteps.push({ query: extractedCypher });
+
+    let chainResult: ChainValues;
+    const context = JSON.stringify(
+      await this.graph.query(extractedCypher, { topK: this.topK })
+    );
 
     if (this.returnDirect) {
-      return { [this.outputKey]: context };
+      chainResult = { [this.outputKey]: context };
     } else {
-      await _runManager.handleText("Full Context:\n");
-      await _runManager.handleText(`${context.toString()} green\n`);
+      await runManager?.handleText("Full Context:\n");
+      await runManager?.handleText(`${context.toString()} green\n`);
 
       intermediateSteps.push({ context });
 
       const result = await this.qaChain.call({ question, context }, callbacks);
 
-      return { [this.outputKey]: result[this.qaChain.outputKey] };
+      chainResult = {
+        [this.outputKey]: result[this.qaChain.outputKey],
+      };
     }
+
+    if (this.returnIntermediateSteps) {
+      chainResult[INTERMEDIATE_STEPS_KEY] = intermediateSteps;
+    }
+
+    return chainResult;
   }
 }
