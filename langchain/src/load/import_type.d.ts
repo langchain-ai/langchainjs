@@ -37,6 +37,9 @@ export interface OptionalImportMap {
   "langchain/chains/sql_db"?:
     | typeof import("../chains/sql_db/index.js")
     | Promise<typeof import("../chains/sql_db/index.js")>;
+  "langchain/embeddings/cloudflare_workersai"?:
+    | typeof import("../embeddings/cloudflare_workersai.js")
+    | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;
   "langchain/embeddings/cohere"?:
     | typeof import("../embeddings/cohere.js")
     | Promise<typeof import("../embeddings/cohere.js")>;

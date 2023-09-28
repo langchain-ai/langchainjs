@@ -76,6 +76,9 @@
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
+    "embeddings/cloudflare_workersai.cjs",
+    "embeddings/cloudflare_workersai.js",
+    "embeddings/cloudflare_workersai.d.ts",
     "embeddings/fake.cjs",
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
@@ -178,6 +181,9 @@
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
+    "vectorstores/cloudflare_vectorize.cjs",
+    "vectorstores/cloudflare_vectorize.js",
+    "vectorstores/cloudflare_vectorize.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
@@ -667,7 +673,8 @@
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
-    "@cloudflare/workers-types": "^4.20230904.0",
+    "@cloudflare/ai": "^1.0.12",
+    "@cloudflare/workers-types": "^4.20230922.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -788,7 +795,7 @@
     "@aws-sdk/signature-v4": "^3.374.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
-    "@cloudflare/workers-types": "^4.20230904.0",
+    "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.7.0",
@@ -896,7 +903,7 @@
     "@clickhouse/client": {
       "optional": true
     },
-    "@cloudflare/workers-types": {
+    "@cloudflare/ai": {
       "optional": true
     },
     "@elastic/elasticsearch": {
@@ -1259,6 +1266,11 @@
       "import": "./embeddings/cache_backed.js",
       "require": "./embeddings/cache_backed.cjs"
     },
+    "./embeddings/cloudflare_workersai": {
+      "types": "./embeddings/cloudflare_workersai.d.ts",
+      "import": "./embeddings/cloudflare_workersai.js",
+      "require": "./embeddings/cloudflare_workersai.cjs"
+    },
     "./embeddings/fake": {
       "types": "./embeddings/fake.d.ts",
       "import": "./embeddings/fake.js",
@@ -1428,6 +1440,11 @@
       "types": "./vectorstores/memory.d.ts",
       "import": "./vectorstores/memory.js",
       "require": "./vectorstores/memory.cjs"
+    },
+    "./vectorstores/cloudflare_vectorize": {
+      "types": "./vectorstores/cloudflare_vectorize.d.ts",
+      "import": "./vectorstores/cloudflare_vectorize.js",
+      "require": "./vectorstores/cloudflare_vectorize.cjs"
     },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",

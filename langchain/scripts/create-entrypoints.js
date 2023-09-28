@@ -35,6 +35,7 @@ const entrypoints = {
   // embeddings
   "embeddings/base": "embeddings/base",
   "embeddings/cache_backed": "embeddings/cache_backed",
+  "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
   "embeddings/fake": "embeddings/fake",
   "embeddings/ollama": "embeddings/ollama",
   "embeddings/openai": "embeddings/openai",
@@ -72,6 +73,7 @@ const entrypoints = {
   "vectorstores/base": "vectorstores/base",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
+  "vectorstores/cloudflare_vectorize": "vectorstores/cloudflare_vectorize",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/googlevertexai": "vectorstores/googlevertexai",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
@@ -279,6 +281,7 @@ const requiresOptionalDependency = [
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
+  "embeddings/cloudflare_workersai",
   "embeddings/cohere",
   "embeddings/googlevertexai",
   "embeddings/googlepalm",

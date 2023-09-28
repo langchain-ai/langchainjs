@@ -13,6 +13,7 @@ export const optionalImportEntrypoints = [
   "langchain/chains/query_constructor",
   "langchain/chains/query_constructor/ir",
   "langchain/chains/sql_db",
+  "langchain/embeddings/cloudflare_workersai",
   "langchain/embeddings/cohere",
   "langchain/embeddings/tensorflow",
   "langchain/embeddings/hf",
