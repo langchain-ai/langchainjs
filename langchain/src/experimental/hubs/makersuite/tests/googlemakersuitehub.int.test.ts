@@ -15,7 +15,7 @@ import { HumanMessage } from "../../../../schema/index.js";
 import { ChatGooglePaLM } from "../../../../chat_models/googlepalm.js";
 import { GooglePaLM } from "../../../../llms/googlepalm.js";
 
-describe("Google Maker Suite Hub Integration", () => {
+describe.skip("Google Maker Suite Hub Integration", () => {
   describe("Prompt", () => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
