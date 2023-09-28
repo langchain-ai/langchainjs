@@ -41,11 +41,7 @@ export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
     let { accessToken } = this.options;
 
     if (accessToken === undefined) {
-      const opts = {
-        ...this.options,
-        credentials: this.options.credentials,
-      };
-      accessToken = await getAccessToken(opts);
+      accessToken = await getAccessToken(this.options);
     }
 
     if (opts.url == null) throw new Error("Missing URL");
