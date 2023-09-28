@@ -7,7 +7,7 @@ import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
 
-const INTERMEDIATE_STEPS_KEY = "intermediate_steps";
+export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
 
 export interface GraphCypherQAChainInput extends ChainInputs {
   graph: Neo4jGraph;
@@ -27,6 +27,8 @@ export interface FromLLMInput {
   qaLLM?: BaseLanguageModel;
   qaPrompt?: BasePromptTemplate;
   cypherPrompt?: BasePromptTemplate;
+  returnIntermediateSteps?: boolean;
+  returnDirect?: boolean;
 }
 
 export class GraphCypherQAChain extends BaseChain {
@@ -100,6 +102,8 @@ export class GraphCypherQAChain extends BaseChain {
       llm,
       cypherLLM,
       qaLLM,
+      returnIntermediateSteps = false,
+      returnDirect = false,
     } = props;
 
     if (!cypherLLM && !llm) {
@@ -122,6 +126,7 @@ export class GraphCypherQAChain extends BaseChain {
       llm: (qaLLM || llm) as BaseLanguageModel,
       prompt: qaPrompt,
     });
+
     const cypherGenerationChain = new LLMChain({
       llm: (cypherLLM || llm) as BaseLanguageModel,
       prompt: cypherPrompt,
@@ -131,6 +136,8 @@ export class GraphCypherQAChain extends BaseChain {
       cypherGenerationChain,
       qaChain,
       graph,
+      returnIntermediateSteps,
+      returnDirect,
     });
   }
 
@@ -162,19 +169,22 @@ export class GraphCypherQAChain extends BaseChain {
     intermediateSteps.push({ query: extractedCypher });
 
     let chainResult: ChainValues;
-    const context = JSON.stringify(
-      await this.graph.query(extractedCypher, { topK: this.topK })
-    );
+    const context = await this.graph.query(extractedCypher, {
+      topK: this.topK,
+    });
 
     if (this.returnDirect) {
       chainResult = { [this.outputKey]: context };
     } else {
       await runManager?.handleText("Full Context:\n");
-      await runManager?.handleText(`${context.toString()} green\n`);
+      await runManager?.handleText(`${context} green\n`);
 
       intermediateSteps.push({ context });
 
-      const result = await this.qaChain.call({ question, context }, callbacks);
+      const result = await this.qaChain.call(
+        { question, context: JSON.stringify(context) },
+        callbacks
+      );
 
       chainResult = {
         [this.outputKey]: result[this.qaChain.outputKey],
