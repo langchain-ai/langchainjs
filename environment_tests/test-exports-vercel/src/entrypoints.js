@@ -28,6 +28,7 @@ export * from "langchain/text_splitter";
 export * from "langchain/memory";
 export * from "langchain/document";
 export * from "langchain/document_loaders/base";
+export * from "langchain/document_loaders/web/searchapi";
 export * from "langchain/document_loaders/web/serpapi";
 export * from "langchain/document_loaders/web/sort_xyz_blockchain";
 export * from "langchain/document_transformers/openai_functions";

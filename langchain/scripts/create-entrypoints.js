@@ -96,6 +96,7 @@ const entrypoints = {
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
+  "vectorstores/vercel_postgres": "vectorstores/vercel_postgres",
   "vectorstores/voy": "vectorstores/voy",
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
@@ -131,6 +132,7 @@ const entrypoints = {
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
+  "document_loaders/web/searchapi": "document_loaders/web/searchapi",
   "document_loaders/web/serpapi": "document_loaders/web/serpapi",
   "document_loaders/web/sort_xyz_blockchain":
     "document_loaders/web/sort_xyz_blockchain",
@@ -321,6 +323,7 @@ const requiresOptionalDependency = [
   "vectorstores/typesense",
   "vectorstores/tigris",
   "vectorstores/usearch",
+  "vectorstores/vercel_postgres",
   "vectorstores/voy",
   "vectorstores/zep",
   "memory/zep",

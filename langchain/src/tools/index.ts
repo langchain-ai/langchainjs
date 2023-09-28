@@ -47,3 +47,5 @@ export {
   GoogleCalendarViewTool,
   GoogleCalendarCreateTool,
 } from "./google_calendar/index.js";
+export { SearchApi, SearchApiParameters } from "./searchapi.js";
+

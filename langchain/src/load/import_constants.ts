@@ -56,6 +56,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/singlestore",
   "langchain/vectorstores/tigris",
   "langchain/vectorstores/usearch",
+  "langchain/vectorstores/vercel_postgres",
   "langchain/vectorstores/voy",
   "langchain/vectorstores/zep",
   "langchain/memory/zep",

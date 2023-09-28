@@ -29,6 +29,7 @@ export * as text_splitter from "../text_splitter.js";
 export * as memory from "../memory/index.js";
 export * as document from "../document.js";
 export * as document_loaders__base from "../document_loaders/base.js";
+export * as document_loaders__web__searchapi from "../document_loaders/web/searchapi.js";
 export * as document_loaders__web__serpapi from "../document_loaders/web/serpapi.js";
 export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";
 export * as document_transformers__openai_functions from "../document_transformers/openai_functions.js";
