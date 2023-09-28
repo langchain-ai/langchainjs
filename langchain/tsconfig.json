@@ -111,7 +111,7 @@
       "src/vectorstores/tigris.ts",
       "src/vectorstores/usearch.ts",
       "src/vectorstores/vectara.ts",
-      "src/vectorstores/vercel.ts",
+      "src/vectorstores/vercel_postgres.ts",
       "src/vectorstores/voy.ts",
       "src/vectorstores/xata.ts",
       "src/vectorstores/zep.ts",

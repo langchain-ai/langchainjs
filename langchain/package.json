@@ -247,9 +247,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
-    "vectorstores/vercel.cjs",
-    "vectorstores/vercel.js",
-    "vectorstores/vercel.d.ts",
+    "vectorstores/vercel_postgres.cjs",
+    "vectorstores/vercel_postgres.js",
+    "vectorstores/vercel_postgres.d.ts",
     "vectorstores/voy.cjs",
     "vectorstores/voy.js",
     "vectorstores/voy.d.ts",
@@ -1541,10 +1541,10 @@
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
     },
-    "./vectorstores/vercel": {
-      "types": "./vectorstores/vercel.d.ts",
-      "import": "./vectorstores/vercel.js",
-      "require": "./vectorstores/vercel.cjs"
+    "./vectorstores/vercel_postgres": {
+      "types": "./vectorstores/vercel_postgres.d.ts",
+      "import": "./vectorstores/vercel_postgres.js",
+      "require": "./vectorstores/vercel_postgres.cjs"
     },
     "./vectorstores/voy": {
       "types": "./vectorstores/voy.d.ts",

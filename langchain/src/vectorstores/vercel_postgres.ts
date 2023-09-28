@@ -16,7 +16,7 @@ type Metadata = Record<string, unknown>;
  * `VercelPostgres` instance. It includes Postgres connection options,
  * table name, filter, and verbosity level.
  */
-export interface VercelPostgresVectorStoreConfig {
+export interface VercelPostgresFields {
   pool: VercelPool;
   client: VercelPoolClient;
   tableName?: string;
@@ -60,10 +60,7 @@ export class VercelPostgres extends VectorStore {
     return "vercel";
   }
 
-  private constructor(
-    embeddings: Embeddings,
-    config: VercelPostgresVectorStoreConfig
-  ) {
+  private constructor(embeddings: Embeddings, config: VercelPostgresFields) {
     super(embeddings, config);
     this.tableName = config.tableName ?? "langchain_vectors";
     this.filter = config.filter;
@@ -92,16 +89,16 @@ export class VercelPostgres extends VectorStore {
    */
   static async initialize(
     embeddings: Embeddings,
-    config: Partial<VercelPostgresVectorStoreConfig> & {
+    config?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }
   ): Promise<VercelPostgres> {
     // Default maxUses to 1 for edge environments:
     // https://github.com/vercel/storage/tree/main/packages/postgres#a-note-on-edge-environments
     const pool =
-      config.pool ??
-      createPool({ maxUses: 1, ...config.postgresConnectionOptions });
-    const client = config.client ?? (await pool.connect());
+      config?.pool ??
+      createPool({ maxUses: 1, ...config?.postgresConnectionOptions });
+    const client = config?.client ?? (await pool.connect());
     const postgresqlVectorStore = new VercelPostgres(embeddings, {
       ...config,
       pool,
@@ -321,7 +318,7 @@ export class VercelPostgres extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: Partial<VercelPostgresVectorStoreConfig> & {
+    dbConfig?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }
   ): Promise<VercelPostgres> {
@@ -350,7 +347,7 @@ export class VercelPostgres extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: Partial<VercelPostgresVectorStoreConfig> & {
+    dbConfig?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }
   ): Promise<VercelPostgres> {
