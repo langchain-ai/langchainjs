@@ -4711,12 +4711,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@neondatabase/serverless@npm:0.5.6":
-  version: 0.5.6
-  resolution: "@neondatabase/serverless@npm:0.5.6"
+"@neondatabase/serverless@npm:0.6.0":
+  version: 0.6.0
+  resolution: "@neondatabase/serverless@npm:0.6.0"
   dependencies:
     "@types/pg": 8.6.6
-  checksum: f3ef701572ab8487ef36d3506415c80d10f2d69d124a2ba783898e0dcb9959f94ef3b09c11dc4dc450c26b9f2a8b8b1e6d086ec6602066c32594124f9610dbef
+  checksum: 25b81ba6b37e0ac56a746a1219de6107dd74d6f2d093bc23dc33b6fb8f33d00f80cb37eb0648afacd32ab0020b20c1809e3ec6e5c34d23fa21ae5b76d6041332
   languageName: node
   linkType: hard
 
@@ -7199,15 +7199,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/postgres@npm:^0.4.2":
-  version: 0.4.2
-  resolution: "@vercel/postgres@npm:0.4.2"
+"@vercel/postgres@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "@vercel/postgres@npm:0.5.0"
   dependencies:
-    "@neondatabase/serverless": 0.5.6
+    "@neondatabase/serverless": 0.6.0
     bufferutil: 4.0.7
     utf-8-validate: 6.0.3
-    ws: 8.14.1
-  checksum: 0fe4ddfda2a6518612c56c769dfa7560e028caf58c827206bb462ac370e766c20e4f04c5e58a5191ac1ee9d1a026ed80f0af0558dd843879853022cb3bc3b409
+    ws: 8.14.2
+  checksum: 9fe0f496753a481d06566e7b846956c2129af081080f6618a4f9f8efb90ae53cc2aa1b3598a95ecc04f612b0ffdfcfffd20921fd1187fdc3db99b35d24b73a3f
   languageName: node
   linkType: hard
 
@@ -13384,7 +13384,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
-    "@vercel/postgres": ^0.4.2
+    "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@xenova/transformers": ^2.5.4
@@ -13507,7 +13507,7 @@ __metadata:
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@upstash/redis": ^1.20.6
-    "@vercel/postgres": ^0.4.2
+    "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
     "@xenova/transformers": ^2.5.4
@@ -19489,9 +19489,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:8.14.1":
-  version: 8.14.1
-  resolution: "ws@npm:8.14.1"
+"ws@npm:8.14.2":
+  version: 8.14.2
+  resolution: "ws@npm:8.14.2"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ">=5.0.2"
@@ -19500,7 +19500,7 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 9e310be2b0ff69e1f87d8c6d093ecd17a1ed4c37f281d17c35e8c30e2bd116401775b3d503249651374e6e0e1e9905db62fff096b694371c77561aee06bc3466
+  checksum: 3ca0dad26e8cc6515ff392b622a1467430814c463b3368b0258e33696b1d4bed7510bc7030f7b72838b9fdeb8dbd8839cbf808367d6aae2e1d668ce741d4308b
   languageName: node
   linkType: hard
 
