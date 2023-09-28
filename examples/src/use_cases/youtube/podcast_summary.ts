@@ -1,5 +1,5 @@
 import { loadSummarizationChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
 import { PromptTemplate } from "langchain/prompts";
 import { TokenTextSplitter } from "langchain/text_splitter";
@@ -11,15 +11,15 @@ const loader = new SearchApiLoader({
 
 const docs = await loader.load();
 
-const textplitterSummary = new TokenTextSplitter({
+const splitter = new TokenTextSplitter({
   chunkSize: 10000,
   chunkOverlap: 250,
 });
 
-const docsSummary = await textplitterSummary.splitDocuments(docs);
+const docsSummary = await splitter.splitDocuments(docs);
 
-const llmSummary = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-16k",
+const llmSummary = new ChatAnthropic({
+  modelName: "claude-2",
   temperature: 0.3,
 });
 
@@ -39,10 +39,7 @@ Total output will be a summary of the video and a list of example questions the 
 SUMMARY AND QUESTIONS:
 `;
 
-const PROMPT_SUMMARY = new PromptTemplate({
-  template: summaryTemplate,
-  inputVariables: ["text"],
-});
+const SUMMARY_PROMPT = PromptTemplate.fromTemplate(summaryTemplate);
 
 const summaryRefineTemplate = `
 You are an expert in summarizing YouTube videos.
@@ -64,41 +61,51 @@ Total output will be a summary of the video and a list of example questions the 
 SUMMARY AND QUESTIONS:
 `;
 
-const PROMPT_SUMMARY_REFINE = new PromptTemplate({
-  inputVariables: ["existing_answer", "text"],
-  template: summaryRefineTemplate,
-});
+const SUMMARY_REFINE_PROMPT = PromptTemplate.fromTemplate(
+  summaryRefineTemplate
+);
 
-const summarize_chain = loadSummarizationChain(llmSummary, {
+const summarizeChain = loadSummarizationChain(llmSummary, {
   type: "refine",
   verbose: true,
-  questionPrompt: PROMPT_SUMMARY,
-  refinePrompt: PROMPT_SUMMARY_REFINE,
+  questionPrompt: SUMMARY_PROMPT,
+  refinePrompt: SUMMARY_REFINE_PROMPT,
 });
 
-const summary = await summarize_chain.run(docsSummary);
+const summary = await summarizeChain.run(docsSummary);
 
 console.log(summary);
 
 /*
-  Summary:
-  In this podcast, Jimmy, also known as MrBeast, helps 1,000 deaf people hear again by providing them with cutting-edge
-  hearing technology. He surprises them with the gift of hearing and also gives them $10,000 each. Throughout the
-  podcast, Jimmy helps individuals and families hear their loved ones again, bringing them to tears of joy. He also
-  surprises them with additional gifts, such as jet skis and tickets to sporting events and concerts. Jimmy's mission
-  extends beyond the United States, as he travels to Mexico and other countries to help deaf individuals there as well.
-  He also donates $100,000 to organizations teaching sign language. The podcast showcases the power of connection and
-  the impact of giving the gift of hearing.
+  Here is a summary of the key points from the podcast transcript:
 
-  Example Questions
-    1. How many deaf people did Jimmy help in this podcast
-    2. What kind of hearing technology did Jimmy provide
-    3. Besides the gift of hearing, what other surprises did Jimmy give to the individuals
-    4. Which countries did Jimmy visit to help deaf people
-    5. How much money did Jimmy donate to organizations teaching sign language
-    6. What was the reaction of the individuals when they were able to hear again
-    7. Did Jimmy only help individuals or also families
-    8. What other activities did Jimmy surprise the individuals with
-    9. How did Jimmy select the individuals he helped
-    10. How did Jimmy's mission impact the lives of the deaf individuals?
+  - Jimmy helps provide hearing aids and cochlear implants to deaf and hard-of-hearing people who can't afford them. He helps over 1,000 people hear again.
+
+  - Jimmy surprises recipients with $10,000 cash gifts in addition to the hearing aids. He also gifts things like jet skis, basketball game tickets, and trips to concerts.
+
+  - Jimmy travels internationally to provide hearing aids, visiting places like Mexico, Guatemala, Brazil, South Africa, Malawi, and Indonesia. 
+
+  - Jimmy donates $100,000 to organizations around the world that teach sign language.
+
+  - The recipients are very emotional and grateful to be able to hear their loved ones again.
+
+  Here are some example questions and answers about the podcast:
+
+  Q: How many people did Jimmy help regain their hearing?
+  A: Jimmy helped over 1,000 people regain their hearing.
+
+  Q: What types of hearing devices did Jimmy provide to the recipients?
+  A: Jimmy provided cutting-edge hearing aids and cochlear implants.
+
+  Q: In addition to the hearing devices, what surprise gifts did Jimmy give some recipients?
+  A: In addition to hearing devices, Jimmy surprised some recipients with $10,000 cash gifts, jet skis, basketball game tickets, and concert tickets.
+
+  Q: What countries did Jimmy travel to in order to help people?
+  A: Jimmy traveled to places like Mexico, Guatemala, Brazil, South Africa, Malawi, and Indonesia.
+
+  Q: How much money did Jimmy donate to organizations that teach sign language?
+  A: Jimmy donated $100,000 to sign language organizations around the world.
+
+  Q: How did the recipients react when they were able to hear again?
+  A: The recipients were very emotional and grateful, with many crying tears of joy at being able to hear their loved ones again.
 */
