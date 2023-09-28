@@ -235,6 +235,9 @@ vectorstores/usearch.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
+vectorstores/vercel_postgres.cjs
+vectorstores/vercel_postgres.js
+vectorstores/vercel_postgres.d.ts
 vectorstores/voy.cjs
 vectorstores/voy.js
 vectorstores/voy.d.ts

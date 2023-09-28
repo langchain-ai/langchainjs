@@ -1,4 +1,9 @@
-import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
+import {
+  type VercelPool,
+  type VercelPoolClient,
+  type VercelPostgresPoolConfig,
+  createPool,
+} from "@vercel/postgres";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -8,12 +13,13 @@ type Metadata = Record<string, unknown>;
 
 /**
  * Interface that defines the arguments required to create a
- * `PGVectorStore` instance. It includes Postgres connection options,
+ * `VercelPostgres` instance. It includes Postgres connection options,
  * table name, filter, and verbosity level.
  */
-export interface PGVectorStoreArgs {
-  postgresConnectionOptions: PoolConfig;
-  tableName: string;
+export interface VercelPostgresFields {
+  pool: VercelPool;
+  client: VercelPoolClient;
+  tableName?: string;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
@@ -25,12 +31,11 @@ export interface PGVectorStoreArgs {
 }
 
 /**
- * Class that provides an interface to a Postgres vector database. It
+ * Class that provides an interface to a Vercel Postgres vector database. It
  * extends the `VectorStore` base class and implements methods for adding
- * documents and vectors, performing similarity searches, and ensuring the
- * existence of a table in the database.
+ * documents and vectors and performing similarity searches.
  */
-export class PGVectorStore extends VectorStore {
+export class VercelPostgres extends VectorStore {
   declare FilterType: Metadata;
 
   tableName: string;
@@ -47,17 +52,17 @@ export class PGVectorStore extends VectorStore {
 
   _verbose?: boolean;
 
-  pool: Pool;
+  pool: VercelPool;
 
-  client?: PoolClient;
+  client: VercelPoolClient;
 
   _vectorstoreType(): string {
-    return "pgvector";
+    return "vercel";
   }
 
-  private constructor(embeddings: Embeddings, config: PGVectorStoreArgs) {
+  private constructor(embeddings: Embeddings, config: VercelPostgresFields) {
     super(embeddings, config);
-    this.tableName = config.tableName;
+    this.tableName = config.tableName ?? "langchain_vectors";
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
@@ -65,8 +70,8 @@ export class PGVectorStore extends VectorStore {
     this.idColumnName = config.columns?.idColumnName ?? "id";
     this.metadataColumnName = config.columns?.metadataColumnName ?? "metadata";
 
-    const pool = new pg.Pool(config.postgresConnectionOptions);
-    this.pool = pool;
+    this.pool = config.pool;
+    this.client = config.client;
 
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
@@ -74,28 +79,35 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
-   * Static method to create a new `PGVectorStore` instance from a
+   * Static method to create a new `VercelPostgres` instance from a
    * connection. It creates a table if one does not exist, and calls
-   * `connect` to return a new instance of `PGVectorStore`.
+   * `connect` to return a new instance of `VercelPostgres`.
    *
    * @param embeddings - Embeddings instance.
-   * @param fields - `PGVectorStoreArgs` instance.
-   * @returns A new instance of `PGVectorStore`.
+   * @param fields - `VercelPostgres` configuration options.
+   * @returns A new instance of `VercelPostgres`.
    */
   static async initialize(
     embeddings: Embeddings,
-    config: PGVectorStoreArgs
-  ): Promise<PGVectorStore> {
-    const postgresqlVectorStore = new PGVectorStore(embeddings, config);
+    config?: Partial<VercelPostgresFields> & {
+      postgresConnectionOptions?: VercelPostgresPoolConfig;
+    }
+  ): Promise<VercelPostgres> {
+    // Default maxUses to 1 for edge environments:
+    // https://github.com/vercel/storage/tree/main/packages/postgres#a-note-on-edge-environments
+    const pool =
+      config?.pool ??
+      createPool({ maxUses: 1, ...config?.postgresConnectionOptions });
+    const client = config?.client ?? (await pool.connect());
+    const postgresqlVectorStore = new VercelPostgres(embeddings, {
+      ...config,
+      pool,
+      client,
+    });
 
-    await postgresqlVectorStore._initializeClient();
     await postgresqlVectorStore.ensureTableInDatabase();
 
     return postgresqlVectorStore;
-  }
-
-  protected async _initializeClient() {
-    this.client = await this.pool.connect();
   }
 
   /**
@@ -105,12 +117,16 @@ export class PGVectorStore extends VectorStore {
    * @param documents - Array of `Document` instances.
    * @returns Promise that resolves when the documents have been added.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
@@ -120,9 +136,13 @@ export class PGVectorStore extends VectorStore {
    * @param index - The index of the row for which placeholders need to be generated.
    * @returns The SQL placeholders for the row values.
    */
-  private generatePlaceholderForRowAt(index: number): string {
-    const base = index * 3;
-    return `($${base + 1}, $${base + 2}, $${base + 3})`;
+  protected generatePlaceholderForRowAt(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    row: (string | Record<string, any>)[],
+    index: number
+  ): string {
+    const base = index * row.length;
+    return `(${row.map((_, j) => `$${base + 1 + j}`)})`;
   }
 
   /**
@@ -132,23 +152,32 @@ export class PGVectorStore extends VectorStore {
    * @param chunkIndex - The starting index for generating query placeholders based on chunk positioning.
    * @returns The complete SQL INSERT INTO query string.
    */
-  private buildInsertQuery(
-    rows: (string | Record<string, unknown>)[][],
-    chunkIndex: number
+  protected async runInsertQuery(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rows: (string | Record<string, any>)[][],
+    useIdColumn: boolean
   ) {
-    const valuesPlaceholders = rows
-      .map((_, j) => this.generatePlaceholderForRowAt(chunkIndex + j))
-      .join(", ");
-
-    const text = `
-      INSERT INTO ${this.tableName}(
-        ${this.contentColumnName},
-        ${this.vectorColumnName},
-        ${this.metadataColumnName}
-      )
-      VALUES ${valuesPlaceholders}
-    `;
-    return text;
+    const values = rows.map((row, j) =>
+      this.generatePlaceholderForRowAt(row, j)
+    );
+    const flatValues = rows.flat();
+    return this.client.query(
+      `
+    INSERT INTO ${this.tableName} (
+      ${useIdColumn ? `${this.idColumnName},` : ""}
+      ${this.contentColumnName}, 
+      ${this.vectorColumnName}, 
+      ${this.metadataColumnName}
+    ) VALUES ${values.join(", ")}
+    ON CONFLICT (${this.idColumnName}) 
+    DO UPDATE 
+    SET 
+    ${this.contentColumnName} = EXCLUDED.${this.contentColumnName},
+    ${this.vectorColumnName} = EXCLUDED.${this.vectorColumnName},
+    ${this.metadataColumnName} = EXCLUDED.${this.metadataColumnName}
+    RETURNING ${this.idColumnName}`,
+      flatValues
+    );
   }
 
   /**
@@ -159,30 +188,47 @@ export class PGVectorStore extends VectorStore {
    * @param documents - Array of `Document` instances.
    * @returns Promise that resolves when the vectors have been added.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<string[]> {
+    if (options?.ids !== undefined && options?.ids.length !== vectors.length) {
+      throw new Error(
+        `If provided, the length of "ids" must be the same as the number of vectors.`
+      );
+    }
     const rows = vectors.map((embedding, idx) => {
       const embeddingString = `[${embedding.join(",")}]`;
-      return [
+      const row = [
         documents[idx].pageContent,
         embeddingString,
         documents[idx].metadata,
       ];
+      if (options?.ids) {
+        return [options.ids[idx], ...row];
+      }
+      return row;
     });
 
     const chunkSize = 500;
 
+    const ids = [];
+
     for (let i = 0; i < rows.length; i += chunkSize) {
       const chunk = rows.slice(i, i + chunkSize);
-      const insertQuery = this.buildInsertQuery(chunk, i);
-      const flatValues = chunk.flat();
-
       try {
-        await this.pool.query(insertQuery, flatValues);
+        const result = await this.runInsertQuery(
+          chunk,
+          options?.ids !== undefined
+        );
+        ids.push(...result.rows.map((row) => row[this.idColumnName]));
       } catch (e) {
         console.error(e);
         throw new Error(`Error inserting: ${(e as Error).message}`);
       }
     }
+    return ids;
   }
 
   /**
@@ -211,7 +257,7 @@ export class PGVectorStore extends VectorStore {
       LIMIT $3;`;
 
     const documents = (
-      await this.pool.query(queryString, [embeddingString, _filter, k])
+      await this.client.query(queryString, [embeddingString, _filter, k])
     ).rows;
 
     const results = [] as [Document, number][];
@@ -227,6 +273,19 @@ export class PGVectorStore extends VectorStore {
     return results;
   }
 
+  async delete(params: { ids?: string[]; deleteAll?: boolean }): Promise<void> {
+    if (params.ids !== undefined) {
+      await this.client.query(
+        `DELETE FROM ${this.tableName} WHERE ${
+          this.idColumnName
+        } IN (${params.ids.map((_, idx) => `$${idx + 1}`)})`,
+        params.ids
+      );
+    } else if (params.deleteAll) {
+      await this.client.query(`TRUNCATE TABLE ${this.tableName}`);
+    }
+  }
+
   /**
    * Method to ensure the existence of the table in the database. It creates
    * the table if it does not already exist.
@@ -234,36 +293,35 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when the table has been ensured.
    */
   async ensureTableInDatabase(): Promise<void> {
-    await this.pool.query("CREATE EXTENSION IF NOT EXISTS vector;");
-    await this.pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-
-    await this.pool.query(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-        "${this.contentColumnName}" text,
-        "${this.metadataColumnName}" jsonb,
-        "${this.vectorColumnName}" vector
-      );
-    `);
+    await this.client.query(`CREATE EXTENSION IF NOT EXISTS vector;`);
+    await this.client.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+    await this.client.query(`CREATE TABLE IF NOT EXISTS "${this.tableName}" (
+      "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+      "${this.contentColumnName}" text,
+      "${this.metadataColumnName}" jsonb,
+      "${this.vectorColumnName}" vector
+    );`);
   }
 
   /**
-   * Static method to create a new `PGVectorStore` instance from an
+   * Static method to create a new `VercelPostgres` instance from an
    * array of texts and their metadata. It converts the texts into
    * `Document` instances and adds them to the store.
    *
    * @param texts - Array of texts.
    * @param metadatas - Array of metadata objects or a single metadata object.
    * @param embeddings - Embeddings instance.
-   * @param dbConfig - `PGVectorStoreArgs` instance.
-   * @returns Promise that resolves with a new instance of `PGVectorStore`.
+   * @param fields - `VercelPostgres` configuration options.
+   * @returns Promise that resolves with a new instance of `VercelPostgres`.
    */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: PGVectorStoreArgs
-  ): Promise<PGVectorStore> {
+    dbConfig?: Partial<VercelPostgresFields> & {
+      postgresConnectionOptions?: VercelPostgresPoolConfig;
+    }
+  ): Promise<VercelPostgres> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
@@ -274,24 +332,26 @@ export class PGVectorStore extends VectorStore {
       docs.push(newDoc);
     }
 
-    return PGVectorStore.fromDocuments(docs, embeddings, dbConfig);
+    return this.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
-   * Static method to create a new `PGVectorStore` instance from an
+   * Static method to create a new `VercelPostgres` instance from an
    * array of `Document` instances. It adds the documents to the store.
    *
    * @param docs - Array of `Document` instances.
    * @param embeddings - Embeddings instance.
-   * @param dbConfig - `PGVectorStoreArgs` instance.
-   * @returns Promise that resolves with a new instance of `PGVectorStore`.
+   * @param fields - `VercelPostgres` configuration options.
+   * @returns Promise that resolves with a new instance of `VercelPostgres`.
    */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: PGVectorStoreArgs
-  ): Promise<PGVectorStore> {
-    const instance = await PGVectorStore.initialize(embeddings, dbConfig);
+    dbConfig?: Partial<VercelPostgresFields> & {
+      postgresConnectionOptions?: VercelPostgresPoolConfig;
+    }
+  ): Promise<VercelPostgres> {
+    const instance = await this.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs);
 
     return instance;
