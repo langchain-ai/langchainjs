@@ -139,6 +139,7 @@
       "src/document_loaders/web/s3.ts",
       "src/document_loaders/web/sonix_audio.ts",
       "src/document_loaders/web/confluence.ts",
+      "src/document_loaders/web/searchapi.ts",
       "src/document_loaders/web/serpapi.ts",
       "src/document_loaders/web/sort_xyz_blockchain.ts",
       "src/document_loaders/web/youtube.ts",

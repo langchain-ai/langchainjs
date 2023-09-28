@@ -331,6 +331,9 @@
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/searchapi.cjs",
+    "document_loaders/web/searchapi.js",
+    "document_loaders/web/searchapi.d.ts",
     "document_loaders/web/serpapi.cjs",
     "document_loaders/web/serpapi.js",
     "document_loaders/web/serpapi.d.ts",
@@ -1672,6 +1675,11 @@
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/searchapi": {
+      "types": "./document_loaders/web/searchapi.d.ts",
+      "import": "./document_loaders/web/searchapi.js",
+      "require": "./document_loaders/web/searchapi.cjs"
     },
     "./document_loaders/web/serpapi": {
       "types": "./document_loaders/web/serpapi.d.ts",

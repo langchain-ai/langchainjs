@@ -130,6 +130,7 @@ const entrypoints = {
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
+  "document_loaders/web/searchapi": "document_loaders/web/searchapi",
   "document_loaders/web/serpapi": "document_loaders/web/serpapi",
   "document_loaders/web/sort_xyz_blockchain":
     "document_loaders/web/sort_xyz_blockchain",
