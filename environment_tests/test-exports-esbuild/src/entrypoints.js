@@ -21,6 +21,7 @@ import * as llms_fireworks from "langchain/llms/fireworks";
 import * as prompts from "langchain/prompts";
 import * as vectorstores_base from "langchain/vectorstores/base";
 import * as vectorstores_memory from "langchain/vectorstores/memory";
+import * as vectorstores_cloudflare_vectorize from "langchain/vectorstores/cloudflare_vectorize";
 import * as vectorstores_prisma from "langchain/vectorstores/prisma";
 import * as vectorstores_vectara from "langchain/vectorstores/vectara";
 import * as vectorstores_xata from "langchain/vectorstores/xata";

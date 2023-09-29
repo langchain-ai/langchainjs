@@ -21,6 +21,7 @@ const llms_fireworks = require("langchain/llms/fireworks");
 const prompts = require("langchain/prompts");
 const vectorstores_base = require("langchain/vectorstores/base");
 const vectorstores_memory = require("langchain/vectorstores/memory");
+const vectorstores_cloudflare_vectorize = require("langchain/vectorstores/cloudflare_vectorize");
 const vectorstores_prisma = require("langchain/vectorstores/prisma");
 const vectorstores_vectara = require("langchain/vectorstores/vectara");
 const vectorstores_xata = require("langchain/vectorstores/xata");

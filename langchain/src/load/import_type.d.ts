@@ -103,9 +103,6 @@ export interface OptionalImportMap {
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
-  "langchain/vectorstores/cloudflare_vectorize"?:
-    | typeof import("../vectorstores/cloudflare_vectorize.js")
-    | Promise<typeof import("../vectorstores/cloudflare_vectorize.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
