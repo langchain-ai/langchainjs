@@ -35,6 +35,7 @@ export const optionalImportEntrypoints = [
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/elasticsearch",
+  "langchain/vectorstores/cloudflare_vectorize",
   "langchain/vectorstores/chroma",
   "langchain/vectorstores/googlevertexai",
   "langchain/vectorstores/hnswlib",

@@ -177,8 +177,7 @@ export class CloudflareVectorizeStore extends VectorStore {
       | Record<string, VectorizeVectorMetadata>[]
       | Record<string, VectorizeVectorMetadata>,
     embeddings: Embeddings,
-    dbConfig: VectorizeLibArgs,
-    options?: { ids?: string[] } | string[]
+    dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -189,12 +188,7 @@ export class CloudflareVectorizeStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return CloudflareVectorizeStore.fromDocuments(
-      docs,
-      embeddings,
-      dbConfig,
-      options
-    );
+    return CloudflareVectorizeStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
@@ -209,11 +203,10 @@ export class CloudflareVectorizeStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: VectorizeLibArgs,
-    options?: { ids?: string[] } | string[]
+    dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const instance = new this(embeddings, dbConfig);
-    await instance.addDocuments(docs, options);
+    await instance.addDocuments(docs);
     return instance;
   }
 
