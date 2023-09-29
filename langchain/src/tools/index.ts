@@ -42,3 +42,4 @@ export {
   DataForSeoApiConfig,
 } from "./dataforseo_api_search.js";
 export { SearxngSearch } from "./searxng_search.js";
+export { SearchApi, SearchApiParameters } from "./searchapi.js";

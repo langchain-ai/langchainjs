@@ -237,10 +237,10 @@ const config = {
     }),
 
   scripts: [
-    "/js/vercel_analytics.js",
+    "/js/google_analytics.js",
     {
-      src: "/_vercel/insights/script.js",
-      defer: true,
+      src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
+      async: true,
     }
   ]
 };

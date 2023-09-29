@@ -4,7 +4,11 @@ import * as fs from "node:fs";
 import * as url from "node:url";
 import * as path from "node:path";
 import { test } from "@jest/globals";
-import { NotionAPILoader, PageObjectResponse } from "../web/notionapi.js";
+import {
+  DatabaseObjectResponse,
+  NotionAPILoader,
+  PageObjectResponse,
+} from "../web/notionapi.js";
 
 test("Properties Parser", async () => {
   const loader = new NotionAPILoader({
@@ -36,7 +40,7 @@ test("Properties Parser", async () => {
   expect(contents.Status).toBe("In progress");
   expect(contents["Multi-select"]).toBe('["Red", "Green", "Blue"]');
   expect(contents.Select).toBe("Magenta");
-  expect(contents["Last edited time"]).toBe("2023-08-09T16:06:00.000Z");
+  expect(contents["Last edited time"]).toBe("2023-09-27T09:11:00.000Z");
   expect(contents.Text).toBe(
     "This is just some **text** with some formatting and new lines.\n" +
       "\n" +
@@ -67,6 +71,60 @@ test("Properties Parser", async () => {
   expect(contents.Person).toBe(
     '[["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"], ["user", "9d6b0c60-efdd-48d1-b63e-027d9b7d66a0"]]'
   );
-  expect(contents.Name).toBe("An example page in a database");
-  expect(contents._title).toBe("An example page in a database");
+  expect(contents.Name).toBe("An example ~~page~~ in a database");
+  expect(contents._title).toBe("An example ~~page~~ in a database");
+});
+
+test("Get Title (page)", async () => {
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_PAGE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle) => {
+      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    },
+  });
+
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/notion_api/notion_page_response.json"
+  );
+
+  const pageDetails: PageObjectResponse = JSON.parse(
+    fs.readFileSync(filePath).toString()
+  );
+
+  // Accessing private class method
+  // eslint-disable-next-line dot-notation
+  const title = loader["getTitle"](pageDetails);
+
+  expect(title).toBe("An example ~~page~~ in a database");
+});
+
+test("Get Title (database)", async () => {
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_PAGE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle) => {
+      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    },
+  });
+
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/notion_api/notion_database_response.json"
+  );
+
+  const dbDetails: DatabaseObjectResponse = JSON.parse(
+    fs.readFileSync(filePath).toString()
+  );
+
+  // Accessing private class method
+  // eslint-disable-next-line dot-notation
+  const title = loader["getTitle"](dbDetails);
+
+  expect(title).toBe("Example ~~_**Database**_~~");
 });

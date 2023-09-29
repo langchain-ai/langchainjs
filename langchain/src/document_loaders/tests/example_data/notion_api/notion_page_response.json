@@ -2,7 +2,7 @@
   "object": "page",
   "id": "7a1c25f2-d8a7-46d9-a2da-c9e39e018a56",
   "created_time": "2023-06-14T10:29:00.000Z",
-  "last_edited_time": "2023-08-09T16:06:00.000Z",
+  "last_edited_time": "2023-09-27T09:11:00.000Z",
   "created_by": {
     "object": "user",
     "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
@@ -27,17 +27,13 @@
           "name": "MetaLumna Logo Square.png",
           "type": "file",
           "file": {
-            "url": "https://s3.us-west-2.amazonaws.com/secure.notion-static.com/8ad37e93-7788-499e-8fe5-35c714c0022f/MetaLumna_Logo_Square.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20230809%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230809T160622Z&X-Amz-Expires=3600&X-Amz-Signature=164ce8273219415d078670e5fca017d7ee2ac3b421284fed8e8d5508e957deaf&X-Amz-SignedHeaders=host&x-id=GetObject",
-            "expiry_time": "2023-08-09T17:06:22.823Z"
+            "url": "https://s3.us-west-2.amazonaws.com/secure.notion-static.com/8ad37e93-7788-499e-8fe5-35c714c0022f/MetaLumna_Logo_Square.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20230927%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230927T091149Z&X-Amz-Expires=3600&X-Amz-Signature=292d6ed32186f0364aa844e4e5654c54c3364fb5e60f5d880591d41585df16e3&X-Amz-SignedHeaders=host&x-id=GetObject",
+            "expiry_time": "2023-09-27T10:11:49.797Z"
           }
         }
       ]
     },
-    "Number": {
-      "id": "%3FD%7CI",
-      "type": "number",
-      "number": 1234
-    },
+    "Number": { "id": "%3FD%7CI", "type": "number", "number": 1234 },
     "Rollup": {
       "id": "%3FROk",
       "type": "rollup",
@@ -71,10 +67,7 @@
             "title": [
               {
                 "type": "text",
-                "text": {
-                  "content": "An example page in a database",
-                  "link": null
-                },
+                "text": { "content": "An example ", "link": null },
                 "annotations": {
                   "bold": false,
                   "italic": false,
@@ -83,7 +76,35 @@
                   "code": false,
                   "color": "default"
                 },
-                "plain_text": "An example page in a database",
+                "plain_text": "An example ",
+                "href": null
+              },
+              {
+                "type": "text",
+                "text": { "content": "page", "link": null },
+                "annotations": {
+                  "bold": false,
+                  "italic": false,
+                  "strikethrough": true,
+                  "underline": false,
+                  "code": false,
+                  "color": "default"
+                },
+                "plain_text": "page",
+                "href": null
+              },
+              {
+                "type": "text",
+                "text": { "content": " in a database", "link": null },
+                "annotations": {
+                  "bold": false,
+                  "italic": false,
+                  "strikethrough": false,
+                  "underline": false,
+                  "code": false,
+                  "color": "default"
+                },
+                "plain_text": " in a database",
                 "href": null
               }
             ]
@@ -156,7 +177,7 @@
     "Last edited time": {
       "id": "Okfy",
       "type": "last_edited_time",
-      "last_edited_time": "2023-08-09T16:06:00.000Z"
+      "last_edited_time": "2023-09-27T09:11:00.000Z"
     },
     "Text": {
       "id": "VWez",
@@ -164,10 +185,7 @@
       "rich_text": [
         {
           "type": "text",
-          "text": {
-            "content": "This is just some ",
-            "link": null
-          },
+          "text": { "content": "This is just some ", "link": null },
           "annotations": {
             "bold": false,
             "italic": false,
@@ -181,10 +199,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "text",
-            "link": null
-          },
+          "text": { "content": "text", "link": null },
           "annotations": {
             "bold": true,
             "italic": false,
@@ -215,10 +230,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "italic",
-            "link": null
-          },
+          "text": { "content": "italic", "link": null },
           "annotations": {
             "bold": false,
             "italic": true,
@@ -232,10 +244,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "\n",
-            "link": null
-          },
+          "text": { "content": "\n", "link": null },
           "annotations": {
             "bold": false,
             "italic": false,
@@ -249,10 +258,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "bold",
-            "link": null
-          },
+          "text": { "content": "bold", "link": null },
           "annotations": {
             "bold": true,
             "italic": false,
@@ -266,10 +272,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "\n",
-            "link": null
-          },
+          "text": { "content": "\n", "link": null },
           "annotations": {
             "bold": false,
             "italic": false,
@@ -283,10 +286,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "inline code",
-            "link": null
-          },
+          "text": { "content": "inline code", "link": null },
           "annotations": {
             "bold": false,
             "italic": false,
@@ -300,10 +300,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "\n",
-            "link": null
-          },
+          "text": { "content": "\n", "link": null },
           "annotations": {
             "bold": false,
             "italic": false,
@@ -317,10 +314,7 @@
         },
         {
           "type": "text",
-          "text": {
-            "content": "strike through",
-            "link": null
-          },
+          "text": { "content": "strike through", "link": null },
           "annotations": {
             "bold": false,
             "italic": false,
@@ -334,27 +328,45 @@
         }
       ]
     },
+    "title": {
+      "id": "VdnU",
+      "type": "rich_text",
+      "rich_text": [
+        {
+          "type": "text",
+          "text": { "content": "So this counts as a title 1", "link": null },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "So this counts as a title 1",
+          "href": null
+        }
+      ]
+    },
     "Last edited by": {
       "id": "Yfu%7B",
       "type": "last_edited_by",
       "last_edited_by": {
         "object": "user",
-        "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+        "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd",
+        "name": "Richard Casemore",
+        "avatar_url": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/fa55636a-5a2b-411d-ad24-6d26b6468bf1/12034277_879339035492383_624157532974474889_o.jpg",
+        "type": "person",
+        "person": { "email": "skarard@gmail.com" }
       }
     },
     "Related Example Database": {
       "id": "%5CtQ%5B",
       "type": "relation",
       "relation": [
-        {
-          "id": "7d9d1b96-34fa-4da3-b70d-9f71a75e1291"
-        },
-        {
-          "id": "7a1c25f2-d8a7-46d9-a2da-c9e39e018a56"
-        },
-        {
-          "id": "67662914-f22b-47fd-98aa-19988c40c77d"
-        }
+        { "id": "7d9d1b96-34fa-4da3-b70d-9f71a75e1291" },
+        { "id": "7a1c25f2-d8a7-46d9-a2da-c9e39e018a56" },
+        { "id": "67662914-f22b-47fd-98aa-19988c40c77d" }
       ],
       "has_more": false
     },
@@ -363,37 +375,26 @@
       "type": "created_by",
       "created_by": {
         "object": "user",
-        "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+        "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd",
+        "name": "Richard Casemore",
+        "avatar_url": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/fa55636a-5a2b-411d-ad24-6d26b6468bf1/12034277_879339035492383_624157532974474889_o.jpg",
+        "type": "person",
+        "person": { "email": "skarard@gmail.com" }
       }
     },
-    "Checkbox": {
-      "id": "aSh%3F",
-      "type": "checkbox",
-      "checkbox": true
-    },
+    "Checkbox": { "id": "aSh%3F", "type": "checkbox", "checkbox": true },
     "Formula": {
       "id": "cnSn",
       "type": "formula",
-      "formula": {
-        "type": "boolean",
-        "boolean": false
-      }
+      "formula": { "type": "boolean", "boolean": false }
     },
     "Phone": {
       "id": "faWC",
       "type": "phone_number",
       "phone_number": "555-1234"
     },
-    "Email": {
-      "id": "hMx%3C",
-      "type": "email",
-      "email": "skarard@gmail.com"
-    },
-    "URL": {
-      "id": "k~K%3C",
-      "type": "url",
-      "url": "https://example.com"
-    },
+    "Email": { "id": "hMx%3C", "type": "email", "email": "skarard@gmail.com" },
+    "URL": { "id": "k~K%3C", "type": "url", "url": "https://example.com" },
     "Created time": {
       "id": "lYCY",
       "type": "created_time",
@@ -402,10 +403,7 @@
     "ID": {
       "id": "lsSy",
       "type": "unique_id",
-      "unique_id": {
-        "prefix": null,
-        "number": 2
-      }
+      "unique_id": { "prefix": null, "number": 2 }
     },
     "Date": {
       "id": "pbgc",
@@ -422,11 +420,19 @@
       "people": [
         {
           "object": "user",
-          "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"
+          "id": "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd",
+          "name": "Richard Casemore",
+          "avatar_url": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/fa55636a-5a2b-411d-ad24-6d26b6468bf1/12034277_879339035492383_624157532974474889_o.jpg",
+          "type": "person",
+          "person": { "email": "skarard@gmail.com" }
         },
         {
           "object": "user",
-          "id": "9d6b0c60-efdd-48d1-b63e-027d9b7d66a0"
+          "id": "9d6b0c60-efdd-48d1-b63e-027d9b7d66a0",
+          "name": "MetaLumna Admin",
+          "avatar_url": null,
+          "type": "person",
+          "person": { "email": "team@metalumna.com" }
         }
       ]
     },
@@ -436,10 +442,7 @@
       "title": [
         {
           "type": "text",
-          "text": {
-            "content": "An example page in a database",
-            "link": null
-          },
+          "text": { "content": "An example ", "link": null },
           "annotations": {
             "bold": false,
             "italic": false,
@@ -448,7 +451,35 @@
             "code": false,
             "color": "default"
           },
-          "plain_text": "An example page in a database",
+          "plain_text": "An example ",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": { "content": "page", "link": null },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": true,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": "page",
+          "href": null
+        },
+        {
+          "type": "text",
+          "text": { "content": " in a database", "link": null },
+          "annotations": {
+            "bold": false,
+            "italic": false,
+            "strikethrough": false,
+            "underline": false,
+            "code": false,
+            "color": "default"
+          },
+          "plain_text": " in a database",
           "href": null
         }
       ]

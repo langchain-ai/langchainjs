@@ -136,7 +136,7 @@ export class SupabaseVectorStore extends VectorStore {
    * @param params The parameters for deleting vectors.
    * @returns A promise that resolves when the vectors have been deleted.
    */
-  async delete(params: { ids: string[] }): Promise<void> {
+  async delete(params: { ids: string[] | number[] }): Promise<void> {
     const { ids } = params;
     for (const id of ids) {
       await this.client.from(this.tableName).delete().eq("id", id);

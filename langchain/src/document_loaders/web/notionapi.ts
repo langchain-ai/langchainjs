@@ -144,10 +144,18 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * @returns The string of the title.
    */
   private getTitle(obj: GetResponse) {
-    if (isPage(obj) && obj.properties.title.type === "title") {
-      return obj.properties.title.title[0]?.plain_text;
+    if (isPage(obj)) {
+      const titleProp = Object.values(obj.properties).find(
+        (prop) => prop.type === "title"
+      );
+      if (titleProp) return this.getPropValue(titleProp);
     }
-    if (isDatabase(obj)) return obj.title[0]?.plain_text;
+    if (isDatabase(obj))
+      return obj.title
+        .map((v) =>
+          this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+        )
+        .join("");
     return null;
   }
 
@@ -346,7 +354,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.onDocumentLoaded(
       this.documents.length,
       this.pageQueueTotal,
-      pageDocument.metadata.properties.title,
+      this.getTitle(pageDetails) || undefined,
       this.rootTitle
     );
   }
