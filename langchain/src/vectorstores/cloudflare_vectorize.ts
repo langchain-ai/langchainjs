@@ -52,7 +52,11 @@ export class CloudflareVectorizeStore extends VectorStore {
     }
     this.index = index;
     this.textKey = textKey ?? "text";
-    this.caller = new AsyncCaller(asyncCallerArgs);
+    this.caller = new AsyncCaller({
+      maxConcurrency: 6,
+      maxRetries: 0,
+      ...asyncCallerArgs,
+    });
   }
 
   /**
@@ -164,13 +168,17 @@ export class CloudflareVectorizeStore extends VectorStore {
    * @param metadatas Metadata associated with the texts.
    * @param embeddings Embeddings to use for the texts.
    * @param dbConfig Configuration for the Vectorize database.
+   * @param options Optional ids for the vectors.
    * @returns Promise that resolves with a new instance of the CloudflareVectorizeStore class.
    */
   static async fromTexts(
     texts: string[],
-    metadatas: object[] | object,
+    metadatas:
+      | Record<string, VectorizeVectorMetadata>[]
+      | Record<string, VectorizeVectorMetadata>,
     embeddings: Embeddings,
-    dbConfig: VectorizeLibArgs
+    dbConfig: VectorizeLibArgs,
+    options?: { ids?: string[] } | string[]
   ): Promise<CloudflareVectorizeStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -181,7 +189,12 @@ export class CloudflareVectorizeStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return CloudflareVectorizeStore.fromDocuments(docs, embeddings, dbConfig);
+    return CloudflareVectorizeStore.fromDocuments(
+      docs,
+      embeddings,
+      dbConfig,
+      options
+    );
   }
 
   /**
@@ -190,15 +203,17 @@ export class CloudflareVectorizeStore extends VectorStore {
    * @param docs Array of documents to add to the Vectorize database.
    * @param embeddings Embeddings to use for the documents.
    * @param dbConfig Configuration for the Vectorize database.
+   * @param options Optional ids for the vectors.
    * @returns Promise that resolves with a new instance of the CloudflareVectorizeStore class.
    */
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: VectorizeLibArgs
+    dbConfig: VectorizeLibArgs,
+    options?: { ids?: string[] } | string[]
   ): Promise<CloudflareVectorizeStore> {
     const instance = new this(embeddings, dbConfig);
-    await instance.addDocuments(docs);
+    await instance.addDocuments(docs, options);
     return instance;
   }
 
