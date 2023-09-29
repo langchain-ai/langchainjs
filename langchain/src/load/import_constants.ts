@@ -94,6 +94,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/fs/openai_whisper_audio",
   "langchain/document_transformers/html_to_text",
   "langchain/document_transformers/mozilla_readability",
+  "langchain/chat_models/bedrock",
   "langchain/chat_models/googlevertexai",
   "langchain/chat_models/googlevertexai/web",
   "langchain/chat_models/googlepalm",
