@@ -21,8 +21,6 @@ import {
 import { OpenAI } from "langchain/llms/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { HNLoader } from "langchain/document_loaders/web/hn";
-import { CloudflareVectorizeStore } from "langchain/vectorstores/cloudflare_vectorize";
-import { CloudflareWorkersAIEmbeddings } from "langchain/embeddings/cloudflare_workersai";
 
 export interface Env {
   OPENAI_API_KEY?: string;
@@ -30,8 +28,6 @@ export interface Env {
   AZURE_OPENAI_API_INSTANCE_NAME?: string;
   AZURE_OPENAI_API_DEPLOYMENT_NAME?: string;
   AZURE_OPENAI_API_VERSION?: string;
-  VECTORIZE_INDEX: VectorizeIndex;
-  AI: Fetcher;
 }
 
 export default {
@@ -66,17 +62,6 @@ export default {
       ]),
     });
     const res = await chain.run("hello");
-
-    const store = new CloudflareVectorizeStore(
-      new CloudflareWorkersAIEmbeddings({
-        binding: env.AI,
-        modelName: "@cf/baai/bge-small-en-v1.5",
-      }),
-      {
-        index: env.VECTORIZE_INDEX,
-      }
-    );
-    const results = await store.similaritySearch("hello", 5);
 
     return new Response(
       `Hello, from Cloudflare Worker at ${request.url}. Assistant says: ${res}`
