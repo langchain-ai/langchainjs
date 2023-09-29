@@ -17,7 +17,7 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   binding: Fetcher;
 
   /** Model name to use */
-  modelName: string;
+  modelName?: string;
 
   /**
    * The maximum number of documents to embed in a single request.
@@ -40,17 +40,17 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
 
   ai: Ai;
 
-  constructor(fields?: Partial<CloudflareWorkersAIEmbeddingsParams>) {
-    super(fields ?? {});
+  constructor(fields: CloudflareWorkersAIEmbeddingsParams) {
+    super(fields);
 
-    if (!fields?.binding) {
+    if (!fields.binding) {
       throw new Error(
         "Must supply a Workers AI binding, eg { binding: env.AI }"
       );
     }
-    this.ai = new Ai(fields?.binding);
-    this.modelName = fields?.modelName ?? this.modelName;
-    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
+    this.ai = new Ai(fields.binding);
+    this.modelName = fields.modelName ?? this.modelName;
+    this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
