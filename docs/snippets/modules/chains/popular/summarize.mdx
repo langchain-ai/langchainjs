@@ -1,6 +1,7 @@
 import CodeBlock from "@theme/CodeBlock";
 import SummarizeExample from "@examples/chains/summarization_map_reduce.ts";
 import SummarizeExampleIntermediateSteps from "@examples/chains/summarization_map_reduce_intermediate_steps.ts";
+import SummarizeSeparateOutputLLMsExample from "@examples/chains/summarization_separate_output_llm.ts";
 
 <CodeBlock language="typescript">{SummarizeExample}</CodeBlock>
 
@@ -9,3 +10,9 @@ import SummarizeExampleIntermediateSteps from "@examples/chains/summarization_ma
 We can also return the intermediate steps for `map_reduce` chains, should we want to inspect them. This is done with the `returnIntermediateSteps` parameter.
 
 <CodeBlock language="typescript">{SummarizeExampleIntermediateSteps}</CodeBlock>
+
+## Streaming
+
+By passing a custom LLM to the internal `map_reduce` chain, we can stream the final output:
+
+<CodeBlock language="typescript">{SummarizeSeparateOutputLLMsExample}</CodeBlock>

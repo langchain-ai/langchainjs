@@ -1,0 +1,38 @@
+---
+sidebar_position: 5
+title: Route between multiple runnables
+---
+
+# Route between multiple Runnables
+
+This notebook covers how to do routing in the LangChain Expression Language.
+
+Routing allows you to create non-deterministic chains where the output of a previous step defines the next step. Routing helps provide structure and consistency around interactions with LLMs.
+
+There are two ways to perform routing:
+
+1. Using a RunnableBranch.
+2. Writing custom factory function that takes the input of a previous step and returns a runnable. Importantly, this should return a runnable and NOT actually execute.
+
+We'll illustrate both methods using a two step sequence where the first step classifies an input question as being about LangChain, Anthropic, or Other, then routes to a corresponding prompt chain.
+
+## Using a RunnableBranch
+
+A RunnableBranch is initialized with a list of (condition, runnable) pairs and a default runnable. It selects which branch by passing each condition the input it's invoked with. It selects the first condition to evaluate to True, and runs the corresponding runnable to that condition with the input.
+
+If no provided conditions match, it runs the default runnable.
+
+Here's an example of what it looks like in action:
+
+import CodeBlock from "@theme/CodeBlock";
+import BranchExample from "@examples/guides/expression_language/how_to_routing_runnable_branch.ts";
+
+<CodeBlock language="typescript">{BranchExample}</CodeBlock>
+
+## Using a custom function
+
+You can also use a custom function to route between different outputs. Here's an example:
+
+import FactoryFunctionExample from "@examples/guides/expression_language/how_to_routing_custom_function.ts";
+
+<CodeBlock language="typescript">{FactoryFunctionExample}</CodeBlock>

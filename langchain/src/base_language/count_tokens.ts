@@ -71,13 +71,16 @@ export const calculateMaxTokens = async ({
   let numTokens;
 
   try {
-    numTokens = (await encodingForModel(modelName)).encode(prompt).length;
+    numTokens = (
+      await encodingForModel(getModelNameForTiktoken(modelName))
+    ).encode(prompt).length;
   } catch (error) {
     console.warn(
       "Failed to calculate number of tokens, falling back to approximate count"
     );
 
     // fallback to approximate calculation if tiktoken is not available
+    // each token is ~4 characters: https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them#
     numTokens = Math.ceil(prompt.length / 4);
   }
 

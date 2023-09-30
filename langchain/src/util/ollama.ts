@@ -80,6 +80,12 @@ export type OllamaGenerationChunk = {
   model: string;
   created_at: string;
   done: boolean;
+  total_duration?: number;
+  load_duration?: number;
+  prompt_eval_count?: number;
+  prompt_eval_duration?: number;
+  eval_count?: number;
+  eval_duration?: number;
 };
 
 export async function* createOllamaStream(
@@ -105,12 +111,12 @@ export async function* createOllamaStream(
     signal: options.signal,
   });
   if (!response.ok) {
+    const json = await response.json();
     const error = new Error(
-      `Ollama call failed with status code ${response.status}`
+      `Ollama call failed with status code ${response.status}: ${json.error}`
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).response = response;
-    console.log(await response.json());
     throw error;
   }
   if (!response.body) {

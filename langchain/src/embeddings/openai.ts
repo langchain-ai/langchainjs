@@ -79,7 +79,7 @@ export class OpenAIEmbeddings
 
     super(fieldsWithDefaults);
 
-    const apiKey =
+    let apiKey =
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
@@ -130,6 +130,7 @@ export class OpenAIEmbeddings
       if (!this.azureOpenAIApiVersion) {
         throw new Error("Azure OpenAI API version not found");
       }
+      apiKey = apiKey ?? "";
     }
 
     this.clientConfig = {

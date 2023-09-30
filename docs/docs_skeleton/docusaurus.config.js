@@ -235,6 +235,14 @@ const config = {
         copyright: `Copyright © ${new Date().getFullYear()} LangChain, Inc.`,
       },
     }),
+
+  scripts: [
+    "/js/google_analytics.js",
+    {
+      src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
+      async: true,
+    }
+  ]
 };
 
 module.exports = config;

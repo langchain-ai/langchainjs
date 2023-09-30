@@ -1,5 +1,4 @@
 import { XMLParser } from "fast-xml-parser";
-import type { OpenAI as OpenAIClient } from "openai";
 
 import { BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
@@ -14,7 +13,7 @@ import {
   DEFAULT_STOP_SEQUENCES,
   type AnthropicInput,
 } from "../../chat_models/anthropic.js";
-import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
+import { BaseFunctionCallOptions } from "../../base_language/index.js";
 import { StructuredTool } from "../../tools/base.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
@@ -41,9 +40,7 @@ for the weather in SF you would respond:
 <observation>64 degrees</observation>`);
 
 export interface ChatAnthropicFunctionsCallOptions
-  extends BaseLanguageModelCallOptions {
-  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
-  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
+  extends BaseFunctionCallOptions {
   tools?: StructuredTool[];
 }
 

@@ -1,7 +1,11 @@
 import type { createCluster, createClient } from "redis";
 
 import { BaseCache, Generation } from "../schema/index.js";
-import { getCacheKey } from "./base.js";
+import {
+  deserializeStoredGeneration,
+  getCacheKey,
+  serializeGeneration,
+} from "./base.js";
 
 /**
  * Represents the type of the Redis client used to interact with the Redis
@@ -39,11 +43,8 @@ export class RedisCache extends BaseCache {
     const generations: Generation[] = [];
 
     while (value) {
-      if (!value) {
-        break;
-      }
-
-      generations.push({ text: value });
+      const storedGeneration = JSON.parse(value);
+      generations.push(deserializeStoredGeneration(storedGeneration));
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
       value = await this.redisClient.get(key);
@@ -63,7 +64,10 @@ export class RedisCache extends BaseCache {
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      await this.redisClient.set(key, value[i].text);
+      await this.redisClient.set(
+        key,
+        JSON.stringify(serializeGeneration(value[i]))
+      );
     }
   }
 }

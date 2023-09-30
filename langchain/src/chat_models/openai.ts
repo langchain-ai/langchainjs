@@ -30,10 +30,11 @@ import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { BaseFunctionCallOptions } from "../base_language/index.js";
 import { NewTokenIndices } from "../callbacks/base.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
 
-export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
+export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
 interface TokenUsage {
   completionTokens?: number;
@@ -131,9 +132,9 @@ function _convertDeltaToMessageChunk(
   }
 }
 
-export interface ChatOpenAICallOptions extends OpenAICallOptions {
-  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
-  functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
+export interface ChatOpenAICallOptions
+  extends OpenAICallOptions,
+    BaseFunctionCallOptions {
   tools?: StructuredTool[];
   promptIndex?: number;
 }
@@ -157,17 +158,19 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
-export class ChatOpenAI
-  extends BaseChatModel<ChatOpenAICallOptions>
+export class ChatOpenAI<
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  >
+  extends BaseChatModel<CallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
   static lc_name() {
     return "ChatOpenAI";
   }
 
-  get callKeys(): (keyof ChatOpenAICallOptions)[] {
+  get callKeys() {
     return [
-      ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
+      ...super.callKeys,
       "options",
       "function_call",
       "functions",
@@ -309,6 +312,7 @@ export class ChatOpenAI
       if (!this.azureOpenAIApiVersion) {
         throw new Error("Azure OpenAI API version not found");
       }
+      this.openAIApiKey = this.openAIApiKey ?? "";
     }
 
     this.clientConfig = {
@@ -390,7 +394,7 @@ export class ChatOpenAI
     let defaultRole: OpenAIRoleEnum | undefined;
     const streamIterable = await this.completionWithRetry(params, options);
     for await (const data of streamIterable) {
-      const choice = data.choices[0];
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }

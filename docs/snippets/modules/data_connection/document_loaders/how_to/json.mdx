@@ -82,21 +82,17 @@ const docs = await loader.load();
 /*
 [
   Document {
-    "metadata": {
-      "blobType": "application/json",
-      "line": 1,
-      "source": "blob",
-    },
-    "pageContent": "BD 2023 SUMMER",
+    pageContent: 'LinkedIn Job',
+    metadata: { source: './src/json/example.json', line: 1 }
   },
   Document {
-    "metadata": {
-      "blobType": "application/json",
-      "line": 2,
-      "source": "blob",
-    },
-    "pageContent": "LinkedIn Job",
+    pageContent: 'LinkedIn Job2',
+    metadata: { source: './src/json/example.json', line: 2 }
   },
-  ...
+  Document {
+    pageContent: 'bob',
+    metadata: { source: './src/json/example.json', line: 3 }
+  }
 ]
+**/
 ```

@@ -24,8 +24,7 @@ const messages = [
   /*#__PURE__*/ SystemMessagePromptTemplate.fromTemplate(system_template),
   /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
 ];
-const CHAT_PROMPT =
-  /*#__PURE__*/ ChatPromptTemplate.fromPromptMessages(messages);
+const CHAT_PROMPT = /*#__PURE__*/ ChatPromptTemplate.fromMessages(messages);
 
 export const QA_PROMPT_SELECTOR = /*#__PURE__*/ new ConditionalPromptSelector(
   DEFAULT_QA_PROMPT,
