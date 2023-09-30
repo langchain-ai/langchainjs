@@ -4346,6 +4346,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jest/create-cache-key-function@npm:^27.4.2":
+  version: 27.5.1
+  resolution: "@jest/create-cache-key-function@npm:27.5.1"
+  dependencies:
+    "@jest/types": ^27.5.1
+  checksum: a6c3a8c769aca6f66f5dc80f1c77e66980b4f213a6b2a15a92ba3595f032848a1261c06c9c798dcf2b672b1ffbefad5085af89d130548741c85ddbe0cf4284e7
+  languageName: node
+  linkType: hard
+
 "@jest/environment@npm:^29.5.0":
   version: 29.5.0
   resolution: "@jest/environment@npm:29.5.0"
@@ -4557,6 +4566,19 @@ __metadata:
     slash: ^3.0.0
     write-file-atomic: ^4.0.2
   checksum: d55d604085c157cf5112e165ff5ac1fa788873b3b31265fb4734ca59892ee24e44119964cc47eb6d178dd9512bbb6c576d1e20e51a201ff4e24d31e818a1c92d
+  languageName: node
+  linkType: hard
+
+"@jest/types@npm:^27.5.1":
+  version: 27.5.1
+  resolution: "@jest/types@npm:27.5.1"
+  dependencies:
+    "@types/istanbul-lib-coverage": ^2.0.0
+    "@types/istanbul-reports": ^3.0.0
+    "@types/node": "*"
+    "@types/yargs": ^16.0.0
+    chalk: ^4.0.0
+  checksum: d1f43cc946d87543ddd79d49547aab2399481d34025d5c5f2025d3d99c573e1d9832fa83cef25e9d9b07a8583500229d15bbb07b8e233d127d911d133e2f14b1
   languageName: node
   linkType: hard
 
@@ -6188,6 +6210,148 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swc/core-darwin-arm64@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-darwin-arm64@npm:1.3.90"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@swc/core-darwin-x64@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-darwin-x64@npm:1.3.90"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-arm-gnueabihf@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.90"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-arm64-gnu@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.90"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-arm64-musl@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-linux-arm64-musl@npm:1.3.90"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-x64-gnu@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-linux-x64-gnu@npm:1.3.90"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc/core-linux-x64-musl@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-linux-x64-musl@npm:1.3.90"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@swc/core-win32-arm64-msvc@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.90"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@swc/core-win32-ia32-msvc@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.90"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@swc/core-win32-x64-msvc@npm:1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core-win32-x64-msvc@npm:1.3.90"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@swc/core@npm:^1.3.90":
+  version: 1.3.90
+  resolution: "@swc/core@npm:1.3.90"
+  dependencies:
+    "@swc/core-darwin-arm64": 1.3.90
+    "@swc/core-darwin-x64": 1.3.90
+    "@swc/core-linux-arm-gnueabihf": 1.3.90
+    "@swc/core-linux-arm64-gnu": 1.3.90
+    "@swc/core-linux-arm64-musl": 1.3.90
+    "@swc/core-linux-x64-gnu": 1.3.90
+    "@swc/core-linux-x64-musl": 1.3.90
+    "@swc/core-win32-arm64-msvc": 1.3.90
+    "@swc/core-win32-ia32-msvc": 1.3.90
+    "@swc/core-win32-x64-msvc": 1.3.90
+    "@swc/counter": ^0.1.1
+    "@swc/types": ^0.1.5
+  peerDependencies:
+    "@swc/helpers": ^0.5.0
+  dependenciesMeta:
+    "@swc/core-darwin-arm64":
+      optional: true
+    "@swc/core-darwin-x64":
+      optional: true
+    "@swc/core-linux-arm-gnueabihf":
+      optional: true
+    "@swc/core-linux-arm64-gnu":
+      optional: true
+    "@swc/core-linux-arm64-musl":
+      optional: true
+    "@swc/core-linux-x64-gnu":
+      optional: true
+    "@swc/core-linux-x64-musl":
+      optional: true
+    "@swc/core-win32-arm64-msvc":
+      optional: true
+    "@swc/core-win32-ia32-msvc":
+      optional: true
+    "@swc/core-win32-x64-msvc":
+      optional: true
+  peerDependenciesMeta:
+    "@swc/helpers":
+      optional: true
+  checksum: f8ced5187068dc73445c135065c6492f0ac559d0f7720c2482aa9663c87bd015f3d2abef6ee7b2f817280a5e8dd0946c59cce7e1499180644fbc948a9e3823ab
+  languageName: node
+  linkType: hard
+
+"@swc/counter@npm:^0.1.1":
+  version: 0.1.2
+  resolution: "@swc/counter@npm:0.1.2"
+  checksum: 8427c594f1f0cf44b83885e9c8fe1e370c9db44ae96e07a37c117a6260ee97797d0709483efbcc244e77bac578690215f45b23254c4cd8a70fb25ddbb50bf33e
+  languageName: node
+  linkType: hard
+
+"@swc/jest@npm:^0.2.29":
+  version: 0.2.29
+  resolution: "@swc/jest@npm:0.2.29"
+  dependencies:
+    "@jest/create-cache-key-function": ^27.4.2
+    jsonc-parser: ^3.2.0
+  peerDependencies:
+    "@swc/core": "*"
+  checksum: 9eaad322310f34e81f67d41411a7d60663341af1bd9fb65456faa914c936d849d6f643fa3b942a187d52e71e62c33097098c639d25c2047fa874f49bf51cec76
+  languageName: node
+  linkType: hard
+
+"@swc/types@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "@swc/types@npm:0.1.5"
+  checksum: 6aee11f62d3d805a64848e0bd5f0e0e615f958e327a9e1260056c368d7d28764d89e38bd8005a536c9bf18afbcd303edd84099d60df34a2975d62540f61df13b
+  languageName: node
+  linkType: hard
+
 "@szmarczak/http-timer@npm:^5.0.1":
   version: 5.0.1
   resolution: "@szmarczak/http-timer@npm:5.0.1"
@@ -6920,6 +7084,15 @@ __metadata:
   version: 21.0.0
   resolution: "@types/yargs-parser@npm:21.0.0"
   checksum: b2f4c8d12ac18a567440379909127cf2cec393daffb73f246d0a25df36ea983b93b7e9e824251f959e9f928cbc7c1aab6728d0a0ff15d6145f66cec2be67d9a2
+  languageName: node
+  linkType: hard
+
+"@types/yargs@npm:^16.0.0":
+  version: 16.0.6
+  resolution: "@types/yargs@npm:16.0.6"
+  dependencies:
+    "@types/yargs-parser": "*"
+  checksum: 3531be5c8fc804405dffbba6f4f5486610e13a321e8c87a97c6e70f681bbdcb594d3259a0d3fdbeba2c38a8ef23dc5609dfffeb58fde0bdda95ce27e8c0ef265
   languageName: node
   linkType: hard
 
@@ -13247,6 +13420,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonc-parser@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "jsonc-parser@npm:3.2.0"
+  checksum: 946dd9a5f326b745aa326d48a7257e3f4a4b62c5e98ec8e49fa2bdd8d96cef7e6febf1399f5c7016114fd1f68a1c62c6138826d5d90bc650448e3cf0951c53c7
+  languageName: node
+  linkType: hard
+
 "jsonfile@npm:^4.0.0":
   version: 4.0.0
   resolution: "jsonfile@npm:4.0.0"
@@ -13449,6 +13629,8 @@ __metadata:
     "@smithy/util-utf8": ^2.0.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
+    "@swc/core": ^1.3.90
+    "@swc/jest": ^0.2.29
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
     "@tensorflow/tfjs-backend-cpu": ^3
     "@tensorflow/tfjs-converter": ^3.6.0
