@@ -61,13 +61,8 @@ const runViewEvents = async (
               description,
               start,
               end,
-            }: {
-              status: unknown;
-              summary: unknown;
-              description: unknown;
-              start: unknown;
-              end: unknown;
-            }) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }: any) => ({
               status,
               summary,
               description,
