@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.155",
+  "version": "0.0.156",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -79,6 +79,9 @@
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
+    "embeddings/cloudflare_workersai.cjs",
+    "embeddings/cloudflare_workersai.js",
+    "embeddings/cloudflare_workersai.d.ts",
     "embeddings/fake.cjs",
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
@@ -181,6 +184,9 @@
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
+    "vectorstores/cloudflare_vectorize.cjs",
+    "vectorstores/cloudflare_vectorize.js",
+    "vectorstores/cloudflare_vectorize.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
@@ -403,6 +409,9 @@
     "chat_models/anthropic.cjs",
     "chat_models/anthropic.js",
     "chat_models/anthropic.d.ts",
+    "chat_models/bedrock.cjs",
+    "chat_models/bedrock.js",
+    "chat_models/bedrock.d.ts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
@@ -665,12 +674,11 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/protocol-http": "^3.374.0",
-    "@aws-sdk/signature-v4": "^3.374.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
-    "@cloudflare/workers-types": "^4.20230904.0",
+    "@cloudflare/ai": "^1.0.12",
+    "@cloudflare/workers-types": "^4.20230922.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -688,6 +696,8 @@
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/protocol-http": "^3.0.6",
+    "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
@@ -788,11 +798,9 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/protocol-http": "^3.374.0",
-    "@aws-sdk/signature-v4": "^3.374.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
-    "@cloudflare/workers-types": "^4.20230904.0",
+    "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.7.0",
@@ -808,6 +816,8 @@
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/protocol-http": "^3.0.6",
+    "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
@@ -889,19 +899,13 @@
     "@aws-sdk/credential-provider-node": {
       "optional": true
     },
-    "@aws-sdk/protocol-http": {
-      "optional": true
-    },
-    "@aws-sdk/signature-v4": {
-      "optional": true
-    },
     "@azure/storage-blob": {
       "optional": true
     },
     "@clickhouse/client": {
       "optional": true
     },
-    "@cloudflare/workers-types": {
+    "@cloudflare/ai": {
       "optional": true
     },
     "@elastic/elasticsearch": {
@@ -947,6 +951,12 @@
       "optional": true
     },
     "@smithy/eventstream-codec": {
+      "optional": true
+    },
+    "@smithy/protocol-http": {
+      "optional": true
+    },
+    "@smithy/signature-v4": {
       "optional": true
     },
     "@smithy/util-utf8": {
@@ -1272,6 +1282,11 @@
       "import": "./embeddings/cache_backed.js",
       "require": "./embeddings/cache_backed.cjs"
     },
+    "./embeddings/cloudflare_workersai": {
+      "types": "./embeddings/cloudflare_workersai.d.ts",
+      "import": "./embeddings/cloudflare_workersai.js",
+      "require": "./embeddings/cloudflare_workersai.cjs"
+    },
     "./embeddings/fake": {
       "types": "./embeddings/fake.d.ts",
       "import": "./embeddings/fake.js",
@@ -1441,6 +1456,11 @@
       "types": "./vectorstores/memory.d.ts",
       "import": "./vectorstores/memory.js",
       "require": "./vectorstores/memory.cjs"
+    },
+    "./vectorstores/cloudflare_vectorize": {
+      "types": "./vectorstores/cloudflare_vectorize.d.ts",
+      "import": "./vectorstores/cloudflare_vectorize.js",
+      "require": "./vectorstores/cloudflare_vectorize.cjs"
     },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",
@@ -1811,6 +1831,11 @@
       "types": "./chat_models/anthropic.d.ts",
       "import": "./chat_models/anthropic.js",
       "require": "./chat_models/anthropic.cjs"
+    },
+    "./chat_models/bedrock": {
+      "types": "./chat_models/bedrock.d.ts",
+      "import": "./chat_models/bedrock.js",
+      "require": "./chat_models/bedrock.cjs"
     },
     "./chat_models/googlevertexai": {
       "types": "./chat_models/googlevertexai.d.ts",
