@@ -5,6 +5,7 @@ import { LLMChain } from "../../../chains/index.js";
 import { VIEW_EVENTS_PROMPT } from "../prompts/index.js";
 import { getTimezoneOffsetInHours } from "../utils/get-timezone-offset-in-hours.js";
 import { BaseLLM } from "../../../llms/base.js";
+import { CallbackManagerForToolRun } from "../../../callbacks/manager.js";
 
 type RunViewEventParams = {
   calendarId: string;
@@ -14,7 +15,8 @@ type RunViewEventParams = {
 
 const runViewEvents = async (
   query: string,
-  { model, auth, calendarId }: RunViewEventParams
+  { model, auth, calendarId }: RunViewEventParams,
+  runManager?: CallbackManagerForToolRun
 ) => {
   const calendar = new calendar_v3.Calendar({});
 
@@ -32,12 +34,15 @@ const runViewEvents = async (
   const u_timezone = getTimezoneOffsetInHours();
   const dayName = new Date().toLocaleString("en-us", { weekday: "long" });
 
-  const output = await viewEventsChain.call({
-    query,
-    date,
-    u_timezone,
-    dayName,
-  });
+  const output = await viewEventsChain.call(
+    {
+      query,
+      date,
+      u_timezone,
+      dayName,
+    },
+    runManager?.getChild()
+  );
   const loaded = JSON.parse(output.text);
 
   try {
@@ -50,7 +55,19 @@ const runViewEvents = async (
     const curatedItems =
       response.data && response.data.items
         ? response.data.items.map(
-            ({ status, summary, description, start, end }) => ({
+            ({
+              status,
+              summary,
+              description,
+              start,
+              end,
+            }: {
+              status: unknown;
+              summary: unknown;
+              description: unknown;
+              start: unknown;
+              end: unknown;
+            }) => ({
               status,
               summary,
               description,

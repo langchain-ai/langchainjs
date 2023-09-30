@@ -2,19 +2,19 @@ import { jest, expect, describe } from "@jest/globals";
 import { LLM } from "../../llms/base.js";
 import {
   GoogleCalendarCreateTool,
-    GoogleCalendarViewTool,
+  GoogleCalendarViewTool,
 } from "../google_calendar/index.js";
 
-jest.mock('googleapis', () => ({
-    google: {
-      auth: {
-        JWT: jest.fn().mockImplementation(() => ({}))
-      }
-    }
-}))
+jest.mock("googleapis", () => ({
+  google: {
+    auth: {
+      JWT: jest.fn().mockImplementation(() => ({})),
+    },
+  },
+}));
 
 jest.mock("../../util/env.js", () => ({
-    getEnvironmentVariable: () => "key",
+  getEnvironmentVariable: () => "key",
 }));
 
 // jest.mock("../google_calendar/commands/run-create-events.js", () => ({
