@@ -3,13 +3,13 @@ export {
   createExtractionChainFromZod,
 } from "./extraction.js";
 export {
-  TaggingChainOptions,
+  type TaggingChainOptions,
   createTaggingChain,
   createTaggingChainFromZod,
 } from "./tagging.js";
-export { OpenAPIChainOptions, createOpenAPIChain } from "./openapi.js";
+export { type OpenAPIChainOptions, createOpenAPIChain } from "./openapi.js";
 export {
-  StructuredOutputChainInput,
+  type StructuredOutputChainInput,
   createStructuredOutputChain,
   createStructuredOutputChainFromZod,
 } from "./structured_output.js";
