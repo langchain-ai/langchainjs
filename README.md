@@ -12,7 +12,9 @@ Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) t
 
 ## Quick Install
 
-`yarn add langchain`
+You can use npm, yarn, or pnpm to install LangChain.js
+
+`npm install -S langchain` or `yarn add langchain` or `pnpm add langchain`
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
