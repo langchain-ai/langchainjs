@@ -10,7 +10,7 @@ Looking for the Python version? Check out [LangChain](https://github.com/hwchase
 **Production Support:** As you move your LangChains into production, we'd love to offer more hands-on support.
 Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to share more about what you're building, and our team will get in touch.
 
-## Quick Install
+## ⚡️ Quick Install
 
 You can use npm, yarn, or pnpm to install LangChain.js
 
@@ -20,7 +20,7 @@ You can use npm, yarn, or pnpm to install LangChain.js
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-## Supported Environments
+## 🌐 Supported Environments
 
 LangChain is written in TypeScript and can be used in:
 
