@@ -14,7 +14,7 @@ import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { BaseLLMParams, LLM } from "./base.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
 
-export { AzureOpenAIInput, OpenAIChatInput };
+export { type AzureOpenAIInput, type OpenAIChatInput };
 /**
  * Interface that extends the OpenAICallOptions interface and includes an
  * optional promptIndex property. It represents the options that can be

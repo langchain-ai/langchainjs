@@ -18,7 +18,7 @@ import { BaseLLM, BaseLLMParams } from "./base.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
 
-export { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
+export type { AzureOpenAIInput, OpenAICallOptions, OpenAIInput };
 
 /**
  * Interface for tracking token usage in OpenAI calls.
