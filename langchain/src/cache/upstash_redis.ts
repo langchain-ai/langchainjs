@@ -50,7 +50,7 @@ export class UpstashRedisCache extends BaseCache {
     const generations: Generation[] = [];
 
     while (value) {
-      const parsedValue = typeof value === 'string' ? JSON.parse(value) : value;
+      const parsedValue = typeof value === "string" ? JSON.parse(value) : value;
       generations.push(deserializeStoredGeneration(parsedValue));
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
