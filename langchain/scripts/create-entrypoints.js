@@ -65,6 +65,7 @@ const entrypoints = {
   "llms/bedrock": "llms/bedrock",
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
+  "llms/portkey": "llms/portkey",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",

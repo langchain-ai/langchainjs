@@ -83,6 +83,7 @@
       "src/llms/bedrock.ts",
       "src/llms/llama_cpp.ts",
       "src/llms/writer.ts",
+      "src/llms/portkey.ts",
       "src/prompts/index.ts",
       "src/prompts/load.ts",
       "src/vectorstores/analyticdb.ts",

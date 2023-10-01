@@ -7520,6 +7520,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"agentkeepalive@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "agentkeepalive@npm:4.5.0"
+  dependencies:
+    humanize-ms: ^1.2.1
+  checksum: 13278cd5b125e51eddd5079f04d6fe0914ac1b8b91c1f3db2c1822f99ac1a7457869068997784342fe455d59daaff22e14fb7b8c3da4e741896e7e31faf92481
+  languageName: node
+  linkType: hard
+
 "aggregate-error@npm:^3.0.0, aggregate-error@npm:^3.1.0":
   version: 3.1.0
   resolution: "aggregate-error@npm:3.1.0"
@@ -13702,6 +13711,7 @@ __metadata:
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
+    portkey-ai: ^0.1.11
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.6
@@ -16406,6 +16416,15 @@ __metadata:
   bin:
     playwright: cli.js
   checksum: bb2cef8812abf60cf07bbf6edb4ac480ccbf0b129e001fd4f2d499c8888918bc87dcc0f346b5954e6b67cd67528c8263593b091f3c83609a91c8a276196c8951
+  languageName: node
+  linkType: hard
+
+"portkey-ai@npm:^0.1.11":
+  version: 0.1.11
+  resolution: "portkey-ai@npm:0.1.11"
+  dependencies:
+    agentkeepalive: ^4.5.0
+  checksum: a3f6dfee5f52da7797575b907e081c9cb9ba951d9b061e9858601a952ea7be931ffcd81c874d49beb6120afaa0f1689219d42c4b6256d0fcac6d8af70e8443af
   languageName: node
   linkType: hard
 
