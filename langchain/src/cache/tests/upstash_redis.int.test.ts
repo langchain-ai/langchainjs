@@ -2,16 +2,17 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { UpstashRedisCache } from "../upstash_redis.js";
 
 /**
- * This test is a result of the `looup` method trying to parse an
- * incorrectly typed value, where before it was being typed as a string.
- * Whereas in reality it was a JSON object.
+ * This test is a result of the `lookup` method trying to parse an
+ * incorrectly typed value Before it was being typed as a string,
+ * whereas in reality it was a JSON object.
  */
 test.skip("UpstashRedisCache does not parse non string cached values", async () => {
   if (
     !process.env.UPSTASH_REDIS_REST_URL ||
-    !process.env.UPSTASH_REDIS_REST_TOKEN
+    !process.env.UPSTASH_REDIS_REST_TOKEN ||
+    !process.env.OPENAI_API_KEY
   ) {
-    throw new Error("Missing Upstash Redis REST URL or REST TOKEN");
+    throw new Error("Missing Upstash Redis REST URL // REST TOKEN or OpenAI API key");
   }
   const upstashRedisCache = new UpstashRedisCache({
     config: {
