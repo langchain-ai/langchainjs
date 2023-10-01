@@ -41,7 +41,7 @@ const cypherPrompt = new PromptTemplate({
 const chain = GraphCypherQAChain.fromLLM({
   llm: model,
   graph,
-  cypherPrompt: cypherPrompt,
+  cypherPrompt,
 });
 
 const res = await chain.run("Who played in Pulp Fiction?");
