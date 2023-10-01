@@ -265,7 +265,7 @@ const stuffChain = loadQAStuffChain(model);
 
 const stuffResult = await stuffChain.call({
   input_documents: relevantDocs,
-  question: "What is task decomposition
+  question: "What is task decomposition?",
 });
 
 console.log(stuffResult);

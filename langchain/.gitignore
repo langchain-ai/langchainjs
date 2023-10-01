@@ -64,6 +64,9 @@ embeddings/base.d.ts
 embeddings/cache_backed.cjs
 embeddings/cache_backed.js
 embeddings/cache_backed.d.ts
+embeddings/cloudflare_workersai.cjs
+embeddings/cloudflare_workersai.js
+embeddings/cloudflare_workersai.d.ts
 embeddings/fake.cjs
 embeddings/fake.js
 embeddings/fake.d.ts
@@ -166,6 +169,9 @@ vectorstores/elasticsearch.d.ts
 vectorstores/memory.cjs
 vectorstores/memory.js
 vectorstores/memory.d.ts
+vectorstores/cloudflare_vectorize.cjs
+vectorstores/cloudflare_vectorize.js
+vectorstores/cloudflare_vectorize.d.ts
 vectorstores/chroma.cjs
 vectorstores/chroma.js
 vectorstores/chroma.d.ts
@@ -235,6 +241,9 @@ vectorstores/usearch.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
+vectorstores/vercel_postgres.cjs
+vectorstores/vercel_postgres.js
+vectorstores/vercel_postgres.d.ts
 vectorstores/voy.cjs
 vectorstores/voy.js
 vectorstores/voy.d.ts
@@ -319,6 +328,9 @@ document_loaders/web/sonix_audio.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
+document_loaders/web/searchapi.cjs
+document_loaders/web/searchapi.js
+document_loaders/web/searchapi.d.ts
 document_loaders/web/serpapi.cjs
 document_loaders/web/serpapi.js
 document_loaders/web/serpapi.d.ts
@@ -382,6 +394,9 @@ chat_models/openai.d.ts
 chat_models/anthropic.cjs
 chat_models/anthropic.js
 chat_models/anthropic.d.ts
+chat_models/bedrock.cjs
+chat_models/bedrock.js
+chat_models/bedrock.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts
