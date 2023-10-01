@@ -35,14 +35,14 @@ export class Neo4jGraph {
 
     try {
       await graph.verifyConnectivity();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log("Failed to verify connection.");
     }
 
     try {
       await graph.refreshSchema();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       throw new Error(`Error: ${error.message}`);
     } finally {
