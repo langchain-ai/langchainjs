@@ -1,6 +1,6 @@
-import { Neo4jGraph } from "langchain/graphs/neo4j_graph.js";
-import { OpenAI } from "langchain/llms/openai.js";
-import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher.js";
+import { Neo4jGraph } from "langchain/graphs/neo4j_graph";
+import { OpenAI } from "langchain/llms/openai";
+import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
 import { PromptTemplate } from "langchain/prompts";
 
 /**

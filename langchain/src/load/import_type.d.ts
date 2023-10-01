@@ -37,6 +37,9 @@ export interface OptionalImportMap {
   "langchain/chains/sql_db"?:
     | typeof import("../chains/sql_db/index.js")
     | Promise<typeof import("../chains/sql_db/index.js")>;
+  "langchain/chains/graph_qa/cypher"?:
+    | typeof import("../chains/graph_qa/cypher.js")
+    | Promise<typeof import("../chains/graph_qa/cypher.js")>;
   "langchain/embeddings/cloudflare_workersai"?:
     | typeof import("../embeddings/cloudflare_workersai.js")
     | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;
@@ -391,6 +394,9 @@ export interface OptionalImportMap {
   "langchain/storage/ioredis"?:
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
+  "langchain/graphs/neo4j_graph"?:
+    | typeof import("../graphs/neo4j_graph.js")
+    | Promise<typeof import("../graphs/neo4j_graph.js")>;
   "langchain/hub"?:
     | typeof import("../hub.js")
     | Promise<typeof import("../hub.js")>;

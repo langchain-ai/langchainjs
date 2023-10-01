@@ -1,6 +1,6 @@
 import { PromptTemplate } from "../../prompts/prompt.js";
 
-const CYPHER_GENERATION_TEMPLATE = `Task:Generate Cypher statement to query a graph database.
+const CYPHER_GENERATION_TEMPLATE =  `Task:Generate Cypher statement to query a graph database.
 Instructions:
 Use only the provided relationship types and properties in the schema.
 Do not use any other relationship types or properties that are not provided.
@@ -12,7 +12,7 @@ Do not include any text except the generated Cypher statement.
 
 The question is:
 {question}`;
-export const CYPHER_GENERATION_PROMPT = new PromptTemplate({
+export const CYPHER_GENERATION_PROMPT = /* #__PURE__ */ new PromptTemplate({
   template: CYPHER_GENERATION_TEMPLATE,
   inputVariables: ["schema", "question"],
 });
@@ -27,7 +27,7 @@ Information:
 
 Question: {question}
 Helpful Answer:`;
-export const CYPHER_QA_PROMPT = new PromptTemplate({
+export const CYPHER_QA_PROMPT = /* #__PURE__ */ new PromptTemplate({
   template: CYPHER_QA_TEMPLATE,
   inputVariables: ["context", "question"],
 });

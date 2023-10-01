@@ -32,6 +32,7 @@ const entrypoints = {
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
   "chains/sql_db": "chains/sql_db/index",
+  "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   // embeddings
   "embeddings/base": "embeddings/base",
   "embeddings/cache_backed": "embeddings/cache_backed",
@@ -235,6 +236,7 @@ const entrypoints = {
   // storage
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub
   hub: "hub",
   // utilities
@@ -282,6 +284,7 @@ const requiresOptionalDependency = [
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
+  "chains/graph_qa/cypher",
   "embeddings/cloudflare_workersai",
   "embeddings/cohere",
   "embeddings/googlevertexai",
@@ -401,6 +404,7 @@ const requiresOptionalDependency = [
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  "graphs/neo4j_graph",
   // Prevent export due to circular dependency with "load" entrypoint
   "hub",
   "experimental/multimodal_embeddings/googlevertexai",
