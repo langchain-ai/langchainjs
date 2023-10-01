@@ -46,11 +46,12 @@ export class UpstashRedisCache extends BaseCache {
   public async lookup(prompt: string, llmKey: string) {
     let idx = 0;
     let key = getCacheKey(prompt, llmKey, String(idx));
-    let value: string | null = await this.redisClient.get(key);
+    let value: unknown = await this.redisClient.get(key);
     const generations: Generation[] = [];
 
     while (value) {
-      generations.push(deserializeStoredGeneration(JSON.parse(value)));
+      const parsedValue = typeof value === 'string' ? JSON.parse(value) : value;
+      generations.push(deserializeStoredGeneration(parsedValue));
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
       value = await this.redisClient.get(key);
