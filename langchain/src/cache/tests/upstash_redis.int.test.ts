@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { UpstashRedisCache } from "../upstash_redis.js";
 
