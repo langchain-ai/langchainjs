@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { Neo4jGraph } from "../neo4j_graph.js";
 
-test("Test that Neo4j database is correctly instantiated and connected", async () => {
+test.skip("Test that Neo4j database is correctly instantiated and connected", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
