@@ -173,6 +173,7 @@
       "src/chat_models/baiduwenxin.ts",
       "src/chat_models/ollama.ts",
       "src/chat_models/minimax.ts",
+      "src/chat_models/portkey.ts",
       "src/schema/index.ts",
       "src/schema/document.ts",
       "src/schema/output_parser.ts",

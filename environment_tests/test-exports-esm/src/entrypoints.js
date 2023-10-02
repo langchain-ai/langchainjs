@@ -40,6 +40,7 @@ import * as chat_models_fireworks from "langchain/chat_models/fireworks";
 import * as chat_models_baiduwenxin from "langchain/chat_models/baiduwenxin";
 import * as chat_models_ollama from "langchain/chat_models/ollama";
 import * as chat_models_minimax from "langchain/chat_models/minimax";
+import * as chat_models_portkey from "langchain/chat_models/portkey";
 import * as schema from "langchain/schema";
 import * as schema_document from "langchain/schema/document";
 import * as schema_output_parser from "langchain/schema/output_parser";

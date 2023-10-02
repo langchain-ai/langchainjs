@@ -433,6 +433,9 @@
     "chat_models/minimax.cjs",
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
+    "chat_models/portkey.cjs",
+    "chat_models/portkey.js",
+    "chat_models/portkey.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -1874,6 +1877,11 @@
       "types": "./chat_models/minimax.d.ts",
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
+    },
+    "./chat_models/portkey": {
+      "types": "./chat_models/portkey.d.ts",
+      "import": "./chat_models/portkey.js",
+      "require": "./chat_models/portkey.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",

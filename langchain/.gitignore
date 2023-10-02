@@ -421,6 +421,9 @@ chat_models/ollama.d.ts
 chat_models/minimax.cjs
 chat_models/minimax.js
 chat_models/minimax.d.ts
+chat_models/portkey.cjs
+chat_models/portkey.js
+chat_models/portkey.d.ts
 schema.cjs
 schema.js
 schema.d.ts

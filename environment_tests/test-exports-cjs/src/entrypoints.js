@@ -40,6 +40,7 @@ const chat_models_fireworks = require("langchain/chat_models/fireworks");
 const chat_models_baiduwenxin = require("langchain/chat_models/baiduwenxin");
 const chat_models_ollama = require("langchain/chat_models/ollama");
 const chat_models_minimax = require("langchain/chat_models/minimax");
+const chat_models_portkey = require("langchain/chat_models/portkey");
 const schema = require("langchain/schema");
 const schema_document = require("langchain/schema/document");
 const schema_output_parser = require("langchain/schema/output_parser");

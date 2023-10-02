@@ -41,6 +41,7 @@ export * as chat_models__fireworks from "../chat_models/fireworks.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
 export * as chat_models__minimax from "../chat_models/minimax.js";
+export * as chat_models__portkey from "../chat_models/portkey.js";
 export * as schema from "../schema/index.js";
 export * as schema__document from "../schema/document.js";
 export * as schema__output_parser from "../schema/output_parser.js";
