@@ -14,6 +14,7 @@ test("Test that Neo4j database is correctly instantiated and connected", async (
 
   const graph = await Neo4jGraph.initialize({ url, username, password });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return graph.query('RETURN "test" AS output').then((output: any) => {
     const expectedOutput = [{ output: "test" }];
     expect(output).toEqual(expectedOutput);
