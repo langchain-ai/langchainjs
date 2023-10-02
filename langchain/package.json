@@ -73,6 +73,9 @@
     "chains/sql_db.cjs",
     "chains/sql_db.js",
     "chains/sql_db.d.ts",
+    "chains/graph_qa/cypher.cjs",
+    "chains/graph_qa/cypher.js",
+    "chains/graph_qa/cypher.d.ts",
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
@@ -604,6 +607,9 @@
     "storage/ioredis.cjs",
     "storage/ioredis.js",
     "storage/ioredis.d.ts",
+    "graphs/neo4j_graph.cjs",
+    "graphs/neo4j_graph.js",
+    "graphs/neo4j_graph.d.ts",
     "hub.cjs",
     "hub.js",
     "hub.d.ts",
@@ -1278,6 +1284,11 @@
       "types": "./chains/sql_db.d.ts",
       "import": "./chains/sql_db.js",
       "require": "./chains/sql_db.cjs"
+    },
+    "./chains/graph_qa/cypher": {
+      "types": "./chains/graph_qa/cypher.d.ts",
+      "import": "./chains/graph_qa/cypher.js",
+      "require": "./chains/graph_qa/cypher.cjs"
     },
     "./embeddings/base": {
       "types": "./embeddings/base.d.ts",
@@ -2163,6 +2174,11 @@
       "types": "./storage/ioredis.d.ts",
       "import": "./storage/ioredis.js",
       "require": "./storage/ioredis.cjs"
+    },
+    "./graphs/neo4j_graph": {
+      "types": "./graphs/neo4j_graph.d.ts",
+      "import": "./graphs/neo4j_graph.js",
+      "require": "./graphs/neo4j_graph.cjs"
     },
     "./hub": {
       "types": "./hub.d.ts",
