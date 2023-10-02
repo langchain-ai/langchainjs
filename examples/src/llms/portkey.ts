@@ -5,15 +5,15 @@ export const run = async () => {
     mode: "single",
     llms: [
       {
-        provider: "anyscale",
-        api_key: "esecret_kj5euqeldwwc9sb1wz8cxxfa2t",
-        model: "meta-llama/Llama-2-13b-chat-hf",
+        provider: "openai",
+        virtual_key: "open-ai-key-1234",
+        model: "text-davinci-003",
         max_tokens: 2000,
       },
     ],
   });
   const res = await model.stream(
-    "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
+    "Question: Write a story about a king\nAnswer:"
   );
   for await (const i of res) {
     process.stdout.write(i);
