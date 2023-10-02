@@ -58,6 +58,9 @@ chains/query_constructor/ir.d.ts
 chains/sql_db.cjs
 chains/sql_db.js
 chains/sql_db.d.ts
+chains/graph_qa/cypher.cjs
+chains/graph_qa/cypher.js
+chains/graph_qa/cypher.d.ts
 embeddings/base.cjs
 embeddings/base.js
 embeddings/base.d.ts
@@ -589,6 +592,9 @@ storage/in_memory.d.ts
 storage/ioredis.cjs
 storage/ioredis.js
 storage/ioredis.d.ts
+graphs/neo4j_graph.cjs
+graphs/neo4j_graph.js
+graphs/neo4j_graph.d.ts
 hub.cjs
 hub.js
 hub.d.ts
