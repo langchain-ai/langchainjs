@@ -17,3 +17,13 @@ services:
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'none'
       CLUSTER_HOSTNAME: 'node1'
+  db:
+    image: ankane/pgvector
+    ports:
+      - 5433:5432
+    volumes:
+      - ./tmp/integration_tests/pgvector:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=ChangeMe
+      - POSTGRES_USER=myuser
+      - POSTGRES_DB=api

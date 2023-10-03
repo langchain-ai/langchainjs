@@ -13,3 +13,19 @@ const embeddings = new OpenAIEmbeddings({
 
 If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` to your OpenAI organization id, or pass it in as `organization` when
 initializing the model.
+
+## Custom URLs
+
+You can customize the base URL the SDK sends requests to by passing a `configuration` parameter like this:
+
+```typescript
+const model = new OpenAIEmbeddings({
+  configuration: {
+    baseURL: "https://your_custom_url.com",
+  },
+});
+```
+
+You can also pass other `ClientOptions` parameters accepted by the official SDK.
+
+If you are hosting on Azure OpenAI, see the [dedicated page instead](/docs/modules/data_connection/text_embedding/integrations/azure_openai).

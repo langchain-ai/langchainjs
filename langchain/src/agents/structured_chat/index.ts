@@ -180,7 +180,7 @@ export class StructuredChatAgent extends Agent {
         })
       ),
     ];
-    return ChatPromptTemplate.fromPromptMessages(messages);
+    return ChatPromptTemplate.fromMessages(messages);
   }
 
   /**

@@ -32,3 +32,5 @@ Chinook_Sqlite.sql
 
 firebase-debug.log
 firestore-debug.log
+
+tmp/

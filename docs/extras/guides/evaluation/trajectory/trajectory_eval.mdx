@@ -1,0 +1,33 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Trajectory from "@examples/guides/evaluation/agent_trajectory/trajectory.ts";
+
+# Agent Trajectory
+
+Agents can be difficult to holistically evaluate due to the breadth of actions and generation they can make. We recommend using multiple evaluation techniques appropriate to your use case. One way to evaluate an agent is to look at the whole trajectory of actions taken along with their responses.
+
+Evaluators that do this can implement the `AgentTrajectoryEvaluator` interface. This walkthrough will show how to use the `trajectory` evaluator to grade  an  agent.
+
+
+## Methods
+
+
+The Agent Trajectory Evaluators are used with the [evaluateAgentTrajectory]  method, which accept:
+
+- input (string) – The input to the agent.
+- prediction (string) – The final predicted response.
+- agentTrajectory (AgentStep[]) – The intermediate steps forming the agent trajectory
+
+They return a dictionary with the following values:
+- score: Float from 0 to 1, where 1 would mean "most effective" and 0 would mean "least effective"
+- reasoning: String "chain of thought reasoning" from the LLM generated prior to creating the score
+
+
+## Usage
+
+<CodeBlock language="typescript">{Trajectory}</CodeBlock>
+
+

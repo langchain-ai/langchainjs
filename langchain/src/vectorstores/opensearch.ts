@@ -98,9 +98,14 @@ export class OpenSearchVectorStore extends VectorStore {
    * exists, then adds the vectors and associated documents to the index.
    * @param vectors The vectors to be added to the OpenSearch index.
    * @param documents The documents associated with the vectors.
+   * @param options Optional parameter that can contain the IDs for the documents.
    * @returns Promise resolving to void.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<void> {
     await this.ensureIndexExists(
       vectors[0].length,
       this.engine,
@@ -109,11 +114,13 @@ export class OpenSearchVectorStore extends VectorStore {
       this.efConstruction,
       this.m
     );
+    const documentIds =
+      options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
     const operations = vectors.flatMap((embedding, idx) => [
       {
         index: {
           _index: this.indexName,
-          _id: uuid.v4(),
+          _id: documentIds[idx],
         },
       },
       {

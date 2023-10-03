@@ -94,6 +94,11 @@ export interface StoredMessage {
   data: StoredMessageData;
 }
 
+export interface StoredGeneration {
+  text: string;
+  message?: StoredMessage;
+}
+
 export type MessageType = "human" | "ai" | "generic" | "system" | "function";
 
 export interface BaseMessageFields {
@@ -447,15 +452,6 @@ export class ChatMessage
 
 export type BaseMessageLike =
   | BaseMessage
-  | {
-      role:
-        | MessageType
-        | "user"
-        | "assistant"
-        | (string & Record<never, never>);
-      content: string;
-      name?: string;
-    }
   | [
       MessageType | "user" | "assistant" | (string & Record<never, never>),
       string
@@ -476,32 +472,17 @@ export function coerceMessageLikeToMessage(
   } else if (isBaseMessage(messageLike)) {
     return messageLike;
   }
-  let role;
-  let content;
-  let name;
-  if (Array.isArray(messageLike)) {
-    [role, content] = messageLike;
-    name = "";
-  } else {
-    role = messageLike.role;
-    content = messageLike.content;
-    name = messageLike.name;
-  }
-  if (role === "human" || role === "user") {
+  const [type, content] = messageLike;
+  if (type === "human" || type === "user") {
     return new HumanMessage({ content });
-  } else if (role === "ai" || role === "assistant") {
+  } else if (type === "ai" || type === "assistant") {
     return new AIMessage({ content });
-  } else if (role === "system") {
+  } else if (type === "system") {
     return new SystemMessage({ content });
-  } else if (role === "function") {
-    if (!name) {
-      throw new Error(
-        `Unable to coerce function message from object: no "name" field provided.`
-      );
-    }
-    return new FunctionMessage({ content, name });
   } else {
-    return new ChatMessage({ content, role });
+    throw new Error(
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
+    );
   }
 }
 
@@ -573,6 +554,65 @@ export class ChatGenerationChunk
       },
       message: this.message.concat(chunk.message),
     });
+  }
+}
+
+interface StoredMessageV1 {
+  type: string;
+  role: string | undefined;
+  text: string;
+}
+
+/**
+ * Maps messages from an older format (V1) to the current `StoredMessage`
+ * format. If the message is already in the `StoredMessage` format, it is
+ * returned as is. Otherwise, it transforms the V1 message into a
+ * `StoredMessage`. This function is important for maintaining
+ * compatibility with older message formats.
+ */
+function mapV1MessageToStoredMessage(
+  message: StoredMessage | StoredMessageV1
+): StoredMessage {
+  // TODO: Remove this mapper when we deprecate the old message format.
+  if ((message as StoredMessage).data !== undefined) {
+    return message as StoredMessage;
+  } else {
+    const v1Message = message as StoredMessageV1;
+    return {
+      type: v1Message.type,
+      data: {
+        content: v1Message.text,
+        role: v1Message.role,
+        name: undefined,
+      },
+    };
+  }
+}
+
+export function mapStoredMessageToChatMessage(message: StoredMessage) {
+  const storedMessage = mapV1MessageToStoredMessage(message);
+  switch (storedMessage.type) {
+    case "human":
+      return new HumanMessage(storedMessage.data);
+    case "ai":
+      return new AIMessage(storedMessage.data);
+    case "system":
+      return new SystemMessage(storedMessage.data);
+    case "function":
+      if (storedMessage.data.name === undefined) {
+        throw new Error("Name must be defined for function messages");
+      }
+      return new FunctionMessage(
+        storedMessage.data as FunctionMessageFieldsWithName
+      );
+    case "chat": {
+      if (storedMessage.data.role === undefined) {
+        throw new Error("Role must be defined for chat messages");
+      }
+      return new ChatMessage(storedMessage.data as ChatMessageFieldsWithRole);
+    }
+    default:
+      throw new Error(`Got unexpected type: ${storedMessage.type}`);
   }
 }
 

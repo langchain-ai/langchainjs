@@ -9,7 +9,7 @@ import {
 } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
 import { BaseTranslator } from "./base.js";
-import { isFilterEmpty } from "./utils.js";
+import { castValue, isFilterEmpty } from "./utils.js";
 
 /**
  * A type alias for an object that maps comparison operators to string or
@@ -161,7 +161,7 @@ export class FunctionalTranslator extends BaseTranslator {
           }
           return false;
         }
-        return comparatorFunction(documentValue, value);
+        return comparatorFunction(documentValue, castValue(value));
       };
     } else {
       throw new Error("Comparator not allowed");
