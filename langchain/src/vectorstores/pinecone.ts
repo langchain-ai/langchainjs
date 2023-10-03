@@ -59,15 +59,19 @@ export class PineconeStore extends VectorStore {
     return "pinecone";
   }
 
+  _validateEnvVars() {
+    if (process.env.PINECONE_API_KEY === undefined || process.env.PINECONE_ENVIRONMENT === undefined) {
+      throw new Error(`You must export your Pinecone API key via env var PINECONE_API_KEY and your environment via env var PINECONE_ENVIRONMENT`)
+    }
+  }
+
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
-    const env = process.env.PINECONE_ENVIRONMENT;
-    const key = process.env.PINECONE_API_KEY;
-    const pinecone = new Pinecone({
-      apiKey: key as string,
-      environment: env as string
-    })
+    this._validateEnvVars();
+
+    // Instantiate the Pinecone client
+    const pinecone = new Pinecone();
 
     this.embeddings = embeddings;
     const { namespace, pineconeIndex, pineconeIndexName, textKey, filter, ...asyncCallerArgs } = args;

@@ -18,15 +18,8 @@ export const run = async () => {
     );
   }
 
-  const env = process.env.PINECONE_ENVIRONMENT;
-  const key = process.env.PINECONE_API_KEY;
-
-  const client = await Pinecone.createClient({
-    apiKey: key,
-    environment: env,
-  });
-
-  const index = client.Index(process.env.PINECONE_INDEX);
+  const pinecone = new Pinecone();
+  const index = pinecone.Index(process.env.PINECONE_INDEX);
 
   const vectorStore = await PineconeStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],

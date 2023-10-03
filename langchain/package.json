@@ -893,9 +893,6 @@
     "@opensearch-project/opensearch": {
       "optional": true
     },
-    "@pinecone-database/pinecone": {
-      "optional": true
-    },
     "@planetscale/database": {
       "optional": true
     },
@@ -1070,7 +1067,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.6.2",
-    "@pinecone-database/pinecone": "^1.0.1",
+    "@pinecone-database/pinecone": "^1.1.0",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",

@@ -5251,17 +5251,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@pinecone-database/pinecone@npm:1.0.1"
+"@pinecone-database/pinecone@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@pinecone-database/pinecone@npm:1.1.0"
   dependencies:
     "@edge-runtime/types": ^2.2.3
     "@sinclair/typebox": ^0.29.0
     "@types/node": ^18.11.17
     ajv: ^8.12.0
     cross-fetch: ^3.1.5
+    encoding: ^0.1.13
     typescript: ^4.9.4
-  checksum: 74722a6a174da52f123a285750e90dfed1d7a890f6d11d6e5d84c46709b5eba91abb6bf29f849f4e48e6531abd7fc04521762bd5a0f78b82f917269a5c71ab2f
+  checksum: 5ff066c23006c6ad8eb3ae5add5aa2633adacf48c539a498f6d97798fb9640254a2ede99f7e47aaff3d885e3df5168ed193990d846acd9bebded7140f18c8eb1
   languageName: node
   linkType: hard
 
@@ -13378,7 +13379,7 @@ __metadata:
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^1.0.1
+    "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@raycast/api": ^1.55.2
@@ -13617,8 +13618,6 @@ __metadata:
       optional: true
     "@opensearch-project/opensearch":
       optional: true
-    "@pinecone-database/pinecone":
-      optional: true
     "@planetscale/database":
       optional: true
     "@qdrant/js-client-rest":
@@ -13747,7 +13746,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
-    "@pinecone-database/pinecone": ^1.0.1
+    "@pinecone-database/pinecone": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3
