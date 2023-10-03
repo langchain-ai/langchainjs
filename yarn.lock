@@ -13725,7 +13725,7 @@ __metadata:
     yaml: ^2.2.1
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
-    zod: ^3.21.4
+    zod: ^3.22.2
     zod-to-json-schema: ^3.20.4
   peerDependencies:
     "@aws-crypto/sha256-js": ^5.0.0
@@ -20024,5 +20024,12 @@ __metadata:
   version: 3.21.4
   resolution: "zod@npm:3.21.4"
   checksum: f185ba87342ff16f7a06686767c2b2a7af41110c7edf7c1974095d8db7a73792696bcb4a00853de0d2edeb34a5b2ea6a55871bc864227dace682a0a28de33e1f
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.22.2":
+  version: 3.22.2
+  resolution: "zod@npm:3.22.2"
+  checksum: 231e2180c8eabb56e88680d80baff5cf6cbe6d64df3c44c50ebe52f73081ecd0229b1c7215b9552537f537a36d9e36afac2737ddd86dc14e3519bdbc777e82b9
   languageName: node
   linkType: hard
