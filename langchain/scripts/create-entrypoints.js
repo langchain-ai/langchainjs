@@ -237,6 +237,7 @@ const entrypoints = {
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
   "graphs/neo4j_graph": "graphs/neo4j_graph",
+  "graphs/falkordb_graph": "graphs/falkordb_graph",
   // hub
   hub: "hub",
   // utilities
@@ -405,6 +406,7 @@ const requiresOptionalDependency = [
   "stores/message/xata",
   "storage/ioredis",
   "graphs/neo4j_graph",
+  "graphs/falkordb_graph",
   // Prevent export due to circular dependency with "load" entrypoint
   "hub",
   "experimental/multimodal_embeddings/googlevertexai",

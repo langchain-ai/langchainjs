@@ -231,6 +231,7 @@
       "src/storage/in_memory.ts",
       "src/storage/ioredis.ts",
       "src/graphs/neo4j_graph.ts",
+      "src/graphs/falkordb_graph.ts",
       "src/hub.ts",
       "src/util/math.ts",
       "src/experimental/autogpt/index.ts",

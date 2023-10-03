@@ -4,13 +4,13 @@ import { BasePromptTemplate } from "../../prompts/base.js";
 import { BaseChain, ChainInputs } from "../base.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
+import { GraphStore } from "../../graphs/base.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
 
 export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
 
 export interface GraphCypherQAChainInput extends ChainInputs {
-  graph: Neo4jGraph;
+  graph: GraphStore;
   cypherGenerationChain: LLMChain;
   qaChain: LLMChain;
   inputKey?: string;
@@ -21,7 +21,7 @@ export interface GraphCypherQAChainInput extends ChainInputs {
 }
 
 export interface FromLLMInput {
-  graph: Neo4jGraph;
+  graph: GraphStore;
   llm?: BaseLanguageModel;
   cypherLLM?: BaseLanguageModel;
   qaLLM?: BaseLanguageModel;
@@ -32,7 +32,7 @@ export interface FromLLMInput {
 }
 
 export class GraphCypherQAChain extends BaseChain {
-  private graph: Neo4jGraph;
+  private graph: GraphStore;
 
   private cypherGenerationChain: LLMChain;
 

@@ -395,8 +395,11 @@ export interface OptionalImportMap {
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
   "langchain/graphs/neo4j_graph"?:
-    | typeof import("../graphs/neo4j_graph.js")
-    | Promise<typeof import("../graphs/neo4j_graph.js")>;
+    | typeof import("../graphs/neo4j_graph.ts")
+    | Promise<typeof import("../graphs/neo4j_graph.ts")>;
+    "langchain/graphs/falkordb_graph"?:
+    | typeof import("../graphs/falkordb_graph.ts")
+    | Promise<typeof import("../graphs/falkordb_graph.ts")>;    
   "langchain/hub"?:
     | typeof import("../hub.js")
     | Promise<typeof import("../hub.js")>;

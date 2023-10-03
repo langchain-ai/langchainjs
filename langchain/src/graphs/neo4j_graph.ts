@@ -1,4 +1,5 @@
 import neo4j from "neo4j-driver";
+import { GraphStore } from './base.js';
 
 interface Neo4jGraphConfig {
   url: string;
@@ -7,7 +8,7 @@ interface Neo4jGraphConfig {
   database?: string;
 }
 
-export class Neo4jGraph {
+export class Neo4jGraph extends GraphStore {
   private driver: neo4j.Driver;
 
   private database: string;
@@ -20,6 +21,7 @@ export class Neo4jGraph {
     password,
     database = "neo4j",
   }: Neo4jGraphConfig) {
+    super();
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
       this.database = database;
