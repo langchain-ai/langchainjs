@@ -15,7 +15,6 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
 
 export interface GraphCypherQAChainInput extends ChainInputs {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   graph: any;
   cypherGenerationChain: LLMChain;
   qaChain: LLMChain;
