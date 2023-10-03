@@ -13,6 +13,7 @@ export interface VectaraLibArgs {
   corpusId: number | number[];
   apiKey: string;
   verbose?: boolean;
+  source?: string;
 }
 
 /**
@@ -23,6 +24,7 @@ interface VectaraCallHeader {
     "x-api-key": string;
     "Content-Type": string;
     "customer-id": string;
+    "X-Source": string;
   };
 }
 
@@ -94,6 +96,8 @@ export class VectaraStore extends VectorStore {
 
   private verbose: boolean;
 
+  private source: string;
+
   private vectaraApiTimeoutSeconds = 60;
 
   _vectorstoreType(): string {
@@ -110,6 +114,7 @@ export class VectaraStore extends VectorStore {
       throw new Error("Vectara api key is not provided.");
     }
     this.apiKey = apiKey;
+    this.source = args.source ?? "langchainjs";
 
     const corpusId =
       args.corpusId ??
@@ -153,6 +158,7 @@ export class VectaraStore extends VectorStore {
         "x-api-key": this.apiKey,
         "Content-Type": "application/json",
         "customer-id": this.customerId.toString(),
+        "X-Source": this.source,
       },
     };
   }
@@ -275,6 +281,7 @@ export class VectaraStore extends VectorStore {
           method: "POST",
           headers: {
             "x-api-key": this.apiKey,
+            "X-Source": this.source,
           },
           body: data,
         }
