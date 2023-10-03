@@ -1,14 +1,12 @@
-import { protos } from "@google-ai/generativelanguage";
-import { google } from "@google-ai/generativelanguage/build/protos/protos.js";
+import type { protos } from "@google-ai/generativelanguage";
+import type { google } from "@google-ai/generativelanguage/build/protos/protos.js";
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 
 import { GooglePaLM } from "../../../llms/googlepalm.js";
 import { ChatGooglePaLM } from "../../../chat_models/googlepalm.js";
 import { PromptTemplate } from "../../../prompts/index.js";
-import { BaseChatModel } from "../../../chat_models/base.js";
-import { LLM } from "../../../llms/base.js";
+import { BaseLanguageModel } from "../../../base_language/index.js";
 import { Runnable } from "../../../schema/runnable/index.js";
-import IExample = google.ai.generativelanguage.v1beta2.IExample;
 import {
   AsyncCaller,
   AsyncCallerCallOptions,
@@ -210,29 +208,30 @@ export class MakerSuitePrompt {
     return ret;
   }
 
-  _examples(): IExample[] {
+  _examples(): google.ai.generativelanguage.v1beta2.IExample[] {
     const promptData: MakerSuiteChatPromptData = this
       .promptData as MakerSuiteChatPromptData;
-    const ret: IExample[] = promptData?.multiturnPrompt?.primingExchanges
-      .map((exchange) => {
-        const example: IExample = {};
-        if (exchange?.request) {
-          example.input = {
-            content: exchange.request,
-          };
-        }
-        if (exchange?.response) {
-          example.output = {
-            content: exchange.response,
-          };
-        }
-        return example;
-      })
-      .filter((value) => Object.keys(value).length);
+    const ret: google.ai.generativelanguage.v1beta2.IExample[] =
+      promptData?.multiturnPrompt?.primingExchanges
+        .map((exchange) => {
+          const example: google.ai.generativelanguage.v1beta2.IExample = {};
+          if (exchange?.request) {
+            example.input = {
+              content: exchange.request,
+            };
+          }
+          if (exchange?.response) {
+            example.output = {
+              content: exchange.response,
+            };
+          }
+          return example;
+        })
+        .filter((value) => Object.keys(value).length);
     return ret;
   }
 
-  toModel(): LLM | BaseChatModel {
+  toModel(): BaseLanguageModel {
     const modelName = this._modelName();
     const modelSettings = {
       modelName,
@@ -336,7 +335,7 @@ export class MakerSuiteHub {
     return expiration > now;
   }
 
-  async forceLoad(id: string): Promise<MakerSuitePrompt> {
+  async forcePull(id: string): Promise<MakerSuitePrompt> {
     const fields: DriveFileReadParams = {
       fileId: id,
     };
@@ -350,9 +349,9 @@ export class MakerSuiteHub {
     return ret;
   }
 
-  async load(id: string): Promise<MakerSuitePrompt> {
+  async pull(id: string): Promise<MakerSuitePrompt> {
     const entry = this.cache[id];
-    const ret = this.isValid(entry) ? entry.prompt : await this.forceLoad(id);
+    const ret = this.isValid(entry) ? entry.prompt : await this.forcePull(id);
     return ret;
   }
 }

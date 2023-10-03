@@ -84,7 +84,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
     const hub = new MakerSuiteHub();
 
     test("text model", async () => {
-      const prompt = await hub.load("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
+      const prompt = await hub.pull("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
       const model = prompt.toModel() as GooglePaLM;
       const result = await model.call(
         "What would be a good name for a company that makes socks"
@@ -94,7 +94,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
     });
 
     test("text chain", async () => {
-      const prompt = await hub.load("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
+      const prompt = await hub.pull("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
       const result = await prompt.toChain().invoke({ product: "socks" });
       console.log("text chain result", result);
       expect(result).toBeTruthy();
