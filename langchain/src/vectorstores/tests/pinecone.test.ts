@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-
+import { Pinecone } from '@pinecone-database/pinecone'
 import { PineconeStore } from "../pinecone.js";
 
 test("PineconeStore with external ids", async () => {
@@ -13,7 +13,10 @@ test("PineconeStore with external ids", async () => {
   };
   const embeddings = new FakeEmbeddings();
 
-  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
+  const pinecone = new Pinecone();
+  const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string)
+
+  const store = new PineconeStore(embeddings, { pineconeIndex });
 
   expect(store).toBeDefined();
 

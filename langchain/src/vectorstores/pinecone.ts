@@ -3,7 +3,6 @@ import * as uuid from "uuid";
 import flatten from "flat";
 
 import {
-  Pinecone,
   RecordMetadata,
   PineconeRecord,
   Index as PineconeIndex,
@@ -70,14 +69,11 @@ export class PineconeStore extends VectorStore {
 
     this._validateEnvVars();
 
-    // Instantiate the Pinecone client
-    const pinecone = new Pinecone();
-
     this.embeddings = embeddings;
     const { namespace, pineconeIndex, pineconeIndexName, textKey, filter, ...asyncCallerArgs } = args;
     this.namespace = namespace;
-    this.pineconeIndexName = args.pineconeIndexName ?? ''
-    this.pineconeIndex = pinecone.Index(this.pineconeIndexName)
+    this.pineconeIndexName = pineconeIndexName || ''
+    this.pineconeIndex = pineconeIndex
     this.textKey = textKey ?? "text";
     this.filter = filter;
     this.caller = new AsyncCaller(asyncCallerArgs);
