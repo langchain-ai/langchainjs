@@ -53,3 +53,5 @@ The [LangChainHub](https://github.com/hwchase17/langchain-hub) is a central plac
 As an open source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
 
 Check out [our contributing guidelines](CONTRIBUTING.md) for instructions on how to contribute.
+
+Please report any security issues or concerns following our [security guidelines](SECURITY.md).
