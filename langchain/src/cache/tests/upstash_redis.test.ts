@@ -2,14 +2,15 @@ import { test, expect, jest } from "@jest/globals";
 import hash from "object-hash";
 
 import { UpstashRedisCache } from "../upstash_redis.js";
+import { StoredGeneration } from "../../schema/index.js";
 
 const sha256 = (str: string) => hash(str);
 
 test("UpstashRedisCache", async () => {
   const redis = {
-    get: jest.fn(async (key: string) => {
+    get: jest.fn(async (key: string): Promise<StoredGeneration | null> => {
       if (key === sha256("foo_bar_0")) {
-        return JSON.stringify({ text: "baz" });
+        return { text: "baz" };
       }
       return null;
     }),
