@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.158",
+  "version": "0.0.160",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -52,6 +52,9 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/google_calendar.cjs",
+    "tools/google_calendar.js",
+    "tools/google_calendar.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -695,7 +698,7 @@
     "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
@@ -751,6 +754,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -817,7 +821,7 @@
     "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
-    "@pinecone-database/pinecone": "*",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
@@ -847,6 +851,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -1037,6 +1042,9 @@
     "google-auth-library": {
       "optional": true
     },
+    "googleapis": {
+      "optional": true
+    },
     "hnswlib-node": {
       "optional": true
     },
@@ -1155,7 +1163,7 @@
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.22.2",
+    "zod": "^3.22.3",
     "zod-to-json-schema": "^3.20.4"
   },
   "publishConfig": {
@@ -1245,6 +1253,11 @@
       "types": "./tools/webbrowser.d.ts",
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
+    },
+    "./tools/google_calendar": {
+      "types": "./tools/google_calendar.d.ts",
+      "import": "./tools/google_calendar.js",
+      "require": "./tools/google_calendar.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",

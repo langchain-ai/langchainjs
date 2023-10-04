@@ -46,6 +46,7 @@
       "src/tools/calculator.ts",
       "src/tools/sql.ts",
       "src/tools/webbrowser.ts",
+      "src/tools/google_calendar/index.ts",
       "src/chains/index.ts",
       "src/chains/load.ts",
       "src/chains/openai_functions/index.ts",
