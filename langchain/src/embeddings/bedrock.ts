@@ -7,7 +7,7 @@ import { Embeddings, EmbeddingsParams } from "./base.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
- * parameters specific to the GooglePaLMEmbeddings class.
+ * parameters specific to the BedrockEmbeddings class.
  */
 export interface BedrockEmbeddingsParams extends EmbeddingsParams {
   /**
@@ -25,7 +25,7 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
 
 /**
  * Class that extends the Embeddings class and provides methods for
- * generating embeddings using the Google Palm API.
+ * generating embeddings using the Bedrock API.
  */
 export class BedrockEmbeddings
   extends Embeddings
