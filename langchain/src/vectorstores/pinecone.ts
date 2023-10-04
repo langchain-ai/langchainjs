@@ -175,7 +175,7 @@ export class PineconeStore extends VectorStore {
       const batchSize = 1000;
       for (let i = 0; i < ids.length; i += batchSize) {
         const batchIds = ids.slice(i, i + batchSize);
-        await namespace.deleteMany([batchIds]);
+        await namespace.deleteMany(batchIds);
       }
     } else {
       throw new Error("Either ids or delete_all must be provided.");

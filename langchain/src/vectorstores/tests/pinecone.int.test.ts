@@ -10,13 +10,12 @@ import { PineconeLibArgs, PineconeStore } from "../pinecone.js";
 
 describe("PineconeStore", () => {
   let pineconeStore: PineconeStore;
+  const testIndexName = 'langchain-pinecone-test'
 
   beforeEach(async () => {
     const embeddings = new OpenAIEmbeddings();
 
     const pinecone = new Pinecone();
-
-    const testIndexName = 'langchain-pinecone-test'
 
     await pinecone.createIndex({
       name: testIndexName,
@@ -39,6 +38,13 @@ describe("PineconeStore", () => {
 
     pineconeStore = new PineconeStore(embeddings, pineconeArgs);
   });
+
+  // This hook is run after all of the tests have completed, and we can use it to clean up our 
+  // test index
+  afterAll(async () => {
+    const pinecone = new Pinecone();
+    await pinecone.deleteIndex(testIndexName)
+  })
 
   test("user-provided ids", async () => {
     const documentId = uuid.v4();
