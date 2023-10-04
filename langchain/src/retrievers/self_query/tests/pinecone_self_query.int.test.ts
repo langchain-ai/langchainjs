@@ -9,9 +9,7 @@ import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
 import { PineconeTranslator } from "../pinecone.js";
 import { OpenAI } from "../../../llms/openai.js";
-import {
-  PineconeStore,
-} from "../../../vectorstores/pinecone.js";
+import { PineconeStore } from "../../../vectorstores/pinecone.js";
 
 describe("Pinecone self query", () => {
   const testIndexName = process.env.PINECONE_INDEX!;
