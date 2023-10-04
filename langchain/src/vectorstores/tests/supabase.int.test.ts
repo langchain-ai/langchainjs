@@ -165,6 +165,47 @@ test("Search a SupabaseVectorStore with a functional metadata filter", async () 
   ]);
 });
 
+test("Search a SupabaseVectorStore with MMR", async () => {
+  const client = createClient(
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+  );
+
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new SupabaseVectorStore(embeddings, { client });
+
+  expect(store).toBeDefined();
+
+  const createdAt = new Date().getTime();
+
+  await store.addDocuments([
+    { pageContent: "hi", metadata: { a: createdAt } },
+    { pageContent: "greetings", metadata: { a: createdAt } },
+    { pageContent: "bye", metadata: { a: createdAt } },
+    { pageContent: "what's this", metadata: { a: createdAt } },
+  ]);
+
+  const results = await store.maxMarginalRelevanceSearch("hello world", {
+    k: 2,
+    fetchK: 20,
+    filter: { a: createdAt },
+  });
+
+  expect(results).toHaveLength(2);
+
+  expect(results).toEqual([
+    new Document({
+      metadata: { a: createdAt },
+      pageContent: "greetings",
+    }),
+    new Document({
+      metadata: { a: createdAt },
+      pageContent: "what's this",
+    }),
+  ]);
+});
+
 test("Upsert on a SupabaseVectorStore", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,

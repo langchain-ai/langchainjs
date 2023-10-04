@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 /**
  * Interface for the parameters required for searching embeddings.
@@ -11,6 +12,7 @@ interface SearchEmbeddingsParams {
   query_embedding: number[];
   match_count: number; // int
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
+  include_embeddings?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
@@ -18,6 +20,13 @@ export type SupabaseMetadata = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 export type SupabaseFilter = PostgrestFilterBuilder<any, any, any>;
 export type SupabaseFilterRPCCall = (rpcCall: SupabaseFilter) => SupabaseFilter;
+
+/**
+ * Interface for options to pass to similarity search.
+ */
+type SearchOptions = {
+  includeEmbeddings?: boolean;
+};
 
 /**
  * Interface for the response returned when searching embeddings.
@@ -36,8 +45,10 @@ export interface SupabaseLibArgs {
   client: SupabaseClient;
   tableName?: string;
   queryName?: string;
+  queryWithEmbeddingsName?: string;
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
   upsertBatchSize?: number;
+  embeddingKey?: string;
 }
 
 /**
@@ -57,6 +68,8 @@ export class SupabaseVectorStore extends VectorStore {
 
   upsertBatchSize = 500;
 
+  embeddingKey: string;
+
   _vectorstoreType(): string {
     return "supabase";
   }
@@ -69,6 +82,7 @@ export class SupabaseVectorStore extends VectorStore {
     this.queryName = args.queryName || "match_documents";
     this.filter = args.filter;
     this.upsertBatchSize = args.upsertBatchSize ?? this.upsertBatchSize;
+    this.embeddingKey = args.embeddingKey || "embedding";
   }
 
   /**
@@ -148,12 +162,14 @@ export class SupabaseVectorStore extends VectorStore {
    * @param query The query vector.
    * @param k The number of results to return.
    * @param filter Optional filter to apply to the search.
+   * @param options Optional settings for the search.
    * @returns A promise that resolves with the search results when the search is complete.
    */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
+    options?: SearchOptions
   ): Promise<[Document, number][]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
@@ -161,6 +177,7 @@ export class SupabaseVectorStore extends VectorStore {
     const _filter = filter ?? this.filter ?? {};
     const matchDocumentsParams: Partial<SearchEmbeddingsParams> = {
       query_embedding: query,
+      include_embeddings: options?.includeEmbeddings,
     };
 
     let filterFunction: SupabaseFilterRPCCall;
@@ -196,6 +213,60 @@ export class SupabaseVectorStore extends VectorStore {
     ]);
 
     return result;
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {SupabaseLibArgs} options.filter - Optional filter to apply to the search.
+   * @param {boolean} options.includeEmbeddings - Option to include the embeddings of the found documents in the result.
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]> &
+      SearchOptions
+  ): Promise<Document[]> {
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    // preserve the original value of includeEmbeddings
+    const includeEmbeddingsFlag = options?.includeEmbeddings || false;
+
+    const resultDocs = await this.similaritySearchVectorWithScore(
+      queryEmbedding,
+      options.fetchK ?? 20,
+      options.filter,
+      { includeEmbeddings: true }
+    );
+
+    const embeddingList = resultDocs.map(
+      (doc) => doc[0].metadata[this.embeddingKey]
+    );
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      options.lambda,
+      options.k
+    );
+
+    return mmrIndexes.map((idx) => {
+      const doc = resultDocs[idx][0];
+
+      // remove embeddings if they were not requested originally
+      if (!includeEmbeddingsFlag) {
+        delete doc.metadata[this.embeddingKey];
+      }
+      return doc;
+    });
   }
 
   /**
