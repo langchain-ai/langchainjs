@@ -167,7 +167,7 @@ test("ChatAnthropic, docs, prompt templates", async () => {
     "You are a helpful assistant that translates {input_language} to {output_language}."
   );
 
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
@@ -189,7 +189,7 @@ test("ChatAnthropic, longer chain of messages", async () => {
     temperature: 0,
   });
 
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
     AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
@@ -222,7 +222,7 @@ test("ChatAnthropic, Claude V2", async () => {
     temperature: 0,
   });
 
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
     AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
     HumanMessagePromptTemplate.fromTemplate("{text}"),

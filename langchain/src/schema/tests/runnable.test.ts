@@ -1,18 +1,9 @@
 /* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { z } from "zod";
 import { test } from "@jest/globals";
-import { LLM } from "../../llms/base.js";
-import {
-  BaseChatModel,
-  createChatMessageChunkEncoderStream,
-} from "../../chat_models/base.js";
-import {
-  AIMessage,
-  BaseMessage,
-  ChatResult,
-  GenerationChunk,
-} from "../index.js";
+import { createChatMessageChunkEncoderStream } from "../../chat_models/base.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -26,119 +17,17 @@ import {
   RouterRunnable,
   RunnableLambda,
 } from "../runnable/index.js";
-import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
+import { OutputParserException, StringOutputParser } from "../output_parser.js";
+
 import {
-  BaseOutputParser,
-  OutputParserException,
-  StringOutputParser,
-} from "../output_parser.js";
-
-/**
- * Parser for comma-separated values. It splits the input text by commas
- * and trims the resulting values.
- */
-export class FakeSplitIntoListParser extends BaseOutputParser<string[]> {
-  lc_namespace = ["tests", "fake"];
-
-  getFormatInstructions() {
-    return "";
-  }
-
-  async parse(text: string): Promise<string[]> {
-    return text.split(",").map((value) => value.trim());
-  }
-}
-
-class FakeLLM extends LLM {
-  response?: string;
-
-  thrownErrorString?: string;
-
-  constructor(fields: { response?: string; thrownErrorString?: string }) {
-    super({});
-    this.response = fields.response;
-    this.thrownErrorString = fields.thrownErrorString;
-  }
-
-  _llmType() {
-    return "fake";
-  }
-
-  async _call(prompt: string): Promise<string> {
-    if (this.thrownErrorString) {
-      throw new Error(this.thrownErrorString);
-    }
-    return this.response ?? prompt;
-  }
-}
-
-class FakeStreamingLLM extends LLM {
-  _llmType() {
-    return "fake";
-  }
-
-  async _call(prompt: string): Promise<string> {
-    return prompt;
-  }
-
-  async *_streamResponseChunks(input: string) {
-    for (const c of input) {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      yield { text: c, generationInfo: {} } as GenerationChunk;
-    }
-  }
-}
-
-class FakeChatModel extends BaseChatModel {
-  _combineLLMOutput() {
-    return [];
-  }
-
-  _llmType(): string {
-    return "fake";
-  }
-
-  async _generate(
-    messages: BaseMessage[],
-    options?: this["ParsedCallOptions"]
-  ): Promise<ChatResult> {
-    if (options?.stop?.length) {
-      return {
-        generations: [
-          {
-            message: new AIMessage(options.stop[0]),
-            text: options.stop[0],
-          },
-        ],
-      };
-    }
-    const text = messages.map((m) => m.content).join("\n");
-    return {
-      generations: [
-        {
-          message: new AIMessage(text),
-          text,
-        },
-      ],
-      llmOutput: {},
-    };
-  }
-}
-
-class FakeRetriever extends BaseRetriever {
-  lc_namespace = ["test", "fake"];
-
-  async _getRelevantDocuments(
-    _query: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<Document<Record<string, any>>[]> {
-    return [
-      new Document({ pageContent: "foo" }),
-      new Document({ pageContent: "bar" }),
-    ];
-  }
-}
+  FakeLLM,
+  FakeRetriever,
+  FakeChatModel,
+  FakeRunnable,
+  FakeStreamingLLM,
+  FakeSplitIntoListParser,
+} from "./lib.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -213,7 +102,7 @@ test("Create a runnable sequence with a static method with invalid output and ca
 });
 
 test("Create a runnable sequence with a runnable map", async () => {
-  const promptTemplate = ChatPromptTemplate.fromPromptMessages<{
+  const promptTemplate = ChatPromptTemplate.fromMessages<{
     documents: string;
     question: string;
   }>([
@@ -239,26 +128,6 @@ test("Create a runnable sequence with a runnable map", async () => {
   expect(result.content).toEqual(
     `You are a nice assistant.\nContext:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
   );
-});
-
-test("Bind kwargs to a runnable", async () => {
-  const llm = new FakeChatModel({});
-  const result = await llm
-    .bind({ stop: ["testing"] })
-    .pipe(new StringOutputParser())
-    .invoke("Hi there!");
-  console.log(result);
-  expect(result).toEqual("testing");
-});
-
-test("Bind kwargs to a runnable with a batch call", async () => {
-  const llm = new FakeChatModel({});
-  const result = await llm
-    .bind({ stop: ["testing"] })
-    .pipe(new StringOutputParser())
-    .batch(["Hi there!", "hey hey", "Hi there!", "hey hey"]);
-  console.log(result);
-  expect(result).toEqual(["testing", "testing", "testing", "testing"]);
 });
 
 test("Stream the entire way through", async () => {
@@ -329,139 +198,15 @@ test("Router runnables", async () => {
   expect(result2).toEqual(["I am a math genius!", "I am an English genius!"]);
 });
 
-test("RunnableWithFallbacks", async () => {
-  const llm = new FakeLLM({
-    thrownErrorString: "Bad error!",
-  });
-  await expect(async () => {
-    const result1 = await llm.invoke("What up");
-    console.log(result1);
-  }).rejects.toThrow();
-  const llmWithFallbacks = llm.withFallbacks({
-    fallbacks: [new FakeLLM({})],
-  });
-  const result2 = await llmWithFallbacks.invoke("What up");
-  expect(result2).toEqual("What up");
-});
-
-test("RunnableWithFallbacks batch", async () => {
-  const llm = new FakeLLM({
-    thrownErrorString: "Bad error!",
-  });
-  await expect(async () => {
-    const result1 = await llm.batch(["What up"]);
-    console.log(result1);
-  }).rejects.toThrow();
-  const llmWithFallbacks = llm.withFallbacks({
-    fallbacks: [new FakeLLM({})],
-  });
-  const result2 = await llmWithFallbacks.batch([
-    "What up 1",
-    "What up 2",
-    "What up 3",
-  ]);
-  expect(result2).toEqual(["What up 1", "What up 2", "What up 3"]);
-});
-
-test("Stream with RunnableBinding", async () => {
-  const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
-  const stream = await llm.pipe(new StringOutputParser()).stream("Hi there!");
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-    console.log(chunk);
-  }
-  expect(chunks.length).toEqual("Hi there!".length);
-  expect(chunks.join("")).toEqual("Hi there!");
-});
-
-test("Stream through a RunnableBinding if the bound runnable implements transform", async () => {
-  const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
-  const outputParser = new StringOutputParser().bind({ callbacks: [] });
-  const stream = await llm.pipe(outputParser).stream("Hi there!");
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-    console.log(chunk);
-  }
-  expect(chunks.length).toEqual("Hi there!".length);
-  expect(chunks.join("")).toEqual("Hi there!");
-});
-
-test("RunnableRetry invoke", async () => {
-  let attemptCount = 0;
+test("RunnableLambda that returns a runnable should invoke the runnable", async () => {
   const runnable = new RunnableLambda({
-    func: (_thing: unknown) => {
-      attemptCount += 1;
-      if (attemptCount < 3) {
-        throw new Error("TEST ERROR");
-      } else {
-        return attemptCount;
-      }
-    },
+    func: () =>
+      new RunnableLambda({
+        func: () => "testing",
+      }),
   });
-  const runnableRetry = runnable.withRetry();
-  const result = await runnableRetry.invoke("");
-  expect(result).toEqual(3);
-});
-
-test("RunnableRetry batch with thrown errors", async () => {
-  const runnable = new RunnableLambda({
-    func: (_thing: unknown) => {
-      throw new Error("TEST ERROR");
-    },
-  });
-  const runnableRetry = runnable.withRetry({
-    stopAfterAttempt: 1,
-  });
-  await expect(async () => {
-    await runnableRetry.batch(["", "", ""]);
-  }).rejects.toThrow();
-});
-
-test("RunnableRetry batch with all returned errors", async () => {
-  let attemptCount = 0;
-  const runnable = new RunnableLambda({
-    func: (_thing: unknown) => {
-      attemptCount += 1;
-      if (attemptCount < 5) {
-        throw new Error("TEST ERROR");
-      } else {
-        return attemptCount;
-      }
-    },
-  });
-  const runnableRetry = runnable.withRetry({
-    stopAfterAttempt: 1,
-  });
-  const result = await runnableRetry.batch(["", "", ""], undefined, {
-    returnExceptions: true,
-  });
-  expect(result).toEqual([
-    new Error("TEST ERROR"),
-    new Error("TEST ERROR"),
-    new Error("TEST ERROR"),
-  ]);
-});
-
-test("RunnableRetry batch should not retry successful requests", async () => {
-  let attemptCount = 0;
-  const runnable = new RunnableLambda({
-    func: (_thing: unknown) => {
-      attemptCount += 1;
-      if (attemptCount < 3) {
-        throw new Error("TEST ERROR");
-      } else {
-        return attemptCount;
-      }
-    },
-  });
-  const runnableRetry = runnable.withRetry({
-    stopAfterAttempt: 2,
-  });
-  const result = await runnableRetry.batch(["", "", ""]);
-  expect(attemptCount).toEqual(5);
-  expect(result.sort()).toEqual([3, 4, 5]);
+  const result = await runnable.invoke({});
+  expect(result).toEqual("testing");
 });
 
 test("RunnableEach", async () => {
@@ -477,4 +222,28 @@ test("RunnableEach", async () => {
       .map()
       .invoke([["a, b", "c"], ["c, e"]])
   ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
+});
+
+test("Runnable withConfig", async () => {
+  const fake = new FakeRunnable({
+    returnOptions: true,
+  });
+  const result = await fake.withConfig({ tags: ["a-tag"] }).invoke("hello");
+  expect(result.tags).toEqual(["a-tag"]);
+  const stream = await fake
+    .withConfig({
+      metadata: {
+        a: "b",
+        b: "c",
+      },
+      tags: ["a-tag"],
+    })
+    .stream("hi", { tags: ["b-tag"], metadata: { a: "updated" } });
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+  expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
+  expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
 });

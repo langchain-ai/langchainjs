@@ -38,7 +38,7 @@ export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOpti
   }
 }
 
-export {
+export type {
   ChatExample,
   GoogleVertexAIChatAuthor,
   GoogleVertexAIChatInput,

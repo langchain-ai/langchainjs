@@ -36,17 +36,16 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-
-    const constructorParameters
-      = env.AZURE_OPENAI_API_KEY ? {
-        azureOpenAIApiKey: env.AZURE_OPENAI_API_KEY,
-        azureOpenAIApiInstanceName: env.AZURE_OPENAI_API_INSTANCE_NAME,
-        azureOpenAIApiDeploymentName: env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
-        azureOpenAIApiVersion: env.AZURE_OPENAI_API_VERSION,
-      }
+    const constructorParameters = env.AZURE_OPENAI_API_KEY
+      ? {
+          azureOpenAIApiKey: env.AZURE_OPENAI_API_KEY,
+          azureOpenAIApiInstanceName: env.AZURE_OPENAI_API_INSTANCE_NAME,
+          azureOpenAIApiDeploymentName: env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
+          azureOpenAIApiVersion: env.AZURE_OPENAI_API_VERSION,
+        }
       : {
-        openAIApiKey: env.OPENAI_API_KEY,
-      }
+          openAIApiKey: env.OPENAI_API_KEY,
+        };
 
     // Intantiate a few things to test the exports
     new OpenAI(constructorParameters);
@@ -58,7 +57,7 @@ export default {
     // Test a chain + prompt + model
     const chain = new LLMChain({
       llm: new ChatOpenAI(constructorParameters),
-      prompt: ChatPromptTemplate.fromPromptMessages([
+      prompt: ChatPromptTemplate.fromMessages([
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]),
     });

@@ -2,6 +2,7 @@ import { type Tiktoken } from "js-tiktoken/lite";
 import type { OpenAI as OpenAIClient } from "openai";
 
 import {
+  BaseCache,
   BaseMessage,
   BaseMessageLike,
   BasePromptValue,
@@ -20,6 +21,7 @@ import { Runnable } from "../schema/runnable/index.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
+import { InMemoryCache } from "../cache/index.js";
 
 const getVerbosity = () => false;
 
@@ -86,6 +88,8 @@ export interface BaseLanguageModelParams
    * @deprecated Use `callbacks` instead
    */
   callbackManager?: CallbackManager;
+
+  cache?: BaseCache | boolean;
 }
 
 export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
@@ -144,6 +148,8 @@ export abstract class BaseLanguageModel<
    */
   caller: AsyncCaller;
 
+  cache?: BaseCache;
+
   constructor({
     callbacks,
     callbackManager,
@@ -153,6 +159,13 @@ export abstract class BaseLanguageModel<
       callbacks: callbacks ?? callbackManager,
       ...params,
     });
+    if (typeof params.cache === "object") {
+      this.cache = params.cache;
+    } else if (params.cache) {
+      this.cache = InMemoryCache.global();
+    } else {
+      this.cache = undefined;
+    }
     this.caller = new AsyncCaller(params ?? {});
   }
 
@@ -227,6 +240,31 @@ export abstract class BaseLanguageModel<
   }
 
   /**
+   * Create a unique cache key for a specific call to a specific language model.
+   * @param callOptions Call options for the model
+   * @returns A unique cache key.
+   */
+  protected _getSerializedCacheKeyParametersForCall(
+    callOptions: CallOptions
+  ): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const params: Record<string, any> = {
+      ...this._identifyingParams(),
+      ...callOptions,
+      _type: this._llmType(),
+      _model: this._modelType(),
+    };
+    const filteredEntries = Object.entries(params).filter(
+      ([_, value]) => value !== undefined
+    );
+    const serializedEntries = filteredEntries
+      .map(([key, value]) => `${key}:${JSON.stringify(value)}`)
+      .sort()
+      .join(",");
+    return serializedEntries;
+  }
+
+  /**
    * @deprecated
    * Return a json-like object representing this LLM.
    */
@@ -258,7 +296,8 @@ export abstract class BaseLanguageModel<
 }
 
 /*
- * Calculate max tokens for given model and prompt.
- * That is the model size - number of tokens in prompt.
+ * Export utility functions for token calculations:
+ * - calculateMaxTokens: Calculate max tokens for a given model and prompt (the model context size - tokens in prompt).
+ * - getModelContextSize: Get the context size for a specific model.
  */
-export { calculateMaxTokens } from "./count_tokens.js";
+export { calculateMaxTokens, getModelContextSize } from "./count_tokens.js";

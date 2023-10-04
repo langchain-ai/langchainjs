@@ -1,16 +1,28 @@
 import { Redis } from "ioredis";
 import { BaseCache, Generation } from "../schema/index.js";
-import { getCacheKey } from "./base.js";
+import {
+  serializeGeneration,
+  deserializeStoredGeneration,
+  getCacheKey,
+} from "./base.js";
 
 /**
  * Cache LLM results using Redis.
  */
 export class RedisCache extends BaseCache {
-  private redisClient: Redis;
+  protected redisClient: Redis;
 
-  constructor(redisClient: Redis) {
+  protected ttl?: number;
+
+  constructor(
+    redisClient: Redis,
+    config?: {
+      ttl?: number;
+    }
+  ) {
     super();
     this.redisClient = redisClient;
+    this.ttl = config?.ttl;
   }
 
   /**
@@ -27,11 +39,8 @@ export class RedisCache extends BaseCache {
     const generations: Generation[] = [];
 
     while (value) {
-      if (!value) {
-        break;
-      }
-
-      generations.push({ text: value });
+      const storedGeneration = JSON.parse(value);
+      generations.push(deserializeStoredGeneration(storedGeneration));
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
       value = await this.redisClient.get(key);
@@ -49,7 +58,19 @@ export class RedisCache extends BaseCache {
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      await this.redisClient.set(key, value[i].text);
+      if (this.ttl !== undefined) {
+        await this.redisClient.set(
+          key,
+          JSON.stringify(serializeGeneration(value[i])),
+          "EX",
+          this.ttl
+        );
+      } else {
+        await this.redisClient.set(
+          key,
+          JSON.stringify(serializeGeneration(value[i]))
+        );
+      }
     }
   }
 }

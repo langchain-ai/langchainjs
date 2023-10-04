@@ -19,6 +19,7 @@ LangChain provides the following tools you can use out of the box:
 - [`IFTTTWebHook`][IFTTTWebHook] - A wrapper around the IFTTT Webhook API. Useful for triggering IFTTT actions.
 - [`JsonListKeysTool`][JsonListKeysTool] and [`JsonGetValueTool`][JsonGetValueTool] - Useful for extracting data from JSON objects. These tools can be used collectively in a [`JsonToolkit`][JsonToolkit].
 - [`RequestsGetTool`][RequestsGetTool] and [`RequestsPostTool`][RequestsPostTool] - Useful for making HTTP requests.
+- [`SearchApi`][SearchApi] - A wrapper around the Search API. This tool is handy when you need to answer questions about current events. Input should be a search query.
 - [`SerpAPI`][SerpAPI] - A wrapper around the SerpAPI API. Useful for when you need to answer questions about current events. Input should be a search query.
 - [`SearxngSearch`][SearxngSearch] - A wrapper around the SearxNG API, this tool is useful for performing meta-search engine queries using the SearxNG API. It is particularly helpful in answering questions about current events.
 - [`QuerySqlTool`][QuerySqlTool], [`InfoSqlTool`][InfoSqlTool], [`ListTablesSqlTool`][ListTablesSqlTool], and [`QueryCheckerTool`][QueryCheckerTool] - Useful for interacting with SQL databases. Can be used together in a [`SqlToolkit`][SqlToolkit]. Requires `typeorm` as a peer dependency.
@@ -38,6 +39,7 @@ LangChain provides the following tools you can use out of the box:
 [JsonToolkit]: ../../toolkits/json
 [RequestsGetTool]: /docs/api/tools/classes/RequestsGetTool
 [RequestsPostTool]: /docs/api/tools/classes/RequestsPostTool
+[SearchApi]: /docs/api/tools/classes/SearchApi
 [SerpAPI]: /docs/api/tools/classes/SerpAPI
 [SearxngSearch]: /docs/api/tools/classes/SearxngSearch
 [QuerySqlTool]: /docs/api/tools_sql/classes/QuerySqlTool

@@ -54,7 +54,7 @@ export default async function handler(req: NextRequest) {
   // Test a chain + prompt + model
   const chain = new LLMChain({
     llm,
-    prompt: ChatPromptTemplate.fromPromptMessages([
+    prompt: ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate("{input}"),
     ]),
   });

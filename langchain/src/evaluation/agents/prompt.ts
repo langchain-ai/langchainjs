@@ -97,15 +97,16 @@ Judgment: Given the good reasoning in the final answer but otherwise poor perfor
 
 Score: 2`;
 
-export const EVAL_CHAT_PROMPT =
-  /* #__PURE__ */ ChatPromptTemplate.fromPromptMessages([
+export const EVAL_CHAT_PROMPT = /* #__PURE__ */ ChatPromptTemplate.fromMessages(
+  [
     /* #__PURE__ */ SystemMessagePromptTemplate.fromTemplate(
       "You are a helpful assistant that evaluates language models."
     ),
     /* #__PURE__ */ HumanMessagePromptTemplate.fromTemplate(EXAMPLE_INPUT),
     /* #__PURE__ */ AIMessagePromptTemplate.fromTemplate(EXAMPLE_OUTPUT),
     /* #__PURE__ */ HumanMessagePromptTemplate.fromTemplate(EVAL_TEMPLATE),
-  ]);
+  ]
+);
 
 const TOOL_FREE_EVAL_TEMPLATE = `An AI language model has been given access to a set of tools to help answer a user's question.
 
@@ -135,7 +136,7 @@ i. Is the final answer helpful?
     v. Are the appropriate tools used to answer the question?`;
 
 export const TOOL_FREE_EVAL_CHAT_PROMPT =
-  /* #__PURE__ */ ChatPromptTemplate.fromPromptMessages([
+  /* #__PURE__ */ ChatPromptTemplate.fromMessages([
     /* #__PURE__ */ SystemMessagePromptTemplate.fromTemplate(
       "You are a helpful assistant that evaluates language models."
     ),
