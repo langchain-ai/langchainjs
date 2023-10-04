@@ -1,9 +1,9 @@
-# OpenAI
+# Bedrock
 
 The `BedrockEmbeddings` class uses the AWS Bedrock API to generate embeddings for a given text. It strips new line characters from the text as recommended.
 
 ```typescript
-import { BedrockEmbeddings } from "langchain/embeddings/openai";
+import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 
 const embeddings = new BedrockEmbeddings();
 ```
@@ -14,7 +14,7 @@ You can pass in your own instance of the `BedrockRuntimeClient` if you want to c
 `credentials`, `region`, `retryPolicy`, etc.
 
 ```typescript
-import { BedrockEmbeddings } from "langchain/embeddings/openai";
+import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 
 const client = new BedrockRuntimeClient({
   region: "us-east-1",
