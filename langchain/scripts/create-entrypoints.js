@@ -25,6 +25,7 @@ const entrypoints = {
   "tools/calculator": "tools/calculator",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
+  "tools/google_calendar": "tools/google_calendar/index",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
@@ -281,6 +282,7 @@ const requiresOptionalDependency = [
   "tools/calculator",
   "tools/sql",
   "tools/webbrowser",
+  "tools/google_calendar",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
