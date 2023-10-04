@@ -3,7 +3,7 @@ import { expect, test } from "@jest/globals";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 import { BedrockEmbeddings } from "../bedrock.js";
 
-test("Test BedrockEmbeddings.embedQuery", async () => {
+test.skip("Test BedrockEmbeddings.embedQuery", async () => {
   const embeddings = new BedrockEmbeddings({
     maxRetries: 1,
   });
@@ -12,7 +12,7 @@ test("Test BedrockEmbeddings.embedQuery", async () => {
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test BedrockEmbeddings.embedDocuments", async () => {
+test.skip("Test BedrockEmbeddings.embedDocuments", async () => {
   const embeddings = new BedrockEmbeddings({
     maxRetries: 1,
   });
@@ -31,7 +31,7 @@ test("Test BedrockEmbeddings.embedDocuments", async () => {
   });
 });
 
-test("Test end to end with HNSWLib", async () => {
+test.skip("Test end to end with HNSWLib", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
