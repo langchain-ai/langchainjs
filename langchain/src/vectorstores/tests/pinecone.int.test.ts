@@ -1,5 +1,6 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-promise-executor-return */
 import { describe, expect, test } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import { Pinecone } from "@pinecone-database/pinecone";
@@ -31,7 +32,7 @@ describe("PineconeStore", () => {
     });
 
     // waitUntilReady is buggy
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const pineconeIndex = pinecone.Index(testIndexName);
 

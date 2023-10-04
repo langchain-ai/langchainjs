@@ -1,4 +1,6 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-promise-executor-return */
 import { test } from "@jest/globals";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { Document } from "../../../document.js";
@@ -9,16 +11,12 @@ import { PineconeTranslator } from "../pinecone.js";
 import { OpenAI } from "../../../llms/openai.js";
 import {
   PineconeStore,
-  PineconeLibArgs,
 } from "../../../vectorstores/pinecone.js";
 
 describe("Pinecone self query", () => {
-  let pineconeStore: PineconeStore;
   const testIndexName = process.env.PINECONE_INDEX!;
 
   beforeAll(async () => {
-    const embeddings = new OpenAIEmbeddings();
-
     if (
       !process.env.PINECONE_API_KEY ||
       !process.env.PINECONE_ENVIRONMENT ||
@@ -51,15 +49,7 @@ describe("Pinecone self query", () => {
     });
 
     // waitUntilReady is buggy
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const pineconeIndex = pinecone.Index(testIndexName);
-
-    const pineconeArgs: PineconeLibArgs = {
-      pineconeIndex,
-    };
-
-    pineconeStore = new PineconeStore(embeddings, pineconeArgs);
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   });
 
   afterAll(async () => {
