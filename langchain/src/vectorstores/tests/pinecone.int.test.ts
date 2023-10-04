@@ -1,8 +1,8 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { faker } from "@faker-js/faker";
-import { Pinecone } from '@pinecone-database/pinecone'
+import { Pinecone } from "@pinecone-database/pinecone";
 import * as uuid from "uuid";
 import { Document } from "../../document.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
@@ -10,9 +10,9 @@ import { PineconeLibArgs, PineconeStore } from "../pinecone.js";
 
 describe("PineconeStore", () => {
   let pineconeStore: PineconeStore;
-  const testIndexName = 'langchain-pinecone-test'
+  const testIndexName = process.env.PINECONE_INDEX!;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const embeddings = new OpenAIEmbeddings();
 
     const pinecone = new Pinecone();
@@ -30,21 +30,24 @@ describe("PineconeStore", () => {
       waitUntilReady: true,
     });
 
+    // waitUntilReady is buggy
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     const pineconeIndex = pinecone.Index(testIndexName);
 
     const pineconeArgs: PineconeLibArgs = {
       pineconeIndex,
-    }
+    };
 
     pineconeStore = new PineconeStore(embeddings, pineconeArgs);
   });
 
-  // This hook is run after all of the tests have completed, and we can use it to clean up our 
+  // This hook is run after all of the tests have completed, and we can use it to clean up our
   // test index
   afterAll(async () => {
     const pinecone = new Pinecone();
-    await pinecone.deleteIndex(testIndexName)
-  })
+    await pinecone.deleteIndex(testIndexName);
+  });
 
   test("user-provided ids", async () => {
     const documentId = uuid.v4();

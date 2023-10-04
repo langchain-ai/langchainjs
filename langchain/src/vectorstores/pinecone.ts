@@ -6,20 +6,18 @@ import {
   RecordMetadata,
   PineconeRecord,
   Index as PineconeIndex,
-} from "@pinecone-database/pinecone"
+} from "@pinecone-database/pinecone";
 
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { AsyncCaller } from "../util/async_caller.js";
 
-
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
 export interface PineconeLibArgs {
   pineconeIndex: PineconeIndex;
-  pineconeIndexName?: string;
   textKey?: string;
   namespace?: string;
   filter?: PineconeMetadata;
@@ -46,8 +44,6 @@ export class PineconeStore extends VectorStore {
 
   namespace?: string;
 
-  pineconeIndexName: string;
-
   pineconeIndex: PineconeIndex;
 
   filter?: PineconeMetadata;
@@ -58,22 +54,14 @@ export class PineconeStore extends VectorStore {
     return "pinecone";
   }
 
-  _validateEnvVars() {
-    if (process.env.PINECONE_API_KEY === undefined || process.env.PINECONE_ENVIRONMENT === undefined) {
-      throw new Error(`You must export your Pinecone API key via env var PINECONE_API_KEY and your environment via env var PINECONE_ENVIRONMENT`)
-    }
-  }
-
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
-    this._validateEnvVars();
-
     this.embeddings = embeddings;
-    const { namespace, pineconeIndex, pineconeIndexName, textKey, filter, ...asyncCallerArgs } = args;
+    const { namespace, pineconeIndex, textKey, filter, ...asyncCallerArgs } =
+      args;
     this.namespace = namespace;
-    this.pineconeIndexName = pineconeIndexName || ''
-    this.pineconeIndex = pineconeIndex
+    this.pineconeIndex = pineconeIndex;
     this.textKey = textKey ?? "text";
     this.filter = filter;
     this.caller = new AsyncCaller(asyncCallerArgs);
@@ -146,18 +134,20 @@ export class PineconeStore extends VectorStore {
       }
 
       return {
-        id: documentIds[idx], metadata, values,
-      } as PineconeRecord<RecordMetadata>
+        id: documentIds[idx],
+        metadata,
+        values,
+      } as PineconeRecord<RecordMetadata>;
     });
 
-    const namespace = this.pineconeIndex.namespace(this.namespace ?? '')
+    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
     // Pinecone recommends a limit of 100 vectors per upsert request
     const chunkSize = 50;
     for (let i = 0; i < pineconeVectors.length; i += chunkSize) {
       const chunk = pineconeVectors.slice(i, i + chunkSize);
-      await namespace.upsert(chunk)
+      await namespace.upsert(chunk);
     }
-    return documentIds
+    return documentIds;
   }
 
   /**
@@ -167,7 +157,7 @@ export class PineconeStore extends VectorStore {
    */
   async delete(params: PineconeDeleteParams): Promise<void> {
     const { deleteAll, ids } = params;
-    const namespace = this.pineconeIndex.namespace(this.namespace ?? '')
+    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
 
     if (deleteAll) {
       await namespace.deleteAll();
@@ -199,7 +189,7 @@ export class PineconeStore extends VectorStore {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
     const _filter = filter ?? this.filter;
-    const namespace = this.pineconeIndex.namespace(this.namespace ?? '')
+    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
 
     const results = await namespace.query({
       includeMetadata: true,
@@ -238,10 +228,10 @@ export class PineconeStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig:
       | {
-        pineconeIndex: PineconeIndex,
-        textKey?: string;
-        namespace?: string | undefined;
-      }
+          pineconeIndex: PineconeIndex;
+          textKey?: string;
+          namespace?: string | undefined;
+        }
       | PineconeLibArgs
   ): Promise<PineconeStore> {
     const docs: Document[] = [];
