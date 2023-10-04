@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Pinecone } from '@pinecone-database/pinecone'
 import { jest, test, expect } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { Pinecone } from '@pinecone-database/pinecone'
 import { PineconeStore } from "../pinecone.js";
 
 test("PineconeStore with external ids", async () => {
