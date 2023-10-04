@@ -14,47 +14,6 @@ import { PineconeStore } from "../../../vectorstores/pinecone.js";
 describe("Pinecone self query", () => {
   const testIndexName = process.env.PINECONE_INDEX!;
 
-  beforeAll(async () => {
-    if (
-      !process.env.PINECONE_API_KEY ||
-      !process.env.PINECONE_ENVIRONMENT ||
-      !testIndexName
-    ) {
-      throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-      );
-    }
-
-    const env = process.env.PINECONE_ENVIRONMENT;
-    const key = process.env.PINECONE_API_KEY;
-
-    const pinecone = new Pinecone({
-      apiKey: key,
-      environment: env,
-    });
-
-    await pinecone.createIndex({
-      name: testIndexName,
-      dimension: 1536,
-
-      // This option tells the client not to throw if the index already exists.
-      // It serves as replacement for createIndexIfNotExists
-      suppressConflicts: true,
-
-      // This option tells the client not to resolve the promise until the
-      // index is ready. It replaces waitUntilIndexIsReady.
-      waitUntilReady: true,
-    });
-
-    // waitUntilReady is buggy
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  });
-
-  afterAll(async () => {
-    const pinecone = new Pinecone();
-    await pinecone.deleteIndex(testIndexName);
-  });
-
   test("Pinecone Store Self Query Retriever Test", async () => {
     const docs = [
       new Document({

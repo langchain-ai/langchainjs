@@ -18,22 +18,6 @@ describe("PineconeStore", () => {
 
     const pinecone = new Pinecone();
 
-    await pinecone.createIndex({
-      name: testIndexName,
-      dimension: 1536,
-
-      // This option tells the client not to throw if the index already exists.
-      // It serves as replacement for createIndexIfNotExists
-      suppressConflicts: true,
-
-      // This option tells the client not to resolve the promise until the
-      // index is ready. It replaces waitUntilIndexIsReady.
-      waitUntilReady: true,
-    });
-
-    // waitUntilReady is buggy
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
     const pineconeIndex = pinecone.Index(testIndexName);
 
     const pineconeArgs: PineconeLibArgs = {
@@ -41,13 +25,6 @@ describe("PineconeStore", () => {
     };
 
     pineconeStore = new PineconeStore(embeddings, pineconeArgs);
-  });
-
-  // This hook is run after all of the tests have completed, and we can use it to clean up our
-  // test index
-  afterAll(async () => {
-    const pinecone = new Pinecone();
-    await pinecone.deleteIndex(testIndexName);
   });
 
   test("user-provided ids", async () => {
