@@ -1,10 +1,10 @@
 import { InputValues } from "../schema/index.js";
 
 /**
- * Type that specifies the format of a template. It can be either
- * "f-string" or "jinja2".
+ * Type that specifies the format of a template. Only
+ * "f-string" is supported currently.
  */
-export type TemplateFormat = "f-string" | "jinja2";
+export type TemplateFormat = "f-string";
 
 /**
  * Type that represents a node in a parsed format string. It can be either
@@ -91,12 +91,10 @@ type Parser = (template: string) => ParsedFStringNode[];
 
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
   "f-string": interpolateFString,
-  jinja2: (_: string, __: InputValues) => "",
 };
 
 export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
   "f-string": parseFString,
-  jinja2: (_: string) => [],
 };
 
 export const renderTemplate = (
