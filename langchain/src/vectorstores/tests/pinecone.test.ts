@@ -14,7 +14,21 @@ test("PineconeStore with external ids", async () => {
   const embeddings = new FakeEmbeddings();
 
   const pinecone = new Pinecone();
-  const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX as string)
+  const testIndexName = 'langchain-pinecone-test'
+
+  await pinecone.createIndex({
+    name: testIndexName,
+    dimension: 1536,
+    // This option tells the client not to throw if the index already exists.
+    // It serves as replacement for createIndexIfNotExists
+    suppressConflicts: true,
+
+    // This option tells the client not to resolve the promise until the
+    // index is ready. It replaces waitUntilIndexIsReady.
+    waitUntilReady: true,
+  });
+
+  const pineconeIndex = pinecone.Index(testIndexName)
 
   const store = new PineconeStore(embeddings, { pineconeIndex });
 
