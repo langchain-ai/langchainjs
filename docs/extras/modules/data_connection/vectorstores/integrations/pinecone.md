@@ -25,13 +25,11 @@ import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 dotenv.config();
 
-const env = process.env.PINECONE_ENVIRONMENT!
-const key = process.env.PINECONE_API_KEY!
+// Instantiate a new Pinecone client, which will automatically read the 
+// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from 
+// the Pinecone dashboard at https://app.pinecone.io
 
-const pinecone = new Pinecone({
-  apiKey: key,
-  environment: env,
-});
+const pinecone = new Pinecone();
 
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
@@ -72,13 +70,12 @@ import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 dotenv.config();
 
-const env = process.env.PINECONE_ENVIRONMENT!
-const key = process.env.PINECONE_API_KEY!
 
-const pinecone = new Pinecone({
-  apiKey: key,
-  environment: env,
-})
+// Instantiate a new Pinecone client, which will automatically read the 
+// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from 
+// the Pinecone dashboard at https://app.pinecone.io
+
+const pinecone = new Pinecone();
 
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
@@ -133,13 +130,11 @@ import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 dotenv.config();
 
-const env = process.env.PINECONE_ENVIRONMENT!
-const key = process.env.PINECONE_API_KEY!
+// Instantiate a new Pinecone client, which will automatically read the 
+// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from 
+// the Pinecone dashboard at https://app.pinecone.io
 
-const pinecone = new Pinecone({
-  apiKey: key,
-  environment: env,
-})
+const pinecone = new Pinecone();
 
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 const embeddings = new OpenAIEmbeddings();
