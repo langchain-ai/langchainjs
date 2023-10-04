@@ -15,8 +15,6 @@ docs/_dist/
 !.yarn/sdks
 !.yarn/versions
 
-pnpm-lock.yaml
-
 langchain/docs/
 
 .idea/
