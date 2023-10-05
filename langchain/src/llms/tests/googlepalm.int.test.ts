@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { GooglePaLM } from "../googlepalm.js";
+import { GooglePaLM } from "../googlepalm/index.js";
 
 test.skip("Test Google Palm", async () => {
   const model = new GooglePaLM();

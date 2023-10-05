@@ -10,7 +10,7 @@ import {
 } from "../../prompts/index.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { ChatGooglePaLM } from "../googlepalm.js";
+import { ChatGooglePaLM } from "../googlepalm/index.js";
 
 test.skip("Test ChatGooglePalm", async () => {
   const chat = new ChatGooglePaLM({

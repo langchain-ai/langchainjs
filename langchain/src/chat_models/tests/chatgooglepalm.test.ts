@@ -6,7 +6,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "../../schema/index.js";
-import { ChatGooglePaLM } from "../googlepalm.js";
+import { ChatGooglePaLM } from "../googlepalm/index.js";
 
 // Test class extending actual class to test private & protected methods
 class ChatGooglePaLMTest extends ChatGooglePaLM {

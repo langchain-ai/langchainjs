@@ -1,7 +1,7 @@
 import { TextServiceClient, protos } from "@google-ai/generativelanguage";
 import { GoogleAuth } from "google-auth-library";
-import { BaseLLMParams, LLM } from "./base.js";
-import { getEnvironmentVariable } from "../util/env.js";
+import { BaseLLMParams, LLM } from "../base.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * Input for Text generation for Google Palm

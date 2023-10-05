@@ -1,15 +1,15 @@
 import { DiscussServiceClient } from "@google-ai/generativelanguage";
 import type { protos } from "@google-ai/generativelanguage";
 import { GoogleAuth } from "google-auth-library";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
   ChatMessage,
   ChatResult,
-} from "../schema/index.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
+} from "../../schema/index.js";
+import { getEnvironmentVariable } from "../../util/env.js";
+import { BaseChatModel, BaseChatModelParams } from "../base.js";
 
 /**
  * An interface defining the input to the ChatGooglePaLM class.
