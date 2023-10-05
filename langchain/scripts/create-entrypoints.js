@@ -247,8 +247,8 @@ const entrypoints = {
     "experimental/chat_models/bittensor",
   "experimental/llms/bittensor":
     "experimental/llms/bittensor",
-  "experimental/hubs/makersuite/googlemakersuite":
-    "experimental/hubs/makersuite/googlemakersuite",
+  "experimental/hubs/makersuite/googlemakersuitehub":
+    "experimental/hubs/makersuite/googlemakersuitehub",
   // evaluation
   evaluation: "evaluation/index",
 };

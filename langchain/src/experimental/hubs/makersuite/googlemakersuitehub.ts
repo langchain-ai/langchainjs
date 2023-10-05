@@ -25,7 +25,6 @@ import { GoogleConnection } from "../../../util/googlevertexai-connection.js";
  * after the cacheTimeout specified in the configuration.
  */
 export interface MakerSuiteHubConfig {
-
   /**
    * How long, in milliseconds, before a prompt is assumed stale and should
    * be refreshed from the copy in Google Drive.
