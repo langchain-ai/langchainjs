@@ -1,10 +1,10 @@
 export {
-  RunnableFunc,
-  RunnableLike,
-  RunnableBatchOptions,
-  RunnableRetryFailedAttemptHandler,
+  type RunnableFunc,
+  type RunnableLike,
+  type RunnableBatchOptions,
+  type RunnableRetryFailedAttemptHandler,
   Runnable,
-  RunnableBindingArgs,
+  type RunnableBindingArgs,
   RunnableBinding,
   RunnableEach,
   RunnableRetry,
@@ -13,7 +13,7 @@ export {
   RunnableLambda,
   RunnableWithFallbacks,
 } from "./base.js";
-export { RunnableConfig } from "./config.js";
+export type { RunnableConfig } from "./config.js";
 export { RunnablePassthrough } from "./passthrough.js";
 export { RouterRunnable } from "./router.js";
-export { RunnableBranch, Branch, BranchLike } from "./branch.js";
+export { RunnableBranch, type Branch, type BranchLike } from "./branch.js";
