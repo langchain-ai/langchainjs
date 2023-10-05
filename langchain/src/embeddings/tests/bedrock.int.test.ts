@@ -1,11 +1,10 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { expect, test } from "@jest/globals";
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 import { BedrockEmbeddings } from "../bedrock.js";
-import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 
 const client = new BedrockRuntimeClient({
   region: process.env.BEDROCK_AWS_REGION!,

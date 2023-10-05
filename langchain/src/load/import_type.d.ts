@@ -43,6 +43,9 @@ export interface OptionalImportMap {
   "langchain/chains/graph_qa/cypher"?:
     | typeof import("../chains/graph_qa/cypher.js")
     | Promise<typeof import("../chains/graph_qa/cypher.js")>;
+  "langchain/embeddings/bedrock"?:
+    | typeof import("../embeddings/bedrock.js")
+    | Promise<typeof import("../embeddings/bedrock.js")>;
   "langchain/embeddings/cloudflare_workersai"?:
     | typeof import("../embeddings/cloudflare_workersai.js")
     | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;

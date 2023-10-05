@@ -36,6 +36,7 @@ const entrypoints = {
   "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   // embeddings
   "embeddings/base": "embeddings/base",
+  "embeddings/bedrock": "embeddings/bedrock",
   "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
   "embeddings/fake": "embeddings/fake",
@@ -287,6 +288,7 @@ const requiresOptionalDependency = [
   "chains/load",
   "chains/sql_db",
   "chains/graph_qa/cypher",
+  "embeddings/bedrock",
   "embeddings/cloudflare_workersai",
   "embeddings/cohere",
   "embeddings/googlevertexai",

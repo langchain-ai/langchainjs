@@ -55,6 +55,7 @@
       "src/chains/sql_db/index.ts",
       "src/chains/graph_qa/cypher.ts",
       "src/embeddings/base.ts",
+      "src/embeddings/bedrock.ts",
       "src/embeddings/cache_backed.ts",
       "src/embeddings/cloudflare_workersai.ts",
       "src/embeddings/fake.ts",
