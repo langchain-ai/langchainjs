@@ -20,17 +20,10 @@ npm i @aws-sdk/client-bedrock-runtime@^3.422.0
 
 The `BedrockEmbeddings` class uses the AWS Bedrock API to generate embeddings for a given text. It strips new line characters from the text as recommended.
 
-```typescript
-import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/embeddings/bedrock.ts";
 
-const embeddings = new BedrockEmbeddings({
-  region: process.env.BEDROCK_AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-  },
-});
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>
 
 ## Configuring the Bedrock Runtime Client
 
