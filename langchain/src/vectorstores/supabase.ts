@@ -47,6 +47,7 @@ export interface SupabaseLibArgs {
   queryName?: string;
   queryWithEmbeddingsName?: string;
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
+  searchOptions?: SearchOptions;
   upsertBatchSize?: number;
   embeddingKey?: string;
 }
@@ -56,7 +57,8 @@ export interface SupabaseLibArgs {
  * vectors.
  */
 export class SupabaseVectorStore extends VectorStore {
-  declare FilterType: SupabaseMetadata | SupabaseFilterRPCCall;
+  declare FilterType: (SupabaseMetadata | SupabaseFilterRPCCall) &
+    SearchOptions;
 
   client: SupabaseClient;
 
@@ -65,6 +67,8 @@ export class SupabaseVectorStore extends VectorStore {
   queryName: string;
 
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
+
+  searchOptions: SearchOptions = {};
 
   upsertBatchSize = 500;
 
@@ -81,6 +85,8 @@ export class SupabaseVectorStore extends VectorStore {
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
     this.filter = args.filter;
+    this.searchOptions.includeEmbeddings =
+      args.searchOptions?.includeEmbeddings ?? false;
     this.upsertBatchSize = args.upsertBatchSize ?? this.upsertBatchSize;
     this.embeddingKey = args.embeddingKey || "embedding";
   }
@@ -162,22 +168,26 @@ export class SupabaseVectorStore extends VectorStore {
    * @param query The query vector.
    * @param k The number of results to return.
    * @param filter Optional filter to apply to the search.
-   * @param options Optional settings for the search.
    * @returns A promise that resolves with the search results when the search is complete.
    */
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"],
-    options?: SearchOptions
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
+
     const _filter = filter ?? this.filter ?? {};
+    const searchOptions: SearchOptions = {
+      includeEmbeddings:
+        filter?.includeEmbeddings ?? this.searchOptions.includeEmbeddings,
+    };
+
     const matchDocumentsParams: Partial<SearchEmbeddingsParams> = {
       query_embedding: query,
-      include_embeddings: options?.includeEmbeddings,
+      include_embeddings: searchOptions.includeEmbeddings,
     };
 
     let filterFunction: SupabaseFilterRPCCall;
@@ -185,7 +195,11 @@ export class SupabaseVectorStore extends VectorStore {
     if (typeof _filter === "function") {
       filterFunction = (rpcCall) => _filter(rpcCall).limit(k);
     } else if (typeof _filter === "object") {
-      matchDocumentsParams.filter = _filter;
+      // Make sure includeEmbeddings is not mistaken for a metadata filter
+      matchDocumentsParams.filter = {
+        ..._filter,
+        includeEmbeddings: undefined,
+      };
       matchDocumentsParams.match_count = k;
       filterFunction = (rpcCall) => rpcCall;
     } else {
@@ -240,11 +254,16 @@ export class SupabaseVectorStore extends VectorStore {
     // preserve the original value of includeEmbeddings
     const includeEmbeddingsFlag = options?.includeEmbeddings || false;
 
+    // update filter to include embeddings, as they will be used in MMR
+    const filterAndSearchOptions = {
+      ...options.filter,
+      includeEmbeddings: true,
+    };
+
     const resultDocs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
       options.fetchK ?? 20,
-      options.filter,
-      { includeEmbeddings: true }
+      filterAndSearchOptions
     );
 
     const embeddingList = resultDocs.map(
