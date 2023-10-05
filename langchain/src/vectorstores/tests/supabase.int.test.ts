@@ -40,6 +40,45 @@ test("SupabaseVectorStore with external ids", async () => {
   ]);
 });
 
+test("Search SupabaseVectorStore and include embeddings", async () => {
+  const client = createClient(
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+  );
+
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new SupabaseVectorStore(embeddings, { client });
+
+  expect(store).toBeDefined();
+
+  const createdAt = new Date().getTime();
+
+  const documents = [
+    new Document({
+      pageContent: createdAt.toString(),
+      metadata: { a: createdAt },
+    }),
+  ];
+  // OpenAI embeddings are not deterministic, so we have to calculate the embedding once for the whole test
+  const embedded = await embeddings.embedDocuments(
+    documents.map((doc) => doc.pageContent)
+  );
+
+  await store.addVectors(embedded, documents);
+
+  const results = await store.similaritySearchVectorWithScore(embedded[0], 1, {
+    includeEmbeddings: true,
+  });
+
+  expect(results).toHaveLength(1);
+
+  // Need to convert to JSON in order to avoid jest distinguishing between -0 and 0
+  expect(results[0][0].metadata.embedding).toEqual(
+    JSON.parse(JSON.stringify(embedded[0]))
+  );
+});
+
 test("Search a SupabaseVectorStore using a metadata filter", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
