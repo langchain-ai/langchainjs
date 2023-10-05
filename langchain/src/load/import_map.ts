@@ -56,8 +56,10 @@ export * as retrievers__document_compressors from "../retrievers/document_compre
 export * as retrievers__multi_query from "../retrievers/multi_query.js";
 export * as retrievers__multi_vector from "../retrievers/multi_vector.js";
 export * as retrievers__parent_document from "../retrievers/parent_document.js";
+export * as retrievers__tavily_search_api from "../retrievers/tavily_search_api.js";
 export * as retrievers__time_weighted from "../retrievers/time_weighted.js";
 export * as retrievers__document_compressors__chain_extract from "../retrievers/document_compressors/chain_extract.js";
+export * as retrievers__document_compressors__embeddings_filter from "../retrievers/document_compressors/embeddings_filter.js";
 export * as retrievers__hyde from "../retrievers/hyde.js";
 export * as retrievers__score_threshold from "../retrievers/score_threshold.js";
 export * as retrievers__vespa from "../retrievers/vespa.js";

@@ -200,9 +200,12 @@ const entrypoints = {
   "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
+  "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
+  "retrievers/document_compressors/embeddings_filter":
+    "retrievers/document_compressors/embeddings_filter",
   "retrievers/hyde": "retrievers/hyde",
   "retrievers/score_threshold": "retrievers/score_threshold",
   "retrievers/self_query": "retrievers/self_query/index",
