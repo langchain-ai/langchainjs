@@ -27,7 +27,7 @@ export const run = async () => {
 
   const resultOne = await vectorStore.maxMarginalRelevanceSearch(
     "Hello world",
-    1
+    { k: 1 },
   );
 
   console.log(resultOne);
