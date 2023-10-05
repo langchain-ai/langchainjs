@@ -1,4 +1,3 @@
-
 # Google MakerSuite
 
 Google's [MakerSuite](https://makersuite.google.com/) is a web-based playground
@@ -7,7 +6,7 @@ Google PaLM API and model. These prompts include the text, which may include
 "test input" that act as template parameters, and parameters for the model
 including the model name, temperature, etc.
 
-LangChainJS provides the `MakerSuiteHub` class which lets you pull this prompt
+LangChain.js provides the `MakerSuiteHub` class which lets you pull this prompt
 from Google Drive, where they are saved. Once pulled, you can convert the prompt
 into a LangChain Template, an LLM Model, or a chain that combines the two. This
 hub class has a simple time-based in-memory cache of prompts, so it is not always
@@ -20,8 +19,8 @@ other developers.
 ## Setup
 
 You do not need any additional packages beyond those that are required for
-either the Google PaLM [text](../../modules/model_io/models/llms/integrations/google_palm)
-or [chat](../../modules/model_io/models/chat/integrations/google_palm) model:
+either the Google PaLM [text](/docs/modules/model_io/models/llms/integrations/google_palm)
+or [chat](/docs/modules/model_io/models/chat/integrations/google_palm) model:
 
 ```bash npm2yarn
 npm install google-auth-library @google-ai/generativelanguage
