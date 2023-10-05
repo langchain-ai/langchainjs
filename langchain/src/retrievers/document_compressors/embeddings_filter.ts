@@ -75,9 +75,7 @@ export class EmbeddingsFilter extends BaseDocumentCompressor {
 
     if (this.similarityThreshold !== undefined) {
       const threshold = this.similarityThreshold;
-      includedIdxs = includedIdxs.filter(
-        (i) => similarity[i] > threshold
-      );
+      includedIdxs = includedIdxs.filter((i) => similarity[i] > threshold);
     }
 
     return includedIdxs.map((i) => documents[i]);
