@@ -255,10 +255,18 @@ export class SupabaseVectorStore extends VectorStore {
     const includeEmbeddingsFlag = options?.includeEmbeddings || false;
 
     // update filter to include embeddings, as they will be used in MMR
-    const filterAndSearchOptions = {
-      ...options.filter,
-      includeEmbeddings: true,
-    };
+    let filterAndSearchOptions
+    if (typeof options.filter === "function") {
+      // Create a new function, in order to not modify the function passed from the outside
+      filterAndSearchOptions = (rpcCall: SupabaseFilter) => options.filter(rpcCall);
+      filterAndSearchOptions.includeEmbeddings = true;
+    } else {
+      // Shallow clone the filter, in order to not modify the object passed from the outside
+      filterAndSearchOptions = {
+        ...options.filter,
+        includeEmbeddings: true,
+      };
+    }
 
     const resultDocs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
