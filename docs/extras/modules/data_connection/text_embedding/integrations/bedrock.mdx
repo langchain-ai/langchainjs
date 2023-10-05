@@ -23,7 +23,13 @@ The `BedrockEmbeddings` class uses the AWS Bedrock API to generate embeddings fo
 ```typescript
 import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 
-const embeddings = new BedrockEmbeddings();
+const embeddings = new BedrockEmbeddings({
+  region: process.env.BEDROCK_AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+  },
+});
 ```
 
 ## Configuring the Bedrock Runtime Client
@@ -32,6 +38,7 @@ You can pass in your own instance of the `BedrockRuntimeClient` if you want to c
 `credentials`, `region`, `retryPolicy`, etc.
 
 ```typescript
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 
 const client = new BedrockRuntimeClient({

@@ -1,20 +1,38 @@
+/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { expect, test } from "@jest/globals";
 
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 import { BedrockEmbeddings } from "../bedrock.js";
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 
-test.skip("Test BedrockEmbeddings.embedQuery", async () => {
+const client = new BedrockRuntimeClient({
+  region: process.env.BEDROCK_AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+  },
+});
+
+test("Test BedrockEmbeddings.embedQuery", async () => {
   const embeddings = new BedrockEmbeddings({
     maxRetries: 1,
+    client,
   });
   const res = await embeddings.embedQuery("Hello world");
   console.log(res);
   expect(typeof res[0]).toBe("number");
 });
 
-test.skip("Test BedrockEmbeddings.embedDocuments", async () => {
+test("Test BedrockEmbeddings.embedDocuments with passed region and credentials", async () => {
   const embeddings = new BedrockEmbeddings({
     maxRetries: 1,
+    region: process.env.BEDROCK_AWS_REGION!,
+    credentials: {
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+    },
   });
   const res = await embeddings.embedDocuments([
     "Hello world",
@@ -31,12 +49,13 @@ test.skip("Test BedrockEmbeddings.embedDocuments", async () => {
   });
 });
 
-test.skip("Test end to end with HNSWLib", async () => {
+test("Test end to end with HNSWLib", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new BedrockEmbeddings({
       maxRetries: 1,
+      client,
     })
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);

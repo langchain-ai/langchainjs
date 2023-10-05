@@ -4,6 +4,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 
 import { Embeddings, EmbeddingsParams } from "./base.js";
+import type { CredentialType } from "../util/bedrock.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -14,13 +15,17 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
    * Model Name to use. Defaults to `amazon.titan-embed-text-v1` if not provided
    *
    */
-  modelName?: string;
+  model?: string;
 
   /**
    * A client provided by the user that allows them to customze any
    * SDK configuration options.
    */
   client?: BedrockRuntimeClient;
+
+  region?: string;
+
+  credentials?: CredentialType;
 }
 
 /**
@@ -31,16 +36,21 @@ export class BedrockEmbeddings
   extends Embeddings
   implements BedrockEmbeddingsParams
 {
-  modelName: string;
+  model: string;
 
   client: BedrockRuntimeClient;
 
   constructor(fields?: BedrockEmbeddingsParams) {
     super(fields ?? {});
 
-    this.modelName = fields?.modelName ?? "amazon.titan-embed-text-v1";
+    this.model = fields?.model ?? "amazon.titan-embed-text-v1";
 
-    this.client = fields?.client ?? new BedrockRuntimeClient();
+    this.client =
+      fields?.client ??
+      new BedrockRuntimeClient({
+        region: fields?.region,
+        credentials: fields?.credentials,
+      });
   }
 
   protected async _embedText(text: string): Promise<number[]> {
@@ -49,7 +59,7 @@ export class BedrockEmbeddings
 
     const res = await this.client.send(
       new InvokeModelCommand({
-        modelId: this.modelName,
+        modelId: this.model,
         body: JSON.stringify({
           inputText: cleanedText,
         }),
