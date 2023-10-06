@@ -45,7 +45,6 @@ export interface SupabaseLibArgs {
   client: SupabaseClient;
   tableName?: string;
   queryName?: string;
-  queryWithEmbeddingsName?: string;
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
   searchOptions?: SearchOptions;
   upsertBatchSize?: number;
