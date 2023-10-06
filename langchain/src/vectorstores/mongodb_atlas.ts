@@ -102,19 +102,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     k: number,
     filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
-    let preFilter: MongoDBDocument | undefined;
-    let postFilterPipeline: MongoDBDocument[] | undefined;
-    let includeEmbeddings: boolean | undefined;
-    if (
-      filter?.preFilter ||
-      filter?.postFilterPipeline ||
-      filter?.includeEmbeddings
-    ) {
-      preFilter = filter.preFilter;
-      postFilterPipeline = filter.postFilterPipeline;
-      includeEmbeddings = filter.includeEmbeddings || false;
-    } else preFilter = filter;
-
+    const postFilterPipeline = filter?.postFilterPipeline ?? [];
+    const preFilter: MongoDBDocument | undefined = filter?.preFilter || filter?.postFilterPipeline || filter?.includeEmbeddings
+      ? filter.preFilter
+      : filter;
+    const removeEmbeddingsPipeline = !filter?.includeEmbeddings ? [{
+      $project: {
+        [this.embeddingKey]: 0,
+      },
+    }] : []
 
     const pipeline: MongoDBDocument[] = [
       {
@@ -132,29 +128,16 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
           score: { $meta: "vectorSearchScore" },
         },
       },
+      ...removeEmbeddingsPipeline,
+      ...postFilterPipeline
     ];
 
-    if (!includeEmbeddings) {
-      const removeEmbeddingsStage = {
-        $project: {
-          [this.embeddingKey]: 0,
-        },
-      };
-      pipeline.push(removeEmbeddingsStage);
-    }
-
-    if (postFilterPipeline) {
-      pipeline.push(...postFilterPipeline);
-    }
-    const results = this.collection.aggregate(pipeline);
-
-    const ret: [Document, number][] = [];
-    for await (const result of results) {
+    const results = this.collection.aggregate(pipeline).map<[Document, number]>((result) => {
       const { score, [this.textKey]: text, ...metadata } = result;
-      ret.push([new Document({ pageContent: text, metadata }), score]);
-    }
+      return [new Document({ pageContent: text, metadata }), score];
+    });
 
-    return ret;
+    return results.toArray();
   }
 
   /**
