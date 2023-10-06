@@ -484,6 +484,9 @@
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
+    "retrievers/chaindesk.cjs",
+    "retrievers/chaindesk.js",
+    "retrievers/chaindesk.d.ts",
     "retrievers/databerry.cjs",
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
@@ -1961,6 +1964,11 @@
       "types": "./retrievers/metal.d.ts",
       "import": "./retrievers/metal.js",
       "require": "./retrievers/metal.cjs"
+    },
+    "./retrievers/chaindesk": {
+      "types": "./retrievers/chaindesk.d.ts",
+      "import": "./retrievers/chaindesk.js",
+      "require": "./retrievers/chaindesk.cjs"
     },
     "./retrievers/databerry": {
       "types": "./retrievers/databerry.d.ts",

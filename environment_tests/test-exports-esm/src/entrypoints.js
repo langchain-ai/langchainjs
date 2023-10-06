@@ -49,6 +49,7 @@ import * as schema_storage from "langchain/schema/storage";
 import * as callbacks from "langchain/callbacks";
 import * as output_parsers from "langchain/output_parsers";
 import * as retrievers_remote from "langchain/retrievers/remote";
+import * as retrievers_chaindesk from "langchain/retrievers/chaindesk";
 import * as retrievers_databerry from "langchain/retrievers/databerry";
 import * as retrievers_contextual_compression from "langchain/retrievers/contextual_compression";
 import * as retrievers_document_compressors from "langchain/retrievers/document_compressors";

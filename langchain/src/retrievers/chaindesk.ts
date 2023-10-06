@@ -1,8 +1,10 @@
-import { BaseRetriever } from "../schema/retriever.js";
+import { BaseRetriever, type BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
-import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { AsyncCaller, type AsyncCallerParams } from "../util/async_caller.js";
 
-export interface ChaindeskRetrieverArgs extends AsyncCallerParams {
+export interface ChaindeskRetrieverArgs
+  extends AsyncCallerParams,
+    BaseRetrieverInput {
   datastoreId: string;
   topK?: number;
   apiKey?: string;
