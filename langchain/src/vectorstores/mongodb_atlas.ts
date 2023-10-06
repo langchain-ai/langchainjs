@@ -102,12 +102,6 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     k: number,
     filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
-    const knnBeta: MongoDBDocument = {
-      vector: query,
-      path: this.embeddingKey,
-      k,
-    };
-
     let preFilter: MongoDBDocument | undefined;
     let postFilterPipeline: MongoDBDocument[] | undefined;
     let includeEmbeddings: boolean | undefined;
@@ -121,19 +115,21 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       includeEmbeddings = filter.includeEmbeddings || false;
     } else preFilter = filter;
 
-    if (preFilter) {
-      knnBeta.filter = preFilter;
-    }
+
     const pipeline: MongoDBDocument[] = [
       {
-        $search: {
+        $vectorSearch: {
+          queryVector: query,
           index: this.indexName,
-          knnBeta,
-        },
+          path: this.embeddingKey,
+          limit: k,
+          numCandidates: 10 * k,
+          ...(preFilter && { filter: preFilter })
+        }
       },
       {
         $set: {
-          score: { $meta: "searchScore" },
+          score: { $meta: "vectorSearchScore" },
         },
       },
     ];

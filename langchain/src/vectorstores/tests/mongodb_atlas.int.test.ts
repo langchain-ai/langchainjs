@@ -16,6 +16,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 {
   "mappings": {
     "fields": {
+      "e": { "type": "number" },
       "embedding": {
         "dimensions": 1536,
         "similarity": "euclidean",
@@ -67,7 +68,7 @@ test("MongoDBAtlasVectorSearch with external ids", async () => {
 
     // we can pre filter the search
     const preFilter = {
-      range: { lte: 1, path: "e" },
+      e: { $lte: 1 },
     };
 
     const filteredResults = await vectorStore.similaritySearch(
