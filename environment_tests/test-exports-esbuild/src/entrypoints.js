@@ -56,8 +56,10 @@ import * as retrievers_document_compressors from "langchain/retrievers/document_
 import * as retrievers_multi_query from "langchain/retrievers/multi_query";
 import * as retrievers_multi_vector from "langchain/retrievers/multi_vector";
 import * as retrievers_parent_document from "langchain/retrievers/parent_document";
+import * as retrievers_tavily_search_api from "langchain/retrievers/tavily_search_api";
 import * as retrievers_time_weighted from "langchain/retrievers/time_weighted";
 import * as retrievers_document_compressors_chain_extract from "langchain/retrievers/document_compressors/chain_extract";
+import * as retrievers_document_compressors_embeddings_filter from "langchain/retrievers/document_compressors/embeddings_filter";
 import * as retrievers_hyde from "langchain/retrievers/hyde";
 import * as retrievers_score_threshold from "langchain/retrievers/score_threshold";
 import * as retrievers_vespa from "langchain/retrievers/vespa";

@@ -1252,6 +1252,10 @@ export class RunnableMap<RunInput> extends Runnable<
     }
   }
 
+  static from<RunInput>(steps: Record<string, RunnableLike<RunInput>>) {
+    return new RunnableMap<RunInput>({ steps });
+  }
+
   async invoke(
     input: RunInput,
     options?: Partial<BaseCallbackConfig>

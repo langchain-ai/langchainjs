@@ -25,6 +25,7 @@ const entrypoints = {
   "tools/calculator": "tools/calculator",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
+  "tools/google_calendar": "tools/google_calendar/index",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
@@ -35,6 +36,7 @@ const entrypoints = {
   "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   // embeddings
   "embeddings/base": "embeddings/base",
+  "embeddings/bedrock": "embeddings/bedrock",
   "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
   "embeddings/fake": "embeddings/fake",
@@ -199,9 +201,12 @@ const entrypoints = {
   "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
+  "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
+  "retrievers/document_compressors/embeddings_filter":
+    "retrievers/document_compressors/embeddings_filter",
   "retrievers/hyde": "retrievers/hyde",
   "retrievers/score_threshold": "retrievers/score_threshold",
   "retrievers/self_query": "retrievers/self_query/index",
@@ -255,6 +260,8 @@ const entrypoints = {
     "experimental/chat_models/bittensor",
   "experimental/llms/bittensor":
     "experimental/llms/bittensor",
+  "experimental/hubs/makersuite/googlemakersuitehub":
+    "experimental/hubs/makersuite/googlemakersuitehub",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -282,10 +289,12 @@ const requiresOptionalDependency = [
   "tools/calculator",
   "tools/sql",
   "tools/webbrowser",
+  "tools/google_calendar",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
   "chains/graph_qa/cypher",
+  "embeddings/bedrock",
   "embeddings/cloudflare_workersai",
   "embeddings/cohere",
   "embeddings/googlevertexai",
@@ -411,6 +420,7 @@ const requiresOptionalDependency = [
   "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
+  "experimental/hubs/makersuite/googlemakersuitehub",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

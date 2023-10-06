@@ -81,12 +81,17 @@
   right: 0.25rem;
   top: 5px;
   content: "Node-only";
-  background: #026e00;
-  color: #fff;
+  color: #026e00;
+  border: 1px solid #026e00;
   border-radius: 0.25rem;
   padding: 0 0.25rem;
   pointer-events: none;
   font-size: 0.85rem;
+}
+
+[data-theme='dark'] .node-only::after {
+  background: #026e00;
+  color: #fff;
 }
 
 .node-only-category {
@@ -98,12 +103,17 @@
   right: 2.5rem;
   top: 5px;
   content: "Node-only";
-  background: #026e00;
-  color: #fff;
+  color: #026e00;
+  border: 1px solid #026e00;
   border-radius: 0.25rem;
   padding: 0 0.25rem;
   pointer-events: none;
   font-size: 0.85rem;
+}
+
+[data-theme='dark'] .node-only-category::after {
+  background: #026e00;
+  color: #fff;
 }
 
 .theme-doc-sidebar-item-category > div > a {

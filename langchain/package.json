@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.157",
+  "version": "0.0.160",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -52,6 +52,9 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/google_calendar.cjs",
+    "tools/google_calendar.js",
+    "tools/google_calendar.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -76,6 +79,9 @@
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
+    "embeddings/bedrock.cjs",
+    "embeddings/bedrock.js",
+    "embeddings/bedrock.d.ts",
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
@@ -505,12 +511,18 @@
     "retrievers/parent_document.cjs",
     "retrievers/parent_document.js",
     "retrievers/parent_document.d.ts",
+    "retrievers/tavily_search_api.cjs",
+    "retrievers/tavily_search_api.js",
+    "retrievers/tavily_search_api.d.ts",
     "retrievers/time_weighted.cjs",
     "retrievers/time_weighted.js",
     "retrievers/time_weighted.d.ts",
     "retrievers/document_compressors/chain_extract.cjs",
     "retrievers/document_compressors/chain_extract.js",
     "retrievers/document_compressors/chain_extract.d.ts",
+    "retrievers/document_compressors/embeddings_filter.cjs",
+    "retrievers/document_compressors/embeddings_filter.js",
+    "retrievers/document_compressors/embeddings_filter.d.ts",
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
@@ -673,6 +685,7 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
@@ -697,7 +710,7 @@
     "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
@@ -753,6 +766,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -799,6 +813,7 @@
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
@@ -819,7 +834,7 @@
     "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
-    "@pinecone-database/pinecone": "*",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
@@ -849,6 +864,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -884,6 +900,9 @@
   },
   "peerDependenciesMeta": {
     "@aws-crypto/sha256-js": {
+      "optional": true
+    },
+    "@aws-sdk/client-bedrock-runtime": {
       "optional": true
     },
     "@aws-sdk/client-dynamodb": {
@@ -1036,6 +1055,9 @@
     "google-auth-library": {
       "optional": true
     },
+    "googleapis": {
+      "optional": true
+    },
     "hnswlib-node": {
       "optional": true
     },
@@ -1154,7 +1176,7 @@
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.21.4",
+    "zod": "^3.22.3",
     "zod-to-json-schema": "^3.20.4"
   },
   "publishConfig": {
@@ -1245,6 +1267,11 @@
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
     },
+    "./tools/google_calendar": {
+      "types": "./tools/google_calendar.d.ts",
+      "import": "./tools/google_calendar.js",
+      "require": "./tools/google_calendar.cjs"
+    },
     "./chains": {
       "types": "./chains.d.ts",
       "import": "./chains.js",
@@ -1284,6 +1311,11 @@
       "types": "./embeddings/base.d.ts",
       "import": "./embeddings/base.js",
       "require": "./embeddings/base.cjs"
+    },
+    "./embeddings/bedrock": {
+      "types": "./embeddings/bedrock.d.ts",
+      "import": "./embeddings/bedrock.js",
+      "require": "./embeddings/bedrock.cjs"
     },
     "./embeddings/cache_backed": {
       "types": "./embeddings/cache_backed.d.ts",
@@ -2000,6 +2032,11 @@
       "import": "./retrievers/parent_document.js",
       "require": "./retrievers/parent_document.cjs"
     },
+    "./retrievers/tavily_search_api": {
+      "types": "./retrievers/tavily_search_api.d.ts",
+      "import": "./retrievers/tavily_search_api.js",
+      "require": "./retrievers/tavily_search_api.cjs"
+    },
     "./retrievers/time_weighted": {
       "types": "./retrievers/time_weighted.d.ts",
       "import": "./retrievers/time_weighted.js",
@@ -2009,6 +2046,11 @@
       "types": "./retrievers/document_compressors/chain_extract.d.ts",
       "import": "./retrievers/document_compressors/chain_extract.js",
       "require": "./retrievers/document_compressors/chain_extract.cjs"
+    },
+    "./retrievers/document_compressors/embeddings_filter": {
+      "types": "./retrievers/document_compressors/embeddings_filter.d.ts",
+      "import": "./retrievers/document_compressors/embeddings_filter.js",
+      "require": "./retrievers/document_compressors/embeddings_filter.cjs"
     },
     "./retrievers/hyde": {
       "types": "./retrievers/hyde.d.ts",
