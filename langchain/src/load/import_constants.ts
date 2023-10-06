@@ -139,4 +139,5 @@ export const optionalImportEntrypoints = [
   "langchain/experimental/multimodal_embeddings/googlevertexai",
   "langchain/experimental/chat_models/anthropic_functions",
   "langchain/experimental/llms/bittensor",
+  "langchain/experimental/hubs/makersuite/googlemakersuitehub",
 ];

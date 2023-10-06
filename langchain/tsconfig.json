@@ -246,6 +246,7 @@
       "src/experimental/chat_models/anthropic_functions.ts",
       "src/experimental/chat_models/bittensor.ts",
       "src/experimental/llms/bittensor.ts",
+      "src/experimental/hubs/makersuite/googlemakersuitehub.ts",
       "src/evaluation/index.ts"
     ],
     "sort": [

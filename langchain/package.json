@@ -652,6 +652,9 @@
     "experimental/llms/bittensor.cjs",
     "experimental/llms/bittensor.js",
     "experimental/llms/bittensor.d.ts",
+    "experimental/hubs/makersuite/googlemakersuitehub.cjs",
+    "experimental/hubs/makersuite/googlemakersuitehub.js",
+    "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -2266,6 +2269,11 @@
       "types": "./experimental/llms/bittensor.d.ts",
       "import": "./experimental/llms/bittensor.js",
       "require": "./experimental/llms/bittensor.cjs"
+    },
+    "./experimental/hubs/makersuite/googlemakersuitehub": {
+      "types": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+      "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
+      "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
