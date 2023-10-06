@@ -640,6 +640,9 @@ experimental/chat_models/bittensor.d.ts
 experimental/llms/bittensor.cjs
 experimental/llms/bittensor.js
 experimental/llms/bittensor.d.ts
+experimental/hubs/makersuite/googlemakersuitehub.cjs
+experimental/hubs/makersuite/googlemakersuitehub.js
+experimental/hubs/makersuite/googlemakersuitehub.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

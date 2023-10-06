@@ -415,6 +415,9 @@ export interface OptionalImportMap {
   "langchain/experimental/llms/bittensor"?:
     | typeof import("../experimental/llms/bittensor.js")
     | Promise<typeof import("../experimental/llms/bittensor.js")>;
+  "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
+    | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
+    | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
 }
 
 export interface SecretMap {
