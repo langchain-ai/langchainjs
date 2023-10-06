@@ -2,6 +2,7 @@
 // Replace with "string" when we are comfortable with a breaking change.
 
 import { BaseCallbackConfig } from "../callbacks/manager.js";
+import { getBufferString } from "../memory/base.js";
 import {
   AIMessage,
   BaseMessage,
@@ -105,7 +106,7 @@ export class ChatPromptValue extends BasePromptValue {
   }
 
   toString() {
-    return JSON.stringify(this.messages);
+    return getBufferString(this.messages);
   }
 
   toChatMessages() {
