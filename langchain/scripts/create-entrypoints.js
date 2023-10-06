@@ -194,6 +194,7 @@ const entrypoints = {
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/zep": "retrievers/zep",
   "retrievers/metal": "retrievers/metal",
+  "retrievers/chaindesk": "retrievers/chaindesk",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",

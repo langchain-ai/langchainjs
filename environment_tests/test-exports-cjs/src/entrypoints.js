@@ -49,6 +49,7 @@ const schema_storage = require("langchain/schema/storage");
 const callbacks = require("langchain/callbacks");
 const output_parsers = require("langchain/output_parsers");
 const retrievers_remote = require("langchain/retrievers/remote");
+const retrievers_chaindesk = require("langchain/retrievers/chaindesk");
 const retrievers_databerry = require("langchain/retrievers/databerry");
 const retrievers_contextual_compression = require("langchain/retrievers/contextual_compression");
 const retrievers_document_compressors = require("langchain/retrievers/document_compressors");

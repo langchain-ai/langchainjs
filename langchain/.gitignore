@@ -478,6 +478,9 @@ retrievers/zep.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
+retrievers/chaindesk.cjs
+retrievers/chaindesk.js
+retrievers/chaindesk.d.ts
 retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts

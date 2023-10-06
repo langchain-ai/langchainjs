@@ -50,6 +50,7 @@ export * as schema__storage from "../schema/storage.js";
 export * as callbacks from "../callbacks/index.js";
 export * as output_parsers from "../output_parsers/index.js";
 export * as retrievers__remote from "../retrievers/remote/index.js";
+export * as retrievers__chaindesk from "../retrievers/chaindesk.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";
 export * as retrievers__contextual_compression from "../retrievers/contextual_compression.js";
 export * as retrievers__document_compressors from "../retrievers/document_compressors/index.js";

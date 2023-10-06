@@ -192,6 +192,7 @@
       "src/retrievers/supabase.ts",
       "src/retrievers/zep.ts",
       "src/retrievers/metal.ts",
+      "src/retrievers/chaindesk.ts",
       "src/retrievers/databerry.ts",
       "src/retrievers/contextual_compression.ts",
       "src/retrievers/document_compressors/index.ts",
