@@ -55,6 +55,14 @@ export type BaseChatModelParams = BaseLanguageModelParams;
 export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 
 /**
+ * Represents the token usaege of a collection of BaseMessages.
+ */
+export type ChatMessageTokenUsage = {
+  totalCount: number;
+  countPerMessage: number[];
+};
+
+/**
  * Creates a transform stream for encoding chat message chunks.
  * @deprecated Use {@link BytesOutputParser} instead
  * @returns A TransformStream instance that encodes chat message chunks.
@@ -474,6 +482,24 @@ export abstract class BaseChatModel<
     const message = new HumanMessage(text);
     const result = await this.call([message], options, callbacks);
     return result.content;
+  }
+
+  /**
+   * Estimates the token usage of a collection of messages. Override to
+   * provide LLM specific chat message token counting logic.
+   *
+   * @param messages An array of BaseMessage instances.
+   * @returns A promise that resolves to a ChatMessageTokenUsage
+   */
+  async getNumTokensFromMessages(
+    messages: BaseMessage[]
+  ): Promise<ChatMessageTokenUsage> {
+    // Assume token usage of a message is the token number of its content.
+    const countPerMessage = await Promise.all(
+      messages.map((msg) => this.getNumTokens(msg.content))
+    );
+    const totalCount = countPerMessage.reduce((a, b) => a + b);
+    return { totalCount, countPerMessage };
   }
 }
 

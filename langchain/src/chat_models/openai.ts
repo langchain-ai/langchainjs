@@ -1,6 +1,5 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 
-import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
   AIMessage,
@@ -470,7 +469,19 @@ export class ChatOpenAI<
       const generations = Object.entries(finalChunks)
         .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
         .map(([_, value]) => value);
-      return { generations };
+
+      const promptTokenUsage = (await this.getNumTokensFromMessages(messages))
+        .totalCount;
+      const completionTokenUsage = (
+        await Promise.all(
+          generations.map((gen) => this.getNumTokens(gen.message.content))
+        )
+      ).reduce((a, b) => a + b);
+
+      tokenUsage.promptTokens = promptTokenUsage;
+      tokenUsage.completionTokens = completionTokenUsage;
+      tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
+      return { generations, llmOutput: { tokenUsage } };
     } else {
       const data = await this.completionWithRetry(
         {
@@ -523,19 +534,16 @@ export class ChatOpenAI<
     }
   }
 
-  async getNumTokensFromMessages(messages: BaseMessage[]): Promise<{
-    totalCount: number;
-    countPerMessage: number[];
-  }> {
+  override async getNumTokensFromMessages(messages: BaseMessage[]) {
     let totalCount = 0;
     let tokensPerMessage = 0;
     let tokensPerName = 0;
 
     // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
-    if (getModelNameForTiktoken(this.modelName) === "gpt-3.5-turbo") {
+    if (this.modelName === "gpt-3.5-turbo-0301") {
       tokensPerMessage = 4;
       tokensPerName = -1;
-    } else if (getModelNameForTiktoken(this.modelName).startsWith("gpt-4")) {
+    } else {
       tokensPerMessage = 3;
       tokensPerName = 1;
     }
