@@ -148,12 +148,9 @@
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
-    "llms/sagemaker_endpoint.cjs",
-    "llms/sagemaker_endpoint.js",
-    "llms/sagemaker_endpoint.d.ts",
-    "llms/sagemaker_endpoint_with_stream.cjs",
-    "llms/sagemaker_endpoint_with_stream.js",
-    "llms/sagemaker_endpoint_with_stream.d.ts",
+    "llms/sagemaker.cjs",
+    "llms/sagemaker.js",
+    "llms/sagemaker.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -1371,15 +1368,10 @@
       "import": "./llms/fireworks.js",
       "require": "./llms/fireworks.cjs"
     },
-    "./llms/sagemaker_endpoint": {
-      "types": "./llms/sagemaker_endpoint.d.ts",
-      "import": "./llms/sagemaker_endpoint.js",
-      "require": "./llms/sagemaker_endpoint.cjs"
-    },
-    "./llms/sagemaker_endpoint_with_stream": {
-      "types": "./llms/sagemaker_endpoint_with_stream.d.ts",
-      "import": "./llms/sagemaker_endpoint_with_stream.js",
-      "require": "./llms/sagemaker_endpoint_with_stream.cjs"
+    "./llms/sagemaker": {
+      "types": "./llms/sagemaker.d.ts",
+      "import": "./llms/sagemaker.js",
+      "require": "./llms/sagemaker.cjs"
     },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",

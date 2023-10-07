@@ -1,7 +1,7 @@
 import {
-  SageMakerEndpointWithStream,
-  SageMakerEndpointWithStreamLLMContentHandler,
-} from "langchain/llms/sagemaker_endpoint_with_stream";
+  SageMaker,
+  SageMakerLLMContentHandler,
+} from "langchain/llms/sagemaker";
 
 interface ResponseJsonInterface {
   generation: {
@@ -10,7 +10,7 @@ interface ResponseJsonInterface {
 }
 
 // Custom for whatever model you'll be using
-class LLama213BHandler implements SageMakerEndpointWithStreamLLMContentHandler {
+class LLama213BHandler implements SageMakerLLMContentHandler {
   contentType = "application/json";
 
   accepts = "application/json";
@@ -40,8 +40,8 @@ class LLama213BHandler implements SageMakerEndpointWithStreamLLMContentHandler {
 
 const contentHandler = new LLama213BHandler();
 
-const model = new SageMakerEndpointWithStream({
-  endpointName: 'aws-llama-2-13b-chat',
+const model = new SageMaker({
+  endpointName: "aws-llama-2-13b-chat",
   modelKwargs: {
     temperature: 0.5,
     max_new_tokens: 700,
@@ -60,14 +60,16 @@ const model = new SageMakerEndpointWithStream({
   },
 });
 
-const res = await model.call("Hello, my name is John Doe, tell me a joke about llamas ");
+const res = await model.call(
+  "Hello, my name is John Doe, tell me a joke about llamas "
+);
 
 console.log(res);
 
 /*
   [
     {
-      content: "Hello, Ivo! Here's a llama joke for you:
+      content: "Hello, John Doe! Here's a llama joke for you:
         Why did the llama become a gardener?
         Because it was great at llama-scaping!"
     }

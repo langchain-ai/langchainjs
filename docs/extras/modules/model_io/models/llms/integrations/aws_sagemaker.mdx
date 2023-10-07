@@ -1,6 +1,6 @@
-# AWS SageMakerEndpoint
+# AWS SageMakerEndpointWithStream
 
-LangChain.js supports integration with AWS SageMaker-hosted endpoints. Check [Amazon SageMaker JumpStart](https://aws.amazon.com/sagemaker/jumpstart/) for a list of available models, and how to deploy your own.
+LangChain.js supports integration with AWS SageMaker-hosted endpoints also using streams. Check [Amazon SageMaker JumpStart](https://aws.amazon.com/sagemaker/jumpstart/) for a list of available models, and how to deploy your own.
 
 Here's an example:
 
@@ -9,6 +9,6 @@ npm install @aws-sdk/client-sagemaker-runtime
 ```
 
 import CodeBlock from "@theme/CodeBlock";
-import SageMakerEndpointExample from "@examples/models/llm/sagemaker_endpoint.ts";
+import SageMakerExample from "@examples/models/llm/sagemaker.ts";
 
-<CodeBlock language="typescript">{SageMakerEndpointExample}</CodeBlock>
+<CodeBlock language="typescript">{SageMakerExample}</CodeBlock>

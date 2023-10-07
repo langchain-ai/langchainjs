@@ -1,69 +1,140 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect, test } from "@jest/globals";
-import { SageMakerLLMContentHandler, UnifiedSageMakerEndpoint } from "../sagemaker.js";
+import { SageMaker, SageMakerLLMContentHandler } from "../sagemaker.js";
 
-interface ResponseJsonInterface {
-  generation: {
-    content: string;
-  };
-}
+// yarn test:single /{path_to}/langchain/src/llms/tests/sagemaker.int.test.ts
+describe("Test SageMaker LLM", () => {
+  test("without streaming", async () => {
+    interface ResponseJsonInterface {
+      generation: {
+        content: string;
+      };
+    }
 
-class LLama213BHandler implements SageMakerLLMContentHandler {
-  contentType = "application/json";
+    class LLama213BHandler implements SageMakerLLMContentHandler {
+      contentType = "application/json";
 
-  accepts = "application/json";
+      accepts = "application/json";
 
-  async transformInput(
-    prompt: string,
-    modelKwargs: Record<string, unknown>
-  ): Promise<Uint8Array> {
-    const payload = {
-      inputs: [[{ role: "user", content: prompt }]],
-      parameters: modelKwargs,
-    };
-    const input_str = JSON.stringify(payload);
-    return new TextEncoder().encode(input_str);
-  }
+      async transformInput(
+        prompt: string,
+        modelKwargs: Record<string, unknown>
+      ): Promise<Uint8Array> {
+        const payload = {
+          inputs: [[{ role: "user", content: prompt }]],
+          parameters: modelKwargs,
+        };
 
-  async transformOutput(output: Uint8Array): Promise<string> {
-    const response_json = JSON.parse(
-      new TextDecoder("utf-8").decode(output)
-    ) as ResponseJsonInterface[];
-    const content = response_json[0]?.generation.content ?? "";
-    return content;
-  }
-}
+        const input_str = JSON.stringify(payload);
 
-// Requires a pre-configured sagemaker endpoint
-test("Test UnifiedSageMakerEndpoint with streaming", async () => {
-  const contentHandler = new LLama213BHandler();
-  const endpointName = "aws-llama-2-13b-chat";
+        return new TextEncoder().encode(input_str);
+      }
 
-  const model = new UnifiedSageMakerEndpoint({
-    endpointName,
-    streaming: true, // specify streaming
-    modelKwargs: {
-      temperature: 0.5,
-      max_new_tokens: 700,
-      top_p: 0.9,
-    },
-    endpointKwargs: {
-      CustomAttributes: "accept_eula=true",
-    },
-    contentHandler,
-    clientOptions: {
-      region: "us-east-1",
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      async transformOutput(output: Uint8Array): Promise<string> {
+        const response_json = JSON.parse(
+          new TextDecoder("utf-8").decode(output)
+        ) as ResponseJsonInterface[];
+        const content = response_json[0]?.generation.content ?? "";
+        return content;
+      }
+    }
+
+    const contentHandler = new LLama213BHandler();
+    const model = new SageMaker({
+      endpointName: "meta-textgeneration-llama-2-13b-f-2023-10-06-23-23-13-817",
+      streaming: false,
+      modelKwargs: {
+        temperature: 0.5,
+        max_new_tokens: 700,
+        top_p: 0.9,
       },
-    },
+      endpointKwargs: {
+        CustomAttributes: "accept_eula=true",
+      },
+      contentHandler,
+      clientOptions: {
+        region: "us-east-1",
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      },
+    });
+
+    const response = await model.call(
+      "hello, my name is John Doe, tell me a fun story about llamas in 3 paragraphs"
+    );
+
+    expect(response.length).toBeGreaterThan(0);
   });
 
-  const response = await model.call(
-    "hello, my name is ivo, tell me a fun story about llamas in 3 paragraphs"
-  );
+  test("with streaming", async () => {
+    interface ResponseJsonInterface {
+      generation: {
+        content: string;
+      };
+    }
 
-  expect(response.length).toBeGreaterThan(0);
+    class LLama213BHandler implements SageMakerLLMContentHandler {
+      contentType = "application/json";
+
+      accepts = "application/json";
+
+      async transformInput(
+        prompt: string,
+        modelKwargs: Record<string, unknown>
+      ): Promise<Uint8Array> {
+        const payload = {
+          inputs: [[{ role: "user", content: prompt }]],
+          parameters: modelKwargs,
+        };
+
+        const input_str = JSON.stringify(payload);
+
+        return new TextEncoder().encode(input_str);
+      }
+
+      async transformOutput(output: Uint8Array): Promise<string> {
+        const response_json = JSON.parse(
+          new TextDecoder("utf-8").decode(output)
+        ) as ResponseJsonInterface[];
+        const content = response_json[0]?.generation.content ?? "";
+        return content;
+      }
+    }
+
+    const contentHandler = new LLama213BHandler();
+    const model = new SageMaker({
+      endpointName: "meta-textgeneration-llama-2-13b-f-2023-10-06-23-23-13-817",
+      streaming: true, // specify streaming
+      modelKwargs: {
+        temperature: 0.5,
+        max_new_tokens: 700,
+        top_p: 0.9,
+      },
+      endpointKwargs: {
+        CustomAttributes: "accept_eula=true",
+      },
+      contentHandler,
+      clientOptions: {
+        region: "us-east-1",
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      },
+    });
+
+    const response = await model.call(
+      "hello, my name is John Doe, tell me a fun story about llamas in 3 paragraphs"
+    );
+
+    const chunks = [];
+    for await (const chunk of response) {
+      chunks.push(chunk);
+    }
+
+    expect(response.length).toBeGreaterThan(0);
+  });
 });
