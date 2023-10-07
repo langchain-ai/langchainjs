@@ -3,7 +3,7 @@ import {
   HierarchicalNSWT,
   CloseVectorHNSWLibArgs,
   CloseVectorDocument,
-  CloseVectorCredentials
+  CloseVectorCredentials,
 } from "closevector-node";
 
 import { Embeddings } from "../embeddings/base.js";
@@ -21,7 +21,8 @@ import { SaveableVectorStore } from "./base.js";
 /**
  * Arguments for creating a CloseVectorNode instance, extending CloseVectorHNSWLibArgs.
  */
-export interface CloseVectorNodeArgs extends CloseVectorHNSWLibArgs<HierarchicalNSWT> {
+export interface CloseVectorNodeArgs
+  extends CloseVectorHNSWLibArgs<HierarchicalNSWT> {
   instance?: CloseVectorHNSWNode;
 }
 
@@ -55,6 +56,12 @@ export class CloseVectorNode extends SaveableVectorStore {
       this.instance = new CloseVectorHNSWNode(embeddings, args);
     }
     this.credentials = credentials;
+    if (this.credentials?.key) {
+      this.instance.accessKey = this.credentials.key;
+    }
+    if (this.credentials?.secret) {
+      this.instance.secret = this.credentials.secret;
+    }
   }
 
   public get instance(): CloseVectorHNSWNode {
@@ -82,6 +89,20 @@ export class CloseVectorNode extends SaveableVectorStore {
   }
 
   /**
+   * Method to save the index to the CloseVector CDN.
+   * @param options
+   * @param options.description A description of the index.
+   * @param options.public Whether the index should be public or private. Defaults to false.
+   * @param options.uuid A UUID for the index. If not provided, a new index will be created.
+   * @param options.onProgress A callback function that will be called with the progress of the upload.
+   */
+  async saveToCloud(
+    options: Parameters<CloseVectorHNSWNode["saveToCloud"]>[0]
+  ) {
+    await this.instance.saveToCloud(options);
+  }
+
+  /**
    * Method to save the vector store to a directory. It saves the HNSW
    * index, the arguments, and the document store to the directory.
    * @param directory The directory to which to save the vector store.
@@ -89,6 +110,20 @@ export class CloseVectorNode extends SaveableVectorStore {
    */
   async save(directory: string): Promise<void> {
     await this.instance.save(directory);
+  }
+
+  /**
+   * Method to load the index from the CloseVector CDN.
+   * @param options
+   * @param options.uuid The UUID of the index to be downloaded.
+   * @param options.accessKey The access key of CloseVector API.
+   * @param options.secret The secret of CloseVector API.
+   * @param options.onProgress A callback function that will be called with the progress of the download.
+   */
+  static async loadFromCloud(
+    options: Parameters<(typeof CloseVectorHNSWNode)["loadFromCloud"]>[0]
+  ) {
+    return await CloseVectorHNSWNode.loadFromCloud(options);
   }
 
   /**
@@ -140,7 +175,7 @@ export class CloseVectorNode extends SaveableVectorStore {
       query,
       k,
       filter
-        ? (x: CloseVectorDocument<Record<string, any>>) =>
+        ? (x: CloseVectorDocument<Record<string, unknown>>) =>
             filter?.({
               pageContent: x.pageContent,
               metadata: x.metadata || {},
@@ -153,7 +188,7 @@ export class CloseVectorNode extends SaveableVectorStore {
         metadata: x[0].metadata || {},
       },
       x[1],
-    ]) as [Document<Record<string, any>>, number][];
+    ]) as [Document<Record<string, unknown>>, number][];
     return mapped;
   }
 
@@ -183,7 +218,7 @@ export class CloseVectorNode extends SaveableVectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    args?: Record<string, any>,
+    args?: Record<string, unknown>,
     credential?: CloseVectorCredentials
   ): Promise<CloseVectorNode> {
     const docs: Document[] = [];
@@ -198,7 +233,7 @@ export class CloseVectorNode extends SaveableVectorStore {
     return await CloseVectorNode.fromDocuments(
       docs,
       embeddings,
-      args as CloseVectorNodeArgs,
+      args,
       credential
     );
   }
@@ -216,15 +251,15 @@ export class CloseVectorNode extends SaveableVectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    args?: Record<string, any>,
+    args?: Record<string, unknown>,
     credentials?: CloseVectorCredentials
   ): Promise<CloseVectorNode> {
-    const _args: Record<string, any> = args || {
+    const _args: Record<string, unknown> = args || {
       space: "cosine",
     };
     const instance = new this(
       embeddings,
-      _args as CloseVectorNodeArgs,
+      _args as unknown as CloseVectorNodeArgs,
       credentials
     );
     await instance.addDocuments(docs);

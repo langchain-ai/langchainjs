@@ -193,6 +193,12 @@
     "vectorstores/cloudflare_vectorize.cjs",
     "vectorstores/cloudflare_vectorize.js",
     "vectorstores/cloudflare_vectorize.d.ts",
+    "vectorstores/closevector_web.cjs",
+    "vectorstores/closevector_web.js",
+    "vectorstores/closevector_web.d.ts",
+    "vectorstores/closevector_node.cjs",
+    "vectorstores/closevector_node.js",
+    "vectorstores/closevector_node.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
@@ -1518,6 +1524,16 @@
       "types": "./vectorstores/cloudflare_vectorize.d.ts",
       "import": "./vectorstores/cloudflare_vectorize.js",
       "require": "./vectorstores/cloudflare_vectorize.cjs"
+    },
+    "./vectorstores/closevector_web": {
+      "types": "./vectorstores/closevector_web.d.ts",
+      "import": "./vectorstores/closevector_web.js",
+      "require": "./vectorstores/closevector_web.cjs"
+    },
+    "./vectorstores/closevector_node": {
+      "types": "./vectorstores/closevector_node.d.ts",
+      "import": "./vectorstores/closevector_node.js",
+      "require": "./vectorstores/closevector_node.cjs"
     },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",
