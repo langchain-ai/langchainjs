@@ -1,38 +1,27 @@
-export class RemoteRunnable<
-  RunInput,
-  RunOutput,
-  CallOptions extends RunnableConfig
-> {}
-
-import { Runnable, RunnableConfig } from "langchain/schema/runnable";
-import { RunnableBatchOptions } from "./base.js";
+import { Runnable, RunnableBatchOptions } from "./base.js";
+import { RunnableConfig } from "./config.js";
+import { IterableReadableStream } from "../../util/stream.js";
+import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
 };
 
-function configWithoutCallbacks<T extends RunnableConfig>(
-  options: T
-): Omit<T, "callbacks"> {
-  const { callbacks, ...rest } = options;
+function withoutCallbacks(
+  options?: RunnableConfig
+): Omit<RunnableConfig, "callbacks"> {
+  const { callbacks, ...rest } = options ?? {};
   return rest;
 }
 
-function withoutCallbacks<T extends RunnableConfig>(
-  options?: T | T[]
-): Omit<T, "callbacks"> | Omit<T, "callbacks">[] {
-  if (Array.isArray(options)) {
-    return options.map(configWithoutCallbacks);
-  }
-  if (!options) {
-    return {} as Omit<T, "callbacks">;
-  }
-  return configWithoutCallbacks(options);
-}
-
-export class RemoteRunnable<Input, Output> extends Runnable<Input, Output> {
+export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
   private url: string;
   private options?: RemoteRunnableOptions;
+
+  lc_namespace = ["langchain", "schema", "runnable", "remote"];
 
   constructor(url: string, options?: RemoteRunnableOptions) {
     super();
@@ -44,54 +33,115 @@ export class RemoteRunnable<Input, Output> extends Runnable<Input, Output> {
     return fetch(`${this.url}${path}`, {
       method: "POST",
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(this.options?.timeout ?? 5000),
     });
   }
 
-  async invoke(input: Input, options?: RunnableConfig): Promise<Output> {
+  async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
     const response = await this.post<{
-      input: Input;
+      input: RunInput;
       config: RunnableConfig;
       kwargs: any;
     }>("/invoke", {
       input,
-      config: withoutCallbacks<RunnableConfig>(options) as RunnableConfig,
+      config: withoutCallbacks(options),
       kwargs: {},
     });
-    return response.body as Output;
+    return response.body as RunOutput;
   }
 
-  async batch(
-    inputs: Input[],
-    options?: RunnableConfig | RunnableConfig[],
+  async _batch(
+    inputs: RunInput[],
+    configs?: RunnableConfig[],
+    _?: (CallbackManagerForChainRun | undefined)[],
     batchOptions?: RunnableBatchOptions
-  ): Promise<Output[]> {
+  ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {
       throw new Error("returnExceptions is not supported for remote clients");
     }
     const response = await this.post<{
-      inputs: Input[];
-      config:
-        | (RunnableConfig & RunnableBatchOptions)
-        | (RunnableConfig & RunnableBatchOptions)[];
+      inputs: RunInput[];
+      config: (RunnableConfig & RunnableBatchOptions)[];
       kwargs: any;
     }>("/batch", {
       inputs,
-      config: withoutCallbacks({ ...options, ...batchOptions }),
+      config:
+        configs ??
+        []
+          .map(withoutCallbacks)
+          .map((config) => ({ ...config, ...batchOptions })),
       kwargs: {},
     });
-    return response.body as Output[];
+    const body = await response.json();
+
+    if (!body.output) throw new Error("Invalid response from remote runnable");
+
+    return JSON.parse(body.output);
   }
 
-  async *stream(input: Input, options?: RunnableConfig) {
-    const stream = this.client.stream("/stream", {
-      method: "POST",
-      body: {
-        input: input,
-        options: options,
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]> {
+    if (batchOptions?.returnExceptions) {
+      throw Error("returnExceptions is not supported for remote clients");
+    }
+    return this._batchWithConfig(this._batch, inputs, options, batchOptions);
+  }
+
+  async stream(
+    input: RunInput,
+    options?: RunnableConfig
+  ): Promise<IterableReadableStream<RunOutput>> {
+    const response = await this.post<{
+      input: RunInput;
+      options: RunnableConfig;
+    }>("/stream", {
+      input,
+      options: options ?? {},
+    });
+    if (!response.ok) {
+      const json = await response.json();
+      const error = new Error(
+        `RemoteRunnable call failed with status code ${response.status}: ${json.message}`
+      );
+      (error as any).response = response;
+      throw error;
+    }
+    if (!response.body) {
+      throw new Error(
+        "Could not begin LangServe stream. Please check the given URL and try again."
+      );
+    }
+    const decoder = new TextDecoder();
+    const { readable, writable } = new TransformStream<Uint8Array, RunOutput>({
+      transform: (chunk, controller) => {
+        const decoded = decoder.decode(chunk);
+        const parsed = JSON.parse(decoded);
+        controller.enqueue(JSON.parse(parsed.data));
       },
     });
-    for await (const chunk of stream) {
-      yield chunk;
-    }
+    response.body.pipeTo(writable);
+    const stream = IterableReadableStream.fromReadableStream(readable);
+    return stream;
   }
 }
