@@ -247,7 +247,6 @@ const entrypoints = {
   hub: "hub",
   // utilities
   "util/math": "util/math",
-  "util/stream": "util/stream",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",

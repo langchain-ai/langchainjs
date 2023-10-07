@@ -238,7 +238,6 @@
       "src/graphs/neo4j_graph.ts",
       "src/hub.ts",
       "src/util/math.ts",
-      "src/util/stream.ts",
       "src/experimental/autogpt/index.ts",
       "src/experimental/babyagi/index.ts",
       "src/experimental/generative_agents/index.ts",
