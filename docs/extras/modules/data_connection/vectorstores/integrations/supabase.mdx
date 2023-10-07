@@ -30,8 +30,7 @@ create table documents (
 create function match_documents (
   query_embedding vector(1536),
   match_count int DEFAULT null,
-  filter jsonb DEFAULT '{}',
-  include_embeddings boolean DEFAULT false
+  filter jsonb DEFAULT '{}'
 ) returns table (
   id bigint,
   content text,
@@ -46,7 +45,7 @@ begin
   select
     id,
     content,
-    (metadata || CASE WHEN include_embeddings THEN jsonb_build_object('embedding', (embedding::text)::jsonb) ELSE '{}'::jsonb END) as metadata,
+    (metadata || jsonb_build_object('embedding', (embedding::text)::jsonb)) as metadata,
     1 - (documents.embedding <=> query_embedding) as similarity
   from documents
   where metadata @> filter

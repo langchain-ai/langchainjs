@@ -22,7 +22,6 @@ test("similaritySearchVectorWithScore should call RPC with the vectorstore filte
     filter: { a: 2 },
     query_embedding: [1, 2, 3],
     match_count: 5,
-    include_embeddings: false,
   });
 });
 
@@ -43,6 +42,5 @@ test("similaritySearchVectorWithScore should call RPC with the passed filters", 
     filter: { b: 3 },
     query_embedding: [1, 2, 3],
     match_count: 5,
-    include_embeddings: false,
   });
 });

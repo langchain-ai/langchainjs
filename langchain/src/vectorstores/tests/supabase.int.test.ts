@@ -306,7 +306,10 @@ test("Search a SupabaseVectorStore with MMR and a functional metadata filter", a
         config: "english",
       });
 
-  const result = await store.maxMarginalRelevanceSearch("quantum", { k: 4, filter: funcFilter });
+  const result = await store.maxMarginalRelevanceSearch("quantum", {
+    k: 4,
+    filter: funcFilter,
+  });
 
   const gibberish = result.map((doc) => doc.pageContent);
   expect(gibberish).toEqual([docs[0].pageContent, docs[1].pageContent]);

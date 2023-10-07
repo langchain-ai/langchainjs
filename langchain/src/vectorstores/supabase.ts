@@ -12,7 +12,6 @@ interface SearchEmbeddingsParams {
   query_embedding: number[];
   match_count: number; // int
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
-  include_embeddings?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
@@ -186,7 +185,6 @@ export class SupabaseVectorStore extends VectorStore {
 
     const matchDocumentsParams: Partial<SearchEmbeddingsParams> = {
       query_embedding: query,
-      include_embeddings: searchOptions.includeEmbeddings,
     };
 
     let filterFunction: SupabaseFilterRPCCall;
@@ -217,13 +215,18 @@ export class SupabaseVectorStore extends VectorStore {
 
     const result: [Document, number][] = (
       searches as SearchEmbeddingsResponse[]
-    ).map((resp) => [
-      new Document({
-        metadata: resp.metadata,
-        pageContent: resp.content,
-      }),
-      resp.similarity,
-    ]);
+    ).map((resp) => {
+      const metadata = searchOptions.includeEmbeddings
+        ? resp.metadata
+        : { ...resp.metadata, [this.embeddingKey]: undefined };
+      return [
+        new Document({
+          metadata,
+          pageContent: resp.content,
+        }),
+        resp.similarity,
+      ];
+    });
 
     return result;
   }
