@@ -257,10 +257,11 @@ export class SupabaseVectorStore extends VectorStore {
     const includeEmbeddingsFlag = options?.includeEmbeddings || false;
 
     // update filter to include embeddings, as they will be used in MMR
-    let filterAndSearchOptions
+    let filterAndSearchOptions: this["FilterType"];
     if (typeof options.filter === "function") {
+      const _filter: SupabaseFilterRPCCall = options.filter;
       // Create a new function, in order to not modify the function passed from the outside
-      filterAndSearchOptions = (rpcCall: SupabaseFilter) => options.filter(rpcCall);
+      filterAndSearchOptions = (rpcCall: SupabaseFilter) => _filter(rpcCall);
       filterAndSearchOptions.includeEmbeddings = true;
     } else {
       // Shallow clone the filter, in order to not modify the object passed from the outside
