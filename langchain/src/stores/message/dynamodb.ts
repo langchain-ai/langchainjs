@@ -91,7 +91,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     sortKey,
     messageAttributeName,
     config,
-    key={},
+    key = {},
   }: DynamoDBChatMessageHistoryFields) {
     super();
 
