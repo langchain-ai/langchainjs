@@ -681,6 +681,7 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "test:web": "NODE_OPTIONS=--experimental-vm-modules yarn run vitest --config vitest.config.ts",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
@@ -754,6 +755,8 @@
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.15",
     "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -766,11 +769,13 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.3.0",
+    "fake-indexeddb": "^4.0.2",
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
+    "happy-dom": "^12.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -808,6 +813,7 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
+    "vitest": "^0.34.6",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
@@ -860,6 +866,8 @@
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.15",
     "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
@@ -1035,6 +1043,12 @@
       "optional": true
     },
     "chromadb": {
+      "optional": true
+    },
+    "closevector-node": {
+      "optional": true
+    },
+    "closevector-web": {
       "optional": true
     },
     "cohere-ai": {
