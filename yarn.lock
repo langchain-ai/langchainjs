@@ -4021,16 +4021,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/generated-types@npm:0.77.0":
-  version: 0.77.0
-  resolution: "@gomomento/generated-types@npm:0.77.0"
-  dependencies:
-    "@grpc/grpc-js": 1.9.0
-    google-protobuf: 3.21.2
-  checksum: a1405156f8c57d9271cd90dbb269ab3a0ea5e66ca3d88e6b08c7ca48623f6956f212f7e1d5d891d38893a4fd40121876da59b3d1a16d1208e1b3abcaa0eab69d
-  languageName: node
-  linkType: hard
-
 "@gomomento/generated-types@npm:0.84.0":
   version: 0.84.0
   resolution: "@gomomento/generated-types@npm:0.84.0"
@@ -4040,16 +4030,6 @@ __metadata:
     grpc-tools: ^1.12.4
     protoc-gen-ts: ^0.8.6
   checksum: 0a8cdfb92f8bba2eec14993c7b83037250142b5b42e913320be1644b0017ad288f91b86b04dec76481ac3d650cf839f34ef2b53c7b6a7dadf12b8cd27f2da6e9
-  languageName: node
-  linkType: hard
-
-"@gomomento/sdk-core@npm:1.40.2":
-  version: 1.40.2
-  resolution: "@gomomento/sdk-core@npm:1.40.2"
-  dependencies:
-    buffer: ^6.0.3
-    jwt-decode: 3.1.2
-  checksum: 9fbbda4b6f063b98d223a45c70869d2797d2d1a5b3cc5e9ea6d437f57a07f40e71dc68a12a27d3d8e644373e8ddc755b2b23aed5310574e30e40c2ce4e8bf8bd
   languageName: node
   linkType: hard
 
@@ -4063,21 +4043,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/sdk@npm:^1.40.2":
-  version: 1.40.2
-  resolution: "@gomomento/sdk@npm:1.40.2"
-  dependencies:
-    "@gomomento/generated-types": 0.77.0
-    "@gomomento/sdk-core": 1.40.2
-    "@grpc/grpc-js": 1.9.0
-    "@types/google-protobuf": 3.15.6
-    google-protobuf: 3.21.2
-    jwt-decode: 3.1.2
-  checksum: eb7084e77be871b333ba5773a22b364dd5c176bc7c8ac866cb061202596ba82f94cbc8ec08315b578e7ca6d06a28c7763e64d87119b10d091ed34d7c24cffd43
-  languageName: node
-  linkType: hard
-
-"@gomomento/sdk@npm:^1.41.2":
+"@gomomento/sdk@npm:^1.41.1, @gomomento/sdk@npm:^1.41.2":
   version: 1.41.2
   resolution: "@gomomento/sdk@npm:1.41.2"
   dependencies:
@@ -10186,7 +10152,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.7.0
-    "@gomomento/sdk": ^1.40.2
+    "@gomomento/sdk": ^1.41.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
