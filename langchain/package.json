@@ -628,6 +628,9 @@
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
+    "util/stream.cjs",
+    "util/stream.js",
+    "util/stream.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -2229,6 +2232,11 @@
       "types": "./util/math.d.ts",
       "import": "./util/math.js",
       "require": "./util/math.cjs"
+    },
+    "./util/stream": {
+      "types": "./util/stream.d.ts",
+      "import": "./util/stream.js",
+      "require": "./util/stream.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",

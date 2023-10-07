@@ -616,6 +616,9 @@ hub.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts
+util/stream.cjs
+util/stream.js
+util/stream.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts

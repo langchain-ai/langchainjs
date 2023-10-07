@@ -69,6 +69,7 @@ const stores_file_in_memory = require("langchain/stores/file/in_memory");
 const stores_message_in_memory = require("langchain/stores/message/in_memory");
 const storage_in_memory = require("langchain/storage/in_memory");
 const util_math = require("langchain/util/math");
+const util_stream = require("langchain/util/stream");
 const experimental_autogpt = require("langchain/experimental/autogpt");
 const experimental_babyagi = require("langchain/experimental/babyagi");
 const experimental_generative_agents = require("langchain/experimental/generative_agents");

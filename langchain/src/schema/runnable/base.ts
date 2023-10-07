@@ -1350,6 +1350,14 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     this.func = fields.func;
   }
 
+  static from<RunInput, RunOutput>(
+    func: RunnableFunc<RunInput, RunOutput>
+  ): RunnableLambda<RunInput, RunOutput> {
+    return new RunnableLambda({
+      func,
+    });
+  }
+
   async _invoke(
     input: RunInput,
     config?: Partial<BaseCallbackConfig>,
