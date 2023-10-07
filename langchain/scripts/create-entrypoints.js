@@ -78,6 +78,7 @@ const entrypoints = {
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
   "vectorstores/lancedb": "vectorstores/lancedb",
+  "vectorstores/momento-vector-index": "vectorstores/momento-vector-index",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -234,6 +235,7 @@ const entrypoints = {
   hub: "hub",
   // utilities
   "util/math": "util/math",
+  "util/time": "util/time",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -305,6 +307,7 @@ const requiresOptionalDependency = [
   "vectorstores/weaviate",
   "vectorstores/lancedb",
   "vectorstores/mongo",
+  "vectorstores/momento-vector-index",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",
   "vectorstores/qdrant",
