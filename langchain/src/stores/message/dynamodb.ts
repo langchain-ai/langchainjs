@@ -124,13 +124,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
       Key: this.dynamoKey,
     };
 
-    let response;
-    try {
-      response = await this.client.send(new GetItemCommand(params));
-    } catch (err) {
-      console.log(err);
-      throw new Error('Unexpected error has occurred');
-    }
+    const response = await this.client.send(new GetItemCommand(params));
     const items = response.Item
       ? response.Item[this.messageAttributeName]?.L ?? []
       : [];
@@ -199,12 +193,6 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
       UpdateExpression:
         "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
     };
-
-    try {
-      await this.client.send(new UpdateItemCommand(params));
-    } catch (err) {
-      console.log(err);
-      throw new Error("Unexpected error has occurred.")
-    }
+    await this.client.send(new UpdateItemCommand(params));
   }
 }
