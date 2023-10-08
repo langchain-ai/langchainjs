@@ -45,7 +45,7 @@ console.log(await dynamicPrompt.format({ adjective: "rainy" }));
 
   Input: rainy
   Output:
-  */
+*/
 
 // Input is a measurement, so should select the tall/short example
 console.log(await dynamicPrompt.format({ adjective: "large" }));
@@ -57,4 +57,4 @@ console.log(await dynamicPrompt.format({ adjective: "large" }));
 
   Input: large
   Output:
-  */
+*/

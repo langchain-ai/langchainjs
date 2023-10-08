@@ -30,6 +30,7 @@ const examples = [
 const exampleSelector = new SemanticSimilarityExampleSelector({
   vectorStore: memoryVectorStore,
   k: 2,
+  // Only embed the "query" key of each example
   inputKeys: ["query"],
 });
 

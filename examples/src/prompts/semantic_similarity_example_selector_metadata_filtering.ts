@@ -34,6 +34,7 @@ const examples = [
 const exampleSelector = new SemanticSimilarityExampleSelector({
   vectorStore: memoryVectorStore,
   k: 2,
+  // Only embed the "query" key of each example
   inputKeys: ["query"],
   // Filter type will depend on your specific vector store.
   // See the section of the docs for the specific vector store you are using.
