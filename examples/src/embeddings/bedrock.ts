@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 
 const embeddings = new BedrockEmbeddings({
