@@ -28,6 +28,7 @@ interface Neo4jVectorStoreArgs {
   searchType?: SearchType;
   retrievalQuery?: string;
   nodeLabel?: string;
+  createIdIndex?: boolean;
 }
 
 const DEFAULT_SEARCH_TYPE = SearchType.VECTOR;
@@ -157,7 +158,28 @@ export class Neo4jVectorStore extends VectorStore {
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
+    const { createIdIndex = true } = config;
+
     const store = await this.initialize(embeddings, config);
+
+    let embeddingDimension = await store.retrieveExistingIndex();
+
+    if (!embeddingDimension) {
+      await store.createNewIndex();
+    } else if (store.embeddingDimension != embeddingDimension) {
+      throw new Error(
+        `Index with name "${store.indexName}" already exists. The provided embedding function and vector index dimensions do not match.
+        Embedding function dimension: ${store.embeddingDimension}
+        Vector index dimension: ${embeddingDimension}`
+      );
+    }
+
+    if (createIdIndex) {
+      await store.query(
+        `CREATE CONSTRAINT IF NOT EXISTS FOR (n:${store.nodeLabel}) REQUIRE n.id IS UNIQUE;`
+      );
+    }
+
     await store.addDocuments(docs);
 
     return store;
@@ -342,7 +364,7 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN name, labelsOrTypes, properties, options
       `,
       {
-        index_Name: this.indexName,
+        index_name: this.indexName,
         node_label: this.nodeLabel,
         embedding_node_property: this.embeddingNodeProperty,
       }
@@ -356,7 +378,6 @@ export class Neo4jVectorStore extends VectorStore {
 
       const embeddingDimension =
         indexInformation[0]["options"]["indexConfig"]["vector.dimensions"];
-
       return embeddingDimension;
     } catch (error) {
       return null;
