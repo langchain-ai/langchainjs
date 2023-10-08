@@ -1,4 +1,28 @@
 import CodeBlock from "@theme/CodeBlock";
 import ExampleSimilarity from "@examples/prompts/semantic_similarity_example_selector.ts";
 
+The examples object will be used as parameters to format `examplePrompt` in the example below. Each example
+should therefore have fields matching the parameters of the example prompt you are using.
+
 <CodeBlock language="typescript">{ExampleSimilarity}</CodeBlock>
+
+By default, each field in the examples object is concatenated together and embedded. If you only want to embed specific keys
+(for example, if you only want to search for similar input queries to the one you're receiving), you can pass an `inputKeys` 
+parameter in the final `options` parameter.
+
+## Loading from an existing vectorstore
+
+You can also use a pre-initialized vector store and add more examples to it by passing it to the constructor directly as follows:
+
+import ExampleSimilarityFromExisting from "@examples/prompts/semantic_similarity_example_selector_from_existing.ts";
+
+<CodeBlock language="typescript">{ExampleSimilarityFromExisting}</CodeBlock>
+
+## Metadata filtering
+
+When adding examples, each field is available as metadata in the produced document. If you would like further control over your
+search space, you can add extra fields to your examples and pass a `filter` parameter when initializing your selector:
+
+import ExampleSimilarityMetadataFiltering from "@examples/prompts/semantic_similarity_example_selector_metadata_filtering.ts";
+
+<CodeBlock language="typescript">{ExampleSimilarityMetadataFiltering}</CodeBlock>
