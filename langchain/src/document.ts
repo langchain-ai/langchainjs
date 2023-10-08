@@ -10,6 +10,7 @@ export interface DocumentInput<
 /**
  * Interface for interacting with a document.
  */
+
 export class Document<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Metadata extends Record<string, any> = Record<string, any>
@@ -19,10 +20,16 @@ export class Document<
 
   metadata: Metadata;
 
+  /**
+   * Constructs a new Document instance.
+   *
+   * @param fields - The input fields for the Document. `pageContent` must not be empty.
+   * You may optionally include `metadata`.
+   * @throws {Error} Throws an error if `pageContent` is not provided or is empty.
+   */
   constructor(fields: DocumentInput<Metadata>) {
-    this.pageContent = fields.pageContent
-      ? fields.pageContent.toString()
-      : this.pageContent;
+    if (!fields.pageContent) throw new Error("pageContents must not be empty");
+    this.pageContent = fields.pageContent.toString();
     this.metadata = fields.metadata ?? ({} as Metadata);
   }
 }
