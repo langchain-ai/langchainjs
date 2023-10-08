@@ -1,3 +1,7 @@
+/**
+ * @vitest-environment happy-dom
+ */
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { describe, it, expect } from "vitest";
 import { CloseVectorWeb } from "../closevector_web.js";

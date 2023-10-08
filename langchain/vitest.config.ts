@@ -5,6 +5,6 @@ export default defineConfig({
     test: {
         watch: false,
         include: ["**/*.vitest.ts"],
-        environment: 'happy-dom',
+        testTimeout: 10000
     },
 });

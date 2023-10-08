@@ -116,14 +116,26 @@ export class CloseVectorNode extends SaveableVectorStore {
    * Method to load the index from the CloseVector CDN.
    * @param options
    * @param options.uuid The UUID of the index to be downloaded.
-   * @param options.accessKey The access key of CloseVector API.
-   * @param options.secret The secret of CloseVector API.
+   * @param options.credentials The credentials to be used by the CloseVectorNode instance.
+   * @param options.embeddings The embeddings to be used by the CloseVectorNode instance.
    * @param options.onProgress A callback function that will be called with the progress of the download.
    */
   static async loadFromCloud(
-    options: Parameters<(typeof CloseVectorHNSWNode)["loadFromCloud"]>[0]
+    options: Omit<Parameters<(typeof CloseVectorHNSWNode)["loadFromCloud"]>[0] & {
+      embeddings: Embeddings;
+      credentials: CloseVectorCredentials;
+    }, 'accessKey' | 'secret'>
   ) {
-    return await CloseVectorHNSWNode.loadFromCloud(options);
+    if (!options.credentials.key || !options.credentials.secret) {
+      throw new Error("key and secret must be provided");
+    }
+    const instance = await CloseVectorHNSWNode.loadFromCloud({
+      ...options,
+      accessKey: options.credentials.key,
+      secret: options.credentials.secret,
+    });
+    const vectorstore = new this(options.embeddings, instance.args, options.credentials);
+    return vectorstore;
   }
 
   /**
