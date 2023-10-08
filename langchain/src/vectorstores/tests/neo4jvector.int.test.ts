@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Neo4jVectorStore } from "../neo4jvector.js";
 
@@ -51,7 +52,7 @@ test("Test fromTexts", async () => {
   expect(password).toBeDefined();
 
   const embeddings = new FakeEmbeddingsWithOsDimension();
-  const metadatas = {};
+  const metadatas: any[] = [];
 
   const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
     texts,
@@ -64,7 +65,7 @@ test("Test fromTexts", async () => {
     }
   );
 
-  const output = neo4jVectorStore.similaritySearch("foo", 1);
-  expect(output).toBe([{ page_content: "foo" }]);
+  const output = neo4jVectorStore.similaritySearch("foo", 2);
+  expect(output).toBe([{ pageContent: "foo" }]);
   await dropVectorIndexes(neo4jVectorStore);
 });

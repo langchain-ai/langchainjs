@@ -64,7 +64,7 @@ export class Neo4jVectorStore extends VectorStore {
     super(embedings, config);
   }
 
-  async _initialize(embedings: Embeddings, config: Neo4jVectorStoreArgs) {
+  static async initialize(embedings: Embeddings, config: Neo4jVectorStoreArgs) {
     const {} = config;
 
     const store = new Neo4jVectorStore(embedings, config);
@@ -123,6 +123,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   async query(query: string, params: any = {}): Promise<any[]> {
     const session = this.driver.session({ database: this.database });
+
     try {
       const result = await session.run(query, params);
       return result.records.map((record: any) => record.toObject());
@@ -131,38 +132,58 @@ export class Neo4jVectorStore extends VectorStore {
     }
   }
 
-  async fromTexts(
+  static async fromTexts(
     texts: string[],
+    metadatas: any,
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
-    const store = await this._initialize(embeddings, config);
-    store.embeddings.embedDocuments(texts);
+    const docs = [];
+
+    for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      const newDoc = new Document({
+        pageContent: texts[i],
+        metadata: metadata,
+      });
+      docs.push(newDoc);
+    }
+
+    return Neo4jVectorStore.fromDocuments(docs, embeddings, config);
+  }
+
+  static async fromDocuments(
+    docs: Document[],
+    embeddings: Embeddings,
+    config: Neo4jVectorStoreArgs
+  ): Promise<Neo4jVectorStore> {
+    const store = await this.initialize(embeddings, config);
+    await store.addDocuments(docs);
 
     return store;
   }
 
-  async fromExistingIndex(
+  static async fromExistingIndex(
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ) {
-    let {
-      searchType = DEFAULT_SEARCH_TYPE,
-      keywordIndexName = "keyword",
-    } = config;
+    let { searchType = DEFAULT_SEARCH_TYPE, keywordIndexName = "keyword" } =
+      config;
 
     if (searchType === SearchType.HYBRID && !keywordIndexName) {
-      throw Error("keyword_index name has to be specified when using hybrid search option");
+      throw Error(
+        "keyword_index name has to be specified when using hybrid search option"
+      );
     }
 
-    const store = await this._initialize(embeddings, config);
+    const store = await this.initialize(embeddings, config);
 
     const embeddingDimension = await store.retrieveExistingIndex();
 
-    if(!embeddingDimension) {
+    if (!embeddingDimension) {
       throw Error(
         "The specified vector index name does not exist. Make sure to check if you spelled it correctly"
-      )
+      );
     }
 
     if (store.embeddingDimension !== embeddingDimension) {
@@ -174,23 +195,25 @@ export class Neo4jVectorStore extends VectorStore {
     }
 
     if (searchType === SearchType.HYBRID) {
-      const ftsNodeLabel = await store.retrieveExistingFtsIndex()
+      const ftsNodeLabel = await store.retrieveExistingFtsIndex();
 
-      if(!ftsNodeLabel) {
-        throw Error("The specified keyword index name does not exist. Make sure to check if you spelled it correctly")
+      if (!ftsNodeLabel) {
+        throw Error(
+          "The specified keyword index name does not exist. Make sure to check if you spelled it correctly"
+        );
       } else {
         if (ftsNodeLabel !== store.nodeLabel) {
           throw Error(
             "Vector and keyword index don't index the same node label"
-          )
+          );
         }
       }
     }
 
-    return store
+    return store;
   }
 
-  async fromExistingGraph(
+  static async fromExistingGraph(
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ) {
@@ -199,7 +222,7 @@ export class Neo4jVectorStore extends VectorStore {
       embeddingNodeProperty,
       searchType = DEFAULT_SEARCH_TYPE,
       retrievalQuery = "",
-      nodeLabel
+      nodeLabel,
     } = config;
 
     if (textNodeProperties.length === 0) {
@@ -218,7 +241,7 @@ export class Neo4jVectorStore extends VectorStore {
       `;
     }
 
-    const store = await this._initialize(embeddings, config);
+    const store = await this.initialize(embeddings, config);
 
     let embeddingDimension = await store.retrieveExistingIndex();
 
@@ -231,13 +254,17 @@ export class Neo4jVectorStore extends VectorStore {
     }
 
     if (searchType === SearchType.HYBRID) {
-      const ftsNodeLabel = await store.retrieveExistingFtsIndex(textNodeProperties);
+      const ftsNodeLabel = await store.retrieveExistingFtsIndex(
+        textNodeProperties
+      );
 
-      if(!ftsNodeLabel) {
+      if (!ftsNodeLabel) {
         await store.createNewKeywordIndex(textNodeProperties);
       } else {
-        if(ftsNodeLabel !== store.nodeLabel) {
-          throw Error("Vector and keyword index don't index the same node label");
+        if (ftsNodeLabel !== store.nodeLabel) {
+          throw Error(
+            "Vector and keyword index don't index the same node label"
+          );
         }
       }
     }
@@ -251,30 +278,34 @@ export class Neo4jVectorStore extends VectorStore {
         str + '\\n' + k + ':' + coalesce(n[k], '')) AS text
         LIMIT 1000
       `;
-    
+
       const data = await store.query(fetchQuery, { props: textNodeProperties });
-      const textEmbeddings = await embeddings.embedDocuments(data.map(el => el.text));
-    
+      const textEmbeddings = await embeddings.embedDocuments(
+        data.map((el) => el.text)
+      );
+
       const params = {
         data: data.map((el, index) => ({
           id: el.id,
           embedding: textEmbeddings[index],
         })),
       };
-    
-      await store.query(`
+
+      await store.query(
+        `
         UNWIND $data AS row
         MATCH (n:\`${nodeLabel}\`)
         WHERE elementId(n) = row.id
         CALL db.create.setVectorProperty(n, '${embeddingNodeProperty}', row.embedding)
         YIELD node RETURN count(*)
-      `, params);
-    
+      `,
+        params
+      );
+
       if (data.length < 1000) {
         break;
       }
     }
-    
 
     return store;
   }
@@ -369,16 +400,21 @@ export class Neo4jVectorStore extends VectorStore {
     }
   }
 
-  async createNewKeywordIndex(textNodeProperties: string[] = []): Promise<void> {
-    const nodeProps = textNodeProperties.length > 0 ? textNodeProperties : [this.textNodeProperty];
-    
+  async createNewKeywordIndex(
+    textNodeProperties: string[] = []
+  ): Promise<void> {
+    const nodeProps =
+      textNodeProperties.length > 0
+        ? textNodeProperties
+        : [this.textNodeProperty];
+
     // Construct the Cypher query to create a new full text index
     const ftsIndexQuery = `
       CREATE FULLTEXT INDEX ${this.keywordIndexName}
       FOR (n:\`${this.nodeLabel}\`) ON EACH
-      [${nodeProps.map(prop => `n.\`${prop}\``).join(', ')}]
+      [${nodeProps.map((prop) => `n.\`${prop}\``).join(", ")}]
     `;
-    
+
     await this.query(ftsIndexQuery);
   }
 
@@ -421,12 +457,14 @@ export class Neo4jVectorStore extends VectorStore {
     `;
 
     const parameters = {
-      data: documents.map((text, index) => ({
-        text,
-        metadata: metadatas ? metadatas[index] : null,
-        embedding: vectors ? vectors[index] : null,
-        id: ids ? ids[index] : null,
-      })),
+      data: documents.map(({ pageContent, metadata }, index) => {
+        return {
+          pageContent,
+          metadata: metadatas ? metadatas[index] : metadata,
+          embedding: vectors[index],
+          id: ids ? ids[index] : null,
+        };
+      }),
     };
 
     await this.query(importQuery, parameters);
