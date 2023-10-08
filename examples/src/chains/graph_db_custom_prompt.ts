@@ -21,7 +21,6 @@ await graph.query(
     "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
 );
 
-
 /**
  * A good practice is to ask the LLM to return only Cypher statement or
  * wrap the generated Cypher statement with three backticks (```) to avoid
@@ -29,7 +28,6 @@ await graph.query(
  * Custom prompts are also great for providing generated Cypher statement
  * examples for particular questions.
  */
-
 
 const cypherTemplate = `Task:Generate Cypher statement to query a graph database.
 Instructions:
