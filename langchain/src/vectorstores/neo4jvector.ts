@@ -30,8 +30,6 @@ interface Neo4jVectorStoreArgs {
   nodeLabel?: string;
 }
 
-interface Neo4jVectorStoreMetadatas {}
-
 const DEFAULT_SEARCH_TYPE = SearchType.VECTOR;
 const DEFAULT_DISTANCE_STRATEGY = DistanceStrategy.COSINE;
 
@@ -135,7 +133,6 @@ export class Neo4jVectorStore extends VectorStore {
 
   async fromTexts(
     texts: string[],
-    metadatas: Neo4jVectorStoreMetadatas | null = null,
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
@@ -146,12 +143,10 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   async fromExistingIndex(
-    metadatas: Neo4jVectorStoreMetadatas | null = null,
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ) {
     let {
-      indexName = "vector",
       searchType = DEFAULT_SEARCH_TYPE,
       keywordIndexName = "keyword",
     } = config;
@@ -196,15 +191,12 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   async fromExistingGraph(
-    metadatas: Neo4jVectorStoreMetadatas | null = null,
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ) {
     let {
       textNodeProperties = [],
       embeddingNodeProperty,
-      keywordIndexName = "keyword",
-      indexName = "vector",
       searchType = DEFAULT_SEARCH_TYPE,
       retrievalQuery = "",
       nodeLabel
