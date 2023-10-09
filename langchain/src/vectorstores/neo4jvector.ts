@@ -39,21 +39,21 @@ export class Neo4jVectorStore extends VectorStore {
 
   private database: string;
 
-  private nodeLabel: string = "Chunk";
+  private preDeleteCollection: boolean;
 
-  private embeddingNodeProperty: string = "embedding";
+  private nodeLabel: string;
+
+  private embeddingNodeProperty: string;
 
   private embeddingDimension: number;
 
-  private textNodeProperty: string = "text";
+  private textNodeProperty: string;
 
-  private keywordIndexName: string = "keyword";
+  private keywordIndexName: string;
 
-  private indexName: string = "vector";
+  private indexName: string;
 
-  private retrievalQuery: string = "";
-
-  private preDeleteCollection: boolean = false;
+  private retrievalQuery: string;
 
   private distanceStrategy: DistanceStrategy = DEFAULT_DISTANCE_STRATEGY;
 
@@ -66,16 +66,31 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   static async initialize(embedings: Embeddings, config: Neo4jVectorStoreArgs) {
-    const {} = config;
-
     const store = new Neo4jVectorStore(embedings, config);
     await store._initializeDriver(config);
     await store._verifyConnectivity();
 
+    const {
+      preDeleteCollection = false,
+      nodeLabel = "Chunk",
+      textNodeProperty = "text",
+      embeddingNodeProperty = "embedding",
+      keywordIndexName = "keyword",
+      indexName = "vector",
+      retrievalQuery = "",
+    } = config;
+
     store.embeddingDimension = (await embedings.embedQuery("foo")).length;
+    store.preDeleteCollection = preDeleteCollection;
+    store.nodeLabel = nodeLabel;
+    store.textNodeProperty = textNodeProperty;
+    store.embeddingNodeProperty = embeddingNodeProperty;
+    store.keywordIndexName = keywordIndexName;
+    store.indexName = indexName;
+    store.retrievalQuery = retrievalQuery;
 
     if (store.preDeleteCollection) {
-      store._dropIndex();
+      await store._dropIndex();
     }
 
     return store;
@@ -109,13 +124,13 @@ export class Neo4jVectorStore extends VectorStore {
   async _dropIndex() {
     try {
       await this.query(`
-            MATCH (n:${this.nodeLabel})
-            CALL {
-              WITH n
-              DETACH DELETE n
-            }
-            IN TRANSACTIONS OF 10000 ROWS;
-          `);
+        MATCH (n:${this.nodeLabel})
+        CALL {
+          WITH n
+          DETACH DELETE n
+        }
+        IN TRANSACTIONS OF 10000 ROWS;
+      `);
       await this.query(`DROP INDEX ${this.indexName}`);
     } catch (error) {
       console.error("An error occurred while dropping the index:", error);
@@ -166,7 +181,7 @@ export class Neo4jVectorStore extends VectorStore {
 
     if (!embeddingDimension) {
       await store.createNewIndex();
-    } else if (store.embeddingDimension != embeddingDimension) {
+    } else if (store.embeddingDimension !== embeddingDimension.low) {
       throw new Error(
         `Index with name "${store.indexName}" already exists. The provided embedding function and vector index dimensions do not match.
         Embedding function dimension: ${store.embeddingDimension}
@@ -179,7 +194,7 @@ export class Neo4jVectorStore extends VectorStore {
         `CREATE CONSTRAINT IF NOT EXISTS FOR (n:${store.nodeLabel}) REQUIRE n.id IS UNIQUE;`
       );
     }
-
+    console.log("ADDING DOCS", docs);
     await store.addDocuments(docs);
 
     return store;
@@ -480,7 +495,7 @@ export class Neo4jVectorStore extends VectorStore {
     const parameters = {
       data: documents.map(({ pageContent, metadata }, index) => {
         return {
-          pageContent,
+          text: pageContent,
           metadata: metadatas ? metadatas[index] : metadata,
           embedding: vectors[index],
           id: ids ? ids[index] : null,
@@ -507,15 +522,16 @@ export class Neo4jVectorStore extends VectorStore {
     k: number = 4
   ): Promise<[Document, number][]> {
     const defaultRetrieval = `
-      RETURN node.${this.textNodeProperty} AS text, score,
-      node {.*, ${this.textNodeProperty}: Null,
-      ${this.embeddingNodeProperty}: Null, id: Null } AS metadata
+    RETURN node.${this.textNodeProperty} AS text, score,
+    node {.*, ${this.textNodeProperty}: Null,
+    ${this.embeddingNodeProperty}: Null, id: Null } AS metadata
     `;
 
     const retrievalQuery = this.retrievalQuery
       ? this.retrievalQuery
       : defaultRetrieval;
 
+    console.log("retrievalQuery", retrievalQuery);
     const readQuery = `
       CALL db.index.vector.queryNodes($index, $k, $embedding)
       YIELD node, score ${retrievalQuery}
@@ -525,15 +541,17 @@ export class Neo4jVectorStore extends VectorStore {
 
     const results = await this.query(readQuery, parameters);
 
-    const docs: [Document, number][] = results.map((result: any) => [
-      new Document({
-        pageContent: JSON.stringify(result.text),
-        metadata: Object.fromEntries(
-          Object.entries(result.metadata).filter(([_, v]) => v !== null)
-        ),
-      }),
-      result.score,
-    ]);
+    const docs: [Document, number][] = results.map((result: any) => {
+      return [
+        new Document({
+          pageContent: result.text,
+          metadata: Object.fromEntries(
+            Object.entries(result.metadata).filter(([_, v]) => v !== null)
+          ),
+        }),
+        result.score,
+      ];
+    });
 
     return docs;
   }

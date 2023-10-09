@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Neo4jVectorStore } from "../neo4jvector.js";
+import { Document } from "../../document.js";
 
 const OS_TOKEN_COUNT = 1536;
 
@@ -62,10 +63,23 @@ test("Test fromTexts", async () => {
       url,
       username,
       password,
+      preDeleteCollection: true,
     }
   );
 
-  const output = neo4jVectorStore.similaritySearch("foo", 2);
-  expect(output).toBe([{ pageContent: "foo" }]);
+  const output = await neo4jVectorStore.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "foo",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "bar",
+      metadata: {},
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
   await dropVectorIndexes(neo4jVectorStore);
 });
