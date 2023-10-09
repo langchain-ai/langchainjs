@@ -3,8 +3,8 @@
 
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
+import { setTimeout } from "timers/promises";
 import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
-import { setTimeout } from 'timers/promises';
 
 import { Document } from "../../document.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
@@ -112,7 +112,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
       texts,
       {},
       new OpenAIEmbeddings(),
-      { collection, indexName: 'default' }
+      { collection, indexName: "default" }
     );
 
     // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
@@ -157,7 +157,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
     const retrieverExpected = ["foo", "foy", "foo"];
     expect(retrieverActual).toEqual(retrieverExpected);
 
-    const similarity = await vectorStore.similaritySearchWithScore('foo', 1);
+    const similarity = await vectorStore.similaritySearchWithScore("foo", 1);
     expect(similarity.length).toBe(1);
   } finally {
     await client.close();

@@ -103,14 +103,21 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
     const postFilterPipeline = filter?.postFilterPipeline ?? [];
-    const preFilter: MongoDBDocument | undefined = filter?.preFilter || filter?.postFilterPipeline || filter?.includeEmbeddings
-      ? filter.preFilter
-      : filter;
-    const removeEmbeddingsPipeline = !filter?.includeEmbeddings ? [{
-      $project: {
-        [this.embeddingKey]: 0,
-      },
-    }] : []
+    const preFilter: MongoDBDocument | undefined =
+      filter?.preFilter ||
+      filter?.postFilterPipeline ||
+      filter?.includeEmbeddings
+        ? filter.preFilter
+        : filter;
+    const removeEmbeddingsPipeline = !filter?.includeEmbeddings
+      ? [
+          {
+            $project: {
+              [this.embeddingKey]: 0,
+            },
+          },
+        ]
+      : [];
 
     const pipeline: MongoDBDocument[] = [
       {
@@ -120,8 +127,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
           path: this.embeddingKey,
           limit: k,
           numCandidates: 10 * k,
-          ...(preFilter && { filter: preFilter })
-        }
+          ...(preFilter && { filter: preFilter }),
+        },
       },
       {
         $set: {
@@ -129,13 +136,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
         },
       },
       ...removeEmbeddingsPipeline,
-      ...postFilterPipeline
+      ...postFilterPipeline,
     ];
 
-    const results = this.collection.aggregate(pipeline).map<[Document, number]>((result) => {
-      const { score, [this.textKey]: text, ...metadata } = result;
-      return [new Document({ pageContent: text, metadata }), score];
-    });
+    const results = this.collection
+      .aggregate(pipeline)
+      .map<[Document, number]>((result) => {
+        const { score, [this.textKey]: text, ...metadata } = result;
+        return [new Document({ pageContent: text, metadata }), score];
+      });
 
     return results.toArray();
   }
