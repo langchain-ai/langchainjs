@@ -130,10 +130,6 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
 
   streaming: boolean;
 
-  _llmType() {
-    return "sagemaker";
-  }
-
   constructor(fields: SageMakerEndpointInput) {
     super(fields);
 
@@ -163,6 +159,10 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
     this.client = new SageMakerRuntimeClient(fields.clientOptions);
   }
 
+  _llmType() {
+    return "sagemaker_endpoint";
+  }
+
   /**
    * Calls the SageMaker endpoint and retrieves the result.
    * @param {string} prompt The input prompt.
@@ -176,14 +176,9 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
     options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    try {
-      return this.streaming
-        ? await this.streamingCall(prompt, options)
-        : await this.noStreamingCall(prompt, options);
-    } catch (error) {
-      console.log("error calling Sagemaker LLM: ", error);
-      return "";
-    }
+    return this.streaming
+      ? await this.streamingCall(prompt, options)
+      : await this.noStreamingCall(prompt, options);
   }
 
   private async streamingCall(
