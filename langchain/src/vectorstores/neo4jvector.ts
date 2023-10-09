@@ -173,7 +173,7 @@ export class Neo4jVectorStore extends VectorStore {
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
-    const { createIdIndex = true } = config;
+    const { searchType = DEFAULT_SEARCH_TYPE, createIdIndex = true } = config;
 
     const store = await this.initialize(embeddings, config);
 
@@ -189,12 +189,28 @@ export class Neo4jVectorStore extends VectorStore {
       );
     }
 
+    if (searchType === SearchType.HYBRID) {
+      const ftsNodeLabel = await store.retrieveExistingFtsIndex();
+
+      if (!ftsNodeLabel) {
+        throw Error(
+          "The specified keyword index name does not exist. Make sure to check if you spelled it correctly"
+        );
+      } else {
+        if (ftsNodeLabel !== store.nodeLabel) {
+          throw Error(
+            "Vector and keyword index don't index the same node label"
+          );
+        }
+      }
+    }
+
     if (createIdIndex) {
       await store.query(
         `CREATE CONSTRAINT IF NOT EXISTS FOR (n:${store.nodeLabel}) REQUIRE n.id IS UNIQUE;`
       );
     }
-    console.log("ADDING DOCS", docs);
+
     await store.addDocuments(docs);
 
     return store;
@@ -483,11 +499,11 @@ export class Neo4jVectorStore extends VectorStore {
       UNWIND $data AS row
       CALL {
         WITH row
-        MERGE (c:${this.nodeLabel} {id: row.id})
+        MERGE (c:\`${this.nodeLabel}\` {id: row.id})
         WITH c, row
         CALL db.create.setVectorProperty(c, '${this.embeddingNodeProperty}', row.embedding)
         YIELD node
-        SET c.${this.textNodeProperty} = row.text
+        SET c.\`${this.textNodeProperty}\` = row.text
         SET c += row.metadata
       } IN TRANSACTIONS OF 1000 ROWS
     `;
@@ -531,7 +547,6 @@ export class Neo4jVectorStore extends VectorStore {
       ? this.retrievalQuery
       : defaultRetrieval;
 
-    console.log("retrievalQuery", retrievalQuery);
     const readQuery = `
       CALL db.index.vector.queryNodes($index, $k, $embedding)
       YIELD node, score ${retrievalQuery}
