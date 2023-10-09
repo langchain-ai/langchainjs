@@ -25,6 +25,9 @@ export interface OptionalImportMap {
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
+  "langchain/tools/google_calendar"?:
+    | typeof import("../tools/google_calendar/index.js")
+    | Promise<typeof import("../tools/google_calendar/index.js")>;
   "langchain/chains/load"?:
     | typeof import("../chains/load.js")
     | Promise<typeof import("../chains/load.js")>;
@@ -37,6 +40,15 @@ export interface OptionalImportMap {
   "langchain/chains/sql_db"?:
     | typeof import("../chains/sql_db/index.js")
     | Promise<typeof import("../chains/sql_db/index.js")>;
+  "langchain/chains/graph_qa/cypher"?:
+    | typeof import("../chains/graph_qa/cypher.js")
+    | Promise<typeof import("../chains/graph_qa/cypher.js")>;
+  "langchain/embeddings/bedrock"?:
+    | typeof import("../embeddings/bedrock.js")
+    | Promise<typeof import("../embeddings/bedrock.js")>;
+  "langchain/embeddings/cloudflare_workersai"?:
+    | typeof import("../embeddings/cloudflare_workersai.js")
+    | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;
   "langchain/embeddings/cohere"?:
     | typeof import("../embeddings/cohere.js")
     | Promise<typeof import("../embeddings/cohere.js")>;
@@ -100,6 +112,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
+  "langchain/vectorstores/cloudflare_vectorize"?:
+    | typeof import("../vectorstores/cloudflare_vectorize.js")
+    | Promise<typeof import("../vectorstores/cloudflare_vectorize.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
@@ -163,6 +178,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/usearch"?:
     | typeof import("../vectorstores/usearch.js")
     | Promise<typeof import("../vectorstores/usearch.js")>;
+  "langchain/vectorstores/vercel_postgres"?:
+    | typeof import("../vectorstores/vercel_postgres.js")
+    | Promise<typeof import("../vectorstores/vercel_postgres.js")>;
   "langchain/vectorstores/voy"?:
     | typeof import("../vectorstores/voy.js")
     | Promise<typeof import("../vectorstores/voy.js")>;
@@ -277,6 +295,9 @@ export interface OptionalImportMap {
   "langchain/document_transformers/mozilla_readability"?:
     | typeof import("../document_transformers/mozilla_readability.js")
     | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
+  "langchain/chat_models/bedrock"?:
+    | typeof import("../chat_models/bedrock.js")
+    | Promise<typeof import("../chat_models/bedrock.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai/index.js")
     | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
@@ -379,6 +400,9 @@ export interface OptionalImportMap {
   "langchain/storage/ioredis"?:
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
+  "langchain/graphs/neo4j_graph"?:
+    | typeof import("../graphs/neo4j_graph.js")
+    | Promise<typeof import("../graphs/neo4j_graph.js")>;
   "langchain/hub"?:
     | typeof import("../hub.js")
     | Promise<typeof import("../hub.js")>;
@@ -391,6 +415,9 @@ export interface OptionalImportMap {
   "langchain/experimental/llms/bittensor"?:
     | typeof import("../experimental/llms/bittensor.js")
     | Promise<typeof import("../experimental/llms/bittensor.js")>;
+  "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
+    | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
+    | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
 }
 
 export interface SecretMap {

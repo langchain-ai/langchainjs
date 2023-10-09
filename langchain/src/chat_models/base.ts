@@ -164,7 +164,10 @@ export abstract class BaseChatModel<
         [messages],
         undefined,
         undefined,
-        extra
+        extra,
+        undefined,
+        undefined,
+        runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
       try {
@@ -228,7 +231,10 @@ export abstract class BaseChatModel<
       baseMessages,
       undefined,
       undefined,
-      extra
+      extra,
+      undefined,
+      undefined,
+      handledOptions.runName
     );
     // generate results
     const results = await Promise.allSettled(

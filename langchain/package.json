@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.154",
+  "version": "0.0.163",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -52,6 +52,9 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/google_calendar.cjs",
+    "tools/google_calendar.js",
+    "tools/google_calendar.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -70,12 +73,21 @@
     "chains/sql_db.cjs",
     "chains/sql_db.js",
     "chains/sql_db.d.ts",
+    "chains/graph_qa/cypher.cjs",
+    "chains/graph_qa/cypher.js",
+    "chains/graph_qa/cypher.d.ts",
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
+    "embeddings/bedrock.cjs",
+    "embeddings/bedrock.js",
+    "embeddings/bedrock.d.ts",
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
+    "embeddings/cloudflare_workersai.cjs",
+    "embeddings/cloudflare_workersai.js",
+    "embeddings/cloudflare_workersai.d.ts",
     "embeddings/fake.cjs",
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
@@ -178,6 +190,9 @@
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
+    "vectorstores/cloudflare_vectorize.cjs",
+    "vectorstores/cloudflare_vectorize.js",
+    "vectorstores/cloudflare_vectorize.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
@@ -247,6 +262,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/vercel_postgres.cjs",
+    "vectorstores/vercel_postgres.js",
+    "vectorstores/vercel_postgres.d.ts",
     "vectorstores/voy.cjs",
     "vectorstores/voy.js",
     "vectorstores/voy.d.ts",
@@ -331,6 +349,9 @@
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/searchapi.cjs",
+    "document_loaders/web/searchapi.js",
+    "document_loaders/web/searchapi.d.ts",
     "document_loaders/web/serpapi.cjs",
     "document_loaders/web/serpapi.js",
     "document_loaders/web/serpapi.d.ts",
@@ -394,6 +415,9 @@
     "chat_models/anthropic.cjs",
     "chat_models/anthropic.js",
     "chat_models/anthropic.d.ts",
+    "chat_models/bedrock.cjs",
+    "chat_models/bedrock.js",
+    "chat_models/bedrock.d.ts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
@@ -466,6 +490,9 @@
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
+    "retrievers/chaindesk.cjs",
+    "retrievers/chaindesk.js",
+    "retrievers/chaindesk.d.ts",
     "retrievers/databerry.cjs",
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
@@ -484,12 +511,18 @@
     "retrievers/parent_document.cjs",
     "retrievers/parent_document.js",
     "retrievers/parent_document.d.ts",
+    "retrievers/tavily_search_api.cjs",
+    "retrievers/tavily_search_api.js",
+    "retrievers/tavily_search_api.d.ts",
     "retrievers/time_weighted.cjs",
     "retrievers/time_weighted.js",
     "retrievers/time_weighted.d.ts",
     "retrievers/document_compressors/chain_extract.cjs",
     "retrievers/document_compressors/chain_extract.js",
     "retrievers/document_compressors/chain_extract.d.ts",
+    "retrievers/document_compressors/embeddings_filter.cjs",
+    "retrievers/document_compressors/embeddings_filter.js",
+    "retrievers/document_compressors/embeddings_filter.d.ts",
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
@@ -586,6 +619,9 @@
     "storage/ioredis.cjs",
     "storage/ioredis.js",
     "storage/ioredis.d.ts",
+    "graphs/neo4j_graph.cjs",
+    "graphs/neo4j_graph.js",
+    "graphs/neo4j_graph.d.ts",
     "hub.cjs",
     "hub.js",
     "hub.d.ts",
@@ -616,6 +652,9 @@
     "experimental/llms/bittensor.cjs",
     "experimental/llms/bittensor.js",
     "experimental/llms/bittensor.d.ts",
+    "experimental/hubs/makersuite/googlemakersuitehub.cjs",
+    "experimental/hubs/makersuite/googlemakersuitehub.js",
+    "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -649,6 +688,7 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
@@ -656,12 +696,11 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/protocol-http": "^3.374.0",
-    "@aws-sdk/signature-v4": "^3.374.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
-    "@cloudflare/workers-types": "^4.20230904.0",
+    "@cloudflare/ai": "^1.0.12",
+    "@cloudflare/workers-types": "^4.20230922.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -674,14 +713,18 @@
     "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/protocol-http": "^3.0.6",
+    "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
+    "@swc/core": "^1.3.90",
+    "@swc/jest": "^0.2.29",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
     "@tensorflow/tfjs-backend-cpu": "^3",
     "@tensorflow/tfjs-converter": "^3.6.0",
@@ -702,6 +745,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
     "@xenova/transformers": "^2.5.4",
@@ -726,6 +770,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -739,6 +784,7 @@
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "neo4j-driver": "^5.12.0",
     "node-llama-cpp": "^2.1.2",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
@@ -771,6 +817,7 @@
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
@@ -778,11 +825,9 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/protocol-http": "^3.374.0",
-    "@aws-sdk/signature-v4": "^3.374.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
-    "@cloudflare/workers-types": "^4.20230904.0",
+    "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.7.0",
@@ -793,11 +838,13 @@
     "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
-    "@pinecone-database/pinecone": "*",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
     "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/protocol-http": "^3.0.6",
+    "@smithy/signature-v4": "^2.0.10",
     "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
@@ -805,6 +852,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
+    "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
     "@xenova/transformers": "^2.5.4",
@@ -821,6 +869,7 @@
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -830,6 +879,7 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "neo4j-driver": "*",
     "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
@@ -857,6 +907,9 @@
     "@aws-crypto/sha256-js": {
       "optional": true
     },
+    "@aws-sdk/client-bedrock-runtime": {
+      "optional": true
+    },
     "@aws-sdk/client-dynamodb": {
       "optional": true
     },
@@ -878,19 +931,13 @@
     "@aws-sdk/credential-provider-node": {
       "optional": true
     },
-    "@aws-sdk/protocol-http": {
-      "optional": true
-    },
-    "@aws-sdk/signature-v4": {
-      "optional": true
-    },
     "@azure/storage-blob": {
       "optional": true
     },
     "@clickhouse/client": {
       "optional": true
     },
-    "@cloudflare/workers-types": {
+    "@cloudflare/ai": {
       "optional": true
     },
     "@elastic/elasticsearch": {
@@ -938,6 +985,12 @@
     "@smithy/eventstream-codec": {
       "optional": true
     },
+    "@smithy/protocol-http": {
+      "optional": true
+    },
+    "@smithy/signature-v4": {
+      "optional": true
+    },
     "@smithy/util-utf8": {
       "optional": true
     },
@@ -957,6 +1010,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@vercel/postgres": {
       "optional": true
     },
     "@writerai/writer-sdk": {
@@ -1007,6 +1063,9 @@
     "google-auth-library": {
       "optional": true
     },
+    "googleapis": {
+      "optional": true
+    },
     "hnswlib-node": {
       "optional": true
     },
@@ -1032,6 +1091,9 @@
       "optional": true
     },
     "mysql2": {
+      "optional": true
+    },
+    "neo4j-driver": {
       "optional": true
     },
     "node-llama-cpp": {
@@ -1122,7 +1184,7 @@
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.21.4",
+    "zod": "^3.22.3",
     "zod-to-json-schema": "^3.20.4"
   },
   "publishConfig": {
@@ -1213,6 +1275,11 @@
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
     },
+    "./tools/google_calendar": {
+      "types": "./tools/google_calendar.d.ts",
+      "import": "./tools/google_calendar.js",
+      "require": "./tools/google_calendar.cjs"
+    },
     "./chains": {
       "types": "./chains.d.ts",
       "import": "./chains.js",
@@ -1243,15 +1310,30 @@
       "import": "./chains/sql_db.js",
       "require": "./chains/sql_db.cjs"
     },
+    "./chains/graph_qa/cypher": {
+      "types": "./chains/graph_qa/cypher.d.ts",
+      "import": "./chains/graph_qa/cypher.js",
+      "require": "./chains/graph_qa/cypher.cjs"
+    },
     "./embeddings/base": {
       "types": "./embeddings/base.d.ts",
       "import": "./embeddings/base.js",
       "require": "./embeddings/base.cjs"
     },
+    "./embeddings/bedrock": {
+      "types": "./embeddings/bedrock.d.ts",
+      "import": "./embeddings/bedrock.js",
+      "require": "./embeddings/bedrock.cjs"
+    },
     "./embeddings/cache_backed": {
       "types": "./embeddings/cache_backed.d.ts",
       "import": "./embeddings/cache_backed.js",
       "require": "./embeddings/cache_backed.cjs"
+    },
+    "./embeddings/cloudflare_workersai": {
+      "types": "./embeddings/cloudflare_workersai.d.ts",
+      "import": "./embeddings/cloudflare_workersai.js",
+      "require": "./embeddings/cloudflare_workersai.cjs"
     },
     "./embeddings/fake": {
       "types": "./embeddings/fake.d.ts",
@@ -1423,6 +1505,11 @@
       "import": "./vectorstores/memory.js",
       "require": "./vectorstores/memory.cjs"
     },
+    "./vectorstores/cloudflare_vectorize": {
+      "types": "./vectorstores/cloudflare_vectorize.d.ts",
+      "import": "./vectorstores/cloudflare_vectorize.js",
+      "require": "./vectorstores/cloudflare_vectorize.cjs"
+    },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",
       "import": "./vectorstores/chroma.js",
@@ -1537,6 +1624,11 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/vercel_postgres": {
+      "types": "./vectorstores/vercel_postgres.d.ts",
+      "import": "./vectorstores/vercel_postgres.js",
+      "require": "./vectorstores/vercel_postgres.cjs"
     },
     "./vectorstores/voy": {
       "types": "./vectorstores/voy.d.ts",
@@ -1678,6 +1770,11 @@
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
     },
+    "./document_loaders/web/searchapi": {
+      "types": "./document_loaders/web/searchapi.d.ts",
+      "import": "./document_loaders/web/searchapi.js",
+      "require": "./document_loaders/web/searchapi.cjs"
+    },
     "./document_loaders/web/serpapi": {
       "types": "./document_loaders/web/serpapi.d.ts",
       "import": "./document_loaders/web/serpapi.js",
@@ -1782,6 +1879,11 @@
       "types": "./chat_models/anthropic.d.ts",
       "import": "./chat_models/anthropic.js",
       "require": "./chat_models/anthropic.cjs"
+    },
+    "./chat_models/bedrock": {
+      "types": "./chat_models/bedrock.d.ts",
+      "import": "./chat_models/bedrock.js",
+      "require": "./chat_models/bedrock.cjs"
     },
     "./chat_models/googlevertexai": {
       "types": "./chat_models/googlevertexai.d.ts",
@@ -1903,6 +2005,11 @@
       "import": "./retrievers/metal.js",
       "require": "./retrievers/metal.cjs"
     },
+    "./retrievers/chaindesk": {
+      "types": "./retrievers/chaindesk.d.ts",
+      "import": "./retrievers/chaindesk.js",
+      "require": "./retrievers/chaindesk.cjs"
+    },
     "./retrievers/databerry": {
       "types": "./retrievers/databerry.d.ts",
       "import": "./retrievers/databerry.js",
@@ -1933,6 +2040,11 @@
       "import": "./retrievers/parent_document.js",
       "require": "./retrievers/parent_document.cjs"
     },
+    "./retrievers/tavily_search_api": {
+      "types": "./retrievers/tavily_search_api.d.ts",
+      "import": "./retrievers/tavily_search_api.js",
+      "require": "./retrievers/tavily_search_api.cjs"
+    },
     "./retrievers/time_weighted": {
       "types": "./retrievers/time_weighted.d.ts",
       "import": "./retrievers/time_weighted.js",
@@ -1942,6 +2054,11 @@
       "types": "./retrievers/document_compressors/chain_extract.d.ts",
       "import": "./retrievers/document_compressors/chain_extract.js",
       "require": "./retrievers/document_compressors/chain_extract.cjs"
+    },
+    "./retrievers/document_compressors/embeddings_filter": {
+      "types": "./retrievers/document_compressors/embeddings_filter.d.ts",
+      "import": "./retrievers/document_compressors/embeddings_filter.js",
+      "require": "./retrievers/document_compressors/embeddings_filter.cjs"
     },
     "./retrievers/hyde": {
       "types": "./retrievers/hyde.d.ts",
@@ -2103,6 +2220,11 @@
       "import": "./storage/ioredis.js",
       "require": "./storage/ioredis.cjs"
     },
+    "./graphs/neo4j_graph": {
+      "types": "./graphs/neo4j_graph.d.ts",
+      "import": "./graphs/neo4j_graph.js",
+      "require": "./graphs/neo4j_graph.cjs"
+    },
     "./hub": {
       "types": "./hub.d.ts",
       "import": "./hub.js",
@@ -2152,6 +2274,11 @@
       "types": "./experimental/llms/bittensor.d.ts",
       "import": "./experimental/llms/bittensor.js",
       "require": "./experimental/llms/bittensor.cjs"
+    },
+    "./experimental/hubs/makersuite/googlemakersuitehub": {
+      "types": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+      "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
+      "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",

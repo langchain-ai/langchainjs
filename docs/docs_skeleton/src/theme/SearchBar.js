@@ -19,8 +19,13 @@ export default function SearchBarWrapper() {
       <MendableSearchBar
         anon_key={customFields.mendableAnonKey}
         style={{ accentColor: "#4F956C", darkMode: false }}
-        placeholder="Search..."
+        placeholder="Search"
         dialogPlaceholder="How do I use a LLM Chain?"
+        searchBarStyle={{
+          borderColor: "#9d9ea1",
+          color: "#9d9ea1",
+        }}
+        askAIText="Ask Mendable AI"
         messageSettings={{ openSourcesInNewTab: false, prettySources: true }}
         showSimpleSearch
         isPinnable

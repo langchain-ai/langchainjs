@@ -61,11 +61,11 @@ jobs:
         os: [ubuntu-latest]
         node-version: [18.x, 19.x, 20.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
-        include:
+        # include:
           # - os: windows-latest
           #   node-version: 20.x
-          - os: macos-latest
-            node-version: 20.x
+          # - os: macos-latest
+          #   node-version: 20.x
     runs-on: ${{ matrix.os }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"

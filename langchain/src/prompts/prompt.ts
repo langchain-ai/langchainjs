@@ -31,7 +31,7 @@ export interface PromptTemplateInput<
   template: string;
 
   /**
-   * The format of the prompt template. Options are 'f-string', 'jinja-2'
+   * The format of the prompt template. Options are 'f-string'
    *
    * @defaultValue 'f-string'
    */
@@ -190,9 +190,6 @@ export class PromptTemplate<
       "template" | "inputVariables"
     > = {}
   ) {
-    if (templateFormat === "jinja2") {
-      throw new Error("jinja2 templates are not currently supported.");
-    }
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
