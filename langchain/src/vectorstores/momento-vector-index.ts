@@ -2,13 +2,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ALL_VECTOR_METADATA,
-  PreviewVectorIndexClient,
+  IVectorIndexClient,
   VectorIndexItem,
   CreateVectorIndex,
   VectorUpsertItemBatch,
   VectorDeleteItemBatch,
   VectorSearch,
-} from "@gomomento/sdk";
+} from "@gomomento/sdk-core";
 import * as uuid from "uuid";
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -19,7 +19,7 @@ export interface DocumentProps {
 }
 
 export interface MomentoVectorIndexLibArgs {
-  client: PreviewVectorIndexClient;
+  client: IVectorIndexClient;
   indexName?: string;
   textField?: string;
   sourceField?: string;
@@ -31,7 +31,7 @@ export interface DeleteProps {
 }
 
 export class MomentoVectorIndex extends VectorStore {
-  private client: PreviewVectorIndexClient;
+  private client: IVectorIndexClient;
 
   private indexName: string;
 
@@ -50,7 +50,7 @@ export class MomentoVectorIndex extends VectorStore {
     this.textField = args.textField ?? "text";
   }
 
-  public getClient(): PreviewVectorIndexClient {
+  public getClient(): IVectorIndexClient {
     return this.client;
   }
 

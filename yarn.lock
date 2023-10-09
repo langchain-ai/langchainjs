@@ -4033,7 +4033,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/sdk-core@npm:1.41.2":
+"@gomomento/sdk-core@npm:1.41.2, @gomomento/sdk-core@npm:^1.41.2":
   version: 1.41.2
   resolution: "@gomomento/sdk-core@npm:1.41.2"
   dependencies:
@@ -4043,7 +4043,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/sdk@npm:^1.41.1, @gomomento/sdk@npm:^1.41.2":
+"@gomomento/sdk@npm:^1.41.2":
   version: 1.41.2
   resolution: "@gomomento/sdk@npm:1.41.2"
   dependencies:
@@ -10152,7 +10152,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.7.0
-    "@gomomento/sdk": ^1.41.1
+    "@gomomento/sdk": ^1.41.2
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
@@ -13350,6 +13350,7 @@ __metadata:
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.7.0
     "@gomomento/sdk": ^1.41.2
+    "@gomomento/sdk-core": ^1.41.2
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -13489,6 +13490,8 @@ __metadata:
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.7.0
     "@gomomento/sdk": ^1.41.2
+    "@gomomento/sdk-core": ^1.41.2
+    "@gomomento/sdk-web": ^1.41.2
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -13587,6 +13590,10 @@ __metadata:
     "@getzep/zep-js":
       optional: true
     "@gomomento/sdk":
+      optional: true
+    "@gomomento/sdk-core":
+      optional: true
+    "@gomomento/sdk-web":
       optional: true
     "@google-ai/generativelanguage":
       optional: true

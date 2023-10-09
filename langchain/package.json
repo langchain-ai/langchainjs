@@ -673,6 +673,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.7.0",
     "@gomomento/sdk": "^1.41.2",
+    "@gomomento/sdk-core": "^1.41.2",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
@@ -792,6 +793,8 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.7.0",
     "@gomomento/sdk": "^1.41.2",
+    "@gomomento/sdk-core": "^1.41.2",
+    "@gomomento/sdk-web": "^1.41.2",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
@@ -907,6 +910,12 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@gomomento/sdk-core": {
+      "optional": true
+    },
+    "@gomomento/sdk-web": {
       "optional": true
     },
     "@google-ai/generativelanguage": {

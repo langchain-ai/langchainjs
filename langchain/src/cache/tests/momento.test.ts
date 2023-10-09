@@ -53,7 +53,7 @@ import {
   CacheUpdateTtl,
   CacheIncreaseTtl,
   CacheDecreaseTtl,
-} from "@gomomento/sdk";
+} from "@gomomento/sdk-core";
 
 import { MomentoCache } from "../momento.js";
 import { Generation } from "../../schema/index.js";
