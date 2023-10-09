@@ -14,9 +14,12 @@ function sortedValues<T>(values: Record<string, T>): T[] {
  * Interface for the input data of the SemanticSimilarityExampleSelector
  * class.
  */
-export interface SemanticSimilarityExampleSelectorInput {
-  vectorStore: VectorStore;
+export interface SemanticSimilarityExampleSelectorInput<
+  V extends VectorStore = VectorStore
+> {
+  vectorStore: V;
   k?: number;
+  filter?: V["FilterType"];
   exampleKeys?: string[];
   inputKeys?: string[];
 }
@@ -25,8 +28,10 @@ export interface SemanticSimilarityExampleSelectorInput {
  * Class that selects examples based on semantic similarity. It extends
  * the BaseExampleSelector class.
  */
-export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
-  vectorStore: VectorStore;
+export class SemanticSimilarityExampleSelector<
+  V extends VectorStore = VectorStore
+> extends BaseExampleSelector {
+  vectorStore: V;
 
   k = 4;
 
@@ -34,12 +39,15 @@ export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
 
   inputKeys?: string[];
 
-  constructor(data: SemanticSimilarityExampleSelectorInput) {
+  filter?: V["FilterType"];
+
+  constructor(data: SemanticSimilarityExampleSelectorInput<V>) {
     super(data);
     this.vectorStore = data.vectorStore;
     this.k = data.k ?? 4;
     this.exampleKeys = data.exampleKeys;
     this.inputKeys = data.inputKeys;
+    this.filter = data.filter;
   }
 
   /**
@@ -60,7 +68,7 @@ export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
     await this.vectorStore.addDocuments([
       new Document({
         pageContent: stringExample,
-        metadata: { example },
+        metadata: example,
       }),
     ]);
   }
@@ -83,7 +91,11 @@ export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
       )
     ).join(" ");
 
-    const exampleDocs = await this.vectorStore.similaritySearch(query, this.k);
+    const exampleDocs = await this.vectorStore.similaritySearch(
+      query,
+      this.k,
+      this.filter
+    );
 
     const examples = exampleDocs.map((doc) => doc.metadata);
     if (this.exampleKeys) {

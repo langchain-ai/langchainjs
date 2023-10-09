@@ -158,28 +158,32 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
   */
   async _call(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const chunks = [];
-    for await (const chunk of this._streamResponseChunks(
-      messages,
-      options,
-      runManager
-    )) {
-      chunks.push(chunk);
-    }
-    return chunks.map((chunk) => chunk.text).join("");
+    const service = "bedrock-runtime";
+    const endpointHost =
+      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
+    const provider = this.model.split(".")[0];
+    const response = await this._signedFetch(messages, options, {
+      bedrockMethod: "invoke",
+      endpointHost,
+      provider,
+    });
+    const json = await response.json();
+    const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
+    return text;
   }
 
-  async *_streamResponseChunks(
+  async _signedFetch(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
-    const provider = this.model.split(".")[0];
-    const service = "bedrock-runtime";
-
+    fields: {
+      bedrockMethod: "invoke" | "invoke-with-response-stream";
+      endpointHost: string;
+      provider: string;
+    }
+  ) {
+    const { bedrockMethod, endpointHost, provider } = fields;
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
       convertMessagesToPromptAnthropic(messages),
@@ -189,13 +193,8 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
       this.modelKwargs
     );
 
-    const endpointHost =
-      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
-
-    const amazonMethod =
-      provider === "anthropic" ? "invoke-with-response-stream" : "invoke";
     const url = new URL(
-      `https://${endpointHost}/model/${this.model}/${amazonMethod}`
+      `https://${endpointHost}/model/${this.model}/${bedrockMethod}`
     );
 
     const request = new HttpRequest({
@@ -232,12 +231,34 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
           method: signedRequest.method,
         })
     );
+    return response;
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const provider = this.model.split(".")[0];
+    const service = "bedrock-runtime";
+
+    const endpointHost =
+      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
+
+    const bedrockMethod =
+      provider === "anthropic" ? "invoke-with-response-stream" : "invoke";
+
+    const response = await this._signedFetch(messages, options, {
+      bedrockMethod,
+      endpointHost,
+      provider,
+    });
 
     if (response.status < 200 || response.status >= 300) {
       throw Error(
-        `Failed to access underlying url '${url}': got ${response.status} ${
-          response.statusText
-        }: ${await response.text()}`
+        `Failed to access underlying url '${endpointHost}': got ${
+          response.status
+        } ${response.statusText}: ${await response.text()}`
       );
     }
 

@@ -53,11 +53,53 @@ test("Test Notion API Loader onDocumentLoad", async () => {
         `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
       );
     },
+    propertiesAsHeader: true,
   });
 
   await loader.load();
 
-  expect(onDocumentLoadedCheck.length).toBe(5);
+  expect(onDocumentLoadedCheck.length).toBe(3);
 
   console.log(onDocumentLoadedCheck);
+});
+
+test("Test docs with empty database page content", async () => {
+  const onDocumentLoadedCheck: string[] = [];
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_DATABASE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
+      onDocumentLoadedCheck.push(
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+      );
+    },
+  });
+
+  const docs = await loader.load();
+
+  expect(docs.length).toBe(0);
+});
+
+test("Test docs with empty database page content and propertiesAsHeader enabled", async () => {
+  const onDocumentLoadedCheck: string[] = [];
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_DATABASE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
+      onDocumentLoadedCheck.push(
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+      );
+    },
+    propertiesAsHeader: true,
+  });
+
+  const docs = await loader.load();
+
+  expect(docs.length).toBe(3);
+
+  console.log(docs);
 });
