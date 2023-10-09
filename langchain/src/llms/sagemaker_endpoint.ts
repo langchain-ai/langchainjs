@@ -8,6 +8,33 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { GenerationChunk } from "../schema/index.js";
 import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
 
+/**
+ * A handler class to transform input from LLM to a format that SageMaker
+ * endpoint expects. Similarily, the class also handles transforming output from
+ * the SageMaker endpoint to a format that LLM class expects.
+ *
+ * Example:
+ * ```
+ * class ContentHandler implements ContentHandlerBase<string, string> {
+ *   contentType = "application/json"
+ *   accepts = "application/json"
+ *
+ *   transformInput(prompt: string, modelKwargs: Record<string, unknown>) {
+ *     const inputString = JSON.stringify({
+ *       prompt,
+ *      ...modelKwargs
+ *     })
+ *     return Buffer.from(inputString)
+ *   }
+ *
+ *   transformOutput(output: Uint8Array) {
+ *     const responseJson = JSON.parse(Buffer.from(output).toString("utf-8"))
+ *     return responseJson[0].generated_text
+ *   }
+ *
+ * }
+ * ```
+ */
 export abstract class BaseSageMakerContentHandler<InputType, OutputType> {
   contentType = "text/plain";
 
@@ -37,19 +64,60 @@ export type SageMakerLLMContentHandler = BaseSageMakerContentHandler<
   string
 >;
 
+/**
+ * The SageMakerEndpointInput interface defines the input parameters for
+ * the SageMakerEndpoint class, which includes the endpoint name, client
+ * options for the SageMaker client, the content handler, and optional
+ * keyword arguments for the model and the endpoint.
+ */
 export interface SageMakerEndpointInput extends BaseLLMParams {
+  /**
+   * The name of the endpoint from the deployed SageMaker model. Must be unique
+   * within an AWS Region.
+   */
   endpointName: string;
+  /**
+   * Options passed to the SageMaker client.
+   */
   clientOptions: SageMakerRuntimeClientConfig;
+  /**
+   * Key word arguments to pass to the model.
+   */
   modelKwargs?: Record<string, unknown>;
+  /**
+   * Optional attributes passed to the InvokeEndpointCommand
+   */
   endpointKwargs?: Record<string, unknown>;
+  /**
+   * The content handler class that provides an input and output transform
+   * functions to handle formats between LLM and the endpoint.
+   */
   contentHandler: SageMakerLLMContentHandler;
   streaming?: boolean;
 }
 
 /**
- * Class to interact with a SageMaker endpoint using aws InvokeEndpointCommand or InvokeEndpointWithResponseStreamCommand API.
+ * The SageMakerEndpoint class is used to interact with SageMaker
+ * Inference Endpoint models. It uses the AWS client for authentication,
+ * which automatically loads credentials.
+ * If a specific credential profile is to be used, the name of the profile
+ * from the ~/.aws/credentials file must be passed. The credentials or
+ * roles used should have the required policies to access the SageMaker
+ * endpoint.
  */
 export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
+  static lc_name() {
+    return "SageMakerEndpoint";
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "clientOptions.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "clientOptions.credentials.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
+      "clientOptions.credentials.sessionToken": "AWS_SESSION_TOKEN",
+    };
+  }
+
   endpointName: string;
 
   modelKwargs?: Record<string, unknown>;
