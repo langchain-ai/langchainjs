@@ -5,6 +5,7 @@ interface Neo4jGraphConfig {
   username: string;
   password: string;
   database?: string;
+  disableLosslessIntegers?: boolean;
 }
 
 export class Neo4jGraph {
@@ -19,9 +20,12 @@ export class Neo4jGraph {
     username,
     password,
     database = "neo4j",
+    disableLosslessIntegers = true,
   }: Neo4jGraphConfig) {
     try {
-      this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
+      this.driver = neo4j.driver(url, neo4j.auth.basic(username, password), {
+        disableLosslessIntegers,
+      });
       this.database = database;
     } catch (error) {
       throw new Error(
