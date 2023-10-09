@@ -1,0 +1,314 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import {
+  DocumentByInfo,
+  FieldPaths,
+  FilterExpression,
+  FunctionReference,
+  GenericActionCtx,
+  GenericDataModel,
+  GenericTableInfo,
+  NamedTableInfo,
+  NamedVectorIndex,
+  TableNamesInDataModel,
+  VectorFilterBuilder,
+  VectorIndexNames,
+} from "convex/server";
+import { Document } from "../document.js";
+import { Embeddings } from "../embeddings/base.js";
+import { VectorStore } from "./base.js";
+
+/**
+ * Type that defines the config required to initialize the
+ * ConvexVectorStore class. It includes the table name,
+ * index name, text field name, and embedding field name.
+ */
+export type ConvexVectorStoreConfig<
+  DataModel extends GenericDataModel,
+  TableName extends TableNamesInDataModel<DataModel>,
+  StoreMutation extends FunctionReference<
+    "mutation",
+    "internal",
+    { table: string; documents: object[] }
+  >,
+  ReadQuery extends FunctionReference<"query", "internal", { ids: string[] }>,
+  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+  TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+> = {
+  readonly ctx: GenericActionCtx<DataModel>;
+  readonly table: TableName;
+  readonly store: StoreMutation;
+  readonly read: ReadQuery;
+  readonly index?: IndexName;
+  readonly textField?: TextFieldName;
+  readonly embeddingField?: EmbeddingFieldName;
+};
+
+/**
+ * Class that is a wrapper around Convex storage and vector search. It is used
+ * to store embeddings in Convex documents with a vector search index,
+ * and perform a vector search on them.
+ *
+ * ConvexVectorSearch does NOT implement maxMarginalRelevanceSearch.
+ */
+export class ConvexVectorSearch<
+  DataModel extends GenericDataModel,
+  TableName extends TableNamesInDataModel<DataModel>,
+  StoreMutation extends FunctionReference<
+    "mutation",
+    "internal",
+    { table: string; documents: object[] }
+  >,
+  ReadQuery extends FunctionReference<
+    "query",
+    "internal",
+    { ids: string[] },
+    DocumentByInfo<NamedTableInfo<DataModel, TableName>>[]
+  >,
+  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+  TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+> extends VectorStore {
+  /**
+   * Type that defines the filter used in the
+   * similaritySearchVectorWithScore and maxMarginalRelevanceSearch methods.
+   * It includes limit, filter and a flag to include embeddings.
+   */
+  declare FilterType: {
+    filter?: (
+      q: VectorFilterBuilder<
+        DocumentByInfo<GenericTableInfo>,
+        NamedVectorIndex<NamedTableInfo<DataModel, TableName>, IndexName>
+      >
+    ) => FilterExpression<boolean>;
+    includeEmbeddings?: boolean;
+  };
+
+  private readonly ctx: GenericActionCtx<DataModel>;
+
+  private readonly table: TableName;
+
+  private readonly store: StoreMutation;
+
+  private readonly read: ReadQuery;
+
+  private readonly index: IndexName;
+
+  private readonly textField: TextFieldName;
+
+  private readonly embeddingField: EmbeddingFieldName;
+
+  _vectorstoreType(): string {
+    return "mongodb_atlas";
+  }
+
+  constructor(
+    embeddings: Embeddings,
+    config: ConvexVectorStoreConfig<
+      DataModel,
+      TableName,
+      StoreMutation,
+      ReadQuery,
+      IndexName,
+      TextFieldName,
+      EmbeddingFieldName
+    >
+  ) {
+    super(embeddings, config);
+    this.ctx = config.ctx;
+    this.table = config.table;
+    this.store = config.store;
+    this.read = config.read;
+    this.index = config.index ?? ("byEmbedding" as IndexName);
+    this.textField = config.textField ?? ("text" as TextFieldName);
+    this.embeddingField =
+      config.embeddingField ?? ("embedding" as EmbeddingFieldName);
+  }
+
+  /**
+   * Add vectors and their corresponding documents to the Convex table.
+   * @param vectors Vectors to be added.
+   * @param documents Corresponding documents to be added.
+   * @returns Promise that resolves when the vectors and documents have been added.
+   */
+  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+    const convexDocuments = vectors.map((embedding, idx) => ({
+      [this.textField]: documents[idx].pageContent,
+      [this.embeddingField]: embedding,
+      ...documents[idx].metadata,
+    }));
+    // @ts-expect-error Imperfect typing
+    await this.ctx.runMutation(this.store, {
+      table: this.table,
+      documents: convexDocuments,
+    });
+  }
+
+  /**
+   * Add documents to the Convex table. It first converts
+   * the documents to vectors using the embeddings and then calls the
+   * addVectors method.
+   * @param documents Documents to be added.
+   * @returns Promise that resolves when the documents have been added.
+   */
+  async addDocuments(documents: Document[]): Promise<void> {
+    const texts = documents.map(({ pageContent }) => pageContent);
+    return this.addVectors(
+      await this.embeddings.embedDocuments(texts),
+      documents
+    );
+  }
+
+  /**
+   * Similarity search on the vectors stored in the
+   * Convex table. It returns a list of documents and their
+   * corresponding similarity scores.
+   * @param query Query vector for the similarity search.
+   * @param k Number of nearest neighbors to return.
+   * @param filter Optional filter to be applied.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
+   */
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    const idsAndScores = await this.ctx.vectorSearch(this.table, this.index, {
+      vector: query,
+      limit: k,
+      filter: filter?.filter,
+    });
+
+    // @ts-expect-error Imperfect typing
+    const documents = await this.ctx.runQuery(this.read, {
+      ids: idsAndScores.map(({ _id }) => _id),
+    });
+
+    return documents.map(
+      (
+        {
+          [this.textField]: text,
+          [this.embeddingField]: embedding,
+          ...metadata
+        },
+        idx
+      ) => [
+        new Document({
+          pageContent: text as string,
+          metadata: {
+            ...metadata,
+            ...(filter?.includeEmbeddings
+              ? { [this.embeddingField]: embedding }
+              : null),
+          },
+        }),
+        idsAndScores[idx]._score,
+      ]
+    );
+  }
+
+  /**
+   * Static method to create an instance of ConvexVectorSearch from a
+   * list of texts. It first converts the texts to vectors and then adds
+   * them to the Convex table.
+   * @param texts List of texts to be converted to vectors.
+   * @param metadatas Metadata for the texts.
+   * @param embeddings Embeddings to be used for conversion.
+   * @param dbConfig Database configuration for Convex.
+   * @returns Promise that resolves to a new instance of ConvexVectorSearch.
+   */
+  static async fromTexts<
+    DataModel extends GenericDataModel,
+    TableName extends TableNamesInDataModel<DataModel>,
+    StoreMutation extends FunctionReference<
+      "mutation",
+      "internal",
+      { table: string; documents: object[] }
+    >,
+    ReadQuery extends FunctionReference<"query", "internal", { ids: string[] }>,
+    IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+    TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+  >(
+    texts: string[],
+    metadatas: object[] | object,
+    embeddings: Embeddings,
+    dbConfig: ConvexVectorStoreConfig<
+      DataModel,
+      TableName,
+      StoreMutation,
+      ReadQuery,
+      IndexName,
+      TextFieldName,
+      EmbeddingFieldName
+    >
+  ): Promise<
+    ConvexVectorSearch<
+      DataModel,
+      TableName,
+      StoreMutation,
+      ReadQuery,
+      IndexName,
+      TextFieldName,
+      EmbeddingFieldName
+    >
+  > {
+    const docs = texts.map(
+      (text, i) =>
+        new Document({
+          pageContent: text,
+          metadata: Array.isArray(metadatas) ? metadatas[i] : metadatas,
+        })
+    );
+    return ConvexVectorSearch.fromDocuments(docs, embeddings, dbConfig);
+  }
+
+  /**
+   * Static method to create an instance of ConvexVectorSearch from a
+   * list of documents. It first converts the documents to vectors and then
+   * adds them to the Convex table.
+   * @param docs List of documents to be converted to vectors.
+   * @param embeddings Embeddings to be used for conversion.
+   * @param dbConfig Database configuration for Convex.
+   * @returns Promise that resolves to a new instance of ConvexVectorSearch.
+   */
+  static async fromDocuments<
+    DataModel extends GenericDataModel,
+    TableName extends TableNamesInDataModel<DataModel>,
+    StoreMutation extends FunctionReference<
+      "mutation",
+      "internal",
+      { table: string; documents: object[] }
+    >,
+    ReadQuery extends FunctionReference<"query", "internal", { ids: string[] }>,
+    IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+    TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+  >(
+    docs: Document[],
+    embeddings: Embeddings,
+    dbConfig: ConvexVectorStoreConfig<
+      DataModel,
+      TableName,
+      StoreMutation,
+      ReadQuery,
+      IndexName,
+      TextFieldName,
+      EmbeddingFieldName
+    >
+  ): Promise<
+    ConvexVectorSearch<
+      DataModel,
+      TableName,
+      StoreMutation,
+      ReadQuery,
+      IndexName,
+      TextFieldName,
+      EmbeddingFieldName
+    >
+  > {
+    const instance = new this(embeddings, dbConfig);
+    await instance.addDocuments(docs);
+    return instance;
+  }
+}
