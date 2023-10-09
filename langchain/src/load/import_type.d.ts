@@ -25,6 +25,9 @@ export interface OptionalImportMap {
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
+  "langchain/tools/google_calendar"?:
+    | typeof import("../tools/google_calendar/index.js")
+    | Promise<typeof import("../tools/google_calendar/index.js")>;
   "langchain/chains/load"?:
     | typeof import("../chains/load.js")
     | Promise<typeof import("../chains/load.js")>;
@@ -40,6 +43,9 @@ export interface OptionalImportMap {
   "langchain/chains/graph_qa/cypher"?:
     | typeof import("../chains/graph_qa/cypher.js")
     | Promise<typeof import("../chains/graph_qa/cypher.js")>;
+  "langchain/embeddings/bedrock"?:
+    | typeof import("../embeddings/bedrock.js")
+    | Promise<typeof import("../embeddings/bedrock.js")>;
   "langchain/embeddings/cloudflare_workersai"?:
     | typeof import("../embeddings/cloudflare_workersai.js")
     | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;
@@ -409,6 +415,9 @@ export interface OptionalImportMap {
   "langchain/experimental/llms/bittensor"?:
     | typeof import("../experimental/llms/bittensor.js")
     | Promise<typeof import("../experimental/llms/bittensor.js")>;
+  "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
+    | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
+    | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
 }
 
 export interface SecretMap {
