@@ -6,7 +6,7 @@ import { ChatBedrock } from "../bedrock.js";
 import { HumanMessage } from "../../schema/index.js";
 
 test("Test Bedrock chat model: Claude-v2", async () => {
-  const region = process.env.BEDROCK_AWS_REGION!;
+  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
   const model = "anthropic.claude-v2";
 
   const bedrock = new ChatBedrock({
@@ -14,20 +14,14 @@ test("Test Bedrock chat model: Claude-v2", async () => {
     region,
     model,
     maxRetries: 0,
-    credentials: {
-      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-    },
   });
 
-  const res = await bedrock.call([
-    new HumanMessage({ content: "What is your name?" }),
-  ]);
+  const res = await bedrock.call([new HumanMessage("What is your name?")]);
   console.log(res);
 });
 
 test("Test Bedrock chat model streaming: Claude-v2", async () => {
-  const region = process.env.BEDROCK_AWS_REGION!;
+  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
   const model = "anthropic.claude-v2";
 
   const bedrock = new ChatBedrock({
@@ -35,10 +29,6 @@ test("Test Bedrock chat model streaming: Claude-v2", async () => {
     region,
     model,
     maxRetries: 0,
-    credentials: {
-      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-    },
   });
 
   const stream = await bedrock.stream([
@@ -52,4 +42,25 @@ test("Test Bedrock chat model streaming: Claude-v2", async () => {
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
+});
+
+test.each([
+  "amazon.titan-text-express-v1",
+  // These models should be supported in the future
+  // "amazon.titan-text-lite-v1",
+  // "amazon.titan-text-agile-v1",
+])("Test Bedrock base chat model: %s", async (model) => {
+  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
+
+  const bedrock = new ChatBedrock({
+    region,
+    model,
+    maxRetries: 0,
+    modelKwargs: {},
+  });
+
+  const res = await bedrock.call([new HumanMessage("What is your name?")]);
+  console.log(res);
+
+  expect(res.content.length).toBeGreaterThan(1);
 });

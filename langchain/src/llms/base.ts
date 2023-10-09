@@ -126,7 +126,10 @@ export abstract class BaseLLM<
         [prompt.toString()],
         undefined,
         undefined,
-        extra
+        extra,
+        undefined,
+        undefined,
+        runnableConfig.runName
       );
       let generation = new GenerationChunk({
         text: "",
@@ -250,7 +253,10 @@ export abstract class BaseLLM<
       prompts,
       undefined,
       undefined,
-      extra
+      extra,
+      undefined,
+      undefined,
+      handledOptions?.runName
     );
 
     let output;
