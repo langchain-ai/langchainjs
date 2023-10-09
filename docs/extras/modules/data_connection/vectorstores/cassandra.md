@@ -17,7 +17,15 @@ The [latest version](https://cwiki.apache.org/confluence/display/CASSANDRA/CEP-3
 1. Create an [Astra DB account](https://astra.datastax.com/register).
 2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
 3. Download your secure connect bundle and application token on your database's "Connect" tab.
+4. Set up the following env vars:
 
+```bash
+export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+export CASSANDRA_SCB=YOUR_CASSANDRA_SCB_HERE
+export CASSANDRA_TOKEN=YOUR_CASSANDRA_TOKEN_HERE
+```
+
+5. Install the Cassandra Node.js driver.
 ```bash npm2yarn
 npm install cassandra-driver
 ```
