@@ -19,17 +19,40 @@ export interface DocumentProps {
 }
 
 export interface MomentoVectorIndexLibArgs {
+  /**
+   * The Momento Vector Index client.
+   */
   client: IVectorIndexClient;
+  /**
+   * The name of the index to use to store the data.
+   * Defaults to "default".
+   */
   indexName?: string;
+  /**
+   * The name of the metadata field to use to store the text of the document.
+   * Defaults to "text".
+   */
   textField?: string;
-  sourceField?: string;
-  fields?: string[];
+  /**
+   * Whether to create the index if it does not already exist.
+   * Defaults to true.
+   */
+  ensureIndexExists?: boolean;
 }
 
 export interface DeleteProps {
+  /**
+   * The ids of the documents to delete.
+   */
   ids: string[];
 }
 
+/**
+ * A vector store that uses the Momento Vector Index.
+ *
+ * @remarks
+ * To sign up for a free Momento account, visit https://console.gomomento.com.
+ */
 export class MomentoVectorIndex extends VectorStore {
   private client: IVectorIndexClient;
 
@@ -37,10 +60,17 @@ export class MomentoVectorIndex extends VectorStore {
 
   private textField: string;
 
+  private _ensureIndexExists: boolean;
+
   _vectorstoreType(): string {
     return "momento";
   }
 
+  /**
+   * Creates a new `MomentoVectorIndex` instance.
+   * @param embeddings The embeddings instance to use to generate embeddings from documents.
+   * @param args The arguments to use to configure the vector store.
+   */
   constructor(embeddings: Embeddings, args: MomentoVectorIndexLibArgs) {
     super(embeddings, args);
 
@@ -48,12 +78,22 @@ export class MomentoVectorIndex extends VectorStore {
     this.client = args.client;
     this.indexName = args.indexName ?? "default";
     this.textField = args.textField ?? "text";
+    this._ensureIndexExists = args.ensureIndexExists ?? true;
   }
 
+  /**
+   * Returns the Momento Vector Index client.
+   * @returns The Momento Vector Index client.
+   */
   public getClient(): IVectorIndexClient {
     return this.client;
   }
 
+  /**
+   * Creates the index if it does not already exist.
+   * @param numDimensions The number of dimensions of the vectors to be stored in the index.
+   * @returns Promise that resolves to true if the index was created, false if it already existed.
+   */
   private async ensureIndexExists(numDimensions: number): Promise<boolean> {
     const response = await this.client.createIndex(
       this.indexName,
@@ -70,6 +110,13 @@ export class MomentoVectorIndex extends VectorStore {
     }
   }
 
+  /**
+   * Converts the metadata to a format that can be stored in the index.
+   *
+   * @remarks stringifies all values in the metadata object
+   * @param metadata The metadata to convert.
+   * @returns The converted metadata.
+   */
   private static prepareMetadata(
     metadata: Record<string, any>
   ): Record<string, string> {
@@ -78,6 +125,16 @@ export class MomentoVectorIndex extends VectorStore {
     );
   }
 
+  /**
+   * Converts the documents to a format that can be stored in the index.
+   *
+   * This is necessary because the Momento Vector Index requires that the metadata
+   * be a map of strings to strings.
+   * @param vectors The vectors to convert.
+   * @param documents The documents to convert.
+   * @param ids The ids to convert.
+   * @returns The converted documents.
+   */
   private prepareItemBatch(
     vectors: number[][],
     documents: Document<Record<string, any>>[],
@@ -93,6 +150,16 @@ export class MomentoVectorIndex extends VectorStore {
     }));
   }
 
+  /**
+   * Adds vectors to the index.
+   *
+   * @remarks If the index does not already exist, it will be created if `ensureIndexExists` is true.
+   * @param vectors The vectors to add to the index.
+   * @param documents The documents to add to the index.
+   * @param documentProps The properties of the documents to add to the index, specifically the ids.
+   * @returns Promise that resolves when the vectors have been added to the index. Also returns the ids of the
+   * documents that were added.
+   */
   public async addVectors(
     vectors: number[][],
     documents: Document<Record<string, any>>[],
@@ -123,7 +190,9 @@ export class MomentoVectorIndex extends VectorStore {
       );
     }
 
-    await this.ensureIndexExists(vectors[0].length);
+    if (this._ensureIndexExists) {
+      await this.ensureIndexExists(vectors[0].length);
+    }
     const documentIds = documentProps?.ids ?? documents.map(() => uuid.v4());
 
     const batchSize = 128;
@@ -174,6 +243,10 @@ export class MomentoVectorIndex extends VectorStore {
     );
   }
 
+  /**
+   * Deletes vectors from the index by id.
+   * @param params The parameters to use to delete the vectors, specifically the ids.
+   */
   public async delete(params: DeleteProps): Promise<void> {
     const response = await this.client.deleteItemBatch(
       this.indexName,
@@ -188,6 +261,13 @@ export class MomentoVectorIndex extends VectorStore {
     }
   }
 
+  /**
+   * Searches the index for the most similar vectors to the query vector.
+   * @param query The query vector.
+   * @param k The number of results to return.
+   * @returns Promise that resolves to the documents of the most similar vectors
+   * to the query vector.
+   */
   public async similaritySearchVectorWithScore(
     query: number[],
     k: number
@@ -219,6 +299,17 @@ export class MomentoVectorIndex extends VectorStore {
     }
   }
 
+  /**
+   * Stores the documents in the index.
+   *
+   * Converts the documents to vectors using the `Embeddings` instance passed.
+   * @param texts The texts to store in the index.
+   * @param metadatas The metadata to store in the index.
+   * @param embeddings The embeddings instance to use to generate embeddings from the documents.
+   * @param dbConfig The configuration to use to instantiate the vector store.
+   * @param documentProps The properties of the documents to add to the index, specifically the ids.
+   * @returns Promise that resolves to the vector store.
+   */
   public static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
@@ -247,6 +338,14 @@ export class MomentoVectorIndex extends VectorStore {
     return await this.fromDocuments(docs, embeddings, dbConfig, documentProps);
   }
 
+  /**
+   * Stores the documents in the index.
+   * @param docs The documents to store in the index.
+   * @param embeddings The embeddings instance to use to generate embeddings from the documents.
+   * @param dbConfig The configuration to use to instantiate the vector store.
+   * @param documentProps The properties of the documents to add to the index, specifically the ids.
+   * @returns Promise that resolves to the vector store.
+   */
   public static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
