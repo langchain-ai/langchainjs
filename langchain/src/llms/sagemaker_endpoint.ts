@@ -201,29 +201,9 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
           },
         });
       } else if (chunk.InternalStreamFailure) {
-        yield new GenerationChunk({
-          text: chunk.InternalStreamFailure.message,
-          generationInfo: {
-            ...chunk.InternalStreamFailure,
-            response: undefined,
-          },
-        });
+        throw new Error(chunk.InternalStreamFailure.message);
       } else if (chunk.ModelStreamError) {
-        yield new GenerationChunk({
-          text: chunk.ModelStreamError.message,
-          generationInfo: {
-            ...chunk.ModelStreamError,
-            response: undefined,
-          },
-        });
-      } else if (chunk.$unknown) {
-        yield new GenerationChunk({
-          text: chunk.$unknown.toString(),
-          generationInfo: {
-            ...chunk.$unknown,
-            response: undefined,
-          },
-        });
+        throw new Error(chunk.ModelStreamError.message);
       }
     }
   }
