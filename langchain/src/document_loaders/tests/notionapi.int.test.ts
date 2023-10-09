@@ -57,7 +57,7 @@ test("Test Notion API Loader onDocumentLoad", async () => {
 
   await loader.load();
 
-  expect(onDocumentLoadedCheck.length).toBe(3);
+  expect(onDocumentLoadedCheck.length).toBe(5);
 
   console.log(onDocumentLoadedCheck);
 });

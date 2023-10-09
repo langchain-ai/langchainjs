@@ -34,7 +34,7 @@ import { BaseFunctionCallOptions } from "../base_language/index.js";
 import { NewTokenIndices } from "../callbacks/base.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
 
-export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
+export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
 interface TokenUsage {
   completionTokens?: number;

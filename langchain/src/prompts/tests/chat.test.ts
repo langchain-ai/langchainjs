@@ -282,7 +282,7 @@ test("Test using partial", async () => {
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
-    `"[{"lc":1,"type":"constructor","id":["langchain","schema","HumanMessage"],"kwargs":{"content":"foobaz","additional_kwargs":{}}}]"`
+    `"Human: foobaz"`
   );
 });
 

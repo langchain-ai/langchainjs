@@ -25,6 +25,7 @@ const entrypoints = {
   "tools/calculator": "tools/calculator",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
+  "tools/google_calendar": "tools/google_calendar/index",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
@@ -32,9 +33,12 @@ const entrypoints = {
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
   "chains/sql_db": "chains/sql_db/index",
+  "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   // embeddings
   "embeddings/base": "embeddings/base",
+  "embeddings/bedrock": "embeddings/bedrock",
   "embeddings/cache_backed": "embeddings/cache_backed",
+  "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
   "embeddings/fake": "embeddings/fake",
   "embeddings/ollama": "embeddings/ollama",
   "embeddings/openai": "embeddings/openai",
@@ -72,6 +76,7 @@ const entrypoints = {
   "vectorstores/base": "vectorstores/base",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
+  "vectorstores/cloudflare_vectorize": "vectorstores/cloudflare_vectorize",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/googlevertexai": "vectorstores/googlevertexai",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
@@ -95,6 +100,7 @@ const entrypoints = {
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
+  "vectorstores/vercel_postgres": "vectorstores/vercel_postgres",
   "vectorstores/voy": "vectorstores/voy",
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
@@ -130,6 +136,7 @@ const entrypoints = {
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
+  "document_loaders/web/searchapi": "document_loaders/web/searchapi",
   "document_loaders/web/serpapi": "document_loaders/web/serpapi",
   "document_loaders/web/sort_xyz_blockchain":
     "document_loaders/web/sort_xyz_blockchain",
@@ -157,6 +164,7 @@ const entrypoints = {
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
+  "chat_models/bedrock": "chat_models/bedrock",
   "chat_models/googlevertexai": "chat_models/googlevertexai/index",
   "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
   "chat_models/googlepalm": "chat_models/googlepalm",
@@ -186,15 +194,19 @@ const entrypoints = {
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/zep": "retrievers/zep",
   "retrievers/metal": "retrievers/metal",
+  "retrievers/chaindesk": "retrievers/chaindesk",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
   "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
+  "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
+  "retrievers/document_compressors/embeddings_filter":
+    "retrievers/document_compressors/embeddings_filter",
   "retrievers/hyde": "retrievers/hyde",
   "retrievers/score_threshold": "retrievers/score_threshold",
   "retrievers/self_query": "retrievers/self_query/index",
@@ -230,6 +242,7 @@ const entrypoints = {
   // storage
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub
   hub: "hub",
   // utilities
@@ -247,6 +260,8 @@ const entrypoints = {
     "experimental/chat_models/bittensor",
   "experimental/llms/bittensor":
     "experimental/llms/bittensor",
+  "experimental/hubs/makersuite/googlemakersuitehub":
+    "experimental/hubs/makersuite/googlemakersuitehub",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -274,9 +289,13 @@ const requiresOptionalDependency = [
   "tools/calculator",
   "tools/sql",
   "tools/webbrowser",
+  "tools/google_calendar",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
+  "chains/graph_qa/cypher",
+  "embeddings/bedrock",
+  "embeddings/cloudflare_workersai",
   "embeddings/cohere",
   "embeddings/googlevertexai",
   "embeddings/googlepalm",
@@ -298,6 +317,7 @@ const requiresOptionalDependency = [
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
+  "vectorstores/cloudflare_vectorize",
   "vectorstores/googlevertexai",
   "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
@@ -319,6 +339,7 @@ const requiresOptionalDependency = [
   "vectorstores/typesense",
   "vectorstores/tigris",
   "vectorstores/usearch",
+  "vectorstores/vercel_postgres",
   "vectorstores/voy",
   "vectorstores/zep",
   "memory/zep",
@@ -357,6 +378,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/openai_whisper_audio",
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
+  "chat_models/bedrock",
   "chat_models/googlevertexai",
   "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
@@ -392,11 +414,13 @@ const requiresOptionalDependency = [
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  "graphs/neo4j_graph",
   // Prevent export due to circular dependency with "load" entrypoint
   "hub",
   "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
+  "experimental/hubs/makersuite/googlemakersuitehub",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

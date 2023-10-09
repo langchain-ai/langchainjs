@@ -180,7 +180,7 @@ export class PGVectorStore extends VectorStore {
         await this.pool.query(insertQuery, flatValues);
       } catch (e) {
         console.error(e);
-        throw new Error(`Error inserting: ${chunk[1]}`);
+        throw new Error(`Error inserting: ${(e as Error).message}`);
       }
     }
   }

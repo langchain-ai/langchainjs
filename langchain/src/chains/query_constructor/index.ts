@@ -22,7 +22,7 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
 import { AttributeInfo } from "../../schema/query_constructor.js";
 
-export { QueryTransformer, TraverseType };
+export { QueryTransformer, type TraverseType };
 export {
   DEFAULT_EXAMPLES,
   DEFAULT_PREFIX,

@@ -1,15 +1,15 @@
 export {
   RemoteRetriever,
-  RemoteRetrieverParams,
-  RemoteRetrieverAuth,
-  RemoteRetrieverValues,
+  type RemoteRetrieverParams,
+  type RemoteRetrieverAuth,
+  type RemoteRetrieverValues,
 } from "./base.js";
 export {
   ChatGPTPluginRetriever,
-  ChatGPTPluginRetrieverFilter,
-  ChatGPTPluginRetrieverParams,
+  type ChatGPTPluginRetrieverFilter,
+  type ChatGPTPluginRetrieverParams,
 } from "./chatgpt-plugin.js";
 export {
   RemoteLangChainRetriever,
-  RemoteLangChainRetrieverParams,
+  type RemoteLangChainRetrieverParams,
 } from "./remote-retriever.js";
