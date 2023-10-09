@@ -10,7 +10,7 @@ export class EncoderBackedStore<K, V, SerializedType = any> extends BaseStore<
   K,
   V
 > {
-  lc_namespace = ["langchain", "storage", "encoder_backed"];
+  lc_namespace = ["langchain", "storage"];
 
   store: BaseStore<string, SerializedType>;
 
