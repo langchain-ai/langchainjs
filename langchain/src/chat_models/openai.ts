@@ -494,7 +494,10 @@ export class ChatOpenAI<
 
       const { functions, function_call } = this.invocationParams(options);
 
-      const promptTokenUsage = promptTokensEstimate({
+      // OpenAI does not support token usage report under stream mode,
+      // fallback to estimation.
+
+      let promptTokenUsage = promptTokensEstimate({
         messages: messages.map((msg) => ({
           ...msg,
           role: messageToOpenAIRole(msg),
@@ -502,6 +505,13 @@ export class ChatOpenAI<
         functions,
         function_call,
       });
+
+      if (this.modelName === "gpt-3.5-turbo-0301") {
+        // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
+        promptTokenUsage += messages.length;
+        promptTokenUsage -= messages.filter((msg) => msg.name).length * 2;
+      }
+
       let completionTokenUsage = 0;
       if (function_call) {
         completionTokenUsage = generations
@@ -573,7 +583,7 @@ export class ChatOpenAI<
     }
   }
 
-  override async getNumTokensFromMessages(messages: BaseMessage[]) {
+  async getNumTokensFromMessages(messages: BaseMessage[]) {
     let totalCount = 0;
     let tokensPerMessage = 0;
     let tokensPerName = 0;
