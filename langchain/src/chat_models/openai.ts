@@ -1,4 +1,8 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import {
+  promptTokensEstimate,
+  messageTokensEstimate,
+} from "openai-chat-tokens";
 
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
@@ -80,6 +84,24 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
+}
+
+function messageToOpenAIMessage(
+  message: BaseMessage
+): OpenAIClient.Chat.Completions.ChatCompletionMessageParam {
+  const msg = {
+    content: message.content || null,
+    name: message.name,
+    role: messageToOpenAIRole(message),
+    function_call: message.additional_kwargs.function_call,
+  };
+  if (msg.function_call?.arguments) {
+    // Remove spaces, new line characters etc.
+    msg.function_call.arguments = JSON.stringify(
+      JSON.parse(msg.function_call.arguments)
+    );
+  }
+  return msg;
 }
 
 function openAIResponseToChatMessage(
@@ -470,13 +492,30 @@ export class ChatOpenAI<
         .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
         .map(([_, value]) => value);
 
-      const promptTokenUsage = (await this.getNumTokensFromMessages(messages))
-        .totalCount;
-      const completionTokenUsage = (
-        await Promise.all(
-          generations.map((gen) => this.getNumTokens(gen.message.content))
-        )
-      ).reduce((a, b) => a + b);
+      const { functions, function_call } = this.invocationParams(options);
+
+      const promptTokenUsage = promptTokensEstimate({
+        messages: messages.map((msg) => ({
+          ...msg,
+          role: messageToOpenAIRole(msg),
+        })),
+        functions,
+        function_call,
+      });
+      let completionTokenUsage = 0;
+      if (function_call) {
+        completionTokenUsage = generations
+          .map((gen) =>
+            messageTokensEstimate(messageToOpenAIMessage(gen.message))
+          )
+          .reduce((a, b) => a + b, 0);
+      } else {
+        completionTokenUsage = (
+          await Promise.all(
+            generations.map((gen) => this.getNumTokens(gen.message.content))
+          )
+        ).reduce((a, b) => a + b, 0);
+      }
 
       tokenUsage.promptTokens = promptTokenUsage;
       tokenUsage.completionTokens = completionTokenUsage;

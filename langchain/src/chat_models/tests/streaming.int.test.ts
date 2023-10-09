@@ -5,7 +5,7 @@ import { HumanMessage } from "../../schema/index.js";
 // Temporary testing file, test cases here should be merged into other testing files
 // before PR.
 
-test("Test OpenAIChat token usage reporting for streaming function calls", async () => {
+test("Test ChatOpenAI token usage reporting for streaming function calls", async () => {
   let streamingTokenUsed = -1;
   let nonStreamingTokenUsed = -1;
 
@@ -32,7 +32,7 @@ test("Test OpenAIChat token usage reporting for streaming function calls", async
       },
       required: ["tone", "word_count", "chat_response"],
     },
-  }
+  };
 
   const streamingModel = new ChatOpenAI({
     modelName: "gpt-4",
@@ -86,13 +86,13 @@ test("Test OpenAIChat token usage reporting for streaming function calls", async
   expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
 });
 
-test("Test OpenAIChat token usage reporting for streaming calls", async () => {
+test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   let streamingTokenUsed = -1;
   let nonStreamingTokenUsed = -1;
   const question = "What is the color of the night sky?";
 
   const streamingModel = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-0301",
+    modelName: "gpt-3.5-turbo",
     streaming: true,
     maxRetries: 10,
     maxConcurrency: 10,
@@ -101,6 +101,7 @@ test("Test OpenAIChat token usage reporting for streaming calls", async () => {
       {
         handleLLMEnd: async (output) => {
           streamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("Estimated usage: ", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
@@ -110,7 +111,7 @@ test("Test OpenAIChat token usage reporting for streaming calls", async () => {
   });
 
   const nonStreamingModel = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-0301",
+    modelName: "gpt-3.5-turbo",
     streaming: false,
     maxRetries: 10,
     maxConcurrency: 10,
@@ -119,6 +120,7 @@ test("Test OpenAIChat token usage reporting for streaming calls", async () => {
       {
         handleLLMEnd: async (output) => {
           nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("Actual usage: ", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
