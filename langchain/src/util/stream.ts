@@ -28,7 +28,7 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     const cancelPromise = this.reader.cancel(); // cancel first, but don't await yet
     this.reader.releaseLock(); // release lock first
     await cancelPromise; // now await it
-    return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore chunk value anyway
+    return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore final chunk value anyway
   }
 
   [Symbol.asyncIterator]() {
@@ -64,10 +64,9 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
         // When no more data needs to be consumed, close the stream
         if (done) {
           controller.close();
-        // Fix: `else if (value)` will hang the streaming when nullish value (e.g. empty string) is pulled
-        } else {
-          controller.enqueue(value);
         }
+        // Fix: `else if (value)` will hang the streaming when nullish value (e.g. empty string) is pulled
+        controller.enqueue(value);
       },
     });
   }
