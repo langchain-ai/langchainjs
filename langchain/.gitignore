@@ -397,6 +397,9 @@ chat_models/base.d.ts
 chat_models/openai.cjs
 chat_models/openai.js
 chat_models/openai.d.ts
+chat_models/portkey.cjs
+chat_models/portkey.js
+chat_models/portkey.d.ts
 chat_models/anthropic.cjs
 chat_models/anthropic.js
 chat_models/anthropic.d.ts
@@ -424,9 +427,6 @@ chat_models/ollama.d.ts
 chat_models/minimax.cjs
 chat_models/minimax.js
 chat_models/minimax.d.ts
-chat_models/portkey.cjs
-chat_models/portkey.js
-chat_models/portkey.d.ts
 schema.cjs
 schema.js
 schema.d.ts

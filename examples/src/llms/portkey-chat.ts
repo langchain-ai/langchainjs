@@ -1,5 +1,6 @@
 import { PortkeyChat } from "langchain/chat_models/portkey";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { SystemMessage } from "langchain/schema";
+()
 export const run = async () => {
   const model = new PortkeyChat({
     mode: "single",
@@ -13,9 +14,7 @@ export const run = async () => {
     ],
   });
   const chatPrompt = [new SystemMessage("Question: Write a story")];
-  const res = await model.stream(
-    chatPrompt
-  );
+  const res = await model.stream(chatPrompt);
   for await (const i of res) {
     process.stdout.write(i.content);
   }

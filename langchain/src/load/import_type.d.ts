@@ -97,6 +97,9 @@ export interface OptionalImportMap {
   "langchain/llms/writer"?:
     | typeof import("../llms/writer.js")
     | Promise<typeof import("../llms/writer.js")>;
+  "langchain/llms/portkey"?:
+    | typeof import("../llms/portkey.js")
+    | Promise<typeof import("../llms/portkey.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;

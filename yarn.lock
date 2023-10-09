@@ -6737,7 +6737,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.182":
+"@types/lodash@npm:^4, @types/lodash@npm:^4.14.182":
   version: 4.14.199
   resolution: "@types/lodash@npm:4.14.199"
   checksum: e68d1fcbbfce953ed87b296a628573f62939227bcda0c934954e862b421e8a34c5e71cad6fea27b9980567909e6a4698f09025692958e36d64ea9ed99ec6fb2e
@@ -13639,6 +13639,7 @@ __metadata:
     "@types/html-to-text": ^9
     "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
+    "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
     "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
@@ -13692,6 +13693,7 @@ __metadata:
     langchainhub: ~0.0.6
     langsmith: ~0.0.31
     llmonitor: ^0.5.4
+    lodash: ^4.17.21
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -13807,6 +13809,7 @@ __metadata:
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
+    portkey-ai: ^0.1.11
     puppeteer: ^19.7.2
     redis: ^4.6.4
     replicate: ^0.18.0
@@ -13959,6 +13962,8 @@ __metadata:
     pickleparser:
       optional: true
     playwright:
+      optional: true
+    portkey-ai:
       optional: true
     puppeteer:
       optional: true

@@ -33,6 +33,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/bedrock",
   "langchain/llms/llama_cpp",
   "langchain/llms/writer",
+  "langchain/llms/portkey",
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/elasticsearch",

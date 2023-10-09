@@ -1,51 +1,47 @@
-/* eslint-disable no-process-env */
 import _ from "lodash";
 import { LLMOptions, Portkey as _Portkey } from "portkey-ai";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { GenerationChunk, LLMResult } from "../schema/index.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { BaseLLM } from "./base.js";
 
 interface PortkeyOptions {
-    apiKey?: string;
-    baseURL?: string;
-    mode?: string;
-    llms?: [LLMOptions] | null;
+  apiKey?: string;
+  baseURL?: string;
+  mode?: string;
+  llms?: [LLMOptions] | null;
 }
 
-const readEnv = (env: string, default_val?: string): string | undefined => {
-    if (typeof process !== "undefined") {
-        return process.env?.[env] ?? default_val;
-    }
-    return default_val;
-};
+const readEnv = (env: string, default_val?: string): string | undefined =>
+  getEnvironmentVariable(env) ?? default_val;
 
 export class PortkeySession {
-    portkey: _Portkey;
+  portkey: _Portkey;
 
-    constructor(options: PortkeyOptions = {}) {
-        if (!options.apiKey) {
-            /* eslint-disable no-param-reassign */
-            options.apiKey = readEnv("PORTKEY_API_KEY");
-        }
-
-        if (!options.baseURL) {
-            /* eslint-disable no-param-reassign */
-            options.baseURL = readEnv("PORTKEY_BASE_URL", "https://api.portkey.ai");
-        }
-
-        this.portkey = new _Portkey({});
-        this.portkey.llms = [{}];
-        if (!options.apiKey) {
-            throw new Error("Set Portkey ApiKey in PORTKEY_API_KEY env variable");
-        }
-
-        this.portkey = new _Portkey(options);
+  constructor(options: PortkeyOptions = {}) {
+    if (!options.apiKey) {
+      /* eslint-disable no-param-reassign */
+      options.apiKey = readEnv("PORTKEY_API_KEY");
     }
+
+    if (!options.baseURL) {
+      /* eslint-disable no-param-reassign */
+      options.baseURL = readEnv("PORTKEY_BASE_URL", "https://api.portkey.ai");
+    }
+
+    this.portkey = new _Portkey({});
+    this.portkey.llms = [{}];
+    if (!options.apiKey) {
+      throw new Error("Set Portkey ApiKey in PORTKEY_API_KEY env variable");
+    }
+
+    this.portkey = new _Portkey(options);
+  }
 }
 
 const defaultPortkeySession: {
-    session: PortkeySession;
-    options: PortkeyOptions;
+  session: PortkeySession;
+  options: PortkeyOptions;
 }[] = [];
 
 /**
@@ -55,105 +51,105 @@ const defaultPortkeySession: {
  * @returns
  */
 export function getPortkeySession(options: PortkeyOptions = {}) {
-    let session = defaultPortkeySession.find((session) => _.isEqual(session.options, options))?.session;
+  let session = defaultPortkeySession.find((session) =>
+    _.isEqual(session.options, options)
+  )?.session;
 
-    if (!session) {
-        session = new PortkeySession(options);
-        defaultPortkeySession.push({ session, options });
-    }
-    return session;
+  if (!session) {
+    session = new PortkeySession(options);
+    defaultPortkeySession.push({ session, options });
+  }
+  return session;
 }
 
 export class Portkey extends BaseLLM {
-    apiKey?: string = undefined;
+  apiKey?: string = undefined;
 
-    baseURL?: string = undefined;
+  baseURL?: string = undefined;
 
-    mode?: string = undefined;
+  mode?: string = undefined;
 
-    llms?: [LLMOptions] | null = undefined;
+  llms?: [LLMOptions] | null = undefined;
 
-    session: PortkeySession;
+  session: PortkeySession;
 
-    constructor(init?: Partial<Portkey>) {
-        super(init ?? {});
-        this.apiKey = init?.apiKey;
+  constructor(init?: Partial<Portkey>) {
+    super(init ?? {});
+    this.apiKey = init?.apiKey;
 
-        this.baseURL = init?.baseURL;
+    this.baseURL = init?.baseURL;
 
-        this.mode = init?.mode;
+    this.mode = init?.mode;
 
-        this.llms = init?.llms;
+    this.llms = init?.llms;
 
-        this.session = getPortkeySession({
-            apiKey: this.apiKey,
-            baseURL: this.baseURL,
-            llms: this.llms,
-            mode: this.mode,
-        });
+    this.session = getPortkeySession({
+      apiKey: this.apiKey,
+      baseURL: this.baseURL,
+      llms: this.llms,
+      mode: this.mode,
+    });
+  }
+
+  _llmType() {
+    return "portkey";
+  }
+
+  async _generate(
+    prompts: string[],
+    options: this["ParsedCallOptions"],
+    _?: CallbackManagerForLLMRun
+  ): Promise<LLMResult> {
+    const choices = [];
+    for (let i = 0; i < prompts.length; i += 1) {
+      const response = await this.session.portkey.completions.create({
+        prompt: prompts[i],
+        ...options,
+        stream: false,
+      });
+      choices.push(response.choices);
     }
+    const generations = choices.map((promptChoices) =>
+      promptChoices.map((choice) => ({
+        text: choice.text ?? "",
+        generationInfo: {
+          finishReason: choice.finish_reason,
+          logprobs: choice.logprobs,
+        },
+      }))
+    );
 
-    _llmType() {
-        return "portkey";
+    return {
+      generations,
+    };
+  }
+
+  async *_streamResponseChunks(
+    input: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const response = await this.session.portkey.completions.create({
+      prompt: input,
+      ...options,
+      stream: true,
+    });
+    for await (const data of response) {
+      const choice = data?.choices[0];
+      if (!choice) {
+        continue;
+      }
+      const chunk = new GenerationChunk({
+        text: choice.text ?? "",
+        generationInfo: {
+          finishReason: choice.finish_reason,
+        },
+      });
+      yield chunk;
+      void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
-
-    async _generate(
-        prompts: string[],
-        options: this["ParsedCallOptions"],
-        _?: CallbackManagerForLLMRun
-    ): Promise<LLMResult> {
-        const choices = [];
-        for (let i = 0; i < prompts.length; i += 1) {
-            const response = await this.session.portkey.completions.create({
-                prompt: prompts[i],
-                ...options,
-                stream: false,
-            });
-            choices.push(response.choices);
-        }
-        const generations = choices.map((promptChoices) =>
-            promptChoices.map((choice) => ({
-                text: choice.text ?? "",
-                generationInfo: {
-                    finishReason: choice.finish_reason,
-                    logprobs: choice.logprobs,
-                },
-            }))
-        );
-
-        return {
-            generations,
-        };
+    if (options.signal?.aborted) {
+      throw new Error("AbortError");
     }
-
-    async *_streamResponseChunks(
-        input: string,
-        options: this["ParsedCallOptions"],
-        runManager?: CallbackManagerForLLMRun
-    ): AsyncGenerator<GenerationChunk> {
-        const response = await this.session.portkey.completions.create({
-            prompt: input,
-            ...options,
-            stream: true,
-        });
-        for await (const data of response) {
-            const choice = data?.choices[0];
-            if (!choice) {
-                continue;
-            }
-            const chunk = new GenerationChunk({
-                text: choice.text ?? "",
-                generationInfo: {
-                    finishReason: choice.finish_reason,
-                },
-            });
-            yield chunk;
-            void runManager?.handleLLMNewToken(chunk.text ?? "");
-        }
-        if (options.signal?.aborted) {
-            throw new Error("AbortError");
-        }
-    }
+  }
 }
-
-export default Portkey;
