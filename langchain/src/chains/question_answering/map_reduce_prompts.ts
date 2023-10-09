@@ -42,7 +42,7 @@ QUESTION: {question}
 =========
 SUMMARIES: {summaries}
 =========
-FINAL ANSWER:`
+FINAL ANSWER:`;
 
 export const COMBINE_PROMPT =
   /*#__PURE__*/ PromptTemplate.fromTemplate(combine_prompt);
