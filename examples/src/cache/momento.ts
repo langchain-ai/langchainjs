@@ -4,7 +4,7 @@ import {
   CacheClient,
   Configurations,
   CredentialProvider,
-} from "@gomomento/sdk";
+} from "@gomomento/sdk"; // `from "gomomento/sdk-web";` for browser/edge
 
 // See https://github.com/momentohq/client-sdk-javascript for connection options
 const client = new CacheClient({
