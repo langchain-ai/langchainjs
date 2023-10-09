@@ -10,6 +10,7 @@ import {
 import { Document } from "langchain/document";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
+import { QA_PROMPT_SELECTOR } from "langchain/chains";
 
 // Initialize the LLM to use to answer the question.
 const model = new OpenAI({});
@@ -26,9 +27,11 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 // Initialize a retriever wrapper around the vector store
 const vectorStoreRetriever = vectorStore.asRetriever();
 
-const questionPrompt =
-  PromptTemplate.fromTemplate(`Based on the following context: {context}
-Answer this question: {question}`);
+/**
+ * Gets the default prompt from the RetrievalQA chain.
+ * @default "Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n {context}\n Question: {question}\n Helpful Answer:""
+ */
+const questionPrompt = QA_PROMPT_SELECTOR.getPrompt(model);
 
 const chain = RunnableSequence.from([
   {

@@ -99,3 +99,4 @@ export {
   type OpenAPIChainOptions,
   createOpenAPIChain,
 } from "./openai_functions/openapi.js";
+export { QA_PROMPT_SELECTOR } from "./question_answering/stuff_prompts.js";
