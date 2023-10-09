@@ -82,7 +82,7 @@
       "src/llms/googlevertexai/web.ts",
       "src/llms/googlepalm.ts",
       "src/llms/fireworks.ts",
-      "src/llms/sagemaker.ts",
+      "src/llms/sagemaker_endpoint.ts",
       "src/llms/bedrock.ts",
       "src/llms/llama_cpp.ts",
       "src/llms/writer.ts",

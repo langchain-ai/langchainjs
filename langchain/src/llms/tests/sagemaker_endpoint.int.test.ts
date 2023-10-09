@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect, test } from "@jest/globals";
-import { SageMaker, SageMakerLLMContentHandler } from "../sagemaker.js";
+import { SageMakerEndpoint, SageMakerLLMContentHandler } from "../sagemaker_endpoint.js";
 
 // yarn test:single /{path_to}/langchain/src/llms/tests/sagemaker.int.test.ts
 describe("Test SageMaker LLM", () => {
@@ -41,7 +41,7 @@ describe("Test SageMaker LLM", () => {
     }
 
     const contentHandler = new LLama213BHandler();
-    const model = new SageMaker({
+    const model = new SageMakerEndpoint({
       endpointName: "meta-textgeneration-llama-2-13b-f-2023-10-06-23-23-13-817",
       streaming: false,
       modelKwargs: {
@@ -105,7 +105,7 @@ describe("Test SageMaker LLM", () => {
     }
 
     const contentHandler = new LLama213BHandler();
-    const model = new SageMaker({
+    const model = new SageMakerEndpoint({
       endpointName: "meta-textgeneration-llama-2-13b-f-2023-10-06-23-23-13-817",
       streaming: true, // specify streaming
       modelKwargs: {

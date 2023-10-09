@@ -1,7 +1,7 @@
 import {
-  SageMaker,
+  SageMakerEndpoint,
   SageMakerLLMContentHandler,
-} from "langchain/llms/sagemaker";
+} from "langchain/llms/sagemaker_endpoint";
 
 interface ResponseJsonInterface {
   generation: {
@@ -40,7 +40,7 @@ class LLama213BHandler implements SageMakerLLMContentHandler {
 
 const contentHandler = new LLama213BHandler();
 
-const model = new SageMaker({
+const model = new SageMakerEndpoint({
   endpointName: "aws-llama-2-13b-chat",
   modelKwargs: {
     temperature: 0.5,

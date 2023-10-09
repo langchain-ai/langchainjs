@@ -49,7 +49,7 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
 /**
  * Class to interact with a SageMaker endpoint using aws InvokeEndpointCommand or InvokeEndpointWithResponseStreamCommand API.
  */
-export class SageMaker extends LLM<BaseLLMCallOptions> {
+export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   endpointName: string;
 
   modelKwargs?: Record<string, unknown>;
@@ -63,7 +63,7 @@ export class SageMaker extends LLM<BaseLLMCallOptions> {
   streaming: boolean;
 
   _llmType() {
-    return this.streaming ? "sagemaker_with_stream" : "sagemaker";
+    return "sagemaker";
   }
 
   constructor(fields: SageMakerEndpointInput) {

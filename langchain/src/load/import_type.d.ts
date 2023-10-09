@@ -91,9 +91,9 @@ export interface OptionalImportMap {
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
-  "langchain/llms/sagemaker"?:
-    | typeof import("../llms/sagemaker.js")
-    | Promise<typeof import("../llms/sagemaker.js")>;
+  "langchain/llms/sagemaker_endpoint"?:
+    | typeof import("../llms/sagemaker_endpoint.js")
+    | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock.js")
     | Promise<typeof import("../llms/bedrock.js")>;
