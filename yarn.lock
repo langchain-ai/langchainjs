@@ -5685,15 +5685,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^0.0.14":
-  version: 0.0.14
-  resolution: "@pinecone-database/pinecone@npm:0.0.14"
-  dependencies:
-    cross-fetch: ^3.1.5
-  checksum: 3af7a4936bef92e456203307c59eaf5e07447308e47a7fad18060b2a6a04f15ad49f00f378cdbbe709e6e60cb07d1ed71d612f1e6b2b78e56e85b97852448d09
-  languageName: node
-  linkType: hard
-
 "@pinecone-database/pinecone@npm:^1.1.0":
   version: 1.1.0
   resolution: "@pinecone-database/pinecone@npm:1.1.0"
@@ -20958,13 +20949,6 @@ __metadata:
   peerDependencies:
     zod: ^3.21.4
   checksum: 899c1f461fb6547c0b08a265c82040c250be9b88d3f408f2f3ff77a418fdfad7549077e589d418fccb312c1f6d555c3c7217b199cc9072762e1fab20716dd2a6
-  languageName: node
-  linkType: hard
-
-"zod@npm:^3.21.4":
-  version: 3.21.4
-  resolution: "zod@npm:3.21.4"
-  checksum: f185ba87342ff16f7a06686767c2b2a7af41110c7edf7c1974095d8db7a73792696bcb4a00853de0d2edeb34a5b2ea6a55871bc864227dace682a0a28de33e1f
   languageName: node
   linkType: hard
 
