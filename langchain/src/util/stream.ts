@@ -61,9 +61,11 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     return new IterableReadableStream<T>({
       async pull(controller) {
         const { value, done } = await generator.next();
+        // When no more data needs to be consumed, close the stream
         if (done) {
           controller.close();
-        } else if (value) {
+        // Fix: `else if (value)` will hang the streaming when nullish value (e.g. empty string) is pulled
+        } else {
           controller.enqueue(value);
         }
       },
