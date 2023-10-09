@@ -45,7 +45,7 @@ describe.skip("Test SageMaker LLM", () => {
 
     const contentHandler = new LLama213BHandler();
     const model = new SageMakerEndpoint({
-      endpointName: "meta-textgeneration-llama-2-13b-f-2023-10-06-23-23-13-817",
+      endpointName: "aws-productbot-ai-dev-llama-2-13b-chat",
       streaming: false,
       modelKwargs: {
         temperature: 0.5,
@@ -66,19 +66,13 @@ describe.skip("Test SageMaker LLM", () => {
     });
 
     const response = await model.call(
-      "hello, my name is John Doe, tell me a fun story about llamas in 3 paragraphs"
+      "hello, my name is John Doe, tell me a fun story about llamas."
     );
 
     expect(response.length).toBeGreaterThan(0);
   });
 
   test("with streaming", async () => {
-    interface ResponseJsonInterface {
-      generation: {
-        content: string;
-      };
-    }
-
     class LLama213BHandler implements SageMakerLLMContentHandler {
       contentType = "application/json";
 
@@ -99,17 +93,13 @@ describe.skip("Test SageMaker LLM", () => {
       }
 
       async transformOutput(output: Uint8Array): Promise<string> {
-        const response_json = JSON.parse(
-          new TextDecoder("utf-8").decode(output)
-        ) as ResponseJsonInterface[];
-        const content = response_json[0]?.generation.content ?? "";
-        return content;
+        return new TextDecoder("utf-8").decode(output)
       }
     }
 
     const contentHandler = new LLama213BHandler();
     const model = new SageMakerEndpoint({
-      endpointName: "meta-textgeneration-llama-2-13b-f-2023-10-06-23-23-13-817",
+      endpointName: "aws-productbot-ai-dev-llama-2-13b-chat",
       streaming: true, // specify streaming
       modelKwargs: {
         temperature: 0.5,
