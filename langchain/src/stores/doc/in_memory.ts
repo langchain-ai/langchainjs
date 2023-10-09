@@ -6,6 +6,8 @@ import { Docstore } from "../../schema/index.js";
  * Extends the Docstore class.
  */
 export class InMemoryDocstore extends Docstore {
+  lc_namespace = ["langchain", "stores", "doc"];
+
   _docs: Map<string, Document>;
 
   constructor(docs?: Map<string, Document>) {

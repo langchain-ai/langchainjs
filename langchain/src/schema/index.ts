@@ -1,6 +1,7 @@
 import type { OpenAI as OpenAIClient } from "openai";
 import { Document } from "../document.js";
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
+import { BaseStore } from "./storage.js";
 
 export const RUN_KEY = "__run";
 
@@ -723,8 +724,29 @@ export abstract class BaseEntityStore extends Serializable {
  * Abstract class for a document store. All document stores should extend
  * this class.
  */
-export abstract class Docstore {
+export abstract class Docstore extends BaseStore<string, Document> {
+  lc_namespace = ["langchain", "schema"];
+
   abstract search(search: string): Promise<Document>;
 
   abstract add(texts: Record<string, Document>): Promise<void>;
+
+  async mget(keys: string[]): Promise<Document[]> {
+    return Promise.all(keys.map((key) => this.search(key)));
+  }
+
+  async mset(keyValuePairs: [string, Document][]): Promise<void> {
+    await Promise.all(
+      keyValuePairs.map(([key, value]) => this.add({ [key]: value }))
+    );
+  }
+
+  async mdelete(_keys: string[]): Promise<void> {
+    throw new Error("Not implemented.");
+  }
+
+  // eslint-disable-next-line require-yield
+  async *yieldKeys(_prefix?: string): AsyncGenerator<string> {
+    throw new Error("Not implemented");
+  }
 }
