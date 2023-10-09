@@ -1,0 +1,74 @@
+---
+sidebar_class_name: node-only
+---
+
+# Cassandra
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+
+[Apache Cassandra®](https://cassandra.apache.org/_/index.html) is a NoSQL, row-oriented, highly scalable and highly available database.
+
+The [latest version](https://cwiki.apache.org/confluence/display/CASSANDRA/CEP-30%3A+Approximate+Nearest+Neighbor(ANN)+Vector+Search+via+Storage-Attached+Indexes) of Apache Cassandra natively supports Vector Similarity Search.
+
+## Setup
+1. Create an [Astra DB account](https://astra.datastax.com/register).
+2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
+3. Download your secure connect bundle and application token on your database's "Connect" tab.
+
+```bash npm2yarn
+npm install cassandra-driver
+```
+
+## Index and query docs
+
+```typescript
+import { Cassandra } from "langchain/vectorstores/milvus";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+
+// text sample from Godel, Escher, Bach
+const vectorStore = await Cassandra.fromTexts(
+  [
+    "Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little\
+            Harmonic Labyrinth of the dreaded Majotaur?",
+    "Achilles: Yiikes! What is that?",
+    "Tortoise: They say-although I person never believed it myself-that an I\
+            Majotaur has created a tiny labyrinth sits in a pit in the middle of\
+            it, waiting innocent victims to get lost in its fears complexity.\
+            Then, when they wander and dazed into the center, he laughs and\
+            laughs at them-so hard, that he laughs them to death!",
+    "Achilles: Oh, no!",
+    "Tortoise: But it's only a myth. Courage, Achilles.",
+  ],
+  [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
+  new OpenAIEmbeddings(),
+  {
+    collectionName: "goldel_escher_bach",
+  }
+);
+
+// or alternatively from docs
+const vectorStore = await Cassandra.fromDocuments(docs, new OpenAIEmbeddings(), {
+  collectionName: "goldel_escher_bach",
+});
+
+const response = await vectorStore.similaritySearch("scared", 2);
+```
+
+## Query docs from existing collection
+
+```typescript
+import { Cassandra } from "langchain/vectorstores/cassandra";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+
+const vectorStore = await Cassandra.fromExistingCollection(
+  new OpenAIEmbeddings(),
+  {
+    collectionName: "goldel_escher_bach",
+  }
+);
+
+const response = await vectorStore.similaritySearch("scared", 2);
+```
