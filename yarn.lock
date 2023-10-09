@@ -14697,6 +14697,7 @@ __metadata:
     ioredis: ^5.3.2
     jsdom: "*"
     llmonitor: "*"
+    lodash: ^4.17.21
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -14842,6 +14843,8 @@ __metadata:
     jsdom:
       optional: true
     llmonitor:
+      optional: true
+    lodash:
       optional: true
     mammoth:
       optional: true
