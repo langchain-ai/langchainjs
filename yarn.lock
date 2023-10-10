@@ -8240,7 +8240,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.182":
+"@types/lodash@npm:^4, @types/lodash@npm:^4.14.182":
   version: 4.14.199
   resolution: "@types/lodash@npm:4.14.199"
   checksum: e68d1fcbbfce953ed87b296a628573f62939227bcda0c934954e862b421e8a34c5e71cad6fea27b9980567909e6a4698f09025692958e36d64ea9ed99ec6fb2e
@@ -9036,6 +9036,15 @@ __metadata:
     depd: ^2.0.0
     humanize-ms: ^1.2.1
   checksum: 982453aa44c11a06826c836025e5162c846e1200adb56f2d075400da7d32d87021b3b0a58768d949d824811f5654223d5a8a3dad120921a2439625eb847c6260
+  languageName: node
+  linkType: hard
+
+"agentkeepalive@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "agentkeepalive@npm:4.5.0"
+  dependencies:
+    humanize-ms: ^1.2.1
+  checksum: 13278cd5b125e51eddd5079f04d6fe0914ac1b8b91c1f3db2c1822f99ac1a7457869068997784342fe455d59daaff22e14fb7b8c3da4e741896e7e31faf92481
   languageName: node
   linkType: hard
 
@@ -15250,6 +15259,7 @@ __metadata:
     "@types/html-to-text": ^9
     "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
+    "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
     "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
@@ -15304,6 +15314,7 @@ __metadata:
     langchainhub: ~0.0.6
     langsmith: ~0.0.31
     llmonitor: ^0.5.4
+    lodash: ^4.17.21
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -15323,6 +15334,7 @@ __metadata:
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
+    portkey-ai: ^0.1.11
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.6
@@ -15408,6 +15420,7 @@ __metadata:
     ioredis: ^5.3.2
     jsdom: "*"
     llmonitor: "*"
+    lodash: ^4.17.21
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -15420,6 +15433,7 @@ __metadata:
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
+    portkey-ai: ^0.1.11
     puppeteer: ^19.7.2
     redis: ^4.6.4
     replicate: ^0.18.0
@@ -15553,6 +15567,8 @@ __metadata:
       optional: true
     llmonitor:
       optional: true
+    lodash:
+      optional: true
     mammoth:
       optional: true
     mongodb:
@@ -15576,6 +15592,8 @@ __metadata:
     pickleparser:
       optional: true
     playwright:
+      optional: true
+    portkey-ai:
       optional: true
     puppeteer:
       optional: true
@@ -18047,6 +18065,15 @@ __metadata:
   bin:
     playwright: cli.js
   checksum: bb2cef8812abf60cf07bbf6edb4ac480ccbf0b129e001fd4f2d499c8888918bc87dcc0f346b5954e6b67cd67528c8263593b091f3c83609a91c8a276196c8951
+  languageName: node
+  linkType: hard
+
+"portkey-ai@npm:^0.1.11":
+  version: 0.1.11
+  resolution: "portkey-ai@npm:0.1.11"
+  dependencies:
+    agentkeepalive: ^4.5.0
+  checksum: a3f6dfee5f52da7797575b907e081c9cb9ba951d9b061e9858601a952ea7be931ffcd81c874d49beb6120afaa0f1689219d42c4b6256d0fcac6d8af70e8443af
   languageName: node
   linkType: hard
 

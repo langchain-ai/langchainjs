@@ -68,6 +68,7 @@ const entrypoints = {
   "llms/bedrock": "llms/bedrock",
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
+  "llms/portkey": "llms/portkey",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -163,6 +164,7 @@ const entrypoints = {
   // chat_models
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
+  "chat_models/portkey": "chat_models/portkey",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/bedrock": "chat_models/bedrock",
   "chat_models/googlevertexai": "chat_models/googlevertexai/index",
@@ -314,6 +316,7 @@ const requiresOptionalDependency = [
   "llms/bedrock",
   "llms/llama_cpp",
   "llms/writer",
+  "llms/portkey",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
@@ -382,6 +385,7 @@ const requiresOptionalDependency = [
   "chat_models/googlevertexai",
   "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
+  "chat_models/portkey",
   "sql_db",
   "retrievers/amazon_kendra",
   "retrievers/supabase",
