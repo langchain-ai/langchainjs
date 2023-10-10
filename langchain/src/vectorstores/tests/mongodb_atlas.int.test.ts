@@ -3,10 +3,11 @@
 
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
-import { CohereEmbeddings } from "../../embeddings/cohere.js";
+import { setTimeout } from "timers/promises";
 import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
 
 import { Document } from "../../document.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.
@@ -15,8 +16,9 @@ import { Document } from "../../document.js";
 {
   "mappings": {
     "fields": {
+      "e": { "type": "number" },
       "embedding": {
-        "dimensions": 1024,
+        "dimensions": 1536,
         "similarity": "euclidean",
         "type": "knnVector"
       }
@@ -24,10 +26,6 @@ import { Document } from "../../document.js";
   }
 }
 */
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
@@ -40,7 +38,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     const [dbName, collectionName] = namespace.split(".");
     const collection = client.db(dbName).collection(collectionName);
 
-    const vectorStore = new MongoDBAtlasVectorSearch(new CohereEmbeddings(), {
+    const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
       collection,
     });
 
@@ -57,7 +55,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     ]);
 
     // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
-    await sleep(2000);
+    await setTimeout(2000);
     const results: Document[] = await vectorStore.similaritySearch(
       "Sandwich",
       1
@@ -70,7 +68,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
 
     // we can pre filter the search
     const preFilter = {
-      range: { lte: 1, path: "e" },
+      e: { $lte: 1 },
     };
 
     const filteredResults = await vectorStore.similaritySearch(
@@ -113,12 +111,12 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
     const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
       texts,
       {},
-      new CohereEmbeddings(),
-      { collection }
+      new OpenAIEmbeddings(),
+      { collection, indexName: "default" }
     );
 
     // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
-    await sleep(2000);
+    await setTimeout(5000);
 
     const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
       k: 10,
@@ -158,6 +156,9 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
     const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);
     const retrieverExpected = ["foo", "foy", "foo"];
     expect(retrieverActual).toEqual(retrieverExpected);
+
+    const similarity = await vectorStore.similaritySearchWithScore("foo", 1);
+    expect(similarity.length).toBe(1);
   } finally {
     await client.close();
   }

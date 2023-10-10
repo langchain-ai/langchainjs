@@ -170,6 +170,11 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
       provider,
     });
     const json = await response.json();
+    if (!response.ok) {
+      throw new Error(
+        `Error ${response.status}: ${json.message ?? JSON.stringify(json)}`
+      );
+    }
     const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
     return text;
   }

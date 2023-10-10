@@ -28,7 +28,7 @@
     "@getzep/zep-js": "^0.7.0",
     "@gomomento/sdk": "^1.23.0",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",
     "@raycast/api": "^1.55.2",
@@ -57,7 +57,7 @@
     "vectordb": "^0.1.4",
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.0.0",
-    "zod": "^3.21.4",
+    "zod": "^3.22.3",
     "zod-to-json-schema": "^3.21.4"
   },
   "devDependencies": {

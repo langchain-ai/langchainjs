@@ -125,8 +125,8 @@ export class MinimaxEmbeddings
     this.type = fieldsWithDefaults?.type ?? this.type;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
-    this.apiUrl = `${this.basePath}/embeddings`;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;
+    this.apiUrl = `${this.basePath}/embeddings`;
     this.headers = fields?.configuration?.headers ?? this.headers;
   }
 
