@@ -1,9 +1,8 @@
-import {Client as CassandraClient, DseClientOptions} from 'cassandra-driver';
+import { Client as CassandraClient, DseClientOptions } from "cassandra-driver";
 
-import {Embeddings} from "../embeddings/base.js";
-import {VectorStore} from "./base.js";
-import {Document} from "../document.js";
-
+import { Embeddings } from "../embeddings/base.js";
+import { VectorStore } from "./base.js";
+import { Document } from "../document.js";
 
 export interface Column {
   type: string;
@@ -14,8 +13,8 @@ export interface CassandraLibArgs extends DseClientOptions {
   table: string;
   keyspace: string;
   dimensions: number;
-  primaryKey: Column
-  metadataColumns: Column[]
+  primaryKey: Column;
+  metadataColumns: Column[];
 }
 
 /**
@@ -93,7 +92,7 @@ export class CassandraStore extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number,
+    k: number
   ): Promise<[Document, number][]> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -109,9 +108,9 @@ export class CassandraStore extends VectorStore {
       delete sanitizedRow.text;
 
       return [
-        new Document({pageContent: textContent, metadata: sanitizedRow}),
+        new Document({ pageContent: textContent, metadata: sanitizedRow }),
         index,
-      ]
+      ];
     });
   }
 
@@ -182,12 +181,18 @@ export class CassandraStore extends VectorStore {
    * @returns Promise that resolves when the database has been initialized.
    */
   private async initialize(): Promise<void> {
-    await this.client.execute(`CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
+    await this.client.execute(`CREATE TABLE IF NOT EXISTS ${this.keyspace}.${
+      this.table
+    } (
       ${this.primaryKey.name} ${this.primaryKey.type} PRIMARY KEY,
       text TEXT,
-      ${this.metadataColumns.length > 0 ? this.metadataColumns.map(col => `${col.name} ${col.type},`) : ''}
+      ${
+        this.metadataColumns.length > 0
+          ? this.metadataColumns.map((col) => `${col.name} ${col.type},`)
+          : ""
+      }
       vector VECTOR<FLOAT, ${this.dimensions}>
-    );`)
+    );`);
 
     await this.client.execute(`CREATE CUSTOM INDEX IF NOT EXISTS ann_index 
   ON ${this.keyspace}.${this.table}(vector) USING 'StorageAttachedIndex';`);
@@ -201,16 +206,27 @@ export class CassandraStore extends VectorStore {
    * @param documents The documents to insert.
    * @returns The CQL query string.
    */
-  private buildInsertQuery(vectors: number[][], documents: Document[]): string[] {
+  private buildInsertQuery(
+    vectors: number[][],
+    documents: Document[]
+  ): string[] {
     const queries: string[] = [];
     for (let index = 0; index < vectors.length; index += 1) {
       const vector = vectors[index];
       const document = documents[index];
 
-      const metadataColNames = Object.keys(document.metadata)
+      const metadataColNames = Object.keys(document.metadata);
       const metadataVals = Object.values(document.metadata);
-      const query = `INSERT INTO ${this.keyspace}.${this.table} (vector, text${metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : ''}) VALUES ([${vector}], '${document.pageContent}'${
-        metadataVals.length > 0 ? ', ' + metadataVals.map(val => typeof val === 'number' ? val : `'${val}'`).join(", "): ''});`
+      const query = `INSERT INTO ${this.keyspace}.${this.table} (vector, text${
+        metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : ""
+      }) VALUES ([${vector}], '${document.pageContent}'${
+        metadataVals.length > 0
+          ? ", " +
+            metadataVals
+              .map((val) => (typeof val === "number" ? val : `'${val}'`))
+              .join(", ")
+          : ""
+      });`;
       queries.push(query);
     }
     return queries;
@@ -223,10 +239,9 @@ export class CassandraStore extends VectorStore {
    * @param k The number of similar vectors to return.
    * @returns The CQL query string.
    */
-  private buildSearchQuery(
-    query: number[],
-    k: number,
-  ): string {
-    return `SELECT * FROM ${this.keyspace}.${this.table} ORDER BY vector ANN OF [${query}] LIMIT ${k || 1};`;
+  private buildSearchQuery(query: number[], k: number): string {
+    return `SELECT * FROM ${this.keyspace}.${
+      this.table
+    } ORDER BY vector ANN OF [${query}] LIMIT ${k || 1};`;
   }
 }

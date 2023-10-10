@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import {test, expect, describe} from "@jest/globals";
+import { test, expect, describe } from "@jest/globals";
 
 import { CassandraStore } from "../cassandra.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
@@ -12,7 +12,7 @@ describe.skip("CassandraStore", () => {
     },
     credentials: {
       username: "token",
-      password: process.env.CASSANDRA_TOKEN  as string,
+      password: process.env.CASSANDRA_TOKEN as string,
     },
     keyspace: "test",
     dimensions: 1536,
@@ -21,11 +21,13 @@ describe.skip("CassandraStore", () => {
       name: "id",
       type: "int",
     },
-    metadataColumns: [{
-      name: "name",
-      type: "text"
-    }]
-  }
+    metadataColumns: [
+      {
+        name: "name",
+        type: "text",
+      },
+    ],
+  };
 
   test("CassandraStore.fromText", async () => {
     const vectorStore = await CassandraStore.fromTexts(
@@ -39,7 +41,10 @@ describe.skip("CassandraStore", () => {
       cassandraConfig
     );
 
-    const results = await vectorStore.similaritySearch("Green yellow purple", 1);
+    const results = await vectorStore.similaritySearch(
+      "Green yellow purple",
+      1
+    );
     expect(results).toEqual([
       new Document({
         pageContent: "Green yellow purple",
@@ -62,7 +67,7 @@ describe.skip("CassandraStore", () => {
 
     const vectorStore = await CassandraStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      cassandraConfig,
+      cassandraConfig
     );
 
     const results = await vectorStore.similaritySearch("Whats up", 1);

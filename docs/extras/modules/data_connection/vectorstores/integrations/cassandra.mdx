@@ -26,6 +26,7 @@ export CASSANDRA_TOKEN=YOUR_CASSANDRA_TOKEN_HERE
 ```
 
 5. Install the Cassandra Node.js driver.
+
 ```bash npm2yarn
 npm install cassandra-driver
 ```
@@ -33,7 +34,7 @@ npm install cassandra-driver
 ## Index and query docs
 
 ```typescript
-import { Cassandra } from "langchain/vectorstores/milvus";
+import { CassandraStore } from "langchain/vectorstores/cassandra";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 // text sample from Godel, Escher, Bach
@@ -68,7 +69,7 @@ const response = await vectorStore.similaritySearch("scared", 2);
 ## Query docs from existing collection
 
 ```typescript
-import { Cassandra } from "langchain/vectorstores/cassandra";
+import { CassandraStore } from "langchain/vectorstores/cassandra";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const vectorStore = await Cassandra.fromExistingCollection(
