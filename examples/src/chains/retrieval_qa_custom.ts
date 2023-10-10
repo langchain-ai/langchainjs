@@ -7,7 +7,7 @@ import { loadQAMapReduceChain } from "langchain/chains";
 
 // Initialize the LLM to use to answer the question.
 const model = new OpenAI({});
-const text = fs.readFileSync("examples/state_of_the_union.txt", "utf8");
+const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
 const docs = await textSplitter.createDocuments([text]);
 

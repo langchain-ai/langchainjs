@@ -12,7 +12,7 @@ import { StringOutputParser } from "langchain/schema/output_parser";
 import { Document } from "langchain/document";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
-const text = fs.readFileSync("examples/state_of_the_union.txt", "utf8");
+const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
 const serializeDocs = (docs: Array<Document>): string =>
   docs.map((doc) => doc.pageContent).join("\n");

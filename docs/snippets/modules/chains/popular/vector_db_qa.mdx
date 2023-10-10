@@ -5,7 +5,9 @@ import CodeBlock from "@theme/CodeBlock";
 
 The following examples combing a `Retriever` (in this case a vector store) with a question answering chain to do question answering.
 
-Legacy non Runnable docs can be found [here](https://js.langchain.com/docs/modules/chains/popular/vector_db_qa_legacy).
+:::info
+Looking for the older, non-LCEL version? Click [here](/docs/modules/chains/popular/vector_db_qa_legacy).
+:::
 
 ## Usage
 
@@ -25,9 +27,3 @@ pass as context to the `loadQAMapReduceChain`. This function loads the `MapReduc
 after mapping over all to reduce to just the necessary context.
 
 <CodeBlock language="typescript">{RetrievalQAExampleCustom}</CodeBlock>
-
-## Custom prompts
-
-You can pass in custom prompts to do question answering. These prompts are the same prompts as you can pass into the base question answering chains.
-
-<CodeBlock language="typescript">{RetrievalQAExampleCustomPrompt}</CodeBlock>
