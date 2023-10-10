@@ -171,7 +171,10 @@ export class RemoteRunnable<
     });
   }
 
-  async invoke(input: RunInput, options?: CallOptions): Promise<RunOutput> {
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
     const response = await this.post<{
@@ -188,7 +191,7 @@ export class RemoteRunnable<
 
   async _batch(
     inputs: RunInput[],
-    options?: CallOptions[],
+    options?: Partial<CallOptions>[],
     _?: (CallbackManagerForChainRun | undefined)[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
@@ -232,25 +235,25 @@ export class RemoteRunnable<
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<CallOptions>[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
   ): Promise<RunOutput[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<CallOptions>[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions: true }
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<CallOptions>[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<CallOptions>[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {
@@ -266,7 +269,7 @@ export class RemoteRunnable<
 
   async stream(
     input: RunInput,
-    options?: CallOptions
+    options?: Partial<CallOptions>
   ): Promise<IterableReadableStream<RunOutput>> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
