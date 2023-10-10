@@ -48,10 +48,10 @@ const combineDocsChain = combineDocsPrompt
 const query = "What did the president say about Justice Breyer?";
 
 // Create a vector store retriever from the documents.
-const vectorStoreRetriever = (
-  await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings())
-).asRetriever();
-const relevantDocs = await vectorStoreRetriever.getRelevantDocuments(query);
+const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+const retriever = vectorStore.asRetriever();
+
+const relevantDocs = await retriever.getRelevantDocuments(query);
 
 const serializedDocsContent = relevantDocs.map((doc) => doc.pageContent);
 
