@@ -7,9 +7,9 @@ import {
   HnswlibModule,
 } from "closevector-web";
 
-import { Embeddings } from "../embeddings/base.js";
-import { Document } from "../document.js";
-import { SaveableVectorStore } from "./base.js";
+import { Embeddings } from "../../embeddings/base.js";
+import { Document } from "../../document.js";
+import { SaveableVectorStore } from "../base.js";
 
 /**
  * package closevector-node is largely based on hnswlib.ts in the current folder with the following exceptions:
@@ -104,7 +104,7 @@ export class CloseVectorWeb extends SaveableVectorStore {
   /**
    * Method to save the vector store to a directory. It saves the HNSW
    * index, the arguments, and the document store to the directory.
-   * @param directory The directory to which to save the vector store.
+   * @param directory The directory in which to save the vector store. We use IndexedDB to mock the file system, so the path, in this case, is the virtual path of we save the index to.
    * @returns A Promise that resolves when the vector store has been saved.
    */
   async save(directory: string): Promise<void> {
@@ -186,13 +186,13 @@ export class CloseVectorWeb extends SaveableVectorStore {
             }) || false
         : undefined
     );
-    const mapped = resp.map((x) => [
-      {
+    const mapped: [Document<Record<string, unknown>>, number][] = resp.map((x) => [
+      new Document({
         pageContent: x[0].pageContent,
         metadata: x[0].metadata || {},
-      },
+      }),
       x[1],
-    ]) as [Document<Record<string, unknown>>, number][];
+    ]);
     return mapped;
   }
 

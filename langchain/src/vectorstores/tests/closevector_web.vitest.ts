@@ -4,7 +4,7 @@
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { describe, it, expect } from "vitest";
-import { CloseVectorWeb } from "../closevector_web.js";
+import { CloseVectorWeb } from "../closevector/web.js";
 import { Document } from "../../document.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 

@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { describe, it, expect } from "vitest";
-import { CloseVectorNode } from "../closevector_node.js";
+import { CloseVectorNode } from "../closevector/node.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 

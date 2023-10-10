@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { describe, it, expect } from "vitest";
-import { CloseVectorNode } from "../closevector_node.js";
+import { CloseVectorNode } from "../closevector/node.js";
 import { Document } from "../../document.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 

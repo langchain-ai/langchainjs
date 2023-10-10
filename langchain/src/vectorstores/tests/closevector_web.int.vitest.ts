@@ -5,7 +5,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { describe, it, expect } from "vitest";
 import { createPublicGetFileOperationUrl, fetchUsingToken, END_POINT } from "closevector-web";
-import { CloseVectorWeb } from "../closevector_web.js";
+import { CloseVectorWeb } from "../closevector/web.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 

@@ -6,9 +6,9 @@ import {
   CloseVectorCredentials,
 } from "closevector-node";
 
-import { Embeddings } from "../embeddings/base.js";
-import { Document } from "../document.js";
-import { SaveableVectorStore } from "./base.js";
+import { Embeddings } from "../../embeddings/base.js";
+import { Document } from "../../document.js";
+import { SaveableVectorStore } from "../base.js";
 
 /**
  * package closevector-node is largely based on hnswlib.ts in the current folder with the following exceptions:
@@ -194,13 +194,13 @@ export class CloseVectorNode extends SaveableVectorStore {
             }) || false
         : undefined
     );
-    const mapped = resp.map((x) => [
-      {
+    const mapped: [Document<Record<string, unknown>>, number][] = resp.map((x) => [
+      new Document({
         pageContent: x[0].pageContent,
         metadata: x[0].metadata || {},
-      },
+      }),
       x[1],
-    ]) as [Document<Record<string, unknown>>, number][];
+    ]);
     return mapped;
   }
 

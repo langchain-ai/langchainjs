@@ -1,7 +1,7 @@
 // If you want to import the browser version, use the following line instead:
-// import { CloseVectorWeb } from "langchain/vectorstores/closevector_web";
-import { CloseVectorNode } from "langchain/vectorstores/closevector_node";
-import { CloseVectorWeb } from "langchain/vectorstores/closevector_web";
+// import { CloseVectorWeb } from "langchain/vectorstores/closevector/web";
+import { CloseVectorNode } from "langchain/vectorstores/closevector/node";
+import { CloseVectorWeb } from "langchain/vectorstores/closevector/web";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {
@@ -35,12 +35,23 @@ const { uuid } = vectorStore.instance;
 // const loadedVectorStore = await CloseVectorWeb.load(
 const loadedVectorStore = await CloseVectorNode.loadFromCloud({
   uuid,
-  accessKey: "your access key",
-  secret: "your secret",
   embeddings: new OpenAIEmbeddings(),
+  credentials: {
+    key: "your access key",
+    secret: "your secret"
+  }
 });
 
-// if you us
+// If you want to import the node version, use the following lines instead:
+// const loadedVectorStoreOnNode = await CloseVectorNode.loadFromCloud({
+//   uuid,
+//   embeddings: new OpenAIEmbeddings(),
+//   credentials: {
+//     key: "your access key",
+//     secret: "your secret"
+//   }
+// });
+
 const loadedVectorStoreOnBrowser = await CloseVectorWeb.loadFromCloud({
   url: (
     await createPublicGetFileOperationUrl({
@@ -49,9 +60,7 @@ const loadedVectorStoreOnBrowser = await CloseVectorWeb.loadFromCloud({
     })
   ).url,
   uuid,
-  embeddings: new CloseVectorFreeEmbeddings({
-    key: "your access key",
-  }),
+  embeddings: new OpenAIEmbeddings(),
 });
 
 // vectorStore and loadedVectorStore are identical

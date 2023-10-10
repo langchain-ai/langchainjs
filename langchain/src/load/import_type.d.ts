@@ -115,12 +115,12 @@ export interface OptionalImportMap {
   "langchain/vectorstores/cloudflare_vectorize"?:
     | typeof import("../vectorstores/cloudflare_vectorize.js")
     | Promise<typeof import("../vectorstores/cloudflare_vectorize.js")>;
-  "langchain/vectorstores/closevector_web"?:
-    | typeof import("../vectorstores/closevector_web.js")
-    | Promise<typeof import("../vectorstores/closevector_web.js")>;
-  "langchain/vectorstores/closevector_node"?:
-    | typeof import("../vectorstores/closevector_node.js")
-    | Promise<typeof import("../vectorstores/closevector_node.js")>;
+  "langchain/vectorstores/closevector/web"?:
+    | typeof import("../vectorstores/closevector/web.js")
+    | Promise<typeof import("../vectorstores/closevector/web.js")>;
+  "langchain/vectorstores/closevector/node"?:
+    | typeof import("../vectorstores/closevector/node.js")
+    | Promise<typeof import("../vectorstores/closevector/node.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
