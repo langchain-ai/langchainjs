@@ -1,3 +1,4 @@
+/* eslint-disable prefer-template */
 import { Client as CassandraClient, DseClientOptions } from "cassandra-driver";
 
 import { Embeddings } from "../embeddings/base.js";
