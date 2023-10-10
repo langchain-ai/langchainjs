@@ -8,7 +8,12 @@ import {
 } from "langchain/schema/runnable";
 import { Document } from "langchain/document";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { ChatPromptTemplate, HumanMessagePromptTemplate, PromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  PromptTemplate,
+  SystemMessagePromptTemplate,
+} from "langchain/prompts";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
 // Initialize the LLM to use to answer the question.
