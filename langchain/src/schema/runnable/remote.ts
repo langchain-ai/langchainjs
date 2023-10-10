@@ -48,7 +48,7 @@ function revive(obj: any): any {
         pageContent: obj.page_content,
         metadata: obj.metadata,
       });
-    //content, type
+
     if (isSuperset(keys, new Set(["content", "type", "is_chunk"]))) {
       if (!obj.is_chunk) {
         if (obj.type === "human") {
@@ -135,7 +135,8 @@ function deserialize<RunOutput>(str: string): RunOutput {
 function withoutCallbacks(
   options?: RunnableConfig
 ): Omit<RunnableConfig, "callbacks"> {
-  const { callbacks, ...rest } = options ?? {};
+  const rest = { ...options };
+  delete rest.callbacks;
   return rest;
 }
 
@@ -144,6 +145,7 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
   RunOutput
 > {
   private url: string;
+
   private options?: RemoteRunnableOptions;
 
   lc_namespace = ["langchain", "schema", "runnable", "remote"];
@@ -169,7 +171,7 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
     const response = await this.post<{
       input: RunInput;
       config: RunnableConfig;
-      kwargs: {};
+      kwargs: Record<string, never>;
     }>("/invoke", {
       input,
       config: withoutCallbacks(options),
@@ -190,7 +192,7 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
     const response = await this.post<{
       inputs: RunInput[];
       config: (RunnableConfig & RunnableBatchOptions)[];
-      kwargs: {};
+      kwargs: Record<string, never>;
     }>("/batch", {
       inputs,
       config:
@@ -268,7 +270,7 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
       );
     }
     const stream = new ReadableStream({
-      start(controller) {
+      async start(controller) {
         const enqueueLine = getMessages((msg) => {
           if (msg.data) controller.enqueue(deserialize(msg.data));
         });
@@ -280,7 +282,7 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
           enqueueLine(line, fieldLength, flush);
           if (flush) controller.close();
         };
-        getBytes(body, getLines(onLine));
+        await getBytes(body, getLines(onLine));
       },
     });
     return IterableReadableStream.fromReadableStream(stream);
