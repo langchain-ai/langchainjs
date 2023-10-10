@@ -196,9 +196,9 @@
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
-    "vectorstores/momento-vector-index.cjs",
-    "vectorstores/momento-vector-index.js",
-    "vectorstores/momento-vector-index.d.ts",
+    "vectorstores/momento_vector_index.cjs",
+    "vectorstores/momento_vector_index.js",
+    "vectorstores/momento_vector_index.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
@@ -1463,10 +1463,10 @@
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
     },
-    "./vectorstores/momento-vector-index": {
-      "types": "./vectorstores/momento-vector-index.d.ts",
-      "import": "./vectorstores/momento-vector-index.js",
-      "require": "./vectorstores/momento-vector-index.cjs"
+    "./vectorstores/momento_vector_index": {
+      "types": "./vectorstores/momento_vector_index.d.ts",
+      "import": "./vectorstores/momento_vector_index.js",
+      "require": "./vectorstores/momento_vector_index.cjs"
     },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",

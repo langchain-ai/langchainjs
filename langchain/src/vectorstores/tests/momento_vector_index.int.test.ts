@@ -10,7 +10,7 @@ import {
 import * as uuid from "uuid";
 import { Document } from "../../document.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { MomentoVectorIndex } from "../momento-vector-index.js";
+import { MomentoVectorIndex } from "../momento_vector_index.js";
 import { sleep } from "../../util/time.js";
 
 async function withVectorStore(

@@ -4,7 +4,6 @@
 
 To sign up and access MVI, visit the [Momento Console](https://console.gomomento.com).
 
-
 ## Setup
 
 1. Sign up for an API key in the [Momento Console](https://console.gomomento.com/).
@@ -48,7 +47,7 @@ added to the existing index.
 
 The `ids` are optional; if you omit them, then Momento will generate UUIDs for you.
 
-import TextsExample from "@examples/indexes/vector_stores/momento-vector-index/fromTexts.ts";
+import TextsExample from "@examples/indexes/vector_stores/momento_vector_index/fromTexts.ts";
 
 <CodeBlock language="typescript">{TextsExample}</CodeBlock>
 
@@ -60,12 +59,12 @@ added to the existing index.
 
 Using `fromDocuments` allows you to seamlessly chain the various document loaders with indexing.
 
-import DocsExample from "@examples/indexes/vector_stores/momento-vector-index/fromDocs.ts";
+import DocsExample from "@examples/indexes/vector_stores/momento_vector_index/fromDocs.ts";
 
 <CodeBlock language="typescript">{DocsExample}</CodeBlock>
 
 ### Search from an existing collection
 
-import ExistingExample from "@examples/indexes/vector_stores/momento-vector-index/fromExisting.ts";
+import ExistingExample from "@examples/indexes/vector_stores/momento_vector_index/fromExisting.ts";
 
 <CodeBlock language="typescript">{ExistingExample}</CodeBlock>

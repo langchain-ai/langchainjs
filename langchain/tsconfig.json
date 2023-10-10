@@ -94,7 +94,7 @@
       "src/vectorstores/faiss.ts",
       "src/vectorstores/weaviate.ts",
       "src/vectorstores/lancedb.ts",
-      "src/vectorstores/momento-vector-index.ts",
+      "src/vectorstores/momento_vector_index.ts",
       "src/vectorstores/mongo.ts",
       "src/vectorstores/mongodb_atlas.ts",
       "src/vectorstores/pinecone.ts",

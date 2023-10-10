@@ -1,4 +1,4 @@
-import { MomentoVectorIndex } from "langchain/vectorstores/momento-vector-index";
+import { MomentoVectorIndex } from "langchain/vectorstores/momento_vector_index";
 // For browser/edge, adjust this to import from "@gomomento/sdk-web";
 import {
   PreviewVectorIndexClient,
