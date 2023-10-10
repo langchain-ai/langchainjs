@@ -36,6 +36,7 @@ function isSuperset(set: Set<string>, subset: Set<string>) {
   return true;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function revive(obj: any): any {
   if (obj === null) return null;
   if (Array.isArray(obj)) return obj.map(revive);
@@ -112,9 +113,11 @@ function revive(obj: any): any {
     }
     if (isSuperset(keys, new Set(["messages"]))) {
       return new ChatPromptValue({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         messages: obj.messages.map((msg: any) => revive(msg)),
       });
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const innerRevive: (key: string) => [string, any] = (key: string) => [
       key,
       revive(obj[key]),
@@ -166,7 +169,7 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
     const response = await this.post<{
       input: RunInput;
       config: RunnableConfig;
-      kwargs: any;
+      kwargs: {};
     }>("/invoke", {
       input,
       config: withoutCallbacks(options),
@@ -187,7 +190,7 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
     const response = await this.post<{
       inputs: RunInput[];
       config: (RunnableConfig & RunnableBatchOptions)[];
-      kwargs: any;
+      kwargs: {};
     }>("/batch", {
       inputs,
       config:
@@ -254,15 +257,16 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
       const error = new Error(
         `RemoteRunnable call failed with status code ${response.status}: ${json.message}`
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).response = response;
       throw error;
     }
-    if (!response.body) {
+    const { body } = response;
+    if (!body) {
       throw new Error(
         "Could not begin LangServe stream. Please check the given URL and try again."
       );
     }
-    const body = response.body;
     const stream = new ReadableStream({
       start(controller) {
         const enqueueLine = getMessages((msg) => {

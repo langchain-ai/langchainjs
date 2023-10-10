@@ -26,7 +26,7 @@ describe("RemoteRunnable", () => {
           ];
           // Push chunks of data to the stream
           for (const chunk of dataChunks) {
-            controller.enqueue(Buffer.from(chunk + "\n"));
+            controller.enqueue(Buffer.from(`${chunk}\n`));
           }
           // Close the stream
           controller.close();
