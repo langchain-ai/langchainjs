@@ -4056,19 +4056,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@edge-runtime/primitives@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@edge-runtime/primitives@npm:4.0.1"
-  checksum: f0a1b49c440a60ddda960645a8ed0d68e4f8914ad1d6275f42c29cff54a255c050479f4d87c1d069eb99c879a65f22911ddd6c35276401f8951ac85995c611f5
+"@edge-runtime/primitives@npm:4.0.2":
+  version: 4.0.2
+  resolution: "@edge-runtime/primitives@npm:4.0.2"
+  checksum: 66ccdadb8bcb02bf7d75d75bc6a611c2d515b09818b8cc4f524944aba58b735aff8a76ba52981a04f89fe616f801d1d947a9b1637a201a3b32f6eca74a6f7001
   languageName: node
   linkType: hard
 
 "@edge-runtime/types@npm:^2.2.3":
-  version: 2.2.3
-  resolution: "@edge-runtime/types@npm:2.2.3"
+  version: 2.2.4
+  resolution: "@edge-runtime/types@npm:2.2.4"
   dependencies:
-    "@edge-runtime/primitives": 4.0.1
-  checksum: e689d2cd95adf3977d8b01317c243d2c53831df514dd63726daf44389bddc34deda49a8db661250f1e5e2a806a4103051dc3a9615e1c3ee00cd167826da02ae7
+    "@edge-runtime/primitives": 4.0.2
+  checksum: 51b5b1cf8f462dd77038357e1b72737e0e8f37c6e7aa47e0b9cd3aebc81004ad5e41c697d14a66171e5acfddf8bf5a5fc6e76c01dde60daccb5703310a4c4446
   languageName: node
   linkType: hard
 
@@ -5682,15 +5682,6 @@ __metadata:
   version: 1.4.1
   resolution: "@opentelemetry/api@npm:1.4.1"
   checksum: e783c40d1a518abf9c4c5d65223237c1392cd9a6c53ac6e2c3ef0c05ff7266e3dfc4fd9874316dae0dcb7a97950878deb513bcbadfaad653d48f0215f2a0911b
-  languageName: node
-  linkType: hard
-
-"@pinecone-database/pinecone@npm:^0.0.14":
-  version: 0.0.14
-  resolution: "@pinecone-database/pinecone@npm:0.0.14"
-  dependencies:
-    cross-fetch: ^3.1.5
-  checksum: 3af7a4936bef92e456203307c59eaf5e07447308e47a7fad18060b2a6a04f15ad49f00f378cdbbe709e6e60cb07d1ed71d612f1e6b2b78e56e85b97852448d09
   languageName: node
   linkType: hard
 
@@ -7608,9 +7599,9 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:^18.11.17":
-  version: 18.17.16
-  resolution: "@types/node@npm:18.17.16"
-  checksum: 8f9dbaf4a67a14110e2a0d805f9b57f3a5cda774dbcb7b1e7973efe31d5eeea358482dbe36a5bfadb0dde99f065f1ae0531f25a032f015871aa0b2896eb3c4ae
+  version: 18.18.4
+  resolution: "@types/node@npm:18.18.4"
+  checksum: 4901e91c4cc479bb58acbcd79236a97a0ad6db4a53cb1f4ba4cf32af15324c61b16faa6e31c1b09bf538a20feb5f5274239157ce5237f5741db0b9ab71e69c52
   languageName: node
   linkType: hard
 
@@ -11194,7 +11185,7 @@ __metadata:
     "@getzep/zep-js": ^0.7.0
     "@gomomento/sdk": ^1.23.0
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^0.0.14
+    "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@raycast/api": ^1.55.2
@@ -11237,7 +11228,7 @@ __metadata:
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.0.0
-    zod: ^3.21.4
+    zod: ^3.22.3
     zod-to-json-schema: ^3.21.4
   languageName: unknown
   linkType: soft
@@ -20984,16 +20975,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.21.4":
-  version: 3.21.4
-  resolution: "zod@npm:3.21.4"
-  checksum: f185ba87342ff16f7a06686767c2b2a7af41110c7edf7c1974095d8db7a73792696bcb4a00853de0d2edeb34a5b2ea6a55871bc864227dace682a0a28de33e1f
-  languageName: node
-  linkType: hard
-
 "zod@npm:^3.22.3":
-  version: 3.22.3
-  resolution: "zod@npm:3.22.3"
-  checksum: 65b05139be337078a70700b05942ab7f2ef5f11abe194df14ef257fac4e5c383476a4dc290731842996bd57fc8d5bf38e5a4c907fe8cdf8b15477f8da5bfcc00
+  version: 3.22.4
+  resolution: "zod@npm:3.22.4"
+  checksum: 80bfd7f8039b24fddeb0718a2ec7c02aa9856e4838d6aa4864335a047b6b37a3273b191ef335bf0b2002e5c514ef261ffcda5a589fb084a48c336ffc4cdbab7f
   languageName: node
   linkType: hard
