@@ -3,7 +3,6 @@
 import { jest, test } from "@jest/globals";
 
 import { RemoteRunnable } from "../runnable/remote.js";
-import { Runnable } from "../runnable/base.js";
 import { AIMessageChunk } from "../index.js";
 
 const BASE_URL = "http://my-langserve-endpoint";
@@ -83,7 +82,7 @@ event: end`;
 
 describe("RemoteRunnable", () => {
   beforeAll(() => {
-    // mock langserve serviceH
+    // mock langserve service
     const returnDataByEndpoint: Record<string, BodyInit> = {
       "/a/invoke": JSON.stringify({ output: ["a", "b", "c"] }),
       "/a/batch": JSON.stringify({
