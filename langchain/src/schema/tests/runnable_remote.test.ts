@@ -114,7 +114,7 @@ describe("RemoteRunnable", () => {
 
   test("Invoke local langserve", async () => {
     // mock fetch, expect /invoke
-    const remote = new RemoteRunnable(`${BASE_URL}/a`);
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
     const result = await remote.invoke({ text: "string" });
     expect(fetch).toHaveBeenCalledWith(
       `${BASE_URL}/a/invoke`,
@@ -130,13 +130,13 @@ describe("RemoteRunnable", () => {
       ["a", "b", "c"],
       ["d", "e", "f"],
     ];
-    const remote = new RemoteRunnable(`${BASE_URL}/a`);
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
     const result = await remote.batch([{ text: "1" }, { text: "2" }]);
     expect(result).toEqual(returnData);
   });
 
   test("Stream local langserve", async () => {
-    const remote = new RemoteRunnable(`${BASE_URL}/a`);
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
     const stream = await remote.stream({ text: "What are the 5 best apples?" });
     let chunkCount = 0;
     for await (const chunk of stream) {
@@ -147,7 +147,7 @@ describe("RemoteRunnable", () => {
   });
 
   test("Stream model output", async () => {
-    const remote = new RemoteRunnable(`${BASE_URL}/b`);
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/b` });
     const stream = await remote.stream({ text: "What are the 5 best apples?" });
     let chunkCount = 0;
     let accumulator: AIMessageChunk | null = null;

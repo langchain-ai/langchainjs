@@ -41,7 +41,6 @@ function isSuperset(set: Set<string>, subset: Set<string>) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function revive(obj: any): any {
-  if (obj === null) return null;
   if (Array.isArray(obj)) return obj.map(revive);
   if (typeof obj === "object") {
     const keysArr = Object.keys(obj);
@@ -154,8 +153,9 @@ export class RemoteRunnable<
 
   lc_namespace = ["langchain", "schema", "runnable", "remote"];
 
-  constructor(url: string, options?: RemoteRunnableOptions) {
-    super();
+  constructor(fields: { url: string; options?: RemoteRunnableOptions }) {
+    super(fields);
+    const { url, options } = fields;
     this.url = url.replace(/\/$/, ""); // remove trailing slash
     this.options = options;
   }
@@ -195,10 +195,10 @@ export class RemoteRunnable<
     if (batchOptions?.returnExceptions) {
       throw new Error("returnExceptions is not supported for remote clients");
     }
-    const arr = options?.map((opts) =>
+    const configsAndKwargsArray = options?.map((opts) =>
       this._separateRunnableConfigFromCallOptions(opts)
     );
-    const tup = arr?.reduce(
+    const [configs, kwargs] = configsAndKwargsArray?.reduce(
       ([pc, pk], [c, k]) =>
         [
           [...pc, c],
@@ -211,8 +211,7 @@ export class RemoteRunnable<
         RunnableConfig[],
         Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
       ]
-    );
-    const [configs, kwargs] = tup ?? [undefined, undefined];
+    ) ?? [undefined, undefined];
     const response = await this.post<{
       inputs: RunInput[];
       config?: (RunnableConfig & RunnableBatchOptions)[];
