@@ -21,12 +21,20 @@ test("SupabaseVectorStore with external ids", async () => {
 
   const createdAt = new Date().getTime();
 
-  await store.addDocuments([
+  const docs = [
     { pageContent: createdAt.toString(), metadata: { a: createdAt } },
     { pageContent: "hi", metadata: { a: createdAt } },
     { pageContent: "bye", metadata: { a: createdAt } },
     { pageContent: "what's this", metadata: { a: createdAt } },
-  ]);
+  ];
+  const vectors = await embeddings.embedDocuments(
+    docs.map((doc) => doc.pageContent)
+  );
+
+  await store.addVectors(
+    vectors,
+    docs.map((doc) => new Document(doc))
+  );
 
   const results = await store.similaritySearch(createdAt.toString(), 1);
 
@@ -34,49 +42,10 @@ test("SupabaseVectorStore with external ids", async () => {
 
   expect(results).toEqual([
     new Document({
-      metadata: { a: createdAt },
+      metadata: { a: createdAt, embedding: vectors[0] },
       pageContent: createdAt.toString(),
     }),
   ]);
-});
-
-test("Search SupabaseVectorStore and include embeddings", async () => {
-  const client = createClient(
-    process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
-  );
-
-  const embeddings = new OpenAIEmbeddings();
-
-  const store = new SupabaseVectorStore(embeddings, { client });
-
-  expect(store).toBeDefined();
-
-  const createdAt = new Date().getTime();
-
-  const documents = [
-    new Document({
-      pageContent: createdAt.toString(),
-      metadata: { a: createdAt },
-    }),
-  ];
-  // OpenAI embeddings are not deterministic, so we have to calculate the embedding once for the whole test
-  const embedded = await embeddings.embedDocuments(
-    documents.map((doc) => doc.pageContent)
-  );
-
-  await store.addVectors(embedded, documents);
-
-  const results = await store.similaritySearchVectorWithScore(embedded[0], 1, {
-    includeEmbeddings: true,
-  });
-
-  expect(results).toHaveLength(1);
-
-  // Need to convert to JSON in order to avoid jest distinguishing between -0 and 0
-  expect(results[0][0].metadata.embedding).toEqual(
-    JSON.parse(JSON.stringify(embedded[0]))
-  );
 });
 
 test("Search a SupabaseVectorStore using a metadata filter", async () => {
@@ -96,12 +65,20 @@ test("Search a SupabaseVectorStore using a metadata filter", async () => {
 
   const createdAt = new Date().getTime();
 
-  await store.addDocuments([
+  const docs = [
     { pageContent: "hello 0", metadata: { created_at: createdAt } },
     { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
     { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
     { pageContent: "hello 3", metadata: { created_at: createdAt + 3 } },
-  ]);
+  ];
+  const vectors = await embeddings.embedDocuments(
+    docs.map((doc) => doc.pageContent)
+  );
+
+  await store.addVectors(
+    vectors,
+    docs.map((doc) => new Document(doc))
+  );
 
   const results = await store.similaritySearch("hello", 1, {
     created_at: createdAt + 2,
@@ -111,7 +88,7 @@ test("Search a SupabaseVectorStore using a metadata filter", async () => {
 
   expect(results).toEqual([
     new Document({
-      metadata: { created_at: createdAt + 2 },
+      metadata: { created_at: createdAt + 2, embedding: vectors[2] },
       pageContent: "hello 2",
     }),
   ]);
@@ -166,8 +143,11 @@ test("Search a SupabaseVectorStore with a functional metadata filter", async () 
       metadata: { b: 4, c: 6, stuff: "right", created_at: createdAt },
     },
   ];
+  const vectors = await embeddings.embedDocuments(
+    docs.map((doc) => doc.pageContent)
+  );
 
-  await store.addDocuments(docs);
+  await store.addVectors(vectors, docs);
 
   const funcFilterA: SupabaseFilterRPCCall = (rpc) =>
     rpc
@@ -195,11 +175,23 @@ test("Search a SupabaseVectorStore with a functional metadata filter", async () 
   expect(resultB).toEqual([
     new Document({
       pageContent: "hello",
-      metadata: { b: 1, c: 9, stuff: "right", created_at: createdAt },
+      metadata: {
+        b: 1,
+        c: 9,
+        stuff: "right",
+        created_at: createdAt,
+        embedding: vectors[2],
+      },
     }),
     new Document({
       pageContent: "hi",
-      metadata: { b: 2, c: 8, stuff: "right", created_at: createdAt },
+      metadata: {
+        b: 2,
+        c: 8,
+        stuff: "right",
+        created_at: createdAt,
+        embedding: vectors[4],
+      },
     }),
   ]);
 });
@@ -218,12 +210,20 @@ test("Search a SupabaseVectorStore with MMR", async () => {
 
   const createdAt = new Date().getTime();
 
-  await store.addDocuments([
+  const docs = [
     { pageContent: "hi", metadata: { a: createdAt } },
     { pageContent: "greetings", metadata: { a: createdAt } },
     { pageContent: "bye", metadata: { a: createdAt } },
     { pageContent: "what's this", metadata: { a: createdAt } },
-  ]);
+  ];
+  const vectors = await embeddings.embedDocuments(
+    docs.map((doc) => doc.pageContent)
+  );
+
+  await store.addVectors(
+    vectors,
+    docs.map((doc) => new Document(doc))
+  );
 
   const results = await store.maxMarginalRelevanceSearch("hello world", {
     k: 2,
@@ -235,11 +235,11 @@ test("Search a SupabaseVectorStore with MMR", async () => {
 
   expect(results).toEqual([
     new Document({
-      metadata: { a: createdAt },
+      metadata: { a: createdAt, embedding: vectors[1] },
       pageContent: "greetings",
     }),
     new Document({
-      metadata: { a: createdAt },
+      metadata: { a: createdAt, embedding: vectors[3] },
       pageContent: "what's this",
     }),
   ]);
@@ -369,12 +369,20 @@ test("Delete on a SupabaseVectorStore", async () => {
 
   const createdAt = new Date().getTime();
 
-  const ids = await store.addDocuments([
+  const docs = [
     { pageContent: "hello 0", metadata: { created_at: createdAt } },
     { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
     { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
     { pageContent: "hello 3", metadata: { created_at: createdAt + 2 } },
-  ]);
+  ];
+  const vectors = await embeddings.embedDocuments(
+    docs.map((doc) => doc.pageContent)
+  );
+
+  const ids = await store.addVectors(
+    vectors,
+    docs.map((doc) => new Document(doc))
+  );
 
   const results = await store.similaritySearch("hello", 2, {
     created_at: createdAt + 2,
@@ -384,11 +392,11 @@ test("Delete on a SupabaseVectorStore", async () => {
 
   expect(results).toEqual([
     new Document({
-      metadata: { created_at: createdAt + 2 },
+      metadata: { created_at: createdAt + 2, embedding: vectors[2] },
       pageContent: "hello 2",
     }),
     new Document({
-      metadata: { created_at: createdAt + 2 },
+      metadata: { created_at: createdAt + 2, embedding: vectors[3] },
       pageContent: "hello 3",
     }),
   ]);
@@ -401,7 +409,7 @@ test("Delete on a SupabaseVectorStore", async () => {
 
   expect(results2).toEqual([
     new Document({
-      metadata: { created_at: createdAt + 2 },
+      metadata: { created_at: createdAt + 2, embedding: vectors[2] },
       pageContent: "hello 2",
     }),
   ]);

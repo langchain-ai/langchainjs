@@ -21,19 +21,13 @@ export type SupabaseFilter = PostgrestFilterBuilder<any, any, any>;
 export type SupabaseFilterRPCCall = (rpcCall: SupabaseFilter) => SupabaseFilter;
 
 /**
- * Interface for options to pass to similarity search.
- */
-type SearchOptions = {
-  includeEmbeddings?: boolean;
-};
-
-/**
  * Interface for the response returned when searching embeddings.
  */
 interface SearchEmbeddingsResponse {
   id: number;
   content: string;
   metadata: object;
+  embedding: number[];
   similarity: number;
 }
 
@@ -45,9 +39,7 @@ export interface SupabaseLibArgs {
   tableName?: string;
   queryName?: string;
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
-  searchOptions?: SearchOptions;
   upsertBatchSize?: number;
-  embeddingKey?: string;
 }
 
 /**
@@ -55,8 +47,7 @@ export interface SupabaseLibArgs {
  * vectors.
  */
 export class SupabaseVectorStore extends VectorStore {
-  declare FilterType: (SupabaseMetadata | SupabaseFilterRPCCall) &
-    SearchOptions;
+  declare FilterType: SupabaseMetadata | SupabaseFilterRPCCall;
 
   client: SupabaseClient;
 
@@ -66,11 +57,7 @@ export class SupabaseVectorStore extends VectorStore {
 
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 
-  searchOptions: SearchOptions = {};
-
   upsertBatchSize = 500;
-
-  embeddingKey: string;
 
   _vectorstoreType(): string {
     return "supabase";
@@ -83,10 +70,7 @@ export class SupabaseVectorStore extends VectorStore {
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
     this.filter = args.filter;
-    this.searchOptions.includeEmbeddings =
-      args.searchOptions?.includeEmbeddings ?? false;
     this.upsertBatchSize = args.upsertBatchSize ?? this.upsertBatchSize;
-    this.embeddingKey = args.embeddingKey || "embedding";
   }
 
   /**
@@ -176,13 +160,7 @@ export class SupabaseVectorStore extends VectorStore {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
-
     const _filter = filter ?? this.filter ?? {};
-    const searchOptions: SearchOptions = {
-      includeEmbeddings:
-        filter?.includeEmbeddings ?? this.searchOptions.includeEmbeddings,
-    };
-
     const matchDocumentsParams: Partial<SearchEmbeddingsParams> = {
       query_embedding: query,
     };
@@ -192,11 +170,7 @@ export class SupabaseVectorStore extends VectorStore {
     if (typeof _filter === "function") {
       filterFunction = (rpcCall) => _filter(rpcCall).limit(k);
     } else if (typeof _filter === "object") {
-      // Make sure includeEmbeddings is not mistaken for a metadata filter
-      matchDocumentsParams.filter = {
-        ..._filter,
-        includeEmbeddings: undefined,
-      };
+      matchDocumentsParams.filter = _filter;
       matchDocumentsParams.match_count = k;
       filterFunction = (rpcCall) => rpcCall;
     } else {
@@ -215,18 +189,16 @@ export class SupabaseVectorStore extends VectorStore {
 
     const result: [Document, number][] = (
       searches as SearchEmbeddingsResponse[]
-    ).map((resp) => {
-      const metadata = searchOptions.includeEmbeddings
-        ? resp.metadata
-        : { ...resp.metadata, [this.embeddingKey]: undefined };
-      return [
-        new Document({
-          metadata,
-          pageContent: resp.content,
-        }),
-        resp.similarity,
-      ];
-    });
+    ).map((resp) => [
+      new Document({
+        metadata: {
+          ...resp.metadata,
+          embedding: resp.embedding,
+        },
+        pageContent: resp.content,
+      }),
+      resp.similarity,
+    ]);
 
     return result;
   }
@@ -242,44 +214,22 @@ export class SupabaseVectorStore extends VectorStore {
    * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
    *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
    * @param {SupabaseLibArgs} options.filter - Optional filter to apply to the search.
-   * @param {boolean} options.includeEmbeddings - Option to include the embeddings of the found documents in the result.
    *
    * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]> &
-      SearchOptions
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
-
-    // preserve the original value of includeEmbeddings
-    const includeEmbeddingsFlag = options?.includeEmbeddings || false;
-
-    // update filter to include embeddings, as they will be used in MMR
-    let filterAndSearchOptions: this["FilterType"];
-    if (typeof options.filter === "function") {
-      const _filter: SupabaseFilterRPCCall = options.filter;
-      // Create a new function, in order to not modify the function passed from the outside
-      filterAndSearchOptions = (rpcCall: SupabaseFilter) => _filter(rpcCall);
-      filterAndSearchOptions.includeEmbeddings = true;
-    } else {
-      // Shallow clone the filter, in order to not modify the object passed from the outside
-      filterAndSearchOptions = {
-        ...options.filter,
-        includeEmbeddings: true,
-      };
-    }
 
     const resultDocs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
       options.fetchK ?? 20,
-      filterAndSearchOptions
+      options.filter
     );
 
-    const embeddingList = resultDocs.map(
-      (doc) => doc[0].metadata[this.embeddingKey]
-    );
+    const embeddingList = resultDocs.map((doc) => doc[0].metadata.embedding);
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
@@ -289,13 +239,7 @@ export class SupabaseVectorStore extends VectorStore {
     );
 
     return mmrIndexes.map((idx) => {
-      const doc = resultDocs[idx][0];
-
-      // remove embeddings if they were not requested originally
-      if (!includeEmbeddingsFlag) {
-        delete doc.metadata[this.embeddingKey];
-      }
-      return doc;
+      return resultDocs[idx][0];
     });
   }
 

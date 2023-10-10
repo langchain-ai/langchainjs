@@ -35,6 +35,7 @@ create function match_documents (
   id bigint,
   content text,
   metadata jsonb,
+  embedding jsonb,
   similarity float
 )
 language plpgsql
@@ -45,7 +46,8 @@ begin
   select
     id,
     content,
-    (metadata || jsonb_build_object('embedding', (embedding::text)::jsonb)) as metadata,
+    metadata,
+    (embedding::text)::jsonb as embedding,
     1 - (documents.embedding <=> query_embedding) as similarity
   from documents
   where metadata @> filter
