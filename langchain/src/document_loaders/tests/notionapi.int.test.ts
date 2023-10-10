@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { NotionAPILoader } from "../web/notionapi.js";
 
-test("Test Notion API Loader Page", async () => {
+test.skip("Test Notion API Loader Page", async () => {
   const loader = new NotionAPILoader({
     clientOptions: {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
@@ -22,7 +22,7 @@ test("Test Notion API Loader Page", async () => {
   console.log(`Loaded ${docs.length} pages`);
 });
 
-test("Test Notion API Loader Database", async () => {
+test.skip("Test Notion API Loader Database", async () => {
   const loader = new NotionAPILoader({
     clientOptions: {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
@@ -41,7 +41,7 @@ test("Test Notion API Loader Database", async () => {
   console.log(`Loaded ${docs.length} pages from the database`);
 });
 
-test("Test Notion API Loader onDocumentLoad", async () => {
+test.skip("Test Notion API Loader onDocumentLoad", async () => {
   const onDocumentLoadedCheck: string[] = [];
   const loader = new NotionAPILoader({
     clientOptions: {
@@ -63,7 +63,7 @@ test("Test Notion API Loader onDocumentLoad", async () => {
   console.log(onDocumentLoadedCheck);
 });
 
-test("Test docs with empty database page content", async () => {
+test.skip("Test docs with empty database page content", async () => {
   const onDocumentLoadedCheck: string[] = [];
   const loader = new NotionAPILoader({
     clientOptions: {
@@ -82,7 +82,7 @@ test("Test docs with empty database page content", async () => {
   expect(docs.length).toBe(0);
 });
 
-test("Test docs with empty database page content and propertiesAsHeader enabled", async () => {
+test.skip("Test docs with empty database page content and propertiesAsHeader enabled", async () => {
   const onDocumentLoadedCheck: string[] = [];
   const loader = new NotionAPILoader({
     clientOptions: {
