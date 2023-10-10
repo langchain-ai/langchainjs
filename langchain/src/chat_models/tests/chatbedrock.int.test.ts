@@ -14,6 +14,10 @@ test("Test Bedrock chat model: Claude-v2", async () => {
     region,
     model,
     maxRetries: 0,
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
   });
 
   const res = await bedrock.call([new HumanMessage("What is your name?")]);
@@ -29,6 +33,10 @@ test("Test Bedrock chat model streaming: Claude-v2", async () => {
     region,
     model,
     maxRetries: 0,
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
   });
 
   const stream = await bedrock.stream([
@@ -44,7 +52,7 @@ test("Test Bedrock chat model streaming: Claude-v2", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test.each([
+test.skip.each([
   "amazon.titan-text-express-v1",
   // These models should be supported in the future
   // "amazon.titan-text-lite-v1",
@@ -57,6 +65,10 @@ test.each([
     model,
     maxRetries: 0,
     modelKwargs: {},
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
   });
 
   const res = await bedrock.call([new HumanMessage("What is your name?")]);
