@@ -176,8 +176,8 @@ export class RemoteRunnable<
       this._separateRunnableConfigFromCallOptions(options);
     const response = await this.post<{
       input: RunInput;
-      config: RunnableConfig;
-      kwargs: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+      config?: RunnableConfig;
+      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
     }>("/invoke", {
       input,
       config: removeCallbacks(config),
@@ -232,25 +232,25 @@ export class RemoteRunnable<
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    options?: Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
   ): Promise<RunOutput[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    options?: Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions: true }
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    options?: Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
+    options?: Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {
@@ -266,14 +266,18 @@ export class RemoteRunnable<
 
   async stream(
     input: RunInput,
-    options?: RunnableConfig
+    options?: CallOptions
   ): Promise<IterableReadableStream<RunOutput>> {
+    const [config, kwargs] =
+      this._separateRunnableConfigFromCallOptions(options);
     const response = await this.post<{
       input: RunInput;
-      options: RunnableConfig;
+      config?: RunnableConfig;
+      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
     }>("/stream", {
       input,
-      options: options ?? {},
+      config,
+      kwargs,
     });
     if (!response.ok) {
       const json = await response.json();
