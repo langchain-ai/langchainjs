@@ -34,7 +34,6 @@ import * as document_loaders_web_sort_xyz_blockchain from "langchain/document_lo
 import * as document_transformers_openai_functions from "langchain/document_transformers/openai_functions";
 import * as chat_models_base from "langchain/chat_models/base";
 import * as chat_models_openai from "langchain/chat_models/openai";
-import * as chat_models_portkey from "langchain/chat_models/portkey";
 import * as chat_models_anthropic from "langchain/chat_models/anthropic";
 import * as chat_models_fireworks from "langchain/chat_models/fireworks";
 import * as chat_models_baiduwenxin from "langchain/chat_models/baiduwenxin";

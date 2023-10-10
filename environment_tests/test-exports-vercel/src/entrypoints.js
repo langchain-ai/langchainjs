@@ -34,7 +34,6 @@ export * from "langchain/document_loaders/web/sort_xyz_blockchain";
 export * from "langchain/document_transformers/openai_functions";
 export * from "langchain/chat_models/base";
 export * from "langchain/chat_models/openai";
-export * from "langchain/chat_models/portkey";
 export * from "langchain/chat_models/anthropic";
 export * from "langchain/chat_models/fireworks";
 export * from "langchain/chat_models/baiduwenxin";

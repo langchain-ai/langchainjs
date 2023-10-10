@@ -298,6 +298,9 @@ export interface OptionalImportMap {
   "langchain/document_transformers/mozilla_readability"?:
     | typeof import("../document_transformers/mozilla_readability.js")
     | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
+  "langchain/chat_models/portkey"?:
+    | typeof import("../chat_models/portkey.js")
+    | Promise<typeof import("../chat_models/portkey.js")>;
   "langchain/chat_models/bedrock"?:
     | typeof import("../chat_models/bedrock.js")
     | Promise<typeof import("../chat_models/bedrock.js")>;
