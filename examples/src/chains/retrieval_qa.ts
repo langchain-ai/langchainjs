@@ -27,8 +27,9 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 const vectorStoreRetriever = vectorStore.asRetriever();
 
 // Create a system & human prompt for the chat model
-const system_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
-  
+const system_template = `Use the following pieces of context to answer the question at the end.
+If you don't know the answer, just say that you don't know, don't try to make up an answer.
+----------------
 {context}`;
 const messages = [
   SystemMessagePromptTemplate.fromTemplate(system_template),
