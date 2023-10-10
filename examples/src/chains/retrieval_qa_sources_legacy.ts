@@ -1,88 +1,30 @@
+import { OpenAI } from "langchain/llms/openai";
+import { RetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  PromptTemplate,
-  SystemMessagePromptTemplate,
-} from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { Document } from "langchain/document";
-import { ChatOpenAI } from "langchain/chat_models/openai";
 
+// Initialize the LLM to use to answer the question.
+const model = new OpenAI({});
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
+const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+const docs = await textSplitter.createDocuments([text]);
 
-const serializeDocs = (docs: Array<Document>): string =>
-  docs.map((doc) => doc.pageContent).join("\n");
+// Create a vector store from the documents.
+const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 
-const query = "What did the president say about Justice Breyer?";
-
-async function retrievalQAWithSources({
-  query,
-  text,
-}: {
-  /**
-   * The query to perform against the documents.
-   */
-  query: string;
-  /**
-   * The text to be chunked and used as context.
-   */
-  text: string;
-}): Promise<{ result: string; sourceDocuments: Array<Document> }> {
-  // Initialize the LLM to use to answer the question.
-  const model = new ChatOpenAI({});
-
-  // Chunk the text into documents.
-  const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-  const docs = await textSplitter.createDocuments([text]);
-
-  // Create a vector store from the documents.
-  const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
-  const vectorStoreRetriever = vectorStore.asRetriever();
-
-  // Create a system & human prompt for the chat model
-  const system_template = `Use the following pieces of context to answer the users question. 
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
-----------------
-{context}`;
-  const messages = [
-    SystemMessagePromptTemplate.fromTemplate(system_template),
-    HumanMessagePromptTemplate.fromTemplate("{question}"),
-  ];
-  const prompt = ChatPromptTemplate.fromMessages(messages);
-
-  const relevantDocs = await vectorStoreRetriever.getRelevantDocuments(query);
-
-  const chain = prompt.pipe(model).pipe(new StringOutputParser());
-
-  const result = await chain.invoke({
-    // Convert the relevant docs to a string and pass as context.
-    context: serializeDocs(relevantDocs),
-    question: query,
-  });
-
-  return {
-    result,
-    sourceDocuments: relevantDocs,
-  };
-}
-
-const res = await retrievalQAWithSources({
-  query,
-  text,
+// Create a chain that uses a map reduce chain and HNSWLib vector store.
+const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
+  returnSourceDocuments: true, // Can also be passed into the constructor
 });
-
-console.log({
-  result: res.result,
-  sourceDocuments: res.sourceDocuments,
+const res = await chain.call({
+  query: "What did the president say about Justice Breyer?",
 });
-
+console.log(JSON.stringify(res, null, 2));
 /*
 {
-  "result": " The president said that Justice Breyer is an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court, and that he has dedicated his life to serve this country.",
+  "text": " The president thanked Justice Breyer for his service and asked him to stand so he could be seen.",
   "sourceDocuments": [
     {
       "pageContent": "Justice Breyer, thank you for your service. Thank you, thank you, thank you. I mean it. Get up. Stand — let me see you. Thank you.\n\nAnd we all know — no matter what your ideology, we all know one of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court.\n\nAs I did four days ago, I’ve nominated a Circuit Court of Appeals — Ketanji Brown Jackson. One of our nation’s top legal minds who will continue in just Brey- — Justice Breyer’s legacy of excellence. A former top litigator in private practice, a former federal public defender from a family of public-school educators and police officers — she’s a consensus builder.\n\nSince she’s been nominated, she’s received a broad range of support, including the Fraternal Order of Police and former judges appointed by Democrats and Republicans.",

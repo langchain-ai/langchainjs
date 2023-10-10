@@ -18,7 +18,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
-const text = fs.readFileSync("examples/state_of_the_union.txt", "utf8");
+const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
 const docs = await textSplitter.createDocuments([text]);
 
@@ -60,8 +60,6 @@ console.log({ answer });
 
 /*
 {
-  answer: '\n' +
-    '\n' +
-    'The president said: "Tonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service."'
+  answer: 'The president thanked Justice Stephen Breyer for his service and honored him for his dedication to the country.'
 }
 */
