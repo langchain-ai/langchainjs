@@ -37,6 +37,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/writer",
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
+  "langchain/vectorstores/cassandra",
   "langchain/vectorstores/elasticsearch",
   "langchain/vectorstores/cloudflare_vectorize",
   "langchain/vectorstores/chroma",

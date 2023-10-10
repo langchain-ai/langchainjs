@@ -109,6 +109,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
+  "langchain/vectorstores/cassandra"?:
+    | typeof import("../vectorstores/cassandra.js")
+    | Promise<typeof import("../vectorstores/cassandra.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;

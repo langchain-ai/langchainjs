@@ -90,6 +90,7 @@
       "src/prompts/load.ts",
       "src/vectorstores/analyticdb.ts",
       "src/vectorstores/base.ts",
+      "src/vectorstores/cassandra.ts",
       "src/vectorstores/elasticsearch.ts",
       "src/vectorstores/memory.ts",
       "src/vectorstores/cloudflare_vectorize.ts",

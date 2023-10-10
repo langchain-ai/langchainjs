@@ -74,6 +74,7 @@ const entrypoints = {
   // vectorstores
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/cassandra": "vectorstores/cassandra",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/cloudflare_vectorize": "vectorstores/cloudflare_vectorize",
@@ -316,6 +317,7 @@ const requiresOptionalDependency = [
   "llms/writer",
   "prompts/load",
   "vectorstores/analyticdb",
+  "vectorstores/cassandra",
   "vectorstores/chroma",
   "vectorstores/cloudflare_vectorize",
   "vectorstores/googlevertexai",
