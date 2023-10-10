@@ -24,9 +24,9 @@ class LLama213BHandler implements SageMakerLLMContentHandler {
       parameters: modelKwargs,
     };
 
-    const input_str = JSON.stringify(payload);
+    const stringifiedPayload = JSON.stringify(payload);
 
-    return new TextEncoder().encode(input_str);
+    return new TextEncoder().encode(stringifiedPayload);
   }
 
   async transformOutput(output: Uint8Array): Promise<string> {

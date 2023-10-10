@@ -93,7 +93,7 @@ describe.skip("Test SageMaker LLM", () => {
       }
 
       async transformOutput(output: Uint8Array): Promise<string> {
-        return new TextDecoder("utf-8").decode(output)
+        return new TextDecoder("utf-8").decode(output);
       }
     }
 

@@ -257,7 +257,9 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
     for await (const chunk of stream.Body) {
       if (chunk.PayloadPart && chunk.PayloadPart.Bytes) {
         yield new GenerationChunk({
-          text: await this.contentHandler.transformOutput(chunk.PayloadPart.Bytes),
+          text: await this.contentHandler.transformOutput(
+            chunk.PayloadPart.Bytes
+          ),
           generationInfo: {
             ...chunk,
             response: undefined,
