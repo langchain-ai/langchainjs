@@ -14672,6 +14672,7 @@ __metadata:
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@upstash/redis": ^1.20.6
+    "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
@@ -14793,6 +14794,8 @@ __metadata:
     "@tensorflow/tfjs-core":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@vercel/kv":
       optional: true
     "@vercel/postgres":
       optional: true

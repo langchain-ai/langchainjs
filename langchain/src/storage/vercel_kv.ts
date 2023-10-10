@@ -3,7 +3,7 @@ import { kv, type VercelKV } from "@vercel/kv";
 import { BaseStore } from "../schema/storage.js";
 
 /**
- * Class that extends the BaseStore class to interact with a Redis
+ * Class that extends the BaseStore class to interact with a Vercel KV
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
  */
@@ -55,13 +55,14 @@ export class VercelKVStore extends BaseStore<string, string> {
    */
   async mget(keys: string[]) {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
-    const retrievedValues = await this.client.mget<string[]>(...prefixedKeys);
+    const retrievedValues = await this.client.mget<(string | undefined)[]>(
+      ...prefixedKeys
+    );
     return retrievedValues.map((value) => {
       if (!value) {
         return undefined;
       } else {
-        // Typing is weird
-        return value as string;
+        return value;
       }
     });
   }
