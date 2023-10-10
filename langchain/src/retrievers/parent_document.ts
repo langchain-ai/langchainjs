@@ -2,7 +2,6 @@ import * as uuid from "uuid";
 
 import { Document } from "../document.js";
 import { VectorStore } from "../vectorstores/base.js";
-import { Docstore } from "../schema/index.js";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,
@@ -14,7 +13,6 @@ import {
  * ParentDocumentRetriever instance.
  */
 export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
-  docstore: Docstore;
   childSplitter: TextSplitter;
   parentSplitter?: TextSplitter;
 };
