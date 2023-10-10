@@ -76,7 +76,7 @@ export abstract class CloseVector<
   }
 
   async saveToCloud(
-    options: Record<string, unknown>
+    _options: Record<string, unknown>
   ) {
     throw new Error("not implemented");
   }
@@ -92,15 +92,15 @@ export abstract class CloseVector<
   }
 
   static async loadFromCloud(
-    options: Record<string, unknown>
+    _options: Record<string, unknown>
   ): Promise<SaveableVectorStore> {
     throw new Error("not implemented");
   }
 
   static async load(
-    directory: string,
-    embeddings: Embeddings,
-    credentials?: CloseVectorCredentials
+    _directory: string,
+    _embeddings: Embeddings,
+    _credentials?: CloseVectorCredentials
   ): Promise<SaveableVectorStore> {
     throw new Error("not implemented");
   }
@@ -183,19 +183,19 @@ export abstract class CloseVector<
    * Static method to create a new CloseVectorNode instance from texts and metadata.
    * It creates a new Document instance for each text and metadata, then
    * calls the fromDocuments method to create the HNSWLib instance.
-   * @param texts The texts to be used to create the documents.
-   * @param metadatas The metadata to be used to create the documents.
-   * @param embeddings The embeddings to be used by the HNSWLib instance.
-   * @param args An optional configuration object for the HNSWLib instance.
-   * @param credential An optional credential object for the CloseVector API.
+   * @param _texts The texts to be used to create the documents.
+   * @param _metadatas The metadata to be used to create the documents.
+   * @param _embeddings The embeddings to be used by the HNSWLib instance.
+   * @param _args An optional configuration object for the HNSWLib instance.
+   * @param _credential An optional credential object for the CloseVector API.
    * @returns A Promise that resolves to a new CloseVectorNode instance.
    */
   static async fromTexts (
-    texts: string[],
-    metadatas: object[] | object,
-    embeddings: Embeddings,
-    args?: Record<string, unknown>,
-    credential?: CloseVectorCredentials
+    _texts: string[],
+    _metadatas: object[] | object,
+    _embeddings: Embeddings,
+    _args?: Record<string, unknown>,
+    _credential?: CloseVectorCredentials
   ): Promise<CloseVector<CloseVectorHNSWNode | CloseVectorHNSWWeb>> {
     throw new Error("not implemented");
   }
@@ -204,17 +204,17 @@ export abstract class CloseVector<
    * Static method to create a new CloseVectorNode instance from documents. It
    * creates a new CloseVectorNode instance, adds the documents to it, then returns
    * the instance.
-   * @param docs The documents to be added to the HNSWLib instance.
-   * @param embeddings The embeddings to be used by the HNSWLib instance.
-   * @param args An optional configuration object for the HNSWLib instance.
-   * @param credentials An optional credential object for the CloseVector API.
+   * @param _docs The documents to be added to the HNSWLib instance.
+   * @param _embeddings The embeddings to be used by the HNSWLib instance.
+   * @param _args An optional configuration object for the HNSWLib instance.
+   * @param _credentials An optional credential object for the CloseVector API.
    * @returns A Promise that resolves to a new CloseVectorNode instance.
    */
   static async fromDocuments(
-    docs: Document[],
-    embeddings: Embeddings,
-    args?: Record<string, unknown>,
-    credentials?: CloseVectorCredentials
+    _docs: Document[],
+    _embeddings: Embeddings,
+    _args?: Record<string, unknown>,
+    _credentials?: CloseVectorCredentials
   ): Promise<CloseVector<CloseVectorHNSWNode | CloseVectorHNSWWeb>> {
     throw new Error("not implemented");
   }
