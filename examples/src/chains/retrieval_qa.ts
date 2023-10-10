@@ -1,4 +1,3 @@
-import { OpenAI } from "langchain/llms/openai";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -9,10 +8,11 @@ import {
 } from "langchain/schema/runnable";
 import { Document } from "langchain/document";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { PromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate, HumanMessagePromptTemplate, PromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 
 // Initialize the LLM to use to answer the question.
-const model = new OpenAI({});
+const model = new ChatOpenAI({});
 const text = fs.readFileSync("examples/state_of_the_union.txt", "utf8");
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
 const docs = await textSplitter.createDocuments([text]);
@@ -26,17 +26,22 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 // Initialize a retriever wrapper around the vector store
 const vectorStoreRetriever = vectorStore.asRetriever();
 
-// Default prompt from the RetrievalQA chain.
-const questionPrompt = PromptTemplate.fromTemplate(
-  `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\nQuestion: {question}\nHelpful Answer:`
-);
+// Create a system & human prompt for the chat model
+const system_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+  
+{context}`;
+const messages = [
+  SystemMessagePromptTemplate.fromTemplate(system_template),
+  HumanMessagePromptTemplate.fromTemplate("{question}"),
+];
+const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
     context: vectorStoreRetriever.pipe(serializedDocs),
     question: new RunnablePassthrough(),
   },
-  questionPrompt,
+  prompt,
   model,
   new StringOutputParser(),
 ]);
