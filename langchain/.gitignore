@@ -175,6 +175,9 @@ vectorstores/analyticdb.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
+vectorstores/cassandra.cjs
+vectorstores/cassandra.js
+vectorstores/cassandra.d.ts
 vectorstores/elasticsearch.cjs
 vectorstores/elasticsearch.js
 vectorstores/elasticsearch.d.ts

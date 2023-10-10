@@ -187,6 +187,9 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/cassandra.cjs",
+    "vectorstores/cassandra.js",
+    "vectorstores/cassandra.d.ts",
     "vectorstores/elasticsearch.cjs",
     "vectorstores/elasticsearch.js",
     "vectorstores/elasticsearch.d.ts",
@@ -759,6 +762,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "cohere-ai": ">=6.0.0",
@@ -867,6 +871,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
     "cohere-ai": ">=6.0.0",
@@ -1040,6 +1045,9 @@
       "optional": true
     },
     "axios": {
+      "optional": true
+    },
+    "cassandra-driver": {
       "optional": true
     },
     "cheerio": {
@@ -1511,6 +1519,11 @@
       "types": "./vectorstores/base.d.ts",
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
+    },
+    "./vectorstores/cassandra": {
+      "types": "./vectorstores/cassandra.d.ts",
+      "import": "./vectorstores/cassandra.js",
+      "require": "./vectorstores/cassandra.cjs"
     },
     "./vectorstores/elasticsearch": {
       "types": "./vectorstores/elasticsearch.d.ts",
