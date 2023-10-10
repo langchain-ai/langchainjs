@@ -38,7 +38,7 @@ import { CassandraStore } from "langchain/vectorstores/cassandra";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 // text sample from Godel, Escher, Bach
-const vectorStore = await Cassandra.fromTexts(
+const vectorStore = await CassandraStore.fromTexts(
   [
     "Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little\
             Harmonic Labyrinth of the dreaded Majotaur?",
@@ -59,7 +59,7 @@ const vectorStore = await Cassandra.fromTexts(
 );
 
 // or alternatively from docs
-const vectorStore = await Cassandra.fromDocuments(docs, new OpenAIEmbeddings(), {
+const vectorStore = await CassandraStore.fromDocuments(docs, new OpenAIEmbeddings(), {
   collectionName: "goldel_escher_bach",
 });
 
@@ -72,7 +72,7 @@ const response = await vectorStore.similaritySearch("scared", 2);
 import { CassandraStore } from "langchain/vectorstores/cassandra";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
-const vectorStore = await Cassandra.fromExistingCollection(
+const vectorStore = await CassandraStore.fromExistingCollection(
   new OpenAIEmbeddings(),
   {
     collectionName: "goldel_escher_bach",
