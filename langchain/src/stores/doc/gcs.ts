@@ -26,8 +26,6 @@ export interface GoogleCloudStorageDocstoreConfiguration {
  * bucket.
  */
 export class GoogleCloudStorageDocstore extends Docstore {
-  lc_namespace = ["langchain", "stores", "doc"];
-
   bucket: string;
 
   prefix = "";
