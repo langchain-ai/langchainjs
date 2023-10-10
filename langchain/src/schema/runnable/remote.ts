@@ -1,7 +1,10 @@
 import { Runnable, RunnableBatchOptions } from "./base.js";
 import { RunnableConfig } from "./config.js";
 import { IterableReadableStream } from "../../util/stream.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import {
+  BaseCallbackConfig,
+  CallbackManagerForChainRun,
+} from "../../callbacks/manager.js";
 import {
   getBytes,
   getLines,
@@ -140,10 +143,11 @@ function withoutCallbacks(
   return rest;
 }
 
-export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
+export class RemoteRunnable<
   RunInput,
-  RunOutput
-> {
+  RunOutput,
+  CallOptions extends RunnableConfig
+> extends Runnable<RunInput, RunOutput, CallOptions> {
   private url: string;
 
   private options?: RemoteRunnableOptions;
@@ -167,40 +171,58 @@ export class RemoteRunnable<RunInput, RunOutput> extends Runnable<
     });
   }
 
-  async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
+  async invoke(input: RunInput, options?: CallOptions): Promise<RunOutput> {
+    const [config, kwargs] =
+      this._separateRunnableConfigFromCallOptions(options);
     const response = await this.post<{
       input: RunInput;
       config: RunnableConfig;
-      kwargs: Record<string, never>;
+      kwargs: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
     }>("/invoke", {
       input,
-      config: withoutCallbacks(options),
-      kwargs: {},
+      config: withoutCallbacks(config),
+      kwargs: kwargs ?? {},
     });
     return revive((await response.json()).output) as RunOutput;
   }
 
   async _batch(
     inputs: RunInput[],
-    configs?: RunnableConfig[],
+    options?: CallOptions[],
     _?: (CallbackManagerForChainRun | undefined)[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {
       throw new Error("returnExceptions is not supported for remote clients");
     }
+    const arr = options?.map((opts) =>
+      this._separateRunnableConfigFromCallOptions(opts)
+    );
+    const tup = arr?.reduce(
+      ([pc, pk], [c, k]) =>
+        [
+          [...pc, c],
+          [...pk, k],
+        ] as [
+          RunnableConfig[],
+          Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
+        ],
+      [[], []] as [
+        RunnableConfig[],
+        Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
+      ]
+    );
+    const [configs, kwargs] = tup ?? [undefined, undefined];
     const response = await this.post<{
       inputs: RunInput[];
-      config: (RunnableConfig & RunnableBatchOptions)[];
-      kwargs: Record<string, never>;
+      config?: (RunnableConfig & RunnableBatchOptions)[];
+      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[];
     }>("/batch", {
       inputs,
-      config:
-        configs ??
-        []
-          .map(withoutCallbacks)
-          .map((config) => ({ ...config, ...batchOptions })),
-      kwargs: {},
+      config: (configs ?? [])
+        .map(withoutCallbacks)
+        .map((config) => ({ ...config, ...batchOptions })),
+      kwargs,
     });
     const body = await response.json();
 
