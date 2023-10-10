@@ -134,7 +134,7 @@ function deserialize<RunOutput>(str: string): RunOutput {
   return revive(obj);
 }
 
-function withoutCallbacks(
+function removeCallbacks(
   options?: RunnableConfig
 ): Omit<RunnableConfig, "callbacks"> {
   const rest = { ...options };
@@ -180,7 +180,7 @@ export class RemoteRunnable<
       kwargs: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
     }>("/invoke", {
       input,
-      config: withoutCallbacks(config),
+      config: removeCallbacks(config),
       kwargs: kwargs ?? {},
     });
     return revive((await response.json()).output) as RunOutput;
@@ -219,7 +219,7 @@ export class RemoteRunnable<
     }>("/batch", {
       inputs,
       config: (configs ?? [])
-        .map(withoutCallbacks)
+        .map(removeCallbacks)
         .map((config) => ({ ...config, ...batchOptions })),
       kwargs,
     });
@@ -287,7 +287,7 @@ export class RemoteRunnable<
     const { body } = response;
     if (!body) {
       throw new Error(
-        "Could not begin LangServe stream. Please check the given URL and try again."
+        "Could not begin remote stream. Please check the given URL and try again."
       );
     }
     const stream = new ReadableStream({
