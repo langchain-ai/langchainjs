@@ -1,5 +1,5 @@
 import RetrievalQARunnableExample from "@examples/chains/retrieval_qa.ts";
-import RetrievalQARunnableExampleCustom from "@examples/chains/retrieval_qa_custom.ts";
+import RetrievalQAExampleCustom from "@examples/chains/retrieval_qa_custom.ts";
 import RetrievalQAExampleCustomPrompt from "@examples/chains/retrieval_qa_custom_prompt.ts";
 import CodeBlock from "@theme/CodeBlock";
 
@@ -20,7 +20,11 @@ In the below example, we are using a `VectorStore` as the `Retriever` and implem
 In this example we're querying relevant documents based on the query, and from those documents we use an LLM to parse out only the relevant information.
 Once all the relevant information is gathered we pass it once more to an LLM to generate the answer.
 
-<CodeBlock language="typescript">{RetrievalQARunnableExampleCustom}</CodeBlock>
+In the example below we instantiate our `Retriever` and query the relevant documents based on the query. We then use those returned relevant documents to
+pass as context to the `loadQAMapReduceChain`. This function loads the `MapReduceDocumentsChain` and passes the relevant documents as context to the chain
+after mapping over all to reduce to just the necessary context.
+
+<CodeBlock language="typescript">{RetrievalQAExampleCustom}</CodeBlock>
 
 ## Custom prompts
 
