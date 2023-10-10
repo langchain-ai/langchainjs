@@ -18,7 +18,7 @@ const docs = await textSplitter.createDocuments([text]);
 
 // Default prompt used in the loadQAMapReduceChain for getting more fine grained context
 // from returned relevant docs.
-const qa_template =
+const qaTemplate =
   PromptTemplate.fromTemplate(`Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.
 {context}
@@ -26,10 +26,10 @@ Question: {question}
 Relevant text, if any:`);
 
 // Create a new chain that uses the default prompt and the relevant docs.
-const query_docs_chain = qa_template.pipe(model).pipe(new StringOutputParser());
+const queryDocsChain = qaTemplate.pipe(model).pipe(new StringOutputParser());
 
 // Default prompt used in the loadQAMapReduceChain for getting a final answer.
-const combine_docs_prompt = PromptTemplate.fromTemplate(
+const combineDocsPrompt = PromptTemplate.fromTemplate(
   `Given the following extracted parts of a long document and a question, create a final answer. 
 If you don't know the answer, just say that you don't know. Don't try to make up an answer.
 
@@ -41,24 +41,24 @@ FINAL ANSWER:`
 );
 
 // Create a new chain using the default prompt and an output parser.
-const combine_docs_chain = combine_docs_prompt
+const combineDocsChain = combineDocsPrompt
   .pipe(model)
   .pipe(new StringOutputParser());
 
 const query = "What did the president say about Justice Breyer?";
 
 // Create a vector store retriever from the documents.
-const vector_store_retriever = (
+const vectorStoreRetriever = (
   await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings())
 ).asRetriever();
-const relevant_docs = await vector_store_retriever.getRelevantDocuments(query);
+const relevantDocs = await vectorStoreRetriever.getRelevantDocuments(query);
 
-const serialized_docs_content = relevant_docs.map((doc) => doc.pageContent);
+const serializedDocsContent = relevantDocs.map((doc) => doc.pageContent);
 
 // Perform a map over all the relevant docs and query the LLM.
-const query_docs_chain_results = await Promise.all(
-  serialized_docs_content.map(async (doc) => {
-    const res = await query_docs_chain.invoke({
+const queryDocsChainResults = await Promise.all(
+  serializedDocsContent.map(async (doc) => {
+    const res = await queryDocsChain.invoke({
       context: doc,
       question: query,
     });
@@ -70,10 +70,10 @@ const query_docs_chain_results = await Promise.all(
 
 const chain = RunnableSequence.from([
   {
-    summaries: () => query_docs_chain_results.join("\n"),
+    summaries: () => queryDocsChainResults.join("\n"),
     question: new RunnablePassthrough(),
   },
-  combine_docs_chain,
+  combineDocsChain,
 ]);
 
 const result = await chain.invoke(query);
