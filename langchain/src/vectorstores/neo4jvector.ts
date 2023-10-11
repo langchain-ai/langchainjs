@@ -243,10 +243,8 @@ export class Neo4jVectorStore extends VectorStore {
         "The specified vector index name does not exist. Make sure to check if you spelled it correctly"
       );
     }
-    console.log(typeof store.embeddingDimension, typeof embeddingDimension);
-    if (!embeddingDimension) {
-      await store.createNewIndex();
-    } else if (store.embeddingDimension !== embeddingDimension) {
+
+    if (store.embeddingDimension !== embeddingDimension) {
       throw new Error(
         `The provided embedding function and vector index dimensions do not match.
          Embedding function dimension: ${store.embeddingDimension}
