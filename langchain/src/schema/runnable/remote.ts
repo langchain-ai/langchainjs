@@ -214,7 +214,7 @@ export class RemoteRunnable<
         RunnableConfig[],
         Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
       ]
-    ) ?? [{}, {}];
+    ) ?? [[], []];
     const response = await this.post<{
       inputs: RunInput[];
       config?: (RunnableConfig & RunnableBatchOptions)[];

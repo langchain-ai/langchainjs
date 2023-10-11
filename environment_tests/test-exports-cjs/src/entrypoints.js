@@ -75,3 +75,4 @@ const experimental_generative_agents = require("langchain/experimental/generativ
 const experimental_plan_and_execute = require("langchain/experimental/plan_and_execute");
 const experimental_chat_models_bittensor = require("langchain/experimental/chat_models/bittensor");
 const evaluation = require("langchain/evaluation");
+const runnables_remote = require("langchain/runnables/remote");
