@@ -183,7 +183,7 @@ export class MessagesPlaceholder<
       const readableInput =
         typeof input === "string" ? input : JSON.stringify(input, null, 2);
       throw new Error(
-        `Class MessagesPlaceholder expects an array of BaseMessage instances but received: ${readableInput}`
+        `Class 'MessagesPlaceholder' expects an array of BaseMessage instances but received: ${readableInput}`
       );
     }
 
