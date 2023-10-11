@@ -56,10 +56,8 @@ export const run = async () => {
     new StringOutputParser(),
   ]);
 
-  const questionOne = "What did the president say about Justice Breyer?";
-
   const stream = await chain.stream({
-    question: questionOne,
+    question: "What did the president say about Justice Breyer?",
   });
 
   let streamedResult = "";
@@ -67,30 +65,29 @@ export const run = async () => {
     streamedResult += chunk;
     console.log(streamedResult);
   }
-
   /**
    * The
-   * president
-   * said
-   * that
-   * Justice
-   * B
-   * rey
-   * er
-   * has
-   * dedicated
-   * his
-   * life
-   * to
-   * serving
-   * the
-   * country
-   * and
-   * thanked
-   * him
-   * for
-   * his
-   * service
-   * .
+   * The president
+   * The president honored
+   * The president honored Justice
+   * The president honored Justice Stephen
+   * The president honored Justice Stephen B
+   * The president honored Justice Stephen Brey
+   * The president honored Justice Stephen Breyer
+   * The president honored Justice Stephen Breyer,
+   * The president honored Justice Stephen Breyer, a
+   * The president honored Justice Stephen Breyer, a retiring
+   * The president honored Justice Stephen Breyer, a retiring Justice
+   * The president honored Justice Stephen Breyer, a retiring Justice of
+   * The president honored Justice Stephen Breyer, a retiring Justice of the
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States Supreme
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States Supreme Court
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States Supreme Court,
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States Supreme Court, for
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States Supreme Court, for his
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States Supreme Court, for his service
+   * The president honored Justice Stephen Breyer, a retiring Justice of the United States Supreme Court, for his service.
    */
 };
