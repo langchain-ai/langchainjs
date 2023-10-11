@@ -145,18 +145,11 @@ export class SupabaseVectorStore extends VectorStore {
     }
   }
 
-  /**
-   * Performs a similarity search on the vector store.
-   * @param query The query vector.
-   * @param k The number of results to return.
-   * @param filter Optional filter to apply to the search.
-   * @returns A promise that resolves with the search results when the search is complete.
-   */
-  async similaritySearchVectorWithScore(
+  protected async _searchSupabase(
     query: number[],
     k: number,
     filter?: this["FilterType"]
-  ): Promise<[Document, number][]> {
+  ): Promise<SearchEmbeddingsResponse[]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
@@ -187,14 +180,25 @@ export class SupabaseVectorStore extends VectorStore {
       );
     }
 
-    const result: [Document, number][] = (
-      searches as SearchEmbeddingsResponse[]
-    ).map((resp) => [
+    return searches;
+  }
+
+  /**
+   * Performs a similarity search on the vector store.
+   * @param query The query vector.
+   * @param k The number of results to return.
+   * @param filter Optional filter to apply to the search.
+   * @returns A promise that resolves with the search results when the search is complete.
+   */
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    const searches = await this._searchSupabase(query, k, filter);
+    const result: [Document, number][] = searches.map((resp) => [
       new Document({
-        metadata: {
-          ...resp.metadata,
-          embedding: resp.embedding,
-        },
+        metadata: resp.metadata,
         pageContent: resp.content,
       }),
       resp.similarity,
@@ -223,13 +227,13 @@ export class SupabaseVectorStore extends VectorStore {
   ): Promise<Document[]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
-    const resultDocs = await this.similaritySearchVectorWithScore(
+    const searches = await this._searchSupabase(
       queryEmbedding,
       options.fetchK ?? 20,
       options.filter
     );
 
-    const embeddingList = resultDocs.map((doc) => doc[0].metadata.embedding);
+    const embeddingList = searches.map((searchResp) => searchResp.embedding);
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
@@ -238,9 +242,13 @@ export class SupabaseVectorStore extends VectorStore {
       options.k
     );
 
-    return mmrIndexes.map((idx) => {
-      return resultDocs[idx][0];
-    });
+    return mmrIndexes.map(
+      (idx) =>
+        new Document({
+          metadata: searches[idx].metadata,
+          pageContent: searches[idx].content,
+        })
+    );
   }
 
   /**
