@@ -1,16 +1,11 @@
-import { Runnable, RunnableBatchOptions } from "./base.js";
-import { RunnableConfig } from "./config.js";
-import { IterableReadableStream } from "../../util/stream.js";
+import { Runnable, RunnableBatchOptions } from "../schema/runnable/index.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 import {
   BaseCallbackConfig,
   CallbackManagerForChainRun,
-} from "../../callbacks/manager.js";
-import {
-  getBytes,
-  getLines,
-  getMessages,
-} from "../../util/event-source-parse.js";
-import { Document } from "../../document.js";
+} from "../callbacks/manager.js";
+import { getBytes, getLines, getMessages } from "../util/event-source-parse.js";
+import { Document } from "../document.js";
 import {
   AIMessage,
   AIMessageChunk,
@@ -22,9 +17,10 @@ import {
   HumanMessageChunk,
   SystemMessage,
   SystemMessageChunk,
-} from "../index.js";
-import { StringPromptValue } from "../../prompts/base.js";
-import { ChatPromptValue } from "../../prompts/chat.js";
+} from "../schema/index.js";
+import { StringPromptValue } from "../prompts/base.js";
+import { ChatPromptValue } from "../prompts/chat.js";
+import { IterableReadableStream } from "../util/stream.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
