@@ -139,6 +139,7 @@ export class Neo4jVectorStore extends VectorStore {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async query(query: string, params: any = {}): Promise<any[] | undefined> {
     try {
       const result = await this.driver.executeQuery(query, params, {
@@ -153,6 +154,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   static async fromTexts(
     texts: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: any,
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
@@ -163,7 +165,7 @@ export class Neo4jVectorStore extends VectorStore {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
         pageContent: texts[i],
-        metadata: metadata,
+        metadata,
       });
       docs.push(newDoc);
     }
@@ -180,11 +182,11 @@ export class Neo4jVectorStore extends VectorStore {
 
     const store = await this.initialize(embeddings, config);
 
-    let embeddingDimension = await store.retrieveExistingIndex();
+    const embeddingDimension = await store.retrieveExistingIndex();
 
     if (!embeddingDimension) {
       await store.createNewIndex();
-    } else if (store.embeddingDimension !== embeddingDimension.low) {
+    } else if (store.embeddingDimension !== embeddingDimension) {
       throw new Error(
         `Index with name "${store.indexName}" already exists. The provided embedding function and vector index dimensions do not match.
         Embedding function dimension: ${store.embeddingDimension}
@@ -223,7 +225,7 @@ export class Neo4jVectorStore extends VectorStore {
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ) {
-    let { searchType = DEFAULT_SEARCH_TYPE, keywordIndexName = "keyword" } =
+    const { searchType = DEFAULT_SEARCH_TYPE, keywordIndexName = "keyword" } =
       config;
 
     if (searchType === SearchType.HYBRID && !keywordIndexName) {
@@ -241,8 +243,10 @@ export class Neo4jVectorStore extends VectorStore {
         "The specified vector index name does not exist. Make sure to check if you spelled it correctly"
       );
     }
-
-    if (store.embeddingDimension !== embeddingDimension) {
+    console.log(typeof store.embeddingDimension, typeof embeddingDimension);
+    if (!embeddingDimension) {
+      await store.createNewIndex();
+    } else if (store.embeddingDimension !== embeddingDimension) {
       throw new Error(
         `The provided embedding function and vector index dimensions do not match.
          Embedding function dimension: ${store.embeddingDimension}
@@ -273,13 +277,15 @@ export class Neo4jVectorStore extends VectorStore {
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ) {
-    let {
+    const {
       textNodeProperties = [],
       embeddingNodeProperty,
       searchType = DEFAULT_SEARCH_TYPE,
       retrievalQuery = "",
       nodeLabel,
     } = config;
+
+    let _retrievalQuery = retrievalQuery;
 
     if (textNodeProperties.length === 0) {
       throw Error(
@@ -288,7 +294,7 @@ export class Neo4jVectorStore extends VectorStore {
     }
 
     if (!retrievalQuery) {
-      config.retrievalQuery = `
+      _retrievalQuery = `
         RETURN reduce(str='', k IN ${textNodeProperties} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
@@ -297,12 +303,15 @@ export class Neo4jVectorStore extends VectorStore {
       `;
     }
 
-    const store = await this.initialize(embeddings, config);
+    const store = await this.initialize(embeddings, {
+      ...config,
+      retrievalQuery: _retrievalQuery,
+    });
 
     let embeddingDimension = await store.retrieveExistingIndex();
 
     if (!embeddingDimension) {
-      embeddingDimension = await store.createNewIndex();
+      await store.createNewIndex();
     } else if (store.embeddingDimension !== embeddingDimension) {
       throw new Error(
         `Index with name ${store.indexName} already exists. The provided embedding function and vector index dimensions do not match.\nEmbedding function dimension: ${store.embeddingDimension}\nVector index dimension: ${embeddingDimension}`
@@ -325,6 +334,7 @@ export class Neo4jVectorStore extends VectorStore {
       }
     }
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const fetchQuery = `
         MATCH (n:\`${nodeLabel}\`)
@@ -413,17 +423,23 @@ export class Neo4jVectorStore extends VectorStore {
       indexInformation = this.sortByIndexName(indexInformation, this.indexName);
 
       try {
-        this.indexName = indexInformation[0]["name"];
-        this.nodeLabel = indexInformation[0]["labelsOrTypes"][0];
-        this.embeddingNodeProperty = indexInformation[0]["properties"][0];
+        const [index] = indexInformation;
+        const [labelOrType] = index.labelsOrTypes;
+        const [property] = index.properties;
+
+        this.indexName = index.name;
+        this.nodeLabel = labelOrType;
+        this.embeddingNodeProperty = property;
 
         const embeddingDimension =
-          indexInformation[0]["options"]["indexConfig"]["vector.dimensions"];
-        return embeddingDimension;
+          index.options.indexConfig["vector.dimensions"];
+        return Number(embeddingDimension);
       } catch (error) {
         return null;
       }
     }
+
+    return null;
   }
 
   async retrieveExistingFtsIndex(
@@ -455,10 +471,15 @@ export class Neo4jVectorStore extends VectorStore {
       );
 
       try {
-        this.keywordIndexName = sortedIndexInformation[0].name;
-        this.textNodeProperty = sortedIndexInformation[0].properties[0];
-        const nodeLabel = sortedIndexInformation[0].labelsOrTypes[0];
-        return nodeLabel;
+        const [index] = sortedIndexInformation;
+        const [labelOrType] = index.labelsOrTypes;
+        const [property] = index.properties;
+
+        this.keywordIndexName = index.name;
+        this.textNodeProperty = property;
+        this.nodeLabel = labelOrType;
+
+        return labelOrType;
       } catch (error) {
         return null;
       }
@@ -486,8 +507,10 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   sortByIndexName(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     values: Array<{ [key: string]: any }>,
     indexName: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Array<{ [key: string]: any }> {
     return values.sort(
       (a, b) =>
@@ -499,15 +522,19 @@ export class Neo4jVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas?: Record<string, any>[],
     ids?: string[]
   ): Promise<string[]> {
-    if (!ids) {
-      ids = documents.map(() => uuid.v1());
+    let _ids = ids;
+    let _metadatas = metadatas;
+
+    if (!_ids) {
+      _ids = documents.map(() => uuid.v1());
     }
 
     if (!metadatas) {
-      metadatas = documents.map(() => ({}));
+      _metadatas = documents.map(() => ({}));
     }
 
     const importQuery = `
@@ -524,19 +551,17 @@ export class Neo4jVectorStore extends VectorStore {
     `;
 
     const parameters = {
-      data: documents.map(({ pageContent, metadata }, index) => {
-        return {
-          text: pageContent,
-          metadata: metadatas ? metadatas[index] : metadata,
-          embedding: vectors[index],
-          id: ids ? ids[index] : null,
-        };
-      }),
+      data: documents.map(({ pageContent, metadata }, index) => ({
+        text: pageContent,
+        metadata: _metadatas ? _metadatas[index] : metadata,
+        embedding: vectors[index],
+        id: _ids ? _ids[index] : null,
+      })),
     };
 
     await this.query(importQuery, parameters);
 
-    return ids;
+    return _ids;
   }
 
   async addDocuments(documents: Document[]): Promise<string[]> {
@@ -550,7 +575,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     vector: number[],
-    k: number = 4
+    k = 4
   ): Promise<[Document, number][]> {
     const defaultRetrieval = `
     RETURN node.${this.textNodeProperty} AS text, score,
@@ -572,17 +597,16 @@ export class Neo4jVectorStore extends VectorStore {
     const results = await this.query(readQuery, parameters);
 
     if (results) {
-      const docs: [Document, number][] = results.map((result: any) => {
-        return [
-          new Document({
-            pageContent: result.text,
-            metadata: Object.fromEntries(
-              Object.entries(result.metadata).filter(([_, v]) => v !== null)
-            ),
-          }),
-          result.score,
-        ];
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const docs: [Document, number][] = results.map((result: any) => [
+        new Document({
+          pageContent: result.text,
+          metadata: Object.fromEntries(
+            Object.entries(result.metadata).filter(([_, v]) => v !== null)
+          ),
+        }),
+        result.score,
+      ]);
 
       return docs;
     }

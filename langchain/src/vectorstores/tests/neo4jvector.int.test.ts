@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { Neo4jVectorStore } from "../neo4jvector.js";
+import { Neo4jVectorStore, SearchType } from "../neo4jvector.js";
 import { Document } from "../../document.js";
 
 const OS_TOKEN_COUNT = 1536;
@@ -55,6 +55,7 @@ test("Test fromTexts", async () => {
   expect(password).toBeDefined();
 
   const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const metadatas: any[] = [];
 
   const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
@@ -84,5 +85,395 @@ test("Test fromTexts", async () => {
 
   expect(output).toStrictEqual(expectedResult);
   await dropVectorIndexes(neo4jVectorStore);
-  neo4jVectorStore.close();
+  await neo4jVectorStore.close();
+});
+
+test("Test fromTexts Hybrid", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      preDeleteCollection: true,
+      searchType: SearchType.HYBRID,
+    }
+  );
+
+  const output = await neo4jVectorStore.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "foo",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "bar",
+      metadata: {},
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+});
+
+test("Test fromExistingIndex", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "vector",
+      preDeleteCollection: true,
+    }
+  );
+
+  const existingIndex = await Neo4jVectorStore.fromExistingIndex(embeddings, {
+    url,
+    username,
+    password,
+    indexName: "vector",
+  });
+
+  const output = await existingIndex.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "foo",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "bar",
+      metadata: {},
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+  await existingIndex.close();
+});
+
+test("Test fromExistingIndex Hybrid", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "vector",
+      keywordIndexName: "keyword",
+      searchType: SearchType.HYBRID,
+      preDeleteCollection: true,
+    }
+  );
+
+  const existingIndex = await Neo4jVectorStore.fromExistingIndex(embeddings, {
+    url,
+    username,
+    password,
+    indexName: "vector",
+    keywordIndexName: "keyword",
+  });
+
+  const output = await existingIndex.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "foo",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "bar",
+      metadata: {},
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+  await existingIndex.close();
+});
+
+test("Test retrievalQuery", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "vector",
+      preDeleteCollection: true,
+      retrievalQuery:
+        "RETURN node.text AS text, score, {foo:'bar'} AS metadata",
+    }
+  );
+
+  const existingIndex = await Neo4jVectorStore.fromExistingIndex(embeddings, {
+    url,
+    username,
+    password,
+    indexName: "vector",
+    keywordIndexName: "keyword",
+  });
+
+  const output = await existingIndex.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "foo",
+      metadata: { foo: "bar" },
+    }),
+    new Document({
+      pageContent: "bar",
+      metadata: { foo: "bar" },
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+  await existingIndex.close();
+});
+
+test("Test fromExistingGraph", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "vector",
+      preDeleteCollection: true,
+    }
+  );
+
+  await neo4jVectorStore.query("MATCH (n) DETACH DELETE n");
+
+  await neo4jVectorStore.query(
+    "CREATE (:Test {name:'Foo'}), (:Test {name:'Bar', foo:'bar'})"
+  );
+
+  const existingGraph = await Neo4jVectorStore.fromExistingGraph(embeddings, {
+    url,
+    username,
+    password,
+    indexName: "vector",
+    nodeLabel: "Test",
+    textNodeProperties: ["name"],
+    embeddingNodeProperty: "embedding",
+  });
+
+  const output = await existingGraph.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "\nname:Foo",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "\nname:Bar",
+      metadata: { foo: "bar" },
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+  await existingGraph.close();
+});
+
+test("Test fromExistingGraph multiple properties", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "vector",
+      preDeleteCollection: true,
+    }
+  );
+
+  await neo4jVectorStore.query("MATCH (n) DETACH DELETE n");
+
+  await neo4jVectorStore.query(
+    "CREATE (:Test {name:'Foo', name2:'Fooz'}), (:Test {name:'Bar', foo:'bar'})"
+  );
+
+  const existingGraph = await Neo4jVectorStore.fromExistingGraph(embeddings, {
+    url,
+    username,
+    password,
+    indexName: "vector",
+    nodeLabel: "Test",
+    textNodeProperties: ["name", "name2"],
+    embeddingNodeProperty: "embedding",
+  });
+
+  const output = await existingGraph.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "\nname:Foo\nname2: Fooz",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "\nname:Bar",
+      metadata: { foo: "bar" },
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+  await existingGraph.close();
+});
+
+test("Test fromExistingGraph multiple properties hybrid", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      indexName: "vector",
+      preDeleteCollection: true,
+    }
+  );
+
+  await neo4jVectorStore.query("MATCH (n) DETACH DELETE n");
+
+  await neo4jVectorStore.query(
+    "CREATE (:Test {name:'Foo', name2:'Fooz'}), (:Test {name:'Bar', foo:'bar'})"
+  );
+
+  const existingGraph = await Neo4jVectorStore.fromExistingGraph(embeddings, {
+    url,
+    username,
+    password,
+    indexName: "vector",
+    nodeLabel: "Test",
+    textNodeProperties: ["name", "name2"],
+    embeddingNodeProperty: "embedding",
+    searchType: SearchType.HYBRID,
+  });
+
+  const output = await existingGraph.similaritySearch("foo", 2);
+
+  const expectedResult = [
+    new Document({
+      pageContent: "\nname:Foo\nname2: Fooz",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "\nname:Bar",
+      metadata: { foo: "bar" },
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
+  await existingGraph.close();
 });
