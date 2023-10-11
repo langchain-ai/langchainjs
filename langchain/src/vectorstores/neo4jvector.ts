@@ -146,12 +146,8 @@ export class Neo4jVectorStore extends VectorStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async query(query: string, params: any = {}): Promise<any[]> {
     const session = this.driver.session({ database: this.database });
-    try {
-      const result = await session.run(query, params);
-      return toObjects(result.records);
-    } catch (error) {
-      throw error;
-    }
+    const result = await session.run(query, params);
+    return toObjects(result.records);
   }
 
   static async fromTexts(
@@ -309,7 +305,7 @@ export class Neo4jVectorStore extends VectorStore {
       retrievalQuery: _retrievalQuery,
     });
 
-    let embeddingDimension = await store.retrieveExistingIndex();
+    const embeddingDimension = await store.retrieveExistingIndex();
 
     if (!embeddingDimension) {
       await store.createNewIndex();
@@ -574,7 +570,7 @@ export class Neo4jVectorStore extends VectorStore {
     );
   }
 
-  async similaritySearch(query: string, k: number = 4): Promise<Document[]> {
+  async similaritySearch(query: string, k = 4): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
 
     const results = await this.similaritySearchVectorWithScore(
@@ -588,7 +584,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     vector: number[],
-    k = 4,
+    k: number,
     query: string
   ): Promise<[Document, number][]> {
     const defaultRetrieval = `
@@ -601,15 +597,16 @@ export class Neo4jVectorStore extends VectorStore {
       ? this.retrievalQuery
       : defaultRetrieval;
 
-    const readQuery =
-      getSearchIndexQuery(this.searchType) + " " + retrievalQuery;
+    const readQuery = `${getSearchIndexQuery(
+      this.searchType
+    )} ${retrievalQuery}`;
 
     const parameters = {
       index: this.indexName,
       k: Number(k),
       embedding: vector,
       keyword_index: this.keywordIndexName,
-      query: query,
+      query,
     };
     const results = await this.query(readQuery, parameters);
 
