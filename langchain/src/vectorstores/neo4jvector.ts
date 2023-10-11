@@ -55,6 +55,8 @@ export class Neo4jVectorStore extends VectorStore {
 
   private retrievalQuery: string;
 
+  private searchType: SearchType;
+
   private distanceStrategy: DistanceStrategy = DEFAULT_DISTANCE_STRATEGY;
 
   _vectorstoreType(): string {
@@ -81,6 +83,7 @@ export class Neo4jVectorStore extends VectorStore {
       keywordIndexName = "keyword",
       indexName = "vector",
       retrievalQuery = "",
+      searchType = DEFAULT_SEARCH_TYPE,
     } = config;
 
     store.embeddingDimension = (await embeddings.embedQuery("foo")).length;
@@ -91,6 +94,7 @@ export class Neo4jVectorStore extends VectorStore {
     store.keywordIndexName = keywordIndexName;
     store.indexName = indexName;
     store.retrievalQuery = retrievalQuery;
+    store.searchType = searchType;
 
     if (store.preDeleteCollection) {
       await store._dropIndex();
@@ -126,7 +130,7 @@ export class Neo4jVectorStore extends VectorStore {
   async _dropIndex() {
     try {
       await this.query(`
-        MATCH (n:${this.nodeLabel})
+        MATCH (n:\`${this.nodeLabel}\`)
         CALL {
           WITH n
           DETACH DELETE n
@@ -141,10 +145,9 @@ export class Neo4jVectorStore extends VectorStore {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async query(query: string, params: any = {}): Promise<any[]> {
+    const session = this.driver.session({ database: this.database });
     try {
-      const result = await this.driver.executeQuery(query, params, {
-        database: this.database,
-      });
+      const result = await session.run(query, params);
       return toObjects(result.records);
     } catch (error) {
       throw error;
@@ -285,7 +288,7 @@ export class Neo4jVectorStore extends VectorStore {
     } = config;
 
     let _retrievalQuery = retrievalQuery;
-
+    console.log("textNodeProperties", textNodeProperties);
     if (textNodeProperties.length === 0) {
       throw Error(
         "Parameter `text_node_properties` must not be an empty array"
@@ -294,7 +297,7 @@ export class Neo4jVectorStore extends VectorStore {
 
     if (!retrievalQuery) {
       _retrievalQuery = `
-        RETURN reduce(str='', k IN ${textNodeProperties} |
+        RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
         .map((prop) => `\`${prop}\`: Null`)
@@ -586,10 +589,7 @@ export class Neo4jVectorStore extends VectorStore {
       ? this.retrievalQuery
       : defaultRetrieval;
 
-    const readQuery = `
-      CALL db.index.vector.queryNodes($index, $k, $embedding)
-      YIELD node, score ${retrievalQuery}
-    `;
+    const readQuery = getSearchIndexQuery(this.searchType) + retrievalQuery;
 
     const parameters = { index: this.indexName, k, embedding: vector };
 
@@ -685,4 +685,24 @@ function extractPathForRows(path: neo4j.Path) {
       objIntToString(segment.end),
     ].filter((part) => part !== null)
   );
+}
+
+function getSearchIndexQuery(searchType: SearchType): string {
+  const typeToQueryMap: { [key in SearchType]: string } = {
+    [SearchType.VECTOR]:
+      "CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score",
+    [SearchType.HYBRID]: `
+          CALL {
+              CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score
+              RETURN node, score UNION
+              CALL db.index.fulltext.queryNodes($keyword_index, $query, {limit: $k}) YIELD node, score
+              WITH collect({node: node, score: score}) AS nodes, max(score) AS max
+              UNWIND nodes AS n
+              RETURN n.node AS node, (n.score / max) AS score
+          }
+          WITH node, max(score) AS score ORDER BY score DESC LIMIT $k
+      `,
+  };
+
+  return typeToQueryMap[searchType];
 }
