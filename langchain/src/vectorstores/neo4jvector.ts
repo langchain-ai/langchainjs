@@ -61,12 +61,15 @@ export class Neo4jVectorStore extends VectorStore {
     return "neo4jvector";
   }
 
-  constructor(embedings: Embeddings, config: Neo4jVectorStoreArgs) {
-    super(embedings, config);
+  constructor(embeddings: Embeddings, config: Neo4jVectorStoreArgs) {
+    super(embeddings, config);
   }
 
-  static async initialize(embedings: Embeddings, config: Neo4jVectorStoreArgs) {
-    const store = new Neo4jVectorStore(embedings, config);
+  static async initialize(
+    embeddings: Embeddings,
+    config: Neo4jVectorStoreArgs
+  ) {
+    const store = new Neo4jVectorStore(embeddings, config);
     await store._initializeDriver(config);
     await store._verifyConnectivity();
 
@@ -80,7 +83,7 @@ export class Neo4jVectorStore extends VectorStore {
       retrievalQuery = "",
     } = config;
 
-    store.embeddingDimension = (await embedings.embedQuery("foo")).length;
+    store.embeddingDimension = (await embeddings.embedQuery("foo")).length;
     store.preDeleteCollection = preDeleteCollection;
     store.nodeLabel = nodeLabel;
     store.textNodeProperty = textNodeProperty;
@@ -113,12 +116,11 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   async _verifyConnectivity() {
-    try {
-      const session = this.driver.session({ database: this.database });
-      await session.close();
-    } catch (error: any) {
-      console.log("Failed to verify connection.");
-    }
+    await this.driver.verifyAuthentication();
+  }
+
+  async close() {
+    await this.driver.close();
   }
 
   async _dropIndex() {
@@ -137,15 +139,16 @@ export class Neo4jVectorStore extends VectorStore {
     }
   }
 
-  async query(query: string, params: any = {}): Promise<any[]> {
-    const session = this.driver.session({ database: this.database });
-
+  async query(query: string, params: any = {}): Promise<any[] | undefined> {
     try {
-      const result = await session.run(query, params);
-      return result.records.map((record: any) => record.toObject());
-    } finally {
-      await session.close();
+      const result = await this.driver.executeQuery(query, params, {
+        database: this.database,
+      });
+      return toObjects(result.records);
+    } catch (error) {
+      // ignore errors
     }
+    return undefined;
   }
 
   static async fromTexts(
@@ -333,6 +336,11 @@ export class Neo4jVectorStore extends VectorStore {
       `;
 
       const data = await store.query(fetchQuery, { props: textNodeProperties });
+
+      if (!data) {
+        continue;
+      }
+
       const textEmbeddings = await embeddings.embedDocuments(
         data.map((el) => el.text)
       );
@@ -400,18 +408,21 @@ export class Neo4jVectorStore extends VectorStore {
         embedding_node_property: this.embeddingNodeProperty,
       }
     );
-    indexInformation = this.sortByIndexName(indexInformation, this.indexName);
 
-    try {
-      this.indexName = indexInformation[0]["name"];
-      this.nodeLabel = indexInformation[0]["labelsOrTypes"][0];
-      this.embeddingNodeProperty = indexInformation[0]["properties"][0];
+    if (indexInformation) {
+      indexInformation = this.sortByIndexName(indexInformation, this.indexName);
 
-      const embeddingDimension =
-        indexInformation[0]["options"]["indexConfig"]["vector.dimensions"];
-      return embeddingDimension;
-    } catch (error) {
-      return null;
+      try {
+        this.indexName = indexInformation[0]["name"];
+        this.nodeLabel = indexInformation[0]["labelsOrTypes"][0];
+        this.embeddingNodeProperty = indexInformation[0]["properties"][0];
+
+        const embeddingDimension =
+          indexInformation[0]["options"]["indexConfig"]["vector.dimensions"];
+        return embeddingDimension;
+      } catch (error) {
+        return null;
+      }
     }
   }
 
@@ -436,20 +447,24 @@ export class Neo4jVectorStore extends VectorStore {
       }
     );
 
-    // Sort the index information by index name
-    const sortedIndexInformation = this.sortByIndexName(
-      indexInformation,
-      this.indexName
-    );
+    if (indexInformation) {
+      // Sort the index information by index name
+      const sortedIndexInformation = this.sortByIndexName(
+        indexInformation,
+        this.indexName
+      );
 
-    try {
-      this.keywordIndexName = sortedIndexInformation[0].name;
-      this.textNodeProperty = sortedIndexInformation[0].properties[0];
-      const nodeLabel = sortedIndexInformation[0].labelsOrTypes[0];
-      return nodeLabel;
-    } catch (error) {
-      return null;
+      try {
+        this.keywordIndexName = sortedIndexInformation[0].name;
+        this.textNodeProperty = sortedIndexInformation[0].properties[0];
+        const nodeLabel = sortedIndexInformation[0].labelsOrTypes[0];
+        return nodeLabel;
+      } catch (error) {
+        return null;
+      }
     }
+
+    return null;
   }
 
   async createNewKeywordIndex(
@@ -556,18 +571,95 @@ export class Neo4jVectorStore extends VectorStore {
 
     const results = await this.query(readQuery, parameters);
 
-    const docs: [Document, number][] = results.map((result: any) => {
-      return [
-        new Document({
-          pageContent: result.text,
-          metadata: Object.fromEntries(
-            Object.entries(result.metadata).filter(([_, v]) => v !== null)
-          ),
-        }),
-        result.score,
-      ];
-    });
+    if (results) {
+      const docs: [Document, number][] = results.map((result: any) => {
+        return [
+          new Document({
+            pageContent: result.text,
+            metadata: Object.fromEntries(
+              Object.entries(result.metadata).filter(([_, v]) => v !== null)
+            ),
+          }),
+          result.score,
+        ];
+      });
 
-    return docs;
+      return docs;
+    }
+
+    return [];
   }
+}
+
+function toObjects(records: neo4j.Record[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recordValues: Record<string, any>[] = records.map((record) => {
+    const rObj = record.toObject();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const out: { [key: string]: any } = {};
+    Object.keys(rObj).forEach((key) => {
+      out[key] = itemIntToString(rObj[key]);
+    });
+    return out;
+  });
+  return recordValues;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function itemIntToString(item: any): any {
+  if (neo4j.isInt(item)) return item.toString();
+  if (Array.isArray(item)) return item.map((ii) => itemIntToString(ii));
+  if (["number", "string", "boolean"].indexOf(typeof item) !== -1) return item;
+  if (item === null) return item;
+  if (typeof item === "object") return objIntToString(item);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function objIntToString(obj: any) {
+  const entry = extractFromNeoObjects(obj);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let newObj: any = null;
+  if (Array.isArray(entry)) {
+    newObj = entry.map((item) => itemIntToString(item));
+  } else if (entry !== null && typeof entry === "object") {
+    newObj = {};
+    Object.keys(entry).forEach((key) => {
+      newObj[key] = itemIntToString(entry[key]);
+    });
+  }
+  return newObj;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractFromNeoObjects(obj: any) {
+  if (
+    // eslint-disable-next-line
+    obj instanceof (neo4j.types.Node as any) ||
+    // eslint-disable-next-line
+    obj instanceof (neo4j.types.Relationship as any)
+  ) {
+    return obj.properties;
+    // eslint-disable-next-line
+  } else if (obj instanceof (neo4j.types.Path as any)) {
+    // eslint-disable-next-line
+    return [].concat.apply<any[], any[], any[]>([], extractPathForRows(obj));
+  }
+  return obj;
+}
+
+function extractPathForRows(path: neo4j.Path) {
+  let { segments } = path;
+  // Zero length path. No relationship, end === start
+  if (!Array.isArray(path.segments) || path.segments.length < 1) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    segments = [{ ...path, end: null } as any];
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return segments.map((segment: any) =>
+    [
+      objIntToString(segment.start),
+      objIntToString(segment.relationship),
+      objIntToString(segment.end),
+    ].filter((part) => part !== null)
+  );
 }

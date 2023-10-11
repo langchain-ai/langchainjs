@@ -82,4 +82,5 @@ test("Test fromTexts", async () => {
 
   expect(output).toStrictEqual(expectedResult);
   await dropVectorIndexes(neo4jVectorStore);
+  neo4jVectorStore.close();
 });
