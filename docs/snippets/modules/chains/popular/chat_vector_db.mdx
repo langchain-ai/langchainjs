@@ -28,7 +28,7 @@ import ConvoQABuiltInExample from "@examples/chains/conversational_qa_built_in_m
 
 ## Streaming
 
-You can also use the above concept of using two different LLMs to stream only the final response from the chain, and not output from the intermediate standalone question generation step. Here's an example:
+You can also stream results from the chain. This is useful if you want to stream the output of the chain to a client, or if you want to stream the output of the chain to another chain.
 
 import ConvoQAStreamingExample from "@examples/chains/conversational_qa_streaming.ts";
 
