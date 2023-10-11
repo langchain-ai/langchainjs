@@ -1,6 +1,5 @@
 import CodeBlock from "@theme/CodeBlock";
 import ConvoRetrievalQAExample from "@examples/chains/conversational_qa.ts";
-import Example from "@examples/chains/conversational_qa.ts";
 
 <CodeBlock language="typescript">{ConvoRetrievalQAExample}</CodeBlock>
 
@@ -59,22 +58,3 @@ import ConvoQAExternalMemoryExample from "@examples/chains/conversational_qa_ext
 
 <CodeBlock language="typescript">{ConvoQAExternalMemoryExample}</CodeBlock>
 
-## Prompt Customization
-
-If you want to further change the chain's behavior, you can change the prompts for both the underlying question generation chain and the QA chain.
-
-One case where you might want to do this is to improve the chain's ability to answer meta questions about the chat history.
-By default, the only input to the QA chain is the standalone question generated from the question generation chain.
-This poses a challenge when asking meta questions about information in previous interactions from the chat history.
-
-For example, if you introduce a friend Bob and mention his age as 28, the chain is unable to provide his age upon asking a question like "How old is Bob?".
-This limitation occurs because the bot searches for Bob in the vector store, rather than considering the message history.
-
-You can pass an alternative prompt for the question generation chain that also returns parts of the chat history relevant to the answer,
-allowing the QA chain to answer meta questions with the additional context:
-
-import ConvoRetrievalQAWithCustomPrompt from "@examples/chains/conversation_qa_custom_prompt.ts";
-
-<CodeBlock language="typescript">{ConvoRetrievalQAWithCustomPrompt}</CodeBlock>
-
-Keep in mind that adding more context to the prompt in this way may distract the LLM from other relevant retrieved information.
