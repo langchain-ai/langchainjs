@@ -196,7 +196,7 @@ export class FunctionalTranslator extends BaseTranslator {
   mergeFilters(
     defaultFilter: FunctionFilter,
     generatedFilter: FunctionFilter,
-    mergeType = "and"
+    mergeType = "and",
   ): FunctionFilter | undefined {
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
