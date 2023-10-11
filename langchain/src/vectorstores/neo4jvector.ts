@@ -94,6 +94,7 @@ export class Neo4jVectorStore extends VectorStore {
     store.keywordIndexName = keywordIndexName;
     store.indexName = indexName;
     store.retrievalQuery = retrievalQuery;
+    console.log("TUKI", searchType);
     store.searchType = searchType;
 
     if (store.preDeleteCollection) {
@@ -239,7 +240,7 @@ export class Neo4jVectorStore extends VectorStore {
     }
 
     const store = await this.initialize(embeddings, config);
-
+    console.log("---------------", store.searchType);
     const embeddingDimension = await store.retrieveExistingIndex();
 
     if (!embeddingDimension) {
@@ -288,7 +289,7 @@ export class Neo4jVectorStore extends VectorStore {
     } = config;
 
     let _retrievalQuery = retrievalQuery;
-    console.log("textNodeProperties", textNodeProperties);
+
     if (textNodeProperties.length === 0) {
       throw Error(
         "Parameter `text_node_properties` must not be an empty array"
@@ -575,9 +576,22 @@ export class Neo4jVectorStore extends VectorStore {
     );
   }
 
+  async similaritySearch(query: string, k: number = 4): Promise<Document[]> {
+    const embedding = await this.embeddings.embedQuery(query);
+
+    const results = await this.similaritySearchVectorWithScore(
+      embedding,
+      k,
+      query
+    );
+
+    return results.map((result) => result[0]);
+  }
+
   async similaritySearchVectorWithScore(
     vector: number[],
-    k = 4
+    k = 4,
+    query: string
   ): Promise<[Document, number][]> {
     const defaultRetrieval = `
     RETURN node.${this.textNodeProperty} AS text, score,
@@ -588,14 +602,21 @@ export class Neo4jVectorStore extends VectorStore {
     const retrievalQuery = this.retrievalQuery
       ? this.retrievalQuery
       : defaultRetrieval;
-
+    console.log("this.searchType", this.searchType);
     const readQuery = getSearchIndexQuery(this.searchType) + retrievalQuery;
 
-    const parameters = { index: this.indexName, k, embedding: vector };
+    const parameters = {
+      index: this.indexName,
+      k,
+      embedding: vector,
+      keyword_index: this.keywordIndexName,
+      query: query,
+    };
 
     const results = await this.query(readQuery, parameters);
 
     if (results) {
+      console.log("results", results);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const docs: [Document, number][] = results.map((result: any) => [
         new Document({
