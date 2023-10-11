@@ -75,3 +75,4 @@ import * as experimental_generative_agents from "langchain/experimental/generati
 import * as experimental_plan_and_execute from "langchain/experimental/plan_and_execute";
 import * as experimental_chat_models_bittensor from "langchain/experimental/chat_models/bittensor";
 import * as evaluation from "langchain/evaluation";
+import * as runnables_remote from "langchain/runnables/remote";
