@@ -162,9 +162,19 @@ export class MessagesPlaceholder<
     let isInputBaseMessage = false;
 
     if (Array.isArray(input)) {
-      isInputBaseMessage = input.every((message) =>
-        isBaseMessage(message as BaseMessage)
+      // Filter out null/undefined values
+      const inputWithoutNull = input.filter(
+        (message) => message !== null && message !== undefined
       );
+
+      isInputBaseMessage = inputWithoutNull.every(
+        (message) =>
+          isBaseMessage(message as BaseMessage) ||
+          message === null ||
+          message === undefined
+      );
+    } else if (input === null || input === undefined) {
+      isInputBaseMessage = true;
     } else {
       isInputBaseMessage = isBaseMessage(input as BaseMessage);
     }
@@ -173,7 +183,7 @@ export class MessagesPlaceholder<
       const readableInput =
         typeof input === "string" ? input : JSON.stringify(input, null, 2);
       throw new Error(
-        `Expected an array of BaseMessage instances but received: ${readableInput}`
+        `Class MessagesPlaceholder expects an array of BaseMessage instances but received: ${readableInput}`
       );
     }
 
