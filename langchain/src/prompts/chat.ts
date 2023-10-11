@@ -158,7 +158,7 @@ export class MessagesPlaceholder<
     return [this.variableName];
   }
 
-  validateInputOrThrow(input: Array<unknown>): input is BaseMessage[] {
+  validateInputOrThrow(input: Array<unknown>, variableName: Extract<keyof RunInput, string>): input is BaseMessage[] {
     let isInputBaseMessage = false;
 
     if (Array.isArray(input)) {
@@ -173,7 +173,7 @@ export class MessagesPlaceholder<
       const readableInput =
         typeof input === "string" ? input : JSON.stringify(input, null, 2);
       throw new Error(
-        `MessagesPlaceholder expects an instance of BaseMessage as input, but received: ${readableInput}`
+        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: ${readableInput}`
       );
     }
 
@@ -183,7 +183,7 @@ export class MessagesPlaceholder<
   formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
-    this.validateInputOrThrow(values[this.variableName]);
+    this.validateInputOrThrow(values[this.variableName], this.variableName);
 
     return Promise.resolve(values[this.variableName] as BaseMessage[]);
   }
