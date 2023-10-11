@@ -140,16 +140,15 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async query(query: string, params: any = {}): Promise<any[] | undefined> {
+  async query(query: string, params: any = {}): Promise<any[]> {
     try {
       const result = await this.driver.executeQuery(query, params, {
         database: this.database,
       });
       return toObjects(result.records);
     } catch (error) {
-      // ignore errors
+      throw error;
     }
-    return undefined;
   }
 
   static async fromTexts(
@@ -178,7 +177,11 @@ export class Neo4jVectorStore extends VectorStore {
     embeddings: Embeddings,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
-    const { searchType = DEFAULT_SEARCH_TYPE, createIdIndex = true } = config;
+    const {
+      searchType = DEFAULT_SEARCH_TYPE,
+      createIdIndex = true,
+      textNodeProperties = [],
+    } = config;
 
     const store = await this.initialize(embeddings, config);
 
@@ -198,9 +201,7 @@ export class Neo4jVectorStore extends VectorStore {
       const ftsNodeLabel = await store.retrieveExistingFtsIndex();
 
       if (!ftsNodeLabel) {
-        throw Error(
-          "The specified keyword index name does not exist. Make sure to check if you spelled it correctly"
-        );
+        await store.createNewKeywordIndex(textNodeProperties);
       } else {
         if (ftsNodeLabel !== store.nodeLabel) {
           throw Error(
