@@ -175,9 +175,12 @@ export class MessagesPlaceholder<
     if (!isInputBaseMessage) {
       const readableInput =
         typeof input === "string" ? input : JSON.stringify(input, null, 2);
-      throw new Error(
+  
+      const error = new Error(
         `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: ${readableInput}`
       );
+      error.name = "InputFormatError";
+      throw error;
     }
 
     return true;
