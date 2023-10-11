@@ -32,6 +32,17 @@ SCHEMA: {schema}
 QUESTION: {question}
 ------------
 SQL QUERY:`);
+/**
+ * You can also load a default prompt by importing from "langchain/sql_db"
+ * 
+ * The default prompts available are:
+ * DEFAULT_SQL_DATABASE_PROMPT
+ * SQL_POSTGRES_PROMPT
+ * SQL_SQLITE_PROMPT
+ * SQL_MSSQL_PROMPT
+ * SQL_MYSQL_PROMPT
+ * SQL_SAP_HANA_PROMPT
+ */
 
 /**
  * Create a new RunnableSequence where we pipe the output from `db.getTableInfo()`
