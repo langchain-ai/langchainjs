@@ -28,7 +28,7 @@ test("Bind kwargs to a runnable with a batch call", async () => {
 test("Stream with RunnableBinding", async () => {
   const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
   const stream = await llm.pipe(new StringOutputParser()).stream("Hi there!");
-  const chunks = [];
+  const chunks: string[] = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
     console.log(chunk);
@@ -41,7 +41,7 @@ test("Stream through a RunnableBinding if the bound runnable implements transfor
   const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
   const outputParser = new StringOutputParser().bind({ callbacks: [] });
   const stream = await llm.pipe(outputParser).stream("Hi there!");
-  const chunks = [];
+  const chunks: string[] = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
     console.log(chunk);

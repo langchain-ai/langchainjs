@@ -137,7 +137,7 @@ PromptTemplates can also be used to produce a list of messages. In this case, th
 ```typescript
 import { ChatPromptTemplate } from "langchain/prompts";
 
-const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
+const template = "You are a helpful assistant that translates {input_language} into {output_language}.";
 const humanTemplate = "{text}";
 
 const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -154,7 +154,7 @@ const formattedChatPrompt = await chatPrompt.formatMessages({
 /*
   [
     SystemMessage {
-      content: 'You are a helpful assistant that translates English to French.'
+      content: 'You are a helpful assistant that translates English into French.'
     },
     HumanMessage { content: 'I love programming.' }
   ]

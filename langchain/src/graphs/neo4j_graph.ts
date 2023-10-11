@@ -59,19 +59,20 @@ export class Neo4jGraph extends GraphStore {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async query(query: string, params: any = {}): Promise<any[]> {
-    const session = this.driver.session({ database: this.database });
+  async query(query: string, params: any = {}): Promise<any[] | undefined> {
     try {
-      const result = await session.run(query, params);
-      return result.records.map((record) => record.toObject());
-    } finally {
-      await session.close();
+      const result = await this.driver.executeQuery(query, params, {
+        database: this.database,
+      });
+      return toObjects(result.records);
+    } catch (error) {
+      // ignore errors
     }
+    return undefined;
   }
 
   async verifyConnectivity() {
-    const session = this.driver.session({ database: this.database });
-    await session.close();
+    await this.driver.verifyAuthentication();
   }
 
   async refreshSchema() {
@@ -105,13 +106,90 @@ export class Neo4jGraph extends GraphStore {
 
     this.schema = `
       Node properties are the following:
-      ${nodeProperties.map((el) => el.output)}
+      ${JSON.stringify(nodeProperties?.map((el) => el.output))}
 
       Relationship properties are the following:
-      ${relationshipsProperties.map((el) => el.output)}
+      ${JSON.stringify(relationshipsProperties?.map((el) => el.output))}
 
       The relationships are the following:
-      ${relationships.map((el) => el.output)}
+      ${JSON.stringify(relationships?.map((el) => el.output))}
     `;
   }
+
+  async close() {
+    await this.driver.close();
+  }
 }
+
+function toObjects(records: neo4j.Record[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recordValues: Record<string, any>[] = records.map((record) => {
+    const rObj = record.toObject();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const out: { [key: string]: any } = {};
+    Object.keys(rObj).forEach((key) => {
+      out[key] = itemIntToString(rObj[key]);
+    });
+    return out;
+  });
+  return recordValues;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function itemIntToString(item: any): any {
+  if (neo4j.isInt(item)) return item.toString();
+  if (Array.isArray(item)) return item.map((ii) => itemIntToString(ii));
+  if (["number", "string", "boolean"].indexOf(typeof item) !== -1) return item;
+  if (item === null) return item;
+  if (typeof item === "object") return objIntToString(item);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function objIntToString(obj: any) {
+  const entry = extractFromNeoObjects(obj);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let newObj: any = null;
+  if (Array.isArray(entry)) {
+    newObj = entry.map((item) => itemIntToString(item));
+  } else if (entry !== null && typeof entry === "object") {
+    newObj = {};
+    Object.keys(entry).forEach((key) => {
+      newObj[key] = itemIntToString(entry[key]);
+    });
+  }
+  return newObj;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractFromNeoObjects(obj: any) {
+  if (
+    // eslint-disable-next-line
+    obj instanceof (neo4j.types.Node as any) ||
+    // eslint-disable-next-line
+    obj instanceof (neo4j.types.Relationship as any)
+  ) {
+    return obj.properties;
+    // eslint-disable-next-line
+  } else if (obj instanceof (neo4j.types.Path as any)) {
+    // eslint-disable-next-line
+    return [].concat.apply<any[], any[], any[]>([], extractPathForRows(obj));
+  }
+  return obj;
+}
+
+const extractPathForRows = (path: neo4j.Path) => {
+  let { segments } = path;
+  // Zero length path. No relationship, end === start
+  if (!Array.isArray(path.segments) || path.segments.length < 1) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    segments = [{ ...path, end: null } as any];
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return segments.map((segment: any) =>
+    [
+      objIntToString(segment.start),
+      objIntToString(segment.relationship),
+      objIntToString(segment.end),
+    ].filter((part) => part !== null)
+  );
+};

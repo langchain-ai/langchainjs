@@ -7,8 +7,9 @@
 
 Looking for the Python version? Check out [LangChain](https://github.com/hwchase17/langchain).
 
-**Production Support:** As you move your LangChains into production, we'd love to offer more hands-on support.
-Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to share more about what you're building, and our team will get in touch.
+To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com). 
+[LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications. 
+Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to get off the waitlist or speak with our sales team
 
 ## ⚡️ Quick Install
 
@@ -102,3 +103,5 @@ For more information on these concepts, please see our [full documentation](http
 As an open source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
 
 For detailed information on how to contribute, see [here](CONTRIBUTING.md).
+
+Please report any security issues or concerns following our [security guidelines](SECURITY.md).

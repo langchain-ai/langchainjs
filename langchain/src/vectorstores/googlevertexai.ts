@@ -12,7 +12,7 @@ import {
 } from "../util/async_caller.js";
 import {
   GoogleVertexAIConnectionParams,
-  GoogleVertexAIResponse,
+  GoogleResponse,
 } from "../types/googlevertexai-types.js";
 import { Docstore } from "../schema/index.js";
 
@@ -46,7 +46,7 @@ interface DeployedIndex {
   // There are other attributes, but we don't care about them right now
 }
 
-interface IndexEndpointResponse extends GoogleVertexAIResponse {
+interface IndexEndpointResponse extends GoogleResponse {
   data: {
     deployedIndexes: DeployedIndex[];
     publicEndpointDomainName: string;
@@ -101,7 +101,7 @@ interface RemoveDatapointRequest {
   datapointIds: string[];
 }
 
-interface RemoveDatapointResponse extends GoogleVertexAIResponse {
+interface RemoveDatapointResponse extends GoogleResponse {
   // Should be empty
 }
 
@@ -165,7 +165,7 @@ interface UpsertDatapointRequest {
   datapoints: IndexDatapoint[];
 }
 
-interface UpsertDatapointResponse extends GoogleVertexAIResponse {
+interface UpsertDatapointResponse extends GoogleResponse {
   // Should be empty
 }
 
@@ -239,7 +239,7 @@ interface FindNeighborsResponseNearestNeighbor {
   neighbors: FindNeighborsResponseNeighbor[];
 }
 
-interface FindNeighborsResponse extends GoogleVertexAIResponse {
+interface FindNeighborsResponse extends GoogleResponse {
   data: {
     nearestNeighbors: FindNeighborsResponseNearestNeighbor[];
   };
