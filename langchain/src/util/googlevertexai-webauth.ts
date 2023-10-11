@@ -4,7 +4,7 @@ import {
   Credentials,
 } from "web-auth-library/google";
 import { getEnvironmentVariable } from "./env.js";
-import type { GoogleVertexAIAbstractedClient } from "../types/googlevertexai-types.js";
+import type { GoogleAbstractedClient } from "../types/googlevertexai-types.js";
 
 export type WebGoogleAuthOptions = {
   credentials: string | Credentials;
@@ -12,7 +12,7 @@ export type WebGoogleAuthOptions = {
   accessToken?: string;
 };
 
-export class WebGoogleAuth implements GoogleVertexAIAbstractedClient {
+export class WebGoogleAuth implements GoogleAbstractedClient {
   options: WebGoogleAuthOptions;
 
   constructor(options?: WebGoogleAuthOptions) {

@@ -46,7 +46,7 @@ export type RunState = {
    * List of sub-runs contained in this run, if any, in the order they were started.
    * If filters were supplied, this list will contain only the runs that matched the filters.
    */
-  logs: LogEntry[];
+  logs: Record<string, LogEntry>;
 };
 
 /**
@@ -121,7 +121,9 @@ export class LogStreamCallbackHandler extends BaseTracer {
 
   protected excludeTags?: string[];
 
-  private indexMap: Record<string, number> = {};
+  private keyMapByRunId: Record<string, string> = {};
+
+  private counterMapByRunName: Record<string, number> = {};
 
   protected transformStream: TransformStream;
 
@@ -201,7 +203,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
                 id: run.id,
                 streamed_output: [],
                 final_output: undefined,
-                logs: [],
+                logs: {},
               },
             },
           ],
@@ -213,7 +215,13 @@ export class LogStreamCallbackHandler extends BaseTracer {
       return;
     }
 
-    this.indexMap[run.id] = Math.max(...Object.values(this.indexMap), -1) + 1;
+    if (this.counterMapByRunName[run.name] === undefined) {
+      this.counterMapByRunName[run.name] = 0;
+    }
+    this.counterMapByRunName[run.name] += 1;
+    const count = this.counterMapByRunName[run.name];
+    this.keyMapByRunId[run.id] =
+      count === 1 ? run.name : `${run.name}:${count}`;
 
     const logEntry: LogEntry = {
       id: run.id,
@@ -231,7 +239,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
         ops: [
           {
             op: "add",
-            path: `/logs/${this.indexMap[run.id]}`,
+            path: `/logs/${this.keyMapByRunId[run.id]}`,
             value: logEntry,
           },
         ],
@@ -241,21 +249,21 @@ export class LogStreamCallbackHandler extends BaseTracer {
 
   async onRunUpdate(run: Run): Promise<void> {
     try {
-      const index = this.indexMap[run.id];
-      if (index === undefined) {
+      const runName = this.keyMapByRunId[run.id];
+      if (runName === undefined) {
         return;
       }
       const ops: JSONPatchOperation[] = [
         {
           op: "add",
-          path: `/logs/${index}/final_output`,
+          path: `/logs/${runName}/final_output`,
           value: run.outputs,
         },
       ];
       if (run.end_time !== undefined) {
         ops.push({
           op: "add",
-          path: `/logs/${index}/end_time`,
+          path: `/logs/${runName}/end_time`,
           value: new Date(run.end_time).toISOString(),
         });
       }
@@ -281,15 +289,15 @@ export class LogStreamCallbackHandler extends BaseTracer {
   }
 
   async onLLMNewToken(run: Run, token: string): Promise<void> {
-    const index = this.indexMap[run.id];
-    if (index === undefined) {
+    const runName = this.keyMapByRunId[run.id];
+    if (runName === undefined) {
       return;
     }
     const patch = new RunLogPatch({
       ops: [
         {
           op: "add",
-          path: `/logs/${index}/streamed_output_str/-`,
+          path: `/logs/${runName}/streamed_output_str/-`,
           value: token,
         },
       ],

@@ -43,6 +43,9 @@ export interface OptionalImportMap {
   "langchain/chains/graph_qa/cypher"?:
     | typeof import("../chains/graph_qa/cypher.js")
     | Promise<typeof import("../chains/graph_qa/cypher.js")>;
+  "langchain/embeddings/bedrock"?:
+    | typeof import("../embeddings/bedrock.js")
+    | Promise<typeof import("../embeddings/bedrock.js")>;
   "langchain/embeddings/cloudflare_workersai"?:
     | typeof import("../embeddings/cloudflare_workersai.js")
     | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;
@@ -100,12 +103,18 @@ export interface OptionalImportMap {
   "langchain/llms/writer"?:
     | typeof import("../llms/writer.js")
     | Promise<typeof import("../llms/writer.js")>;
+  "langchain/llms/portkey"?:
+    | typeof import("../llms/portkey.js")
+    | Promise<typeof import("../llms/portkey.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
+  "langchain/vectorstores/cassandra"?:
+    | typeof import("../vectorstores/cassandra.js")
+    | Promise<typeof import("../vectorstores/cassandra.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
@@ -292,6 +301,9 @@ export interface OptionalImportMap {
   "langchain/document_transformers/mozilla_readability"?:
     | typeof import("../document_transformers/mozilla_readability.js")
     | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
+  "langchain/chat_models/portkey"?:
+    | typeof import("../chat_models/portkey.js")
+    | Promise<typeof import("../chat_models/portkey.js")>;
   "langchain/chat_models/bedrock"?:
     | typeof import("../chat_models/bedrock.js")
     | Promise<typeof import("../chat_models/bedrock.js")>;
@@ -412,6 +424,9 @@ export interface OptionalImportMap {
   "langchain/experimental/llms/bittensor"?:
     | typeof import("../experimental/llms/bittensor.js")
     | Promise<typeof import("../experimental/llms/bittensor.js")>;
+  "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
+    | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
+    | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
 }
 
 export interface SecretMap {

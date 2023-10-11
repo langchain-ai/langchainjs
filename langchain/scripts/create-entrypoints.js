@@ -36,6 +36,7 @@ const entrypoints = {
   "chains/graph_qa/cypher": "chains/graph_qa/cypher",
   // embeddings
   "embeddings/base": "embeddings/base",
+  "embeddings/bedrock": "embeddings/bedrock",
   "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
   "embeddings/fake": "embeddings/fake",
@@ -67,12 +68,14 @@ const entrypoints = {
   "llms/bedrock": "llms/bedrock",
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
+  "llms/portkey": "llms/portkey",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
   // vectorstores
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/cassandra": "vectorstores/cassandra",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/cloudflare_vectorize": "vectorstores/cloudflare_vectorize",
@@ -162,6 +165,7 @@ const entrypoints = {
   // chat_models
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
+  "chat_models/portkey": "chat_models/portkey",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/bedrock": "chat_models/bedrock",
   "chat_models/googlevertexai": "chat_models/googlevertexai/index",
@@ -193,15 +197,19 @@ const entrypoints = {
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/zep": "retrievers/zep",
   "retrievers/metal": "retrievers/metal",
+  "retrievers/chaindesk": "retrievers/chaindesk",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
   "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
+  "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
+  "retrievers/document_compressors/embeddings_filter":
+    "retrievers/document_compressors/embeddings_filter",
   "retrievers/hyde": "retrievers/hyde",
   "retrievers/score_threshold": "retrievers/score_threshold",
   "retrievers/self_query": "retrievers/self_query/index",
@@ -251,12 +259,14 @@ const entrypoints = {
     "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
-  "experimental/chat_models/bittensor":
-    "experimental/chat_models/bittensor",
-  "experimental/llms/bittensor":
-    "experimental/llms/bittensor",
+  "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
+  "experimental/llms/bittensor": "experimental/llms/bittensor",
+  "experimental/hubs/makersuite/googlemakersuitehub":
+    "experimental/hubs/makersuite/googlemakersuitehub",
   // evaluation
   evaluation: "evaluation/index",
+  // runnables
+  "runnables/remote": "runnables/remote",
 };
 
 // Entrypoints in this list will
@@ -287,6 +297,7 @@ const requiresOptionalDependency = [
   "chains/load",
   "chains/sql_db",
   "chains/graph_qa/cypher",
+  "embeddings/bedrock",
   "embeddings/cloudflare_workersai",
   "embeddings/cohere",
   "embeddings/googlevertexai",
@@ -306,8 +317,10 @@ const requiresOptionalDependency = [
   "llms/bedrock",
   "llms/llama_cpp",
   "llms/writer",
+  "llms/portkey",
   "prompts/load",
   "vectorstores/analyticdb",
+  "vectorstores/cassandra",
   "vectorstores/chroma",
   "vectorstores/cloudflare_vectorize",
   "vectorstores/googlevertexai",
@@ -374,6 +387,7 @@ const requiresOptionalDependency = [
   "chat_models/googlevertexai",
   "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
+  "chat_models/portkey",
   "sql_db",
   "retrievers/amazon_kendra",
   "retrievers/supabase",
@@ -412,6 +426,7 @@ const requiresOptionalDependency = [
   "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
+  "experimental/hubs/makersuite/googlemakersuitehub",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

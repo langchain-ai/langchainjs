@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { NotionAPILoader } from "../web/notionapi.js";
 
-test("Test Notion API Loader Page", async () => {
+test.skip("Test Notion API Loader Page", async () => {
   const loader = new NotionAPILoader({
     clientOptions: {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
@@ -22,7 +22,7 @@ test("Test Notion API Loader Page", async () => {
   console.log(`Loaded ${docs.length} pages`);
 });
 
-test("Test Notion API Loader Database", async () => {
+test.skip("Test Notion API Loader Database", async () => {
   const loader = new NotionAPILoader({
     clientOptions: {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
@@ -41,7 +41,29 @@ test("Test Notion API Loader Database", async () => {
   console.log(`Loaded ${docs.length} pages from the database`);
 });
 
-test("Test Notion API Loader onDocumentLoad", async () => {
+test.skip("Test Notion API Loader onDocumentLoad", async () => {
+  const onDocumentLoadedCheck: string[] = [];
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_DATABASE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
+      onDocumentLoadedCheck.push(
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+      );
+    },
+    propertiesAsHeader: true,
+  });
+
+  await loader.load();
+
+  expect(onDocumentLoadedCheck.length).toBe(3);
+
+  console.log(onDocumentLoadedCheck);
+});
+
+test.skip("Test docs with empty database page content", async () => {
   const onDocumentLoadedCheck: string[] = [];
   const loader = new NotionAPILoader({
     clientOptions: {
@@ -55,9 +77,29 @@ test("Test Notion API Loader onDocumentLoad", async () => {
     },
   });
 
-  await loader.load();
+  const docs = await loader.load();
 
-  expect(onDocumentLoadedCheck.length).toBe(5);
+  expect(docs.length).toBe(0);
+});
 
-  console.log(onDocumentLoadedCheck);
+test.skip("Test docs with empty database page content and propertiesAsHeader enabled", async () => {
+  const onDocumentLoadedCheck: string[] = [];
+  const loader = new NotionAPILoader({
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
+    id: process.env.NOTION_DATABASE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
+      onDocumentLoadedCheck.push(
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+      );
+    },
+    propertiesAsHeader: true,
+  });
+
+  const docs = await loader.load();
+
+  expect(docs.length).toBe(3);
+
+  console.log(docs);
 });

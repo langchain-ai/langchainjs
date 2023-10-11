@@ -36,6 +36,7 @@ export function listExternals() {
     "firebase-admin/app",
     "firebase-admin/firestore",
     "web-auth-library/google",
+    "@google-ai/generativelanguage/build/protos/protos.js",
   ];
 }
 

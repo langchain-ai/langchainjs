@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-
 import { PineconeStore } from "../pinecone.js";
 
 test("PineconeStore with external ids", async () => {
+  const upsert = jest.fn();
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({
-      matches: [],
+    namespace: jest.fn<any>().mockReturnValue({
+      upsert,
+      query: jest.fn<any>().mockResolvedValue({
+        matches: [],
+      }),
     }),
   };
   const embeddings = new FakeEmbeddings();
@@ -30,20 +32,15 @@ test("PineconeStore with external ids", async () => {
     ["id1"]
   );
 
-  expect(client.upsert).toHaveBeenCalledTimes(1);
+  expect(upsert).toHaveBeenCalledTimes(1);
 
-  expect(client.upsert).toHaveBeenCalledWith({
-    upsertRequest: {
-      namespace: undefined,
-      vectors: [
-        {
-          id: "id1",
-          metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4, text: "hello" },
-          values: [0.1, 0.2, 0.3, 0.4],
-        },
-      ],
+  expect(upsert).toHaveBeenCalledWith([
+    {
+      id: "id1",
+      metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4, text: "hello" },
+      values: [0.1, 0.2, 0.3, 0.4],
     },
-  });
+  ]);
 
   const results = await store.similaritySearch("hello", 1);
 
@@ -51,10 +48,13 @@ test("PineconeStore with external ids", async () => {
 });
 
 test("PineconeStore with generated ids", async () => {
+  const upsert = jest.fn();
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({
-      matches: [],
+    namespace: jest.fn<any>().mockReturnValue({
+      upsert,
+      query: jest.fn<any>().mockResolvedValue({
+        matches: [],
+      }),
     }),
   };
   const embeddings = new FakeEmbeddings();
@@ -65,7 +65,7 @@ test("PineconeStore with generated ids", async () => {
 
   await store.addDocuments([{ pageContent: "hello", metadata: { a: 1 } }]);
 
-  expect(client.upsert).toHaveBeenCalledTimes(1);
+  expect(upsert).toHaveBeenCalledTimes(1);
 
   const results = await store.similaritySearch("hello", 1);
 
@@ -73,10 +73,13 @@ test("PineconeStore with generated ids", async () => {
 });
 
 test("PineconeSo with string arrays", async () => {
+  const upsert = jest.fn();
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({
-      matches: [],
+    namespace: jest.fn<any>().mockReturnValue({
+      upsert,
+      query: jest.fn<any>().mockResolvedValue({
+        matches: [],
+      }),
     }),
   };
   const embeddings = new FakeEmbeddings();
@@ -98,25 +101,20 @@ test("PineconeSo with string arrays", async () => {
     ["id1"]
   );
 
-  expect(client.upsert).toHaveBeenCalledWith({
-    upsertRequest: {
-      namespace: undefined,
-      vectors: [
-        {
-          id: "id1",
-          metadata: {
-            a: 1,
-            "b.nested.0": 1,
-            "b.nested.1.a": 4,
-            c: ["some", "string", "array"],
-            "d.0": 1,
-            "d.1.nested": 2,
-            "d.2": "string",
-            text: "hello",
-          },
-          values: [0.1, 0.2, 0.3, 0.4],
-        },
-      ],
+  expect(upsert).toHaveBeenCalledWith([
+    {
+      id: "id1",
+      metadata: {
+        a: 1,
+        "b.nested.0": 1,
+        "b.nested.1.a": 4,
+        c: ["some", "string", "array"],
+        "d.0": 1,
+        "d.1.nested": 2,
+        "d.2": "string",
+        text: "hello",
+      },
+      values: [0.1, 0.2, 0.3, 0.4],
     },
-  });
+  ]);
 });

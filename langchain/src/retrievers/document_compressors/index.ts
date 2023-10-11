@@ -1,4 +1,6 @@
 import { Document } from "../../document.js";
+import { BaseDocumentTransformer } from "../../schema/document.js";
+import { Callbacks } from "../../callbacks/manager.js";
 
 /**
  * Base Document Compression class. All compressors should extend this class.
@@ -15,6 +17,48 @@ export abstract class BaseDocumentCompressor {
    */
   abstract compressDocuments(
     documents: Document[],
-    query: string
+    query: string,
+    callbacks?: Callbacks
   ): Promise<Document[]>;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static isBaseDocumentCompressor(x: any): x is BaseDocumentCompressor {
+    return x?.compressDocuments !== undefined;
+  }
+}
+
+/**
+ * Document compressor that uses a pipeline of Transformers.
+ */
+export class DocumentCompressorPipeline extends BaseDocumentCompressor {
+  transformers: (BaseDocumentTransformer | BaseDocumentCompressor)[];
+
+  constructor(fields: {
+    transformers: (BaseDocumentTransformer | BaseDocumentCompressor)[];
+  }) {
+    super();
+    this.transformers = fields.transformers;
+  }
+
+  async compressDocuments(
+    documents: Document[],
+    query: string,
+    callbacks?: Callbacks
+  ): Promise<Document[]> {
+    let transformedDocuments = documents;
+    for (const transformer of this.transformers) {
+      if (BaseDocumentCompressor.isBaseDocumentCompressor(transformer)) {
+        transformedDocuments = await transformer.compressDocuments(
+          transformedDocuments,
+          query,
+          callbacks
+        );
+      } else {
+        transformedDocuments = await transformer.transformDocuments(
+          transformedDocuments
+        );
+      }
+    }
+    return transformedDocuments;
+  }
 }
