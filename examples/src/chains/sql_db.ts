@@ -34,7 +34,7 @@ QUESTION: {question}
 SQL QUERY:`);
 /**
  * You can also load a default prompt by importing from "langchain/sql_db"
- * 
+ *
  * The default prompts available are:
  * DEFAULT_SQL_DATABASE_PROMPT
  * SQL_POSTGRES_PROMPT
