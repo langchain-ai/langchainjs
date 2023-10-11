@@ -459,13 +459,13 @@ export type BaseMessageLike =
   | string;
 
 export function isBaseMessage(
-  messageLike: BaseMessageLike | null | undefined
-): messageLike is BaseMessage | null | undefined {
-  if (messageLike === null || messageLike === undefined) {
-    return true;
-  }
-
-  return typeof (messageLike as BaseMessage)._getType === "function";
+  messageLike?: unknown
+): messageLike is BaseMessage {
+  return (
+    typeof (messageLike as BaseMessage)?._getType === "function" ||
+    messageLike === null ||
+    messageLike === undefined
+  );
 }
 
 export function coerceMessageLikeToMessage(
