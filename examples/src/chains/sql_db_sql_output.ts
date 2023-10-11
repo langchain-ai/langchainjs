@@ -72,7 +72,7 @@ NATURAL LANGUAGE RESPONSE:`);
  * Create a new RunnableSequence where we pipe the output from the previous chain, the users question,
  * and the SQL query, into the prompt template, and then into the llm.
  * Using the result from the `sqlQueryChain` we can run the SQL query via `db.run(input.query)`.
- * 
+ *
  * Lastly we're piping the result of the first chain (the outputted SQL query) so it is
  * logged along with the natural language response.
  */
