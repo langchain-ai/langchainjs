@@ -23,6 +23,9 @@ const db = await SqlDatabase.fromDataSourceParams({
 
 const llm = new ChatOpenAI();
 
+/**
+ * Create the first prompt template used for getting the SQL query.
+ */
 const prompt =
   PromptTemplate.fromTemplate(`Based on the provided SQL table schema below, write a SQL query that would answer the user's question.
 ------------
@@ -32,6 +35,12 @@ QUESTION: {question}
 ------------
 SQL QUERY:`);
 
+/**
+ * Create a new RunnableSequence where we pipe the output from `db.getTableInfo()`
+ * and the users question, into the prompt template, and then into the llm.
+ * We're also applying a stop condition to the llm, so that it stops when it
+ * sees the `\nSQLResult:` token.
+ */
 const sqlQueryChain = RunnableSequence.from([
   {
     schema: async () => db.getTableInfo(),
@@ -42,6 +51,10 @@ const sqlQueryChain = RunnableSequence.from([
   new StringOutputParser(),
 ]);
 
+/**
+ * Create the final prompt template which is tasked with getting the natural
+ * language response to the SQL query.
+ */
 const finalResponsePrompt =
   PromptTemplate.fromTemplate(`Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
 ------------
@@ -55,6 +68,14 @@ SQL RESPONSE: {response}
 ------------
 NATURAL LANGUAGE RESPONSE:`);
 
+/**
+ * Create a new RunnableSequence where we pipe the output from the previous chain, the users question,
+ * and the SQL query, into the prompt template, and then into the llm.
+ * Using the result from the `sqlQueryChain` we can run the SQL query via `db.run(input.query)`.
+ * 
+ * Lastly we're piping the result of the first chain (the outputted SQL query) so it is
+ * logged along with the natural language response.
+ */
 const finalChain = RunnableSequence.from([
   {
     question: (input) => input.question,
