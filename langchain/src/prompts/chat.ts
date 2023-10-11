@@ -158,9 +158,7 @@ export class MessagesPlaceholder<
     return [this.variableName];
   }
 
-  validateInputOrThrow(
-    input: Array<unknown>
-  ): input is BaseMessage[] {
+  validateInputOrThrow(input: Array<unknown>): input is BaseMessage[] {
     let isInputBaseMessage = false;
 
     if (Array.isArray(input)) {
