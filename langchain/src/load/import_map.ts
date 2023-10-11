@@ -76,3 +76,4 @@ export * as experimental__generative_agents from "../experimental/generative_age
 export * as experimental__plan_and_execute from "../experimental/plan_and_execute/index.js";
 export * as experimental__chat_models__bittensor from "../experimental/chat_models/bittensor.js";
 export * as evaluation from "../evaluation/index.js";
+export * as runnables__remote from "../runnables/remote.js";
