@@ -600,7 +600,7 @@ describe("Pinecone self query", () => {
           type: "movie",
         },
         mergeFiltersOperator: "and",
-        forceDefaultFilter: true
+        forceDefaultFilter: true,
       },
     });
 
@@ -622,5 +622,4 @@ describe("Pinecone self query", () => {
     console.log(query1, query2, query3, query4, query5); // query 5 should return documents
     expect(query5.length).toBeGreaterThan(0);
   });
-
 });

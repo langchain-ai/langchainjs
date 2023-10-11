@@ -53,7 +53,6 @@ export abstract class BaseTranslator<
     generatedFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
     mergeType?: "and" | "or" | "replace",
     forceDefaultFilter?: boolean
-
   ): this["VisitStructuredQueryOutput"]["filter"] | undefined;
 }
 
