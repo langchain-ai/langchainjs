@@ -8,7 +8,7 @@ test.skip("Test that FalkorDN database is correctly instantiated and connected",
 
   expect(url).toBeDefined();
 
-  const graph = await FalkorDBGraph.initialize({ url});
+  const graph = await FalkorDBGraph.initialize({ url });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return graph.query('RETURN "test" AS output').then((output: any) => {

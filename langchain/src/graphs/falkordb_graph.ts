@@ -1,25 +1,22 @@
-import { createClient, Graph } from 'redis';
-import { GraphStore } from './base.js';
+import { createClient, Graph } from "redis";
+import { GraphStore } from "./base.js";
 
 interface FalkorDBGraphConfig {
   url: string;
   graph?: string;
 }
 
-export class FalkorDBGraph extends GraphStore{
+export class FalkorDBGraph extends GraphStore {
   private driver;
 
   private graph: Graph;
 
   private schema = "";
 
-  constructor({
-    url, 
-    graph = "falkordb",
-  }: FalkorDBGraphConfig) {
+  constructor({ url, graph = "falkordb" }: FalkorDBGraphConfig) {
     super();
     try {
-      this.driver =  createClient( { url }) 
+      this.driver = createClient({ url });
       this.graph = new Graph(this.driver, graph);
     } catch (error) {
       throw new Error(
@@ -57,7 +54,7 @@ export class FalkorDBGraph extends GraphStore{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async query(query: string, params: any = {}): Promise<any[]> {
     const result = await this.graph.query(query, params);
-    return result.data?? [];
+    return result.data ?? [];
   }
 
   async verifyConnectivity() {

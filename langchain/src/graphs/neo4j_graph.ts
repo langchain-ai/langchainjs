@@ -1,5 +1,5 @@
 import neo4j from "neo4j-driver";
-import { GraphStore } from './base.js';
+import { GraphStore } from "./base.js";
 
 interface Neo4jGraphConfig {
   url: string;
