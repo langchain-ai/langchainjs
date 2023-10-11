@@ -61,7 +61,8 @@ export const run = async () => {
     {
       question: (input: { question: string; chatHistory?: string }) =>
         input.question,
-      chatHistory: (input: { question: string; chatHistory?: string }) => input.chatHistory ?? "",
+      chatHistory: (input: { question: string; chatHistory?: string }) =>
+        input.chatHistory ?? "",
       context: async (input: { question: string; chatHistory?: string }) => {
         const relevantDocs = await retriever.getRelevantDocuments(
           input.question
