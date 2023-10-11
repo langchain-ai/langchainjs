@@ -464,7 +464,7 @@ export function isBaseMessage(
   if (messageLike === null || messageLike === undefined) {
     return true;
   }
-  
+
   return typeof (messageLike as BaseMessage)._getType === "function";
 }
 
