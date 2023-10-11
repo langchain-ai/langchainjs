@@ -28,9 +28,14 @@ export type ConvexVectorStoreConfig<
   StoreMutation extends FunctionReference<
     "mutation",
     "internal",
-    { table: string; documents: object[] }
+    { table: string; document: object }
   >,
-  ReadQuery extends FunctionReference<"query", "internal", { ids: string[] }>,
+  ReadQuery extends FunctionReference<
+    "query",
+    "internal",
+    { id: string },
+    object | null
+  >,
   IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
   TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
   EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
@@ -49,21 +54,21 @@ export type ConvexVectorStoreConfig<
  * to store embeddings in Convex documents with a vector search index,
  * and perform a vector search on them.
  *
- * ConvexVectorSearch does NOT implement maxMarginalRelevanceSearch.
+ * ConvexVectorStore does NOT implement maxMarginalRelevanceSearch.
  */
-export class ConvexVectorSearch<
+export class ConvexVectorStore<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel>,
   StoreMutation extends FunctionReference<
     "mutation",
     "internal",
-    { table: string; documents: object[] }
+    { table: string; document: object }
   >,
   ReadQuery extends FunctionReference<
     "query",
     "internal",
-    { ids: string[] },
-    DocumentByInfo<NamedTableInfo<DataModel, TableName>>[]
+    { id: string },
+    object | null
   >,
   IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
   TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
@@ -137,11 +142,19 @@ export class ConvexVectorSearch<
       [this.embeddingField]: embedding,
       ...documents[idx].metadata,
     }));
-    // @ts-expect-error Imperfect typing
-    await this.ctx.runMutation(this.store, {
-      table: this.table,
-      documents: convexDocuments,
-    });
+    // TODO: Remove chunking when Convex handles the concurrent requests correctly
+    const PAGE_SIZE = 16;
+    for (let i = 0; i < convexDocuments.length; i += PAGE_SIZE) {
+      await Promise.all(
+        convexDocuments.slice(i, i + PAGE_SIZE).map((document) =>
+          this.ctx.runMutation(this.store, {
+            table: this.table,
+            document,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any)
+        )
+      );
+    }
   }
 
   /**
@@ -179,10 +192,12 @@ export class ConvexVectorSearch<
       filter: filter?.filter,
     });
 
-    // @ts-expect-error Imperfect typing
-    const documents = await this.ctx.runQuery(this.read, {
-      ids: idsAndScores.map(({ _id }) => _id),
-    });
+    const documents = await Promise.all(
+      idsAndScores.map(({ _id }) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.ctx.runQuery(this.read, { id: _id } as any)
+      )
+    );
 
     return documents.map(
       (
@@ -208,14 +223,14 @@ export class ConvexVectorSearch<
   }
 
   /**
-   * Static method to create an instance of ConvexVectorSearch from a
+   * Static method to create an instance of ConvexVectorStore from a
    * list of texts. It first converts the texts to vectors and then adds
    * them to the Convex table.
    * @param texts List of texts to be converted to vectors.
    * @param metadatas Metadata for the texts.
    * @param embeddings Embeddings to be used for conversion.
    * @param dbConfig Database configuration for Convex.
-   * @returns Promise that resolves to a new instance of ConvexVectorSearch.
+   * @returns Promise that resolves to a new instance of ConvexVectorStore.
    */
   static async fromTexts<
     DataModel extends GenericDataModel,
@@ -223,9 +238,14 @@ export class ConvexVectorSearch<
     StoreMutation extends FunctionReference<
       "mutation",
       "internal",
-      { table: string; documents: object[] }
+      { table: string; document: object }
     >,
-    ReadQuery extends FunctionReference<"query", "internal", { ids: string[] }>,
+    ReadQuery extends FunctionReference<
+      "query",
+      "internal",
+      { id: string },
+      object | null
+    >,
     IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
     TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
     EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
@@ -243,7 +263,7 @@ export class ConvexVectorSearch<
       EmbeddingFieldName
     >
   ): Promise<
-    ConvexVectorSearch<
+    ConvexVectorStore<
       DataModel,
       TableName,
       StoreMutation,
@@ -260,17 +280,17 @@ export class ConvexVectorSearch<
           metadata: Array.isArray(metadatas) ? metadatas[i] : metadatas,
         })
     );
-    return ConvexVectorSearch.fromDocuments(docs, embeddings, dbConfig);
+    return ConvexVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
-   * Static method to create an instance of ConvexVectorSearch from a
+   * Static method to create an instance of ConvexVectorStore from a
    * list of documents. It first converts the documents to vectors and then
    * adds them to the Convex table.
    * @param docs List of documents to be converted to vectors.
    * @param embeddings Embeddings to be used for conversion.
    * @param dbConfig Database configuration for Convex.
-   * @returns Promise that resolves to a new instance of ConvexVectorSearch.
+   * @returns Promise that resolves to a new instance of ConvexVectorStore.
    */
   static async fromDocuments<
     DataModel extends GenericDataModel,
@@ -278,9 +298,14 @@ export class ConvexVectorSearch<
     StoreMutation extends FunctionReference<
       "mutation",
       "internal",
-      { table: string; documents: object[] }
+      { table: string; document: object }
     >,
-    ReadQuery extends FunctionReference<"query", "internal", { ids: string[] }>,
+    ReadQuery extends FunctionReference<
+      "query",
+      "internal",
+      { id: string },
+      object | null
+    >,
     IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
     TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
     EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
@@ -297,7 +322,7 @@ export class ConvexVectorSearch<
       EmbeddingFieldName
     >
   ): Promise<
-    ConvexVectorSearch<
+    ConvexVectorStore<
       DataModel,
       TableName,
       StoreMutation,

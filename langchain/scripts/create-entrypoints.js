@@ -87,6 +87,7 @@ const entrypoints = {
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/cassandra": "vectorstores/cassandra",
+  "vectorstores/convex": "vectorstores/convex",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/cloudflare_vectorize": "vectorstores/cloudflare_vectorize",
@@ -262,6 +263,7 @@ const entrypoints = {
   "stores/message/planetscale": "stores/message/planetscale",
   "stores/message/xata": "stores/message/xata",
   // storage
+  "storage/convex": "storage/convex",
   "storage/encoder_backed": "storage/encoder_backed",
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",

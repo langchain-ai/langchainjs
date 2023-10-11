@@ -223,6 +223,9 @@
     "vectorstores/cassandra.cjs",
     "vectorstores/cassandra.js",
     "vectorstores/cassandra.d.ts",
+    "vectorstores/convex.cjs",
+    "vectorstores/convex.js",
+    "vectorstores/convex.d.ts",
     "vectorstores/elasticsearch.cjs",
     "vectorstores/elasticsearch.js",
     "vectorstores/elasticsearch.d.ts",
@@ -679,6 +682,9 @@
     "stores/message/xata.cjs",
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
+    "storage/convex.cjs",
+    "storage/convex.js",
+    "storage/convex.d.ts",
     "storage/encoder_backed.cjs",
     "storage/encoder_backed.js",
     "storage/encoder_backed.d.ts",
@@ -1700,6 +1706,11 @@
       "import": "./vectorstores/cassandra.js",
       "require": "./vectorstores/cassandra.cjs"
     },
+    "./vectorstores/convex": {
+      "types": "./vectorstores/convex.d.ts",
+      "import": "./vectorstores/convex.js",
+      "require": "./vectorstores/convex.cjs"
+    },
     "./vectorstores/elasticsearch": {
       "types": "./vectorstores/elasticsearch.d.ts",
       "import": "./vectorstores/elasticsearch.js",
@@ -2459,6 +2470,11 @@
       "types": "./stores/message/xata.d.ts",
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
+    },
+    "./storage/convex": {
+      "types": "./storage/convex.d.ts",
+      "import": "./storage/convex.js",
+      "require": "./storage/convex.cjs"
     },
     "./storage/encoder_backed": {
       "types": "./storage/encoder_backed.d.ts",
