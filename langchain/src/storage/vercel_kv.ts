@@ -7,7 +7,7 @@ import { BaseStore } from "../schema/storage.js";
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
  */
-export class VercelKVStore extends BaseStore<string, string> {
+export class VercelKVStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
 
   protected client: VercelKV;
@@ -18,18 +18,18 @@ export class VercelKVStore extends BaseStore<string, string> {
 
   protected yieldKeysScanBatchSize = 1000;
 
-  constructor(fields: {
-    client: VercelKV;
+  constructor(fields?: {
+    client?: VercelKV;
     ttl?: number;
     namespace?: string;
     yieldKeysScanBatchSize?: number;
   }) {
     super(fields);
-    this.client = fields.client ?? kv;
-    this.ttl = fields.ttl;
-    this.namespace = fields.namespace;
+    this.client = fields?.client ?? kv;
+    this.ttl = fields?.ttl;
+    this.namespace = fields?.namespace;
     this.yieldKeysScanBatchSize =
-      fields.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
+      fields?.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
   }
 
   _getPrefixedKey(key: string) {
@@ -58,11 +58,14 @@ export class VercelKVStore extends BaseStore<string, string> {
     const retrievedValues = await this.client.mget<(string | undefined)[]>(
       ...prefixedKeys
     );
+    const encoder = new TextEncoder();
     return retrievedValues.map((value) => {
-      if (!value) {
+      if (value === undefined || value === null) {
         return undefined;
+      } else if (typeof value === "object") {
+        return encoder.encode(JSON.stringify(value));
       } else {
-        return value;
+        return encoder.encode(value);
       }
     });
   }
@@ -72,13 +75,14 @@ export class VercelKVStore extends BaseStore<string, string> {
    * @param keyValuePairs Array of key-value pairs to be set.
    * @returns Promise that resolves when all keys have been set.
    */
-  async mset(keyValuePairs: [string, string][]): Promise<void> {
-    const encodedKeyValuePairs = keyValuePairs.map(([key, value]) => [
+  async mset(keyValuePairs: [string, Uint8Array][]): Promise<void> {
+    const decoder = new TextDecoder();
+    const decodedKeyValuePairs = keyValuePairs.map(([key, value]) => [
       this._getPrefixedKey(key),
-      value,
+      decoder.decode(value),
     ]);
     const pipeline = this.client.pipeline();
-    for (const [key, value] of encodedKeyValuePairs) {
+    for (const [key, value] of decodedKeyValuePairs) {
       if (this.ttl) {
         pipeline.setex(key, this.ttl, value);
       } else {

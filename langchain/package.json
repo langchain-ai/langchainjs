@@ -622,6 +622,9 @@
     "stores/message/xata.cjs",
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
+    "storage/encoder_backed.cjs",
+    "storage/encoder_backed.js",
+    "storage/encoder_backed.d.ts",
     "storage/in_memory.cjs",
     "storage/in_memory.js",
     "storage/in_memory.d.ts",
@@ -2252,6 +2255,11 @@
       "types": "./stores/message/xata.d.ts",
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
+    },
+    "./storage/encoder_backed": {
+      "types": "./storage/encoder_backed.d.ts",
+      "import": "./storage/encoder_backed.js",
+      "require": "./storage/encoder_backed.cjs"
     },
     "./storage/in_memory": {
       "types": "./storage/in_memory.d.ts",

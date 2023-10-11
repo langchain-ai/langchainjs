@@ -610,6 +610,9 @@ stores/message/planetscale.d.ts
 stores/message/xata.cjs
 stores/message/xata.js
 stores/message/xata.d.ts
+storage/encoder_backed.cjs
+storage/encoder_backed.js
+storage/encoder_backed.d.ts
 storage/in_memory.cjs
 storage/in_memory.js
 storage/in_memory.d.ts
