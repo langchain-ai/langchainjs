@@ -322,7 +322,7 @@ test("Throws if trying to pass non BaseMessage inputs to MessagesPlaceholder", a
     // eslint-disable-next-line no-instanceof/no-instanceof
     if (e instanceof Error) {
       expect(e.message).toBe(
-        "Class MessagesPlaceholder expects an array of BaseMessage instances but received: this is not a valid input type!"
+        "MessagesPlaceholder expects an instance of BaseMessage as input, but received: this is not a valid input type!"
       );
     } else {
       throw e;
