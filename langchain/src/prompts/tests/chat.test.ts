@@ -304,3 +304,28 @@ test("Test BaseMessage", async () => {
     new FunctionMessage({ content: "{}", name: "get_weather" }),
   ]);
 });
+
+test("Throws if trying to pass non BaseMessage inputs to MessagesPlaceholder", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "some string"],
+    new MessagesPlaceholder("chatHistory"),
+    ["human", "{question}"],
+  ]);
+  const values = "this is not a prompt template!";
+
+  try {
+    await prompt.formatMessages({
+      chatHistory: values,
+      question: "What is the meaning of life?",
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (e instanceof Error) {
+      expect(e.message).toBe(
+        "Expected an array of BaseMessage instances but received: this is not a prompt template!"
+      );
+    } else {
+      throw e;
+    }
+  }
+});

@@ -158,9 +158,35 @@ export class MessagesPlaceholder<
     return [this.variableName];
   }
 
+  validateInputOrThrow(
+    input: Array<unknown>
+  ): input is BaseMessage[] {
+    let isInputBaseMessage = false;
+
+    if (Array.isArray(input)) {
+      isInputBaseMessage = input.every((message) =>
+        isBaseMessage(message as BaseMessage)
+      );
+    } else {
+      isInputBaseMessage = isBaseMessage(input as BaseMessage);
+    }
+
+    if (!isInputBaseMessage) {
+      const readableInput =
+        typeof input === "string" ? input : JSON.stringify(input, null, 2);
+      throw new Error(
+        `Expected an array of BaseMessage instances but received: ${readableInput}`
+      );
+    }
+
+    return true;
+  }
+
   formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
+    this.validateInputOrThrow(values[this.variableName]);
+
     return Promise.resolve(values[this.variableName] as BaseMessage[]);
   }
 }
