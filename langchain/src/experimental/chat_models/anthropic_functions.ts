@@ -1,6 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 
-import { BaseChatModelParams } from "../../chat_models/base.js";
+import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessage,
@@ -145,13 +145,16 @@ function parseOutput(
   return null;
 }
 
-export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCallOptions> {
+export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
+  model: BaseChatModel;
+
   static lc_name(): string {
     return "AnthropicFunctions";
   }
 
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
+    this.model = fields?.model ?? new ChatAnthropic(fields);
   }
 
   async _generate(
