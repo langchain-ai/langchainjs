@@ -20,7 +20,6 @@ import {
   ChatGenerationChunk,
   ChatMessage,
 } from "../schema/index.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 function convertOneMessageToText(
   message: BaseMessage,
