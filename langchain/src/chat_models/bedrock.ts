@@ -20,6 +20,7 @@ import {
   ChatGenerationChunk,
   ChatMessage,
 } from "../schema/index.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 function convertOneMessageToText(
   message: BaseMessage,
@@ -86,7 +87,12 @@ export function convertMessagesToPrompt(
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
  */
-export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
+export class ChatBedrock<
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+  >
+  extends SimpleChatModel<CallOptions>
+  implements BaseBedrockInput
+{
   model = "amazon.titan-tg1-large";
 
   region: string;
