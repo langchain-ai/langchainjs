@@ -344,5 +344,5 @@ test("Does not throw if null or undefined is passed as input to MessagesPlacehol
     question: "What is the meaning of life?",
   });
 
-  expect(formatted).toHaveLength(4);
+  expect(formatted).toHaveLength(2);
 });

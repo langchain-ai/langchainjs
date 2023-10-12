@@ -186,12 +186,12 @@ export class MessagesPlaceholder<
     return true;
   }
 
-  formatMessages(
+  async formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
     this.validateInputOrThrow(values[this.variableName], this.variableName);
 
-    return Promise.resolve(values[this.variableName] as BaseMessage[]);
+    return values[this.variableName];
   }
 }
 
