@@ -45,105 +45,6 @@ export interface ChatAnthropicFunctionsCallOptions
   tools?: StructuredTool[];
 }
 
-async function createPromptMessages(
-  messages: BaseMessage[],
-  options: ChatAnthropicFunctionsCallOptions,
-  inputStopSequences: string[]
-) {
-  let promptMessages = messages;
-  let forced = false;
-  let functionCall: string | undefined;
-  if (options.tools) {
-    // eslint-disable-next-line no-param-reassign
-    options.functions = (options.functions ?? []).concat(
-      options.tools.map(formatToOpenAIFunction)
-    );
-  }
-  if (options.functions !== undefined && options.functions.length > 0) {
-    const content = await TOOL_SYSTEM_PROMPT.format({
-      tools: JSON.stringify(options.functions, null, 2),
-    });
-    const systemMessage = new SystemMessage({ content });
-    promptMessages = [systemMessage].concat(promptMessages);
-    const stopSequences =
-      options?.stop?.concat(DEFAULT_STOP_SEQUENCES) ?? inputStopSequences;
-    // eslint-disable-next-line no-param-reassign
-    options.stop = stopSequences.concat(["</tool_input>"]);
-    if (options.function_call) {
-      if (typeof options.function_call === "string") {
-        functionCall = JSON.parse(options.function_call).name;
-      } else {
-        functionCall = options.function_call.name;
-      }
-      forced = true;
-      const matchingFunction = options.functions.find(
-        (tool) => tool.name === functionCall
-      );
-      if (!matchingFunction) {
-        throw new Error(
-          `No matching function found for passed "function_call"`
-        );
-      }
-      promptMessages = promptMessages.concat([
-        new AIMessage({
-          content: `<tool>${functionCall}</tool>`,
-        }),
-      ]);
-      // eslint-disable-next-line no-param-reassign
-      delete options.function_call;
-    }
-    // eslint-disable-next-line no-param-reassign
-    delete options.functions;
-  } else if (options.function_call !== undefined) {
-    throw new Error(
-      `If "function_call" is provided, "functions" must also be.`
-    );
-  }
-  return { promptMessages, forced, functionCall };
-}
-
-function parseOutput(
-  chatGenerationContent: string,
-  forced: boolean,
-  functionCall?: string
-) {
-  if (forced) {
-    const parser = new XMLParser();
-    const result = parser.parse(`${chatGenerationContent}</tool_input>`);
-    if (functionCall === undefined) {
-      throw new Error(`Could not parse called function from model output.`);
-    }
-    const responseMessageWithFunctions = new AIMessage({
-      content: "",
-      additional_kwargs: {
-        function_call: {
-          name: functionCall,
-          arguments: result.tool_input ? JSON.stringify(result.tool_input) : "",
-        },
-      },
-    });
-    return {
-      generations: [{ message: responseMessageWithFunctions, text: "" }],
-    };
-  } else if (chatGenerationContent.includes("<tool>")) {
-    const parser = new XMLParser();
-    const result = parser.parse(`${chatGenerationContent}</tool_input>`);
-    const responseMessageWithFunctions = new AIMessage({
-      content: chatGenerationContent.split("<tool>")[0],
-      additional_kwargs: {
-        function_call: {
-          name: result.tool,
-          arguments: result.tool_input ? JSON.stringify(result.tool_input) : "",
-        },
-      },
-    });
-    return {
-      generations: [{ message: responseMessageWithFunctions, text: "" }],
-    };
-  }
-  return null;
-}
-
 export type AnthropicFunctionsInput = Partial<AnthropicInput> &
   BaseChatModelParams & {
     llm?: BaseChatModel;
@@ -189,11 +90,57 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    const { promptMessages, forced, functionCall } = await createPromptMessages(
-      messages,
-      options,
-      this.stopSequences ?? DEFAULT_STOP_SEQUENCES
-    );
+    let promptMessages = messages;
+    let forced = false;
+    let functionCall: string | undefined;
+    if (options.tools) {
+      // eslint-disable-next-line no-param-reassign
+      options.functions = (options.functions ?? []).concat(
+        options.tools.map(formatToOpenAIFunction)
+      );
+    }
+    if (options.functions !== undefined && options.functions.length > 0) {
+      const content = await TOOL_SYSTEM_PROMPT.format({
+        tools: JSON.stringify(options.functions, null, 2),
+      });
+      const systemMessage = new SystemMessage({ content });
+      promptMessages = [systemMessage].concat(promptMessages);
+      const stopSequences =
+        options?.stop?.concat(DEFAULT_STOP_SEQUENCES) ??
+        this.stopSequences ??
+        DEFAULT_STOP_SEQUENCES;
+      // eslint-disable-next-line no-param-reassign
+      options.stop = stopSequences.concat(["</tool_input>"]);
+      if (options.function_call) {
+        if (typeof options.function_call === "string") {
+          functionCall = JSON.parse(options.function_call).name;
+        } else {
+          functionCall = options.function_call.name;
+        }
+        forced = true;
+        const matchingFunction = options.functions.find(
+          (tool) => tool.name === functionCall
+        );
+        if (!matchingFunction) {
+          throw new Error(
+            `No matching function found for passed "function_call"`
+          );
+        }
+        promptMessages = promptMessages.concat([
+          new AIMessage({
+            content: `<tool>${functionCall}</tool>`,
+          }),
+        ]);
+        // eslint-disable-next-line no-param-reassign
+        delete options.function_call;
+      }
+      // eslint-disable-next-line no-param-reassign
+      delete options.functions;
+    } else if (options.function_call !== undefined) {
+      throw new Error(
+        `If "function_call" is provided, "functions" must also be.`
+      );
+    }
     const chatResult = await this.llm._generate(
       promptMessages,
       options,
@@ -201,13 +148,45 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
     );
     const chatGenerationContent = chatResult.generations[0].message.content;
 
-    const functionResult = parseOutput(
-      chatGenerationContent,
-      forced,
-      functionCall
-    );
-
-    return functionResult ?? chatResult;
+    if (forced) {
+      const parser = new XMLParser();
+      const result = parser.parse(`${chatGenerationContent}</tool_input>`);
+      if (functionCall === undefined) {
+        throw new Error(`Could not parse called function from model output.`);
+      }
+      const responseMessageWithFunctions = new AIMessage({
+        content: "",
+        additional_kwargs: {
+          function_call: {
+            name: functionCall,
+            arguments: result.tool_input
+              ? JSON.stringify(result.tool_input)
+              : "",
+          },
+        },
+      });
+      return {
+        generations: [{ message: responseMessageWithFunctions, text: "" }],
+      };
+    } else if (chatGenerationContent.includes("<tool>")) {
+      const parser = new XMLParser();
+      const result = parser.parse(`${chatGenerationContent}</tool_input>`);
+      const responseMessageWithFunctions = new AIMessage({
+        content: chatGenerationContent.split("<tool>")[0],
+        additional_kwargs: {
+          function_call: {
+            name: result.tool,
+            arguments: result.tool_input
+              ? JSON.stringify(result.tool_input)
+              : "",
+          },
+        },
+      });
+      return {
+        generations: [{ message: responseMessageWithFunctions, text: "" }],
+      };
+    }
+    return chatResult;
   }
 
   _llmType(): string {
