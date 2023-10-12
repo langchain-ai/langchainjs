@@ -459,9 +459,9 @@ export type BaseMessageLike =
   | string;
 
 export function isBaseMessage(
-  messageLike: BaseMessageLike
+  messageLike?: unknown
 ): messageLike is BaseMessage {
-  return typeof (messageLike as BaseMessage)._getType === "function";
+  return typeof (messageLike as BaseMessage)?._getType === "function";
 }
 
 export function coerceMessageLikeToMessage(
