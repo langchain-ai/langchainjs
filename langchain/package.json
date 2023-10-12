@@ -217,6 +217,9 @@
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
+    "vectorstores/momento_vector_index.cjs",
+    "vectorstores/momento_vector_index.js",
+    "vectorstores/momento_vector_index.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
@@ -637,6 +640,9 @@
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
+    "util/time.cjs",
+    "util/time.js",
+    "util/time.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -667,6 +673,9 @@
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "runnables/remote.cjs",
+    "runnables/remote.js",
+    "runnables/remote.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -714,7 +723,8 @@
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.7.0",
-    "@gomomento/sdk": "^1.23.0",
+    "@gomomento/sdk": "^1.41.2",
+    "@gomomento/sdk-core": "^1.41.2",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
@@ -843,7 +853,9 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.7.0",
-    "@gomomento/sdk": "^1.23.0",
+    "@gomomento/sdk": "^1.41.2",
+    "@gomomento/sdk-core": "^1.41.2",
+    "@gomomento/sdk-web": "^1.41.2",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
@@ -964,6 +976,12 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@gomomento/sdk-core": {
+      "optional": true
+    },
+    "@gomomento/sdk-web": {
       "optional": true
     },
     "@google-ai/generativelanguage": {
@@ -1569,6 +1587,11 @@
       "types": "./vectorstores/lancedb.d.ts",
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
+    },
+    "./vectorstores/momento_vector_index": {
+      "types": "./vectorstores/momento_vector_index.d.ts",
+      "import": "./vectorstores/momento_vector_index.js",
+      "require": "./vectorstores/momento_vector_index.cjs"
     },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",
@@ -2270,6 +2293,11 @@
       "import": "./util/math.js",
       "require": "./util/math.cjs"
     },
+    "./util/time": {
+      "types": "./util/time.d.ts",
+      "import": "./util/time.js",
+      "require": "./util/time.cjs"
+    },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
@@ -2319,6 +2347,11 @@
       "types": "./evaluation.d.ts",
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
+    },
+    "./runnables/remote": {
+      "types": "./runnables/remote.d.ts",
+      "import": "./runnables/remote.js",
+      "require": "./runnables/remote.cjs"
     },
     "./package.json": "./package.json"
   }
