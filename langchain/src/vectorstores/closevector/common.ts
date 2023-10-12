@@ -1,5 +1,4 @@
-import type { CloseVectorHNSWNode } from "closevector-node";
-import type { CloseVectorHNSWWeb } from "closevector-web";
+import type { CloseVectorSaveableVectorStore } from "closevector-common";
 
 import { Embeddings } from "../../embeddings/base.js";
 import { Document } from "../../document.js";
@@ -25,7 +24,7 @@ type CloseVectorCredentials = {
  * similarity searches, and saving and loading the vector store.
  */
 export abstract class CloseVector<
-    CloseVectorHNSWImplementation extends (CloseVectorHNSWNode | CloseVectorHNSWWeb),
+    CloseVectorHNSWImplementation extends CloseVectorSaveableVectorStore,
 > extends SaveableVectorStore {
   declare FilterType: (doc: Document) => boolean;
 
@@ -136,7 +135,7 @@ export abstract class CloseVector<
       query,
       k,
       filter
-        ? (x) =>
+        ? (x: { pageContent: string; metadata: Record<string, unknown>; }) =>
             filter?.({
               pageContent: x.pageContent,
               metadata: x.metadata || {},
@@ -196,7 +195,7 @@ export abstract class CloseVector<
     _embeddings: Embeddings,
     _args?: Record<string, unknown>,
     _credential?: CloseVectorCredentials
-  ): Promise<CloseVector<CloseVectorHNSWNode | CloseVectorHNSWWeb>> {
+  ): Promise<CloseVector<CloseVectorSaveableVectorStore>> {
     throw new Error("not implemented");
   }
 
@@ -215,7 +214,7 @@ export abstract class CloseVector<
     _embeddings: Embeddings,
     _args?: Record<string, unknown>,
     _credentials?: CloseVectorCredentials
-  ): Promise<CloseVector<CloseVectorHNSWNode | CloseVectorHNSWWeb>> {
+  ): Promise<CloseVector<CloseVectorSaveableVectorStore>> {
     throw new Error("not implemented");
   }
 

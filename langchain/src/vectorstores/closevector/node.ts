@@ -170,6 +170,6 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
   static async imports(): Promise<{
     HierarchicalNSW: typeof HierarchicalNSWT;
   }> {
-    return await CloseVectorHNSWNode.imports();
+    return CloseVectorHNSWNode.imports();
   }
 }

@@ -14745,6 +14745,7 @@ __metadata:
     camelcase: 6
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
+    closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
     closevector-web: 0.1.0-alpha.15
     cohere-ai: ">=6.0.0"
@@ -14872,8 +14873,9 @@ __metadata:
     axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
+    closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
-    closevector-web: 0.1.0-alpha.15
+    closevector-web: 0.1.0-alpha.16
     cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
@@ -15004,6 +15006,8 @@ __metadata:
     cheerio:
       optional: true
     chromadb:
+      optional: true
+    closevector-common:
       optional: true
     closevector-node:
       optional: true

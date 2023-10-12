@@ -168,6 +168,6 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
   }
 
   static async imports(): Promise<HnswlibModule> {
-    return await CloseVectorHNSWWeb.imports();
+    return CloseVectorHNSWWeb.imports();
   }
 }
