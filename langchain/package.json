@@ -172,6 +172,9 @@
     "llms/writer.cjs",
     "llms/writer.js",
     "llms/writer.d.ts",
+    "llms/portkey.cjs",
+    "llms/portkey.js",
+    "llms/portkey.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -184,6 +187,9 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/cassandra.cjs",
+    "vectorstores/cassandra.js",
+    "vectorstores/cassandra.d.ts",
     "vectorstores/elasticsearch.cjs",
     "vectorstores/elasticsearch.js",
     "vectorstores/elasticsearch.d.ts",
@@ -418,6 +424,9 @@
     "chat_models/openai.cjs",
     "chat_models/openai.js",
     "chat_models/openai.d.ts",
+    "chat_models/portkey.cjs",
+    "chat_models/portkey.js",
+    "chat_models/portkey.d.ts",
     "chat_models/anthropic.cjs",
     "chat_models/anthropic.js",
     "chat_models/anthropic.d.ts",
@@ -699,7 +708,7 @@
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
@@ -742,6 +751,7 @@
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
+    "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
@@ -758,6 +768,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "closevector-common": "0.1.0-alpha.1",
@@ -790,6 +801,7 @@
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
     "llmonitor": "^0.5.4",
+    "lodash": "^4.17.21",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
@@ -803,6 +815,7 @@
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
+    "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
@@ -869,6 +882,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
     "closevector-common": "0.1.0-alpha.1",
@@ -888,6 +902,7 @@
     "ioredis": "^5.3.2",
     "jsdom": "*",
     "llmonitor": "*",
+    "lodash": "^4.17.21",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -900,6 +915,7 @@
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
+    "portkey-ai": "^0.1.11",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.18.0",
@@ -1045,6 +1061,9 @@
     "axios": {
       "optional": true
     },
+    "cassandra-driver": {
+      "optional": true
+    },
     "cheerio": {
       "optional": true
     },
@@ -1102,6 +1121,9 @@
     "llmonitor": {
       "optional": true
     },
+    "lodash": {
+      "optional": true
+    },
     "mammoth": {
       "optional": true
     },
@@ -1136,6 +1158,9 @@
       "optional": true
     },
     "playwright": {
+      "optional": true
+    },
+    "portkey-ai": {
       "optional": true
     },
     "puppeteer": {
@@ -1493,6 +1518,11 @@
       "import": "./llms/writer.js",
       "require": "./llms/writer.cjs"
     },
+    "./llms/portkey": {
+      "types": "./llms/portkey.d.ts",
+      "import": "./llms/portkey.js",
+      "require": "./llms/portkey.cjs"
+    },
     "./prompts": {
       "types": "./prompts.d.ts",
       "import": "./prompts.js",
@@ -1512,6 +1542,11 @@
       "types": "./vectorstores/base.d.ts",
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
+    },
+    "./vectorstores/cassandra": {
+      "types": "./vectorstores/cassandra.d.ts",
+      "import": "./vectorstores/cassandra.js",
+      "require": "./vectorstores/cassandra.cjs"
     },
     "./vectorstores/elasticsearch": {
       "types": "./vectorstores/elasticsearch.d.ts",
@@ -1902,6 +1937,11 @@
       "types": "./chat_models/openai.d.ts",
       "import": "./chat_models/openai.js",
       "require": "./chat_models/openai.cjs"
+    },
+    "./chat_models/portkey": {
+      "types": "./chat_models/portkey.d.ts",
+      "import": "./chat_models/portkey.js",
+      "require": "./chat_models/portkey.cjs"
     },
     "./chat_models/anthropic": {
       "types": "./chat_models/anthropic.d.ts",

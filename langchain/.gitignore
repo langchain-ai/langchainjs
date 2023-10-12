@@ -160,6 +160,9 @@ llms/llama_cpp.d.ts
 llms/writer.cjs
 llms/writer.js
 llms/writer.d.ts
+llms/portkey.cjs
+llms/portkey.js
+llms/portkey.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
@@ -172,6 +175,9 @@ vectorstores/analyticdb.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
+vectorstores/cassandra.cjs
+vectorstores/cassandra.js
+vectorstores/cassandra.d.ts
 vectorstores/elasticsearch.cjs
 vectorstores/elasticsearch.js
 vectorstores/elasticsearch.d.ts
@@ -406,6 +412,9 @@ chat_models/base.d.ts
 chat_models/openai.cjs
 chat_models/openai.js
 chat_models/openai.d.ts
+chat_models/portkey.cjs
+chat_models/portkey.js
+chat_models/portkey.d.ts
 chat_models/anthropic.cjs
 chat_models/anthropic.js
 chat_models/anthropic.d.ts

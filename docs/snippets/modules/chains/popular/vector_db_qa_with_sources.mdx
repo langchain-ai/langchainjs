@@ -1,8 +1,7 @@
-import RetrievalQAExampleSources from "@examples/chains/retrieval_qa_sources.ts";
+import RetrievalQARunnableExampleSources from "@examples/chains/retrieval_qa_sources.ts";
 import CodeBlock from "@theme/CodeBlock";
 
 ## Return Source Documents
-Additionally, we can return the source documents used to answer the question by specifying an optional parameter when constructing the chain.
+Additionally, we can create a custom function which returns the documents used as context when querying the LLM.
 
-
-<CodeBlock language="typescript">{RetrievalQAExampleSources}</CodeBlock>
+<CodeBlock language="typescript">{RetrievalQARunnableExampleSources}</CodeBlock>
