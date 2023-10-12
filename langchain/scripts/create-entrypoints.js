@@ -94,6 +94,7 @@ const entrypoints = {
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/pgvector": "vectorstores/pgvector",
   "vectorstores/milvus": "vectorstores/milvus",
+  "vectorstores/neo4j_vector": "vectorstores/neo4j_vector",
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
@@ -263,8 +264,6 @@ const entrypoints = {
     "experimental/chat_models/anthropic_functions",
   "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
   "experimental/llms/bittensor": "experimental/llms/bittensor",
-  "experimental/hubs/makersuite/googlemakersuitehub":
-    "experimental/hubs/makersuite/googlemakersuitehub",
   // evaluation
   evaluation: "evaluation/index",
   // runnables
@@ -342,6 +341,7 @@ const requiresOptionalDependency = [
   "vectorstores/typeorm",
   "vectorstores/milvus",
   "vectorstores/myscale",
+  "vectorstores/neo4j_vector",
   "vectorstores/redis",
   "vectorstores/singlestore",
   "vectorstores/typesense",
