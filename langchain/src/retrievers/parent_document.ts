@@ -66,12 +66,12 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       }
     }
     const parentDocs: Document[] = [];
-    for (const parentDocId of parentDocIds) {
-      const storedParentDocs = await this.docstore.mget([parentDocId]);
-      if (storedParentDocs[0] !== undefined) {
-        parentDocs.push(storedParentDocs[0]);
-      }
-    }
+    const storedParentDocs = await this.docstore.mget(parentDocIds);
+    const isDocument = (doc: unknown): doc is Document => {
+      return doc !== undefined;
+    };
+    const retrievedDocs: Document[] = storedParentDocs.filter(isDocument);
+    parentDocs.push(...retrievedDocs);
     return parentDocs.slice(0, this.parentK);
   }
 
