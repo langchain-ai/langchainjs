@@ -107,6 +107,7 @@ const entrypoints = {
   "vectorstores/voy": "vectorstores/voy",
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
+  "vectorstores/neo4j_vector": "vectorstores/neo4j_vector",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -350,6 +351,7 @@ const requiresOptionalDependency = [
   "vectorstores/vercel_postgres",
   "vectorstores/voy",
   "vectorstores/zep",
+  "vectorstores/neo4j_vector": "vectorstores/neo4j_vector",
   "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/assemblyai",
