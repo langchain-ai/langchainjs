@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
-import { HumanMessage } from "../../../schema/index.js";
+import { BaseMessageChunk, HumanMessage } from "../../../schema/index.js";
 import { AnthropicFunctions } from "../anthropic_functions.js";
 import { ChatBedrock } from "../../../chat_models/bedrock.js";
 
@@ -10,6 +10,18 @@ test("Test AnthropicFunctions", async () => {
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
   console.log(JSON.stringify(res));
+});
+
+test("Test AnthropicFunctions streaming", async () => {
+  const chat = new AnthropicFunctions({ modelName: "claude-2" });
+  const message = new HumanMessage("Hello!");
+  const stream = await chat.stream([message]);
+  const chunks: BaseMessageChunk[] = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
 });
 
 test("Test AnthropicFunctions with functions", async () => {
