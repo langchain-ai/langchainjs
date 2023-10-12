@@ -304,3 +304,52 @@ test("Test BaseMessage", async () => {
     new FunctionMessage({ content: "{}", name: "get_weather" }),
   ]);
 });
+
+test("Throws if trying to pass non BaseMessage inputs to MessagesPlaceholder", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "some string"],
+    new MessagesPlaceholder("chatHistory"),
+    ["human", "{question}"],
+  ]);
+  const value = "this is not a valid input type!";
+
+  try {
+    await prompt.formatMessages({
+      chatHistory: value,
+      question: "What is the meaning of life?",
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (e instanceof Error) {
+      expect(e.name).toBe("InputFormatError");
+    } else {
+      throw e;
+    }
+  }
+});
+
+test("Does not throws if null or undefined is passed as input to MessagesPlaceholder", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "some string"],
+    new MessagesPlaceholder("chatHistory"),
+    new MessagesPlaceholder("chatHistory2"),
+    ["human", "{question}"],
+  ]);
+  const value1 = null;
+  const value2 = undefined;
+
+  try {
+    await prompt.formatMessages({
+      chatHistory: value1,
+      chatHistory2: value2,
+      question: "What is the meaning of life?",
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (e instanceof Error) {
+      expect(e.name).toBe("InputFormatError");
+    } else {
+      throw e;
+    }
+  }
+});

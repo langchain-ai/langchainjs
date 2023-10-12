@@ -101,6 +101,7 @@
       "src/vectorstores/faiss.ts",
       "src/vectorstores/weaviate.ts",
       "src/vectorstores/lancedb.ts",
+      "src/vectorstores/momento_vector_index.ts",
       "src/vectorstores/mongo.ts",
       "src/vectorstores/mongodb_atlas.ts",
       "src/vectorstores/pinecone.ts",
@@ -241,6 +242,7 @@
       "src/graphs/neo4j_graph.ts",
       "src/hub.ts",
       "src/util/math.ts",
+      "src/util/time.ts",
       "src/experimental/autogpt/index.ts",
       "src/experimental/babyagi/index.ts",
       "src/experimental/generative_agents/index.ts",
@@ -250,7 +252,8 @@
       "src/experimental/chat_models/bittensor.ts",
       "src/experimental/llms/bittensor.ts",
       "src/experimental/hubs/makersuite/googlemakersuitehub.ts",
-      "src/evaluation/index.ts"
+      "src/evaluation/index.ts",
+      "src/runnables/remote.ts"
     ],
     "sort": [
       "kind",
