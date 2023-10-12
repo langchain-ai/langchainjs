@@ -1,10 +1,9 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { HumanMessage } from "../../../schema/index.js";
-import {
-  AnthropicFunctions,
-  AnthropicFunctionsBedrock,
-} from "../anthropic_functions.js";
+import { AnthropicFunctions } from "../anthropic_functions.js";
+import { ChatBedrock } from "../../../chat_models/bedrock.js";
 
 test("Test AnthropicFunctions", async () => {
   const chat = new AnthropicFunctions({ modelName: "claude-2" });
@@ -82,8 +81,8 @@ test("Test AnthropicFunctions with a forced function call", async () => {
   console.log(JSON.stringify(res));
 });
 
-test("Test AnthropicFunctionsBedrock", async () => {
-  const model = new AnthropicFunctionsBedrock({
+test("Test AnthropicFunctions with a Bedrock model", async () => {
+  const chatBedrock = new ChatBedrock({
     region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
     model: "anthropic.claude-v2",
     temperature: 0.1,
@@ -91,6 +90,9 @@ test("Test AnthropicFunctionsBedrock", async () => {
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     },
+  });
+  const model = new AnthropicFunctions({
+    llm: chatBedrock,
   }).bind({
     functions: [
       {

@@ -5,6 +5,7 @@ import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
+  ChatGenerationChunk,
   ChatResult,
   SystemMessage,
 } from "../../schema/index.js";
@@ -17,8 +18,6 @@ import { BaseFunctionCallOptions } from "../../base_language/index.js";
 import { StructuredTool } from "../../tools/base.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
-import { ChatBedrock } from "../../chat_models/bedrock.js";
-import { BaseBedrockInput } from "../../util/bedrock.js";
 
 const TOOL_SYSTEM_PROMPT =
   /* #__PURE__ */
@@ -145,61 +144,44 @@ function parseOutput(
   return null;
 }
 
+export type AnthropicFunctionsInput = Partial<AnthropicInput> &
+  BaseChatModelParams & {
+    llm?: BaseChatModel;
+  };
+
 export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
-  model: BaseChatModel;
+  llm: BaseChatModel;
+
+  stopSequences?: string[];
+
+  lc_namespace = ["langchain", "experimental", "chat_models"];
 
   static lc_name(): string {
     return "AnthropicFunctions";
   }
 
-  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
+  constructor(fields?: AnthropicFunctionsInput) {
     super(fields ?? {});
-    this.model = fields?.model ?? new ChatAnthropic(fields);
+    this.llm = fields?.llm ?? new ChatAnthropic(fields);
+    this.stopSequences =
+      fields?.stopSequences ?? (this.llm as ChatAnthropic).stopSequences;
   }
 
-  async _generate(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun | undefined
-  ): Promise<ChatResult> {
-    const { promptMessages, forced, functionCall } = await createPromptMessages(
-      messages,
-      options,
-      this.stopSequences ?? DEFAULT_STOP_SEQUENCES
-    );
-    const chatResult = await super._generate(
-      promptMessages,
-      options,
-      runManager
-    );
-    const chatGenerationContent = chatResult.generations[0].message.content;
-
-    const functionResult = parseOutput(
-      chatGenerationContent,
-      forced,
-      functionCall
-    );
-
-    return functionResult ?? chatResult;
-  }
-
-  _llmType(): string {
-    return "anthropic_functions";
+  invocationParams() {
+    return this.llm.invocationParams();
   }
 
   /** @ignore */
-  _combineLLMOutput() {
-    return [];
-  }
-}
-
-export class AnthropicFunctionsBedrock extends ChatBedrock<ChatAnthropicFunctionsCallOptions> {
-  static lc_name(): string {
-    return "AnthropicFunctionsBedrock";
+  _identifyingParams() {
+    return this.llm._identifyingParams();
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
-    super(fields ?? {});
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield* this.llm._streamResponseChunks(messages, options, runManager);
   }
 
   async _generate(
@@ -212,7 +194,7 @@ export class AnthropicFunctionsBedrock extends ChatBedrock<ChatAnthropicFunction
       options,
       this.stopSequences ?? DEFAULT_STOP_SEQUENCES
     );
-    const chatResult = await super._generate(
+    const chatResult = await this.llm._generate(
       promptMessages,
       options,
       runManager
