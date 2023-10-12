@@ -33,8 +33,6 @@ export type RunnableBatchOptions = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableRetryFailedAttemptHandler = (error: any) => any;
 
-type RunnableConfigAndOptions = RunnableConfig & { runType?: string };
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _coerceToDict(value: any, defaultKey: string) {
   return value && !Array.isArray(value) && typeof value === "object"
@@ -252,11 +250,11 @@ export abstract class Runnable<
       | ((input: T) => Promise<RunOutput>)
       | ((
           input: T,
-          config?: RunnableConfig,
+          config?: Partial<CallOptions>,
           runManager?: CallbackManagerForChainRun
         ) => Promise<RunOutput>),
     input: T,
-    options?: RunnableConfigAndOptions
+    options?: Partial<CallOptions> & { runType?: string }
   ) {
     const callbackManager_ = await getCallbackMangerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
@@ -291,22 +289,19 @@ export abstract class Runnable<
   async _batchWithConfig<T extends RunInput>(
     func: (
       inputs: T[],
-      configs?: RunnableConfig[],
+      options?: Partial<CallOptions>[],
       runManagers?: (CallbackManagerForChainRun | undefined)[],
       batchOptions?: RunnableBatchOptions
     ) => Promise<(RunOutput | Error)[]>,
     inputs: T[],
     options?:
-      | Partial<RunnableConfigAndOptions>
-      | Partial<RunnableConfigAndOptions>[],
+      | Partial<CallOptions & { runType?: string }>
+      | Partial<CallOptions & { runType?: string }>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
-    const configs = this._getOptionsList(
-      (options ?? {}) as CallOptions,
-      inputs.length
-    );
+    const optionsList = this._getOptionsList(options ?? {}, inputs.length);
     const callbackManagers = await Promise.all(
-      configs.map(getCallbackMangerForConfig)
+      optionsList.map(getCallbackMangerForConfig)
     );
     const runManagers = await Promise.all(
       callbackManagers.map((callbackManager, i) =>
@@ -314,16 +309,16 @@ export abstract class Runnable<
           this.toJSON(),
           _coerceToDict(inputs[i], "input"),
           undefined,
-          configs[i].runType,
+          optionsList[i].runType,
           undefined,
           undefined,
-          configs[i].runName
+          optionsList[i].runName
         )
       )
     );
     let outputs: (RunOutput | Error)[];
     try {
-      outputs = await func(inputs, configs, runManagers, batchOptions);
+      outputs = await func(inputs, optionsList, runManagers, batchOptions);
     } catch (e) {
       await Promise.all(
         runManagers.map((runManager) => runManager?.handleChainError(e))
@@ -351,9 +346,9 @@ export abstract class Runnable<
     transformer: (
       generator: AsyncGenerator<I>,
       runManager?: CallbackManagerForChainRun,
-      options?: Partial<RunnableConfig>
+      options?: Partial<CallOptions>
     ) => AsyncGenerator<O>,
-    options?: RunnableConfig & { runType?: string }
+    options?: CallOptions & { runType?: string }
   ): AsyncGenerator<O> {
     let finalInput: I | undefined;
     let finalInputSupported = true;

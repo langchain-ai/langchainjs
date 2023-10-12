@@ -4808,37 +4808,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/generated-types@npm:0.62.1":
-  version: 0.62.1
-  resolution: "@gomomento/generated-types@npm:0.62.1"
+"@gomomento/generated-types@npm:0.84.0":
+  version: 0.84.0
+  resolution: "@gomomento/generated-types@npm:0.84.0"
   dependencies:
-    "@grpc/grpc-js": 1.8.14
-    "@types/google-protobuf": 3.15.6
+    "@grpc/grpc-js": 1.9.0
     google-protobuf: 3.21.2
-  checksum: 7ffb49da9e196be6127b835dbbf7376a50fa28efba5db2b8b10be14bc99a2faec3216d4cd3a75308ce14ee34d8b7fb322f595292c7f603ba5d00d2c45c98c319
+    grpc-tools: ^1.12.4
+    protoc-gen-ts: ^0.8.6
+  checksum: 0a8cdfb92f8bba2eec14993c7b83037250142b5b42e913320be1644b0017ad288f91b86b04dec76481ac3d650cf839f34ef2b53c7b6a7dadf12b8cd27f2da6e9
   languageName: node
   linkType: hard
 
-"@gomomento/sdk-core@npm:1.23.0":
-  version: 1.23.0
-  resolution: "@gomomento/sdk-core@npm:1.23.0"
+"@gomomento/sdk-core@npm:1.41.2, @gomomento/sdk-core@npm:^1.41.2":
+  version: 1.41.2
+  resolution: "@gomomento/sdk-core@npm:1.41.2"
   dependencies:
     buffer: ^6.0.3
     jwt-decode: 3.1.2
-  checksum: 2edc270fa61bc528fbba538836b53cc4fd4980bca3290ff7fbdd5c2832d42044189dc936ffa0b446cc8599fcad8ac880763c3ec37cd27667d80f2dd18e8abce8
+  checksum: 22801a85f4417307262da95e1c89042b5579b80cc4ae8e32f796fb033e4110af402001b2e02de82f13c122bf2e94d65a4861c555e8bc6c7af6092cf8140746d4
   languageName: node
   linkType: hard
 
-"@gomomento/sdk@npm:^1.23.0":
-  version: 1.23.0
-  resolution: "@gomomento/sdk@npm:1.23.0"
+"@gomomento/sdk@npm:^1.41.2":
+  version: 1.41.2
+  resolution: "@gomomento/sdk@npm:1.41.2"
   dependencies:
-    "@gomomento/generated-types": 0.62.1
-    "@gomomento/sdk-core": 1.23.0
-    "@grpc/grpc-js": 1.8.14
+    "@gomomento/generated-types": 0.84.0
+    "@gomomento/sdk-core": 1.41.2
+    "@grpc/grpc-js": 1.9.0
+    "@types/google-protobuf": 3.15.6
     google-protobuf: 3.21.2
     jwt-decode: 3.1.2
-  checksum: 5704ffcfaec1ff0e82d853e01ac500be9f0ea78fb74cdd6af41ba91b50a32884310d7ac12eddb0eeabf5ef5b9c68d660f5393f3219a67214c4c728d5331607e7
+  checksum: aef0069d19c7af103a24f6429d1430cf67f0e80854893f6cebcc2d94b7a5e153b14f7bd39824b103bec233233e742ced4769fffb9250f7fe88c2ff129b1f6e4a
   languageName: node
   linkType: hard
 
@@ -4947,16 +4949,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@grpc/grpc-js@npm:1.8.14, @grpc/grpc-js@npm:^1.8.14":
-  version: 1.8.14
-  resolution: "@grpc/grpc-js@npm:1.8.14"
-  dependencies:
-    "@grpc/proto-loader": ^0.7.0
-    "@types/node": ">=12.12.47"
-  checksum: 7b889ae67cde5eb9b4feb92d54e73945d881309b9b879a2dde478fa7850b99835efa7592a8154a0f923851d7a18a177c106f5f52b45061180bb04aef7783c1c9
-  languageName: node
-  linkType: hard
-
 "@grpc/grpc-js@npm:1.8.17, @grpc/grpc-js@npm:~1.8.0":
   version: 1.8.17
   resolution: "@grpc/grpc-js@npm:1.8.17"
@@ -4964,6 +4956,16 @@ __metadata:
     "@grpc/proto-loader": ^0.7.0
     "@types/node": ">=12.12.47"
   checksum: 0ac8cd7342a33d7e507ec0ebb470721ae84eb964fd164e4b7b829cb35774c09df158124cbce859d9398c9a015f0e29d2308a3a17be35d54e030a7dc091e7e9a4
+  languageName: node
+  linkType: hard
+
+"@grpc/grpc-js@npm:1.9.0, @grpc/grpc-js@npm:^1.8.14":
+  version: 1.9.0
+  resolution: "@grpc/grpc-js@npm:1.9.0"
+  dependencies:
+    "@grpc/proto-loader": ^0.7.0
+    "@types/node": ">=12.12.47"
+  checksum: 32817c84e4b0eedc523b123cbfce935cafedbf33f94f7609931a878dd6945c4d83b4a781a9d7dedbd4fd273a95e8bd3b0de5f6ca920112331e1c3279fa104b3e
   languageName: node
   linkType: hard
 
@@ -5517,6 +5519,25 @@ __metadata:
   bin:
     node-pre-gyp: bin/node-pre-gyp
   checksum: 1a98db05d955b74dad3814679593df293b9194853698f3f5f1ed00ecd93128cdd4b14fb8767fe44ac6981ef05c23effcfdc88710e7c1de99ccb6f647890597c8
+  languageName: node
+  linkType: hard
+
+"@mapbox/node-pre-gyp@npm:^1.0.5":
+  version: 1.0.11
+  resolution: "@mapbox/node-pre-gyp@npm:1.0.11"
+  dependencies:
+    detect-libc: ^2.0.0
+    https-proxy-agent: ^5.0.0
+    make-dir: ^3.1.0
+    node-fetch: ^2.6.7
+    nopt: ^5.0.0
+    npmlog: ^5.0.1
+    rimraf: ^3.0.2
+    semver: ^7.3.5
+    tar: ^6.1.11
+  bin:
+    node-pre-gyp: bin/node-pre-gyp
+  checksum: b848f6abc531a11961d780db813cc510ca5a5b6bf3184d72134089c6875a91c44d571ba6c1879470020803f7803609e7b2e6e429651c026fe202facd11d444b8
   languageName: node
   linkType: hard
 
@@ -11951,7 +11972,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.7.0
-    "@gomomento/sdk": ^1.23.0
+    "@gomomento/sdk": ^1.41.2
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
@@ -13215,6 +13236,18 @@ __metadata:
   version: 16.6.0
   resolution: "graphql@npm:16.6.0"
   checksum: bf1d9e3c1938ce3c1a81e909bd3ead1ae4707c577f91cff1ca2eca474bfbc7873d5d7b942e1e9777ff5a8304421dba57a4b76d7a29eb19de8711cb70e3c2415e
+  languageName: node
+  linkType: hard
+
+"grpc-tools@npm:^1.12.4":
+  version: 1.12.4
+  resolution: "grpc-tools@npm:1.12.4"
+  dependencies:
+    "@mapbox/node-pre-gyp": ^1.0.5
+  bin:
+    grpc_tools_node_protoc: bin/protoc.js
+    grpc_tools_node_protoc_plugin: bin/protoc_plugin.js
+  checksum: 5ea946c2d231e2b58be48b14e12f2982b44845f62d05327cf84f67fae30355c7a781d8443b0988f9db77d4eb219f15e5f98e869f6a14c4276084726e48dc8ec0
   languageName: node
   linkType: hard
 
@@ -15267,7 +15300,8 @@ __metadata:
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.7.0
-    "@gomomento/sdk": ^1.23.0
+    "@gomomento/sdk": ^1.41.2
+    "@gomomento/sdk-core": ^1.41.2
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -15417,7 +15451,9 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.7.0
-    "@gomomento/sdk": ^1.23.0
+    "@gomomento/sdk": ^1.41.2
+    "@gomomento/sdk-core": ^1.41.2
+    "@gomomento/sdk-web": ^1.41.2
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -15523,6 +15559,10 @@ __metadata:
     "@getzep/zep-js":
       optional: true
     "@gomomento/sdk":
+      optional: true
+    "@gomomento/sdk-core":
+      optional: true
+    "@gomomento/sdk-web":
       optional: true
     "@google-ai/generativelanguage":
       optional: true
@@ -18468,6 +18508,15 @@ __metadata:
     pbjs: bin/pbjs
     pbts: bin/pbts
   checksum: b2fc6a01897b016c2a7e43a854ab4a3c57080f61be41e552235436e7a730711b8e89e47cb4ae52f0f065b5ab5d5989fc932f390337ce3a8ccf07203415700850
+  languageName: node
+  linkType: hard
+
+"protoc-gen-ts@npm:^0.8.6":
+  version: 0.8.7
+  resolution: "protoc-gen-ts@npm:0.8.7"
+  bin:
+    protoc-gen-ts: protoc-gen-ts.js
+  checksum: 556d89ef43b152b9f457dab79d51f649f5108fb1ef447da41f0c3b6f33df1a5bd8ef3392c0ce9b25730e68ccb0c972a52ca37d50775ce4602a94b502aeab1e88
   languageName: node
   linkType: hard
 
