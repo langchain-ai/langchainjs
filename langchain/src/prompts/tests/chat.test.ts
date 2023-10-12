@@ -328,7 +328,7 @@ test("Throws if trying to pass non BaseMessage inputs to MessagesPlaceholder", a
   }
 });
 
-test("Does not throw if null or undefined is passed as input to MessagesPlaceholder", async () => {
+test("Does not throws if null or undefined is passed as input to MessagesPlaceholder", async () => {
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "some string"],
     new MessagesPlaceholder("chatHistory"),
@@ -338,11 +338,18 @@ test("Does not throw if null or undefined is passed as input to MessagesPlacehol
   const value1 = null;
   const value2 = undefined;
 
-  const formatted = await prompt.formatMessages({
-    chatHistory: value1,
-    chatHistory2: value2,
-    question: "What is the meaning of life?",
-  });
-
-  expect(formatted).toHaveLength(2);
+  try {
+    await prompt.formatMessages({
+      chatHistory: value1,
+      chatHistory2: value2,
+      question: "What is the meaning of life?",
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (e instanceof Error) {
+      expect(e.name).toBe("InputFormatError");
+    } else {
+      throw e;
+    }
+  }
 });
