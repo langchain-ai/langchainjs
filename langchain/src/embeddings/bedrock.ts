@@ -55,6 +55,7 @@ export class BedrockEmbeddings
       });
   }
 
+  /** @deprecated */
   protected async _embedText(text: string): Promise<number[]> {
     // replace newlines, which can negatively affect performance.
     const cleanedText = text.replace(/\n/g, " ");
@@ -81,7 +82,7 @@ export class BedrockEmbeddings
 
   /**
    * Method that takes a document as input and returns a promise that
-   * resolves to an embedding for the document. It calls the _embedText
+   * resolves to an embedding for the document. It calls the embedTextWithRetry
    * method with the document as the input.
    * @param document Document for which to generate an embedding.
    * @returns Promise that resolves to an embedding for the input document.
@@ -89,7 +90,7 @@ export class BedrockEmbeddings
   embedQuery(document: string): Promise<number[]> {
     return this.caller.callWithOptions(
       {},
-      this._embedText.bind(this),
+      this.embedTextWithRetry.bind(this),
       document
     );
   }
@@ -107,7 +108,7 @@ export class BedrockEmbeddings
 
     for (const batch of batches) {
       const batchRequests = batch.map((document) =>
-        this.embeddingWithRetry({ inputText: document })
+        this.embedTextWithRetry(document)
       );
 
       const batchEmbeddings = await Promise.all(batchRequests);
@@ -124,13 +125,11 @@ export class BedrockEmbeddings
    * @param request Request to send to the Bedrock API.
    * @returns Promise that resolves to the response from the API.
    */
-  private async embeddingWithRetry(request: {
-    inputText: string;
-  }): Promise<number[]> {
+  private async embedTextWithRetry(inputText: string): Promise<number[]> {
     return this.caller.call(async () => {
       try {
         // replace newlines, which can negatively affect performance.
-        const cleanedText = request.inputText.replace(/\n/g, " ");
+        const cleanedText = inputText.replace(/\n/g, " ");
 
         const res = await this.client.send(
           new InvokeModelCommand({
