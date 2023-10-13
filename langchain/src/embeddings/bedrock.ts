@@ -55,12 +55,18 @@ export class BedrockEmbeddings
       });
   }
 
-  /** @deprecated */
+  /**
+   * Protected method to make a request to the Bedrock API to generate
+   * embeddings. Handles the retry logic and returns the response from the
+   * API.
+   * @param request Request to send to the Bedrock API.
+   * @returns Promise that resolves to the response from the API.
+   */
   protected async _embedText(text: string): Promise<number[]> {
     return this.caller.call(async () => {
       try {
         // replace newlines, which can negatively affect performance.
-        const cleanedText = inputText.replace(/\n/g, " ");
+        const cleanedText = text.replace(/\n/g, " ");
 
         const res = await this.client.send(
           new InvokeModelCommand({
@@ -95,7 +101,7 @@ export class BedrockEmbeddings
 
   /**
    * Method that takes a document as input and returns a promise that
-   * resolves to an embedding for the document. It calls the embedTextWithRetry
+   * resolves to an embedding for the document. It calls the _embedText
    * method with the document as the input.
    * @param document Document for which to generate an embedding.
    * @returns Promise that resolves to an embedding for the input document.
@@ -103,7 +109,7 @@ export class BedrockEmbeddings
   embedQuery(document: string): Promise<number[]> {
     return this.caller.callWithOptions(
       {},
-      this.embedTextWithRetry.bind(this),
+      this._embedText.bind(this),
       document
     );
   }
@@ -121,7 +127,7 @@ export class BedrockEmbeddings
 
     for (const batch of batches) {
       const batchRequests = batch.map((document) =>
-        this.embedTextWithRetry(document)
+        this._embedText(document)
       );
 
       const batchEmbeddings = await Promise.all(batchRequests);
@@ -129,49 +135,5 @@ export class BedrockEmbeddings
     }
 
     return embeddings;
-  }
-
-  /**
-   * Private method to make a request to the Bedrock API to generate
-   * embeddings. Handles the retry logic and returns the response from the
-   * API.
-   * @param request Request to send to the Bedrock API.
-   * @returns Promise that resolves to the response from the API.
-   */
-  private async embedTextWithRetry(inputText: string): Promise<number[]> {
-    return this.caller.call(async () => {
-      try {
-        // replace newlines, which can negatively affect performance.
-        const cleanedText = inputText.replace(/\n/g, " ");
-
-        const res = await this.client.send(
-          new InvokeModelCommand({
-            modelId: this.model,
-            body: JSON.stringify({
-              inputText: cleanedText,
-            }),
-            contentType: "application/json",
-            accept: "application/json",
-          })
-        );
-
-        const body = new TextDecoder().decode(res.body);
-        return JSON.parse(body).embedding;
-      } catch (e) {
-        console.error({
-          error: e,
-        });
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        if (e instanceof Error) {
-          throw new Error(
-            `An error occurred while embedding documents with Bedrock: ${e.message}`
-          );
-        }
-
-        throw new Error(
-          "An error occurred while embedding documents with Bedrock"
-        );
-      }
-    });
   }
 }
