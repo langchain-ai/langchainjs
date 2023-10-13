@@ -167,17 +167,17 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
    * Calls the SageMaker endpoint and retrieves the result.
    * @param {string} prompt The input prompt.
    * @param {this["ParsedCallOptions"]} options Parsed call options.
-   * @param {CallbackManagerForLLMRun} _runManager Optional run manager.
+   * @param {CallbackManagerForLLMRun} runManager Optional run manager.
    * @returns {Promise<string>} A promise that resolves to the generated string.
    */
   /** @ignore */
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     return this.streaming
-      ? await this.streamingCall(prompt, options, _runManager)
+      ? await this.streamingCall(prompt, options, runManager)
       : await this.noStreamingCall(prompt, options);
   }
 
