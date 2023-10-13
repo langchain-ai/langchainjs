@@ -126,9 +126,7 @@ export class BedrockEmbeddings
     const embeddings: number[][] = [];
 
     for (const batch of batches) {
-      const batchRequests = batch.map((document) =>
-        this._embedText(document)
-      );
+      const batchRequests = batch.map((document) => this._embedText(document));
 
       const batchEmbeddings = await Promise.all(batchRequests);
       embeddings.push(...batchEmbeddings);
