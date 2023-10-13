@@ -96,10 +96,10 @@ export class BedrockEmbeddings
   }
 
   /**
-   * Method to generate embeddings for an array of documents. Splits the
-   * documents into batches and makes requests to Bedrock to generate
+   * Method to generate embeddings for an array of texts. Splits the
+   * texts into batches and makes requests to Bedrock to generate
    * embeddings.
-   * @param documents Array of documents for which to generate embeddings.
+   * @param documents Array of texts for which to generate embeddings.
    * @returns Promise that resolves to a 2D array of embeddings for each input document.
    */
   async embedDocuments(documents: string[]): Promise<number[][]> {
