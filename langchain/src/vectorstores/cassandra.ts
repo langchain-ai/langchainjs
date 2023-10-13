@@ -195,7 +195,7 @@ export class CassandraStore extends VectorStore {
       vector VECTOR<FLOAT, ${this.dimensions}>
     );`);
 
-    await this.client.execute(`CREATE CUSTOM INDEX IF NOT EXISTS ann_index 
+    await this.client.execute(`CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
   ON ${this.keyspace}.${this.table}(vector) USING 'StorageAttachedIndex';`);
     this.isInitialized = true;
   }
