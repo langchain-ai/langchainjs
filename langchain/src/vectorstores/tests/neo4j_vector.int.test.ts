@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { Neo4jVectorStore, SearchType } from "../neo4j_vector.js";
+import { Neo4jVectorStore } from "../neo4j_vector.js";
 import { Document } from "../../document.js";
 
 const OS_TOKEN_COUNT = 1536;
@@ -110,7 +110,7 @@ test("Test fromTexts Hybrid", async () => {
       username,
       password,
       preDeleteCollection: true,
-      searchType: SearchType.HYBRID,
+      searchType: "hybrid",
     }
   );
 
@@ -207,7 +207,7 @@ test("Test fromExistingIndex Hybrid", async () => {
       password,
       indexName: "vector",
       keywordIndexName: "keyword",
-      searchType: SearchType.HYBRID,
+      searchType: "hybrid",
       preDeleteCollection: true,
     }
   );
@@ -218,7 +218,7 @@ test("Test fromExistingIndex Hybrid", async () => {
     password,
     indexName: "vector",
     keywordIndexName: "keyword",
-    searchType: SearchType.HYBRID,
+    searchType: "hybrid",
   });
 
   const output = await existingIndex.similaritySearch("foo", 2);
@@ -448,7 +448,7 @@ test("Test fromExistingGraph multiple properties hybrid", async () => {
     nodeLabel: "Test",
     textNodeProperties: ["name", "name2"],
     embeddingNodeProperty: "embedding",
-    searchType: SearchType.HYBRID,
+    searchType: "hybrid",
   });
 
   const output = await existingGraph.similaritySearch("foo", 2);

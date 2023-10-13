@@ -4,15 +4,9 @@ import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 
-export enum SearchType {
-  VECTOR = "vector",
-  HYBRID = "hybrid",
-}
+export type SearchType = "vector" | "hybrid";
 
-export enum DistanceStrategy {
-  EUCLIDEAN_DISTANCE = "euclidean",
-  COSINE = "cosine",
-}
+export type DistanceStrategy = "euclidean" | "cosine";
 
 interface Neo4jVectorStoreArgs {
   url: string;
@@ -31,8 +25,8 @@ interface Neo4jVectorStoreArgs {
   createIdIndex?: boolean;
 }
 
-const DEFAULT_SEARCH_TYPE = SearchType.VECTOR;
-const DEFAULT_DISTANCE_STRATEGY = DistanceStrategy.COSINE;
+const DEFAULT_SEARCH_TYPE = "vector";
+const DEFAULT_DISTANCE_STRATEGY = "cosine";
 
 export class Neo4jVectorStore extends VectorStore {
   private driver: neo4j.Driver;
@@ -196,7 +190,7 @@ export class Neo4jVectorStore extends VectorStore {
       );
     }
 
-    if (searchType === SearchType.HYBRID) {
+    if (searchType === "hybrid") {
       const ftsNodeLabel = await store.retrieveExistingFtsIndex();
 
       if (!ftsNodeLabel) {
@@ -228,7 +222,7 @@ export class Neo4jVectorStore extends VectorStore {
     const { searchType = DEFAULT_SEARCH_TYPE, keywordIndexName = "keyword" } =
       config;
 
-    if (searchType === SearchType.HYBRID && !keywordIndexName) {
+    if (searchType === "hybrid" && !keywordIndexName) {
       throw Error(
         "keyword_index name has to be specified when using hybrid search option"
       );
@@ -251,7 +245,7 @@ export class Neo4jVectorStore extends VectorStore {
       );
     }
 
-    if (searchType === SearchType.HYBRID) {
+    if (searchType === "hybrid") {
       const ftsNodeLabel = await store.retrieveExistingFtsIndex();
 
       if (!ftsNodeLabel) {
@@ -315,7 +309,7 @@ export class Neo4jVectorStore extends VectorStore {
       );
     }
 
-    if (searchType === SearchType.HYBRID) {
+    if (searchType === "hybrid") {
       const ftsNodeLabel = await store.retrieveExistingFtsIndex(
         textNodeProperties
       );
@@ -704,9 +698,9 @@ function extractPathForRows(path: neo4j.Path) {
 
 function getSearchIndexQuery(searchType: SearchType): string {
   const typeToQueryMap: { [key in SearchType]: string } = {
-    [SearchType.VECTOR]:
+    vector:
       "CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score",
-    [SearchType.HYBRID]: `
+    hybrid: `
           CALL {
               CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score
               RETURN node, score UNION
