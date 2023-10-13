@@ -7,7 +7,11 @@ import { HNSWLib } from "../../vectorstores/hnswlib.js";
 import { BedrockEmbeddings } from "../bedrock.js";
 
 const getClient = () => {
-  if (!process.env.BEDROCK_AWS_REGION || !process.env.BEDROCK_AWS_ACCESS_KEY_ID || !process.env.BEDROCK_AWS_SECRET_ACCESS_KEY) {
+  if (
+    !process.env.BEDROCK_AWS_REGION ||
+    !process.env.BEDROCK_AWS_ACCESS_KEY_ID ||
+    !process.env.BEDROCK_AWS_SECRET_ACCESS_KEY
+  ) {
     throw new Error("Missing environment variables for AWS");
   }
 
@@ -20,7 +24,7 @@ const getClient = () => {
   });
 
   return client;
-}
+};
 
 test("Test BedrockEmbeddings.embedQuery", async () => {
   const client = getClient();
