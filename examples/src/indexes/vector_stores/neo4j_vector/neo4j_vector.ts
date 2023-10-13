@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Neo4jVectorIndex } from "langchain/vectorstores/neo4j_vector";
+import { Neo4jVectorStore } from "langchain/vectorstores/neo4j_vector";
 
 // Configuration object for Neo4j connection and other related settings
 const config = {
@@ -19,7 +19,7 @@ const documents = [
   { pageContent: "Cat drinks milk", metadata: { a: 1 } },
 ];
 
-const neo4jVectorIndex = await Neo4jVectorIndex.fromDocuments(
+const neo4jVectorIndex = await Neo4jVectorStore.fromDocuments(
   documents,
   new OpenAIEmbeddings(),
   config
@@ -33,4 +33,4 @@ console.log(results);
   [ Document { pageContent: 'Cat drinks milk', metadata: { a: 1 } } ]
 */
 
-await Neo4jVectorIndex.close();
+await neo4jVectorIndex.close();

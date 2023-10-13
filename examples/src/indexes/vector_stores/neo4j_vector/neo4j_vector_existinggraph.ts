@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Neo4jVectorIndex } from "langchain/vectorstores/neo4j_vector";
+import { Neo4jVectorStore } from "langchain/vectorstores/neo4j_vector";
 
 /**
  * `fromExistingGraph` Method:
@@ -27,9 +27,9 @@ const config = {
 };
 
 // You should have a populated Neo4j database to use this method
-const neo4jVectorIndex = await Neo4jVectorIndex.fromExistingGraph(
+const neo4jVectorIndex = await Neo4jVectorStore.fromExistingGraph(
   new OpenAIEmbeddings(),
   config
 );
 
-await Neo4jVectorIndex.close();
+await neo4jVectorIndex.close();
