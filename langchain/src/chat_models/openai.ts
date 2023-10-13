@@ -214,6 +214,8 @@ export class ChatOpenAI<
 
   modelName = "gpt-3.5-turbo";
 
+  prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[] | undefined;
+
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
   stop?: string[];
@@ -287,6 +289,7 @@ export class ChatOpenAI<
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     this.modelName = fields?.modelName ?? this.modelName;
+    this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 
@@ -378,14 +381,7 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
-      messages.map((message) => ({
-        role: messageToOpenAIRole(message),
-        content: message.content,
-        name: message.name,
-        function_call: message.additional_kwargs
-          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-      }));
+    const messagesMapped = this._mapMessages(messages);
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
@@ -442,14 +438,6 @@ export class ChatOpenAI<
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
-      messages.map((message) => ({
-        role: messageToOpenAIRole(message),
-        content: message.content,
-        name: message.name,
-        function_call: message.additional_kwargs
-          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-      }));
 
     if (params.stream) {
       const stream = await this._streamResponseChunks(
@@ -472,6 +460,7 @@ export class ChatOpenAI<
         .map(([_, value]) => value);
       return { generations };
     } else {
+      const messagesMapped = this._mapMessages(messages);
       const data = await this.completionWithRetry(
         {
           ...params,
@@ -638,6 +627,20 @@ export class ChatOpenAI<
       };
     }
     return requestOptions;
+  }
+
+
+  _mapMessages(messages: BaseMessage[]): OpenAIClient.Chat.ChatCompletionMessageParam[] {
+    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
+    messages.map((message) => ({
+      role: messageToOpenAIRole(message),
+      content: message.content,
+      name: message.name,
+      function_call: message.additional_kwargs
+        .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
+    }));
+
+    return this.prefixMessages ?  [...this.prefixMessages, ...messagesMapped] : messagesMapped;
   }
 
   _llmType() {
