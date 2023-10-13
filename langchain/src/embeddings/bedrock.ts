@@ -57,27 +57,40 @@ export class BedrockEmbeddings
 
   /** @deprecated */
   protected async _embedText(text: string): Promise<number[]> {
-    // replace newlines, which can negatively affect performance.
-    const cleanedText = text.replace(/\n/g, " ");
+    return this.caller.call(async () => {
+      try {
+        // replace newlines, which can negatively affect performance.
+        const cleanedText = inputText.replace(/\n/g, " ");
 
-    const res = await this.client.send(
-      new InvokeModelCommand({
-        modelId: this.model,
-        body: JSON.stringify({
-          inputText: cleanedText,
-        }),
-        contentType: "application/json",
-        accept: "application/json",
-      })
-    );
+        const res = await this.client.send(
+          new InvokeModelCommand({
+            modelId: this.model,
+            body: JSON.stringify({
+              inputText: cleanedText,
+            }),
+            contentType: "application/json",
+            accept: "application/json",
+          })
+        );
 
-    try {
-      const body = new TextDecoder().decode(res.body);
+        const body = new TextDecoder().decode(res.body);
+        return JSON.parse(body).embedding;
+      } catch (e) {
+        console.error({
+          error: e,
+        });
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (e instanceof Error) {
+          throw new Error(
+            `An error occurred while embedding documents with Bedrock: ${e.message}`
+          );
+        }
 
-      return JSON.parse(body).embedding;
-    } catch (e) {
-      throw new Error("An invalid response was returned by Bedrock.");
-    }
+        throw new Error(
+          "An error occurred while embedding documents with Bedrock"
+        );
+      }
+    });
   }
 
   /**
