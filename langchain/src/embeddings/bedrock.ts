@@ -4,7 +4,6 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import type { CredentialType } from "../util/bedrock.js";
-import { chunkArray } from "../util/chunk.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -115,23 +114,12 @@ export class BedrockEmbeddings
   }
 
   /**
-   * Method to generate embeddings for an array of texts. Splits the
-   * texts into batches and makes requests to Bedrock to generate
-   * embeddings.
+   * Method to generate embeddings for an array of texts. Calls _embedText
+   * method which batches and handles retry logic when calling the AWS Bedrock API.
    * @param documents Array of texts for which to generate embeddings.
    * @returns Promise that resolves to a 2D array of embeddings for each input document.
    */
   async embedDocuments(documents: string[]): Promise<number[][]> {
-    const batches = chunkArray(documents, this.batchSize);
-    const embeddings: number[][] = [];
-
-    for (const batch of batches) {
-      const batchRequests = batch.map((document) => this._embedText(document));
-
-      const batchEmbeddings = await Promise.all(batchRequests);
-      embeddings.push(...batchEmbeddings);
-    }
-
-    return embeddings;
+    return Promise.all(documents.map((document) => this._embedText(document)));
   }
 }
