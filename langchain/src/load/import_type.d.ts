@@ -475,6 +475,8 @@ export interface SecretMap {
   VECTARA_CUSTOMER_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
+  YC_API_KEY?: string;
+  YC_IAM_TOKEN?: string;
   ZAPIER_NLA_API_KEY?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;
