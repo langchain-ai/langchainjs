@@ -1,7 +1,5 @@
 import { DataSource } from "typeorm";
-import { OpenAI } from "langchain/llms/openai";
 import { SqlDatabase } from "langchain/sql_db";
-import { SqlDatabaseChain } from "langchain/chains/sql_db";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
