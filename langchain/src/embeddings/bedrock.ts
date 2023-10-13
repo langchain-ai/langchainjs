@@ -146,6 +146,9 @@ export class BedrockEmbeddings
         const body = new TextDecoder().decode(res.body);
         return JSON.parse(body).embedding;
       } catch (e) {
+        console.error({
+          error: e,
+        });
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof Error) {
           throw new Error(
