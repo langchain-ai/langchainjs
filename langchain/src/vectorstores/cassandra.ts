@@ -195,7 +195,8 @@ export class CassandraStore extends VectorStore {
       vector VECTOR<FLOAT, ${this.dimensions}>
     );`);
 
-    await this.client.execute(`CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
+    await this.client
+      .execute(`CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
   ON ${this.keyspace}.${this.table}(vector) USING 'StorageAttachedIndex';`);
     this.isInitialized = true;
   }
@@ -218,8 +219,13 @@ export class CassandraStore extends VectorStore {
 
       const metadataColNames = Object.keys(document.metadata);
       const metadataVals = Object.values(document.metadata);
-      const metadataInsert = metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : ""
-      const query = `INSERT INTO ${this.keyspace}.${this.table} (vector, text${metadataInsert}) VALUES ([${vector}], '${document.pageContent}'${
+      const metadataInsert =
+        metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : "";
+      const query = `INSERT INTO ${this.keyspace}.${
+        this.table
+      } (vector, text${metadataInsert}) VALUES ([${vector}], '${
+        document.pageContent
+      }'${
         metadataVals.length > 0
           ? ", " +
             metadataVals
