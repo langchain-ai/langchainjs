@@ -18,6 +18,7 @@ import * as llms_ai21 from "langchain/llms/ai21";
 import * as llms_aleph_alpha from "langchain/llms/aleph_alpha";
 import * as llms_ollama from "langchain/llms/ollama";
 import * as llms_fireworks from "langchain/llms/fireworks";
+import * as llms_yandex from "langchain/llms/yandex";
 import * as prompts from "langchain/prompts";
 import * as vectorstores_base from "langchain/vectorstores/base";
 import * as vectorstores_memory from "langchain/vectorstores/memory";

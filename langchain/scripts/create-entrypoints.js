@@ -69,6 +69,7 @@ const entrypoints = {
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
   "llms/portkey": "llms/portkey",
+  "llms/yandex": "llms/yandex",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
