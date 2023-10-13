@@ -247,6 +247,9 @@
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
+    "vectorstores/neo4j_vector.cjs",
+    "vectorstores/neo4j_vector.js",
+    "vectorstores/neo4j_vector.d.ts",
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
@@ -1640,6 +1643,11 @@
       "types": "./vectorstores/milvus.d.ts",
       "import": "./vectorstores/milvus.js",
       "require": "./vectorstores/milvus.cjs"
+    },
+    "./vectorstores/neo4j_vector": {
+      "types": "./vectorstores/neo4j_vector.d.ts",
+      "import": "./vectorstores/neo4j_vector.js",
+      "require": "./vectorstores/neo4j_vector.cjs"
     },
     "./vectorstores/prisma": {
       "types": "./vectorstores/prisma.d.ts",

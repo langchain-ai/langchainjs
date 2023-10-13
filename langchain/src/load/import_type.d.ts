@@ -166,6 +166,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/milvus"?:
     | typeof import("../vectorstores/milvus.js")
     | Promise<typeof import("../vectorstores/milvus.js")>;
+  "langchain/vectorstores/neo4j_vector"?:
+    | typeof import("../vectorstores/neo4j_vector.js")
+    | Promise<typeof import("../vectorstores/neo4j_vector.js")>;
   "langchain/vectorstores/typeorm"?:
     | typeof import("../vectorstores/typeorm.js")
     | Promise<typeof import("../vectorstores/typeorm.js")>;
