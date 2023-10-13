@@ -218,9 +218,8 @@ export class CassandraStore extends VectorStore {
 
       const metadataColNames = Object.keys(document.metadata);
       const metadataVals = Object.values(document.metadata);
-      const query = `INSERT INTO ${this.keyspace}.${this.table} (vector, text${
-        metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : ""
-      }) VALUES ([${vector}], '${document.pageContent}'${
+      const metadataInsert = metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : ""
+      const query = `INSERT INTO ${this.keyspace}.${this.table} (vector, text${metadataInsert}) VALUES ([${vector}], '${document.pageContent}'${
         metadataVals.length > 0
           ? ", " +
             metadataVals
