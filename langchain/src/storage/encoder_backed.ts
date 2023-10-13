@@ -84,13 +84,19 @@ export class EncoderBackedStore<K, V, SerializedType = any> extends BaseStore<
   }
 }
 
-export function createDocumentStoreFromByteStore(store: BaseStore<string, Uint8Array>) {
+export function createDocumentStoreFromByteStore(
+  store: BaseStore<string, Uint8Array>
+) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   return new EncoderBackedStore({
     store,
     keyEncoder: (key: string) => key,
-    valueSerializer: (doc: Document) => encoder.encode(JSON.stringify({ pageContent: doc.pageContent, metadata: doc.metadata })),
-    valueDeserializer: (bytes: Uint8Array) => new Document(JSON.parse(decoder.decode(bytes))),
-  })
+    valueSerializer: (doc: Document) =>
+      encoder.encode(
+        JSON.stringify({ pageContent: doc.pageContent, metadata: doc.metadata })
+      ),
+    valueDeserializer: (bytes: Uint8Array) =>
+      new Document(JSON.parse(decoder.decode(bytes))),
+  });
 }

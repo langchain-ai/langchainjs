@@ -69,6 +69,7 @@ const entrypoints = {
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
   "llms/portkey": "llms/portkey",
+  "llms/yandex": "llms/yandex",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -94,6 +95,7 @@ const entrypoints = {
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/pgvector": "vectorstores/pgvector",
   "vectorstores/milvus": "vectorstores/milvus",
+  "vectorstores/neo4j_vector": "vectorstores/neo4j_vector",
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
@@ -344,6 +346,7 @@ const requiresOptionalDependency = [
   "vectorstores/typeorm",
   "vectorstores/milvus",
   "vectorstores/myscale",
+  "vectorstores/neo4j_vector",
   "vectorstores/redis",
   "vectorstores/singlestore",
   "vectorstores/typesense",

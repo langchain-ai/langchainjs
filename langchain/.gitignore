@@ -163,6 +163,9 @@ llms/writer.d.ts
 llms/portkey.cjs
 llms/portkey.js
 llms/portkey.d.ts
+llms/yandex.cjs
+llms/yandex.js
+llms/yandex.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts

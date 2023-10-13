@@ -175,6 +175,9 @@
     "llms/portkey.cjs",
     "llms/portkey.js",
     "llms/portkey.d.ts",
+    "llms/yandex.cjs",
+    "llms/yandex.js",
+    "llms/yandex.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -1528,6 +1531,11 @@
       "types": "./llms/portkey.d.ts",
       "import": "./llms/portkey.js",
       "require": "./llms/portkey.cjs"
+    },
+    "./llms/yandex": {
+      "types": "./llms/yandex.d.ts",
+      "import": "./llms/yandex.js",
+      "require": "./llms/yandex.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
