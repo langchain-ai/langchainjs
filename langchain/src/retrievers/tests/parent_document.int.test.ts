@@ -78,3 +78,33 @@ test("Should work with a backwards compatible docstore too", async () => {
   expect(retrievedDocs.length).toEqual(1);
   expect(retrievedDocs[0].pageContent.length).toBeGreaterThan(1000);
 });
+
+test("Should return a part of a document if a parent splitter is passed", async () => {
+  const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
+  const docstore = new InMemoryStore();
+  const retriever = new ParentDocumentRetriever({
+    vectorstore,
+    docstore,
+    parentSplitter: new RecursiveCharacterTextSplitter({
+      chunkOverlap: 0,
+      chunkSize: 500,
+    }),
+    childSplitter: new RecursiveCharacterTextSplitter({
+      chunkOverlap: 0,
+      chunkSize: 50,
+    }),
+  });
+  const docs = await new TextLoader(
+    "../examples/state_of_the_union.txt"
+  ).load();
+  await retriever.addDocuments(docs);
+  const query = "justice breyer";
+  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
+    "justice breyer"
+  );
+  console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
+  console.log(retrievedDocs);
+  expect(retrievedDocs.length).toBeGreaterThan(1);
+  expect(retrievedDocs[0].pageContent.length).toBeGreaterThan(100);
+});

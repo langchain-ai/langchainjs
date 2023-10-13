@@ -246,8 +246,10 @@ const entrypoints = {
   "stores/message/planetscale": "stores/message/planetscale",
   "stores/message/xata": "stores/message/xata",
   // storage
+  "storage/encoder_backed": "storage/encoder_backed",
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  "storage/vercel_kv": "storage/vercel_kv",
   "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub
   hub: "hub",
@@ -426,6 +428,7 @@ const requiresOptionalDependency = [
   "stores/message/planetscale",
   "stores/message/xata",
   "storage/ioredis",
+  "storage/vercel_kv",
   "graphs/neo4j_graph",
   // Prevent export due to circular dependency with "load" entrypoint
   "hub",

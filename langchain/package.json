@@ -631,12 +631,18 @@
     "stores/message/xata.cjs",
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
+    "storage/encoder_backed.cjs",
+    "storage/encoder_backed.js",
+    "storage/encoder_backed.d.ts",
     "storage/in_memory.cjs",
     "storage/in_memory.js",
     "storage/in_memory.d.ts",
     "storage/ioredis.cjs",
     "storage/ioredis.js",
     "storage/ioredis.d.ts",
+    "storage/vercel_kv.cjs",
+    "storage/vercel_kv.js",
+    "storage/vercel_kv.d.ts",
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
@@ -771,6 +777,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
@@ -882,6 +889,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@upstash/redis": "^1.20.6",
+    "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
@@ -1048,6 +1056,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@vercel/kv": {
       "optional": true
     },
     "@vercel/postgres": {
@@ -2284,6 +2295,11 @@
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
     },
+    "./storage/encoder_backed": {
+      "types": "./storage/encoder_backed.d.ts",
+      "import": "./storage/encoder_backed.js",
+      "require": "./storage/encoder_backed.cjs"
+    },
     "./storage/in_memory": {
       "types": "./storage/in_memory.d.ts",
       "import": "./storage/in_memory.js",
@@ -2293,6 +2309,11 @@
       "types": "./storage/ioredis.d.ts",
       "import": "./storage/ioredis.js",
       "require": "./storage/ioredis.cjs"
+    },
+    "./storage/vercel_kv": {
+      "types": "./storage/vercel_kv.d.ts",
+      "import": "./storage/vercel_kv.js",
+      "require": "./storage/vercel_kv.cjs"
     },
     "./graphs/neo4j_graph": {
       "types": "./graphs/neo4j_graph.d.ts",

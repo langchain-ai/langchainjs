@@ -68,6 +68,7 @@ const cache = require("langchain/cache");
 const stores_doc_in_memory = require("langchain/stores/doc/in_memory");
 const stores_file_in_memory = require("langchain/stores/file/in_memory");
 const stores_message_in_memory = require("langchain/stores/message/in_memory");
+const storage_encoder_backed = require("langchain/storage/encoder_backed");
 const storage_in_memory = require("langchain/storage/in_memory");
 const util_math = require("langchain/util/math");
 const util_time = require("langchain/util/time");

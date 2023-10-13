@@ -1,16 +1,16 @@
-import type { Redis } from "ioredis";
+import { kv, type VercelKV } from "@vercel/kv";
 
 import { BaseStore } from "../schema/storage.js";
 
 /**
- * Class that extends the BaseStore class to interact with a Redis
+ * Class that extends the BaseStore class to interact with a Vercel KV
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
  */
-export class RedisByteStore extends BaseStore<string, Uint8Array> {
+export class VercelKVStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
 
-  protected client: Redis;
+  protected client: VercelKV;
 
   protected ttl?: number;
 
@@ -18,18 +18,18 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
 
   protected yieldKeysScanBatchSize = 1000;
 
-  constructor(fields: {
-    client: Redis;
+  constructor(fields?: {
+    client?: VercelKV;
     ttl?: number;
     namespace?: string;
     yieldKeysScanBatchSize?: number;
   }) {
     super(fields);
-    this.client = fields.client;
-    this.ttl = fields.ttl;
-    this.namespace = fields.namespace;
+    this.client = fields?.client ?? kv;
+    this.ttl = fields?.ttl;
+    this.namespace = fields?.namespace;
     this.yieldKeysScanBatchSize =
-      fields.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
+      fields?.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
   }
 
   _getPrefixedKey(key: string) {
@@ -55,12 +55,17 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
    */
   async mget(keys: string[]) {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
-    const retrievedValues = await this.client.mgetBuffer(prefixedKeys);
+    const retrievedValues = await this.client.mget<(string | undefined)[]>(
+      ...prefixedKeys
+    );
+    const encoder = new TextEncoder();
     return retrievedValues.map((value) => {
-      if (!value) {
+      if (value === undefined || value === null) {
         return undefined;
+      } else if (typeof value === "object") {
+        return encoder.encode(JSON.stringify(value));
       } else {
-        return value;
+        return encoder.encode(value);
       }
     });
   }
@@ -72,14 +77,14 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
    */
   async mset(keyValuePairs: [string, Uint8Array][]): Promise<void> {
     const decoder = new TextDecoder();
-    const encodedKeyValuePairs = keyValuePairs.map(([key, value]) => [
+    const decodedKeyValuePairs = keyValuePairs.map(([key, value]) => [
       this._getPrefixedKey(key),
       decoder.decode(value),
     ]);
     const pipeline = this.client.pipeline();
-    for (const [key, value] of encodedKeyValuePairs) {
+    for (const [key, value] of decodedKeyValuePairs) {
       if (this.ttl) {
-        pipeline.set(key, value, "EX", this.ttl);
+        pipeline.setex(key, this.ttl, value);
       } else {
         pipeline.set(key, value);
       }
@@ -108,24 +113,18 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
     } else {
       pattern = this._getPrefixedKey("*");
     }
-    let [cursor, batch] = await this.client.scan(
-      0,
-      "MATCH",
-      pattern,
-      "COUNT",
-      this.yieldKeysScanBatchSize
-    );
+    let [cursor, batch] = await this.client.scan(0, {
+      match: pattern,
+      count: this.yieldKeysScanBatchSize,
+    });
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
     }
-    while (cursor !== "0") {
-      [cursor, batch] = await this.client.scan(
-        cursor,
-        "MATCH",
-        pattern,
-        "COUNT",
-        this.yieldKeysScanBatchSize
-      );
+    while (cursor !== 0) {
+      [cursor, batch] = await this.client.scan(cursor, {
+        match: pattern,
+        count: this.yieldKeysScanBatchSize,
+      });
       for (const key of batch) {
         yield this._getDeprefixedKey(key);
       }

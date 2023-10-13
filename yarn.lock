@@ -8887,12 +8887,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@upstash/redis@npm:1.22.0":
+  version: 1.22.0
+  resolution: "@upstash/redis@npm:1.22.0"
+  dependencies:
+    isomorphic-fetch: ^3.0.0
+  checksum: 894b7d4e318c55fdcbf0f322efd9ace94a37f1b8f9d7cb2cdf8b8b4859814379665c7e00feef3565578455d98492710d14ed4a2b043ec412b5d640a4d5a2dd55
+  languageName: node
+  linkType: hard
+
 "@upstash/redis@npm:^1.20.6":
   version: 1.20.6
   resolution: "@upstash/redis@npm:1.20.6"
   dependencies:
     isomorphic-fetch: ^3.0.0
   checksum: e4bcf1d61b0fa3dec5b2b730831a0d6939416bdafe1af753479e53b035aa70be49ca96a6f3f52473d488ec896588a0134ee71b4c71f0caecb6454648f2e3bd29
+  languageName: node
+  linkType: hard
+
+"@vercel/kv@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@vercel/kv@npm:0.2.3"
+  dependencies:
+    "@upstash/redis": 1.22.0
+  checksum: 3a2b1e3a0ebf605b69341b449bd81edde94f9d00393cc6971759b950c90cff782e1e4fa5daf672f4769aa8301e00f7b7fdec07cdd98d40530652d83c043125ed
   languageName: node
   linkType: hard
 
@@ -15347,6 +15365,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
+    "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
@@ -15478,6 +15497,7 @@ __metadata:
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@upstash/redis": ^1.20.6
+    "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
     "@xata.io/client": ^0.25.1
@@ -15606,6 +15626,8 @@ __metadata:
     "@tensorflow/tfjs-core":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@vercel/kv":
       optional: true
     "@vercel/postgres":
       optional: true
