@@ -2,9 +2,9 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import type { CredentialType } from "../util/bedrock.js";
+import { chunkArray } from "../util/chunk.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -39,6 +39,8 @@ export class BedrockEmbeddings
   model: string;
 
   client: BedrockRuntimeClient;
+
+  batchSize = 512;
 
   constructor(fields?: BedrockEmbeddingsParams) {
     super(fields ?? {});
@@ -96,10 +98,68 @@ export class BedrockEmbeddings
    * Method that takes an array of documents as input and returns a promise
    * that resolves to a 2D array of embeddings for each document. It calls
    * the _embedText method for each document in the array.
+   * Method to generate embeddings for an array of documents. Splits the
+   * documents into batches and makes requests to Bedrock to generate
+   * embeddings.
    * @param documents Array of documents for which to generate embeddings.
    * @returns Promise that resolves to a 2D array of embeddings for each input document.
    */
-  embedDocuments(documents: string[]): Promise<number[][]> {
-    return Promise.all(documents.map((document) => this._embedText(document)));
+  async embedDocuments(documents: string[]): Promise<number[][]> {
+    const batches = chunkArray(documents, this.batchSize);
+    let embeddings: number[][] = [];
+
+    for (const batch of batches) {
+      const batchRequests = batch.map((document) =>
+        this.embeddingWithRetry({ inputText: document })
+      );
+
+      const batchEmbeddings = await Promise.all(batchRequests);
+      embeddings = embeddings.concat(batchEmbeddings);
+    }
+
+    return embeddings;
+  }
+
+  /**
+   * Private method to make a request to the Bedrock API to generate
+   * embeddings. Handles the retry logic and returns the response from the
+   * API.
+   * @param request Request to send to the Bedrock API.
+   * @returns Promise that resolves to the response from the API.
+   */
+  private async embeddingWithRetry(request: {
+    inputText: string;
+  }): Promise<number[]> {
+    return this.caller.call(async () => {
+      try {
+        // replace newlines, which can negatively affect performance.
+        const cleanedText = request.inputText.replace(/\n/g, " ");
+
+        const res = await this.client.send(
+          new InvokeModelCommand({
+            modelId: this.model,
+            body: JSON.stringify({
+              inputText: cleanedText,
+            }),
+            contentType: "application/json",
+            accept: "application/json",
+          })
+        );
+
+        const body = new TextDecoder().decode(res.body);
+        return JSON.parse(body).embedding;
+      } catch (e) {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (e instanceof Error) {
+          throw new Error(
+            `An error occurred while embedding documents with Bedrock: ${e.message}`
+          );
+        }
+
+        throw new Error(
+          "An error occurred while embedding documents with Bedrock"
+        );
+      }
+    });
   }
 }
