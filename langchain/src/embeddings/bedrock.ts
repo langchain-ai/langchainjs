@@ -95,9 +95,6 @@ export class BedrockEmbeddings
   }
 
   /**
-   * Method that takes an array of documents as input and returns a promise
-   * that resolves to a 2D array of embeddings for each document. It calls
-   * the _embedText method for each document in the array.
    * Method to generate embeddings for an array of documents. Splits the
    * documents into batches and makes requests to Bedrock to generate
    * embeddings.
@@ -106,7 +103,7 @@ export class BedrockEmbeddings
    */
   async embedDocuments(documents: string[]): Promise<number[][]> {
     const batches = chunkArray(documents, this.batchSize);
-    let embeddings: number[][] = [];
+    const embeddings: number[][] = [];
 
     for (const batch of batches) {
       const batchRequests = batch.map((document) =>
@@ -114,7 +111,7 @@ export class BedrockEmbeddings
       );
 
       const batchEmbeddings = await Promise.all(batchRequests);
-      embeddings = embeddings.concat(batchEmbeddings);
+      embeddings.push(...batchEmbeddings);
     }
 
     return embeddings;
