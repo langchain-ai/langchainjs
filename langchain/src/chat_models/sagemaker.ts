@@ -4,9 +4,16 @@ import {
   SageMakerRuntimeClient,
   SageMakerRuntimeClientConfig,
 } from "@aws-sdk/client-sagemaker-runtime";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { GenerationChunk } from "../schema/index.js";
-import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  ChatGenerationChunk,
+  ChatMessage,
+} from "../schema/index.js";
+
+import { BaseChatModelParams, SimpleChatModel } from "./base.js";
 
 /**
  * A handler class to transform input from LLM to a format that SageMaker
@@ -65,72 +72,71 @@ export type SageMakerLLMContentHandler = BaseSageMakerContentHandler<
 >;
 
 /**
- * The SageMakerEndpointInput interface defines the input parameters for
- * the SageMakerEndpoint class, which includes the endpoint name, client
- * options for the SageMaker client, the content handler, and optional
- * keyword arguments for the model and the endpoint.
+ * An interface defining the options for an Sagemaker API call. It extends
+ * the BaseLanguageModelCallOptions interface.
  */
-export interface SageMakerEndpointInput extends BaseLLMParams {
+export interface SagemakerCallOptions extends BaseLanguageModelCallOptions {}
+
+export interface SageMakerInput {
+  endpointName: string;
+  clientOptions: SageMakerRuntimeClientConfig;
+  modelKwargs?: Record<string, unknown>;
+  endpointKwargs?: Record<string, unknown>;
+  contentHandler: SageMakerLLMContentHandler;
+  chatMainInstruction: string;
+  streaming?: boolean;
+}
+
+export class ChatSagemaker
+  extends SimpleChatModel<SagemakerCallOptions>
+  implements SageMakerInput
+{
   /**
    * The name of the endpoint from the deployed SageMaker model. Must be unique
    * within an AWS Region.
    */
   endpointName: string;
+
   /**
    * Options passed to the SageMaker client.
    */
   clientOptions: SageMakerRuntimeClientConfig;
+
   /**
    * Key word arguments to pass to the model.
    */
   modelKwargs?: Record<string, unknown>;
+
   /**
    * Optional attributes passed to the InvokeEndpointCommand
    */
   endpointKwargs?: Record<string, unknown>;
+
   /**
    * The content handler class that provides an input and output transform
    * functions to handle formats between LLM and the endpoint.
    */
   contentHandler: SageMakerLLMContentHandler;
-  streaming?: boolean;
-}
 
-/**
- * The SageMakerEndpoint class is used to interact with SageMaker
- * Inference Endpoint models. It uses the AWS client for authentication,
- * which automatically loads credentials.
- * If a specific credential profile is to be used, the name of the profile
- * from the ~/.aws/credentials file must be passed. The credentials or
- * roles used should have the required policies to access the SageMaker
- * endpoint.
- */
-export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
+  client: SageMakerRuntimeClient;
+
+  streaming: boolean;
+
+  chatMainInstruction: string;
+
+  _llmType() {
+    return "sagemaker_endpoint";
+  }
+
   static lc_name() {
     return "SageMakerEndpoint";
   }
 
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      "clientOptions.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
-      "clientOptions.credentials.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
-      "clientOptions.credentials.sessionToken": "AWS_SESSION_TOKEN",
-    };
+  _combineLLMOutput() {
+    return {};
   }
 
-  endpointName: string;
-
-  modelKwargs?: Record<string, unknown>;
-
-  endpointKwargs?: Record<string, unknown>;
-
-  client: SageMakerRuntimeClient;
-
-  contentHandler: SageMakerLLMContentHandler;
-
-  streaming: boolean;
-
-  constructor(fields: SageMakerEndpointInput) {
+  constructor(fields: SageMakerInput & BaseChatModelParams) {
     super(fields);
 
     if (!fields.clientOptions.region) {
@@ -156,51 +162,104 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
     this.endpointKwargs = fields.endpointKwargs;
     this.modelKwargs = fields.modelKwargs;
     this.streaming = fields.streaming ?? false;
+    this.clientOptions = fields.clientOptions;
     this.client = new SageMakerRuntimeClient(fields.clientOptions);
+    this.chatMainInstruction = fields.chatMainInstruction ?? `
+      The pr
+    `
   }
 
-  _llmType() {
-    return "sagemaker_endpoint";
-  }
-
-  /**
-   * Calls the SageMaker endpoint and retrieves the result.
-   * @param {string} prompt The input prompt.
-   * @param {this["ParsedCallOptions"]} options Parsed call options.
-   * @param {CallbackManagerForLLMRun} _runManager Optional run manager.
-   * @returns {Promise<string>} A promise that resolves to the generated string.
-   */
-  /** @ignore */
-  async _call(
-    prompt: string,
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
-  ): Promise<string> {
-    return this.streaming
-      ? await this.streamingCall(prompt, options, _runManager)
-      : await this.noStreamingCall(prompt, options);
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const prompt = this._formatMessagesAsPrompt(messages);
+    const body = await this.contentHandler.transformInput(
+      prompt,
+      this.modelKwargs ?? {}
+    );
+    const { contentType, accepts } = this.contentHandler;
+
+    const stream = await this.caller.call(() =>
+      this.client.send(
+        new InvokeEndpointWithResponseStreamCommand({
+          EndpointName: this.endpointName,
+          Body: body,
+          ContentType: contentType,
+          Accept: accepts,
+          ...this.endpointKwargs,
+        }),
+        { abortSignal: options.signal }
+      )
+    );
+
+    if (!stream.Body) {
+      throw new Error("Inference result missing Body");
+    }
+
+    for await (const chunk of stream.Body) {
+      if (chunk.PayloadPart && chunk.PayloadPart.Bytes) {
+        yield new ChatGenerationChunk({
+          text: await this.contentHandler.transformOutput(
+            chunk.PayloadPart.Bytes
+          ),
+          message: new AIMessageChunk({
+            content: await this.contentHandler.transformOutput(
+              chunk.PayloadPart.Bytes
+            ),
+          }),
+          generationInfo: {
+            ...chunk,
+            response: undefined,
+          },
+        });
+      } else if (chunk.InternalStreamFailure) {
+        throw new Error(chunk.InternalStreamFailure.message);
+      } else if (chunk.ModelStreamError) {
+        throw new Error(chunk.ModelStreamError.message);
+      }
+    }
+  }
+
+  protected _formatMessagesAsPrompt(messages: BaseMessage[]): string {
+    const formattedMessages = messages
+      .map((message) => {
+        const type = message._getType();
+        switch (type) {
+          case "system":
+            return `<<SYS>> ${message.content} <</SYS>>`
+          case "human":
+            return `[INST] ${message.content} [/INST]`
+          case "ai":
+            return message.content;
+
+          default:
+            throw new Error("Invalid chat message");
+        }
+      })
+      .join("\n");
+
+    return `${formattedMessages}`;
   }
 
   private async streamingCall(
-    prompt: string,
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const chunks = [];
-    for await (const chunk of this._streamResponseChunks(
-      prompt,
-      options,
-      runManager
-    )) {
+    for await (const chunk of this._streamResponseChunks(messages, options)) {
       chunks.push(chunk.text);
     }
     return chunks.join("");
   }
 
   private async noStreamingCall(
-    prompt: string,
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"]
   ): Promise<string> {
+    const prompt = this._formatMessagesAsPrompt(messages);
+
     const body = await this.contentHandler.transformInput(
       prompt,
       this.modelKwargs ?? {}
@@ -227,57 +286,20 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   }
 
   /**
-   * Streams response chunks from the SageMaker endpoint.
+   * Calls the SageMaker endpoint and retrieves the result.
    * @param {string} prompt The input prompt.
    * @param {this["ParsedCallOptions"]} options Parsed call options.
-   * @returns {AsyncGenerator<GenerationChunk>} An asynchronous generator yielding generation chunks.
+   * @param {CallbackManagerForLLMRun} _runManager Optional run manager.
+   * @returns {Promise<string>} A promise that resolves to the generated string.
    */
-  async *_streamResponseChunks(
-    prompt: string,
+  /** @ignore */
+  async _call(
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<GenerationChunk> {
-    const body = await this.contentHandler.transformInput(
-      prompt,
-      this.modelKwargs ?? {}
-    );
-    const { contentType, accepts } = this.contentHandler;
-
-    const stream = await this.caller.call(() =>
-      this.client.send(
-        new InvokeEndpointWithResponseStreamCommand({
-          EndpointName: this.endpointName,
-          Body: body,
-          ContentType: contentType,
-          Accept: accepts,
-          ...this.endpointKwargs,
-        }),
-        { abortSignal: options.signal }
-      )
-    );
-
-    if (!stream.Body) {
-      throw new Error("Inference result missing Body");
-    }
-
-    for await (const chunk of stream.Body) {
-      if (chunk.PayloadPart && chunk.PayloadPart.Bytes) {
-        const text = await this.contentHandler.transformOutput(
-          chunk.PayloadPart.Bytes
-        );
-        yield new GenerationChunk({
-          text,
-          generationInfo: {
-            ...chunk,
-            response: undefined,
-          },
-        });
-        await runManager?.handleLLMNewToken(text);
-      } else if (chunk.InternalStreamFailure) {
-        throw new Error(chunk.InternalStreamFailure.message);
-      } else if (chunk.ModelStreamError) {
-        throw new Error(chunk.ModelStreamError.message);
-      }
-    }
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
+    return this.streaming
+      ? await this.streamingCall(messages, options)
+      : await this.noStreamingCall(messages, options);
   }
 }
