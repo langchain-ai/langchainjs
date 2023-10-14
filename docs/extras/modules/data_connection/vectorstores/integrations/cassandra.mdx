@@ -37,47 +37,43 @@ npm install cassandra-driver
 import { CassandraStore } from "langchain/vectorstores/cassandra";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
-// text sample from Godel, Escher, Bach
+
+const config = {
+   cloud: {
+     secureConnectBundle: process.env.CASSANDRA_SCB as string,
+   },
+   credentials: {
+     username: "token",
+     password: process.env.CASSANDRA_TOKEN as string,
+   },
+   keyspace: "test",
+   dimensions: 1536,
+   table: "test",
+   primaryKey: {
+     name: "id",
+     type: "int",
+   },
+   metadataColumns: [
+     {
+       name: "name",
+       type: "text",
+     },
+   ],
+ };
+
 const vectorStore = await CassandraStore.fromTexts(
+  ["I am blue", "Green yellow purple", "Hello there hello"],
   [
-    "Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little\
-            Harmonic Labyrinth of the dreaded Majotaur?",
-    "Achilles: Yiikes! What is that?",
-    "Tortoise: They say-although I person never believed it myself-that an I\
-            Majotaur has created a tiny labyrinth sits in a pit in the middle of\
-            it, waiting innocent victims to get lost in its fears complexity.\
-            Then, when they wander and dazed into the center, he laughs and\
-            laughs at them-so hard, that he laughs them to death!",
-    "Achilles: Oh, no!",
-    "Tortoise: But it's only a myth. Courage, Achilles.",
+    { id: 2, name: "2" },
+    { id: 1, name: "1" },
+    { id: 3, name: "3" },
   ],
-  [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
   new OpenAIEmbeddings(),
-  {
-    collectionName: "goldel_escher_bach",
-  }
+  cassandraConfig
 );
 
-// or alternatively from docs
-const vectorStore = await CassandraStore.fromDocuments(docs, new OpenAIEmbeddings(), {
-  collectionName: "goldel_escher_bach",
-});
-
-const response = await vectorStore.similaritySearch("scared", 2);
-```
-
-## Query docs from existing collection
-
-```typescript
-import { CassandraStore } from "langchain/vectorstores/cassandra";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-
-const vectorStore = await CassandraStore.fromExistingCollection(
-  new OpenAIEmbeddings(),
-  {
-    collectionName: "goldel_escher_bach",
-  }
+const results = await vectorStore.similaritySearch(
+  "Green yellow purple",
+  1
 );
-
-const response = await vectorStore.similaritySearch("scared", 2);
 ```

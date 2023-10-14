@@ -1,12 +1,12 @@
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { InMemoryDocstore } from "langchain/stores/doc/in_memory";
+import { InMemoryStore } from "langchain/storage/in_memory";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
-const docstore = new InMemoryDocstore();
+const docstore = new InMemoryStore();
 const retriever = new ParentDocumentRetriever({
   vectorstore,
   docstore,

@@ -6,7 +6,6 @@ import {
 import { LLMChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import {
-  BasePromptTemplate,
   BaseStringPromptTemplate,
   SerializedBasePromptTemplate,
   renderTemplate,
