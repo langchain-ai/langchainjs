@@ -178,6 +178,9 @@
     "llms/yandex.cjs",
     "llms/yandex.js",
     "llms/yandex.d.ts",
+    "llms/fake.cjs",
+    "llms/fake.js",
+    "llms/fake.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -1539,6 +1542,11 @@
       "types": "./llms/yandex.d.ts",
       "import": "./llms/yandex.js",
       "require": "./llms/yandex.cjs"
+    },
+    "./llms/fake": {
+      "types": "./llms/fake.d.ts",
+      "import": "./llms/fake.js",
+      "require": "./llms/fake.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",

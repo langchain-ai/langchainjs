@@ -70,6 +70,7 @@ const entrypoints = {
   "llms/writer": "llms/writer",
   "llms/portkey": "llms/portkey",
   "llms/yandex": "llms/yandex",
+  "llms/fake": "llms/fake",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -178,6 +179,7 @@ const entrypoints = {
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
+  "chat_models/fake": "chat_models/fake",
   // schema
   schema: "schema/index",
   "schema/document": "schema/document",
