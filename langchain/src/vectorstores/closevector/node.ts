@@ -77,10 +77,13 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
    * @param options.onProgress A callback function that will be called with the progress of the download.
    */
   static async loadFromCloud(
-    options: Omit<Parameters<(typeof CloseVectorHNSWNode)["loadFromCloud"]>[0] & {
-      embeddings: Embeddings;
-      credentials: CloseVectorCredentials;
-    }, 'accessKey' | 'secret'>
+    options: Omit<
+      Parameters<(typeof CloseVectorHNSWNode)["loadFromCloud"]>[0] & {
+        embeddings: Embeddings;
+        credentials: CloseVectorCredentials;
+      },
+      "accessKey" | "secret"
+    >
   ) {
     if (!options.credentials.key || !options.credentials.secret) {
       throw new Error("key and secret must be provided");
@@ -90,7 +93,11 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
       accessKey: options.credentials.key,
       secret: options.credentials.secret,
     });
-    const vectorstore = new this(options.embeddings, instance.args, options.credentials);
+    const vectorstore = new this(
+      options.embeddings,
+      instance.args,
+      options.credentials
+    );
     return vectorstore;
   }
 
@@ -130,7 +137,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
     args?: Record<string, unknown>,
     credential?: CloseVectorCredentials
   ): Promise<CloseVectorNode> {
-    const docs = CloseVector.textsToDocuments(texts, metadatas)
+    const docs = CloseVector.textsToDocuments(texts, metadatas);
     return await CloseVectorNode.fromDocuments(
       docs,
       embeddings,

@@ -38,8 +38,8 @@ const loadedVectorStore = await CloseVectorNode.loadFromCloud({
   embeddings: new OpenAIEmbeddings(),
   credentials: {
     key: "your access key",
-    secret: "your secret"
-  }
+    secret: "your secret",
+  },
 });
 
 // If you want to import the node version, use the following lines instead:

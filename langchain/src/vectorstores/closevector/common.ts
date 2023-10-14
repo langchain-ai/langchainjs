@@ -5,9 +5,9 @@ import { Document } from "../../document.js";
 import { SaveableVectorStore } from "../base.js";
 
 type CloseVectorCredentials = {
-  key?: string,
-  secret?: string,
-}
+  key?: string;
+  secret?: string;
+};
 
 /**
  * package closevector is largely based on hnswlib.ts in the current folder with the following exceptions:
@@ -24,7 +24,7 @@ type CloseVectorCredentials = {
  * similarity searches, and saving and loading the vector store.
  */
 export abstract class CloseVector<
-    CloseVectorHNSWImplementation extends CloseVectorSaveableVectorStore,
+  CloseVectorHNSWImplementation extends CloseVectorSaveableVectorStore
 > extends SaveableVectorStore {
   declare FilterType: (doc: Document) => boolean;
 
@@ -74,11 +74,7 @@ export abstract class CloseVector<
     await this.instance.addDocuments(documents);
   }
 
-  async saveToCloud(
-    _options: Record<string, unknown>
-  ) {
-    throw new Error("not implemented");
-  }
+  abstract saveToCloud(_options: Record<string, unknown>): Promise<void>;
 
   /**
    * Method to save the vector store to a directory. It saves the HNSW
@@ -88,20 +84,6 @@ export abstract class CloseVector<
    */
   async save(directory: string): Promise<void> {
     await this.instance.save(directory);
-  }
-
-  static async loadFromCloud(
-    _options: Record<string, unknown>
-  ): Promise<SaveableVectorStore> {
-    throw new Error("not implemented");
-  }
-
-  static async load(
-    _directory: string,
-    _embeddings: Embeddings,
-    _credentials?: CloseVectorCredentials
-  ): Promise<SaveableVectorStore> {
-    throw new Error("not implemented");
   }
 
   /**
@@ -135,7 +117,7 @@ export abstract class CloseVector<
       query,
       k,
       filter
-        ? (x: { pageContent: string; metadata: Record<string, unknown>; }) =>
+        ? (x: { pageContent: string; metadata: Record<string, unknown> }) =>
             filter?.({
               pageContent: x.pageContent,
               metadata: x.metadata || {},
@@ -176,51 +158,5 @@ export abstract class CloseVector<
       docs.push(newDoc);
     }
     return docs;
-  }
-
-  /**
-   * Static method to create a new CloseVectorNode instance from texts and metadata.
-   * It creates a new Document instance for each text and metadata, then
-   * calls the fromDocuments method to create the HNSWLib instance.
-   * @param _texts The texts to be used to create the documents.
-   * @param _metadatas The metadata to be used to create the documents.
-   * @param _embeddings The embeddings to be used by the HNSWLib instance.
-   * @param _args An optional configuration object for the HNSWLib instance.
-   * @param _credential An optional credential object for the CloseVector API.
-   * @returns A Promise that resolves to a new CloseVectorNode instance.
-   */
-  static async fromTexts (
-    _texts: string[],
-    _metadatas: object[] | object,
-    _embeddings: Embeddings,
-    _args?: Record<string, unknown>,
-    _credential?: CloseVectorCredentials
-  ): Promise<CloseVector<CloseVectorSaveableVectorStore>> {
-    throw new Error("not implemented");
-  }
-
-  /**
-   * Static method to create a new CloseVectorNode instance from documents. It
-   * creates a new CloseVectorNode instance, adds the documents to it, then returns
-   * the instance.
-   * @param _docs The documents to be added to the HNSWLib instance.
-   * @param _embeddings The embeddings to be used by the HNSWLib instance.
-   * @param _args An optional configuration object for the HNSWLib instance.
-   * @param _credentials An optional credential object for the CloseVector API.
-   * @returns A Promise that resolves to a new CloseVectorNode instance.
-   */
-  static async fromDocuments(
-    _docs: Document[],
-    _embeddings: Embeddings,
-    _args?: Record<string, unknown>,
-    _credentials?: CloseVectorCredentials
-  ): Promise<CloseVector<CloseVectorSaveableVectorStore>> {
-    throw new Error("not implemented");
-  }
-
-  static async imports(): Promise<{
-    HierarchicalNSW: unknown;
-  }> {
-    throw new Error("not implemented");
   }
 }
