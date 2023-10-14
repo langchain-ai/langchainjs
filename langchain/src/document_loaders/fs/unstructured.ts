@@ -55,6 +55,47 @@ export type UnstructuredLoaderStrategy =
   | "auto";
 
 /**
+ * Represents the available hi-res models for the UnstructuredLoader. It can
+ * be one of "chipper".
+ */
+export type HiResModelName = "chipper";
+
+/**
+ * To enable or disable table extraction for file types other than PDF, set
+ * the skipInferTableTypes property in the UnstructuredLoaderOptions object.
+ * The skipInferTableTypes property is an array of file types for which table
+ * extraction is disabled. For example, to disable table extraction for .docx
+ * and .doc files, set the skipInferTableTypes property to ["docx", "doc"].
+ * You can also disable table extraction for all file types other than PDF by
+ * setting the skipInferTableTypes property to [].
+ */
+export type SkipInferTableTypes =
+  | "txt"
+  | "text"
+  | "pdf"
+  | "docx"
+  | "doc"
+  | "jpg"
+  | "jpeg"
+  | "eml"
+  | "html"
+  | "htm"
+  | "md"
+  | "pptx"
+  | "ppt"
+  | "msg"
+  | "rtf"
+  | "xlsx"
+  | "xls"
+  | "odt"
+  | "epub";
+
+/**
+ * Set the chunking_strategy to chunk text into larger or smaller elements. Defaults to None with optional arg of by_title
+ */
+type ChunkingStrategy = "None" | "by_title";
+
+/**
  * Represents a string value with autocomplete suggestions. It is used for
  * the `strategy` property in the UnstructuredLoaderOptions.
  */
@@ -69,6 +110,10 @@ export type UnstructuredLoaderOptions = {
   coordinates?: boolean;
   pdfInferTableStructure?: boolean;
   xmlKeepTags?: boolean;
+  skipInferTableTypes?: Array<StringWithAutocomplete<SkipInferTableTypes>>;
+  hiResModelName?: StringWithAutocomplete<HiResModelName>;
+  includePageBreaks?: boolean;
+  chunkingStrategy?: StringWithAutocomplete<ChunkingStrategy>;
 };
 
 type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
@@ -104,6 +149,16 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private xmlKeepTags?: boolean;
 
+  private skipInferTableTypes?: Array<
+    StringWithAutocomplete<SkipInferTableTypes>
+  >;
+
+  private hiResModelName?: StringWithAutocomplete<HiResModelName>;
+
+  private includePageBreaks?: boolean;
+
+  private chunkingStrategy?: StringWithAutocomplete<ChunkingStrategy>;
+
   constructor(
     filePathOrLegacyApiUrl: string,
     optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {}
@@ -127,6 +182,10 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.coordinates = options.coordinates;
       this.pdfInferTableStructure = options.pdfInferTableStructure;
       this.xmlKeepTags = options.xmlKeepTags;
+      this.skipInferTableTypes = options.skipInferTableTypes;
+      this.hiResModelName = options.hiResModelName;
+      this.includePageBreaks = options.includePageBreaks;
+      this.chunkingStrategy = options.chunkingStrategy;
     }
   }
 
@@ -156,6 +215,21 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     }
     if (this.xmlKeepTags === true) {
       formData.append("xml_keep_tags", "true");
+    }
+    if (this.skipInferTableTypes) {
+      formData.append(
+        "skip_infer_table_types",
+        JSON.stringify(this.skipInferTableTypes)
+      );
+    }
+    if (this.hiResModelName) {
+      formData.append("hi_res_model_name", this.hiResModelName);
+    }
+    if (this.includePageBreaks) {
+      formData.append("include_page_breaks", "true");
+    }
+    if (this.chunkingStrategy) {
+      formData.append("chunking_strategy", this.chunkingStrategy);
     }
 
     const headers = {

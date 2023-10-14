@@ -2,7 +2,7 @@ import {
   CacheClient,
   Configurations,
   CredentialProvider,
-} from "@gomomento/sdk";
+} from "@gomomento/sdk"; // `from "gomomento/sdk-web";` for browser/edge
 import { BufferMemory } from "langchain/memory";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
@@ -12,7 +12,7 @@ import { MomentoChatMessageHistory } from "langchain/stores/message/momento";
 const client = new CacheClient({
   configuration: Configurations.Laptop.v1(),
   credentialProvider: CredentialProvider.fromEnvironmentVariable({
-    environmentVariableName: "MOMENTO_AUTH_TOKEN",
+    environmentVariableName: "MOMENTO_API_KEY",
   }),
   defaultTtlSeconds: 60 * 60 * 24,
 });

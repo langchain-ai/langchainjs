@@ -11,10 +11,16 @@ Because a Momento cache is instantly available and requires zero infrastructure 
 
 ## Setup
 
-You will need to install the [Momento Client Library](https://github.com/momentohq/client-sdk-javascript) in your project:
+You will need to install the [Momento Client Library](https://github.com/momentohq/client-sdk-javascript) in your project. Given Momento's compatibility with Node.js, browser, and edge environments, ensure you install the relevant package.
 
+To install for **Node.js**:
 ```bash npm2yarn
 npm install @gomomento/sdk
+```
+
+To install for **browser/edge workers**:
+```bash npm2yarn
+npm install @gomomento/sdk-web
 ```
 
 You will also need an API key from [Momento](https://gomomento.com/). You can sign up for a free account [here](https://console.gomomento.com/).

@@ -87,6 +87,7 @@ const entrypoints = {
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
   "vectorstores/lancedb": "vectorstores/lancedb",
+  "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -252,6 +253,7 @@ const entrypoints = {
   hub: "hub",
   // utilities
   "util/math": "util/math",
+  "util/time": "util/time",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -261,14 +263,14 @@ const entrypoints = {
     "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
-  "experimental/chat_models/bittensor":
-    "experimental/chat_models/bittensor",
-  "experimental/llms/bittensor":
-    "experimental/llms/bittensor",
+  "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
+  "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
   // evaluation
   evaluation: "evaluation/index",
+  // runnables
+  "runnables/remote": "runnables/remote",
 };
 
 // Entrypoints in this list will
@@ -334,6 +336,7 @@ const requiresOptionalDependency = [
   "vectorstores/weaviate",
   "vectorstores/lancedb",
   "vectorstores/mongo",
+  "vectorstores/momento_vector_index",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",
   "vectorstores/qdrant",
