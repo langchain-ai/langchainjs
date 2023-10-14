@@ -9,6 +9,9 @@ import { GenerationChunk } from "../schema/index.js";
 export interface FakeListInput extends BaseLLMParams {
   /** Responses to return */
   responses: string[];
+
+  /** Time to sleep in milliseconds between responses */
+  sleep?: number;
 }
 
 /**
@@ -24,9 +27,12 @@ export class FakeListLLM extends LLM {
 
   i = 0;
 
-  constructor({ responses }: FakeListInput) {
+  sleep?: number;
+
+  constructor({ responses, sleep }: FakeListInput) {
     super({});
     this.responses = responses;
+    this.sleep = sleep;
   }
 
   _llmType() {
@@ -34,13 +40,25 @@ export class FakeListLLM extends LLM {
   }
 
   async _call(
-    _prompt: string,
-    _options: this["ParsedCallOptions"],
+    prompt: string,
+    options: this["ParsedCallOptions"],
   ): Promise<string> {
-    const response = this.responses[this.i];
-    
-    this._incrementResponse();
-    return response;
+    const params = this.invocationParams(options);
+
+    if (params.stream) {
+      const chunks: string[] = [];
+
+      for await (const chunk of this._streamResponseChunks(prompt, options)) {
+        chunks.push(chunk.text);
+      }
+      
+      this._incrementResponse();
+      return chunks.join("");
+    } else {
+      const response = this._currentResponse();
+      this._incrementResponse();
+      return response;
+    }
   }
 
   _currentResponse() {
@@ -53,41 +71,6 @@ export class FakeListLLM extends LLM {
     } else {
       this.i = 0;
     }
-  }
-}
-
-/**
- * Interface for the input parameters specific to the Fake List Streaming model.
- */
-export interface FakeListStreamingInput extends FakeListInput {
-  /** Time to sleep in milliseconds between responses */
-  sleep?: number;
-}
-
-/**
- * A fake LLM that streams a predefined list of responses. It can be used for
- * testing purposes.
- */
-export class FakeListStreamingLLM extends FakeListLLM {
-  sleep?: number;
-
-  constructor({ responses, sleep }: FakeListStreamingInput) {
-    super({ responses });
-    this.sleep = sleep;
-  }
-
-  async _call(
-    prompt: string,
-    options: this["ParsedCallOptions"],
-  ): Promise<string> {
-    const chunks: string[] = [];
-
-    for await (const chunk of this._streamResponseChunks(prompt, options)) {
-      chunks.push(chunk.text);
-    }
-    
-    this._incrementResponse();
-    return chunks.join("");
   }
 
   async *_streamResponseChunks(
