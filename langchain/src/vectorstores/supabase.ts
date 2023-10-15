@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 /**
  * Interface for the parameters required for searching embeddings.
@@ -26,6 +27,7 @@ interface SearchEmbeddingsResponse {
   id: number;
   content: string;
   metadata: object;
+  embedding: number[];
   similarity: number;
 }
 
@@ -143,18 +145,11 @@ export class SupabaseVectorStore extends VectorStore {
     }
   }
 
-  /**
-   * Performs a similarity search on the vector store.
-   * @param query The query vector.
-   * @param k The number of results to return.
-   * @param filter Optional filter to apply to the search.
-   * @returns A promise that resolves with the search results when the search is complete.
-   */
-  async similaritySearchVectorWithScore(
+  protected async _searchSupabase(
     query: number[],
     k: number,
     filter?: this["FilterType"]
-  ): Promise<[Document, number][]> {
+  ): Promise<SearchEmbeddingsResponse[]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
@@ -185,9 +180,23 @@ export class SupabaseVectorStore extends VectorStore {
       );
     }
 
-    const result: [Document, number][] = (
-      searches as SearchEmbeddingsResponse[]
-    ).map((resp) => [
+    return searches;
+  }
+
+  /**
+   * Performs a similarity search on the vector store.
+   * @param query The query vector.
+   * @param k The number of results to return.
+   * @param filter Optional filter to apply to the search.
+   * @returns A promise that resolves with the search results when the search is complete.
+   */
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    const searches = await this._searchSupabase(query, k, filter);
+    const result: [Document, number][] = searches.map((resp) => [
       new Document({
         metadata: resp.metadata,
         pageContent: resp.content,
@@ -196,6 +205,50 @@ export class SupabaseVectorStore extends VectorStore {
     ]);
 
     return result;
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {SupabaseLibArgs} options.filter - Optional filter to apply to the search.
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const searches = await this._searchSupabase(
+      queryEmbedding,
+      options.fetchK ?? 20,
+      options.filter
+    );
+
+    const embeddingList = searches.map((searchResp) => searchResp.embedding);
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      options.lambda,
+      options.k
+    );
+
+    return mmrIndexes.map(
+      (idx) =>
+        new Document({
+          metadata: searches[idx].metadata,
+          pageContent: searches[idx].content,
+        })
+    );
   }
 
   /**

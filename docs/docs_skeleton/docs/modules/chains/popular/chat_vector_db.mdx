@@ -3,11 +3,19 @@ sidebar_position: 2
 ---
 
 # Conversational Retrieval QA
-The ConversationalRetrievalQA chain builds on RetrievalQAChain to provide a chat history component.
 
-It first combines the chat history (either explicitly passed in or retrieved from the provided memory) and the question into a standalone question, then looks up relevant documents from the retriever, and finally passes those documents and the question to a question answering chain to return a response.
+:::info
+Looking for the older, non-LCEL version? Click [here](/docs/modules/chains/popular/chat_vector_db_legacy).
+:::
 
-To create one, you will need a retriever. In the below example, we will create one from a vector store, which can be created from embeddings.
+A common requirement for retrieval-augmented generation chains is support for followup questions.
+Followup questions can contain references to past chat history (e.g. "What did Biden say about Justice Breyer", followed by "Was that nice?"), which make them ill-suited
+to direct retriever similarity search .
+
+To support followups, you can add an additional step prior to retrieval that combines the chat history (either explicitly passed in or retrieved from the provided memory) and the question into a standalone question. 
+It then performs the standard retrieval steps of looking up relevant documents from the retriever and passing those documents and the question into a question answering chain to return a response.
+
+To create a conversational question-answering chain, you will need a retriever. In the below example, we will create one from a vector store, which can be created from embeddings.
 
 import Example from "@snippets/modules/chains/popular/chat_vector_db.mdx"
 

@@ -6,7 +6,7 @@ import {
   ICacheClient,
   InvalidArgumentError,
   CollectionTtl,
-} from "@gomomento/sdk";
+} from "@gomomento/sdk-core";
 import {
   BaseMessage,
   BaseListChatMessageHistory,

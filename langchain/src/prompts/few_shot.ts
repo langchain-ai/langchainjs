@@ -51,7 +51,7 @@ export interface FewShotPromptTemplateInput
   suffix?: string;
 
   /**
-   * The format of the prompt template. Options are: 'f-string', 'jinja-2'
+   * The format of the prompt template. Options are: 'f-string'
    */
   templateFormat?: TemplateFormat;
 
