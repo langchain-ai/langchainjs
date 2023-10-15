@@ -56,11 +56,12 @@ export class FaissStore extends SaveableVectorStore {
    * @param documents An array of Document objects.
    * @returns A Promise that resolves when the documents have been added.
    */
-  async addDocuments(documents: Document[]) {
+  async addDocuments(documents: Document[], options?: { ids?: string[]}) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
@@ -84,7 +85,7 @@ export class FaissStore extends SaveableVectorStore {
    * @param documents An array of Document objects corresponding to the vectors.
    * @returns A Promise that resolves with an array of document IDs when the vectors and documents have been added.
    */
-  async addVectors(vectors: number[][], documents: Document[]) {
+  async addVectors(vectors: number[][], documents: Document[], options?: { ids?: string[]}) {
     if (vectors.length === 0) {
       return [];
     }
@@ -104,10 +105,9 @@ export class FaissStore extends SaveableVectorStore {
     }
 
     const docstoreSize = this.index.ntotal();
-    const documentIds = [];
+    const documentIds = options?.ids ?? documents.map(() => uuid.v4());
     for (let i = 0; i < vectors.length; i += 1) {
-      const documentId = uuid.v4();
-      documentIds.push(documentId);
+      const documentId = documentIds[i]
       const id = docstoreSize + i;
       this.index.add(vectors[i]);
       this._mapping[id] = documentId;
@@ -170,6 +170,44 @@ export class FaissStore extends SaveableVectorStore {
   }
 
   /**
+   * Method to delete documents.
+   * @param params Object containing the IDs of the documents to delete.
+   * @returns A promise that resolves when the deletion is complete.
+   */
+  async delete(params: { ids: string[] }) {
+    const documentIds = params.ids;
+    if (documentIds == null) {
+      throw new Error("No documentIds provided to delete.");
+    }
+
+    const mappings = new Map(Object.entries(this._mapping).map(([key, value]) => [parseInt(key, 10), value]));
+    const reversedMappings = new Map(Array.from(mappings, entry => [entry[1], entry[0]]))
+
+    const missingIds = new Set(documentIds.filter(id => !reversedMappings.has(id)));
+    if (missingIds.size > 0) {
+      throw new Error(
+        `Some specified documentIds do not exist in the current store. DocumentIds not found: ${Array.from(missingIds).join(', ')}`
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const indexIdToDelete = documentIds.map(id => reversedMappings.get(id)!);
+
+    // remove from index
+    this.index.removeIds(indexIdToDelete);
+    // remove from docstore
+    documentIds.forEach(id => {
+      this.docstore._docs.delete(id);
+    })
+    // remove from mappings
+    indexIdToDelete.forEach(id => {
+      mappings.delete(id);
+    })
+
+    this._mapping = Object.fromEntries(mappings);
+  }
+
+  /**
    * Merges the current FaissStore with another FaissStore.
    * @param targetIndex The FaissStore to merge with.
    * @returns A Promise that resolves with an array of document IDs when the merge is complete.
@@ -214,8 +252,8 @@ export class FaissStore extends SaveableVectorStore {
       fs
         .readFile(path.join(directory, "docstore.json"), "utf8")
         .then(JSON.parse) as Promise<
-        [Map<string, Document>, Record<number, string>]
-      >;
+          [Map<string, Document>, Record<number, string>]
+        >;
     const readIndex = async (directory: string) => {
       const { IndexFlatL2 } = await this.importFaiss();
       return IndexFlatL2.read(path.join(directory, "faiss.index"));
