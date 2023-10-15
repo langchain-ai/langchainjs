@@ -4,7 +4,7 @@ import {
   CacheGet,
   CacheSet,
   InvalidArgumentError,
-} from "@gomomento/sdk";
+} from "@gomomento/sdk-core";
 
 import { BaseCache, Generation } from "../schema/index.js";
 import {
