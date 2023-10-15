@@ -16,6 +16,7 @@ import * as llms_base from "langchain/llms/base";
 import * as llms_openai from "langchain/llms/openai";
 import * as llms_ai21 from "langchain/llms/ai21";
 import * as llms_aleph_alpha from "langchain/llms/aleph_alpha";
+import * as llms_cloudflare_workersai from "langchain/llms/cloudflare_workersai";
 import * as llms_ollama from "langchain/llms/ollama";
 import * as llms_fireworks from "langchain/llms/fireworks";
 import * as llms_yandex from "langchain/llms/yandex";
@@ -36,6 +37,7 @@ import * as document_transformers_openai_functions from "langchain/document_tran
 import * as chat_models_base from "langchain/chat_models/base";
 import * as chat_models_openai from "langchain/chat_models/openai";
 import * as chat_models_anthropic from "langchain/chat_models/anthropic";
+import * as chat_models_cloudflare_workersai from "langchain/chat_models/cloudflare_workersai";
 import * as chat_models_fireworks from "langchain/chat_models/fireworks";
 import * as chat_models_baiduwenxin from "langchain/chat_models/baiduwenxin";
 import * as chat_models_ollama from "langchain/chat_models/ollama";

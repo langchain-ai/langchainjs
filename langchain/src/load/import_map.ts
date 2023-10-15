@@ -17,6 +17,7 @@ export * as llms__base from "../llms/base.js";
 export * as llms__openai from "../llms/openai.js";
 export * as llms__ai21 from "../llms/ai21.js";
 export * as llms__aleph_alpha from "../llms/aleph_alpha.js";
+export * as llms__cloudflare_workersai from "../llms/cloudflare_workersai.js";
 export * as llms__ollama from "../llms/ollama.js";
 export * as llms__fireworks from "../llms/fireworks.js";
 export * as llms__yandex from "../llms/yandex.js";
@@ -37,6 +38,7 @@ export * as document_transformers__openai_functions from "../document_transforme
 export * as chat_models__base from "../chat_models/base.js";
 export * as chat_models__openai from "../chat_models/openai.js";
 export * as chat_models__anthropic from "../chat_models/anthropic.js";
+export * as chat_models__cloudflare_workersai from "../chat_models/cloudflare_workersai.js";
 export * as chat_models__fireworks from "../chat_models/fireworks.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
