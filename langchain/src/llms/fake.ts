@@ -1,4 +1,3 @@
-import { setTimeout } from "timers/promises";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { LLM, BaseLLMParams } from "./base.js";
 import { GenerationChunk } from "../schema/index.js";
@@ -82,11 +81,17 @@ export class FakeListLLM extends LLM {
 
     for await (const text of response) {
       if (this.sleep !== undefined) {
-        await setTimeout(this.sleep);
+        await this._wait(this.sleep);
       }
 
       yield this._createResponseChunk(text);
     }
+  }
+
+  async _wait(ms: number) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
   }
 
   _createResponseChunk(text: string): GenerationChunk {
