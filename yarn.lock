@@ -10396,7 +10396,7 @@ __metadata:
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
@@ -10572,27 +10572,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"faiss-node@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "faiss-node@npm:0.3.0"
+"faiss-node@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "faiss-node@npm:0.5.1"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^6.0.0
     node-gyp: latest
     prebuild-install: ^7.1.1
-  checksum: 292da11f4a453a252576535d360207bd55c8421d0a1dfd30c7ca7f8ba84854fba693c8685ee90506d8c56f1a5c69a905a587d7fb382100efd5b8a384728cbd6e
-  languageName: node
-  linkType: hard
-
-"faiss-node@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "faiss-node@npm:0.5.0"
-  dependencies:
-    bindings: ^1.5.0
-    node-addon-api: ^6.0.0
-    node-gyp: latest
-    prebuild-install: ^7.1.1
-  checksum: a7e6613040c2918653c0a89aa46495fb87ff8e4c4bb434dbc39e5a6819017c386b6c39a68ddcbf81d52f1dd41a238dd7c079ae68532a3bae7f5c9eae3fbd244a
+  checksum: 9c8ba45c004151be6e94460a30b46fdd854de5f067fd18757f388e103276bb4d479db66cd0475961c447c40c11df629612144d31af932984d4b5ca5c5276f508
   languageName: node
   linkType: hard
 
@@ -13676,7 +13664,7 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
-    faiss-node: ^0.5.0
+    faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     flat: ^5.0.2
@@ -13787,7 +13775,7 @@ __metadata:
     cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     google-auth-library: ^8.9.0
