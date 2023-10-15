@@ -12027,7 +12027,7 @@ __metadata:
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     pg: ^8.11.0
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     prettier: ^2.8.3
     prisma: ^4.11.0
     redis: ^4.6.6
@@ -15430,7 +15430,7 @@ __metadata:
     peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     prettier: ^2.8.3
@@ -15533,7 +15533,7 @@ __metadata:
     peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     puppeteer: ^19.7.2
@@ -18109,13 +18109,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pickleparser@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "pickleparser@npm:0.1.0"
+"pickleparser@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "pickleparser@npm:0.2.1"
   bin:
     pickleparser: bin/pickletojson.js
     pickletojson: bin/pickletojson.js
-  checksum: 6b0be95990743edf19ea8abccf0dea9ffd244c1bc97873fb94b7dd7f057b1643a85ef795b8180fdede61298afaeb83eb733456abf4b607b7d04f97f71a0322e3
+  checksum: d456c1e1bf7b9eb964f58793abb5e928d005c04bc81e3ab2b7be4978b25221374fd621fe160695b30da0e3dccff3c8795e92cff872574755b99d5fae629a9604
   languageName: node
   linkType: hard
 
