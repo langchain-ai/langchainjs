@@ -123,6 +123,15 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
   ): Promise<AgentAction | AgentFinish>;
 }
 
+export interface RunnableAgentInput<
+  RunInput extends ChainValues = any,
+  RunOutput extends AgentAction | AgentFinish = any
+> {
+  llmChain: Runnable<RunInput, RunOutput> | LLMChain;
+  outputParser: AgentActionOutputParser | undefined;
+  stop?: string[];
+}
+
 /**
  * Class representing a single action agent which accepts runnables.
  * Extends the BaseSingleActionAgent class and provides methods for
@@ -136,20 +145,20 @@ export class RunnableAgent<
 
   static kind = "runnable_agent" as const;
 
-  runnable: Runnable<RunInput, RunOutput>;
+  runnable: Runnable<RunInput, RunOutput> | LLMChain;
 
-  outputKeys: string[] = [];
+  outputParser: AgentActionOutputParser | undefined;
 
-  constructor(fields: {
-    runnable: Runnable<RunInput, RunOutput>;
-    outputKeys?: string[];
-  }) {
+  stop?: string[];
+
+  constructor(fields: RunnableAgentInput) {
     super();
-    this.runnable = fields.runnable;
-    this.outputKeys = fields.outputKeys ?? [];
+    this.runnable = fields.llmChain;
+    this.outputParser = fields.outputParser;
+    this.stop = fields.stop;
   }
 
-  get inputKeys() {
+  get inputKeys(): string[] {
     return [];
   }
 
@@ -163,7 +172,12 @@ export class RunnableAgent<
     const output = await this.runnable.invoke(invokeInput, {
       callbacks: callbackManager,
     });
-    return output;
+
+    if (this.outputParser === undefined) {
+      throw new Error("Output parser not set");
+    }
+
+    return this.outputParser.parse(output, callbackManager);
   }
 }
 
@@ -277,7 +291,7 @@ export interface AgentArgs {
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
  */
-export abstract class Agent extends BaseSingleActionAgent {
+export abstract class Agent extends RunnableAgent {
   llmChain: LLMChain;
 
   outputParser: AgentActionOutputParser | undefined;
@@ -294,7 +308,8 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   constructor(input: AgentInput) {
     super(input);
-    this.llmChain = input.llmChain;
+
+    this.runnable = input.runnable ?? input.llmChain;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
   }
@@ -399,7 +414,10 @@ export abstract class Agent extends BaseSingleActionAgent {
       newInputs.stop = this._stop();
     }
 
-    const output = await this.llmChain.predict(newInputs, callbackManager);
+    const output = await this.runnable.invoke(newInputs, {
+      callbacks: callbackManager,
+    });
+
     if (!this.outputParser) {
       throw new Error("Output parser not set");
     }

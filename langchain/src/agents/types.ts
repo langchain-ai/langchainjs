@@ -1,17 +1,25 @@
 import { LLMChain } from "../chains/llm_chain.js";
 import { SerializedLLMChain } from "../chains/serde.js";
-import { AgentAction, AgentFinish } from "../schema/index.js";
+import { AgentAction, AgentFinish, ChainValues } from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
+import { Runnable } from "../schema/runnable/base.js";
 
 /**
  * Interface defining the input for creating an agent. It includes the
  * LLMChain instance, an optional output parser, and an optional list of
  * allowed tools.
  */
-export interface AgentInput {
+export interface AgentInput<
+  RunInput extends ChainValues = any,
+  RunOutput extends AgentAction | AgentFinish = any
+> {
+  /**
+   * @deprecated - use runnable instead
+   */
   llmChain: LLMChain;
   outputParser: AgentActionOutputParser | undefined;
   allowedTools?: string[];
+  runnable?: Runnable<RunInput, RunOutput>;
 }
 
 /**
