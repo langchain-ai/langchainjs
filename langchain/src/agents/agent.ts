@@ -17,6 +17,7 @@ import {
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
+import { Runnable } from "../schema/runnable/base.js";
 
 /**
  * Record type for arguments passed to output parsers.
@@ -120,6 +121,50 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
     inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish>;
+}
+
+/**
+ * Class representing a single action agent which accepts runnables.
+ * Extends the BaseSingleActionAgent class and provides methods for
+ * planning agent actions with runnables.
+ */
+export class RunnableAgent<
+  RunInput extends ChainValues = any,
+  RunOutput extends AgentAction | AgentFinish = any
+> extends BaseSingleActionAgent {
+  lc_namespace = ["langchain", "agents", "runnable"];
+
+  static kind = "runnable_agent" as const;
+
+  runnable: Runnable<RunInput, RunOutput>;
+
+  outputKeys: string[] = [];
+
+  constructor(fields: {
+    runnable: Runnable<RunInput, RunOutput>;
+    outputKeys?: string[];
+  }) {
+    super();
+    this.runnable = fields.runnable;
+    this.outputKeys = fields.outputKeys ?? [];
+  }
+
+  get inputKeys() {
+    return [];
+  }
+
+  async plan(
+    steps: AgentStep[],
+    inputs: RunInput,
+    callbackManager?: CallbackManager
+  ): Promise<AgentAction | AgentFinish> {
+    const invokeInput = { ...inputs, steps };
+
+    const output = await this.runnable.invoke(invokeInput, {
+      callbacks: callbackManager,
+    });
+    return output;
+  }
 }
 
 /**
