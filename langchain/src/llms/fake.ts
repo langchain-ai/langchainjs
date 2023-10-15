@@ -1,4 +1,4 @@
-import { setTimeout } from 'timers/promises';
+import { setTimeout } from "timers/promises";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { LLM, BaseLLMParams } from "./base.js";
 import { GenerationChunk } from "../schema/index.js";
@@ -41,7 +41,7 @@ export class FakeListLLM extends LLM {
 
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const params = this.invocationParams(options);
 
@@ -51,7 +51,7 @@ export class FakeListLLM extends LLM {
       for await (const chunk of this._streamResponseChunks(prompt, options)) {
         chunks.push(chunk.text);
       }
-      
+
       this._incrementResponse();
       return chunks.join("");
     } else {
@@ -92,7 +92,7 @@ export class FakeListLLM extends LLM {
   _createResponseChunk(text: string): GenerationChunk {
     return new GenerationChunk({
       text,
-      generationInfo: {}
+      generationInfo: {},
     });
   }
 }

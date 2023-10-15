@@ -8,8 +8,8 @@ export interface FakeChatInput extends BaseChatModelParams {
   /** Responses to return */
   responses: string[];
 }
-  
-/** 
+
+/**
  * A fake Chat Model that returns a predefined list of responses. It can be used
  * for testing purposes.
  */
@@ -26,7 +26,7 @@ export class FakeListChatModel extends BaseChatModel {
     super({});
     this.responses = responses;
   }
-  
+
   _combineLLMOutput() {
     return [];
   }
@@ -39,7 +39,6 @@ export class FakeListChatModel extends BaseChatModel {
     _messages: BaseMessage[],
     options?: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
-
     if (options?.stop?.length) {
       return {
         generations: [
@@ -53,7 +52,7 @@ export class FakeListChatModel extends BaseChatModel {
 
     const response = this._currentResponse();
     this._incrementResponse();
-    
+
     return {
       generations: [
         {
