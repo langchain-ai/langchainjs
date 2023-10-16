@@ -113,7 +113,7 @@ export function createAWSSfnAgent(
   });
   const chain = new LLMChain({ prompt, llm });
   const agent = new ZeroShotAgent({
-    llmChain: chain,
+    runnable: chain,
     allowedTools: tools.map((t) => t.name),
   });
   return AgentExecutor.fromAgentAndTools({
