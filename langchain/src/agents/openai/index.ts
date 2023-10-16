@@ -126,6 +126,10 @@ export class OpenAIAgent extends Agent {
 
   lc_namespace = ["langchain", "agents", "openai"];
 
+  static llm: BaseLanguageModel | undefined;
+
+  static prompt: BasePromptTemplate | undefined;
+
   _agentType() {
     return "openai-functions" as const;
   }
@@ -191,6 +195,8 @@ export class OpenAIAgent extends Agent {
       llm,
       callbacks: args?.callbacks,
     });
+    this.llm = llm;
+    this.prompt = prompt;
     return new OpenAIAgent({
       runnable: chain,
       allowedTools: tools.map((t) => t.name),
@@ -232,15 +238,14 @@ export class OpenAIAgent extends Agent {
       newInputs.stop = this._stop();
     }
 
-    let llm: ChatOpenAI;
-    let prompt: BasePromptTemplate;
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (this.runnable instanceof LLMChain) {
-      llm = this.runnable.llm;
-      prompt = this.runnable.prompt;
-    } else {
-      throw new Error("Must pass an LLMChain to an OpenAIAgent");
+    if (!OpenAIAgent.llm || !OpenAIAgent.prompt) {
+      throw new Error(
+        'LLM and prompt instances not found. You must call "fromLLMAndTools" to create an OpenAIAgent.'
+      );
     }
+
+    const { prompt } = OpenAIAgent;
+    const llm = OpenAIAgent.llm as ChatOpenAI;
 
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: (typeof llm)["CallOptions"] = {
