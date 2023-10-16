@@ -136,22 +136,22 @@ export class RunnableAgent<
   } = any,
   RunOutput extends AgentAction | AgentFinish = any
 > extends BaseSingleActionAgent {
-  lc_namespace = ["langchain", "agents", "runnable"];
-
   protected lc_runnable = true;
+
+  lc_namespace = ["langchain", "agents", "runnable"];
 
   runnable: Runnable<RunInput, RunOutput>;
 
   stop?: string[];
 
+  get inputKeys(): string[] {
+    return [];
+  }
+
   constructor(fields: RunnableAgentInput) {
     super();
     this.runnable = fields.runnable;
     this.stop = fields.stop;
-  }
-
-  get inputKeys(): string[] {
-    return [];
   }
 
   async plan(
