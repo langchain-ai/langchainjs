@@ -25,7 +25,7 @@ export interface ChatCreatePromptArgs {
   prefix?: string;
   /** String to use directly as the human message template. */
   humanMessageTemplate?: string;
-  /** Formatable string to use as the instructions template. */
+  /** Formattable string to use as the instructions template. */
   formatInstructions?: strng;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
