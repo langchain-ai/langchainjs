@@ -16,8 +16,8 @@ Whether you’re new to LangChain, looking to go deeper, or just want to get mor
 
 LangChain is the product of over 5,000+ contributions by 1,500+ contributors, and there is **\*\***still**\*\*** so much to do together. Here are some ways to get involved:
 
-- **[Open a pull request](https://github.com/hwchase17/langchainjs/issues):** we’d appreciate all forms of contributions–new features, infrastructure improvements, better documentation, bug fixes, etc. If you have an improvement or an idea, we’d love to work on it with you.
-- **[Read our contributor guidelines:](https://github.com/hwchase17/langchainjs/blob/main/CONTRIBUTING.md)** We ask contributors to follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow, run a few local checks for formatting, linting, and testing before submitting, and follow certain documentation and testing conventions.
+- **[Open a pull request](https://github.com/langchain-ai/langchainjs/issues):** we’d appreciate all forms of contributions–new features, infrastructure improvements, better documentation, bug fixes, etc. If you have an improvement or an idea, we’d love to work on it with you.
+- **[Read our contributor guidelines:](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md)** We ask contributors to follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow, run a few local checks for formatting, linting, and testing before submitting, and follow certain documentation and testing conventions.
 - **Become an expert:** our experts help the community by answering product questions in Discord. If that’s a role you’d like to play, we’d be so grateful! (And we have some special experts-only goodies/perks we can tell you more about). Send us an email to introduce yourself at hello@langchain.dev and we’ll take it from there!
 - **Integrate with LangChain:** if your product integrates with LangChain–or aspires to–we want to help make sure the experience is as smooth as possible for you and end users. Send us an email at hello@langchain.dev and tell us what you’re working on.
   - **Become an Integration Maintainer:** Partner with our team to ensure your integration stays up-to-date and talk directly with users (and answer their inquiries) in our Discord. Introduce yourself at hello@langchain.dev if you’d like to explore this role.
@@ -47,5 +47,5 @@ Here’s where our team hangs out, talks shop, spotlights cool work, and shares 
 
 - **[Twitter](https://twitter.com/LangChainAI):** we post about what we’re working on and what cool things we’re seeing in the space. If you tag @langchainai in your post, we’ll almost certainly see it, and can snow you some love!
 - **[Discord](https://discord.gg/6adMQxSpJS):** connect with with >30k developers who are building with LangChain
-- **[GitHub](https://github.com/hwchase17/langchainjs):** open pull requests, contribute to a discussion, and/or contribute
+- **[GitHub](https://github.com/langchain-ai/langchainjs):** open pull requests, contribute to a discussion, and/or contribute
 - **[Subscribe to our bi-weekly Release Notes](https://6w1pwbss0py.typeform.com/to/KjZB1auB):** a twice/month email roundup of the coolest things going on in our orbit
