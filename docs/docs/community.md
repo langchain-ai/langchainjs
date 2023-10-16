@@ -14,7 +14,7 @@ Whether you’re new to LangChain, looking to go deeper, or just want to get mor
 
 # 🦜 Contribute to LangChain
 
-LangChain is the product of over 5,000+ contributions by 1,500+ contributors, and there is **\*\***still**\*\*** so much to do together. Here are some ways to get involved:
+LangChain is the product of over 5,000+ contributions by 1,500+ contributors, and there is **still** so much to do together. Here are some ways to get involved:
 
 - **[Open a pull request](https://github.com/langchain-ai/langchainjs/issues):** we’d appreciate all forms of contributions–new features, infrastructure improvements, better documentation, bug fixes, etc. If you have an improvement or an idea, we’d love to work on it with you.
 - **[Read our contributor guidelines:](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md)** We ask contributors to follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow, run a few local checks for formatting, linting, and testing before submitting, and follow certain documentation and testing conventions.
