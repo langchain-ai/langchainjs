@@ -164,6 +164,14 @@ export class AgentExecutor extends BaseChain {
       let output;
       try {
         output = await this.agent.plan(steps, inputs, runManager?.getChild());
+        console.log(
+          {
+            steps,
+            inputs,
+            output,
+          },
+          "Planning"
+        );
       } catch (e) {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof OutputParserException) {

@@ -3,12 +3,16 @@ import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { loadAgent } from "../load.js";
-import { AgentExecutor } from "../index.js";
+import { AgentExecutor, ZeroShotAgent } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 import { Tool } from "../../tools/base.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
+import { RunnableAgent } from "../agent.js";
+import { RunnableSequence } from "../../schema/runnable/base.js";
+import { RunnablePassthrough } from "../../schema/runnable/passthrough.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -30,6 +34,40 @@ test("Run agent from hub", async () => {
     returnIntermediateSteps: true,
   });
   const res = await executor.call({
+    input:
+      "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
+  });
+  console.log(res);
+});
+
+test.only("Pass runnable to agent executor", async () => {
+  const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
+  const tools: Tool[] = [
+    new SerpAPI(undefined, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
+
+  const prompt = ZeroShotAgent.createPrompt(tools);
+  const outputParser = ZeroShotAgent.getDefaultOutputParser();
+
+  const runnable = RunnableSequence.from([
+    {
+      input: (i: { input: string }) => i.input,
+    },
+    prompt,
+    model,
+    outputParser,
+  ]);
+
+  const executor = AgentExecutor.fromAgentAndTools({
+    agent: runnable,
+    tools,
+  });
+  const res = await executor.invoke({
     input:
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
   });

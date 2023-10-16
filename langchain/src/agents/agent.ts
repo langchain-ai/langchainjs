@@ -135,7 +135,7 @@ export class RunnableAgent<
 > extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents", "runnable"];
 
-  static kind = "runnable_agent" as const;
+  protected lc_runnable = true;
 
   runnable: Runnable<RunInput, RunOutput>;
 
@@ -400,6 +400,10 @@ export abstract class Agent extends BaseSingleActionAgent {
     }
 
     const output = await this.llmChain.predict(newInputs, callbackManager);
+    console.log({
+      newInputs,
+      output,
+    });
     if (!this.outputParser) {
       throw new Error("Output parser not set");
     }
