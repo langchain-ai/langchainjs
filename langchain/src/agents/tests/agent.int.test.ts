@@ -41,6 +41,8 @@ test("Run agent from hub", async () => {
     },
     "Run agent from hub response"
   );
+  expect(res.output).not.toEqual("");
+  expect(res.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
 test("Pass runnable to agent executor", async () => {
@@ -86,6 +88,8 @@ test("Pass runnable to agent executor", async () => {
     },
     "Pass runnable to agent executor"
   );
+  expect(res.output).not.toEqual("");
+  expect(res.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
 test("Run agent locally", async () => {
@@ -114,6 +118,8 @@ test("Run agent locally", async () => {
     },
     "Run agent locally"
   );
+  expect(result.output).not.toEqual("");
+  expect(result.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
 test("Run agent with an abort signal", async () => {
@@ -207,4 +213,5 @@ test("Run tool web-browser", async () => {
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("web-browser");
   expect(result.output).not.toEqual("");
+  expect(result.output).not.toEqual("Agent stopped due to max iterations.");
 });
