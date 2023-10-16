@@ -9,15 +9,20 @@ import { LLMChain } from "langchain/chains";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate
+  HumanMessagePromptTemplate,
 } from "langchain/prompts";
 
-const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
+const template =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
 const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
 const humanTemplate = "{text}";
-const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(humanTemplate);
+const humanMessagePrompt =
+  HumanMessagePromptTemplate.fromTemplate(humanTemplate);
 
-const chatPrompt = ChatPromptTemplate.fromMessages([systemMessagePrompt, humanMessagePrompt]);
+const chatPrompt = ChatPromptTemplate.fromMessages([
+  systemMessagePrompt,
+  humanMessagePrompt,
+]);
 
 const chat = new ChatOpenAI({
   temperature: 0,
@@ -34,6 +39,7 @@ const result = await chain.call({
   text: "I love programming",
 });
 ```
+
 ```typescript
 // { text: "J'adore programmer" }
 ```

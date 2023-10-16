@@ -1,0 +1,6 @@
+node_modules
+build
+.docusaurus
+docs/api
+docs/_static
+static

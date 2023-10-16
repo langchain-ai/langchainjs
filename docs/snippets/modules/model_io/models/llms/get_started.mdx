@@ -2,8 +2,8 @@
 
 To start we'll need to install the official OpenAI package:
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 
 <Tabs>
@@ -35,6 +35,7 @@ const llm = new OpenAI({
 ```
 
 otherwise you can initialize with an empty object:
+
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
 
@@ -42,6 +43,7 @@ const llm = new OpenAI({});
 ```
 
 ### `call`: string in -> string out
+
 The simplest way to use an LLM is the `.call` method: pass in a string, get a string completion.
 
 ```typescript
@@ -53,12 +55,16 @@ console.log(res);
 ```
 
 ### `generate`: batch calls, richer outputs
+
 `generate` lets you can call the model with a list of strings, getting back a more complete response than just the text. This complete response can include things like multiple top responses and other LLM provider-specific information:
 
 ```typescript
-const llmResult = await llm.generate(["Tell me a joke", "Tell me a poem"], ["Tell me a joke", "Tell me a poem"]);
+const llmResult = await llm.generate(
+  ["Tell me a joke", "Tell me a poem"],
+  ["Tell me a joke", "Tell me a poem"]
+);
 
-console.log(llmResult.generations.length)
+console.log(llmResult.generations.length);
 
 // 30
 
@@ -87,7 +93,6 @@ console.log(llmResult.generations[1]);
 
 You can also access provider specific information that is returned. This information is NOT standardized across providers.
 
-
 ```typescript
 console.log(llmResult.llmOutput);
 
@@ -96,7 +101,6 @@ console.log(llmResult.llmOutput);
     tokenUsage: { completionTokens: 46, promptTokens: 8, totalTokens: 54 }
   }
 */
-
 ```
 
 import AdvancedExample from "@examples/models/llm/llm_advanced.ts";

@@ -3,7 +3,8 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { LLMChain } from "langchain/chains";
 import { ChatPromptTemplate } from "langchain/prompts";
 
-const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
+const template =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
 const humanTemplate = "{text}";
 
 const chatPrompt = ChatPromptTemplate.fromMessages([

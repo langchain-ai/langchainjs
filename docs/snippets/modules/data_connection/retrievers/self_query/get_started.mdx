@@ -1,7 +1,7 @@
 All Self Query retrievers require `peggy` as a peer dependency:
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 
 <Tabs>
@@ -38,7 +38,8 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   attributeInfo,
   structuredQueryTranslator: new FunctionalTranslator(),
   searchParams: {
-    filter: (doc: Document) => doc.metadata && doc.metadata.genre === "animated",
+    filter: (doc: Document) =>
+      doc.metadata && doc.metadata.genre === "animated",
     mergeFiltersOperator: "and",
   },
 });
