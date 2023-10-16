@@ -6516,25 +6516,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/types@npm:^2.4.1":
-  version: 2.4.3
-  resolution: "@docusaurus/types@npm:2.4.3"
-  dependencies:
-    "@types/history": ^4.7.11
-    "@types/react": "*"
-    commander: ^5.1.0
-    joi: ^17.6.0
-    react-helmet-async: ^1.3.0
-    utility-types: ^3.10.0
-    webpack: ^5.73.0
-    webpack-merge: ^5.8.0
-  peerDependencies:
-    react: ^16.8.4 || ^17.0.0
-    react-dom: ^16.8.4 || ^17.0.0
-  checksum: c123c45630e885b588f808baa06a97f8408a3381906f65cb92ae75732aedfca6ab2cada94f969c08e043b885b95298616440326259b789010e0986cbcd7a960b
-  languageName: node
-  linkType: hard
-
 "@docusaurus/utils-common@npm:2.4.1":
   version: 2.4.1
   resolution: "@docusaurus/utils-common@npm:2.4.1"
@@ -15343,7 +15324,7 @@ __metadata:
     "@mendable/search": ^0.0.160
     "@swc/core": ^1.3.62
     clsx: ^1.2.1
-    docusaurus-plugin-typedoc: next
+    docusaurus-plugin-typedoc: 1.0.0-next.5
     eslint: ^8.19.0
     eslint-config-airbnb: ^19.0.4
     eslint-config-prettier: ^8.5.0
@@ -15383,14 +15364,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docusaurus-plugin-typedoc@npm:next":
-  version: 1.0.0-next.17
-  resolution: "docusaurus-plugin-typedoc@npm:1.0.0-next.17"
-  dependencies:
-    "@docusaurus/types": ^2.4.1
+"docusaurus-plugin-typedoc@npm:1.0.0-next.5":
+  version: 1.0.0-next.5
+  resolution: "docusaurus-plugin-typedoc@npm:1.0.0-next.5"
   peerDependencies:
-    typedoc-plugin-markdown: ">=4.0.0-next.22"
-  checksum: a8103fb2461b59eaf394a159ee6b23777d4994c17f9be8264e18e687e973f6c7fee273f66bf64eef3069f1144b712d1753e9a4709b0f367fde7fe8d52c625ce6
+    typedoc-plugin-markdown: ">=4.0.0-next.6"
+  checksum: 0386e62a3c77cc8aed23558e4630a1b80cd2bae723b93e872207a04538ee49497a39cbcdbb05824a4de6c8216914953dc30b8ae0ed01ed086c0d35a4eb2a0efb
   languageName: node
   linkType: hard
 
