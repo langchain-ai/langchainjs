@@ -11,7 +11,6 @@ import { WebBrowser } from "../../tools/webbrowser.js";
 import { Tool } from "../../tools/base.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
-import { RunnableAgent } from "../agent.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -63,8 +62,13 @@ test("Pass runnable to agent executor", async () => {
     outputParser,
   ]);
 
+  const agent = new ZeroShotAgent({
+    runnable,
+    allowedTools: tools.map((t) => t.name),
+  });
+
   const executor = AgentExecutor.fromAgentAndTools({
-    agent: runnable,
+    agent,
     tools,
   });
   const res = await executor.invoke({

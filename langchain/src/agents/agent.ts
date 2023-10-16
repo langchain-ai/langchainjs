@@ -276,8 +276,14 @@ export interface AgentArgs {
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
  */
-export abstract class Agent extends BaseSingleActionAgent {
-  llmChain: LLMChain;
+export abstract class Agent<
+  RunInput extends ChainValues & {
+    agent_scratchpad?: string | BaseMessage[];
+    stop?: string[];
+  } = any,
+  RunOutput extends AgentAction | AgentFinish = any
+> extends BaseSingleActionAgent {
+  runnable: Runnable<RunInput, RunOutput>;
 
   outputParser: AgentActionOutputParser | undefined;
 
@@ -288,13 +294,23 @@ export abstract class Agent extends BaseSingleActionAgent {
   }
 
   get inputKeys(): string[] {
-    return this.llmChain.inputKeys.filter((k) => k !== "agent_scratchpad");
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (this.runnable instanceof LLMChain) {
+      return this.runnable.inputKeys.filter((k) => k !== "agent_scratchpad");
+    }
+    return [];
   }
 
   constructor(input: AgentInput) {
     super(input);
 
-    this.llmChain = input.llmChain;
+    if (!input.runnable && !input.llmChain) {
+      throw new Error(
+        `Runnable and LLMChain are both missing, one is required.`
+      );
+    }
+
+    this.runnable = input.runnable;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
   }
@@ -385,12 +401,12 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   private async _plan(
     steps: AgentStep[],
-    inputs: ChainValues,
+    inputs: RunInput,
     suffix?: string,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     const thoughts = await this.constructScratchPad(steps);
-    const newInputs: ChainValues = {
+    const newInputs: RunInput = {
       ...inputs,
       agent_scratchpad: suffix ? `${thoughts}${suffix}` : thoughts,
     };
@@ -399,15 +415,16 @@ export abstract class Agent extends BaseSingleActionAgent {
       newInputs.stop = this._stop();
     }
 
-    const output = await this.llmChain.predict(newInputs, callbackManager);
+    const output = await this.runnable.invoke(newInputs, callbackManager);
     console.log({
       newInputs,
       output,
     });
-    if (!this.outputParser) {
-      throw new Error("Output parser not set");
-    }
-    return this.outputParser.parse(output, callbackManager);
+    return output;
+    // if (!this.outputParser) {
+    //   throw new Error("Output parser not set");
+    // }
+    // return this.outputParser.parse(output, callbackManager);
   }
 
   /**
@@ -421,7 +438,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    */
   plan(
     steps: AgentStep[],
-    inputs: ChainValues,
+    inputs: RunInput,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     return this._plan(steps, inputs, undefined, callbackManager);
@@ -433,7 +450,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   async returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     steps: AgentStep[],
-    inputs: ChainValues,
+    inputs: RunInput,
     callbackManager?: CallbackManager
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {

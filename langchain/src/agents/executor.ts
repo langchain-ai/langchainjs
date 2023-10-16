@@ -23,7 +23,7 @@ import { Runnable } from "../schema/runnable/base.js";
  * properties specific to agent execution.
  */
 export interface AgentExecutorInput extends ChainInputs {
-  agent: BaseSingleActionAgent | BaseMultiActionAgent | Runnable;
+  agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: this["agent"]["ToolType"][];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;

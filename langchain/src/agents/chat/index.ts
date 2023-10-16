@@ -161,7 +161,7 @@ export class ChatAgent extends Agent {
       args?.outputParser ?? ChatAgent.getDefaultOutputParser();
 
     return new ChatAgent({
-      llmChain: chain,
+      runnable: chain,
       outputParser,
       allowedTools: tools.map((t) => t.name),
     });

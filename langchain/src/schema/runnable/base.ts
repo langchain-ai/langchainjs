@@ -54,8 +54,6 @@ export abstract class Runnable<
 > extends Serializable {
   protected lc_runnable = true;
 
-  declare ToolType: StructuredTool;
-
   abstract invoke(
     input: RunInput,
     options?: Partial<CallOptions>

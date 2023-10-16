@@ -192,7 +192,7 @@ export class OpenAIAgent extends Agent {
       callbacks: args?.callbacks,
     });
     return new OpenAIAgent({
-      llmChain: chain,
+      runnable: chain,
       allowedTools: tools.map((t) => t.name),
       tools,
     });
@@ -233,7 +233,7 @@ export class OpenAIAgent extends Agent {
     }
 
     // Split inputs between prompt and llm
-    const llm = this.llmChain.llm as ChatOpenAI;
+    const llm = this.runnable.llm as ChatOpenAI;
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: (typeof llm)["CallOptions"] = {
       tools: this.tools,
