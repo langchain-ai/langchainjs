@@ -232,20 +232,28 @@ export class OpenAIAgent extends Agent {
       newInputs.stop = this._stop();
     }
 
-    // Split inputs between prompt and llm
-    const llm = this.runnable.llm as ChatOpenAI;
+    let llm: ChatOpenAI;
+    let prompt: BasePromptTemplate;
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (this.runnable instanceof LLMChain) {
+      llm = this.runnable.llm;
+      prompt = this.runnable.prompt;
+    } else {
+      throw new Error("Must pass an LLMChain to an OpenAIAgent");
+    }
+
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: (typeof llm)["CallOptions"] = {
       tools: this.tools,
     };
-    for (const key of this.llmChain.llm.callKeys) {
+    for (const key of llm.callKeys) {
       if (key in inputs) {
         valuesForLLM[key as keyof (typeof llm)["CallOptions"]] = inputs[key];
         delete valuesForPrompt[key];
       }
     }
 
-    const promptValue = await this.llmChain.prompt.formatPromptValue(
+    const promptValue = await prompt.formatPromptValue(
       valuesForPrompt
     );
     const message = await llm.predictMessages(
