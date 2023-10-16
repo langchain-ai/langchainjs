@@ -416,9 +416,6 @@ export abstract class Agent<
     }
 
     /**
-     * The output type for this is a little weird, depending on if a
-     * runnable was passed in or not.
-     *
      * If a runnable is passed in (and not an LLMChain), then the output is
      * `AgentAction | AgentFinish`.
      * If an LLMChain was passed, the output will be `{ text: string }`.
