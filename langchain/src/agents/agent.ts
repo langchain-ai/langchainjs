@@ -308,7 +308,6 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   constructor(input: AgentInput) {
     super(input);
-
     this.llmChain = input.llmChain;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
