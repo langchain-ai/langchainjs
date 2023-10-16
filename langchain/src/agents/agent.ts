@@ -130,7 +130,10 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
  * planning agent actions with runnables.
  */
 export class RunnableAgent<
-  RunInput extends ChainValues = any,
+  RunInput extends ChainValues & {
+    agent_scratchpad?: string | BaseMessage[];
+    stop?: string[];
+  } = any,
   RunOutput extends AgentAction | AgentFinish = any
 > extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents", "runnable"];

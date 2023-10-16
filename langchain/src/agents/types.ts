@@ -1,4 +1,3 @@
-import { Callbacks } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import {
@@ -34,7 +33,10 @@ export type AgentInput<
  * It includes the Runnable instance, and an optional list of stop strings.
  */
 export interface RunnableAgentInput<
-  RunInput extends ChainValues = any,
+  RunInput extends ChainValues & {
+    agent_scratchpad?: string | BaseMessage[];
+    stop?: string[];
+  } = any,
   RunOutput extends AgentAction | AgentFinish = any
 > {
   runnable: Runnable<RunInput, RunOutput>;
