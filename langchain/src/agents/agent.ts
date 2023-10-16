@@ -307,12 +307,6 @@ export abstract class Agent<
   constructor(input: AgentInput) {
     super(input);
 
-    if (!input.runnable && !input.llmChain) {
-      throw new Error(
-        `Runnable and LLMChain are both missing, one is required.`
-      );
-    }
-
     this.runnable = input.runnable;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
