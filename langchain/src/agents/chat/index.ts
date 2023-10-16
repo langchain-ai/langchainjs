@@ -123,11 +123,12 @@ export class ChatAgent extends Agent {
       prefix = PREFIX,
       suffix = SUFFIX,
       humanMessageTemplate = DEFAULT_HUMAN_MESSAGE_TEMPLATE,
+      format_instructions = FORMAT_INSTRUCTIONS
     } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const template = [prefix, toolStrings, FORMAT_INSTRUCTIONS, suffix].join(
+    const template = [prefix, toolStrings, format_instructions, suffix].join(
       "\n\n"
     );
     const messages = [
