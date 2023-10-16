@@ -435,7 +435,7 @@ export abstract class Agent<
       return this.outputParser.parse(output.text, callbackManager);
     }
 
-    return this.outputParser.parseAgentOutput(output, callbackManager);
+    return output;
   }
 
   /**

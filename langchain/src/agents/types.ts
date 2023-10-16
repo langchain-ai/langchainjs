@@ -48,14 +48,7 @@ export interface RunnableAgentInput<
  */
 export abstract class AgentActionOutputParser extends BaseOutputParser<
   AgentAction | AgentFinish
-> {
-  parseAgentOutput(
-    output: AgentFinish | AgentAction,
-    _callbackManager?: Callbacks
-  ) {
-    return output;
-  }
-}
+> {}
 
 /**
  * Type representing the stopping method for an agent. It can be either
