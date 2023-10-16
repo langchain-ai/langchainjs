@@ -14,7 +14,6 @@ import { Serializable } from "../../load/serializable.js";
 import { IterableReadableStream } from "../../util/stream.js";
 import { RunnableConfig, getCallbackMangerForConfig } from "./config.js";
 import { AsyncCaller } from "../../util/async_caller.js";
-import { StructuredTool } from "../../tools/base.js";
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput

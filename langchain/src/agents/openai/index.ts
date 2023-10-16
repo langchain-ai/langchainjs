@@ -253,9 +253,7 @@ export class OpenAIAgent extends Agent {
       }
     }
 
-    const promptValue = await prompt.formatPromptValue(
-      valuesForPrompt
-    );
+    const promptValue = await prompt.formatPromptValue(valuesForPrompt);
     const message = await llm.predictMessages(
       promptValue.toChatMessages(),
       valuesForLLM,
