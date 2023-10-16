@@ -3,6 +3,7 @@ import { getEnvironmentVariable } from "../../util/env.js";
 import { ChatLlamaCpp } from "../llama_cpp.js";
 import { SystemMessage, AIMessage, HumanMessage } from "../../schema/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
+import { ConversationChain } from "../../chains/index.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
@@ -17,7 +18,7 @@ test.skip("test call", async () => {
 });
 
 
-test.skip("Test messages", async () => {
+test("Test messages", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: LLAMA_PATH });
 
   const response1 = await llamaCpp.call([
@@ -35,28 +36,34 @@ test.skip("Test messages", async () => {
   console.log({ response2 });
 });
 
+test.skip("Basic chain function", async () => {
+// Create a new LLMChain from a PromptTemplate and an LLM in streaming mode.
+const model = new ChatLlamaCpp({ modelPath: LLAMA_PATH, temperature: 0.9 });
+const prompt = PromptTemplate.fromTemplate(
+  "What is a good name for a company that makes {product}?"
+);
+const chain = new LLMChain({ llm: model, prompt });
 
-test("Test chain with memory", async () => {
-  const template = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+const res = await chain.call({ product: "colorful socks" });
 
-Current conversation:
-{history}
-Human: {input}`;
+console.log({ res });
+});
 
+test.skip("Test chain with memory", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: LLAMA_PATH });
-  const chain = new LLMChain({
-    prompt: PromptTemplate.fromTemplate(template),
+
+  const chain = new ConversationChain({
     llm: llamaCpp,
-    memory: new BufferMemory({}),
+    memory: new BufferMemory(),
   });
 
-  const response1 = await chain.call({ input: "My name is Nigel." });
+  const response1 = await chain.call({ input: "[INST] My name is Nigel. [/INST]" });
   console.log({ response1 });
 
   const response2 = await chain.call({ input: "What did I say my name was?" });
   console.log({ response2 });
 
-  const response3 = await chain.call({ input: "What is your name?" });
+  const response3 = await chain.call({ input: "[INST] What is your name? [/INST]" });
   console.log({ response3 });
 });
 

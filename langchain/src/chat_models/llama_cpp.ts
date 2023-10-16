@@ -1,4 +1,4 @@
-import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
+import { LlamaModel, LlamaContext, LlamaChatSession, EmptyChatPromptWrapper } from "node-llama-cpp";
 import { SimpleChatModel, BaseChatModelParams } from "./base.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
@@ -119,7 +119,10 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     this.modelType = inputs.modelType ?? this.modelType;
     this._model = new LlamaModel(inputs);
     this._context = new LlamaContext({ model: this._model });
-    this._session = new LlamaChatSession({ context: this._context });
+    this._session = new LlamaChatSession({
+        context: this._context,
+        promptWrapper: new EmptyChatPromptWrapper()
+    });
   }
 
   _llmType() {
@@ -148,6 +151,22 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     return {};
   }
 
+  /**
+  * Stream output in chunks.
+  * @param input
+  * @param options
+  * @returns A readable stream that is also an iterable.
+  */
+ async stream(
+   input: RunInput,
+   options?: Partial<CallOptions>
+ ): Promise<IterableReadableStream<RunOutput>> {
+   return IterableReadableStream.fromAsyncGenerator(
+     this._streamIterator(input, options)
+   );
+ }
+
+
   /** @ignore */
   async _call(
     messages: BaseMessage[],
@@ -155,8 +174,24 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     // @ts-expect-error - TS6133: 'runManager' is declared but its value is never read.
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
+
+    // Check if we need a new session with system prompt
+    // Check for system prompt in messages
+    // Extract all system prompts and add the last set as local and stored value
+
+    // Check if we need to add chat history
+    // If the last item in the array is human message that is the prompt
+    // Any prior messages add as conversationHistory
+
+    // Now create the sesssion test if there is local system OR history?
+    // If there is only history is there stored system?
+
+    // Creat the session with appropriate Wrappers
+
+    // Run the prompt
+    
     // Let's see if we need to instanciate the session
-    if (messages.findIndex(msg => msg._getType() === "system") === -1) {
+    if (messages.findIndex(msg => msg._getType() === "system") !== -1) {
         const sysMessages = messages.filter(
           (message) => message._getType() === "system"
         );
@@ -164,6 +199,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
         this._session = new LlamaChatSession({
           context: this._context,
           systemPrompt: sysMessages[0].content,
+          promptWrapper: new EmptyChatPromptWrapper(),
         });
     }
 
@@ -181,52 +217,56 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
   // This builds a simple string from the prompts
   protected _convertMessagesToPrompt(messages: BaseMessage[]): string {
-    let result = messages
-      .map((message) => {
-        let text = "";
-
+      let result = [];
+      /*for (const message of messages) {
         if (message._getType() === "human") {
-            switch (this.modelType) {
-                case "chatML":
-                    text = text.concat("<|im_start|>user\n", message.content, "<|im_end|>");
-                    break;
-                case "falcon":
-                    text = text.concat("User: ", message.content);
-                    break;
-                case "general":
-                    text = text.concat("### Human:\n", message.content, "\n");
-                    break;
-                default:
-                    if (messages.findIndex(msg => msg._getType() === "system") === -1) {
-                        text = text.concat("<s>[INST] ", message.content, " [/INST]\n");
-                    } else {
-                        text = text.concat("[INST] ", message.content, " [/INST]\n");
-                    }
-                    break;
-            }
+          result.push(message.content);
         } else if (message._getType() === "ai") {
-            switch (this.modelType) {
-                case "chatML":
-                    text = text.concat("<|im_start|>assistant\n", message.content, "<|im_end|>");
-                    break;
-                case "falcon":
-                    text = text.concat("Assistant: ", message.content);
-                    break;
-                case "general":
-                    text = text.concat("### Assistant:\n", message.content, "\n");
-                    break;
-                default:
-                    text = text.concat(message.content, " </s>\n");
-                    break;
-            }
+            result.push(message.content);
         }
-      })
-      .join("\n");
+    }*/
+
+      for (const message of messages) {
+          if (message._getType() === "human") {
+              switch (this.modelType) {
+                  case "chatML":
+                      result.push("<|im_start|>user\n" + message.content +"<|im_end|>");
+                      break;
+                  case "falcon":
+                      result.push("User: " + message.content);
+                      break;
+                  case "general":
+                      result.push("### Human:\n" + message.content);
+                      break;
+                  default:
+                      result.push("<s>[INST] " + message.content + " [/INST]");
+                      break;
+              }
+          } else if (message._getType() === "ai") {
+              switch (this.modelType) {
+                  case "chatML":
+                      result.push("<|im_start|>assistant\n" + message.content + "<|im_end|>");
+                      break;
+                  case "falcon":
+                      result.push("Assistant: " + message.content);
+                      break;
+                  case "general":
+                      result.push("### Assistant:\n" + message.content);
+                      break;
+                  default:
+                      result.push(" " + message.content + " </s>");
+                      break;
+              }
+          }
+        }
 
       if (this.modelType === "llama") {
-          result = "<s>" + result + "</s>";
+          console.log(result.join(""));
+          return result.join("");
+      } else {
+          console.log(result.join("\n"));
+          return result.join("\n");
       }
 
-    return result;
   }
 }
