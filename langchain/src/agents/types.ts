@@ -1,3 +1,4 @@
+import { Callbacks } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import {
@@ -47,7 +48,11 @@ export interface RunnableAgentInput<
  */
 export abstract class AgentActionOutputParser extends BaseOutputParser<
   AgentAction | AgentFinish
-> {}
+> {
+  async parseAgentOutput(output: AgentFinish | AgentAction, _callbackManager?: Callbacks) {
+    return output;
+  }
+}
 
 /**
  * Type representing the stopping method for an agent. It can be either

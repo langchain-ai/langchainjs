@@ -19,7 +19,6 @@ import {
   StoppingMethod,
 } from "./types.js";
 import { Runnable } from "../schema/runnable/base.js";
-import { StringOutputParser } from "../schema/output_parser.js";
 
 /**
  * Record type for arguments passed to output parsers.
@@ -416,12 +415,30 @@ export abstract class Agent<
       newInputs.stop = this._stop();
     }
 
-    const output = await this.runnable.invoke(newInputs, callbackManager);
-    
+    /**
+     * The output type for this is a little weird, depending on if a 
+     * runnable was passed in or not.
+     * 
+     * If a runnable is passed in (and not an LLMChain), then the output is
+     * `AgentAction | AgentFinish`.
+     * If an LLMChain was passed, the output will be `{ text: string }`.
+     */
+    const output = (await this.runnable.invoke(newInputs, callbackManager)) as
+      | {
+          text: string;
+        }
+      | AgentAction
+      | AgentFinish;
+
     if (!this.outputParser) {
       throw new Error("Output parser not set");
     }
-    return this.outputParser.parse(output, callbackManager);
+
+    if ("text" in output) {
+      return this.outputParser.parse(output.text, callbackManager);
+    }
+
+    return this.outputParser.parseAgentOutput(output, callbackManager);
   }
 
   /**
