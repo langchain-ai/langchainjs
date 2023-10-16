@@ -119,7 +119,7 @@ export class ChatAgent extends Agent {
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
    * @param args.humanMessageTemplate - String to use directly as the human message template
-   * @param args.formatInstructions - Formatable string to use as the instructions template
+   * @param args.formatInstructions - Formattable string to use as the instructions template
    */
   static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
     const {
