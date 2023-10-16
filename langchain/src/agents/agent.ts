@@ -291,7 +291,7 @@ export interface AgentArgs {
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
  */
-export abstract class Agent extends RunnableAgent {
+export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
 
   outputParser: AgentActionOutputParser | undefined;
@@ -309,7 +309,7 @@ export abstract class Agent extends RunnableAgent {
   constructor(input: AgentInput) {
     super(input);
 
-    this.runnable = input.runnable ?? input.llmChain;
+    this.llmChain = input.llmChain;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
   }
@@ -414,10 +414,7 @@ export abstract class Agent extends RunnableAgent {
       newInputs.stop = this._stop();
     }
 
-    const output = await this.runnable.invoke(newInputs, {
-      callbacks: callbackManager,
-    });
-
+    const output = await this.llmChain.predict(newInputs, callbackManager);
     if (!this.outputParser) {
       throw new Error("Output parser not set");
     }
