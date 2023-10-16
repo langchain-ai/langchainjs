@@ -35,7 +35,12 @@ test("Run agent from hub", async () => {
     input:
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
   });
-  console.log(res);
+  console.log(
+    {
+      res,
+    },
+    "Run agent from hub response"
+  );
 });
 
 test("Pass runnable to agent executor", async () => {
@@ -75,7 +80,12 @@ test("Pass runnable to agent executor", async () => {
     input:
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
   });
-  console.log(res);
+  console.log(
+    {
+      res,
+    },
+    "Pass runnable to agent executor"
+  );
 });
 
 test("Run agent locally", async () => {
@@ -98,8 +108,12 @@ test("Run agent locally", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const result = await executor.call({ input });
-
-  console.log(`Got output ${result.output}`);
+  console.log(
+    {
+      result,
+    },
+    "Run agent locally"
+  );
 });
 
 test("Run agent with an abort signal", async () => {
@@ -184,9 +198,12 @@ test("Run tool web-browser", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const result = await executor.call({ input });
-
-  console.log(`Got output ${result.output}`);
-
+  console.log(
+    {
+      result,
+    },
+    "Run tool web-browser"
+  );
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("web-browser");
   expect(result.output).not.toEqual("");

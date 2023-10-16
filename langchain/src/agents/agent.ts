@@ -19,6 +19,7 @@ import {
   StoppingMethod,
 } from "./types.js";
 import { Runnable } from "../schema/runnable/base.js";
+import { StringOutputParser } from "../schema/output_parser.js";
 
 /**
  * Record type for arguments passed to output parsers.
@@ -416,15 +417,11 @@ export abstract class Agent<
     }
 
     const output = await this.runnable.invoke(newInputs, callbackManager);
-    console.log({
-      newInputs,
-      output,
-    });
-    return output;
-    // if (!this.outputParser) {
-    //   throw new Error("Output parser not set");
-    // }
-    // return this.outputParser.parse(output, callbackManager);
+    
+    if (!this.outputParser) {
+      throw new Error("Output parser not set");
+    }
+    return this.outputParser.parse(output, callbackManager);
   }
 
   /**
