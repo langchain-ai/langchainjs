@@ -38,8 +38,8 @@ describe("Test FakeListLLM", () => {
       responses: ["test response 1", "test response 2"],
       sleep: 10,
     });
-    const sleepSpy = jest.spyOn(llm, '_sleep');
-    
+    const sleepSpy = jest.spyOn(llm, "_sleep");
+
     await llm.call("test prompt");
 
     expect(sleepSpy).toHaveBeenCalledTimes(1);
@@ -50,7 +50,7 @@ describe("Test FakeListLLM", () => {
       responses: ["test response 1", "test response 2"],
     });
     const chunks = [];
-    
+
     const response = await llm.stream("test prompt");
     for await (const chunk of response) {
       chunks.push(chunk);
@@ -66,7 +66,7 @@ describe("Test FakeListLLM", () => {
     });
     const chunks1 = [];
     const chunks2 = [];
-    
+
     const response1 = await llm.stream("test prompt");
     for await (const chunk of response1) {
       chunks1.push(chunk);
@@ -78,16 +78,16 @@ describe("Test FakeListLLM", () => {
 
     expect(chunks1.join("")).toBe("test response 1");
     expect(chunks2.join("")).toBe("test response 2");
-  })
+  });
 
   test("Should stream responses after sleep if requested", async () => {
     const llm = new FakeListLLM({
       responses: ["test response 1", "test response 2"],
       sleep: 10,
     });
-    const sleepSpy = jest.spyOn(llm, '_sleep');
+    const sleepSpy = jest.spyOn(llm, "_sleep");
     const chunks = [];
-    
+
     const response = await llm.stream("test prompt");
     for await (const chunk of response) {
       chunks.push(chunk);

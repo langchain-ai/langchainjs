@@ -77,7 +77,7 @@ describe("Test FakeListChatLLM", () => {
       responses: ["test response 1", "test response 2"],
     });
     const chunks = [];
-    
+
     const response = await chat
       .pipe(new StringOutputParser())
       .stream("Test message");
@@ -95,7 +95,7 @@ describe("Test FakeListChatLLM", () => {
     });
     const chunks1 = [];
     const chunks2 = [];
-    
+
     const response1 = await chat
       .pipe(new StringOutputParser())
       .stream("Test message");
@@ -120,7 +120,7 @@ describe("Test FakeListChatLLM", () => {
     });
     const sleepSpy = jest.spyOn(chat, "_sleep");
     const chunks = [];
-    
+
     const response = await chat
       .pipe(new StringOutputParser())
       .stream("Test message");

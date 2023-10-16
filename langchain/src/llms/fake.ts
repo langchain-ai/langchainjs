@@ -46,7 +46,7 @@ export class FakeListLLM extends LLM {
     const response = this._currentResponse();
     this._incrementResponse();
     await this._sleepIfRequested();
-    
+
     return response;
   }
 

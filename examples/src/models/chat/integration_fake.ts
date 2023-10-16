@@ -7,14 +7,13 @@ import { StringOutputParser } from "langchain/schema/output_parser";
  */
 
 const chat = new FakeListChatModel({
-  responses: [
-    "I'll callback later.",
-    "You 'console' them!"
-  ]
+  responses: ["I'll callback later.", "You 'console' them!"],
 });
 
 const firstMessage = new HumanMessage("You want to hear a JavasSript joke?");
-const secondMessage = new HumanMessage("How do you cheer up a JavaScript developer?");
+const secondMessage = new HumanMessage(
+  "How do you cheer up a JavaScript developer?"
+);
 const firstResponse = await chat.call([firstMessage]);
 const secondResponse = await chat.call([secondMessage]);
 
@@ -40,14 +39,13 @@ console.log(chunks.join(""));
  */
 
 const slowChat = new FakeListChatModel({
-  responses: [
-    "Because Oct 31 equals Dec 25",
-    "You 'console' them!"
-  ],
+  responses: ["Because Oct 31 equals Dec 25", "You 'console' them!"],
   sleep: 1000,
 });
 
-const thirdMessage = new HumanMessage("Why do programmers always mix up Halloween and Christmas?");
+const thirdMessage = new HumanMessage(
+  "Why do programmers always mix up Halloween and Christmas?"
+);
 const slowResponse = await slowChat.call([thirdMessage]);
 console.log({ slowResponse });
 

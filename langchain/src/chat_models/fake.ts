@@ -53,10 +53,10 @@ export class FakeListChatModel extends BaseChatModel {
     options?: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     await this._sleepIfRequested();
-    
+
     if (options?.stop?.length) {
       return {
-        generations: [this._formatGeneration(options.stop[0])]
+        generations: [this._formatGeneration(options.stop[0])],
       };
     } else {
       const response = this._currentResponse();
@@ -75,7 +75,7 @@ export class FakeListChatModel extends BaseChatModel {
       text,
     };
   }
-  
+
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     _options: this["ParsedCallOptions"],

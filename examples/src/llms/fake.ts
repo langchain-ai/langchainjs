@@ -5,14 +5,13 @@ import { FakeListLLM } from "langchain/llms/fake";
  */
 
 const llm = new FakeListLLM({
-  responses: [
-    "I'll callback later.",
-    "You 'console' them!"
-  ]
+  responses: ["I'll callback later.", "You 'console' them!"],
 });
 
 const firstResponse = await llm.call("You want to hear a JavasSript joke?");
-const secondResponse = await llm.call("How do you cheer up a JavaScript developer?");
+const secondResponse = await llm.call(
+  "How do you cheer up a JavaScript developer?"
+);
 
 console.log({ firstResponse });
 console.log({ secondResponse });
@@ -34,17 +33,18 @@ console.log(chunks.join(""));
  */
 
 const slowLLM = new FakeListLLM({
-  responses: [
-    "Because Oct 31 equals Dec 25",
-    "You 'console' them!"
-  ],
-  sleep: 1000
+  responses: ["Because Oct 31 equals Dec 25", "You 'console' them!"],
+  sleep: 1000,
 });
 
-const slowResponse = await slowLLM.call("Why do programmers always mix up Halloween and Christmas?");
+const slowResponse = await slowLLM.call(
+  "Why do programmers always mix up Halloween and Christmas?"
+);
 console.log({ slowResponse });
 
-const slowStream = await slowLLM.stream("How do you cheer up a JavaScript developer?");
+const slowStream = await slowLLM.stream(
+  "How do you cheer up a JavaScript developer?"
+);
 const slowChunks = [];
 for await (const chunk of slowStream) {
   slowChunks.push(chunk);
