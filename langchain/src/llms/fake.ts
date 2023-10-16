@@ -39,25 +39,15 @@ export class FakeListLLM extends LLM {
   }
 
   async _call(
-    prompt: string,
-    options: this["ParsedCallOptions"]
+    _prompt: string,
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const params = this.invocationParams(options);
-
-    if (params.stream) {
-      const chunks: string[] = [];
-
-      for await (const chunk of this._streamResponseChunks(prompt, options)) {
-        chunks.push(chunk.text);
-      }
-
-      this._incrementResponse();
-      return chunks.join("");
-    } else {
-      const response = this._currentResponse();
-      this._incrementResponse();
-      return response;
-    }
+    const response = this._currentResponse();
+    this._incrementResponse();
+    await this._sleepIfRequested();
+    
+    return response;
   }
 
   _currentResponse() {
@@ -78,19 +68,23 @@ export class FakeListLLM extends LLM {
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const response = this._currentResponse();
+    this._incrementResponse();
 
     for await (const text of response) {
-      if (this.sleep !== undefined) {
-        await this._wait(this.sleep);
-      }
-
+      await this._sleepIfRequested();
       yield this._createResponseChunk(text);
     }
   }
 
-  async _wait(ms: number) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
+  async _sleepIfRequested() {
+    if (this.sleep !== undefined) {
+      await this._sleep();
+    }
+  }
+
+  async _sleep() {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => resolve(), this.sleep);
     });
   }
 

@@ -1,5 +1,12 @@
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
-import { AIMessage, BaseMessage, ChatResult } from "../schema/index.js";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  ChatGenerationChunk,
+  ChatResult,
+} from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 /**
  * Interface for the input parameters specific to the Fake List Chat model.
@@ -7,6 +14,9 @@ import { AIMessage, BaseMessage, ChatResult } from "../schema/index.js";
 export interface FakeChatInput extends BaseChatModelParams {
   /** Responses to return */
   responses: string[];
+
+  /** Time to sleep in milliseconds between responses */
+  sleep?: number;
 }
 
 /**
@@ -22,9 +32,12 @@ export class FakeListChatModel extends BaseChatModel {
 
   i = 0;
 
-  constructor({ responses }: FakeChatInput) {
+  sleep?: number;
+
+  constructor({ responses, sleep }: FakeChatInput) {
     super({});
     this.responses = responses;
+    this.sleep = sleep;
   }
 
   _combineLLMOutput() {
@@ -39,29 +52,61 @@ export class FakeListChatModel extends BaseChatModel {
     _messages: BaseMessage[],
     options?: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
+    await this._sleepIfRequested();
+    
     if (options?.stop?.length) {
       return {
-        generations: [
-          {
-            message: new AIMessage(options.stop[0]),
-            text: options.stop[0],
-          },
-        ],
+        generations: [this._formatGeneration(options.stop[0])]
+      };
+    } else {
+      const response = this._currentResponse();
+      this._incrementResponse();
+
+      return {
+        generations: [this._formatGeneration(response)],
+        llmOutput: {},
       };
     }
+  }
 
+  _formatGeneration(text: string) {
+    return {
+      message: new AIMessage(text),
+      text,
+    };
+  }
+  
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
     const response = this._currentResponse();
     this._incrementResponse();
 
-    return {
-      generations: [
-        {
-          message: new AIMessage(response),
-          text: response,
-        },
-      ],
-      llmOutput: {},
-    };
+    for await (const text of response) {
+      await this._sleepIfRequested();
+      yield this._createResponseChunk(text);
+    }
+  }
+
+  async _sleepIfRequested() {
+    if (this.sleep !== undefined) {
+      await this._sleep();
+    }
+  }
+
+  async _sleep() {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => resolve(), this.sleep);
+    });
+  }
+
+  _createResponseChunk(text: string): ChatGenerationChunk {
+    return new ChatGenerationChunk({
+      message: new AIMessageChunk({ content: text }),
+      text,
+    });
   }
 
   _currentResponse() {
