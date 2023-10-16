@@ -92,7 +92,57 @@ test("Pass runnable to agent executor", async () => {
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
-test.only("Add a fallback method", async () => {
+test("Add a fallback method", async () => {
+  // Model should always fail since the model name passed does not exist.
+  const modelBase = new ChatOpenAI({
+    modelName: "fake-model",
+    temperature: 10,
+  });
+
+  const modelLarge = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-16k",
+    temperature: 0.6,
+  });
+
+  const model = modelBase.withFallbacks({
+    fallbacks: [modelLarge],
+  });
+
+  const prompt = ZeroShotAgent.createPrompt([]);
+  const outputParser = ZeroShotAgent.getDefaultOutputParser();
+
+  const runnable = RunnableSequence.from([
+    {
+      input: (i: { input: string }) => i.input,
+      agent_scratchpad: (i: { input: string }) => i.input,
+    },
+    prompt,
+    model,
+    outputParser,
+  ]);
+
+  const agent = new ZeroShotAgent({
+    runnable,
+  });
+
+  const executor = AgentExecutor.fromAgentAndTools({
+    agent,
+    tools: [],
+  });
+  const res = await executor.invoke({
+    input: "Is the sky blue? Response with a concise answer",
+  });
+  console.log(
+    {
+      res,
+    },
+    "Pass runnable to agent executor"
+  );
+  expect(res.output).not.toEqual("");
+  expect(res.output).not.toEqual("Agent stopped due to max iterations.");
+});
+
+test("Add a fallback method", async () => {
   // Model should always fail since the model name passed does not exist.
   const modelBase = new ChatOpenAI({
     modelName: "fake-model",
