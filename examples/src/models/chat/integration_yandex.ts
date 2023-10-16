@@ -4,10 +4,12 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 const chat = new YandexGPTChat();
 
 const res = await chat.call([
-  new SystemMessage("You are a helpful assistant that translates English to French."), 
-  new HumanMessage("I love programming.")
+  new SystemMessage(
+    "You are a helpful assistant that translates English to French."
+  ),
+  new HumanMessage("I love programming."),
 ]);
-console.log(res)
+console.log(res);
 
 /*
 AIMessage {
