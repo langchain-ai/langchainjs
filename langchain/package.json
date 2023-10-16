@@ -457,6 +457,9 @@
     "chat_models/minimax.cjs",
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
+    "chat_models/yandex.cjs",
+    "chat_models/yandex.js",
+    "chat_models/yandex.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -2004,6 +2007,11 @@
       "types": "./chat_models/minimax.d.ts",
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
+    },
+    "./chat_models/yandex": {
+      "types": "./chat_models/yandex.d.ts",
+      "import": "./chat_models/yandex.js",
+      "require": "./chat_models/yandex.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
