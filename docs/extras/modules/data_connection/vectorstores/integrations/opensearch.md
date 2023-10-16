@@ -18,7 +18,7 @@ Langchain.js accepts [@opensearch-project/opensearch](https://opensearch.org/doc
 npm install -S @opensearch-project/opensearch
 ```
 
-You'll also need to have an OpenSearch instance running. You can use the [official Docker image](https://opensearch.org/docs/latest/opensearch/install/docker/) to get started. You can also find an example docker-compose file [here](https://github.com/hwchase17/langchainjs/blob/main/examples/src/indexes/vector_stores/opensearch/docker-compose.yml).
+You'll also need to have an OpenSearch instance running. You can use the [official Docker image](https://opensearch.org/docs/latest/opensearch/install/docker/) to get started. You can also find an example docker-compose file [here](https://github.com/langchain-ai/langchainjs/blob/main/examples/src/indexes/vector_stores/opensearch/docker-compose.yml).
 
 ## Index docs
 
@@ -96,7 +96,7 @@ const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
 const response = await chain.call({ query: "What is opensearch?" });
 
 console.log(JSON.stringify(response, null, 2));
-/* 
+/*
   {
     "text": " Opensearch is a collection of technologies that allow search engines to publish search results in a standard format, making it easier for users to search across multiple sites.",
     "sourceDocuments": [
@@ -107,6 +107,6 @@ console.log(JSON.stringify(response, null, 2));
         }
       }
     ]
-  } 
+  }
   */
 ```
