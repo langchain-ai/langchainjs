@@ -24,6 +24,7 @@ import { Runnable } from "../schema/runnable/base.js";
  */
 export interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
+  runnable?: Runnable;
   tools: this["agent"]["ToolType"][];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
@@ -98,8 +99,8 @@ export class AgentExecutor extends BaseChain {
   constructor(input: AgentExecutorInput) {
     super(input);
 
-    if (Runnable.isRunnable(input.agent)) {
-      this.agent = new RunnableAgent({ runnable: input.agent });
+    if (Runnable.isRunnable(input.runnable)) {
+      this.agent = new RunnableAgent({ runnable: input.runnable });
     } else {
       this.agent = input.agent;
     }

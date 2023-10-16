@@ -10,9 +10,8 @@ import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 import { Tool } from "../../tools/base.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
-import { RunnableAgent } from "../agent.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
-import { RunnablePassthrough } from "../../schema/runnable/passthrough.js";
+import { RunnableAgent } from "../agent.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -40,7 +39,7 @@ test("Run agent from hub", async () => {
   console.log(res);
 });
 
-test.only("Pass runnable to agent executor", async () => {
+test("Pass runnable to agent executor", async () => {
   const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
   const tools: Tool[] = [
     new SerpAPI(undefined, {
@@ -57,14 +56,18 @@ test.only("Pass runnable to agent executor", async () => {
   const runnable = RunnableSequence.from([
     {
       input: (i: { input: string }) => i.input,
+      agent_scratchpad: (i: { input: string }) => i.input,
     },
     prompt,
     model,
     outputParser,
   ]);
 
+  const agent = new RunnableAgent({ runnable });
+
   const executor = AgentExecutor.fromAgentAndTools({
-    agent: runnable,
+    agent,
+    runnable,
     tools,
   });
   const res = await executor.invoke({
