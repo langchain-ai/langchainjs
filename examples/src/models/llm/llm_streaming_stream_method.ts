@@ -3,6 +3,7 @@ import { OpenAI } from "langchain/llms/openai";
 // To enable streaming, we pass in `streaming: true` to the LLM constructor.
 const model = new OpenAI({
   maxTokens: 25,
+  streaming: true,
 });
 
 const stream = await model.stream("Tell me a joke.");
