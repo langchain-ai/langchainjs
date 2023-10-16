@@ -49,7 +49,7 @@ export interface RunnableAgentInput<
 export abstract class AgentActionOutputParser extends BaseOutputParser<
   AgentAction | AgentFinish
 > {
-  async parseAgentOutput(
+  parseAgentOutput(
     output: AgentFinish | AgentAction,
     _callbackManager?: Callbacks
   ) {
