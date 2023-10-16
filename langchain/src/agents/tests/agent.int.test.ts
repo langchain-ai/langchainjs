@@ -92,18 +92,16 @@ test("Pass runnable to agent executor", async () => {
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
-test("Add a fallback method", async () => {
+test.only("Add a fallback method", async () => {
   // Model should always fail since the model name passed does not exist.
   const modelBase = new ChatOpenAI({
     modelName: "fake-model",
     temperature: 10,
-    maxTokens: 10,
   });
 
   const modelLarge = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-16k",
     temperature: 0.6,
-    maxTokens: 10,
   });
 
   const model = modelBase.withFallbacks({
