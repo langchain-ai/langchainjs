@@ -23,8 +23,7 @@ import { Runnable } from "../schema/runnable/base.js";
  * properties specific to agent execution.
  */
 export interface AgentExecutorInput extends ChainInputs {
-  agent: BaseSingleActionAgent | BaseMultiActionAgent;
-  runnable?: Runnable;
+  agent: BaseSingleActionAgent | BaseMultiActionAgent | Runnable;
   tools: this["agent"]["ToolType"][];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
@@ -99,8 +98,8 @@ export class AgentExecutor extends BaseChain {
   constructor(input: AgentExecutorInput) {
     super(input);
 
-    if (Runnable.isRunnable(input.runnable)) {
-      this.agent = new RunnableAgent({ runnable: input.runnable });
+    if (Runnable.isRunnable(input.agent)) {
+      this.agent = new RunnableAgent({ runnable: input.agent });
     } else {
       this.agent = input.agent;
     }
@@ -165,14 +164,6 @@ export class AgentExecutor extends BaseChain {
       let output;
       try {
         output = await this.agent.plan(steps, inputs, runManager?.getChild());
-        console.log(
-          {
-            steps,
-            inputs,
-            output,
-          },
-          "Planning"
-        );
       } catch (e) {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof OutputParserException) {

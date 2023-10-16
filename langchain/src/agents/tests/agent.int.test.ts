@@ -63,11 +63,8 @@ test("Pass runnable to agent executor", async () => {
     outputParser,
   ]);
 
-  const agent = new RunnableAgent({ runnable });
-
   const executor = AgentExecutor.fromAgentAndTools({
-    agent,
-    runnable,
+    agent: runnable,
     tools,
   });
   const res = await executor.invoke({
