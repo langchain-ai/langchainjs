@@ -14,6 +14,7 @@ import { StructuredTool, Tool } from "../tools/base.js";
 import {
   AgentActionOutputParser,
   AgentInput,
+  RunnableAgentInput,
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
@@ -123,15 +124,6 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
   ): Promise<AgentAction | AgentFinish>;
 }
 
-export interface RunnableAgentInput<
-  RunInput extends ChainValues = any,
-  RunOutput extends AgentAction | AgentFinish = any
-> {
-  llmChain: Runnable<RunInput, RunOutput> | LLMChain;
-  outputParser: AgentActionOutputParser | undefined;
-  stop?: string[];
-}
-
 /**
  * Class representing a single action agent which accepts runnables.
  * Extends the BaseSingleActionAgent class and provides methods for
@@ -145,16 +137,13 @@ export class RunnableAgent<
 
   static kind = "runnable_agent" as const;
 
-  runnable: Runnable<RunInput, RunOutput> | LLMChain;
-
-  outputParser: AgentActionOutputParser | undefined;
+  runnable: Runnable<RunInput, RunOutput>;
 
   stop?: string[];
 
   constructor(fields: RunnableAgentInput) {
     super();
-    this.runnable = fields.llmChain;
-    this.outputParser = fields.outputParser;
+    this.runnable = fields.runnable;
     this.stop = fields.stop;
   }
 
@@ -173,11 +162,7 @@ export class RunnableAgent<
       callbacks: callbackManager,
     });
 
-    if (this.outputParser === undefined) {
-      throw new Error("Output parser not set");
-    }
-
-    return this.outputParser.parse(output, callbackManager);
+    return output;
   }
 }
 
@@ -308,6 +293,7 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   constructor(input: AgentInput) {
     super(input);
+
     this.llmChain = input.llmChain;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;

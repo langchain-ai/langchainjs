@@ -1,5 +1,9 @@
 import { BaseChain, ChainInputs } from "../chains/base.js";
-import { BaseMultiActionAgent, BaseSingleActionAgent } from "./agent.js";
+import {
+  BaseMultiActionAgent,
+  BaseSingleActionAgent,
+  RunnableAgent,
+} from "./agent.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import {
@@ -11,6 +15,7 @@ import {
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { OutputParserException } from "../schema/output_parser.js";
 import { Tool, ToolInputParsingException } from "../tools/base.js";
+import { Runnable } from "../schema/runnable/base.js";
 
 /**
  * Interface defining the structure of input data for creating an
@@ -92,7 +97,13 @@ export class AgentExecutor extends BaseChain {
 
   constructor(input: AgentExecutorInput) {
     super(input);
-    this.agent = input.agent;
+
+    if (Runnable.isRunnable(input.agent)) {
+      this.agent = new RunnableAgent({ runnable: input.agent });
+    } else {
+      this.agent = input.agent;
+    }
+
     this.tools = input.tools;
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;
