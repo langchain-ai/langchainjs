@@ -2,7 +2,7 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 import { dummyMessages } from "../violation_of_expectation/types.js";
-import { ViolationOfExpectationChain } from "../violation_of_expectation/violation_of_expectation_chain.js";
+import { ViolationOfExpectationsChain } from "../violation_of_expectation/violation_of_expectation_chain.js";
 
 test("should respond with the proper schema", async () => {
   const vectorStore = await HNSWLib.fromTexts(
@@ -15,7 +15,7 @@ test("should respond with the proper schema", async () => {
   const llm = new ChatOpenAI({
     modelName: "gpt-4",
   });
-  const chain = new ViolationOfExpectationChain({
+  const chain = new ViolationOfExpectationsChain({
     llm,
     retriever,
   });

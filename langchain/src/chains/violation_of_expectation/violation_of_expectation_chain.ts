@@ -24,9 +24,9 @@ import {
 } from "./violation_of_expectation_prompt.js";
 
 /**
- * Interface for the input parameters of the ViolationOfExpectationChain class.
+ * Interface for the input parameters of the ViolationOfExpectationsChain class.
  */
-export interface ViolationOfExpectationChainInput extends ChainInputs {
+export interface ViolationOfExpectationsChainInput extends ChainInputs {
   /**
    * The retriever to use for retrieving stored
    * thoughts and insights.
@@ -42,12 +42,12 @@ export interface ViolationOfExpectationChainInput extends ChainInputs {
  * Chain that generates key insights/facts of a user based on a
  * a chat conversation with an AI.
  */
-export class ViolationOfExpectationChain
+export class ViolationOfExpectationsChain
   extends BaseChain
-  implements ViolationOfExpectationChainInput
+  implements ViolationOfExpectationsChainInput
 {
   static lc_name() {
-    return "ViolationOfExpectationChain";
+    return "ViolationOfExpectationsChain";
   }
 
   _chainType(): string {
@@ -74,7 +74,7 @@ export class ViolationOfExpectationChain
 
   stringOutputParser: StringOutputParser;
 
-  constructor(fields: ViolationOfExpectationChainInput) {
+  constructor(fields: ViolationOfExpectationsChainInput) {
     super(fields);
     this.retriever = fields.retriever;
     this.llm = fields.llm;
@@ -434,5 +434,30 @@ export class ViolationOfExpectationChain
     );
 
     return res;
+  }
+
+  /**
+   * Static method that creates a ViolationOfExpectationsChain instance from a
+   * ChatOpenAI and retriever. It also accepts optional options
+   * to customize the chain.
+   * 
+   * @param llm The ChatOpenAI instance.
+   * @param retriever The retriever used for similarity search.
+   * @param options Optional options to customize the chain.
+   * 
+   * @returns A new instance of ViolationOfExpectationsChain.
+   */
+  static fromLLM(
+    llm: ChatOpenAI,
+    retriever: BaseRetriever,
+    options?: Partial<
+      Omit<ViolationOfExpectationsChainInput, "llm" | "retriever">
+    >
+  ): ViolationOfExpectationsChain {
+    return new this({
+      retriever,
+      llm,
+      ...options,
+    });
   }
 }
