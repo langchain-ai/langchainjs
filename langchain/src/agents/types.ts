@@ -1,3 +1,4 @@
+import { LLMChain } from "../chains/llm_chain.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import {
   AgentAction,
@@ -20,6 +21,8 @@ export type AgentInput<
   } = any,
   RunOutput extends AgentAction | AgentFinish = any
 > = {
+  /** @deprecated - prefer `runnables` */
+  llmChain?: LLMChain;
   runnable: Runnable<RunInput, RunOutput>;
   outputParser: AgentActionOutputParser | undefined;
   allowedTools?: string[];

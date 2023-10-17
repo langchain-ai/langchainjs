@@ -238,14 +238,11 @@ export class OpenAIAgent extends Agent {
       newInputs.stop = this._stop();
     }
 
-    if (!OpenAIAgent.llm || !OpenAIAgent.prompt) {
-      throw new Error(
-        'LLM and prompt instances not found. You must call "fromLLMAndTools" to create an OpenAIAgent.'
-      );
+    if (!this.llmChain) {
+      throw new Error("Must initialize OpenAIAgent with an LLMChain");
     }
 
-    const { prompt } = OpenAIAgent;
-    const llm = OpenAIAgent.llm as ChatOpenAI;
+    const llm = this.llmChain.llm as ChatOpenAI;
 
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: (typeof llm)["CallOptions"] = {
@@ -258,7 +255,7 @@ export class OpenAIAgent extends Agent {
       }
     }
 
-    const promptValue = await prompt.formatPromptValue(valuesForPrompt);
+    const promptValue = await this.llmChain.prompt.formatPromptValue(valuesForPrompt);
     const message = await llm.predictMessages(
       promptValue.toChatMessages(),
       valuesForLLM,

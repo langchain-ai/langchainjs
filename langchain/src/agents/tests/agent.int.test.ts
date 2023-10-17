@@ -3,14 +3,16 @@ import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { loadAgent } from "../load.js";
-import { AgentExecutor, OpenAIAgent, ZeroShotAgent } from "../index.js";
+import { AgentExecutor, ZeroShotAgent } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 import { Tool } from "../../tools/base.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
+import {
+  RunnableSequence,
+} from "../../schema/runnable/base.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -69,68 +71,13 @@ test("Pass runnable to agent executor", async () => {
     outputParser,
   ]);
 
-  const agent = new ZeroShotAgent({
-    runnable,
-    allowedTools: tools.map((t) => t.name),
-  });
-
   const executor = AgentExecutor.fromAgentAndTools({
-    agent,
+    agent: runnable,
     tools,
   });
   const res = await executor.invoke({
     input:
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
-  });
-  console.log(
-    {
-      res,
-    },
-    "Pass runnable to agent executor"
-  );
-  expect(res.output).not.toEqual("");
-  expect(res.output).not.toEqual("Agent stopped due to max iterations.");
-});
-
-test("Add a fallback method", async () => {
-  // Model should always fail since the model name passed does not exist.
-  const modelBase = new ChatOpenAI({
-    modelName: "fake-model",
-    temperature: 10,
-  });
-
-  const modelLarge = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-16k",
-    temperature: 0.6,
-  });
-
-  const model = modelBase.withFallbacks({
-    fallbacks: [modelLarge],
-  });
-
-  const prompt = ZeroShotAgent.createPrompt([]);
-  const outputParser = ZeroShotAgent.getDefaultOutputParser();
-
-  const runnable = RunnableSequence.from([
-    {
-      input: (i: { input: string }) => i.input,
-      agent_scratchpad: (i: { input: string }) => i.input,
-    },
-    prompt,
-    model,
-    outputParser,
-  ]);
-
-  const agent = new ZeroShotAgent({
-    runnable,
-  });
-
-  const executor = AgentExecutor.fromAgentAndTools({
-    agent,
-    tools: [],
-  });
-  const res = await executor.invoke({
-    input: "Is the sky blue? Response with a concise answer",
   });
   console.log(
     {

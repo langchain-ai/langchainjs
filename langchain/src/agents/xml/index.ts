@@ -59,8 +59,6 @@ export class XMLAgent extends Agent implements XMLAgentInput {
 
   tools: Tool[];
 
-  llmChain: LLMChain;
-
   _agentType() {
     return "xml" as const;
   }
@@ -102,6 +100,10 @@ export class XMLAgent extends Agent implements XMLAgentInput {
     inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
+    if (!this.llmChain) {
+      throw new Error("LLMChain is required for XMLAgent");
+    }
+
     let log = "";
     for (const { action, observation } of steps) {
       log += `<tool>${action.tool}</tool><tool_input>${action.toolInput}</tool_input><observation>${observation}</observation>`;
@@ -139,6 +141,7 @@ export class XMLAgent extends Agent implements XMLAgentInput {
       callbacks: args?.callbacks,
     });
     return new XMLAgent({
+      llmChain: chain,
       runnable: chain,
       tools,
       outputParser: args?.outputParser,

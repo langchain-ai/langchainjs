@@ -10,21 +10,37 @@ import {
   AgentAction,
   AgentFinish,
   AgentStep,
+  BaseMessage,
   ChainValues,
 } from "../schema/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { OutputParserException } from "../schema/output_parser.js";
-import { Tool, ToolInputParsingException } from "../tools/base.js";
+import {
+  StructuredTool,
+  Tool,
+  ToolInputParsingException,
+} from "../tools/base.js";
 import { Runnable } from "../schema/runnable/base.js";
+
+type ExtractToolType<T> = T extends { ToolType: infer Tool } ? Tool : StructuredTool;
 
 /**
  * Interface defining the structure of input data for creating an
  * AgentExecutor. It extends ChainInputs and includes additional
  * properties specific to agent execution.
  */
-export interface AgentExecutorInput extends ChainInputs {
-  agent: BaseSingleActionAgent | BaseMultiActionAgent;
-  tools: this["agent"]["ToolType"][];
+export interface AgentExecutorInput<
+  RunInput extends ChainValues & {
+    agent_scratchpad?: string | BaseMessage[];
+    stop?: string[];
+  } = any,
+  RunOutput extends AgentAction | AgentFinish = any
+> extends ChainInputs {
+  agent:
+    | BaseSingleActionAgent
+    | BaseMultiActionAgent
+    | Runnable<RunInput, RunOutput>;
+  tools: ExtractToolType<this["agent"]>[];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;

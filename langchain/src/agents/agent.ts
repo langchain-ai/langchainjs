@@ -165,6 +165,10 @@ export class RunnableAgent<
       callbacks: callbackManager,
     });
 
+    console.log({
+      invokeInput,
+    });
+
     return output;
   }
 }
@@ -288,6 +292,8 @@ export abstract class Agent<
 > extends BaseSingleActionAgent {
   runnable: Runnable<RunInput, RunOutput>;
 
+  llmChain: LLMChain | undefined;
+
   outputParser: AgentActionOutputParser | undefined;
 
   private _allowedTools?: string[] = undefined;
@@ -307,6 +313,7 @@ export abstract class Agent<
   constructor(input: AgentInput) {
     super(input);
 
+    this.llmChain = input.llmChain;
     this.runnable = input.runnable;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
