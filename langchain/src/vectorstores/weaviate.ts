@@ -172,7 +172,9 @@ export class WeaviateStore extends VectorStore {
       const errorMessages: string[] = [];
       responses.forEach((response) => {
         if (response?.result?.errors?.error) {
-          errorMessages.push(...response.result.errors.error.map((err) => err.message ?? ""));
+          errorMessages.push(
+            ...response.result.errors.error.map((err) => err.message ?? "")
+          );
         }
       });
       if (errorMessages.length > 0) {
