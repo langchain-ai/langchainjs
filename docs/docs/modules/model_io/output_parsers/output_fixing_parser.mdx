@@ -4,6 +4,9 @@ This output parser wraps another output parser, and in the event that the first 
 
 But we can do other things besides throw errors. Specifically, we can pass the misformatted output, along with the formatted instructions, to the model and ask it to fix it.
 
-import Example from "@snippets/modules/model_io/output_parsers/output_fixing_parser.mdx";
+For this example, we'll use the structured output parser. Here's what happens if we pass it a result that does not comply with the schema:
 
-<Example />
+import CodeBlock from "@theme/CodeBlock";
+import Fix from "@examples/prompts/fix_parser.ts";
+
+<CodeBlock language="typescript">{Fix}</CodeBlock>

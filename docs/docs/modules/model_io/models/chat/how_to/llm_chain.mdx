@@ -2,6 +2,34 @@
 
 You can use the existing LLMChain in a very similar way to before - provide a prompt and a model.
 
-import LLMChain from "@snippets/modules/model_io/models/chat/how_to/llm_chain.mdx";
+```typescript
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { LLMChain } from "langchain/chains";
+import { ChatPromptTemplate } from "langchain/prompts";
 
-<LLMChain />
+const template =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
+const humanTemplate = "{text}";
+
+const chatPrompt = ChatPromptTemplate.fromMessages([
+  ["system", template],
+  ["human", humanTemplate],
+]);
+
+const chat = new ChatOpenAI({
+  temperature: 0,
+});
+
+const chain = new LLMChain({
+  llm: chat,
+  prompt: chatPrompt,
+});
+
+const result = await chain.call({
+  input_language: "English",
+  output_language: "French",
+  text: "I love programming",
+});
+
+// { text: "J'adore programmer" }
+```
