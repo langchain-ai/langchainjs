@@ -113,6 +113,25 @@ export class ViolationOfExpectationChain
     return newArray;
   }
 
+  /**
+   * This method processes a chat history to generate insights about the user.
+   * 
+   * @param {ChainValues} values - The input values for the chain. It should contain a key for chat history.
+   * @param {CallbackManagerForChainRun} [runManager] - Optional callback manager for the chain run.
+   * 
+   * @returns {Promise<ChainValues>} A promise that resolves to a list of insights about the user.
+   * 
+   * @throws {Error} If the chat history key is not found in the input values or if the chat history is not an array of BaseMessages.
+   * 
+   * @description
+   * The method performs the following steps:
+   * 1. Checks if the chat history key is present in the input values and if the chat history is an array of BaseMessages.
+   * 2. Breaks the chat history into chunks of messages.
+   * 3. For each chunk, it generates an initial prediction for the user's next message.
+   * 4. For each prediction, it generates insights and prediction violations, and regenerates the prediction based on the violations.
+   * 5. For each set of messages, it generates a fact/insight about the user.
+   * The method returns a list of these insights.
+   */
   async _call(
     values: ChainValues,
     runManager?: CallbackManagerForChainRun
@@ -171,6 +190,16 @@ export class ViolationOfExpectationChain
     return insights;
   }
 
+  /**
+   * This method predicts the next user message based on the chat history.
+   * 
+   * @param {BaseMessage[]} chatHistory - The chat history based on which the next user message is predicted.
+   * @param {CallbackManagerForChainRun} [runManager] - Optional callback manager for the chain run.
+   * 
+   * @returns {Promise<PredictNextUserMessageResponse>} A promise that resolves to the predicted next user message, the user state, and any insights.
+   * 
+   * @throws {Error} If the response from the language model does not contain the expected keys: 'userState', 'predictedUserMessage', and 'insights'.
+   */
   private async predictNextUserMessage(
     chatHistory: BaseMessage[],
     runManager?: CallbackManagerForChainRun
@@ -204,6 +233,13 @@ export class ViolationOfExpectationChain
     throw new Error(`Invalid response from LLM: ${JSON.stringify(res)}`);
   }
 
+  /**
+   * Retrieves relevant insights based on the provided insights.
+   * 
+   * @param {Array<string>} insights - An array of insights to be used for retrieving relevant documents.
+   * 
+   * @returns {Promise<Array<string>>} A promise that resolves to an array of relevant insights content.
+   */
   private async retrieveRelevantInsights(
     insights: Array<string>
   ): Promise<Array<string>> {
@@ -225,6 +261,19 @@ export class ViolationOfExpectationChain
     return relevantInsightsContent;
   }
 
+  /**
+   * This method generates prediction violations based on the predicted and actual user responses.
+   * It also generates a revised prediction based on the identified violations.
+   * 
+   * @param {Object} params - The parameters for the method.
+   * @param {PredictNextUserMessageResponse} params.userPredictions - The predicted user message, user state, and insights.
+   * @param {BaseMessage} [params.userResponse] - The actual user response.
+   * @param {CallbackManagerForChainRun} [params.runManager] - Optional callback manager for the chain run.
+   * 
+   * @returns {Promise<{ userResponse: BaseMessage | undefined; revisedPrediction: string; explainedPredictionErrors: Array<string>; }>} A promise that resolves to an object containing the actual user response, the revised prediction, and the explained prediction errors.
+   * 
+   * @throws {Error} If the response from the language model does not contain the expected keys: 'violationExplanation', 'explainedPredictionErrors', and 'accuratePrediction'.
+   */
   private async getPredictionViolations({
     userPredictions,
     userResponse,
@@ -271,6 +320,17 @@ export class ViolationOfExpectationChain
     };
   }
 
+  /**
+   * This method generates a revised prediction based on the original prediction, explained prediction errors, and user insights.
+   * 
+   * @param {Object} params - The parameters for the method.
+   * @param {string} params.originalPrediction - The original prediction made by the model.
+   * @param {Array<string>} params.explainedPredictionErrors - An array of explained prediction errors.
+   * @param {Array<string>} params.userInsights - An array of insights about the user.
+   * @param {CallbackManagerForChainRun} [params.runManager] - Optional callback manager for the chain run.
+   * 
+   * @returns {Promise<string>} A promise that resolves to a revised prediction.
+   */
   private async generateRevisedPrediction({
     originalPrediction,
     explainedPredictionErrors,
@@ -298,6 +358,18 @@ export class ViolationOfExpectationChain
     return revisedPredictionRes;
   }
 
+  /**
+   * This method generates facts or insights about the user based on the revised prediction, explained prediction errors, and the user's response.
+   * 
+   * @param {Object} params - The parameters for the method.
+   * @param {BaseMessage} [params.userResponse] - The actual user response.
+   * @param {Object} params.predictions - The revised prediction and explained prediction errors.
+   * @param {string} params.predictions.revisedPrediction - The revised prediction made by the model.
+   * @param {Array<string>} params.predictions.explainedPredictionErrors - An array of explained prediction errors.
+   * @param {CallbackManagerForChainRun} [params.runManager] - Optional callback manager for the chain run.
+   * 
+   * @returns {Promise<string>} A promise that resolves to a string containing the generated facts or insights about the user.
+   */
   private async generateFacts({
     userResponse,
     predictions,
