@@ -7,7 +7,6 @@ const { ProvidePlugin } = require("webpack");
 const path = require("path");
 
 const examplesPath = path.resolve(__dirname, "..", "examples", "src");
-const snippetsPath = path.resolve(__dirname, "snippets");
 
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
