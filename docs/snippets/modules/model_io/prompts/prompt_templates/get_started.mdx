@@ -19,11 +19,9 @@ const formattedPrompt = await prompt.format({
 */
 ```
 
-
 ## Create a prompt template
 
 You can create simple hardcoded prompts using the `PromptTemplate` class. Prompt templates can take any number of input variables, and can be formatted to generate a prompt.
-
 
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
@@ -41,8 +39,8 @@ console.log(formattedNoInputPrompt);
 // An example prompt with one input variable
 const oneInputPrompt = new PromptTemplate({
   inputVariables: ["adjective"],
-  template: "Tell me a {adjective} joke."
-})
+  template: "Tell me a {adjective} joke.",
+});
 const formattedOneInputPrompt = await oneInputPrompt.format({
   adjective: "funny",
 });
@@ -101,11 +99,7 @@ import {
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
-import {
-  AIMessage,
-  HumanMessage,
-  SystemMessage,
-} from "langchain/schema";
+import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
 ```
 
 To create a message template associated with a role, you would use the corresponding `<ROLE>MessagePromptTemplate`.
@@ -113,7 +107,8 @@ To create a message template associated with a role, you would use the correspon
 For convenience, you can also declare message prompt templates as tuples. These will be coerced to the proper prompt template types:
 
 ```typescript
-const systemTemplate = "You are a helpful assistant that translates {input_language} to {output_language}.";
+const systemTemplate =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
 const humanTemplate = "{text}";
 
 const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -148,20 +143,21 @@ depending on whether you want to use the formatted value as input to an LLM or c
 If you prefer to use the message classes, there is a `fromTemplate` method exposed on these classes.
 This is what it would look like:
 
-
 ```typescript
-const template = "You are a helpful assistant that translates {input_language} to {output_language}.";
+const template =
+  "You are a helpful assistant that translates {input_language} to {output_language}.";
 const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(template);
 const humanTemplate = "{text}";
-const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(humanTemplate);
+const humanMessagePrompt =
+  HumanMessagePromptTemplate.fromTemplate(humanTemplate);
 ```
 
 If you wanted to construct the `MessagePromptTemplate` more directly, you could create a PromptTemplate externally and then pass it in, e.g.:
 
-
 ```typescript
 const prompt = new PromptTemplate({
-  template: "You are a helpful assistant that translates {input_language} to {output_language}.",
+  template:
+    "You are a helpful assistant that translates {input_language} to {output_language}.",
   inputVariables: ["input_language", "output_language"],
 });
 const systemMessagePrompt2 = new SystemMessagePromptTemplate({
@@ -173,11 +169,8 @@ const systemMessagePrompt2 = new SystemMessagePromptTemplate({
 
 ```typescript
 const chatPrompt = ChatPromptTemplate.fromMessages<{
-  input_language: string,
-  output_language: string,
-  text: string
-}>([
-  systemMessagePrompt,
-  humanMessagePrompt
-]);
+  input_language: string;
+  output_language: string;
+  text: string;
+}>([systemMessagePrompt, humanMessagePrompt]);
 ```

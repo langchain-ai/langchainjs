@@ -8,7 +8,7 @@ const model = new OpenAI({
   modelName: "text-davinci-002",
   cache: true,
   n: 2,
-  bestOf: 2
+  bestOf: 2,
 });
 ```
 
@@ -30,7 +30,6 @@ console.log(res);
 */
 ```
 
-
 ```typescript
 // The second time it is, so it goes faster
 const res2 = await model.predict("Tell me a joke");
@@ -50,11 +49,13 @@ console.log(res2);
 LangChain also provides a Momento-based cache. [Momento](https://gomomento.com) is a distributed, serverless cache that requires zero setup or infrastructure maintenance. Given Momento's compatibility with Node.js, browser, and edge environments, ensure you install the relevant package.
 
 To install for **Node.js**:
+
 ```bash npm2yarn
 npm install @gomomento/sdk
 ```
 
 To install for **browser/edge workers**:
+
 ```bash npm2yarn
 npm install @gomomento/sdk-web
 ```

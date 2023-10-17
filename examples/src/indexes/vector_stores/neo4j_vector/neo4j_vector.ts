@@ -8,7 +8,7 @@ const config = {
   password: "pleaseletmein", // Password for Neo4j authentication
   indexName: "vector", // Name of the vector index
   keywordIndexName: "keyword", // Name of the keyword index if using hybrid search
-  searchType: "vector", // Type of search (e.g., vector, hybrid)
+  searchType: "vector" as const, // Type of search (e.g., vector, hybrid)
   nodeLabel: "Chunk", // Label for the nodes in the graph
   textNodeProperty: "text", // Property of the node containing text
   embeddingNodeProperty: "embedding", // Property of the node containing embedding

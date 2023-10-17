@@ -10,6 +10,7 @@ Here's an explanation of each step in the `RunnableSequence.from()` call above:
 - The `context` key is used to fetch relevant documents from the loaded context (in this case the State Of The Union speech). It performs a call to the `getRelevantDocuments` method on the retriever, passing in the user's question as the query. We then pass it to our `serializeDocs` util which maps over all returned documents, joins them with newlines and returns a string.
 
 After getting and formatting all inputs we pipe them through the following operations:
+
 - `questionPrompt` - this is the prompt template which we pass to the model in the next step. Behind the scenes it's taking the inputs outlined above and formatting them into the proper spots outlined in our template.
 - The formatted prompt with context then gets passed to the LLM and a response is generated.
 - Finally, we pipe the result of the LLM call to an output parser which formats the response into a readable string.

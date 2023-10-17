@@ -7,7 +7,7 @@ import { PromptTemplate } from "langchain/prompts";
 
 const prompt = new PromptTemplate({
   template: "{foo}{bar}",
-  inputVariables: ["foo", "bar"]
+  inputVariables: ["foo", "bar"],
 });
 
 const partialPrompt = await prompt.partial({
@@ -24,7 +24,6 @@ console.log(formattedPrompt);
 ```
 
 You can also just initialize the prompt with the partialed variables.
-
 
 ```typescript
 const prompt = new PromptTemplate({
@@ -66,13 +65,12 @@ const formattedPrompt = await partialPrompt.format({
   adjective: "funny",
 });
 
-console.log(formattedPrompt)
+console.log(formattedPrompt);
 
 // Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
 ```
 
 You can also just initialize the prompt with the partialed variables:
-
 
 ```typescript
 const prompt = new PromptTemplate({
@@ -80,14 +78,14 @@ const prompt = new PromptTemplate({
   inputVariables: ["adjective"],
   partialVariables: {
     date: getCurrentDate,
-  }
+  },
 });
 
 const formattedPrompt = await prompt.format({
   adjective: "funny",
 });
 
-console.log(formattedPrompt)
+console.log(formattedPrompt);
 
 // Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
 ```

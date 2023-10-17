@@ -18,7 +18,6 @@ const prompt = PromptTemplate.fromTemplate(
 
 We can now create a very simple chain that will take user input, format the prompt with it, and then send it to the LLM.
 
-
 ```typescript
 const chain = new LLMChain({ llm: model, prompt });
 
@@ -43,7 +42,7 @@ const chain = new LLMChain({ llm: model, prompt });
 
 const res = await chain.call({
   company: "a startup",
-  product: "colorful socks"
+  product: "colorful socks",
 });
 
 console.log({ res });
@@ -51,7 +50,6 @@ console.log({ res });
 ```
 
 You can use a chat model in an `LLMChain` as well:
-
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/chains/llm_chain_chat.ts";

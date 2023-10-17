@@ -11,7 +11,9 @@ const memory = new BufferMemory();
 // but we pass it explicitly here. It also has a default prompt.
 const chain = new ConversationChain({ llm: chat, memory });
 
-const res1 = await chain.run("Answer briefly. What are the first 3 colors of a rainbow?");
+const res1 = await chain.run(
+  "Answer briefly. What are the first 3 colors of a rainbow?"
+);
 console.log(res1);
 
 // The first three colors of a rainbow are red, orange, and yellow.

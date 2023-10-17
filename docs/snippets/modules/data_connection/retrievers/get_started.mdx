@@ -28,8 +28,8 @@ This assumes you're using Node, but you can swap in another integration if neces
 
 First, install the required dependency:
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 
 <Tabs>
@@ -53,7 +53,7 @@ import RetrievalQAExample from "@examples/chains/retrieval_qa.ts";
 Let's walk through what's happening here.
 
 1. We first load a long text and split it into smaller documents using a text splitter.
-We then load those documents (which also embeds the documents using the passed `OpenAIEmbeddings` instance) into HNSWLib, our vector store, creating our index.
+   We then load those documents (which also embeds the documents using the passed `OpenAIEmbeddings` instance) into HNSWLib, our vector store, creating our index.
 
 2. Though we can query the vector store directly, we convert the vector store into a retriever to return retrieved documents in the right format for the question answering chain.
 
