@@ -63,10 +63,16 @@ export class ViolationOfExpectationChain
 
   llm: ChatOpenAI;
 
+  jsonOutputParser: JsonOutputFunctionsParser;
+
+  stringOutputParser: StringOutputParser;
+
   constructor(fields: ViolationOfExpectationChainInput) {
     super(fields);
     this.retriever = fields.retriever;
     this.llm = fields.llm;
+    this.jsonOutputParser = new JsonOutputFunctionsParser();
+    this.stringOutputParser = new StringOutputParser();
   }
 
   getChatHistoryString(chatHistory: BaseMessage[]): string {
@@ -126,32 +132,33 @@ export class ViolationOfExpectationChain
 
     const messageChunks = this.getMessageChunks(chatHistory as BaseMessage[]);
 
+    // Generate the initial prediction for every user message.
     const userPredictions = await Promise.all(
       messageChunks.map(async (chatHistoryChunk) => ({
         userPredictions: await this.predictNextUserMessage(
-          chatHistoryChunk.chunkedMessages,
-          this.llm
+          chatHistoryChunk.chunkedMessages
         ),
         userResponse: chatHistoryChunk.userResponse,
         runManager,
       }))
     );
 
+    // Generate insights, and prediction violations for every user message.
+    // This call also regenerates the prediction based on the violations.
     const predictionViolations = await Promise.all(
       userPredictions.map((prediction) =>
         this.getPredictionViolations({
           userPredictions: prediction.userPredictions,
           userResponse: prediction.userResponse,
-          llm: this.llm,
           runManager,
         })
       )
     );
 
+    // Generate a fact/insight about the user for every set of messages.
     const insights = await Promise.all(
       predictionViolations.map((violation) =>
         this.generateFacts({
-          llm: this.llm,
           userResponse: violation.userResponse,
           predictions: {
             revisedPrediction: violation.revisedPrediction,
@@ -166,22 +173,18 @@ export class ViolationOfExpectationChain
 
   private async predictNextUserMessage(
     chatHistory: BaseMessage[],
-    llm: ChatOpenAI,
     runManager?: CallbackManagerForChainRun
   ): Promise<PredictNextUserMessageResponse> {
     const messageString = this.getChatHistoryString(chatHistory);
 
-    const outputParser = new JsonOutputFunctionsParser();
-
-    const llmWithFunctions = llm.bind({
+    const llmWithFunctions = this.llm.bind({
       functions: [PREDICT_NEXT_USER_MESSAGE_FUNCTION],
       function_call: { name: PREDICT_NEXT_USER_MESSAGE_FUNCTION.name },
     });
 
-    const chain =
-      PREDICT_NEXT_USER_MESSAGE_PROMPT.pipe(llmWithFunctions).pipe(
-        outputParser
-      );
+    const chain = PREDICT_NEXT_USER_MESSAGE_PROMPT.pipe(llmWithFunctions).pipe(
+      this.jsonOutputParser
+    );
 
     const res = await chain.invoke(
       {
@@ -225,23 +228,20 @@ export class ViolationOfExpectationChain
   private async getPredictionViolations({
     userPredictions,
     userResponse,
-    llm,
     runManager,
   }: {
     userPredictions: PredictNextUserMessageResponse;
     userResponse?: BaseMessage;
-    llm: ChatOpenAI;
     runManager?: CallbackManagerForChainRun;
   }) {
-    const outputParser = new JsonOutputFunctionsParser();
-
-    const llmWithFunctions = llm.bind({
+    const llmWithFunctions = this.llm.bind({
       functions: [PREDICTION_VIOLATIONS_FUNCTION],
       function_call: { name: PREDICTION_VIOLATIONS_FUNCTION.name },
     });
 
-    const chain =
-      PREDICTION_VIOLATIONS_PROMPT.pipe(llmWithFunctions).pipe(outputParser);
+    const chain = PREDICTION_VIOLATIONS_PROMPT.pipe(llmWithFunctions).pipe(
+      this.jsonOutputParser
+    );
 
     const res = (await chain.invoke(
       {
@@ -258,7 +258,6 @@ export class ViolationOfExpectationChain
 
     // Generate a revised prediction based on violations.
     const revisedPrediction = await this.generateRevisedPrediction({
-      llm,
       originalPrediction: userPredictions.predictedUserMessage,
       explainedPredictionErrors: res.explainedPredictionErrors,
       userInsights: userPredictions.insights,
@@ -273,21 +272,19 @@ export class ViolationOfExpectationChain
   }
 
   private async generateRevisedPrediction({
-    llm,
     originalPrediction,
     explainedPredictionErrors,
     userInsights,
     runManager,
   }: {
-    llm: ChatOpenAI;
     originalPrediction: string;
     explainedPredictionErrors: Array<string>;
     userInsights: Array<string>;
     runManager?: CallbackManagerForChainRun;
   }): Promise<string> {
     const revisedPredictionChain = GENERATE_REVISED_PREDICTION_PROMPT.pipe(
-      llm
-    ).pipe(new StringOutputParser());
+      this.llm
+    ).pipe(this.stringOutputParser);
 
     const revisedPredictionRes = await revisedPredictionChain.invoke(
       {
@@ -302,12 +299,10 @@ export class ViolationOfExpectationChain
   }
 
   private async generateFacts({
-    llm,
     userResponse,
     predictions,
     runManager,
   }: {
-    llm: ChatOpenAI;
     userResponse?: BaseMessage;
     /**
      * Optional if the prediction was accurate.
@@ -318,8 +313,8 @@ export class ViolationOfExpectationChain
     };
     runManager?: CallbackManagerForChainRun;
   }) {
-    const chain = GENERATE_FACTS_PROMPT.pipe(llm).pipe(
-      new StringOutputParser()
+    const chain = GENERATE_FACTS_PROMPT.pipe(this.llm).pipe(
+      this.stringOutputParser
     );
 
     const res = await chain.invoke(
