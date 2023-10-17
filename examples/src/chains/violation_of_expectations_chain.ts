@@ -38,14 +38,12 @@ const dummyMessages = [
   ),
 ];
 
-console.log("here");
 // Instantiate with an empty string to start, since we have no data yet.
 const vectorStore = await HNSWLib.fromTexts(
   [" "],
   [{ id: 1 }],
   new OpenAIEmbeddings()
 );
-console.log("there");
 const retriever = vectorStore.asRetriever();
 
 // Instantiate the LLM,
@@ -53,6 +51,7 @@ const llm = new ChatOpenAI({
   modelName: "gpt-4",
 });
 
+// And the chain.
 const voeChain = ViolationOfExpectationsChain.fromLLM(llm, retriever);
 
 // Requires an input key of "chat_history" with an array of messages.
