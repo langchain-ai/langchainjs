@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 import type {
-  WeaviateObject,
   WeaviateClient,
+  WeaviateObject,
   WhereFilter,
 } from "weaviate-ts-client";
 import { VectorStore } from "./base.js";
@@ -173,7 +173,11 @@ export class WeaviateStore extends VectorStore {
       responses.forEach((response) => {
         if (response?.result?.errors?.error) {
           errorMessages.push(
-            ...response.result.errors.error.map((err) => err.message ?? "")
+            ...response.result.errors.error.map(
+              (err) =>
+                err.message ??
+                "!! Unfortunately no error message was presented in the API response !!"
+            )
           );
         }
       });
