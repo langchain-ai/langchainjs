@@ -23,7 +23,7 @@ const config = {
   nodeLabel: "Wikipedia",
   textNodeProperties: ["title", "description"],
   embeddingNodeProperty: "embedding",
-  searchType: "hybrid",
+  searchType: "hybrid" as const,
 };
 
 // You should have a populated Neo4j database to use this method

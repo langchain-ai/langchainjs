@@ -25,6 +25,8 @@ export interface ChatCreatePromptArgs {
   prefix?: string;
   /** String to use directly as the human message template. */
   humanMessageTemplate?: string;
+  /** Formattable string to use as the instructions template. */
+  formatInstructions?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
 }
@@ -117,17 +119,19 @@ export class ChatAgent extends Agent {
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
    * @param args.humanMessageTemplate - String to use directly as the human message template
+   * @param args.formatInstructions - Formattable string to use as the instructions template
    */
   static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
       humanMessageTemplate = DEFAULT_HUMAN_MESSAGE_TEMPLATE,
+      formatInstructions = FORMAT_INSTRUCTIONS,
     } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const template = [prefix, toolStrings, FORMAT_INSTRUCTIONS, suffix].join(
+    const template = [prefix, toolStrings, formatInstructions, suffix].join(
       "\n\n"
     );
     const messages = [
