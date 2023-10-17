@@ -10,9 +10,7 @@ import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 import { Tool } from "../../tools/base.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
-import {
-  RunnableSequence,
-} from "../../schema/runnable/base.js";
+import { RunnableSequence } from "../../schema/runnable/base.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });

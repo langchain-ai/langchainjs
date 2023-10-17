@@ -22,7 +22,9 @@ import {
 } from "../tools/base.js";
 import { Runnable } from "../schema/runnable/base.js";
 
-type ExtractToolType<T> = T extends { ToolType: infer Tool } ? Tool : StructuredTool;
+type ExtractToolType<T> = T extends { ToolType: infer Tool }
+  ? Tool
+  : StructuredTool;
 
 /**
  * Interface defining the structure of input data for creating an
