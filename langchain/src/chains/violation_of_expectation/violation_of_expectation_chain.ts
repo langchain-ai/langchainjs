@@ -150,7 +150,7 @@ export class ViolationOfExpectationChain
       predictionViolations.map((violation) =>
         this.generateFacts({
           llm: this.llm,
-          userMessage: violation.userMessage,
+          userResponse: violation.userResponse,
           predictions: {
             revisedPrediction: violation.revisedPrediction,
             explainedPredictionErrors: violation.explainedPredictionErrors,
@@ -238,53 +238,58 @@ export class ViolationOfExpectationChain
       predicted_output: userPredictions.predictedUserMessage,
       actual_output: userResponse?.content ?? "",
       user_insights: userPredictions.insights.join("\n"),
-    });
-
-    if (
-      !(
-        "violationExplanation" in res &&
-        "explainedPredictionErrors" in res &&
-        "accuratePrediction" in res
-      )
-    ) {
-      throw new Error(
-        "Predictions violations response is missing required fields"
-      );
-    }
-
-    const violations = res as {
+    }) as Awaited<{
       violationExplanation: string;
       explainedPredictionErrors: Array<string>;
       accuratePrediction: boolean;
+    }>;
+
+    // Generate a revised prediction based on violations.
+    const revisedPrediction = await this.generateRevisedPrediction({
+      llm,
+      originalPrediction: userPredictions.predictedUserMessage,
+      explainedPredictionErrors: res.explainedPredictionErrors,
+      userInsights: userPredictions.insights,
+    });
+
+    return {
+      userResponse,
+      revisedPrediction,
+      explainedPredictionErrors: res.explainedPredictionErrors,
     };
+  }
 
-    // make one more call to regenerate the prediction. use the retrieved facts and generated facts.
-
+  private async generateRevisedPrediction({
+    llm,
+    originalPrediction,
+    explainedPredictionErrors,
+    userInsights,
+  }: {
+    llm: ChatOpenAI;
+    originalPrediction: string;
+    explainedPredictionErrors: Array<string>;
+    userInsights: Array<string>;
+  }): Promise<string> {
     const revisedPredictionChain = GENERATE_REVISED_PREDICTION_PROMPT.pipe(
       llm
     ).pipe(new StringOutputParser());
 
     const revisedPredictionRes = await revisedPredictionChain.invoke({
-      prediction: userPredictions.predictedUserMessage,
-      explained_prediction_errors:
-        violations.explainedPredictionErrors.join("\n"),
-      user_insights: userPredictions.insights.join("\n"),
+      prediction: originalPrediction,
+      explained_prediction_errors: explainedPredictionErrors.join("\n"),
+      user_insights: userInsights.join("\n"),
     });
 
-    return {
-      userMessage: userResponse,
-      revisedPrediction: revisedPredictionRes,
-      explainedPredictionErrors: violations.explainedPredictionErrors,
-    };
+    return revisedPredictionRes;
   }
 
   private async generateFacts({
     llm,
-    userMessage,
+    userResponse,
     predictions,
   }: {
     llm: ChatOpenAI;
-    userMessage?: BaseMessage;
+    userResponse?: BaseMessage;
     /**
      * Optional if the prediction was accurate.
      */
@@ -300,7 +305,7 @@ export class ViolationOfExpectationChain
     const res = await chain.invoke({
       prediction_violations: predictions.explainedPredictionErrors.join("\n"),
       prediction: predictions.revisedPrediction,
-      user_message: userMessage?.content ?? "",
+      user_message: userResponse?.content ?? "",
     });
 
     return res;
