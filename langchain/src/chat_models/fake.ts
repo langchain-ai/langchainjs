@@ -25,7 +25,7 @@ export interface FakeChatInput extends BaseChatModelParams {
  */
 export class FakeListChatModel extends BaseChatModel {
   static lc_name() {
-    return "Fake List";
+    return "FakeListChatModel";
   }
 
   responses: string[];

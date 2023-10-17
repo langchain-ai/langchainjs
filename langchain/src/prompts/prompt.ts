@@ -69,7 +69,7 @@ type ExtractTemplateParamsRecursive<
   Result extends string[] = []
 > = T extends `${string}{${infer Param}}${infer Rest}`
   ? Param extends `${NonAlphanumeric}${string}`
-    ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that look like template variables e.g. see https://github.com/hwchase17/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
+    ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that look like template variables e.g. see https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
     : ExtractTemplateParamsRecursive<Rest, [...Result, Param]>
   : Result;
 

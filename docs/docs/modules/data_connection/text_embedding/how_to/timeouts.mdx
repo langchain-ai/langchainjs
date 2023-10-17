@@ -1,0 +1,10 @@
+import CodeBlock from "@theme/CodeBlock";
+import TimeoutExample from "@examples/models/embeddings/openai_timeout.ts";
+
+# Adding a timeout
+
+By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+
+<CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
+
+Currently, the timeout option is only supported for OpenAI models.

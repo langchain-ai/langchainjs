@@ -19,7 +19,7 @@ export interface FakeListInput extends BaseLLMParams {
  */
 export class FakeListLLM extends LLM {
   static lc_name() {
-    return "Fake List";
+    return "FakeListLLM";
   }
 
   responses: string[];
