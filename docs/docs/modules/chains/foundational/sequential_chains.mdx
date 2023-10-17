@@ -9,6 +9,24 @@ In this notebook we will walk through some examples for how to do this, using se
 - `SimpleSequentialChain`: The simplest form of sequential chains, where each step has a singular input/output, and the output of one step is the input to the next.
 - `SequentialChain`: A more general form of sequential chains, allowing for multiple inputs/outputs.
 
-import Example from "@snippets/modules/chains/foundational/sequential_chains.mdx";
+import CodeBlock from "@theme/CodeBlock";
+import SimpleSequentialChainExample from "@examples/chains/simple_sequential_chain.ts";
+import SequentialChainExample from "@examples/chains/sequential_chain.ts";
 
-<Example />
+## `SimpleSequentialChain`
+
+Let's start with the simplest possible case which is `SimpleSequentialChain`.
+
+An `SimpleSequentialChain` is a chain that allows you to join multiple single-input/single-output chains into one chain.
+
+The example below shows a sample usecase. In the first step, given a title, a synopsis of a play is generated. In the second step, based on the generated synopsis, a review of the play is generated.
+
+<CodeBlock language="typescript">{SimpleSequentialChainExample}</CodeBlock>
+
+## `SequentialChain`
+
+More advanced scenario useful when you have multiple chains that have more than one input or ouput keys.
+
+Unlike for `SimpleSequentialChain`, outputs from all previous chains will be available to the next chain.
+
+<CodeBlock language="typescript">{SequentialChainExample}</CodeBlock>

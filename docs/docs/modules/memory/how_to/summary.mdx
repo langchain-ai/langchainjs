@@ -5,6 +5,16 @@ Conversation summary memory summarizes the conversation as it happens and stores
 
 Let's first explore the basic functionality of this type of memory.
 
-import Example from "@snippets/modules/memory/how_to/summary.mdx";
+import CodeBlock from "@theme/CodeBlock";
 
-<Example />
+## Usage, with an LLM
+
+import TextExample from "@examples/memory/summary_llm.ts";
+
+<CodeBlock language="typescript">{TextExample}</CodeBlock>
+
+## Usage, with a Chat Model
+
+import ChatExample from "@examples/memory/summary_chat.ts";
+
+<CodeBlock language="typescript">{ChatExample}</CodeBlock>

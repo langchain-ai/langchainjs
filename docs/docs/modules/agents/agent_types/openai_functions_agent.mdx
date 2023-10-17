@@ -6,6 +6,21 @@ The goal of the OpenAI Function APIs is to more reliably return valid and useful
 
 The OpenAI Functions Agent is designed to work with these models.
 
-import Example from "@snippets/modules/agents/agent_types/openai_functions_agent.mdx";
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/openai.ts";
 
-<Example />
+:::tip Compatibility
+Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
+:::
+
+This agent also supports `StructuredTool`s with more complex input schemas.
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Prompt customization
+
+You can pass in a custom string to be used as the system message of the prompt as follows:
+
+import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
+
+<CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>

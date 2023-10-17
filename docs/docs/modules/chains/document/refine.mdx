@@ -14,6 +14,15 @@ There are also certain tasks which are difficult to accomplish iteratively. For 
 
 Here's how it looks in practice:
 
-import Interface from "@snippets/modules/chains/document/refine.mdx";
+import RefineExample from "@examples/chains/qa_refine.ts";
+import CodeBlock from "@theme/CodeBlock";
 
-<Interface />
+<CodeBlock language="typescript">{RefineExample}</CodeBlock>
+
+## Prompt customization
+
+You may want to tweak the behavior of a step by changing the prompt. Here's an example of how to do that:
+
+import CustomRefineExample from "@examples/chains/qa_refine_custom_prompt.ts";
+
+<CodeBlock language="typescript">{CustomRefineExample}</CodeBlock>

@@ -4,9 +4,21 @@
 
 To install LangChain run:
 
-import Install from "@snippets/get_started/quickstart/installation.mdx";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
 
-<Install />
+<Tabs>
+  <TabItem value="npm" label="npm" default>
+    <CodeBlock language="bash">npm install -S langchain</CodeBlock>
+  </TabItem>
+  <TabItem value="yarn" label="Yarn">
+    <CodeBlock language="bash">yarn add langchain</CodeBlock>
+  </TabItem>
+  <TabItem value="pnpm" label="pnpm">
+    <CodeBlock language="bash">pnpm add langchain</CodeBlock>
+  </TabItem>
+</Tabs>
 
 For more details, see our [Installation guide](/docs/get_started/installation).
 
@@ -14,9 +26,21 @@ For more details, see our [Installation guide](/docs/get_started/installation).
 
 Using LangChain will usually require integrations with one or more model providers, data stores, APIs, etc. For this example, we'll use OpenAI's model APIs.
 
-import OpenAISetup from "@snippets/get_started/quickstart/openai_setup.mdx";
+Accessing their API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
 
-<OpenAISetup />
+```bash
+export OPENAI_API_KEY="..."
+```
+
+If you'd prefer not to set an environment variable you can pass the key in directly via the `openAIApiKey` parameter when initializing the OpenAI LLM class:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+
+const llm = new OpenAI({
+  openAIApiKey: "YOUR_KEY_HERE",
+});
+```
 
 ## Building an application
 
