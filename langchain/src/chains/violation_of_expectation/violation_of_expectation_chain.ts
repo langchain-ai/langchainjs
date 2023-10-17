@@ -246,14 +246,27 @@ export class ViolationOfExpectationChain
     );
 
     if (
-      "userState" in res &&
-      "predictedUserMessage" in res &&
-      "insights" in res
+      !(
+        "userState" in res &&
+        "predictedUserMessage" in res &&
+        "insights" in res
+      )
     ) {
-      return res as PredictNextUserMessageResponse;
+      throw new Error(`Invalid response from LLM: ${JSON.stringify(res)}`);
     }
 
-    throw new Error(`Invalid response from LLM: ${JSON.stringify(res)}`);
+    const predictionResponse = res as PredictNextUserMessageResponse;
+
+    // Query the retriever for relevant insights. Use the generates insights as a query.
+    const retrievedDocs = await this.retrieveRelevantInsights(
+      predictionResponse.insights
+    );
+    const relevantDocs = [...predictionResponse.insights, ...retrievedDocs];
+
+    return {
+      ...predictionResponse,
+      insights: relevantDocs,
+    };
   }
 
   /**
@@ -266,16 +279,15 @@ export class ViolationOfExpectationChain
   private async retrieveRelevantInsights(
     insights: Array<string>
   ): Promise<Array<string>> {
-    const relevantInsightsDocuments = (
-      await Promise.all(
-        insights.map(async (insight) => {
-          const relevantInsight = await this.retriever.getRelevantDocuments(
-            insight
-          );
-          return relevantInsight;
-        })
-      )
-    ).flat();
+    // Only extract the first relevant doc from the retriever. We don't need more than one.
+    const relevantInsightsDocuments = await Promise.all(
+      insights.map(async (insight) => {
+        const relevantInsight = await this.retriever.getRelevantDocuments(
+          insight
+        );
+        return relevantInsight[0];
+      })
+    );
 
     const relevantInsightsContent = relevantInsightsDocuments.map(
       (document) => document.pageContent
