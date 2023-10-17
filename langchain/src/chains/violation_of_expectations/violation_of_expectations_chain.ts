@@ -21,7 +21,7 @@ import {
   GENERATE_REVISED_PREDICTION_PROMPT,
   PREDICTION_VIOLATIONS_PROMPT,
   PREDICT_NEXT_USER_MESSAGE_PROMPT,
-} from "./violation_of_expectation_prompt.js";
+} from "./violation_of_expectations_prompt.js";
 
 /**
  * Interface for the input parameters of the ViolationOfExpectationsChain class.

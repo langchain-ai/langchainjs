@@ -7,6 +7,7 @@ export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
 export * as chains from "../chains/index.js";
 export * as chains__openai_functions from "../chains/openai_functions/index.js";
+export * as chains__violation_of_expectations from "../chains/violation_of_expectations/violation_of_expectations_chain.js";
 export * as embeddings__base from "../embeddings/base.js";
 export * as embeddings__cache_backed from "../embeddings/cache_backed.js";
 export * as embeddings__fake from "../embeddings/fake.js";

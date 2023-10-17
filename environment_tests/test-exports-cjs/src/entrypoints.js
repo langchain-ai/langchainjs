@@ -6,6 +6,7 @@ const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const chains = require("langchain/chains");
 const chains_openai_functions = require("langchain/chains/openai_functions");
+const chains_violation_of_expectations = require("langchain/chains/violation_of_expectations");
 const embeddings_base = require("langchain/embeddings/base");
 const embeddings_cache_backed = require("langchain/embeddings/cache_backed");
 const embeddings_fake = require("langchain/embeddings/fake");
