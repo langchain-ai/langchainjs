@@ -16,7 +16,7 @@
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "build": "VERCEL_FORCE_NO_BUILD_CACHE=1 turbo run build --filter=\"!test-exports-*\" --concurrency 1",
+    "build": "VERCEL_FORCE_NO_BUILD_CACHE=1 TURBO_FORCE=true turbo run build --filter=\"!test-exports-*\" --concurrency 1",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
