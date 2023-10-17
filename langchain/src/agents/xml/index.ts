@@ -11,18 +11,18 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "../../prompts/chat.js";
-import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
+import { Agent, AgentArgs } from "../agent.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import { AgentInput } from "../types.js";
 
 /**
  * Interface for the input to the XMLAgent class.
  */
-export interface XMLAgentInput {
+export interface XMLAgentInput extends AgentInput {
   tools: Tool[];
-  llmChain: LLMChain;
 }
 
 /**
@@ -50,7 +50,7 @@ export async function parseOutput(
 /**
  * Class that represents an agent that uses XML tags.
  */
-export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
+export class XMLAgent extends Agent implements XMLAgentInput {
   static lc_name() {
     return "XMLAgent";
   }
@@ -65,10 +65,17 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
     return "xml" as const;
   }
 
+  observationPrefix() {
+    return "Observation: ";
+  }
+
+  llmPrefix() {
+    return "Thought:";
+  }
+
   constructor(fields: XMLAgentInput) {
     super(fields);
     this.tools = fields.tools;
-    this.llmChain = fields.llmChain;
   }
 
   get inputKeys() {
@@ -132,8 +139,9 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
       callbacks: args?.callbacks,
     });
     return new XMLAgent({
-      llmChain: chain,
+      runnable: chain,
       tools,
+      outputParser: args?.outputParser,
     });
   }
 }

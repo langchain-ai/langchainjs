@@ -3,7 +3,7 @@ import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { loadAgent } from "../load.js";
-import { AgentExecutor, ZeroShotAgent } from "../index.js";
+import { AgentExecutor, OpenAIAgent, ZeroShotAgent } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
