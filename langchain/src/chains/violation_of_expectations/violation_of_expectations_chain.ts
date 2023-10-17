@@ -96,6 +96,10 @@ export class ViolationOfExpectationsChain
       .join("\n");
   }
 
+  removeDuplicateStrings(strings: Array<string>): Array<string> {
+    return [...new Set(strings)];
+  }
+
   /**
    * This method breaks down the chat history into chunks of messages.
    * Each chunk consists of a sequence of messages ending with an AI message and the subsequent user response, if any.
@@ -261,7 +265,10 @@ export class ViolationOfExpectationsChain
     const retrievedDocs = await this.retrieveRelevantInsights(
       predictionResponse.insights
     );
-    const relevantDocs = [...predictionResponse.insights, ...retrievedDocs];
+    const relevantDocs = this.removeDuplicateStrings([
+      ...predictionResponse.insights,
+      ...retrievedDocs,
+    ]);
 
     return {
       ...predictionResponse,
@@ -440,11 +447,11 @@ export class ViolationOfExpectationsChain
    * Static method that creates a ViolationOfExpectationsChain instance from a
    * ChatOpenAI and retriever. It also accepts optional options
    * to customize the chain.
-   * 
+   *
    * @param llm The ChatOpenAI instance.
    * @param retriever The retriever used for similarity search.
    * @param options Optional options to customize the chain.
-   * 
+   *
    * @returns A new instance of ViolationOfExpectationsChain.
    */
   static fromLLM(
