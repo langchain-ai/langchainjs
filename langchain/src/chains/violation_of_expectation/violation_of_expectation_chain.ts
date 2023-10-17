@@ -109,7 +109,7 @@ export class ViolationOfExpectationChain
 
   async _call(
     values: ChainValues,
-    _runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.chatHistoryKey in values)) {
       throw new Error(`Chat history key ${this.chatHistoryKey} not found`);
@@ -133,6 +133,7 @@ export class ViolationOfExpectationChain
           this.llm
         ),
         userResponse: chatHistoryChunk.userResponse,
+        runManager,
       }))
     );
 
@@ -142,6 +143,7 @@ export class ViolationOfExpectationChain
           userPredictions: prediction.userPredictions,
           userResponse: prediction.userResponse,
           llm: this.llm,
+          runManager,
         })
       )
     );
@@ -164,7 +166,8 @@ export class ViolationOfExpectationChain
 
   private async predictNextUserMessage(
     chatHistory: BaseMessage[],
-    llm: ChatOpenAI
+    llm: ChatOpenAI,
+    runManager?: CallbackManagerForChainRun
   ): Promise<PredictNextUserMessageResponse> {
     const messageString = this.getChatHistoryString(chatHistory);
 
@@ -180,9 +183,12 @@ export class ViolationOfExpectationChain
         outputParser
       );
 
-    const res = await chain.invoke({
-      chat_history: messageString,
-    });
+    const res = await chain.invoke(
+      {
+        chat_history: messageString,
+      },
+      runManager?.getChild("prediction")
+    );
 
     if (
       "userState" in res &&
@@ -191,6 +197,7 @@ export class ViolationOfExpectationChain
     ) {
       return res as PredictNextUserMessageResponse;
     }
+
     throw new Error(`Invalid response from LLM: ${JSON.stringify(res)}`);
   }
 
@@ -219,10 +226,12 @@ export class ViolationOfExpectationChain
     userPredictions,
     userResponse,
     llm,
+    runManager,
   }: {
     userPredictions: PredictNextUserMessageResponse;
     userResponse?: BaseMessage;
     llm: ChatOpenAI;
+    runManager?: CallbackManagerForChainRun;
   }) {
     const outputParser = new JsonOutputFunctionsParser();
 
@@ -234,11 +243,14 @@ export class ViolationOfExpectationChain
     const chain =
       PREDICTION_VIOLATIONS_PROMPT.pipe(llmWithFunctions).pipe(outputParser);
 
-    const res = (await chain.invoke({
-      predicted_output: userPredictions.predictedUserMessage,
-      actual_output: userResponse?.content ?? "",
-      user_insights: userPredictions.insights.join("\n"),
-    })) as Awaited<{
+    const res = (await chain.invoke(
+      {
+        predicted_output: userPredictions.predictedUserMessage,
+        actual_output: userResponse?.content ?? "",
+        user_insights: userPredictions.insights.join("\n"),
+      },
+      runManager?.getChild("prediction_violations")
+    )) as Awaited<{
       violationExplanation: string;
       explainedPredictionErrors: Array<string>;
       accuratePrediction: boolean;
@@ -250,6 +262,7 @@ export class ViolationOfExpectationChain
       originalPrediction: userPredictions.predictedUserMessage,
       explainedPredictionErrors: res.explainedPredictionErrors,
       userInsights: userPredictions.insights,
+      runManager,
     });
 
     return {
@@ -264,21 +277,26 @@ export class ViolationOfExpectationChain
     originalPrediction,
     explainedPredictionErrors,
     userInsights,
+    runManager,
   }: {
     llm: ChatOpenAI;
     originalPrediction: string;
     explainedPredictionErrors: Array<string>;
     userInsights: Array<string>;
+    runManager?: CallbackManagerForChainRun;
   }): Promise<string> {
     const revisedPredictionChain = GENERATE_REVISED_PREDICTION_PROMPT.pipe(
       llm
     ).pipe(new StringOutputParser());
 
-    const revisedPredictionRes = await revisedPredictionChain.invoke({
-      prediction: originalPrediction,
-      explained_prediction_errors: explainedPredictionErrors.join("\n"),
-      user_insights: userInsights.join("\n"),
-    });
+    const revisedPredictionRes = await revisedPredictionChain.invoke(
+      {
+        prediction: originalPrediction,
+        explained_prediction_errors: explainedPredictionErrors.join("\n"),
+        user_insights: userInsights.join("\n"),
+      },
+      runManager?.getChild("prediction_revision")
+    );
 
     return revisedPredictionRes;
   }
@@ -287,6 +305,7 @@ export class ViolationOfExpectationChain
     llm,
     userResponse,
     predictions,
+    runManager,
   }: {
     llm: ChatOpenAI;
     userResponse?: BaseMessage;
@@ -297,16 +316,20 @@ export class ViolationOfExpectationChain
       revisedPrediction: string;
       explainedPredictionErrors: Array<string>;
     };
+    runManager?: CallbackManagerForChainRun;
   }) {
     const chain = GENERATE_FACTS_PROMPT.pipe(llm).pipe(
       new StringOutputParser()
     );
 
-    const res = await chain.invoke({
-      prediction_violations: predictions.explainedPredictionErrors.join("\n"),
-      prediction: predictions.revisedPrediction,
-      user_message: userResponse?.content ?? "",
-    });
+    const res = await chain.invoke(
+      {
+        prediction_violations: predictions.explainedPredictionErrors.join("\n"),
+        prediction: predictions.revisedPrediction,
+        user_message: userResponse?.content ?? "",
+      },
+      runManager?.getChild("generate_facts")
+    );
 
     return res;
   }
