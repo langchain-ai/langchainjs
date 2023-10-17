@@ -239,7 +239,9 @@ export class OpenAIAgent extends Agent {
     }
 
     if (!this.llmChain) {
-      throw new Error("OpenAIAgent missing `llmChain`. You must initialize through the `.fromLLMAndTools()` method.");
+      throw new Error(
+        "OpenAIAgent missing `llmChain`. You must initialize through the `.fromLLMAndTools()` method."
+      );
     }
 
     const llm = this.llmChain.llm as ChatOpenAI;
