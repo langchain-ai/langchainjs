@@ -24,10 +24,7 @@ test("should respond with the proper schema", async () => {
     chat_history: dummyMessages,
   });
 
-  console.log(
-    res.map((i) => ({
-      explainedPredictionErrors: i.explainedPredictionErrors,
-      violationExplanation: i.violationExplanation,
-    }))
-  );
+  console.log({
+    res,
+  });
 });

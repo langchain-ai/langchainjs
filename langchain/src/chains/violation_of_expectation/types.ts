@@ -45,11 +45,9 @@ export const PREDICT_NEXT_USER_MESSAGE_FUNCTION = {
 export const PREDICTION_VIOLATIONS_ZOD_SCHEMA = z.object({
   violationExplanation: z
     .string()
-    .optional()
     .describe("How was the predication violated?"),
   explainedPredictionErrors: z
     .string()
-    .optional()
     .array()
     .describe("Explanations of how the prediction was violated and why"),
   accuratePrediction: z

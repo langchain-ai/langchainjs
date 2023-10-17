@@ -7,6 +7,7 @@ import {
   HumanMessage,
   isBaseMessage,
 } from "../../schema/index.js";
+import { StringOutputParser } from "../../schema/output_parser.js";
 import { BaseRetriever } from "../../schema/retriever.js";
 import { BaseChain, ChainInputs } from "../base.js";
 import {
@@ -16,6 +17,8 @@ import {
   PredictNextUserMessageResponse,
 } from "./types.js";
 import {
+  GENERATE_FACTS_PROMPT,
+  GENERATE_REVISED_PREDICTION_PROMPT,
   PREDICTION_VIOLATIONS_PROMPT,
   PREDICT_NEXT_USER_MESSAGE_PROMPT,
 } from "./violation_of_expectation_prompt.js";
@@ -143,7 +146,18 @@ export class ViolationOfExpectationChain
       )
     );
 
-    return predictionViolations;
+    const insights = await Promise.all(predictionViolations.map((violation) =>
+      this.generateFacts({
+        llm: this.llm,
+        userMessage: violation.userMessage,
+        predictions: {
+          revisedPrediction: violation.revisedPrediction,
+          explainedPredictionErrors: violation.explainedPredictionErrors,
+        },
+      })
+    ));
+
+    return insights;
   }
 
   private async predictNextUserMessage(
@@ -224,24 +238,69 @@ export class ViolationOfExpectationChain
       user_insights: userPredictions.insights.join("\n"),
     });
 
-    return res;
+    if (
+      !(
+        "violationExplanation" in res &&
+        "explainedPredictionErrors" in res &&
+        "accuratePrediction" in res
+      )
+    ) {
+      throw new Error(
+        "Predictions violations response is missing required fields"
+      );
+    }
+
+    const violations = res as {
+      violationExplanation: string;
+      explainedPredictionErrors: Array<string>;
+      accuratePrediction: boolean;
+    };
+
+    // make one more call to regenerate the prediction. use the retrieved facts and generated facts.
+
+    const revisedPredictionChain = GENERATE_REVISED_PREDICTION_PROMPT.pipe(
+      llm
+    ).pipe(new StringOutputParser());
+
+    const revisedPredictionRes = await revisedPredictionChain.invoke({
+      prediction: userPredictions.predictedUserMessage,
+      explained_prediction_errors:
+        violations.explainedPredictionErrors.join("\n"),
+      user_insights: userPredictions.insights.join("\n"),
+    });
+
+    return {
+      userMessage: userResponse,
+      revisedPrediction: revisedPredictionRes,
+      explainedPredictionErrors: violations.explainedPredictionErrors,
+    };
   }
 
   private async generateFacts({
     llm,
     userMessage,
-    predictionViolations: { violationExplanation, explainedPredictionErrors },
+    predictions,
   }: {
     llm: ChatOpenAI;
-    userMessage: BaseMessage;
+    userMessage?: BaseMessage;
     /**
      * Optional if the prediction was accurate.
      */
-    predictionViolations?: {
-      violationExplanation: string;
+    predictions: {
+      revisedPrediction: string;
       explainedPredictionErrors: Array<string>;
     };
   }) {
-    throw new Error("Not implemented");
+    const chain = GENERATE_FACTS_PROMPT.pipe(llm).pipe(
+      new StringOutputParser()
+    );
+
+    const res = await chain.invoke({
+      prediction_violations: predictions.explainedPredictionErrors.join("\n"),
+      prediction: predictions.revisedPrediction,
+      user_message: userMessage?.content ?? "",
+    });
+
+    return res;
   }
 }
