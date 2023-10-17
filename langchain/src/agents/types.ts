@@ -21,7 +21,7 @@ export type AgentInput<
   } = any,
   RunOutput extends AgentAction | AgentFinish = any
 > = {
-  /** @deprecated - prefer `runnables` */
+  /** @deprecated - Use `runnable` instead */
   llmChain?: LLMChain;
   runnable: Runnable<RunInput, RunOutput>;
   outputParser: AgentActionOutputParser | undefined;

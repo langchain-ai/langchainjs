@@ -11,18 +11,18 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "../../prompts/chat.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
-import { AgentInput } from "../types.js";
 
 /**
  * Interface for the input to the XMLAgent class.
  */
-export interface XMLAgentInput extends AgentInput {
+export interface XMLAgentInput {
   tools: Tool[];
+  llmChain: LLMChain;
 }
 
 /**
@@ -50,7 +50,7 @@ export async function parseOutput(
 /**
  * Class that represents an agent that uses XML tags.
  */
-export class XMLAgent extends Agent implements XMLAgentInput {
+export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   static lc_name() {
     return "XMLAgent";
   }
@@ -59,16 +59,10 @@ export class XMLAgent extends Agent implements XMLAgentInput {
 
   tools: Tool[];
 
+  llmChain: LLMChain;
+
   _agentType() {
     return "xml" as const;
-  }
-
-  observationPrefix() {
-    return "Observation: ";
-  }
-
-  llmPrefix() {
-    return "Thought:";
   }
 
   constructor(fields: XMLAgentInput) {
@@ -100,10 +94,6 @@ export class XMLAgent extends Agent implements XMLAgentInput {
     inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    if (!this.llmChain) {
-      throw new Error("LLMChain is required for XMLAgent");
-    }
-
     let log = "";
     for (const { action, observation } of steps) {
       log += `<tool>${action.tool}</tool><tool_input>${action.toolInput}</tool_input><observation>${observation}</observation>`;
@@ -142,9 +132,7 @@ export class XMLAgent extends Agent implements XMLAgentInput {
     });
     return new XMLAgent({
       llmChain: chain,
-      runnable: chain,
       tools,
-      outputParser: args?.outputParser,
     });
   }
 }

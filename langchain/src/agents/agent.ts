@@ -165,10 +165,6 @@ export class RunnableAgent<
       callbacks: callbackManager,
     });
 
-    console.log({
-      invokeInput,
-    });
-
     return output;
   }
 }
@@ -292,6 +288,7 @@ export abstract class Agent<
 > extends BaseSingleActionAgent {
   runnable: Runnable<RunInput, RunOutput>;
 
+  /** @deprecated - Use `runnable` instead */
   llmChain: LLMChain | undefined;
 
   outputParser: AgentActionOutputParser | undefined;
@@ -303,9 +300,10 @@ export abstract class Agent<
   }
 
   get inputKeys(): string[] {
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (this.runnable instanceof LLMChain) {
-      return this.runnable.inputKeys.filter((k) => k !== "agent_scratchpad");
+    if ("inputKeys" in this.runnable) {
+      return (this.runnable as { inputKeys: string[] }).inputKeys.filter(
+        (k) => k !== "agent_scratchpad"
+      );
     }
     return [];
   }
@@ -420,8 +418,7 @@ export abstract class Agent<
     }
 
     /**
-     * If a runnable is passed in (and not an LLMChain), then the output is
-     * `AgentAction | AgentFinish`.
+     * If a runnable is passed in, then the output is `AgentAction | AgentFinish`.
      * If an LLMChain was passed, the output will be `{ text: string }`.
      */
     const output = (await this.runnable.invoke(newInputs, callbackManager)) as
