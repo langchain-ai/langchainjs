@@ -164,12 +164,22 @@ export class WeaviateStore extends VectorStore {
     });
 
     try {
-      await this.client.batch
+      const responses = await this.client.batch
         .objectsBatcher()
         .withObjects(...batch)
         .do();
+      // if storing vectors fails, we need to know why
+      const errorMessages: string[] = [];
+      responses.forEach((response) => {
+        if (response?.result?.errors?.error) {
+          errorMessages.push(...response.result.errors.error.map((err) => err.message ?? ""));
+        }
+      });
+      if (errorMessages.length > 0) {
+        throw new Error(errorMessages.join("\n"));
+      }
     } catch (e) {
-      throw Error(`'Error adding vectors' ${e}`);
+      throw Error(`Error adding vectors: ${e}`);
     }
     return documentIds;
   }
