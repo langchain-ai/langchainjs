@@ -21,7 +21,7 @@ export type PredictNextUserMessageResponse = {
   insights: Array<string>;
 };
 
-export const PREDICT_NEXT_USER_MESSAGE_ZOD_SCHEMA = z.object({
+export const PREDICT_NEXT_USER_MESSAGE_ZOD_SCHEMA = /* #__PURE__ */ z.object({
   userState: z
     .string()
     .describe("Concise reasoning about the users internal mental state."),
@@ -44,7 +44,7 @@ export const PREDICT_NEXT_USER_MESSAGE_FUNCTION = {
   parameters: zodToJsonSchema(PREDICT_NEXT_USER_MESSAGE_ZOD_SCHEMA),
 };
 
-export const PREDICTION_VIOLATIONS_ZOD_SCHEMA = z.object({
+export const PREDICTION_VIOLATIONS_ZOD_SCHEMA = /* #__PURE__ */ z.object({
   violationExplanation: z
     .string()
     .describe("How was the predication violated?"),

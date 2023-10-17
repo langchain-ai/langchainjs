@@ -1,8 +1,8 @@
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { dummyMessages } from "../violation_of_expectation/types.js";
-import { ViolationOfExpectationsChain } from "../violation_of_expectation/violation_of_expectation_chain.js";
+import { dummyMessages } from "../violation_of_expectations/types.js";
+import { ViolationOfExpectationsChain } from "../violation_of_expectations/violation_of_expectations_chain.js";
 
 test("should respond with the proper schema", async () => {
   const vectorStore = await HNSWLib.fromTexts(
