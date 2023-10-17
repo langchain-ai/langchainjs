@@ -166,6 +166,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/milvus"?:
     | typeof import("../vectorstores/milvus.js")
     | Promise<typeof import("../vectorstores/milvus.js")>;
+  "langchain/vectorstores/neo4j_vector"?:
+    | typeof import("../vectorstores/neo4j_vector.js")
+    | Promise<typeof import("../vectorstores/neo4j_vector.js")>;
   "langchain/vectorstores/typeorm"?:
     | typeof import("../vectorstores/typeorm.js")
     | Promise<typeof import("../vectorstores/typeorm.js")>;
@@ -412,6 +415,9 @@ export interface OptionalImportMap {
   "langchain/storage/ioredis"?:
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
+  "langchain/storage/vercel_kv"?:
+    | typeof import("../storage/vercel_kv.js")
+    | Promise<typeof import("../storage/vercel_kv.js")>;
   "langchain/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;
@@ -475,6 +481,8 @@ export interface SecretMap {
   VECTARA_CUSTOMER_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
+  YC_API_KEY?: string;
+  YC_IAM_TOKEN?: string;
   ZAPIER_NLA_API_KEY?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;

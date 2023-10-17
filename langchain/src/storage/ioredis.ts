@@ -8,7 +8,7 @@ import { BaseStore } from "../schema/storage.js";
  * as well as yielding keys from the database.
  */
 export class RedisByteStore extends BaseStore<string, Uint8Array> {
-  lc_namespace = ["langchain", "storage", "ioredis"];
+  lc_namespace = ["langchain", "storage"];
 
   protected client: Redis;
 
@@ -56,11 +56,11 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
   async mget(keys: string[]) {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.client.mgetBuffer(prefixedKeys);
-    return retrievedValues.map((key) => {
-      if (!key) {
+    return retrievedValues.map((value) => {
+      if (!value) {
         return undefined;
       } else {
-        return key;
+        return value;
       }
     });
   }

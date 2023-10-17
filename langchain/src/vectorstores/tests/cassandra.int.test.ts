@@ -5,6 +5,7 @@ import { CassandraStore } from "../cassandra.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
+// yarn test:single /langchain/src/vectorstores/tests/cassandra.int.test.ts
 describe.skip("CassandraStore", () => {
   const cassandraConfig = {
     cloud: {
