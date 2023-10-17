@@ -54,6 +54,7 @@
       "src/chains/query_constructor/ir.ts",
       "src/chains/sql_db/index.ts",
       "src/chains/graph_qa/cypher.ts",
+      "src/chains/violation_of_expectations/violation_of_expectations_chain.ts",
       "src/embeddings/base.ts",
       "src/embeddings/bedrock.ts",
       "src/embeddings/cache_backed.ts",

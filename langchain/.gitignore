@@ -64,6 +64,9 @@ chains/sql_db.d.ts
 chains/graph_qa/cypher.cjs
 chains/graph_qa/cypher.js
 chains/graph_qa/cypher.d.ts
+chains/violation_of_expectations.cjs
+chains/violation_of_expectations.js
+chains/violation_of_expectations.d.ts
 embeddings/base.cjs
 embeddings/base.js
 embeddings/base.d.ts

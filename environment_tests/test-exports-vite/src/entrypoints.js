@@ -6,6 +6,7 @@ export * from "langchain/base_language";
 export * from "langchain/tools";
 export * from "langchain/chains";
 export * from "langchain/chains/openai_functions";
+export * from "langchain/chains/violation_of_expectations";
 export * from "langchain/embeddings/base";
 export * from "langchain/embeddings/cache_backed";
 export * from "langchain/embeddings/fake";
