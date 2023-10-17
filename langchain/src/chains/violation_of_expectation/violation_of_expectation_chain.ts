@@ -234,11 +234,11 @@ export class ViolationOfExpectationChain
     const chain =
       PREDICTION_VIOLATIONS_PROMPT.pipe(llmWithFunctions).pipe(outputParser);
 
-    const res = await chain.invoke({
+    const res = (await chain.invoke({
       predicted_output: userPredictions.predictedUserMessage,
       actual_output: userResponse?.content ?? "",
       user_insights: userPredictions.insights.join("\n"),
-    }) as Awaited<{
+    })) as Awaited<{
       violationExplanation: string;
       explainedPredictionErrors: Array<string>;
       accuratePrediction: boolean;
