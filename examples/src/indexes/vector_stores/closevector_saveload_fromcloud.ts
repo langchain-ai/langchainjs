@@ -4,10 +4,7 @@ import { CloseVectorNode } from "langchain/vectorstores/closevector/node";
 import { CloseVectorWeb } from "langchain/vectorstores/closevector/web";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {
-  CloseVectorFreeEmbeddings,
-  createPublicGetFileOperationUrl,
-} from "closevector-web";
+import { createPublicGetFileOperationUrl } from "closevector-web";
 
 // Create a vector store through any method, here from texts as an example
 // If you want to import the browser version, use the following line instead:

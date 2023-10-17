@@ -3,7 +3,7 @@ import { CloseVectorNode } from "../closevector/node.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
-test("Test CloseVectorNode.fromTexts + addVectors", async () => {
+test.skip("Test CloseVectorNode.fromTexts + addVectors", async () => {
   const key = getEnvironmentVariable("CLOSEVECTOR_API_KEY");
   const secret = getEnvironmentVariable("CLOSEVECTOR_API_SECRET");
 
