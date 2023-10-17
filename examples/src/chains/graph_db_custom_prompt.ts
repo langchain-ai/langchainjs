@@ -40,7 +40,7 @@ Do not respond to any questions that might ask anything else than for you to con
 Do not include any text except the generated Cypher statement.
 Follow these Cypher example when Generating Cypher statements:
 # How many actors played in Top Gun?
-MATCH (m:Movie {title:"Top Gun"})<-[:ACTED_IN]-()
+MATCH (m:Movie {{title:"Top Gun"}})<-[:ACTED_IN]-()
 RETURN count(*) AS result 
 
 The question is:

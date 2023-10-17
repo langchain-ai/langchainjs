@@ -1,0 +1,35 @@
+---
+sidebar_position: 3
+title: Querying a SQL DB
+---
+
+# Querying a SQL DB
+
+We can replicate our SQLDatabaseChain with Runnables.
+
+## Setup
+
+We'll need the Chinook sample DB for this example.
+
+First install `typeorm`:
+
+```bash npm2yarn
+npm install typeorm
+```
+
+Then install the dependencies needed for your database. For example, for SQLite:
+
+```bash npm2yarn
+npm install sqlite3
+```
+
+For other databases see https://typeorm.io/#installation.
+
+Finally follow the instructions on https://database.guide/2-sample-databases-sqlite/ to get the sample database for this example.
+
+## Composition
+
+import CodeBlock from "@theme/CodeBlock";
+import SQLDBExample from "@examples/guides/expression_language/cookbook_sql_db.ts";
+
+<CodeBlock language="typescript">{SQLDBExample}</CodeBlock>
