@@ -23,6 +23,9 @@ import {
   PREDICT_NEXT_USER_MESSAGE_PROMPT,
 } from "./violation_of_expectation_prompt.js";
 
+/**
+ * Interface for the input parameters of the ViolationOfExpectationChain class.
+ */
 export interface ViolationOfExpectationChainInput extends ChainInputs {
   /**
    * The retriever to use for retrieving stored
@@ -35,6 +38,10 @@ export interface ViolationOfExpectationChainInput extends ChainInputs {
   llm: ChatOpenAI;
 }
 
+/**
+ * Chain that generates key insights/facts of a user based on a
+ * a chat conversation with an AI.
+ */
 export class ViolationOfExpectationChain
   extends BaseChain
   implements ViolationOfExpectationChainInput
@@ -89,6 +96,22 @@ export class ViolationOfExpectationChain
       .join("\n");
   }
 
+  /**
+   * This method breaks down the chat history into chunks of messages.
+   * Each chunk consists of a sequence of messages ending with an AI message and the subsequent user response, if any.
+   * 
+   * @param {BaseMessage[]} chatHistory - The chat history to be chunked.
+   * 
+   * @returns {MessageChunkResult[]} An array of message chunks. Each chunk includes a sequence of messages and the subsequent user response.
+   * 
+   * @description
+   * The method iterates over the chat history and pushes each message into a temporary array.
+   * When it encounters an AI message, it checks for a subsequent user message.
+   * If a user message is found, it is considered as the user response to the AI message.
+   * If no user message is found after the AI message, the user response is undefined.
+   * The method then pushes the chunk (sequence of messages and user response) into the result array.
+   * This process continues until all messages in the chat history have been processed.
+   */
   getMessageChunks(chatHistory: BaseMessage[]): MessageChunkResult[] {
     const newArray: MessageChunkResult[] = [];
     const tempArray: BaseMessage[] = [];
