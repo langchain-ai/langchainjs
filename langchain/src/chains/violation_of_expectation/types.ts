@@ -24,15 +24,17 @@ export type PredictNextUserMessageResponse = {
 export const PREDICT_NEXT_USER_MESSAGE_ZOD_SCHEMA = z.object({
   userState: z
     .string()
-    .describe("Reasoning about the users internal mental state"),
+    .describe("Concise reasoning about the users internal mental state."),
   predictedUserMessage: z
     .string()
-    .describe("Likely possibility for the next user response"),
+    .describe(
+      "Your prediction on how they will respond to the AI's most recent message."
+    ),
   insights: z
     .string()
     .array()
     .describe(
-      "A list of any additional data, relevant to the conversation that would be useful to improve prediction"
+      "A concise list of any additional insights that would be useful to improve prediction."
     ),
 });
 
@@ -64,30 +66,33 @@ export const PREDICTION_VIOLATIONS_FUNCTION = {
 
 export const dummyMessages = [
   new HumanMessage(
-    "Hey, have you read the entry I wrote about college choices in my journal?"
+    "I've been thinking about the importance of time with myself to discover my voice. I feel like 1-2 hours is never enough."
   ),
   new AIMessage(
-    "Ah, the infamous journal of yours. Yeah, you left it open on the page. MIT, huh?"
+    "The concept of 'adequate time' varies. Have you tried different formats of introspection, such as morning pages or long-form writing, to see if they make the process more efficient?"
   ),
   new HumanMessage(
-    "Yeah, but it's not just the prestige. I wrote about the bio-engineering program there, it's groundbreaking. Plus, the campus is near the Charles River."
-  ),
-  new AIMessage("Haha, the river! Planning to join the rowing team?"),
-  new HumanMessage(
-    "Nah, I was actually looking at their Rocket Team. Imagine, designing real rockets!"
+    "I have tried journaling but never consistently. Sometimes it feels like writing doesn't capture everything."
   ),
   new AIMessage(
-    "Well, space is the final frontier. I, on the other hand, wrote about Stanford in my journal. The whole Silicon Valley ecosystem is exciting."
+    "Writing has its limits. What about other mediums like digital art, or interactive journal apps with dynamic prompts that dig deeper? Even coding a personal project can be a form of self-discovery."
   ),
   new HumanMessage(
-    "True. Your love for entrepreneurship would fit well there. And it’s near Palo Alto, so your startup dreams could actually take off."
+    "That's an interesting idea. I've never thought about coding as a form of self-discovery."
   ),
   new AIMessage(
-    "Yeah, but it’s also because the campus has those Rodin sculptures. Art amidst tech, you know?"
+    "Since you're comfortable with code, consider building a tool to log and analyze your emotional state, thoughts, or personal growth metrics. It merges skill with introspection, makes the data quantifiable."
   ),
   new HumanMessage(
-    "Haha, I bet you also love that it's a bike-friendly campus. You and your vintage Schwinn."
+    "The idea of quantifying emotions and personal growth is fascinating. But I wonder how much it can really capture the 'dark zone' within us."
   ),
-  new AIMessage("Guilty as charged. So, East Coast or West Coast next year?"),
-  // new HumanMessage("Let’s see whose journal predicts the future better."),
+  new AIMessage(
+    "Good point. The 'dark zone' isn't fully quantifiable. But a tool could serve as a scaffold to explore those areas. It gives a structured approach to an unstructured problem."
+  ),
+  new HumanMessage(
+    "You might be onto something. A structured approach could help unearth patterns or triggers I hadn't noticed."
+  ),
+  new AIMessage(
+    "Exactly. It's about creating a framework to understand what can't easily be understood. Then you can allocate those 5+ hours more effectively, targeting areas that your data flags."
+  ),
 ];

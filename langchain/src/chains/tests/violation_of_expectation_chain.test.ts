@@ -13,7 +13,7 @@ test("should respond with the proper schema", async () => {
   const retriever = vectorStore.asRetriever();
 
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    modelName: "gpt-4",
   });
   const chain = new ViolationOfExpectationChain({
     llm,

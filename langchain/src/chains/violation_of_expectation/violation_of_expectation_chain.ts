@@ -146,16 +146,18 @@ export class ViolationOfExpectationChain
       )
     );
 
-    const insights = await Promise.all(predictionViolations.map((violation) =>
-      this.generateFacts({
-        llm: this.llm,
-        userMessage: violation.userMessage,
-        predictions: {
-          revisedPrediction: violation.revisedPrediction,
-          explainedPredictionErrors: violation.explainedPredictionErrors,
-        },
-      })
-    ));
+    const insights = await Promise.all(
+      predictionViolations.map((violation) =>
+        this.generateFacts({
+          llm: this.llm,
+          userMessage: violation.userMessage,
+          predictions: {
+            revisedPrediction: violation.revisedPrediction,
+            explainedPredictionErrors: violation.explainedPredictionErrors,
+          },
+        })
+      )
+    );
 
     return insights;
   }
