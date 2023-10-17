@@ -12,7 +12,7 @@ To contribute to this project, please follow a ["fork and pull request"](https:/
 
 If you are not sure what to work on, we have a few suggestions:
 
-- Look at the issues with the [help wanted](https://github.com/hwchase17/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And if you have any questions let us know, we're happy to guide you!
+- Look at the issues with the [help wanted](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And if you have any questions let us know, we're happy to guide you!
 - At the moment our main focus is reaching parity with the Python version for features and base functionality. If you are interested in working on a specific integration or feature, please let us know and we can help you get started.
 
 ### New abstractions
@@ -21,9 +21,9 @@ We aim to keep the same APIs between the Python and JS versions of LangChain, wh
 
 ### Want to add a specific integration?
 
-LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/llms/openai.ts)), vector stores (e.g. [FAISS](https://github.com/ewfian/langchainjs/blob/main/langchain/src/vectorstores/faiss.ts)), document loaders (e.g. [Apify](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/stores/message/redis.ts)), and more.
+LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/llms/openai.ts)), vector stores (e.g. [FAISS](https://github.com/ewfian/langchainjs/blob/main/langchain/src/vectorstores/faiss.ts)), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/stores/message/redis.ts)), and more.
 
-We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
+We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
 ### Want to add a feature that's already in Python?
 
@@ -39,7 +39,7 @@ https://langchain-translator.vercel.app/
 
 ### 🚩 GitHub Issues
 
-Our [issues](https://github.com/hwchase17/langchainjs/issues) page contains
+Our [issues](https://github.com/langchain-ai/langchainjs/issues) page contains
 with bugs, improvements, and feature requests.
 
 If you start working on an issue, please assign it to yourself.
@@ -170,7 +170,7 @@ If you add support for a new external API, please add a new integration test.
 Integration tests should be called `*.int.test.ts`.
 
 Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` file
-like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
+like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/langchain/.env.example).
 
 We generally recommend only running integration tests with `yarn test:single`, but if you want to run all integration tests, run:
 
