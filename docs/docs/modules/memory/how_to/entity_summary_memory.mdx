@@ -1,0 +1,19 @@
+# Entity memory
+
+Entity Memory remembers given facts about specific entities in a conversation. It extracts information on entities (using an LLM) and builds up its knowledge about that entity over time (also using an LLM).
+
+Let's first walk through using this functionality.
+
+import CodeBlock from "@theme/CodeBlock";
+
+import Example from "@examples/memory/entity.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Inspecting the Memory Store
+
+You can also inspect the memory store directly to see the current summary of each entity:
+
+import MemoryInspectionExample from "@examples/memory/entity_memory_inspection.ts";
+
+<CodeBlock language="typescript">{MemoryInspectionExample}</CodeBlock>

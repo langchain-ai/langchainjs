@@ -2,9 +2,12 @@ import { expect } from "@jest/globals";
 
 import {
   ICacheClient,
+  IMomentoCache,
   CacheDelete,
   CacheGet,
   CacheIncrement,
+  CacheKeyExists,
+  CacheKeysExist,
   CacheSet,
   CacheSetIfNotExists,
   CacheSetFetch,
@@ -25,7 +28,9 @@ import {
   CacheDictionarySetField,
   CacheDictionarySetFields,
   CacheDictionaryGetField,
+  CacheDictionaryGetFields,
   CacheDictionaryFetch,
+  CacheDictionaryLength,
   CacheDictionaryIncrement,
   CacheDictionaryRemoveField,
   CacheDictionaryRemoveFields,
@@ -35,28 +40,38 @@ import {
   CacheSortedSetGetRank,
   CacheSortedSetGetScore,
   CacheSortedSetGetScores,
+  CacheSortedSetLength,
+  CacheSortedSetLengthByScore,
   CacheSortedSetIncrementScore,
   CacheSortedSetRemoveElement,
-  ItemGetType,
+  CacheItemGetType,
+  CacheItemGetTtl,
   CreateCache,
   ListCaches,
   DeleteCache,
   CacheFlush,
-} from "@gomomento/sdk";
+  CacheUpdateTtl,
+  CacheIncreaseTtl,
+  CacheDecreaseTtl,
+} from "@gomomento/sdk-core";
 
 import { MomentoCache } from "../momento.js";
 import { Generation } from "../../schema/index.js";
 
 class MockClient implements ICacheClient {
-  private cache: Map<string, string>;
+  private _cache: Map<string, string>;
 
   constructor() {
-    this.cache = new Map();
+    this._cache = new Map();
+  }
+
+  cache(): IMomentoCache {
+    throw new Error("Method not implemented.");
   }
 
   public async get(_: string, key: string): Promise<CacheGet.Response> {
-    if (this.cache.has(key)) {
-      return new CacheGet.Hit(new TextEncoder().encode(this.cache.get(key)));
+    if (this._cache.has(key)) {
+      return new CacheGet.Hit(new TextEncoder().encode(this._cache.get(key)));
     } else {
       return new CacheGet.Miss();
     }
@@ -67,7 +82,7 @@ class MockClient implements ICacheClient {
     key: string,
     value: string
   ): Promise<CacheSet.Response> {
-    this.cache.set(key, value);
+    this._cache.set(key, value);
     return new CacheSet.Success();
   }
 
@@ -96,6 +111,14 @@ class MockClient implements ICacheClient {
   }
 
   increment(): Promise<CacheIncrement.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  keyExists(): Promise<CacheKeyExists.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  keysExist(): Promise<CacheKeysExist.Response> {
     throw new Error("Method not implemented.");
   }
 
@@ -175,7 +198,7 @@ class MockClient implements ICacheClient {
     throw new Error("Method not implemented.");
   }
 
-  dictionaryGetFields(): Promise<CacheDictionaryGetField.Response> {
+  dictionaryGetFields(): Promise<CacheDictionaryGetFields.Response> {
     throw new Error("Method not implemented.");
   }
 
@@ -184,6 +207,10 @@ class MockClient implements ICacheClient {
   }
 
   dictionaryIncrement(): Promise<CacheDictionaryIncrement.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  dictionaryLength(): Promise<CacheDictionaryLength.Response> {
     throw new Error("Method not implemented.");
   }
 
@@ -227,6 +254,14 @@ class MockClient implements ICacheClient {
     throw new Error("Method not implemented.");
   }
 
+  sortedSetLength(): Promise<CacheSortedSetLength.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  sortedSetLengthByScore(): Promise<CacheSortedSetLengthByScore.Response> {
+    throw new Error("Method not implemented.");
+  }
+
   sortedSetRemoveElement(): Promise<CacheSortedSetRemoveElement.Response> {
     throw new Error("Method not implemented.");
   }
@@ -235,7 +270,23 @@ class MockClient implements ICacheClient {
     throw new Error("Method not implemented.");
   }
 
-  itemGetType(): Promise<ItemGetType.Response> {
+  itemGetType(): Promise<CacheItemGetType.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  itemGetTtl(): Promise<CacheItemGetTtl.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  updateTtl(): Promise<CacheUpdateTtl.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  increaseTtl(): Promise<CacheIncreaseTtl.Response> {
+    throw new Error("Method not implemented.");
+  }
+
+  decreaseTtl(): Promise<CacheDecreaseTtl.Response> {
     throw new Error("Method not implemented.");
   }
 }

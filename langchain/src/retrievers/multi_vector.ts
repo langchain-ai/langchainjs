@@ -1,4 +1,4 @@
-import { BaseStore } from "../schema/storage.js";
+import { BaseStoreInterface } from "../schema/storage.js";
 import { Document } from "../document.js";
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { VectorStore } from "../vectorstores/base.js";
@@ -8,7 +8,7 @@ import { VectorStore } from "../vectorstores/base.js";
  */
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
   vectorstore: VectorStore;
-  docstore: BaseStore<string, Document>;
+  docstore: BaseStoreInterface<string, Document>;
   idKey?: string;
   childK?: number;
   parentK?: number;
@@ -28,7 +28,7 @@ export class MultiVectorRetriever extends BaseRetriever {
 
   public vectorstore: VectorStore;
 
-  public docstore: BaseStore<string, Document>;
+  public docstore: BaseStoreInterface<string, Document>;
 
   protected idKey: string;
 
