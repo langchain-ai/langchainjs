@@ -1,4 +1,4 @@
-import { ZepRetriever, ZepRetrieverConfig } from "langchain/retrievers/zep";
+import { ZepRetriever } from "langchain/retrievers/zep";
 import { ZepMemory } from "langchain/memory/zep";
 import { Memory as MemoryModel, Message } from "@getzep/zep-js";
 import { randomUUID } from "crypto";
