@@ -32,4 +32,4 @@ Please report security vulnerabilities by email to security@langchain.dev. This 
 
 ## Enterprise solutions
 
-LangChain may offer enterprise solutions for customers who have additional security requirements. Please contact us at sales@langchain.dev.
+LangChain offers enterprise solutions for customers who have additional security requirements. Please contact us at sales@langchain.dev.
