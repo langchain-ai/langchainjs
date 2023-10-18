@@ -1266,6 +1266,9 @@ export class RunnableMap<RunInput> extends Runnable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Record<string, any>
 > {
+  addStep(key: string, value: Runnable<Record<string, any>, any, BaseCallbackConfig>) {
+    throw new Error("Method not implemented.");
+  }
   static lc_name() {
     return "RunnableMap";
   }
@@ -1275,6 +1278,10 @@ export class RunnableMap<RunInput> extends Runnable<
   lc_serializable = true;
 
   protected steps: Record<string, Runnable<RunInput>>;
+
+  public getStepsKeys(): string[] {
+    return Object.keys(this.steps);
+  }
 
   constructor(fields: { steps: Record<string, RunnableLike<RunInput>> }) {
     super(fields);
