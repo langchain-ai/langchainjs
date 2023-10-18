@@ -45,3 +45,8 @@ export const run = async () => {
   );
 };
 ```
+
+# Disclaimer ⚠️
+This agent can make requests to external APIs. Use with caution, especially when granting access to users.
+
+Consider adding limitations to what actions can be preformed via the agent, what APIs it can access, what headers can be passed and more.
