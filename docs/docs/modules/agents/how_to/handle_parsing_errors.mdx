@@ -1,0 +1,21 @@
+# Handle parsing errors
+
+Occasionally the LLM cannot determine what step to take because it outputs format in incorrect form to be handled by the output parser.
+In this case, by default the agent errors. You can control this functionality by passing `handleParsingErrors` when initializing the agent
+executor. This field can be a boolean, a string, or a function:
+
+- Passing `true` will pass a generic error back to the LLM along with the parsing error text for a retry.
+- Passing a string will return that value along with the parsing error text. This is helpful to steer the LLM in the right direction.
+- Passing a function that takes an `OutputParserException` as a single argument allows you to run code in response to an error and return
+  whatever string you'd like.
+
+Here's an example where the model initially tries to set `"Reminder"` as the task type instead of an allowed value:
+
+import CodeBlock from "@theme/CodeBlock";
+import HandleParsingErrorExample from "@examples/agents/handle_parsing_error.ts";
+
+<CodeBlock language="typescript">{HandleParsingErrorExample}</CodeBlock>
+
+This is what the resulting trace looks like - note that the LLM retries before correctly choosing a matching enum:
+
+https://smith.langchain.com/public/b00cede1-4aca-49de-896f-921d34a0b756/r
