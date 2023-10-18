@@ -166,6 +166,9 @@ llms/portkey.d.ts
 llms/yandex.cjs
 llms/yandex.js
 llms/yandex.d.ts
+llms/fake.cjs
+llms/fake.js
+llms/fake.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
@@ -451,6 +454,9 @@ chat_models/ollama.d.ts
 chat_models/minimax.cjs
 chat_models/minimax.js
 chat_models/minimax.d.ts
+chat_models/fake.cjs
+chat_models/fake.js
+chat_models/fake.d.ts
 schema.cjs
 schema.js
 schema.d.ts
