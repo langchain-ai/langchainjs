@@ -33,7 +33,7 @@ export interface SqlDatabaseChainInput extends ChainInputs {
  * Class that represents a SQL database chain in the LangChain framework.
  * It extends the BaseChain class and implements the functionality
  * specific to a SQL database chain.
- * 
+ *
  * @security **Security Notice**
  * This chain generates SQL queries for the given database.
  * The SQLDatabase class provides a getTableInfo method that can be used

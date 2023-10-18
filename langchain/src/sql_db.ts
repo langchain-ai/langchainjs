@@ -16,7 +16,7 @@ export type { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
 
 /**
  * Class that represents a SQL database in the LangChain framework.
- * 
+ *
  * @security **Security Notice**
  * This class generates SQL queries for the given database.
  * The SQLDatabase class provides a getTableInfo method that can be used
