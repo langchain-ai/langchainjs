@@ -11,6 +11,7 @@ import { StringOutputParser } from "../../schema/output_parser.js";
 import { BaseRetriever } from "../../schema/retriever.js";
 import { BaseChain, ChainInputs } from "../base.js";
 import {
+  GetPredictionViolationsResponse,
   MessageChunkResult,
   PREDICTION_VIOLATIONS_FUNCTION,
   PREDICT_NEXT_USER_MESSAGE_FUNCTION,
@@ -214,7 +215,9 @@ export class ViolationOfExpectationsChain
       )
     );
 
-    return insights;
+    return {
+      insights,
+    };
   }
 
   /**
@@ -324,7 +327,7 @@ export class ViolationOfExpectationsChain
     userPredictions: PredictNextUserMessageResponse;
     userResponse?: BaseMessage;
     runManager?: CallbackManagerForChainRun;
-  }) {
+  }): Promise<GetPredictionViolationsResponse> {
     const llmWithFunctions = this.llm.bind({
       functions: [PREDICTION_VIOLATIONS_FUNCTION],
       function_call: { name: PREDICTION_VIOLATIONS_FUNCTION.name },
@@ -426,7 +429,7 @@ export class ViolationOfExpectationsChain
       explainedPredictionErrors: Array<string>;
     };
     runManager?: CallbackManagerForChainRun;
-  }) {
+  }): Promise<string> {
     const chain = GENERATE_FACTS_PROMPT.pipe(this.llm).pipe(
       this.stringOutputParser
     );

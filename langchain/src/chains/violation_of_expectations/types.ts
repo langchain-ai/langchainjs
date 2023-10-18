@@ -19,6 +19,12 @@ export type PredictNextUserMessageResponse = {
   insights: Array<string>;
 };
 
+export type GetPredictionViolationsResponse = {
+  userResponse?: HumanMessage;
+  revisedPrediction: string;
+  explainedPredictionErrors: Array<string>;
+}
+
 export const PREDICT_NEXT_USER_MESSAGE_FUNCTION = {
   name: "predictNextUserMessage",
   description: "Predicts the next user message, along with insights.",
