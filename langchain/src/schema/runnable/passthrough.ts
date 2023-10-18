@@ -102,19 +102,6 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   }
 
   static assign<RunInput = unknown>(mapping: Record<string, Runnable<Record<string, unknown>, unknown> | ((input: Record<string, unknown>) => unknown)>): RunnableAssign<RunInput, Record<string, unknown>> {
-    const runnableMap = new RunnableMap<Record<string, unknown>>({ steps: {} });
-    for (const key in mapping) {
-      if (Object.prototype.hasOwnProperty.call(mapping, key)) {
-        const value = mapping[key];
-        if (Runnable.isRunnable(value)) {
-          runnableMap.addStep(key, value);
-        } else if (typeof value === "function") {
-          runnableMap.addStep(key, new RunnablePassthrough(value));
-        } else {
-          throw new Error("Invalid mapping argument.");
-        }
-      }
-    }
-    return new RunnableAssign(runnableMap);
+    return new RunnableAssign(new RunnableMap<Record<string, unknown>>({ steps: mapping }));
   }
 }
