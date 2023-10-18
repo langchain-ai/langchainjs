@@ -1,6 +1,9 @@
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
-import { RunnablePassthrough, RunnableSequence } from "langchain/schema/runnable";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "langchain/schema/runnable";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -36,7 +39,7 @@ const sqlQueryGeneratorChain = RunnableSequence.from([
 ]);
 
 const result = await sqlQueryGeneratorChain.invoke({
-  question: "How many employees are there?"
+  question: "How many employees are there?",
 });
 
 console.log({

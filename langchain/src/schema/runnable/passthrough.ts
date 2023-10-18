@@ -15,7 +15,7 @@ export class RunnableAssign<
   mapper: RunnableMap<RunInput>;
 
   constructor(mapper: RunnableMap<RunInput>) {
-    super()
+    super();
     this.mapper = mapper;
   }
 
