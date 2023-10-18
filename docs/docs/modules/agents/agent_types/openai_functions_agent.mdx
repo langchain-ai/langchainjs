@@ -1,0 +1,31 @@
+---
+hide_table_of_contents: true
+sidebar_position: 0
+---
+
+# OpenAI functions
+
+Certain OpenAI models (like gpt-3.5-turbo-0613 and gpt-4-0613) have been fine-tuned to detect when a function should to be called and respond with the inputs that should be passed to the function.
+In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call those functions.
+The goal of the OpenAI Function APIs is to more reliably return valid and useful function calls than a generic text completion or chat API.
+
+The OpenAI Functions Agent is designed to work with these models.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/openai.ts";
+
+:::tip Compatibility
+Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
+:::
+
+This agent also supports `StructuredTool`s with more complex input schemas.
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Prompt customization
+
+You can pass in a custom string to be used as the system message of the prompt as follows:
+
+import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
+
+<CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>
