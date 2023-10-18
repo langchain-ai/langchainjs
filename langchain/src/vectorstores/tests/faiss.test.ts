@@ -259,12 +259,12 @@ test("Test FaissStore.delete", async () => {
   );
   expect(doc2.metadata.tag).toEqual(8);
 
-  await vectorStore.delete({ ids: [idsReturned1[1]] });
+  await vectorStore.delete({ ids: [idsReturned1[0]] });
   const [[doc3]] = await vectorStore.similaritySearchVectorWithScore(
     [1, 1, 0, 1],
     1
   );
-  expect(doc3.metadata.tag).toEqual(1);
+  expect(doc3.metadata.tag).toEqual(8);
 });
 
 test("Test FaissStore Exceptions", async () => {

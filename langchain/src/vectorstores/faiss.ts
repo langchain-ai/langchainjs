@@ -219,7 +219,7 @@ export class FaissStore extends SaveableVectorStore {
       mappings.delete(id);
     });
 
-    this._mapping = Object.fromEntries(mappings);
+    this._mapping = { ...Array.from(mappings.values())};
   }
 
   /**

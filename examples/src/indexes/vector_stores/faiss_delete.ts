@@ -47,3 +47,7 @@ await vectorStore.delete({ ids: [ids[0], ids[1]] });
 const docs2 = await vectorStore.similaritySearch("my world", 3);
 
 console.log(docs2);
+
+/*
+[ Document { pageContent: 'your world', metadata: { tag: 4 } } ]
+*/
