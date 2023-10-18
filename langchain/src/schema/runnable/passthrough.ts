@@ -14,6 +14,11 @@ export class RunnableAssign<
 
   mapper: RunnableMap<RunInput>;
 
+  constructor(mapper: RunnableMap<RunInput>) {
+    super()
+    this.mapper = mapper;
+  }
+
   async invoke(input: RunInput, options?: Partial<CallOptions>) {
     const mapperResult = await this.mapper.invoke(input, options);
 
@@ -101,13 +106,13 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     );
   }
 
-  static assign<RunInput = unknown>(
+  static assign(
     mapping: Record<
       string,
       | Runnable<Record<string, unknown>, unknown>
       | ((input: Record<string, unknown>) => unknown)
     >
-  ): RunnableAssign<RunInput, Record<string, unknown>> {
+  ): RunnableAssign<Record<string, unknown>, Record<string, unknown>> {
     return new RunnableAssign(
       new RunnableMap<Record<string, unknown>>({ steps: mapping })
     );
