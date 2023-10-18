@@ -3,11 +3,11 @@ import { Runnable, RunnableMap } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
 /**
- * A runnable that assigns key-value pairs to inputs of type `Record<string, any>`.
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
  */
 export class RunnableAssign<
-  RunInput = any,
-  RunOutput = any,
+  RunInput = unknown,
+  RunOutput = unknown,
   CallOptions extends RunnableConfig = RunnableConfig
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "schema", "runnable"];
@@ -42,7 +42,7 @@ export class RunnableAssign<
         );
       }
 
-      const filtered: Record<string, any> = {};
+      const filtered: Record<string, unknown> = {};
       for (const key in chunk) {
         if (!mapperKeys.has(key)) {
           filtered[key] = chunk[key];
