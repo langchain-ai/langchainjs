@@ -2,7 +2,7 @@ import {
   MemorySearchPayload,
   MemorySearchResult,
   NotFoundError,
-  ZepClient
+  ZepClient,
 } from "@getzep/zep-js";
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
@@ -43,7 +43,7 @@ export class ZepRetriever extends BaseRetriever {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "ZEP_API_KEY",
-      url: "ZEP_API_URL"
+      url: "ZEP_API_URL",
     };
   }
 
@@ -89,7 +89,7 @@ export class ZepRetriever extends BaseRetriever {
         }) =>
           new Document({
             pageContent: content ?? "",
-            metadata: { score: dist, ...messageMetadata, ...rest }
+            metadata: { score: dist, ...messageMetadata, ...rest },
           })
       );
   }
@@ -104,7 +104,7 @@ export class ZepRetriever extends BaseRetriever {
       text: query,
       metadata: this.filter,
       search_type: this.searchType,
-      mmr_lambda: this.mmrLambda
+      mmr_lambda: this.mmrLambda,
     };
     // Wait for ZepClient to be initialized
     const zepClient = await this.zepClientPromise;

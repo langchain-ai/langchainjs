@@ -11,14 +11,14 @@ function sleep(ms: number) {
 export const run = async () => {
   const zepConfig = {
     url: process.env.ZEP_URL || "http://localhost:8000",
-    sessionId: `session_${randomUUID()}`
+    sessionId: `session_${randomUUID()}`,
   };
 
   console.log(`Zep Config: ${JSON.stringify(zepConfig)}`);
 
   const memory = new ZepMemory({
     baseURL: zepConfig.url,
-    sessionId: zepConfig.sessionId
+    sessionId: zepConfig.sessionId,
   });
 
   // Generate chat messages
@@ -31,8 +31,8 @@ export const run = async () => {
     {
       role: "User",
       message:
-        "I'm looking for a red car with a sunroof that I can drive to Paris."
-    }
+        "I'm looking for a red car with a sunroof that I can drive to Paris.",
+    },
   ];
 
   const zepClient = await memory.zepClientPromise;
@@ -45,11 +45,13 @@ export const run = async () => {
     let m: MemoryModel;
     if (chatMessage.role === "AI") {
       m = new MemoryModel({
-        messages: [new Message({ role: "ai", content: chatMessage.message })]
+        messages: [new Message({ role: "ai", content: chatMessage.message })],
       });
     } else {
       m = new MemoryModel({
-        messages: [new Message({ role: "human", content: chatMessage.message })]
+        messages: [
+          new Message({ role: "human", content: chatMessage.message }),
+        ],
       });
     }
 
@@ -70,7 +72,7 @@ export const run = async () => {
     ...zepConfig,
     topK: 3,
     searchType: "mmr",
-    mmrLambda: 0.5
+    mmrLambda: 0.5,
   });
   const mmrDocs = await mmrRetriever.getRelevantDocuments(query);
   console.log("MMR reranking search");
@@ -81,8 +83,8 @@ export const run = async () => {
     ...zepConfig,
     topK: 3,
     filter: {
-      where: { jsonpath: '$.system.entities[*] ? (@.Label == "GPE")' }
-    }
+      where: { jsonpath: '$.system.entities[*] ? (@.Label == "GPE")' },
+    },
   });
   const filteredDocs = await filteredRetriever.getRelevantDocuments(query);
   console.log("Filtered search");
