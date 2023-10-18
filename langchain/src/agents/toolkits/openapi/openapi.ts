@@ -71,6 +71,8 @@ export class OpenApiToolkit extends RequestsToolkit {
  * Exposing this agent to users could lead to security vulnerabilities. Consider
  * limiting access to what endpoints it can hit, what actions can be taken, and
  * more.
+ * 
+ * See https://js.langchain.com/docs/security for more information.
  */
 export function createOpenApiAgent(
   llm: BaseLanguageModel,
