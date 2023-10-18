@@ -157,6 +157,116 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
   ]);
 });
 
+test("Test FaissStore.addDocuments", async () => {
+  const vectorStore = new FaissStore(new FakeEmbeddings(), {});
+  const idsReturned = await vectorStore.addDocuments([
+    { pageContent: "bar", metadata: { id: 4, name: "4" } },
+    { pageContent: "baz", metadata: { id: 5, name: "5" } },
+  ]);
+
+  expect(idsReturned.length).toEqual(2);
+
+  const ids = ["2", "1", "4"];
+  const idsReturned1 = await vectorStore.addDocuments(
+    [
+      { pageContent: "bar", metadata: { id: 4, name: "4" } },
+      { pageContent: "baz", metadata: { id: 5, name: "5" } },
+    ],
+    {
+      ids,
+    }
+  );
+
+  expect(idsReturned1).toStrictEqual(ids);
+  expect(vectorStore.index?.ntotal()).toBe(4);
+  expect(Object.keys(vectorStore._mapping).length).toBe(4);
+  expect(vectorStore.docstore._docs.size).toBe(4);
+});
+
+test("Test FaissStore.delete", async () => {
+  const vectorStore = new FaissStore(new FakeEmbeddings(), {});
+  const ids = ["2", "1", "4"];
+  const idsReturned = await vectorStore.addVectors(
+    [
+      [1, 0, 0, 0],
+      [1, 0, 0, 1],
+      [1, 1, 0, 1],
+    ],
+    [
+      new Document({
+        pageContent: "my world",
+        metadata: { tag: 2 },
+      }),
+      new Document({
+        pageContent: "our world",
+        metadata: { tag: 1 },
+      }),
+      new Document({
+        pageContent: "your world",
+        metadata: { tag: 4 },
+      }),
+    ],
+    {
+      ids,
+    }
+  );
+
+  expect(idsReturned).toStrictEqual(ids);
+
+  expect(vectorStore.index?.ntotal()).toBe(3);
+  expect(Object.keys(vectorStore._mapping).length).toBe(3);
+  expect(vectorStore.docstore._docs.size).toBe(3);
+
+  const [[doc]] = await vectorStore.similaritySearchVectorWithScore(
+    [1, 1, 0, 1],
+    1
+  );
+  expect(doc.metadata.tag).toEqual(4);
+
+  await vectorStore.delete({ ids: ids.slice(2) });
+
+  expect(vectorStore.index?.ntotal()).toBe(2);
+  expect(Object.keys(vectorStore._mapping).length).toBe(2);
+  expect(vectorStore.docstore._docs.size).toBe(2);
+
+  const [[doc1]] = await vectorStore.similaritySearchVectorWithScore(
+    [1, 1, 0, 1],
+    1
+  );
+  expect(doc1.metadata.tag).toEqual(1);
+
+  const idsReturned1 = await vectorStore.addVectors(
+    [
+      [1, 0, 0, 0],
+      [1, 1, 0, 1],
+    ],
+    [
+      new Document({
+        pageContent: "my world 1",
+        metadata: { tag: 7 },
+      }),
+      new Document({
+        pageContent: "our world 2",
+        metadata: { tag: 8 },
+      }),
+    ]
+  );
+
+  expect(idsReturned1.length).toStrictEqual(2);
+  const [[doc2]] = await vectorStore.similaritySearchVectorWithScore(
+    [1, 1, 0, 1],
+    1
+  );
+  expect(doc2.metadata.tag).toEqual(8);
+
+  await vectorStore.delete({ ids: [idsReturned1[0]] });
+  const [[doc3]] = await vectorStore.similaritySearchVectorWithScore(
+    [1, 1, 0, 1],
+    1
+  );
+  expect(doc3.metadata.tag).toEqual(8);
+});
+
 test("Test FaissStore Exceptions", async () => {
   const vectorStore = new FaissStore(new FakeEmbeddings(), {});
   expect(() => vectorStore.index).toThrow(
@@ -219,4 +329,16 @@ test("Test FaissStore Exceptions", async () => {
   await expect(async () => {
     await FaissStore.load("_fake_path", new FakeEmbeddings());
   }).rejects.toThrow(/No such file or directory$/);
+
+  const vectorStore3 = new FaissStore(new FakeEmbeddings(), {});
+  await expect(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await vectorStore3.delete({ ids: null as any });
+  }).rejects.toThrow("No documentIds provided to delete.");
+
+  await expect(async () => {
+    await vectorStore3.delete({ ids: ["123"] });
+  }).rejects.toThrow(
+    "Some specified documentIds do not exist in the current store. DocumentIds not found: 123"
+  );
 });

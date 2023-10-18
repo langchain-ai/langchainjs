@@ -6981,13 +6981,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@getzep/zep-js@npm:0.7.0"
+"@getzep/zep-js@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@getzep/zep-js@npm:0.8.0"
   dependencies:
+    "@supercharge/promise-pool": ^3.1.0
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: aa5d68babb6b8bc40886f7f4fd4c502cf0eb407e2781b9e91934865faba83bc2efb4ba21ef304209d4919f7bfad05c50bab6e8da4e3e37eb6095c77e7d24de8c
+  checksum: fcc47ddf96fa52222b2beedd500ad25c42c93933a5167ca2887bfc965cc39c51519bbfac14883115418d9596249234ff49f00b5aeb94f0bf001c2ca4d41d63f0
   languageName: node
   linkType: hard
 
@@ -10073,6 +10074,13 @@ __metadata:
     "@supabase/storage-js": ^2.3.1
     cross-fetch: ^3.1.5
   checksum: 60da311e9aae2f9cce0716baf9820cf2030b2ee3ba0df6f95de60023b770d034b2f5044e4492c50c02f62379b1ac9979ca65e136873fc6c9d8bd76e758a62b33
+  languageName: node
+  linkType: hard
+
+"@supercharge/promise-pool@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@supercharge/promise-pool@npm:3.1.0"
+  checksum: 15c391bb592f552eb9c7d36467539256a752206bd59834e86171a4c8356e077bc774e0583e14e03fd1613de66dbf623f00777ec674d95242ae7ad7f43d74268c
   languageName: node
   linkType: hard
 
@@ -13265,6 +13273,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"browserify-zlib@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "browserify-zlib@npm:0.1.4"
+  dependencies:
+    pako: ~0.2.0
+  checksum: abee4cb4349e8a21391fd874564f41b113fe691372913980e6fa06a777e4ea2aad4e942af14ab99bce190d5ac8f5328201432f4ef0eae48c6d02208bc212976f
+  languageName: node
+  linkType: hard
+
 "browserslist@npm:^4.0.0, browserslist@npm:^4.14.5, browserslist@npm:^4.18.1, browserslist@npm:^4.21.10, browserslist@npm:^4.21.4, browserslist@npm:^4.21.9, browserslist@npm:^4.22.1":
   version: 4.22.1
   resolution: "browserslist@npm:4.22.1"
@@ -14012,6 +14029,108 @@ __metadata:
   version: 1.0.4
   resolution: "clone@npm:1.0.4"
   checksum: d06418b7335897209e77bdd430d04f882189582e67bd1f75a04565f3f07f5b3f119a9d670c943b6697d0afb100f03b866b3b8a1f91d4d02d72c4ecf2bb64b5dd
+  languageName: node
+  linkType: hard
+
+"closevector-browserify-zlib@npm:0.1.0-alpha.3":
+  version: 0.1.0-alpha.3
+  resolution: "closevector-browserify-zlib@npm:0.1.0-alpha.3"
+  dependencies:
+    buffer: ^6.0.3
+    closevector-stream-browserify: 0.1.0-alpha.1
+    pako: ~1.0.5
+    process: ^0.11.10
+  checksum: de0a91c02ccf1e5a3675f08ed3eb9e9f989d8ed32e5e65dffa0b751fd68bd5fff5681eb2d76ba74bc4fec5fbaf515be6dbc08e9c022a80a2ca3a99c576006ae5
+  languageName: node
+  linkType: hard
+
+"closevector-common@npm:0.1.0-alpha.1":
+  version: 0.1.0-alpha.1
+  resolution: "closevector-common@npm:0.1.0-alpha.1"
+  checksum: eccd2ee3ef43c60203a15005309b16a18ee90a50515e60df1c306e431c96ced9b913d9c362b551014fc8975f9b5c26fef3f61d74286b4c7039c6bc91d9ea54dd
+  languageName: node
+  linkType: hard
+
+"closevector-crypto-jwt@npm:0.1.0-alpha.3":
+  version: 0.1.0-alpha.3
+  resolution: "closevector-crypto-jwt@npm:0.1.0-alpha.3"
+  checksum: f8377320088a4a1eb295a02176eb7517cdfcf712924ef7aded5a3fb5a53747bf5843adc2e097dfa68b0e75123cafe1ac79e76ff8f68e231831bc9b5903759d2f
+  languageName: node
+  linkType: hard
+
+"closevector-hnswlib-node@npm:0.1.0-alpha.2":
+  version: 0.1.0-alpha.2
+  resolution: "closevector-hnswlib-node@npm:0.1.0-alpha.2"
+  dependencies:
+    bindings: ^1.5.0
+    node-addon-api: ^7.0.0
+    node-gyp: latest
+  checksum: 9bf4cf9325caacc5e6c237392f4bc7f9d0344ed009030494117930e014b664b500627c0bd75f6eaca3ab64625a0c927c1c198bfc0f31516d72d83844190ec54d
+  languageName: node
+  linkType: hard
+
+"closevector-hnswlib-wasm@npm:0.1.0-alpha.3":
+  version: 0.1.0-alpha.3
+  resolution: "closevector-hnswlib-wasm@npm:0.1.0-alpha.3"
+  dependencies:
+    bindings: ^1.5.0
+    node-addon-api: ^7.0.0
+  checksum: d0dd57782c25807b38b4977f19d1bedea5347d85e33917f20bbfa40c1017eaec565252f27f3e4675690cddda0c889d732ce5069abb6c29976a903be828ecbe8d
+  languageName: node
+  linkType: hard
+
+"closevector-node@npm:0.1.0-alpha.10":
+  version: 0.1.0-alpha.10
+  resolution: "closevector-node@npm:0.1.0-alpha.10"
+  dependencies:
+    axios: ^1.4.0
+    closevector-common: 0.1.0-alpha.1
+    closevector-hnswlib-node: 0.1.0-alpha.2
+    jsonwebtoken: ^9.0.0
+    tar: ^6.1.15
+    typescript: ^5.1.6
+  checksum: af946bcab810414af4408013fadf402253dfe5375cb0ef0f036f1fce4885cf65ccf5f201cc4aac35b95bdeccb04d47678bc333a08a83ec7d0e5de9c69456c1e6
+  languageName: node
+  linkType: hard
+
+"closevector-readable-stream@npm:0.1.0-alpha.1":
+  version: 0.1.0-alpha.1
+  resolution: "closevector-readable-stream@npm:0.1.0-alpha.1"
+  dependencies:
+    buffer: ^6.0.3
+    events: ^3.3.0
+    inherits: ^2.0.3
+    process: ^0.11.10
+    string_decoder: ^1.1.1
+    util-deprecate: ^1.0.1
+  checksum: f8bed4668df214e9983218792a745b22e4446b10e418e02162abc6364688bf16bf7ec3f0a350b951e99c57475c851890af9c54b0fb109c059cda9b679cfae211
+  languageName: node
+  linkType: hard
+
+"closevector-stream-browserify@npm:0.1.0-alpha.1":
+  version: 0.1.0-alpha.1
+  resolution: "closevector-stream-browserify@npm:0.1.0-alpha.1"
+  dependencies:
+    closevector-readable-stream: 0.1.0-alpha.1
+    events: ^3.3.0
+  checksum: c491d61e03449ee01b1fa53983f3c9f8fc6aa8989f5c095fc7ff6de0bb2e67bbe7514808526d178b3503bc7ef504e1887ab7d8f774f2654dd2d53ca9cfe7ce7f
+  languageName: node
+  linkType: hard
+
+"closevector-web@npm:0.1.0-alpha.15":
+  version: 0.1.0-alpha.15
+  resolution: "closevector-web@npm:0.1.0-alpha.15"
+  dependencies:
+    axios: ^1.4.0
+    closevector-browserify-zlib: 0.1.0-alpha.3
+    closevector-common: 0.1.0-alpha.1
+    closevector-crypto-jwt: 0.1.0-alpha.3
+    closevector-hnswlib-wasm: 0.1.0-alpha.3
+    closevector-stream-browserify: 0.1.0-alpha.1
+    gunzip-maybe: ^1.4.2
+    tar-stream: ^3.1.6
+    typescript: ^5.1.6
+  checksum: 2f8b0b53b0aa944a00ffda9215d5b3ddafedbae3bee7e78ed49d0b183b03f2ec6340876a21b020381f2e193578b29e067f76ca0e4c34c10d439232147c93ace8
   languageName: node
   linkType: hard
 
@@ -15569,6 +15688,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"duplexify@npm:^3.5.0, duplexify@npm:^3.6.0":
+  version: 3.7.1
+  resolution: "duplexify@npm:3.7.1"
+  dependencies:
+    end-of-stream: ^1.0.0
+    inherits: ^2.0.1
+    readable-stream: ^2.0.0
+    stream-shift: ^1.0.0
+  checksum: 3c2ed2223d956a5da713dae12ba8295acb61d9acd966ccbba938090d04f4574ca4dca75cca089b5077c2d7e66101f32e6ea9b36a78ca213eff574e7a8b8accf2
+  languageName: node
+  linkType: hard
+
 "duplexify@npm:^4.0.0":
   version: 4.1.2
   resolution: "duplexify@npm:4.1.2"
@@ -15683,7 +15814,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"end-of-stream@npm:^1.1.0, end-of-stream@npm:^1.4.1":
+"end-of-stream@npm:^1.0.0, end-of-stream@npm:^1.1.0, end-of-stream@npm:^1.4.1":
   version: 1.4.4
   resolution: "end-of-stream@npm:1.4.4"
   dependencies:
@@ -16719,7 +16850,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"events@npm:^3.0.0, events@npm:^3.2.0":
+"events@npm:^3.0.0, events@npm:^3.2.0, events@npm:^3.3.0":
   version: 3.3.0
   resolution: "events@npm:3.3.0"
   checksum: f6f487ad2198aa41d878fa31452f1a3c00958f46e9019286ff4787c84aac329332ab45c9cdc8c445928fc6d7ded294b9e005a7fce9426488518017831b272780
@@ -16733,7 +16864,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -16759,7 +16890,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-unused-imports: ^3.0.0
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
@@ -16767,7 +16898,7 @@ __metadata:
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     pg: ^8.11.0
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     prettier: ^2.8.3
     prisma: ^4.11.0
     redis: ^4.6.6
@@ -16983,15 +17114,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"faiss-node@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "faiss-node@npm:0.3.0"
+"faiss-node@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "faiss-node@npm:0.5.1"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^6.0.0
     node-gyp: latest
     prebuild-install: ^7.1.1
-  checksum: 292da11f4a453a252576535d360207bd55c8421d0a1dfd30c7ca7f8ba84854fba693c8685ee90506d8c56f1a5c69a905a587d7fb382100efd5b8a384728cbd6e
+  checksum: 9c8ba45c004151be6e94460a30b46fdd854de5f067fd18757f388e103276bb4d479db66cd0475961c447c40c11df629612144d31af932984d4b5ca5c5276f508
   languageName: node
   linkType: hard
 
@@ -18431,6 +18562,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"gunzip-maybe@npm:^1.4.2":
+  version: 1.4.2
+  resolution: "gunzip-maybe@npm:1.4.2"
+  dependencies:
+    browserify-zlib: ^0.1.4
+    is-deflate: ^1.0.0
+    is-gzip: ^1.0.0
+    peek-stream: ^1.1.0
+    pumpify: ^1.3.3
+    through2: ^2.0.3
+  bin:
+    gunzip-maybe: bin.js
+  checksum: bc4d4977c24a2860238df271de75d53dd72a359d19f1248d1c613807dc221d3b8ae09624e3085c8106663e3e1b59db62a85b261d1138c2cc24efad9df577d4e1
+  languageName: node
+  linkType: hard
+
 "gzip-size@npm:^6.0.0":
   version: 6.0.0
   resolution: "gzip-size@npm:6.0.0"
@@ -19442,6 +19589,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-deflate@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "is-deflate@npm:1.0.0"
+  checksum: c2f9f2d3db79ac50c5586697d1e69a55282a2b0cc5e437b3c470dd47f24e40b6216dcd7e024511e21381607bf57afa019343e3bd0e08a119032818b596004262
+  languageName: node
+  linkType: hard
+
 "is-docker@npm:^2.0.0, is-docker@npm:^2.1.1":
   version: 2.2.1
   resolution: "is-docker@npm:2.2.1"
@@ -19519,6 +19673,13 @@ __metadata:
   dependencies:
     is-extglob: ^2.1.1
   checksum: d381c1319fcb69d341cc6e6c7cd588e17cd94722d9a32dbd60660b993c4fb7d0f19438674e68dfec686d09b7c73139c9166b47597f846af387450224a8101ab4
+  languageName: node
+  linkType: hard
+
+"is-gzip@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "is-gzip@npm:1.0.0"
+  checksum: 0d28931c1f445fa29c900cf9f48e06e9d1d477a3bf7bd7332e7ce68f1333ccd8cb381de2f0f62a9a262d9c0912608a9a71b4a40e788e201b3dbd67072bb20d86
   languageName: node
   linkType: hard
 
@@ -21145,7 +21306,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@gomomento/sdk-core": ^1.41.2
     "@google-ai/generativelanguage": ^0.2.1
@@ -21202,6 +21363,9 @@ __metadata:
     cassandra-driver: ^4.6.4
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
+    closevector-common: 0.1.0-alpha.1
+    closevector-node: 0.1.0-alpha.10
+    closevector-web: 0.1.0-alpha.15
     cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     decamelize: ^1.2.0
@@ -21215,7 +21379,7 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     flat: ^5.0.2
@@ -21253,7 +21417,7 @@ __metadata:
     peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     prettier: ^2.8.3
@@ -21296,7 +21460,7 @@ __metadata:
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@gomomento/sdk-core": ^1.41.2
     "@gomomento/sdk-web": ^1.41.2
@@ -21331,10 +21495,13 @@ __metadata:
     cassandra-driver: ^4.6.4
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
+    closevector-common: 0.1.0-alpha.1
+    closevector-node: 0.1.0-alpha.10
+    closevector-web: 0.1.0-alpha.16
     cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     google-auth-library: ^8.9.0
@@ -21356,7 +21523,7 @@ __metadata:
     peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     puppeteer: ^19.7.2
@@ -21471,6 +21638,12 @@ __metadata:
     cheerio:
       optional: true
     chromadb:
+      optional: true
+    closevector-common:
+      optional: true
+    closevector-node:
+      optional: true
+    closevector-web:
       optional: true
     cohere-ai:
       optional: true
@@ -22738,6 +22911,13 @@ __metadata:
   version: 4.2.4
   resolution: "minipass@npm:4.2.4"
   checksum: c664f2ae4401408d1e7a6e4f50aca45f87b1b0634bc9261136df5c378e313e77355765f73f59c4a5abcadcdf43d83fcd3eb14e4a7cdcce8e36508e2290345753
+  languageName: node
+  linkType: hard
+
+"minipass@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "minipass@npm:5.0.0"
+  checksum: 425dab288738853fded43da3314a0b5c035844d6f3097a8e3b5b29b328da8f3c1af6fc70618b32c29ff906284cf6406b6841376f21caaadd0793c1d5a6a620ea
   languageName: node
   linkType: hard
 
@@ -24113,7 +24293,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pako@npm:~1.0.2":
+"pako@npm:~0.2.0":
+  version: 0.2.9
+  resolution: "pako@npm:0.2.9"
+  checksum: 055f9487cd57fbb78df84315873bbdd089ba286f3499daed47d2effdc6253e981f5db6898c23486de76d4a781559f890d643bd3a49f70f1b4a18019c98aa5125
+  languageName: node
+  linkType: hard
+
+"pako@npm:~1.0.2, pako@npm:~1.0.5":
   version: 1.0.11
   resolution: "pako@npm:1.0.11"
   checksum: 1be2bfa1f807608c7538afa15d6f25baa523c30ec870a3228a89579e474a4d992f4293859524e46d5d87fd30fa17c5edf34dbef0671251d9749820b488660b16
@@ -24365,6 +24552,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"peek-stream@npm:^1.1.0":
+  version: 1.1.3
+  resolution: "peek-stream@npm:1.1.3"
+  dependencies:
+    buffer-from: ^1.0.0
+    duplexify: ^3.5.0
+    through2: ^2.0.3
+  checksum: a0e09d6d1a8a01158a3334f20d6b1cdd91747eba24eb06a1d742eefb620385593121a76d4378cc81f77cdce6a66df0575a41041b1189c510254aec91878afc99
+  languageName: node
+  linkType: hard
+
 "peggy@npm:^3.0.2":
   version: 3.0.2
   resolution: "peggy@npm:3.0.2"
@@ -24507,13 +24705,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pickleparser@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "pickleparser@npm:0.1.0"
+"pickleparser@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "pickleparser@npm:0.2.1"
   bin:
     pickleparser: bin/pickletojson.js
     pickletojson: bin/pickletojson.js
-  checksum: 6b0be95990743edf19ea8abccf0dea9ffd244c1bc97873fb94b7dd7f057b1643a85ef795b8180fdede61298afaeb83eb733456abf4b607b7d04f97f71a0322e3
+  checksum: d456c1e1bf7b9eb964f58793abb5e928d005c04bc81e3ab2b7be4978b25221374fd621fe160695b30da0e3dccff3c8795e92cff872574755b99d5fae629a9604
   languageName: node
   linkType: hard
 
@@ -25527,6 +25725,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pump@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "pump@npm:2.0.1"
+  dependencies:
+    end-of-stream: ^1.1.0
+    once: ^1.3.1
+  checksum: e9f26a17be00810bff37ad0171edb35f58b242487b0444f92fb7d78bc7d61442fa9b9c5bd93a43fd8fd8ddd3cc75f1221f5e04c790f42907e5baab7cf5e2b931
+  languageName: node
+  linkType: hard
+
 "pump@npm:^3.0.0":
   version: 3.0.0
   resolution: "pump@npm:3.0.0"
@@ -25534,6 +25742,17 @@ __metadata:
     end-of-stream: ^1.1.0
     once: ^1.3.1
   checksum: e42e9229fba14732593a718b04cb5e1cfef8254544870997e0ecd9732b189a48e1256e4e5478148ecb47c8511dca2b09eae56b4d0aad8009e6fac8072923cfc9
+  languageName: node
+  linkType: hard
+
+"pumpify@npm:^1.3.3":
+  version: 1.5.1
+  resolution: "pumpify@npm:1.5.1"
+  dependencies:
+    duplexify: ^3.6.0
+    inherits: ^2.0.3
+    pump: ^2.0.0
+  checksum: 26ca412ec8d665bd0d5e185c1b8f627728eff603440d75d22a58e421e3c66eaf86ec6fc6a6efc54808ecef65979279fa8e99b109a23ec1fa8d79f37e6978c9bd
   languageName: node
   linkType: hard
 
@@ -25982,7 +26201,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^2.0.1, readable-stream@npm:~2.3.6":
+"readable-stream@npm:^2.0.0, readable-stream@npm:^2.0.1, readable-stream@npm:~2.3.6":
   version: 2.3.8
   resolution: "readable-stream@npm:2.3.8"
   dependencies:
@@ -28147,7 +28366,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar-stream@npm:^3.1.5":
+"tar-stream@npm:^3.1.5, tar-stream@npm:^3.1.6":
   version: 3.1.6
   resolution: "tar-stream@npm:3.1.6"
   dependencies:
@@ -28169,6 +28388,20 @@ __metadata:
     mkdirp: ^1.0.3
     yallist: ^4.0.0
   checksum: 8a278bed123aa9f53549b256a36b719e317c8b96fe86a63406f3c62887f78267cea9b22dc6f7007009738509800d4a4dccc444abd71d762287c90f35b002eb1c
+  languageName: node
+  linkType: hard
+
+"tar@npm:^6.1.15":
+  version: 6.2.0
+  resolution: "tar@npm:6.2.0"
+  dependencies:
+    chownr: ^2.0.0
+    fs-minipass: ^2.0.0
+    minipass: ^5.0.0
+    minizlib: ^2.1.1
+    mkdirp: ^1.0.3
+    yallist: ^4.0.0
+  checksum: db4d9fe74a2082c3a5016630092c54c8375ff3b280186938cfd104f2e089c4fd9bad58688ef6be9cf186a889671bf355c7cda38f09bbf60604b281715ca57f5c
   languageName: node
   linkType: hard
 
@@ -28268,6 +28501,16 @@ __metadata:
   dependencies:
     any-promise: ^1.0.0
   checksum: 84e1b804bfec49f3531215f17b4a6e50fd4397b5f7c1bccc427b9c656e1ecfb13ea79d899930184f78bc2f57285c54d9a50a590c8868f4f0cef5c1d9f898b05e
+  languageName: node
+  linkType: hard
+
+"through2@npm:^2.0.3":
+  version: 2.0.5
+  resolution: "through2@npm:2.0.5"
+  dependencies:
+    readable-stream: ~2.3.6
+    xtend: ~4.0.1
+  checksum: beb0f338aa2931e5660ec7bf3ad949e6d2e068c31f4737b9525e5201b824ac40cac6a337224856b56bd1ddd866334bbfb92a9f57cd6f66bc3f18d3d86fc0fe50
   languageName: node
   linkType: hard
 
@@ -30528,7 +30771,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"xtend@npm:^4.0.0, xtend@npm:^4.0.1":
+"xtend@npm:^4.0.0, xtend@npm:^4.0.1, xtend@npm:~4.0.1":
   version: 4.0.2
   resolution: "xtend@npm:4.0.2"
   checksum: ac5dfa738b21f6e7f0dd6e65e1b3155036d68104e67e5d5d1bde74892e327d7e5636a076f625599dc394330a731861e87343ff184b0047fef1360a7ec0a5a36a
