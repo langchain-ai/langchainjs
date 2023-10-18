@@ -70,7 +70,7 @@ export function createSqlAgent(
   });
   const chain = new LLMChain({ prompt, llm });
   const agent = new ZeroShotAgent({
-    runnable: chain,
+    llmChain: chain,
     allowedTools: tools.map((t) => t.name),
   });
   return AgentExecutor.fromAgentAndTools({

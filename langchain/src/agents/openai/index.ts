@@ -126,10 +126,6 @@ export class OpenAIAgent extends Agent {
 
   lc_namespace = ["langchain", "agents", "openai"];
 
-  static llm: BaseLanguageModel | undefined;
-
-  static prompt: BasePromptTemplate | undefined;
-
   _agentType() {
     return "openai-functions" as const;
   }
@@ -195,10 +191,8 @@ export class OpenAIAgent extends Agent {
       llm,
       callbacks: args?.callbacks,
     });
-    this.llm = llm;
-    this.prompt = prompt;
     return new OpenAIAgent({
-      runnable: chain,
+      llmChain: chain,
       allowedTools: tools.map((t) => t.name),
       tools,
     });
@@ -236,12 +230,6 @@ export class OpenAIAgent extends Agent {
     };
     if (this._stop().length !== 0) {
       newInputs.stop = this._stop();
-    }
-
-    if (!this.llmChain) {
-      throw new Error(
-        "OpenAIAgent missing `llmChain`. You must initialize through the `.fromLLMAndTools()` method."
-      );
     }
 
     const llm = this.llmChain.llm as ChatOpenAI;

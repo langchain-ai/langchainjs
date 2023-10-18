@@ -212,7 +212,7 @@ export class StructuredChatAgent extends Agent {
     });
 
     return new StructuredChatAgent({
-      runnable: chain,
+      llmChain: chain,
       outputParser,
       allowedTools: tools.map((t) => t.name),
     });

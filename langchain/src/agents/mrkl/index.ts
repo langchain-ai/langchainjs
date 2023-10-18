@@ -145,7 +145,7 @@ export class ZeroShotAgent extends Agent {
     });
 
     return new ZeroShotAgent({
-      runnable: chain,
+      llmChain: chain,
       allowedTools: tools.map((t) => t.name),
       outputParser,
     });

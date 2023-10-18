@@ -68,6 +68,7 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   constructor(fields: XMLAgentInput) {
     super(fields);
     this.tools = fields.tools;
+    this.llmChain = fields.llmChain;
   }
 
   get inputKeys() {

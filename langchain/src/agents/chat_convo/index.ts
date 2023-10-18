@@ -207,7 +207,7 @@ export class ChatConversationalAgent extends Agent {
       callbacks: args?.callbacks ?? args?.callbackManager,
     });
     return new ChatConversationalAgent({
-      runnable: chain,
+      llmChain: chain,
       outputParser,
       allowedTools: tools.map((t) => t.name),
     });

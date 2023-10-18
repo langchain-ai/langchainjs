@@ -114,14 +114,15 @@ export class AgentExecutor extends BaseChain {
   }
 
   constructor(input: AgentExecutorInput) {
-    super(input);
-
+    let agent: BaseSingleActionAgent | BaseMultiActionAgent;
     if (Runnable.isRunnable(input.agent)) {
-      this.agent = new RunnableAgent({ runnable: input.agent });
+      agent = new RunnableAgent({ runnable: input.agent });
     } else {
-      this.agent = input.agent;
+      agent = input.agent;
     }
 
+    super(input);
+    this.agent = agent;
     this.tools = input.tools;
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;

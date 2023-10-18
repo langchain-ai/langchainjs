@@ -133,8 +133,8 @@ export class RunnableAgent<
   RunInput extends ChainValues & {
     agent_scratchpad?: string | BaseMessage[];
     stop?: string[];
-  } = any,
-  RunOutput extends AgentAction | AgentFinish = any
+  },
+  RunOutput extends AgentAction | AgentFinish
 > extends BaseSingleActionAgent {
   protected lc_runnable = true;
 
@@ -279,17 +279,8 @@ export interface AgentArgs {
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
  */
-export abstract class Agent<
-  RunInput extends ChainValues & {
-    agent_scratchpad?: string | BaseMessage[];
-    stop?: string[];
-  } = any,
-  RunOutput extends AgentAction | AgentFinish = any
-> extends BaseSingleActionAgent {
-  runnable: Runnable<RunInput, RunOutput>;
-
-  /** @deprecated - Use `runnable` instead */
-  llmChain: LLMChain | undefined;
+export abstract class Agent extends BaseSingleActionAgent {
+  llmChain: LLMChain;
 
   outputParser: AgentActionOutputParser | undefined;
 
@@ -300,19 +291,13 @@ export abstract class Agent<
   }
 
   get inputKeys(): string[] {
-    if ("inputKeys" in this.runnable) {
-      return (this.runnable as { inputKeys: string[] }).inputKeys.filter(
-        (k) => k !== "agent_scratchpad"
-      );
-    }
-    return [];
+    return this.llmChain.inputKeys.filter((k) => k !== "agent_scratchpad");
   }
 
   constructor(input: AgentInput) {
     super(input);
 
     this.llmChain = input.llmChain;
-    this.runnable = input.runnable;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
   }
@@ -403,12 +388,12 @@ export abstract class Agent<
 
   private async _plan(
     steps: AgentStep[],
-    inputs: RunInput,
+    inputs: ChainValues,
     suffix?: string,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     const thoughts = await this.constructScratchPad(steps);
-    const newInputs: RunInput = {
+    const newInputs: ChainValues = {
       ...inputs,
       agent_scratchpad: suffix ? `${thoughts}${suffix}` : thoughts,
     };
@@ -421,7 +406,7 @@ export abstract class Agent<
      * If a runnable is passed in, then the output is `AgentAction | AgentFinish`.
      * If an LLMChain was passed, the output will be `{ text: string }`.
      */
-    const output = (await this.runnable.invoke(newInputs, callbackManager)) as
+    const output = (await this.llmChain.invoke(newInputs, callbackManager)) as
       | {
           text: string;
         }
@@ -450,7 +435,7 @@ export abstract class Agent<
    */
   plan(
     steps: AgentStep[],
-    inputs: RunInput,
+    inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     return this._plan(steps, inputs, undefined, callbackManager);
@@ -462,7 +447,7 @@ export abstract class Agent<
   async returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     steps: AgentStep[],
-    inputs: RunInput,
+    inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {
