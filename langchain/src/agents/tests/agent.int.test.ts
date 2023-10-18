@@ -11,6 +11,8 @@ import { WebBrowser } from "../../tools/webbrowser.js";
 import { Tool } from "../../tools/base.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
+import { OutputParserException } from "../../schema/output_parser.js";
+import { AIMessage } from "../../schema/index.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -85,6 +87,71 @@ test("Pass runnable to agent executor", async () => {
   );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
+});
+
+test("Custom output parser", async () => {
+  const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
+  const tools: Tool[] = [
+    new SerpAPI(undefined, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
+
+  const parser = (output: AIMessage) => {
+    const text = output.content;
+    if (text.includes("Final Answer:")) {
+      return {
+        returnValues: {
+          output: "We did it!",
+        },
+        log: text,
+      };
+    }
+
+    const match = /Action:([\s\S]*?)(?:\nAction Input:([\s\S]*?))?$/.exec(text);
+    if (!match) {
+      throw new OutputParserException(`Could not parse LLM output: ${text}`);
+    }
+
+    return {
+      tool: match[1].trim(),
+      toolInput: match[2]
+        ? match[2].trim().replace(/^("+)(.*?)(\1)$/, "$2")
+        : "",
+      log: text,
+    };
+  };
+
+  const prompt = ZeroShotAgent.createPrompt(tools);
+
+  const runnable = RunnableSequence.from([
+    {
+      input: (i: { input: string }) => i.input,
+      agent_scratchpad: (i: { input: string }) => i.input,
+    },
+    prompt,
+    model,
+    parser,
+  ]);
+
+  const executor = AgentExecutor.fromAgentAndTools({
+    agent: runnable,
+    tools,
+  });
+  const res = await executor.invoke({
+    input:
+      "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
+  });
+  console.log(
+    {
+      res,
+    },
+    "Custom output parser"
+  );
+  expect(res.output).toEqual("We did it!");
 });
 
 test("Add a fallback method", async () => {
