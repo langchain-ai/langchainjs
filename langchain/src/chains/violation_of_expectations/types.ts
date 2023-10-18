@@ -23,7 +23,7 @@ export type GetPredictionViolationsResponse = {
   userResponse?: HumanMessage;
   revisedPrediction: string;
   explainedPredictionErrors: Array<string>;
-}
+};
 
 export const PREDICT_NEXT_USER_MESSAGE_FUNCTION = {
   name: "predictNextUserMessage",
