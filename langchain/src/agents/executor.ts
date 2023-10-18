@@ -70,7 +70,13 @@ export class ExceptionTool extends Tool {
  * A chain managing an agent using tools.
  * @augments BaseChain
  */
-export class AgentExecutor extends BaseChain {
+export class AgentExecutor<
+  RunInput extends ChainValues & {
+    agent_scratchpad?: string | BaseMessage[];
+    stop?: string[];
+  },
+  RunOutput extends AgentAction | AgentFinish
+> extends BaseChain {
   static lc_name() {
     return "AgentExecutor";
   }
@@ -113,7 +119,7 @@ export class AgentExecutor extends BaseChain {
     return this.agent.returnValues;
   }
 
-  constructor(input: AgentExecutorInput) {
+  constructor(input: AgentExecutorInput<RunInput, RunOutput>) {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
     if (Runnable.isRunnable(input.agent)) {
       agent = new RunnableAgent({ runnable: input.agent });
