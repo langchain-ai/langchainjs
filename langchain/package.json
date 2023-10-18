@@ -133,6 +133,9 @@
     "llms/aleph_alpha.cjs",
     "llms/aleph_alpha.js",
     "llms/aleph_alpha.d.ts",
+    "llms/cloudflare_workersai.cjs",
+    "llms/cloudflare_workersai.js",
+    "llms/cloudflare_workersai.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -445,6 +448,9 @@
     "chat_models/bedrock.cjs",
     "chat_models/bedrock.js",
     "chat_models/bedrock.d.ts",
+    "chat_models/cloudflare_workersai.cjs",
+    "chat_models/cloudflare_workersai.js",
+    "chat_models/cloudflare_workersai.d.ts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
@@ -1492,6 +1498,11 @@
       "import": "./llms/aleph_alpha.js",
       "require": "./llms/aleph_alpha.cjs"
     },
+    "./llms/cloudflare_workersai": {
+      "types": "./llms/cloudflare_workersai.d.ts",
+      "import": "./llms/cloudflare_workersai.js",
+      "require": "./llms/cloudflare_workersai.cjs"
+    },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
       "import": "./llms/cohere.js",
@@ -2011,6 +2022,11 @@
       "types": "./chat_models/bedrock.d.ts",
       "import": "./chat_models/bedrock.js",
       "require": "./chat_models/bedrock.cjs"
+    },
+    "./chat_models/cloudflare_workersai": {
+      "types": "./chat_models/cloudflare_workersai.d.ts",
+      "import": "./chat_models/cloudflare_workersai.js",
+      "require": "./chat_models/cloudflare_workersai.cjs"
     },
     "./chat_models/googlevertexai": {
       "types": "./chat_models/googlevertexai.d.ts",
