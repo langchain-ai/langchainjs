@@ -1,8 +1,9 @@
-name: Deploy Docs Preview
+name: Deploy Docs Prod
 
 on:
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-  pull_request:
+  push:
+    branches: ["main"]
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -15,24 +16,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-docs-preview:
-    name: Deploy Preview Docs to Vercel
+  deploy-docs-prod:
+    name: Deploy Prod Docs to Vercel
     runs-on: ubuntu-latest
-    environment: Staging
+    environment: Production
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      PR_URL: ${{ github.event.pull_request.html_url }}
-      GITHUB_TOKEN: ${{ secrets.PR_COMMENT_GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
       - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} > deployment-url.txt
-      - name: Post Preview URL Comment
-        run: gh pr comment $PR_URL -F deployment-url.txt
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
