@@ -2,7 +2,8 @@ name: Deploy Docs Preview
 
 on:
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-  pull_request:
+  pull_request_target:
+    branches: [ main ]
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -14,11 +15,17 @@ concurrency:
   group: exports-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# From https://dev.to/petrsvihlik/using-environment-protection-rules-to-secure-secrets-when-building-external-forks-with-pullrequesttarget-hci
 jobs:
+  approve:
+    runs-on: ubuntu-latest
+
   deploy-docs-preview:
     name: Deploy Preview Docs to Vercel
     runs-on: ubuntu-latest
-    environment: Staging
+    needs: [ approve ]
+    environment:
+      name: Integrate Pull Request
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
