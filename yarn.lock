@@ -6981,13 +6981,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@getzep/zep-js@npm:0.7.0"
+"@getzep/zep-js@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@getzep/zep-js@npm:0.8.0"
   dependencies:
+    "@supercharge/promise-pool": ^3.1.0
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: aa5d68babb6b8bc40886f7f4fd4c502cf0eb407e2781b9e91934865faba83bc2efb4ba21ef304209d4919f7bfad05c50bab6e8da4e3e37eb6095c77e7d24de8c
+  checksum: fcc47ddf96fa52222b2beedd500ad25c42c93933a5167ca2887bfc965cc39c51519bbfac14883115418d9596249234ff49f00b5aeb94f0bf001c2ca4d41d63f0
   languageName: node
   linkType: hard
 
@@ -10073,6 +10074,13 @@ __metadata:
     "@supabase/storage-js": ^2.3.1
     cross-fetch: ^3.1.5
   checksum: 60da311e9aae2f9cce0716baf9820cf2030b2ee3ba0df6f95de60023b770d034b2f5044e4492c50c02f62379b1ac9979ca65e136873fc6c9d8bd76e758a62b33
+  languageName: node
+  linkType: hard
+
+"@supercharge/promise-pool@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@supercharge/promise-pool@npm:3.1.0"
+  checksum: 15c391bb592f552eb9c7d36467539256a752206bd59834e86171a4c8356e077bc774e0583e14e03fd1613de66dbf623f00777ec674d95242ae7ad7f43d74268c
   languageName: node
   linkType: hard
 
@@ -16856,7 +16864,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -16882,7 +16890,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-unused-imports: ^3.0.0
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     graphql: ^16.6.0
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
@@ -16890,7 +16898,7 @@ __metadata:
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     pg: ^8.11.0
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     prettier: ^2.8.3
     prisma: ^4.11.0
     redis: ^4.6.6
@@ -17106,15 +17114,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"faiss-node@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "faiss-node@npm:0.3.0"
+"faiss-node@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "faiss-node@npm:0.5.1"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^6.0.0
     node-gyp: latest
     prebuild-install: ^7.1.1
-  checksum: 292da11f4a453a252576535d360207bd55c8421d0a1dfd30c7ca7f8ba84854fba693c8685ee90506d8c56f1a5c69a905a587d7fb382100efd5b8a384728cbd6e
+  checksum: 9c8ba45c004151be6e94460a30b46fdd854de5f067fd18757f388e103276bb4d479db66cd0475961c447c40c11df629612144d31af932984d4b5ca5c5276f508
   languageName: node
   linkType: hard
 
@@ -21298,7 +21306,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@gomomento/sdk-core": ^1.41.2
     "@google-ai/generativelanguage": ^0.2.1
@@ -21371,7 +21379,7 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     flat: ^5.0.2
@@ -21409,7 +21417,7 @@ __metadata:
     peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     prettier: ^2.8.3
@@ -21452,7 +21460,7 @@ __metadata:
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@gomomento/sdk-core": ^1.41.2
     "@gomomento/sdk-web": ^1.41.2
@@ -21493,7 +21501,7 @@ __metadata:
     cohere-ai: ">=6.0.0"
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
-    faiss-node: ^0.3.0
+    faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
     google-auth-library: ^8.9.0
@@ -21515,7 +21523,7 @@ __metadata:
     peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
-    pickleparser: ^0.1.0
+    pickleparser: ^0.2.1
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     puppeteer: ^19.7.2
@@ -24694,13 +24702,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pickleparser@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "pickleparser@npm:0.1.0"
+"pickleparser@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "pickleparser@npm:0.2.1"
   bin:
     pickleparser: bin/pickletojson.js
     pickletojson: bin/pickletojson.js
-  checksum: 6b0be95990743edf19ea8abccf0dea9ffd244c1bc97873fb94b7dd7f057b1643a85ef795b8180fdede61298afaeb83eb733456abf4b607b7d04f97f71a0322e3
+  checksum: d456c1e1bf7b9eb964f58793abb5e928d005c04bc81e3ab2b7be4978b25221374fd621fe160695b30da0e3dccff3c8795e92cff872574755b99d5fae629a9604
   languageName: node
   linkType: hard
 
