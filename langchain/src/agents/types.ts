@@ -14,11 +14,11 @@ import { Runnable } from "../schema/runnable/base.js";
  * LLMChain instance, an optional output parser, and an optional list of
  * allowed tools.
  */
-export type AgentInput = {
+export interface AgentInput {
   llmChain: LLMChain;
   outputParser: AgentActionOutputParser | undefined;
   allowedTools?: string[];
-};
+}
 
 /**
  * Interface defining the input for creating an agent that uses runnables.
@@ -28,8 +28,8 @@ export interface RunnableAgentInput<
   RunInput extends ChainValues & {
     agent_scratchpad?: string | BaseMessage[];
     stop?: string[];
-  } = any,
-  RunOutput extends AgentAction | AgentFinish = any
+  },
+  RunOutput extends AgentAction | AgentFinish
 > {
   runnable: Runnable<RunInput, RunOutput>;
   stop?: string[];

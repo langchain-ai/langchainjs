@@ -35,8 +35,8 @@ export interface AgentExecutorInput<
   RunInput extends ChainValues & {
     agent_scratchpad?: string | BaseMessage[];
     stop?: string[];
-  } = any,
-  RunOutput extends AgentAction | AgentFinish = any
+  },
+  RunOutput extends AgentAction | AgentFinish
 > extends ChainInputs {
   agent:
     | BaseSingleActionAgent
