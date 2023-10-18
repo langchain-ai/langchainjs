@@ -96,6 +96,8 @@
       "src/vectorstores/elasticsearch.ts",
       "src/vectorstores/memory.ts",
       "src/vectorstores/cloudflare_vectorize.ts",
+      "src/vectorstores/closevector/web.ts",
+      "src/vectorstores/closevector/node.ts",
       "src/vectorstores/chroma.ts",
       "src/vectorstores/googlevertexai.ts",
       "src/vectorstores/hnswlib.ts",

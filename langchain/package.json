@@ -202,6 +202,12 @@
     "vectorstores/cloudflare_vectorize.cjs",
     "vectorstores/cloudflare_vectorize.js",
     "vectorstores/cloudflare_vectorize.d.ts",
+    "vectorstores/closevector/web.cjs",
+    "vectorstores/closevector/web.js",
+    "vectorstores/closevector/web.d.ts",
+    "vectorstores/closevector/node.cjs",
+    "vectorstores/closevector/node.js",
+    "vectorstores/closevector/node.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
@@ -788,6 +794,9 @@
     "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
+    "closevector-common": "0.1.0-alpha.1",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.15",
     "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -900,6 +909,9 @@
     "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
+    "closevector-common": "0.1.0-alpha.1",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.16",
     "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
@@ -1089,6 +1101,15 @@
       "optional": true
     },
     "chromadb": {
+      "optional": true
+    },
+    "closevector-common": {
+      "optional": true
+    },
+    "closevector-node": {
+      "optional": true
+    },
+    "closevector-web": {
       "optional": true
     },
     "cohere-ai": {
@@ -1579,6 +1600,16 @@
       "types": "./vectorstores/cloudflare_vectorize.d.ts",
       "import": "./vectorstores/cloudflare_vectorize.js",
       "require": "./vectorstores/cloudflare_vectorize.cjs"
+    },
+    "./vectorstores/closevector/web": {
+      "types": "./vectorstores/closevector/web.d.ts",
+      "import": "./vectorstores/closevector/web.js",
+      "require": "./vectorstores/closevector/web.cjs"
+    },
+    "./vectorstores/closevector/node": {
+      "types": "./vectorstores/closevector/node.d.ts",
+      "import": "./vectorstores/closevector/node.js",
+      "require": "./vectorstores/closevector/node.cjs"
     },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",
