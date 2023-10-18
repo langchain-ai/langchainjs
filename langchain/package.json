@@ -913,7 +913,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "llmonitor": "*",
+    "llmonitor": "^0.5.8",
     "lodash": "^4.17.21",
     "mammoth": "*",
     "mongodb": "^5.2.0",

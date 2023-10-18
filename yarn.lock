@@ -21234,7 +21234,7 @@ __metadata:
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.6
     langsmith: ~0.0.31
-    llmonitor: ^0.5.4
+    llmonitor: ^0.5.8
     lodash: ^4.17.21
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
@@ -21344,7 +21344,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    llmonitor: "*"
+    llmonitor: ^0.5.8
     lodash: ^4.17.21
     mammoth: "*"
     mongodb: ^5.2.0
@@ -21771,17 +21771,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"llmonitor@npm:^0.5.4":
-  version: 0.5.4
-  resolution: "llmonitor@npm:0.5.4"
+"llmonitor@npm:^0.5.8":
+  version: 0.5.9
+  resolution: "llmonitor@npm:0.5.9"
   dependencies:
     unctx: ^2.3.1
   peerDependencies:
-    openai: ^4.3.0
+    openai: ^4.0.0
+    react: ">=17.0.0"
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: d7f266e341ff11c2012dc7598cd3fe6d1c87989587e75548ba55e65b3d26493bd911c14b18f292d6e7c1616b6d2255bcd3a0bb0f27f5f4d5888b20c40388984e
+    react:
+      optional: true
+  checksum: ce57cd3488fefb25a3c771f61ea13d394282c57a75c7e6b5964a87bc0e26a26ecabdb93495d9b60f1657824b9153906cebbb71879452006e978a2f1e4332c6a4
   languageName: node
   linkType: hard
 

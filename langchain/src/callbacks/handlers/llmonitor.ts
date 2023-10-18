@@ -184,7 +184,7 @@ export class LLMonitorHandler
       ...(metadata || {}),
     };
 
-    // Expend them so they're excluded from the "extra" field
+    // Expand them so they're excluded from the "extra" field
     const { model, model_name, modelName, userId, userProps, ...rest } = params;
 
     const name = model || modelName || model_name || llm.id.at(-1);
