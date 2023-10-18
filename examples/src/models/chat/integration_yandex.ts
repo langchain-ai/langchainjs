@@ -1,7 +1,7 @@
-import { YandexGPTChat } from "langchain/chat_models/yandex";
+import { ChatYandexGPT } from "langchain/chat_models/yandex";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
-const chat = new YandexGPTChat();
+const chat = new ChatYandexGPT();
 
 const res = await chat.call([
   new SystemMessage(

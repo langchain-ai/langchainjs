@@ -35,7 +35,7 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
   return [chatHistory, instruction];
 }
 
-export class YandexGPTChat extends BaseChatModel {
+export class ChatYandexGPT extends BaseChatModel {
   apiKey?: string;
 
   iamToken?: string;
