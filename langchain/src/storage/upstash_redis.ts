@@ -76,6 +76,8 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
    * @returns An array of retrieved values.
    */
   async mget(keys: string[]) {
+    const encoder = new TextEncoder();
+
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.client.mget<Uint8Array[]>(
       ...prefixedKeys
@@ -83,8 +85,10 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
     return retrievedValues.map((value) => {
       if (!value) {
         return undefined;
+      } else if (typeof value === "object") {
+        return encoder.encode(JSON.stringify(value));
       } else {
-        return value;
+        return encoder.encode(value);
       }
     });
   }
@@ -128,22 +132,26 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
     let pattern;
     if (prefix) {
-      pattern = this._getPrefixedKey(prefix);
+      pattern = `${this._getPrefixedKey(prefix)}*`;
     } else {
       pattern = this._getPrefixedKey("*");
     }
+
     let [cursor, batch] = await this.client.scan(0, {
       match: pattern,
       count: this.yieldKeysScanBatchSize,
     });
+
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
     }
+  
     while (cursor !== 0) {
       [cursor, batch] = await this.client.scan(cursor, {
         match: pattern,
         count: this.yieldKeysScanBatchSize,
       });
+    
       for (const key of batch) {
         yield this._getDeprefixedKey(key);
       }
