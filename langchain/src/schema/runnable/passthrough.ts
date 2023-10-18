@@ -2,6 +2,9 @@ import { IterableReadableStream } from "../../util/stream.js";
 import { Runnable, RunnableMap } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
+/**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, any>`.
+ */
 export class RunnableAssign<
   RunInput = any,
   RunOutput = any,
