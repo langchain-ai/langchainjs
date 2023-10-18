@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.167",
+  "version": "0.0.168",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -133,6 +133,9 @@
     "llms/aleph_alpha.cjs",
     "llms/aleph_alpha.js",
     "llms/aleph_alpha.d.ts",
+    "llms/cloudflare_workersai.cjs",
+    "llms/cloudflare_workersai.js",
+    "llms/cloudflare_workersai.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -178,6 +181,9 @@
     "llms/yandex.cjs",
     "llms/yandex.js",
     "llms/yandex.d.ts",
+    "llms/fake.cjs",
+    "llms/fake.js",
+    "llms/fake.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -202,6 +208,12 @@
     "vectorstores/cloudflare_vectorize.cjs",
     "vectorstores/cloudflare_vectorize.js",
     "vectorstores/cloudflare_vectorize.d.ts",
+    "vectorstores/closevector/web.cjs",
+    "vectorstores/closevector/web.js",
+    "vectorstores/closevector/web.d.ts",
+    "vectorstores/closevector/node.cjs",
+    "vectorstores/closevector/node.js",
+    "vectorstores/closevector/node.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
@@ -436,6 +448,9 @@
     "chat_models/bedrock.cjs",
     "chat_models/bedrock.js",
     "chat_models/bedrock.d.ts",
+    "chat_models/cloudflare_workersai.cjs",
+    "chat_models/cloudflare_workersai.js",
+    "chat_models/cloudflare_workersai.d.ts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
@@ -457,6 +472,9 @@
     "chat_models/minimax.cjs",
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
+    "chat_models/fake.cjs",
+    "chat_models/fake.js",
+    "chat_models/fake.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -788,6 +806,9 @@
     "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
+    "closevector-common": "0.1.0-alpha.1",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.15",
     "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -900,6 +921,9 @@
     "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
+    "closevector-common": "0.1.0-alpha.1",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.16",
     "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
@@ -1089,6 +1113,15 @@
       "optional": true
     },
     "chromadb": {
+      "optional": true
+    },
+    "closevector-common": {
+      "optional": true
+    },
+    "closevector-node": {
+      "optional": true
+    },
+    "closevector-web": {
       "optional": true
     },
     "cohere-ai": {
@@ -1465,6 +1498,11 @@
       "import": "./llms/aleph_alpha.js",
       "require": "./llms/aleph_alpha.cjs"
     },
+    "./llms/cloudflare_workersai": {
+      "types": "./llms/cloudflare_workersai.d.ts",
+      "import": "./llms/cloudflare_workersai.js",
+      "require": "./llms/cloudflare_workersai.cjs"
+    },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
       "import": "./llms/cohere.js",
@@ -1540,6 +1578,11 @@
       "import": "./llms/yandex.js",
       "require": "./llms/yandex.cjs"
     },
+    "./llms/fake": {
+      "types": "./llms/fake.d.ts",
+      "import": "./llms/fake.js",
+      "require": "./llms/fake.cjs"
+    },
     "./prompts": {
       "types": "./prompts.d.ts",
       "import": "./prompts.js",
@@ -1579,6 +1622,16 @@
       "types": "./vectorstores/cloudflare_vectorize.d.ts",
       "import": "./vectorstores/cloudflare_vectorize.js",
       "require": "./vectorstores/cloudflare_vectorize.cjs"
+    },
+    "./vectorstores/closevector/web": {
+      "types": "./vectorstores/closevector/web.d.ts",
+      "import": "./vectorstores/closevector/web.js",
+      "require": "./vectorstores/closevector/web.cjs"
+    },
+    "./vectorstores/closevector/node": {
+      "types": "./vectorstores/closevector/node.d.ts",
+      "import": "./vectorstores/closevector/node.js",
+      "require": "./vectorstores/closevector/node.cjs"
     },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",
@@ -1970,6 +2023,11 @@
       "import": "./chat_models/bedrock.js",
       "require": "./chat_models/bedrock.cjs"
     },
+    "./chat_models/cloudflare_workersai": {
+      "types": "./chat_models/cloudflare_workersai.d.ts",
+      "import": "./chat_models/cloudflare_workersai.js",
+      "require": "./chat_models/cloudflare_workersai.cjs"
+    },
     "./chat_models/googlevertexai": {
       "types": "./chat_models/googlevertexai.d.ts",
       "import": "./chat_models/googlevertexai.js",
@@ -2004,6 +2062,11 @@
       "types": "./chat_models/minimax.d.ts",
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
+    },
+    "./chat_models/fake": {
+      "types": "./chat_models/fake.d.ts",
+      "import": "./chat_models/fake.js",
+      "require": "./chat_models/fake.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",

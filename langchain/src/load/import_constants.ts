@@ -41,6 +41,8 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/cassandra",
   "langchain/vectorstores/elasticsearch",
   "langchain/vectorstores/cloudflare_vectorize",
+  "langchain/vectorstores/closevector/web",
+  "langchain/vectorstores/closevector/node",
   "langchain/vectorstores/chroma",
   "langchain/vectorstores/googlevertexai",
   "langchain/vectorstores/hnswlib",
