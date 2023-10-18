@@ -28,7 +28,7 @@ export class RunnableAssign<
     options: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
     const mapperKeys = new Set(this.mapper.getStepsKeys());
-    const mapOutput = this.mapper.transform(generator, options)
+    const mapOutput = this.mapper.transform(generator, options);
 
     for await (const chunk of mapOutput) {
       if (typeof chunk !== "object") {
@@ -101,7 +101,15 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     );
   }
 
-  static assign<RunInput = unknown>(mapping: Record<string, Runnable<Record<string, unknown>, unknown> | ((input: Record<string, unknown>) => unknown)>): RunnableAssign<RunInput, Record<string, unknown>> {
-    return new RunnableAssign(new RunnableMap<Record<string, unknown>>({ steps: mapping }));
+  static assign<RunInput = unknown>(
+    mapping: Record<
+      string,
+      | Runnable<Record<string, unknown>, unknown>
+      | ((input: Record<string, unknown>) => unknown)
+    >
+  ): RunnableAssign<RunInput, Record<string, unknown>> {
+    return new RunnableAssign(
+      new RunnableMap<Record<string, unknown>>({ steps: mapping })
+    );
   }
 }
