@@ -83,21 +83,6 @@ jobs:
         run: yarn run test:unit
 
   test-exports:
-    name: Environment Tests
-    runs-on: ubuntu-latest
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
-      - name: Test Exports
-        run: yarn run test:exports:docker
+    uses:
+      ./.github/workflows/test-exports.yml
+    secrets: inherit

@@ -1,7 +1,7 @@
 /* eslint-disable prefer-template */
 /* eslint-disable no-param-reassign */
 // eslint-disable-next-line import/no-extraneous-dependencies
-const babel = require("@babel/core");
+const swc = require("@swc/core");
 const path = require("path");
 const fs = require("fs");
 
@@ -20,14 +20,15 @@ async function webpackLoader(content, map, meta) {
   }
 
   try {
-    const result = await babel.parseAsync(content, {
-      sourceType: "module",
+    const module = await swc.parse(content, {
+      isModule: true,
       filename: this.resourcePath,
+      syntax: "typescript",
     });
 
     const imports = [];
 
-    result.program.body.forEach((node) => {
+    module.body.forEach((node) => {
       if (node.type === "ImportDeclaration") {
         const source = node.source.value;
 
@@ -37,8 +38,8 @@ async function webpackLoader(content, map, meta) {
 
         node.specifiers.forEach((specifier) => {
           if (specifier.type === "ImportSpecifier") {
-            const local = specifier.local.name;
-            const imported = specifier.imported.name;
+            const local = specifier.local.value;
+            const imported = specifier.imported?.value ?? local;
             imports.push({ local, imported, source });
           } else {
             throw new Error("Unsupported import type");
