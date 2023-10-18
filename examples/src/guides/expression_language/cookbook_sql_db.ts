@@ -23,6 +23,9 @@ SQL Query:`);
 
 const model = new ChatOpenAI();
 
+// The `RunnablePassthrough.assign()` is used here to passthrough the input from the `.invoke()`
+// call (in this example it's the question), along with any inputs passed to the `.assign()` method.
+// In this case, we're passing the schema.
 const sqlQueryGeneratorChain = RunnableSequence.from([
   RunnablePassthrough.assign({
     schema: async () => db.getTableInfo(),
