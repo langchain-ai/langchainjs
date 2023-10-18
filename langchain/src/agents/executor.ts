@@ -32,10 +32,10 @@ type ExtractToolType<T> = T extends { ToolType: infer Tool }
  * properties specific to agent execution.
  */
 export interface AgentExecutorInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends ChainValues & {
     agent_scratchpad?: string | BaseMessage[];
     stop?: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends AgentAction | AgentFinish = any
@@ -73,10 +73,10 @@ export class ExceptionTool extends Tool {
  * @augments BaseChain
  */
 export class AgentExecutor<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends ChainValues & {
     agent_scratchpad?: string | BaseMessage[];
     stop?: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends AgentAction | AgentFinish = any
