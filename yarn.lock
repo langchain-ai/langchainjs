@@ -6981,13 +6981,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@getzep/zep-js@npm:0.7.0"
+"@getzep/zep-js@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@getzep/zep-js@npm:0.8.0"
   dependencies:
+    "@supercharge/promise-pool": ^3.1.0
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: aa5d68babb6b8bc40886f7f4fd4c502cf0eb407e2781b9e91934865faba83bc2efb4ba21ef304209d4919f7bfad05c50bab6e8da4e3e37eb6095c77e7d24de8c
+  checksum: fcc47ddf96fa52222b2beedd500ad25c42c93933a5167ca2887bfc965cc39c51519bbfac14883115418d9596249234ff49f00b5aeb94f0bf001c2ca4d41d63f0
   languageName: node
   linkType: hard
 
@@ -10073,6 +10074,13 @@ __metadata:
     "@supabase/storage-js": ^2.3.1
     cross-fetch: ^3.1.5
   checksum: 60da311e9aae2f9cce0716baf9820cf2030b2ee3ba0df6f95de60023b770d034b2f5044e4492c50c02f62379b1ac9979ca65e136873fc6c9d8bd76e758a62b33
+  languageName: node
+  linkType: hard
+
+"@supercharge/promise-pool@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@supercharge/promise-pool@npm:3.1.0"
+  checksum: 15c391bb592f552eb9c7d36467539256a752206bd59834e86171a4c8356e077bc774e0583e14e03fd1613de66dbf623f00777ec674d95242ae7ad7f43d74268c
   languageName: node
   linkType: hard
 
@@ -16856,7 +16864,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -21298,7 +21306,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@gomomento/sdk-core": ^1.41.2
     "@google-ai/generativelanguage": ^0.2.1
@@ -21452,7 +21460,7 @@ __metadata:
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.7.0
+    "@getzep/zep-js": ^0.8.0
     "@gomomento/sdk": ^1.41.2
     "@gomomento/sdk-core": ^1.41.2
     "@gomomento/sdk-web": ^1.41.2
