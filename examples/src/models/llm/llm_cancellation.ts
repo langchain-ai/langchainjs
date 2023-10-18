@@ -6,7 +6,7 @@ const controller = new AbortController();
 // Call `controller.abort()` somewhere to cancel the request.
 
 const res = await model.call(
-  "What would be a good company name a company that makes colorful socks?",
+  "What would be a good name for a company that makes colorful socks?",
   { signal: controller.signal }
 );
 
