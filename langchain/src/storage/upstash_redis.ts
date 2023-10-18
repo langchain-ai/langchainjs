@@ -7,7 +7,6 @@ import { BaseStore } from "../schema/storage.js";
  * instance of the UpstashStoreInput class.
  */
 export interface UpstashRedisStoreInput {
-  sessionId: string;
   sessionTTL?: number;
   config?: RedisConfigNodejs;
   client?: UpstashRedis;
