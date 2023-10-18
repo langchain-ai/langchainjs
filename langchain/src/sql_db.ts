@@ -19,7 +19,7 @@ export type { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
  * 
  * @security **Security Notice**
  * This class generates SQL queries for the given database.
- * The SQLDatabase class provides a get_table_info method that can be used
+ * The SQLDatabase class provides a getTableInfo method that can be used
  * to get column information as well as sample data from the table.
  * To mitigate risk of leaking sensitive data, limit permissions
  * to read and scope to the tables that are needed.
