@@ -6,7 +6,7 @@ import { BaseStore } from "../schema/storage.js";
  * Type definition for the input parameters required to initialize an
  * instance of the UpstashStoreInput class.
  */
-export interface UpstashStoreInput {
+export interface UpstashRedisStoreInput {
   sessionId: string;
   sessionTTL?: number;
   config?: RedisConfigNodejs;
@@ -27,7 +27,7 @@ export interface UpstashStoreInput {
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
  */
-export class UpstashStore extends BaseStore<string, Uint8Array> {
+export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
 
   protected client: UpstashRedis;
@@ -38,7 +38,7 @@ export class UpstashStore extends BaseStore<string, Uint8Array> {
 
   private sessionTTL?: number;
 
-  constructor(fields: UpstashStoreInput) {
+  constructor(fields: UpstashRedisStoreInput) {
     super(fields);
     if (fields.client) {
       this.client = fields.client;
