@@ -34,7 +34,6 @@ const entrypoints = {
   "chains/query_constructor/ir": "chains/query_constructor/ir",
   "chains/sql_db": "chains/sql_db/index",
   "chains/graph_qa/cypher": "chains/graph_qa/cypher",
-  "chains/violation_of_expectations": "chains/violation_of_expectations/violation_of_expectations_chain",
   // embeddings
   "embeddings/base": "embeddings/base",
   "embeddings/bedrock": "embeddings/bedrock",
@@ -276,6 +275,7 @@ const entrypoints = {
   "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
+    "experimental/chains/violation_of_expectations": "experimental/chains/violation_of_expectations/index",
   // evaluation
   evaluation: "evaluation/index",
   // runnables

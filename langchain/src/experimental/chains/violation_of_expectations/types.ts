@@ -1,4 +1,4 @@
-import { BaseMessage, HumanMessage } from "../../schema/index.js";
+import { BaseMessage, HumanMessage } from "../../../schema/index.js";
 
 /**
  * Contains the chunk of messages, along with the

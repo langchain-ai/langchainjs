@@ -1,15 +1,15 @@
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
+import { CallbackManagerForChainRun } from "../../../callbacks/manager.js";
+import { ChatOpenAI } from "../../../chat_models/openai.js";
+import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
 import {
   BaseMessage,
   ChainValues,
   HumanMessage,
   isBaseMessage,
-} from "../../schema/index.js";
-import { StringOutputParser } from "../../schema/output_parser.js";
-import { BaseRetriever } from "../../schema/retriever.js";
-import { BaseChain, ChainInputs } from "../base.js";
+} from "../../../schema/index.js";
+import { StringOutputParser } from "../../../schema/output_parser.js";
+import { BaseRetriever } from "../../../schema/retriever.js";
+import { BaseChain, ChainInputs } from "../../../chains/base.js";
 import {
   GetPredictionViolationsResponse,
   MessageChunkResult,

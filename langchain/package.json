@@ -76,9 +76,6 @@
     "chains/graph_qa/cypher.cjs",
     "chains/graph_qa/cypher.js",
     "chains/graph_qa/cypher.d.ts",
-    "chains/violation_of_expectations.cjs",
-    "chains/violation_of_expectations.js",
-    "chains/violation_of_expectations.d.ts",
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
@@ -703,6 +700,9 @@
     "experimental/hubs/makersuite/googlemakersuitehub.cjs",
     "experimental/hubs/makersuite/googlemakersuitehub.js",
     "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+    "experimental/chains/violation_of_expectations.cjs",
+    "experimental/chains/violation_of_expectations.js",
+    "experimental/chains/violation_of_expectations.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -1405,11 +1405,6 @@
       "types": "./chains/graph_qa/cypher.d.ts",
       "import": "./chains/graph_qa/cypher.js",
       "require": "./chains/graph_qa/cypher.cjs"
-    },
-    "./chains/violation_of_expectations": {
-      "types": "./chains/violation_of_expectations.d.ts",
-      "import": "./chains/violation_of_expectations.js",
-      "require": "./chains/violation_of_expectations.cjs"
     },
     "./embeddings/base": {
       "types": "./embeddings/base.d.ts",
@@ -2450,6 +2445,11 @@
       "types": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts",
       "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
       "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
+    },
+    "./experimental/chains/violation_of_expectations": {
+      "types": "./experimental/chains/violation_of_expectations.d.ts",
+      "import": "./experimental/chains/violation_of_expectations.js",
+      "require": "./experimental/chains/violation_of_expectations.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
