@@ -149,7 +149,15 @@ export class AgentExecutor<
   }
 
   /** Create from agent and a list of tools. */
-  static fromAgentAndTools(fields: AgentExecutorInput): AgentExecutor {
+  static fromAgentAndTools<
+    RunInput extends ChainValues & {
+      agent_scratchpad?: string | BaseMessage[];
+      stop?: string[];
+    },
+    RunOutput extends AgentAction | AgentFinish
+  >(
+    fields: AgentExecutorInput<RunInput, RunOutput>
+  ): AgentExecutor<RunInput, RunOutput> {
     return new AgentExecutor(fields);
   }
 
