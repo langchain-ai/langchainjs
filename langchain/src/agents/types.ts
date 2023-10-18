@@ -25,11 +25,13 @@ export interface AgentInput {
  * It includes the Runnable instance, and an optional list of stop strings.
  */
 export interface RunnableAgentInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends ChainValues & {
     agent_scratchpad?: string | BaseMessage[];
     stop?: string[];
-  },
-  RunOutput extends AgentAction | AgentFinish
+  } = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends AgentAction | AgentFinish = any
 > {
   runnable: Runnable<RunInput, RunOutput>;
   stop?: string[];

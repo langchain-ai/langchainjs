@@ -148,7 +148,7 @@ export class RunnableAgent<
     return [];
   }
 
-  constructor(fields: RunnableAgentInput) {
+  constructor(fields: RunnableAgentInput<RunInput, RunOutput>) {
     super();
     this.runnable = fields.runnable;
     this.stop = fields.stop;

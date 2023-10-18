@@ -116,12 +116,8 @@ test("Add a fallback method", async () => {
     outputParser,
   ]);
 
-  const agent = new ZeroShotAgent({
-    runnable,
-  });
-
   const executor = AgentExecutor.fromAgentAndTools({
-    agent,
+    agent: runnable,
     tools: [],
   });
   const res = await executor.invoke({
