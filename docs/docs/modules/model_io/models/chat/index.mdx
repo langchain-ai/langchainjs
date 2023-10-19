@@ -67,6 +67,16 @@ const chat = new ChatOpenAI({});
 The chat model interface is based around messages rather than raw text.
 The types of messages currently supported in LangChain are `AIMessage`, `HumanMessage`, `SystemMessage`, `FunctionMessage`, and `ChatMessage` -- `ChatMessage` takes in an arbitrary role parameter. Most of the time, you'll just be dealing with `HumanMessage`, `AIMessage`, and `SystemMessage`
 
+### `invoke`
+
+#### Generic inputs -> generic outputs
+
+You can generate LLM responses by calling `.invoke` and passing in whatever inputs you defined in the (`Runnable`)[/docs/expression_language/].
+
+import RunnableExample from "@examples/models/chat/runnable_chat_quick_start.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
 ### `call`
 
 #### Messages in -> message out
