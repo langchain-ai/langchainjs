@@ -44,6 +44,7 @@ export * as chat_models__fireworks from "../chat_models/fireworks.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";
 export * as chat_models__ollama from "../chat_models/ollama.js";
 export * as chat_models__minimax from "../chat_models/minimax.js";
+export * as chat_models__yandex from "../chat_models/yandex.js";
 export * as chat_models__fake from "../chat_models/fake.js";
 export * as schema from "../schema/index.js";
 export * as schema__document from "../schema/document.js";

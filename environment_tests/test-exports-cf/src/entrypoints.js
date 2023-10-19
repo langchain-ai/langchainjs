@@ -43,6 +43,7 @@ export * from "langchain/chat_models/fireworks";
 export * from "langchain/chat_models/baiduwenxin";
 export * from "langchain/chat_models/ollama";
 export * from "langchain/chat_models/minimax";
+export * from "langchain/chat_models/yandex";
 export * from "langchain/chat_models/fake";
 export * from "langchain/schema";
 export * from "langchain/schema/document";

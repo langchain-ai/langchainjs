@@ -183,6 +183,7 @@ const entrypoints = {
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
+  "chat_models/yandex": "chat_models/yandex",
   "chat_models/fake": "chat_models/fake",
   // schema
   schema: "schema/index",
