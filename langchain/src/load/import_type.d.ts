@@ -82,9 +82,12 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
-  "langchain/vectorstores/analyticdb"?:
+    "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
+  "langchain/vectorstores/azuresearch"?:
+    | typeof import("../vectorstores/azuresearch.js")
+    | Promise<typeof import("../vectorstores/azuresearch.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;

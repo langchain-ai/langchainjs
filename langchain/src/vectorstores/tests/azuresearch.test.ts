@@ -87,7 +87,7 @@ test("AzureSearch addDocuments should embed at max 16 documents up a time", asyn
   expect(client.uploadDocuments.mock.calls[1][0]).toHaveLength(14);
 });
 
-test("AzureSearch with external ids", async () => {
+test("AzureSearch with external keys", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
     search: jest.fn<any>().mockResolvedValue({
@@ -116,7 +116,7 @@ test("AzureSearch with external ids", async () => {
       },
     ],
     {
-      ids: ["id1"]
+      keys: ["id1"]
     }
   );
 
@@ -124,7 +124,7 @@ test("AzureSearch with external ids", async () => {
   expect(result).toEqual(["id1"]);
 });
 
-test("AzureSearch with generated ids", async () => {
+test("AzureSearch with generated keys", async () => {
   const embeddings = new FakeEmbeddings();
   const client = {
     search: jest.fn<any>().mockResolvedValue({

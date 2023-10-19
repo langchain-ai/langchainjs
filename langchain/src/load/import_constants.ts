@@ -29,6 +29,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/bedrock",
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
+  "langchain/vectorstores/azuresearch",
   "langchain/vectorstores/elasticsearch",
   "langchain/vectorstores/chroma",
   "langchain/vectorstores/hnswlib",

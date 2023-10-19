@@ -170,13 +170,13 @@ export class AzureSearchStore extends VectorStore {
   }
 
   /**
-   * Delete document by key.
+   * Delete document by key(s).
    *
    * @param key
    * @returns
    */
-  async deleteByKey(key: string): Promise<IndexingResult[]> {
-    const { results } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, [key]);
+  async deleteByKey(key: string | string[]): Promise<IndexingResult[]> {
+    const { results } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, Array.isArray(key) ? key : [key]);
 
     return results;
   }

@@ -78,6 +78,7 @@
       "src/prompts/index.ts",
       "src/prompts/load.ts",
       "src/vectorstores/analyticdb.ts",
+      "src/vectorstores/azuresearch.ts",
       "src/vectorstores/base.ts",
       "src/vectorstores/elasticsearch.ts",
       "src/vectorstores/memory.ts",
