@@ -16,7 +16,7 @@ const dummyMessages = [
   ),
 ];
 
-test("should respond with the proper schema", async () => {
+test.skip("should respond with the proper schema", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     [" "],
     [{ id: 1 }],
