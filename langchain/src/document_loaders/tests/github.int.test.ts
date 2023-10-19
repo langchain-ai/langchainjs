@@ -3,7 +3,7 @@ import { GithubRepoLoader } from "../web/github.js";
 
 test("Test GithubRepoLoader", async () => {
   const loader = new GithubRepoLoader(
-    "https://github.com/hwchase17/langchainjs",
+    "https://github.com/langchain-ai/langchainjs",
     { branch: "main", recursive: false, unknown: "warn" }
   );
   const documents = await loader.load();
@@ -20,7 +20,7 @@ test("Test GithubRepoLoader", async () => {
 
 test("Test ignorePaths with GithubRepoLoader", async () => {
   const loader = new GithubRepoLoader(
-    "https://github.com/hwchase17/langchainjs",
+    "https://github.com/langchain-ai/langchainjs",
     {
       branch: "main",
       recursive: false,
@@ -42,7 +42,7 @@ test("Test ignorePaths with GithubRepoLoader", async () => {
 
 test("Test ignorePaths with GithubRepoLoader", async () => {
   const loader = new GithubRepoLoader(
-    "https://github.com/hwchase17/langchainjs",
+    "https://github.com/langchain-ai/langchainjs",
     {
       branch: "main",
       recursive: false,

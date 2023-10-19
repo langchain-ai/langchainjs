@@ -161,7 +161,7 @@ export class OpenAIAgent extends Agent {
     fields?: OpenAIAgentCreatePromptArgs
   ): BasePromptTemplate {
     const { prefix = PREFIX } = fields || {};
-    return ChatPromptTemplate.fromPromptMessages([
+    return ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(prefix),
       new MessagesPlaceholder("chat_history"),
       HumanMessagePromptTemplate.fromTemplate("{input}"),

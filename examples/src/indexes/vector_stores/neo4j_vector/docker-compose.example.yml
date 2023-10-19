@@ -1,0 +1,8 @@
+services:
+  database:
+    image: neo4j
+    ports:
+      - 7687:7687
+      - 7474:7474
+    environment:
+      - NEO4J_AUTH=neo4j/pleaseletmein

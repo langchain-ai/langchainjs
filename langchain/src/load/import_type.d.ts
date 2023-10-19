@@ -25,6 +25,9 @@ export interface OptionalImportMap {
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
+  "langchain/tools/google_calendar"?:
+    | typeof import("../tools/google_calendar/index.js")
+    | Promise<typeof import("../tools/google_calendar/index.js")>;
   "langchain/chains/load"?:
     | typeof import("../chains/load.js")
     | Promise<typeof import("../chains/load.js")>;
@@ -37,6 +40,15 @@ export interface OptionalImportMap {
   "langchain/chains/sql_db"?:
     | typeof import("../chains/sql_db/index.js")
     | Promise<typeof import("../chains/sql_db/index.js")>;
+  "langchain/chains/graph_qa/cypher"?:
+    | typeof import("../chains/graph_qa/cypher.js")
+    | Promise<typeof import("../chains/graph_qa/cypher.js")>;
+  "langchain/embeddings/bedrock"?:
+    | typeof import("../embeddings/bedrock.js")
+    | Promise<typeof import("../embeddings/bedrock.js")>;
+  "langchain/embeddings/cloudflare_workersai"?:
+    | typeof import("../embeddings/cloudflare_workersai.js")
+    | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;
   "langchain/embeddings/cohere"?:
     | typeof import("../embeddings/cohere.js")
     | Promise<typeof import("../embeddings/cohere.js")>;
@@ -71,8 +83,11 @@ export interface OptionalImportMap {
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
   "langchain/llms/googlevertexai"?:
-    | typeof import("../llms/googlevertexai.js")
-    | Promise<typeof import("../llms/googlevertexai.js")>;
+    | typeof import("../llms/googlevertexai/index.js")
+    | Promise<typeof import("../llms/googlevertexai/index.js")>;
+  "langchain/llms/googlevertexai/web"?:
+    | typeof import("../llms/googlevertexai/web.js")
+    | Promise<typeof import("../llms/googlevertexai/web.js")>;
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
@@ -88,15 +103,30 @@ export interface OptionalImportMap {
   "langchain/llms/writer"?:
     | typeof import("../llms/writer.js")
     | Promise<typeof import("../llms/writer.js")>;
+  "langchain/llms/portkey"?:
+    | typeof import("../llms/portkey.js")
+    | Promise<typeof import("../llms/portkey.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
+  "langchain/vectorstores/cassandra"?:
+    | typeof import("../vectorstores/cassandra.js")
+    | Promise<typeof import("../vectorstores/cassandra.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
+  "langchain/vectorstores/cloudflare_vectorize"?:
+    | typeof import("../vectorstores/cloudflare_vectorize.js")
+    | Promise<typeof import("../vectorstores/cloudflare_vectorize.js")>;
+  "langchain/vectorstores/closevector/web"?:
+    | typeof import("../vectorstores/closevector/web.js")
+    | Promise<typeof import("../vectorstores/closevector/web.js")>;
+  "langchain/vectorstores/closevector/node"?:
+    | typeof import("../vectorstores/closevector/node.js")
+    | Promise<typeof import("../vectorstores/closevector/node.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
@@ -115,6 +145,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/lancedb"?:
     | typeof import("../vectorstores/lancedb.js")
     | Promise<typeof import("../vectorstores/lancedb.js")>;
+  "langchain/vectorstores/momento_vector_index"?:
+    | typeof import("../vectorstores/momento_vector_index.js")
+    | Promise<typeof import("../vectorstores/momento_vector_index.js")>;
   "langchain/vectorstores/mongo"?:
     | typeof import("../vectorstores/mongo.js")
     | Promise<typeof import("../vectorstores/mongo.js")>;
@@ -133,9 +166,15 @@ export interface OptionalImportMap {
   "langchain/vectorstores/opensearch"?:
     | typeof import("../vectorstores/opensearch.js")
     | Promise<typeof import("../vectorstores/opensearch.js")>;
+  "langchain/vectorstores/pgvector"?:
+    | typeof import("../vectorstores/pgvector.js")
+    | Promise<typeof import("../vectorstores/pgvector.js")>;
   "langchain/vectorstores/milvus"?:
     | typeof import("../vectorstores/milvus.js")
     | Promise<typeof import("../vectorstores/milvus.js")>;
+  "langchain/vectorstores/neo4j_vector"?:
+    | typeof import("../vectorstores/neo4j_vector.js")
+    | Promise<typeof import("../vectorstores/neo4j_vector.js")>;
   "langchain/vectorstores/typeorm"?:
     | typeof import("../vectorstores/typeorm.js")
     | Promise<typeof import("../vectorstores/typeorm.js")>;
@@ -157,6 +196,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/usearch"?:
     | typeof import("../vectorstores/usearch.js")
     | Promise<typeof import("../vectorstores/usearch.js")>;
+  "langchain/vectorstores/vercel_postgres"?:
+    | typeof import("../vectorstores/vercel_postgres.js")
+    | Promise<typeof import("../vectorstores/vercel_postgres.js")>;
   "langchain/vectorstores/voy"?:
     | typeof import("../vectorstores/voy.js")
     | Promise<typeof import("../vectorstores/voy.js")>;
@@ -211,6 +253,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notionapi"?:
     | typeof import("../document_loaders/web/notionapi.js")
     | Promise<typeof import("../document_loaders/web/notionapi.js")>;
+  "langchain/document_loaders/web/pdf"?:
+    | typeof import("../document_loaders/web/pdf.js")
+    | Promise<typeof import("../document_loaders/web/pdf.js")>;
   "langchain/document_loaders/web/recursive_url"?:
     | typeof import("../document_loaders/web/recursive_url.js")
     | Promise<typeof import("../document_loaders/web/recursive_url.js")>;
@@ -268,9 +313,18 @@ export interface OptionalImportMap {
   "langchain/document_transformers/mozilla_readability"?:
     | typeof import("../document_transformers/mozilla_readability.js")
     | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
+  "langchain/chat_models/portkey"?:
+    | typeof import("../chat_models/portkey.js")
+    | Promise<typeof import("../chat_models/portkey.js")>;
+  "langchain/chat_models/bedrock"?:
+    | typeof import("../chat_models/bedrock.js")
+    | Promise<typeof import("../chat_models/bedrock.js")>;
   "langchain/chat_models/googlevertexai"?:
-    | typeof import("../chat_models/googlevertexai.js")
-    | Promise<typeof import("../chat_models/googlevertexai.js")>;
+    | typeof import("../chat_models/googlevertexai/index.js")
+    | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
+  "langchain/chat_models/googlevertexai/web"?:
+    | typeof import("../chat_models/googlevertexai/web.js")
+    | Promise<typeof import("../chat_models/googlevertexai/web.js")>;
   "langchain/chat_models/googlepalm"?:
     | typeof import("../chat_models/googlepalm.js")
     | Promise<typeof import("../chat_models/googlepalm.js")>;
@@ -313,6 +367,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/weaviate"?:
     | typeof import("../retrievers/self_query/weaviate.js")
     | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
+  "langchain/cache/cloudflare_kv"?:
+    | typeof import("../cache/cloudflare_kv.js")
+    | Promise<typeof import("../cache/cloudflare_kv.js")>;
   "langchain/cache/momento"?:
     | typeof import("../cache/momento.js")
     | Promise<typeof import("../cache/momento.js")>;
@@ -331,6 +388,9 @@ export interface OptionalImportMap {
   "langchain/stores/file/node"?:
     | typeof import("../stores/file/node.js")
     | Promise<typeof import("../stores/file/node.js")>;
+  "langchain/stores/message/cloudflare_d1"?:
+    | typeof import("../stores/message/cloudflare_d1.js")
+    | Promise<typeof import("../stores/message/cloudflare_d1.js")>;
   "langchain/stores/message/dynamodb"?:
     | typeof import("../stores/message/dynamodb.js")
     | Promise<typeof import("../stores/message/dynamodb.js")>;
@@ -361,6 +421,12 @@ export interface OptionalImportMap {
   "langchain/storage/ioredis"?:
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
+  "langchain/storage/vercel_kv"?:
+    | typeof import("../storage/vercel_kv.js")
+    | Promise<typeof import("../storage/vercel_kv.js")>;
+  "langchain/graphs/neo4j_graph"?:
+    | typeof import("../graphs/neo4j_graph.js")
+    | Promise<typeof import("../graphs/neo4j_graph.js")>;
   "langchain/hub"?:
     | typeof import("../hub.js")
     | Promise<typeof import("../hub.js")>;
@@ -370,6 +436,12 @@ export interface OptionalImportMap {
   "langchain/experimental/chat_models/anthropic_functions"?:
     | typeof import("../experimental/chat_models/anthropic_functions.js")
     | Promise<typeof import("../experimental/chat_models/anthropic_functions.js")>;
+  "langchain/experimental/llms/bittensor"?:
+    | typeof import("../experimental/llms/bittensor.js")
+    | Promise<typeof import("../experimental/llms/bittensor.js")>;
+  "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
+    | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
+    | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
 }
 
 export interface SecretMap {
@@ -383,8 +455,10 @@ export interface SecretMap {
   BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
+  FIREWORKS_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
+  GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
@@ -413,6 +487,8 @@ export interface SecretMap {
   VECTARA_CUSTOMER_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
+  YC_API_KEY?: string;
+  YC_IAM_TOKEN?: string;
   ZAPIER_NLA_API_KEY?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;

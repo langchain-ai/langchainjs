@@ -173,7 +173,7 @@ export class ChatConversationalAgent extends Agent {
       HumanMessagePromptTemplate.fromTemplate(renderedHumanMessage),
       new MessagesPlaceholder("agent_scratchpad"),
     ];
-    return ChatPromptTemplate.fromPromptMessages(messages);
+    return ChatPromptTemplate.fromMessages(messages);
   }
 
   /**

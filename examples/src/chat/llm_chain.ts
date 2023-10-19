@@ -5,7 +5,7 @@ import { ChatPromptTemplate } from "langchain/prompts";
 export const run = async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
 
-  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  const chatPrompt = ChatPromptTemplate.fromMessages([
     [
       "system",
       "You are a helpful assistant that translates {input_language} to {output_language}.",

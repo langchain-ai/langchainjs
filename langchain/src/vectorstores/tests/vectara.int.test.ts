@@ -4,7 +4,7 @@ import fs from "fs";
 import { expect, beforeAll } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
-import { VectaraLibArgs, VectaraStore } from "../vectara.js";
+import { VectaraFile, VectaraLibArgs, VectaraStore } from "../vectara.js";
 
 const getDocs = (): Document[] => {
   const hashCode = (s: string) =>
@@ -191,20 +191,26 @@ describe("VectaraStore", () => {
         { filename: "frenchOne.txt", content: frenchOneContent },
       ];
 
-      const blobs = [];
+      const vectaraFiles: VectaraFile[] = [];
       for (const file of files) {
         fs.writeFileSync(file.filename, file.content);
 
         const buffer = fs.readFileSync(file.filename);
-        blobs.push(new Blob([buffer], { type: "text/plain" }));
+        vectaraFiles.push({
+          blob: new Blob([buffer], { type: "text/plain" }),
+          fileName: file.filename,
+        });
       }
 
       const bitcoinBuffer = fs.readFileSync(
         "../examples/src/document_loaders/example_data/bitcoin.pdf"
       );
-      blobs.push(new Blob([bitcoinBuffer], { type: "application/pdf" }));
+      vectaraFiles.push({
+        blob: new Blob([bitcoinBuffer], { type: "application/pdf" }),
+        fileName: "bitcoin.pdf",
+      });
 
-      const results = await store.addFiles(blobs);
+      const results = await store.addFiles(vectaraFiles);
 
       for (const file of files) {
         fs.unlinkSync(file.filename);

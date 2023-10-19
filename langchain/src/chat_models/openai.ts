@@ -34,7 +34,7 @@ import { BaseFunctionCallOptions } from "../base_language/index.js";
 import { NewTokenIndices } from "../callbacks/base.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
 
-export { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
+export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
 interface TokenUsage {
   completionTokens?: number;
@@ -158,17 +158,19 @@ export interface ChatOpenAICallOptions
  * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
-export class ChatOpenAI
-  extends BaseChatModel<ChatOpenAICallOptions>
+export class ChatOpenAI<
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  >
+  extends BaseChatModel<CallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
   static lc_name() {
     return "ChatOpenAI";
   }
 
-  get callKeys(): (keyof ChatOpenAICallOptions)[] {
+  get callKeys() {
     return [
-      ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
+      ...super.callKeys,
       "options",
       "function_call",
       "functions",
@@ -392,7 +394,7 @@ export class ChatOpenAI
     let defaultRole: OpenAIRoleEnum | undefined;
     const streamIterable = await this.completionWithRetry(params, options);
     for await (const data of streamIterable) {
-      const choice = data.choices[0];
+      const choice = data?.choices[0];
       if (!choice) {
         continue;
       }

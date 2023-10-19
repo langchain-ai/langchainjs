@@ -1,0 +1,30 @@
+import CodeBlock from "@theme/CodeBlock";
+import GraphDBExample from "@examples/chains/graph_db_neo4j.ts";
+import GraphDBReturnDirectExample from "@examples/chains/graph_db_return_direct.ts";
+import GraphDBCustomPromptExample from "@examples/chains/graph_db_custom_prompt.ts";
+
+# Neo4j Cypher graph QA
+
+This example uses Neo4j database, which is a native graph database.
+
+## Set up
+
+Install the dependencies needed for Neo4j:
+
+```bash npm2yarn
+npm install neo4j-driver
+```
+
+Next, follow the instructions on https://neo4j.com/docs/operations-manual/current/installation/ to get a database instance running.
+
+<CodeBlock language="typescript">{GraphDBExample}</CodeBlock>
+
+If desired, you can return database results directly instead of generated text.
+
+<CodeBlock language="typescript">{GraphDBReturnDirectExample}</CodeBlock>
+
+## Custom prompt
+
+You can also customize the prompt that is used to generate Cypher statements or answers. Here, a custom prompt is used to generate Cypher statements.
+
+<CodeBlock language="typescript">{GraphDBCustomPromptExample}</CodeBlock>

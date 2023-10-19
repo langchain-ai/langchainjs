@@ -12,7 +12,7 @@ import {
 } from "./util/sql_utils.js";
 import { Serializable } from "./load/serializable.js";
 
-export { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
+export type { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
 
 export class SqlDatabase
   extends Serializable

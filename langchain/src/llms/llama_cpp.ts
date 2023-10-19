@@ -85,6 +85,8 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   _context: LlamaContext;
 
+  _session: LlamaChatSession;
+
   static lc_name() {
     return "LlamaCpp";
   }
@@ -105,6 +107,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     this.vocabOnly = inputs.vocabOnly;
     this._model = new LlamaModel(inputs);
     this._context = new LlamaContext({ model: this._model });
+    this._session = new LlamaChatSession({ context: this._context });
   }
 
   _llmType() {
@@ -116,13 +119,11 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     prompt: string,
     options?: this["ParsedCallOptions"]
   ): Promise<string> {
-    const session = new LlamaChatSession({ context: this._context });
-
     try {
-      const compleation = await session.prompt(prompt, options);
-      return compleation;
+      const completion = await this._session.prompt(prompt, options);
+      return completion;
     } catch (e) {
-      throw new Error("Error getting prompt compleation.");
+      throw new Error("Error getting prompt completion.");
     }
   }
 }

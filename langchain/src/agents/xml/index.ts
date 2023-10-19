@@ -76,7 +76,7 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   }
 
   static createPrompt() {
-    return ChatPromptTemplate.fromPromptMessages([
+    return ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(AGENT_INSTRUCTIONS),
       AIMessagePromptTemplate.fromTemplate("{intermediate_steps}"),
     ]);

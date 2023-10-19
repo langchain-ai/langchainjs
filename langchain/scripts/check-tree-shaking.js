@@ -35,6 +35,8 @@ export function listExternals() {
     "notion-to-md/build/utils/notion.js",
     "firebase-admin/app",
     "firebase-admin/firestore",
+    "web-auth-library/google",
+    "@google-ai/generativelanguage/build/protos/protos.js",
   ];
 }
 

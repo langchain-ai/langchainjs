@@ -2,6 +2,7 @@
 // Replace with "string" when we are comfortable with a breaking change.
 
 import { BaseCallbackConfig } from "../callbacks/manager.js";
+import { getBufferString } from "../memory/base.js";
 import {
   AIMessage,
   BaseMessage,
@@ -15,7 +16,7 @@ import {
   coerceMessageLikeToMessage,
   isBaseMessage,
 } from "../schema/index.js";
-import { Runnable } from "../schema/runnable.js";
+import { Runnable } from "../schema/runnable/index.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
@@ -105,7 +106,7 @@ export class ChatPromptValue extends BasePromptValue {
   }
 
   toString() {
-    return JSON.stringify(this.messages);
+    return getBufferString(this.messages);
   }
 
   toChatMessages() {
@@ -157,10 +158,40 @@ export class MessagesPlaceholder<
     return [this.variableName];
   }
 
-  formatMessages(
+  validateInputOrThrow(
+    input: Array<unknown>,
+    variableName: Extract<keyof RunInput, string>
+  ): input is BaseMessage[] {
+    let isInputBaseMessage = false;
+
+    if (Array.isArray(input)) {
+      isInputBaseMessage = input.every((message) =>
+        isBaseMessage(message as BaseMessage)
+      );
+    } else {
+      isInputBaseMessage = isBaseMessage(input as BaseMessage);
+    }
+
+    if (!isInputBaseMessage) {
+      const readableInput =
+        typeof input === "string" ? input : JSON.stringify(input, null, 2);
+
+      const error = new Error(
+        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: ${readableInput}`
+      );
+      error.name = "InputFormatError";
+      throw error;
+    }
+
+    return true;
+  }
+
+  async formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
-    return Promise.resolve(values[this.variableName] as BaseMessage[]);
+    this.validateInputOrThrow(values[this.variableName], this.variableName);
+
+    return values[this.variableName];
   }
 }
 
@@ -583,8 +614,14 @@ export class ChatPromptTemplate<
     >(promptDict);
   }
 
+  /**
+   * Create a chat model-specific prompt from individual chat messages
+   * or message-like tuples.
+   * @param promptMessages Messages to be passed to the chat model
+   * @returns A new ChatPromptTemplate
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromPromptMessages<RunInput extends InputValues = any>(
+  static fromMessages<RunInput extends InputValues = any>(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
       | BaseMessagePromptTemplateLike
@@ -625,5 +662,16 @@ export class ChatPromptTemplate<
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,
     });
+  }
+
+  /** @deprecated Renamed to .fromMessages */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromPromptMessages<RunInput extends InputValues = any>(
+    promptMessages: (
+      | ChatPromptTemplate<InputValues, string>
+      | BaseMessagePromptTemplateLike
+    )[]
+  ): ChatPromptTemplate<RunInput> {
+    return this.fromMessages(promptMessages);
   }
 }

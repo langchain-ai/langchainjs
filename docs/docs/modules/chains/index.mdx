@@ -1,0 +1,88 @@
+---
+sidebar_position: 2
+---
+
+# Chains
+
+Using an LLM in isolation is fine for simple applications,
+but more complex applications require chaining LLMs - either with each other or with other components.
+
+LangChain provides the **Chain** interface for such "chained" applications. We define a Chain very generically as a sequence of calls to components, which can include other chains. The base interface is simple:
+
+import CodeBlock from "@theme/CodeBlock";
+import BaseClassExample from "@examples/chains/advanced_subclass.ts";
+
+<CodeBlock language="typescript">{BaseClassExample}</CodeBlock>
+
+This idea of composing components together in a chain is simple but powerful. It drastically simplifies and makes more modular the implementation of complex applications, which in turn makes it much easier to debug, maintain, and improve your applications.
+
+For more specifics check out:
+
+- [How-to](/docs/modules/chains/how_to/) for walkthroughs of different chain features
+- [Foundational](/docs/modules/chains/foundational/) to get acquainted with core building block chains
+- [Document](/docs/modules/chains/document/) to learn how to incorporate documents into chains
+- [Popular](/docs/modules/chains/popular/) chains for the most common use cases
+- [Additional](/docs/modules/chains/additional/) to see some of the more advanced chains and integrations that you can use out of the box
+
+## Why do we need chains?
+
+Chains allow us to combine multiple components together to create a single, coherent application. For example, we can create a chain that takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM. We can build more complex chains by combining multiple chains together, or by combining chains with other components.
+
+## Get started
+
+### Using `LLMChain`
+
+The `LLMChain` is most basic building block chain. It takes in a prompt template, formats it with the user input and returns the response from an LLM.
+
+To use the `LLMChain`, first create a prompt template.
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+import { PromptTemplate } from "langchain/prompts";
+import { LLMChain } from "langchain/chains";
+
+// We can construct an LLMChain from a PromptTemplate and an LLM.
+const model = new OpenAI({ temperature: 0 });
+const prompt = PromptTemplate.fromTemplate(
+  "What is a good name for a company that makes {product}?"
+);
+```
+
+We can now create a very simple chain that will take user input, format the prompt with it, and then send it to the LLM.
+
+```typescript
+const chain = new LLMChain({ llm: model, prompt });
+
+// Since this LLMChain is a single-input, single-output chain, we can also `run` it.
+// This convenience method takes in a string and returns the value
+// of the output key field in the chain response. For LLMChains, this defaults to "text".
+const res = await chain.run("colorful socks");
+console.log({ res });
+
+// { res: "\n\nSocktastic!" }
+```
+
+If there are multiple variables, you can input them all at once using a dictionary.
+This will return the complete chain response.
+
+```typescript
+const prompt = PromptTemplate.fromTemplate(
+  "What is a good name for {company} that makes {product}?"
+);
+
+const chain = new LLMChain({ llm: model, prompt });
+
+const res = await chain.call({
+  company: "a startup",
+  product: "colorful socks",
+});
+
+console.log({ res });
+// { res: { text: '\n\Socktopia Colourful Creations.' } }
+```
+
+You can use a chat model in an `LLMChain` as well:
+
+import Example from "@examples/chains/llm_chain_chat.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

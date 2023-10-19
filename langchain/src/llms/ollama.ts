@@ -11,9 +11,7 @@ import { GenerationChunk } from "../schema/index.js";
  * Class that represents the Ollama language model. It extends the base
  * LLM class and implements the OllamaInput interface.
  */
-export class Ollama extends LLM implements OllamaInput {
-  declare CallOptions: OllamaCallOptions;
-
+export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   static lc_name() {
     return "Ollama";
   }
@@ -166,34 +164,10 @@ export class Ollama extends LLM implements OllamaInput {
   }
 
   async *_streamResponseChunks(
-    input: string,
+    prompt: string,
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    const stream = await this.caller.call(async () =>
-      createOllamaStream(
-        this.baseUrl,
-        { ...this.invocationParams(options), prompt: input },
-        options
-      )
-    );
-    for await (const chunk of stream) {
-      yield new GenerationChunk({
-        text: chunk.response,
-        generationInfo: {
-          ...chunk,
-          response: undefined,
-        },
-      });
-      await runManager?.handleLLMNewToken(chunk.response ?? "");
-    }
-  }
-
-  /** @ignore */
-  async _call(
-    prompt: string,
-    options: this["ParsedCallOptions"]
-  ): Promise<string> {
     const stream = await this.caller.call(async () =>
       createOllamaStream(
         this.baseUrl,
@@ -201,9 +175,46 @@ export class Ollama extends LLM implements OllamaInput {
         options
       )
     );
-    const chunks = [];
     for await (const chunk of stream) {
-      chunks.push(chunk.response);
+      if (!chunk.done) {
+        yield new GenerationChunk({
+          text: chunk.response,
+          generationInfo: {
+            ...chunk,
+            response: undefined,
+          },
+        });
+        await runManager?.handleLLMNewToken(chunk.response ?? "");
+      } else {
+        yield new GenerationChunk({
+          text: "",
+          generationInfo: {
+            model: chunk.model,
+            total_duration: chunk.total_duration,
+            load_duration: chunk.load_duration,
+            prompt_eval_count: chunk.prompt_eval_count,
+            prompt_eval_duration: chunk.prompt_eval_duration,
+            eval_count: chunk.eval_count,
+            eval_duration: chunk.eval_duration,
+          },
+        });
+      }
+    }
+  }
+
+  /** @ignore */
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
+    const chunks = [];
+    for await (const chunk of this._streamResponseChunks(
+      prompt,
+      options,
+      runManager
+    )) {
+      chunks.push(chunk.text);
     }
     return chunks.join("");
   }

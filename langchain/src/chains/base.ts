@@ -8,7 +8,7 @@ import {
 } from "../callbacks/manager.js";
 import { SerializedBaseChain } from "./serde.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
-import { RunnableConfig } from "../schema/runnable.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -177,7 +177,12 @@ export abstract class BaseChain<
     );
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-      fullValues
+      fullValues,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      parsedConfig.runName
     );
     let outputValues: RunOutput;
     try {
