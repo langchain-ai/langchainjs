@@ -11,7 +11,7 @@ import { TEMPLATE_TOOL_RESPONSE } from "./chat_convo/prompt.js";
  * Format a list of AgentSteps into a list of BaseMessage instances for
  * agents that use OpenAI's API. Helpful for passing in previous agent
  * step context into new iterations.
- * 
+ *
  * @param steps A list of AgentSteps to format.
  * @returns A list of BaseMessages.
  */
