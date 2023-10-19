@@ -463,6 +463,9 @@ chat_models/ollama.d.ts
 chat_models/minimax.cjs
 chat_models/minimax.js
 chat_models/minimax.d.ts
+chat_models/yandex.cjs
+chat_models/yandex.js
+chat_models/yandex.d.ts
 chat_models/fake.cjs
 chat_models/fake.js
 chat_models/fake.d.ts
@@ -691,6 +694,9 @@ experimental/llms/bittensor.d.ts
 experimental/hubs/makersuite/googlemakersuitehub.cjs
 experimental/hubs/makersuite/googlemakersuitehub.js
 experimental/hubs/makersuite/googlemakersuitehub.d.ts
+experimental/chains/violation_of_expectations.cjs
+experimental/chains/violation_of_expectations.js
+experimental/chains/violation_of_expectations.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

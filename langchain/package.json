@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.168",
+  "version": "0.0.169",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -475,6 +475,9 @@
     "chat_models/minimax.cjs",
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
+    "chat_models/yandex.cjs",
+    "chat_models/yandex.js",
+    "chat_models/yandex.d.ts",
     "chat_models/fake.cjs",
     "chat_models/fake.js",
     "chat_models/fake.d.ts",
@@ -703,6 +706,9 @@
     "experimental/hubs/makersuite/googlemakersuitehub.cjs",
     "experimental/hubs/makersuite/googlemakersuitehub.js",
     "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+    "experimental/chains/violation_of_expectations.cjs",
+    "experimental/chains/violation_of_expectations.js",
+    "experimental/chains/violation_of_expectations.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -836,7 +842,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
-    "llmonitor": "^0.5.4",
+    "llmonitor": "^0.5.8",
     "lodash": "^4.17.21",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
@@ -940,7 +946,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "llmonitor": "*",
+    "llmonitor": "^0.5.8",
     "lodash": "^4.17.21",
     "mammoth": "*",
     "mongodb": "^5.2.0",
@@ -2071,6 +2077,11 @@
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
     },
+    "./chat_models/yandex": {
+      "types": "./chat_models/yandex.d.ts",
+      "import": "./chat_models/yandex.js",
+      "require": "./chat_models/yandex.cjs"
+    },
     "./chat_models/fake": {
       "types": "./chat_models/fake.d.ts",
       "import": "./chat_models/fake.js",
@@ -2450,6 +2461,11 @@
       "types": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts",
       "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
       "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
+    },
+    "./experimental/chains/violation_of_expectations": {
+      "types": "./experimental/chains/violation_of_expectations.d.ts",
+      "import": "./experimental/chains/violation_of_expectations.js",
+      "require": "./experimental/chains/violation_of_expectations.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
