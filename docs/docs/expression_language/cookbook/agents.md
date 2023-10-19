@@ -5,6 +5,7 @@ The `AgentExecutor` class accepts a `Runnable` as the agent. With this, we can c
 Here is a simple example of an agent which uses `Runnables`, a retriever and a structured output parser to create an OpenAI functions agent that finds specific information in a large text document.
 
 The first step is to import necessary modules
+
 ```typescript
 import { zodToJsonSchema } from "zod-to-json-schema";
 import fs from "fs";
@@ -167,12 +168,12 @@ The output will look something like this
 ```typescript
 {
   res: {
-    inputs: '{\n' +
+    inputs: "{\n" +
       '  "answer": "The President nominated Circuit Court of Appeals Judge Ketanji Brown Jackson, who is described as one of our nation’s top legal minds and will continue Justice Breyer’s legacy of excellence.",\n' +
       '  "sources": [\n' +
       '    "State of the Union Address"\n' +
-      '  ]\n' +
-      '}'
+      "  ]\n" +
+      "}";
   }
 }
 ```
