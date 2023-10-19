@@ -16,9 +16,7 @@ test.skip("OpenSearchVectorStore integration", async () => {
 
   const indexName = "test_index";
 
-  const embeddings = new OpenAIEmbeddings(undefined, {
-    baseOptions: { temperature: 0 },
-  });
+  const embeddings = new OpenAIEmbeddings();
   const store = new OpenSearchVectorStore(embeddings, { client, indexName });
   await store.deleteIfExists();
 

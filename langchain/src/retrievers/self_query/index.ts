@@ -28,6 +28,7 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
     k?: number;
     filter?: T["FilterType"];
     mergeFiltersOperator?: "or" | "and" | "replace";
+    forceDefaultFilter?: boolean;
   };
 }
 
@@ -62,7 +63,8 @@ export class SelfQueryRetriever<T extends VectorStore>
     k?: number;
     filter?: T["FilterType"];
     mergeFiltersOperator?: "or" | "and" | "replace";
-  } = { k: 4 };
+    forceDefaultFilter?: boolean;
+  } = { k: 4, forceDefaultFilter: false };
 
   constructor(options: SelfQueryRetrieverArgs<T>) {
     super(options);
@@ -94,7 +96,8 @@ export class SelfQueryRetriever<T extends VectorStore>
     const filter = this.structuredQueryTranslator.mergeFilters(
       this.searchParams?.filter,
       nextArg.filter,
-      this.searchParams?.mergeFiltersOperator
+      this.searchParams?.mergeFiltersOperator,
+      this.searchParams?.forceDefaultFilter
     );
 
     const generatedQuery = generatedStructuredQuery.query;

@@ -6,12 +6,12 @@ import {
   parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { Document } from "../document.js";
-import { Runnable, RunnableConfig } from "./runnable.js";
+import { Runnable } from "./runnable/index.js";
+import { RunnableConfig } from "./runnable/config.js";
 
 /**
- * Base Index class. All indexes should extend this class.
+ * Base Retriever class. All indexes should extend this class.
  */
-
 export interface BaseRetrieverInput {
   callbacks?: Callbacks;
   tags?: string[];
@@ -22,10 +22,7 @@ export interface BaseRetrieverInput {
 /**
  * Abstract base class for a Document retrieval system. A retrieval system
  * is defined as something that can take string queries and return the
- * most 'relevant' Documents from some source. It extends the `Runnable`
- * class, which means it is a unit of work that can be invoked, batched,
- * streamed, or transformed. In the context of `BaseRetriever`, it is
- * invoked with a string input and returns an array of `Document` objects.
+ * most 'relevant' Documents from some source.
  */
 export abstract class BaseRetriever extends Runnable<string, Document[]> {
   callbacks?: Callbacks;
@@ -86,7 +83,12 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
     );
     const runManager = await callbackManager_?.handleRetrieverStart(
       this.toJSON(),
-      query
+      query,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      parsedConfig.runName
     );
     try {
       const results = await this._getRelevantDocuments(query, runManager);

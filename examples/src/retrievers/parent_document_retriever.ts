@@ -1,12 +1,12 @@
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { InMemoryDocstore } from "langchain/stores/doc/in_memory";
+import { InMemoryStore } from "langchain/storage/in_memory";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
-const docstore = new InMemoryDocstore();
+const docstore = new InMemoryStore();
 const retriever = new ParentDocumentRetriever({
   vectorstore,
   docstore,
@@ -23,6 +23,9 @@ const retriever = new ParentDocumentRetriever({
   // Note that this does not exactly correspond to the number of final (parent) documents
   // retrieved, as multiple child documents can point to the same parent.
   childK: 20,
+  // Optional `k` parameter to limit number of final, parent documents returned from this
+  // retriever and sent to LLM. This is an upper-bound, and the final count may be lower than this.
+  parentK: 5,
 });
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();

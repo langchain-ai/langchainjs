@@ -2,44 +2,6 @@
  * Support async iterator syntax for ReadableStreams in all environments.
  * Source: https://github.com/MattiasBuelens/web-streams-polyfill/pull/122#issuecomment-1627354490
  */
-export function readableStreamToAsyncIterable(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  stream: any,
-  preventCancel = false
-) {
-  if (stream[Symbol.asyncIterator]) {
-    return stream[Symbol.asyncIterator]();
-  }
-
-  const reader = stream.getReader();
-
-  return {
-    async next() {
-      try {
-        const result = await reader.read();
-        if (result.done) reader.releaseLock(); // release lock when stream becomes closed
-        return result;
-      } catch (e) {
-        reader.releaseLock(); // release lock when stream becomes errored
-        throw e;
-      }
-    },
-    async return() {
-      if (!preventCancel) {
-        const cancelPromise = reader.cancel(); // cancel first, but don't await yet
-        reader.releaseLock(); // release lock first
-        await cancelPromise; // now await it
-      } else {
-        reader.releaseLock();
-      }
-      return { done: true, value: undefined };
-    },
-    [Symbol.asyncIterator]() {
-      return this;
-    },
-  };
-}
-
 export class IterableReadableStream<T> extends ReadableStream<T> {
   public reader: ReadableStreamDefaultReader<T>;
 
@@ -66,7 +28,7 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     const cancelPromise = this.reader.cancel(); // cancel first, but don't await yet
     this.reader.releaseLock(); // release lock first
     await cancelPromise; // now await it
-    return { done: true, value: undefined };
+    return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore final chunk value anyway
   }
 
   [Symbol.asyncIterator]() {
@@ -79,8 +41,7 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     return new IterableReadableStream<T>({
       start(controller) {
         return pump();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        function pump(): any {
+        function pump(): Promise<T | undefined> {
           return reader.read().then(({ done, value }) => {
             // When no more data needs to be consumed, close the stream
             if (done) {
@@ -100,11 +61,12 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     return new IterableReadableStream<T>({
       async pull(controller) {
         const { value, done } = await generator.next();
+        // When no more data needs to be consumed, close the stream
         if (done) {
           controller.close();
-        } else if (value) {
-          controller.enqueue(value);
         }
+        // Fix: `else if (value)` will hang the streaming when nullish value (e.g. empty string) is pulled
+        controller.enqueue(value);
       },
     });
   }

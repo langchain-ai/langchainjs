@@ -1,5 +1,6 @@
-import { ChatCompletionFunctions } from "openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
 
@@ -16,6 +17,8 @@ import {
 } from "../../prompts/chat.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
+import { BaseChatModel } from "../../chat_models/base.js";
+import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
  * Type representing a function for executing OpenAPI requests.
@@ -151,42 +154,49 @@ function convertOpenAPIParamsToJSONSchema(
  * @param spec The OpenAPI specification that contains the schema.
  * @returns The JSON schema representation of the OpenAPI schema.
  */
-function convertOpenAPISchemaToJSONSchema(
+export function convertOpenAPISchemaToJSONSchema(
   schema: OpenAPIV3_1.SchemaObject,
   spec: OpenAPISpec
-) {
-  if (schema.type !== "object" && schema.type !== "array") {
-    return {
-      type: schema.type ?? "string",
-    } as JsonSchema7Type;
+): JsonSchema7Type {
+  if (schema.type === "object") {
+    return Object.keys(schema.properties ?? {}).reduce(
+      (jsonSchema: JsonSchema7ObjectType, propertyName) => {
+        if (!schema.properties) {
+          return jsonSchema;
+        }
+        const openAPIProperty = spec.getSchema(schema.properties[propertyName]);
+        if (openAPIProperty.type === undefined) {
+          return jsonSchema;
+        }
+        // eslint-disable-next-line no-param-reassign
+        jsonSchema.properties[propertyName] = convertOpenAPISchemaToJSONSchema(
+          openAPIProperty,
+          spec
+        );
+        if (openAPIProperty.required && jsonSchema.required !== undefined) {
+          jsonSchema.required.push(propertyName);
+        }
+        return jsonSchema;
+      },
+      {
+        type: "object",
+        properties: {},
+        required: [],
+        additionalProperties: {},
+      }
+    );
   }
-  return Object.keys(schema.properties ?? {}).reduce(
-    (jsonSchema: JsonSchema7ObjectType, propertyName) => {
-      if (!schema.properties) {
-        return jsonSchema;
-      }
-      const openAPIProperty = spec.getSchema(schema.properties[propertyName]);
-      if (openAPIProperty.type === undefined) {
-        return jsonSchema;
-      }
-      // eslint-disable-next-line no-param-reassign
-      jsonSchema.properties[propertyName] = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        type: openAPIProperty.type as any,
-        description: openAPIProperty.description,
-      };
-      if (openAPIProperty.required && jsonSchema.required !== undefined) {
-        jsonSchema.required.push(propertyName);
-      }
-      return jsonSchema;
-    },
-    {
-      type: "object",
-      properties: {},
-      required: [],
-      additionalProperties: {},
-    }
-  );
+  if (schema.type === "array") {
+    return {
+      type: "array",
+      items: convertOpenAPISchemaToJSONSchema(schema.items ?? {}, spec),
+      minItems: schema.minItems,
+      maxItems: schema.maxItems,
+    } as JsonSchema7ArrayType;
+  }
+  return {
+    type: schema.type ?? "string",
+  } as JsonSchema7Type;
 }
 
 /**
@@ -195,7 +205,7 @@ function convertOpenAPISchemaToJSONSchema(
  * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
  */
 function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
-  openAIFunctions: ChatCompletionFunctions[];
+  openAIFunctions: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {
   if (!spec.document.paths) {
@@ -273,16 +283,17 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
           };
         }
       }
-      const openAIFunction: ChatCompletionFunctions = {
-        name: OpenAPISpec.getCleanedOperationId(operation, path, method),
-        description: operation.description ?? operation.summary ?? "",
-        parameters: {
-          type: "object",
-          properties: requestArgsSchema,
-          // All remaining top-level parameters are required
-          required: Object.keys(requestArgsSchema),
-        },
-      };
+      const openAIFunction: OpenAIClient.Chat.ChatCompletionCreateParams.Function =
+        {
+          name: OpenAPISpec.getCleanedOperationId(operation, path, method),
+          description: operation.description ?? operation.summary ?? "",
+          parameters: {
+            type: "object",
+            properties: requestArgsSchema,
+            // All remaining top-level parameters are required
+            required: Object.keys(requestArgsSchema),
+          },
+        };
 
       openAIFunctions.push(openAIFunction);
       const baseUrl = (spec.baseUrl ?? "").endsWith("/")
@@ -430,7 +441,7 @@ class SimpleRequestChain extends BaseChain {
  * Type representing the options for creating an OpenAPI chain.
  */
 export type OpenAPIChainOptions = {
-  llm?: ChatOpenAI;
+  llm?: BaseChatModel<BaseFunctionCallOptions>;
   prompt?: BasePromptTemplate;
   requestChain?: BaseChain;
   llmChainInputs?: LLMChainInput;
@@ -472,7 +483,7 @@ export async function createOpenAPIChain(
   }
   const {
     llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }),
-    prompt = ChatPromptTemplate.fromPromptMessages([
+    prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
         "Use the provided API's to respond to this user query:\n\n{query}"
       ),

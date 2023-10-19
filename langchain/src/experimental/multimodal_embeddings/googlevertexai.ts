@@ -1,10 +1,11 @@
+import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import { Embeddings, EmbeddingsParams } from "../../embeddings/base.js";
 import {
+  GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
-  GoogleVertexAIConnectionParams,
   GoogleVertexAILLMResponse,
 } from "../../types/googlevertexai-types.js";
-import { GoogleVertexAIConnection } from "../../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../../util/async_caller.js";
 
 /**
@@ -13,7 +14,7 @@ import { AsyncCallerCallOptions } from "../../util/async_caller.js";
  */
 export interface GoogleVertexAIMultimodalEmbeddingsParams
   extends EmbeddingsParams,
-    GoogleVertexAIConnectionParams {}
+    GoogleVertexAIBaseLLMInput<GoogleAuthOptions> {}
 
 /**
  * Options for the GoogleVertexAIMultimodalEmbeddings class, extending
@@ -72,10 +73,11 @@ export class GoogleVertexAIMultimodalEmbeddings
 {
   model = "multimodalembedding@001";
 
-  private connection: GoogleVertexAIConnection<
+  private connection: GoogleVertexAILLMConnection<
     GoogleVertexAIMultimodalEmbeddingsOptions,
     GoogleVertexAIMultimodalEmbeddingsInstance,
-    GoogleVertexAIMultimodalEmbeddingsResults
+    GoogleVertexAIMultimodalEmbeddingsResults,
+    GoogleAuthOptions
   >;
 
   constructor(fields?: GoogleVertexAIMultimodalEmbeddingsParams) {
@@ -83,9 +85,13 @@ export class GoogleVertexAIMultimodalEmbeddings
 
     this.model = fields?.model ?? this.model;
 
-    this.connection = new GoogleVertexAIConnection(
+    this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
-      this.caller
+      this.caller,
+      new GoogleAuth({
+        scopes: "https://www.googleapis.com/auth/cloud-platform",
+        ...fields?.authOptions,
+      })
     );
   }
 

@@ -11,6 +11,27 @@ test.skip("test call", async () => {
   console.log({ result });
 });
 
+test.skip("test call with callback", async () => {
+  const ollama = new Ollama({
+    baseUrl: "http://localhost:11434",
+  });
+  const tokens: string[] = [];
+  const result = await ollama.predict(
+    "What is a good name for a company that makes colorful socks?",
+    {
+      callbacks: [
+        {
+          handleLLMNewToken(token) {
+            tokens.push(token);
+          },
+        },
+      ],
+    }
+  );
+  expect(tokens.length).toBeGreaterThan(1);
+  expect(result).toEqual(tokens.join(""));
+});
+
 test.skip("test streaming call", async () => {
   const ollama = new Ollama({
     baseUrl: "http://localhost:11434",
@@ -47,9 +68,7 @@ test.skip("should stream through with a bytes output parser", async () => {
   User: {input}
   AI:`;
 
-  const prompt = PromptTemplate.fromTemplate<{
-    input: string;
-  }>(TEMPLATE);
+  const prompt = PromptTemplate.fromTemplate(TEMPLATE);
 
   const ollama = new Ollama({
     model: "llama2",

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.132",
+  "version": "0.0.169",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -52,6 +52,9 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/google_calendar.cjs",
+    "tools/google_calendar.js",
+    "tools/google_calendar.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -70,18 +73,27 @@
     "chains/sql_db.cjs",
     "chains/sql_db.js",
     "chains/sql_db.d.ts",
-    "embeddings.cjs",
-    "embeddings.js",
-    "embeddings.d.ts",
+    "chains/graph_qa/cypher.cjs",
+    "chains/graph_qa/cypher.js",
+    "chains/graph_qa/cypher.d.ts",
     "embeddings/base.cjs",
     "embeddings/base.js",
     "embeddings/base.d.ts",
+    "embeddings/bedrock.cjs",
+    "embeddings/bedrock.js",
+    "embeddings/bedrock.d.ts",
     "embeddings/cache_backed.cjs",
     "embeddings/cache_backed.js",
     "embeddings/cache_backed.d.ts",
+    "embeddings/cloudflare_workersai.cjs",
+    "embeddings/cloudflare_workersai.js",
+    "embeddings/cloudflare_workersai.d.ts",
     "embeddings/fake.cjs",
     "embeddings/fake.js",
     "embeddings/fake.d.ts",
+    "embeddings/ollama.cjs",
+    "embeddings/ollama.js",
+    "embeddings/ollama.d.ts",
     "embeddings/openai.cjs",
     "embeddings/openai.js",
     "embeddings/openai.d.ts",
@@ -94,15 +106,18 @@
     "embeddings/hf.cjs",
     "embeddings/hf.js",
     "embeddings/hf.d.ts",
+    "embeddings/hf_transformers.cjs",
+    "embeddings/hf_transformers.js",
+    "embeddings/hf_transformers.d.ts",
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
-    "llms.cjs",
-    "llms.js",
-    "llms.d.ts",
+    "embeddings/minimax.cjs",
+    "embeddings/minimax.js",
+    "embeddings/minimax.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -118,6 +133,9 @@
     "llms/aleph_alpha.cjs",
     "llms/aleph_alpha.js",
     "llms/aleph_alpha.d.ts",
+    "llms/cloudflare_workersai.cjs",
+    "llms/cloudflare_workersai.js",
+    "llms/cloudflare_workersai.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -136,24 +154,42 @@
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
+    "llms/googlevertexai/web.cjs",
+    "llms/googlevertexai/web.js",
+    "llms/googlevertexai/web.d.ts",
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
+    "llms/fireworks.cjs",
+    "llms/fireworks.js",
+    "llms/fireworks.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/llama_cpp.cjs",
+    "llms/llama_cpp.js",
+    "llms/llama_cpp.d.ts",
+    "llms/writer.cjs",
+    "llms/writer.js",
+    "llms/writer.d.ts",
+    "llms/portkey.cjs",
+    "llms/portkey.js",
+    "llms/portkey.d.ts",
+    "llms/yandex.cjs",
+    "llms/yandex.js",
+    "llms/yandex.d.ts",
+    "llms/fake.cjs",
+    "llms/fake.js",
+    "llms/fake.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
     "prompts/load.cjs",
     "prompts/load.js",
     "prompts/load.d.ts",
-    "vectorstores.cjs",
-    "vectorstores.js",
-    "vectorstores.d.ts",
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
@@ -163,15 +199,30 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/cassandra.cjs",
+    "vectorstores/cassandra.js",
+    "vectorstores/cassandra.d.ts",
     "vectorstores/elasticsearch.cjs",
     "vectorstores/elasticsearch.js",
     "vectorstores/elasticsearch.d.ts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
+    "vectorstores/cloudflare_vectorize.cjs",
+    "vectorstores/cloudflare_vectorize.js",
+    "vectorstores/cloudflare_vectorize.d.ts",
+    "vectorstores/closevector/web.cjs",
+    "vectorstores/closevector/web.js",
+    "vectorstores/closevector/web.d.ts",
+    "vectorstores/closevector/node.cjs",
+    "vectorstores/closevector/node.js",
+    "vectorstores/closevector/node.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
+    "vectorstores/googlevertexai.cjs",
+    "vectorstores/googlevertexai.js",
+    "vectorstores/googlevertexai.d.ts",
     "vectorstores/hnswlib.cjs",
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
@@ -184,6 +235,9 @@
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
+    "vectorstores/momento_vector_index.cjs",
+    "vectorstores/momento_vector_index.js",
+    "vectorstores/momento_vector_index.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
@@ -202,9 +256,15 @@
     "vectorstores/opensearch.cjs",
     "vectorstores/opensearch.js",
     "vectorstores/opensearch.d.ts",
+    "vectorstores/pgvector.cjs",
+    "vectorstores/pgvector.js",
+    "vectorstores/pgvector.d.ts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
+    "vectorstores/neo4j_vector.cjs",
+    "vectorstores/neo4j_vector.js",
+    "vectorstores/neo4j_vector.d.ts",
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
@@ -232,6 +292,12 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/vercel_postgres.cjs",
+    "vectorstores/vercel_postgres.js",
+    "vectorstores/vercel_postgres.d.ts",
+    "vectorstores/voy.cjs",
+    "vectorstores/voy.js",
+    "vectorstores/voy.d.ts",
     "vectorstores/xata.cjs",
     "vectorstores/xata.js",
     "vectorstores/xata.d.ts",
@@ -250,9 +316,6 @@
     "document.cjs",
     "document.js",
     "document.d.ts",
-    "document_loaders.cjs",
-    "document_loaders.js",
-    "document_loaders.d.ts",
     "document_loaders/base.cjs",
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
@@ -301,6 +364,12 @@
     "document_loaders/web/notionapi.cjs",
     "document_loaders/web/notionapi.js",
     "document_loaders/web/notionapi.d.ts",
+    "document_loaders/web/pdf.cjs",
+    "document_loaders/web/pdf.js",
+    "document_loaders/web/pdf.d.ts",
+    "document_loaders/web/recursive_url.cjs",
+    "document_loaders/web/recursive_url.js",
+    "document_loaders/web/recursive_url.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -310,6 +379,9 @@
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/searchapi.cjs",
+    "document_loaders/web/searchapi.js",
+    "document_loaders/web/searchapi.d.ts",
     "document_loaders/web/serpapi.cjs",
     "document_loaders/web/serpapi.js",
     "document_loaders/web/serpapi.d.ts",
@@ -352,6 +424,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_loaders/fs/openai_whisper_audio.cjs",
+    "document_loaders/fs/openai_whisper_audio.js",
+    "document_loaders/fs/openai_whisper_audio.d.ts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",
@@ -361,33 +436,57 @@
     "document_transformers/openai_functions.cjs",
     "document_transformers/openai_functions.js",
     "document_transformers/openai_functions.d.ts",
-    "chat_models.cjs",
-    "chat_models.js",
-    "chat_models.d.ts",
     "chat_models/base.cjs",
     "chat_models/base.js",
     "chat_models/base.d.ts",
     "chat_models/openai.cjs",
     "chat_models/openai.js",
     "chat_models/openai.d.ts",
+    "chat_models/portkey.cjs",
+    "chat_models/portkey.js",
+    "chat_models/portkey.d.ts",
     "chat_models/anthropic.cjs",
     "chat_models/anthropic.js",
     "chat_models/anthropic.d.ts",
+    "chat_models/bedrock.cjs",
+    "chat_models/bedrock.js",
+    "chat_models/bedrock.d.ts",
+    "chat_models/cloudflare_workersai.cjs",
+    "chat_models/cloudflare_workersai.js",
+    "chat_models/cloudflare_workersai.d.ts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/googlevertexai/web.cjs",
+    "chat_models/googlevertexai/web.js",
+    "chat_models/googlevertexai/web.d.ts",
     "chat_models/googlepalm.cjs",
     "chat_models/googlepalm.js",
     "chat_models/googlepalm.d.ts",
+    "chat_models/fireworks.cjs",
+    "chat_models/fireworks.js",
+    "chat_models/fireworks.d.ts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
+    "chat_models/minimax.cjs",
+    "chat_models/minimax.js",
+    "chat_models/minimax.d.ts",
+    "chat_models/yandex.cjs",
+    "chat_models/yandex.js",
+    "chat_models/yandex.d.ts",
+    "chat_models/fake.cjs",
+    "chat_models/fake.js",
+    "chat_models/fake.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
+    "schema/document.cjs",
+    "schema/document.js",
+    "schema/document.d.ts",
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
@@ -409,15 +508,15 @@
     "callbacks.cjs",
     "callbacks.js",
     "callbacks.d.ts",
+    "callbacks/handlers/llmonitor.cjs",
+    "callbacks/handlers/llmonitor.js",
+    "callbacks/handlers/llmonitor.d.ts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
     "output_parsers/expression.cjs",
     "output_parsers/expression.js",
     "output_parsers/expression.d.ts",
-    "retrievers.cjs",
-    "retrievers.js",
-    "retrievers.d.ts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",
@@ -433,6 +532,9 @@
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
+    "retrievers/chaindesk.cjs",
+    "retrievers/chaindesk.js",
+    "retrievers/chaindesk.d.ts",
     "retrievers/databerry.cjs",
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
@@ -442,18 +544,33 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/multi_query.cjs",
+    "retrievers/multi_query.js",
+    "retrievers/multi_query.d.ts",
+    "retrievers/multi_vector.cjs",
+    "retrievers/multi_vector.js",
+    "retrievers/multi_vector.d.ts",
     "retrievers/parent_document.cjs",
     "retrievers/parent_document.js",
     "retrievers/parent_document.d.ts",
+    "retrievers/tavily_search_api.cjs",
+    "retrievers/tavily_search_api.js",
+    "retrievers/tavily_search_api.d.ts",
     "retrievers/time_weighted.cjs",
     "retrievers/time_weighted.js",
     "retrievers/time_weighted.d.ts",
     "retrievers/document_compressors/chain_extract.cjs",
     "retrievers/document_compressors/chain_extract.js",
     "retrievers/document_compressors/chain_extract.d.ts",
+    "retrievers/document_compressors/embeddings_filter.cjs",
+    "retrievers/document_compressors/embeddings_filter.js",
+    "retrievers/document_compressors/embeddings_filter.d.ts",
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
+    "retrievers/score_threshold.cjs",
+    "retrievers/score_threshold.js",
+    "retrievers/score_threshold.d.ts",
     "retrievers/self_query.cjs",
     "retrievers/self_query.js",
     "retrievers/self_query.d.ts",
@@ -478,6 +595,9 @@
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
+    "cache/cloudflare_kv.cjs",
+    "cache/cloudflare_kv.js",
+    "cache/cloudflare_kv.d.ts",
     "cache/momento.cjs",
     "cache/momento.js",
     "cache/momento.d.ts",
@@ -502,6 +622,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/cloudflare_d1.cjs",
+    "stores/message/cloudflare_d1.js",
+    "stores/message/cloudflare_d1.d.ts",
     "stores/message/in_memory.cjs",
     "stores/message/in_memory.js",
     "stores/message/in_memory.d.ts",
@@ -514,6 +637,9 @@
     "stores/message/momento.cjs",
     "stores/message/momento.js",
     "stores/message/momento.d.ts",
+    "stores/message/mongodb.cjs",
+    "stores/message/mongodb.js",
+    "stores/message/mongodb.d.ts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
@@ -529,15 +655,30 @@
     "stores/message/xata.cjs",
     "stores/message/xata.js",
     "stores/message/xata.d.ts",
+    "storage/encoder_backed.cjs",
+    "storage/encoder_backed.js",
+    "storage/encoder_backed.d.ts",
     "storage/in_memory.cjs",
     "storage/in_memory.js",
     "storage/in_memory.d.ts",
     "storage/ioredis.cjs",
     "storage/ioredis.js",
     "storage/ioredis.d.ts",
+    "storage/vercel_kv.cjs",
+    "storage/vercel_kv.js",
+    "storage/vercel_kv.d.ts",
+    "graphs/neo4j_graph.cjs",
+    "graphs/neo4j_graph.js",
+    "graphs/neo4j_graph.d.ts",
+    "hub.cjs",
+    "hub.js",
+    "hub.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
+    "util/time.cjs",
+    "util/time.js",
+    "util/time.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -553,9 +694,27 @@
     "experimental/multimodal_embeddings/googlevertexai.cjs",
     "experimental/multimodal_embeddings/googlevertexai.js",
     "experimental/multimodal_embeddings/googlevertexai.d.ts",
+    "experimental/chat_models/anthropic_functions.cjs",
+    "experimental/chat_models/anthropic_functions.js",
+    "experimental/chat_models/anthropic_functions.d.ts",
+    "experimental/chat_models/bittensor.cjs",
+    "experimental/chat_models/bittensor.js",
+    "experimental/chat_models/bittensor.d.ts",
+    "experimental/llms/bittensor.cjs",
+    "experimental/llms/bittensor.js",
+    "experimental/llms/bittensor.d.ts",
+    "experimental/hubs/makersuite/googlemakersuitehub.cjs",
+    "experimental/hubs/makersuite/googlemakersuitehub.js",
+    "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+    "experimental/chains/violation_of_expectations.cjs",
+    "experimental/chains/violation_of_expectations.js",
+    "experimental/chains/violation_of_expectations.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "runnables/remote.cjs",
+    "runnables/remote.js",
+    "runnables/remote.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -566,18 +725,18 @@
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "build:esm": "tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
-    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
+    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
-    "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "lint-staged",
-    "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
+    "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
@@ -586,42 +745,49 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/protocol-http": "^3.374.0",
-    "@aws-sdk/signature-v4": "^3.374.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/search-documents": "12.0.0-beta.3",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
+    "@cloudflare/ai": "^1.0.12",
+    "@cloudflare/workers-types": "^4.20230922.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.6.3",
-    "@gomomento/sdk": "^1.23.0",
+    "@getzep/zep-js": "^0.8.0",
+    "@gomomento/sdk": "^1.41.2",
+    "@gomomento/sdk-core": "^1.41.2",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@mozilla/readability": "^0.4.4",
-    "@notionhq/client": "^2.2.5",
+    "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/protocol-http": "^3.0.6",
+    "@smithy/signature-v4": "^2.0.10",
+    "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
+    "@swc/core": "^1.3.90",
+    "@swc/jest": "^0.2.29",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
-    "@tensorflow/tfjs-backend-cpu": "^4.4.0",
-    "@tensorflow/tfjs-converter": "^4.4.0",
-    "@tensorflow/tfjs-core": "^4.4.0",
-    "@tigrisdata/vector": "^1.1.0",
+    "@tensorflow/tfjs-backend-cpu": "^3",
+    "@tensorflow/tfjs-converter": "^3.6.0",
+    "@tensorflow/tfjs-core": "^3.6.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
     "@types/decamelize": "^1.2.0",
@@ -629,6 +795,7 @@
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
+    "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
@@ -638,13 +805,21 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@vercel/kv": "^0.2.3",
+    "@vercel/postgres": "^0.5.0",
+    "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
+    "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
-    "cohere-ai": "^5.0.2",
+    "closevector-common": "0.1.0-alpha.1",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.15",
+    "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
@@ -655,32 +830,40 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.3.0",
+    "faiss-node": "^0.5.1",
+    "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
+    "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
+    "llmonitor": "^0.5.8",
+    "lodash": "^4.17.21",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "neo4j-driver": "^5.12.0",
+    "node-llama-cpp": "^2.1.2",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
-    "pickleparser": "^0.1.0",
+    "pickleparser": "^0.2.1",
     "playwright": "^1.32.1",
+    "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.12.3",
+    "replicate": "^0.18.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
@@ -692,12 +875,15 @@
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
+    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
+    "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
   "peerDependencies": {
     "@aws-crypto/sha256-js": "^5.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
@@ -710,69 +896,95 @@
     "@azure/search-documents": "12.0.0-beta.3",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
+    "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.6.3",
-    "@gomomento/sdk": "^1.23.0",
+    "@getzep/zep-js": "^0.8.0",
+    "@gomomento/sdk": "^1.41.2",
+    "@gomomento/sdk-core": "^1.41.2",
+    "@gomomento/sdk-web": "^1.41.2",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@mozilla/readability": "*",
-    "@notionhq/client": "^2.2.5",
+    "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
-    "@pinecone-database/pinecone": "*",
+    "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@smithy/eventstream-codec": "^2.0.5",
+    "@smithy/protocol-http": "^3.0.6",
+    "@smithy/signature-v4": "^2.0.10",
+    "@smithy/util-utf8": "^2.0.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
-    "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
+    "@vercel/kv": "^0.2.3",
+    "@vercel/postgres": "^0.5.0",
+    "@writerai/writer-sdk": "^0.40.2",
     "@xata.io/client": "^0.25.1",
+    "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
+    "cassandra-driver": "^4.6.4",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.3",
-    "cohere-ai": "^5.0.2",
+    "chromadb": "*",
+    "closevector-common": "0.1.0-alpha.1",
+    "closevector-node": "0.1.0-alpha.10",
+    "closevector-web": "0.1.0-alpha.16",
+    "cohere-ai": ">=6.0.0",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.3.0",
+    "faiss-node": "^0.5.1",
+    "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+    "googleapis": "^126.0.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
+    "llmonitor": "^0.5.8",
+    "lodash": "^4.17.21",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "neo4j-driver": "*",
+    "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
-    "pickleparser": "^0.1.0",
+    "pickleparser": "^0.2.1",
     "playwright": "^1.32.1",
+    "portkey-ai": "^0.1.11",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
-    "replicate": "^0.12.3",
+    "replicate": "^0.18.0",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
+    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
+    "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
   "peerDependenciesMeta": {
     "@aws-crypto/sha256-js": {
+      "optional": true
+    },
+    "@aws-sdk/client-bedrock-runtime": {
       "optional": true
     },
     "@aws-sdk/client-dynamodb": {
@@ -811,6 +1023,9 @@
     "@clickhouse/client": {
       "optional": true
     },
+    "@cloudflare/ai": {
+      "optional": true
+    },
     "@elastic/elasticsearch": {
       "optional": true
     },
@@ -821,6 +1036,12 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@gomomento/sdk-core": {
+      "optional": true
+    },
+    "@gomomento/sdk-web": {
       "optional": true
     },
     "@google-ai/generativelanguage": {
@@ -853,6 +1074,18 @@
     "@raycast/api": {
       "optional": true
     },
+    "@smithy/eventstream-codec": {
+      "optional": true
+    },
+    "@smithy/protocol-http": {
+      "optional": true
+    },
+    "@smithy/signature-v4": {
+      "optional": true
+    },
+    "@smithy/util-utf8": {
+      "optional": true
+    },
     "@supabase/postgrest-js": {
       "optional": true
     },
@@ -868,13 +1101,22 @@
     "@tensorflow/tfjs-core": {
       "optional": true
     },
-    "@tigrisdata/vector": {
-      "optional": true
-    },
     "@upstash/redis": {
       "optional": true
     },
+    "@vercel/kv": {
+      "optional": true
+    },
+    "@vercel/postgres": {
+      "optional": true
+    },
+    "@writerai/writer-sdk": {
+      "optional": true
+    },
     "@xata.io/client": {
+      "optional": true
+    },
+    "@xenova/transformers": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -886,10 +1128,22 @@
     "axios": {
       "optional": true
     },
+    "cassandra-driver": {
+      "optional": true
+    },
     "cheerio": {
       "optional": true
     },
     "chromadb": {
+      "optional": true
+    },
+    "closevector-common": {
+      "optional": true
+    },
+    "closevector-node": {
+      "optional": true
+    },
+    "closevector-web": {
       "optional": true
     },
     "cohere-ai": {
@@ -904,10 +1158,16 @@
     "faiss-node": {
       "optional": true
     },
+    "fast-xml-parser": {
+      "optional": true
+    },
     "firebase-admin": {
       "optional": true
     },
     "google-auth-library": {
+      "optional": true
+    },
+    "googleapis": {
       "optional": true
     },
     "hnswlib-node": {
@@ -925,6 +1185,12 @@
     "jsdom": {
       "optional": true
     },
+    "llmonitor": {
+      "optional": true
+    },
+    "lodash": {
+      "optional": true
+    },
     "mammoth": {
       "optional": true
     },
@@ -932,6 +1198,12 @@
       "optional": true
     },
     "mysql2": {
+      "optional": true
+    },
+    "neo4j-driver": {
+      "optional": true
+    },
+    "node-llama-cpp": {
       "optional": true
     },
     "notion-to-md": {
@@ -953,6 +1225,9 @@
       "optional": true
     },
     "playwright": {
+      "optional": true
+    },
+    "portkey-ai": {
       "optional": true
     },
     "puppeteer": {
@@ -982,7 +1257,13 @@
     "vectordb": {
       "optional": true
     },
+    "voy-search": {
+      "optional": true
+    },
     "weaviate-ts-client": {
+      "optional": true
+    },
+    "web-auth-library": {
       "optional": true
     },
     "youtube-transcript": {
@@ -993,7 +1274,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.5.7",
+    "@anthropic-ai/sdk": "^0.6.2",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",
@@ -1003,16 +1284,17 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "~0.0.16",
+    "langchainhub": "~0.0.6",
+    "langsmith": "~0.0.31",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.3.0",
+    "openai": "~4.4.0",
     "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.21.4",
+    "zod": "^3.22.3",
     "zod-to-json-schema": "^3.20.4"
   },
   "publishConfig": {
@@ -1033,11 +1315,6 @@
     "vectorstores"
   ],
   "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js",
-      "require": "./index.cjs"
-    },
     "./load": {
       "types": "./load.d.ts",
       "import": "./load.js",
@@ -1108,6 +1385,11 @@
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
     },
+    "./tools/google_calendar": {
+      "types": "./tools/google_calendar.d.ts",
+      "import": "./tools/google_calendar.js",
+      "require": "./tools/google_calendar.cjs"
+    },
     "./chains": {
       "types": "./chains.d.ts",
       "import": "./chains.js",
@@ -1138,27 +1420,40 @@
       "import": "./chains/sql_db.js",
       "require": "./chains/sql_db.cjs"
     },
-    "./embeddings": {
-      "node": {
-        "types": "./embeddings.d.ts",
-        "import": "./embeddings.js",
-        "require": "./embeddings.cjs"
-      }
+    "./chains/graph_qa/cypher": {
+      "types": "./chains/graph_qa/cypher.d.ts",
+      "import": "./chains/graph_qa/cypher.js",
+      "require": "./chains/graph_qa/cypher.cjs"
     },
     "./embeddings/base": {
       "types": "./embeddings/base.d.ts",
       "import": "./embeddings/base.js",
       "require": "./embeddings/base.cjs"
     },
+    "./embeddings/bedrock": {
+      "types": "./embeddings/bedrock.d.ts",
+      "import": "./embeddings/bedrock.js",
+      "require": "./embeddings/bedrock.cjs"
+    },
     "./embeddings/cache_backed": {
       "types": "./embeddings/cache_backed.d.ts",
       "import": "./embeddings/cache_backed.js",
       "require": "./embeddings/cache_backed.cjs"
     },
+    "./embeddings/cloudflare_workersai": {
+      "types": "./embeddings/cloudflare_workersai.d.ts",
+      "import": "./embeddings/cloudflare_workersai.js",
+      "require": "./embeddings/cloudflare_workersai.cjs"
+    },
     "./embeddings/fake": {
       "types": "./embeddings/fake.d.ts",
       "import": "./embeddings/fake.js",
       "require": "./embeddings/fake.cjs"
+    },
+    "./embeddings/ollama": {
+      "types": "./embeddings/ollama.d.ts",
+      "import": "./embeddings/ollama.js",
+      "require": "./embeddings/ollama.cjs"
     },
     "./embeddings/openai": {
       "types": "./embeddings/openai.d.ts",
@@ -1180,6 +1475,11 @@
       "import": "./embeddings/hf.js",
       "require": "./embeddings/hf.cjs"
     },
+    "./embeddings/hf_transformers": {
+      "types": "./embeddings/hf_transformers.d.ts",
+      "import": "./embeddings/hf_transformers.js",
+      "require": "./embeddings/hf_transformers.cjs"
+    },
     "./embeddings/googlevertexai": {
       "types": "./embeddings/googlevertexai.d.ts",
       "import": "./embeddings/googlevertexai.js",
@@ -1190,12 +1490,10 @@
       "import": "./embeddings/googlepalm.js",
       "require": "./embeddings/googlepalm.cjs"
     },
-    "./llms": {
-      "node": {
-        "types": "./llms.d.ts",
-        "import": "./llms.js",
-        "require": "./llms.cjs"
-      }
+    "./embeddings/minimax": {
+      "types": "./embeddings/minimax.d.ts",
+      "import": "./embeddings/minimax.js",
+      "require": "./embeddings/minimax.cjs"
     },
     "./llms/load": {
       "types": "./llms/load.d.ts",
@@ -1221,6 +1519,11 @@
       "types": "./llms/aleph_alpha.d.ts",
       "import": "./llms/aleph_alpha.js",
       "require": "./llms/aleph_alpha.cjs"
+    },
+    "./llms/cloudflare_workersai": {
+      "types": "./llms/cloudflare_workersai.d.ts",
+      "import": "./llms/cloudflare_workersai.js",
+      "require": "./llms/cloudflare_workersai.cjs"
     },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
@@ -1252,10 +1555,20 @@
       "import": "./llms/googlevertexai.js",
       "require": "./llms/googlevertexai.cjs"
     },
+    "./llms/googlevertexai/web": {
+      "types": "./llms/googlevertexai/web.d.ts",
+      "import": "./llms/googlevertexai/web.js",
+      "require": "./llms/googlevertexai/web.cjs"
+    },
     "./llms/googlepalm": {
       "types": "./llms/googlepalm.d.ts",
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
+    },
+    "./llms/fireworks": {
+      "types": "./llms/fireworks.d.ts",
+      "import": "./llms/fireworks.js",
+      "require": "./llms/fireworks.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
@@ -1267,6 +1580,31 @@
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
     },
+    "./llms/llama_cpp": {
+      "types": "./llms/llama_cpp.d.ts",
+      "import": "./llms/llama_cpp.js",
+      "require": "./llms/llama_cpp.cjs"
+    },
+    "./llms/writer": {
+      "types": "./llms/writer.d.ts",
+      "import": "./llms/writer.js",
+      "require": "./llms/writer.cjs"
+    },
+    "./llms/portkey": {
+      "types": "./llms/portkey.d.ts",
+      "import": "./llms/portkey.js",
+      "require": "./llms/portkey.cjs"
+    },
+    "./llms/yandex": {
+      "types": "./llms/yandex.d.ts",
+      "import": "./llms/yandex.js",
+      "require": "./llms/yandex.cjs"
+    },
+    "./llms/fake": {
+      "types": "./llms/fake.d.ts",
+      "import": "./llms/fake.js",
+      "require": "./llms/fake.cjs"
+    },
     "./prompts": {
       "types": "./prompts.d.ts",
       "import": "./prompts.js",
@@ -1276,13 +1614,6 @@
       "types": "./prompts/load.d.ts",
       "import": "./prompts/load.js",
       "require": "./prompts/load.cjs"
-    },
-    "./vectorstores": {
-      "node": {
-        "types": "./vectorstores.d.ts",
-        "import": "./vectorstores.js",
-        "require": "./vectorstores.cjs"
-      }
     },
     "./vectorstores/analyticdb": {
       "types": "./vectorstores/analyticdb.d.ts",
@@ -1299,6 +1630,11 @@
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
     },
+    "./vectorstores/cassandra": {
+      "types": "./vectorstores/cassandra.d.ts",
+      "import": "./vectorstores/cassandra.js",
+      "require": "./vectorstores/cassandra.cjs"
+    },
     "./vectorstores/elasticsearch": {
       "types": "./vectorstores/elasticsearch.d.ts",
       "import": "./vectorstores/elasticsearch.js",
@@ -1309,10 +1645,30 @@
       "import": "./vectorstores/memory.js",
       "require": "./vectorstores/memory.cjs"
     },
+    "./vectorstores/cloudflare_vectorize": {
+      "types": "./vectorstores/cloudflare_vectorize.d.ts",
+      "import": "./vectorstores/cloudflare_vectorize.js",
+      "require": "./vectorstores/cloudflare_vectorize.cjs"
+    },
+    "./vectorstores/closevector/web": {
+      "types": "./vectorstores/closevector/web.d.ts",
+      "import": "./vectorstores/closevector/web.js",
+      "require": "./vectorstores/closevector/web.cjs"
+    },
+    "./vectorstores/closevector/node": {
+      "types": "./vectorstores/closevector/node.d.ts",
+      "import": "./vectorstores/closevector/node.js",
+      "require": "./vectorstores/closevector/node.cjs"
+    },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",
       "import": "./vectorstores/chroma.js",
       "require": "./vectorstores/chroma.cjs"
+    },
+    "./vectorstores/googlevertexai": {
+      "types": "./vectorstores/googlevertexai.d.ts",
+      "import": "./vectorstores/googlevertexai.js",
+      "require": "./vectorstores/googlevertexai.cjs"
     },
     "./vectorstores/hnswlib": {
       "types": "./vectorstores/hnswlib.d.ts",
@@ -1333,6 +1689,11 @@
       "types": "./vectorstores/lancedb.d.ts",
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
+    },
+    "./vectorstores/momento_vector_index": {
+      "types": "./vectorstores/momento_vector_index.d.ts",
+      "import": "./vectorstores/momento_vector_index.js",
+      "require": "./vectorstores/momento_vector_index.cjs"
     },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",
@@ -1364,10 +1725,20 @@
       "import": "./vectorstores/opensearch.js",
       "require": "./vectorstores/opensearch.cjs"
     },
+    "./vectorstores/pgvector": {
+      "types": "./vectorstores/pgvector.d.ts",
+      "import": "./vectorstores/pgvector.js",
+      "require": "./vectorstores/pgvector.cjs"
+    },
     "./vectorstores/milvus": {
       "types": "./vectorstores/milvus.d.ts",
       "import": "./vectorstores/milvus.js",
       "require": "./vectorstores/milvus.cjs"
+    },
+    "./vectorstores/neo4j_vector": {
+      "types": "./vectorstores/neo4j_vector.d.ts",
+      "import": "./vectorstores/neo4j_vector.js",
+      "require": "./vectorstores/neo4j_vector.cjs"
     },
     "./vectorstores/prisma": {
       "types": "./vectorstores/prisma.d.ts",
@@ -1414,6 +1785,16 @@
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
     },
+    "./vectorstores/vercel_postgres": {
+      "types": "./vectorstores/vercel_postgres.d.ts",
+      "import": "./vectorstores/vercel_postgres.js",
+      "require": "./vectorstores/vercel_postgres.cjs"
+    },
+    "./vectorstores/voy": {
+      "types": "./vectorstores/voy.d.ts",
+      "import": "./vectorstores/voy.js",
+      "require": "./vectorstores/voy.cjs"
+    },
     "./vectorstores/xata": {
       "types": "./vectorstores/xata.d.ts",
       "import": "./vectorstores/xata.js",
@@ -1443,13 +1824,6 @@
       "types": "./document.d.ts",
       "import": "./document.js",
       "require": "./document.cjs"
-    },
-    "./document_loaders": {
-      "node": {
-        "types": "./document_loaders.d.ts",
-        "import": "./document_loaders.js",
-        "require": "./document_loaders.cjs"
-      }
     },
     "./document_loaders/base": {
       "types": "./document_loaders/base.d.ts",
@@ -1531,6 +1905,16 @@
       "import": "./document_loaders/web/notionapi.js",
       "require": "./document_loaders/web/notionapi.cjs"
     },
+    "./document_loaders/web/pdf": {
+      "types": "./document_loaders/web/pdf.d.ts",
+      "import": "./document_loaders/web/pdf.js",
+      "require": "./document_loaders/web/pdf.cjs"
+    },
+    "./document_loaders/web/recursive_url": {
+      "types": "./document_loaders/web/recursive_url.d.ts",
+      "import": "./document_loaders/web/recursive_url.js",
+      "require": "./document_loaders/web/recursive_url.cjs"
+    },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",
       "import": "./document_loaders/web/s3.js",
@@ -1545,6 +1929,11 @@
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/searchapi": {
+      "types": "./document_loaders/web/searchapi.d.ts",
+      "import": "./document_loaders/web/searchapi.js",
+      "require": "./document_loaders/web/searchapi.cjs"
     },
     "./document_loaders/web/serpapi": {
       "types": "./document_loaders/web/serpapi.d.ts",
@@ -1616,6 +2005,11 @@
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
     },
+    "./document_loaders/fs/openai_whisper_audio": {
+      "types": "./document_loaders/fs/openai_whisper_audio.d.ts",
+      "import": "./document_loaders/fs/openai_whisper_audio.js",
+      "require": "./document_loaders/fs/openai_whisper_audio.cjs"
+    },
     "./document_transformers/html_to_text": {
       "types": "./document_transformers/html_to_text.d.ts",
       "import": "./document_transformers/html_to_text.js",
@@ -1631,13 +2025,6 @@
       "import": "./document_transformers/openai_functions.js",
       "require": "./document_transformers/openai_functions.cjs"
     },
-    "./chat_models": {
-      "node": {
-        "types": "./chat_models.d.ts",
-        "import": "./chat_models.js",
-        "require": "./chat_models.cjs"
-      }
-    },
     "./chat_models/base": {
       "types": "./chat_models/base.d.ts",
       "import": "./chat_models/base.js",
@@ -1648,20 +2035,45 @@
       "import": "./chat_models/openai.js",
       "require": "./chat_models/openai.cjs"
     },
+    "./chat_models/portkey": {
+      "types": "./chat_models/portkey.d.ts",
+      "import": "./chat_models/portkey.js",
+      "require": "./chat_models/portkey.cjs"
+    },
     "./chat_models/anthropic": {
       "types": "./chat_models/anthropic.d.ts",
       "import": "./chat_models/anthropic.js",
       "require": "./chat_models/anthropic.cjs"
+    },
+    "./chat_models/bedrock": {
+      "types": "./chat_models/bedrock.d.ts",
+      "import": "./chat_models/bedrock.js",
+      "require": "./chat_models/bedrock.cjs"
+    },
+    "./chat_models/cloudflare_workersai": {
+      "types": "./chat_models/cloudflare_workersai.d.ts",
+      "import": "./chat_models/cloudflare_workersai.js",
+      "require": "./chat_models/cloudflare_workersai.cjs"
     },
     "./chat_models/googlevertexai": {
       "types": "./chat_models/googlevertexai.d.ts",
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
     },
+    "./chat_models/googlevertexai/web": {
+      "types": "./chat_models/googlevertexai/web.d.ts",
+      "import": "./chat_models/googlevertexai/web.js",
+      "require": "./chat_models/googlevertexai/web.cjs"
+    },
     "./chat_models/googlepalm": {
       "types": "./chat_models/googlepalm.d.ts",
       "import": "./chat_models/googlepalm.js",
       "require": "./chat_models/googlepalm.cjs"
+    },
+    "./chat_models/fireworks": {
+      "types": "./chat_models/fireworks.d.ts",
+      "import": "./chat_models/fireworks.js",
+      "require": "./chat_models/fireworks.cjs"
     },
     "./chat_models/baiduwenxin": {
       "types": "./chat_models/baiduwenxin.d.ts",
@@ -1673,10 +2085,30 @@
       "import": "./chat_models/ollama.js",
       "require": "./chat_models/ollama.cjs"
     },
+    "./chat_models/minimax": {
+      "types": "./chat_models/minimax.d.ts",
+      "import": "./chat_models/minimax.js",
+      "require": "./chat_models/minimax.cjs"
+    },
+    "./chat_models/yandex": {
+      "types": "./chat_models/yandex.d.ts",
+      "import": "./chat_models/yandex.js",
+      "require": "./chat_models/yandex.cjs"
+    },
+    "./chat_models/fake": {
+      "types": "./chat_models/fake.d.ts",
+      "import": "./chat_models/fake.js",
+      "require": "./chat_models/fake.cjs"
+    },
     "./schema": {
       "types": "./schema.d.ts",
       "import": "./schema.js",
       "require": "./schema.cjs"
+    },
+    "./schema/document": {
+      "types": "./schema/document.d.ts",
+      "import": "./schema/document.js",
+      "require": "./schema/document.cjs"
     },
     "./schema/output_parser": {
       "types": "./schema/output_parser.d.ts",
@@ -1713,6 +2145,11 @@
       "import": "./callbacks.js",
       "require": "./callbacks.cjs"
     },
+    "./callbacks/handlers/llmonitor": {
+      "types": "./callbacks/handlers/llmonitor.d.ts",
+      "import": "./callbacks/handlers/llmonitor.js",
+      "require": "./callbacks/handlers/llmonitor.cjs"
+    },
     "./output_parsers": {
       "types": "./output_parsers.d.ts",
       "import": "./output_parsers.js",
@@ -1722,13 +2159,6 @@
       "types": "./output_parsers/expression.d.ts",
       "import": "./output_parsers/expression.js",
       "require": "./output_parsers/expression.cjs"
-    },
-    "./retrievers": {
-      "node": {
-        "types": "./retrievers.d.ts",
-        "import": "./retrievers.js",
-        "require": "./retrievers.cjs"
-      }
     },
     "./retrievers/amazon_kendra": {
       "types": "./retrievers/amazon_kendra.d.ts",
@@ -1755,6 +2185,11 @@
       "import": "./retrievers/metal.js",
       "require": "./retrievers/metal.cjs"
     },
+    "./retrievers/chaindesk": {
+      "types": "./retrievers/chaindesk.d.ts",
+      "import": "./retrievers/chaindesk.js",
+      "require": "./retrievers/chaindesk.cjs"
+    },
     "./retrievers/databerry": {
       "types": "./retrievers/databerry.d.ts",
       "import": "./retrievers/databerry.js",
@@ -1770,10 +2205,25 @@
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
     },
+    "./retrievers/multi_query": {
+      "types": "./retrievers/multi_query.d.ts",
+      "import": "./retrievers/multi_query.js",
+      "require": "./retrievers/multi_query.cjs"
+    },
+    "./retrievers/multi_vector": {
+      "types": "./retrievers/multi_vector.d.ts",
+      "import": "./retrievers/multi_vector.js",
+      "require": "./retrievers/multi_vector.cjs"
+    },
     "./retrievers/parent_document": {
       "types": "./retrievers/parent_document.d.ts",
       "import": "./retrievers/parent_document.js",
       "require": "./retrievers/parent_document.cjs"
+    },
+    "./retrievers/tavily_search_api": {
+      "types": "./retrievers/tavily_search_api.d.ts",
+      "import": "./retrievers/tavily_search_api.js",
+      "require": "./retrievers/tavily_search_api.cjs"
     },
     "./retrievers/time_weighted": {
       "types": "./retrievers/time_weighted.d.ts",
@@ -1785,10 +2235,20 @@
       "import": "./retrievers/document_compressors/chain_extract.js",
       "require": "./retrievers/document_compressors/chain_extract.cjs"
     },
+    "./retrievers/document_compressors/embeddings_filter": {
+      "types": "./retrievers/document_compressors/embeddings_filter.d.ts",
+      "import": "./retrievers/document_compressors/embeddings_filter.js",
+      "require": "./retrievers/document_compressors/embeddings_filter.cjs"
+    },
     "./retrievers/hyde": {
       "types": "./retrievers/hyde.d.ts",
       "import": "./retrievers/hyde.js",
       "require": "./retrievers/hyde.cjs"
+    },
+    "./retrievers/score_threshold": {
+      "types": "./retrievers/score_threshold.d.ts",
+      "import": "./retrievers/score_threshold.js",
+      "require": "./retrievers/score_threshold.cjs"
     },
     "./retrievers/self_query": {
       "types": "./retrievers/self_query.d.ts",
@@ -1830,6 +2290,11 @@
       "import": "./cache.js",
       "require": "./cache.cjs"
     },
+    "./cache/cloudflare_kv": {
+      "types": "./cache/cloudflare_kv.d.ts",
+      "import": "./cache/cloudflare_kv.js",
+      "require": "./cache/cloudflare_kv.cjs"
+    },
     "./cache/momento": {
       "types": "./cache/momento.d.ts",
       "import": "./cache/momento.js",
@@ -1870,6 +2335,11 @@
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
     },
+    "./stores/message/cloudflare_d1": {
+      "types": "./stores/message/cloudflare_d1.d.ts",
+      "import": "./stores/message/cloudflare_d1.js",
+      "require": "./stores/message/cloudflare_d1.cjs"
+    },
     "./stores/message/in_memory": {
       "types": "./stores/message/in_memory.d.ts",
       "import": "./stores/message/in_memory.js",
@@ -1889,6 +2359,11 @@
       "types": "./stores/message/momento.d.ts",
       "import": "./stores/message/momento.js",
       "require": "./stores/message/momento.cjs"
+    },
+    "./stores/message/mongodb": {
+      "types": "./stores/message/mongodb.d.ts",
+      "import": "./stores/message/mongodb.js",
+      "require": "./stores/message/mongodb.cjs"
     },
     "./stores/message/redis": {
       "types": "./stores/message/redis.d.ts",
@@ -1915,6 +2390,11 @@
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
     },
+    "./storage/encoder_backed": {
+      "types": "./storage/encoder_backed.d.ts",
+      "import": "./storage/encoder_backed.js",
+      "require": "./storage/encoder_backed.cjs"
+    },
     "./storage/in_memory": {
       "types": "./storage/in_memory.d.ts",
       "import": "./storage/in_memory.js",
@@ -1925,10 +2405,30 @@
       "import": "./storage/ioredis.js",
       "require": "./storage/ioredis.cjs"
     },
+    "./storage/vercel_kv": {
+      "types": "./storage/vercel_kv.d.ts",
+      "import": "./storage/vercel_kv.js",
+      "require": "./storage/vercel_kv.cjs"
+    },
+    "./graphs/neo4j_graph": {
+      "types": "./graphs/neo4j_graph.d.ts",
+      "import": "./graphs/neo4j_graph.js",
+      "require": "./graphs/neo4j_graph.cjs"
+    },
+    "./hub": {
+      "types": "./hub.d.ts",
+      "import": "./hub.js",
+      "require": "./hub.cjs"
+    },
     "./util/math": {
       "types": "./util/math.d.ts",
       "import": "./util/math.js",
       "require": "./util/math.cjs"
+    },
+    "./util/time": {
+      "types": "./util/time.d.ts",
+      "import": "./util/time.js",
+      "require": "./util/time.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
@@ -1955,10 +2455,40 @@
       "import": "./experimental/multimodal_embeddings/googlevertexai.js",
       "require": "./experimental/multimodal_embeddings/googlevertexai.cjs"
     },
+    "./experimental/chat_models/anthropic_functions": {
+      "types": "./experimental/chat_models/anthropic_functions.d.ts",
+      "import": "./experimental/chat_models/anthropic_functions.js",
+      "require": "./experimental/chat_models/anthropic_functions.cjs"
+    },
+    "./experimental/chat_models/bittensor": {
+      "types": "./experimental/chat_models/bittensor.d.ts",
+      "import": "./experimental/chat_models/bittensor.js",
+      "require": "./experimental/chat_models/bittensor.cjs"
+    },
+    "./experimental/llms/bittensor": {
+      "types": "./experimental/llms/bittensor.d.ts",
+      "import": "./experimental/llms/bittensor.js",
+      "require": "./experimental/llms/bittensor.cjs"
+    },
+    "./experimental/hubs/makersuite/googlemakersuitehub": {
+      "types": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+      "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
+      "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
+    },
+    "./experimental/chains/violation_of_expectations": {
+      "types": "./experimental/chains/violation_of_expectations.d.ts",
+      "import": "./experimental/chains/violation_of_expectations.js",
+      "require": "./experimental/chains/violation_of_expectations.cjs"
+    },
     "./evaluation": {
       "types": "./evaluation.d.ts",
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
+    },
+    "./runnables/remote": {
+      "types": "./runnables/remote.d.ts",
+      "import": "./runnables/remote.js",
+      "require": "./runnables/remote.cjs"
     },
     "./package.json": "./package.json"
   }

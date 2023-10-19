@@ -38,7 +38,6 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
-      options: { adapter: undefined },
     })
   ).rejects.toThrow();
 }, 5000);
@@ -63,7 +62,6 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   await expect(() => {
     const ret = model.call("Print hello world", {
       signal: controller.signal,
-      options: { adapter: undefined },
     });
 
     controller.abort();
@@ -94,6 +92,22 @@ test("Test OpenAI with maxTokens -1", async () => {
 test("Test OpenAI with chat model returns OpenAIChat", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo" });
   expect(model).toBeInstanceOf(OpenAIChat);
+  const res = await model.call("Print hello world");
+  console.log({ res });
+  expect(typeof res).toBe("string");
+});
+
+test("Test OpenAI with instruct model returns OpenAI", async () => {
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  expect(model).toBeInstanceOf(OpenAI);
+  const res = await model.call("Print hello world");
+  console.log({ res });
+  expect(typeof res).toBe("string");
+});
+
+test("Test OpenAI with versioned instruct model returns OpenAI", async () => {
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct-0914" });
+  expect(model).toBeInstanceOf(OpenAI);
   const res = await model.call("Print hello world");
   console.log({ res });
   expect(typeof res).toBe("string");

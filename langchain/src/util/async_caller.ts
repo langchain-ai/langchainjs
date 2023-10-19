@@ -4,6 +4,7 @@ import PQueueMod from "p-queue";
 const STATUS_NO_RETRY = [
   400, // Bad Request
   401, // Unauthorized
+  402, // Payment Required
   403, // Forbidden
   404, // Not Found
   405, // Method Not Allowed
@@ -12,6 +13,38 @@ const STATUS_NO_RETRY = [
   408, // Request Timeout
   409, // Conflict
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const defaultFailedAttemptHandler = (error: any) => {
+  if (
+    error.message.startsWith("Cancel") ||
+    error.message.startsWith("TimeoutError") ||
+    error.name === "TimeoutError" ||
+    error.message.startsWith("AbortError") ||
+    error.name === "AbortError"
+  ) {
+    throw error;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((error as any)?.code === "ECONNABORTED") {
+    throw error;
+  }
+  const status =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (error as any)?.response?.status ?? (error as any)?.status;
+  if (status && STATUS_NO_RETRY.includes(+status)) {
+    throw error;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((error as any)?.error?.code === "insufficient_quota") {
+    const err = new Error(error?.message);
+    err.name = "InsufficientQuotaError";
+    throw err;
+  }
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type FailedAttemptHandler = (error: any) => any;
 
 export interface AsyncCallerParams {
   /**
@@ -24,6 +57,12 @@ export interface AsyncCallerParams {
    * with an exponential backoff between each attempt. Defaults to 6.
    */
   maxRetries?: number;
+  /**
+   * Custom handler to handle failed attempts. Takes the originally thrown
+   * error object as input, and should itself throw an error if the input
+   * error is not retryable.
+   */
+  onFailedAttempt?: FailedAttemptHandler;
 }
 
 export interface AsyncCallerCallOptions {
@@ -48,11 +87,15 @@ export class AsyncCaller {
 
   protected maxRetries: AsyncCallerParams["maxRetries"];
 
+  protected onFailedAttempt: AsyncCallerParams["onFailedAttempt"];
+
   private queue: typeof import("p-queue")["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
     this.maxRetries = params.maxRetries ?? 6;
+    this.onFailedAttempt =
+      params.onFailedAttempt ?? defaultFailedAttemptHandler;
 
     const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
     this.queue = new PQueue({ concurrency: this.maxConcurrency });
@@ -76,31 +119,7 @@ export class AsyncCaller {
               }
             }),
           {
-            onFailedAttempt(error) {
-              if (
-                error.message.startsWith("Cancel") ||
-                error.message.startsWith("TimeoutError") ||
-                error.message.startsWith("AbortError")
-              ) {
-                throw error;
-              }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              if ((error as any)?.code === "ECONNABORTED") {
-                throw error;
-              }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const status = (error as any)?.response?.status;
-              if (status && STATUS_NO_RETRY.includes(+status)) {
-                throw error;
-              }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const data = (error as any)?.response?.data;
-              if (data?.error?.code === "insufficient_quota") {
-                const error = new Error(data?.error?.message);
-                error.name = "InsufficientQuotaError";
-                throw error;
-              }
-            },
+            onFailedAttempt: this.onFailedAttempt,
             retries: this.maxRetries,
             randomize: true,
             // If needed we can change some of the defaults here,

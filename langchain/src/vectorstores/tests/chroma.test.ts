@@ -44,7 +44,11 @@ describe("Chroma", () => {
     const expectedPageContents = ["Document 1", "Document 2"];
     const embeddings = new FakeEmbeddings();
     jest.spyOn(embeddings, "embedDocuments");
-    const args = { collectionName: "testCollection", index: mockClient };
+    const args = {
+      collectionName: "testCollection",
+      index: mockClient,
+      collectionMetadata: { "hnsw:space": "cosine" },
+    };
     const documents = expectedPageContents.map((pc) => ({ pageContent: pc }));
 
     const chroma = new Chroma(embeddings, args);

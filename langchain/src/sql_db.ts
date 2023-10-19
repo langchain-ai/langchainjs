@@ -12,7 +12,7 @@ import {
 } from "./util/sql_utils.js";
 import { Serializable } from "./load/serializable.js";
 
-export { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
+export type { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
 
 export class SqlDatabase
   extends Serializable
@@ -36,6 +36,8 @@ export class SqlDatabase
 
   sampleRowsInTableInfo = 3;
 
+  customDescription?: Record<string, string>;
+
   protected constructor(fields: SqlDatabaseDataSourceParams) {
     super(...arguments);
     this.appDataSource = fields.appDataSource;
@@ -58,6 +60,13 @@ export class SqlDatabase
     }
     sqlDatabase.allTables = await getTableAndColumnsName(
       sqlDatabase.appDataSource
+    );
+    sqlDatabase.customDescription = Object.fromEntries(
+      Object.entries(fields?.customDescription ?? {}).filter(([key, _]) =>
+        sqlDatabase.allTables
+          .map((table: SqlTable) => table.tableName)
+          .includes(key)
+      )
     );
     verifyIncludeTablesExistInDatabase(
       sqlDatabase.allTables,
@@ -119,7 +128,8 @@ export class SqlDatabase
     return generateTableInfoFromTables(
       selectedTables,
       this.appDataSource,
-      this.sampleRowsInTableInfo
+      this.sampleRowsInTableInfo,
+      this.customDescription
     );
   }
 

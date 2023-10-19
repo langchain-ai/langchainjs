@@ -33,6 +33,7 @@ export interface DynamoDBChatMessageHistoryFields {
   sortKey?: string;
   messageAttributeName?: string;
   config?: DynamoDBClientConfig;
+  key?: Record<string, AttributeValue>;
 }
 
 /**
@@ -81,7 +82,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   private messageAttributeName = "messages";
 
-  private dynamoKey: Record<string, AttributeValue>;
+  private dynamoKey: Record<string, AttributeValue> = {};
 
   constructor({
     tableName,
@@ -90,8 +91,10 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     sortKey,
     messageAttributeName,
     config,
+    key = {},
   }: DynamoDBChatMessageHistoryFields) {
     super();
+
     this.tableName = tableName;
     this.sessionId = sessionId;
     this.client = new DynamoDBClient(config ?? {});
@@ -99,11 +102,14 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     this.sortKey = sortKey;
     this.messageAttributeName =
       messageAttributeName ?? this.messageAttributeName;
+    this.dynamoKey = key;
 
-    this.dynamoKey = {};
-    this.dynamoKey[this.partitionKey] = { S: this.sessionId };
-    if (this.sortKey) {
-      this.dynamoKey[this.sortKey] = { S: this.sortKey };
+    // override dynamoKey with partition key and sort key when key not specified
+    if (Object.keys(this.dynamoKey).length === 0) {
+      this.dynamoKey[this.partitionKey] = { S: this.sessionId };
+      if (this.sortKey) {
+        this.dynamoKey[this.sortKey] = { S: this.sortKey };
+      }
     }
   }
 
