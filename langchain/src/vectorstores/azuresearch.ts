@@ -27,7 +27,7 @@ export type AzureSearchStoreParams = {
 
 /**
  * Define metadata schema.
- * 
+ *
  * If yout want to add custom data, use the attributes property.
  */
 export type AzureSearchDocumentMetadata = {
@@ -150,9 +150,9 @@ export class AzureSearchStore extends VectorStore {
 
   /**
    * Delete multiple documents by filter expression.
-   * 
+   *
    * @param filter A partial document with key and value to filter.
-   * @returns 
+   * @returns
    */
   async deleteMany(filter: Partial<AzureSearchDocument>): Promise<IndexingResult[]> {
     const { results } = await this.client.deleteDocuments([filter as AzureSearchDocument]);
@@ -162,9 +162,9 @@ export class AzureSearchStore extends VectorStore {
 
   /**
    * Delete document by id.
-   * 
-   * @param id 
-   * @returns 
+   *
+   * @param id
+   * @returns
    */
   async deleteById(id: string): Promise<IndexingResult[]> {
     const { results } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, [id]);
@@ -459,6 +459,11 @@ export class AzureSearchStore extends VectorStore {
   }
 }
 
+/**
+ * Prepares the Index
+ *
+ * @param indexName - the name of the index
+ */
 function makeSearchIndex(indexName: string): SearchIndex {
   return {
     name: indexName,
