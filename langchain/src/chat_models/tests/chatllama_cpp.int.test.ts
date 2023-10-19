@@ -6,6 +6,7 @@ import { LLMChain } from "../../chains/llm_chain.js";
 import { ConversationChain } from "../../chains/index.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
+import { StringOutputParser } from "langchain/schema/output_parser";
 
 const LLAMA_PATH = getEnvironmentVariable("LLAMA_PATH")!;
 
@@ -18,8 +19,8 @@ test.skip("test call", async () => {
 });
 
 
-test("Test messages", async () => {
-  const llamaCpp = new ChatLlamaCpp({ modelPath: LLAMA_PATH });
+test.skip("Test messages", async () => {
+  const llamaCpp = new ChatLlamaCpp({ modelPath: LLAMA_PATH, wrapperType: "llama" });
 
   const response1 = await llamaCpp.call([
     new HumanMessage({ content: "My name is Nigel." }),
@@ -44,9 +45,9 @@ const prompt = PromptTemplate.fromTemplate(
 );
 const chain = new LLMChain({ llm: model, prompt });
 
-const res = await chain.call({ product: "colorful socks" });
+const response = await chain.call({ product: "colorful socks" });
 
-console.log({ res });
+console.log({ response });
 });
 
 test.skip("Test chain with memory", async () => {
@@ -57,13 +58,13 @@ test.skip("Test chain with memory", async () => {
     memory: new BufferMemory(),
   });
 
-  const response1 = await chain.call({ input: "[INST] My name is Nigel. [/INST]" });
+  const response1 = await chain.call({ input: "My name is Nigel." });
   console.log({ response1 });
 
   const response2 = await chain.call({ input: "What did I say my name was?" });
   console.log({ response2 });
 
-  const response3 = await chain.call({ input: "[INST] What is your name? [/INST]" });
+  const response3 = await chain.call({ input: "What is your name?" });
   console.log({ response3 });
 });
 
@@ -78,4 +79,30 @@ test.skip("system message test", async () => {
     new HumanMessage("Tell me where Llamas come from?"),
   ]);
   console.log({ response });
+});
+
+
+test("streaming test", async () => {
+  const llamaCpp = new ChatLlamaCpp({ modelPath: LLAMA_PATH, streaming: true });
+
+  const response = await llamaCpp.call([new HumanMessage("Tell me a joke.")], {
+    callbacks: [
+      {
+        onToken(token) {
+          process.stdout.write(chunk);
+        },
+      },
+    ],
+  });
+  console.log(response);
+
+  const response1 = await llamaCpp.call([
+    new HumanMessage({ content: "Hi there, how are you?" }),
+    ],
+    {
+      onToken(chunk) {
+        process.stdout.write(chunk);
+      },
+    },
+  );
 });
