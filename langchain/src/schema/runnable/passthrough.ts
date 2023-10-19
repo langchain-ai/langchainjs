@@ -54,10 +54,6 @@ export class RunnableAssign<
       }
     }
 
-    const firstMapChunk = await mapOutput.next();
-    if (firstMapChunk.value) {
-      yield firstMapChunk.value;
-    }
     for await (const chunk of mapOutput) {
       yield chunk as RunOutput;
     }
