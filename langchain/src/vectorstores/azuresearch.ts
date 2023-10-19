@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import { SearchClient, SearchIndexClient, AzureKeyCredential, IndexingResult, SearchIndex } from "@azure/search-documents";
-import { VectorStore } from "./index.js";
+import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
@@ -403,7 +403,7 @@ export class AzureSearchStore extends VectorStore {
    */
   static async fromTexts(
     texts: string[],
-    metadatas: object[] | object,
+    metadatas: AzureSearchDocumentMetadata[],
     embeddings: Embeddings,
     dbConfig: AzureSearchStoreParams,
   ): Promise<AzureSearchStore> {
