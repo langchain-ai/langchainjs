@@ -132,26 +132,23 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
     let pattern;
     if (prefix) {
-      pattern = `${this._getPrefixedKey(prefix)}*`;
+      const wildcardPrefix = prefix.endsWith("*") ? prefix : `${prefix}*`;
+      pattern = `${this._getPrefixedKey(wildcardPrefix)}*`;
     } else {
       pattern = this._getPrefixedKey("*");
     }
-
     let [cursor, batch] = await this.client.scan(0, {
       match: pattern,
       count: this.yieldKeysScanBatchSize,
     });
-
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
     }
-
     while (cursor !== 0) {
       [cursor, batch] = await this.client.scan(cursor, {
         match: pattern,
         count: this.yieldKeysScanBatchSize,
       });
-
       for (const key of batch) {
         yield this._getDeprefixedKey(key);
       }
