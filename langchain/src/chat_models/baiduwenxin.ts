@@ -59,7 +59,7 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatBaiduWenxin class.
  */
 declare interface BaiduWenxinChatInput {
-  /** Model name to use
+  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
    * @default "ERNIE-Bot-turbo"
    */
   modelName: string;
@@ -230,6 +230,9 @@ export class ChatBaiduWenxin
     } else if (this.modelName === "ERNIE-Bot-turbo") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
+    } else if (this.modelName === "ERNIE-Bot-4") {
+      this.apiUrl =
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
     } else {
       throw new Error(`Invalid model name: ${this.modelName}`);
     }
