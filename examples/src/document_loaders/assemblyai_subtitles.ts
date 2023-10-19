@@ -1,6 +1,5 @@
 import {
-  AudioSubtitleLoader,
-  SubtitleFormat,
+  AudioSubtitleLoader
 } from "langchain/document_loaders/web/assemblyai";
 
 // You can also use a local file path and the loader will upload it to AssemblyAI for you.
@@ -11,7 +10,7 @@ const loader = new AudioSubtitleLoader(
     audio_url: audioUrl,
     // any other parameters as documented here: https://www.assemblyai.com/docs/API%20reference/transcript#create-a-transcript
   },
-  SubtitleFormat.Srt, // srt or vtt
+  'srt', // srt or vtt
   {
     apiKey: "<ASSEMBLYAI_API_KEY>", // or set the `ASSEMBLYAI_API_KEY` env variable
   }
