@@ -31,7 +31,7 @@ export CASSANDRA_TOKEN=YOUR_CASSANDRA_TOKEN_HERE
 npm install cassandra-driver
 ```
 
-## Index and query docs
+## Indexing docs
 
 ```typescript
 import { CassandraStore } from "langchain/vectorstores/cassandra";
@@ -48,6 +48,7 @@ const config = {
   keyspace: "test",
   dimensions: 1536,
   table: "test",
+  indices: [{name: "name", value: "(name)"}]
   primaryKey: {
     name: "id",
     type: "int",
@@ -71,5 +72,12 @@ const vectorStore = await CassandraStore.fromTexts(
   cassandraConfig
 );
 
+## Querying docs
+
 const results = await vectorStore.similaritySearch("Green yellow purple", 1);
+
+or filtered query:
+
+const results = await vectorStore.similaritySearch("B", 1, {name: "Bubba"});
+
 ```
