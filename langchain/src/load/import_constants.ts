@@ -47,6 +47,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/cassandra",
   "langchain/vectorstores/convex",
+  "langchain/vectorstores/azuresearch",
   "langchain/vectorstores/elasticsearch",
   "langchain/vectorstores/cloudflare_vectorize",
   "langchain/vectorstores/closevector/web",

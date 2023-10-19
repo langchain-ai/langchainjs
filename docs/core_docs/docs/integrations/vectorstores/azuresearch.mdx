@@ -1,0 +1,34 @@
+---
+sidebar_class_name: node-only
+---
+
+# AzureSearch
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+[Azure Search](https://azure.microsoft.com/products/ai-services/cognitive-search/) is a distributed, RESTful search engine optimized for speed and relevance on production-scale workloads on Azure. It supports also vector search using the [k-nearest neighbor](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) (kNN) algorithm and also [semantic search](https://learn.microsoft.com/en-us/azure/search/semantic-search-overview).
+You can read more about the support of vector search in Azure Cognitive Search [here](https://learn.microsoft.com/en-us/azure/search/vector-search-ranking).
+
+LangChain.js accepts [@azure/search-documents](https://github.com/Azure/azure-sdk-for-js) as the client for Azure Search vectorstore. Unfortunately, the features used to implement the vector store are avaiable only in beta version of the package.
+
+## Setup
+
+```bash npm2yarn
+npm install -S @azure/search-documents@12.0.0-beta.3
+```
+
+You'll also need to have an Azure Search instance running. You can deploy a free version on Azure Portal without any cost. 
+To use here you will need the Endpoint and the Admin Key (Query key can be used only to search document, not to index, update or delete).
+
+## Example: index docs, vector search and LLM integration
+
+Below is an example that indexes 4 documents in Azure Search,
+runs a vector search query, and finally uses an LLM to answer a question in natural language
+based on the retrieved documents.
+
+import CodeBlock from "@theme/CodeBlock";
+import FromDocs from "@examples/indexes/vector_stores/azuresearch/azuresearch.ts";
+
+<CodeBlock language="typescript">{FromDocs}</CodeBlock>
