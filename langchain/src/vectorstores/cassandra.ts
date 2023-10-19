@@ -12,7 +12,7 @@ export interface Column {
 
 export interface Index {
   name: string;
-  value: string
+  value: string;
 }
 
 export interface CassandraLibArgs extends DseClientOptions {
@@ -111,7 +111,7 @@ export class CassandraStore extends VectorStore {
     }
 
     const queryStr = this.buildSearchQuery(query, k, filter);
-    console.log(queryStr)
+    console.log(queryStr);
     const queryResultSet = await this.client.execute(queryStr);
 
     return queryResultSet?.rows.map((row, index) => {
@@ -211,7 +211,7 @@ export class CassandraStore extends VectorStore {
       .execute(`CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
   ON ${this.keyspace}.${this.table}(vector) USING 'StorageAttachedIndex';`);
 
-    for await (const {name, value} of this.indices) {
+    for await (const { name, value } of this.indices) {
       await this.client
         .execute(`CREATE CUSTOM INDEX IF NOT EXISTS idx_${this.table}_${name}
   ON ${this.keyspace}.${this.table} ${value} USING 'StorageAttachedIndex';`);
@@ -271,11 +271,13 @@ export class CassandraStore extends VectorStore {
    * @param filter
    * @returns The CQL query string.
    */
-  private buildSearchQuery(query: number[], k: number = 1, filter?: this["FilterType"]): string {
-    const whereClause = filter ? this.buildWhereClause(filter) : '';
+  private buildSearchQuery(
+    query: number[],
+    k: number = 1,
+    filter?: this["FilterType"]
+  ): string {
+    const whereClause = filter ? this.buildWhereClause(filter) : "";
 
-    return `SELECT * FROM ${this.keyspace}.${
-      this.table
-    } ${whereClause} ORDER BY vector ANN OF [${query}] LIMIT ${k}`;
+    return `SELECT * FROM ${this.keyspace}.${this.table} ${whereClause} ORDER BY vector ANN OF [${query}] LIMIT ${k}`;
   }
 }

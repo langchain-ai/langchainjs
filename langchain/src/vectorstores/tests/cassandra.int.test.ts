@@ -18,10 +18,12 @@ describe.only("CassandraStore", () => {
     keyspace: "test",
     dimensions: 1536,
     table: "test",
-    indices: [{
-      name: "name",
-      value: "(name)"
-    }],
+    indices: [
+      {
+        name: "name",
+        value: "(name)",
+      },
+    ],
     primaryKey: {
       name: "id",
       type: "int",
@@ -102,7 +104,7 @@ describe.only("CassandraStore", () => {
     );
 
     const results = await vectorStore.similaritySearch("H", 1, {
-      name: "Bubba"
+      name: "Bubba",
     });
     expect(results).toEqual([
       new Document({
