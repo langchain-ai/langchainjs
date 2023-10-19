@@ -82,5 +82,6 @@ export * from "langchain/experimental/babyagi";
 export * from "langchain/experimental/generative_agents";
 export * from "langchain/experimental/plan_and_execute";
 export * from "langchain/experimental/chat_models/bittensor";
+export * from "langchain/experimental/chains/violation_of_expectations";
 export * from "langchain/evaluation";
 export * from "langchain/runnables/remote";

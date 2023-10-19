@@ -276,6 +276,7 @@ const entrypoints = {
   "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
+    "experimental/chains/violation_of_expectations": "experimental/chains/violation_of_expectations/index",
   // evaluation
   evaluation: "evaluation/index",
   // runnables

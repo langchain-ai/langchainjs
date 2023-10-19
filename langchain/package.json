@@ -703,6 +703,9 @@
     "experimental/hubs/makersuite/googlemakersuitehub.cjs",
     "experimental/hubs/makersuite/googlemakersuitehub.js",
     "experimental/hubs/makersuite/googlemakersuitehub.d.ts",
+    "experimental/chains/violation_of_expectations.cjs",
+    "experimental/chains/violation_of_expectations.js",
+    "experimental/chains/violation_of_expectations.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -2450,6 +2453,11 @@
       "types": "./experimental/hubs/makersuite/googlemakersuitehub.d.ts",
       "import": "./experimental/hubs/makersuite/googlemakersuitehub.js",
       "require": "./experimental/hubs/makersuite/googlemakersuitehub.cjs"
+    },
+    "./experimental/chains/violation_of_expectations": {
+      "types": "./experimental/chains/violation_of_expectations.d.ts",
+      "import": "./experimental/chains/violation_of_expectations.js",
+      "require": "./experimental/chains/violation_of_expectations.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
