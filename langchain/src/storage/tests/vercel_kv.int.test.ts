@@ -25,7 +25,7 @@ describe("VercelKVStore", () => {
 
   afterEach(async () => await client.flushall());
 
-  test.only("VercelKVStore can preform all operations", async () => {
+  test("VercelKVStore can preform all operations", async () => {
     const store = new VercelKVStore({
       client,
     });
