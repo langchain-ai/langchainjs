@@ -232,13 +232,13 @@ export class OpenAIAgent extends Agent {
       newInputs.stop = this._stop();
     }
 
+    // Split inputs between prompt and llm
     const llm = this.llmChain.llm as ChatOpenAI;
-
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: (typeof llm)["CallOptions"] = {
       tools: this.tools,
     };
-    for (const key of llm.callKeys) {
+    for (const key of this.llmChain.llm.callKeys) {
       if (key in inputs) {
         valuesForLLM[key as keyof (typeof llm)["CallOptions"]] = inputs[key];
         delete valuesForPrompt[key];
