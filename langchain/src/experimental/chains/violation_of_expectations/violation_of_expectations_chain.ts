@@ -117,7 +117,7 @@ export class ViolationOfExpectationsChain
    * The method then pushes the chunk (sequence of messages and user response) into the result array.
    * This process continues until all messages in the chat history have been processed.
    */
-  getMessageChunks(chatHistory: BaseMessage[]): MessageChunkResult[] {
+  chunkMessagesByAIResponse(chatHistory: BaseMessage[]): MessageChunkResult[] {
     const newArray: MessageChunkResult[] = [];
     const tempArray: BaseMessage[] = [];
 
@@ -177,7 +177,7 @@ export class ViolationOfExpectationsChain
       throw new Error("Chat history must be an array of BaseMessages");
     }
 
-    const messageChunks = this.getMessageChunks(chatHistory as BaseMessage[]);
+    const messageChunks = this.chunkMessagesByAIResponse(chatHistory as BaseMessage[]);
 
     // Generate the initial prediction for every user message.
     const userPredictions = await Promise.all(
