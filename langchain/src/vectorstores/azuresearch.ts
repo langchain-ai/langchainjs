@@ -49,7 +49,7 @@ export type AzureSearchDocument = {
  * Azure Search - Options for adding documents.
  */
 export type AzureSearchAddDocumentsOptions = {
-  ids?: string[];
+  keys?: string[];
 }
 
 const DEFAULT_FIELD_ID = "id";
@@ -126,10 +126,10 @@ export class AzureSearchStore extends VectorStore {
     documents: Document<AzureSearchDocumentMetadata>[],
     options?: AzureSearchAddDocumentsOptions
   ) {
-    const ids = options?.ids ?? documents.map(() => uuid.v4());
+    const keys = options?.keys ?? documents.map(() => uuid.v4());
 
     const entities: AzureSearchDocument[] = documents.map((doc, idx) => ({
-      id: ids[idx],
+      id: keys[idx],
       content: doc.pageContent,
       content_vector: vectors[idx],
       metadata: {
@@ -145,29 +145,38 @@ export class AzureSearchStore extends VectorStore {
       await this.client.uploadDocuments(chunk, { throwOnAnyFailure: true });
     }
 
-    return ids;
+    return keys;
   }
 
   /**
    * Delete multiple documents by filter expression.
    *
-   * @param filter A partial document with key and value to filter.
+   * @param filter OData filter to find documents to delete.
    * @returns
    */
-  async deleteMany(filter: Partial<AzureSearchDocument>): Promise<IndexingResult[]> {
-    const { results } = await this.client.deleteDocuments([filter as AzureSearchDocument]);
+  async deleteMany(filter: string): Promise<IndexingResult[]> {
+    const { results } = await this.client.search("", {
+      filter,
+    });
 
-    return results;
+    const keys: string[] = [];
+    for await (const item of results) {
+      keys.push(item.document.id);
+    }
+
+    const { results: deleteResults } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, keys);
+
+    return deleteResults;
   }
 
   /**
-   * Delete document by id.
+   * Delete document by key.
    *
-   * @param id
+   * @param key
    * @returns
    */
-  async deleteById(id: string): Promise<IndexingResult[]> {
-    const { results } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, [id]);
+  async deleteByKey(key: string): Promise<IndexingResult[]> {
+    const { results } = await this.client.deleteDocuments(DEFAULT_FIELD_ID, [key]);
 
     return results;
   }

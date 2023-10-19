@@ -108,7 +108,7 @@ describe("AzureSearch", () => {
         }
       })
     ], {
-      ids: [key],
+      keys: [key],
     });
 
     expect(result).toHaveLength(1);
@@ -169,5 +169,55 @@ describe("AzureSearch", () => {
     const result = await store.similaritySearch("test", 1);
 
     expect(result).toBeDefined();
+  });
+
+  test("test delete documents by key", async () => {
+    const key = new Date().getTime().toString();
+    const store = await AzureSearchStore.create({
+      client,
+      search: {
+        type: 'similarity',
+      }
+    }, embeddings);
+
+    await store.addDocuments([
+      new Document<AzureSearchDocumentMetadata>({
+        pageContent: "test index document upload text",
+        metadata: {
+          source: 'test',
+        }
+      })
+    ], {
+      keys: [key],
+    });
+
+    const deleteResult = await store.deleteByKey(key);
+
+    expect(deleteResult).toHaveLength(1);
+  });
+
+  test("test delete documents by filter", async () => {
+    const key = new Date().getTime().toString();
+    const source = `test-${key}`;
+
+    const store = await AzureSearchStore.create({
+      client,
+      search: {
+        type: 'similarity',
+      }
+    }, embeddings);
+
+    await store.addDocuments([
+      new Document<AzureSearchDocumentMetadata>({
+        pageContent: "test index document upload text",
+        metadata: {
+          source,
+        }
+      })
+    ]);
+
+    const deleteResult = await store.deleteMany(`metadata/source eq '${source}'`);
+
+    expect(deleteResult).toHaveLength(1);
   });
 });
