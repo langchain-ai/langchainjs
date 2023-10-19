@@ -10,12 +10,23 @@ import { Document } from "../document.js";
 /**
  * Configuration interface for the ZepRetriever class. Extends the
  * BaseRetrieverInput interface.
+ *
+ * @argument {string} sessionId - The ID of the Zep session.
+ * @argument {string} url - The URL of the Zep API.
+ * @argument {number} [topK] - The number of results to return.
+ * @argument {string} [apiKey] - The API key for the Zep API.
+ * @argument [searchType] [searchType] - The type of search to perform: "similarity" or "mmr".
+ * @argument {number} [mmrLambda] - The lambda value for the MMR search.
+ * @argument {Record<string, unknown>} [filter] - The metadata filter to apply to the search.
  */
 export interface ZepRetrieverConfig extends BaseRetrieverInput {
   sessionId: string;
   url: string;
   topK?: number;
   apiKey?: string;
+  searchType?: "similarity" | "mmr";
+  mmrLambda?: number;
+  filter?: Record<string, unknown>;
 }
 
 /**
@@ -46,10 +57,19 @@ export class ZepRetriever extends BaseRetriever {
 
   private topK?: number;
 
+  private searchType?: "similarity" | "mmr";
+
+  private mmrLambda?: number;
+
+  private filter?: Record<string, unknown>;
+
   constructor(config: ZepRetrieverConfig) {
     super(config);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
+    this.searchType = config.searchType;
+    this.mmrLambda = config.mmrLambda;
+    this.filter = config.filter;
     this.zepClientPromise = ZepClient.init(config.url, config.apiKey);
   }
 
@@ -62,10 +82,14 @@ export class ZepRetriever extends BaseRetriever {
     return results
       .filter((r) => r.message)
       .map(
-        ({ message: { content } = {}, ...metadata }, dist) =>
+        ({
+          message: { content, metadata: messageMetadata } = {},
+          dist,
+          ...rest
+        }) =>
           new Document({
             pageContent: content ?? "",
-            metadata: { score: dist, ...metadata },
+            metadata: { score: dist, ...messageMetadata, ...rest },
           })
       );
   }
@@ -76,7 +100,12 @@ export class ZepRetriever extends BaseRetriever {
    *  @returns {Promise<Document[]>} A promise that resolves to an array of relevant Document objects.
    */
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    const payload: MemorySearchPayload = { text: query, metadata: {} };
+    const payload: MemorySearchPayload = {
+      text: query,
+      metadata: this.filter,
+      search_type: this.searchType,
+      mmr_lambda: this.mmrLambda,
+    };
     // Wait for ZepClient to be initialized
     const zepClient = await this.zepClientPromise;
     if (!zepClient) {
