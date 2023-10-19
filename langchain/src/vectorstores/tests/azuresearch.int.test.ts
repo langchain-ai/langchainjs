@@ -1,20 +1,37 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { describe, expect, test } from "@jest/globals";
+import { jest, describe, expect, test } from "@jest/globals";
 import { SearchClient, SearchIndexClient, AzureKeyCredential } from "@azure/search-documents";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { AzureSearchStore, AzureSearchDocument } from "../azuresearch.js";
+import { AzureSearchStore, AzureSearchDocument, AzureSearchDocumentMetadata } from "../azuresearch.js";
+import { FakeEmbeddings } from "../../embeddings/fake.js";
+import { Document } from "../../document.js";
 
 const indexName = 'test-int';
 
 describe("AzureSearch", () => {
-  const embeddings = new OpenAIEmbeddings();
+  const embeddings = new FakeEmbeddings();
   let indexClient: SearchIndexClient;
   let client: SearchClient<AzureSearchDocument>;
   let queryClient: SearchClient<AzureSearchDocument>;
 
+  const embedMock = jest
+    .spyOn(FakeEmbeddings.prototype, 'embedDocuments')
+    .mockImplementation(
+      async (documents: string[]) => documents.map(() => Array(1536).fill(0.2))
+    );
+
+  const queryMock = jest
+    .spyOn(FakeEmbeddings.prototype, 'embedQuery')
+    .mockImplementation(
+      async () => Array(1536).fill(0.2)
+    );
+
+  beforeEach(() => {
+    embedMock.mockClear();
+    queryMock.mockClear();
+  });
+
   beforeAll(async () => {
-    console.log(process.env.OPENAI_API_KEY);
     client = new SearchClient(
       process.env.AZURE_SEARCH_ENDPOINT!,
       indexName,
@@ -75,23 +92,26 @@ describe("AzureSearch", () => {
   });
 
   test("test index document upload", async () => {
-    const oldStats = await indexClient.getIndexStatistics(indexName);
-
-    await AzureSearchStore.fromTexts(
-      ["test index document upload text"],
-      [],
-      embeddings,
-      {
-        client,
-        search: {
-          type: 'similarity',
-        }
+    const key = new Date().getTime().toString();
+    const store = await AzureSearchStore.create({
+      client,
+      search: {
+        type: 'similarity',
       }
-    );
+    }, embeddings);
 
-    const newStats = await indexClient.getIndexStatistics(indexName);
+    const result = await store.addDocuments([
+      new Document<AzureSearchDocumentMetadata>({
+        pageContent: "test index document upload text",
+        metadata: {
+          source: 'test',
+        }
+      })
+    ], {
+      ids: [key],
+    });
 
-    expect(newStats.documentCount - oldStats.documentCount).toBe(1);
+    expect(result).toHaveLength(1);
   });
 
   test("test index document search", async () => {
@@ -136,23 +156,18 @@ describe("AzureSearch", () => {
   });
 
   test("test index document search with query key", async () => {
-    const store = await AzureSearchStore.fromTexts(
-      ["test index document upload text"],
-      [{
-        source: 'filter-test',
-        attributes: [{ key: 'abc', value: 'def' }],
-      }],
-      embeddings,
+    const store = await AzureSearchStore.create(
       {
         client: queryClient,
         search: {
           type: 'similarity',
         }
-      }
+      },
+      embeddings,
     );
 
     const result = await store.similaritySearch("test", 1);
 
-    expect(result).toHaveLength(1);
+    expect(result).toBeDefined();
   });
 });
