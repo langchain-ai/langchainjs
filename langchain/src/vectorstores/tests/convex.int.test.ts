@@ -12,17 +12,18 @@ import { api } from "./convex/convex/_generated/api.js";
 // 2. `npx convex dev --once`
 // 3. `cd ../../../..`
 // 3. `cp src/vectorstores/tests/convex/.env.local .env`
-// 4. `yarn test:single src/vectorstores/tests/convex.int.test.ts`
-// 5. Add your OpenAI key to `.env` (see `.env.example`)
+// 4. Add your OpenAI key to `.env` (see `.env.example`)
+// 5. `yarn test:single src/vectorstores/tests/convex.int.test.ts`
 //
 // If you're developing these tests, after you've done the above:
 //
 // In `langchain/src/vectorstores/tests/convex` run `npx convex dev`
 // In `langchain` run `yarn test:single src/vectorstores/tests/convex.int.test.ts`
+
 const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 const openAIApiKey = process.env.OPENAI_API_KEY as string;
 
-test("Test embeddings creation", async () => {
+test("Convex injest, similaritySearch", async () => {
   await client.mutation(api.test.reset);
 
   await client.action(api.test.injest, {
