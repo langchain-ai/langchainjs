@@ -66,5 +66,7 @@ test("RunnablePassthrough with RunnableAssign & memory", async () => {
 
   const response2 = await chain.invoke({ input: "test2" });
   console.log(response2);
-  expect(response2).toEqual("You are a helpful chatbot\ntest\nYou are a helpful chatbot\ntest\ntest2");
+  expect(response2).toEqual(
+    "You are a helpful chatbot\ntest\nYou are a helpful chatbot\ntest\ntest2"
+  );
 });
