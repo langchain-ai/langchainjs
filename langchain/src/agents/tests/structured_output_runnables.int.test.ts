@@ -32,7 +32,7 @@ const structuredOutputParser = (
 
   const jsonInput = JSON.parse(inputs);
 
-  if (name === "Response") {
+  if (name === "response") {
     return { returnValues: { inputs }, log: output.content };
   }
 
@@ -86,7 +86,7 @@ test("Pass custom structured output parsers", async () => {
     functions: [
       formatToOpenAIFunction(retrieverTool),
       {
-        name: "Response",
+        name: "response",
         description: "Return the response to the user",
         parameters: zodToJsonSchema(responseSchema),
       },
