@@ -19,7 +19,10 @@ export class RunnableAssign<
     this.mapper = mapper;
   }
 
-  async invoke(input: RunInput, options?: Partial<CallOptions>) {
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
     const mapperResult = await this.mapper.invoke(input, options);
 
     return {
