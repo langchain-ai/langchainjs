@@ -26,7 +26,7 @@ export class CloudflareWorkersAI
 
   cloudflareApiToken?: string;
 
-  baseUrl?: string;
+  baseUrl: string;
 
   static lc_name() {
     return "CloudflareWorkersAI";
@@ -44,22 +44,29 @@ export class CloudflareWorkersAI
     this.cloudflareApiToken =
       fields?.cloudflareApiToken ??
       getEnvironmentVariable("CLOUDFLARE_API_TOKEN");
-    this.baseUrl = fields?.baseUrl;
+    this.baseUrl =
+      fields?.baseUrl ??
+      `https://api.cloudflare.com/client/v4/accounts/${this.cloudflareAccountId}/ai/run`;
+    if (this.baseUrl.endsWith("/")) {
+      this.baseUrl = this.baseUrl.slice(0, -1);
+    }
   }
 
   /**
    * Method to validate the environment.
    */
   validateEnvironment() {
-    if (!this.cloudflareAccountId) {
-      throw new Error(
-        `No Cloudflare account ID found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_ACCOUNT_ID" in your environment variables.`
-      );
-    }
-    if (!this.cloudflareApiToken) {
-      throw new Error(
-        `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`
-      );
+    if (this.baseUrl === undefined) {
+      if (!this.cloudflareAccountId) {
+        throw new Error(
+          `No Cloudflare account ID found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_ACCOUNT_ID" in your environment variables.`
+        );
+      }
+      if (!this.cloudflareApiToken) {
+        throw new Error(
+          `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`
+        );
+      }
     }
   }
 
@@ -96,7 +103,7 @@ export class CloudflareWorkersAI
   ): Promise<string> {
     this.validateEnvironment();
 
-    const url = `https://api.cloudflare.com/client/v4/accounts/${this.cloudflareAccountId}/ai/run/${this.model}`;
+    const url = `${this.baseUrl}/${this.model}`;
     const headers = {
       Authorization: `Bearer ${this.cloudflareApiToken}`,
       "Content-Type": "application/json",
