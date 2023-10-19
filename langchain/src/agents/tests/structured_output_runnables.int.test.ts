@@ -15,12 +15,6 @@ import { AgentExecutor } from "../executor.js";
 const structuredOutputParser = (
   output: AIMessage
 ): AgentAction | AgentFinish => {
-  console.log(
-    {
-      output,
-    },
-    "Running custom parser"
-  );
   if (!("function_call" in output.additional_kwargs)) {
     console.log("returning first AgentFinish");
     return { returnValues: { output: output.content }, log: output.content };
@@ -99,7 +93,7 @@ test("Pass custom structured output parsers", async () => {
   const runnableAgent = RunnableSequence.from([
     {
       input: (i: { input: string }) => i.input,
-      agent_scratchpad: (i: { input: string }) => i.input,
+      agent_scratchpad: (i: { input: string }) => i,
     },
     prompt,
     llmWithTools,
