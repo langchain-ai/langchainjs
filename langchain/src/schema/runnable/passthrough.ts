@@ -6,8 +6,10 @@ import type { RunnableConfig } from "./config.js";
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
  */
 export class RunnableAssign<
-  RunInput = unknown,
-  RunOutput = unknown,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends Record<string, any> = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = any,
   CallOptions extends RunnableConfig = RunnableConfig
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "schema", "runnable"];
