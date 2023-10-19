@@ -130,8 +130,6 @@ export class ChatCloudflareWorkersAI
       "Content-Type": "application/json",
     };
 
-    console.log(url);
-
     const formattedMessages = this._formatMessages(messages);
 
     const data = { messages: formattedMessages };
