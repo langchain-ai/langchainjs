@@ -32,7 +32,7 @@ export class ChatCloudflareWorkersAI
 
   cloudflareApiToken?: string;
 
-  baseUrl?: string;
+  baseUrl: string;
 
   constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams) {
     super(fields ?? {});
@@ -44,7 +44,12 @@ export class ChatCloudflareWorkersAI
     this.cloudflareApiToken =
       fields?.cloudflareApiToken ??
       getEnvironmentVariable("CLOUDFLARE_API_TOKEN");
-    this.baseUrl = fields?.baseUrl;
+    this.baseUrl =
+      fields?.baseUrl ??
+      `https://api.cloudflare.com/client/v4/accounts/${this.cloudflareAccountId}/ai/run`;
+    if (this.baseUrl.endsWith("/")) {
+      this.baseUrl = this.baseUrl.slice(0, -1);
+    }
   }
 
   _llmType() {
@@ -119,11 +124,13 @@ export class ChatCloudflareWorkersAI
   ): Promise<string> {
     this.validateEnvironment();
 
-    const url = `https://api.cloudflare.com/client/v4/accounts/${this.cloudflareAccountId}/ai/run/${this.model}`;
+    const url = `${this.baseUrl}/${this.model}`;
     const headers = {
       Authorization: `Bearer ${this.cloudflareApiToken}`,
       "Content-Type": "application/json",
     };
+
+    console.log(url);
 
     const formattedMessages = this._formatMessages(messages);
 

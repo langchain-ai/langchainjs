@@ -8,6 +8,7 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { ChatCloudflareWorkersAI } from "../cloudflare_workersai.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 describe("ChatCloudflareWorkersAI", () => {
   test("call", async () => {
@@ -55,6 +56,28 @@ describe("ChatCloudflareWorkersAI", () => {
 
   test("longer chain of messages", async () => {
     const chat = new ChatCloudflareWorkersAI();
+
+    const chatPrompt = ChatPromptTemplate.fromMessages([
+      HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
+      AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
+      HumanMessagePromptTemplate.fromTemplate("{text}"),
+    ]);
+
+    const responseA = await chat.generatePrompt([
+      await chatPrompt.formatPromptValue({
+        text: "What did I just say my name was?",
+      }),
+    ]);
+
+    console.log(responseA.generations);
+  });
+
+  test.skip("custom base url", async () => {
+    const chat = new ChatCloudflareWorkersAI({
+      baseUrl: `https://gateway.ai.cloudflare.com/v1/${getEnvironmentVariable(
+        "CLOUDFLARE_ACCOUNT_ID"
+      )}/lang-chainjs/workers-ai/`,
+    });
 
     const chatPrompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
