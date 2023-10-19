@@ -637,6 +637,9 @@ stores/file/in_memory.d.ts
 stores/file/node.cjs
 stores/file/node.js
 stores/file/node.d.ts
+stores/message/convex.cjs
+stores/message/convex.js
+stores/message/convex.d.ts
 stores/message/cloudflare_d1.cjs
 stores/message/cloudflare_d1.js
 stores/message/cloudflare_d1.d.ts
@@ -697,6 +700,9 @@ graphs/neo4j_graph.d.ts
 hub.cjs
 hub.js
 hub.d.ts
+util/convex.cjs
+util/convex.js
+util/convex.d.ts
 util/document.cjs
 util/document.js
 util/document.d.ts
@@ -745,3 +751,5 @@ runnables/remote.d.ts
 index.cjs
 index.js
 index.d.ts
+
+.env.local

@@ -12,6 +12,7 @@ import {
   TableNamesInDataModel,
   VectorFilterBuilder,
   VectorIndexNames,
+  makeFunctionReference,
 } from "convex/server";
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -25,33 +26,35 @@ import { VectorStore } from "./base.js";
 export type ConvexVectorStoreConfig<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel>,
-  StoreMutation extends FunctionReference<
+  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+  TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  MetadataFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  InsertMutation extends FunctionReference<
     "mutation",
     "internal",
     { table: string; document: object }
   >,
-  ReadQuery extends FunctionReference<
+  GetQuery extends FunctionReference<
     "query",
     "internal",
     { id: string },
     object | null
-  >,
-  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
-  TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
-  EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+  >
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
-  readonly table: TableName;
-  readonly store: StoreMutation;
-  readonly read: ReadQuery;
+  readonly table?: TableName;
   readonly index?: IndexName;
   readonly textField?: TextFieldName;
   readonly embeddingField?: EmbeddingFieldName;
+  readonly metadataField?: MetadataFieldName;
+  readonly insert?: InsertMutation;
+  readonly get?: GetQuery;
 };
 
 /**
  * Class that is a wrapper around Convex storage and vector search. It is used
- * to store embeddings in Convex documents with a vector search index,
+ * to insert embeddings in Convex documents with a vector search index,
  * and perform a vector search on them.
  *
  * ConvexVectorStore does NOT implement maxMarginalRelevanceSearch.
@@ -59,20 +62,21 @@ export type ConvexVectorStoreConfig<
 export class ConvexVectorStore<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel>,
-  StoreMutation extends FunctionReference<
+  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+  TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  MetadataFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  InsertMutation extends FunctionReference<
     "mutation",
     "internal",
     { table: string; document: object }
   >,
-  ReadQuery extends FunctionReference<
+  GetQuery extends FunctionReference<
     "query",
     "internal",
     { id: string },
     object | null
-  >,
-  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
-  TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
-  EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+  >
 > extends VectorStore {
   /**
    * Type that defines the filter used in the
@@ -93,15 +97,17 @@ export class ConvexVectorStore<
 
   private readonly table: TableName;
 
-  private readonly store: StoreMutation;
-
-  private readonly read: ReadQuery;
-
   private readonly index: IndexName;
 
   private readonly textField: TextFieldName;
 
   private readonly embeddingField: EmbeddingFieldName;
+
+  private readonly metadataField: MetadataFieldName;
+
+  private readonly insert: InsertMutation;
+
+  private readonly get: GetQuery;
 
   _vectorstoreType(): string {
     return "mongodb_atlas";
@@ -112,22 +118,28 @@ export class ConvexVectorStore<
     config: ConvexVectorStoreConfig<
       DataModel,
       TableName,
-      StoreMutation,
-      ReadQuery,
       IndexName,
       TextFieldName,
-      EmbeddingFieldName
+      EmbeddingFieldName,
+      MetadataFieldName,
+      InsertMutation,
+      GetQuery
     >
   ) {
     super(embeddings, config);
     this.ctx = config.ctx;
-    this.table = config.table;
-    this.store = config.store;
-    this.read = config.read;
+    this.table = config.table ?? ("documents" as TableName);
     this.index = config.index ?? ("byEmbedding" as IndexName);
     this.textField = config.textField ?? ("text" as TextFieldName);
     this.embeddingField =
       config.embeddingField ?? ("embedding" as EmbeddingFieldName);
+    this.metadataField =
+      config.metadataField ?? ("metadata" as MetadataFieldName);
+    this.insert =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      config.insert ?? (makeFunctionReference("langchain/db:insert") as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.get = config.get ?? (makeFunctionReference("langchain/db:get") as any);
   }
 
   /**
@@ -140,14 +152,14 @@ export class ConvexVectorStore<
     const convexDocuments = vectors.map((embedding, idx) => ({
       [this.textField]: documents[idx].pageContent,
       [this.embeddingField]: embedding,
-      ...documents[idx].metadata,
+      [this.metadataField]: documents[idx].metadata,
     }));
     // TODO: Remove chunking when Convex handles the concurrent requests correctly
     const PAGE_SIZE = 16;
     for (let i = 0; i < convexDocuments.length; i += PAGE_SIZE) {
       await Promise.all(
         convexDocuments.slice(i, i + PAGE_SIZE).map((document) =>
-          this.ctx.runMutation(this.store, {
+          this.ctx.runMutation(this.insert, {
             table: this.table,
             document,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -195,7 +207,7 @@ export class ConvexVectorStore<
     const documents = await Promise.all(
       idsAndScores.map(({ _id }) =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.ctx.runQuery(this.read, { id: _id } as any)
+        this.ctx.runQuery(this.get, { id: _id } as any)
       )
     );
 
@@ -204,7 +216,7 @@ export class ConvexVectorStore<
         {
           [this.textField]: text,
           [this.embeddingField]: embedding,
-          ...metadata
+          [this.metadataField]: metadata,
         },
         idx
       ) => [
@@ -212,9 +224,7 @@ export class ConvexVectorStore<
           pageContent: text as string,
           metadata: {
             ...metadata,
-            ...(filter?.includeEmbeddings
-              ? { [this.embeddingField]: embedding }
-              : null),
+            ...(filter?.includeEmbeddings ? { embedding } : null),
           },
         }),
         idsAndScores[idx]._score,
@@ -235,20 +245,21 @@ export class ConvexVectorStore<
   static async fromTexts<
     DataModel extends GenericDataModel,
     TableName extends TableNamesInDataModel<DataModel>,
-    StoreMutation extends FunctionReference<
+    IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+    TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    MetadataFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    InsertMutation extends FunctionReference<
       "mutation",
       "internal",
       { table: string; document: object }
     >,
-    ReadQuery extends FunctionReference<
+    GetQuery extends FunctionReference<
       "query",
       "internal",
       { id: string },
       object | null
-    >,
-    IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
-    TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
-    EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+    >
   >(
     texts: string[],
     metadatas: object[] | object,
@@ -256,21 +267,23 @@ export class ConvexVectorStore<
     dbConfig: ConvexVectorStoreConfig<
       DataModel,
       TableName,
-      StoreMutation,
-      ReadQuery,
       IndexName,
       TextFieldName,
-      EmbeddingFieldName
+      EmbeddingFieldName,
+      MetadataFieldName,
+      InsertMutation,
+      GetQuery
     >
   ): Promise<
     ConvexVectorStore<
       DataModel,
       TableName,
-      StoreMutation,
-      ReadQuery,
       IndexName,
       TextFieldName,
-      EmbeddingFieldName
+      EmbeddingFieldName,
+      MetadataFieldName,
+      InsertMutation,
+      GetQuery
     >
   > {
     const docs = texts.map(
@@ -295,41 +308,44 @@ export class ConvexVectorStore<
   static async fromDocuments<
     DataModel extends GenericDataModel,
     TableName extends TableNamesInDataModel<DataModel>,
-    StoreMutation extends FunctionReference<
+    IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+    TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    MetadataFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+    InsertMutation extends FunctionReference<
       "mutation",
       "internal",
       { table: string; document: object }
     >,
-    ReadQuery extends FunctionReference<
+    GetQuery extends FunctionReference<
       "query",
       "internal",
       { id: string },
       object | null
-    >,
-    IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
-    TextFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
-    EmbeddingFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+    >
   >(
     docs: Document[],
     embeddings: Embeddings,
     dbConfig: ConvexVectorStoreConfig<
       DataModel,
       TableName,
-      StoreMutation,
-      ReadQuery,
       IndexName,
       TextFieldName,
-      EmbeddingFieldName
+      EmbeddingFieldName,
+      MetadataFieldName,
+      InsertMutation,
+      GetQuery
     >
   ): Promise<
     ConvexVectorStore<
       DataModel,
       TableName,
-      StoreMutation,
-      ReadQuery,
       IndexName,
       TextFieldName,
-      EmbeddingFieldName
+      EmbeddingFieldName,
+      MetadataFieldName,
+      InsertMutation,
+      GetQuery
     >
   > {
     const instance = new this(embeddings, dbConfig);

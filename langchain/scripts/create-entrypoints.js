@@ -19,7 +19,8 @@ const entrypoints = {
   "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
-  "agents/format_scratchpad/log_to_message": "agents/format_scratchpad/log_to_message",
+  "agents/format_scratchpad/log_to_message":
+    "agents/format_scratchpad/log_to_message",
   "agents/react/output_parser": "agents/react/output_parser",
   "agents/xml/output_parser": "agents/xml/output_parser",
   "agents/openai/output_parser": "agents/openai/output_parser",
@@ -251,6 +252,7 @@ const entrypoints = {
   "stores/doc/gcs": "stores/doc/gcs",
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/convex": "stores/message/convex",
   "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
   "stores/message/in_memory": "stores/message/in_memory",
   "stores/message/dynamodb": "stores/message/dynamodb",
@@ -275,6 +277,7 @@ const entrypoints = {
   // hub
   hub: "hub",
   // utilities
+  "util/convex": "util/convex",
   "util/document": "util/document",
   "util/math": "util/math",
   "util/time": "util/time",
@@ -291,7 +294,8 @@ const entrypoints = {
   "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
-    "experimental/chains/violation_of_expectations": "experimental/chains/violation_of_expectations/index",
+  "experimental/chains/violation_of_expectations":
+    "experimental/chains/violation_of_expectations/index",
   // evaluation
   evaluation: "evaluation/index",
   // runnables
@@ -354,6 +358,7 @@ const requiresOptionalDependency = [
   "vectorstores/cloudflare_vectorize",
   "vectorstores/closevector/web",
   "vectorstores/closevector/node",
+  "vectorstores/convex",
   "vectorstores/googlevertexai",
   "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
@@ -444,6 +449,7 @@ const requiresOptionalDependency = [
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/cloudflare_d1",
+  "stores/message/convex",
   "stores/message/dynamodb",
   "stores/message/firestore",
   "stores/message/momento",
@@ -453,6 +459,7 @@ const requiresOptionalDependency = [
   "stores/message/upstash_redis",
   "stores/message/planetscale",
   "stores/message/xata",
+  "storage/convex",
   "storage/file_system",
   "storage/ioredis",
   "storage/vercel_kv",

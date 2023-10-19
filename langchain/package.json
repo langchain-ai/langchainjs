@@ -649,6 +649,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/convex.cjs",
+    "stores/message/convex.js",
+    "stores/message/convex.d.ts",
     "stores/message/cloudflare_d1.cjs",
     "stores/message/cloudflare_d1.js",
     "stores/message/cloudflare_d1.d.ts",
@@ -709,9 +712,15 @@
     "hub.cjs",
     "hub.js",
     "hub.d.ts",
+<<<<<<< HEAD
     "util/document.cjs",
     "util/document.js",
     "util/document.d.ts",
+=======
+    "util/convex.cjs",
+    "util/convex.js",
+    "util/convex.d.ts",
+>>>>>>> 9b7d995c (Docs and first test)
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -2416,6 +2425,11 @@
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
     },
+    "./stores/message/convex": {
+      "types": "./stores/message/convex.d.ts",
+      "import": "./stores/message/convex.js",
+      "require": "./stores/message/convex.cjs"
+    },
     "./stores/message/cloudflare_d1": {
       "types": "./stores/message/cloudflare_d1.d.ts",
       "import": "./stores/message/cloudflare_d1.js",
@@ -2516,10 +2530,17 @@
       "import": "./hub.js",
       "require": "./hub.cjs"
     },
+<<<<<<< HEAD
     "./util/document": {
       "types": "./util/document.d.ts",
       "import": "./util/document.js",
       "require": "./util/document.cjs"
+=======
+    "./util/convex": {
+      "types": "./util/convex.d.ts",
+      "import": "./util/convex.js",
+      "require": "./util/convex.cjs"
+>>>>>>> 9b7d995c (Docs and first test)
     },
     "./util/math": {
       "types": "./util/math.d.ts",

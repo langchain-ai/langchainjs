@@ -28,6 +28,9 @@ export function listExternals() {
     /node\:/,
     /js-tiktoken/,
     "axios", // axios is a dependency of openai
+    "convex",
+    "convex/server",
+    "convex/values",
     "mysql2/promise",
     "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
     "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js",
@@ -40,9 +43,14 @@ export function listExternals() {
   ];
 }
 
+export function entryPointsWithInherentSideEffects() {
+  return ["dist/util/convex.js"];
+}
+
 export async function checkTreeShaking() {
   const externals = listExternals();
   const entrypoints = listEntrypoints();
+  const ignoredEntrypoints = new Set(entryPointsWithInherentSideEffects());
   const consoleLog = console.log;
   const reportMap = new Map();
 
@@ -51,7 +59,12 @@ export async function checkTreeShaking() {
 
     console.log = function (...args) {
       const line = args.length ? args.join(" ") : "";
-      if (line.trim().startsWith("First side effect in")) {
+      const [, moduleWithSideEffects] =
+        line.match(/First side effect in (\S+)/) ?? [];
+      if (
+        moduleWithSideEffects &&
+        !ignoredEntrypoints.has(moduleWithSideEffects)
+      ) {
         sideEffects += line + "\n";
       }
     };

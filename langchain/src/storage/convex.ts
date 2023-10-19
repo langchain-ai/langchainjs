@@ -7,6 +7,7 @@ import {
   NamedTableInfo,
   TableNamesInDataModel,
   VectorIndexNames,
+  makeFunctionReference,
 } from "convex/server";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Value } from "convex/values";
@@ -20,6 +21,9 @@ import { BaseStore } from "../schema/storage.js";
 export type ConvexKVStoreConfig<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel>,
+  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+  KeyFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  ValueFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
   UpsertMutation extends FunctionReference<
     "mutation",
     "internal",
@@ -29,25 +33,29 @@ export type ConvexKVStoreConfig<
     "query",
     "internal",
     { table: string; index: string; keyField: string; key: string },
-    object | null
+    object[]
   >,
-  DeleteMutation extends FunctionReference<
+  DeleteManyMutation extends FunctionReference<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >,
-  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
-  KeyFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
-  ValueFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+  >
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
-  readonly upsert: UpsertMutation;
-  readonly lookup: LookupQuery;
-  readonly delete: DeleteMutation;
+  // Defaults to "cache"
   readonly table?: TableName;
+  // Defaults to "byKey"
   readonly index?: IndexName;
+  // Defaults to "key"
   readonly keyField?: KeyFieldName;
+  // Defaults to "value"
   readonly valueField?: ValueFieldName;
+  // Defaults to `internal.langchain.db.upsert`
+  readonly upsert?: UpsertMutation;
+  // Defaults to `internal.langchain.db.lookup`
+  readonly lookup?: LookupQuery;
+  // Defaults to `internal.langchain.db.deleteMany`
+  readonly deleteMany?: DeleteManyMutation;
 };
 
 /**
@@ -59,6 +67,9 @@ export class ConvexKVStore<
   T extends Value,
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel>,
+  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
+  KeyFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
+  ValueFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
   UpsertMutation extends FunctionReference<
     "mutation",
     "internal",
@@ -68,16 +79,13 @@ export class ConvexKVStore<
     "query",
     "internal",
     { table: string; index: string; keyField: string; key: string },
-    object | null
+    object[]
   >,
-  DeleteMutation extends FunctionReference<
+  DeleteManyMutation extends FunctionReference<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >,
-  IndexName extends VectorIndexNames<NamedTableInfo<DataModel, TableName>>,
-  KeyFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>,
-  ValueFieldName extends FieldPaths<NamedTableInfo<DataModel, TableName>>
+  >
 > extends BaseStore<string, T> {
   lc_namespace = ["langchain", "storage", "convex"];
 
@@ -85,39 +93,46 @@ export class ConvexKVStore<
 
   private readonly table: TableName;
 
-  private readonly upsert: UpsertMutation;
-
-  private readonly lookup: LookupQuery;
-
-  private readonly delete: DeleteMutation;
-
   private readonly index: IndexName;
 
   private readonly keyField: KeyFieldName;
 
   private readonly valueField: ValueFieldName;
 
+  private readonly upsert: UpsertMutation;
+
+  private readonly lookup: LookupQuery;
+
+  private readonly deleteMany: DeleteManyMutation;
+
   constructor(
     config: ConvexKVStoreConfig<
       DataModel,
       TableName,
-      UpsertMutation,
-      LookupQuery,
-      DeleteMutation,
       IndexName,
       KeyFieldName,
-      ValueFieldName
+      ValueFieldName,
+      UpsertMutation,
+      LookupQuery,
+      DeleteManyMutation
     >
   ) {
     super(config);
     this.ctx = config.ctx;
     this.table = config.table ?? ("cache" as TableName);
-    this.upsert = config.upsert;
-    this.lookup = config.lookup;
-    this.delete = config.delete;
     this.index = config.index ?? ("byKey" as IndexName);
     this.keyField = config.keyField ?? ("key" as KeyFieldName);
     this.valueField = config.valueField ?? ("value" as ValueFieldName);
+    this.upsert =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      config.upsert ?? (makeFunctionReference("langchain/db:upsert") as any);
+    this.lookup =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      config.lookup ?? (makeFunctionReference("langchain/db:lookup") as any);
+    this.deleteMany =
+      config.deleteMany ??
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (makeFunctionReference("langchain/db:deleteMany") as any);
   }
 
   /**
@@ -127,18 +142,16 @@ export class ConvexKVStore<
    */
   async mget(keys: string[]) {
     return (await Promise.all(
-      keys.map(
-        async (key) =>
-          (
-            (await this.ctx.runQuery(this.lookup, {
-              table: this.table,
-              index: this.index,
-              keyField: this.keyField,
-              key,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any)) as any
-          )?.[this.valueField] ?? undefined
-      )
+      keys.map(async (key) => {
+        const found = (await this.ctx.runQuery(this.lookup, {
+          table: this.table,
+          index: this.index,
+          keyField: this.keyField,
+          key,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any)) as any;
+        return found.length > 0 ? found[0][this.valueField] : undefined;
+      })
     )) as (T | undefined)[];
   }
 
@@ -174,7 +187,7 @@ export class ConvexKVStore<
   async mdelete(keys: string[]): Promise<void> {
     await Promise.all(
       keys.map((key) =>
-        this.ctx.runMutation(this.delete, {
+        this.ctx.runMutation(this.deleteMany, {
           table: this.table,
           index: this.index,
           keyField: this.keyField,

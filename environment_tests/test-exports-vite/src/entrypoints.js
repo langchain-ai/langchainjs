@@ -81,11 +81,16 @@ export * from "langchain/retrievers/vespa";
 export * from "langchain/cache";
 export * from "langchain/stores/doc/in_memory";
 export * from "langchain/stores/file/in_memory";
+export * from "langchain/stores/message/convex";
 export * from "langchain/stores/message/in_memory";
 export * from "langchain/storage/convex";
 export * from "langchain/storage/encoder_backed";
 export * from "langchain/storage/in_memory";
+<<<<<<< HEAD
 export * from "langchain/util/document";
+=======
+export * from "langchain/util/convex";
+>>>>>>> 9b7d995c (Docs and first test)
 export * from "langchain/util/math";
 export * from "langchain/util/time";
 export * from "langchain/experimental/autogpt";

@@ -82,11 +82,16 @@ export * as retrievers__vespa from "../retrievers/vespa.js";
 export * as cache from "../cache/index.js";
 export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
 export * as stores__file__in_memory from "../stores/file/in_memory.js";
+export * as stores__message__convex from "../stores/message/convex.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as storage__convex from "../storage/convex.js";
 export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
+<<<<<<< HEAD
 export * as util__document from "../util/document.js";
+=======
+export * as util__convex from "../util/convex.js";
+>>>>>>> 9b7d995c (Docs and first test)
 export * as util__math from "../util/math.js";
 export * as util__time from "../util/time.js";
 export * as experimental__autogpt from "../experimental/autogpt/index.js";
