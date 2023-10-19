@@ -652,6 +652,9 @@ storage/ioredis.d.ts
 storage/vercel_kv.cjs
 storage/vercel_kv.js
 storage/vercel_kv.d.ts
+storage/upstash_redis.cjs
+storage/upstash_redis.js
+storage/upstash_redis.d.ts
 graphs/neo4j_graph.cjs
 graphs/neo4j_graph.js
 graphs/neo4j_graph.d.ts
