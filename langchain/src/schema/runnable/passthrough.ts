@@ -1,4 +1,3 @@
-import { IterableReadableStream } from "../../util/stream.js";
 import { Runnable, RunnableLike, RunnableMap } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
@@ -31,53 +30,6 @@ export class RunnableAssign<
       ...input,
       ...mapperResult,
     } as RunOutput;
-  }
-
-  async *transform(
-    generator: AsyncGenerator<RunInput>,
-    options: Partial<CallOptions>
-  ): AsyncGenerator<RunOutput> {
-    const mapperKeys = new Set(this.mapper.getStepsKeys());
-    const mapOutput = this.mapper.transform(generator, options);
-
-    for await (const chunk of mapOutput) {
-      if (typeof chunk !== "object") {
-        throw new Error(
-          "The input to RunnablePassthrough.assign() must be an object."
-        );
-      }
-
-      const filtered: Record<string, unknown> = {};
-      for (const key in chunk) {
-        if (!mapperKeys.has(key)) {
-          filtered[key] = chunk[key];
-        }
-      }
-
-      if (Object.keys(filtered).length > 0) {
-        yield filtered as RunOutput;
-      }
-    }
-
-    for await (const chunk of mapOutput) {
-      yield chunk as RunOutput;
-    }
-  }
-
-  async *_streamIterator(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): AsyncGenerator<RunOutput> {
-    yield this.invoke(input, options);
-  }
-
-  async stream(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): Promise<IterableReadableStream<RunOutput>> {
-    return IterableReadableStream.fromAsyncGenerator(
-      this._streamIterator(input, options)
-    );
   }
 }
 
