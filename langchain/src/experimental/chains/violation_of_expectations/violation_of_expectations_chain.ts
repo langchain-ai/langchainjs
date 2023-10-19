@@ -177,7 +177,9 @@ export class ViolationOfExpectationsChain
       throw new Error("Chat history must be an array of BaseMessages");
     }
 
-    const messageChunks = this.chunkMessagesByAIResponse(chatHistory as BaseMessage[]);
+    const messageChunks = this.chunkMessagesByAIResponse(
+      chatHistory as BaseMessage[]
+    );
 
     // Generate the initial prediction for every user message.
     const userPredictions = await Promise.all(

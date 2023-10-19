@@ -1,10 +1,15 @@
 # Violation of Expectations Chain
 
-This page demonstrates how to use the `ViolationOfExpectationsChain`, and scenarios where it can be extremely powerful for extracting insights on chat conversations.
-The example provided will use a chat between a human and an AI, talking about a journal entry the user made.
+This page demonstrates how to use the `ViolationOfExpectationsChain`. This chain extracts insights from chat conversations
+by comparing the differences between an LLM's prediction of the next message in a conversation and the user's mental state against the actual next message,
+and is intended to provide a form of reflection for long-term memory.
 
-The `ViolationOfExpectationsChain` was built using the findings from a paper by [Plastic Labs](https://plasticlabs.ai/). Their paper `Violation of Expectation via Metacognitive Prompting Reduces
+The `ViolationOfExpectationsChain` was implemented using the results of a paper by [Plastic Labs](https://plasticlabs.ai/). Their paper, `Violation of Expectation via Metacognitive Prompting Reduces
 Theory of Mind Prediction Error in Large Language Models` can be found [here](https://arxiv.org/abs/2310.06983).
+
+## Usage
+
+The below example features a chat between a human and an AI, talking about a journal entry the user made.
 
 import CodeBlock from "@theme/CodeBlock";
 import ViolationOfExpectationsChainExample from "@examples/use_cases/advanced/violation_of_expectations_chain.ts";
@@ -13,11 +18,13 @@ import ViolationOfExpectationsChainExample from "@examples/use_cases/advanced/vi
   {ViolationOfExpectationsChainExample}
 </CodeBlock>
 
-Now let's go over everything the chaim is doing, step by step.
+## Explanation
+
+Now let's go over everything the chain is doing, step by step.
 
 Under the hood, the `ViolationOfExpectationsChain` performs four main steps:
 
-## Step 1. Predict the user's next message using only the chat history.
+### Step 1. Predict the user's next message using only the chat history.
 
 The LLM is tasked with generating three key pieces of information:
 
@@ -28,7 +35,7 @@ The LLM is tasked with generating three key pieces of information:
   From each result we extract the first retrieved document, and return it.
   Then, all retrieved documents and generated insights are sorted to remove duplicates, and returned.
 
-## Step 2. Generate prediction violations.
+### Step 2. Generate prediction violations.
 
 Using the results from step 1, we query the LLM to generate the following:
 
@@ -38,12 +45,12 @@ Using the results from step 1, we query the LLM to generate the following:
 
 Once we have the difference between the predicted and actual response, we can move on to step 3.
 
-## Step 3. Regenerate the prediction.
+### Step 3. Regenerate the prediction.
 
 Using the original prediction, key insights and the differences between the actual response and our prediction, we can generate a new more accurate prediction.
 These predictions will help us in the next step to generate an insight that isn't just parts of the user's conversation verbatim.
 
-## Step 4. Generate an insight.
+### Step 4. Generate an insight.
 
 Lastly, we prompt the LLM to generate one concise insight given the following context:
 
