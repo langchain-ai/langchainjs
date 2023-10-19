@@ -6,7 +6,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
 // yarn test:single /langchain/src/vectorstores/tests/cassandra.int.test.ts
-describe.only("CassandraStore", () => {
+describe.skip("CassandraStore", () => {
   const cassandraConfig = {
     cloud: {
       secureConnectBundle: process.env.CASSANDRA_SCB as string,
