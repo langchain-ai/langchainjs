@@ -95,7 +95,7 @@ describe("UpstashRedisStore", () => {
     }
     console.log("Yielded keys:", yieldedKeys);
     expect(yieldedKeys.sort()).toEqual(keysWithPrefix.sort());
-  
+
     // afterEach won't automatically delete these since we're applying a prefix.
     await store.mdelete(keysWithPrefix);
   });
