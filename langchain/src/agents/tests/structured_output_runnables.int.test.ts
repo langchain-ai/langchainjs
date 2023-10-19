@@ -1,6 +1,7 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import fs from "fs";
 import { z } from "zod";
+import { test, jest } from "@jest/globals";
 import { AIMessage, AgentAction, AgentFinish } from "../../schema/index.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
@@ -15,6 +16,7 @@ import { AgentExecutor } from "../executor.js";
 const structuredOutputParser = (
   output: AIMessage
 ): AgentAction | AgentFinish => {
+  console.log("output", output);
   if (!("function_call" in output.additional_kwargs)) {
     console.log("returning first AgentFinish");
     return { returnValues: { output: output.content }, log: output.content };
@@ -51,12 +53,9 @@ test("Pass custom structured output parsers", async () => {
       page_chunk: i,
     },
   }));
-  console.log({
-    docsLen: docs.length,
-    docsZero: docs[0],
-  });
   const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
   const retriever = vectorStore.asRetriever();
+  const getRelevantDocumentsSpy = jest.spyOn(retriever, "getRelevantDocuments");
 
   const responseSchema = z.object({
     answer: z.string().describe("The final answer to respond to the user"),
@@ -86,7 +85,7 @@ test("Pass custom structured output parsers", async () => {
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a helpful assistant\nThought:{agent_scratchpad}"],
+    ["system", "You are a helpful assistant\nThoughts:{agent_scratchpad}"],
     ["user", "{input}"],
   ]);
 
@@ -112,4 +111,9 @@ test("Pass custom structured output parsers", async () => {
   console.log({
     res,
   });
+
+  const results = await Promise.all(
+    getRelevantDocumentsSpy.mock.results.map((item) => item.value)
+  );
+  console.log("results", results);
 });
