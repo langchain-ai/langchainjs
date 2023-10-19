@@ -1,5 +1,5 @@
 import { IterableReadableStream } from "../../util/stream.js";
-import { Runnable, RunnableMap } from "./base.js";
+import { Runnable, RunnableLike, RunnableMap } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
 /**
@@ -103,11 +103,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   }
 
   static assign(
-    mapping: Record<
-      string,
-      | Runnable<Record<string, unknown>, unknown>
-      | ((input: Record<string, unknown>) => unknown)
-    >
+    mapping: Record<string, RunnableLike<Record<string, unknown>, any>>
   ): RunnableAssign<Record<string, unknown>, Record<string, unknown>> {
     return new RunnableAssign(
       new RunnableMap<Record<string, unknown>>({ steps: mapping })
