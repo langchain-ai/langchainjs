@@ -31,6 +31,9 @@
     "agents/toolkits/sql.cjs",
     "agents/toolkits/sql.js",
     "agents/toolkits/sql.d.ts",
+    "agents/format_scratchpad.cjs",
+    "agents/format_scratchpad.js",
+    "agents/format_scratchpad.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -1327,6 +1330,11 @@
       "types": "./agents/toolkits/sql.d.ts",
       "import": "./agents/toolkits/sql.js",
       "require": "./agents/toolkits/sql.cjs"
+    },
+    "./agents/format_scratchpad": {
+      "types": "./agents/format_scratchpad.d.ts",
+      "import": "./agents/format_scratchpad.js",
+      "require": "./agents/format_scratchpad.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",

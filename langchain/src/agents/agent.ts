@@ -163,6 +163,7 @@ export class RunnableAgent<
 
     const output = await this.runnable.invoke(invokeInput, {
       callbacks: callbackManager,
+      runName: "RunnableAgent",
     });
 
     return output;
