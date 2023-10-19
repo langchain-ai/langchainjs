@@ -1,0 +1,178 @@
+# Agents
+
+The `AgentExecutor` class accepts a `Runnable` as the agent. With this, we can create powerful agents using the LCEL and the `AgentExecutor` class.
+
+Here is a simple example of an agent which uses `Runnables`, a retriever and a structured output parser to create an OpenAI functions agent that finds specific information in a large text document.
+
+The first step is to import necessary modules
+```typescript
+import { zodToJsonSchema } from "zod-to-json-schema";
+import fs from "fs";
+import { z } from "zod";
+import {
+  AIMessage,
+  AgentAction,
+  AgentFinish,
+  AgentStep,
+} from "langchain/schema/index.js";
+import { RunnableSequence } from "langchain/schema/runnable/base.js";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "langchain/prompts/chat.js";
+import { ChatOpenAI } from "langchain/chat_models/openai.js";
+import { createRetrieverTool } from "langchain/agents/toolkits/index.js";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter.js";
+import { HNSWLib } from "langchain/vectorstores/hnswlib.js";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai.js";
+import { formatToOpenAIFunction } from "langchain/tools/convert_to_openai.js";
+import { AgentExecutor } from "langchain/agents/executor.js";
+import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad.js";
+```
+
+Next, we load the text document and embed it using the OpenAI embeddings model.
+
+```typescript
+// Read text file & embed documents
+const text = fs.readFileSync("examples/state_of_the_union.txt", "utf8");
+const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+let docs = await textSplitter.createDocuments([text]);
+// Add fake document source information to the metadata
+docs = docs.map((doc, i) => ({
+  ...doc,
+  metadata: {
+    page_chunk: i,
+  },
+}));
+// Initialize docs & create retriever
+const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+```
+
+Since we're going to want to retrieve the embeddings inside the agent, we need to instantiate the vector store as a retriever.
+We also need an LLM to preform the calls with.
+
+```typescript
+const retriever = vectorStore.asRetriever();
+const llm = new ChatOpenAI({});
+```
+
+In order to use our retriever with the LLM as an OpenAI function, we need to convert the retriever to a tool
+
+```typescript
+const retrieverTool = createRetrieverTool(retriever, {
+  name: "state-of-union-retriever",
+  description:
+    "Query a retriever to get information about state of the union address",
+});
+```
+
+Now we can define our prompt template. We'll use a simple `ChatPromptTemplate` with placeholders for the user's question, and the agent scratchpad (this will be very helpful in the future).
+
+```typescript
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  new MessagesPlaceholder("agent_scratchpad"),
+  ["user", "{input}"],
+]);
+```
+
+After that, we define our structured response schema using zod. This schema defines the structure of the final response from the agent.
+
+```typescript
+const responseSchema = z.object({
+  answer: z.string().describe("The final answer to respond to the user"),
+  sources: z
+    .array(z.string())
+    .describe(
+      "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information"
+    ),
+});
+```
+
+Next, we can construct the custom structured output parser.
+
+```typescript
+const structuredOutputParser = (
+  output: AIMessage
+): AgentAction | AgentFinish => {
+  // If no function call is passed, return the output as an instance of `AgentFinish`
+  if (!("function_call" in output.additional_kwargs)) {
+    return { returnValues: { output: output.content }, log: output.content };
+  }
+  // Extract the function call name and arguments
+  const functionCall = output.additional_kwargs.function_call;
+  const name = functionCall?.name as string;
+  const inputs = functionCall?.arguments as string;
+  // Parse the arguments as JSON
+  const jsonInput = JSON.parse(inputs);
+  // If the function call name is `response` then we know it's used our final
+  // response function and can return an instance of `AgentFinish`
+  if (name === "response") {
+    return { returnValues: { inputs }, log: output.content };
+  }
+  // If none of the above are true, the agent is not yet finished and we return
+  // an instance of `AgentAction`
+  return {
+    tool: name,
+    toolInput: jsonInput,
+    log: output.content,
+  };
+};
+```
+
+After this, we can bind our two functions to the LLM, and create a runnable sequence which will be used as the agent.
+
+```typescript
+const llmWithTools = llm.bind({
+  functions: [
+    formatToOpenAIFunction(retrieverTool),
+    {
+      name: "response",
+      description: "Return the response to the user",
+      parameters: zodToJsonSchema(responseSchema),
+    },
+  ],
+});
+/** Create the runnable */
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: { input: string }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: Array<AgentStep> }) =>
+      formatForOpenAIFunctions(i.steps),
+  },
+  prompt,
+  llmWithTools,
+  structuredOutputParser,
+]);
+```
+
+Finally, we can create an instance of `AgentExecutor` and run the agent.
+
+```typescript
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools: [retrieverTool],
+});
+/** Call invoke on the agent */
+const res = await executor.invoke({
+  input: "what did the president say about kentaji brown jackson",
+});
+console.log({
+  res,
+});
+```
+
+The output will look something like this
+
+```typescript
+{
+  res: {
+    inputs: '{\n' +
+      '  "answer": "The President nominated Circuit Court of Appeals Judge Ketanji Brown Jackson, who is described as one of our nation’s top legal minds and will continue Justice Breyer’s legacy of excellence.",\n' +
+      '  "sources": [\n' +
+      '    "State of the Union Address"\n' +
+      '  ]\n' +
+      '}'
+  }
+}
+```
