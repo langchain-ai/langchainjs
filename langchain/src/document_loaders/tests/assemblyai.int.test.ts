@@ -4,7 +4,6 @@ import {
   AudioTranscriptLoader,
   AudioTranscriptParagraphsLoader,
   AudioTranscriptSentencesLoader,
-  SubtitleFormat,
 } from "../web/assemblyai.js";
 
 // eslint-disable-next-line no-process-env
@@ -89,7 +88,7 @@ describe.skip("AssemblyAI", () => {
       {
         audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
       },
-      SubtitleFormat.Srt
+      'srt'
     );
     const docs = await loader.load();
 
@@ -98,7 +97,7 @@ describe.skip("AssemblyAI", () => {
   });
 
   test("Retrieve subtitles by ID", async () => {
-    const loader = new AudioSubtitleLoader(transcriptId, SubtitleFormat.Srt);
+    const loader = new AudioSubtitleLoader(transcriptId, 'srt');
     const docs = await loader.load();
 
     expect(docs).toHaveLength(1);

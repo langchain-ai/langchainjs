@@ -1,23 +1,16 @@
-import { promises as fs } from "node:fs";
+import { AssemblyAI, BaseServiceParams, CreateTranscriptParameters, SubtitleFormat, Transcript, TranscriptParagraph, TranscriptSentence } from "assemblyai"
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
-import { AssemblyAIClient } from "../../util/assemblyai-client.js";
-import {
-  AssemblyAIOptions,
-  CreateTranscriptParams,
-  SubtitleFormat,
-  Transcript,
-  TranscriptSegment,
-} from "../../types/assemblyai-types.js";
+import { AssemblyAIOptions } from "../../types/assemblyai-types.js";
 
-export * from "../../types/assemblyai-types.js";
+export type * from "../../types/assemblyai-types.js";
 
 /**
  * Base class for AssemblyAI loaders.
  */
 abstract class AssemblyAILoader extends BaseDocumentLoader {
-  protected client: AssemblyAIClient;
+  protected client: AssemblyAI;
 
   /**
    * Creates a new AssemblyAI loader.
@@ -26,42 +19,34 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
    */
   constructor(assemblyAIOptions?: AssemblyAIOptions) {
     super();
-    const apiKey =
-      assemblyAIOptions?.apiKey ?? getEnvironmentVariable("ASSEMBLYAI_API_KEY");
-    this.client = new AssemblyAIClient(apiKey as string);
-  }
+    let options = assemblyAIOptions;
+    if (!options) {
+      options = {}
+    }
+    if (!options.apiKey) {
+      options.apiKey = getEnvironmentVariable("ASSEMBLYAI_API_KEY");
+    }
+    if (!options.apiKey) {
+      throw new Error("No AssemblyAI API key provided");
+    }
 
-  /**
-   * Attempts to upload the file to AssemblyAI if it is a local file.
-   * If `audio_url` starts with `http://` or `https://`, it is assumed to be a remote file.
-   * Otherwise, it is assumed to be a local file and is uploaded to AssemblyAI.
-   * @param createTranscriptOptions
-   */
-  protected async uploadFile(createTranscriptOptions: CreateTranscriptParams) {
-    let path = createTranscriptOptions.audio_url;
-    if (path.startsWith("http://") || path.startsWith("https://")) return;
-    if (path.startsWith("file://")) path = path.slice("file://".length);
-
-    const file = await fs.readFile(path);
-    const uploadUrl = await this.client.uploadFile(file);
-    // eslint-disable-next-line no-param-reassign
-    createTranscriptOptions.audio_url = uploadUrl;
+    this.client = new AssemblyAI(options as BaseServiceParams);
   }
 }
 
 abstract class CreateTranscriptLoader extends AssemblyAILoader {
-  protected createTranscriptParams?: CreateTranscriptParams;
+  protected CreateTranscriptParameters?: CreateTranscriptParameters;
 
   protected transcriptId?: string;
 
   /**
    * Creates a new AudioTranscriptLoader.
-   * @param createTranscriptParams The parameters to create the transcript.
+   * @param CreateTranscriptParameters The parameters to create the transcript.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
   constructor(
-    createTranscriptParams: CreateTranscriptParams,
+    CreateTranscriptParameters: CreateTranscriptParameters,
     assemblyAIOptions?: AssemblyAIOptions
   );
 
@@ -80,28 +65,24 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
   constructor(
-    params: CreateTranscriptParams | string,
+    params: CreateTranscriptParameters | string,
     assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(assemblyAIOptions);
     if (typeof params === "string") {
       this.transcriptId = params;
     } else {
-      this.createTranscriptParams = params;
+      this.CreateTranscriptParameters = params;
     }
   }
 
   protected async getOrCreateTranscript() {
-    if (!this.transcriptId && this.createTranscriptParams) {
-      await this.uploadFile(this.createTranscriptParams);
-      this.transcriptId = (
-        await this.client.createTranscript(this.createTranscriptParams)
-      ).id;
+    if (this.transcriptId) {
+      return await this.client.transcripts.get(this.transcriptId);
     }
-    const transcript = await this.client.waitForTranscriptToComplete(
-      this.transcriptId as string
-    );
-    return transcript;
+    if (this.CreateTranscriptParameters) {
+      return await this.client.transcripts.create(this.CreateTranscriptParameters)
+    }
   }
 }
 
@@ -134,11 +115,11 @@ export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
    * Creates a transcript and loads the paragraphs of the transcript, creating a document for each paragraph.
    * @returns A promise that resolves to an array of documents, each containing a paragraph of the transcript.
    */
-  override async load(): Promise<Document<TranscriptSegment>[]> {
+  override async load(): Promise<Document<TranscriptParagraph>[]> {
     const transcript = await this.getOrCreateTranscript();
-    const paragraphsResponse = await this.client.getParagraphs(transcript.id);
+    const paragraphsResponse = await this.client.transcripts.paragraphs(transcript.id);
     return paragraphsResponse.paragraphs.map(
-      (p) =>
+      (p: TranscriptParagraph) =>
         new Document({
           pageContent: p.text,
           metadata: p,
@@ -148,7 +129,7 @@ export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
 }
 
 /**
- * Creates a transcript for the given `CreateTranscriptParams.audio_url`,
+ * Creates a transcript for the given `CreateTranscriptParameters.audio_url`,
  * and loads the sentences of the transcript, creating a document for each sentence.
  */
 export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
@@ -156,11 +137,11 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
    * Creates a transcript and loads the sentences of the transcript, creating a document for each sentence.
    * @returns A promise that resolves to an array of documents, each containing a sentence of the transcript.
    */
-  override async load(): Promise<Document<TranscriptSegment>[]> {
+  override async load(): Promise<Document<TranscriptSentence>[]> {
     const transcript = await this.getOrCreateTranscript();
-    const sentencesResponse = await this.client.getSentences(transcript.id);
+    const sentencesResponse = await this.client.transcripts.sentences(transcript.id);
     return sentencesResponse.sentences.map(
-      (p) =>
+      (p: TranscriptSentence) =>
         new Document({
           pageContent: p.text,
           metadata: p,
@@ -175,14 +156,14 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
 export class AudioSubtitleLoader extends CreateTranscriptLoader {
   /**
    * Creates a new AudioSubtitleLoader.
-   * @param createTranscriptParams The parameters to create the transcript.
+   * @param CreateTranscriptParameters The parameters to create the transcript.
    * @param subtitleFormat The format of the subtitles, either `srt` or `vtt`.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
   constructor(
-    createTranscriptParams: CreateTranscriptParams,
-    subtitleFormat: (typeof SubtitleFormat)[keyof typeof SubtitleFormat],
+    CreateTranscriptParameters: CreateTranscriptParameters,
+    subtitleFormat: SubtitleFormat,
     assemblyAIOptions?: AssemblyAIOptions
   );
 
@@ -195,7 +176,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
    */
   constructor(
     transcriptId: string,
-    subtitleFormat: (typeof SubtitleFormat)[keyof typeof SubtitleFormat],
+    subtitleFormat: SubtitleFormat,
     assemblyAIOptions?: AssemblyAIOptions
   );
 
@@ -207,8 +188,8 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
   constructor(
-    params: CreateTranscriptParams | string,
-    private subtitleFormat: (typeof SubtitleFormat)[keyof typeof SubtitleFormat] = SubtitleFormat.Srt,
+    params: CreateTranscriptParameters | string,
+    private subtitleFormat: SubtitleFormat = 'srt',
     assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(params as string, assemblyAIOptions);
@@ -221,7 +202,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
    */
   override async load(): Promise<Document[]> {
     const transcript = await this.getOrCreateTranscript();
-    const subtitles = await this.client.getSubtitles(
+    const subtitles = await this.client.transcripts.subtitles(
       transcript.id,
       this.subtitleFormat
     );
