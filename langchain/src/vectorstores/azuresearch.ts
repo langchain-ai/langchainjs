@@ -26,16 +26,23 @@ export type AzureSearchStoreParams = {
 }
 
 /**
+ * Define metadata schema.
+ * 
+ * If yout want to add custom data, use the attributes property.
+ */
+export type AzureSearchDocumentMetadata = {
+  source: string;
+  attributes?: Array<{ key: string; value: string; }>;
+}
+
+/**
  * Azure Search - Represents a document indexed.
  */
 export type AzureSearchDocument = {
   id: string;
   content: string;
   content_vector: number[];
-  metadata: {
-    source: string;
-    attributes: Array<{ key: string; value: string; }>;
-  };
+  metadata: AzureSearchDocumentMetadata;
 }
 
 /**
@@ -81,7 +88,7 @@ export class AzureSearchStore extends VectorStore {
    * @param options
    */
   async addDocuments(
-    documents: Document[],
+    documents: Document<AzureSearchDocumentMetadata>[],
     options?: AzureSearchAddDocumentsOptions
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
@@ -116,7 +123,7 @@ export class AzureSearchStore extends VectorStore {
    */
   async addVectors(
     vectors: number[][],
-    documents: Document[],
+    documents: Document<AzureSearchDocumentMetadata>[],
     options?: AzureSearchAddDocumentsOptions
   ) {
     const ids = options?.ids ?? documents.map(() => uuid.v4());
@@ -273,7 +280,7 @@ export class AzureSearchStore extends VectorStore {
     const docsWithScore: [Document, number][] = [];
 
     for await (const item of results) {
-      const document = new Document({
+      const document = new Document<AzureSearchDocumentMetadata>({
         pageContent: item.document.content,
         metadata: item.document.metadata,
       });
@@ -313,10 +320,10 @@ export class AzureSearchStore extends VectorStore {
       answers: "extractive",
     });
 
-    const docsWithScore: [Document, number][] = [];
+    const docsWithScore: [Document<AzureSearchDocumentMetadata>, number][] = [];
 
     for await (const item of results) {
-      const document = new Document({
+      const document = new Document<AzureSearchDocumentMetadata>({
         pageContent: item.document.content,
         metadata: item.document.metadata,
       });
@@ -351,7 +358,7 @@ export class AzureSearchStore extends VectorStore {
     const docsWithScore: [Document, number][] = [];
 
     for await (const item of results) {
-      const document = new Document({
+      const document = new Document<AzureSearchDocumentMetadata>({
         pageContent: item.document.content,
         metadata: item.document.metadata,
       });
@@ -400,12 +407,12 @@ export class AzureSearchStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig: AzureSearchStoreParams,
   ): Promise<AzureSearchStore> {
-    const docs: Document[] = [];
+    const docs: Document<AzureSearchDocumentMetadata>[] = [];
 
     // Transform texts into Documents.
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
-      const newDoc = new Document({
+      const newDoc = new Document<AzureSearchDocumentMetadata>({
         pageContent: texts[i],
         metadata,
       });
@@ -424,7 +431,7 @@ export class AzureSearchStore extends VectorStore {
    * @param dbConfig
    */
   static async fromDocuments(
-    docs: Document[],
+    docs: Document<AzureSearchDocumentMetadata>[],
     embeddings: Embeddings,
     dbConfig: AzureSearchStoreParams,
   ): Promise<AzureSearchStore> {
