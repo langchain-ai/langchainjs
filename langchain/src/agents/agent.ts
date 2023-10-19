@@ -403,26 +403,11 @@ export abstract class Agent extends BaseSingleActionAgent {
       newInputs.stop = this._stop();
     }
 
-    /**
-     * If a runnable is passed in, then the output is `AgentAction | AgentFinish`.
-     * If an LLMChain was passed, the output will be `{ text: string }`.
-     */
-    const output = (await this.llmChain.invoke(newInputs, callbackManager)) as
-      | {
-          text: string;
-        }
-      | AgentAction
-      | AgentFinish;
-
+    const output = await this.llmChain.predict(newInputs, callbackManager);
     if (!this.outputParser) {
       throw new Error("Output parser not set");
     }
-
-    if ("text" in output) {
-      return this.outputParser.parse(output.text, callbackManager);
-    }
-
-    return output;
+    return this.outputParser.parse(output, callbackManager);
   }
 
   /**
