@@ -76,8 +76,7 @@ describe("UpstashRedisStore", () => {
     expect(everyValueUndefined).toBe(true);
   });
 
-  /** @TODO -- tests broken ATM when passing a prefix */
-  test("UpstashRedis can yield keys", async () => {
+  test("UpstashRedis can yield keys with prefix", async () => {
     const encoder = new TextEncoder();
 
     const client = getClient();
@@ -86,19 +85,18 @@ describe("UpstashRedisStore", () => {
     });
 
     const value = new Date().toISOString();
-    const keysWithPrefix = keys.map((key) => `prefix_${key}`);
-    await store.mset(keys.map((key) => [key, encoder.encode(value)]));
+    const prefix = "prefix_";
+    const keysWithPrefix = keys.map((key) => `${prefix}${key}`);
+    await store.mset(keysWithPrefix.map((key) => [key, encoder.encode(value)]));
 
     const yieldedKeys = [];
-    for await (const key of store.yieldKeys("prefix_")) {
+    for await (const key of store.yieldKeys(prefix)) {
       yieldedKeys.push(key);
     }
-
     console.log("Yielded keys:", yieldedKeys);
-
     expect(yieldedKeys.sort()).toEqual(keysWithPrefix.sort());
-
-    // afterEach won't delete these since we're applying a prefix.
+  
+    // afterEach won't automatically delete these since we're applying a prefix.
     await store.mdelete(keysWithPrefix);
   });
 });

@@ -126,7 +126,7 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
 
   /**
    * Yields keys from the Upstash Redis database.
-   * @param prefix Optional prefix to filter the keys.
+   * @param prefix Optional prefix to filter the keys. A wildcard (*) is always appended to the end.
    * @returns An AsyncGenerator that yields keys from the Upstash Redis database.
    */
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
@@ -145,13 +145,13 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
     }
-  
+
     while (cursor !== 0) {
       [cursor, batch] = await this.client.scan(cursor, {
         match: pattern,
         count: this.yieldKeysScanBatchSize,
       });
-    
+
       for (const key of batch) {
         yield this._getDeprefixedKey(key);
       }
