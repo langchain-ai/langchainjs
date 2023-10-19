@@ -6,7 +6,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
 // yarn test:single /langchain/src/vectorstores/tests/cassandra.int.test.ts
-describe.skip("CassandraStore", () => {
+describe.only("CassandraStore", () => {
   const cassandraConfig = {
     cloud: {
       secureConnectBundle: process.env.CASSANDRA_SCB as string,
@@ -18,6 +18,10 @@ describe.skip("CassandraStore", () => {
     keyspace: "test",
     dimensions: 1536,
     table: "test",
+    indices: [{
+      name: "name",
+      value: "(name)"
+    }],
     primaryKey: {
       name: "id",
       type: "int",
@@ -34,9 +38,9 @@ describe.skip("CassandraStore", () => {
     const vectorStore = await CassandraStore.fromTexts(
       ["I am blue", "Green yellow purple", "Hello there hello"],
       [
-        { id: 2, name: "2" },
-        { id: 1, name: "1" },
-        { id: 3, name: "3" },
+        { id: 2, name: "Alex" },
+        { id: 1, name: "Scott" },
+        { id: 3, name: "Bubba" },
       ],
       new OpenAIEmbeddings(),
       cassandraConfig
@@ -49,7 +53,7 @@ describe.skip("CassandraStore", () => {
     expect(results).toEqual([
       new Document({
         pageContent: "Green yellow purple",
-        metadata: { id: 1, name: "1" },
+        metadata: { id: 1, name: "Scott" },
       }),
     ]);
   });
@@ -58,9 +62,9 @@ describe.skip("CassandraStore", () => {
     await CassandraStore.fromTexts(
       ["Hey", "Whats up", "Hello"],
       [
-        { id: 2, name: "2" },
-        { id: 1, name: "1" },
-        { id: 3, name: "3" },
+        { id: 2, name: "Alex" },
+        { id: 1, name: "Scott" },
+        { id: 3, name: "Bubba" },
       ],
       new OpenAIEmbeddings(),
       cassandraConfig
@@ -75,7 +79,35 @@ describe.skip("CassandraStore", () => {
     expect(results).toEqual([
       new Document({
         pageContent: "Whats up",
-        metadata: { id: 1, name: "1" },
+        metadata: { id: 1, name: "Scott" },
+      }),
+    ]);
+  });
+
+  test("CassandraStore.fromExistingIndex (with filter)", async () => {
+    await CassandraStore.fromTexts(
+      ["Hey", "Whats up", "Hello"],
+      [
+        { id: 2, name: "Alex" },
+        { id: 1, name: "Scott" },
+        { id: 3, name: "Bubba" },
+      ],
+      new OpenAIEmbeddings(),
+      cassandraConfig
+    );
+
+    const vectorStore = await CassandraStore.fromExistingIndex(
+      new OpenAIEmbeddings(),
+      cassandraConfig
+    );
+
+    const results = await vectorStore.similaritySearch("H", 1, {
+      name: "Bubba"
+    });
+    expect(results).toEqual([
+      new Document({
+        pageContent: "Hello",
+        metadata: { id: 3, name: "Bubba" },
       }),
     ]);
   });
