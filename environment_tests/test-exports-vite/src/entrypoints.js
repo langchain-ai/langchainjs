@@ -2,6 +2,7 @@ export * from "langchain/load";
 export * from "langchain/load/serializable";
 export * from "langchain/agents";
 export * from "langchain/agents/toolkits";
+export * from "langchain/agents/format_scratchpad";
 export * from "langchain/base_language";
 export * from "langchain/tools";
 export * from "langchain/chains";

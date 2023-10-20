@@ -206,7 +206,7 @@ export class PGVectorStore extends VectorStore {
     const queryString = `
       SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
       FROM ${this.tableName}
-      WHERE ${this.metadataColumnName} @> $2
+      WHERE ${this.metadataColumnName}::jsonb @> $2
       ORDER BY "_distance" ASC
       LIMIT $3;`;
 

@@ -4,68 +4,103 @@ import {
   AudioTranscriptLoader,
   AudioTranscriptParagraphsLoader,
   AudioTranscriptSentencesLoader,
-  SubtitleFormat,
 } from "../web/assemblyai.js";
 
-test.skip("Test Invalid API key", async () => {
-  const loader = new AudioTranscriptLoader(
-    {
+// eslint-disable-next-line no-process-env
+const transcriptId = process.env.ASSEMBLYAI_TRANSCRIPT_ID as string;
+
+describe.skip("AssemblyAI", () => {
+  test("Invalid API key", async () => {
+    const loader = new AudioTranscriptLoader(
+      {
+        audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
+      },
+      { apiKey: "invalid" }
+    );
+
+    await expect(loader.load()).rejects.toThrow(
+      "Authentication error, API token missing/invalid"
+    );
+  });
+
+  test("Create and retrieve transcript", async () => {
+    const loader = new AudioTranscriptLoader({
       audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
-    },
-    { apiKey: "invalid" }
-  );
+    });
+    const docs = await loader.load();
 
-  await expect(loader.load()).rejects.toThrow(
-    "Authentication error, API token missing/invalid"
-  );
-});
-
-test.skip("Test Audio Transcript Loader", async () => {
-  const loader = new AudioTranscriptLoader({
-    audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
+    expect(docs).toHaveLength(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+    expect(docs[0].metadata).not.toBeFalsy();
   });
-  const docs = await loader.load();
 
-  expect(docs).toHaveLength(1);
-  expect(docs[0].pageContent).not.toBeFalsy();
-  expect(docs[0].metadata).not.toBeFalsy();
-  console.dir(docs, { depth: Infinity });
-});
+  test("Retrieve transcript by ID", async () => {
+    const loader = new AudioTranscriptLoader(transcriptId);
+    const docs = await loader.load();
 
-test.skip("Test Audio Transcript Paragraphs Loader", async () => {
-  const loader = new AudioTranscriptParagraphsLoader({
-    audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
+    expect(docs).toHaveLength(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+    expect(docs[0].metadata).not.toBeFalsy();
   });
-  const docs = await loader.load();
 
-  expect(docs.length).toBeGreaterThan(1);
-  expect(docs[0].pageContent).not.toBeFalsy();
-  expect(docs[0].metadata).not.toBeFalsy();
-  console.dir(docs, { depth: Infinity });
-});
-
-test.skip("Test Audio Transcript Sentences Loader", async () => {
-  const loader = new AudioTranscriptSentencesLoader({
-    audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
-  });
-  const docs = await loader.load();
-
-  expect(docs.length).toBeGreaterThan(1);
-  expect(docs[0].pageContent).not.toBeFalsy();
-  expect(docs[0].metadata).not.toBeFalsy();
-  console.dir(docs, { depth: Infinity });
-});
-
-test.skip("Test Audio Subtitles Loader", async () => {
-  const loader = new AudioSubtitleLoader(
-    {
+  test("Create and retrieve paragraphs", async () => {
+    const loader = new AudioTranscriptParagraphsLoader({
       audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
-    },
-    SubtitleFormat.Srt
-  );
-  const docs = await loader.load();
+    });
+    const docs = await loader.load();
 
-  expect(docs).toHaveLength(1);
-  expect(docs[0].pageContent).not.toBeFalsy();
-  console.dir(docs, { depth: Infinity });
+    expect(docs.length).toBeGreaterThan(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+    expect(docs[0].metadata).not.toBeFalsy();
+  });
+
+  test("Retrieve paragraphs by ID", async () => {
+    const loader = new AudioTranscriptParagraphsLoader(transcriptId);
+    const docs = await loader.load();
+
+    expect(docs.length).toBeGreaterThan(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+    expect(docs[0].metadata).not.toBeFalsy();
+  });
+
+  test("Create and retrieve sentences", async () => {
+    const loader = new AudioTranscriptSentencesLoader({
+      audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
+    });
+    const docs = await loader.load();
+
+    expect(docs.length).toBeGreaterThan(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+    expect(docs[0].metadata).not.toBeFalsy();
+  });
+
+  test("Retrieve sentences by ID", async () => {
+    const loader = new AudioTranscriptSentencesLoader(transcriptId);
+    const docs = await loader.load();
+
+    expect(docs.length).toBeGreaterThan(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+    expect(docs[0].metadata).not.toBeFalsy();
+  });
+
+  test("Create and retrieve subtitles", async () => {
+    const loader = new AudioSubtitleLoader(
+      {
+        audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
+      },
+      "srt"
+    );
+    const docs = await loader.load();
+
+    expect(docs).toHaveLength(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+  });
+
+  test("Retrieve subtitles by ID", async () => {
+    const loader = new AudioSubtitleLoader(transcriptId, "srt");
+    const docs = await loader.load();
+
+    expect(docs).toHaveLength(1);
+    expect(docs[0].pageContent).not.toBeFalsy();
+  });
 });

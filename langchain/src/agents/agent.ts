@@ -14,9 +14,11 @@ import { StructuredTool, Tool } from "../tools/base.js";
 import {
   AgentActionOutputParser,
   AgentInput,
+  RunnableAgentInput,
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
+import { Runnable } from "../schema/runnable/base.js";
 
 /**
  * Record type for arguments passed to output parsers.
@@ -120,6 +122,52 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
     inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish>;
+}
+
+/**
+ * Class representing a single action agent which accepts runnables.
+ * Extends the BaseSingleActionAgent class and provides methods for
+ * planning agent actions with runnables.
+ */
+export class RunnableAgent<
+  RunInput extends ChainValues & {
+    agent_scratchpad?: string | BaseMessage[];
+    stop?: string[];
+  },
+  RunOutput extends AgentAction | AgentFinish
+> extends BaseSingleActionAgent {
+  protected lc_runnable = true;
+
+  lc_namespace = ["langchain", "agents", "runnable"];
+
+  runnable: Runnable<RunInput, RunOutput>;
+
+  stop?: string[];
+
+  get inputKeys(): string[] {
+    return [];
+  }
+
+  constructor(fields: RunnableAgentInput<RunInput, RunOutput>) {
+    super();
+    this.runnable = fields.runnable;
+    this.stop = fields.stop;
+  }
+
+  async plan(
+    steps: AgentStep[],
+    inputs: RunInput,
+    callbackManager?: CallbackManager
+  ): Promise<AgentAction | AgentFinish> {
+    const invokeInput = { ...inputs, steps };
+
+    const output = await this.runnable.invoke(invokeInput, {
+      callbacks: callbackManager,
+      runName: "RunnableAgent",
+    });
+
+    return output;
+  }
 }
 
 /**
@@ -249,6 +297,7 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   constructor(input: AgentInput) {
     super(input);
+
     this.llmChain = input.llmChain;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;
