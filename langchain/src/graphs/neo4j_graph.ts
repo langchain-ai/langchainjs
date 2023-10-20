@@ -18,7 +18,7 @@ interface Neo4jGraphConfig {
  * limit the permissions granted to the credentials used with this tool.
  * For example, creating read only users for the database is a good way to
  * ensure that the calling code cannot mutate or delete data.
- * See https://js.langchain.com/docs/security for more information.
+ * @link See https://js.langchain.com/docs/security for more information.
  */
 export class Neo4jGraph {
   private driver: neo4j.Driver;

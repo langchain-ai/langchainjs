@@ -72,7 +72,7 @@ export class OpenApiToolkit extends RequestsToolkit {
  * limiting access to what endpoints it can hit, what actions can be taken, and
  * more.
  *
- * See https://js.langchain.com/docs/security for more information.
+ * @link See https://js.langchain.com/docs/security for more information.
  */
 export function createOpenApiAgent(
   llm: BaseLanguageModel,
