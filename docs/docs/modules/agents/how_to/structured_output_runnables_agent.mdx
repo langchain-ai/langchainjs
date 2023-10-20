@@ -120,7 +120,7 @@ const structuredOutputParser = (
   // If the function call name is `response` then we know it's used our final
   // response function and can return an instance of `AgentFinish`
   if (name === "response") {
-    return { returnValues: { ...inputs }, log: output.content };
+    return { returnValues: { ...jsonInput }, log: output.content };
   }
   // If none of the above are true, the agent is not yet finished and we return
   // an instance of `AgentAction`
@@ -176,10 +176,10 @@ The output will look something like this
 ```typescript
 {
   res: {
-    "answer": "The President nominated Circuit Court of Appeals Judge Ketanji Brown Jackson, who is described as one of our nation’s top legal minds and will continue Justice Breyer’s legacy of excellence.",\n' +
-    "sources": [\n' +
-      "State of the Union Address"\n' +
-    ]\n"
+    answer: 'President mentioned that he nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. He described her as one of our nation’s top legal minds and stated that she will continue Justice Breyer’s legacy of excellence.',
+    sources: [
+      'And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence. A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.'
+    ]
   }
 }
 ```

@@ -33,7 +33,7 @@ const structuredOutputParser = (
   const jsonInput = JSON.parse(inputs);
 
   if (name === "response") {
-    return { returnValues: { inputs }, log: output.content };
+    return { returnValues: { ...jsonInput }, log: output.content };
   }
 
   return {
@@ -75,6 +75,12 @@ test("Pass custom structured output parsers", async () => {
         "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information"
       ),
   });
+  /** Create the response function */
+  const responseOpenAIFunction = {
+    name: "response",
+    description: "Return the response to the user",
+    parameters: zodToJsonSchema(responseSchema),
+  };
   /** Convert retriever into a tool */
   const retrieverTool = createRetrieverTool(retriever, {
     name: "state-of-union-retriever",
@@ -83,14 +89,7 @@ test("Pass custom structured output parsers", async () => {
   });
   /** Bind both retriever and response functions to LLM */
   const llmWithTools = llm.bind({
-    functions: [
-      formatToOpenAIFunction(retrieverTool),
-      {
-        name: "response",
-        description: "Return the response to the user",
-        parameters: zodToJsonSchema(responseSchema),
-      },
-    ],
+    functions: [formatToOpenAIFunction(retrieverTool), responseOpenAIFunction],
   });
   /** Create the runnable */
   const runnableAgent = RunnableSequence.from([
@@ -115,4 +114,14 @@ test("Pass custom structured output parsers", async () => {
   console.log({
     res,
   });
+  /**
+    {
+      res: {
+        answer: 'President mentioned that he nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. He described her as one of our nation’s top legal minds and stated that she will continue Justice Breyer’s legacy of excellence.',
+        sources: [
+          'And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence. A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.'
+        ]
+      }
+    }
+   */
 });
