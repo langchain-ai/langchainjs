@@ -718,7 +718,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:hwchase17/langchainjs.git"
+    "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
