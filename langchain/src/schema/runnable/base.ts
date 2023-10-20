@@ -1339,16 +1339,16 @@ export class RunnableMap<RunInput> extends Runnable<
         callbacks: runManager?.getChild(`map:key:${name}`),
       }),
     }));
-  
+
     async function get_next_chunk(
       generator: AsyncGenerator<RunInput>
     ): Promise<AsyncGenerator<any, any, unknown>> {
       const result = await generator.next();
       return result.value;
     }
-  
+
     const tasks = new Map(
-      namedGenerators.map(({stepName, generator}) => [
+      namedGenerators.map(({ stepName, generator }) => [
         generator,
         [stepName, generator],
       ])
@@ -1356,7 +1356,7 @@ export class RunnableMap<RunInput> extends Runnable<
 
     while (tasks.size) {
       const completedTasks = await Promise.race(Array.from(tasks.keys()));
-  
+
       for await (const task of completedTasks) {
         const fetchedTask = tasks.get(task);
         if (!fetchedTask) {
@@ -1366,7 +1366,9 @@ export class RunnableMap<RunInput> extends Runnable<
         const stepName = fetchedTask[0] as string;
         const generator = fetchedTask[1] as AsyncGenerator<any, any, unknown>;
 
-        const chunk: Record<string, any> = new AddableObject({ [stepName]: await task });
+        const chunk: Record<string, any> = new AddableObject({
+          [stepName]: await task,
+        });
         yield chunk;
         const newTask = await get_next_chunk(generator);
         tasks.set(newTask, [stepName, generator]);

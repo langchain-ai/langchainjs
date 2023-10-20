@@ -274,11 +274,13 @@ test.only("RunnableMap can stream", async () => {
   let finalResult = "";
   for await (const value of result) {
     finalResult += value;
-    console.log('in for loop', {
+    console.log("in for loop", {
       value,
       finalResult,
     });
   }
   console.log(finalResult);
-  expect(finalResult).toEqual(`System: You are a nice assistant.\nHuman: Context:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`);
+  expect(finalResult).toEqual(
+    `System: You are a nice assistant.\nHuman: Context:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
+  );
 });
