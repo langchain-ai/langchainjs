@@ -131,7 +131,7 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
     case "human":
       return "user";
     case "system":
-      throw new Error("System messages not supported");
+      throw new Error("System messages should not be here");
     case "function":
       throw new Error("Function messages not supported");
     case "generic": {
@@ -299,6 +299,15 @@ export class ChatBaiduWenxin
     const tokenUsage: TokenUsage = {};
 
     const params = this.invocationParams();
+
+    // Wenxin requires the system message to be put in the params, not messages array
+    const systemMessage = messages.find(
+      (message) => message._getType() === "system"
+    );
+    if (systemMessage) {
+      messages = messages.filter((message) => message !== systemMessage);
+      params.system = systemMessage.text;
+    }
     const messagesMapped: WenxinMessage[] = messages.map((message) => ({
       role: messageToWenxinRole(message),
       content: message.text,

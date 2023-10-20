@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { ChatBaiduWenxin } from "../baiduwenxin.js";
-import { HumanMessage } from "../../schema/index.js";
+import { SystemMessage, HumanMessage } from "../../schema/index.js";
 
 interface TestConfig {
   modelName: string | undefined;
@@ -16,16 +16,19 @@ interface TestConfig {
       handleLLMNewToken?: (token: string) => Promise<void>;
     }>;
   };
+  system?: string;
   message?: string;
 }
 
 const runTest = async ({
   modelName,
   config,
+  system = "",
   message = "Hello!",
 }: TestConfig) => {
-  const description = `Test ChatBaiduWenxin ${modelName} ${config.description || ""
-    }`.trim();
+  const description = `Test ChatBaiduWenxin ${modelName} ${
+    config.description || ""
+  }`.trim();
   let nrNewTokens = 0;
   let streamedCompletion = "";
   if (config.streaming) {
@@ -43,8 +46,14 @@ const runTest = async ({
       modelName,
       ...config,
     });
-    const messageInstance = new HumanMessage(message);
-    const res = await chat.call([messageInstance]);
+
+    let messages = [];
+    if (system) {
+      messages.push(new SystemMessage(system));
+    }
+    messages.push(new HumanMessage(message));
+
+    const res = await chat.call(messages);
     console.log({ res });
 
     if (config.streaming) {
@@ -82,6 +91,13 @@ const testConfigs: TestConfig[] = [
       streaming: true,
     },
     message: "您好，请讲个长笑话",
+  },
+  {
+    modelName: "ERNIE-Bot-turbo",
+    config: {
+      description: "with system message",
+    },
+    system: "你是一个说文言文的人",
   },
   {
     modelName: "ERNIE-Bot-4",
