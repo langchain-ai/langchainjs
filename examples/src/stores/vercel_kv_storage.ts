@@ -2,6 +2,10 @@ import { createClient } from "@vercel/kv";
 import { AIMessage, HumanMessage } from "langchain/schema";
 import { VercelKVStore } from "langchain/storage/vercel_kv";
 
+// Pro tip: define a helper function for getting your client
+// along with handling the case where your environment variables
+// are not set.
+
 // Define the client and store
 const client = createClient({
   url: process.env.VERCEL_KV_API_URL!,
