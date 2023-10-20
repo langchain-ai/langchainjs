@@ -247,3 +247,38 @@ test("Runnable withConfig", async () => {
   expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
   expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
 });
+
+test.only("RunnableMap can stream", async () => {
+  const promptTemplate = ChatPromptTemplate.fromMessages<{
+    documents: string;
+    question: string;
+  }>([
+    SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
+    HumanMessagePromptTemplate.fromTemplate(
+      `Context:\n{documents}\n\nQuestion:\n{question}`
+    ),
+  ]);
+  const llm = new FakeStreamingLLM({});
+  const inputs = {
+    question: (input: string) => input,
+    documents: RunnableSequence.from([
+      new FakeRetriever(),
+      (docs: Document[]) => JSON.stringify(docs),
+    ]),
+    extraField: new FakeLLM({}),
+  };
+  const runnable = new RunnableMap({ steps: inputs })
+    .pipe(promptTemplate)
+    .pipe(llm);
+  const result = await runnable.stream("Do you know the Muffin Man?");
+  let finalResult = "";
+  for await (const value of result) {
+    finalResult += value;
+    console.log('in for loop', {
+      value,
+      finalResult,
+    });
+  }
+  console.log(finalResult);
+  expect(finalResult).toEqual(`System: You are a nice assistant.\nHuman: Context:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`);
+});

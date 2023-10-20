@@ -1326,82 +1326,71 @@ export class RunnableMap<RunInput> extends Runnable<
   }
 
   async *_transform(
-    input: AsyncIterator<RunInput>,
-    options?: Partial<BaseCallbackConfig>
-  ): AsyncIterableIterator<AddableObject> {
-    const callbackManager_ = await getCallbackMangerForConfig(options);
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      {
-        input,
-      },
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      options?.runName
-    );
-
+    input: AsyncGenerator<RunInput, RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
+  ): AsyncIterableIterator<Record<string, any>> {
     const steps = { ...this.steps };
 
-    // Creating named generators
-    const namedGenerators = Object.entries(steps).map(([name, step]) => [
-      name,
-      step.transform(
-        input,
-        runManager?.getChild(`map:key:${name}`)
-      ), // Assume patchConfig is implemented
-    ]);
-
-    const tasks: Map<
-      Promise<unknown>,
-      [string, AsyncIterator<unknown>]
-    > = new Map();
-
-    for (const [stepName, generator] of namedGenerators) {
-      const task = generator;
-      tasks.set(task, [stepName, generator]);
+    const namedGenerators = Object.entries(steps).map(([name, step]) => ({
+      stepName: name,
+      generator: step.transform(input, {
+        ...config,
+        callbacks: runManager?.getChild(`map:key:${name}`),
+      }),
+    }));
+  
+    async function get_next_chunk(
+      generator: AsyncGenerator<RunInput>
+    ): Promise<AsyncGenerator<any, any, unknown>> {
+      const result = await generator.next();
+      return result.value;
     }
+  
+    const tasks = new Map(
+      namedGenerators.map(({stepName, generator}) => [
+        generator,
+        [stepName, generator],
+      ])
+    );
 
     while (tasks.size) {
       const completedTasks = await Promise.race(Array.from(tasks.keys()));
-
-      for (const task of completedTasks) {
-        const [stepName, generator] = tasks.get(task)!;
-        tasks.delete(task);
-
-        try {
-          const chunk = new AddableObject({ [stepName]: await task });
-          yield chunk;
-          const newTask = generator;
-          tasks.set(newTask, [stepName, generator]);
-        } catch (err) {
-          if (err instanceof StopAsyncIteration) {
-            continue;
-          }
-          throw err;
+  
+      for await (const task of completedTasks) {
+        const fetchedTask = tasks.get(task);
+        if (!fetchedTask) {
+          continue;
         }
+        tasks.delete(task);
+        const stepName = fetchedTask[0] as string;
+        const generator = fetchedTask[1] as AsyncGenerator<any, any, unknown>;
+
+        const chunk: Record<string, any> = new AddableObject({ [stepName]: await task });
+        yield chunk;
+        const newTask = await get_next_chunk(generator);
+        tasks.set(newTask, [stepName, generator]);
       }
     }
   }
 
   async *transform(
-    input: AsyncIterator<RunInput>,
-    config?: RunnableConfig
-  ): AsyncIterableIterator<Record<string, any>> {
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<BaseCallbackConfig>
+  ): AsyncGenerator<Record<string, any>> {
     for await (const chunk of this._transformStreamWithConfig<
       RunInput,
       Record<string, any>
-    >(input, this._transform, config)) {
+    >(generator, this._transform, options)) {
       yield chunk;
     }
   }
 
   async *_streamIterator(
     input: RunInput,
-    options?: Partial<BaseCallbackConfig>
+    config?: BaseCallbackConfig
   ): AsyncGenerator<Record<string, any>> {
-    yield this.invoke(input, options);
+    yield this.invoke(input, this._patchConfig(config));
   }
 
   async stream(
