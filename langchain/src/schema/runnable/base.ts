@@ -1276,6 +1276,10 @@ export class RunnableMap<RunInput> extends Runnable<
 
   protected steps: Record<string, Runnable<RunInput>>;
 
+  public getStepsKeys(): string[] {
+    return Object.keys(this.steps);
+  }
+
   constructor(fields: { steps: Record<string, RunnableLike<RunInput>> }) {
     super(fields);
     this.steps = {};
