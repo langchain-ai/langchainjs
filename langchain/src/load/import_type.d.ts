@@ -298,6 +298,9 @@ export interface OptionalImportMap {
   "langchain/chat_models/googlepalm"?:
     | typeof import("../chat_models/googlepalm.js")
     | Promise<typeof import("../chat_models/googlepalm.js")>;
+  "langchain/chat_models/llama_cpp"?:
+    | typeof import("../chat_models/llama_cpp.js")
+    | Promise<typeof import("../chat_models/llama_cpp.js")>;
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;

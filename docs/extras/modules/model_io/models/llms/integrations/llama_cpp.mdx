@@ -20,13 +20,7 @@ npm install -S node-llama-cpp
 
 You will also need a local Llama 2 model (or a model supported by [node-llama-cpp](https://github.com/withcatai/node-llama-cpp)). You will need to pass the path to this model to the LlamaCpp module as a part of the parameters (see example).
 
-If you want to optimize `node-llama-cpp` for your environment you can download and build versions of `llama.cpp` that are pre-built for the node version you are using, your machines architecture or for the GPU you have. For example on a Mac with Metal GPU you can run:
-
-```
-npx node-llama-cpp download --metal --arch arm64 --nodeTarget v18.0.0
-```
-
-If you do use the `--metal` option don't forget to set the `gpuLayers` to something other than `0` when you instanciate your LLM, this will trigger it to use the GPU. Further details on all of the options `node-llama-cpp` supports can be found [here](https://github.com/withcatai/node-llama-cpp) and details on compiling and running `llama.cpp` can be found [here](https://github.com/ggerganov/llama.cpp).
+Out-of-the-box `node-llama-cpp` is tuned for running on a MacOS platform with support for the Metal GPU of Apple M-series of processors. If you need to turn this off or need support for the CUDA architecture then refer to the documentation at [node-llama-cpp](https://withcatai.github.io/node-llama-cpp/).
 
 A note to langchainjs contributers: if you want to run the tests associated with this module you will need to put the path to your local model in the environment variable `LLAMA_PATH`.
 

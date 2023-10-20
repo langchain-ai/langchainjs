@@ -1,9 +1,13 @@
-import { LlamaModel, LlamaContext, LlamaChatSession, ConversationInteraction, } from "node-llama-cpp";
-import { SimpleChatModel, BaseChatModelParams, } from "./base.js";
-import { BaseLanguageModelCallOptions, } from "../base_language/index.js";
-import { CallbackManagerForLLMRun, } from "../callbacks/manager.js";
-import { BaseMessage, } from "../schema/index.js";
-import { AIMessageChunk, BaseMessage, ChatGenerationChunk, ChatMessage, } from "../schema/index.js";
+import {
+  LlamaModel,
+  LlamaContext,
+  LlamaChatSession,
+  ConversationInteraction,
+} from "node-llama-cpp";
+import { SimpleChatModel, BaseChatModelParams } from "./base.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { BaseMessage } from "../schema/index.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -28,8 +32,6 @@ export interface LlamaCppInputs extends BaseChatModelParams {
   modelPath: string;
   /** If null, a random seed will be used. */
   seed?: null | number;
-  /** If true, respond in streaming mode. */
-  streaming?: boolean;
   /** The randomness of the responses, e.g. 0.1 deterministic, 1.5 creative, 0.8 balanced, 0 disables. */
   temperature?: number;
   /** Consider the n most likely tokens, where n is 1 to vocabulary size, 0 disables (uses full vocabulary). Note: only applies when `temperature` > 0. */
@@ -78,8 +80,6 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
   seed?: null | number;
 
-  streaming?: boolean;
-
   useMlock?: boolean;
 
   useMmap?: boolean;
@@ -109,7 +109,6 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     this.lowVram = inputs?.lowVram;
     this.modelPath = inputs.modelPath;
     this.seed = inputs?.seed;
-    this.streaming = inputs?.streaming ?? false;
     this.useMlock = inputs?.useMlock;
     this.useMmap = inputs?.useMmap;
     this.vocabOnly = inputs?.vocabOnly;
@@ -133,7 +132,6 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
       lowVram: this.lowVram,
       modelPath: this.modelPath,
       seed: this.seed,
-      streaming: this.streaming,
       useMlock: this.useMlock,
       useMmap: this.useMmap,
       vocabOnly: this.vocabOnly,
@@ -145,65 +143,6 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     return {};
   }
 
-  async *_streamResponseChunks(
-    input: string,
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
-    //const stream = await this.caller.call(async () =>
-      await this._session.prompt(input, {
-          onToken(chunk) {
-                //return chunk;
-                const decoded_chunk = this._context.decode(chunk);
-                return new ChatGenerationChunk({
-                  text: decoded_chunk,
-                  message: new AIMessageChunk({ content: decoded_chunk }),
-                });
-                /*await runManager?.handleLLMNewToken(decoded_chunk ?? "");
-              } else {
-                yield new ChatGenerationChunk({
-                  text: "",
-                  message: new AIMessageChunk({ content: "" }),
-                  generationInfo: {
-                    model: chunk.model,
-                    total_duration: chunk.total_duration,
-                    load_duration: chunk.load_duration,
-                    prompt_eval_count: chunk.prompt_eval_count,
-                    prompt_eval_duration: chunk.prompt_eval_duration,
-                    eval_count: chunk.eval_count,
-                    eval_duration: chunk.eval_duration,
-                  },
-                });
-              }*/
-          }
-      });
-    //);
-    /*for await (const chunk of stream) {
-      if (!chunk.done) {
-        yield new ChatGenerationChunk({
-          text: chunk.response,
-          message: new AIMessageChunk({ content: chunk.response }),
-        });
-        await runManager?.handleLLMNewToken(chunk.response ?? "");
-      } else {
-        yield new ChatGenerationChunk({
-          text: "",
-          message: new AIMessageChunk({ content: "" }),
-          generationInfo: {
-            model: chunk.model,
-            total_duration: chunk.total_duration,
-            load_duration: chunk.load_duration,
-            prompt_eval_count: chunk.prompt_eval_count,
-            prompt_eval_duration: chunk.prompt_eval_duration,
-            eval_count: chunk.eval_count,
-            eval_duration: chunk.eval_duration,
-          },
-        });
-      }
-    }*/
-  }
-
-
   /** @ignore */
   async _call(
     messages: BaseMessage[],
@@ -211,8 +150,6 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     // @ts-expect-error - TS6133: 'runManager' is declared but its value is never read.
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const params = this.invocationParams(options);
-
     let prompt = "";
 
     if (messages.length > 1) {
@@ -222,71 +159,62 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
       prompt = this._buildSession(messages);
     } else {
       // If we already have a session then we should just have a single prompt
-      prompt  = messages[0].content;
+      prompt = messages[0].content;
     }
 
-    console.log("_call, prompt: " + prompt);
-    if (this.streaming) {
-      //const completion = await this._session.prompt(prompt, options);
-      const chunks = [];
-      for await (const chunk of this._streamResponseChunks(
-        prompt,
-        options,
-        runManager
-      )) {
-        chunks.push(chunk.message.content);
-      }
-      return chunks.join("");
-    } else {
-      try {
-        const completion = await this._session.prompt(prompt, options);
-        return completion;
-      } catch (e) {
-        throw new Error("Error getting prompt completion.");
-      }
+    try {
+      // @ts-expect-error - TS2531: Object is possibly 'null'.
+      const completion = await this._session.prompt(prompt, options);
+      return completion;
+    } catch (e) {
+      throw new Error("Error getting prompt completion.");
     }
-
   }
 
   // This constructs a new session if we need to adding in any sys messages or previous chats
   protected _buildSession(messages: BaseMessage[]): string {
-    let prompt = ""
+    let prompt = "";
     let sysMessage = "";
+    let noSystemMessages = [];
     let interactions: ConversationInteraction[];
-    interactions = []
+    interactions = [];
 
     // Let's see if we have a system message
-    if (messages.findIndex(msg => msg._getType() === "system") !== -1) {
-        const sysMessages = messages.filter(
-          (message) => message._getType() === "system"
-        );
+    if (messages.findIndex((msg) => msg._getType() === "system") !== -1) {
+      const sysMessages = messages.filter(
+        (message) => message._getType() === "system"
+      );
 
-        // Only use the last provided system message
-        sysMessage = sysMessages[sysMessages.length-1].content;
+      // Only use the last provided system message
+      sysMessage = sysMessages[sysMessages.length - 1].content;
 
-        // Now filter out the system messages
-        messages = messages.filter(
-          (message) => message._getType() !== "system"
-        );
-
+      // Now filter out the system messages
+      noSystemMessages = messages.filter(
+        (message) => message._getType() !== "system"
+      );
+    } else {
+      noSystemMessages = messages;
     }
 
     // Lets see if we just have a prompt left or are their previous interactions?
-    if (messages.length > 1) {
+    if (noSystemMessages.length > 1) {
       // Is the last message a prompt?
-      if (messages[messages.length -1]._getType() === "human") {
-        prompt = messages[messages.length -1].content;
-        interactions = this._convertMessagesToInteractions(messages.slice(0, messages.length-1));
+      if (
+        noSystemMessages[noSystemMessages.length - 1]._getType() === "human"
+      ) {
+        prompt = noSystemMessages[noSystemMessages.length - 1].content;
+        interactions = this._convertMessagesToInteractions(
+          noSystemMessages.slice(0, noSystemMessages.length - 1)
+        );
       } else {
-        interactions = this._convertMessagesToInteractions(messages);
+        interactions = this._convertMessagesToInteractions(noSystemMessages);
       }
     } else {
       // If there was only a single message we assume it's a prompt
-      prompt = messages[0].content;
+      prompt = noSystemMessages[0].content;
     }
 
     // Now lets construct a session according to what we got
-    console.log("_buildSession, conversationHistory: " + JSON.stringify(interactions) + ", systemPrompt: " + sysMessage);
     if (sysMessage !== "" && interactions.length > 0) {
       this._session = new LlamaChatSession({
         context: this._context,
@@ -313,11 +241,12 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   }
 
   // This builds a an array of interactions
-  protected _convertMessagesToInteractions(messages: BaseMessage[]): ConversationInteraction[] {
-    let result = [];
+  protected _convertMessagesToInteractions(
+    messages: BaseMessage[]
+  ): ConversationInteraction[] {
+    const result = [];
 
     for (let i = 0; i < messages.length; i += 2) {
-
       if (i + 1 < messages.length) {
         result.push({
           prompt: messages[i].content,
@@ -328,5 +257,4 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
     return result;
   }
-
 }

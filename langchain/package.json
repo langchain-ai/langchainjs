@@ -430,6 +430,9 @@
     "chat_models/minimax.cjs",
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
+    "chat_models/llama_cpp.cjs",
+    "chat_models/llama_cpp.js",
+    "chat_models/llama_cpp.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -1865,6 +1868,11 @@
       "types": "./chat_models/minimax.d.ts",
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
+    },
+    "./chat_models/llama_cpp": {
+      "types": "./chat_models/llama_cpp.d.ts",
+      "import": "./chat_models/llama_cpp.js",
+      "require": "./chat_models/llama_cpp.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
