@@ -19,6 +19,9 @@ agents/toolkits/aws_sfn.d.ts
 agents/toolkits/sql.cjs
 agents/toolkits/sql.js
 agents/toolkits/sql.d.ts
+agents/format_scratchpad.cjs
+agents/format_scratchpad.js
+agents/format_scratchpad.d.ts
 base_language.cjs
 base_language.js
 base_language.d.ts

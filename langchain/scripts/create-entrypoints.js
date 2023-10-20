@@ -16,6 +16,7 @@ const entrypoints = {
   "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
+  "agents/format_scratchpad": "agents/format_scratchpad",
   // base language
   base_language: "base_language/index",
   // tools
