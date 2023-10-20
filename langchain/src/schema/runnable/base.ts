@@ -1333,6 +1333,7 @@ export class RunnableMap<RunInput> extends Runnable<
     generator: AsyncGenerator<RunInput>,
     runManager?: CallbackManagerForChainRun,
     options?: Partial<RunnableConfig>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): AsyncGenerator<Record<string, any>> {
     const steps = { ...this.steps };
 
@@ -1353,6 +1354,7 @@ export class RunnableMap<RunInput> extends Runnable<
 
     async function getNextChunk(
       generator: AsyncGenerator<RunInput>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ): Promise<AsyncGenerator<RunInput, any, unknown>> {
       const result = await generator.next();
       return result.value;
@@ -1371,7 +1373,8 @@ export class RunnableMap<RunInput> extends Runnable<
         // which array element is of which type.
         const [stepName, generator] = fetchedTask as [
           string,
-          AsyncGenerator<any, any, unknown>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          AsyncGenerator<RunInput, any, unknown>
         ];
         const chunk = new AddableObject({
           [stepName]: await task,
@@ -1386,9 +1389,11 @@ export class RunnableMap<RunInput> extends Runnable<
   async *transform(
     generator: AsyncGenerator<RunInput>,
     options: Partial<BaseCallbackConfig>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): AsyncGenerator<Record<string, any>> {
     for await (const chunk of this._transformStreamWithConfig<
       RunInput,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
       Record<string, any>
     >(generator, this._transform, options)) {
       yield chunk;
@@ -1398,6 +1403,7 @@ export class RunnableMap<RunInput> extends Runnable<
   async *_streamIterator(
     input: RunInput,
     config?: BaseCallbackConfig
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): AsyncGenerator<Record<string, any>> {
     yield this.invoke(input, this._patchConfig(config));
   }
@@ -1405,6 +1411,7 @@ export class RunnableMap<RunInput> extends Runnable<
   async stream(
     input: RunInput,
     options?: Partial<BaseCallbackConfig>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<IterableReadableStream<Record<string, any>>> {
     return IterableReadableStream.fromAsyncGenerator(
       this._streamIterator(input, options)
