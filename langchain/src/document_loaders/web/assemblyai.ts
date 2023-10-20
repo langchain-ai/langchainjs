@@ -1,4 +1,12 @@
-import { AssemblyAI, BaseServiceParams, CreateTranscriptParameters, SubtitleFormat, Transcript, TranscriptParagraph, TranscriptSentence } from "assemblyai"
+import {
+  AssemblyAI,
+  BaseServiceParams,
+  CreateTranscriptParameters,
+  SubtitleFormat,
+  Transcript,
+  TranscriptParagraph,
+  TranscriptSentence,
+} from "assemblyai";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
@@ -21,7 +29,7 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
     super();
     let options = assemblyAIOptions;
     if (!options) {
-      options = {}
+      options = {};
     }
     if (!options.apiKey) {
       options.apiKey = getEnvironmentVariable("ASSEMBLYAI_API_KEY");
@@ -62,7 +70,9 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
       return await this.client.transcripts.get(this.transcriptId);
     }
     if (this.CreateTranscriptParameters) {
-      return await this.client.transcripts.create(this.CreateTranscriptParameters)
+      return await this.client.transcripts.create(
+        this.CreateTranscriptParameters
+      );
     }
   }
 }
@@ -98,7 +108,9 @@ export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
    */
   override async load(): Promise<Document<TranscriptParagraph>[]> {
     const transcript = await this.getOrCreateTranscript();
-    const paragraphsResponse = await this.client.transcripts.paragraphs(transcript.id);
+    const paragraphsResponse = await this.client.transcripts.paragraphs(
+      transcript.id
+    );
     return paragraphsResponse.paragraphs.map(
       (p: TranscriptParagraph) =>
         new Document({
@@ -120,7 +132,9 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
    */
   override async load(): Promise<Document<TranscriptSentence>[]> {
     const transcript = await this.getOrCreateTranscript();
-    const sentencesResponse = await this.client.transcripts.sentences(transcript.id);
+    const sentencesResponse = await this.client.transcripts.sentences(
+      transcript.id
+    );
     return sentencesResponse.sentences.map(
       (p: TranscriptSentence) =>
         new Document({
@@ -170,7 +184,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
    */
   constructor(
     params: CreateTranscriptParameters | string,
-    private subtitleFormat: SubtitleFormat = 'srt',
+    private subtitleFormat: SubtitleFormat = "srt",
     assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(params, assemblyAIOptions);

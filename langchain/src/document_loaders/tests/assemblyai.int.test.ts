@@ -88,7 +88,7 @@ describe.skip("AssemblyAI", () => {
       {
         audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
       },
-      'srt'
+      "srt"
     );
     const docs = await loader.load();
 
@@ -97,7 +97,7 @@ describe.skip("AssemblyAI", () => {
   });
 
   test("Retrieve subtitles by ID", async () => {
-    const loader = new AudioSubtitleLoader(transcriptId, 'srt');
+    const loader = new AudioSubtitleLoader(transcriptId, "srt");
     const docs = await loader.load();
 
     expect(docs).toHaveLength(1);
