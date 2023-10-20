@@ -186,6 +186,7 @@
       "src/chat_models/baiduwenxin.ts",
       "src/chat_models/ollama.ts",
       "src/chat_models/minimax.ts",
+      "src/chat_models/yandex.ts",
       "src/chat_models/fake.ts",
       "src/schema/index.ts",
       "src/schema/document.ts",
@@ -262,6 +263,7 @@
       "src/experimental/chat_models/bittensor.ts",
       "src/experimental/llms/bittensor.ts",
       "src/experimental/hubs/makersuite/googlemakersuitehub.ts",
+      "src/experimental/chains/violation_of_expectations/index.ts",
       "src/evaluation/index.ts",
       "src/runnables/remote.ts"
     ],
@@ -277,7 +279,7 @@
     "excludeExternals": true,
     "excludeNotDocumented": false,
     "includeVersion": true,
-    "sourceLinkTemplate": "https://github.com/hwchase17/langchainjs/blob/{gitRevision}/{path}#L{line}",
+    "sourceLinkTemplate": "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
     "readme": "none",
     "out": "docs"
   }

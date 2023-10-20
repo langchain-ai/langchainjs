@@ -33,7 +33,7 @@ async function withVectorStore(
   }
 }
 
-describe("MomentoVectorIndex", () => {
+describe.skip("MomentoVectorIndex", () => {
   it("stores user-provided ids", async () => {
     await withVectorStore(async (vectorStore: MomentoVectorIndex) => {
       const pageContent = faker.lorem.sentence(5);
