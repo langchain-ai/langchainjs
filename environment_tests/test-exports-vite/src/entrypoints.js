@@ -75,7 +75,6 @@ export * from "langchain/stores/file/in_memory";
 export * from "langchain/stores/message/in_memory";
 export * from "langchain/storage/encoder_backed";
 export * from "langchain/storage/in_memory";
-export * from "langchain/storage/upstash_redis";
 export * from "langchain/util/math";
 export * from "langchain/util/time";
 export * from "langchain/experimental/autogpt";

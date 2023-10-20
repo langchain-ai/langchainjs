@@ -441,6 +441,7 @@ const requiresOptionalDependency = [
   "stores/message/xata",
   "storage/ioredis",
   "storage/vercel_kv",
+  "storage/upstash_redis",
   "graphs/neo4j_graph",
   // Prevent export due to circular dependency with "load" entrypoint
   "hub",
