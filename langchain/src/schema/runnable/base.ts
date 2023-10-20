@@ -1369,7 +1369,10 @@ export class RunnableMap<RunInput> extends Runnable<
         tasks.delete(task);
         // Need the type cast because TypeScript isn't able to infer
         // which array element is of which type.
-        const [stepName, generator] = fetchedTask as [string, AsyncGenerator<any, any, unknown>];
+        const [stepName, generator] = fetchedTask as [
+          string,
+          AsyncGenerator<any, any, unknown>
+        ];
         const chunk = new AddableObject({
           [stepName]: await task,
         });
