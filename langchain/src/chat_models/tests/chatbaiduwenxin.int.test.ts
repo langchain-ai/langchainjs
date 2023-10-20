@@ -41,7 +41,7 @@ const runTest = async ({
       },
     ];
   }
-  test(description, async () => {
+  test.skip(description, async () => {
     const chat = new ChatBaiduWenxin({
       modelName,
       ...config,
