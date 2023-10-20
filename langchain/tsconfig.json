@@ -73,6 +73,7 @@
       "src/llms/openai.ts",
       "src/llms/ai21.ts",
       "src/llms/aleph_alpha.ts",
+      "src/llms/cloudflare_workersai.ts",
       "src/llms/cohere.ts",
       "src/llms/hf.ts",
       "src/llms/raycast.ts",
@@ -177,6 +178,7 @@
       "src/chat_models/portkey.ts",
       "src/chat_models/anthropic.ts",
       "src/chat_models/bedrock.ts",
+      "src/chat_models/cloudflare_workersai.ts",
       "src/chat_models/googlevertexai/index.ts",
       "src/chat_models/googlevertexai/web.ts",
       "src/chat_models/googlepalm.ts",
@@ -184,6 +186,7 @@
       "src/chat_models/baiduwenxin.ts",
       "src/chat_models/ollama.ts",
       "src/chat_models/minimax.ts",
+      "src/chat_models/yandex.ts",
       "src/chat_models/fake.ts",
       "src/schema/index.ts",
       "src/schema/document.ts",
@@ -260,6 +263,7 @@
       "src/experimental/chat_models/bittensor.ts",
       "src/experimental/llms/bittensor.ts",
       "src/experimental/hubs/makersuite/googlemakersuitehub.ts",
+      "src/experimental/chains/violation_of_expectations/index.ts",
       "src/evaluation/index.ts",
       "src/runnables/remote.ts"
     ],
@@ -275,7 +279,7 @@
     "excludeExternals": true,
     "excludeNotDocumented": false,
     "includeVersion": true,
-    "sourceLinkTemplate": "https://github.com/hwchase17/langchainjs/blob/{gitRevision}/{path}#L{line}",
+    "sourceLinkTemplate": "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
     "readme": "none",
     "out": "docs"
   }

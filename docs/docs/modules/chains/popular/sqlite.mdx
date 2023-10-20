@@ -45,3 +45,20 @@ const db = await SqlDatabase.fromDataSourceParams({
 If desired, you can return the used SQL command when calling the chain.
 
 <CodeBlock language="typescript">{SqlDBSqlOutputExample}</CodeBlock>
+
+# Disclaimer ⚠️
+
+The query chain may generate insert/update/delete queries. When this is not expected, use a custom prompt or create SQL users without write permissions.
+
+The final user might overload your SQL database by asking a simple question such as "run the biggest query possible". The generated query might look like:
+
+```sql
+SELECT * FROM "public"."users"
+    JOIN "public"."user_permissions" ON "public"."users".id = "public"."user_permissions".user_id
+    JOIN "public"."projects" ON "public"."users".id = "public"."projects".user_id
+    JOIN "public"."events" ON "public"."projects".id = "public"."events".project_id;
+```
+
+For a transactional SQL database, if one of the table above contains millions of rows, the query might cause trouble to other applications using the same database.
+
+Most datawarehouse oriented databases support user-level quota, for limiting resource usage.

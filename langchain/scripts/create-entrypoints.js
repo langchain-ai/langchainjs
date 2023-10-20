@@ -55,6 +55,7 @@ const entrypoints = {
   "llms/openai": "llms/openai",
   "llms/ai21": "llms/ai21",
   "llms/aleph_alpha": "llms/aleph_alpha",
+  "llms/cloudflare_workersai": "llms/cloudflare_workersai",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/raycast": "llms/raycast",
@@ -174,6 +175,7 @@ const entrypoints = {
   "chat_models/portkey": "chat_models/portkey",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/bedrock": "chat_models/bedrock",
+  "chat_models/cloudflare_workersai": "chat_models/cloudflare_workersai",
   "chat_models/googlevertexai": "chat_models/googlevertexai/index",
   "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
   "chat_models/googlepalm": "chat_models/googlepalm",
@@ -181,6 +183,7 @@ const entrypoints = {
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
+  "chat_models/yandex": "chat_models/yandex",
   "chat_models/fake": "chat_models/fake",
   // schema
   schema: "schema/index",
@@ -273,6 +276,7 @@ const entrypoints = {
   "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
+    "experimental/chains/violation_of_expectations": "experimental/chains/violation_of_expectations/index",
   // evaluation
   evaluation: "evaluation/index",
   // runnables
