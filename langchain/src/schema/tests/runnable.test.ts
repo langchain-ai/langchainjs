@@ -248,7 +248,7 @@ test("Runnable withConfig", async () => {
   expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
 });
 
-test.only("RunnableMap can stream", async () => {
+test("RunnableMap can stream", async () => {
   const promptTemplate = ChatPromptTemplate.fromMessages<{
     documents: string;
     question: string;
