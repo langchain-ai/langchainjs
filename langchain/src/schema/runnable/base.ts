@@ -1326,21 +1326,21 @@ export class RunnableMap<RunInput> extends Runnable<
   }
 
   async *_transform(
-    input: AsyncGenerator<RunInput, RunInput>,
+    generator: AsyncGenerator<RunInput>,
     runManager?: CallbackManagerForChainRun,
-    config?: RunnableConfig
-  ): AsyncIterableIterator<Record<string, any>> {
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<Record<string, any>> {
     const steps = { ...this.steps };
 
     const namedGenerators = Object.entries(steps).map(([name, step]) => ({
       stepName: name,
-      generator: step.transform(input, {
-        ...config,
+      generator: step.transform(generator, {
+        ...options,
         callbacks: runManager?.getChild(`map:key:${name}`),
       }),
     }));
 
-    async function get_next_chunk(
+    async function getNextChunk(
       generator: AsyncGenerator<RunInput>
     ): Promise<AsyncGenerator<any, any, unknown>> {
       const result = await generator.next();
@@ -1370,7 +1370,7 @@ export class RunnableMap<RunInput> extends Runnable<
           [stepName]: await task,
         });
         yield chunk;
-        const newTask = await get_next_chunk(generator);
+        const newTask = await getNextChunk(generator);
         tasks.set(newTask, [stepName, generator]);
       }
     }
