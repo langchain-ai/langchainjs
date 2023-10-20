@@ -208,7 +208,7 @@ const config = {
             items: [
               {
                 label: "Python",
-                href: "https://github.com/hwchase17/langchain",
+                href: "https://github.com/langchain-ai/langchain",
               },
               {
                 label: "JS/TS",
