@@ -1344,19 +1344,19 @@ export class RunnableMap<RunInput> extends Runnable<
       }),
     }));
 
-    async function getNextChunk(
-      generator: AsyncGenerator<RunInput>
-    ): Promise<AsyncGenerator<any, any, unknown>> {
-      const result = await generator.next();
-      return result.value;
-    }
-
     const tasks = new Map(
       namedGenerators.map(({ stepName, generator }) => [
         generator,
         [stepName, generator],
       ])
     );
+
+    async function getNextChunk(
+      generator: AsyncGenerator<RunInput>
+    ): Promise<AsyncGenerator<RunInput, any, unknown>> {
+      const result = await generator.next();
+      return result.value;
+    }
 
     while (tasks.size) {
       const completedTasks = await Promise.race(Array.from(tasks.keys()));
@@ -1367,10 +1367,10 @@ export class RunnableMap<RunInput> extends Runnable<
           continue;
         }
         tasks.delete(task);
-        const stepName = fetchedTask[0] as string;
-        const generator = fetchedTask[1] as AsyncGenerator<any, any, unknown>;
-
-        const chunk: Record<string, any> = new AddableObject({
+        // Need the type cast because TypeScript isn't able to infer
+        // which array element is of which type.
+        const [stepName, generator] = fetchedTask as [string, AsyncGenerator<any, any, unknown>];
+        const chunk = new AddableObject({
           [stepName]: await task,
         });
         yield chunk;

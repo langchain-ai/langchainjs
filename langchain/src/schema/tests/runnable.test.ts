@@ -274,10 +274,6 @@ test("RunnableMap can stream", async () => {
   let finalResult = "";
   for await (const value of result) {
     finalResult += value;
-    console.log("in for loop", {
-      value,
-      finalResult,
-    });
   }
   console.log(finalResult);
   expect(finalResult).toEqual(
