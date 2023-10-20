@@ -41,6 +41,7 @@ interface ChatCompletionRequest {
   temperature?: number;
   top_p?: number;
   penalty_score?: number;
+  system?: string;
 }
 
 /**
@@ -305,6 +306,7 @@ export class ChatBaiduWenxin
       (message) => message._getType() === "system"
     );
     if (systemMessage) {
+      // eslint-disable-next-line no-param-reassign
       messages = messages.filter((message) => message !== systemMessage);
       params.system = systemMessage.text;
     }

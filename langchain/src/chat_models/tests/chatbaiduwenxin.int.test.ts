@@ -32,6 +32,7 @@ const runTest = async ({
   let nrNewTokens = 0;
   let streamedCompletion = "";
   if (config.streaming) {
+    // eslint-disable-next-line no-param-reassign
     config.callbacks = [
       {
         async handleLLMNewToken(token: string) {
@@ -47,7 +48,7 @@ const runTest = async ({
       ...config,
     });
 
-    let messages = [];
+    const messages = [];
     if (system) {
       messages.push(new SystemMessage(system));
     }
@@ -106,5 +107,6 @@ const testConfigs: TestConfig[] = [
 ];
 
 testConfigs.forEach((testConfig) => {
-  runTest(testConfig);
+  // eslint-disable-next-line no-void
+  void runTest(testConfig);
 });
