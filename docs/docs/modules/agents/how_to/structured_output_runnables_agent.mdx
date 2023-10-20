@@ -1,4 +1,4 @@
-# Agents
+# Structured Output Agent with Runnables
 
 The `AgentExecutor` class accepts a `Runnable` as the agent. With this, we can create powerful agents using the LCEL and the `AgentExecutor` class.
 
@@ -90,6 +90,17 @@ const responseSchema = z.object({
 });
 ```
 
+Once our response schema is defined, we can construct it as an OpenAI function to later be passed to the model.
+This is an important step regarding consistency as the model will always respond in this schema when it successfully completes a task
+
+```typescript
+const responseOpenAIFunction = {
+  name: "response",
+  description: "Return the response to the user",
+  parameters: zodToJsonSchema(responseSchema),
+};
+```
+
 Next, we can construct the custom structured output parser.
 
 ```typescript
@@ -109,7 +120,7 @@ const structuredOutputParser = (
   // If the function call name is `response` then we know it's used our final
   // response function and can return an instance of `AgentFinish`
   if (name === "response") {
-    return { returnValues: { inputs }, log: output.content };
+    return { returnValues: { ...inputs }, log: output.content };
   }
   // If none of the above are true, the agent is not yet finished and we return
   // an instance of `AgentAction`
@@ -123,16 +134,13 @@ const structuredOutputParser = (
 
 After this, we can bind our two functions to the LLM, and create a runnable sequence which will be used as the agent.
 
+**Important** - note here we pass in `agent_scratchpad` as an input variable, which formats all the previous steps using the `formatForOpenAIFunctions` function.
+This is very important as it contains all the context history the model needs to preform accurate tasks. Without this, the model would have no context on the previous steps taken.
+The `formatForOpenAIFunctions` function returns the steps as an array of `BaseMessage`. This is necessary as the `MessagesPlaceholder` class expects this type as the input.
+
 ```typescript
 const llmWithTools = llm.bind({
-  functions: [
-    formatToOpenAIFunction(retrieverTool),
-    {
-      name: "response",
-      description: "Return the response to the user",
-      parameters: zodToJsonSchema(responseSchema),
-    },
-  ],
+  functions: [formatToOpenAIFunction(retrieverTool), responseOpenAIFunction],
 });
 /** Create the runnable */
 const runnableAgent = RunnableSequence.from([
@@ -168,12 +176,10 @@ The output will look something like this
 ```typescript
 {
   res: {
-    inputs: "{\n" +
-      '  "answer": "The President nominated Circuit Court of Appeals Judge Ketanji Brown Jackson, who is described as one of our nation’s top legal minds and will continue Justice Breyer’s legacy of excellence.",\n' +
-      '  "sources": [\n' +
-      '    "State of the Union Address"\n' +
-      "  ]\n" +
-      "}";
+    "answer": "The President nominated Circuit Court of Appeals Judge Ketanji Brown Jackson, who is described as one of our nation’s top legal minds and will continue Justice Breyer’s legacy of excellence.",\n' +
+    "sources": [\n' +
+      "State of the Union Address"\n' +
+    ]\n"
   }
 }
 ```
