@@ -18,7 +18,7 @@ import { AIMessage, HumanMessage } from "../../schema/index.js";
 const client = new CacheClient({
   configuration: Configurations.Laptop.v1(),
   credentialProvider: CredentialProvider.fromEnvironmentVariable({
-    environmentVariableName: "MOMENTO_AUTH_TOKEN",
+    environmentVariableName: "MOMENTO_API_KEY",
   }),
   defaultTtlSeconds: 60,
 });

@@ -10,7 +10,7 @@ module.exports = {
     parser: "@typescript-eslint/parser",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint"],
+  plugins: ["@typescript-eslint", "unused-imports"],
   rules: {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
@@ -18,6 +18,7 @@ module.exports = {
     "@typescript-eslint/no-use-before-define": ["error", "nofunc"],
     "@typescript-eslint/no-unused-vars": 0,
     "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/ban-ts-comment": 0,
     camelcase: 0,
     "class-methods-use-this": 0,
     "import/extensions": 0,
@@ -40,5 +41,6 @@ module.exports = {
     "no-useless-constructor": 0,
     "no-else-return": 0,
     semi: ["error", "always"],
+    "unused-imports/no-unused-imports": "error",
   },
 };

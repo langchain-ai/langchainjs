@@ -100,6 +100,10 @@ export class CustomListOutputParser extends ListOutputParser {
    * @returns A string containing instructions on the expected format of the response.
    */
   getFormatInstructions(): string {
-    return `Your response should be a list of ${this.length} items separated by "${this.separator}" (eg: \`foo${this.separator} bar${this.separator} baz\`)`;
+    return `Your response should be a list of ${
+      this.length === undefined ? "" : `${this.length} `
+    }items separated by "${this.separator}" (eg: \`foo${this.separator} bar${
+      this.separator
+    } baz\`)`;
   }
 }

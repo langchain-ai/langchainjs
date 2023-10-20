@@ -1,0 +1,8 @@
+# Dynamically selecting from multiple prompts
+
+This notebook demonstrates how to use the `RouterChain` paradigm to create a chain that dynamically selects the prompt to use for a given input. Specifically we show how to use the `MultiPromptChain` to create a question-answering chain that selects the prompt which is most relevant for a given question, and then answers the question using that prompt.
+
+import CodeBlock from "@theme/CodeBlock";
+import MultiPromptExample from "@examples/chains/multi_prompt.ts";
+
+<CodeBlock language="typescript">{MultiPromptExample}</CodeBlock>

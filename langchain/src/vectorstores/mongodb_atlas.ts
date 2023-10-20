@@ -102,63 +102,51 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     k: number,
     filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
-    const knnBeta: MongoDBDocument = {
-      vector: query,
-      path: this.embeddingKey,
-      k,
-    };
-
-    let preFilter: MongoDBDocument | undefined;
-    let postFilterPipeline: MongoDBDocument[] | undefined;
-    let includeEmbeddings: boolean | undefined;
-    if (
+    const postFilterPipeline = filter?.postFilterPipeline ?? [];
+    const preFilter: MongoDBDocument | undefined =
       filter?.preFilter ||
       filter?.postFilterPipeline ||
       filter?.includeEmbeddings
-    ) {
-      preFilter = filter.preFilter;
-      postFilterPipeline = filter.postFilterPipeline;
-      includeEmbeddings = filter.includeEmbeddings || false;
-    } else preFilter = filter;
+        ? filter.preFilter
+        : filter;
+    const removeEmbeddingsPipeline = !filter?.includeEmbeddings
+      ? [
+          {
+            $project: {
+              [this.embeddingKey]: 0,
+            },
+          },
+        ]
+      : [];
 
-    if (preFilter) {
-      knnBeta.filter = preFilter;
-    }
     const pipeline: MongoDBDocument[] = [
       {
-        $search: {
+        $vectorSearch: {
+          queryVector: query,
           index: this.indexName,
-          knnBeta,
+          path: this.embeddingKey,
+          limit: k,
+          numCandidates: 10 * k,
+          ...(preFilter && { filter: preFilter }),
         },
       },
       {
         $set: {
-          score: { $meta: "searchScore" },
+          score: { $meta: "vectorSearchScore" },
         },
       },
+      ...removeEmbeddingsPipeline,
+      ...postFilterPipeline,
     ];
 
-    if (!includeEmbeddings) {
-      const removeEmbeddingsStage = {
-        $project: {
-          [this.embeddingKey]: 0,
-        },
-      };
-      pipeline.push(removeEmbeddingsStage);
-    }
+    const results = this.collection
+      .aggregate(pipeline)
+      .map<[Document, number]>((result) => {
+        const { score, [this.textKey]: text, ...metadata } = result;
+        return [new Document({ pageContent: text, metadata }), score];
+      });
 
-    if (postFilterPipeline) {
-      pipeline.push(...postFilterPipeline);
-    }
-    const results = this.collection.aggregate(pipeline);
-
-    const ret: [Document, number][] = [];
-    for await (const result of results) {
-      const { score, [this.textKey]: text, ...metadata } = result;
-      ret.push([new Document({ pageContent: text, metadata }), score]);
-    }
-
-    return ret;
+    return results.toArray();
   }
 
   /**

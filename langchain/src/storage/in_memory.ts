@@ -6,7 +6,7 @@ import { BaseStore } from "../schema/storage.js";
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class InMemoryStore<T = any> extends BaseStore<string, T> {
-  lc_namespace = ["langchain", "storage", "in_memory"];
+  lc_namespace = ["langchain", "storage"];
 
   protected store: Record<string, T> = {};
 
