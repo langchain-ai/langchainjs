@@ -31,6 +31,9 @@
     "agents/toolkits/sql.cjs",
     "agents/toolkits/sql.js",
     "agents/toolkits/sql.d.ts",
+    "agents/format_scratchpad.cjs",
+    "agents/format_scratchpad.js",
+    "agents/format_scratchpad.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -664,6 +667,9 @@
     "storage/vercel_kv.cjs",
     "storage/vercel_kv.js",
     "storage/vercel_kv.d.ts",
+    "storage/upstash_redis.cjs",
+    "storage/upstash_redis.js",
+    "storage/upstash_redis.d.ts",
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
@@ -718,7 +724,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:hwchase17/langchainjs.git"
+    "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
@@ -1338,6 +1344,11 @@
       "types": "./agents/toolkits/sql.d.ts",
       "import": "./agents/toolkits/sql.js",
       "require": "./agents/toolkits/sql.cjs"
+    },
+    "./agents/format_scratchpad": {
+      "types": "./agents/format_scratchpad.d.ts",
+      "import": "./agents/format_scratchpad.js",
+      "require": "./agents/format_scratchpad.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
@@ -2393,6 +2404,11 @@
       "types": "./storage/vercel_kv.d.ts",
       "import": "./storage/vercel_kv.js",
       "require": "./storage/vercel_kv.cjs"
+    },
+    "./storage/upstash_redis": {
+      "types": "./storage/upstash_redis.d.ts",
+      "import": "./storage/upstash_redis.js",
+      "require": "./storage/upstash_redis.cjs"
     },
     "./graphs/neo4j_graph": {
       "types": "./graphs/neo4j_graph.d.ts",

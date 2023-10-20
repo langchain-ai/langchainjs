@@ -1,35 +1,57 @@
-import type { Redis } from "ioredis";
+import { Redis as UpstashRedis, type RedisConfigNodejs } from "@upstash/redis";
 
 import { BaseStore } from "../schema/storage.js";
 
 /**
- * Class that extends the BaseStore class to interact with a Redis
+ * Type definition for the input parameters required to initialize an
+ * instance of the UpstashStoreInput class.
+ */
+export interface UpstashRedisStoreInput {
+  sessionTTL?: number;
+  config?: RedisConfigNodejs;
+  client?: UpstashRedis;
+  /**
+   * The amount of keys to retrieve per batch when yielding keys.
+   * @default 1000
+   */
+  yieldKeysScanBatchSize?: number;
+  /**
+   * The namespace to use for the keys in the database.
+   */
+  namespace?: string;
+}
+
+/**
+ * Class that extends the BaseStore class to interact with an Upstash Redis
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
  */
-export class RedisByteStore extends BaseStore<string, Uint8Array> {
+export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
 
-  protected client: Redis;
-
-  protected ttl?: number;
+  protected client: UpstashRedis;
 
   protected namespace?: string;
 
   protected yieldKeysScanBatchSize = 1000;
 
-  constructor(fields: {
-    client: Redis;
-    ttl?: number;
-    namespace?: string;
-    yieldKeysScanBatchSize?: number;
-  }) {
+  private sessionTTL?: number;
+
+  constructor(fields: UpstashRedisStoreInput) {
     super(fields);
-    this.client = fields.client;
-    this.ttl = fields.ttl;
-    this.namespace = fields.namespace;
+    if (fields.client) {
+      this.client = fields.client;
+    } else if (fields.config) {
+      this.client = new UpstashRedis(fields.config);
+    } else {
+      throw new Error(
+        `Upstash Redis store requires either a config object or a pre-configured client.`
+      );
+    }
+    this.sessionTTL = fields.sessionTTL;
     this.yieldKeysScanBatchSize =
       fields.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
+    this.namespace = fields.namespace;
   }
 
   _getPrefixedKey(key: string) {
@@ -49,24 +71,30 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
   }
 
   /**
-   * Gets multiple keys from the Redis database.
+   * Gets multiple keys from the Upstash Redis database.
    * @param keys Array of keys to be retrieved.
    * @returns An array of retrieved values.
    */
   async mget(keys: string[]) {
+    const encoder = new TextEncoder();
+
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
-    const retrievedValues = await this.client.mgetBuffer(prefixedKeys);
+    const retrievedValues = await this.client.mget<Uint8Array[]>(
+      ...prefixedKeys
+    );
     return retrievedValues.map((value) => {
       if (!value) {
         return undefined;
+      } else if (typeof value === "object") {
+        return encoder.encode(JSON.stringify(value));
       } else {
-        return value;
+        return encoder.encode(value);
       }
     });
   }
 
   /**
-   * Sets multiple keys in the Redis database.
+   * Sets multiple keys in the Upstash Redis database.
    * @param keyValuePairs Array of key-value pairs to be set.
    * @returns Promise that resolves when all keys have been set.
    */
@@ -78,8 +106,8 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
     ]);
     const pipeline = this.client.pipeline();
     for (const [key, value] of encodedKeyValuePairs) {
-      if (this.ttl) {
-        pipeline.set(key, value, "EX", this.ttl);
+      if (this.sessionTTL) {
+        pipeline.setex(key, this.sessionTTL, value);
       } else {
         pipeline.set(key, value);
       }
@@ -88,7 +116,7 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
   }
 
   /**
-   * Deletes multiple keys from the Redis database.
+   * Deletes multiple keys from the Upstash Redis database.
    * @param keys Array of keys to be deleted.
    * @returns Promise that resolves when all keys have been deleted.
    */
@@ -97,36 +125,30 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
   }
 
   /**
-   * Yields keys from the Redis database.
-   * @param prefix Optional prefix to filter the keys.
-   * @returns An AsyncGenerator that yields keys from the Redis database.
+   * Yields keys from the Upstash Redis database.
+   * @param prefix Optional prefix to filter the keys. A wildcard (*) is always appended to the end.
+   * @returns An AsyncGenerator that yields keys from the Upstash Redis database.
    */
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
     let pattern;
     if (prefix) {
       const wildcardPrefix = prefix.endsWith("*") ? prefix : `${prefix}*`;
-      pattern = this._getPrefixedKey(wildcardPrefix);
+      pattern = `${this._getPrefixedKey(wildcardPrefix)}*`;
     } else {
       pattern = this._getPrefixedKey("*");
     }
-    let [cursor, batch] = await this.client.scan(
-      0,
-      "MATCH",
-      pattern,
-      "COUNT",
-      this.yieldKeysScanBatchSize
-    );
+    let [cursor, batch] = await this.client.scan(0, {
+      match: pattern,
+      count: this.yieldKeysScanBatchSize,
+    });
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
     }
-    while (cursor !== "0") {
-      [cursor, batch] = await this.client.scan(
-        cursor,
-        "MATCH",
-        pattern,
-        "COUNT",
-        this.yieldKeysScanBatchSize
-      );
+    while (cursor !== 0) {
+      [cursor, batch] = await this.client.scan(cursor, {
+        match: pattern,
+        count: this.yieldKeysScanBatchSize,
+      });
       for (const key of batch) {
         yield this._getDeprefixedKey(key);
       }

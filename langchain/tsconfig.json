@@ -39,6 +39,7 @@
       "src/agents/toolkits/index.ts",
       "src/agents/toolkits/aws_sfn.ts",
       "src/agents/toolkits/sql/index.ts",
+      "src/agents/format_scratchpad.ts",
       "src/base_language/index.ts",
       "src/tools/index.ts",
       "src/tools/aws_lambda.ts",
@@ -250,6 +251,7 @@
       "src/storage/in_memory.ts",
       "src/storage/ioredis.ts",
       "src/storage/vercel_kv.ts",
+      "src/storage/upstash_redis.ts",
       "src/graphs/neo4j_graph.ts",
       "src/hub.ts",
       "src/util/math.ts",
@@ -279,7 +281,7 @@
     "excludeExternals": true,
     "excludeNotDocumented": false,
     "includeVersion": true,
-    "sourceLinkTemplate": "https://github.com/hwchase17/langchainjs/blob/{gitRevision}/{path}#L{line}",
+    "sourceLinkTemplate": "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
     "readme": "none",
     "out": "docs"
   }
