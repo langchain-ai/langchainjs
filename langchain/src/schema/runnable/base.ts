@@ -14,6 +14,7 @@ import { Serializable } from "../../load/serializable.js";
 import { IterableReadableStream } from "../../util/stream.js";
 import { RunnableConfig, getCallbackMangerForConfig } from "./config.js";
 import { AsyncCaller } from "../../util/async_caller.js";
+import { AddableObject } from "./utils.js";
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput
@@ -1322,6 +1323,94 @@ export class RunnableMap<RunInput> extends Runnable<
     }
     await runManager?.handleChainEnd(output);
     return output;
+  }
+
+  async *_transform(
+    input: AsyncIterator<RunInput>,
+    options?: Partial<BaseCallbackConfig>
+  ): AsyncIterableIterator<AddableObject> {
+    const callbackManager_ = await getCallbackMangerForConfig(options);
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      {
+        input,
+      },
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      options?.runName
+    );
+
+    const steps = { ...this.steps };
+
+    // Creating named generators
+    const namedGenerators = Object.entries(steps).map(([name, step]) => [
+      name,
+      step.transform(
+        input,
+        runManager?.getChild(`map:key:${name}`)
+      ), // Assume patchConfig is implemented
+    ]);
+
+    const tasks: Map<
+      Promise<unknown>,
+      [string, AsyncIterator<unknown>]
+    > = new Map();
+
+    for (const [stepName, generator] of namedGenerators) {
+      const task = generator;
+      tasks.set(task, [stepName, generator]);
+    }
+
+    while (tasks.size) {
+      const completedTasks = await Promise.race(Array.from(tasks.keys()));
+
+      for (const task of completedTasks) {
+        const [stepName, generator] = tasks.get(task)!;
+        tasks.delete(task);
+
+        try {
+          const chunk = new AddableObject({ [stepName]: await task });
+          yield chunk;
+          const newTask = generator;
+          tasks.set(newTask, [stepName, generator]);
+        } catch (err) {
+          if (err instanceof StopAsyncIteration) {
+            continue;
+          }
+          throw err;
+        }
+      }
+    }
+  }
+
+  async *transform(
+    input: AsyncIterator<RunInput>,
+    config?: RunnableConfig
+  ): AsyncIterableIterator<Record<string, any>> {
+    for await (const chunk of this._transformStreamWithConfig<
+      RunInput,
+      Record<string, any>
+    >(input, this._transform, config)) {
+      yield chunk;
+    }
+  }
+
+  async *_streamIterator(
+    input: RunInput,
+    options?: Partial<BaseCallbackConfig>
+  ): AsyncGenerator<Record<string, any>> {
+    yield this.invoke(input, options);
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<IterableReadableStream<Record<string, any>>> {
+    return IterableReadableStream.fromAsyncGenerator(
+      this._streamIterator(input, options)
+    );
   }
 }
 
