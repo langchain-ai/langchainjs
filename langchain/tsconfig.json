@@ -279,7 +279,7 @@
     "excludeExternals": true,
     "excludeNotDocumented": false,
     "includeVersion": true,
-    "sourceLinkTemplate": "https://github.com/hwchase17/langchainjs/blob/{gitRevision}/{path}#L{line}",
+    "sourceLinkTemplate": "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
     "readme": "none",
     "out": "docs"
   }
