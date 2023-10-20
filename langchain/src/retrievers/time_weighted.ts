@@ -23,7 +23,7 @@ export const BUFFER_IDX = "buffer_idx";
 
 /**
  * TimeWeightedVectorStoreRetriever retrieves documents based on their time-weighted relevance.
- * ref: https://github.com/hwchase17/langchain/blob/master/langchain/retrievers/time_weighted_retriever.py
+ * ref: https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/retrievers/time_weighted_retriever.py
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   static lc_name() {
