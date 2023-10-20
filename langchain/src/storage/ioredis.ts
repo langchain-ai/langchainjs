@@ -104,7 +104,8 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
     let pattern;
     if (prefix) {
-      pattern = this._getPrefixedKey(prefix);
+      const wildcardPrefix = prefix.endsWith("*") ? prefix : `${prefix}*`;
+      pattern = this._getPrefixedKey(wildcardPrefix);
     } else {
       pattern = this._getPrefixedKey("*");
     }
