@@ -72,12 +72,16 @@ const vectorStore = await CassandraStore.fromTexts(
   cassandraConfig
 );
 
+```
+
 ## Querying docs
 
+```typescript
 const results = await vectorStore.similaritySearch("Green yellow purple", 1);
+```
 
 or filtered query:
 
-const results = await vectorStore.similaritySearch("B", 1, {name: "Bubba"});
-
+```typescript
+const results = await vectorStore.similaritySearch("B", 1, { name: "Bubba" });
 ```

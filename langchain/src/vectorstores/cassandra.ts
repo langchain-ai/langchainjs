@@ -15,6 +15,8 @@ export interface Index {
   value: string;
 }
 
+export type CassandraVectorStoreFilterType = string[];
+
 export interface CassandraLibArgs extends DseClientOptions {
   table: string;
   keyspace: string;
@@ -104,14 +106,13 @@ export class CassandraStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: CassandraVectorStoreFilterType
   ): Promise<[Document, number][]> {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
     const queryStr = this.buildSearchQuery(query, k, filter);
-    console.log(queryStr);
     const queryResultSet = await this.client.execute(queryStr);
 
     return queryResultSet?.rows.map((row, index) => {
@@ -256,7 +257,7 @@ export class CassandraStore extends VectorStore {
     return queries;
   }
 
-  private buildWhereClause(filter: this["FilterType"]): string {
+  private buildWhereClause(filter: CassandraVectorStoreFilterType): string {
     const whereClause = Object.entries(filter)
       .map(([key, value]) => `${key} = '${value}'`)
       .join(" AND ");
@@ -274,7 +275,7 @@ export class CassandraStore extends VectorStore {
   private buildSearchQuery(
     query: number[],
     k: number = 1,
-    filter?: this["FilterType"]
+    filter?: CassandraVectorStoreFilterType
   ): string {
     const whereClause = filter ? this.buildWhereClause(filter) : "";
 
