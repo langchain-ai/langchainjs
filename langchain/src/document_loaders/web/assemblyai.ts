@@ -40,25 +40,6 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
   protected transcriptId?: string;
 
   /**
-   * Creates a new AudioTranscriptLoader.
-   * @param CreateTranscriptParameters The parameters to create the transcript.
-   * @param assemblyAIOptions The options to configure the AssemblyAI loader.
-   * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
-   */
-  constructor(
-    CreateTranscriptParameters: CreateTranscriptParameters,
-    assemblyAIOptions?: AssemblyAIOptions
-  );
-
-  /**
-   * Retrevies an existing transcript by its ID.
-   * @param transcriptId The ID of the transcript to retrieve.
-   * @param assemblyAIOptions The options to configure the AssemblyAI loader.
-   * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
-   */
-  constructor(transcriptId: string, assemblyAIOptions?: AssemblyAIOptions);
-
-  /**
    * Retrevies an existing transcript by its ID.
    * @param params The parameters to create the transcript, or the ID of the transcript to retrieve.
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
@@ -192,7 +173,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
     private subtitleFormat: SubtitleFormat = 'srt',
     assemblyAIOptions?: AssemblyAIOptions
   ) {
-    super(params as string, assemblyAIOptions);
+    super(params, assemblyAIOptions);
     this.subtitleFormat = subtitleFormat;
   }
 
