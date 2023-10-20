@@ -2,11 +2,27 @@ import { Redis } from "@upstash/redis";
 import { AIMessage, HumanMessage } from "langchain/schema";
 import { UpstashRedisStore } from "langchain/storage/upstash_redis";
 
+// Pro tip: define a helper function for getting your client
+// along with handling the case where your environment variables
+// are not set.
+const getClient = () => {
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
+    throw new Error(
+      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set in the environment"
+    );
+  }
+  const client = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+  return client;
+};
+
 // Define the client and store
-const client = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+const client = getClient();
 const store = new UpstashRedisStore({
   client,
 });
