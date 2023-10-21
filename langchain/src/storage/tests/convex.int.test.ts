@@ -22,28 +22,28 @@ import { api } from "./convex/convex/_generated/api.js";
 const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 
 test.skip("Convex set, get, delete", async () => {
-  await client.mutation(api.test.reset);
+  await client.mutation(api.lib.reset);
 
   const value1 = new Date().toISOString();
   const value2 = new Date().toISOString() + new Date().toISOString();
 
-  await client.action(api.test.mset, {
+  await client.action(api.lib.mset, {
     pairs: [
       { key: "key1", value: value1 },
       { key: "key2", value: value2 },
     ],
   });
 
-  const retrievedValues = await client.action(api.test.mget, {
+  const retrievedValues = await client.action(api.lib.mget, {
     keys: ["key1", "key2"],
   });
   expect(retrievedValues).toEqual([value1, value2]);
 
-  await client.action(api.test.mdelete, {
+  await client.action(api.lib.mdelete, {
     keys: ["key1", "key2"],
   });
 
-  const retrievedValues2 = await client.action(api.test.mget, {
+  const retrievedValues2 = await client.action(api.lib.mget, {
     keys: ["key1", "key2"],
   });
   expect(retrievedValues2).toEqual(["undefined", "undefined"]);

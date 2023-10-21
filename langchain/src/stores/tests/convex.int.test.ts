@@ -24,9 +24,9 @@ const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 const openAIApiKey = process.env.OPENAI_API_KEY as string;
 
 test.skip("Convex persisted LLM chat", async () => {
-  await client.mutation(api.test.reset);
+  await client.mutation(api.lib.reset);
 
-  const { response: result1 } = await client.action(api.test.chat, {
+  const { response: result1 } = await client.action(api.lib.chat, {
     openAIApiKey,
     sessionId: "1",
     input: "Hi! I'm Jim.",
@@ -34,7 +34,7 @@ test.skip("Convex persisted LLM chat", async () => {
 
   console.log({ result1 });
 
-  const { response: result2 } = await client.action(api.test.chat, {
+  const { response: result2 } = await client.action(api.lib.chat, {
     openAIApiKey,
     sessionId: "1",
     input: "What did I just say my name was?",
@@ -44,7 +44,7 @@ test.skip("Convex persisted LLM chat", async () => {
 
   expect(result2).toContain("Jim");
 
-  const { response: result3 } = await client.action(api.test.chat, {
+  const { response: result3 } = await client.action(api.lib.chat, {
     openAIApiKey,
     sessionId: "2",
     input: "What did I just say my name was?",

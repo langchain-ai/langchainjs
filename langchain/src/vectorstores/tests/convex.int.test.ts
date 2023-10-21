@@ -24,15 +24,15 @@ const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 const openAIApiKey = process.env.OPENAI_API_KEY as string;
 
 test.skip("Convex ingest, similaritySearch", async () => {
-  await client.mutation(api.test.reset);
+  await client.mutation(api.lib.reset);
 
-  await client.action(api.test.ingest, {
+  await client.action(api.lib.ingest, {
     openAIApiKey,
     texts: ["Hello world", "Bye bye", "hello nice world"],
     metadatas: [{ id: 2 }, { id: 1 }, { id: 3 }],
   });
 
-  const metadatas = await client.action(api.test.similaritySearch, {
+  const metadatas = await client.action(api.lib.similaritySearch, {
     openAIApiKey,
     query: "hello world",
   });
