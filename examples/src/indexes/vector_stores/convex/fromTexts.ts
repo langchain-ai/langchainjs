@@ -4,7 +4,7 @@ import { ConvexVectorStore } from "langchain/vectorstores/convex";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { action } from "./_generated/server.js";
 
-export const injest = action({
+export const ingest = action({
   args: {},
   handler: async (ctx) => {
     await ConvexVectorStore.fromTexts(

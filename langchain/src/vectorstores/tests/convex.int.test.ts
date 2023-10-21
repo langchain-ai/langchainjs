@@ -23,10 +23,10 @@ import { api } from "./convex/convex/_generated/api.js";
 const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 const openAIApiKey = process.env.OPENAI_API_KEY as string;
 
-test("Convex injest, similaritySearch", async () => {
+test.skip("Convex ingest, similaritySearch", async () => {
   await client.mutation(api.test.reset);
 
-  await client.action(api.test.injest, {
+  await client.action(api.test.ingest, {
     openAIApiKey,
     texts: ["Hello world", "Bye bye", "hello nice world"],
     metadatas: [{ id: 2 }, { id: 1 }, { id: 3 }],

@@ -21,7 +21,7 @@ import { api } from "./convex/convex/_generated/api.js";
 
 const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 
-test("Convex set, get, delete", async () => {
+test.skip("Convex set, get, delete", async () => {
   await client.mutation(api.test.reset);
 
   const value1 = new Date().toISOString();

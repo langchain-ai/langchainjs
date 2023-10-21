@@ -471,6 +471,7 @@ const requiresOptionalDependency = [
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub",
+  "util/convex",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

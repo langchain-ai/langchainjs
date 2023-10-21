@@ -12,7 +12,7 @@ export const reset = mutation({
   },
 });
 
-export const injest = action({
+export const ingest = action({
   args: {
     openAIApiKey: v.string(),
     texts: v.array(v.string()),

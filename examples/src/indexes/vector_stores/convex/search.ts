@@ -5,7 +5,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { v } from "convex/values";
 import { action } from "./_generated/server.js";
 
-export const injest = action({
+export const search = action({
   args: {
     query: v.string(),
   },

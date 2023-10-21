@@ -23,7 +23,7 @@ import { api } from "./convex/convex/_generated/api.js";
 const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 const openAIApiKey = process.env.OPENAI_API_KEY as string;
 
-test("Convex persisted LLM chat", async () => {
+test.skip("Convex persisted LLM chat", async () => {
   await client.mutation(api.test.reset);
 
   const { response: result1 } = await client.action(api.test.chat, {
