@@ -2,11 +2,9 @@ import { AgentExecutor } from "langchain/agents";
 import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
-  BaseChatPromptTemplate,
   ChatPromptTemplate,
   MessagesPlaceholder,
   PromptTemplate,
-  SerializedBasePromptTemplate,
 } from "langchain/prompts";
 import {
   AgentAction,
@@ -14,7 +12,6 @@ import {
   AgentStep,
   BaseMessage,
   InputValues,
-  PartialValues,
   SystemMessage,
 } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
@@ -38,77 +35,63 @@ const SUFFIX = `Begin!
 
 Question: {input}`;
 
-class CustomPromptTemplate extends BaseChatPromptTemplate {
-  tools: Array<Tool>;
-
-  constructor(args: { tools: Array<Tool>; inputVariables: Array<string> }) {
-    super({ inputVariables: args.inputVariables });
-    this.tools = args.tools;
+async function formatMessages(
+  values: InputValues,
+  tools: Tool[]
+): Promise<Array<BaseMessage>> {
+  /** Check input and intermediate steps are both inside values */
+  if (!("input" in values) || !("intermediate_steps" in values)) {
+    throw new Error("Missing input or agent_scratchpad from values.");
   }
-
-  _getPromptType(): string {
-    throw new Error("Not implemented");
-  }
-
-  async formatMessages(values: InputValues): Promise<Array<BaseMessage>> {
-    /** Check input and intermediate steps are both inside values */
-    if (!("input" in values) || !("intermediate_steps" in values)) {
-      throw new Error("Missing input or agent_scratchpad from values.");
-    }
-    /** Extract and case the intermediateSteps from values as Array<AgentStep> */
-    const intermediateSteps = values.intermediate_steps as Array<AgentStep>;
-    /** Call the helper `formatForOpenAIFunctions` which returns the steps as `Array<BaseMessage>`  */
-    const agentScratchpad = formatForOpenAIFunctions(intermediateSteps);
-    /** Construct the tool strings */
-    const toolStrings = this.tools
-      .map((tool) => `${tool.name}: ${tool.description}`)
-      .join("\n");
-    const toolNames = this.tools.map((tool) => tool.name).join("\n");
-    /** Create templates and format the instructions and suffix prompts */
-    const prefixTemplate = new PromptTemplate({
-      template: PREFIX,
-      inputVariables: ["tools"],
-    });
-    const instructionsTemplate = new PromptTemplate({
-      template: TOOL_INSTRUCTIONS_TEMPLATE,
-      inputVariables: ["tool_names"],
-    });
-    const suffixTemplate = new PromptTemplate({
-      template: SUFFIX,
-      inputVariables: ["input"],
-    });
-    /** Format both templates by passing in the input variables */
-    const formattedPrefix = await prefixTemplate.format({
-      tools: toolStrings,
-    });
-    const formattedInstructions = await instructionsTemplate.format({
-      tool_names: toolNames,
-    });
-    const formattedSuffix = await suffixTemplate.format({
-      input: values.input,
-    });
-    /** Construct the chat prompt template */
-    const chatPrompt = ChatPromptTemplate.fromMessages([
-      new SystemMessage(formattedPrefix),
-      new SystemMessage(formattedInstructions),
-      new MessagesPlaceholder("agent_scratchpad"),
-      new SystemMessage(formattedSuffix),
-    ]);
-    /** Convert the prompt template to a string */
-    const formatted = await chatPrompt.format({
-      agent_scratchpad: agentScratchpad,
-    });
-    /** Return the formatted message */
-    return [new SystemMessage(formatted)];
-  }
-
-  partial(_values: PartialValues): Promise<BaseChatPromptTemplate> {
-    throw new Error("Not implemented");
-  }
-
-  serialize(): SerializedBasePromptTemplate {
-    throw new Error("Not implemented");
-  }
+  /** Extract and case the intermediateSteps from values as Array<AgentStep> or an empty array if none are passed */
+  const intermediateSteps = values.intermediate_steps
+    ? (values.intermediate_steps as Array<AgentStep>)
+    : [];
+  /** Call the helper `formatForOpenAIFunctions` which returns the steps as `Array<BaseMessage>`  */
+  const agentScratchpad = formatForOpenAIFunctions(intermediateSteps);
+  console.log("agentScratchpad", agentScratchpad);
+  /** Construct the tool strings */
+  const toolStrings = tools
+    .map((tool) => `${tool.name}: ${tool.description}`)
+    .join("\n");
+  const toolNames = tools.map((tool) => tool.name).join(",\n");
+  /** Create templates and format the instructions and suffix prompts */
+  const prefixTemplate = new PromptTemplate({
+    template: PREFIX,
+    inputVariables: ["tools"],
+  });
+  const instructionsTemplate = new PromptTemplate({
+    template: TOOL_INSTRUCTIONS_TEMPLATE,
+    inputVariables: ["tool_names"],
+  });
+  const suffixTemplate = new PromptTemplate({
+    template: SUFFIX,
+    inputVariables: ["input"],
+  });
+  /** Format both templates by passing in the input variables */
+  const formattedPrefix = await prefixTemplate.format({
+    tools: toolStrings,
+  });
+  const formattedInstructions = await instructionsTemplate.format({
+    tool_names: toolNames,
+  });
+  const formattedSuffix = await suffixTemplate.format({
+    input: values.input,
+  });
+  /** Construct the chat prompt template */
+  const chatPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessage(formattedPrefix),
+    new SystemMessage(formattedInstructions),
+    new MessagesPlaceholder("agent_scratchpad"),
+    new SystemMessage(formattedSuffix),
+  ]);
+  /** Convert the prompt template to a string */
+  const formatted = await chatPrompt.format({
+    agent_scratchpad: agentScratchpad,
+  });
+  /** Return the formatted message */
+  const formattedAsSystem = new SystemMessage(formatted);
+  return [formattedAsSystem];
 }
 
 /** Define the custom output parser */
@@ -139,7 +122,6 @@ function customOutputParser(message: BaseMessage): AgentAction | AgentFinish {
 const model = new ChatOpenAI({ temperature: 0 }).bind({
   stop: ["\nObservation"],
 });
-/** B */
 /** Define the tools */
 const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -149,16 +131,14 @@ const tools = [
   }),
   new Calculator(),
 ];
+
 /** Define the Runnable with LCEL */
 const runnable = RunnableSequence.from([
   {
     input: (values: InputValues) => values.input,
-    intermediate_steps: (values: InputValues) => values.intermediate_steps,
+    intermediate_steps: (values: InputValues) => values.steps,
   },
-  new CustomPromptTemplate({
-    tools,
-    inputVariables: ["input", "intermediate_steps"],
-  }),
+  /** @TODO add prompt here */
   model,
   customOutputParser,
 ]);
