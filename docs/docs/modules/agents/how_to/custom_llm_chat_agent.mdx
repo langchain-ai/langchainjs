@@ -1,3 +1,7 @@
+import CodeBlock from "@theme/CodeBlock";
+import ChatModelExample from "@examples/agents/custom_llm_agent_chat.ts";
+import RunnableExample from "@examples/agents/custom_llm_agent_chat_runnable.ts";
+
 # Custom LLM Agent (with a ChatModel)
 
 This notebook goes through how to create your own custom agent based on a chat model.
@@ -20,7 +24,10 @@ The LLMAgent is used in an AgentExecutor. This AgentExecutor can largely be thou
 
 `AgentFinish` is a response that contains the final message to be sent back to the user. This should be used to end an agent run.
 
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/agents/custom_llm_agent_chat.ts";
+# With LCEL
 
-<CodeBlock language="typescript">{Example}</CodeBlock>
+<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+
+# With Chat Model
+
+<CodeBlock language="typescript">{ChatModelExample}</CodeBlock>
