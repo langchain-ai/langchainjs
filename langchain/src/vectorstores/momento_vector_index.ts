@@ -111,21 +111,6 @@ export class MomentoVectorIndex extends VectorStore {
   }
 
   /**
-   * Converts the metadata to a format that can be stored in the index.
-   *
-   * @remarks stringifies all values in the metadata object
-   * @param metadata The metadata to convert.
-   * @returns The converted metadata.
-   */
-  private static prepareMetadata(
-    metadata: Record<string, any>
-  ): Record<string, string> {
-    return Object.fromEntries(
-      Object.entries(metadata).map(([key, val]) => [key, JSON.stringify(val)])
-    );
-  }
-
-  /**
    * Converts the documents to a format that can be stored in the index.
    *
    * This is necessary because the Momento Vector Index requires that the metadata
@@ -144,7 +129,7 @@ export class MomentoVectorIndex extends VectorStore {
       id: ids[idx],
       vector,
       metadata: {
-        ...MomentoVectorIndex.prepareMetadata(documents[idx].metadata),
+        ...documents[idx].metadata,
         [this.textField]: documents[idx].pageContent,
       },
     }));
@@ -283,11 +268,11 @@ export class MomentoVectorIndex extends VectorStore {
 
       return response.hits().map((hit) => [
         new Document({
-          pageContent: hit.metadata[this.textField] ?? "",
+          pageContent: hit.metadata[this.textField]?.toString() ?? "",
           metadata: Object.fromEntries(
-            Object.entries(hit.metadata)
-              .filter(([key]) => key !== this.textField)
-              .map(([key, val]) => [key, JSON.parse(val)])
+            Object.entries(hit.metadata).filter(
+              ([key]) => key !== this.textField
+            )
           ),
         }),
         hit.distance,
