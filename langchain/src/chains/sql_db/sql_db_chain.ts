@@ -42,6 +42,8 @@ export interface SqlDatabaseChainInput extends ChainInputs {
  * to read and scope to the tables that are needed.
  * Optionally, use the includesTables or ignoreTables class parameters
  * to limit which tables can/cannot be accessed.
+ *
+ * @link See https://js.langchain.com/docs/security for more information.
  */
 export class SqlDatabaseChain extends BaseChain {
   static lc_name() {
