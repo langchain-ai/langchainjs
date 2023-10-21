@@ -33,3 +33,5 @@ Chinook_Sqlite.sql
 firebase-debug.log
 firestore-debug.log
 tmp/
+
+**/convex/_generated
