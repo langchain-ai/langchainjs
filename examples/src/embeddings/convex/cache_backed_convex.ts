@@ -1,6 +1,5 @@
 "use node";
 
-import { v } from "convex/values";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CacheBackedEmbeddings } from "langchain/embeddings/cache_backed";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
