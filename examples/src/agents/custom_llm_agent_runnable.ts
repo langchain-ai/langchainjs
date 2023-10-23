@@ -1,5 +1,5 @@
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { OpenAI } from "langchain/llms/openai";
 import { PromptTemplate } from "langchain/prompts";
 import {
   AgentAction,
@@ -14,10 +14,10 @@ import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 
 /**
- * Instantiate the chat model and bind the stop token
+ * Instantiate the LLM and bind the stop token
  * @important The stop token must be set, if not the LLM will happily continue generating text forever.
  */
-const model = new ChatOpenAI({ temperature: 0 }).bind({
+const model = new OpenAI({ temperature: 0 }).bind({
   stop: ["\nObservation"],
 });
 /** Define the tools */
@@ -107,8 +107,7 @@ async function formatMessages(
 }
 
 /** Define the custom output parser */
-function customOutputParser(message: BaseMessage): AgentAction | AgentFinish {
-  const text = message.content;
+function customOutputParser(text: string): AgentAction | AgentFinish {
   /** If the input includes "Final Answer" return as an instance of `AgentFinish` */
   if (text.includes("Final Answer:")) {
     const parts = text.split("Final Answer:");
@@ -154,5 +153,5 @@ const result = await executor.call({ input });
 
 console.log(`Got output ${result.output}`);
 /**
- * Got output Harry Styles' current age raised to the 0.23 power is approximately 2.1156502324195268.
+ * Got output Harry Styles, Olivia Wilde's boyfriend, is 29 years old and his age raised to the 0.23 power is 2.169459462491557.
  */
