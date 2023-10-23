@@ -1,0 +1,108 @@
+# OpenAI Function calling
+
+import CodeBlock from "@theme/CodeBlock";
+import OpenAIFunctionsExample from "@examples/models/chat/openai_functions.ts";
+import OpenAIFunctionsZodExample from "@examples/models/chat/openai_functions_zod.ts";
+
+Function calling is a useful way to get structured output from an LLM for a wide range of purposes.
+By providing schemas for "functions", the LLM will choose one and attempt to output a response matching that schema.
+
+Though the name implies that the LLM is actually running code and calling a function, it is more accurate to say that the LLM is
+populating parameters that match the schema for the arguments a hypothetical function would take. We can use these
+structured responses for whatever we'd like!
+
+Function calling serves as a building block for several other popular features in LangChain, including the [`OpenAI Functions agent`](/docs/modules/agents/agent_types/openai_functions_agent)
+and [`structured output chain`](/docs/modules/chains/popular/structured_output). In addition to these more specific use cases, you can also attach function parameters
+directly to the model and call it, as shown below.
+
+## Usage
+
+There are two main ways to apply functions to your OpenAI calls.
+
+The first and most simple is by attaching a function directly to the `.invoke({})` method:
+
+```typescript
+/* Define your function schema */
+const extractionFunctionSchema = {...}
+
+/* Instantiate ChatOpenAI class */
+const model = new ChatOpenAI({ modelName: "gpt-4" });
+
+/**
+ * Call the .invoke method on the model, directly passing
+ * the function arguments as call args.
+ */
+const result = await model.invoke([new HumanMessage("What a beautiful day!")], {
+  functions: [extractionFunctionSchema],
+  function_call: { name: "extractor" },
+});
+
+console.log({ result });
+```
+
+The second way is by directly binding the function to your model. Binding function arguments to your model is useful when you want to call the same function twice.
+Calling the `.bind({})` method attaches any call arguments passed in to all future calls to the model.
+
+```typescript
+/* Define your function schema */
+const extractionFunctionSchema = {...}
+
+/* Instantiate ChatOpenAI class and bind function arguments to the model */
+const model = new ChatOpenAI({ modelName: "gpt-4" }).bind({
+  functions: [extractionFunctionSchema],
+  function_call: { name: "extractor" },
+});
+
+/* Now we can call the model without having to pass the function arguments in again */
+const result = await model.invoke([new HumanMessage("What a beautiful day!")]);
+
+console.log({ result });
+```
+
+OpenAI requires parameter schemas in the format below, where `parameters` must be [JSON Schema](https://json-schema.org/).
+When adding call arguments to your model, specifying the `function_call` argument will force the model to return a response using the specified function.
+This is useful if you have multiple schemas you'd like the model to pick from.
+
+Example function schema:
+
+```typescript
+const extractionFunctionSchema = {
+  name: "extractor",
+  description: "Extracts fields from the input.",
+  parameters: {
+    type: "object",
+    properties: {
+      tone: {
+        type: "string",
+        enum: ["positive", "negative"],
+        description: "The overall tone of the input",
+      },
+      word_count: {
+        type: "number",
+        description: "The number of words in the input",
+      },
+      chat_response: {
+        type: "string",
+        description: "A response to the human's input",
+      },
+    },
+    required: ["tone", "word_count", "chat_response"],
+  },
+};
+```
+
+Now to put it all together:
+
+<CodeBlock language="typescript">{OpenAIFunctionsExample}</CodeBlock>
+
+## Usage with Zod
+
+An alternative way to declare function schema is to use the [Zod](https://zod.dev) schema library with the
+[zod-to-json-schema](https://www.npmjs.com/package/zod-to-json-schema) utility package to translate it:
+
+```bash npm2yarn
+npm install zod
+npm install zod-to-json-schema
+```
+
+<CodeBlock language="typescript">{OpenAIFunctionsZodExample}</CodeBlock>

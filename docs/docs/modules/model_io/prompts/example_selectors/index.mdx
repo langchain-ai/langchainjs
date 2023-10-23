@@ -1,0 +1,17 @@
+# Example selectors
+
+If you have a large number of examples, you may need to select which ones to include in the prompt. The Example Selector is the class responsible for doing so.
+
+The base interface is defined as below:
+
+If you have a large number of examples, you may need to programmatically select which ones to include in the prompt. The ExampleSelector is the class responsible for doing so. The base interface is defined as below.
+
+```typescript
+class BaseExampleSelector {
+  addExample(example: Example): Promise<void | string>;
+
+  selectExamples(input_variables: Example): Promise<Example[]>;
+}
+```
+
+It needs to expose a `selectExamples` - this takes in the input variables and then returns a list of examples method - and an `addExample` method, which saves an example for later selection. It is up to each specific implementation as to how those examples are saved and selected.

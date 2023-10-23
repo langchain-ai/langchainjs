@@ -1,0 +1,53 @@
+{
+  "textPrompt": {
+    "value": "What would be a good name for a company that makes {{30E275F8-0B60-4E71-843D-9865F4D4EFD4:product:​}}?",
+    "variables": [
+      {
+        "variableId": "30E275F8-0B60-4E71-843D-9865F4D4EFD4",
+        "displayName": "product"
+      }
+    ]
+  },
+  "runSettings": {
+    "temperature": 0.7,
+    "model": "models/text-bison-001",
+    "candidateCount": 1,
+    "topP": 0.95,
+    "topK": 40,
+    "maxOutputTokens": 1024,
+    "safetySettings": [
+      {
+        "category": "HARM_CATEGORY_DEROGATORY",
+        "threshold": "BLOCK_LOW_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_TOXICITY",
+        "threshold": "BLOCK_LOW_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_VIOLENCE",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_SEXUAL",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_MEDICAL",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_DANGEROUS",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      }
+    ]
+  },
+  "testExamples": [
+    {
+      "inputBindings": {
+        "30E275F8-0B60-4E71-843D-9865F4D4EFD4": ""
+      },
+      "modelResponses": [{}]
+    }
+  ]
+}

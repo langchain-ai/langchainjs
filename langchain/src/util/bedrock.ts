@@ -104,6 +104,8 @@ export class BedrockLLMInputOutputAdapter {
     } else if (provider === "ai21") {
       return responseBody?.completions?.[0]?.data?.text ?? "";
     }
-    return responseBody.outputText;
+
+    // I haven't been able to get a response with more than one result in it.
+    return responseBody.results?.[0]?.outputText;
   }
 }

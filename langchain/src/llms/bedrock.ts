@@ -96,28 +96,37 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const chunks = [];
-    for await (const chunk of this._streamResponseChunks(
-      prompt,
-      options,
-      runManager
-    )) {
-      chunks.push(chunk);
+    const service = "bedrock-runtime";
+    const endpointHost =
+      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
+    const provider = this.model.split(".")[0];
+    const response = await this._signedFetch(prompt, options, {
+      bedrockMethod: "invoke",
+      endpointHost,
+      provider,
+    });
+    const json = await response.json();
+    if (!response.ok) {
+      throw new Error(
+        `Error ${response.status}: ${json.message ?? JSON.stringify(json)}`
+      );
     }
-    return chunks.map((chunk) => chunk.text).join("");
+    const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
+    return text;
   }
 
-  async *_streamResponseChunks(
+  async _signedFetch(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<GenerationChunk> {
-    const provider = this.model.split(".")[0];
-    const service = "bedrock-runtime";
-
+    fields: {
+      bedrockMethod: "invoke" | "invoke-with-response-stream";
+      endpointHost: string;
+      provider: string;
+    }
+  ) {
+    const { bedrockMethod, endpointHost, provider } = fields;
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
       prompt,
@@ -127,13 +136,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       this.modelKwargs
     );
 
-    const endpointHost =
-      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
-
-    const amazonMethod =
-      provider === "anthropic" ? "invoke-with-response-stream" : "invoke";
     const url = new URL(
-      `https://${endpointHost}/model/${this.model}/${amazonMethod}`
+      `https://${endpointHost}/model/${this.model}/${bedrockMethod}`
     );
 
     const request = new HttpRequest({
@@ -170,12 +174,34 @@ export class Bedrock extends LLM implements BaseBedrockInput {
           method: signedRequest.method,
         })
     );
+    return response;
+  }
+
+  async *_streamResponseChunks(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const provider = this.model.split(".")[0];
+    const bedrockMethod =
+      provider === "anthropic" ? "invoke-with-response-stream" : "invoke";
+
+    const service = "bedrock-runtime";
+    const endpointHost =
+      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
+
+    // Send request to AWS using the low-level fetch API
+    const response = await this._signedFetch(prompt, options, {
+      bedrockMethod,
+      endpointHost,
+      provider,
+    });
 
     if (response.status < 200 || response.status >= 300) {
       throw Error(
-        `Failed to access underlying url '${url}': got ${response.status} ${
-          response.statusText
-        }: ${await response.text()}`
+        `Failed to access underlying url '${endpointHost}': got ${
+          response.status
+        } ${response.statusText}: ${await response.text()}`
       );
     }
 

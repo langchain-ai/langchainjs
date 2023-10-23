@@ -45,12 +45,14 @@ export abstract class BaseTranslator<
    * @param defaultFilter The default filter.
    * @param generatedFilter The generated filter.
    * @param mergeType The type of merge to perform. Can be 'and', 'or', or 'replace'.
+   * @param forceDefaultFilter If true, the default filter will be used even if the generated filter is not empty.
    * @returns The merged filter, or undefined if both filters are empty.
    */
   abstract mergeFilters(
     defaultFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
     generatedFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
-    mergeType?: "and" | "or" | "replace"
+    mergeType?: "and" | "or" | "replace",
+    forceDefaultFilter?: boolean
   ): this["VisitStructuredQueryOutput"]["filter"] | undefined;
 }
 
@@ -169,7 +171,8 @@ export class BasicTranslator<
   mergeFilters(
     defaultFilter: VisitorStructuredQueryResult["filter"] | undefined,
     generatedFilter: VisitorStructuredQueryResult["filter"] | undefined,
-    mergeType = "and"
+    mergeType = "and",
+    forceDefaultFilter = false
   ): VisitorStructuredQueryResult["filter"] | undefined {
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
@@ -181,6 +184,9 @@ export class BasicTranslator<
       return generatedFilter;
     }
     if (isFilterEmpty(generatedFilter)) {
+      if (forceDefaultFilter) {
+        return defaultFilter;
+      }
       if (mergeType === "and") {
         return undefined;
       }
