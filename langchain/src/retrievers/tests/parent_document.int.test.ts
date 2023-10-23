@@ -113,7 +113,7 @@ test("Should return a part of a document if a parent splitter is passed", async 
 test("Should use a custom retriever to retrieve one doc", async () => {
   const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
   const docstore = new InMemoryStore();
-  const scoreThresholdRetriever = ScoreThresholdRetriever.fromVectorStore(
+  const childDocumentRetriever = ScoreThresholdRetriever.fromVectorStore(
     vectorstore,
     {
       minSimilarityScore: 0.01, // Essentially no threshold
@@ -123,7 +123,7 @@ test("Should use a custom retriever to retrieve one doc", async () => {
   const retriever = new ParentDocumentRetriever({
     vectorstore,
     docstore,
-    retriever: scoreThresholdRetriever,
+    childDocumentRetriever,
     parentSplitter: new RecursiveCharacterTextSplitter({
       chunkOverlap: 0,
       chunkSize: 500,

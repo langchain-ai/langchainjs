@@ -8,7 +8,7 @@ import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
 const docstore = new InMemoryStore();
-const scoreThresholdRetriever = ScoreThresholdRetriever.fromVectorStore(
+const childDocumentRetriever = ScoreThresholdRetriever.fromVectorStore(
   vectorstore,
   {
     minSimilarityScore: 0.01, // Essentially no threshold
@@ -18,7 +18,7 @@ const scoreThresholdRetriever = ScoreThresholdRetriever.fromVectorStore(
 const retriever = new ParentDocumentRetriever({
   vectorstore,
   docstore,
-  retriever: scoreThresholdRetriever,
+  childDocumentRetriever,
   // Optional, not required if you're already passing in split documents
   parentSplitter: new RecursiveCharacterTextSplitter({
     chunkOverlap: 0,

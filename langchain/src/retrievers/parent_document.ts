@@ -19,7 +19,7 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
    * A custom retriever to use when retrieving instead of
    * the `.similaritySearch` method of the vectorstore.
    */
-  retriever?: VectorStoreRetriever<VectorStore>;
+  childDocumentRetriever?: VectorStoreRetriever<VectorStore>;
 };
 
 /**
@@ -50,7 +50,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   protected parentK?: number;
 
-  retriever: VectorStoreRetriever<VectorStore> | undefined;
+  childDocumentRetriever: VectorStoreRetriever<VectorStore> | undefined;
 
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
@@ -61,14 +61,14 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.idKey = fields.idKey ?? this.idKey;
     this.childK = fields.childK;
     this.parentK = fields.parentK;
-    this.retriever = fields.retriever;
+    this.childDocumentRetriever = fields.childDocumentRetriever;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let subDocs: Document<Record<string, any>>[] = [];
-    if (this.retriever) {
-      subDocs = await this.retriever.getRelevantDocuments(query);
+    if (this.childDocumentRetriever) {
+      subDocs = await this.childDocumentRetriever.getRelevantDocuments(query);
     } else {
       subDocs = await this.vectorstore.similaritySearch(query, this.childK);
     }
@@ -145,8 +145,8 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       embeddedDocs.push(...taggedSubDocs);
       fullDocs[parentDocId] = parentDoc;
     }
-    if (this.retriever) {
-      await this.retriever.addDocuments(embeddedDocs);
+    if (this.childDocumentRetriever) {
+      await this.childDocumentRetriever.addDocuments(embeddedDocs);
     } else {
       await this.vectorstore.addDocuments(embeddedDocs);
     }
