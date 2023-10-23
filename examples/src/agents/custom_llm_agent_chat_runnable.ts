@@ -100,8 +100,12 @@ async function formatMessages(
     new SystemMessage(formattedSuffix),
     new SystemMessage(agentScratchpad),
   ]);
-  /** Convert the prompt template to a string */
-  const formatted = await chatPrompt.format({});
+  const formatted = [
+    formattedPrefix,
+    formattedInstructions,
+    formattedSuffix,
+    agentScratchpad,
+  ].join("\n");
   /** Return the message as a human string. */
   return [new HumanMessage(formatted)];
 }
