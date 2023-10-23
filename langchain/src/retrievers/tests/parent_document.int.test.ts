@@ -109,7 +109,7 @@ test("Should return a part of a document if a parent splitter is passed", async 
   expect(retrievedDocs[0].pageContent.length).toBeGreaterThan(100);
 });
 
-test("Should use score threshold to retrieve docs", async () => {
+test("Should use score threshold to retrieve one doc", async () => {
   const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
   const docstore = new InMemoryStore();
   const retriever = new ParentDocumentRetriever({
