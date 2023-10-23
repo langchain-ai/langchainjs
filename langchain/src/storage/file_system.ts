@@ -1,4 +1,3 @@
-import fs from "fs";
 import fsPromises from "fs/promises";
 import path from "path";
 import { BaseStore } from "../schema/storage.js";
@@ -14,7 +13,9 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
 
   constructor(fields: { path: string }) {
     if (path.extname(fields.path) !== ".json") {
-      throw new Error("File extension must be .json for NodeFileSystemStore");
+      throw new Error(
+        `File extension must be .json for NodeFileSystemStore. Path: ${fields.path}`
+      );
     }
 
     super(fields);
@@ -22,18 +23,6 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
   }
 
   private async getParsedFile(): Promise<Record<string, T>> {
-    if (fs.existsSync(this.path)) {
-      if (fs.lstatSync(this.path).isDirectory()) {
-        console.log(`${this.path} is a directory`);
-        fs.rmdir(this.path, { recursive: true }, (err) => {
-          console.error("error del dir", err);
-        });
-      } else {
-        console.log(`${this.path} is a file`);
-      }
-    } else {
-      console.log(`${this.path} does not exist`);
-    }
     let values: Record<string, T> = {};
     try {
       const fileContent = await fsPromises.readFile(this.path, "utf-8");
@@ -55,8 +44,9 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
 
   private async setFileContent(fileContent: Record<string, T>) {
     try {
-      const fileContentString = JSON.stringify(fileContent);
-      await fsPromises.writeFile(this.path, fileContentString, { flag: "a" });
+      const hasEntries = Object.entries(fileContent).length > 0;
+      const fileContentString = hasEntries ? JSON.stringify(fileContent) : "";
+      await fsPromises.writeFile(this.path, fileContentString);
     } catch (e) {
       throw new Error(`Error setting file content at path: ${this.path}`);
     }
@@ -119,5 +109,29 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
         yield key;
       }
     }
+  }
+
+  /**
+   * Static method for initializing the class.
+   * Preforms a check to see if the file exists, and if not, creates it.
+   * @param path Path to the file.
+   * @returns Promise that resolves to an instance of the class.
+   */
+  static async fromPath<T>(path: string): Promise<NodeFileSystemStore<T>> {
+    try {
+      await fsPromises.access(
+        path,
+        fsPromises.constants.R_OK | fsPromises.constants.W_OK
+      );
+    } catch (e) {
+      try {
+        await fsPromises.writeFile(path, "", { flag: "a" });
+      } catch (err) {
+        console.error("error write file", err);
+        throw new Error(`An error occurred creating file at: ${path}`);
+      }
+    }
+
+    return new this<T>({ path });
   }
 }

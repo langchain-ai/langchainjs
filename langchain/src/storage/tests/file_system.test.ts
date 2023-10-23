@@ -10,13 +10,17 @@ describe("UpstashRedisStore", () => {
   const secondaryPath = "./file_system_store_test_secondary.json";
 
   afterEach(async () => {
+    try {
+      await fsPromises.access(path, fsPromises.constants.F_OK);
+    } catch (e) {
+      // file does not exist, so we don't need to delete it
+      return;
+    }
     await fsPromises.unlink(path);
   });
 
   test("NodeFileSystemStore can write & read values", async () => {
-    const store = new NodeFileSystemStore<string>({
-      path,
-    });
+    const store = await NodeFileSystemStore.fromPath<string>(path);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
@@ -29,10 +33,8 @@ describe("UpstashRedisStore", () => {
     expect(retrievedValues.map((v) => v)).toEqual([value1, value2]);
   });
 
-  test.only("NodeFileSystemStore can delete values", async () => {
-    const store = new NodeFileSystemStore<string>({
-      path,
-    });
+  test("NodeFileSystemStore can delete values", async () => {
+    const store = await NodeFileSystemStore.fromPath<string>(path);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
@@ -48,9 +50,7 @@ describe("UpstashRedisStore", () => {
   test("NodeFileSystemStore can yield keys with prefix", async () => {
     const prefix = "prefix_";
     const keysWithPrefix = keys.map((key) => `${prefix}${key}`);
-    const store = new NodeFileSystemStore<string>({
-      path,
-    });
+    const store = await NodeFileSystemStore.fromPath<string>(path);
     const value = new Date().toISOString();
     await store.mset(keysWithPrefix.map((key) => [key, value]));
     const yieldedKeys = [];
@@ -64,9 +64,7 @@ describe("UpstashRedisStore", () => {
   });
 
   test("NodeFileSystemStore works with a file which does not exist", async () => {
-    const store = new NodeFileSystemStore<string>({
-      path: secondaryPath,
-    });
+    const store = await NodeFileSystemStore.fromPath<string>(secondaryPath);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
@@ -85,6 +83,6 @@ describe("UpstashRedisStore", () => {
         return v;
       })
     ).toEqual([value1, value2]);
-    // await fsPromises.rm(secondaryPath);
+    await fsPromises.rm(secondaryPath);
   });
 });
