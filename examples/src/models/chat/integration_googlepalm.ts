@@ -7,7 +7,7 @@ export const run = async () => {
     temperature: 0.7, // OPTIONAL
     modelName: "models/chat-bison-001", // OPTIONAL
     topK: 40, // OPTIONAL
-    topP: 3, // OPTIONAL
+    topP: 1, // OPTIONAL
     examples: [
       // OPTIONAL
       {
