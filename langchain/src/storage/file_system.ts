@@ -22,6 +22,10 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
     this.path = fields.path;
   }
 
+  /**
+   * Read and parse the file at the given path.
+   * @returns Promise that resolves to the parsed file content.
+   */
   private async getParsedFile(): Promise<Record<string, T>> {
     let values: Record<string, T> = {};
     try {
@@ -32,23 +36,27 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
       values = JSON.parse(fileContent);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
+      // If the file does not exist, create it
       if (("code" in e && e.code === "EISDIR") || e.code === "ENOENT") {
         await fsPromises.writeFile(this.path, "", "utf-8");
         return {} as Record<string, T>;
       }
-      console.error(e);
-      throw new Error(`Error parsing file content at path: ${this.path}`);
+      throw new Error(`Error reading and parsing file at path: ${this.path}`);
     }
     return values;
   }
 
+  /**
+   * Writes the given key-value pairs to the file at the given path.
+   * @param fileContent An object with the key-value pairs to be written to the file.
+   */
   private async setFileContent(fileContent: Record<string, T>) {
     try {
       const hasEntries = Object.entries(fileContent).length > 0;
       const fileContentString = hasEntries ? JSON.stringify(fileContent) : "";
       await fsPromises.writeFile(this.path, fileContentString);
-    } catch (e) {
-      throw new Error(`Error setting file content at path: ${this.path}`);
+    } catch (_) {
+      throw new Error(`Error writing file at path: ${this.path}`);
     }
   }
 
@@ -119,15 +127,16 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
    */
   static async fromPath<T>(path: string): Promise<NodeFileSystemStore<T>> {
     try {
+      // Verifies the file exists at the provided path, and that it is readable and writable.
       await fsPromises.access(
         path,
         fsPromises.constants.R_OK | fsPromises.constants.W_OK
       );
-    } catch (e) {
+    } catch (_) {
       try {
+        // File does not exist, create it.
         await fsPromises.writeFile(path, "", { flag: "a" });
-      } catch (err) {
-        console.error("error write file", err);
+      } catch (_) {
         throw new Error(`An error occurred creating file at: ${path}`);
       }
     }

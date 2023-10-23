@@ -259,6 +259,7 @@ const entrypoints = {
   "storage/ioredis": "storage/ioredis",
   "storage/vercel_kv": "storage/vercel_kv",
   "storage/upstash_redis": "storage/upstash_redis",
+  "storage/file_system": "storage/file_system",
   // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub

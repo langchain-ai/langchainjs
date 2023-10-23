@@ -76,6 +76,7 @@ import * as stores_file_in_memory from "langchain/stores/file/in_memory";
 import * as stores_message_in_memory from "langchain/stores/message/in_memory";
 import * as storage_encoder_backed from "langchain/storage/encoder_backed";
 import * as storage_in_memory from "langchain/storage/in_memory";
+import * as storage_file_system from "langchain/storage/file_system";
 import * as util_math from "langchain/util/math";
 import * as util_time from "langchain/util/time";
 import * as experimental_autogpt from "langchain/experimental/autogpt";
