@@ -6992,39 +6992,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/generated-types@npm:0.84.0":
-  version: 0.84.0
-  resolution: "@gomomento/generated-types@npm:0.84.0"
+"@gomomento/generated-types@npm:0.87.0":
+  version: 0.87.0
+  resolution: "@gomomento/generated-types@npm:0.87.0"
   dependencies:
     "@grpc/grpc-js": 1.9.0
     google-protobuf: 3.21.2
     grpc-tools: ^1.12.4
     protoc-gen-ts: ^0.8.6
-  checksum: 0a8cdfb92f8bba2eec14993c7b83037250142b5b42e913320be1644b0017ad288f91b86b04dec76481ac3d650cf839f34ef2b53c7b6a7dadf12b8cd27f2da6e9
+  checksum: 30e35a2d2ae4a7a8aca1274ca72132ce9a7070189eee7cacd106fb2e619cca194f8b95ea9f19c10dc8b8d3277f3f5b9303a5763f0a6b9d739b23007b41f5bfad
   languageName: node
   linkType: hard
 
-"@gomomento/sdk-core@npm:1.41.2, @gomomento/sdk-core@npm:^1.41.2":
-  version: 1.41.2
-  resolution: "@gomomento/sdk-core@npm:1.41.2"
+"@gomomento/sdk-core@npm:1.44.1, @gomomento/sdk-core@npm:^1.44.1":
+  version: 1.44.1
+  resolution: "@gomomento/sdk-core@npm:1.44.1"
   dependencies:
     buffer: ^6.0.3
     jwt-decode: 3.1.2
-  checksum: 22801a85f4417307262da95e1c89042b5579b80cc4ae8e32f796fb033e4110af402001b2e02de82f13c122bf2e94d65a4861c555e8bc6c7af6092cf8140746d4
+  checksum: adb69c48e97cf7703ecef2b7430eb1fca01f062ceab93bea723ff5211e4f4b7ce083ccb8fe8460037b0aa92970369e136107086dc3586c5ca9f8a64b84f07592
   languageName: node
   linkType: hard
 
-"@gomomento/sdk@npm:^1.41.2":
-  version: 1.41.2
-  resolution: "@gomomento/sdk@npm:1.41.2"
+"@gomomento/sdk@npm:^1.44.1":
+  version: 1.44.1
+  resolution: "@gomomento/sdk@npm:1.44.1"
   dependencies:
-    "@gomomento/generated-types": 0.84.0
-    "@gomomento/sdk-core": 1.41.2
+    "@gomomento/generated-types": 0.87.0
+    "@gomomento/sdk-core": 1.44.1
     "@grpc/grpc-js": 1.9.0
     "@types/google-protobuf": 3.15.6
     google-protobuf: 3.21.2
     jwt-decode: 3.1.2
-  checksum: aef0069d19c7af103a24f6429d1430cf67f0e80854893f6cebcc2d94b7a5e153b14f7bd39824b103bec233233e742ced4769fffb9250f7fe88c2ff129b1f6e4a
+  checksum: a281c1ea350505bb5ae2d067ab73d90b04bdd9944de832c73f1bd95d81ccca554f7684527e97d50f98daa0ecc58cd9f85a4be22b1a9e3ffa7f9b3c00c0996f95
   languageName: node
   linkType: hard
 
@@ -16875,7 +16875,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.41.2
+    "@gomomento/sdk": ^1.44.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
@@ -21317,8 +21317,8 @@ __metadata:
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.41.2
-    "@gomomento/sdk-core": ^1.41.2
+    "@gomomento/sdk": ^1.44.1
+    "@gomomento/sdk-core": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -21472,9 +21472,9 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.41.2
-    "@gomomento/sdk-core": ^1.41.2
-    "@gomomento/sdk-web": ^1.41.2
+    "@gomomento/sdk": ^1.44.1
+    "@gomomento/sdk-core": ^1.44.1
+    "@gomomento/sdk-web": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
