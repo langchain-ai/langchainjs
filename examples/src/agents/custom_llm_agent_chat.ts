@@ -49,7 +49,7 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
   }
 
   _getPromptType(): string {
-    throw new Error("Not implemented");
+    return "chat";
   }
 
   async formatMessages(values: InputValues): Promise<BaseMessage[]> {

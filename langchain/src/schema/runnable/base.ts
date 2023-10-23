@@ -547,7 +547,7 @@ export abstract class Runnable<
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isRunnable(thing: any): thing is Runnable {
-    return thing.lc_runnable;
+    return thing ? thing.lc_runnable : false;
   }
 }
 
@@ -1275,6 +1275,10 @@ export class RunnableMap<RunInput> extends Runnable<
   lc_serializable = true;
 
   protected steps: Record<string, Runnable<RunInput>>;
+
+  public getStepsKeys(): string[] {
+    return Object.keys(this.steps);
+  }
 
   constructor(fields: { steps: Record<string, RunnableLike<RunInput>> }) {
     super(fields);
