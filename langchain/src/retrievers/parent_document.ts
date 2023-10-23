@@ -1,13 +1,12 @@
 import * as uuid from "uuid";
 
 import { Document } from "../document.js";
-import { VectorStore } from "../vectorstores/base.js";
+import { VectorStore, VectorStoreRetriever } from "../vectorstores/base.js";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,
   type MultiVectorRetrieverInput,
 } from "./multi_vector.js";
-import { ScoreThresholdRetriever } from "./score_threshold.js";
 
 /**
  * Interface for the fields required to initialize a
@@ -17,14 +16,10 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
   childSplitter: TextSplitter;
   parentSplitter?: TextSplitter;
   /**
-   * When set, the retriever will use the ScoreThresholdRetriever to find
-   * relevant documents within a defined similarity score threshold (minSimilarityScore).
+   * A custom retriever to use when retrieving instead of
+   * the `.similaritySearch` method of the vectorstore.
    */
-  scoreThresholdOptions?: {
-    minSimilarityScore: number;
-    kIncrement?: number;
-    maxK?: number;
-  };
+  retriever?: VectorStoreRetriever<VectorStore>;
 };
 
 /**
@@ -55,13 +50,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   protected parentK?: number;
 
-  protected retriever: ScoreThresholdRetriever<VectorStore> | undefined;
-
-  protected scoreThresholdOptions?: {
-    minSimilarityScore: number;
-    kIncrement?: number;
-    maxK?: number;
-  };
+  retriever: VectorStoreRetriever<VectorStore> | undefined;
 
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
@@ -72,13 +61,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.idKey = fields.idKey ?? this.idKey;
     this.childK = fields.childK;
     this.parentK = fields.parentK;
-    this.scoreThresholdOptions = fields.scoreThresholdOptions;
-    this.retriever = fields.scoreThresholdOptions
-      ? ScoreThresholdRetriever.fromVectorStore(fields.vectorstore, {
-          ...fields.scoreThresholdOptions,
-          maxK: fields.scoreThresholdOptions.maxK ?? fields.childK,
-        })
-      : undefined;
+    this.retriever = fields.retriever;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
@@ -160,7 +143,11 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       embeddedDocs.push(...taggedSubDocs);
       fullDocs[parentDocId] = parentDoc;
     }
-    await this.vectorstore.addDocuments(embeddedDocs);
+    if (this.retriever) {
+      await this.retriever.addDocuments(embeddedDocs);
+    } else {
+      await this.vectorstore.addDocuments(embeddedDocs);
+    }
     if (addToDocstore) {
       await this.docstore.mset(Object.entries(fullDocs));
     }
