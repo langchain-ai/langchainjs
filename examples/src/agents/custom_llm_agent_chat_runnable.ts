@@ -1,6 +1,6 @@
 import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "langchain/prompts";
 import {
   AgentAction,
   AgentFinish,
@@ -8,7 +8,6 @@ import {
   BaseMessage,
   HumanMessage,
   InputValues,
-  SystemMessage,
 } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { SerpAPI } from "langchain/tools";
@@ -93,14 +92,14 @@ async function formatMessages(
   const formattedSuffix = await suffixTemplate.format({
     input: values.input,
   });
-  /** Construct the chat prompt template */
+  /** Construct the final prompt string */
   const formatted = [
     formattedPrefix,
     formattedInstructions,
     formattedSuffix,
     agentScratchpad,
   ].join("\n");
-  /** Return the message as a human string. */
+  /** Return the message as a HumanMessage. */
   return [new HumanMessage(formatted)];
 }
 
