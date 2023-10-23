@@ -1,27 +1,37 @@
 import { AgentExecutor } from "langchain/agents";
-import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import {
-  ChatPromptTemplate,
-  MessagesPlaceholder,
-  PromptTemplate,
-} from "langchain/prompts";
+import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
 import {
   AgentAction,
   AgentFinish,
   AgentStep,
   BaseMessage,
+  HumanMessage,
   InputValues,
   SystemMessage,
 } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI, Tool } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 
-const PREFIX = `Answer the following questions as best you can. You have access to the following tools:
-Tools {tools}`;
+/** Instantiate the chat model and bind the stop token */
+const model = new ChatOpenAI({ temperature: 0 }).bind({
+  stop: ["\nObservation"],
+});
+/** Define the tools */
+const tools = [
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+  new Calculator(),
+];
 
-const TOOL_INSTRUCTIONS_TEMPLATE = `Use the following format in your response:
+const PREFIX = `Answer the following questions as best you can. You have access to the following tools:
+{tools}`;
+
+const TOOL_INSTRUCTIONS_TEMPLATE = `Use the following format in your response. Do not use JSON or any other format besides what is outlined below:
 
 Question: the input question you must answer
 Thought: you should always think about what to do
@@ -33,11 +43,11 @@ Thought: I now know the final answer
 Final Answer: the final answer to the original input question`;
 const SUFFIX = `Begin!
 
-Question: {input}`;
+Question: {input}
+Thoughts:`;
 
 async function formatMessages(
-  values: InputValues,
-  tools: Tool[]
+  values: InputValues
 ): Promise<Array<BaseMessage>> {
   /** Check input and intermediate steps are both inside values */
   if (!("input" in values) || !("intermediate_steps" in values)) {
@@ -48,7 +58,12 @@ async function formatMessages(
     ? (values.intermediate_steps as Array<AgentStep>)
     : [];
   /** Call the helper `formatForOpenAIFunctions` which returns the steps as `Array<BaseMessage>`  */
-  const agentScratchpad = formatForOpenAIFunctions(intermediateSteps);
+  const agentScratchpad = intermediateSteps.reduce(
+    (thoughts, { action, observation }) =>
+      thoughts +
+      [action.log, `\nObservation: ${observation}`, "Thought:"].join("\n"),
+    ""
+  );
   console.log("agentScratchpad", agentScratchpad);
   /** Construct the tool strings */
   const toolStrings = tools
@@ -82,16 +97,13 @@ async function formatMessages(
   const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessage(formattedPrefix),
     new SystemMessage(formattedInstructions),
-    new MessagesPlaceholder("agent_scratchpad"),
     new SystemMessage(formattedSuffix),
+    new SystemMessage(agentScratchpad),
   ]);
   /** Convert the prompt template to a string */
-  const formatted = await chatPrompt.format({
-    agent_scratchpad: agentScratchpad,
-  });
-  /** Return the formatted message */
-  const formattedAsSystem = new SystemMessage(formatted);
-  return [formattedAsSystem];
+  const formatted = await chatPrompt.format({});
+  /** Return the message as a human string. */
+  return [new HumanMessage(formatted)];
 }
 
 /** Define the custom output parser */
@@ -118,27 +130,13 @@ function customOutputParser(message: BaseMessage): AgentAction | AgentFinish {
   };
 }
 
-/** Instantiate the chat model and bind the stop token */
-const model = new ChatOpenAI({ temperature: 0 }).bind({
-  stop: ["\nObservation"],
-});
-/** Define the tools */
-const tools = [
-  new SerpAPI(process.env.SERPAPI_API_KEY, {
-    location: "Austin,Texas,United States",
-    hl: "en",
-    gl: "us",
-  }),
-  new Calculator(),
-];
-
 /** Define the Runnable with LCEL */
 const runnable = RunnableSequence.from([
   {
     input: (values: InputValues) => values.input,
     intermediate_steps: (values: InputValues) => values.steps,
   },
-  /** @TODO add prompt here */
+  formatMessages,
   model,
   customOutputParser,
 ]);
@@ -156,3 +154,6 @@ console.log(`Executing with input "${input}"...`);
 const result = await executor.call({ input });
 
 console.log(`Got output ${result.output}`);
+/**
+ * Got output Harry Styles' current age raised to the 0.23 power is approximately 2.1156502324195268.
+ */
