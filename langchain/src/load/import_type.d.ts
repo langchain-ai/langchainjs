@@ -424,6 +424,9 @@ export interface OptionalImportMap {
   "langchain/storage/vercel_kv"?:
     | typeof import("../storage/vercel_kv.js")
     | Promise<typeof import("../storage/vercel_kv.js")>;
+  "langchain/storage/upstash_redis"?:
+    | typeof import("../storage/upstash_redis.js")
+    | Promise<typeof import("../storage/upstash_redis.js")>;
   "langchain/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;

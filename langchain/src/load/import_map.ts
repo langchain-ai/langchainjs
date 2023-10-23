@@ -3,6 +3,7 @@
 export * as load__serializable from "../load/serializable.js";
 export * as agents from "../agents/index.js";
 export * as agents__toolkits from "../agents/toolkits/index.js";
+export * as agents__format_scratchpad from "../agents/format_scratchpad.js";
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
 export * as chains from "../chains/index.js";
@@ -76,6 +77,7 @@ export * as stores__file__in_memory from "../stores/file/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
+export * as storage__file_system from "../storage/file_system.js";
 export * as util__math from "../util/math.js";
 export * as util__time from "../util/time.js";
 export * as experimental__autogpt from "../experimental/autogpt/index.js";

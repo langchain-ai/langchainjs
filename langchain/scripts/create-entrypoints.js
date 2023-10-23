@@ -16,6 +16,7 @@ const entrypoints = {
   "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
+  "agents/format_scratchpad": "agents/format_scratchpad",
   // base language
   base_language: "base_language/index",
   // tools
@@ -257,6 +258,9 @@ const entrypoints = {
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
   "storage/vercel_kv": "storage/vercel_kv",
+  "storage/upstash_redis": "storage/upstash_redis",
+  "storage/file_system": "storage/file_system",
+  // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub
   hub: "hub",
@@ -439,6 +443,7 @@ const requiresOptionalDependency = [
   "stores/message/xata",
   "storage/ioredis",
   "storage/vercel_kv",
+  "storage/upstash_redis",
   "graphs/neo4j_graph",
   // Prevent export due to circular dependency with "load" entrypoint
   "hub",
