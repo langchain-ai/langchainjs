@@ -65,6 +65,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let subDocs: Document<Record<string, any>>[] = [];
     if (this.retriever) {
       subDocs = await this.retriever.getRelevantDocuments(query);
