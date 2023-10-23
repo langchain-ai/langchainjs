@@ -2,9 +2,9 @@
 
 import { test } from "@jest/globals";
 import fsPromises from "fs/promises";
-import { NodeFileSystemStore } from "../file_system.js";
+import { LocalFileStore } from "../file_system.js";
 
-describe("NodeFileSystemStore", () => {
+describe("LocalFileStore", () => {
   const keys = ["key1", "key2"];
   const path = "./file_system_store_test.json";
   const secondaryPath = "./file_system_store_test_secondary.json";
@@ -19,8 +19,8 @@ describe("NodeFileSystemStore", () => {
     await fsPromises.unlink(path);
   });
 
-  test("NodeFileSystemStore can write & read values", async () => {
-    const store = await NodeFileSystemStore.fromPath<string>(path);
+  test("LocalFileStore can write & read values", async () => {
+    const store = await LocalFileStore.fromPath<string>(path);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
@@ -33,8 +33,8 @@ describe("NodeFileSystemStore", () => {
     expect(retrievedValues.map((v) => v)).toEqual([value1, value2]);
   });
 
-  test("NodeFileSystemStore can delete values", async () => {
-    const store = await NodeFileSystemStore.fromPath<string>(path);
+  test("LocalFileStore can delete values", async () => {
+    const store = await LocalFileStore.fromPath<string>(path);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
@@ -47,10 +47,10 @@ describe("NodeFileSystemStore", () => {
     expect(everyValueUndefined).toBe(true);
   });
 
-  test("NodeFileSystemStore can yield keys with prefix", async () => {
+  test("LocalFileStore can yield keys with prefix", async () => {
     const prefix = "prefix_";
     const keysWithPrefix = keys.map((key) => `${prefix}${key}`);
-    const store = await NodeFileSystemStore.fromPath<string>(path);
+    const store = await LocalFileStore.fromPath<string>(path);
     const value = new Date().toISOString();
     await store.mset(keysWithPrefix.map((key) => [key, value]));
     const yieldedKeys = [];
@@ -63,8 +63,8 @@ describe("NodeFileSystemStore", () => {
     await store.mdelete(keysWithPrefix);
   });
 
-  test("NodeFileSystemStore works with a file which does not exist", async () => {
-    const store = await NodeFileSystemStore.fromPath<string>(secondaryPath);
+  test("LocalFileStore works with a file which does not exist", async () => {
+    const store = await LocalFileStore.fromPath<string>(secondaryPath);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([

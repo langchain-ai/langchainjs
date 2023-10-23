@@ -6,7 +6,7 @@ import { BaseStore } from "../schema/storage.js";
  * File system implementation of the BaseStore using a dictionary. Used for
  * storing key-value pairs in the file system.
  */
-export class NodeFileSystemStore<T> extends BaseStore<string, T> {
+export class LocalFileStore<T> extends BaseStore<string, T> {
   lc_namespace = ["langchain", "storage"];
 
   path: string;
@@ -14,7 +14,7 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
   constructor(fields: { path: string }) {
     if (path.extname(fields.path) !== ".json") {
       throw new Error(
-        `File extension must be .json for NodeFileSystemStore. Path: ${fields.path}`
+        `File extension must be .json for LocalFileStore. Path: ${fields.path}`
       );
     }
 
@@ -125,7 +125,7 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
    * @param path Path to the file.
    * @returns Promise that resolves to an instance of the class.
    */
-  static async fromPath<T>(path: string): Promise<NodeFileSystemStore<T>> {
+  static async fromPath<T>(path: string): Promise<LocalFileStore<T>> {
     try {
       // Verifies the file exists at the provided path, and that it is readable and writable.
       await fsPromises.access(
