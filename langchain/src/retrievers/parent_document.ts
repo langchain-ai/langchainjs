@@ -80,7 +80,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
         this.vectorstore,
         {
           ...this.scoreThresholdOptions,
-          maxK: this.scoreThresholdOptions.maxK ?? this.childK,
+          maxK: this.scoreThresholdOptions.maxK ?? this.parentK,
         }
       );
       subDocs = await retriever.getRelevantDocuments(query);
