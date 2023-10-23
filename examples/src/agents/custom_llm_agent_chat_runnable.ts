@@ -63,7 +63,6 @@ async function formatMessages(
       [action.log, `\nObservation: ${observation}`, "Thought:"].join("\n"),
     ""
   );
-  console.log("agentScratchpad", agentScratchpad);
   /** Construct the tool strings */
   const toolStrings = tools
     .map((tool) => `${tool.name}: ${tool.description}`)
@@ -105,7 +104,6 @@ async function formatMessages(
 
 /** Define the custom output parser */
 function customOutputParser(message: BaseMessage): AgentAction | AgentFinish {
-  console.log("message: ", message);
   const text = message.content;
   /** If the input includes "Final Answer" return as an instance of `AgentFinish` */
   if (text.includes("Final Answer:")) {
