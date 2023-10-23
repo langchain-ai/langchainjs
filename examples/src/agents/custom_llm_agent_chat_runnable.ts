@@ -94,12 +94,6 @@ async function formatMessages(
     input: values.input,
   });
   /** Construct the chat prompt template */
-  const chatPrompt = ChatPromptTemplate.fromMessages([
-    new SystemMessage(formattedPrefix),
-    new SystemMessage(formattedInstructions),
-    new SystemMessage(formattedSuffix),
-    new SystemMessage(agentScratchpad),
-  ]);
   const formatted = [
     formattedPrefix,
     formattedInstructions,
