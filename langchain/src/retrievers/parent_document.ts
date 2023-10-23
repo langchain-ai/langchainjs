@@ -55,6 +55,8 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   protected parentK?: number;
 
+  protected retriever: ScoreThresholdRetriever<VectorStore> | undefined;
+
   protected scoreThresholdOptions?: {
     minSimilarityScore: number;
     kIncrement?: number;
@@ -71,19 +73,18 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.childK = fields.childK;
     this.parentK = fields.parentK;
     this.scoreThresholdOptions = fields.scoreThresholdOptions;
+    this.retriever = fields.scoreThresholdOptions
+      ? ScoreThresholdRetriever.fromVectorStore(fields.vectorstore, {
+          ...fields.scoreThresholdOptions,
+          maxK: fields.scoreThresholdOptions.maxK ?? fields.childK,
+        })
+      : undefined;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
     let subDocs: Document<Record<string, any>>[] = [];
-    if (this.scoreThresholdOptions) {
-      const retriever = ScoreThresholdRetriever.fromVectorStore(
-        this.vectorstore,
-        {
-          ...this.scoreThresholdOptions,
-          maxK: this.scoreThresholdOptions.maxK ?? this.childK,
-        }
-      );
-      subDocs = await retriever.getRelevantDocuments(query);
+    if (this.retriever) {
+      subDocs = await this.retriever.getRelevantDocuments(query);
     } else {
       subDocs = await this.vectorstore.similaritySearch(query, this.childK);
     }
