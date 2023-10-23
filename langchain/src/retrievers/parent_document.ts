@@ -90,6 +90,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   /**
    * Adds documents to the docstore and vectorstores.
+   * If a retriever is provided, it will be used to add documents instead of the vectorstore.
    * @param docs The documents to add
    * @param config.ids Optional list of ids for documents. If provided should be the same
    *   length as the list of documents. Can provided if parent documents
