@@ -23,11 +23,10 @@ The `yieldKeys` method is a generator function that can be used to iterate over 
 
 It's that simple!
 
-So far LangChain.js has three integrations for `BaseStore`:
+So far LangChain.js has two base integrations for `BaseStore`:
 
-- `IORedis`
-- `Vercel KV`
-- `Upstash Redis`
+- `InMemoryStore`
+- `NodeFileSystemStore`
 
 ## Use Cases
 
@@ -36,6 +35,6 @@ If you're building web apps with chat, the `BaseStore` family of integrations ca
 
 **Caching**
 The `BaseStore` family can be a useful alternative to our other caching integrations.
-For example the `Vercel KV` fits very nicely if you're already building with the Vercel cloud platform.
+For example the `NodeFileSystemStore` allows for persisting data through the file system. It also is incredibly fast, so your users will be able to access cached data in a snap. 
 
 See the individual sections for deeper dives on specific storage providers.

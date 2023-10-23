@@ -1,0 +1,67 @@
+# Reading Data
+
+Reading data is simple with kv stores. Below is an example using the `InMemoryStore` and the `.mget()` method.
+We'll also set our generic value type to `string` so we can have type safety setting our strings.
+
+Import the `InMemoryStore` class.
+
+```typescript
+import { InMemoryStore } from "langchain/storage/in_memory";
+```
+
+Instantiate a new instance and pass `string` as our generic for the value type.
+
+```typescript
+const store = new InMemoryStore<string>();
+```
+
+Next we can call `.mset()` to write multiple values at once.
+
+```typescript
+const data = [
+  ["key1", "value1"],
+  ["key2", "value2"],
+];
+
+await store.mset(data);
+```
+
+Finally, call the `.mget()` method to retrieve the values from our store.
+
+```typescript
+const data = await store.mget(["key1", "key2"]);
+
+console.log(data);
+/**
+ * ["value1", "value2"]
+ */
+```
+
+## Using File System
+
+```typescript
+import { NodeFileSystemStore } from "langchain/storage/in_memory";
+```
+
+```typescript
+const pathToStore = "./my-store.json";
+const store = await NodeFileSystemStore.fromPath<string>(pathToStore);
+```
+
+```typescript
+const data = [
+  ["key1", "value1"],
+  ["key2", "value2"],
+];
+
+await store.mset(data);
+```
+
+```typescript
+const data = await store.mget(["key1", "key2"]);
+
+console.log(data);
+/**
+ * ["value1", "value2"]
+ */
+```
