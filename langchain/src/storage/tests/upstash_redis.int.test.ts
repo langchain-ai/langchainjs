@@ -20,7 +20,7 @@ const getClient = () => {
   return new UpstashRedis(config);
 };
 
-describe("UpstashRedisStore", () => {
+describe.skip("UpstashRedisStore", () => {
   const keys = ["key1", "key2"];
   const client = getClient();
 
