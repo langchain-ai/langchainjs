@@ -1,6 +1,9 @@
 ---
 hide_table_of_contents: true
 ---
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/parent_document_retriever.ts";
+import ExampleWithScoreThreshold from "@examples/retrievers/parent_document_retriever_score_threshold.ts";
 
 # Parent Document Retriever
 
@@ -15,7 +18,13 @@ Note that "parent document" refers to the document that a small chunk originated
 
 ## Usage
 
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/retrievers/parent_document_retriever.ts";
-
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+## With Score Threshold
+
+By setting the options in `scoreThresholdOptions` we can force the `ParentDocumentRetriever` to use the `ScoreThresholdRetriever` under the hood.
+This sets the vector store inside `ScoreThresholdRetriever` as the one we passed when initializing `ParentDocumentRetriever`, while also allowing us to also set a score threshold for the retriever.
+
+This can be helpful when you're not sure how many documents you want (or if you are sure, just set the `maxK` option), but you want to make sure that the documents you do get are within a certain relevancy threshold.
+
+<CodeBlock language="typescript">{ExampleWithScoreThreshold}</CodeBlock>
