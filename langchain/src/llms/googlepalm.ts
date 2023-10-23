@@ -129,7 +129,7 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
     }
 
     if (this.topP && this.topP > 1) {
-      throw new Error("`topP` must in the range of [0,1]");
+      throw new Error("Google PaLM `topP` must in the range of [0,1]");
     }
 
     this.topK = fields?.topK ?? this.topK;
