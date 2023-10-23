@@ -41,7 +41,7 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
         await fsPromises.writeFile(this.path, "", "utf-8");
         return {} as Record<string, T>;
       }
-      throw new Error(`Error reading and parsing file at path: ${this.path}`);
+      throw new Error(`Error reading and parsing file at path: ${this.path}.\nError: ${JSON.stringify(e)}`);
     }
     return values;
   }
@@ -55,8 +55,8 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
       const hasEntries = Object.entries(fileContent).length > 0;
       const fileContentString = hasEntries ? JSON.stringify(fileContent) : "";
       await fsPromises.writeFile(this.path, fileContentString);
-    } catch (_) {
-      throw new Error(`Error writing file at path: ${this.path}`);
+    } catch (error) {
+      throw new Error(`Error writing file at path: ${this.path}.\nError: ${JSON.stringify(error)}`);
     }
   }
 
@@ -136,8 +136,8 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
       try {
         // File does not exist, create it.
         await fsPromises.writeFile(path, "", { flag: "a" });
-      } catch (_) {
-        throw new Error(`An error occurred creating file at: ${path}`);
+      } catch (error) {
+        throw new Error(`An error occurred creating file at: ${path}.\nError: ${JSON.stringify(error)}`);
       }
     }
 
