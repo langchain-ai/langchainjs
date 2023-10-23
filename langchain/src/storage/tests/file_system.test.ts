@@ -4,7 +4,7 @@ import { test } from "@jest/globals";
 import fsPromises from "fs/promises";
 import { NodeFileSystemStore } from "../file_system.js";
 
-describe("UpstashRedisStore", () => {
+describe("NodeFileSystemStore", () => {
   const keys = ["key1", "key2"];
   const path = "./file_system_store_test.json";
   const secondaryPath = "./file_system_store_test_secondary.json";
@@ -83,6 +83,6 @@ describe("UpstashRedisStore", () => {
         return v;
       })
     ).toEqual([value1, value2]);
-    await fsPromises.rm(secondaryPath);
+    await fsPromises.unlink(secondaryPath);
   });
 });
