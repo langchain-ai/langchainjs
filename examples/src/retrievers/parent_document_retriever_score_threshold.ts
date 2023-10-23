@@ -4,12 +4,21 @@ import { InMemoryStore } from "langchain/storage/in_memory";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { TextLoader } from "langchain/document_loaders/fs/text";
+import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
 const docstore = new InMemoryStore();
+const scoreThresholdRetriever = ScoreThresholdRetriever.fromVectorStore(
+  vectorstore,
+  {
+    minSimilarityScore: 0.01, // Essentially no threshold
+    maxK: 1, // Only return the top result
+  }
+);
 const retriever = new ParentDocumentRetriever({
   vectorstore,
   docstore,
+  retriever: scoreThresholdRetriever,
   // Optional, not required if you're already passing in split documents
   parentSplitter: new RecursiveCharacterTextSplitter({
     chunkOverlap: 0,
@@ -19,12 +28,6 @@ const retriever = new ParentDocumentRetriever({
     chunkOverlap: 0,
     chunkSize: 50,
   }),
-  // Setting score threshold option will make the retriever use
-  // the ScoreThresholdRetriever instead of a plain vector store lookup.
-  scoreThresholdOptions: {
-    minSimilarityScore: 0.1, // Setting a low score threshold will return many documents.
-    maxK: 1, // Set maxK to 1 so only one document is returned in the end.
-  },
 });
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
