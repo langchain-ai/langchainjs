@@ -272,10 +272,17 @@ test("RunnableMap can stream", async () => {
     .pipe(llm);
   const result = await runnable.stream("Do you know the Muffin Man?");
   let finalResult = "";
+  let numOfStreams = 0;
   for await (const value of result) {
     finalResult += value;
+    numOfStreams += 1;
   }
-  console.log(finalResult);
+  console.log(finalResult, "\n", numOfStreams);
+  /**
+   * Ensure that we actually streamed
+   * Most of the time, it will be 162
+   */
+  expect(numOfStreams).toBeGreaterThan(1);
   expect(finalResult).toEqual(
     `System: You are a nice assistant.\nHuman: Context:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
   );
