@@ -10,8 +10,9 @@ A MRKL agent consists of three parts:
 
 In this notebook we walk through how to create a custom MRKL agent by creating a custom `Runnable`.
 
-Custom `Runnable`
-The first way to create a custom agent is not to use an existing Agent class, but use a custom `Runnable`. This is the simplest way to create a custom Agent.
+## Custom `Runnable`
+
+The first way to create a custom agent is to use a custom `Runnable`.
 
 Most of the work in creating the custom `Runnable` comes down to the input and outputs. Because we're using a custom `Runnable` we are not provided with any pre-built input/output parsers.
 Instead, we must create our own to format the inputs and outputs a the way we define.
