@@ -184,6 +184,7 @@ const entrypoints = {
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
+  "chat_models/llama_cpp": "chat_models/llama_cpp",
   "chat_models/yandex": "chat_models/yandex",
   "chat_models/fake": "chat_models/fake",
   // schema
@@ -408,6 +409,7 @@ const requiresOptionalDependency = [
   "chat_models/googlevertexai",
   "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
+  "chat_models/llama_cpp",
   "chat_models/portkey",
   "sql_db",
   "retrievers/amazon_kendra",
