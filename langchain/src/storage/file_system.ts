@@ -109,7 +109,7 @@ export class NodeFileSystemStore<T> extends BaseStore<string, T> {
    * @param prefix Optional prefix to filter keys.
    * @returns AsyncGenerator that yields keys from the store.
    */
-  async *yieldKeys(prefix?: string | undefined): AsyncGenerator<string> {
+  async *yieldKeys(prefix?: string): AsyncGenerator<string> {
     const fileContent = await this.getParsedFile();
     const keys = Object.keys(fileContent);
     for (const key of keys) {
