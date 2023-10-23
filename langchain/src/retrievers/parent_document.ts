@@ -7,6 +7,7 @@ import {
   MultiVectorRetriever,
   type MultiVectorRetrieverInput,
 } from "./multi_vector.js";
+import { ScoreThresholdRetriever } from "./score_threshold.js";
 
 /**
  * Interface for the fields required to initialize a
@@ -15,6 +16,15 @@ import {
 export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
   childSplitter: TextSplitter;
   parentSplitter?: TextSplitter;
+  /**
+   * When set, the retriever will use the ScoreThresholdRetriever to find
+   * relevant documents within a defined similarity score threshold (minSimilarityScore).
+   */
+  scoreThresholdOptions?: {
+    minSimilarityScore: number;
+    kIncrement?: number;
+    maxK?: number;
+  };
 };
 
 /**
@@ -45,6 +55,12 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   protected parentK?: number;
 
+  protected scoreThresholdOptions?: {
+    minSimilarityScore: number;
+    kIncrement?: number;
+    maxK?: number;
+  };
+
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
@@ -54,10 +70,24 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.idKey = fields.idKey ?? this.idKey;
     this.childK = fields.childK;
     this.parentK = fields.parentK;
+    this.scoreThresholdOptions = fields.scoreThresholdOptions;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    const subDocs = await this.vectorstore.similaritySearch(query, this.childK);
+    let subDocs: Document<Record<string, any>>[] = [];
+    if (this.scoreThresholdOptions) {
+      const retriever = ScoreThresholdRetriever.fromVectorStore(
+        this.vectorstore,
+        {
+          ...this.scoreThresholdOptions,
+          maxK: this.scoreThresholdOptions.maxK ?? this.childK,
+        }
+      );
+      subDocs = await retriever.getRelevantDocuments(query);
+    } else {
+      subDocs = await this.vectorstore.similaritySearch(query, this.childK);
+    }
+
     // Maintain order
     const parentDocIds: string[] = [];
     for (const doc of subDocs) {

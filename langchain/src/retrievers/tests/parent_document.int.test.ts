@@ -108,3 +108,36 @@ test("Should return a part of a document if a parent splitter is passed", async 
   expect(retrievedDocs.length).toBeGreaterThan(1);
   expect(retrievedDocs[0].pageContent.length).toBeGreaterThan(100);
 });
+
+test("Should use score threshold to retrieve docs", async () => {
+  const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
+  const docstore = new InMemoryStore();
+  const retriever = new ParentDocumentRetriever({
+    vectorstore,
+    docstore,
+    parentSplitter: new RecursiveCharacterTextSplitter({
+      chunkOverlap: 0,
+      chunkSize: 500,
+    }),
+    childSplitter: new RecursiveCharacterTextSplitter({
+      chunkOverlap: 0,
+      chunkSize: 50,
+    }),
+    scoreThresholdOptions: {
+      minSimilarityScore: 0.01, // Essentially no threshold
+      maxK: 1, // Only return the top result
+    },
+  });
+  const docs = await new TextLoader(
+    "../examples/state_of_the_union.txt"
+  ).load();
+  await retriever.addDocuments(docs);
+  const query = "justice breyer";
+  const retrievedDocs = await retriever.getRelevantDocuments(query);
+  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
+    "justice breyer"
+  );
+  console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
+  console.log(retrievedDocs);
+  expect(retrievedDocs).toHaveLength(1);
+});
