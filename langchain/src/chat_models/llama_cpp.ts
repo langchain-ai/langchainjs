@@ -2,12 +2,11 @@ import {
   LlamaModel,
   LlamaContext,
   LlamaChatSession,
-  ConversationInteraction,
+  type ConversationInteraction,
 } from "node-llama-cpp";
 import { SimpleChatModel, BaseChatModelParams } from "./base.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { BaseMessage } from "../schema/index.js";
+import type { BaseMessage } from "../schema/index.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -95,7 +94,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   _session: LlamaChatSession | null;
 
   static lc_name() {
-    return "LlamaCpp";
+    return "ChatLlamaCpp";
   }
 
   constructor(inputs: LlamaCppInputs) {
@@ -146,9 +145,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    // @ts-expect-error - TS6133: 'runManager' is declared but its value is never read.
-    runManager?: CallbackManagerForLLMRun
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     let prompt = "";
 
@@ -175,9 +172,8 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   protected _buildSession(messages: BaseMessage[]): string {
     let prompt = "";
     let sysMessage = "";
-    let noSystemMessages = [];
-    let interactions: ConversationInteraction[];
-    interactions = [];
+    let noSystemMessages: BaseMessage[] = [];
+    let interactions: ConversationInteraction[] = [];
 
     // Let's see if we have a system message
     if (messages.findIndex((msg) => msg._getType() === "system") !== -1) {
@@ -244,7 +240,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   protected _convertMessagesToInteractions(
     messages: BaseMessage[]
   ): ConversationInteraction[] {
-    const result = [];
+    const result: ConversationInteraction[] = [];
 
     for (let i = 0; i < messages.length; i += 2) {
       if (i + 1 < messages.length) {
