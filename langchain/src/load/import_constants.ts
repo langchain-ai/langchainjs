@@ -143,6 +143,7 @@ export const optionalImportEntrypoints = [
   "langchain/storage/ioredis",
   "langchain/storage/vercel_kv",
   "langchain/storage/upstash_redis",
+  "langchain/storage/file_system",
   "langchain/graphs/neo4j_graph",
   "langchain/hub",
   "langchain/experimental/multimodal_embeddings/googlevertexai",

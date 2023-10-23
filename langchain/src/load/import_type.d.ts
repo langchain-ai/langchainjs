@@ -427,6 +427,9 @@ export interface OptionalImportMap {
   "langchain/storage/upstash_redis"?:
     | typeof import("../storage/upstash_redis.js")
     | Promise<typeof import("../storage/upstash_redis.js")>;
+  "langchain/storage/file_system"?:
+    | typeof import("../storage/file_system.js")
+    | Promise<typeof import("../storage/file_system.js")>;
   "langchain/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;
