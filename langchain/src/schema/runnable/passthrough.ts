@@ -60,6 +60,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   }
 
   static assign(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mapping: Record<string, RunnableLike<Record<string, unknown>, any>>
   ): RunnableAssign<Record<string, unknown>, Record<string, unknown>> {
     return new RunnableAssign(
