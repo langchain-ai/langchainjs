@@ -14,7 +14,7 @@ import { Serializable } from "../../load/serializable.js";
 import { IterableReadableStream } from "../../util/stream.js";
 import { RunnableConfig, getCallbackMangerForConfig } from "./config.js";
 import { AsyncCaller } from "../../util/async_caller.js";
-import { AddableObject } from "./utils.js";
+import { AddableDict } from "./utils.js";
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput
@@ -1376,7 +1376,7 @@ export class RunnableMap<RunInput> extends Runnable<
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           AsyncGenerator<RunInput, any, unknown>
         ];
-        const chunk = new AddableObject({
+        const chunk = new AddableDict({
           [stepName]: await task,
         });
         yield chunk;
