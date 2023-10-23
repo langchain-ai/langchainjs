@@ -54,6 +54,9 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
           });
         }
       },
+      cancel() {
+        reader.releaseLock();
+      },
     });
   }
 
