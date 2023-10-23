@@ -15,7 +15,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as langchain_db from "../langchain/db";
-import type * as test from "../test";
+import type * as lib from "../lib";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -27,7 +27,7 @@ import type * as test from "../test";
  */
 declare const fullApi: ApiFromModules<{
   "langchain/db": typeof langchain_db;
-  test: typeof test;
+  lib: typeof lib;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

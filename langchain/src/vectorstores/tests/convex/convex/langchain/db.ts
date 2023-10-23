@@ -1,2 +1,1 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-export * from "langchain/util/convex";
+export * from "../../../../../util/convex.js";
