@@ -26,11 +26,11 @@ const tools = [
   }),
   new Calculator(),
 ];
-
+/** Create the prefix prompt */
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:
 {tools}`;
-
-const TOOL_INSTRUCTIONS_TEMPLATE = `Use the following format in your response. Do not use JSON or any other format besides what is outlined below:
+/** Create the tool instructions prompt */
+const TOOL_INSTRUCTIONS_TEMPLATE = `Use the following format in your response:
 
 Question: the input question you must answer
 Thought: you should always think about what to do
@@ -40,10 +40,11 @@ Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question`;
+/** Create the suffix prompt */
 const SUFFIX = `Begin!
 
 Question: {input}
-Thoughts:`;
+Thought:`;
 
 async function formatMessages(
   values: InputValues
