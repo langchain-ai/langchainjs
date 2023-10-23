@@ -441,6 +441,7 @@ const requiresOptionalDependency = [
   "stores/message/upstash_redis",
   "stores/message/planetscale",
   "stores/message/xata",
+  "storage/file_system",
   "storage/ioredis",
   "storage/vercel_kv",
   "storage/upstash_redis",
