@@ -106,9 +106,12 @@ export class OpenAIAgent extends Agent {
 
   tools: StructuredTool[];
 
+  outputParser: OpenAIFunctionsAgentOutputParser;
+
   constructor(input: Omit<OpenAIAgentInput, "outputParser">) {
     super({ ...input, outputParser: undefined });
     this.tools = input.tools;
+    this.outputParser = new OpenAIFunctionsAgentOutputParser();
   }
 
   /**
@@ -215,7 +218,6 @@ export class OpenAIAgent extends Agent {
       valuesForLLM,
       callbackManager
     );
-    const outputParser = new OpenAIFunctionsAgentOutputParser();
-    return outputParser.parseAIMessage(message);
+    return this.outputParser.parseAIMessage(message);
   }
 }
