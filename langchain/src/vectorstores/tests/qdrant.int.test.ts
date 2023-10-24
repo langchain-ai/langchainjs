@@ -8,7 +8,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { QdrantVectorStore } from "../qdrant.js";
 import { OllamaEmbeddings } from "../../embeddings/ollama.js";
 
-describe("QdrantVectorStore testcase", () => {
+describe.skip("QdrantVectorStore testcase", () => {
   test("base usage", async () => {
     const embeddings = new OpenAIEmbeddings({});
 

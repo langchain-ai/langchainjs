@@ -177,37 +177,42 @@ export class RedisVectorStore extends VectorStore {
     documents: Document[],
     { keys, batchSize = 1000 }: RedisAddOptions = {}
   ) {
-    // check if the index exists and create it if it doesn't
-    await this.createIndex(vectors[0].length);
+    if (!vectors.length || !vectors[0].length) {
+      throw new Error("No vectors provided");
+    }
+    try {
+      // check if the index exists and create it if it doesn't
+      await this.createIndex(vectors[0].length);
 
-    const info = await this.redisClient.ft.info(this.indexName);
-    const lastKeyCount = parseInt(info.numDocs, 10) || 0;
-    const multi = this.redisClient.multi();
+      const info = await this.redisClient.ft.info(this.indexName);
+      const lastKeyCount = parseInt(info.numDocs, 10) || 0;
+      const multi = this.redisClient.multi();
+      for (let i = 0; i < vectors.length; i += 1) {
+        const vector = vectors[i];
+        const key =
+          keys && keys.length
+            ? keys[i]
+            : `${this.keyPrefix}${i + lastKeyCount}`;
+        const metadata =
+          documents[i] && documents[i].metadata ? documents[i].metadata : {};
 
-    vectors.map(async (vector, idx) => {
-      const key =
-        keys && keys.length
-          ? keys[idx]
-          : `${this.keyPrefix}${idx + lastKeyCount}`;
-      const metadata =
-        documents[idx] && documents[idx].metadata
-          ? documents[idx].metadata
-          : {};
+        multi.hSet(key, {
+          [this.vectorKey]: this.getFloat32Buffer(vector),
+          [this.contentKey]: documents[i].pageContent,
+          [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
+        });
 
-      multi.hSet(key, {
-        [this.vectorKey]: this.getFloat32Buffer(vector),
-        [this.contentKey]: documents[idx].pageContent,
-        [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
-      });
-
-      // write batch
-      if (idx % batchSize === 0) {
-        await multi.exec();
+        // write batch
+        if (i % batchSize === 0) {
+          await multi.exec();
+        }
       }
-    });
 
-    // insert final batch
-    await multi.exec();
+      // insert final batch
+      await multi.exec();
+    } catch (e) {
+      throw e;
+    }
   }
 
   /**
@@ -326,10 +331,10 @@ export class RedisVectorStore extends VectorStore {
   /**
    * Method for creating an index in the RedisVectorStore. If the index
    * already exists, it does nothing.
-   * @param dimensions The dimensions of the index. Defaults to 1536.
+   * @param dimensions The dimensions of the index
    * @returns A promise that resolves when the index has been created.
    */
-  async createIndex(dimensions = 1536): Promise<void> {
+  async createIndex(dimensions: number): Promise<void> {
     if (await this.checkIndexExists()) {
       return;
     }
