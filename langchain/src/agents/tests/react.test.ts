@@ -1,4 +1,4 @@
-import { ReActSingleInputOutputParser } from "../react/outputParser.js";
+import { ReActSingleInputOutputParser } from "../react/output_parser.js";
 
 test("ReActSingleInputOutputParser identifies final answer", async () => {
   const finalAnswerText = `Observation: 2.169459462491557
