@@ -21,6 +21,7 @@ const entrypoints = {
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/format_scratchpad/log_to_message": "agents/format_scratchpad/log_to_message",
   "agents/react/output_parser": "agents/react/output_parser",
+  "agents/xml/output_parser": "agents/xml/output_parser",
   // base language
   base_language: "base_language/index",
   // tools
