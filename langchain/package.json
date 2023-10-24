@@ -49,6 +49,9 @@
     "agents/openai/output_parser.cjs",
     "agents/openai/output_parser.js",
     "agents/openai/output_parser.d.ts",
+    "agents/xml/output_parser.cjs",
+    "agents/xml/output_parser.js",
+    "agents/xml/output_parser.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -1394,10 +1397,17 @@
       "import": "./agents/react/output_parser.js",
       "require": "./agents/react/output_parser.cjs"
     },
+<<<<<<< HEAD
     "./agents/openai/output_parser": {
       "types": "./agents/openai/output_parser.d.ts",
       "import": "./agents/openai/output_parser.js",
       "require": "./agents/openai/output_parser.cjs"
+=======
+    "./agents/xml/output_parser": {
+      "types": "./agents/xml/output_parser.d.ts",
+      "import": "./agents/xml/output_parser.js",
+      "require": "./agents/xml/output_parser.cjs"
+>>>>>>> 549d07c0b79d1b709128d23322d99ca35583f3f6
     },
     "./base_language": {
       "types": "./base_language.d.ts",
