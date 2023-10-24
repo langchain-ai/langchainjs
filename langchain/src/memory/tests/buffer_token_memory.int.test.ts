@@ -1,7 +1,9 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { OpenAI } from "../../llms/openai.js";
+import { OpenAIChat } from "../../llms/openai-chat.js";
 import { LLMChain } from "../../chains/llm_chain.js";
+import { ConversationChain } from "../../chains/conversation.js";
 import { ConversationTokenBufferMemory } from "../buffer_token_memory.js";
 import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 import { HumanMessage, AIMessage } from "../../schema/index.js";
@@ -27,3 +29,39 @@ test("Test buffer window memory with LLM", async () => {
   expect(result3).toStrictEqual({ history: expectedString3 });
 });
 
+test("Test buffer memory with LLM chain", async () => {
+
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
+
+  const memory = new ConversationTokenBufferMemory({
+    llm: model,
+    maxTokenLimit: 60,
+  });
+  expect(await memory.loadMemoryVariables({})).toEqual({
+    history: "",
+  });
+
+  const conversationWithSummary = new ConversationChain({
+    llm: model,
+    memory,
+    verbose: true,
+  });
+
+  // const res1 = await conversationWithSummary.call({ input: "Hi, what's up?" });
+  // console.log({ res1 });
+
+  await conversationWithSummary.predict({ input: "Hi, what's up?" });
+
+  const result1 = await memory.loadMemoryVariables({});
+  console.log({result1});
+  const expectedString1 = "Human: Hi, what's up?\nAI:";
+  expect(result1).toStrictEqual({ history: expectedString1 });
+
+  // await conversationWithSummary.predict({ input: "Just working on writing some documentation!" });
+
+  // await conversationWithSummary.predict({ input: "For LangChain! Have you heard of it?" });
+
+  // await conversationWithSummary.predict({ 
+  //   input: "Haha nope, although a lot of people confuse it for that" 
+  // });
+});
