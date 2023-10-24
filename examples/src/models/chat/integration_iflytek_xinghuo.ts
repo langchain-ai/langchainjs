@@ -1,0 +1,20 @@
+import { ChatIflytekXinghuo } from "langchain/chat_models/iflytek_xinghuo";
+import { HumanMessage } from "langchain/schema";
+
+const model = new ChatIflytekXinghuo({
+  iflytekAppid: "a5a552cc",
+  iflytekApiKey: "093ce6cb0318ab61f515d3e34299f012",
+  iflytekApiSecret: "MmRkNzNkNjQxNWVjYWEwZDhkZTM3NGE1",
+});
+
+const messages1 = [new HumanMessage("Nice to meet you!")];
+
+const res1 = await model.call(messages1);
+
+console.log(res1);
+
+const messages2 = [new HumanMessage("Hello")];
+
+const res2 = await model.call(messages2);
+
+console.log(res2);

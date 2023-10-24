@@ -192,6 +192,7 @@ const entrypoints = {
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/fireworks": "chat_models/fireworks",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
+  "chat_models/iflytek_xinghuo": "chat_models/iflytek_xinghuo",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
   "chat_models/llama_cpp": "chat_models/llama_cpp",

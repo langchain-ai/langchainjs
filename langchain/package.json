@@ -496,6 +496,9 @@
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
+    "chat_models/iflytek_xinghuo.cjs",
+    "chat_models/iflytek_xinghuo.js",
+    "chat_models/iflytek_xinghuo.d.ts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
@@ -849,6 +852,7 @@
     "@types/pg": "^8",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
+    "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
@@ -1338,6 +1342,7 @@
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
+    "ws": "^8.14.2",
     "yaml": "^2.2.1",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.20.4"
@@ -2169,6 +2174,11 @@
       "types": "./chat_models/baiduwenxin.d.ts",
       "import": "./chat_models/baiduwenxin.js",
       "require": "./chat_models/baiduwenxin.cjs"
+    },
+    "./chat_models/iflytek_xinghuo": {
+      "types": "./chat_models/iflytek_xinghuo.d.ts",
+      "import": "./chat_models/iflytek_xinghuo.js",
+      "require": "./chat_models/iflytek_xinghuo.cjs"
     },
     "./chat_models/ollama": {
       "types": "./chat_models/ollama.d.ts",

@@ -49,6 +49,7 @@ export * from "langchain/chat_models/anthropic";
 export * from "langchain/chat_models/cloudflare_workersai";
 export * from "langchain/chat_models/fireworks";
 export * from "langchain/chat_models/baiduwenxin";
+export * from "langchain/chat_models/iflytek_xinghuo";
 export * from "langchain/chat_models/ollama";
 export * from "langchain/chat_models/minimax";
 export * from "langchain/chat_models/yandex";
