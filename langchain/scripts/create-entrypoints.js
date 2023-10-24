@@ -16,7 +16,11 @@ const entrypoints = {
   "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
-  "agents/format_scratchpad": "agents/format_scratchpad",
+  "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
+  "agents/format_scratchpad/log": "agents/format_scratchpad/log",
+  "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
+  "agents/format_scratchpad/log_to_message": "agents/format_scratchpad/log_to_message",
+  "agents/react/output_parser": "agents/react/output_parser",
   // base language
   base_language: "base_language/index",
   // tools
@@ -24,6 +28,7 @@ const entrypoints = {
   "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
+  "tools/render": "tools/render",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   "tools/google_calendar": "tools/google_calendar/index",
