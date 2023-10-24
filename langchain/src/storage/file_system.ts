@@ -24,6 +24,9 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
   private async getParsedFile(key: string): Promise<Uint8Array | undefined> {
     try {
       const fileContent = await fsPromises.readFile(this.getFullPath(key));
+      if (!fileContent) {
+        return undefined;
+      }
       return fileContent;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
