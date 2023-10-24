@@ -169,14 +169,46 @@ const config = {
             position: "left",
           },
           {
-            href: "https://smith.langchain.com/",
-            label: "LangSmith",
-            position: "right",
+            type: "dropdown",
+            label: "More",
+            position: "left",
+            items: [
+              {
+                to: "/docs/community",
+                label: "Community",
+              },
+              {
+                to: "/docs/additional_resources/tutorials",
+                label: "Tutorials",
+              },
+            ],
           },
           {
-            href: "https://python.langchain.com/en/latest/",
-            label: "Python Docs",
+            type: "dropdown",
+            label: "Also by LangChain",
             position: "right",
+            items: [
+              {
+                href: "https://chat.langchain.com",
+                label: "Chat our docs",
+              },
+              {
+                href: "https://smith.langchain.com",
+                label: "LangSmith",
+              },
+              {
+                href: "https://smith.langchain.com/hub",
+                label: "LangChain Hub",
+              },
+              {
+                href: "https://github.com/langchain-ai/langserve",
+                label: "LangServe",
+              },
+              {
+                href: "https://python.langchain.com/en/latest/",
+                label: "Python Docs",
+              },
+            ],
           },
           // Please keep GitHub link to the right for consistency.
           {
