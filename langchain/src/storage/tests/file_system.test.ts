@@ -1,28 +1,22 @@
 /* eslint-disable no-process-env */
 
 import { test } from "@jest/globals";
-import fsPromises from "fs/promises";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as os from "node:os";
 import { LocalFileStore } from "../file_system.js";
 
 describe("LocalFileStore", () => {
   const keys = ["key1", "key2"];
-  const rootPath = "./file_system_store_test";
+  const tempDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "file_system_store_test")
+  );
   const secondaryRootPath = "./file_system_store_test_secondary";
-
-  afterEach(async () => {
-    try {
-      await fsPromises.access(rootPath, fsPromises.constants.F_OK);
-    } catch (e) {
-      // file does not exist, so we don't need to delete it
-      return;
-    }
-    await fsPromises.rm(rootPath, { recursive: true, force: true });
-  });
 
   test("LocalFileStore can write & read values", async () => {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
-    const store = await LocalFileStore.fromPath(rootPath);
+    const store = await LocalFileStore.fromPath(tempDir);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
@@ -40,7 +34,7 @@ describe("LocalFileStore", () => {
 
   test("LocalFileStore can delete values", async () => {
     const encoder = new TextEncoder();
-    const store = await LocalFileStore.fromPath(rootPath);
+    const store = await LocalFileStore.fromPath(tempDir);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
@@ -57,7 +51,7 @@ describe("LocalFileStore", () => {
     const encoder = new TextEncoder();
     const prefix = "prefix_";
     const keysWithPrefix = keys.map((key) => `${prefix}${key}`);
-    const store = await LocalFileStore.fromPath(rootPath);
+    const store = await LocalFileStore.fromPath(tempDir);
     const value = new Date().toISOString();
     await store.mset(keysWithPrefix.map((key) => [key, encoder.encode(value)]));
     const yieldedKeys = [];
@@ -92,6 +86,6 @@ describe("LocalFileStore", () => {
         return decoder.decode(v);
       })
     ).toEqual([value1, value2]);
-    await fsPromises.rm(secondaryRootPath, { recursive: true, force: true });
+    await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });
 });

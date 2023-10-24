@@ -6992,39 +6992,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/generated-types@npm:0.84.0":
-  version: 0.84.0
-  resolution: "@gomomento/generated-types@npm:0.84.0"
+"@gomomento/generated-types@npm:0.87.0":
+  version: 0.87.0
+  resolution: "@gomomento/generated-types@npm:0.87.0"
   dependencies:
     "@grpc/grpc-js": 1.9.0
     google-protobuf: 3.21.2
     grpc-tools: ^1.12.4
     protoc-gen-ts: ^0.8.6
-  checksum: 0a8cdfb92f8bba2eec14993c7b83037250142b5b42e913320be1644b0017ad288f91b86b04dec76481ac3d650cf839f34ef2b53c7b6a7dadf12b8cd27f2da6e9
+  checksum: 30e35a2d2ae4a7a8aca1274ca72132ce9a7070189eee7cacd106fb2e619cca194f8b95ea9f19c10dc8b8d3277f3f5b9303a5763f0a6b9d739b23007b41f5bfad
   languageName: node
   linkType: hard
 
-"@gomomento/sdk-core@npm:1.41.2, @gomomento/sdk-core@npm:^1.41.2":
-  version: 1.41.2
-  resolution: "@gomomento/sdk-core@npm:1.41.2"
+"@gomomento/sdk-core@npm:1.44.1, @gomomento/sdk-core@npm:^1.44.1":
+  version: 1.44.1
+  resolution: "@gomomento/sdk-core@npm:1.44.1"
   dependencies:
     buffer: ^6.0.3
     jwt-decode: 3.1.2
-  checksum: 22801a85f4417307262da95e1c89042b5579b80cc4ae8e32f796fb033e4110af402001b2e02de82f13c122bf2e94d65a4861c555e8bc6c7af6092cf8140746d4
+  checksum: adb69c48e97cf7703ecef2b7430eb1fca01f062ceab93bea723ff5211e4f4b7ce083ccb8fe8460037b0aa92970369e136107086dc3586c5ca9f8a64b84f07592
   languageName: node
   linkType: hard
 
-"@gomomento/sdk@npm:^1.41.2":
-  version: 1.41.2
-  resolution: "@gomomento/sdk@npm:1.41.2"
+"@gomomento/sdk@npm:^1.44.1":
+  version: 1.44.1
+  resolution: "@gomomento/sdk@npm:1.44.1"
   dependencies:
-    "@gomomento/generated-types": 0.84.0
-    "@gomomento/sdk-core": 1.41.2
+    "@gomomento/generated-types": 0.87.0
+    "@gomomento/sdk-core": 1.44.1
     "@grpc/grpc-js": 1.9.0
     "@types/google-protobuf": 3.15.6
     google-protobuf: 3.21.2
     jwt-decode: 3.1.2
-  checksum: aef0069d19c7af103a24f6429d1430cf67f0e80854893f6cebcc2d94b7a5e153b14f7bd39824b103bec233233e742ced4769fffb9250f7fe88c2ff129b1f6e4a
+  checksum: a281c1ea350505bb5ae2d067ab73d90b04bdd9944de832c73f1bd95d81ccca554f7684527e97d50f98daa0ecc58cd9f85a4be22b1a9e3ffa7f9b3c00c0996f95
   languageName: node
   linkType: hard
 
@@ -16875,7 +16875,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.41.2
+    "@gomomento/sdk": ^1.44.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
@@ -21318,8 +21318,8 @@ __metadata:
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.41.2
-    "@gomomento/sdk-core": ^1.41.2
+    "@gomomento/sdk": ^1.44.1
+    "@gomomento/sdk-core": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -21418,7 +21418,7 @@ __metadata:
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     neo4j-driver: ^5.12.0
-    node-llama-cpp: ^2.1.2
+    node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
     object-hash: ^3.0.0
     openai: ~4.4.0
@@ -21473,9 +21473,9 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.41.2
-    "@gomomento/sdk-core": ^1.41.2
-    "@gomomento/sdk-web": ^1.41.2
+    "@gomomento/sdk": ^1.44.1
+    "@gomomento/sdk-core": ^1.44.1
+    "@gomomento/sdk-web": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -23527,9 +23527,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-llama-cpp@npm:^2.1.2":
-  version: 2.5.1
-  resolution: "node-llama-cpp@npm:2.5.1"
+"node-llama-cpp@npm:2.7.3":
+  version: 2.7.3
+  resolution: "node-llama-cpp@npm:2.7.3"
   dependencies:
     chalk: ^5.3.0
     chmodrp: ^1.0.2
@@ -23549,7 +23549,7 @@ __metadata:
     yargs: ^17.7.2
   bin:
     node-llama-cpp: dist/cli/cli.js
-  checksum: a2e5cd94deb21d6172881a56de334112600cb323701e63e0e986ae8928c3d2deec2b62f2e888cac60703623b9f9609c78644cd38583d1d628d9da7ed552de796
+  checksum: 5be984ab4711d3e6f3f29e6246e5d3b437b0e48631376f361c832a969530ffa4da5cdc78e8cf8e003a86411ced42c7cf022ad6d5b50c24f276cd841dbb077e0b
   languageName: node
   linkType: hard
 

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.170",
+  "version": "0.0.171",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -34,6 +34,18 @@
     "agents/format_scratchpad.cjs",
     "agents/format_scratchpad.js",
     "agents/format_scratchpad.d.ts",
+    "agents/format_scratchpad/log.cjs",
+    "agents/format_scratchpad/log.js",
+    "agents/format_scratchpad/log.d.ts",
+    "agents/format_scratchpad/xml.cjs",
+    "agents/format_scratchpad/xml.js",
+    "agents/format_scratchpad/xml.d.ts",
+    "agents/format_scratchpad/log_to_message.cjs",
+    "agents/format_scratchpad/log_to_message.js",
+    "agents/format_scratchpad/log_to_message.d.ts",
+    "agents/react/output_parser.cjs",
+    "agents/react/output_parser.js",
+    "agents/react/output_parser.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -49,6 +61,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/render.cjs",
+    "tools/render.js",
+    "tools/render.d.ts",
     "tools/sql.cjs",
     "tools/sql.js",
     "tools/sql.d.ts",
@@ -475,6 +490,9 @@
     "chat_models/minimax.cjs",
     "chat_models/minimax.js",
     "chat_models/minimax.d.ts",
+    "chat_models/llama_cpp.cjs",
+    "chat_models/llama_cpp.js",
+    "chat_models/llama_cpp.d.ts",
     "chat_models/yandex.cjs",
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",
@@ -768,8 +786,8 @@
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.8.0",
-    "@gomomento/sdk": "^1.41.2",
-    "@gomomento/sdk-core": "^1.41.2",
+    "@gomomento/sdk": "^1.44.1",
+    "@gomomento/sdk-core": "^1.44.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
@@ -856,7 +874,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "^5.12.0",
-    "node-llama-cpp": "^2.1.2",
+    "node-llama-cpp": "2.7.3",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
@@ -903,9 +921,9 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.8.0",
-    "@gomomento/sdk": "^1.41.2",
-    "@gomomento/sdk-core": "^1.41.2",
-    "@gomomento/sdk-web": "^1.41.2",
+    "@gomomento/sdk": "^1.44.1",
+    "@gomomento/sdk-core": "^1.44.1",
+    "@gomomento/sdk-web": "^1.44.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
@@ -1353,6 +1371,26 @@
       "import": "./agents/format_scratchpad.js",
       "require": "./agents/format_scratchpad.cjs"
     },
+    "./agents/format_scratchpad/log": {
+      "types": "./agents/format_scratchpad/log.d.ts",
+      "import": "./agents/format_scratchpad/log.js",
+      "require": "./agents/format_scratchpad/log.cjs"
+    },
+    "./agents/format_scratchpad/xml": {
+      "types": "./agents/format_scratchpad/xml.d.ts",
+      "import": "./agents/format_scratchpad/xml.js",
+      "require": "./agents/format_scratchpad/xml.cjs"
+    },
+    "./agents/format_scratchpad/log_to_message": {
+      "types": "./agents/format_scratchpad/log_to_message.d.ts",
+      "import": "./agents/format_scratchpad/log_to_message.js",
+      "require": "./agents/format_scratchpad/log_to_message.cjs"
+    },
+    "./agents/react/output_parser": {
+      "types": "./agents/react/output_parser.d.ts",
+      "import": "./agents/react/output_parser.js",
+      "require": "./agents/react/output_parser.cjs"
+    },
     "./base_language": {
       "types": "./base_language.d.ts",
       "import": "./base_language.js",
@@ -1377,6 +1415,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/render": {
+      "types": "./tools/render.d.ts",
+      "import": "./tools/render.js",
+      "require": "./tools/render.cjs"
     },
     "./tools/sql": {
       "types": "./tools/sql.d.ts",
@@ -2087,6 +2130,11 @@
       "types": "./chat_models/minimax.d.ts",
       "import": "./chat_models/minimax.js",
       "require": "./chat_models/minimax.cjs"
+    },
+    "./chat_models/llama_cpp": {
+      "types": "./chat_models/llama_cpp.d.ts",
+      "import": "./chat_models/llama_cpp.js",
+      "require": "./chat_models/llama_cpp.cjs"
     },
     "./chat_models/yandex": {
       "types": "./chat_models/yandex.d.ts",
