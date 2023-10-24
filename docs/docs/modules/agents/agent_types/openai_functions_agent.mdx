@@ -20,6 +20,12 @@ import RunnableExample from "@examples/agents/openai_runnable.ts";
 Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
 :::
 
+# With LCEL
+
+In this example we'll use LCEL to construct a highly customizable agent that is given two tools: Search and Calculator.
+
+<CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>
+
 This agent also supports `StructuredTool`s with more complex input schemas.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
@@ -27,6 +33,5 @@ This agent also supports `StructuredTool`s with more complex input schemas.
 ## Prompt customization
 
 You can pass in a custom string to be used as the system message of the prompt as follows:
-
 
 <CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>
