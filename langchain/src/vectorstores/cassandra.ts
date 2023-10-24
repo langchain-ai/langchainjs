@@ -22,6 +22,8 @@ export interface CassandraLibArgs extends DseClientOptions {
   primaryKey: Column;
   metadataColumns: Column[];
   indices: Index[];
+  maxConcurrency?: number;
+  batchSize?: number;
 }
 
 /**
@@ -50,6 +52,10 @@ export class CassandraStore extends VectorStore {
 
   private isInitialized = false;
 
+  private readonly maxConcurrency: number;
+
+  private readonly batchSize: number;
+
   _vectorstoreType(): string {
     return "cassandra";
   }
@@ -64,6 +70,8 @@ export class CassandraStore extends VectorStore {
     this.primaryKey = args.primaryKey;
     this.metadataColumns = args.metadataColumns;
     this.indices = args.indices;
+    this.maxConcurrency = args.maxConcurrency || 25;
+    this.batchSize = args.batchSize || 0;
   }
 
   /**
@@ -81,8 +89,7 @@ export class CassandraStore extends VectorStore {
       await this.initialize();
     }
 
-    const queries = this.buildInsertQuery(vectors, documents);
-    await this.client.batch(queries);
+    await this.insertAll(vectors, documents);
   }
 
   /**
@@ -221,43 +228,6 @@ export class CassandraStore extends VectorStore {
     this.isInitialized = true;
   }
 
-  /**
-   * Method to build an CQL query for inserting vectors and documents into
-   * the Cassandra database.
-   * @param vectors The vectors to insert.
-   * @param documents The documents to insert.
-   * @returns The CQL query string.
-   */
-  private buildInsertQuery(
-    vectors: number[][],
-    documents: Document[]
-  ): string[] {
-    const queries: string[] = [];
-    for (let index = 0; index < vectors.length; index += 1) {
-      const vector = vectors[index];
-      const document = documents[index];
-
-      const metadataColNames = Object.keys(document.metadata);
-      const metadataVals = Object.values(document.metadata);
-      const metadataInsert =
-        metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : "";
-      const query = `INSERT INTO ${this.keyspace}.${
-        this.table
-      } (vector, text${metadataInsert}) VALUES ([${vector}], '${
-        document.pageContent
-      }'${
-        metadataVals.length > 0
-          ? ", " +
-            metadataVals
-              .map((val) => (typeof val === "number" ? val : `'${val}'`))
-              .join(", ")
-          : ""
-      });`;
-      queries.push(query);
-    }
-    return queries;
-  }
-
   private buildWhereClause(filter: this["FilterType"]): string {
     const whereClause = Object.entries(filter)
       .map(([key, value]) => `${key} = '${value}'`)
@@ -281,5 +251,96 @@ export class CassandraStore extends VectorStore {
     const whereClause = filter ? this.buildWhereClause(filter) : "";
 
     return `SELECT * FROM ${this.keyspace}.${this.table} ${whereClause} ORDER BY vector ANN OF [${query}] LIMIT ${k}`;
+  }
+
+  /**
+   * Method to inserting vectors and documents into the Cassandra database in a batch.
+   * @param batchVectors The list of vectors to insert.
+   * @param batchDocuments The list documents to insert.
+   * @returns Promise that resolves when the batch has been inserted.
+   */
+  private async executeInsert(batchVectors: number[][], batchDocuments: Document[]): Promise<void> {
+    const queries = [];
+    for (let i = 0; i < batchVectors.length; i++) {
+      const preparedVector = new Float32Array(batchVectors[i]);
+      const document = batchDocuments[i];
+      const metadataColNames = Object.keys(document.metadata);
+      const metadataVals = Object.values(document.metadata);
+      const metadataInsert = metadataColNames.length > 0 ? ', ' + metadataColNames.join(', ') : '';
+
+      const query = {
+        query: `INSERT INTO ${this.keyspace}.${this.table} (vector, text${metadataInsert}) VALUES (?, ?${", ?".repeat(metadataColNames.length)})`,
+        params: [preparedVector, document.pageContent, ...metadataVals]
+      };
+      queries.push(query);
+    }
+
+    if (queries.length === 1) {
+      await this.client.execute(queries[0].query, queries[0].params, { prepare: true });
+    } else {
+      await this.client.batch(queries, { prepare: true });
+    }
+  }
+
+  /**
+   * Method to inserting vectors and documents into the Cassandra database in
+   * parallel, keeping within maxConcurrency number of active insert statements.
+   * @param vectors The vectors to insert.
+   * @param documents The documents to insert.
+   * @returns Promise that resolves when the documents have been added.
+   */
+  private async insertAll(vectors: number[][], documents: Document[]): Promise<void> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    let currentConcurrency = 0; // Current number of running inserts
+    const pending: Promise<void>[] = []; // Array to hold pending promises
+
+    let currentBatchVectors: number[][] = [];
+    let currentBatchDocuments: Document[] = [];
+
+    for (let i = 0; i <= vectors.length; i++) { // Notice the <= to include the last iteration
+      // Add vectors and documents to the current batch if we haven't reached the end
+      if (i < vectors.length) {
+        currentBatchVectors.push(vectors[i]);
+        currentBatchDocuments.push(documents[i]);
+      }
+
+      // Check for end of batch OR end of array
+      if (currentBatchVectors.length >= this.batchSize || i === vectors.length) {
+
+        // Check for max concurrency limit
+        if (currentConcurrency >= this.maxConcurrency) {
+          // Wait for one of the inserts to finish
+          await Promise.race(pending);
+        }
+
+        // Only proceed if there is something to insert
+        if (currentBatchVectors.length > 0) {
+          // Start a new insert and add its promise to the pending array
+          const p = this.executeInsert(currentBatchVectors, currentBatchDocuments);
+          pending.push(p);
+          currentConcurrency++;
+
+          // Reset the batch
+          currentBatchVectors = [];
+          currentBatchDocuments = [];
+
+          // Remove the promise from pending once it's done, and decrease the concurrency count
+          p.finally(() => {
+            const index = pending.indexOf(p);
+            if (index > -1) {
+              pending.splice(index, 1);
+            }
+            currentConcurrency--;
+          });
+        }
+      }
+    }
+
+    // Wait for any remaining inserts to finish
+    await Promise.all(pending);
+
   }
 }

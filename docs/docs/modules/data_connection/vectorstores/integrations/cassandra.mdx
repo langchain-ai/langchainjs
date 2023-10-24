@@ -48,7 +48,7 @@ const config = {
   keyspace: "test",
   dimensions: 1536,
   table: "test",
-  indices: [{name: "name", value: "(name)"}]
+  indices: [{name: "name", value: "(name)"}],
   primaryKey: {
     name: "id",
     type: "int",
@@ -85,3 +85,19 @@ or filtered query:
 ```typescript
 const results = await vectorStore.similaritySearch("B", 1, { name: "Bubba" });
 ```
+
+## Additional Configuration
+
+In the configuration document, two optional parameters are provided; their defaults are:
+
+```
+  ...
+  maxConcurrency: 25,
+  batchSize: 0,
+  ...
+```
+
+|Parameter|Usage|
+|---------|-----|
+| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time. |
+| `batchSize` | How many documents will be sent on a single request. A value > 1 is recommended only when loading into a single partition. |
