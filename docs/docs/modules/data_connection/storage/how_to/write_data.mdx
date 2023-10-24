@@ -1,0 +1,50 @@
+# Writing Data
+
+Writing data is simple with KV stores. Below is an example using the `InMemoryStore` and the `.mset()` method.
+We'll also set our generic value type to `Date` so we can have type safety setting our dates.
+
+Import the `InMemoryStore` class.
+
+```typescript
+import { InMemoryStore } from "langchain/storage/in_memory";
+```
+
+Instantiate a new instance and pass `Date` as our generic for the value type.
+
+```typescript
+const store = new InMemoryStore<Date>();
+```
+
+Finally we can call `.mset()` to write multiple values at once.
+
+```typescript
+const data = [
+  ["date1", new Date()],
+  ["date2", new Date()],
+];
+
+await store.mset(data);
+```
+
+## Using File System
+
+When using the file system integration we need to instantiate via the `fromPath` method. This is required because it needs to preform checks to ensure the directory exists and is readable/writable.
+You also must use a directory when using `LocalFileStore` because each entry is stored as a unique file in the directory.
+
+```typescript
+import { LocalFileStore } from "langchain/storage/file_system";
+```
+
+```typescript
+const pathToStore = "./my-store-directory";
+const store = await LocalFileStore.fromPath(pathToStore);
+```
+
+```typescript
+const data = [
+  ["date1", new Date()],
+  ["date2", new Date()],
+];
+
+await store.mset(data);
+```
