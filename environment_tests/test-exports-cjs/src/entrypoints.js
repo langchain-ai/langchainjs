@@ -7,6 +7,7 @@ const agents_format_scratchpad_log = require("langchain/agents/format_scratchpad
 const agents_format_scratchpad_xml = require("langchain/agents/format_scratchpad/xml");
 const agents_format_scratchpad_log_to_message = require("langchain/agents/format_scratchpad/log_to_message");
 const agents_react_output_parser = require("langchain/agents/react/output_parser");
+const agents_openai_output_parser = require("langchain/agents/openai/output_parser");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const tools_render = require("langchain/tools/render");
