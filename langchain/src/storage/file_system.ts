@@ -1,69 +1,73 @@
 import { promises as fsPromises } from "fs";
-import path from "path";
+import nodePath from "path";
 import { BaseStore } from "../schema/storage.js";
 
 /**
  * File system implementation of the BaseStore using a dictionary. Used for
  * storing key-value pairs in the file system.
  */
-export class LocalFileStore<T> extends BaseStore<string, T> {
+export class LocalFileStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
 
-  path: string;
+  rootPath: string;
 
-  constructor(fields: { path: string }) {
-    if (path.extname(fields.path) !== ".json") {
-      throw new Error(
-        `File extension must be .json for LocalFileStore. Path: ${fields.path}`
-      );
-    }
-
+  constructor(fields: { rootPath: string }) {
     super(fields);
-    this.path = fields.path;
+    this.rootPath = fields.rootPath;
   }
 
   /**
    * Read and parse the file at the given path.
+   * @param key The key to read the file for.
    * @returns Promise that resolves to the parsed file content.
    */
-  private async getParsedFile(): Promise<Record<string, T>> {
-    let values: Record<string, T> = {};
+  private async getParsedFile(key: string): Promise<Uint8Array | undefined> {
     try {
-      const fileContent = await fsPromises.readFile(this.path, "utf-8");
-      if (!fileContent) {
-        return {} as Record<string, T>;
-      }
-      values = JSON.parse(fileContent);
+      const fileContent = await fsPromises.readFile(this.getFullPath(key));
+      return fileContent;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // If the file does not exist, create it
       if (("code" in e && e.code === "EISDIR") || e.code === "ENOENT") {
-        await fsPromises.writeFile(this.path, "", "utf-8");
-        return {} as Record<string, T>;
+        await fsPromises.writeFile(this.getFullPath(key), "");
+        return undefined;
       }
       throw new Error(
         `Error reading and parsing file at path: ${
-          this.path
+          this.rootPath
         }.\nError: ${JSON.stringify(e)}`
       );
     }
-    return values;
   }
 
   /**
    * Writes the given key-value pairs to the file at the given path.
    * @param fileContent An object with the key-value pairs to be written to the file.
    */
-  private async setFileContent(fileContent: Record<string, T>) {
+  private async setFileContent(content: Uint8Array, key: string) {
     try {
-      const hasEntries = Object.entries(fileContent).length > 0;
-      const fileContentString = hasEntries ? JSON.stringify(fileContent) : "";
-      await fsPromises.writeFile(this.path, fileContentString);
+      await fsPromises.writeFile(this.getFullPath(key), content);
     } catch (error) {
       throw new Error(
-        `Error writing file at path: ${this.path}.\nError: ${JSON.stringify(
-          error
-        )}`
+        `Error writing file at path: ${this.getFullPath(
+          key
+        )}.\nError: ${JSON.stringify(error)}`
+      );
+    }
+  }
+
+  /**
+   * Returns the full path of the file where the value of the given key is stored.
+   * @param key the key to get the full path for
+   */
+  private getFullPath(key: string): string {
+    try {
+      const keyAsTxtFile = `${key}.txt`;
+      const fullPath = nodePath.join(this.rootPath, keyAsTxtFile);
+      return fullPath;
+    } catch (e) {
+      throw new Error(
+        `Error getting full path for key: ${key}.\nError: ${JSON.stringify(e)}`
       );
     }
   }
@@ -74,11 +78,12 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
    * @returns Array of values associated with the given keys.
    */
   async mget(keys: string[]) {
-    const fileContent = await this.getParsedFile();
-    const retrievedValues = Object.entries(fileContent)
-      .filter(([key]) => keys.includes(key))
-      .map(([_, value]) => value);
-    return retrievedValues;
+    const values: (Uint8Array | undefined)[] = [];
+    for (const key of keys) {
+      const fileContent = await this.getParsedFile(key);
+      values.push(fileContent);
+    }
+    return values;
   }
 
   /**
@@ -86,16 +91,10 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
    * @param keyValuePairs Array of key-value pairs to set in the store.
    * @returns Promise that resolves when all key-value pairs have been set.
    */
-  async mset(keyValuePairs: [string, T][]): Promise<void> {
-    const fileContent = await this.getParsedFile();
-    const encodedKeyValuePairs: [string, T][] = keyValuePairs.map(
-      ([key, value]) => [key, value]
+  async mset(keyValuePairs: [string, Uint8Array][]): Promise<void> {
+    await Promise.all(
+      keyValuePairs.map(([key, value]) => this.setFileContent(value, key))
     );
-
-    for (const [key, value] of encodedKeyValuePairs) {
-      fileContent[key] = value;
-    }
-    await this.setFileContent(fileContent);
   }
 
   /**
@@ -104,11 +103,9 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
    * @returns Promise that resolves when all keys have been deleted.
    */
   async mdelete(keys: string[]): Promise<void> {
-    const fileContent = await this.getParsedFile();
-    for (const key of keys) {
-      delete fileContent[key];
-    }
-    await this.setFileContent(fileContent);
+    await Promise.all(
+      keys.map((key) => fsPromises.unlink(this.getFullPath(key)))
+    );
   }
 
   /**
@@ -118,9 +115,9 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
    * @returns AsyncGenerator that yields keys from the store.
    */
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
-    const fileContent = await this.getParsedFile();
-    const keys = Object.keys(fileContent);
-    for (const key of keys) {
+    const allFiles = await fsPromises.readdir(this.rootPath);
+    const allKeys = allFiles.map((file) => file.replace(".txt", ""));
+    for (const key of allKeys) {
       if (prefix === undefined || key.startsWith(prefix)) {
         yield key;
       }
@@ -129,30 +126,30 @@ export class LocalFileStore<T> extends BaseStore<string, T> {
 
   /**
    * Static method for initializing the class.
-   * Preforms a check to see if the file exists, and if not, creates it.
-   * @param path Path to the file.
+   * Preforms a check to see if the directory exists, and if not, creates it.
+   * @param path Path to the directory.
    * @returns Promise that resolves to an instance of the class.
    */
-  static async fromPath<T>(path: string): Promise<LocalFileStore<T>> {
+  static async fromPath(rootPath: string): Promise<LocalFileStore> {
     try {
-      // Verifies the file exists at the provided path, and that it is readable and writable.
+      // Verifies the directory exists at the provided path, and that it is readable and writable.
       await fsPromises.access(
-        path,
+        rootPath,
         fsPromises.constants.R_OK | fsPromises.constants.W_OK
       );
     } catch (_) {
       try {
-        // File does not exist, create it.
-        await fsPromises.writeFile(path, "", { flag: "a" });
+        // Directory does not exist, create it.
+        await fsPromises.mkdir(rootPath, { recursive: true });
       } catch (error) {
         throw new Error(
-          `An error occurred creating file at: ${path}.\nError: ${JSON.stringify(
+          `An error occurred creating directory at: ${rootPath}.\nError: ${JSON.stringify(
             error
           )}`
         );
       }
     }
 
-    return new this<T>({ path });
+    return new this({ rootPath });
   }
 }

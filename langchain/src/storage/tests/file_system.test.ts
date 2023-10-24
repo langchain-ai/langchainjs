@@ -6,40 +6,46 @@ import { LocalFileStore } from "../file_system.js";
 
 describe("LocalFileStore", () => {
   const keys = ["key1", "key2"];
-  const path = "./file_system_store_test.json";
-  const secondaryPath = "./file_system_store_test_secondary.json";
+  const rootPath = "./file_system_store_test";
+  const secondaryRootPath = "./file_system_store_test_secondary";
 
   afterEach(async () => {
     try {
-      await fsPromises.access(path, fsPromises.constants.F_OK);
+      await fsPromises.access(rootPath, fsPromises.constants.F_OK);
     } catch (e) {
       // file does not exist, so we don't need to delete it
       return;
     }
-    await fsPromises.unlink(path);
+    await fsPromises.rm(rootPath, { recursive: true, force: true });
   });
 
   test("LocalFileStore can write & read values", async () => {
-    const store = await LocalFileStore.fromPath<string>(path);
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const store = await LocalFileStore.fromPath(rootPath);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
-      [keys[0], value1],
-      [keys[1], value2],
+      [keys[0], encoder.encode(value1)],
+      [keys[1], encoder.encode(value2)],
     ]);
     const retrievedValues = await store.mget([keys[0], keys[1]]);
     const everyValueDefined = retrievedValues.every((v) => v !== undefined);
     expect(everyValueDefined).toBe(true);
-    expect(retrievedValues.map((v) => v)).toEqual([value1, value2]);
+    expect(retrievedValues.map((v) => decoder.decode(v))).toEqual([
+      value1,
+      value2,
+    ]);
   });
 
   test("LocalFileStore can delete values", async () => {
-    const store = await LocalFileStore.fromPath<string>(path);
+    const encoder = new TextEncoder();
+    const store = await LocalFileStore.fromPath(rootPath);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
-      [keys[0], value1],
-      [keys[1], value2],
+      [keys[0], encoder.encode(value1)],
+      [keys[1], encoder.encode(value2)],
     ]);
     await store.mdelete(keys);
     const retrievedValues = await store.mget([keys[0], keys[1]]);
@@ -48,11 +54,12 @@ describe("LocalFileStore", () => {
   });
 
   test("LocalFileStore can yield keys with prefix", async () => {
+    const encoder = new TextEncoder();
     const prefix = "prefix_";
     const keysWithPrefix = keys.map((key) => `${prefix}${key}`);
-    const store = await LocalFileStore.fromPath<string>(path);
+    const store = await LocalFileStore.fromPath(rootPath);
     const value = new Date().toISOString();
-    await store.mset(keysWithPrefix.map((key) => [key, value]));
+    await store.mset(keysWithPrefix.map((key) => [key, encoder.encode(value)]));
     const yieldedKeys = [];
     for await (const key of store.yieldKeys(prefix)) {
       yieldedKeys.push(key);
@@ -64,12 +71,14 @@ describe("LocalFileStore", () => {
   });
 
   test("LocalFileStore works with a file which does not exist", async () => {
-    const store = await LocalFileStore.fromPath<string>(secondaryPath);
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const store = await LocalFileStore.fromPath(secondaryRootPath);
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();
     await store.mset([
-      [keys[0], value1],
-      [keys[1], value2],
+      [keys[0], encoder.encode(value1)],
+      [keys[1], encoder.encode(value2)],
     ]);
     const retrievedValues = await store.mget([keys[0], keys[1]]);
     const everyValueDefined = retrievedValues.every((v) => v !== undefined);
@@ -80,9 +89,9 @@ describe("LocalFileStore", () => {
         if (!v) {
           throw new Error("Value is undefined");
         }
-        return v;
+        return decoder.decode(v);
       })
     ).toEqual([value1, value2]);
-    await fsPromises.unlink(secondaryPath);
+    await fsPromises.rm(secondaryRootPath, { recursive: true, force: true });
   });
 });
