@@ -20,7 +20,7 @@ const entrypoints = {
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/format_scratchpad/log_to_message": "agents/format_scratchpad/log_to_message",
-  "agents/react/outputParser": "agents/react/outputParser",
+  "agents/react/output_parser": "agents/react/outputParser",
   // base language
   base_language: "base_language/index",
   // tools
@@ -28,6 +28,7 @@ const entrypoints = {
   "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
+  "tools/render": "tools/render",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   "tools/google_calendar": "tools/google_calendar/index",
