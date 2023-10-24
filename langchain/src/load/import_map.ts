@@ -3,9 +3,14 @@
 export * as load__serializable from "../load/serializable.js";
 export * as agents from "../agents/index.js";
 export * as agents__toolkits from "../agents/toolkits/index.js";
-export * as agents__format_scratchpad from "../agents/format_scratchpad.js";
+export * as agents__format_scratchpad from "../agents/format_scratchpad/openai_functions.js";
+export * as agents__format_scratchpad__log from "../agents/format_scratchpad/log.js";
+export * as agents__format_scratchpad__xml from "../agents/format_scratchpad/xml.js";
+export * as agents__format_scratchpad__log_to_message from "../agents/format_scratchpad/log_to_message.js";
+export * as agents__react__output_parser from "../agents/react/output_parser.js";
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
+export * as tools__render from "../tools/render.js";
 export * as chains from "../chains/index.js";
 export * as chains__openai_functions from "../chains/openai_functions/index.js";
 export * as embeddings__base from "../embeddings/base.js";

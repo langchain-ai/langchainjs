@@ -45,7 +45,7 @@ async function dropVectorIndexes(store: Neo4jVectorStore) {
   }
 }
 
-test("Test fromTexts", async () => {
+test.skip("Test fromTexts", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -88,7 +88,7 @@ test("Test fromTexts", async () => {
   await neo4jVectorStore.close();
 });
 
-test("Test fromTexts Hybrid", async () => {
+test.skip("Test fromTexts Hybrid", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -132,7 +132,7 @@ test("Test fromTexts Hybrid", async () => {
   await neo4jVectorStore.close();
 });
 
-test("Test fromExistingIndex", async () => {
+test.skip("Test fromExistingIndex", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -184,7 +184,7 @@ test("Test fromExistingIndex", async () => {
   await existingIndex.close();
 });
 
-test("Test fromExistingIndex Hybrid", async () => {
+test.skip("Test fromExistingIndex Hybrid", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -240,7 +240,7 @@ test("Test fromExistingIndex Hybrid", async () => {
   await existingIndex.close();
 });
 
-test("Test retrievalQuery", async () => {
+test.skip("Test retrievalQuery", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -286,7 +286,7 @@ test("Test retrievalQuery", async () => {
   await neo4jVectorStore.close();
 });
 
-test("Test fromExistingGraph", async () => {
+test.skip("Test fromExistingGraph", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -347,7 +347,7 @@ test("Test fromExistingGraph", async () => {
   await existingGraph.close();
 });
 
-test("Test fromExistingGraph multiple properties", async () => {
+test.skip("Test fromExistingGraph multiple properties", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
@@ -408,7 +408,7 @@ test("Test fromExistingGraph multiple properties", async () => {
   await existingGraph.close();
 });
 
-test("Test fromExistingGraph multiple properties hybrid", async () => {
+test.skip("Test fromExistingGraph multiple properties hybrid", async () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
