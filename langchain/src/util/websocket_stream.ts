@@ -48,8 +48,8 @@ export class WebSocketStream<
     if (getEnv() === "browser") {
       ws = new WebSocket(url, options.protocols ?? []);
     } else if (getEnv() === "node") {
-      //@ts-ignore
-      ws = new WsWebSocket(url);
+      // @ts-ignore
+      ws = new WsWebSocket(url, options.protocols ?? []);
     }
 
     const closeWithInfo = ({ code, reason }: WebSocketCloseInfo = {}) =>
