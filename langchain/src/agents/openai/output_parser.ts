@@ -4,7 +4,6 @@ import {
   AgentFinish,
   BaseMessage,
   ChatGeneration,
-  Generation,
   isBaseMessage,
 } from "../../schema/index.js";
 import { AgentActionOutputParser } from "../types.js";
@@ -34,7 +33,7 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
     );
   }
 
-  async parseResult(generations: Generation[] | ChatGeneration[]) {
+  async parseResult(generations: ChatGeneration[]) {
     if ("message" in generations[0] && isBaseMessage(generations[0].message)) {
       return this.parseAIMessage(generations[0].message);
     }
