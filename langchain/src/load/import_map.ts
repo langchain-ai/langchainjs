@@ -4,6 +4,7 @@ export * as load__serializable from "../load/serializable.js";
 export * as agents from "../agents/index.js";
 export * as agents__toolkits from "../agents/toolkits/index.js";
 export * as agents__format_scratchpad from "../agents/format_scratchpad.js";
+export * as agents__react__outputParser from "../agents/react/outputParser.js";
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
 export * as chains from "../chains/index.js";

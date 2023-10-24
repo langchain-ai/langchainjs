@@ -34,6 +34,9 @@
     "agents/format_scratchpad.cjs",
     "agents/format_scratchpad.js",
     "agents/format_scratchpad.d.ts",
+    "agents/react/outputParser.cjs",
+    "agents/react/outputParser.js",
+    "agents/react/outputParser.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -1352,6 +1355,11 @@
       "types": "./agents/format_scratchpad.d.ts",
       "import": "./agents/format_scratchpad.js",
       "require": "./agents/format_scratchpad.cjs"
+    },
+    "./agents/react/outputParser": {
+      "types": "./agents/react/outputParser.d.ts",
+      "import": "./agents/react/outputParser.js",
+      "require": "./agents/react/outputParser.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
