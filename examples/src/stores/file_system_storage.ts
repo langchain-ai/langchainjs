@@ -1,8 +1,9 @@
+import fs from "fs";
 import { AIMessage, HumanMessage } from "langchain/schema";
-import { NodeFileSystemStore } from "langchain/storage/file_system";
+import { LocalFileStore } from "langchain/storage/file_system";
 
 // Instantiate the store using the `fromPath` method.
-const store = await NodeFileSystemStore.fromPath<Uint8Array>("./messages.json");
+const store = await LocalFileStore.fromPath("./messages");
 // Define our encoder/decoder for converting between strings and Uint8Arrays
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -58,3 +59,4 @@ console.log(yieldedKeys);
 // Finally, let's delete the keys from the store
 // and delete the file.
 await store.mdelete(yieldedKeys);
+await fs.promises.rm("./messages", { recursive: true, force: true });

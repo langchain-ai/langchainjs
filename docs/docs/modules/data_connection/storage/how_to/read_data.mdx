@@ -40,12 +40,12 @@ console.log(data);
 ## Using File System
 
 ```typescript
-import { NodeFileSystemStore } from "langchain/storage/in_memory";
+import { LocalFileStore } from "langchain/storage/in_memory";
 ```
 
 ```typescript
 const pathToStore = "./my-store.json";
-const store = await NodeFileSystemStore.fromPath<string>(pathToStore);
+const store = await LocalFileStore.fromPath<string>(pathToStore);
 ```
 
 ```typescript

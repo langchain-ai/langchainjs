@@ -29,15 +29,15 @@ await store.mset(data);
 ## Using File System
 
 When using the file system integration we need to instantiate via the `fromPath` method. This is required because it needs to preform checks to ensure the path exists and is writable.
-You also must use a `JSON` file when using `NodeFileSystemStore` or it'll throw an error.
+You also must use a `JSON` file when using `LocalFileStore` or it'll throw an error.
 
 ```typescript
-import { NodeFileSystemStore } from "langchain/storage/in_memory";
+import { LocalFileStore } from "langchain/storage/in_memory";
 ```
 
 ```typescript
 const pathToStore = "./my-store.json";
-const store = await NodeFileSystemStore.fromPath<Date>(pathToStore);
+const store = await LocalFileStore.fromPath<Date>(pathToStore);
 ```
 
 ```typescript
