@@ -332,7 +332,7 @@ export class RedisVectorStore extends VectorStore {
    * @param dimensions The dimensions of the index
    * @returns A promise that resolves when the index has been created.
    */
-  async createIndex(dimensions: number): Promise<void> {
+  async createIndex(dimensions = 1536): Promise<void> {
     if (await this.checkIndexExists()) {
       return;
     }
