@@ -35,6 +35,5 @@ firebase-debug.log
 firestore-debug.log
 tmp/
 
-**/convex/_generated
 **/convex/.gitignore
 **/convex/tsconfig.json
