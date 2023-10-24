@@ -1,11 +1,24 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
+import { pull } from "langchain/hub";
+import { PromptTemplate } from "langchain/prompts";
+import { RunnableSequence } from "langchain/schema/runnable";
+import { InputValues } from "langchain/schema";
+import { BufferMemory } from "langchain/memory";
+import { formatLogToString } from "langchain/agents/format_scratchpad/log";
+import { renderTextDescription } from "langchain/tools/render";
+import { ReActSingleInputOutputParser } from "langchain/agents/react/output_parser";
 
 process.env.LANGCHAIN_HANDLER = "langchain";
-/** Define your chat model and tools */
-const model = new ChatOpenAI({ temperature: 0 });
+/** Define your chat model */
+const model = new ChatOpenAI({ modelName: "gpt-4" });
+/** Bind a stop token to the model */
+const modelWithStop = model.bind({
+  stop: ["\nObservation"],
+});
+/** Define your list of tools */
 const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
     location: "Austin,Texas,United States",
@@ -14,32 +27,54 @@ const tools = [
   }),
   new Calculator(),
 ];
-/** Define your  */
-
-// Passing "chat-conversational-react-description" as the agent type
-// automatically creates and uses BufferMemory with the executor.
-// If you would like to override this, you can pass in a custom
-// memory option, but the memoryKey set on it must be "chat_history".
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "chat-conversational-react-description",
-  verbose: true,
+/** Pull a prompt from LangChain Hub */
+const prompt = await pull<PromptTemplate>("hwchase17/react-chat");
+/** Add input variables to prompt */
+const toolNames = tools.map((tool) => tool.name);
+const promptWithInputs = await prompt.partial({
+  tools: renderTextDescription(tools),
+  tool_names: toolNames.join(","),
 });
+console.log(promptWithInputs);
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: InputValues) => i.input,
+    agent_scratchpad: (i: InputValues) => formatLogToString(i.steps),
+    chat_history: (i: InputValues) => i.chat_history,
+  },
+  promptWithInputs,
+  modelWithStop,
+  new ReActSingleInputOutputParser({ toolNames }),
+]);
+/**
+ * Define your memory store
+ * @important The memoryKey must be "chat_history" for the chat agent to work
+ * because this is the key we defined above in the `runnableAgent`.
+ */
+const memory = new BufferMemory({ memoryKey: "chat_history" });
+/** Define your executor and pass in the agent, tools and memory */
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+  memory,
+});
+
 console.log("Loaded agent.");
 
 const input0 = "hi, i am bob";
-
 const result0 = await executor.call({ input: input0 });
-
 console.log(`Got output ${result0.output}`);
 
 const input1 = "whats my name?";
-
 const result1 = await executor.call({ input: input1 });
-
 console.log(`Got output ${result1.output}`);
 
 const input2 = "whats the weather in pomfret?";
-
 const result2 = await executor.call({ input: input2 });
-
 console.log(`Got output ${result2.output}`);
+/**
+ * Loaded agent.
+ * Got output Hello Bob, how can I assist you today?
+ * Got output Your name is Bob.
+ * Got output The current weather in Pomfret, CT is partly cloudy with a temperature of 59 degrees Fahrenheit. The humidity is at 52% and there is a wind speed of 8 mph. There is a 0% chance of precipitation.
+ */
