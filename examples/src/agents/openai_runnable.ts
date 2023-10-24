@@ -6,6 +6,7 @@ import { InputValues } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
+import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
@@ -36,11 +37,11 @@ const modelWithTools = model.bind({
 });
 /**
  * Construct the runnable agent.
- * 
+ *
  * We're using a `RunnableSequence` which takes two inputs:
  * - input --> the users input
  * - agent_scratchpad --> the previous agent steps
- * 
+ *
  * We're using the `formatForOpenAIFunctions` util function to format the agent
  * steps into a list of `BaseMessages` which can be passed into `MessagesPlaceholder`
  */
@@ -51,17 +52,32 @@ const runnableAgent = RunnableSequence.from([
   },
   prompt,
   modelWithTools,
-  // new OpenAIFunctionsAgentOutputParser()
+  new OpenAIFunctionsAgentOutputParser(),
 ]);
-
+/** Pass the runnable along with the tools to create the Agent Executor */
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
   tools,
 });
 
-const result = await executor.run("What is the weather in New York?");
-console.log(result);
+console.log("Loaded agent executor");
 
+const query = "What is the weather in New York?";
+console.log(`Calling agent executor with query: ${query}`);
+const result = await executor.call({
+  input: query,
+});
+console.log(result.output);
 /*
-  The current weather in New York is 72°F with a wind speed of 1 mph coming from the SSW. The humidity is at 89% and the UV index is 0 out of 11. The cloud cover is 79% and there has been no rain.
+Loaded agent executor
+Calling agent executor with query: What is the weather in New York?
+Sure, here is the response to your last comment:
+
+```json
+{
+  "action": {
+    "text": "The current weather in New York is mostly sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 47% and the wind speed is 7 mph. There is 0% chance of precipitation."
+  }
+}
+```
 */
