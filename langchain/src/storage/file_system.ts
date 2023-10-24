@@ -24,17 +24,9 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
   private async getParsedFile(key: string): Promise<Uint8Array | undefined> {
     try {
       const fileContent = await fsPromises.readFile(this.getFullPath(key));
-      if (!fileContent) {
-        return undefined;
-      }
       return fileContent;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      // If the file does not exist, create it
-      if (("code" in e && e.code === "EISDIR") || e.code === "ENOENT") {
-        await fsPromises.writeFile(this.getFullPath(key), "");
-        return undefined;
-      }
       throw new Error(
         `Error reading and parsing file at path: ${
           this.rootPath
