@@ -18,6 +18,7 @@ const entrypoints = {
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   "agents/format_scratchpad": "agents/format_scratchpad/index",
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
+  "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/react/outputParser": "agents/react/outputParser",
   // base language
   base_language: "base_language/index",

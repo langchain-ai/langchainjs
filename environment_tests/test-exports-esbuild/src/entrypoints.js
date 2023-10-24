@@ -4,6 +4,7 @@ import * as agents from "langchain/agents";
 import * as agents_toolkits from "langchain/agents/toolkits";
 import * as agents_format_scratchpad from "langchain/agents/format_scratchpad";
 import * as agents_format_scratchpad_log from "langchain/agents/format_scratchpad/log";
+import * as agents_format_scratchpad_xml from "langchain/agents/format_scratchpad/xml";
 import * as agents_react_outputParser from "langchain/agents/react/outputParser";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";

@@ -37,6 +37,9 @@
     "agents/format_scratchpad/log.cjs",
     "agents/format_scratchpad/log.js",
     "agents/format_scratchpad/log.d.ts",
+    "agents/format_scratchpad/xml.cjs",
+    "agents/format_scratchpad/xml.js",
+    "agents/format_scratchpad/xml.d.ts",
     "agents/react/outputParser.cjs",
     "agents/react/outputParser.js",
     "agents/react/outputParser.d.ts",
@@ -1363,6 +1366,11 @@
       "types": "./agents/format_scratchpad/log.d.ts",
       "import": "./agents/format_scratchpad/log.js",
       "require": "./agents/format_scratchpad/log.cjs"
+    },
+    "./agents/format_scratchpad/xml": {
+      "types": "./agents/format_scratchpad/xml.d.ts",
+      "import": "./agents/format_scratchpad/xml.js",
+      "require": "./agents/format_scratchpad/xml.cjs"
     },
     "./agents/react/outputParser": {
       "types": "./agents/react/outputParser.d.ts",

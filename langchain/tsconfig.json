@@ -41,6 +41,7 @@
       "src/agents/toolkits/sql/index.ts",
       "src/agents/format_scratchpad/index.ts",
       "src/agents/format_scratchpad/log.ts",
+      "src/agents/format_scratchpad/xml.ts",
       "src/agents/react/outputParser.ts",
       "src/base_language/index.ts",
       "src/tools/index.ts",
