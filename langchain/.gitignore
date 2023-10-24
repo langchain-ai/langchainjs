@@ -22,6 +22,9 @@ agents/toolkits/sql.d.ts
 agents/format_scratchpad.cjs
 agents/format_scratchpad.js
 agents/format_scratchpad.d.ts
+agents/format_scratchpad/log.cjs
+agents/format_scratchpad/log.js
+agents/format_scratchpad/log.d.ts
 agents/react/outputParser.cjs
 agents/react/outputParser.js
 agents/react/outputParser.d.ts
