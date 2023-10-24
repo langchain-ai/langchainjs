@@ -30,9 +30,9 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       return fileContent;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      // If the file does not exist, create it
-      if (("code" in e && e.code === "EISDIR") || e.code === "ENOENT") {
-        await fsPromises.writeFile(this.getFullPath(key), "");
+      // File does not exist yet.
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if ("code" in e && e.code === "ENOENT") {
         return undefined;
       }
       throw new Error(
