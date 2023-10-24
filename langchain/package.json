@@ -43,9 +43,9 @@
     "agents/format_scratchpad/log_to_message.cjs",
     "agents/format_scratchpad/log_to_message.js",
     "agents/format_scratchpad/log_to_message.d.ts",
-    "agents/react/outputParser.cjs",
-    "agents/react/outputParser.js",
-    "agents/react/outputParser.d.ts",
+    "agents/react/output_parser.cjs",
+    "agents/react/output_parser.js",
+    "agents/react/output_parser.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -61,6 +61,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/render.cjs",
+    "tools/render.js",
+    "tools/render.d.ts",
     "tools/sql.cjs",
     "tools/sql.js",
     "tools/sql.d.ts",
@@ -1380,10 +1383,10 @@
       "import": "./agents/format_scratchpad/log_to_message.js",
       "require": "./agents/format_scratchpad/log_to_message.cjs"
     },
-    "./agents/react/outputParser": {
-      "types": "./agents/react/outputParser.d.ts",
-      "import": "./agents/react/outputParser.js",
-      "require": "./agents/react/outputParser.cjs"
+    "./agents/react/output_parser": {
+      "types": "./agents/react/output_parser.d.ts",
+      "import": "./agents/react/output_parser.js",
+      "require": "./agents/react/output_parser.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
@@ -1409,6 +1412,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/render": {
+      "types": "./tools/render.d.ts",
+      "import": "./tools/render.js",
+      "require": "./tools/render.cjs"
     },
     "./tools/sql": {
       "types": "./tools/sql.d.ts",
