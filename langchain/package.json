@@ -46,6 +46,9 @@
     "agents/react/output_parser.cjs",
     "agents/react/output_parser.js",
     "agents/react/output_parser.d.ts",
+    "agents/xml/output_parser.cjs",
+    "agents/xml/output_parser.js",
+    "agents/xml/output_parser.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -1390,6 +1393,11 @@
       "types": "./agents/react/output_parser.d.ts",
       "import": "./agents/react/output_parser.js",
       "require": "./agents/react/output_parser.cjs"
+    },
+    "./agents/xml/output_parser": {
+      "types": "./agents/xml/output_parser.d.ts",
+      "import": "./agents/xml/output_parser.js",
+      "require": "./agents/xml/output_parser.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
