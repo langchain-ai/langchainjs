@@ -34,8 +34,11 @@ const FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE =
 export class ReActSingleInputOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "react"];
 
-  constructor() {
+  private toolNames: string[];
+
+  constructor(fields: { toolNames: string[] }) {
     super(...arguments);
+    this.toolNames = fields.toolNames;
   }
 
   /**
