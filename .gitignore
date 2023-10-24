@@ -5,6 +5,7 @@ lib/
 .turbo
 .eslintcache
 .env
+.env.local
 yarn-error.log
 docs/_dist/
 

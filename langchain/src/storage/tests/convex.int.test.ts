@@ -22,6 +22,8 @@ import { api } from "./convex/convex/_generated/api.js";
 const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 
 test.skip("Convex set, get, delete", async () => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore TypeScript fails here, but only during build
   await client.mutation(api.lib.reset);
 
   const value1 = new Date().toISOString();

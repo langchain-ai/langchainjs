@@ -31,7 +31,6 @@ const llms_yandex = require("langchain/llms/yandex");
 const llms_fake = require("langchain/llms/fake");
 const prompts = require("langchain/prompts");
 const vectorstores_base = require("langchain/vectorstores/base");
-const vectorstores_convex = require("langchain/vectorstores/convex");
 const vectorstores_memory = require("langchain/vectorstores/memory");
 const vectorstores_prisma = require("langchain/vectorstores/prisma");
 const vectorstores_vectara = require("langchain/vectorstores/vectara");
@@ -81,16 +80,17 @@ const retrievers_vespa = require("langchain/retrievers/vespa");
 const cache = require("langchain/cache");
 const stores_doc_in_memory = require("langchain/stores/doc/in_memory");
 const stores_file_in_memory = require("langchain/stores/file/in_memory");
-const stores_message_convex = require("langchain/stores/message/convex");
 const stores_message_in_memory = require("langchain/stores/message/in_memory");
-const storage_convex = require("langchain/storage/convex");
 const storage_encoder_backed = require("langchain/storage/encoder_backed");
 const storage_in_memory = require("langchain/storage/in_memory");
+<<<<<<< HEAD
 <<<<<<< HEAD
 const util_document = require("langchain/util/document");
 =======
 const util_convex = require("langchain/util/convex");
 >>>>>>> 9b7d995c (Docs and first test)
+=======
+>>>>>>> c7c752d0 (Working build)
 const util_math = require("langchain/util/math");
 const util_time = require("langchain/util/time");
 const experimental_autogpt = require("langchain/experimental/autogpt");
