@@ -42,6 +42,7 @@
       "src/agents/format_scratchpad/index.ts",
       "src/agents/format_scratchpad/log.ts",
       "src/agents/format_scratchpad/xml.ts",
+      "src/agents/format_scratchpad/log_to_message.ts",
       "src/agents/react/outputParser.ts",
       "src/base_language/index.ts",
       "src/tools/index.ts",

@@ -6,6 +6,7 @@ export * as agents__toolkits from "../agents/toolkits/index.js";
 export * as agents__format_scratchpad from "../agents/format_scratchpad/index.js";
 export * as agents__format_scratchpad__log from "../agents/format_scratchpad/log.js";
 export * as agents__format_scratchpad__xml from "../agents/format_scratchpad/xml.js";
+export * as agents__format_scratchpad__log_to_message from "../agents/format_scratchpad/log_to_message.js";
 export * as agents__react__outputParser from "../agents/react/outputParser.js";
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";

@@ -28,6 +28,9 @@ agents/format_scratchpad/log.d.ts
 agents/format_scratchpad/xml.cjs
 agents/format_scratchpad/xml.js
 agents/format_scratchpad/xml.d.ts
+agents/format_scratchpad/log_to_message.cjs
+agents/format_scratchpad/log_to_message.js
+agents/format_scratchpad/log_to_message.d.ts
 agents/react/outputParser.cjs
 agents/react/outputParser.js
 agents/react/outputParser.d.ts
