@@ -14,6 +14,7 @@ import { renderTextDescription } from "langchain/tools/render";
 
 /** Define the model to be used */
 const model = new OpenAI({ temperature: 0 });
+
 /** Create a list of the tools we're providing to the agent */
 const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -23,12 +24,14 @@ const tools = [
   }),
   new Calculator(),
 ];
+
 /**
  * Define our output parser.
  * In this case we'll use the default output parser
  * for chat agents. `ChatAgentOutputParser`
  */
 const outputParser = new ChatAgentOutputParser();
+
 /**
  * Define our prompts.
  * For this example we'll use the same default prompts
@@ -104,7 +107,6 @@ const runnableAgent = RunnableSequence.from([
  * The AgentExecutor is responsible for actually
  * running the iterations.
  */
-
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
   tools,
