@@ -1,11 +1,8 @@
-import { AIMessage, HumanMessage } from "langchain/schema";
+import { AIMessage, BaseMessage, HumanMessage } from "langchain/schema";
 import { InMemoryStore } from "langchain/storage/in_memory";
 
 // Instantiate the store using the `fromPath` method.
-const store = new InMemoryStore();
-// Define our encoder/decoder for converting between strings and Uint8Arrays
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
+const store = new InMemoryStore<BaseMessage>();
 /**
  * Here you would define your LLM and chat chain, call
  * the LLM and eventually get a list of messages.
@@ -21,19 +18,24 @@ const messages = Array.from({ length: 5 }).map((_, index) => {
 // The key will be prefixed with `message:id:` and end
 // with the index.
 await store.mset(
-  messages.map((message, index) => [
-    `message:id:${index}`,
-    encoder.encode(JSON.stringify(message)),
-  ])
+  messages.map((message, index) => [`message:id:${index}`, message])
 );
 // Now you can get your messages from the store
 const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
 // Make sure to decode the values
-console.log(retrievedMessages.map((v) => decoder.decode(v)));
+console.log(retrievedMessages.map((v) => v));
 /**
 [
-  '{"id":["langchain","AIMessage"],"kwargs":{"content":"ai stuff..."}}',
-  '{"id":["langchain","HumanMessage"],"kwargs":{"content":"human stuff..."}}'
+  AIMessage {
+    lc_kwargs: { content: 'ai stuff...', additional_kwargs: {} },
+    content: 'ai stuff...',
+    ...
+  },
+  HumanMessage {
+    lc_kwargs: { content: 'human stuff...', additional_kwargs: {} },
+    content: 'human stuff...',
+    ...
+  }
 ]
  */
 // Or, if you want to get back all the keys you can call
@@ -48,10 +50,10 @@ for await (const key of store.yieldKeys("message:id:")) {
 console.log(yieldedKeys);
 /**
 [
-  'message:id:2',
-  'message:id:1',
-  'message:id:3',
   'message:id:0',
+  'message:id:1',
+  'message:id:2',
+  'message:id:3',
   'message:id:4'
 ]
  */
