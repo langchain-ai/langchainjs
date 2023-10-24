@@ -2,13 +2,14 @@ import * as fs from "fs";
 
 import { OpenAI } from "langchain/llms/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { RetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_compression";
 import { LLMChainExtractor } from "langchain/retrievers/document_compressors/chain_extract";
 
-const model = new OpenAI();
+const model = new OpenAI({
+  modelName: "gpt-3.5-turbo-instruct",
+});
 const baseCompressor = LLMChainExtractor.fromLLM(model);
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
@@ -24,10 +25,27 @@ const retriever = new ContextualCompressionRetriever({
   baseRetriever: vectorStore.asRetriever(),
 });
 
-const chain = RetrievalQAChain.fromLLM(model, retriever);
+const retrievedDocs = await retriever.getRelevantDocuments(
+  "What did the speaker say about Justice Breyer?"
+);
 
-const res = await chain.call({
-  query: "What did the speaker say about Justice Breyer?",
-});
+console.log({ retrievedDocs });
 
-console.log({ res });
+/*
+  {
+    retrievedDocs: [
+      Document {
+        pageContent: 'One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.',
+        metadata: [Object]
+      },
+      Document {
+        pageContent: '"Tonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service."',
+        metadata: [Object]
+      },
+      Document {
+        pageContent: 'The onslaught of state laws targeting transgender Americans and their families is wrong.',
+        metadata: [Object]
+      }
+    ]
+  }
+*/

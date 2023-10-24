@@ -41,6 +41,7 @@ interface ChatCompletionRequest {
   temperature?: number;
   top_p?: number;
   penalty_score?: number;
+  system?: string;
 }
 
 /**
@@ -59,7 +60,7 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatBaiduWenxin class.
  */
 declare interface BaiduWenxinChatInput {
-  /** Model name to use
+  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
    * @default "ERNIE-Bot-turbo"
    */
   modelName: string;
@@ -131,7 +132,7 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
     case "human":
       return "user";
     case "system":
-      throw new Error("System messages not supported");
+      throw new Error("System messages should not be here");
     case "function":
       throw new Error("Function messages not supported");
     case "generic": {
@@ -230,6 +231,9 @@ export class ChatBaiduWenxin
     } else if (this.modelName === "ERNIE-Bot-turbo") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
+    } else if (this.modelName === "ERNIE-Bot-4") {
+      this.apiUrl =
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
     } else {
       throw new Error(`Invalid model name: ${this.modelName}`);
     }
@@ -296,6 +300,16 @@ export class ChatBaiduWenxin
     const tokenUsage: TokenUsage = {};
 
     const params = this.invocationParams();
+
+    // Wenxin requires the system message to be put in the params, not messages array
+    const systemMessage = messages.find(
+      (message) => message._getType() === "system"
+    );
+    if (systemMessage) {
+      // eslint-disable-next-line no-param-reassign
+      messages = messages.filter((message) => message !== systemMessage);
+      params.system = systemMessage.text;
+    }
     const messagesMapped: WenxinMessage[] = messages.map((message) => ({
       role: messageToWenxinRole(message),
       content: message.text,

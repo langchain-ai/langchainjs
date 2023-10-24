@@ -58,7 +58,7 @@ type ModelColumns<TModel extends Record<string, unknown>> = {
   [K in keyof TModel]?: true | ColumnSymbol;
 };
 
-type PrismaSqlFilter<TModel extends Record<string, unknown>> = {
+export type PrismaSqlFilter<TModel extends Record<string, unknown>> = {
   [K in keyof TModel]?: {
     equals?: TModel[K];
     lt?: TModel[K];

@@ -2,7 +2,6 @@ import * as uuid from "uuid";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
 import { RunnableSequence } from "langchain/schema/runnable";
 
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";

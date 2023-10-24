@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { PoolConfig } from "pg";
+import type { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { PGVectorStore } from "../pgvector.js";
 
@@ -29,27 +29,29 @@ test("Test embeddings creation", async () => {
 
   expect(pgvectorVectorStore).toBeDefined();
 
-  const docHello = {
-    pageContent: "hello",
-    metadata: { a: 1 },
-  };
-  const docCat = {
-    pageContent: "Cat drinks milk",
-    metadata: { a: 2 },
-  };
-  const docHi = { pageContent: "hi", metadata: { a: 1 } };
+  try {
+    const docHello = {
+      pageContent: "hello",
+      metadata: { a: 1 },
+    };
+    const docCat = {
+      pageContent: "Cat drinks milk",
+      metadata: { a: 2 },
+    };
+    const docHi = { pageContent: "hi", metadata: { a: 1 } };
 
-  await pgvectorVectorStore.addDocuments([docHello, docHi, docCat]);
+    await pgvectorVectorStore.addDocuments([docHello, docHi, docCat]);
 
-  const results = await pgvectorVectorStore.similaritySearch("hello", 2, {
-    a: 2,
-  });
+    const results = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: 2,
+    });
 
-  expect(results).toHaveLength(1);
+    expect(results).toHaveLength(1);
 
-  expect(results[0].pageContent).toEqual(docCat.pageContent);
+    expect(results[0].pageContent).toEqual(docCat.pageContent);
+  } finally {
+    await pgvectorVectorStore.pool.query('DROP TABLE "testlangchain"');
 
-  await pgvectorVectorStore.pool.query('TRUNCATE TABLE "testlangchain"');
-
-  await pgvectorVectorStore.end();
+    await pgvectorVectorStore.end();
+  }
 });
