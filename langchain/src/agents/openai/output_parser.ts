@@ -20,6 +20,10 @@ export type FunctionsAgentAction = AgentAction & {
 export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "openai"];
 
+  static lc_name() {
+    return "OpenAIFunctionsAgentOutputParser";
+  }
+
   constructor() {
     super(...arguments);
   }
