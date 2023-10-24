@@ -1,11 +1,13 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
 } from "langchain/prompts";
+import { RunnableSequence } from "langchain/schema/runnable";
+import { InputValues } from "langchain/schema";
 
 /**
  * Define your chat model.
@@ -48,16 +50,34 @@ const createPrompt = () =>
   ]);
 const prompt = createPrompt();
 
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "xml",
-  verbose: true,
+/**
+ * Next construct your runnable agent using a `RunnableSequence`
+ * which takes in two arguments: input and agent_scratchpad.
+ * The agent_scratchpad is then formatted using the `formatLogToMessage`
+ * util because we're using a `MessagesPlaceholder` in our prompt.
+ */
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: InputValues) => i.input,
+    agent_scratchpad: (i: InputValues) => i.steps,
+  },
+  prompt,
+  model,
+  // add output parser
+]);
+
+/**
+ * Finally, we can define our agent executor and call it with an input.
+ */
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
 });
+
 console.log("Loaded agent.");
 
 const input = `What is the weather in Honolulu?`;
-
 const result = await executor.call({ input });
-
 console.log(result);
 
 /*
