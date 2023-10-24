@@ -3,7 +3,7 @@ import { OutputParserException } from "../../schema/output_parser.js";
 import { AgentActionOutputParser } from "../types.js";
 
 export class XMLAgentOutputParser extends AgentActionOutputParser {
-  lc_namespace = ["langchain", "agents", "openai"];
+  lc_namespace = ["langchain", "agents", "xml"];
 
   static lc_name() {
     return "XMLAgentOutputParser";
