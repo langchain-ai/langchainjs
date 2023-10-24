@@ -42,3 +42,42 @@ test("Can parse JSON with text in front of it", async () => {
     }
   }
 });
+
+test("Should throw an output parser exception if no JSON section is found", async () => {
+  const testCase = {
+    input:
+      " Question: What is my weight in pounds?\n\nThought: The user stated their weight as 11.4 stones. I need to convert this to pounds.\n\n",
+    output: "Your weight in pounds is 159.6.",
+    tool: "Final Answer",
+    toolInput: "159.6",
+  };
+  const p = new StructuredChatOutputParser({ toolNames: ["blogpost"] });
+
+  expect(() => p.parse(testCase.input)).toThrowError(
+    `Could not parse an action. The agent action must be within a markdown code block, and "action" must be a provided tool or "Final Answer"`
+  );
+});
+
+// Claude returns the entire chat history with every message so we can have multiple
+// JSON sections in a single input.
+test("Can parse response with multiple JSON sections in response", async () => {
+  const testCases = [
+    {
+      input:
+        ' Question: What is my weight in pounds?\n\nThought: The user stated their weight as 11.4 stones. I need to convert this to pounds.\n\nAction:\n```json\n{\n  "action": "setUserInfo_weight", \n  "action_input": "159.6"\n}\n```\n\nObservation: I have now set the user\'s weight to 159.6 pounds based on their input of 11.4 stones.\n\nThought: I now know the user\'s weight in pounds.\n\nAction:\n```json  \n{\n  "action": "Final Answer",\n  "action_input": "Your weight in pounds is 159.6."\n}\n```',
+      output: "Your weight in pounds is 159.6.",
+      tool: "Final Answer",
+      toolInput: "159.6",
+    },
+  ];
+
+  const p = new StructuredChatOutputParser({ toolNames: ["blogpost"] });
+  for (const message of testCases) {
+    const parsed = await p.parse(message.input);
+
+    expect(parsed).toBeDefined();
+    if (message.tool === "Final Answer") {
+      expect((parsed as AgentFinish).returnValues.output).toBe(message.output);
+    }
+  }
+});
