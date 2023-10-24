@@ -180,39 +180,37 @@ export class RedisVectorStore extends VectorStore {
     if (!vectors.length || !vectors[0].length) {
       throw new Error("No vectors provided");
     }
-    try {
-      // check if the index exists and create it if it doesn't
-      await this.createIndex(vectors[0].length);
+    // check if the index exists and create it if it doesn't
+    await this.createIndex(vectors[0].length);
 
-      const info = await this.redisClient.ft.info(this.indexName);
-      const lastKeyCount = parseInt(info.numDocs, 10) || 0;
-      const multi = this.redisClient.multi();
-      for (let i = 0; i < vectors.length; i += 1) {
-        const vector = vectors[i];
-        const key =
-          keys && keys.length
-            ? keys[i]
-            : `${this.keyPrefix}${i + lastKeyCount}`;
-        const metadata =
-          documents[i] && documents[i].metadata ? documents[i].metadata : {};
+    const info = await this.redisClient.ft.info(this.indexName);
+    const lastKeyCount = parseInt(info.numDocs, 10) || 0;
+    const multi = this.redisClient.multi();
 
-        multi.hSet(key, {
-          [this.vectorKey]: this.getFloat32Buffer(vector),
-          [this.contentKey]: documents[i].pageContent,
-          [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
-        });
+    vectors.map(async (vector, idx) => {
+      const key =
+        keys && keys.length
+          ? keys[idx]
+          : `${this.keyPrefix}${idx + lastKeyCount}`;
+      const metadata =
+        documents[idx] && documents[idx].metadata
+          ? documents[idx].metadata
+          : {};
 
-        // write batch
-        if (i % batchSize === 0) {
-          await multi.exec();
-        }
+      multi.hSet(key, {
+        [this.vectorKey]: this.getFloat32Buffer(vector),
+        [this.contentKey]: documents[idx].pageContent,
+        [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
+      });
+
+      // write batch
+      if (idx % batchSize === 0) {
+        await multi.exec();
       }
+    });
 
-      // insert final batch
-      await multi.exec();
-    } catch (e) {
-      throw e;
-    }
+    // insert final batch
+    await multi.exec();
   }
 
   /**
