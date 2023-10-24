@@ -34,10 +34,28 @@ test("Test OpenAIEmbeddings concurrency", async () => {
   );
 });
 
-test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () => {
+test("Test timeout error thrown from SDK", async () => {
   await expect(async () => {
     const model = new OpenAIEmbeddings({
       timeout: 1,
+    });
+    await model.embedDocuments([
+      "Hello world",
+      "Bye bye",
+      "Hello world",
+      "Bye bye",
+      "Hello world",
+      "Bye bye",
+    ]);
+  }).rejects.toThrow();
+});
+
+test("Test OpenAI embeddings with an invalid org throws", async () => {
+  await expect(async () => {
+    const model = new OpenAIEmbeddings({
+      configuration: {
+        organization: "NOT_REAL",
+      },
     });
     await model.embedDocuments([
       "Hello world",
