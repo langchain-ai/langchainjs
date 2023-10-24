@@ -18,7 +18,7 @@ The path passed to the `.fromPath` must be a directory, not a file.
 
 The `LocalFileStore` is a wrapper around the `fs` module for storing data as key-value pairs.
 Each key value pair has its own file nested inside the directory passed to the `.fromPath` method.
-All files inside are `.txt` and contain the value of the key.
+The file name is the key and inside contains the value of the key.
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/stores/file_system_storage.ts";

@@ -6,7 +6,7 @@ sidebar_position: 5
 
 Storing data in key value format is quick and efficient, and can be a powerful tool for LLM applications. The `BaseStore` class provides a simple interface for getting, setting, deleting and iterating over lists of key value pairs.
 
-The public API of `BaseStore` in LangChain.js offers four main methods:
+The public API of `BaseStore` in LangChain JS offers four main methods:
 
 ```typescript
 abstract mget(keys: K[]): Promise<(V | undefined)[]>;
@@ -26,14 +26,16 @@ It's that simple!
 So far LangChain.js has two base integrations for `BaseStore`:
 
 - `InMemoryStore`
-- `LocalFileStore`
+- `LocalFileStore` (Node.js only)
 
 ## Use Cases
 
-**Chat history**
+### Chat history
+
 If you're building web apps with chat, the `BaseStore` family of integrations can come in very handy for storing and retrieving chat history.
 
-**Caching**
+### Caching
+
 The `BaseStore` family can be a useful alternative to our other caching integrations.
 For example the `LocalFileStore` allows for persisting data through the file system. It also is incredibly fast, so your users will be able to access cached data in a snap.
 

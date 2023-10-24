@@ -22,7 +22,6 @@ await store.mset(
 );
 // Now you can get your messages from the store
 const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
-// Make sure to decode the values
 console.log(retrievedMessages.map((v) => v));
 /**
 [
