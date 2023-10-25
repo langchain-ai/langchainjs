@@ -15,7 +15,7 @@ import {
 } from "../callbacks/manager.js";
 import { Embeddings } from "../embeddings/base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { formatDocumentsContentToString } from "../util/document.js";
+import { serializeDocumentsAsString } from "../util/document.js";
 
 export const parseInputs = (inputs: string): [string, string] => {
   const [baseUrl, task] = inputs.split(",").map((input) => {
@@ -259,7 +259,7 @@ export class WebBrowser extends Tool {
         undefined,
         runManager?.getChild("vectorstore")
       );
-      context = formatDocumentsContentToString(results, "\n");
+      context = serializeDocumentsAsString(results, "\n");
     }
 
     const input = `Text:${context}\n\nI need ${

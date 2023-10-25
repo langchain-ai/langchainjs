@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { formatDocumentsContentToString } from "langchain/util/document";
+import { serializeDocumentsAsString } from "langchain/util/document";
 
 /* Initialize the LLM to use to answer the question */
 const model = new ChatOpenAI({});
@@ -59,7 +59,7 @@ const chain = RunnableSequence.from([
       input.chatHistory ?? "",
     context: async (input: { question: string; chatHistory?: string }) => {
       const relevantDocs = await retriever.getRelevantDocuments(input.question);
-      const serialized = formatDocumentsContentToString(relevantDocs);
+      const serialized = serializeDocumentsAsString(relevantDocs);
       return serialized;
     },
   },

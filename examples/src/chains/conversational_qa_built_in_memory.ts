@@ -9,7 +9,7 @@ import * as fs from "fs";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { BaseMessage } from "langchain/schema";
-import { formatDocumentsContentToString } from "langchain/util/document";
+import { serializeDocumentsAsString } from "langchain/util/document";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
@@ -88,7 +88,7 @@ const performQuestionAnswering = async (input: {
 }): Promise<{ result: string; sourceDocuments: Array<Document> }> => {
   let newQuestion = input.question;
   // Serialize context and chat history into strings
-  const serializedDocs = formatDocumentsContentToString(input.context);
+  const serializedDocs = serializeDocumentsAsString(input.context);
   const chatHistoryString = input.chatHistory
     ? serializeChatHistory(input.chatHistory)
     : null;

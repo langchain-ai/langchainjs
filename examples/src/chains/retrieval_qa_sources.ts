@@ -10,7 +10,7 @@ import {
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { formatDocumentsContentToString } from "langchain/util/document";
+import { serializeDocumentsAsString } from "langchain/util/document";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
@@ -53,7 +53,7 @@ const chain = RunnableSequence.from([
     sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
     question: (previousStepResult) => previousStepResult.question,
     context: (previousStepResult) =>
-      formatDocumentsContentToString(previousStepResult.sourceDocuments),
+      serializeDocumentsAsString(previousStepResult.sourceDocuments),
   },
   {
     result: prompt.pipe(model).pipe(new StringOutputParser()),
