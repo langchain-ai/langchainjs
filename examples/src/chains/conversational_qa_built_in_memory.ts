@@ -9,6 +9,7 @@ import * as fs from "fs";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { BaseMessage } from "langchain/schema";
+import { formatDocumentsContentToString } from "langchain/util/document";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
@@ -24,9 +25,6 @@ const memory = new BufferMemory({
   outputKey: "text", // The key for the final conversational output of the chain
   returnMessages: true, // If using with a chat model (e.g. gpt-3.5 or gpt-4)
 });
-
-const serializeDocs = (docs: Array<Document>): string =>
-  docs.map((doc) => doc.pageContent).join("\n");
 
 const serializeChatHistory = (chatHistory: Array<BaseMessage>): string =>
   chatHistory
@@ -90,7 +88,7 @@ const performQuestionAnswering = async (input: {
 }): Promise<{ result: string; sourceDocuments: Array<Document> }> => {
   let newQuestion = input.question;
   // Serialize context and chat history into strings
-  const serializedDocs = serializeDocs(input.context);
+  const serializedDocs = formatDocumentsContentToString(input.context);
   const chatHistoryString = input.chatHistory
     ? serializeChatHistory(input.chatHistory)
     : null;

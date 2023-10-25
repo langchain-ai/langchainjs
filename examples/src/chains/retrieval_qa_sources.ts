@@ -8,15 +8,11 @@ import {
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { Document } from "langchain/document";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { RunnableSequence } from "langchain/schema/runnable";
+import { formatDocumentsContentToString } from "langchain/util/document";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
-
-// Convert the relevant docs to a string and pass as context.
-const serializeDocs = (docs: Array<Document>): string =>
-  docs.map((doc) => doc.pageContent).join("\n");
 
 const query = "What did the president say about Justice Breyer?";
 
@@ -57,7 +53,7 @@ const chain = RunnableSequence.from([
     sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
     question: (previousStepResult) => previousStepResult.question,
     context: (previousStepResult) =>
-      serializeDocs(previousStepResult.sourceDocuments),
+      formatDocumentsContentToString(previousStepResult.sourceDocuments),
   },
   {
     result: prompt.pipe(model).pipe(new StringOutputParser()),
