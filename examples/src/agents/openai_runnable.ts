@@ -84,17 +84,11 @@ console.log(`Calling agent executor with query: ${query}`);
 const result = await executor.call({
   input: query,
 });
-console.log(result.output);
+console.log(result);
 /*
 Loaded agent executor
 Calling agent executor with query: What is the weather in New York?
-Sure, here is the response to your last comment:
-
-```json
 {
-  "action": {
-    "text": "The current weather in New York is mostly sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 47% and the wind speed is 7 mph. There is 0% chance of precipitation."
-  }
+  output: 'The current weather in New York is sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 54% and the wind is blowing at 6 mph. There is 0% chance of precipitation.'
 }
-```
 */
