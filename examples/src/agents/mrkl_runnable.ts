@@ -1,9 +1,6 @@
 import { AgentExecutor, ChatAgentOutputParser } from "langchain/agents";
 import { OpenAI } from "langchain/llms/openai";
-import {
-  ChatPromptTemplate,
-  PromptTemplate,
-} from "langchain/prompts";
+import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
 import { InputValues } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { SerpAPI } from "langchain/tools";
