@@ -13,9 +13,9 @@ describe("PGVectorStore", () => {
         type: "postgres",
         host: "127.0.0.1",
         port: 5432,
-        user: "admin",
-        password: "admin",
-        database: "dev",
+        user: "your_user",
+        password: "your_password",
+        database: "your_db_name",
       } as PoolConfig,
       tableName,
       columns: {
