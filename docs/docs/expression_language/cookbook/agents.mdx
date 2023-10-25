@@ -79,13 +79,10 @@ Question: {input}`;
 ```
 
 ```typescript
-const createPrompt = () =>
-  ChatPromptTemplate.fromMessages([
-    template,
-    AIMessagePromptTemplate.fromTemplate("{agent_scratchpad}"),
-  ]);
-
-const prompt = createPrompt();
+const prompt = ChatPromptTemplate.fromMessages([
+  ["human", template],
+  ["ai", "{agent_scratchpad}"],
+]);
 
 const outputParser = new XMLAgentOutputParser();
 ```

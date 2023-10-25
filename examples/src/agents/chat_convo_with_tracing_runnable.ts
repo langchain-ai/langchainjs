@@ -26,7 +26,10 @@ const tools = [
   }),
   new Calculator(),
 ];
-/** Pull a prompt from LangChain Hub */
+/**
+ * Pull a prompt from LangChain Hub
+ * @link https://smith.langchain.com/hub/hwchase17/react-chat
+ */
 const prompt = await pull<PromptTemplate>("hwchase17/react-chat");
 /** Add input variables to prompt */
 const toolNames = tools.map((tool) => tool.name);

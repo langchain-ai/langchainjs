@@ -46,12 +46,10 @@ When you are done, respond with a final answer between <final_answer></final_ans
 Begin!
 
 Question: {input}`;
-const createPrompt = () =>
-  ChatPromptTemplate.fromMessages([
-    HumanMessagePromptTemplate.fromTemplate(AGENT_INSTRUCTIONS),
-    new MessagesPlaceholder("agent_scratchpad"),
-  ]);
-const prompt = createPrompt();
+const prompt = ChatPromptTemplate.fromMessages([
+  HumanMessagePromptTemplate.fromTemplate(AGENT_INSTRUCTIONS),
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
 
 /**
  * Next construct your runnable agent using a `RunnableSequence`
