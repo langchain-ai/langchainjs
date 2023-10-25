@@ -49,7 +49,6 @@ import * as chat_models_anthropic from "langchain/chat_models/anthropic";
 import * as chat_models_cloudflare_workersai from "langchain/chat_models/cloudflare_workersai";
 import * as chat_models_fireworks from "langchain/chat_models/fireworks";
 import * as chat_models_baiduwenxin from "langchain/chat_models/baiduwenxin";
-import * as chat_models_iflytek_xinghuo from "langchain/chat_models/iflytek_xinghuo";
 import * as chat_models_ollama from "langchain/chat_models/ollama";
 import * as chat_models_minimax from "langchain/chat_models/minimax";
 import * as chat_models_yandex from "langchain/chat_models/yandex";

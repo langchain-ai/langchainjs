@@ -430,6 +430,7 @@ const requiresOptionalDependency = [
   "chat_models/googlepalm",
   "chat_models/llama_cpp",
   "chat_models/portkey",
+  "chat_models/iflytek_xinghuo",
   "sql_db",
   "retrievers/amazon_kendra",
   "retrievers/supabase",
