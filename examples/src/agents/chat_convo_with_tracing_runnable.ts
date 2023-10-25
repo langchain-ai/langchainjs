@@ -11,7 +11,6 @@ import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { renderTextDescription } from "langchain/tools/render";
 import { ReActSingleInputOutputParser } from "langchain/agents/react/output_parser";
 
-process.env.LANGCHAIN_HANDLER = "langchain";
 /** Define your chat model */
 const model = new ChatOpenAI({ modelName: "gpt-4" });
 /** Bind a stop token to the model */
