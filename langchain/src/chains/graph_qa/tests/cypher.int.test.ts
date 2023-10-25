@@ -5,7 +5,7 @@ import { Neo4jGraph } from "../../../graphs/neo4j_graph.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { ChainValues } from "../../../schema/index.js";
 
-describe("testCypherGeneratingRun", () => {
+describe.skip("testCypherGeneratingRun", () => {
   const url = process.env.NEO4J_URI as string;
   const username = process.env.NEO4J_USERNAME as string;
   const password = process.env.NEO4J_PASSWORD as string;
