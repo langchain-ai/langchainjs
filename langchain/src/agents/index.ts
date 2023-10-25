@@ -72,3 +72,4 @@ export {
   type OpenAIAgentInput,
   type OpenAIAgentCreatePromptArgs,
 } from "./openai/index.js";
+export { XMLAgent, type XMLAgentInput } from "./xml/index.js";

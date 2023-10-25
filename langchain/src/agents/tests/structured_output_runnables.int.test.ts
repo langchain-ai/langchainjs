@@ -16,7 +16,7 @@ import { HNSWLib } from "../../vectorstores/hnswlib.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { AgentExecutor } from "../executor.js";
-import { formatForOpenAIFunctions } from "../format_scratchpad.js";
+import { formatForOpenAIFunctions } from "../format_scratchpad/openai_functions.js";
 
 /** Define a custom structured output parser. */
 const structuredOutputParser = (

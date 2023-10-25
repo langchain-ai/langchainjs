@@ -351,6 +351,14 @@
     {
       "source": "/docs/guides/expression_language/interface(/?)",
       "destination": "/docs/expression_language/interface/"
+    },
+    {
+      "source": "/docs/additional_resources/scrimba(/?)",
+      "destination": "/docs/additional_resources/tutorials/"
+    },
+    {
+      "source": "/docs/additional_resources/expression_language_cheatsheet(/?)",
+      "destination": "/docs/additional_resources/tutorials/"
     }
   ]
 }
