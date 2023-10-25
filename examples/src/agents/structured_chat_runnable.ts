@@ -24,7 +24,9 @@ import { formatLogToString } from "langchain/agents/format_scratchpad/log";
  */
 
 /** Define the chat model. */
-const model = new ChatOpenAI({ temperature: 0 });
+const model = new ChatOpenAI({ temperature: 0 }).bind({
+  stop: ["\nObservation:"],
+});
 /** Define your list of tools, including the `DynamicStructuredTool` */
 const tools = [
   new Calculator(), // Older existing single input tools will still work
@@ -139,10 +141,17 @@ const prompt = createPrompt();
  * @important This step is very important and not to be overlooked for one main reason: retries.
  * If the agent fails to produce a valid output, it will preform retries to try and coerce the agent
  * into producing a valid output.
+ *
+ * @important You can not pass in the same model we're using in the executor since it has stop tokens
+ * bound to it, and the implementation of `StructuredChatOutputParserWithRetries.fromLLM` does not accept
+ * LLMs of this type.
  */
-const outputParser = StructuredChatOutputParserWithRetries.fromLLM(model, {
-  toolNames,
-});
+const outputParser = StructuredChatOutputParserWithRetries.fromLLM(
+  new ChatOpenAI({ temperature: 0 }),
+  {
+    toolNames,
+  }
+);
 
 /**
  * Finally, construct the runnable agent using a

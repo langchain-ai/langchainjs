@@ -37,7 +37,7 @@ const promptWithInputs = await prompt.partial({
   tools: renderTextDescription(tools),
   tool_names: toolNames.join(","),
 });
-console.log(promptWithInputs);
+
 const runnableAgent = RunnableSequence.from([
   {
     input: (i: InputValues) => i.input,
