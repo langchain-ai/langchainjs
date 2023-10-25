@@ -8,7 +8,7 @@ These cookbooks are in Jupyter notebook form and use the [Deno runtime](https://
 
 Full installation instructions are available here: https://docs.deno.com/runtime/manual/tools/jupyter
 
-Note that you will also need to install the Python `jupyter` package, and that the syntax for imports and environment variables are slightly different from Node.
+Note that you will also need to install the Python `jupyter` package, and that the syntax for imports and environment variables are slightly different from Node and the web. In particular, we use `Deno.env.get()` to retrieve environment variables, and e.g. `import { PromptTemplate } from "https://esm.sh/langchain/prompts";` to import from a URL to match Deno conventions.
 
 Notebook | Description
 :- | :-
