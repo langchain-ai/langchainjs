@@ -4,9 +4,9 @@ You can pass a Runnable into an agent.
 
 Building an agent from a runnable usually involves a few things:
 
-1. Data processing for the intermediate steps (`agent_scratchpad`). These need to represented in a way that the language model can recognize them. This should be pretty tightly coupled to the instructions in the prompt. For this reason, we use the built in util `formatXml` to format the steps as XML.
+1. Data processing for the intermediate steps (`agent_scratchpad`). These need to represented in a way that the language model can recognize them. This should be pretty tightly coupled to the instructions in the prompt. For this reason, in the below example with an XML agent, we use the built in util `formatXml` to format the steps as XML.
 
-2. The prompt itself. This is the default XML agent prompt, which includes variables for the tool list and user question. It also contains examples of inputs and outputs for the agent to learn from.
+2. The prompt itself. Below, this is the default XML agent prompt, which includes variables for the tool list and user question. It also contains examples of inputs and outputs for the agent to learn from.
 
 3. The model, complete with stop tokens if needed (in our case, needed).
 
