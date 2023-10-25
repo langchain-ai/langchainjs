@@ -13,20 +13,20 @@ import type {
   AgentAction,
   AgentFinish,
   AgentStep,
-} from "langchain/schema/index.js";
-import { RunnableSequence } from "langchain/schema/runnable/base.js";
+} from "langchain/schema/index";
+import { RunnableSequence } from "langchain/schema/runnable/base";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
-} from "langchain/prompts/chat.js";
-import { ChatOpenAI } from "langchain/chat_models/openai.js";
-import { createRetrieverTool } from "langchain/agents/toolkits/index.js";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter.js";
-import { HNSWLib } from "langchain/vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai.js";
-import { formatToOpenAIFunction } from "langchain/tools/convert_to_openai.js";
-import { AgentExecutor } from "langchain/agents/executor.js";
-import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad.js";
+} from "langchain/prompts/chat";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { createRetrieverTool } from "langchain/agents/toolkits/index";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { formatToOpenAIFunction } from "langchain/tools/convert_to_openai";
+import { AgentExecutor } from "langchain/agents/executor";
+import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad";
 ```
 
 Next, we load the text document and embed it using the OpenAI embeddings model.

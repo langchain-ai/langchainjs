@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.170",
+  "version": "0.0.172",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -34,6 +34,24 @@
     "agents/format_scratchpad.cjs",
     "agents/format_scratchpad.js",
     "agents/format_scratchpad.d.ts",
+    "agents/format_scratchpad/log.cjs",
+    "agents/format_scratchpad/log.js",
+    "agents/format_scratchpad/log.d.ts",
+    "agents/format_scratchpad/xml.cjs",
+    "agents/format_scratchpad/xml.js",
+    "agents/format_scratchpad/xml.d.ts",
+    "agents/format_scratchpad/log_to_message.cjs",
+    "agents/format_scratchpad/log_to_message.js",
+    "agents/format_scratchpad/log_to_message.d.ts",
+    "agents/react/output_parser.cjs",
+    "agents/react/output_parser.js",
+    "agents/react/output_parser.d.ts",
+    "agents/xml/output_parser.cjs",
+    "agents/xml/output_parser.js",
+    "agents/xml/output_parser.d.ts",
+    "agents/openai/output_parser.cjs",
+    "agents/openai/output_parser.js",
+    "agents/openai/output_parser.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -49,6 +67,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/render.cjs",
+    "tools/render.js",
+    "tools/render.d.ts",
     "tools/sql.cjs",
     "tools/sql.js",
     "tools/sql.d.ts",
@@ -673,6 +694,9 @@
     "storage/upstash_redis.cjs",
     "storage/upstash_redis.js",
     "storage/upstash_redis.d.ts",
+    "storage/file_system.cjs",
+    "storage/file_system.js",
+    "storage/file_system.d.ts",
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
     "graphs/neo4j_graph.d.ts",
@@ -1353,6 +1377,36 @@
       "import": "./agents/format_scratchpad.js",
       "require": "./agents/format_scratchpad.cjs"
     },
+    "./agents/format_scratchpad/log": {
+      "types": "./agents/format_scratchpad/log.d.ts",
+      "import": "./agents/format_scratchpad/log.js",
+      "require": "./agents/format_scratchpad/log.cjs"
+    },
+    "./agents/format_scratchpad/xml": {
+      "types": "./agents/format_scratchpad/xml.d.ts",
+      "import": "./agents/format_scratchpad/xml.js",
+      "require": "./agents/format_scratchpad/xml.cjs"
+    },
+    "./agents/format_scratchpad/log_to_message": {
+      "types": "./agents/format_scratchpad/log_to_message.d.ts",
+      "import": "./agents/format_scratchpad/log_to_message.js",
+      "require": "./agents/format_scratchpad/log_to_message.cjs"
+    },
+    "./agents/react/output_parser": {
+      "types": "./agents/react/output_parser.d.ts",
+      "import": "./agents/react/output_parser.js",
+      "require": "./agents/react/output_parser.cjs"
+    },
+    "./agents/xml/output_parser": {
+      "types": "./agents/xml/output_parser.d.ts",
+      "import": "./agents/xml/output_parser.js",
+      "require": "./agents/xml/output_parser.cjs"
+    },
+    "./agents/openai/output_parser": {
+      "types": "./agents/openai/output_parser.d.ts",
+      "import": "./agents/openai/output_parser.js",
+      "require": "./agents/openai/output_parser.cjs"
+    },
     "./base_language": {
       "types": "./base_language.d.ts",
       "import": "./base_language.js",
@@ -1377,6 +1431,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/render": {
+      "types": "./tools/render.d.ts",
+      "import": "./tools/render.js",
+      "require": "./tools/render.cjs"
     },
     "./tools/sql": {
       "types": "./tools/sql.d.ts",
@@ -2417,6 +2476,11 @@
       "types": "./storage/upstash_redis.d.ts",
       "import": "./storage/upstash_redis.js",
       "require": "./storage/upstash_redis.cjs"
+    },
+    "./storage/file_system": {
+      "types": "./storage/file_system.d.ts",
+      "import": "./storage/file_system.js",
+      "require": "./storage/file_system.cjs"
     },
     "./graphs/neo4j_graph": {
       "types": "./graphs/neo4j_graph.d.ts",
