@@ -5,7 +5,7 @@ import {
   DynamicStructuredTool,
   DynamicStructuredToolInput,
 } from "../../../tools/dynamic.js";
-import { serializeDocumentsAsString } from "../../../util/document.js";
+import { formatDocumentsAsString } from "../../../util/document.js";
 
 export function createRetrieverTool(
   retriever: BaseRetriever,
@@ -19,7 +19,7 @@ export function createRetrieverTool(
       input,
       runManager?.getChild("retriever")
     );
-    return serializeDocumentsAsString(docs, "\n");
+    return formatDocumentsAsString(docs, "\n");
   };
   const schema = z.object({
     input: z

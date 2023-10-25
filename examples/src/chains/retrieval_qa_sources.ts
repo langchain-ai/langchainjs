@@ -10,7 +10,7 @@ import {
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { serializeDocumentsAsString } from "langchain/util/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
@@ -28,7 +28,7 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 const vectorStoreRetriever = vectorStore.asRetriever();
 
 // Create a system & human prompt for the chat model
-const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the users question. 
+const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the users question.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
 ----------------
 {context}`;
@@ -53,7 +53,7 @@ const chain = RunnableSequence.from([
     sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
     question: (previousStepResult) => previousStepResult.question,
     context: (previousStepResult) =>
-      serializeDocumentsAsString(previousStepResult.sourceDocuments),
+      formatDocumentsAsString(previousStepResult.sourceDocuments),
   },
   {
     result: prompt.pipe(model).pipe(new StringOutputParser()),

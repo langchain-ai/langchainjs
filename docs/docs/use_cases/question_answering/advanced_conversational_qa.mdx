@@ -98,7 +98,7 @@ that abstracts the last processing step.
 import { RunnableSequence } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { LLMChain } from "langchain/chains";
-import { serializeDocumentsAsString } from "langchain/util/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 /**
  * A helper function which performs the LLM call and saves the context to memory.
@@ -155,7 +155,7 @@ const answerQuestionChain = RunnableSequence.from([
       const relevantDocs = await retriever.getRelevantDocuments(
         previousStepResult.question
       );
-      const serialized = serializeDocumentsAsString(relevantDocs);
+      const serialized = formatDocumentsAsString(relevantDocs);
       return serialized;
     },
   },

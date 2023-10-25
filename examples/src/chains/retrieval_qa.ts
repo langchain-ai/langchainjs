@@ -13,7 +13,7 @@ import {
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { serializeDocumentsAsString } from "langchain/util/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
@@ -39,7 +39,7 @@ const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
-    context: vectorStoreRetriever.pipe(serializeDocumentsAsString),
+    context: vectorStoreRetriever.pipe(formatDocumentsAsString),
     question: new RunnablePassthrough(),
   },
   prompt,

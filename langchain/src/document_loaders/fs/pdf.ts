@@ -1,7 +1,7 @@
 import type { TextItem } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
 import { Document } from "../../document.js";
 import { BufferLoader } from "./buffer.js";
-import { serializeDocumentsAsString } from "../../util/document.js";
+import { formatDocumentsAsString } from "../../util/document.js";
 
 /**
  * A class that extends the `BufferLoader` class. It represents a document
@@ -94,7 +94,7 @@ export class PDFLoader extends BufferLoader {
 
     return [
       new Document({
-        pageContent: serializeDocumentsAsString(documents),
+        pageContent: formatDocumentsAsString(documents),
         metadata: {
           ...metadata,
           pdf: {

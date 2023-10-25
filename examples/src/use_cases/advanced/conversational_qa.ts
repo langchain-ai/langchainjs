@@ -8,7 +8,7 @@ import { RunnableBranch, RunnableSequence } from "langchain/schema/runnable";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { LLMChain } from "langchain/chains";
-import { serializeDocumentsAsString } from "langchain/util/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 export const run = async () => {
   /* Initialize the LLM to use to answer the question */
@@ -120,7 +120,7 @@ Standalone question:`);
         const relevantDocs = await retriever.getRelevantDocuments(
           previousStepResult.question
         );
-        const serialized = serializeDocumentsAsString(relevantDocs);
+        const serialized = formatDocumentsAsString(relevantDocs);
         return serialized;
       },
     },

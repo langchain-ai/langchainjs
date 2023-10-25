@@ -4,7 +4,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { serializeDocumentsAsString } from "langchain/util/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 const model = new ChatOpenAI({});
 
@@ -36,7 +36,7 @@ const languageChain = RunnableSequence.from([
     context: RunnableSequence.from([
       (input: LanguageChainInput) => input.question,
       retriever,
-      serializeDocumentsAsString,
+      formatDocumentsAsString,
     ]),
     question: (input: LanguageChainInput) => input.question,
     language: (input: LanguageChainInput) => input.language,

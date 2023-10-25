@@ -7,7 +7,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { serializeDocumentsAsString } from "langchain/util/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 const model = new ChatOpenAI({});
 
@@ -63,7 +63,7 @@ const standaloneQuestionChain = RunnableSequence.from([
 
 const answerChain = RunnableSequence.from([
   {
-    context: retriever.pipe(serializeDocumentsAsString),
+    context: retriever.pipe(formatDocumentsAsString),
     question: new RunnablePassthrough(),
   },
   ANSWER_PROMPT,
