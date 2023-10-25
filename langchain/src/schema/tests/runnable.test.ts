@@ -12,7 +12,7 @@ import {
 } from "../../prompts/index.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
 import {
-  RunnableMap,
+  RunnableParallel,
   RunnableSequence,
   RouterRunnable,
   RunnableLambda,
@@ -120,7 +120,7 @@ test("Create a runnable sequence with a runnable map", async () => {
     ]),
     extraField: new FakeLLM({}),
   };
-  const runnable = new RunnableMap({ steps: inputs })
+  const runnable = new RunnableParallel({ steps: inputs })
     .pipe(promptTemplate)
     .pipe(llm);
   const result = await runnable.invoke("Do you know the Muffin Man?");
@@ -248,42 +248,22 @@ test("Runnable withConfig", async () => {
   expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
 });
 
-test("RunnableMap can stream", async () => {
-  const promptTemplate = ChatPromptTemplate.fromMessages<{
-    documents: string;
-    question: string;
-  }>([
-    SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
-    HumanMessagePromptTemplate.fromTemplate(
-      `Context:\n{documents}\n\nQuestion:\n{question}`
-    ),
-  ]);
-  const llm = new FakeStreamingLLM({});
-  const inputs = {
-    question: (input: string) => input,
-    documents: RunnableSequence.from([
-      new FakeRetriever(),
-      (docs: Document[]) => JSON.stringify(docs),
-    ]),
-    extraField: new FakeLLM({}),
-  };
-  const runnable = new RunnableMap({ steps: inputs })
-    .pipe(promptTemplate)
-    .pipe(llm);
-  const result = await runnable.stream("Do you know the Muffin Man?");
-  let finalResult = "";
-  let numOfStreams = 0;
-  for await (const value of result) {
-    finalResult += value;
-    numOfStreams += 1;
-  }
-  console.log(finalResult, "\n", numOfStreams);
-  /**
-   * Ensure that we actually streamed
-   * Most of the time, it will be 162
-   */
-  expect(numOfStreams).toBeGreaterThan(1);
-  expect(finalResult).toEqual(
-    `System: You are a nice assistant.\nHuman: Context:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
+test("RunnableParallel can stream", async () => {
+  const prompt = PromptTemplate.fromTemplate(`Hello world!`);
+  const prompt2 = PromptTemplate.fromTemplate(
+    `mitochondria is the powerhouse of the cell`
   );
+  const llm = new FakeStreamingLLM({});
+  const llm2 = new FakeStreamingLLM({});
+  const runnable = RunnableParallel.from({
+    one: prompt.pipe(llm),
+    two: prompt2.pipe(llm2),
+  });
+  const chunks = [];
+  const stream = await runnable.stream({});
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
 });

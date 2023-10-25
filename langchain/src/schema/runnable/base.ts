@@ -14,7 +14,6 @@ import { Serializable } from "../../load/serializable.js";
 import { IterableReadableStream } from "../../util/stream.js";
 import { RunnableConfig, getCallbackMangerForConfig } from "./config.js";
 import { AsyncCaller } from "../../util/async_caller.js";
-import { AddableDict } from "./utils.js";
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput
@@ -395,6 +394,7 @@ export abstract class Runnable<
     try {
       const outputIterator = transformer(
         wrappedInputGenerator,
+        // TODO: This is always undefined, fix.
         runManager,
         options
       );
@@ -1262,13 +1262,13 @@ export class RunnableSequence<
  * A runnable that runs a mapping of runnables in parallel,
  * and returns a mapping of their outputs.
  */
-export class RunnableMap<RunInput> extends Runnable<
+export class RunnableParallel<RunInput> extends Runnable<
   RunInput,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Record<string, any>
 > {
   static lc_name() {
-    return "RunnableMap";
+    return "RunnableParallel";
   }
 
   lc_namespace = ["langchain", "schema", "runnable"];
@@ -1290,7 +1290,7 @@ export class RunnableMap<RunInput> extends Runnable<
   }
 
   static from<RunInput>(steps: Record<string, RunnableLike<RunInput>>) {
-    return new RunnableMap<RunInput>({ steps });
+    return new RunnableParallel<RunInput>({ steps });
   }
 
   async invoke(
@@ -1333,83 +1333,73 @@ export class RunnableMap<RunInput> extends Runnable<
     generator: AsyncGenerator<RunInput>,
     runManager?: CallbackManagerForChainRun,
     options?: Partial<RunnableConfig>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): AsyncGenerator<Record<string, any>> {
-    const steps = { ...this.steps };
-
-    const namedGenerators = Object.entries(steps).map(([name, step]) => ({
+    const namedGenerators = Object.entries(this.steps).map(([name, step]) => ({
       stepName: name,
-      generator: step.transform(generator, {
-        ...options,
-        callbacks: runManager?.getChild(`map:key:${name}`),
-      }),
+      stepGenerator: step.transform(
+        generator,
+        this._patchConfig(options, runManager?.getChild(`map:key:${name}`))
+      ),
     }));
 
-    const tasks = new Map(
-      namedGenerators.map(({ stepName, generator }) => [
-        generator,
-        [stepName, generator],
-      ])
+    const finishedIteratorPromisePlaceholder: Promise<any> = new Promise(
+      () => {}
     );
+    const nextPromises = namedGenerators.map(
+      ({ stepName, stepGenerator }, i) => {
+        return stepGenerator.next().then((iteratorResult) => ({
+          iteratorResult,
+          stepGenerator,
+          stepName,
+          index: i,
+        }));
+      }
+    );
+    let finishedCount = 0;
 
-    while (tasks.size) {
-      const completedTasks = await Promise.race(Array.from(tasks.keys()));
-
-      for await (const task of completedTasks) {
-        const fetchedTask = tasks.get(task);
-        if (!fetchedTask) {
-          continue;
-        }
-        tasks.delete(task);
-        // Need the type cast because TypeScript isn't able to infer
-        // which array element is of which type.
-        const [stepName, generator] = fetchedTask as [
-          string,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          AsyncGenerator<RunInput, any, unknown>
-        ];
-        const chunk = new AddableDict({
-          [stepName]: await task,
-        });
-        yield chunk;
-        const { value: newTask } = await generator.next();
-        tasks.set(newTask, [stepName, generator]);
+    while (finishedCount < namedGenerators.length) {
+      const { stepGenerator, iteratorResult, stepName, index } =
+        await Promise.race(nextPromises);
+      if (iteratorResult.done) {
+        nextPromises[index] = finishedIteratorPromisePlaceholder;
+        finishedCount += 1;
+      } else {
+        yield {
+          [stepName]: iteratorResult.value,
+        };
+        nextPromises[index] = stepGenerator.next().then((iteratorResult) => ({
+          iteratorResult,
+          stepGenerator,
+          stepName,
+          index,
+        }));
       }
     }
   }
 
   async *transform(
     generator: AsyncGenerator<RunInput>,
-    options: Partial<BaseCallbackConfig>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    options?: Partial<BaseCallbackConfig>
   ): AsyncGenerator<Record<string, any>> {
-    for await (const chunk of this._transformStreamWithConfig<
-      RunInput,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      Record<string, any>
-    >(generator, this._transform, options)) {
-      yield chunk;
-    }
+    yield* this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
   }
 
   async *_streamIterator(
     input: RunInput,
-    config?: BaseCallbackConfig
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    config?: Partial<BaseCallbackConfig>
   ): AsyncGenerator<Record<string, any>> {
-    yield this.invoke(input, this._patchConfig(config));
-  }
-
-  async stream(
-    input: RunInput,
-    options?: Partial<BaseCallbackConfig>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<IterableReadableStream<Record<string, any>>> {
-    return IterableReadableStream.fromAsyncGenerator(
-      this._streamIterator(input, options)
-    );
+    const convertToGenerator = async function* (input: RunInput) {
+      yield input;
+    };
+    yield* this.transform(convertToGenerator(input), config);
   }
 }
+
+export class RunnableMap<RunInput> extends RunnableParallel<RunInput> {}
 
 /**
  * A runnable that runs a callable.
@@ -1640,7 +1630,7 @@ export function _coerceToRunnable<RunInput, RunOutput>(
     for (const [key, value] of Object.entries(coerceable)) {
       runnables[key] = _coerceToRunnable(value);
     }
-    return new RunnableMap<RunInput>({
+    return new RunnableParallel<RunInput>({
       steps: runnables,
     }) as unknown as Runnable<RunInput, Exclude<RunOutput, Error>>;
   } else {
