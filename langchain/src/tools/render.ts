@@ -25,7 +25,7 @@ export function renderTextDescription(tools: StructuredTool[]): string {
  * calculator: This tool is used for math,
  * args: {"expression": {"type": "string"}}
  * ```
- * @param tools 
+ * @param tools
  * @returns a string of all tools, their descriptions and a stringified version of their schemas
  */
 export function renderTextDescriptionAndArgs(tools: StructuredTool[]): string {

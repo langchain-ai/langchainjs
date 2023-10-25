@@ -58,7 +58,7 @@ const prompt = createPrompt();
  * which takes in two arguments: input and agent_scratchpad.
  * The agent_scratchpad is then formatted using the `formatLogToMessage`
  * util because we're using a `MessagesPlaceholder` in our prompt.
- * 
+ *
  * We also need to pass our tools through formatted as a string since
  * our prompt function does not format the prompt.
  */
