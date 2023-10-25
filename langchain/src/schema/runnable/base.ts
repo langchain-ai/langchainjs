@@ -1352,14 +1352,6 @@ export class RunnableMap<RunInput> extends Runnable<
       ])
     );
 
-    async function getNextChunk(
-      generator: AsyncGenerator<RunInput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ): Promise<AsyncGenerator<RunInput, any, unknown>> {
-      const result = await generator.next();
-      return result.value;
-    }
-
     while (tasks.size) {
       const completedTasks = await Promise.race(Array.from(tasks.keys()));
 
@@ -1380,7 +1372,7 @@ export class RunnableMap<RunInput> extends Runnable<
           [stepName]: await task,
         });
         yield chunk;
-        const newTask = await getNextChunk(generator);
+        const { value: newTask } = await generator.next();
         tasks.set(newTask, [stepName, generator]);
       }
     }
