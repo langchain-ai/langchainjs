@@ -1,8 +1,13 @@
 import { AgentExecutor } from "langchain/agents";
-import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import { InputValues } from "langchain/schema";
+import {
+  AIMessage,
+  AgentStep,
+  BaseMessage,
+  FunctionMessage,
+  InputValues,
+} from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
@@ -36,6 +41,20 @@ const modelWithTools = model.bind({
   functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
 });
 /**
+ * Define a new agent steps parser.
+ */
+const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
+  steps.flatMap(({ action, observation }) => {
+    if ("messageLog" in action && action.messageLog !== undefined) {
+      const log = action.messageLog as BaseMessage[];
+      return log.concat(
+        new FunctionMessage(observation, action.tool)
+      );
+    } else {
+      return [new AIMessage(action.log)];
+    }
+  });
+/**
  * Construct the runnable agent.
  *
  * We're using a `RunnableSequence` which takes two inputs:
@@ -48,7 +67,7 @@ const modelWithTools = model.bind({
 const runnableAgent = RunnableSequence.from([
   {
     input: (i: InputValues) => i.input,
-    agent_scratchpad: (i: InputValues) => formatForOpenAIFunctions(i.steps),
+    agent_scratchpad: (i: InputValues) => formatAgentSteps(i.steps),
   },
   prompt,
   modelWithTools,
