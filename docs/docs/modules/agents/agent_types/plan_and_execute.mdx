@@ -12,7 +12,6 @@ The execution is usually done by a separate agent (equipped with tools).
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/agents/plan_and_execute.ts";
-import RunnableExample from "@examples/agents/plan_and_execute_runnable.ts";
 
 This agent uses a two step process:
 
@@ -21,10 +20,6 @@ This agent uses a two step process:
 
 The idea is that the planning step keeps the LLM more "on track" by breaking up a larger task into simpler subtasks.
 However, this method requires more individual LLM queries and has higher latency compared to Action Agents.
-
-# With LCEL
-
-<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
 
 # With `PlanAndExecuteAgentExecutor`
 
