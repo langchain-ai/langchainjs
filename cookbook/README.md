@@ -12,4 +12,4 @@ Note that you will also need to install the Python `jupyter` package, and that t
 
 Notebook | Description
 :- | :-
-[LLaMA2_sql_chat.ipynb](https://github.com/langchain-ai/langchainjs/tree/master/cookbook/LLaMA2_sql_chat.ipynb) | Build a chat application that interacts with a sql database using an open source llm (llama2), specifically demonstrated on a sqlite database containing nba rosters.
+[rewrite.ipynb](https://github.com/langchain-ai/langchainjs/tree/master/cookbook/rewrite.ipynb) | Handle real-world questions that contain extraneous, distracting information in your RAG chains by first rewriting them before performing retrieval.
