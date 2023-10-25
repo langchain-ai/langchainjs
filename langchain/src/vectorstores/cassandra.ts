@@ -21,9 +21,54 @@ export interface CassandraLibArgs extends DseClientOptions {
   dimensions: number;
   primaryKey: Column;
   metadataColumns: Column[];
-  indices: Index[];
+  indices?: Index[];
   maxConcurrency?: number;
   batchSize?: number;
+}
+
+/**
+ * Class for managing concurrent tasks, similar to PromisePool (which is
+ * not part of the project's dependencies, and would be preferable to
+ * having this code).
+ */
+class ConcurrencyManager {
+  private maxConcurrency: number;
+
+  private pending: Promise<void>[];
+
+  private currentConcurrency: number;
+
+  constructor(maxConcurrency: number) {
+    this.maxConcurrency = maxConcurrency;
+    this.pending = [];
+    this.currentConcurrency = 0;
+  }
+
+  async run(task: () => Promise<void>): Promise<void> {
+    // Check for max concurrency limit
+    while (this.currentConcurrency >= this.maxConcurrency) {
+      // Wait for one of the tasks to finish
+      await Promise.race(this.pending);
+    }
+
+    // Start a new task and add its promise to the pending array
+    const p = task();
+    this.pending.push(p);
+    this.currentConcurrency += 1;
+
+    // Remove the promise from pending once it's done, and decrease the concurrency count
+    p.finally(() => {
+      const index = this.pending.indexOf(p);
+      if (index > -1) {
+        this.pending.splice(index, 1);
+      }
+      this.currentConcurrency -= 1;
+    });
+  }
+
+  async waitAll(): Promise<void> {
+    await Promise.all(this.pending);
+  }
 }
 
 /**
@@ -69,9 +114,19 @@ export class CassandraStore extends VectorStore {
     this.table = args.table;
     this.primaryKey = args.primaryKey;
     this.metadataColumns = args.metadataColumns;
-    this.indices = args.indices;
-    this.maxConcurrency = args.maxConcurrency || 25;
-    this.batchSize = args.batchSize || 0;
+    this.indices = args.indices || [];
+    this.maxConcurrency = Math.floor(args.maxConcurrency || 25);
+    if (this.maxConcurrency < 1) {
+      console.warn("maxConcurrency must be greater than 0, defaulting to 1");
+      this.maxConcurrency = 1;
+    }
+    this.batchSize = Math.floor(args.batchSize || 1);
+    if (this.batchSize < 1) {
+      console.warn(
+        "batchSize must be greater than or equal to 1, defaulting to 1"
+      );
+      this.batchSize = 1;
+    }
   }
 
   /**
@@ -254,93 +309,133 @@ export class CassandraStore extends VectorStore {
   }
 
   /**
-   * Method to inserting vectors and documents into the Cassandra database in a batch.
+   * Method for inserting vectors and documents into the Cassandra database in a batch.
    * @param batchVectors The list of vectors to insert.
-   * @param batchDocuments The list documents to insert.
+   * @param batchDocuments The list of documents to insert.
    * @returns Promise that resolves when the batch has been inserted.
    */
-  private async executeInsert(batchVectors: number[][], batchDocuments: Document[]): Promise<void> {
+  private async executeInsert(
+    batchVectors: number[][],
+    batchDocuments: Document[]
+  ): Promise<void> {
+    // Input validation: Check if the lengths of batchVectors and batchDocuments are the same
+    if (batchVectors.length !== batchDocuments.length) {
+      throw new Error(
+        `The lengths of vectors (${batchVectors.length}) and documents (${batchDocuments.length}) must be the same.`
+      );
+    }
+
+    // Initialize an array to hold query objects
     const queries = [];
-    for (let i = 0; i < batchVectors.length; i++) {
+
+    // Loop through each vector and document in the batch
+    for (let i = 0; i < batchVectors.length; i += 1) {
+      // Convert the list of numbers to a Float32Array, the driver's expected format of a vector
       const preparedVector = new Float32Array(batchVectors[i]);
+      // Retrieve the corresponding document
       const document = batchDocuments[i];
+
+      // Extract metadata column names and values from the document
       const metadataColNames = Object.keys(document.metadata);
       const metadataVals = Object.values(document.metadata);
-      const metadataInsert = metadataColNames.length > 0 ? ', ' + metadataColNames.join(', ') : '';
 
+      // Prepare the metadata columns string for the query, if metadata exists
+      const metadataInsert =
+        metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : "";
+
+      // Construct the query string and parameters
       const query = {
-        query: `INSERT INTO ${this.keyspace}.${this.table} (vector, text${metadataInsert}) VALUES (?, ?${", ?".repeat(metadataColNames.length)})`,
-        params: [preparedVector, document.pageContent, ...metadataVals]
+        query: `INSERT INTO ${this.keyspace}.${
+          this.table
+        } (vector, text${metadataInsert}) 
+                VALUES (?, ?${", ?".repeat(metadataColNames.length)})`,
+        params: [preparedVector, document.pageContent, ...metadataVals],
       };
+
+      // Add the query to the list
       queries.push(query);
     }
 
+    // Execute the queries: use a batch if multiple, otherwise execute a single query
     if (queries.length === 1) {
-      await this.client.execute(queries[0].query, queries[0].params, { prepare: true });
+      await this.client.execute(queries[0].query, queries[0].params, {
+        prepare: true,
+      });
     } else {
-      await this.client.batch(queries, { prepare: true });
+      await this.client.batch(queries, { prepare: true, logged: false });
     }
   }
 
   /**
-   * Method to inserting vectors and documents into the Cassandra database in
+   * Method for inserting vectors and documents into the Cassandra database in
    * parallel, keeping within maxConcurrency number of active insert statements.
    * @param vectors The vectors to insert.
    * @param documents The documents to insert.
    * @returns Promise that resolves when the documents have been added.
    */
-  private async insertAll(vectors: number[][], documents: Document[]): Promise<void> {
+  private async insertAll(
+    vectors: number[][],
+    documents: Document[]
+  ): Promise<void> {
+    // Input validation: Check if the lengths of vectors and documents are the same
+    if (vectors.length !== documents.length) {
+      throw new Error(
+        `The lengths of vectors (${vectors.length}) and documents (${documents.length}) must be the same.`
+      );
+    }
+
+    // Early exit: If there are no vectors or documents to insert, return immediately
+    if (vectors.length === 0) {
+      return;
+    }
+
+    // Ensure the store is initialized before proceeding
     if (!this.isInitialized) {
       await this.initialize();
     }
 
-    let currentConcurrency = 0; // Current number of running inserts
-    const pending: Promise<void>[] = []; // Array to hold pending promises
+    // Create a ConcurrencyManager instance to manage concurrent executions
+    const manager = new ConcurrencyManager(this.maxConcurrency);
 
+    // Buffers to hold the current batch of vectors and documents
     let currentBatchVectors: number[][] = [];
     let currentBatchDocuments: Document[] = [];
 
-    for (let i = 0; i <= vectors.length; i++) { // Notice the <= to include the last iteration
-      // Add vectors and documents to the current batch if we haven't reached the end
+    // Loop through each vector/document pair to insert; we use
+    // <= vectors.length to ensure the last batch is inserted
+    for (let i = 0; i <= vectors.length; i += 1) {
+      // Check if we're still within the array boundaries
       if (i < vectors.length) {
+        // Add the current vector and document to the batch
         currentBatchVectors.push(vectors[i]);
         currentBatchDocuments.push(documents[i]);
       }
 
-      // Check for end of batch OR end of array
-      if (currentBatchVectors.length >= this.batchSize || i === vectors.length) {
-
-        // Check for max concurrency limit
-        if (currentConcurrency >= this.maxConcurrency) {
-          // Wait for one of the inserts to finish
-          await Promise.race(pending);
-        }
-
-        // Only proceed if there is something to insert
+      // Check if we've reached the batch size or end of the array
+      if (
+        currentBatchVectors.length >= this.batchSize ||
+        i === vectors.length
+      ) {
+        // Only proceed if there are items in the current batch
         if (currentBatchVectors.length > 0) {
-          // Start a new insert and add its promise to the pending array
-          const p = this.executeInsert(currentBatchVectors, currentBatchDocuments);
-          pending.push(p);
-          currentConcurrency++;
+          // Create copies of the current batch arrays to use in the async insert operation
+          const batchVectors = [...currentBatchVectors];
+          const batchDocuments = [...currentBatchDocuments];
 
-          // Reset the batch
+          // Execute the insert using the ConcurrencyManager.
+          // It will handle concurrency and queueing.
+          await manager.run(() =>
+            this.executeInsert(batchVectors, batchDocuments)
+          );
+
+          // Clear the current buffers for the next iteration
           currentBatchVectors = [];
           currentBatchDocuments = [];
-
-          // Remove the promise from pending once it's done, and decrease the concurrency count
-          p.finally(() => {
-            const index = pending.indexOf(p);
-            if (index > -1) {
-              pending.splice(index, 1);
-            }
-            currentConcurrency--;
-          });
         }
       }
     }
 
-    // Wait for any remaining inserts to finish
-    await Promise.all(pending);
-
+    // Make sure all pending insert operations are completed
+    await manager.waitAll();
   }
 }
