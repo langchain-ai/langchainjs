@@ -1,6 +1,7 @@
 /* eslint-disable prefer-template */
 import { Client as CassandraClient, DseClientOptions } from "cassandra-driver";
 
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
@@ -15,60 +16,14 @@ export interface Index {
   value: string;
 }
 
-export interface CassandraLibArgs extends DseClientOptions {
+export interface CassandraLibArgs extends DseClientOptions, AsyncCallerParams {
   table: string;
   keyspace: string;
   dimensions: number;
   primaryKey: Column;
   metadataColumns: Column[];
   indices?: Index[];
-  maxConcurrency?: number;
   batchSize?: number;
-}
-
-/**
- * Class for managing concurrent tasks, similar to PromisePool (which is
- * not part of the project's dependencies, and would be preferable to
- * having this code).
- */
-class ConcurrencyManager {
-  private maxConcurrency: number;
-
-  private pending: Promise<void>[];
-
-  private currentConcurrency: number;
-
-  constructor(maxConcurrency: number) {
-    this.maxConcurrency = maxConcurrency;
-    this.pending = [];
-    this.currentConcurrency = 0;
-  }
-
-  async run(task: () => Promise<void>): Promise<void> {
-    // Check for max concurrency limit
-    while (this.currentConcurrency >= this.maxConcurrency) {
-      // Wait for one of the tasks to finish
-      await Promise.race(this.pending);
-    }
-
-    // Start a new task and add its promise to the pending array
-    const p = task();
-    this.pending.push(p);
-    this.currentConcurrency += 1;
-
-    // Remove the promise from pending once it's done, and decrease the concurrency count
-    p.finally(() => {
-      const index = this.pending.indexOf(p);
-      if (index > -1) {
-        this.pending.splice(index, 1);
-      }
-      this.currentConcurrency -= 1;
-    });
-  }
-
-  async waitAll(): Promise<void> {
-    await Promise.all(this.pending);
-  }
 }
 
 /**
@@ -97,7 +52,7 @@ export class CassandraStore extends VectorStore {
 
   private isInitialized = false;
 
-  private readonly maxConcurrency: number;
+  asyncCaller: AsyncCaller;
 
   private readonly batchSize: number;
 
@@ -106,21 +61,23 @@ export class CassandraStore extends VectorStore {
   }
 
   constructor(embeddings: Embeddings, args: CassandraLibArgs) {
-    super(embeddings, args);
+    const argsWithDefaults = {
+      indices: [],
+      maxConcurrency: 25,
+      batchSize: 1,
+      ...args,
+    };
+    super(embeddings, argsWithDefaults);
+    this.asyncCaller = new AsyncCaller(argsWithDefaults ?? {});
 
-    this.client = new CassandraClient(args);
-    this.dimensions = args.dimensions;
-    this.keyspace = args.keyspace;
-    this.table = args.table;
-    this.primaryKey = args.primaryKey;
-    this.metadataColumns = args.metadataColumns;
-    this.indices = args.indices || [];
-    this.maxConcurrency = Math.floor(args.maxConcurrency || 25);
-    if (this.maxConcurrency < 1) {
-      console.warn("maxConcurrency must be greater than 0, defaulting to 1");
-      this.maxConcurrency = 1;
-    }
-    this.batchSize = Math.floor(args.batchSize || 1);
+    this.client = new CassandraClient(argsWithDefaults);
+    this.dimensions = argsWithDefaults.dimensions;
+    this.keyspace = argsWithDefaults.keyspace;
+    this.table = argsWithDefaults.table;
+    this.primaryKey = argsWithDefaults.primaryKey;
+    this.metadataColumns = argsWithDefaults.metadataColumns;
+    this.indices = argsWithDefaults.indices;
+    this.batchSize = argsWithDefaults.batchSize;
     if (this.batchSize < 1) {
       console.warn(
         "batchSize must be greater than or equal to 1, defaulting to 1"
@@ -394,8 +351,8 @@ export class CassandraStore extends VectorStore {
       await this.initialize();
     }
 
-    // Create a ConcurrencyManager instance to manage concurrent executions
-    const manager = new ConcurrencyManager(this.maxConcurrency);
+    // Initialize an array to hold promises for each batch insert
+    const insertPromises: Promise<void>[] = [];
 
     // Buffers to hold the current batch of vectors and documents
     let currentBatchVectors: number[][] = [];
@@ -422,10 +379,11 @@ export class CassandraStore extends VectorStore {
           const batchVectors = [...currentBatchVectors];
           const batchDocuments = [...currentBatchDocuments];
 
-          // Execute the insert using the ConcurrencyManager.
-          // It will handle concurrency and queueing.
-          await manager.run(() =>
-            this.executeInsert(batchVectors, batchDocuments)
+          // Execute the insert using the AsyncCaller - it will handle concurrency and queueing.
+          insertPromises.push(
+            this.asyncCaller.call(() =>
+              this.executeInsert(batchVectors, batchDocuments)
+            )
           );
 
           // Clear the current buffers for the next iteration
@@ -435,7 +393,7 @@ export class CassandraStore extends VectorStore {
       }
     }
 
-    // Make sure all pending insert operations are completed
-    await manager.waitAll();
+    // Wait for all insert operations to complete.
+    await Promise.all(insertPromises);
   }
 }
