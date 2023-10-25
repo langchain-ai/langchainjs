@@ -44,10 +44,6 @@ const serializeChatHistory = (chatHistory: string | Array<string>) => {
   }
   return chatHistory;
 };
-
-/* Extract the content from Documents */
-const serializeDocs = (docs: Array<Document>): string =>
-  docs.map((doc) => doc.pageContent).join("\n");
 ```
 
 Our conversational system performs two main LLM queries.
@@ -102,6 +98,7 @@ that abstracts the last processing step.
 import { RunnableSequence } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { LLMChain } from "langchain/chains";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 /**
  * A helper function which performs the LLM call and saves the context to memory.
@@ -158,7 +155,7 @@ const answerQuestionChain = RunnableSequence.from([
       const relevantDocs = await retriever.getRelevantDocuments(
         previousStepResult.question
       );
-      const serialized = serializeDocs(relevantDocs);
+      const serialized = formatDocumentsAsString(relevantDocs);
       return serialized;
     },
   },

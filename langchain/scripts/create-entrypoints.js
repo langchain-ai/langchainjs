@@ -273,6 +273,7 @@ const entrypoints = {
   // hub
   hub: "hub",
   // utilities
+  "util/document": "util/document",
   "util/math": "util/math",
   "util/time": "util/time",
   // experimental

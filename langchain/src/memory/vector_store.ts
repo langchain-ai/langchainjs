@@ -1,4 +1,5 @@
 import { Document } from "../document.js";
+import { formatDocumentsAsString } from "../util/document.js";
 import { VectorStoreRetriever } from "../vectorstores/base.js";
 import {
   BaseMemory,
@@ -64,7 +65,7 @@ export class VectorStoreRetrieverMemory
     return {
       [this.memoryKey]: this.returnDocs
         ? results
-        : results.map((r) => r.pageContent).join("\n"),
+        : formatDocumentsAsString(results, "\n"),
     };
   }
 

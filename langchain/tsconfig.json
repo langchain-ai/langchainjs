@@ -263,6 +263,7 @@
       "src/storage/file_system.ts",
       "src/graphs/neo4j_graph.ts",
       "src/hub.ts",
+      "src/util/document.ts",
       "src/util/math.ts",
       "src/util/time.ts",
       "src/experimental/autogpt/index.ts",
