@@ -112,7 +112,6 @@ export class OpenAIAgent extends Agent {
   constructor(input: Omit<OpenAIAgentInput, "outputParser">) {
     super({ ...input, outputParser: undefined });
     this.tools = input.tools;
-    this.outputParser = new OpenAIFunctionsAgentOutputParser();
   }
 
   /**
