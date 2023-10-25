@@ -95,7 +95,6 @@ Loaded agent.
 Calling executor with input: What is the weather in Honolulu?
 {
   output: '\n' +
-    'The weather forecast for Honolulu today is a high of 84°F, a low of 73°F, sunny with a 16% chance of rain, winds ENE at 15 mph, humidity 66%, and a UV index of 8 out of 11.\n' +
-    '</final_answer>'
+    'The weather in Honolulu is mostly sunny with a high of 72 degrees Fahrenheit, 2% chance of rain, 91% humidity, and winds around 2 mph.\n'
 }
 */
