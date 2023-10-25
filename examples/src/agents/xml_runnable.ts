@@ -66,7 +66,7 @@ const runnableAgent = RunnableSequence.from([
   {
     input: (i: InputValues) => i.input,
     agent_scratchpad: (i: InputValues) => formatLogToMessage(i.steps),
-    tools: () => renderTextDescriptionAndArgs(tools),
+    tools: (i: InputValues) => renderTextDescriptionAndArgs(i.tools),
   },
   prompt,
   model,
@@ -85,7 +85,7 @@ console.log("Loaded agent.");
 
 const input = `What is the weather in Honolulu?`;
 console.log(`Calling executor with input: ${input}`);
-const result = await executor.call({ input });
+const result = await executor.call({ input, tools });
 console.log(result);
 
 /*

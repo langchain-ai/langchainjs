@@ -94,7 +94,7 @@ const outputParser = new XMLAgentOutputParser();
 const runnableAgent = RunnableSequence.from([
   {
     input: (i: InputValues) => i.input,
-    tools: () => renderTextDescription(tools),
+    tools: (i: InputValues) => renderTextDescription(i.tools),
     agent_scratchpad: (i: InputValues) => formatXml(i.steps),
   },
   prompt,
@@ -115,7 +115,7 @@ console.log("Loaded executor");
 
 const input = "What is the weather in SF?";
 console.log(`Calling executor with input: ${input}`);
-const response = await executor.call({ input });
+const response = await executor.call({ input, tools });
 console.log(response);
 ```
 
