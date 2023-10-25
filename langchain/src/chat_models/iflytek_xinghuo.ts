@@ -7,7 +7,7 @@ import {
   ChatMessage,
   ChatResult,
 } from "../schema/index.js";
-import { getEnvironmentVariable } from "../util/env.js";
+import { getEnv, getEnvironmentVariable } from "../util/env.js";
 import { IterableReadableStream } from "../util/stream.js";
 import { WebSocketStream } from "../util/websocket_stream.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
@@ -245,21 +245,45 @@ export class ChatIflytekXinghuo
    * Method that retrieves the auth websocket url for making requests to the Iflytek Xinghuo API.
    * @returns The auth websocket url for making requests to the Iflytek Xinghuo API.
    */
-  getAuthWebSocketUrl() {
+  async getAuthWebSocketUrl() {
     const host = "spark-api.xf-yun.com";
     const date = new Date().toUTCString();
     const url = `GET /${this.version}/chat HTTP/1.1`;
-    const hash = createHmac("sha256", this.iflytekApiSecret)
-      .update(`host: ${host}\n` + `date: ${date}\n` + url)
-      .digest("base64");
-    const authorization_origin = `api_key="${this.iflytekApiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${hash}"`;
-    const authorization = Buffer.from(authorization_origin).toString("base64");
-    const authWebSocketUrl =
+    let authorization;
+    if (getEnv() === "node") {
+      const { createHmac } = await import("crypto");
+      const hash = createHmac("sha256", this.iflytekApiSecret)
+        .update(`host: ${host}\n` + `date: ${date}\n` + url)
+        .digest("base64");
+      const authorization_origin = `api_key="${this.iflytekApiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${hash}"`;
+      authorization = Buffer.from(authorization_origin).toString("base64");
+    } else if (getEnv() === "browser") {
+      const keyBuffer = new TextEncoder().encode(this.iflytekApiSecret);
+      const dataBuffer = new TextEncoder().encode(
+        `host: ${host}\n` + `date: ${date}\n` + url
+      );
+      const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        keyBuffer,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign("HMAC", cryptoKey, dataBuffer);
+      const hash = window.btoa(
+        String.fromCharCode(...new Uint8Array(signature))
+      );
+      const authorization_origin = `api_key="${this.iflytekApiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${hash}"`;
+      authorization = window.btoa(authorization_origin);
+    } else {
+      throw new Error(`Invalid Environment: ${getEnv()}`);
+    }
+    return (
       this.apiUrl +
       `?authorization=${authorization}` +
       `&host=${encodeURIComponent(host)}` +
-      `&date=${encodeURIComponent(date)}`;
-    return authWebSocketUrl;
+      `&date=${encodeURIComponent(date)}`
+    );
   }
 
   /**
@@ -288,7 +312,8 @@ export class ChatIflytekXinghuo
     onmessage: (data: string) => void,
     signal?: AbortSignal
   ) {
-    const webSocketStream = new WebSocketStream(this.getAuthWebSocketUrl(), {
+    const url = await this.getAuthWebSocketUrl();
+    const webSocketStream = new WebSocketStream(url, {
       signal,
     });
     const connection = await webSocketStream.connection;
