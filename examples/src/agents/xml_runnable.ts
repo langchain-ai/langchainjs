@@ -8,6 +8,9 @@ import {
 } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { InputValues } from "langchain/schema";
+import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
+import { renderTextDescriptionAndArgs } from "langchain/tools/render";
+import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_message";
 
 /**
  * Define your chat model.
@@ -55,15 +58,19 @@ const prompt = createPrompt();
  * which takes in two arguments: input and agent_scratchpad.
  * The agent_scratchpad is then formatted using the `formatLogToMessage`
  * util because we're using a `MessagesPlaceholder` in our prompt.
+ * 
+ * We also need to pass our tools through formatted as a string since
+ * our prompt function does not format the prompt.
  */
 const runnableAgent = RunnableSequence.from([
   {
     input: (i: InputValues) => i.input,
-    agent_scratchpad: (i: InputValues) => i.steps,
+    agent_scratchpad: (i: InputValues) => formatLogToMessage(i.steps),
+    tools: () => renderTextDescriptionAndArgs(tools),
   },
   prompt,
   model,
-  // add output parser
+  new XMLAgentOutputParser(),
 ]);
 
 /**
@@ -77,12 +84,16 @@ const executor = AgentExecutor.fromAgentAndTools({
 console.log("Loaded agent.");
 
 const input = `What is the weather in Honolulu?`;
+console.log(`Calling executor with input: ${input}`);
 const result = await executor.call({ input });
 console.log(result);
 
 /*
-  https://smith.langchain.com/public/d0acd50a-f99d-4af0-ae66-9009de319fb5/r
-  {
-    output: 'The weather in Honolulu is currently 75 degrees Fahrenheit with a small craft advisory in effect. The forecast calls for generally clear skies tonight with a low of 75 degrees.'
-  }
+Loaded agent.
+Calling executor with input: What is the weather in Honolulu?
+{
+  output: '\n' +
+    'The weather forecast for Honolulu today is a high of 84°F, a low of 73°F, sunny with a 16% chance of rain, winds ENE at 15 mph, humidity 66%, and a UV index of 8 out of 11.\n' +
+    '</final_answer>'
+}
 */
