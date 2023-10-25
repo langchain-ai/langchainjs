@@ -2,6 +2,16 @@
 
 You can pass a Runnable into an agent.
 
+Building an agent from a runnable usually involves a few things:
+
+1. Data processing for the intermediate steps (`agent_scratchpad`). These need to represented in a way that the language model can recognize them. This should be pretty tightly coupled to the instructions in the prompt. For this reason, we use the built in util `formatXml` to format the steps as XML.
+
+2. The prompt itself. This is the default XML agent prompt, which includes variables for the tool list and user question. It also contains examples of inputs and outputs for the agent to learn from.
+
+3. The model, complete with stop tokens if needed (in our case, needed).
+
+4. The output parser - should be in sync with how the prompt specifies things to be formatted. In our case, we'll continue with the theme of XML and use the default `XMLAgentOutputParser`
+
 ```typescript
 import { AgentExecutor } from "langchain/agents";
 import { formatXml } from "langchain/agents/format_scratchpad/xml";
@@ -79,16 +89,6 @@ const prompt = createPrompt();
 
 const outputParser = new XMLAgentOutputParser();
 ```
-
-Building an agent from a runnable usually involves a few things:
-
-1. Data processing for the intermediate steps (`agent_scratchpad`). These need to represented in a way that the language model can recognize them. This should be pretty tightly coupled to the instructions in the prompt. For this reason, we use the built in util `formatXml` to format the steps as XML.
-
-2. The prompt itself. This is the default XML agent prompt, which includes variables for the tool list and user question. It also contains examples of inputs and outputs for the agent to learn from.
-
-3. The model, complete with stop tokens if needed (in our case, needed).
-
-4. The output parser - should be in sync with how the prompt specifies things to be formatted. In our case, we'll continue with the theme of XML and use the default `XMLAgentOutputParser`
 
 ```typescript
 const runnableAgent = RunnableSequence.from([
