@@ -259,7 +259,7 @@ export class WebBrowser extends Tool {
         undefined,
         runManager?.getChild("vectorstore")
       );
-      context = formatDocumentsContentToString(results);
+      context = formatDocumentsContentToString(results, "\n");
     }
 
     const input = `Text:${context}\n\nI need ${
