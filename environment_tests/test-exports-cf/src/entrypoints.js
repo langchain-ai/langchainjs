@@ -7,6 +7,7 @@ export * from "langchain/agents/format_scratchpad/log";
 export * from "langchain/agents/format_scratchpad/xml";
 export * from "langchain/agents/format_scratchpad/log_to_message";
 export * from "langchain/agents/react/output_parser";
+export * from "langchain/agents/openai/output_parser";
 export * from "langchain/base_language";
 export * from "langchain/tools";
 export * from "langchain/tools/render";
