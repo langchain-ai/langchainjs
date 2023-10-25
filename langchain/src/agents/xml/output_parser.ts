@@ -9,10 +9,6 @@ export class XMLAgentOutputParser extends AgentActionOutputParser {
     return "XMLAgentOutputParser";
   }
 
-  constructor() {
-    super(...arguments);
-  }
-
   /**
    * Parses the output text from the agent and returns an AgentAction or
    * AgentFinish object.
