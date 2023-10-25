@@ -51,7 +51,7 @@ const runnableAgent = RunnableSequence.from([
 /**
  * Define your memory store
  * @important The memoryKey must be "chat_history" for the chat agent to work
- * because this is the key we defined above in the `runnableAgent`.
+ * because this is the key this particular prompt expects.
  */
 const memory = new BufferMemory({ memoryKey: "chat_history" });
 /** Define your executor and pass in the agent, tools and memory */
