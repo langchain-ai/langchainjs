@@ -23,10 +23,6 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
     return "OpenAIFunctionsAgentOutputParser";
   }
 
-  constructor() {
-    super(...arguments);
-  }
-
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     throw new Error(
       `OpenAIFunctionsAgentOutputParser can only parse messages.\nPassed input: ${text}`
