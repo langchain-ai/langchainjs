@@ -1,3 +1,5 @@
+/* eslint-disable spaced-comment */
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {
   internalQueryGeneric as internalQuery,
@@ -6,9 +8,9 @@ import {
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { GenericId, v } from "convex/values";
 
-export const get = internalQuery({
+export const get = /*#__PURE__*/ internalQuery({
   args: {
-    id: v.string(),
+    id: /*#__PURE__*/ v.string(),
   },
   handler: async (ctx, args) => {
     const result = await ctx.db.get(args.id as GenericId<string>);
@@ -16,22 +18,22 @@ export const get = internalQuery({
   },
 });
 
-export const insert = internalMutation({
+export const insert = /*#__PURE__*/ internalMutation({
   args: {
-    table: v.string(),
-    document: v.any(),
+    table: /*#__PURE__*/ v.string(),
+    document: /*#__PURE__*/ v.any(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert(args.table, args.document);
   },
 });
 
-export const lookup = internalQuery({
+export const lookup = /*#__PURE__*/ internalQuery({
   args: {
-    table: v.string(),
-    index: v.string(),
-    keyField: v.string(),
-    key: v.string(),
+    table: /*#__PURE__*/ v.string(),
+    index: /*#__PURE__*/ v.string(),
+    keyField: /*#__PURE__*/ v.string(),
+    key: /*#__PURE__*/ v.string(),
   },
   handler: async (ctx, args) => {
     const result = await ctx.db
@@ -42,13 +44,13 @@ export const lookup = internalQuery({
   },
 });
 
-export const upsert = internalMutation({
+export const upsert = /*#__PURE__*/ internalMutation({
   args: {
-    table: v.string(),
-    index: v.string(),
-    keyField: v.string(),
-    key: v.string(),
-    document: v.any(),
+    table: /*#__PURE__*/ v.string(),
+    index: /*#__PURE__*/ v.string(),
+    keyField: /*#__PURE__*/ v.string(),
+    key: /*#__PURE__*/ v.string(),
+    document: /*#__PURE__*/ v.any(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -63,12 +65,12 @@ export const upsert = internalMutation({
   },
 });
 
-export const deleteMany = internalMutation({
+export const deleteMany = /*#__PURE__*/ internalMutation({
   args: {
-    table: v.string(),
-    index: v.string(),
-    keyField: v.string(),
-    key: v.string(),
+    table: /*#__PURE__*/ v.string(),
+    index: /*#__PURE__*/ v.string(),
+    keyField: /*#__PURE__*/ v.string(),
+    key: /*#__PURE__*/ v.string(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db

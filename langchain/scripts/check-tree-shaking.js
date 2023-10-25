@@ -43,14 +43,9 @@ export function listExternals() {
   ];
 }
 
-export function entryPointsWithInherentSideEffects() {
-  return ["dist/util/convex.js"];
-}
-
 export async function checkTreeShaking() {
   const externals = listExternals();
   const entrypoints = listEntrypoints();
-  const ignoredEntrypoints = new Set(entryPointsWithInherentSideEffects());
   const consoleLog = console.log;
   const reportMap = new Map();
 
@@ -59,12 +54,7 @@ export async function checkTreeShaking() {
 
     console.log = function (...args) {
       const line = args.length ? args.join(" ") : "";
-      const [, moduleWithSideEffects] =
-        line.match(/First side effect in (\S+)/) ?? [];
-      if (
-        moduleWithSideEffects &&
-        !ignoredEntrypoints.has(moduleWithSideEffects)
-      ) {
+      if (line.trim().startsWith("First side effect in")) {
         sideEffects += line + "\n";
       }
     };
