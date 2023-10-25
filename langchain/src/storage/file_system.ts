@@ -1,5 +1,5 @@
-import { promises as fsPromises } from "fs";
-import nodePath from "path";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import { BaseStore } from "../schema/storage.js";
 
 /**
@@ -23,7 +23,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    */
   private async getParsedFile(key: string): Promise<Uint8Array | undefined> {
     try {
-      const fileContent = await fsPromises.readFile(this.getFullPath(key));
+      const fileContent = await fs.readFile(this.getFullPath(key));
       if (!fileContent) {
         return undefined;
       }
@@ -49,7 +49,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    */
   private async setFileContent(content: Uint8Array, key: string) {
     try {
-      await fsPromises.writeFile(this.getFullPath(key), content);
+      await fs.writeFile(this.getFullPath(key), content);
     } catch (error) {
       throw new Error(
         `Error writing file at path: ${this.getFullPath(
@@ -66,7 +66,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
   private getFullPath(key: string): string {
     try {
       const keyAsTxtFile = `${key}.txt`;
-      const fullPath = nodePath.join(this.rootPath, keyAsTxtFile);
+      const fullPath = path.join(this.rootPath, keyAsTxtFile);
       return fullPath;
     } catch (e) {
       throw new Error(
@@ -107,7 +107,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    */
   async mdelete(keys: string[]): Promise<void> {
     await Promise.all(
-      keys.map((key) => fsPromises.unlink(this.getFullPath(key)))
+      keys.map((key) => fs.unlink(this.getFullPath(key)))
     );
   }
 
@@ -118,7 +118,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @returns AsyncGenerator that yields keys from the store.
    */
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
-    const allFiles = await fsPromises.readdir(this.rootPath);
+    const allFiles = await fs.readdir(this.rootPath);
     const allKeys = allFiles.map((file) => file.replace(".txt", ""));
     for (const key of allKeys) {
       if (prefix === undefined || key.startsWith(prefix)) {
@@ -136,14 +136,14 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
   static async fromPath(rootPath: string): Promise<LocalFileStore> {
     try {
       // Verifies the directory exists at the provided path, and that it is readable and writable.
-      await fsPromises.access(
+      await fs.access(
         rootPath,
-        fsPromises.constants.R_OK | fsPromises.constants.W_OK
+        fs.constants.R_OK | fs.constants.W_OK
       );
     } catch (_) {
       try {
         // Directory does not exist, create it.
-        await fsPromises.mkdir(rootPath, { recursive: true });
+        await fs.mkdir(rootPath, { recursive: true });
       } catch (error) {
         throw new Error(
           `An error occurred creating directory at: ${rootPath}.\nError: ${JSON.stringify(
