@@ -18,7 +18,7 @@
  Create as many sidebars as you want.
  */
 
- module.exports = {
+module.exports = {
   // By default, Docusaurus generates a sidebar from the docs folder structure
   docs: [
     {
