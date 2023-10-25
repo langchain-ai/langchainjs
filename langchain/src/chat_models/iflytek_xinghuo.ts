@@ -233,6 +233,8 @@ export class ChatIflytekXinghuo
         case "v3.1":
           this.domain = "generalv3";
           break;
+        default:
+          this.domain = "generalv2";
       }
       this.apiUrl = `wss://spark-api.xf-yun.com/${this.version}/chat`;
     } else {
@@ -252,14 +254,14 @@ export class ChatIflytekXinghuo
     if (getEnv() === "node") {
       const { createHmac } = await import("crypto");
       const hash = createHmac("sha256", this.iflytekApiSecret)
-        .update(`host: ${host}\n` + `date: ${date}\n` + url)
+        .update(`host: ${host}\ndate: ${date}\n${url}`)
         .digest("base64");
       const authorization_origin = `api_key="${this.iflytekApiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${hash}"`;
       authorization = Buffer.from(authorization_origin).toString("base64");
     } else if (getEnv() === "browser") {
       const keyBuffer = new TextEncoder().encode(this.iflytekApiSecret);
       const dataBuffer = new TextEncoder().encode(
-        `host: ${host}\n` + `date: ${date}\n` + url
+        `host: ${host}\ndate: ${date}\n${url}`
       );
       const cryptoKey = await crypto.subtle.importKey(
         "raw",
@@ -277,12 +279,11 @@ export class ChatIflytekXinghuo
     } else {
       throw new Error(`Invalid Environment: ${getEnv()}`);
     }
-    return (
-      this.apiUrl +
-      `?authorization=${authorization}` +
-      `&host=${encodeURIComponent(host)}` +
-      `&date=${encodeURIComponent(date)}`
-    );
+    let authWebSocketUrl = this.apiUrl;
+    authWebSocketUrl += `?authorization=${authorization}`;
+    authWebSocketUrl += `&host=${encodeURIComponent(host)}`;
+    authWebSocketUrl += `&date=${encodeURIComponent(date)}`;
+    return authWebSocketUrl;
   }
 
   /**
@@ -349,8 +350,8 @@ export class ChatIflytekXinghuo
         break;
       }
     }
-    streams.cancel();
-    webSocketStream.close();
+    void streams.cancel();
+    void webSocketStream.close();
   }
 
   /** @ignore */
@@ -370,7 +371,7 @@ export class ChatIflytekXinghuo
         let response: ChatCompletionResponse;
         let rejected = false;
         let resolved = false;
-        this.completion(
+        void this.completion(
           {
             ...params,
             messages: messagesMapped,
@@ -463,6 +464,7 @@ export class ChatIflytekXinghuo
   }
 
   /** @ignore */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _combineLLMOutput(): Record<string, any> | undefined {
     return [];
   }

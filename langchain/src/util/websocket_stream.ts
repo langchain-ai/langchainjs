@@ -48,6 +48,7 @@ export class WebSocketStream<
     if (getEnv() === "browser") {
       ws = new WebSocket(url, options.protocols ?? []);
     } else if (getEnv() === "node") {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       ws = new WsWebSocket(url, options.protocols ?? []);
     }
@@ -91,6 +92,7 @@ export class WebSocketStream<
     });
 
     if (options.signal) {
+      // eslint-disable-next-line no-param-reassign
       options.signal.onabort = () => ws.close();
     }
 
