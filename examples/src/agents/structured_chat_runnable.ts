@@ -108,31 +108,33 @@ Action:
 }}
 \`\`\``;
 const SUFFIX = `Begin! Reminder to ALWAYS use the above format, and to use tools if appropriate.`;
-const createPrompt = () => {
-  const inputVariables = ["input", "agent_scratchpad"];
-  const template = [PREFIX, FORMAT_INSTRUCTIONS, SUFFIX].join("\n\n");
-  const humanMessageTemplate = "{input}\n\n{agent_scratchpad}";
-  const messages = [
-    new SystemMessagePromptTemplate(
-      new PromptTemplate({
-        template,
-        inputVariables,
-        partialVariables: {
-          tool_schemas: renderTextDescriptionAndArgs(tools),
-          tool_names: toolNames.join(", "),
-        },
-      })
-    ),
-    new HumanMessagePromptTemplate(
-      new PromptTemplate({
-        template: humanMessageTemplate,
-        inputVariables,
-      })
-    ),
-  ];
-  return ChatPromptTemplate.fromMessages(messages);
-};
-const prompt = createPrompt();
+const inputVariables = ["input", "agent_scratchpad"];
+const template = [
+  PREFIX,
+  FORMAT_INSTRUCTIONS,
+  SUFFIX,
+  `Thoughts: {agent_scratchpad}`,
+].join("\n\n");
+const humanMessageTemplate = "{input}";
+const messages = [
+  new SystemMessagePromptTemplate(
+    new PromptTemplate({
+      template,
+      inputVariables,
+      partialVariables: {
+        tool_schemas: renderTextDescriptionAndArgs(tools),
+        tool_names: toolNames.join(", "),
+      },
+    })
+  ),
+  new HumanMessagePromptTemplate(
+    new PromptTemplate({
+      template: humanMessageTemplate,
+      inputVariables,
+    })
+  ),
+];
+const prompt = ChatPromptTemplate.fromMessages(messages);
 
 /**
  * Now we can create our output parser.

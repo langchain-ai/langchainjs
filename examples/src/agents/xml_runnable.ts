@@ -16,7 +16,11 @@ import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_me
  * Define your chat model.
  * In this case we'll use Claude since it preforms well on XML related tasks
  */
-const model = new ChatAnthropic({ modelName: "claude-2", temperature: 0.1 });
+const model = new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).bind(
+  {
+    stop: ["</tool_input>", "</final_answer>"],
+  }
+);
 /** Define your list of tools. */
 const tools = [new SerpAPI()];
 

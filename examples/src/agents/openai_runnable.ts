@@ -28,8 +28,8 @@ const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
  * steps into a list of `BaseMessages` which can be passed into `MessagesPlaceholder`
  */
 const prompt = ChatPromptTemplate.fromMessages([
-  ["system", "You are a helpful assistant"],
-  ["user", "{input}"],
+  ["ai", "You are a helpful assistant"],
+  ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 /**
