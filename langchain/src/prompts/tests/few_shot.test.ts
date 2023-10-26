@@ -89,9 +89,9 @@ describe("FewShotPromptTemplate", () => {
     });
     expect(await partialPrompt.format({ bar: "baz" })).toBe(
       `boobaz
-  An example about foo
-  An example about bar
-  `
+An example about foo
+An example about bar
+`
     );
   });
 
@@ -116,14 +116,14 @@ describe("FewShotPromptTemplate", () => {
     });
     expect(await partialPrompt.format({ bar: "baz" })).toBe(
       `boobaz
-  An example about foo
-  An example about bar
-  `
+An example about foo
+An example about bar
+`
     );
   });
 });
 
-describe.only("FewShotChatMessagePromptTemplate", () => {
+describe("FewShotChatMessagePromptTemplate", () => {
   test("Test using partial", async () => {
     const examplePrompt = ChatPromptTemplate.fromMessages([
       ["ai", "{foo}{bar}"],
@@ -197,8 +197,7 @@ describe.only("FewShotChatMessagePromptTemplate", () => {
     expect(await partialPrompt.format({ bar: "baz" })).toBe("boobaz\n");
   });
 
-  /** @TODO - broken */
-  test.skip("Test partial with function and examples", async () => {
+  test("Test partial with function and examples", async () => {
     const examplePrompt = ChatPromptTemplate.fromMessages([
       ["ai", "An example about {x}"],
     ]);
@@ -217,14 +216,14 @@ describe.only("FewShotChatMessagePromptTemplate", () => {
     });
     expect(await partialPrompt.format({ bar: "baz" })).toBe(
       `boobaz
-  An example about foo
-  An example about bar
-  `
+An example about foo
+An example about bar
+`
     );
   });
 
   /** @TODO - broken */
-  test.skip("Test partial with function and example selector", async () => {
+  test("Test partial with function and example selector", async () => {
     const examplePrompt = ChatPromptTemplate.fromMessages([
       ["ai", "An example about {x}"],
     ]);
@@ -247,9 +246,9 @@ describe.only("FewShotChatMessagePromptTemplate", () => {
     });
     expect(await partialPrompt.format({ bar: "baz" })).toBe(
       `boobaz
-  An example about foo
-  An example about bar
-  `
+An example about foo
+An example about bar
+`
     );
   });
 });

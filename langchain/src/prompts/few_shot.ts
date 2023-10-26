@@ -386,10 +386,12 @@ export class FewShotChatMessagePromptTemplate<
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = await this.getExamples(allValues);
-
-    const exampleStrings = await Promise.all(
+    const exampleMessages = await Promise.all(
       examples.map((example) => this.examplePrompt.formatMessages(example))
     );
+    const exampleStrings = exampleMessages
+      .flat()
+      .map((message) => message.content);
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
       this.exampleSeparator
     );
@@ -411,7 +413,6 @@ export class FewShotChatMessagePromptTemplate<
       inputVariables: newInputVariables,
       partialVariables: newPartialVariables,
     };
-    console.log("promptDict", promptDict);
     return new FewShotChatMessagePromptTemplate<
       InputValues<Exclude<Extract<keyof RunInput, string>, PartialVariableName>>
     >(promptDict);
