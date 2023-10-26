@@ -255,6 +255,13 @@ export interface FewShotChatMessagePromptTemplateInput
   exampleSeparator?: string;
 
   /**
+   * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
+   * {@link examples} must be
+   * provided.
+   */
+  exampleSelector?: BaseExampleSelector | undefined;
+
+  /**
    * A prompt template string to put before the examples.
    *
    * @defaultValue `""`
@@ -278,13 +285,15 @@ export interface FewShotChatMessagePromptTemplateInput
 }
 
 export class FewShotChatMessagePromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PartialVariableName extends string = any
   >
-  extends BaseChatPromptTemplate<RunInput, PartialVariableName>
+  extends BaseChatPromptTemplate
   implements FewShotChatMessagePromptTemplateInput
 {
-  lc_serializable = false;
+  lc_serializable = true;
 
   examples?: InputValues[];
 
@@ -386,10 +395,12 @@ export class FewShotChatMessagePromptTemplate<
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = await this.getExamples(allValues);
-
-    const exampleStrings = await Promise.all(
+    const exampleMessages = await Promise.all(
       examples.map((example) => this.examplePrompt.formatMessages(example))
     );
+    const exampleStrings = exampleMessages
+      .flat()
+      .map((message) => message.content);
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
       this.exampleSeparator
     );
@@ -411,7 +422,6 @@ export class FewShotChatMessagePromptTemplate<
       inputVariables: newInputVariables,
       partialVariables: newPartialVariables,
     };
-    console.log("promptDict", promptDict);
     return new FewShotChatMessagePromptTemplate<
       InputValues<Exclude<Extract<keyof RunInput, string>, PartialVariableName>>
     >(promptDict);
