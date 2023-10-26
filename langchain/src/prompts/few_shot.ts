@@ -281,10 +281,10 @@ export class FewShotChatMessagePromptTemplate<
     RunInput extends InputValues = any,
     PartialVariableName extends string = any
   >
-  extends BaseChatPromptTemplate<RunInput, PartialVariableName>
+  extends BaseChatPromptTemplate
   implements FewShotChatMessagePromptTemplateInput
 {
-  lc_serializable = false;
+  lc_serializable = true;
 
   examples?: InputValues[];
 
