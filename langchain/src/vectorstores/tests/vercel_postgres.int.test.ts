@@ -72,4 +72,53 @@ describe("Test VercelPostgres store", () => {
 
     expect(results3).toHaveLength(0);
   });
+
+  test("Test metadata filtering", async () => {
+    const config = {
+      tableName: "testvercelvectorstorelangchain",
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
+
+    vercelPostgresStore = await VercelPostgres.initialize(
+      new OpenAIEmbeddings(),
+      config
+    );
+
+    const docGreen = {
+      pageContent: "Hi, I am the color green.",
+      metadata: { color: "green" },
+    };
+    const docBlue = {
+      pageContent: "Hi, I am the color blue.",
+      metadata: { color: "blue" },
+    };
+    const docYellow = {
+      pageContent: "Hi, I am the color yellow.",
+      metadata: { color: "yellow" },
+    };
+
+    await vercelPostgresStore.addDocuments([docGreen, docBlue, docYellow]);
+
+    const results1 = await vercelPostgresStore.similaritySearch("color", 5, {
+      color: "blue",
+    });
+
+    expect(results1).toHaveLength(1);
+
+    const results2 = await vercelPostgresStore.similaritySearch("color", 5, {
+      color: { in: ["blue", "yellow"] },
+    });
+
+    const results2WithColorGreen = results2.filter(
+      (result) => result.metadata.color === "green"
+    );
+
+    expect(results2).toHaveLength(2);
+    expect(results2WithColorGreen).toHaveLength(0);
+  });
 });
