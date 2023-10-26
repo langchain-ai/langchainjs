@@ -34,6 +34,170 @@ import FormatExample from "@examples/chains/openai_functions_structured_format.t
 
 <CodeBlock language="typescript">{FormatExample}</CodeBlock>
 
+# With chat history memory
+
+In this example we'll construct a simple chain which uses OpenAI functions, structured output parser and chat history memory.
+We'll provide the chain with two functions:
+
+* `food_recorder` -> A function to record what food a user likes.
+* `final_response` -> The function that returns a response to the user
+
+After each LLM response, we'll take our structured data and save it to memory (with a little formatting too). By doing this, we're enabling our LLM to
+remember what the user has said and use that information to generate a response.
+
+The first step is to create our functions. For this we'll use `zod` to create the function schemas.
+
+We're going to create two, one which returns an array of foods, with their name, whether or not they're healthy and their color.
+The second simply returns an object containing the final response.
+
+```typescript
+const foodZodSchema = z.object({
+  foods: z
+    .array(
+      z.object({
+        name: z.string().describe("The name of the food item"),
+        healthy: z.boolean().describe("Whether the food is good for you"),
+        color: z.string().optional().describe("The color of the food"),
+      })
+    )
+    .describe("An array of food items mentioned in the text"),
+});
+
+const finalResponseZodSchema = z.object({
+  finalResponse: z.string().describe("The final response"),
+});
+```
+
+Next we'll construct the prompt. This is simple, we have two "messages", one from the AI with a simple explanation on when to use the functions, and an input variable for the chat history. The second only contains the users question.
+
+```typescript
+const prompt = ChatPromptTemplate.fromMessages([
+  [
+    "ai",
+    `You are a helpful assistant.
+You are provided with two functions: one to use to record what food the user likes, and one to use when replying to user questions.
+Chat history: {history}`,
+  ],
+  ["human", "Question: {input}"],
+]);
+```
+
+Then, define the LLM model and bind the function arguments to it. By using `.bind()` we're adding the functions to the model for every call.
+
+```typescript
+const model = new ChatOpenAI({
+  temperature: 0,
+}).bind({
+  functions: [
+    {
+      name: "food_recorder",
+      description: "A function to record what food a user likes",
+      parameters: zodToJsonSchema(foodZodSchema),
+    },
+    {
+      name: "final_response",
+      description: "The function that returns a response to the user",
+      parameters: zodToJsonSchema(finalResponseZodSchema),
+    },
+  ],
+});
+```
+
+Next we can define our memory using the `BufferMemory` class, and the output parser for structured data: `JsonOutputFunctionsParser`.
+
+```typescript
+const outputParser = new JsonOutputFunctionsParser();
+
+const memory = new BufferMemory({
+  memoryKey: "history", // The object key to store the memory under
+  inputKey: "question", // The object key for the input
+  outputKey: "answer", // The object key for the output
+});
+```
+
+Now for the most important step, we'll create a custom function which handles calling the LLM, saving the memory and returning the response.
+
+```typescript
+const executeQuery = async (input: { input: string; history: string }) => {
+  // Create a chain of the prompt, model and output parser
+  const chain = prompt.pipe(model).pipe(outputParser);
+  const response = await chain.invoke(input);
+  let responseString = "";
+
+  // Extract the structured food response and format it into a more readable string
+  if ("foods" in response) {
+    responseString += `This user likes the following foods: ${JSON.stringify(
+      response.foods,
+      null,
+      2
+    )}`;
+  }
+  // Extract the final response as a string
+  if ("finalResponse" in response) {
+    const responseAsFinalResponse = response as { finalResponse: string };
+    responseString += responseAsFinalResponse.finalResponse;
+  }
+
+  // Save question and result to memory.
+  await memory.saveContext(
+    {
+      question: input.input,
+    },
+    {
+      answer: responseString,
+    }
+  );
+  return response;
+};
+```
+
+Once we've defined our custom function, we can pass it to a `RunnableSequence` which handles the input from the user, and retrieving the memory from the store.
+
+```typescript
+const runnableChain = RunnableSequence.from([
+  {
+    input: (i: { input: string }) => i.input,
+    history: async (i: { input: string }) => {
+      const { history } = await memory.loadMemoryVariables({});
+      return history;
+    },
+  },
+  executeQuery,
+]);
+```
+
+Finally, we can run the chain and see the results.
+
+```typescript
+const response = await runnableChain.invoke({
+  input: "I like apples, bananas, oxygen, and french fries.",
+});
+
+console.log(response);
+/**
+{
+  foods: [
+    { name: 'apples', healthy: true, color: 'red' },
+    { name: 'bananas', healthy: true, color: 'yellow' },
+    { name: 'oxygen', healthy: true, color: 'transparent' },
+    { name: 'french fries', healthy: false, color: 'golden' }
+  ]
+}
+ */
+
+const response2 = await runnableChain.invoke({
+  input: "What food do I like?",
+});
+
+console.log(response2);
+/**
+{
+  finalResponse: 'You like apples, bananas, oxygen, and french fries.'
+}
+ */
+```
+
+
 ### Generate a Database Record
 
 Though we suggest the above [Expression Language example](/docs/expression_language/cookbook), here's an example
