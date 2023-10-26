@@ -487,6 +487,9 @@ chat_models/baiduwenxin.d.ts
 chat_models/iflytek_xinghuo.cjs
 chat_models/iflytek_xinghuo.js
 chat_models/iflytek_xinghuo.d.ts
+chat_models/iflytek_xinghuo/web.cjs
+chat_models/iflytek_xinghuo/web.js
+chat_models/iflytek_xinghuo/web.d.ts
 chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts

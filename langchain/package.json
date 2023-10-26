@@ -499,6 +499,9 @@
     "chat_models/iflytek_xinghuo.cjs",
     "chat_models/iflytek_xinghuo.js",
     "chat_models/iflytek_xinghuo.d.ts",
+    "chat_models/iflytek_xinghuo/web.cjs",
+    "chat_models/iflytek_xinghuo/web.js",
+    "chat_models/iflytek_xinghuo/web.d.ts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
@@ -2179,6 +2182,11 @@
       "types": "./chat_models/iflytek_xinghuo.d.ts",
       "import": "./chat_models/iflytek_xinghuo.js",
       "require": "./chat_models/iflytek_xinghuo.cjs"
+    },
+    "./chat_models/iflytek_xinghuo/web": {
+      "types": "./chat_models/iflytek_xinghuo/web.d.ts",
+      "import": "./chat_models/iflytek_xinghuo/web.js",
+      "require": "./chat_models/iflytek_xinghuo/web.cjs"
     },
     "./chat_models/ollama": {
       "types": "./chat_models/ollama.d.ts",

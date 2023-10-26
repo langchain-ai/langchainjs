@@ -1,6 +1,3 @@
-import WsWebSocket from "ws";
-import { getEnv } from "./env.js";
-
 export interface WebSocketConnection<
   T extends Uint8Array | string = Uint8Array | string
 > {
@@ -25,7 +22,7 @@ export interface WebSocketStreamOptions {
  *
  * @see https://web.dev/websocketstream/
  */
-export class WebSocketStream<
+export abstract class BaseWebSocketStream<
   T extends Uint8Array | string = Uint8Array | string
 > {
   readonly url: string;
@@ -43,15 +40,7 @@ export class WebSocketStream<
 
     this.url = url;
 
-    let ws: WebSocket;
-
-    if (getEnv() === "browser") {
-      ws = new WebSocket(url, options.protocols ?? []);
-    } else if (getEnv() === "node") {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      ws = new WsWebSocket(url, options.protocols ?? []);
-    }
+    const ws = this.openWebSocket(url, options);
 
     const closeWithInfo = ({ code, reason }: WebSocketCloseInfo = {}) =>
       ws.close(code, reason);
@@ -98,4 +87,9 @@ export class WebSocketStream<
 
     this.close = closeWithInfo;
   }
+
+  abstract openWebSocket(
+    url: string,
+    options: WebSocketStreamOptions
+  ): WebSocket;
 }

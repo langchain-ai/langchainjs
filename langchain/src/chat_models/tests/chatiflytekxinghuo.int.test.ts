@@ -1,5 +1,5 @@
 import { HumanMessage } from "../../schema/index.js";
-import { ChatIflytekXinghuo } from "../iflytek_xinghuo.js";
+import { ChatIflytekXinghuo } from "../iflytek_xinghuo/index.js";
 
 test.skip("Iflytek Xinghuo Call", async () => {
   const model = new ChatIflytekXinghuo({

@@ -1,15 +1,18 @@
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
   ChatGeneration,
   ChatMessage,
   ChatResult,
-} from "../schema/index.js";
-import { getEnv, getEnvironmentVariable } from "../util/env.js";
-import { IterableReadableStream } from "../util/stream.js";
-import { WebSocketStream } from "../util/websocket_stream.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
+} from "../../schema/index.js";
+import { getEnvironmentVariable } from "../../util/env.js";
+import { IterableReadableStream } from "../../util/stream.js";
+import { BaseChatModel, BaseChatModelParams } from "../base.js";
+import {
+  BaseWebSocketStream,
+  WebSocketStreamOptions,
+} from "../../util/iflytek_websocket_stream.js";
 
 /**
  * Type representing the role of a message in the Xinghuo chat model.
@@ -144,7 +147,7 @@ declare interface IflytekXinghuoChatInput {
  * @augments BaseChatModel
  * @augments IflytekXinghuoChatInput
  */
-export class ChatIflytekXinghuo
+export abstract class BaseChatIflytekXinghuo
   extends BaseChatModel
   implements IflytekXinghuoChatInput
 {
@@ -243,50 +246,6 @@ export class ChatIflytekXinghuo
   }
 
   /**
-   * Method that retrieves the auth websocket url for making requests to the Iflytek Xinghuo API.
-   * @returns The auth websocket url for making requests to the Iflytek Xinghuo API.
-   */
-  async getAuthWebSocketUrl() {
-    const host = "spark-api.xf-yun.com";
-    const date = new Date().toUTCString();
-    const url = `GET /${this.version}/chat HTTP/1.1`;
-    let authorization;
-    if (getEnv() === "node") {
-      const { createHmac } = await import("crypto");
-      const hash = createHmac("sha256", this.iflytekApiSecret)
-        .update(`host: ${host}\ndate: ${date}\n${url}`)
-        .digest("base64");
-      const authorization_origin = `api_key="${this.iflytekApiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${hash}"`;
-      authorization = Buffer.from(authorization_origin).toString("base64");
-    } else if (getEnv() === "browser") {
-      const keyBuffer = new TextEncoder().encode(this.iflytekApiSecret);
-      const dataBuffer = new TextEncoder().encode(
-        `host: ${host}\ndate: ${date}\n${url}`
-      );
-      const cryptoKey = await crypto.subtle.importKey(
-        "raw",
-        keyBuffer,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
-      const signature = await crypto.subtle.sign("HMAC", cryptoKey, dataBuffer);
-      const hash = window.btoa(
-        String.fromCharCode(...new Uint8Array(signature))
-      );
-      const authorization_origin = `api_key="${this.iflytekApiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${hash}"`;
-      authorization = window.btoa(authorization_origin);
-    } else {
-      throw new Error(`Invalid Environment: ${getEnv()}`);
-    }
-    let authWebSocketUrl = this.apiUrl;
-    authWebSocketUrl += `?authorization=${authorization}`;
-    authWebSocketUrl += `&host=${encodeURIComponent(host)}`;
-    authWebSocketUrl += `&date=${encodeURIComponent(date)}`;
-    return authWebSocketUrl;
-  }
-
-  /**
    * Get the identifying parameters for the model
    */
   identifyingParams() {
@@ -306,14 +265,21 @@ export class ChatIflytekXinghuo
     };
   }
 
+  /**
+   * Method that retrieves the auth websocketStream for making requests to the Iflytek Xinghuo API.
+   * @returns The auth websocketStream for making requests to the Iflytek Xinghuo API.
+   */
+  abstract openWebSocketStream<T extends BaseWebSocketStream>(
+    options: WebSocketStreamOptions
+  ): Promise<T>;
+
   /** @ignore */
   async completion(
     request: ChatCompletionRequest,
     onmessage: (data: string) => void,
     signal?: AbortSignal
   ) {
-    const url = await this.getAuthWebSocketUrl();
-    const webSocketStream = new WebSocketStream(url, {
+    const webSocketStream = await this.openWebSocketStream({
       signal,
     });
     const connection = await webSocketStream.connection;
