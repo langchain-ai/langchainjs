@@ -8,7 +8,7 @@ export interface DocumentInput<
 }
 
 /**
- * Interface for interacting with a document.
+ * Class for creating and interacting with a document.
  */
 
 export class Document<
@@ -21,15 +21,13 @@ export class Document<
   metadata: Metadata;
 
   /**
-   * Constructs a new Document instance.
+   * Creates a new Document instance.
    *
-   * @param fields - The input fields for the Document. `pageContent` must not be empty.
-   * You may optionally include `metadata`.
-   * @throws {Error} Throws an error if `pageContent` is not provided or is empty.
+   * {DocumentInput<Metadata>} fields - Takes `pageContent` as a string
+   * and optional `metadata` as Metadata.
    */
   constructor(fields: DocumentInput<Metadata>) {
-    if (!fields.pageContent) throw new Error("pageContents must not be empty");
-    this.pageContent = fields.pageContent.toString();
+    this.pageContent = fields.pageContent?.toString() ?? "";
     this.metadata = fields.metadata ?? ({} as Metadata);
   }
 }
