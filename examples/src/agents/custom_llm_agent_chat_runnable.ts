@@ -1,4 +1,5 @@
 import { AgentExecutor } from "langchain/agents";
+import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { PromptTemplate } from "langchain/prompts";
 import {
@@ -60,13 +61,8 @@ async function formatMessages(
   const intermediateSteps = values.intermediate_steps
     ? (values.intermediate_steps as Array<AgentStep>)
     : [];
-  /** Call the helper `formatForOpenAIFunctions` which returns the steps as `Array<BaseMessage>`  */
-  const agentScratchpad = intermediateSteps.reduce(
-    (thoughts, { action, observation }) =>
-      thoughts +
-      [action.log, `\nObservation: ${observation}`, "Thought:"].join("\n"),
-    ""
-  );
+  /** Call the helper `formatLogToString` which returns the steps as a string  */
+  const agentScratchpad = formatLogToString(intermediateSteps);
   /** Construct the tool strings */
   const toolStrings = tools
     .map((tool) => `${tool.name}: ${tool.description}`)
