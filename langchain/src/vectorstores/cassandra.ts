@@ -1,6 +1,7 @@
 /* eslint-disable prefer-template */
 import { Client as CassandraClient, DseClientOptions } from "cassandra-driver";
 
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
@@ -15,13 +16,14 @@ export interface Index {
   value: string;
 }
 
-export interface CassandraLibArgs extends DseClientOptions {
+export interface CassandraLibArgs extends DseClientOptions, AsyncCallerParams {
   table: string;
   keyspace: string;
   dimensions: number;
   primaryKey: Column;
   metadataColumns: Column[];
-  indices: Index[];
+  indices?: Index[];
+  batchSize?: number;
 }
 
 /**
@@ -50,20 +52,38 @@ export class CassandraStore extends VectorStore {
 
   private isInitialized = false;
 
+  asyncCaller: AsyncCaller;
+
+  private readonly batchSize: number;
+
   _vectorstoreType(): string {
     return "cassandra";
   }
 
   constructor(embeddings: Embeddings, args: CassandraLibArgs) {
-    super(embeddings, args);
+    const argsWithDefaults = {
+      indices: [],
+      maxConcurrency: 25,
+      batchSize: 1,
+      ...args,
+    };
+    super(embeddings, argsWithDefaults);
+    this.asyncCaller = new AsyncCaller(argsWithDefaults ?? {});
 
-    this.client = new CassandraClient(args);
-    this.dimensions = args.dimensions;
-    this.keyspace = args.keyspace;
-    this.table = args.table;
-    this.primaryKey = args.primaryKey;
-    this.metadataColumns = args.metadataColumns;
-    this.indices = args.indices;
+    this.client = new CassandraClient(argsWithDefaults);
+    this.dimensions = argsWithDefaults.dimensions;
+    this.keyspace = argsWithDefaults.keyspace;
+    this.table = argsWithDefaults.table;
+    this.primaryKey = argsWithDefaults.primaryKey;
+    this.metadataColumns = argsWithDefaults.metadataColumns;
+    this.indices = argsWithDefaults.indices;
+    this.batchSize = argsWithDefaults.batchSize;
+    if (this.batchSize < 1) {
+      console.warn(
+        "batchSize must be greater than or equal to 1, defaulting to 1"
+      );
+      this.batchSize = 1;
+    }
   }
 
   /**
@@ -81,8 +101,7 @@ export class CassandraStore extends VectorStore {
       await this.initialize();
     }
 
-    const queries = this.buildInsertQuery(vectors, documents);
-    await this.client.batch(queries);
+    await this.insertAll(vectors, documents);
   }
 
   /**
@@ -221,43 +240,6 @@ export class CassandraStore extends VectorStore {
     this.isInitialized = true;
   }
 
-  /**
-   * Method to build an CQL query for inserting vectors and documents into
-   * the Cassandra database.
-   * @param vectors The vectors to insert.
-   * @param documents The documents to insert.
-   * @returns The CQL query string.
-   */
-  private buildInsertQuery(
-    vectors: number[][],
-    documents: Document[]
-  ): string[] {
-    const queries: string[] = [];
-    for (let index = 0; index < vectors.length; index += 1) {
-      const vector = vectors[index];
-      const document = documents[index];
-
-      const metadataColNames = Object.keys(document.metadata);
-      const metadataVals = Object.values(document.metadata);
-      const metadataInsert =
-        metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : "";
-      const query = `INSERT INTO ${this.keyspace}.${
-        this.table
-      } (vector, text${metadataInsert}) VALUES ([${vector}], '${
-        document.pageContent
-      }'${
-        metadataVals.length > 0
-          ? ", " +
-            metadataVals
-              .map((val) => (typeof val === "number" ? val : `'${val}'`))
-              .join(", ")
-          : ""
-      });`;
-      queries.push(query);
-    }
-    return queries;
-  }
-
   private buildWhereClause(filter: this["FilterType"]): string {
     const whereClause = Object.entries(filter)
       .map(([key, value]) => `${key} = '${value}'`)
@@ -281,5 +263,137 @@ export class CassandraStore extends VectorStore {
     const whereClause = filter ? this.buildWhereClause(filter) : "";
 
     return `SELECT * FROM ${this.keyspace}.${this.table} ${whereClause} ORDER BY vector ANN OF [${query}] LIMIT ${k}`;
+  }
+
+  /**
+   * Method for inserting vectors and documents into the Cassandra database in a batch.
+   * @param batchVectors The list of vectors to insert.
+   * @param batchDocuments The list of documents to insert.
+   * @returns Promise that resolves when the batch has been inserted.
+   */
+  private async executeInsert(
+    batchVectors: number[][],
+    batchDocuments: Document[]
+  ): Promise<void> {
+    // Input validation: Check if the lengths of batchVectors and batchDocuments are the same
+    if (batchVectors.length !== batchDocuments.length) {
+      throw new Error(
+        `The lengths of vectors (${batchVectors.length}) and documents (${batchDocuments.length}) must be the same.`
+      );
+    }
+
+    // Initialize an array to hold query objects
+    const queries = [];
+
+    // Loop through each vector and document in the batch
+    for (let i = 0; i < batchVectors.length; i += 1) {
+      // Convert the list of numbers to a Float32Array, the driver's expected format of a vector
+      const preparedVector = new Float32Array(batchVectors[i]);
+      // Retrieve the corresponding document
+      const document = batchDocuments[i];
+
+      // Extract metadata column names and values from the document
+      const metadataColNames = Object.keys(document.metadata);
+      const metadataVals = Object.values(document.metadata);
+
+      // Prepare the metadata columns string for the query, if metadata exists
+      const metadataInsert =
+        metadataColNames.length > 0 ? ", " + metadataColNames.join(", ") : "";
+
+      // Construct the query string and parameters
+      const query = {
+        query: `INSERT INTO ${this.keyspace}.${
+          this.table
+        } (vector, text${metadataInsert}) 
+                VALUES (?, ?${", ?".repeat(metadataColNames.length)})`,
+        params: [preparedVector, document.pageContent, ...metadataVals],
+      };
+
+      // Add the query to the list
+      queries.push(query);
+    }
+
+    // Execute the queries: use a batch if multiple, otherwise execute a single query
+    if (queries.length === 1) {
+      await this.client.execute(queries[0].query, queries[0].params, {
+        prepare: true,
+      });
+    } else {
+      await this.client.batch(queries, { prepare: true, logged: false });
+    }
+  }
+
+  /**
+   * Method for inserting vectors and documents into the Cassandra database in
+   * parallel, keeping within maxConcurrency number of active insert statements.
+   * @param vectors The vectors to insert.
+   * @param documents The documents to insert.
+   * @returns Promise that resolves when the documents have been added.
+   */
+  private async insertAll(
+    vectors: number[][],
+    documents: Document[]
+  ): Promise<void> {
+    // Input validation: Check if the lengths of vectors and documents are the same
+    if (vectors.length !== documents.length) {
+      throw new Error(
+        `The lengths of vectors (${vectors.length}) and documents (${documents.length}) must be the same.`
+      );
+    }
+
+    // Early exit: If there are no vectors or documents to insert, return immediately
+    if (vectors.length === 0) {
+      return;
+    }
+
+    // Ensure the store is initialized before proceeding
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    // Initialize an array to hold promises for each batch insert
+    const insertPromises: Promise<void>[] = [];
+
+    // Buffers to hold the current batch of vectors and documents
+    let currentBatchVectors: number[][] = [];
+    let currentBatchDocuments: Document[] = [];
+
+    // Loop through each vector/document pair to insert; we use
+    // <= vectors.length to ensure the last batch is inserted
+    for (let i = 0; i <= vectors.length; i += 1) {
+      // Check if we're still within the array boundaries
+      if (i < vectors.length) {
+        // Add the current vector and document to the batch
+        currentBatchVectors.push(vectors[i]);
+        currentBatchDocuments.push(documents[i]);
+      }
+
+      // Check if we've reached the batch size or end of the array
+      if (
+        currentBatchVectors.length >= this.batchSize ||
+        i === vectors.length
+      ) {
+        // Only proceed if there are items in the current batch
+        if (currentBatchVectors.length > 0) {
+          // Create copies of the current batch arrays to use in the async insert operation
+          const batchVectors = [...currentBatchVectors];
+          const batchDocuments = [...currentBatchDocuments];
+
+          // Execute the insert using the AsyncCaller - it will handle concurrency and queueing.
+          insertPromises.push(
+            this.asyncCaller.call(() =>
+              this.executeInsert(batchVectors, batchDocuments)
+            )
+          );
+
+          // Clear the current buffers for the next iteration
+          currentBatchVectors = [];
+          currentBatchDocuments = [];
+        }
+      }
+    }
+
+    // Wait for all insert operations to complete.
+    await Promise.all(insertPromises);
   }
 }

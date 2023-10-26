@@ -26,7 +26,7 @@ Here's an explanation of each step in the `RunnableSequence.from()` call above:
 
 - The first input passed is an object containing a `question` key. This key is used as the main input for whatever question a user may ask.
 - The next key is `chatHistory`. This is a string of all previous chats (human & AI) concatenated together. This is used to help the model understand the context of the question.
-- The `context` key is used to fetch relevant documents from the loaded context (in this case the State Of The Union speech). It performs a call to the `getRelevantDocuments` method on the retriever, passing in the user's question as the query. We then pass it to our `serializeDocs` util which maps over all returned documents, joins them with newlines and returns a string.
+- The `context` key is used to fetch relevant documents from the loaded context (in this case the State Of The Union speech). It performs a call to the `getRelevantDocuments` method on the retriever, passing in the user's question as the query. We then pass it to our `formatDocumentsAsString` util which maps over all returned documents, joins them with newlines and returns a string.
 
 After getting and formatting all inputs we pipe them through the following operations:
 

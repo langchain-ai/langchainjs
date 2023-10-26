@@ -2,6 +2,7 @@ import { type TextItem } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
 
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
+import { formatDocumentsAsString } from "../../util/document.js";
 
 /**
  * A document loader for loading data from PDFs.
@@ -79,7 +80,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
     return [
       new Document({
-        pageContent: documents.map((doc) => doc.pageContent).join("\n\n"),
+        pageContent: formatDocumentsAsString(documents),
         metadata: {
           pdf: {
             version,

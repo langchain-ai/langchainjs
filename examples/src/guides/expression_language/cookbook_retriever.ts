@@ -7,7 +7,7 @@ import {
   RunnablePassthrough,
 } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { Document } from "langchain/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 const model = new ChatOpenAI({});
 
@@ -24,12 +24,9 @@ const prompt =
 
 Question: {question}`);
 
-const serializeDocs = (docs: Document[]) =>
-  docs.map((doc) => doc.pageContent).join("\n");
-
 const chain = RunnableSequence.from([
   {
-    context: retriever.pipe(serializeDocs),
+    context: retriever.pipe(formatDocumentsAsString),
     question: new RunnablePassthrough(),
   },
   prompt,

@@ -5,7 +5,7 @@ sidebar_position: 0
 
 # OpenAI functions
 
-Certain OpenAI models (like gpt-3.5-turbo-0613 and gpt-4-0613) have been fine-tuned to detect when a function should to be called and respond with the inputs that should be passed to the function.
+Certain OpenAI models (like `gpt-3.5-turbo` and `gpt-4`) have been fine-tuned to detect when a function should to be called and respond with the inputs that should be passed to the function.
 In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call those functions.
 The goal of the OpenAI Function APIs is to more reliably return valid and useful function calls than a generic text completion or chat API.
 
@@ -13,10 +13,23 @@ The OpenAI Functions Agent is designed to work with these models.
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/agents/openai.ts";
+import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
+import RunnableExample from "@examples/agents/openai_runnable.ts";
 
 :::tip Compatibility
 Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
 :::
+
+# With LCEL
+
+In this example we'll use LCEL to construct a highly customizable agent that is given two tools: search and calculator.
+We'll then pull in a prompt template from the (LangChainHub)[https://smith.langchain.com/hub] and pass that to our runnable agent.
+Lastly we'll use the default OpenAI functions output parser `OpenAIFunctionsAgentOutputParser`.
+This output parser contains a method `parseAIMessage` which when provided with a message, either returns an instance of `FunctionsAgentAction` if there is another action to be taken my the agent, or `AgentFinish` if the agent has completed its objective.
+
+<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+
+# With `initializeAgentExecutorWithOptions`
 
 This agent also supports `StructuredTool`s with more complex input schemas.
 
@@ -25,7 +38,5 @@ This agent also supports `StructuredTool`s with more complex input schemas.
 ## Prompt customization
 
 You can pass in a custom string to be used as the system message of the prompt as follows:
-
-import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
 
 <CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.172",
+  "version": "0.0.173",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -703,6 +703,9 @@
     "hub.cjs",
     "hub.js",
     "hub.d.ts",
+    "util/document.cjs",
+    "util/document.js",
+    "util/document.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -843,7 +846,7 @@
     "apify-client": "^2.7.1",
     "assemblyai": "^2.0.2",
     "axios": "^0.26.0",
-    "cassandra-driver": "^4.6.4",
+    "cassandra-driver": "^4.7.2",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "closevector-common": "0.1.0-alpha.1",
@@ -959,7 +962,7 @@
     "apify-client": "^2.7.1",
     "assemblyai": "^2.0.2",
     "axios": "*",
-    "cassandra-driver": "^4.6.4",
+    "cassandra-driver": "^4.7.2",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
     "closevector-common": "0.1.0-alpha.1",
@@ -2491,6 +2494,11 @@
       "types": "./hub.d.ts",
       "import": "./hub.js",
       "require": "./hub.cjs"
+    },
+    "./util/document": {
+      "types": "./util/document.d.ts",
+      "import": "./util/document.js",
+      "require": "./util/document.cjs"
     },
     "./util/math": {
       "types": "./util/math.d.ts",

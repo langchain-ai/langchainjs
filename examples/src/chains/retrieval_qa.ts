@@ -6,7 +6,6 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "langchain/schema/runnable";
-import { Document } from "langchain/document";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import {
   ChatPromptTemplate,
@@ -14,16 +13,13 @@ import {
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({});
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
 const docs = await textSplitter.createDocuments([text]);
-
-const serializedDocs = (docs: Array<Document>) =>
-  docs.map((doc) => doc.pageContent).join("\n\n");
-
 // Create a vector store from the documents.
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 
@@ -43,7 +39,7 @@ const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
-    context: vectorStoreRetriever.pipe(serializedDocs),
+    context: vectorStoreRetriever.pipe(formatDocumentsAsString),
     question: new RunnablePassthrough(),
   },
   prompt,
