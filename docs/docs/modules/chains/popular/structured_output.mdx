@@ -47,7 +47,7 @@ remember what the user has said and use that information to generate a response.
 
 The first step is to create our functions. For this we'll use `zod` to create the function schemas.
 
-We're going to create two, one which returns an array of foods, with their name, whether or not they're healthy and their color.
+We're going to create two, one which returns an array of foods with their name, whether or not they're healthy and their color.
 The second simply returns an object containing the final response.
 
 ```typescript
@@ -68,7 +68,7 @@ const finalResponseZodSchema = z.object({
 });
 ```
 
-Next we'll construct the prompt. This is simple, we have two "messages", one from the AI with a simple explanation on when to use the functions, and an input variable for the chat history. The second only contains the users question.
+Next we'll construct the prompt. We have two "messages", one from the AI with a simple explanation on when to use the functions, and an input variable for the chat history. The second only contains the users question.
 
 ```typescript
 const prompt = ChatPromptTemplate.fromMessages([
@@ -83,6 +83,8 @@ Chat history: {history}`,
 ```
 
 Then, define the LLM model and bind the function arguments to it. By using `.bind()` we're adding the functions to the model for every call.
+
+We also must wrap our `zod` schemas with `zodToJsonSchema` to appropriately format them for OpenAI.
 
 ```typescript
 const model = new ChatOpenAI({
@@ -171,7 +173,6 @@ Finally, we can run the chain and see the results.
 const response = await runnableChain.invoke({
   input: "I like apples, bananas, oxygen, and french fries.",
 });
-
 console.log(response);
 /**
 {
@@ -183,11 +184,9 @@ console.log(response);
   ]
 }
  */
-
 const response2 = await runnableChain.invoke({
   input: "What food do I like?",
 });
-
 console.log(response2);
 /**
 {
