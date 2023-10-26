@@ -47,6 +47,34 @@ interface ChatCompletionRequest {
   chat_id?: string;
 }
 
+export interface ChatCompletionChunk {
+  header: {
+    code: number;
+    message: string;
+    sid: string;
+    status: number;
+  };
+  payload: {
+    choices: {
+      status: number;
+      seq: number;
+      text: {
+        content: string;
+        role: XinghuoMessageRole;
+        index: number;
+      }[];
+    };
+    usage?: {
+      text: {
+        question_tokens: number;
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+      };
+    };
+  };
+}
+
 /**
  * Interface representing a response from a chat completion.
  */
@@ -136,6 +164,8 @@ declare interface IflytekXinghuoChatInput {
   max_tokens?: number;
 
   top_k?: number;
+
+  streaming?: boolean;
 }
 
 /**
@@ -192,6 +222,8 @@ export abstract class BaseChatIflytekXinghuo
 
   top_k = 4;
 
+  streaming = false;
+
   constructor(fields?: Partial<IflytekXinghuoChatInput> & BaseChatModelParams) {
     super(fields ?? {});
 
@@ -220,6 +252,7 @@ export abstract class BaseChatIflytekXinghuo
     }
 
     this.userId = fields?.userId ?? this.userId;
+    this.streaming = fields?.streaming ?? this.streaming;
     this.temperature = fields?.temperature ?? this.temperature;
     this.max_tokens = fields?.max_tokens ?? this.max_tokens;
     this.top_k = fields?.top_k ?? this.top_k;
@@ -258,8 +291,11 @@ export abstract class BaseChatIflytekXinghuo
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<ChatCompletionRequest, "messages"> {
+  invocationParams(): Omit<ChatCompletionRequest, "messages"> & {
+    streaming: boolean;
+  } {
     return {
+      streaming: this.streaming,
       temperature: this.temperature,
       top_k: this.top_k,
     };
@@ -269,16 +305,33 @@ export abstract class BaseChatIflytekXinghuo
    * Method that retrieves the auth websocketStream for making requests to the Iflytek Xinghuo API.
    * @returns The auth websocketStream for making requests to the Iflytek Xinghuo API.
    */
-  abstract openWebSocketStream<T extends BaseWebSocketStream>(
+  abstract openWebSocketStream<T extends BaseWebSocketStream<string>>(
     options: WebSocketStreamOptions
   ): Promise<T>;
 
-  /** @ignore */
+  /**
+   * Calls the Xinghuo API completion.
+   * @param request The request to send to the Xinghuo API.
+   * @param signal The signal for the API call.
+   * @returns The response from the Xinghuo API.
+   */
   async completion(
     request: ChatCompletionRequest,
-    onmessage: (data: string) => void,
+    stream: true,
     signal?: AbortSignal
-  ) {
+  ): Promise<IterableReadableStream<string>>;
+
+  async completion(
+    request: ChatCompletionRequest,
+    stream: false,
+    signal?: AbortSignal
+  ): Promise<ChatCompletionResponse>;
+
+  async completion(
+    request: ChatCompletionRequest,
+    stream: boolean,
+    signal?: AbortSignal
+  ): Promise<IterableReadableStream<string> | ChatCompletionResponse> {
     const webSocketStream = await this.openWebSocketStream({
       signal,
     });
@@ -309,18 +362,32 @@ export abstract class BaseChatIflytekXinghuo
     const writer = writable.getWriter();
     await writer.write(message);
     const streams = IterableReadableStream.fromReadableStream(readable);
-    for await (const chunk of streams) {
-      onmessage?.(chunk as string);
-      const { header } = JSON.parse(chunk as string);
-      if (header.status === 2) {
-        break;
+    if (stream) {
+      return streams;
+    } else {
+      let response: ChatCompletionResponse = { result: "" };
+      for await (const chunk of streams) {
+        const data = JSON.parse(chunk) as ChatCompletionChunk;
+        const { header, payload } = data;
+        if (header.code === 0) {
+          if (header.status === 0) {
+            response.result = payload.choices?.text[0]?.content ?? "";
+          } else if (header.status === 1) {
+            response.result += payload.choices?.text[0]?.content ?? "";
+          } else if (header.status === 2) {
+            response = { ...response, usage: payload.usage?.text };
+            break;
+          }
+        } else {
+          break;
+        }
       }
+      void streams.cancel();
+      void webSocketStream.close();
+      return response;
     }
-    void streams.cancel();
-    void webSocketStream.close();
   }
 
-  /** @ignore */
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -332,71 +399,42 @@ export abstract class BaseChatIflytekXinghuo
       role: messageToXinghuoRole(message),
       content: message.content,
     }));
-    const data = await new Promise<ChatCompletionResponse>(
-      (resolve, reject) => {
-        let response: ChatCompletionResponse;
-        let rejected = false;
-        let resolved = false;
-        void this.completion(
-          {
-            ...params,
-            messages: messagesMapped,
-          },
-          (result) => {
-            const data = JSON.parse(result);
-
-            if (data?.header?.code !== 0) {
-              if (rejected) {
-                return;
+    const data = params.streaming
+      ? await (async () => {
+          const streams = await this.completion(
+            { messages: messagesMapped, ...params },
+            true,
+            options.signal
+          );
+          let response: ChatCompletionResponse = { result: "" };
+          for await (const chunk of streams) {
+            const data = JSON.parse(chunk) as ChatCompletionChunk;
+            const { header, payload } = data;
+            if (header.code === 0) {
+              if (header.status === 0) {
+                response.result = payload.choices?.text[0]?.content ?? "";
+              } else if (header.status === 1) {
+                response.result += payload.choices?.text[0]?.content ?? "";
+              } else if (header.status === 2) {
+                response = { ...response, usage: payload.usage?.text };
+                break;
               }
-              rejected = true;
-              reject(data);
-              return;
-            }
-
-            const message = data.payload as {
-              choices: {
-                status: number;
-                seq: number;
-                text: {
-                  content: string;
-                  role: XinghuoMessageRole;
-                  index: number;
-                }[];
-              };
-              usage: {
-                text: {
-                  completion_tokens: number;
-                  prompt_tokens: number;
-                  total_tokens: number;
-                };
-              };
-            };
-            if (!response) {
-              response = {
-                result: message.choices?.text[0]?.content ?? "",
-              };
+              void runManager?.handleLLMNewToken(
+                payload.choices?.text[0]?.content
+              );
             } else {
-              response.result += message.choices?.text[0]?.content ?? "";
+              break;
             }
-            if (message.usage) response.usage = message.usage.text;
-
-            void runManager?.handleLLMNewToken(
-              message.choices?.text[0]?.content ?? ""
-            );
-
-            if (message.choices.status === 2) {
-              if (resolved || rejected) {
-                return;
-              }
-              resolved = true;
-              resolve(response);
-            }
-          },
-          options?.signal
+          }
+          void streams.cancel();
+          return response;
+        })()
+      : await this.completion(
+          { messages: messagesMapped, ...params },
+          false,
+          options.signal
         );
-      }
-    );
+
     const {
       completion_tokens: completionTokens,
       prompt_tokens: promptTokens,
