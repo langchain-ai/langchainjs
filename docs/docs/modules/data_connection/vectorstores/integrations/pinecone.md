@@ -11,19 +11,16 @@ Only available on Node.js.
 LangChain.js accepts [@pinecone-database/pinecone](https://docs.pinecone.io/docs/node-client) as the client for Pinecone vectorstore. Install the library with:
 
 ```bash npm2yarn
-npm install -S dotenv @pinecone-database/pinecone
+npm install -S @pinecone-database/pinecone
 ```
 
 ## Index docs
 
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
-import * as dotenv from "dotenv";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
-
-dotenv.config();
 
 // Instantiate a new Pinecone client, which will automatically read the
 // env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
@@ -62,13 +59,10 @@ await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
 
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
-import * as dotenv from "dotenv";
 import { VectorDBQAChain } from "langchain/chains";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
-
-dotenv.config();
 
 // Instantiate a new Pinecone client, which will automatically read the
 // env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
@@ -122,12 +116,9 @@ console.log(response);
 
 ```typescript
 import { Pinecone } from "@pinecone-database/pinecone";
-import * as dotenv from "dotenv";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
-
-dotenv.config();
 
 // Instantiate a new Pinecone client, which will automatically read the
 // env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
@@ -191,4 +182,39 @@ console.log(results2);
 /*
   []
 */
+```
+
+## Maximal marginal relevance search
+
+Pinecone supports maximal marginal relevance search, which takes a combination of documents
+that are most similar to the inputs, then reranks and optimizes for diversity.
+
+```typescript
+import { Pinecone } from "@pinecone-database/pinecone";
+import { VectorDBQAChain } from "langchain/chains";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI } from "langchain/llms/openai";
+import { PineconeStore } from "langchain/vectorstores/pinecone";
+
+// Instantiate a new Pinecone client, which will automatically read the
+// env vars: PINECONE_API_KEY and PINECONE_ENVIRONMENT which come from
+// the Pinecone dashboard at https://app.pinecone.io
+
+const pinecone = new Pinecone();
+
+const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
+
+const vectorStore = await PineconeStore.fromExistingIndex(
+  new OpenAIEmbeddings(),
+  { pineconeIndex }
+);
+
+/* Search the vector DB independently with meta filters */
+const results = await vectorStore.maxMarginalRelevance("pinecone", {
+  k: 5,
+  fetchK: 20, // Default value for the number of initial documents to fetch for reranking.
+  // You can pass a filter as well
+  // filter: {},
+});
+console.log(results);
 ```
