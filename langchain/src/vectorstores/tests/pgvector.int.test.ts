@@ -12,12 +12,12 @@ describe("PGVectorStore", () => {
       postgresConnectionOptions: {
         type: "postgres",
         host: "127.0.0.1",
-        port: 5432,
-        user: "your_user",
-        password: "your_password",
-        database: "your_db_name",
+        port: 5433,
+        user: "myuser",
+        password: "ChangeMe",
+        database: "api",
       } as PoolConfig,
-      tableName,
+      tableName: "testlangchain",
       columns: {
         idColumnName: "id",
         vectorColumnName: "vector",
