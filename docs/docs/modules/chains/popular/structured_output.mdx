@@ -134,8 +134,7 @@ const executeQuery = async (input: { input: string; history: string }) => {
   }
   // Extract the final response as a string
   if ("finalResponse" in response) {
-    const responseAsFinalResponse = response as { finalResponse: string };
-    responseString += responseAsFinalResponse.finalResponse;
+    responseString += response.finalResponse;
   }
 
   // Save question and result to memory.
