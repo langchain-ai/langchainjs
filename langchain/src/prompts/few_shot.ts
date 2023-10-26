@@ -285,7 +285,9 @@ export interface FewShotChatMessagePromptTemplateInput
 }
 
 export class FewShotChatMessagePromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PartialVariableName extends string = any
   >
   extends BaseChatPromptTemplate
