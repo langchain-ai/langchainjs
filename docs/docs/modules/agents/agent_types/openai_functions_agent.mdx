@@ -23,7 +23,7 @@ Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/
 # With LCEL
 
 In this example we'll use LCEL to construct a highly customizable agent that is given two tools: search and calculator.
-We'll then pull in a prompt template from the (LangChainHub)[https://smith.langchain.com/hub] and pass that to our runnable agent.
+We'll then pull in a prompt template from the [LangChainHub](https://smith.langchain.com/hub) and pass that to our runnable agent.
 Lastly we'll use the default OpenAI functions output parser `OpenAIFunctionsAgentOutputParser`.
 This output parser contains a method `parseAIMessage` which when provided with a message, either returns an instance of `FunctionsAgentAction` if there is another action to be taken my the agent, or `AgentFinish` if the agent has completed its objective.
 
