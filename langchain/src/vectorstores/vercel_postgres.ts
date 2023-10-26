@@ -9,7 +9,7 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
-type Metadata = Record<string, unknown>;
+type Metadata = Record<string, string | number | Record<"in", string[]>>;
 
 /**
  * Interface that defines the arguments required to create a
@@ -247,27 +247,33 @@ export class VercelPostgres extends VectorStore {
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
-    const _filter = filter ? filter : {};
+    const _filter: this["FilterType"] = filter ? filter : {};
     const whereClauses = [];
     const values = [embeddingString, k];
     let paramCount = 2;
 
     for (const [key, value] of Object.entries(_filter)) {
-      if (value.hasOwnProperty("in")) {
-        const placeholders = value.in
-          .map((_, index) => `$${paramCount + index + 1}`)
-          .join(",");
-        whereClauses.push(
-          `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
-        );
-        values.push(...value.in);
-        paramCount += value.in.length;
+      // check if the filter checks for a single value or is an IN filter
+      if (typeof value !== "string" && typeof value !== "number") {
+        const inValue = value.in;
+        if (inValue) {
+          const placeholders = inValue
+            .map((_: unknown, index: number) => `$${paramCount + index + 1}`)
+            .join(",");
+          whereClauses.push(
+            `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+          );
+          values.push(...inValue);
+          paramCount += inValue.length;
+        }
       } else {
         paramCount++;
         whereClauses.push(
           `${this.metadataColumnName}->>'${key}' = $${paramCount}`
         );
-        values.push(value);
+        if (value !== null && value !== undefined) {
+          values.push(value as string | number);
+        }
       }
     }
 
