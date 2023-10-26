@@ -1,15 +1,15 @@
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { AgentExecutor } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
+import { SerpAPI, Tool } from "langchain/tools";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
 } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { InputValues } from "langchain/schema";
+import { AgentStep } from "langchain/schema";
 import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
-import { renderTextDescriptionAndArgs } from "langchain/tools/render";
+import { renderTextDescription } from "langchain/tools/render";
 import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_message";
 
 /**
@@ -66,9 +66,14 @@ const prompt = ChatPromptTemplate.fromMessages([
  */
 const runnableAgent = RunnableSequence.from([
   {
-    input: (i: InputValues) => i.input,
-    agent_scratchpad: (i: InputValues) => formatLogToMessage(i.steps),
-    tools: (i: InputValues) => renderTextDescriptionAndArgs(i.tools),
+    input: (i: { input: string; tools: Tool[]; steps: AgentStep[] }) => i.input,
+    agent_scratchpad: (i: {
+      input: string;
+      tools: Tool[];
+      steps: AgentStep[];
+    }) => formatLogToMessage(i.steps),
+    tools: (i: { input: string; tools: Tool[]; steps: AgentStep[] }) =>
+      renderTextDescription(i.tools),
   },
   prompt,
   model,

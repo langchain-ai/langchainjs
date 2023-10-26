@@ -18,7 +18,7 @@ import { formatXml } from "langchain/agents/format_scratchpad/xml";
 import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { ChatPromptTemplate } from "langchain/prompts";
-import { InputValues } from "langchain/schema";
+import { AgentStep } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { Tool, ToolParams } from "langchain/tools";
 import { renderTextDescription } from "langchain/tools/render";
@@ -90,9 +90,14 @@ const outputParser = new XMLAgentOutputParser();
 ```typescript
 const runnableAgent = RunnableSequence.from([
   {
-    input: (i: InputValues) => i.input,
-    tools: (i: InputValues) => renderTextDescription(i.tools),
-    agent_scratchpad: (i: InputValues) => formatXml(i.steps),
+    input: (i: { input: string; tools: Tool[]; steps: AgentStep[] }) => i.input,
+    tools: (i: { input: string; tools: Tool[]; steps: AgentStep[] }) =>
+      renderTextDescription(i.tools),
+    agent_scratchpad: (i: {
+      input: string;
+      tools: Tool[];
+      steps: AgentStep[];
+    }) => formatXml(i.steps),
   },
   prompt,
   model,

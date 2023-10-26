@@ -5,7 +5,7 @@ import { Calculator } from "langchain/tools/calculator";
 import { pull } from "langchain/hub";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { InputValues } from "langchain/schema";
+import { AgentStep, BaseMessage } from "langchain/schema";
 import { BufferMemory } from "langchain/memory";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { renderTextDescription } from "langchain/tools/render";
@@ -40,9 +40,21 @@ const promptWithInputs = await prompt.partial({
 
 const runnableAgent = RunnableSequence.from([
   {
-    input: (i: InputValues) => i.input,
-    agent_scratchpad: (i: InputValues) => formatLogToString(i.steps),
-    chat_history: (i: InputValues) => i.chat_history,
+    input: (i: {
+      input: string;
+      steps: AgentStep[];
+      chat_history: BaseMessage[];
+    }) => i.input,
+    agent_scratchpad: (i: {
+      input: string;
+      steps: AgentStep[];
+      chat_history: BaseMessage[];
+    }) => formatLogToString(i.steps),
+    chat_history: (i: {
+      input: string;
+      steps: AgentStep[];
+      chat_history: BaseMessage[];
+    }) => i.chat_history,
   },
   promptWithInputs,
   modelWithStop,

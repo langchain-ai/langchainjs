@@ -14,7 +14,7 @@ import {
 } from "langchain/prompts";
 import { renderTextDescriptionAndArgs } from "langchain/tools/render";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { InputValues } from "langchain/schema";
+import { AgentStep } from "langchain/schema";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 
 /**
@@ -161,8 +161,9 @@ const outputParser = StructuredChatOutputParserWithRetries.fromLLM(
  */
 const runnableAgent = RunnableSequence.from([
   {
-    input: (i: InputValues) => i.input,
-    agent_scratchpad: (i: InputValues) => formatLogToString(i.steps),
+    input: (i: { input: string; steps: AgentStep[] }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
+      formatLogToString(i.steps),
   },
   prompt,
   model,

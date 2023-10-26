@@ -6,7 +6,6 @@ import {
   AgentStep,
   BaseMessage,
   FunctionMessage,
-  InputValues,
 } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
@@ -64,8 +63,9 @@ const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
  */
 const runnableAgent = RunnableSequence.from([
   {
-    input: (i: InputValues) => i.input,
-    agent_scratchpad: (i: InputValues) => formatAgentSteps(i.steps),
+    input: (i: { input: string; steps: AgentStep[] }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
+      formatAgentSteps(i.steps),
   },
   prompt,
   modelWithTools,

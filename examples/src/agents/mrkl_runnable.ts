@@ -1,7 +1,8 @@
 import { AgentExecutor, ChatAgentOutputParser } from "langchain/agents";
+import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { OpenAI } from "langchain/llms/openai";
 import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
-import { InputValues } from "langchain/schema";
+import { AgentStep } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
@@ -84,8 +85,9 @@ const prompt = ChatPromptTemplate.fromMessages([
  */
 const runnableAgent = RunnableSequence.from([
   {
-    input: (i: InputValues) => i.input,
-    agent_scratchpad: (i: InputValues) => i.input,
+    input: (i: { input: string; steps: AgentStep[] }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
+      formatLogToString(i.steps),
   },
   prompt,
   model,
