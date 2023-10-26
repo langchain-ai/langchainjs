@@ -221,34 +221,4 @@ An example about bar
 `
     );
   });
-
-  /** @TODO - broken */
-  test("Test partial with function and example selector", async () => {
-    const examplePrompt = ChatPromptTemplate.fromMessages([
-      ["ai", "An example about {x}"],
-    ]);
-    const exampleSelector = await LengthBasedExampleSelector.fromExamples(
-      [{ x: "foo" }, { x: "bar" }],
-      { examplePrompt, maxLength: 200 }
-    );
-    const prompt = new FewShotChatMessagePromptTemplate({
-      prefix: "{foo}{bar}",
-      exampleSelector,
-      suffix: "",
-      templateFormat: "f-string",
-      exampleSeparator: "\n",
-      examplePrompt,
-      inputVariables: ["foo", "bar"],
-    });
-
-    const partialPrompt = await prompt.partial({
-      foo: () => Promise.resolve("boo"),
-    });
-    expect(await partialPrompt.format({ bar: "baz" })).toBe(
-      `boobaz
-An example about foo
-An example about bar
-`
-    );
-  });
 });

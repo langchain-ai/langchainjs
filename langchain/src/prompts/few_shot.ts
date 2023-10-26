@@ -255,6 +255,13 @@ export interface FewShotChatMessagePromptTemplateInput
   exampleSeparator?: string;
 
   /**
+   * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
+   * {@link examples} must be
+   * provided.
+   */
+  exampleSelector?: BaseExampleSelector | undefined;
+
+  /**
    * A prompt template string to put before the examples.
    *
    * @defaultValue `""`
