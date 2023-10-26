@@ -39,8 +39,8 @@ import FormatExample from "@examples/chains/openai_functions_structured_format.t
 In this example we'll construct a simple chain which uses OpenAI functions, structured output parser and chat history memory.
 We'll provide the chain with two functions:
 
-* `food_recorder` -> A function to record what food a user likes.
-* `final_response` -> The function that returns a response to the user
+- `food_recorder` -> A function to record what food a user likes.
+- `final_response` -> The function that returns a response to the user
 
 After each LLM response, we'll take our structured data and save it to memory (with a little formatting too). By doing this, we're enabling our LLM to
 remember what the user has said and use that information to generate a response.
@@ -194,7 +194,6 @@ console.log(response2);
 }
  */
 ```
-
 
 ### Generate a Database Record
 
