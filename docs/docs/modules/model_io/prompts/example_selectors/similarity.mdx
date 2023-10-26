@@ -36,3 +36,12 @@ import ExampleSimilarityMetadataFiltering from "@examples/prompts/semantic_simil
 <CodeBlock language="typescript">
   {ExampleSimilarityMetadataFiltering}
 </CodeBlock>
+
+## Custom vectorstore retrievers
+
+You can also pass a vectorstore retriever instead of a vectorstore. One way this could be useful is if you want to use retrieval
+besides similarity search such as maximal marginal relevance:
+
+import ExampleSimilarityCustomRetriever from "@examples/prompts/semantic_similarity_example_selector_custom_retriever.ts";
+
+<CodeBlock language="typescript">{ExampleSimilarityCustomRetriever}</CodeBlock>
