@@ -8,10 +8,11 @@ import {
   Index as PineconeIndex,
 } from "@pinecone-database/pinecone";
 
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { AsyncCaller } from "../util/async_caller.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
@@ -172,6 +173,29 @@ export class PineconeStore extends VectorStore {
     }
   }
 
+  protected async _runPineconeQuery(
+    query: number[],
+    k: number,
+    filter?: PineconeMetadata,
+    options?: { includeValues: boolean }
+  ) {
+    if (filter && this.filter) {
+      throw new Error("cannot provide both `filter` and `this.filter`");
+    }
+    const _filter = filter ?? this.filter;
+    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
+
+    const results = await namespace.query({
+      includeMetadata: true,
+      topK: k,
+      vector: query,
+      filter: _filter,
+      ...options,
+    });
+
+    return results;
+  }
+
   /**
    * Method that performs a similarity search in the Pinecone database and
    * returns the results along with their scores.
@@ -185,19 +209,7 @@ export class PineconeStore extends VectorStore {
     k: number,
     filter?: PineconeMetadata
   ): Promise<[Document, number][]> {
-    if (filter && this.filter) {
-      throw new Error("cannot provide both `filter` and `this.filter`");
-    }
-    const _filter = filter ?? this.filter;
-    const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
-
-    const results = await namespace.query({
-      includeMetadata: true,
-      topK: k,
-      vector: query,
-      filter: _filter,
-    });
-
+    const results = await this._runPineconeQuery(query, k, filter);
     const result: [Document, number][] = [];
 
     if (results.matches) {
@@ -211,6 +223,57 @@ export class PineconeStore extends VectorStore {
     }
 
     return result;
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {PineconeMetadata} options.filter - Optional filter to apply to the search.
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const results = await this._runPineconeQuery(
+      queryEmbedding,
+      options.fetchK ?? 20,
+      options.filter,
+      { includeValues: true }
+    );
+
+    const matches = results?.matches ?? [];
+    const embeddingList = matches.map((match) => match.values);
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      options.lambda,
+      options.k
+    );
+
+    const topMmrMatches = mmrIndexes.map((idx) => matches[idx]);
+
+    const finalResult: Document[] = [];
+    for (const res of topMmrMatches) {
+      const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
+        {}) as PineconeMetadata;
+      if (res.score) {
+        finalResult.push(new Document({ metadata, pageContent }));
+      }
+    }
+
+    return finalResult;
   }
 
   /**
