@@ -232,7 +232,7 @@ export class PineconeStore extends VectorStore {
    *
    * @param {string} query - Text to look up documents similar to.
    * @param {number} options.k - Number of documents to return.
-   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.fetchK=20 - Number of documents to fetch before passing to the MMR algorithm.
    * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
    *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
    * @param {PineconeMetadata} options.filter - Optional filter to apply to the search.
