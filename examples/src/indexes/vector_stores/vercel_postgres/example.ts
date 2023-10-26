@@ -48,7 +48,7 @@ console.log(results);
 // Metadata filtering
 const results2 = await vercelPostgresStore.similaritySearch(
   "Irrelevant query, metadata filtering",
-  2,
+  3,
   {
     topic: "science",
   }
@@ -56,6 +56,32 @@ const results2 = await vercelPostgresStore.similaritySearch(
 console.log(results2);
 /*
   [
+    Document {
+      pageContent: 'Mitochondria is the powerhouse of the cell',
+      metadata: { topic: 'science' }
+    }
+  ]
+*/
+
+// Metadata filtering with IN-filters works as well
+const results3 = await vercelPostgresStore.similaritySearch(
+  "Irrelevant query, metadata filtering",
+  2,
+  {
+    topic: { in: ["science", "nonsense"] },
+  }
+);
+console.log(results3);
+/*
+  [
+    Document {
+      pageContent: 'hello',
+      metadata: { topic: 'nonsense' }
+    },
+    Document {
+      pageContent: 'hi',
+      metadata: { topic: 'nonsense' }
+    },
     Document {
       pageContent: 'Mitochondria is the powerhouse of the cell',
       metadata: { topic: 'science' }
@@ -74,11 +100,11 @@ await vercelPostgresStore.addDocuments(
   { ids: [ids[2]] }
 );
 
-const results3 = await vercelPostgresStore.similaritySearch(
+const results4 = await vercelPostgresStore.similaritySearch(
   "What is the powerhouse of the cell?",
   1
 );
-console.log(results3);
+console.log(results4);
 /*
   [
     Document {
@@ -90,14 +116,14 @@ console.log(results3);
 
 await vercelPostgresStore.delete({ ids: [ids[2]] });
 
-const results4 = await vercelPostgresStore.similaritySearch(
+const results5 = await vercelPostgresStore.similaritySearch(
   "No more metadata",
   2,
   {
     topic: "science",
   }
 );
-console.log(results4);
+console.log(results5);
 /*
   []
 */
