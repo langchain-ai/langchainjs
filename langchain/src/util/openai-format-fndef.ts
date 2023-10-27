@@ -1,5 +1,5 @@
 /**
- * Formatting function definitions for calculating openai function defination token usage.  
+ * Formatting function definitions for calculating openai function defination token usage.
  * Source https://github.com/hmarr/openai-chat-tokens/blob/main/src/functions.ts
  */
 import OpenAI from "openai";
