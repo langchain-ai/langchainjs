@@ -2,6 +2,7 @@ export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
   BaseMemory,
   getInputValue,
+  getOutputValue,
   getBufferString,
   type InputValues,
   type OutputValues,
