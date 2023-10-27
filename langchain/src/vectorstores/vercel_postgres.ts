@@ -247,33 +247,27 @@ export class VercelPostgres extends VectorStore {
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
-    const _filter: this["FilterType"] = filter ? filter : {};
+    const _filter = filter || {};
     const whereClauses = [];
     const values = [embeddingString, k];
     let paramCount = 2;
 
     for (const [key, value] of Object.entries(_filter)) {
-      // check if the filter checks for a single value or is an IN filter
-      if (typeof value !== "string" && typeof value !== "number") {
-        const inValue = value.in;
-        if (inValue) {
-          const placeholders = inValue
-            .map((_: unknown, index: number) => `$${paramCount + index + 1}`)
-            .join(",");
-          whereClauses.push(
-            `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
-          );
-          values.push(...inValue);
-          paramCount += inValue.length;
-        }
+      if (typeof value === "object" && Object.prototype.hasOwnProperty.call(value,"in")) {
+        const placeholders = value.in
+          .map((_, index) => `$${paramCount + index + 1}`)
+          .join(",");
+        whereClauses.push(
+          `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+        );
+        values.push(...value.in);
+        paramCount += value.in.length;
       } else {
-        paramCount++;
+        paramCount += 1;
         whereClauses.push(
           `${this.metadataColumnName}->>'${key}' = $${paramCount}`
         );
-        if (value !== null && value !== undefined) {
-          values.push(value as string | number);
-        }
+        values.push(value);
       }
     }
 
