@@ -652,6 +652,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
       {
         handleLLMEnd: async (output) => {
           streamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("streaming usage", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
@@ -674,6 +675,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
       {
         handleLLMEnd: async (output) => {
           nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("non-streaming usage", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
@@ -711,6 +713,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
 test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   let streamingTokenUsed = -1;
   let nonStreamingTokenUsed = -1;
+  const systemPrompt = "You are a helpful assistant";
   const question = "What is the color of the night sky?";
 
   const streamingModel = new ChatOpenAI({
@@ -724,6 +727,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
       {
         handleLLMEnd: async (output) => {
           streamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("streaming usage", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
@@ -743,6 +747,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
       {
         handleLLMEnd: async (output) => {
           nonStreamingTokenUsed = output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("non-streaming usage", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
@@ -752,8 +757,12 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   });
 
   const [nonStreamingResult, streamingResult] = await Promise.all([
-    nonStreamingModel.generate([[new HumanMessage(question)]]),
-    streamingModel.generate([[new HumanMessage(question)]]),
+    nonStreamingModel.generate([
+      [new SystemMessage(systemPrompt), new HumanMessage(question)],
+    ]),
+    streamingModel.generate([
+      [new SystemMessage(systemPrompt), new HumanMessage(question)],
+    ]),
   ]);
 
   expect(streamingTokenUsed).toBeGreaterThan(-1);
