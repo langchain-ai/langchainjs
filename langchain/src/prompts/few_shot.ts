@@ -286,6 +286,8 @@ export interface FewShotChatMessagePromptTemplateInput
 
   /**
    * Whether or not to try validating the template on initialization.
+   *
+   * @defaultValue `true`
    */
   validateTemplate?: boolean;
 }
