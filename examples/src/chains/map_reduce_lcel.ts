@@ -1,7 +1,13 @@
+import { BaseCallbackConfig } from "langchain/callbacks";
+import {
+  _collapseDocs,
+  _splitListOfDocs,
+} from "langchain/chains/combine_documents/reduce";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Document } from "langchain/document";
-import { BasePromptTemplate, PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
+import { formatDocument } from "langchain/schema/prompt_template";
 import {
   RunnableLambda,
   RunnableMap,
@@ -9,9 +15,21 @@ import {
   RunnableSequence,
 } from "langchain/schema/runnable";
 
+/** Define your model */
 const model = new ChatOpenAI({});
 
-const documentPrompt = PromptTemplate.fromTemplate("{page_content}");
+/** Define your prompt templates. We'll define three here */
+// The first
+const documentPrompt = PromptTemplate.fromTemplate("{pageContent}");
+const summarizePrompt = PromptTemplate.fromTemplate(
+  "Summarize this content:\n\n{context}"
+);
+const collapsePrompt = PromptTemplate.fromTemplate(
+  "Collapse this content:\n\n{context}"
+);
+const combinePrompt = PromptTemplate.fromTemplate(
+  "Combine these summaries:\n\n{context}"
+);
 
 function partial<F extends (...args: any[]) => any>(
   fn: F,
@@ -20,42 +38,9 @@ function partial<F extends (...args: any[]) => any>(
   return (...args: any[]): ReturnType<F> => fn(...partialArgs, ...args);
 }
 
-/** @TODO refactor to be shared util */
-const formatDocument = async (
-  document: Document,
-  prompt: BasePromptTemplate
-): Promise<string> => {
-  const baseInfo = {
-    pageContent: document.pageContent,
-    ...document.metadata,
-  };
-  const variables = new Set(prompt.inputVariables);
-  const requiredMetadata = new Set(
-    prompt.inputVariables
-      .map((v) => (v !== "pageContent" ? v : null))
-      .filter((v) => v !== null)
-  );
-  const missingMetadata = [];
-  for (const variable of variables) {
-    if (!(variable in baseInfo) && variable !== "pageContent") {
-      missingMetadata.push(variable);
-    }
-  }
-  if (missingMetadata.length) {
-    throw new Error(
-      `Document prompt requires documents to have metadata variables: ${requiredMetadata}. Received document with missing metadata: ${missingMetadata}`
-    );
-  }
-  return prompt.format(baseInfo);
-};
-
-// const partialFormatDocument = async (document: Document): Promise<string> =>
-//   formatDocument(document, documentPrompt);
-const partialFormatDocument = partial(formatDocument, documentPrompt);
-
 const formatDocs = async (documents: Document[]): Promise<string> => {
   const formattedDocs = await Promise.all(
-    documents.map((doc) => partialFormatDocument(doc))
+    documents.map((doc) => formatDocument(doc, documentPrompt))
   );
   return formattedDocs.join("\n\n");
 };
@@ -67,10 +52,9 @@ const outputParser = new StringOutputParser();
 
 const mapChain = RunnableSequence.from([
   {
-    context: async (i: { document: Document }) =>
-      partialFormatDocument(i.document),
+    context: async (i: Document) => formatDocument(i, documentPrompt),
   },
-  PromptTemplate.fromTemplate("Summarize this content:\n\n{context}"),
+  summarizePrompt,
   model,
   outputParser,
 ]);
@@ -94,26 +78,29 @@ const collapseChain = RunnableSequence.from([
   {
     context: async (i: { documents: Document[] }) => formatDocs(i.documents),
   },
-  PromptTemplate.fromTemplate("Collapse this content:\n\n{context}"),
+  collapsePrompt,
   model,
   outputParser,
 ]);
 
 const collapse = async (
   documents: Document[],
-  /** @todo fix type */
-  config: { runName: string },
+  config?: BaseCallbackConfig,
   tokenMax = 4000
 ) => {
+  const editableConfig = config;
   let docs = documents;
   let collapseCount = 1;
   while ((await getNumTokens(docs)) > tokenMax) {
+    if (editableConfig) {
+      console.log("config is true");
+      editableConfig.runName = `Collapse ${collapseCount}`;
+    }
     const invoke = partial(collapseChain.invoke);
-    /**
-     * @TODO implement `splitListOfDocs` `collapseDocs` from py (_split_list_of_docs, _collapse_docs)
-     */
-    const splitDocs: Document[] = splitListOfDocs(docs, getNumTokens, tokenMax);
-    docs = await Promise.all(splitDocs.map((doc) => collapseDocs(doc, invoke)));
+    const splitDocs = _splitListOfDocs(docs, getNumTokens, tokenMax);
+    docs = await Promise.all(
+      splitDocs.map((doc) => _collapseDocs(doc, invoke))
+    );
     collapseCount += 1;
   }
   return docs;
@@ -123,7 +110,7 @@ const reduceChain = RunnableSequence.from([
   {
     context: formatDocs,
   },
-  PromptTemplate.fromTemplate("Combine these summaries:\n\n{context}"),
+  combinePrompt,
   model,
   outputParser,
 ]).withConfig({ runName: "Reduce" });
@@ -135,7 +122,7 @@ const mapReduceChain = RunnableSequence.from([
   reduceChain,
 ]).withConfig({ runName: "Map reduce" });
 
-// call chain
+// Define the text to be processed
 const text = `Nuclear power in space is the use of nuclear power in outer space, typically either small fission systems or radioactive decay for electricity or heat. Another use is for scientific observation, as in a Mössbauer spectrometer. The most common type is a radioisotope thermoelectric generator, which has been used on many space probes and on crewed lunar missions. Small fission reactors for Earth observation satellites, such as the TOPAZ nuclear reactor, have also been flown.[1] A radioisotope heater unit is powered by radioactive decay and can keep components from becoming too cold to function, potentially over a span of decades.[2]
 
 The United States tested the SNAP-10A nuclear reactor in space for 43 days in 1965,[3] with the next test of a nuclear reactor power system intended for space use occurring on 13 September 2012 with the Demonstration Using Flattop Fission (DUFF) test of the Kilopower reactor.[4]
@@ -162,16 +149,23 @@ Nuclear thermal rocket
 Nuclear pulse propulsion
 Nuclear electric rocket`;
 
-const docs = text.split("\n\n").map(
-  (pageContent) =>
-    new Document({
-      pageContent,
-      metadata: {
-        source: "https://en.wikipedia.org/wiki/Nuclear_power_in_space",
-      },
-    })
-);
+// Split the text into documents and process them with the map-reduce chain
+const docs = text
+  .split("\n\n")
+  .map(
+    (pageContent) =>
+      new Document({
+        pageContent,
+        metadata: {
+          source: "https://en.wikipedia.org/wiki/Nuclear_power_in_space",
+        },
+      })
+  );
+const result = await mapReduceChain.invoke(docs);
 
-const result = await mapReduceChain.invoke({ documents: docs });
-
+// Print the result
 console.log(result);
+/**
+ * View the full sequence on LangSmith
+ * @link https://smith.langchain.com/public/067ca077-19e9-4fa8-a3a4-9e99b7c8374f/r
+ */
