@@ -48,7 +48,7 @@ console.log(results);
 // Metadata filtering
 const results2 = await vercelPostgresStore.similaritySearch(
   "Irrelevant query, metadata filtering",
-  3,
+  2,
   {
     topic: "science",
   }
@@ -66,7 +66,7 @@ console.log(results2);
 // Metadata filtering with IN-filters works as well
 const results3 = await vercelPostgresStore.similaritySearch(
   "Irrelevant query, metadata filtering",
-  2,
+  3,
   {
     topic: { in: ["science", "nonsense"] },
   }
