@@ -1,6 +1,9 @@
 /**
  * Formatting function definitions for calculating openai function defination token usage.
- * Source https://github.com/hmarr/openai-chat-tokens/blob/main/src/functions.ts
+ *
+ * https://github.com/hmarr/openai-chat-tokens/blob/main/src/functions.ts
+ * (c) 2023 Harry Marr
+ * MIT license
  */
 import OpenAI from "openai";
 
