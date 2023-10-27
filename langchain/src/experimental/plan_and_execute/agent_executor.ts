@@ -18,7 +18,9 @@ import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PlanOutputParser } from "./outputParser.js";
 import { Tool } from "../../tools/base.js";
+import { DynamicStructuredTool } from "../../tools/dynamic.js";
 import { ChatAgent } from "../../agents/chat/index.js";
+import { StructuredChatAgent } from "../../agents/index.js";
 import { SerializedLLMChain } from "../../chains/serde.js";
 
 /**
@@ -84,7 +86,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     tools,
   }: {
     llm: BaseLanguageModel;
-    tools?: Tool[];
+    tools?: Tool[] | DynamicStructuredTool[];
   }) {
     const plannerLlmChain = new LLMChain({
       llm,
@@ -108,10 +110,22 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     humanMessageTemplate = DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
   }: {
     llm: BaseLanguageModel;
-    tools: Tool[];
+    tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   }) {
-    const agent = ChatAgent.fromLLMAndTools(llm, tools, {
+    let agent;
+
+    if (tools[0] instanceof DynamicStructuredTool) {
+      agent = StructuredChatAgent.fromLLMAndTools(llm, tools, {});
+      return new ChainStepExecutor(
+        AgentExecutor.fromAgentAndTools({
+          agent,
+          tools,
+        })
+      );
+    }
+
+    agent = ChatAgent.fromLLMAndTools(llm, tools as Tool[], {
       humanMessageTemplate,
     });
     return new ChainStepExecutor(
@@ -138,7 +152,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     humanMessageTemplate,
   }: {
     llm: BaseLanguageModel;
-    tools: Tool[];
+    tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {
     const executor = new PlanAndExecuteAgentExecutor({
