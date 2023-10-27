@@ -1,8 +1,4 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
-import {
-  promptTokensEstimate,
-  messageTokensEstimate,
-} from "openai-chat-tokens";
 
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
@@ -36,6 +32,7 @@ import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import { BaseFunctionCallOptions } from "../base_language/index.js";
 import { NewTokenIndices } from "../callbacks/base.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
+import { FunctionDef, formatFunctionDefinitions } from "../util/openai-format-fndef.js";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -51,6 +48,10 @@ interface OpenAILLMOutput {
 
 // TODO import from SDK when available
 type OpenAIRoleEnum = "system" | "assistant" | "user" | "function";
+
+type OpenAICompletionParam = OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
+type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
+type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
 
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
@@ -88,7 +89,7 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 
 function messageToOpenAIMessage(
   message: BaseMessage
-): OpenAIClient.Chat.Completions.ChatCompletionMessageParam {
+): OpenAICompletionParam {
   const msg = {
     content: message.content || null,
     name: message.name,
@@ -473,7 +474,7 @@ export class ChatOpenAI<
       }));
 
     if (params.stream) {
-      const stream = await this._streamResponseChunks(
+      const stream = this._streamResponseChunks(
         messages,
         options,
         runManager
@@ -497,35 +498,8 @@ export class ChatOpenAI<
       // OpenAI does not support token usage report under stream mode,
       // fallback to estimation.
 
-      let promptTokenUsage = promptTokensEstimate({
-        messages: messages.map((msg) => ({
-          ...msg,
-          role: messageToOpenAIRole(msg),
-        })),
-        functions,
-        function_call,
-      });
-
-      if (this.modelName === "gpt-3.5-turbo-0301") {
-        // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
-        promptTokenUsage += messages.length;
-        promptTokenUsage -= messages.filter((msg) => msg.name).length * 2;
-      }
-
-      let completionTokenUsage = 0;
-      if (function_call) {
-        completionTokenUsage = generations
-          .map((gen) =>
-            messageTokensEstimate(messageToOpenAIMessage(gen.message))
-          )
-          .reduce((a, b) => a + b, 0);
-      } else {
-        completionTokenUsage = (
-          await Promise.all(
-            generations.map((gen) => this.getNumTokens(gen.message.content))
-          )
-        ).reduce((a, b) => a + b, 0);
-      }
+      const promptTokenUsage = await this.getNumTokensFromPrompt(messages, functions, function_call);
+      const completionTokenUsage = await this.getNumTokensFromGenerations(generations);
 
       tokenUsage.promptTokens = promptTokenUsage;
       tokenUsage.completionTokens = completionTokenUsage;
@@ -583,6 +557,81 @@ export class ChatOpenAI<
     }
   }
 
+  /**
+   * Estimate the number of tokens a prompt will use.
+   * 
+   */
+  private async getNumTokensFromPrompt(
+    messages: BaseMessage[], 
+    functions?: OpenAIFnDef[], 
+    function_call?: "none" | "auto" | OpenAIFnCallOption
+  ): Promise<number> {
+    // It appears that if functions are present, the first system message is padded with a trailing newline. This
+    // was inferred by trying lots of combinations of messages and functions and seeing what the token counts were.
+    let paddedSystem = false;
+    const openaiMessages = messages.map(m => messageToOpenAIMessage(m));
+
+    let tokens = (await Promise.all(openaiMessages.map(async (m, indx) => {
+      let msg = m;
+      if (msg.role === "system" && functions && !paddedSystem) {
+        msg = { ...msg, content: `${msg.content}\n` };
+        paddedSystem = true;
+      }
+      return (await this.getNumTokensFromMessages([messages[indx]])).totalCount;
+    }))).reduce((a, b) => a + b, 0);
+
+    // Each completion (vs message) seems to carry a 3-token overhead
+    tokens += 3;
+
+    // If there are functions, add the function definitions as they count towards token usage
+    if (functions && function_call !== "auto") {
+      const promptDefinitions = formatFunctionDefinitions(functions as unknown as FunctionDef[]);
+      tokens += await this.getNumTokens(promptDefinitions);
+      tokens += 9; // Add nine per completion
+    }
+
+    // If there's a system message _and_ functions are present, subtract four tokens. I assume this is because
+    // functions typically add a system message, but reuse the first one if it's already there. This offsets
+    // the extra 9 tokens added by the function definitions.
+    if (functions && openaiMessages.find((m) => m.role === "system")) {
+      tokens -= 4;
+    }
+
+    // If function_call is 'none', add one token.
+    // If it's a FunctionCall object, add 4 + the number of tokens in the function name.
+    // If it's undefined or 'auto', don't add anything.
+    if (function_call === "none") {
+      tokens += 1;
+    } else if (typeof function_call === "object") {
+      tokens += await this.getNumTokens(function_call.name) + 4;
+    }
+
+    if (this.modelName === "gpt-3.5-turbo-0301") {
+      // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
+      tokens += messages.length;
+      tokens -= messages.filter((msg) => msg.name).length * 2;
+    }
+
+    return tokens;
+  }
+
+  /**
+   * Estimate the number of tokens an array of generations have used. 
+   */
+  private async getNumTokensFromGenerations(generations: ChatGeneration[]) {
+
+    const generationUsages = await Promise.all(generations.map(async (generation) => {
+      const openAIMessage = messageToOpenAIMessage(generation.message);
+      if (openAIMessage.function_call) {
+        return (await this.getNumTokensFromMessages([generation.message])).totalCount;
+      } else {
+        return await this.getNumTokens(generation.message.content);
+      }
+    }));
+
+    return generationUsages.reduce((a, b) => a + b, 0);
+  }
+
   async getNumTokensFromMessages(messages: BaseMessage[]) {
     let totalCount = 0;
     let tokensPerMessage = 0;
@@ -608,6 +657,15 @@ export class ChatOpenAI<
         const count = textCount + tokensPerMessage + roleCount + nameCount;
 
         totalCount += count;
+
+        const openAIMessage = messageToOpenAIMessage(message);
+        if (openAIMessage.role === "function") {
+          totalCount -= 2;
+        }
+        if (openAIMessage.function_call) {
+          totalCount += 3;
+        }
+
         return count;
       })
     );
