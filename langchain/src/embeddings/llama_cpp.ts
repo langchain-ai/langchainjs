@@ -90,12 +90,15 @@ export class LlamaCppEmbeddings
 
             const embeddings: number[][] = [];
 
-            for (let i = 0; i < tokensArray.length; i += 1) {
-                const tokens = tokensArray[i];
+            for (const tokens of tokensArray) {
+				const embedArray: number[] = [];
 
-                for (let j =0; j < tokens.length; j += 1) {
-                    embeddings[i][j] = ((tokens[j] as unknown) as number);
+                for (const token in tokens) {
+					const nToken: number = +token;
+                    embedArray.push(nToken);
                 }
+
+				embeddings.push(embedArray);
             }
 
             resolve(embeddings);
@@ -115,7 +118,8 @@ export class LlamaCppEmbeddings
 
           const tokensObj = this._context.encode(text);
           for (const token in tokensObj) {
-              tokens.push((token as unknown) as number);
+			  const nToken: number = +token;
+              tokens.push(nToken);
           }
 
           resolve(tokens);
