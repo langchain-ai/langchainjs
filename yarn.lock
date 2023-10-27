@@ -11033,6 +11033,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/long@npm:~5.0.0":
+  version: 5.0.0
+  resolution: "@types/long@npm:5.0.0"
+  dependencies:
+    long: "*"
+  checksum: 1483b703bd6257cff1c9921cdc80e36f83985bed1f7bf9a64919e29df0038c3eb5acc82b70cd0cf15e4fdd639f79976eed5f7f9053e8db152b21b9e5d202845c
+  languageName: node
+  linkType: hard
+
 "@types/markdown-it@npm:^12.2.3":
   version: 12.2.3
   resolution: "@types/markdown-it@npm:12.2.3"
@@ -12153,7 +12162,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"adm-zip@npm:^0.5.3, adm-zip@npm:^0.5.9":
+"adm-zip@npm:^0.5.9, adm-zip@npm:~0.5.10":
   version: 0.5.10
   resolution: "adm-zip@npm:0.5.10"
   checksum: 07ed91cf6423bf5dca4ee63977bc7635e91b8d21829c00829d48dce4c6932e1b19e6cfcbe44f1931c956e68795ae97183fc775913883fa48ce88a1ac11fb2034
@@ -13619,15 +13628,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cassandra-driver@npm:^4.6.4":
-  version: 4.6.4
-  resolution: "cassandra-driver@npm:4.6.4"
+"cassandra-driver@npm:^4.7.2":
+  version: 4.7.2
+  resolution: "cassandra-driver@npm:4.7.2"
   dependencies:
-    "@types/long": ^4.0.0
+    "@types/long": ~5.0.0
     "@types/node": ">=8"
-    adm-zip: ^0.5.3
-    long: ^2.2.0
-  checksum: 44e889496472e0cca5bbf70b0cb4b945db164dd3ac6193c62a7157033b987828cd6df14e06248221414ef2b4856e1cdebb3b6f131f3929dacbf02e2e69c8dec3
+    adm-zip: ~0.5.10
+    long: ~5.2.3
+  checksum: bedf59290d52a4ce64c8c3b66d0c4b6c20a04bfe5751509487f17cd0fe5c8ad0e30b41dde6b398eb092b5fe7c30b191301b1896e9fd63ac9f533e867db985d9a
   languageName: node
   linkType: hard
 
@@ -21372,7 +21381,7 @@ __metadata:
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     camelcase: 6
-    cassandra-driver: ^4.6.4
+    cassandra-driver: ^4.7.2
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
     closevector-common: 0.1.0-alpha.1
@@ -21505,7 +21514,7 @@ __metadata:
     apify-client: ^2.7.1
     assemblyai: ^2.0.2
     axios: "*"
-    cassandra-driver: ^4.6.4
+    cassandra-driver: ^4.7.2
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
     closevector-common: 0.1.0-alpha.1
@@ -22229,6 +22238,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"long@npm:*, long@npm:^5.2.1, long@npm:~5.2.3":
+  version: 5.2.3
+  resolution: "long@npm:5.2.3"
+  checksum: 885ede7c3de4facccbd2cacc6168bae3a02c3e836159ea4252c87b6e34d40af819824b2d4edce330bfb5c4d6e8ce3ec5864bdcf9473fa1f53a4f8225860e5897
+  languageName: node
+  linkType: hard
+
 "long@npm:4.0.0, long@npm:^4.0.0":
   version: 4.0.0
   resolution: "long@npm:4.0.0"
@@ -22236,24 +22252,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"long@npm:^2.2.0":
-  version: 2.4.0
-  resolution: "long@npm:2.4.0"
-  checksum: e24fd5e14be90ba6ec3faa43b3b0f1c4ac88bfdc52471d90f63e173572f6db27c45873e847f8af58283ca3140eb42d7ba11708102f3cc0956793b03305c737e0
-  languageName: node
-  linkType: hard
-
 "long@npm:^5.0.0":
   version: 5.2.1
   resolution: "long@npm:5.2.1"
   checksum: 9264da12d1b7df67e5aa6da4498144293caf1ad12e7f092efe4e9a2d32c53f0bbf7334f7cef997080a2a3af061142558ab366efa71698d98b1cdb883477445a7
-  languageName: node
-  linkType: hard
-
-"long@npm:^5.2.1":
-  version: 5.2.3
-  resolution: "long@npm:5.2.3"
-  checksum: 885ede7c3de4facccbd2cacc6168bae3a02c3e836159ea4252c87b6e34d40af819824b2d4edce330bfb5c4d6e8ce3ec5864bdcf9473fa1f53a4f8225860e5897
   languageName: node
   linkType: hard
 

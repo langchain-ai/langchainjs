@@ -48,7 +48,7 @@ const config = {
   keyspace: "test",
   dimensions: 1536,
   table: "test",
-  indices: [{name: "name", value: "(name)"}]
+  indices: [{ name: "name", value: "(name)" }],
   primaryKey: {
     name: "id",
     type: "int",
@@ -71,7 +71,6 @@ const vectorStore = await CassandraStore.fromTexts(
   new OpenAIEmbeddings(),
   cassandraConfig
 );
-
 ```
 
 ## Querying docs
@@ -85,3 +84,21 @@ or filtered query:
 ```typescript
 const results = await vectorStore.similaritySearch("B", 1, { name: "Bubba" });
 ```
+
+## Additional Configuration Options
+
+In the configuration document, optional parameters are provided; their defaults are:
+
+```
+  ...
+  indices: [],
+  maxConcurrency: 25,
+  batchSize: 1,
+  ...
+```
+
+| Parameter        | Usage                                                                                                                                                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `indices`        | Optional, but required if using filtered queries. Each metadata column (e.g. `<metadata_filter_column>`) to be indexed should appear as an entry in a list, in the format `[{name: "<metadata_filter_column>", value: "(<metadata_filter_column>)"}]`. |
+| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                                                |
+| `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged.                           |

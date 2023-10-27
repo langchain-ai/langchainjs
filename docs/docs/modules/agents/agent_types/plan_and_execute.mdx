@@ -1,5 +1,9 @@
 # Plan and execute
 
+:::info Compatibility
+This agent currently only supports Chat Models.
+:::
+
 Plan and execute agents accomplish an objective by first planning what to do, then executing the sub tasks. This idea is largely inspired by [BabyAGI](https://github.com/yoheinakajima/babyagi) and then the ["Plan-and-Solve" paper](https://arxiv.org/abs/2305.04091).
 
 The planning is almost always done by an LLM.
@@ -17,6 +21,10 @@ This agent uses a two step process:
 The idea is that the planning step keeps the LLM more "on track" by breaking up a larger task into simpler subtasks.
 However, this method requires more individual LLM queries and has higher latency compared to Action Agents.
 
-**Note**: This agent currently only supports Chat Models.
+# With `PlanAndExecuteAgentExecutor`
+
+:::info
+This is an experimental chain and is not recommended for production use yet.
+:::
 
 <CodeBlock language="typescript">{Example}</CodeBlock>

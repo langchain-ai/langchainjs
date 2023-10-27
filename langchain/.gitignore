@@ -691,6 +691,9 @@ graphs/neo4j_graph.d.ts
 hub.cjs
 hub.js
 hub.d.ts
+util/document.cjs
+util/document.js
+util/document.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts

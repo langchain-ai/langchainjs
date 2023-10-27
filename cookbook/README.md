@@ -13,3 +13,5 @@ Note that you will also need to install the Python `jupyter` package, and that t
 Notebook | Description
 :- | :-
 [rewrite.ipynb](https://github.com/langchain-ai/langchainjs/tree/master/cookbook/rewrite.ipynb) | Handle real-world questions that contain extraneous, distracting information in your RAG chains by first rewriting them before performing retrieval.
+[rag_fusion.ipynb](https://github.com/langchain-ai/langchainjs/tree/master/cookbook/rag_fusion.ipynb) | Turn user queries into more search friendly queries, then query a vector store and use reciprocal rank fusion to rank the results.
+[basic_critique_revise.ipynb](https://github.com/langchain-ai/langchainjs/tree/master/cookbook/basic_critique_revise.ipynb) | Basic example of correcting an LLM's output using a pattern called critique-revise, where we highlight what part of the output is wrong and re-query the LLM for a correction.

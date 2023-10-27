@@ -84,6 +84,7 @@ export * as stores__file__in_memory from "../stores/file/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
+export * as util__document from "../util/document.js";
 export * as util__math from "../util/math.js";
 export * as util__time from "../util/time.js";
 export * as experimental__autogpt from "../experimental/autogpt/index.js";
