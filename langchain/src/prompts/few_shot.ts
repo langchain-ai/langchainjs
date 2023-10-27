@@ -292,6 +292,11 @@ export interface FewShotChatMessagePromptTemplateInput
   validateTemplate?: boolean;
 }
 
+/**
+ * Chat prompt template that contains few-shot examples.
+ * @augments BasePromptTemplateInput
+ * @augments FewShotChatMessagePromptTemplateInput
+ */
 export class FewShotChatMessagePromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
@@ -399,6 +404,11 @@ export class FewShotChatMessagePromptTemplate<
     return messages;
   }
 
+  /**
+   * Formats the prompt with the given values.
+   * @param values The values to format the prompt with.
+   * @returns A promise that resolves to a string representing the formatted prompt.
+   */
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = await this.getExamples(allValues);
@@ -414,6 +424,11 @@ export class FewShotChatMessagePromptTemplate<
     return renderTemplate(template, this.templateFormat, allValues);
   }
 
+  /**
+   * Partially formats the prompt with the given values.
+   * @param values The values to partially format the prompt with.
+   * @returns A promise that resolves to an instance of `FewShotChatMessagePromptTemplate` with the given values partially formatted.
+   */
   async partial(
     values: PartialValues<PartialVariableName>
   ): Promise<FewShotChatMessagePromptTemplate<RunInput, PartialVariableName>> {
