@@ -23,7 +23,11 @@ export const formatDocument = async (
   }
   if (missingMetadata.length) {
     throw new Error(
-      `Document prompt requires documents to have metadata variables: ${JSON.stringify(requiredMetadata)}. Received document with missing metadata: ${JSON.stringify(missingMetadata)}`
+      `Document prompt requires documents to have metadata variables: ${JSON.stringify(
+        requiredMetadata
+      )}. Received document with missing metadata: ${JSON.stringify(
+        missingMetadata
+      )}`
     );
   }
   return prompt.format(baseInfo);

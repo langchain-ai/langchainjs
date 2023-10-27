@@ -15,11 +15,10 @@ import {
   RunnableSequence,
 } from "langchain/schema/runnable";
 
-/** Define your model */
+// Initialize the OpenAI model
 const model = new ChatOpenAI({});
 
-/** Define your prompt templates. We'll define three here */
-// The first
+// Define prompt templates for document formatting, summarizing, collapsing, and combining
 const documentPrompt = PromptTemplate.fromTemplate("{pageContent}");
 const summarizePrompt = PromptTemplate.fromTemplate(
   "Summarize this content:\n\n{context}"
@@ -31,6 +30,7 @@ const combinePrompt = PromptTemplate.fromTemplate(
   "Combine these summaries:\n\n{context}"
 );
 
+// Define a partial function to allow function invocation with preset arguments
 function partial<F extends (...args: any[]) => any>(
   fn: F,
   ...partialArgs: any[]
@@ -38,6 +38,7 @@ function partial<F extends (...args: any[]) => any>(
   return (...args: any[]): ReturnType<F> => fn(...partialArgs, ...args);
 }
 
+// Define a function to format a list of documents into a string
 const formatDocs = async (documents: Document[]): Promise<string> => {
   const formattedDocs = await Promise.all(
     documents.map((doc) => formatDocument(doc, documentPrompt))
@@ -45,44 +46,39 @@ const formatDocs = async (documents: Document[]): Promise<string> => {
   return formattedDocs.join("\n\n");
 };
 
+// Define a function to get the number of tokens in a list of documents
 const getNumTokens = async (documents: Document[]): Promise<number> =>
   model.getNumTokens(await formatDocs(documents));
 
+// Initialize the output parser
 const outputParser = new StringOutputParser();
 
+// Define the map chain to format, summarize, and parse the document
 const mapChain = RunnableSequence.from([
-  {
-    context: async (i: Document) => formatDocument(i, documentPrompt),
-  },
+  { context: async (i: Document) => formatDocument(i, documentPrompt) },
   summarizePrompt,
   model,
   outputParser,
 ]);
 
-// Wrapper chain to keep the original metadata.
+// Define a wrapper chain to keep the original metadata while summarizing the document
 const mapAsDocChain = RunnableSequence.from([
-  RunnableMap.from({
-    doc: new RunnablePassthrough(),
-    content: mapChain,
-  }),
+  RunnableMap.from({ doc: new RunnablePassthrough(), content: mapChain }),
   RunnableLambda.from(
     (input) =>
-      new Document({
-        pageContent: input.content,
-        metadata: input.doc.metadata,
-      })
+      new Document({ pageContent: input.content, metadata: input.doc.metadata })
   ),
 ]).withConfig({ runName: "Summarize (return doc)" });
 
+// Define the collapse chain to format, collapse, and parse a list of documents
 const collapseChain = RunnableSequence.from([
-  {
-    context: async (i: { documents: Document[] }) => formatDocs(i.documents),
-  },
+  { context: async (i: { documents: Document[] }) => formatDocs(i.documents) },
   collapsePrompt,
   model,
   outputParser,
 ]);
 
+// Define a function to collapse a list of documents until the total number of tokens is within the limit
 const collapse = async (
   documents: Document[],
   config?: BaseCallbackConfig,
@@ -106,16 +102,15 @@ const collapse = async (
   return docs;
 };
 
+// Define the reduce chain to format, combine, and parse a list of documents
 const reduceChain = RunnableSequence.from([
-  {
-    context: formatDocs,
-  },
+  { context: formatDocs },
   combinePrompt,
   model,
   outputParser,
 ]).withConfig({ runName: "Reduce" });
 
-// Final chain
+// Define the final map-reduce chain
 const mapReduceChain = RunnableSequence.from([
   mapAsDocChain.map(),
   collapse,
@@ -150,17 +145,15 @@ Nuclear pulse propulsion
 Nuclear electric rocket`;
 
 // Split the text into documents and process them with the map-reduce chain
-const docs = text
-  .split("\n\n")
-  .map(
-    (pageContent) =>
-      new Document({
-        pageContent,
-        metadata: {
-          source: "https://en.wikipedia.org/wiki/Nuclear_power_in_space",
-        },
-      })
-  );
+const docs = text.split("\n\n").map(
+  (pageContent) =>
+    new Document({
+      pageContent,
+      metadata: {
+        source: "https://en.wikipedia.org/wiki/Nuclear_power_in_space",
+      },
+    })
+);
 const result = await mapReduceChain.invoke(docs);
 
 // Print the result
