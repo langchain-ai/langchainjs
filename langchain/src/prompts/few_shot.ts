@@ -270,6 +270,8 @@ export interface FewShotChatMessagePromptTemplateInput
 
   /**
    * A prompt template string to put after the examples.
+   *
+   * @defaultValue `""`
    */
   suffix?: string;
 
