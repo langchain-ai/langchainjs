@@ -142,7 +142,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     humanMessageTemplate?: string;
   } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {
     const executor = new PlanAndExecuteAgentExecutor({
-      planner: PlanAndExecuteAgentExecutor.getDefaultPlanner({ llm }),
+      planner: PlanAndExecuteAgentExecutor.getDefaultPlanner({ llm, tools }),
       stepExecutor: PlanAndExecuteAgentExecutor.getDefaultStepExecutor({
         llm,
         tools,
