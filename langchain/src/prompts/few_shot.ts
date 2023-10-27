@@ -277,6 +277,8 @@ export interface FewShotChatMessagePromptTemplateInput
 
   /**
    * The format of the prompt template. Options are: 'f-string'
+   *
+   * @defaultValue `f-string`
    */
   templateFormat?: TemplateFormat;
 
