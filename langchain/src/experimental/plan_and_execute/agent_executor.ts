@@ -10,7 +10,7 @@ import {
 import { AgentExecutor } from "../../agents/executor.js";
 import {
   DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
-  getPlannerChatPrompt
+  getPlannerChatPrompt,
 } from "./prompt.js";
 import { ChainValues } from "../../schema/index.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
@@ -79,7 +79,13 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
    * @param llm The Large Language Model (LLM) used to generate responses.
    * @returns A new LLMPlanner instance.
    */
-  static getDefaultPlanner({ llm, tools }: { llm: BaseLanguageModel, tools?: Tool[] }) {
+  static getDefaultPlanner({
+    llm,
+    tools,
+  }: {
+    llm: BaseLanguageModel;
+    tools?: Tool[];
+  }) {
     const plannerLlmChain = new LLMChain({
       llm,
       prompt: getPlannerChatPrompt(tools),
