@@ -57,6 +57,7 @@ const entrypoints = {
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
   "embeddings/minimax": "embeddings/minimax",
+  "embeddings/llama_cpp": "embeddings/llama_cpp",
   // llms
   "llms/load": "llms/load",
   "llms/base": "llms/base",
@@ -331,6 +332,7 @@ const requiresOptionalDependency = [
   "embeddings/tensorflow",
   "embeddings/hf",
   "embeddings/hf_transformers",
+  "embeddings/llama_cpp",
   "llms/load",
   "llms/cohere",
   "llms/googlevertexai",
