@@ -251,6 +251,8 @@ export interface FewShotChatMessagePromptTemplateInput
 
   /**
    * String separator used to join the prefix, the examples, and suffix.
+   *
+   * @defaultValue `"\n\n"`
    */
   exampleSeparator?: string;
 
