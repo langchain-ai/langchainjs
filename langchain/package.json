@@ -712,15 +712,12 @@
     "hub.cjs",
     "hub.js",
     "hub.d.ts",
-<<<<<<< HEAD
-    "util/document.cjs",
-    "util/document.js",
-    "util/document.d.ts",
-=======
     "util/convex.cjs",
     "util/convex.js",
     "util/convex.d.ts",
->>>>>>> 9b7d995c (Docs and first test)
+    "util/document.cjs",
+    "util/document.js",
+    "util/document.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -2530,17 +2527,15 @@
       "import": "./hub.js",
       "require": "./hub.cjs"
     },
-<<<<<<< HEAD
-    "./util/document": {
-      "types": "./util/document.d.ts",
-      "import": "./util/document.js",
-      "require": "./util/document.cjs"
-=======
     "./util/convex": {
       "types": "./util/convex.d.ts",
       "import": "./util/convex.js",
       "require": "./util/convex.cjs"
->>>>>>> 9b7d995c (Docs and first test)
+    },
+    "./util/document": {
+      "types": "./util/document.d.ts",
+      "import": "./util/document.js",
+      "require": "./util/document.cjs"
     },
     "./util/math": {
       "types": "./util/math.d.ts",

@@ -83,14 +83,7 @@ export * from "langchain/stores/file/in_memory";
 export * from "langchain/stores/message/in_memory";
 export * from "langchain/storage/encoder_backed";
 export * from "langchain/storage/in_memory";
-<<<<<<< HEAD
-<<<<<<< HEAD
 export * from "langchain/util/document";
-=======
-export * from "langchain/util/convex";
->>>>>>> 9b7d995c (Docs and first test)
-=======
->>>>>>> c7c752d0 (Working build)
 export * from "langchain/util/math";
 export * from "langchain/util/time";
 export * from "langchain/experimental/autogpt";

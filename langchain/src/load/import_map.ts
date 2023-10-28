@@ -84,14 +84,7 @@ export * as stores__file__in_memory from "../stores/file/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
-<<<<<<< HEAD
-<<<<<<< HEAD
 export * as util__document from "../util/document.js";
-=======
-export * as util__convex from "../util/convex.js";
->>>>>>> 9b7d995c (Docs and first test)
-=======
->>>>>>> fb144c0c (Fix generated files)
 export * as util__math from "../util/math.js";
 export * as util__time from "../util/time.js";
 export * as experimental__autogpt from "../experimental/autogpt/index.js";
