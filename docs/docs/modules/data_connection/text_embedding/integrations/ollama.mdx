@@ -26,7 +26,7 @@ import { OllamaEmbeddings } from "langchain/embeddings/ollama";
 
 const embeddings = new OllamaEmbeddings({
   model: "llama2", // default value
-  baseUrl: "http://localhost:11434", // default value
+  baseUrl: "http://127.0.0.1:11434", // default value
   requestOptions: {
     useMMap: true, // use_mmap 1
     numThread: 6, // num_thread 6
@@ -42,10 +42,10 @@ import { OllamaEmbeddings } from "langchain/embeddings/ollama";
 
 const embeddings = new OllamaEmbeddings({
   model: "llama2", // default value
-  baseUrl: "http://localhost:11434", // default value
+  baseUrl: "http://127.0.0.1:11434", // default value
   requestOptions: {
     useMMap: true,
-    numThreads: 6,
+    numThread: 6,
     numGpu: 1,
   },
 });

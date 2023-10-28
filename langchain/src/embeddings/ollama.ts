@@ -24,7 +24,7 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
 export class OllamaEmbeddings extends Embeddings {
   model = "llama2";
 
-  baseUrl = "http://localhost:11434";
+  baseUrl = "http://127.0.0.1:11434";
 
   requestOptions?: OllamaRequestParams["options"];
 
