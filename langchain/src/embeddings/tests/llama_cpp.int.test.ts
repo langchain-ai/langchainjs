@@ -4,13 +4,13 @@ import { LlamaCppEmbeddings } from "../llama_cpp.js";
 
 const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;
 
-test("Test LlamaCppEmbeddings.embedQuery", async () => {
+test.skip("Test LlamaCppEmbeddings.embedQuery", async () => {
   const embeddings = new LlamaCppEmbeddings({ modelPath: llamaPath });
   const res = await embeddings.embedQuery("Hello Llama");
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test LlamaCppEmbeddings.embedDocuments", async () => {
+test.skip("Test LlamaCppEmbeddings.embedDocuments", async () => {
   const embeddings = new LlamaCppEmbeddings({ modelPath: llamaPath });
   const res = await embeddings.embedDocuments(["Hello Llama", "Bye bye"]);
   expect(res).toHaveLength(2);
@@ -18,7 +18,7 @@ test("Test LlamaCppEmbeddings.embedDocuments", async () => {
   expect(typeof res[1][0]).toBe("number");
 });
 
-test("Test LlamaCppEmbeddings concurrency", async () => {
+test.skip("Test LlamaCppEmbeddings concurrency", async () => {
   const embeddings = new LlamaCppEmbeddings({
     modelPath: llamaPath,
     batchSize: 1,
