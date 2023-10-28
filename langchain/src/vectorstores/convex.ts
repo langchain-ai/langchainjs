@@ -110,7 +110,7 @@ export class ConvexVectorStore<
   private readonly get: GetQuery;
 
   _vectorstoreType(): string {
-    return "mongodb_atlas";
+    return "convex";
   }
 
   constructor(
