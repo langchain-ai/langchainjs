@@ -19,34 +19,36 @@ import { api } from "./convex/convex/_generated/api.js";
 // In `langchain/src/storage/tests/convex` run `npx convex dev`
 // In `langchain` run `yarn test:single src/storage/tests/convex.int.test.ts`
 
-const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
+describe.skip("Convex storage", () => {
+  const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
 
-test.skip("Convex set, get, delete", async () => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore TypeScript fails here, but only during build
-  await client.mutation(api.lib.reset);
+  test("Convex set, get, delete", async () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore TypeScript fails here, but only during build
+    await client.mutation(api.lib.reset);
 
-  const value1 = new Date().toISOString();
-  const value2 = new Date().toISOString() + new Date().toISOString();
+    const value1 = new Date().toISOString();
+    const value2 = new Date().toISOString() + new Date().toISOString();
 
-  await client.action(api.lib.mset, {
-    pairs: [
-      { key: "key1", value: value1 },
-      { key: "key2", value: value2 },
-    ],
+    await client.action(api.lib.mset, {
+      pairs: [
+        { key: "key1", value: value1 },
+        { key: "key2", value: value2 },
+      ],
+    });
+
+    const retrievedValues = await client.action(api.lib.mget, {
+      keys: ["key1", "key2"],
+    });
+    expect(retrievedValues).toEqual([value1, value2]);
+
+    await client.action(api.lib.mdelete, {
+      keys: ["key1", "key2"],
+    });
+
+    const retrievedValues2 = await client.action(api.lib.mget, {
+      keys: ["key1", "key2"],
+    });
+    expect(retrievedValues2).toEqual(["undefined", "undefined"]);
   });
-
-  const retrievedValues = await client.action(api.lib.mget, {
-    keys: ["key1", "key2"],
-  });
-  expect(retrievedValues).toEqual([value1, value2]);
-
-  await client.action(api.lib.mdelete, {
-    keys: ["key1", "key2"],
-  });
-
-  const retrievedValues2 = await client.action(api.lib.mget, {
-    keys: ["key1", "key2"],
-  });
-  expect(retrievedValues2).toEqual(["undefined", "undefined"]);
 });
