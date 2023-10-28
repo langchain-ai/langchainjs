@@ -115,6 +115,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/cassandra"?:
     | typeof import("../vectorstores/cassandra.js")
     | Promise<typeof import("../vectorstores/cassandra.js")>;
+  "langchain/vectorstores/convex"?:
+    | typeof import("../vectorstores/convex.js")
+    | Promise<typeof import("../vectorstores/convex.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
@@ -391,6 +394,9 @@ export interface OptionalImportMap {
   "langchain/stores/file/node"?:
     | typeof import("../stores/file/node.js")
     | Promise<typeof import("../stores/file/node.js")>;
+  "langchain/stores/message/convex"?:
+    | typeof import("../stores/message/convex.js")
+    | Promise<typeof import("../stores/message/convex.js")>;
   "langchain/stores/message/cloudflare_d1"?:
     | typeof import("../stores/message/cloudflare_d1.js")
     | Promise<typeof import("../stores/message/cloudflare_d1.js")>;
@@ -421,6 +427,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/xata"?:
     | typeof import("../stores/message/xata.js")
     | Promise<typeof import("../stores/message/xata.js")>;
+  "langchain/storage/convex"?:
+    | typeof import("../storage/convex.js")
+    | Promise<typeof import("../storage/convex.js")>;
   "langchain/storage/ioredis"?:
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
@@ -439,6 +448,9 @@ export interface OptionalImportMap {
   "langchain/hub"?:
     | typeof import("../hub.js")
     | Promise<typeof import("../hub.js")>;
+  "langchain/util/convex"?:
+    | typeof import("../util/convex.js")
+    | Promise<typeof import("../util/convex.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
