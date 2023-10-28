@@ -1,13 +1,17 @@
 import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
-import { LlamaBaseCppInputs, createLlamaModel, createLlamaContext, createLlamaSession } from "../util/llama_cpp.js";
+import {
+  LlamaBaseCppInputs,
+  createLlamaModel,
+  createLlamaContext,
+  createLlamaSession,
+} from "../util/llama_cpp.js";
 import { LLM, BaseLLMCallOptions, BaseLLMParams } from "./base.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
  * can set this in the environment variable `LLAMA_PATH`.
  */
-export interface LlamaCppInputs extends LlamaBaseCppInputs, BaseLLMParams {
-}
+export interface LlamaCppInputs extends LlamaBaseCppInputs, BaseLLMParams {}
 
 export interface LlamaCppCallOptions extends BaseLLMCallOptions {
   /** The maximum number of tokens the response should contain. */
@@ -49,14 +53,14 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   constructor(inputs: LlamaCppInputs) {
     super(inputs);
-	this.maxTokens = inputs?.maxTokens;
-	this.temperature = inputs?.temperature;
-	this.topK = inputs?.topK;
-	this.topP = inputs?.topP;
-	this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
+    this.maxTokens = inputs?.maxTokens;
+    this.temperature = inputs?.temperature;
+    this.topK = inputs?.topK;
+    this.topP = inputs?.topP;
+    this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
     this._model = createLlamaModel(inputs);
     this._context = createLlamaContext(this._model, inputs);
-    this._session = createLlamaSession(this._context );
+    this._session = createLlamaSession(this._context);
   }
 
   _llmType() {
@@ -66,17 +70,17 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     prompt: string,
-	// @ts-expect-error - TS6133: 'options' is declared but its value is never read.
+    // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
     options?: this["ParsedCallOptions"]
   ): Promise<string> {
     try {
-	  const promptOptions = {
-		maxTokens: this?.maxTokens,
-		temperature: this?.temperature,
-	  	topK: this?.topK,
-	  	topP: this?.topP,
-	  	trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
-	  };
+      const promptOptions = {
+        maxTokens: this?.maxTokens,
+        temperature: this?.temperature,
+        topK: this?.topK,
+        topP: this?.topP,
+        trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
+      };
       const completion = await this._session.prompt(prompt, promptOptions);
       return completion;
     } catch (e) {

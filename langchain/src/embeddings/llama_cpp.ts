@@ -1,75 +1,75 @@
 import { LlamaModel, LlamaContext } from "node-llama-cpp";
-import { LlamaBaseCppInputs, createLlamaModel, createLlamaContext  } from "../util/llama_cpp.js";
+import {
+  LlamaBaseCppInputs,
+  createLlamaModel,
+  createLlamaContext,
+} from "../util/llama_cpp.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
  * can set this in the environment variable `LLAMA_PATH`.
  */
-export interface LlamaCppEmbeddingsParams extends LlamaBaseCppInputs, EmbeddingsParams {
-}
+export interface LlamaCppEmbeddingsParams
+  extends LlamaBaseCppInputs,
+    EmbeddingsParams {}
 
 export class LlamaCppEmbeddings extends Embeddings {
+  _model: LlamaModel;
 
-    _model: LlamaModel;
+  _context: LlamaContext;
 
-    _context: LlamaContext;
+  constructor(inputs: LlamaCppEmbeddingsParams) {
+    super(inputs);
+    const _inputs = inputs;
+    _inputs.embedding = true;
 
+    this._model = createLlamaModel(_inputs);
+    this._context = createLlamaContext(this._model, _inputs);
+  }
 
-    constructor(inputs: LlamaCppEmbeddingsParams) {
-      super(inputs);
-	  inputs.embedding = true;
+  /**
+   * Generates embeddings for an array of texts.
+   * @param texts - An array of strings to generate embeddings for.
+   * @returns A Promise that resolves to an array of embeddings.
+   */
+  async embedDocuments(texts: string[]): Promise<number[][]> {
+    return new Promise((resolve) => {
+      const tokensArray = texts.map((text) => this._context.encode(text));
 
-	  this._model = createLlamaModel(inputs);
-      this._context = createLlamaContext(this._model, inputs);
-    }
+      const embeddings: number[][] = [];
 
-    /**
-     * Generates embeddings for an array of texts.
-     * @param texts - An array of strings to generate embeddings for.
-     * @returns A Promise that resolves to an array of embeddings.
-     */
-    async embedDocuments(texts: string[]): Promise<number[][]> {
-        return new Promise(resolve => {
-            const tokensArray = texts.map((text) =>
-              this._context.encode(text)
-            );
+      for (const tokens of tokensArray) {
+        const embedArray: number[] = [];
 
-            const embeddings: number[][] = [];
+        for (let i = 0; i < tokens.length; i += 1) {
+          const nToken: number = +tokens[i];
+          embedArray.push(nToken);
+        }
 
-            for (const tokens of tokensArray) {
-				const embedArray: number[] = [];
+        embeddings.push(embedArray);
+      }
 
-                for (const token in tokens) {
-					const nToken: number = +token;
-                    embedArray.push(nToken);
-                }
+      resolve(embeddings);
+    });
+  }
 
-				embeddings.push(embedArray);
-            }
+  /**
+   * Generates an embedding for a single text.
+   * @param text - A string to generate an embedding for.
+   * @returns A Promise that resolves to an array of numbers representing the embedding.
+   */
+  async embedQuery(text: string): Promise<number[]> {
+    return new Promise((resolve) => {
+      const tokens: number[] = [];
 
-            resolve(embeddings);
-        });
+      const encodings = this._context.encode(text);
+      for (let i = 0; i < encodings.length; i += 1) {
+        const token: number = +encodings[i];
+        tokens.push(token);
+      }
 
-
-    }
-
-    /**
-     * Generates an embedding for a single text.
-     * @param text - A string to generate an embedding for.
-     * @returns A Promise that resolves to an array of numbers representing the embedding.
-     */
-    async embedQuery(text: string): Promise<number[]> {
-      return new Promise(resolve => {
-          let tokens: number[] = [];
-
-          const tokensObj = this._context.encode(text);
-          for (const token in tokensObj) {
-			  const nToken: number = +token;
-              tokens.push(nToken);
-          }
-
-          resolve(tokens);
-      });
-   }
+      resolve(tokens);
+    });
+  }
 }

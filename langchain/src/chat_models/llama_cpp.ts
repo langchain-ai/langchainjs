@@ -5,7 +5,11 @@ import {
   type ConversationInteraction,
 } from "node-llama-cpp";
 import { SimpleChatModel, BaseChatModelParams } from "./base.js";
-import { LlamaBaseCppInputs, createLlamaModel, createLlamaContext, } from "../util/llama_cpp.js";
+import {
+  LlamaBaseCppInputs,
+  createLlamaModel,
+  createLlamaContext,
+} from "../util/llama_cpp.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import type { BaseMessage } from "../schema/index.js";
 
@@ -13,8 +17,9 @@ import type { BaseMessage } from "../schema/index.js";
  * Note that the modelPath is the only required parameter. For testing you
  * can set this in the environment variable `LLAMA_PATH`.
  */
-export interface LlamaCppInputs extends LlamaBaseCppInputs, BaseChatModelParams {
-}
+export interface LlamaCppInputs
+  extends LlamaBaseCppInputs,
+    BaseChatModelParams {}
 
 export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
   /** The maximum number of tokens the response should contain. */
@@ -56,12 +61,12 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
   constructor(inputs: LlamaCppInputs) {
     super(inputs);
-	this.maxTokens = inputs?.maxTokens;
-	this.temperature = inputs?.temperature;
-	this.topK = inputs?.topK;
-	this.topP = inputs?.topP;
-	this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
-	this._model = createLlamaModel(inputs);
+    this.maxTokens = inputs?.maxTokens;
+    this.temperature = inputs?.temperature;
+    this.topK = inputs?.topK;
+    this.topP = inputs?.topP;
+    this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
+    this._model = createLlamaModel(inputs);
     this._context = createLlamaContext(this._model, inputs);
     this._session = null;
   }
@@ -77,18 +82,18 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
   invocationParams() {
     return {
-		maxTokens: this.maxTokens,
-    	temperature: this.temperature,
-    	topK: this.topK,
-    	topP: this.topP,
-    	trimWhitespaceSuffix: this.trimWhitespaceSuffix,
+      maxTokens: this.maxTokens,
+      temperature: this.temperature,
+      topK: this.topK,
+      topP: this.topP,
+      trimWhitespaceSuffix: this.trimWhitespaceSuffix,
     };
   }
 
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-	// @ts-expect-error - TS6133: 'options' is declared but its value is never read.
+    // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
     options: this["ParsedCallOptions"]
   ): Promise<string> {
     let prompt = "";
@@ -104,13 +109,13 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     }
 
     try {
-	  const promptOptions = {
-  		maxTokens: this?.maxTokens,
-  		temperature: this?.temperature,
-  	  	topK: this?.topK,
-  	  	topP: this?.topP,
-  	  	trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
-  	  };
+      const promptOptions = {
+        maxTokens: this?.maxTokens,
+        temperature: this?.temperature,
+        topK: this?.topK,
+        topP: this?.topP,
+        trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
+      };
       // @ts-expect-error - TS2531: Object is possibly 'null'.
       const completion = await this._session.prompt(prompt, promptOptions);
       return completion;

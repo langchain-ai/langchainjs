@@ -1,4 +1,4 @@
-import { LlamaModel, LlamaContext, LlamaChatSession, } from "node-llama-cpp";
+import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -43,35 +43,37 @@ export interface LlamaBaseCppInputs {
   vocabOnly?: boolean;
 }
 
-
 export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
-	const options = {
-		gpuLayers: inputs?.gpuLayers,
-  		modelPath: inputs.modelPath,
-  		useMlock: inputs?.useMlock,
-  		useMmap: inputs?.useMmap,
-  		vocabOnly: inputs?.vocabOnly,
-	};
+  const options = {
+    gpuLayers: inputs?.gpuLayers,
+    modelPath: inputs.modelPath,
+    useMlock: inputs?.useMlock,
+    useMmap: inputs?.useMmap,
+    vocabOnly: inputs?.vocabOnly,
+  };
 
-	return new LlamaModel(options);
+  return new LlamaModel(options);
 }
 
-export function createLlamaContext(model: LlamaModel, inputs: LlamaBaseCppInputs): LlamaContext {
-	const options = {
-		batchSize: inputs?.batchSize,
-	  	contextSize: inputs?.contextSize,
-	  	embedding: inputs?.embedding,
-	  	f16Kv: inputs?.f16Kv,
-	  	logitsAll: inputs?.logitsAll,
-	  	model: model,
-	  	prependBos: inputs?.prependBos,
-	  	seed: inputs?.seed,
-	  	threads: inputs?.threads,
-	};
+export function createLlamaContext(
+  model: LlamaModel,
+  inputs: LlamaBaseCppInputs
+): LlamaContext {
+  const options = {
+    batchSize: inputs?.batchSize,
+    contextSize: inputs?.contextSize,
+    embedding: inputs?.embedding,
+    f16Kv: inputs?.f16Kv,
+    logitsAll: inputs?.logitsAll,
+    model,
+    prependBos: inputs?.prependBos,
+    seed: inputs?.seed,
+    threads: inputs?.threads,
+  };
 
-	return new LlamaContext(options);
+  return new LlamaContext(options);
 }
 
 export function createLlamaSession(context: LlamaContext): LlamaChatSession {
-	return new LlamaChatSession({context});
+  return new LlamaChatSession({ context });
 }
