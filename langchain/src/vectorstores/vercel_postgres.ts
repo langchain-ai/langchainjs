@@ -247,15 +247,16 @@ export class VercelPostgres extends VectorStore {
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
-    const _filter = filter || {};
+    const _filter: this["FilterType"] = filter ?? {};
     const whereClauses = [];
     const values = [embeddingString, k];
-    let paramCount = 2;
+    let paramCount = values.length;
 
     for (const [key, value] of Object.entries(_filter)) {
-      if (typeof value === "object" && Object.prototype.hasOwnProperty.call(value,"in")) {
+      if (typeof value === "object" && value !== null) {
+        const currentParamCount = paramCount;
         const placeholders = value.in
-          .map((_, index) => `$${paramCount + index + 1}`)
+          .map((_, index) => `$${currentParamCount + index + 1}`)
           .join(",");
         whereClauses.push(
           `${this.metadataColumnName}->>'${key}' IN (${placeholders})`

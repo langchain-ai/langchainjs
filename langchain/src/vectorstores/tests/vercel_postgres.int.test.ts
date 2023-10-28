@@ -16,18 +16,11 @@ const config = {
 
 describe("Test VercelPostgres store", () => {
   afterAll(async () => {
-  //   if (!vercelPostgresStore) {
-  //     vercelPostgresStore = await VercelPostgres.initialize(
-  //     new OpenAIEmbeddings(),
-  //     config
-  //   );
-  // }
-    await vercelPostgresStore.delete({ deleteAll: true });
-    await vercelPostgresStore.end();
+    await vercelPostgresStore?.delete({ deleteAll: true });
+    await vercelPostgresStore?.end();
   });
 
   test("Test embeddings creation", async () => {
-  
     vercelPostgresStore = await VercelPostgres.initialize(
       new OpenAIEmbeddings(),
       config
@@ -81,7 +74,6 @@ describe("Test VercelPostgres store", () => {
   });
 
   test("Test metadata filtering", async () => {
-
     vercelPostgresStore = await VercelPostgres.initialize(
       new OpenAIEmbeddings(),
       config
@@ -101,11 +93,15 @@ describe("Test VercelPostgres store", () => {
     };
     const docIrrelevant = {
       pageContent: "Hi, I am an irrelevant doc without metadata.",
-      metadata: {}
+      metadata: {},
     };
 
-
-    await vercelPostgresStore.addDocuments([docGreen, docBlue, docYellow, docIrrelevant]);
+    await vercelPostgresStore.addDocuments([
+      docGreen,
+      docBlue,
+      docYellow,
+      docIrrelevant,
+    ]);
 
     const results1 = await vercelPostgresStore.similaritySearch("color", 5, {
       color: "blue",
@@ -113,9 +109,13 @@ describe("Test VercelPostgres store", () => {
 
     expect(results1).toHaveLength(1);
 
-    const results2 = await vercelPostgresStore.similaritySearch("irrelevant query", 5, {
-      color: { in: ["blue", "yellow"] },
-    });
+    const results2 = await vercelPostgresStore.similaritySearch(
+      "irrelevant query",
+      5,
+      {
+        color: { in: ["blue", "yellow"] },
+      }
+    );
 
     expect(results2).toHaveLength(2);
 
