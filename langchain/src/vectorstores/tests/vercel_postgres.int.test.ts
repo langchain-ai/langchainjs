@@ -15,7 +15,7 @@ const config = {
 };
 
 describe("Test VercelPostgres store", () => {
-  afterAll(async () => {
+  afterEach(async () => {
     await vercelPostgresStore?.delete({ deleteAll: true });
     await vercelPostgresStore?.end();
   });
