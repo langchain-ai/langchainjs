@@ -3,7 +3,7 @@ import { BasePromptTemplate } from "../prompts/base.js";
 
 /**
  * Formats a document using a given prompt template.
- * 
+ *
  * @async
  * @param {Document} document - The document to format.
  * @param {BasePromptTemplate} prompt - The prompt template to use for formatting.
