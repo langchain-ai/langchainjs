@@ -1032,6 +1032,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
+    "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
@@ -1318,6 +1319,9 @@
     "web-auth-library": {
       "optional": true
     },
+    "ws": {
+      "optional": true
+    },
     "youtube-transcript": {
       "optional": true
     },
@@ -1345,7 +1349,6 @@
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
-    "ws": "^8.14.2",
     "yaml": "^2.2.1",
     "zod": "^3.22.3",
     "zod-to-json-schema": "^3.20.4"
