@@ -20,22 +20,24 @@ import { api } from "./convex/convex/_generated/api.js";
 // In `langchain/src/vectorstores/tests/convex` run `npx convex dev`
 // In `langchain` run `yarn test:single src/vectorstores/tests/convex.int.test.ts`
 
-const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
-const openAIApiKey = process.env.OPENAI_API_KEY as string;
+describe.skip("Convex Vectorstore", () => {
+  test("Convex ingest, similaritySearch", async () => {
+    const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
+    const openAIApiKey = process.env.OPENAI_API_KEY as string;
 
-test.skip("Convex ingest, similaritySearch", async () => {
-  await client.mutation(api.lib.reset);
+    await client.mutation(api.lib.reset);
 
-  await client.action(api.lib.ingest, {
-    openAIApiKey,
-    texts: ["Hello world", "Bye bye", "hello nice world"],
-    metadatas: [{ id: 2 }, { id: 1 }, { id: 3 }],
+    await client.action(api.lib.ingest, {
+      openAIApiKey,
+      texts: ["Hello world", "Bye bye", "hello nice world"],
+      metadatas: [{ id: 2 }, { id: 1 }, { id: 3 }],
+    });
+
+    const metadatas = await client.action(api.lib.similaritySearch, {
+      openAIApiKey,
+      query: "hello world",
+    });
+
+    expect(metadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
   });
-
-  const metadatas = await client.action(api.lib.similaritySearch, {
-    openAIApiKey,
-    query: "hello world",
-  });
-
-  expect(metadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
 });

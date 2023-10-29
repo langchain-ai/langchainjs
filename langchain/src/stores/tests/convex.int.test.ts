@@ -20,37 +20,39 @@ import { api } from "./convex/convex/_generated/api.js";
 // In `langchain/src/stores/tests/convex` run `npx convex dev`
 // In `langchain` run `yarn test:single src/stores/tests/convex.int.test.ts`
 
-const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
-const openAIApiKey = process.env.OPENAI_API_KEY as string;
+describe.skip("Convex stores", () => {
+  test("Convex persisted LLM chat", async () => {
+    const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
+    const openAIApiKey = process.env.OPENAI_API_KEY as string;
 
-test.skip("Convex persisted LLM chat", async () => {
-  await client.mutation(api.lib.reset);
+    await client.mutation(api.lib.reset);
 
-  const { response: result1 } = await client.action(api.lib.chat, {
-    openAIApiKey,
-    sessionId: "1",
-    input: "Hi! I'm Jim.",
+    const { response: result1 } = await client.action(api.lib.chat, {
+      openAIApiKey,
+      sessionId: "1",
+      input: "Hi! I'm Jim.",
+    });
+
+    console.log({ result1 });
+
+    const { response: result2 } = await client.action(api.lib.chat, {
+      openAIApiKey,
+      sessionId: "1",
+      input: "What did I just say my name was?",
+    });
+
+    console.log({ result2 });
+
+    expect(result2).toContain("Jim");
+
+    const { response: result3 } = await client.action(api.lib.chat, {
+      openAIApiKey,
+      sessionId: "2",
+      input: "What did I just say my name was?",
+    });
+
+    console.log({ result3 });
+
+    expect(result3).not.toContain("Jim");
   });
-
-  console.log({ result1 });
-
-  const { response: result2 } = await client.action(api.lib.chat, {
-    openAIApiKey,
-    sessionId: "1",
-    input: "What did I just say my name was?",
-  });
-
-  console.log({ result2 });
-
-  expect(result2).toContain("Jim");
-
-  const { response: result3 } = await client.action(api.lib.chat, {
-    openAIApiKey,
-    sessionId: "2",
-    input: "What did I just say my name was?",
-  });
-
-  console.log({ result3 });
-
-  expect(result3).not.toContain("Jim");
 });
