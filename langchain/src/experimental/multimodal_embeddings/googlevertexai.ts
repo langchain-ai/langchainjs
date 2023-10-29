@@ -3,6 +3,7 @@ import { Embeddings, EmbeddingsParams } from "../../embeddings/base.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
+  GoogleVertexAILLMPredictions,
   GoogleVertexAILLMResponse,
 } from "../../types/googlevertexai-types.js";
 import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
@@ -127,7 +128,9 @@ export class GoogleVertexAIMultimodalEmbeddings
   responseToEmbeddings(
     response: GoogleVertexAILLMResponse<GoogleVertexAIMultimodalEmbeddingsResults>
   ): MediaEmbeddings[] {
-    return response.data.predictions.map((r) => ({
+    return (
+      response?.data as GoogleVertexAILLMPredictions<GoogleVertexAIMultimodalEmbeddingsResults>
+    ).predictions.map((r) => ({
       text: r.textEmbedding,
       image: r.imageEmbedding,
     }));

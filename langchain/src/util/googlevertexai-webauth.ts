@@ -4,7 +4,40 @@ import {
   Credentials,
 } from "web-auth-library/google";
 import { getEnvironmentVariable } from "./env.js";
-import type { GoogleAbstractedClient } from "../types/googlevertexai-types.js";
+import type {
+  GoogleAbstractedClient,
+  GoogleAbstractedClientOps,
+} from "../types/googlevertexai-types.js";
+import { GoogleVertexAIStream } from "./googlevertexai-connection.js";
+
+class GoogleVertexAIResponseStream extends GoogleVertexAIStream {
+  decoder: TextDecoder;
+
+  constructor(body: ReadableStream | null) {
+    super();
+    this.decoder = new TextDecoder();
+    if (body) {
+      void this.run(body);
+    } else {
+      console.error("Unexpected empty body while streaming");
+    }
+  }
+
+  async run(body: ReadableStream) {
+    const reader = body.getReader();
+    let isDone = false;
+    while (!isDone) {
+      const { value, done } = await reader.read();
+      if (!done) {
+        const svalue = this.decoder.decode(value);
+        this.appendBuffer(svalue);
+      } else {
+        isDone = done;
+        this.closeBuffer();
+      }
+    }
+  }
+}
 
 export type WebGoogleAuthOptions = {
   credentials: string | Credentials;
@@ -37,7 +70,7 @@ export class WebGoogleAuth implements GoogleAbstractedClient {
     return credentials.project_id;
   }
 
-  async request(opts: { url?: string; method?: string; data?: unknown }) {
+  async request(opts: GoogleAbstractedClientOps) {
     let { accessToken } = this.options;
 
     if (accessToken === undefined) {
@@ -63,6 +96,7 @@ export class WebGoogleAuth implements GoogleAbstractedClient {
     const res = await fetch(opts.url, fetchOptions);
 
     if (!res.ok) {
+      console.error(res);
       const error = new Error(
         `Could not get access token for Vertex AI with status code: ${res.status}`
       );
@@ -72,7 +106,10 @@ export class WebGoogleAuth implements GoogleAbstractedClient {
     }
 
     return {
-      data: await res.json(),
+      data:
+        opts.responseType === "json"
+          ? await res.json()
+          : new GoogleVertexAIResponseStream(res.body),
       config: {},
       status: res.status,
       statusText: res.statusText,
