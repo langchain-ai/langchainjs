@@ -30,7 +30,7 @@ const combinePrompt = PromptTemplate.fromTemplate(
   "Combine these summaries:\n\n{context}"
 );
 
-// Define a partial function to allow function invocation with preset arguments
+// Define a util function to allow function invocation with preset arguments
 function partial<F extends (...args: any[]) => any>(
   fn: F,
   ...partialArgs: any[]
@@ -38,7 +38,7 @@ function partial<F extends (...args: any[]) => any>(
   return (...args: any[]): ReturnType<F> => fn(...partialArgs, ...args);
 }
 
-// Define a function to format a list of documents into a string
+// Wrap the `formatDocument` util so it can format a list of documents
 const formatDocs = async (documents: Document[]): Promise<string> => {
   const formattedDocs = await Promise.all(
     documents.map((doc) => formatDocument(doc, documentPrompt))
@@ -89,7 +89,6 @@ const collapse = async (
   let collapseCount = 1;
   while ((await getNumTokens(docs)) > tokenMax) {
     if (editableConfig) {
-      console.log("config is true");
       editableConfig.runName = `Collapse ${collapseCount}`;
     }
     const invoke = partial(collapseChain.invoke);
