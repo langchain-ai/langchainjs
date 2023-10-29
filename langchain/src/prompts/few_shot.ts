@@ -130,6 +130,10 @@ export class FewShotPromptTemplate
     return "few_shot";
   }
 
+  static lc_name() {
+    return "FewShotPromptTemplate";
+  }
+
   private async getExamples(
     inputVariables: InputValues
   ): Promise<InputValues[]> {
@@ -328,9 +332,21 @@ export class FewShotChatMessagePromptTemplate<
     return "few_shot_chat";
   }
 
+  static lc_name() {
+    return "FewShotChatMessagePromptTemplate";
+  }
+
   constructor(fields: FewShotChatMessagePromptTemplateInput) {
     super(fields);
-    Object.assign(this, fields);
+    
+    this.examples = fields.examples;
+    this.examplePrompt = fields.examplePrompt;
+    this.exampleSeparator = fields.exampleSeparator ?? "\n\n";
+    this.exampleSelector = fields.exampleSelector;
+    this.prefix = fields.prefix ?? "";
+    this.suffix = fields.suffix ?? "";
+    this.templateFormat = fields.templateFormat ?? "f-string";
+    this.validateTemplate = fields.validateTemplate ?? true;
 
     if (this.examples !== undefined && this.exampleSelector !== undefined) {
       throw new Error(
