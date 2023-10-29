@@ -510,7 +510,7 @@ export class ChatOpenAI<
       tokenUsage.promptTokens = promptTokenUsage;
       tokenUsage.completionTokens = completionTokenUsage;
       tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
-      return { generations, llmOutput: { tokenUsage } };
+      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     } else {
       const data = await this.completionWithRetry(
         {
@@ -650,6 +650,7 @@ export class ChatOpenAI<
             : 0;
         let count = textCount + tokensPerMessage + roleCount + nameCount;
 
+        // From: https://github.com/hmarr/openai-chat-tokens/blob/main/src/index.ts messageTokenEstimate
         const openAIMessage = messageToOpenAIMessage(message);
         if (openAIMessage.role === "function") {
           count -= 2;
