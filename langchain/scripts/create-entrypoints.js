@@ -326,6 +326,7 @@ const requiresOptionalDependency = [
   "tools/sql",
   "tools/webbrowser",
   "tools/google_calendar",
+  "tools/graphql",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
