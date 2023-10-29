@@ -117,7 +117,8 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
 
     if (tools[0] instanceof DynamicStructuredTool) {
       agent = StructuredChatAgent.fromLLMAndTools(llm, tools, {
-        humanMessageTemplate
+        humanMessageTemplate,
+        inputVariables: ["previous_steps", "current_step", "agent_scratchpad"]
       });
       return new ChainStepExecutor(
         AgentExecutor.fromAgentAndTools({
