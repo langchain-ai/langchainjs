@@ -1,11 +1,7 @@
 import { ChatIflytekXinghuo } from "langchain/chat_models/iflytek_xinghuo";
 import { HumanMessage } from "langchain/schema";
 
-const model = new ChatIflytekXinghuo({
-  iflytekAppid: "",
-  iflytekApiKey: "",
-  iflytekApiSecret: "",
-});
+const model = new ChatIflytekXinghuo();
 
 const messages1 = [new HumanMessage("Nice to meet you!")];
 
