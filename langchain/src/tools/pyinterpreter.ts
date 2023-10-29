@@ -15,9 +15,25 @@ export class PythonInterpreterTool extends Tool {
 
   pyodideInstance: PyodideInterface | null = null;
 
+  stdout = "";
+
+  stderr = "";
+
   constructor(options?: Parameters<typeof loadPyodide>[0]) {
     super(...arguments);
     loadPyodide(options).then((instance) => {
+      instance.setStderr({
+        batched: (text) => {
+          this.stderr += text;
+        },
+      });
+
+      instance.setStdout({
+        batched: (text) => {
+          this.stdout += text;
+        },
+      });
+
       this.pyodideInstance = instance;
     });
   }
@@ -36,22 +52,10 @@ export class PythonInterpreterTool extends Tool {
       throw new Error("Pyodide not loaded");
     }
 
-    let stdout = "";
-    let stderr = "";
-
-    this.pyodideInstance.setStderr({
-      batched: (text) => {
-        stderr += text;
-      },
-    });
-
-    this.pyodideInstance.setStdout({
-      batched: (text) => {
-        stdout += text;
-      },
-    });
+    this.stdout = "";
+    this.stderr = "";
 
     await this.pyodideInstance.runPythonAsync(script);
-    return JSON.stringify({ stdout, stderr });
+    return JSON.stringify({ stdout: this.stdout, stderr: this.stderr });
   }
 }
