@@ -34,12 +34,26 @@ const extractionFunctionSchema = {
 const model = new ChatOpenAI({ modelName: "gpt-4" });
 
 // Create a new runnable, bind the function to the model, and pipe the output through the parser
-const runnable = model.bind({
-  functions: [extractionFunctionSchema],
-  function_call: { name: "extractor" },
-}).pipe(parser);
+const runnable = model
+  .bind({
+    functions: [extractionFunctionSchema],
+    function_call: { name: "extractor" },
+  })
+  .pipe(parser);
 
 // Invoke the runnable with an input
-const result = await runnable.invoke([new HumanMessage("What a beautiful day!")]);
+const result = await runnable.invoke([
+  new HumanMessage("What a beautiful day!"),
+]);
 
 console.log({ result });
+
+/**
+{
+  result: {
+    tone: 'positive',
+    word_count: 4,
+    chat_response: "Indeed, it's a lovely day!"
+  }
+}
+ */
