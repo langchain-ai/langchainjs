@@ -1,5 +1,6 @@
 import CodeBlock from "@theme/CodeBlock";
 import InMemoryExample from "@examples/embeddings/cache_backed_in_memory.ts";
+import ConvexExample from "@examples/embeddings/convex/cache_backed_convex.ts";
 import RedisExample from "@examples/embeddings/cache_backed_redis.ts";
 
 # Caching
@@ -26,6 +27,46 @@ Here's a basic test example with an in memory cache. This type of cache is prima
 Do not use this cache if you need to actually store the embeddings for an extended period of time:
 
 <CodeBlock language="typescript">{InMemoryExample}</CodeBlock>
+
+## Usage, Convex
+
+Here's an example with a [Convex](https://convex.dev/) as a cache.
+
+### Create project
+
+Get a working [Convex](https://docs.convex.dev/) project set up, for example by using:
+
+```bash
+npm create convex@latest
+```
+
+### Add database accessors
+
+Add query and mutation helpers to `convex/langchain/db.ts`:
+
+```ts title="convex/langchain/db.ts"
+export * from "langchain/util/convex";
+```
+
+### Configure your schema
+
+Set up your schema (for indexing):
+
+```ts title="convex/schema.ts"
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  cache: defineTable({
+    key: v.string(),
+    value: v.any(),
+  }).index("byKey", ["key"]),
+});
+```
+
+### Example
+
+<CodeBlock language="typescript">{ConvexExample}</CodeBlock>
 
 ## Usage, Redis
 

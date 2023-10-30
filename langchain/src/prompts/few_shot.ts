@@ -130,6 +130,10 @@ export class FewShotPromptTemplate
     return "few_shot";
   }
 
+  static lc_name() {
+    return "FewShotPromptTemplate";
+  }
+
   private async getExamples(
     inputVariables: InputValues
   ): Promise<InputValues[]> {
@@ -251,6 +255,8 @@ export interface FewShotChatMessagePromptTemplateInput
 
   /**
    * String separator used to join the prefix, the examples, and suffix.
+   *
+   * @defaultValue `"\n\n"`
    */
   exampleSeparator?: string;
 
@@ -270,20 +276,31 @@ export interface FewShotChatMessagePromptTemplateInput
 
   /**
    * A prompt template string to put after the examples.
+   *
+   * @defaultValue `""`
    */
   suffix?: string;
 
   /**
    * The format of the prompt template. Options are: 'f-string'
+   *
+   * @defaultValue `f-string`
    */
   templateFormat?: TemplateFormat;
 
   /**
    * Whether or not to try validating the template on initialization.
+   *
+   * @defaultValue `true`
    */
   validateTemplate?: boolean;
 }
 
+/**
+ * Chat prompt template that contains few-shot examples.
+ * @augments BasePromptTemplateInput
+ * @augments FewShotChatMessagePromptTemplateInput
+ */
 export class FewShotChatMessagePromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
@@ -315,9 +332,21 @@ export class FewShotChatMessagePromptTemplate<
     return "few_shot_chat";
   }
 
+  static lc_name() {
+    return "FewShotChatMessagePromptTemplate";
+  }
+
   constructor(fields: FewShotChatMessagePromptTemplateInput) {
     super(fields);
-    Object.assign(this, fields);
+
+    this.examples = fields.examples;
+    this.examplePrompt = fields.examplePrompt;
+    this.exampleSeparator = fields.exampleSeparator ?? "\n\n";
+    this.exampleSelector = fields.exampleSelector;
+    this.prefix = fields.prefix ?? "";
+    this.suffix = fields.suffix ?? "";
+    this.templateFormat = fields.templateFormat ?? "f-string";
+    this.validateTemplate = fields.validateTemplate ?? true;
 
     if (this.examples !== undefined && this.exampleSelector !== undefined) {
       throw new Error(
@@ -371,6 +400,7 @@ export class FewShotChatMessagePromptTemplate<
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
     let examples = await this.getExamples(allValues);
+
     examples = examples.map((example) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result: Record<string, any> = {};
@@ -380,17 +410,19 @@ export class FewShotChatMessagePromptTemplate<
       return result;
     });
 
-    const messages = [];
+    const messages: BaseMessage[] = [];
     for (const example of examples) {
       const exampleMessages = await this.examplePrompt.formatMessages(example);
-      for (const message of exampleMessages) {
-        messages.push(message);
-      }
+      messages.push(...exampleMessages);
     }
-
     return messages;
   }
 
+  /**
+   * Formats the prompt with the given values.
+   * @param values The values to format the prompt with.
+   * @returns A promise that resolves to a string representing the formatted prompt.
+   */
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = await this.getExamples(allValues);
@@ -406,6 +438,11 @@ export class FewShotChatMessagePromptTemplate<
     return renderTemplate(template, this.templateFormat, allValues);
   }
 
+  /**
+   * Partially formats the prompt with the given values.
+   * @param values The values to partially format the prompt with.
+   * @returns A promise that resolves to an instance of `FewShotChatMessagePromptTemplate` with the given values partially formatted.
+   */
   async partial(
     values: PartialValues<PartialVariableName>
   ): Promise<FewShotChatMessagePromptTemplate<RunInput, PartialVariableName>> {
