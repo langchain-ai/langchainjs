@@ -1,5 +1,4 @@
 import { BaseLLMParams } from "../llms/base.js";
-import { GoogleVertexAIStream } from "../util/googlevertexai-connection.js";
 
 export interface GoogleConnectionParams<AuthOptions> {
   authOptions?: AuthOptions;
@@ -71,12 +70,6 @@ export interface GoogleVertexAILLMPredictions<
   PredictionType extends GoogleVertexAIBasePrediction
 > {
   predictions: PredictionType[];
-}
-
-export interface GoogleVertexAILLMResponse<
-  PredictionType extends GoogleVertexAIBasePrediction
-> extends GoogleResponse {
-  data: GoogleVertexAIStream | GoogleVertexAILLMPredictions<PredictionType>;
 }
 
 export type GoogleAbstractedClientOpsMethod = "GET" | "POST";

@@ -4,9 +4,11 @@ import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
   GoogleVertexAILLMPredictions,
-  GoogleVertexAILLMResponse,
 } from "../../types/googlevertexai-types.js";
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
+import {
+  GoogleVertexAILLMConnection,
+  GoogleVertexAILLMResponse,
+} from "../../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../../util/async_caller.js";
 
 /**

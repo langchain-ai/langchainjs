@@ -376,6 +376,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static convertPredictionChunk(output: any): ChatGenerationChunk {
     const generation: ChatGeneration = BaseChatGoogleVertexAI.convertPrediction(
       output.outputs[0]

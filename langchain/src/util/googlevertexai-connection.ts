@@ -4,7 +4,7 @@ import type {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
   GoogleVertexAIConnectionParams,
-  GoogleVertexAILLMResponse,
+  GoogleVertexAILLMPredictions,
   GoogleVertexAIModelParams,
   GoogleResponse,
   GoogleAbstractedClient,
@@ -53,6 +53,8 @@ export abstract class GoogleConnection<
     }
     if (this.streaming) {
       opts.responseType = "stream";
+    } else {
+      opts.responseType = "json";
     }
 
     try {
@@ -114,6 +116,7 @@ export function complexValue(value: unknown): unknown {
       };
     } else {
       const ret: Record<string, unknown> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const v: Record<string, any> = value;
       Object.keys(v).forEach((key) => {
         ret[key] = complexValue(v[key]);
@@ -244,6 +247,12 @@ export class GoogleVertexAILLMConnection<
     const response = await this._request(data, options);
     return response;
   }
+}
+
+export interface GoogleVertexAILLMResponse<
+  PredictionType extends GoogleVertexAIBasePrediction
+> extends GoogleResponse {
+  data: GoogleVertexAIStream | GoogleVertexAILLMPredictions<PredictionType>;
 }
 
 export class GoogleVertexAIStream {
@@ -397,7 +406,7 @@ export class GoogleVertexAIStream {
       this._chunkPending = new Promise((resolve) => {
         this._chunkResolution = resolve;
       });
-      return await this._chunkPending;
+      return this._chunkPending;
     }
   }
 

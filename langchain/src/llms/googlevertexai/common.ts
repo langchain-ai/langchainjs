@@ -3,12 +3,12 @@ import { Generation, GenerationChunk, LLMResult } from "../../schema/index.js";
 import {
   GoogleVertexAILLMConnection,
   GoogleVertexAIStream,
+  GoogleVertexAILLMResponse,
 } from "../../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
   GoogleVertexAILLMPredictions,
-  GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
 } from "../../types/googlevertexai-types.js";
 import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
