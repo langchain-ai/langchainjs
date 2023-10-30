@@ -409,7 +409,7 @@ export class FewShotChatMessagePromptTemplate<
       });
       return result;
     });
-    
+
     const messages: BaseMessage[] = [];
     for (const example of examples) {
       const exampleMessages = await this.examplePrompt.formatMessages(example);

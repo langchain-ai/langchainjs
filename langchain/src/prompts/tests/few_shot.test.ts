@@ -150,7 +150,7 @@ describe("FewShotChatMessagePromptTemplate", () => {
       new AIMessage("ai-foo"),
       new HumanMessage("human-bar"),
       new AIMessage("ai-foo2"),
-      new HumanMessage("human-bar2")
+      new HumanMessage("human-bar2"),
     ]);
   });
 
