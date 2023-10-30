@@ -338,7 +338,7 @@ export class FewShotChatMessagePromptTemplate<
 
   constructor(fields: FewShotChatMessagePromptTemplateInput) {
     super(fields);
-    
+
     this.examples = fields.examples;
     this.examplePrompt = fields.examplePrompt;
     this.exampleSeparator = fields.exampleSeparator ?? "\n\n";
@@ -400,6 +400,7 @@ export class FewShotChatMessagePromptTemplate<
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
     let examples = await this.getExamples(allValues);
+
     examples = examples.map((example) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result: Record<string, any> = {};
@@ -408,15 +409,12 @@ export class FewShotChatMessagePromptTemplate<
       });
       return result;
     });
-
-    const messages = [];
+    
+    const messages: BaseMessage[] = [];
     for (const example of examples) {
       const exampleMessages = await this.examplePrompt.formatMessages(example);
-      for (const message of exampleMessages) {
-        messages.push(message);
-      }
+      messages.push(...exampleMessages);
     }
-
     return messages;
   }
 

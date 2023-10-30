@@ -5,6 +5,7 @@ import {
 } from "../few_shot.js";
 import { ChatPromptTemplate, LengthBasedExampleSelector } from "../index.js";
 import { PromptTemplate } from "../prompt.js";
+import { AIMessage, HumanMessage } from "../../schema/index.js";
 
 describe("FewShotPromptTemplate", () => {
   test("Test using partial", async () => {
@@ -124,6 +125,35 @@ An example about bar
 });
 
 describe("FewShotChatMessagePromptTemplate", () => {
+  test("Format messages", async () => {
+    const examplePrompt = ChatPromptTemplate.fromMessages([
+      ["ai", "{ai_input_var}"],
+      ["human", "{human_input_var}"],
+    ]);
+    const examples = [
+      {
+        ai_input_var: "ai-foo",
+        human_input_var: "human-bar",
+      },
+      {
+        ai_input_var: "ai-foo2",
+        human_input_var: "human-bar2",
+      },
+    ];
+    const prompt = new FewShotChatMessagePromptTemplate({
+      examplePrompt,
+      inputVariables: ["ai_input_var", "human_input_var"],
+      examples,
+    });
+    const messages = await prompt.formatMessages({});
+    expect(messages).toEqual([
+      new AIMessage("ai-foo"),
+      new HumanMessage("human-bar"),
+      new AIMessage("ai-foo2"),
+      new HumanMessage("human-bar2")
+    ]);
+  });
+
   test("Test using partial", async () => {
     const examplePrompt = ChatPromptTemplate.fromMessages([
       ["ai", "{foo}{bar}"],
