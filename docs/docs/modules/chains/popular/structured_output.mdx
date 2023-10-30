@@ -51,6 +51,10 @@ We're going to create two, one which returns an array of foods with their name, 
 The second simply returns an object containing the final response.
 
 ```typescript
+import { z } from "zod";
+```
+
+```typescript
 const foodZodSchema = z.object({
   foods: z
     .array(
@@ -71,6 +75,10 @@ const finalResponseZodSchema = z.object({
 Next we'll construct the prompt. We have two "messages", one from the AI with a simple explanation on when to use the functions, and an input variable for the chat history. The second only contains the users question.
 
 ```typescript
+import { ChatPromptTemplate } from "langchain/prompts";
+```
+
+```typescript
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "ai",
@@ -85,6 +93,11 @@ Chat history: {history}`,
 Then, define the LLM model and bind the function arguments to it. By using `.bind()` we're adding the functions to the model for every call.
 
 We also must wrap our `zod` schemas with `zodToJsonSchema` to appropriately format them for OpenAI.
+
+```typescript
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+```
 
 ```typescript
 const model = new ChatOpenAI({
@@ -106,6 +119,11 @@ const model = new ChatOpenAI({
 ```
 
 Next we can define our memory using the `BufferMemory` class, and the output parser for structured data: `JsonOutputFunctionsParser`.
+
+```typescript
+import { JsonOutputFunctionsParser } from "langchain/output_parsers";
+import { BufferMemory } from "langchain/memory";
+```
 
 ```typescript
 const outputParser = new JsonOutputFunctionsParser();
@@ -153,6 +171,10 @@ const executeQuery = async (input: { input: string; history: string }) => {
 ```
 
 Once we've defined our custom function, we can pass it to a `RunnableSequence` which handles the input from the user, and retrieving the memory from the store.
+
+```typescript
+import { RunnableSequence } from "langchain/schema/runnable";
+```
 
 ```typescript
 const runnableChain = RunnableSequence.from([
