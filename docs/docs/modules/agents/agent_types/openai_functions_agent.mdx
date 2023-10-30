@@ -37,6 +37,7 @@ Using memory can help give the agent better context on past interactions, which 
 Adding memory only requires a few changes to the above example.
 
 First, import and instantiate your memory class, in this example we'll use `BufferMemory`.
+
 ```typescript
 import { BufferMemory } from "langchain/memory";
 ```
@@ -120,8 +121,9 @@ console.log(result2);
 ```
 
 You may also inspect the LangSmith traces for both agent calls here:
-* [Question 1](https://smith.langchain.com/public/12f4022d-f02f-4b00-9122-8493afe5507d/r)
-* [Question 2](https://smith.langchain.com/public/2052d0d1-5640-44bc-9024-d443d46db2a4/r)
+
+- [Question 1](https://smith.langchain.com/public/12f4022d-f02f-4b00-9122-8493afe5507d/r)
+- [Question 2](https://smith.langchain.com/public/2052d0d1-5640-44bc-9024-d443d46db2a4/r)
 
 # With `initializeAgentExecutorWithOptions`
 
