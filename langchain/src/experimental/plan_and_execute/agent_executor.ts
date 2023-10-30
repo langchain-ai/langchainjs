@@ -84,7 +84,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     tools,
   }: {
     llm: BaseLanguageModel;
-    tools?: Tool[];
+    tools: Tool[];
   }) {
     const plannerLlmChain = new LLMChain({
       llm,
