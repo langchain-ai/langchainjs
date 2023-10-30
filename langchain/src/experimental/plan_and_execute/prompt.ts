@@ -24,14 +24,9 @@ You may extract and combine relevant data from your previous steps when respondi
  * @param tools the tools available to the `planner`
  * @returns
  */
-export const getPlannerChatPrompt = (tools?: Tool[] | DynamicStructuredTool[]) => {
-  const toolStrings = tools
-    ? tools.map((tool) => `${tool.name}: ${tool.description}`).join("\n")
-    : "";
-
-  const toolInstruction = tools
-    ? `You have a set of tools at your disposal to help you with this task: ${toolStrings}. You must consider these tools when coming up with your plan.`
-    : `Your steps should be general, and should not require a specific method to solve a step.`;
+export const getPlannerChatPrompt = (tools: Tool[] | DynamicStructuredTool[]) => {
+  
+    const toolStrings = tools.map((tool) => `${tool.name}: ${tool.description}`).join("\n")
 
     PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE = [
     `Let's first understand the problem and devise a plan to solve the problem.`,
@@ -39,7 +34,7 @@ export const getPlannerChatPrompt = (tools?: Tool[] | DynamicStructuredTool[]) =
     `followed by a numbered list of steps.`,
     `Please make the plan the minimum number of steps required`,
     `to answer the query or complete the task accurately and precisely.`,
-    `${toolInstruction}`,
+    `You have a set of tools at your disposal to help you with this task: ${toolStrings}. You must consider these tools when coming up with your plan.`,
     `If the task is a question, the final step in the plan must be the following: "Given the above steps taken,`,
     `please respond to the original query."`,
     `At the end of your plan, say "<END_OF_PLAN>"`,
