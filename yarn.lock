@@ -7135,14 +7135,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "@getzep/zep-js@npm:0.8.0"
+"@getzep/zep-js@npm:^0.9.0":
+  version: 0.9.0
+  resolution: "@getzep/zep-js@npm:0.9.0"
   dependencies:
     "@supercharge/promise-pool": ^3.1.0
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: fcc47ddf96fa52222b2beedd500ad25c42c93933a5167ca2887bfc965cc39c51519bbfac14883115418d9596249234ff49f00b5aeb94f0bf001c2ca4d41d63f0
+  checksum: 4378b7fb1bbff5b9705f2c81b5cef1811fd2fbf1c3606c085cfc2f898f18f1a685d87f7f149e1c579a3895340fa85b42e0ad954fd11de3de3a97224e0e291c82
   languageName: node
   linkType: hard
 
@@ -17141,7 +17141,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.8.0
+    "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.44.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -21585,7 +21585,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.8.0
+    "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.44.1
     "@gomomento/sdk-core": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
@@ -21741,7 +21741,7 @@ __metadata:
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.8.0
+    "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.44.1
     "@gomomento/sdk-core": ^1.44.1
     "@gomomento/sdk-web": ^1.44.1
@@ -22030,6 +22030,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
+    "@getzep/zep-js": ^0.9.0
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3
