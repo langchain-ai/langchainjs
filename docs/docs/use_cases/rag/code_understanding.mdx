@@ -4,9 +4,9 @@
 
 Source code analysis is one of the most popular LLM applications (e.g., [GitHub Co-Pilot](https://github.com/features/copilot), [Code Interpreter](https://chat.openai.com/auth/login?next=%2F%3Fmodel%3Dgpt-4-code-interpreter), [Codium](https://www.codium.ai/), and [Codeium](https://codeium.com/about)) for use-cases such as:
 
-* Q&A over the code base to understand how it works
-* Using LLMs for suggesting refactors or improvements
-* Using LLMs for documenting the code
+- Q&A over the code base to understand how it works
+- Using LLMs for suggesting refactors or improvements
+- Using LLMs for documenting the code
 
 ![RAG over code](/img/rag_code_diagram.png)
 
@@ -16,9 +16,9 @@ The pipeline for QA over code follows the [steps we do for document question ans
 
 In particular, we can employ a [splitting strategy](/docs/modules/data_connection/document_transformers/text_splitters/code_splitter) that does a few things:
 
-* Keeps each top-level function and class in the code is loaded into separate documents.
-* Puts remaining into a separate document.
-* Retains metadata about where each split comes from
+- Keeps each top-level function and class in the code is loaded into separate documents.
+- Puts remaining into a separate document.
+- Retains metadata about where each split comes from
 
 ## Quickstart
 
@@ -81,8 +81,8 @@ The most common approach is to embed the contents of each document then store th
 
 When setting up the vector store retriever:
 
-* We test max marginal relevance for retrieval
-* And 5 documents returned
+- We test max marginal relevance for retrieval
+- And 5 documents returned
 
 In this example we'll be using Supabase, however you can pick any vector store with MMR search you'd like from [our large list of integrations](/docs/modules/data_connection/vectorstores/integrations/).
 
@@ -289,7 +289,7 @@ await memory.saveContext(
 );
 ```
 
-```typescript
+````typescript
 console.log(result);
 /**
 {
@@ -318,4 +318,4 @@ console.log(result);
     'In this example, the agent is initialized with an OpenAI model with a temperature of 0, and two tools: SerpAPI and Calculator. This particular agent is set to use the "zero-shot-react-description" type.'
 }
  */
-```
+````
