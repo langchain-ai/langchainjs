@@ -88,9 +88,16 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     llm: BaseLanguageModel;
     tools: Tool[] | DynamicStructuredTool[];
   }) {
+  static async getDefaultPlanner({
+    llm,
+    tools,
+  }: {
+    llm: BaseLanguageModel;
+    tools: Tool[];
+  }) {
     const plannerLlmChain = new LLMChain({
       llm,
-      prompt: getPlannerChatPrompt(tools),
+      prompt: await getPlannerChatPrompt(tools),
     });
     return new LLMPlanner(plannerLlmChain, new PlanOutputParser());
   }
@@ -149,7 +156,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
    * @param humanMessageTemplate The template for human messages. If not provided, a default template is used.
    * @returns A new PlanAndExecuteAgentExecutor instance.
    */
-  static fromLLMAndTools({
+  static async fromLLMAndTools({
     llm,
     tools,
     humanMessageTemplate,
@@ -159,7 +166,10 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     humanMessageTemplate?: string;
   } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {
     const executor = new PlanAndExecuteAgentExecutor({
-      planner: PlanAndExecuteAgentExecutor.getDefaultPlanner({ llm, tools }),
+      planner: await PlanAndExecuteAgentExecutor.getDefaultPlanner({
+        llm,
+        tools,
+      }),
       stepExecutor: PlanAndExecuteAgentExecutor.getDefaultStepExecutor({
         llm,
         tools,

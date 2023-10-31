@@ -33,7 +33,15 @@ export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOpti
     this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller,
-      client
+      client,
+      false
+    );
+
+    this.streamedConnection = new GoogleVertexAILLMConnection(
+      { ...fields, ...this },
+      this.caller,
+      client,
+      true
     );
   }
 }

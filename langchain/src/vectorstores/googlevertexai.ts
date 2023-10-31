@@ -13,6 +13,7 @@ import {
 import {
   GoogleVertexAIConnectionParams,
   GoogleResponse,
+  GoogleAbstractedClientOpsMethod,
 } from "../types/googlevertexai-types.js";
 import { Docstore } from "../schema/index.js";
 
@@ -73,7 +74,7 @@ class IndexEndpointConnection extends GoogleVertexAIConnection<
     return url;
   }
 
-  buildMethod() {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "GET";
   }
 
@@ -124,7 +125,7 @@ class RemoveDatapointConnection extends GoogleVertexAIConnection<
     return url;
   }
 
-  buildMethod(): string {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "POST";
   }
 
@@ -188,7 +189,7 @@ class UpsertDatapointConnection extends GoogleVertexAIConnection<
     return url;
   }
 
-  buildMethod(): string {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "POST";
   }
 
@@ -270,7 +271,7 @@ class FindNeighborsConnection
     return url;
   }
 
-  buildMethod(): string {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "POST";
   }
 
