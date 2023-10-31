@@ -75,7 +75,9 @@ const collapse = async (
       editableConfig.runName = `Collapse ${collapseCount}`;
     }
     const splitDocs = splitListOfDocs(docs, getNumTokens, tokenMax);
-    docs = await Promise.all(splitDocs.map((doc) => collapseDocs(doc, collapseChain.invoke)));
+    docs = await Promise.all(
+      splitDocs.map((doc) => collapseDocs(doc, collapseChain.invoke))
+    );
     collapseCount += 1;
   }
   return docs;
@@ -95,9 +97,14 @@ const mapReduceChain = RunnableSequence.from([
     RunnableMap.from({ doc: new RunnablePassthrough(), content: mapChain }),
     RunnableLambda.from(
       (input) =>
-        new Document({ pageContent: input.content, metadata: input.doc.metadata })
+        new Document({
+          pageContent: input.content,
+          metadata: input.doc.metadata,
+        })
     ),
-  ]).withConfig({ runName: "Summarize (return doc)" }).map(),
+  ])
+    .withConfig({ runName: "Summarize (return doc)" })
+    .map(),
   collapse,
   reduceChain,
 ]).withConfig({ runName: "Map reduce" });
