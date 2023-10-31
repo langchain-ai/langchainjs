@@ -14,4 +14,13 @@ Here's how it looks in practice:
 
 ## With LCEL
 
+To show how this can be implemented in Expression Language, we break the map-reduce chain down into three steps:
+
+1. Summarization of each document
+  * This step summarizes each relevant document so all relevant content can be passed through to the LLM.
+2. Collapsing
+  * Combines the summarized documents into a single document.
+3. Reducing
+  * This step passes the collapsed document through an LLM to get the final output.
+
 <CodeBlock language="typescript">{LcelExample}</CodeBlock>
