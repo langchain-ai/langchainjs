@@ -38,12 +38,14 @@ You may extract and combine relevant data from your previous steps when respondi
  * @returns
  */
 export const getPlannerChatPrompt = async (tools: Tool[]) => {
-  const toolStrings = tools.map((tool) => `${tool.name}: ${tool.description}`).join("\n")
+  const toolStrings = tools
+    .map((tool) => `${tool.name}: ${tool.description}`)
+    .join("\n");
 
   return /* #__PURE__ */ ChatPromptTemplate.fromMessages([
-    await SystemMessagePromptTemplate.fromTemplate(
-        PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE
-    ).format(toolStrings),
+    SystemMessagePromptTemplate.fromTemplate(
+      PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE
+    ),
     HumanMessagePromptTemplate.fromTemplate(`{input}`),
-  ]);
+  ]).partial({ toolStrings });
 };
