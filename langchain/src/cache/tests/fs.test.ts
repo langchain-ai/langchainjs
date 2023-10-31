@@ -5,12 +5,12 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import * as os from "node:os";
-import { FSCache } from "../fs.js";
+import { LocalFileCache } from "../file_system.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let tmpDir: string;
 
-describe("Test RedisCache", () => {
+describe("Test LocalFileCache", () => {
   beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "langchain-"));
   });
@@ -20,7 +20,7 @@ describe("Test RedisCache", () => {
   });
 
   test("FSCache with an LLM", async () => {
-    const cache = await FSCache.create(tmpDir);
+    const cache = await LocalFileCache.create(tmpDir);
 
     const model = new OpenAI({ cache });
     const response1 = await model.invoke("What is something random?");
@@ -29,7 +29,7 @@ describe("Test RedisCache", () => {
   });
 
   test("RedisCache with a chat model", async () => {
-    const cache = await FSCache.create(tmpDir);
+    const cache = await LocalFileCache.create(tmpDir);
 
     const model = new ChatOpenAI({ cache });
     const response1 = await model.invoke("What is something random?");

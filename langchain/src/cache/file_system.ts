@@ -9,7 +9,7 @@ const DEFAULT_CACHE_DIR = path.join(process.cwd(), ".langchain-cache");
  * A cache that uses the local filesystem as the backing store.
  * This is useful for local development and testing. But it is not recommended for production use.
  */
-export class FSCache extends BaseCache {
+export class LocalFileCache extends BaseCache {
   private cacheDir: string;
 
   private constructor(cacheDir: string) {
@@ -24,8 +24,8 @@ export class FSCache extends BaseCache {
    */
   public static async create(
     cacheDir: string = DEFAULT_CACHE_DIR
-  ): Promise<FSCache> {
-    const cache = new FSCache(cacheDir);
+  ): Promise<LocalFileCache> {
+    const cache = new LocalFileCache(cacheDir);
     await fs.mkdir(cacheDir, { recursive: true });
     return cache;
   }
