@@ -13,77 +13,59 @@ import { formatDocumentsAsString } from "langchain/util/document";
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 
 // Define the path to the repo to preform RAG on.
-// const REPO_PATH = "/tmp/test_repo";
+const REPO_PATH = "/tmp/test_repo";
 
-const initStore = async (repoPath?: string): Promise<SupabaseVectorStore> => {
-  const privateKey = process.env.SUPABASE_PRIVATE_KEY;
-  if (!privateKey) throw new Error(`Expected env var SUPABASE_PRIVATE_KEY`);
+const privateKey = process.env.SUPABASE_PRIVATE_KEY;
+if (!privateKey) throw new Error(`Expected env var SUPABASE_PRIVATE_KEY`);
 
-  const url = process.env.SUPABASE_URL;
-  if (!url) throw new Error(`Expected env var SUPABASE_URL`);
+const url = process.env.SUPABASE_URL;
+if (!url) throw new Error(`Expected env var SUPABASE_URL`);
 
-  const client = createClient(url, privateKey);
+const client = createClient(url, privateKey);
 
-  if (repoPath) {
-    // Load the file
-    const loader = new DirectoryLoader(repoPath, {
-      ".ts": (path) => new TextLoader(path),
-    });
-    const docs = await loader.load();
+// Load the file
+const loader = new DirectoryLoader(REPO_PATH, {
+  ".ts": (path) => new TextLoader(path),
+});
+const docs = await loader.load();
 
-    // Split the documents
-    const typescriptSplitter = RecursiveCharacterTextSplitter.fromLanguage(
-      "js",
-      {
-        chunkSize: 2000,
-        chunkOverlap: 200,
-      }
-    );
+// Split the documents
+const javascriptSplitter = RecursiveCharacterTextSplitter.fromLanguage("js", {
+  chunkSize: 2000,
+  chunkOverlap: 200,
+});
+const texts = await javascriptSplitter.splitDocuments(docs);
+console.log("Loaded ", texts.length, " documents.");
 
-    const texts = await typescriptSplitter.splitDocuments(docs);
-
-    console.log("Loaded ", texts.length, " documents.");
-
-    /** Load texts into store */
-    const vectorStore = await SupabaseVectorStore.fromDocuments(
-      texts,
-      new OpenAIEmbeddings(),
-      {
-        client,
-        tableName: "documents",
-        queryName: "match_documents",
-      }
-    );
-    return vectorStore;
+/**
+ * Load texts into store
+ *
+ * @link https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/supabase
+ * for documentation on setting up a Supabase vector store.
+ */
+const vectorStore = await SupabaseVectorStore.fromDocuments(
+  texts,
+  new OpenAIEmbeddings(),
+  {
+    client,
+    tableName: "documents",
+    queryName: "match_documents",
   }
-
-  const vectorStore = await SupabaseVectorStore.fromExistingIndex(
-    new OpenAIEmbeddings(),
-    {
-      client,
-      tableName: "documents",
-      queryName: "match_documents",
-    }
-  );
-  return vectorStore;
-};
-
-const vectorStore = await initStore();
+);
 console.log("Loaded vector store");
 /** Instantiate the store as a retriever. */
 const retriever = vectorStore.asRetriever({
-  searchType: "mmr",
+  searchType: "mmr", // Use max marginal relevance search
   searchKwargs: { fetchK: 5 },
 });
 
 const model = new ChatOpenAI({ modelName: "gpt-4" });
 const memory = new ConversationSummaryMemory({
   llm: model,
-  returnMessages: true,
-  memoryKey: "chat_history",
+  returnMessages: true, // Return stored messages as instances of `BaseMessage`
+  memoryKey: "chat_history", // This must match up with our prompt template input variable.
 });
 
-const combineDocsPromptString = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\nQuestion: {question}\nHelpful Answer:`;
 const question_generator_template = ChatPromptTemplate.fromMessages([
   [
     "ai",
@@ -96,9 +78,11 @@ Standalone question:`,
   ],
 ]);
 
-// Combine docs chain
 const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
-  ["ai", combineDocsPromptString],
+  [
+    "ai",
+    `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\nQuestion: {question}\nHelpful Answer:`,
+  ],
   new MessagesPlaceholder("chat_history"),
 ]);
 const combineDocumentsChain = RunnableSequence.from([

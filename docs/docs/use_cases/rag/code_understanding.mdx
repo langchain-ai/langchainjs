@@ -1,0 +1,321 @@
+# RAG over code
+
+## Use case
+
+Source code analysis is one of the most popular LLM applications (e.g., [GitHub Co-Pilot](https://github.com/features/copilot), [Code Interpreter](https://chat.openai.com/auth/login?next=%2F%3Fmodel%3Dgpt-4-code-interpreter), [Codium](https://www.codium.ai/), and [Codeium](https://codeium.com/about)) for use-cases such as:
+
+* Q&A over the code base to understand how it works
+* Using LLMs for suggesting refactors or improvements
+* Using LLMs for documenting the code
+
+![RAG over code](/img/rag_code_diagram.png)
+
+## Overview
+
+The pipeline for QA over code follows the [steps we do for document question answering](http://localhost:3000/docs/use_cases/question_answering/), with some differences:
+
+In particular, we can employ a [splitting strategy](/docs/modules/data_connection/document_transformers/text_splitters/code_splitter) that does a few things:
+
+* Keeps each top-level function and class in the code is loaded into separate documents.
+* Puts remaining into a separate document.
+* Retains metadata about where each split comes from
+
+## Quickstart
+
+```bash
+yarn add @supabase/supabase-js
+
+# Set env var OPENAI_API_KEY or load from a .env file
+```
+
+### Loading
+
+We'll upload all JavaScript/TypeScript files using the `DirectoryLoader` and `TextLoader` classes.
+
+The following script iterates over the files in the LangChain repository and loads every .ts file (a.k.a. documents):
+
+```typescript
+import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
+import { TextLoader } from "langchain/document_loaders/fs/text";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+```
+
+```typescript
+// Define the path to the repo to preform RAG on.
+const REPO_PATH = "/tmp/test_repo";
+```
+
+We load the code by passing the directory path to `DirectoryLoader`, which will load all files with `.ts` extensions.
+These files are then passed to a `TextLoader` which will return the contents of the file as a string.
+
+```typescript
+const loader = new DirectoryLoader(REPO_PATH, {
+  ".ts": (path) => new TextLoader(path),
+});
+const docs = await loader.load();
+```
+
+Next, we can create a `RecursiveCharacterTextSplitter` to split our code.
+
+We'll call the static `fromLanguage` method to create a splitter that knows how to split JavaScript/TypeScript code.
+
+```typescript
+const javascriptSplitter = RecursiveCharacterTextSplitter.fromLanguage("js", {
+  chunkSize: 2000,
+  chunkOverlap: 200,
+});
+const texts = await javascriptSplitter.splitDocuments(docs);
+
+console.log("Loaded ", texts.length, " documents.");
+```
+
+```txt
+Loaded 3342 documents.
+```
+
+### RetrievalQA
+
+We need to store the documents in a way we can semantically search for their content.
+
+The most common approach is to embed the contents of each document then store the embedding and document in a vector store.
+
+When setting up the vector store retriever:
+
+* We test max marginal relevance for retrieval
+* And 5 documents returned
+
+In this example we'll be using Supabase, however you can pick any vector store with MMR search you'd like from [our large list of integrations](/docs/modules/data_connection/vectorstores/integrations/).
+
+```typescript
+import { createClient } from "@supabase/supabase-js";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+```
+
+```typescript
+const privateKey = process.env.SUPABASE_PRIVATE_KEY;
+if (!privateKey) throw new Error(`Expected env var SUPABASE_PRIVATE_KEY`);
+
+const url = process.env.SUPABASE_URL;
+if (!url) throw new Error(`Expected env var SUPABASE_URL`);
+
+const client = createClient(url, privateKey);
+```
+
+Once we've initialized our client we can pass it, along with some more options to the `.fromDocuments` method on `SupabaseVectorStore`.
+
+For more instructions on how to set up Supabase, see the [Supabase docs](/docs/modules/data_connection/vectorstores/integrations/supabase).
+
+```typescript
+const vectorStore = await SupabaseVectorStore.fromDocuments(
+  texts,
+  new OpenAIEmbeddings(),
+  {
+    client,
+    tableName: "documents",
+    queryName: "match_documents",
+  }
+);
+```
+
+```typescript
+const retriever = vectorStore.asRetriever({
+  searchType: "mmr", // Use max marginal relevance search
+  searchKwargs: { fetchK: 5 },
+});
+```
+
+### Chat
+
+We'll setup our model and memory system just as we'd do for any other chatbot application.
+
+```typescript
+import { ChatOpenAI } from "langchain/chat_models/openai";
+```
+
+```typescript
+const model = new ChatOpenAI({ modelName: "gpt-4" });
+```
+
+We're going to use `ConversationSummaryMemory` as our memory chain. Under the hood this is calling out to an LLM when saving memory to summarize each conversation.
+
+```typescript
+import { ConversationSummaryMemory } from "langchain/memory";
+```
+
+```typescript
+const memory = new ConversationSummaryMemory({
+  llm: model,
+  returnMessages: true, // Return stored messages as instances of `BaseMessage`
+  memoryKey: "chat_history", // This must match up with our prompt template input variable.
+});
+```
+
+Now we can construct our main sequence of chains. We're going to be building `ConversationalRetrievalChain` using Expression Language.
+
+```typescript
+import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
+import { RunnableBranch, RunnableSequence } from "langchain/schema/runnable";
+import { formatDocumentsAsString } from "langchain/util/document";
+import { BaseMessage } from "langchain/schema";
+import { StringOutputParser } from "langchain/schema/output_parser";
+```
+
+First we construct the combine documents chain. This chain takes in the question, chat history (from memory) and context (relevant documents). It then passes all three into the prompt which answers the users question.
+
+```typescript
+const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
+  [
+    "ai",
+    `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\nQuestion: {question}\nHelpful Answer:`,
+  ],
+  new MessagesPlaceholder("chat_history"),
+]);
+```
+
+```typescript
+const combineDocumentsChain = RunnableSequence.from([
+  {
+    question: (i: { question: string }) => i.question,
+    chat_history: async () => {
+      console.log("calling combine docs chain");
+      const { chat_history } = await memory.loadMemoryVariables({});
+      return chat_history;
+    },
+    context: async (i: { question: string }) => {
+      const relevantDocs = await retriever.getRelevantDocuments(i.question);
+      return formatDocumentsAsString(relevantDocs);
+    },
+  },
+  combineDocumentsPrompt,
+  model,
+  new StringOutputParser(),
+]);
+```
+
+Then, we define our question generator chain. This is used to regenerate the users question based on the chat history. Regenerating the question has been shown to lead to better outputs by LLMs since it can be updated to include past context.
+
+```typescript
+const question_generator_template = ChatPromptTemplate.fromMessages([
+  [
+    "ai",
+    `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
+
+Chat History:
+{chat_history}
+Follow Up Input: {question}
+Standalone question:`,
+  ],
+]);
+```
+
+```typescript
+const questionGeneratorChain = RunnableSequence.from([
+  {
+    question: (i: { question: string }) => i.question,
+    chat_history: async () => {
+      const { chat_history } = await memory.loadMemoryVariables({});
+      return chat_history;
+    },
+  },
+  question_generator_template,
+  model,
+  new StringOutputParser(),
+]);
+```
+
+In order to use the chain we defined above we create a new chain: `questionGeneratorAndCombineDocumentsChain`.
+
+This chain is called whenever there is chat history so it can first rephrase the question, then pass it through to `combineDocumentsChain` for an answer.
+
+```typescript
+const questionGeneratorAndCombineDocumentsChain = RunnableSequence.from([
+  {
+    question: (i: { question: string }) => {
+      console.log("calling qa chain");
+      return questionGeneratorChain.invoke(i);
+    },
+  },
+  combineDocumentsChain,
+]);
+```
+
+Finally, we'll patch it all together using a [`RunnableBranch`](/docs/expression_language/how_to/routing#using-a-runnablebranch).
+
+The `RunnableBranch` allows us to pass in context, evaluate conditions, and invoke the first chain whose condition evaluated to true.
+
+In our case we'll be checking if there is chat history. If no history is present, we do not need to rephrase a users question (since there's no chat history to rephrase with) and can directly call the `combineDocumentsChain`.
+
+If there is chat history, we call the `questionGeneratorAndCombineDocumentsChain` which will rephrase the question and then pass it to `combineDocumentsChain`.
+
+Since we're using a `RunnableBranch` we must also pass a fallback chain. This chain is called if none of the conditions evaluate to true.
+
+```typescript
+const conversationalQaChain = RunnableBranch.from([
+  [
+    (i: { chat_history: BaseMessage[]; question: string }) =>
+      i.chat_history.length > 1,
+    questionGeneratorAndCombineDocumentsChain,
+  ],
+  [
+    (i: { chat_history: BaseMessage[]; question: string }) =>
+      i.chat_history.length <= 1,
+    combineDocumentsChain,
+  ],
+  combineDocumentsChain,
+]);
+```
+
+The last step is to invoke our chain!
+
+```typescript
+const question = "How can I initialize a ReAct agent?";
+const result = await conversationalQaChain.invoke({
+  question,
+  chat_history: (await memory.loadMemoryVariables({})).chat_history,
+});
+```
+
+This is also where we'd save the LLM response to memory for future context.
+
+```typescript
+await memory.saveContext(
+  {
+    input: question,
+  },
+  {
+    output: result,
+  }
+);
+```
+
+```typescript
+console.log(result);
+/**
+{
+  text: 'You can initialize a ReAct agent by using the `initializeAgentExecutorWithOptions` function from the "langchain/agents" module. This function requires three arguments: a list of tools, a model, and an options object that specifies the agent type:\n' +
+    '\n' +
+    '```javascript\n' +
+    'import { initializeAgentExecutorWithOptions } from "langchain/agents";\n' +
+    'import { OpenAI } from "langchain/llms/openai";\n' +
+    'import { SerpAPI } from "langchain/tools";\n' +
+    'import { Calculator } from "langchain/tools/calculator";\n' +
+    '\n' +
+    'const model = new OpenAI({ temperature: 0 });\n' +
+    'const tools = [\n' +
+    '  new SerpAPI(process.env.SERPAPI_API_KEY, {\n' +
+    '    location: "Austin,Texas,United States",\n' +
+    '    hl: "en",\n' +
+    '    gl: "us",\n' +
+    '  }),\n' +
+    '  new Calculator(),\n' +
+    '];\n' +
+    'const executor = await initializeAgentExecutorWithOptions(tools, model, {\n' +
+    '  agentType: "zero-shot-react-description",\n' +
+    '});\n' +
+    '```\n' +
+    '\n' +
+    'In this example, the agent is initialized with an OpenAI model with a temperature of 0, and two tools: SerpAPI and Calculator. This particular agent is set to use the "zero-shot-react-description" type.'
+}
+ */
+```
