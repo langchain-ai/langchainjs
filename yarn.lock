@@ -7353,10 +7353,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/inference@npm:^1.5.1":
-  version: 1.5.1
-  resolution: "@huggingface/inference@npm:1.5.1"
-  checksum: 34fa2e2194d57527f2e60693740f5f99bbd45c009e6b49c457416befad6b087e8bc35ed812710c99e86507d51388a21676b141c7a7c4a4a3b135a03ec7f1b794
+"@huggingface/inference@npm:^2.6.4":
+  version: 2.6.4
+  resolution: "@huggingface/inference@npm:2.6.4"
+  checksum: 7d48960a62d0621d4c3f1edd183aa5d7829d297110b5720c78291aac17ed58b6a9af8eaf8a3f2cbb9dabfda3cf48931f59cf491cdedefd624f90d93fa3927981
   languageName: node
   linkType: hard
 
@@ -21590,7 +21590,7 @@ __metadata:
     "@gomomento/sdk-core": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
-    "@huggingface/inference": ^1.5.1
+    "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
@@ -21747,7 +21747,7 @@ __metadata:
     "@gomomento/sdk-web": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
-    "@huggingface/inference": ^1.5.1
+    "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": "*"
