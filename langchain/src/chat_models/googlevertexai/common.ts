@@ -1,19 +1,26 @@
 import { BaseChatModel } from "../base.js";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   ChatGeneration,
+  ChatGenerationChunk,
   ChatMessage,
   ChatResult,
   LLMResult,
 } from "../../schema/index.js";
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
+import {
+  GoogleVertexAILLMConnection,
+  GoogleVertexAIStream,
+} from "../../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
+  GoogleVertexAILLMPredictions,
   GoogleVertexAIModelParams,
 } from "../../types/googlevertexai-types.js";
 import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/index.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
@@ -192,6 +199,13 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     AuthOptions
   >;
 
+  streamedConnection: GoogleVertexAILLMConnection<
+    BaseLanguageModelCallOptions,
+    GoogleVertexAIChatInstance,
+    GoogleVertexAIChatPrediction,
+    AuthOptions
+  >;
+
   get lc_aliases(): Record<string, string> {
     return {
       model: "model_name",
@@ -214,19 +228,46 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     return [];
   }
 
-  // TODO: Add streaming support
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    // Make the call as a streaming request
+    const instance: GoogleVertexAIChatInstance = this.createInstance(_messages);
+    const parameters = this.formatParameters();
+    const result = await this.streamedConnection.request(
+      [instance],
+      parameters,
+      _options
+    );
+
+    // Get the streaming parser of the response
+    const stream = result.data as GoogleVertexAIStream;
+
+    // Loop until the end of the stream
+    // During the loop, yield each time we get a chunk from the streaming parser
+    // that is either available or added to the queue
+    while (!stream.streamDone) {
+      const output = await stream.nextChunk();
+      const chunk =
+        output !== null
+          ? BaseChatGoogleVertexAI.convertPredictionChunk(output)
+          : new ChatGenerationChunk({
+              text: "",
+              message: new AIMessageChunk(""),
+              generationInfo: { finishReason: "stop" },
+            });
+      yield chunk;
+    }
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     const instance: GoogleVertexAIChatInstance = this.createInstance(messages);
-
-    const parameters: GoogleVertexAIModelParams = {
-      temperature: this.temperature,
-      topK: this.topK,
-      topP: this.topP,
-      maxOutputTokens: this.maxOutputTokens,
-    };
+    const parameters: GoogleVertexAIModelParams = this.formatParameters();
 
     const result = await this.connection.request(
       [instance],
@@ -235,7 +276,9 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     );
 
     const generations =
-      result?.data?.predictions?.map((prediction) =>
+      (
+        result?.data as GoogleVertexAILLMPredictions<GoogleVertexAIChatPrediction>
+      )?.predictions?.map((prediction) =>
         BaseChatGoogleVertexAI.convertPrediction(prediction)
       ) ?? [];
     return {
@@ -307,6 +350,15 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     return instance;
   }
 
+  formatParameters(): GoogleVertexAIModelParams {
+    return {
+      temperature: this.temperature,
+      topK: this.topK,
+      topP: this.topP,
+      maxOutputTokens: this.maxOutputTokens,
+    };
+  }
+
   /**
    * Converts a prediction from the Google Vertex AI chat model to a chat
    * generation.
@@ -322,5 +374,17 @@ export class BaseChatGoogleVertexAI<AuthOptions>
       message: new AIMessage(message.content),
       generationInfo: prediction,
     };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static convertPredictionChunk(output: any): ChatGenerationChunk {
+    const generation: ChatGeneration = BaseChatGoogleVertexAI.convertPrediction(
+      output.outputs[0]
+    );
+    return new ChatGenerationChunk({
+      text: generation.text,
+      message: new AIMessageChunk(generation.message),
+      generationInfo: generation.generationInfo,
+    });
   }
 }
