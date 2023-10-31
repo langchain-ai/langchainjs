@@ -93,8 +93,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-    // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
-    options: this["ParsedCallOptions"]
+    _options: this["ParsedCallOptions"]
   ): Promise<string> {
     let prompt = "";
 
