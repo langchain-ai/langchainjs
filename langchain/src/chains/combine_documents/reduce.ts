@@ -11,7 +11,7 @@ import { Document } from "../../document.js";
  *
  * @throws {Error} - Throws an error if a single document has more tokens than the tokenMax.
  */
-export function _splitListOfDocs(
+export function splitListOfDocs(
   docs: Document[],
   lengthFunc: (...args: any[]) => any,
   tokenMax: number
@@ -49,7 +49,7 @@ export function _splitListOfDocs(
  *
  * @throws {Error} - Throws an error if the combineDocumentFunc does not return a promise or if the promise does not resolve to a string.
  */
-export async function _collapseDocs(
+export async function collapseDocs(
   docs: Document[],
   combineDocumentFunc: (docs: Document[]) => Promise<string>
 ): Promise<Document> {

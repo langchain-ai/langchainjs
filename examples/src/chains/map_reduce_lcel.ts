@@ -1,7 +1,7 @@
 import { BaseCallbackConfig } from "langchain/callbacks";
 import {
-  _collapseDocs,
-  _splitListOfDocs,
+  collapseDocs,
+  splitListOfDocs,
 } from "langchain/chains/combine_documents/reduce";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Document } from "langchain/document";
@@ -30,14 +30,6 @@ const combinePrompt = PromptTemplate.fromTemplate(
   "Combine these summaries:\n\n{context}"
 );
 
-// Define a util function to allow function invocation with preset arguments
-function partial<F extends (...args: any[]) => any>(
-  fn: F,
-  ...partialArgs: any[]
-): (...args: any[]) => ReturnType<F> {
-  return (...args: any[]): ReturnType<F> => fn(...partialArgs, ...args);
-}
-
 // Wrap the `formatDocument` util so it can format a list of documents
 const formatDocs = async (documents: Document[]): Promise<string> => {
   const formattedDocs = await Promise.all(
@@ -61,18 +53,9 @@ const mapChain = RunnableSequence.from([
   outputParser,
 ]);
 
-// Define a wrapper chain to keep the original metadata while summarizing the document
-const mapAsDocChain = RunnableSequence.from([
-  RunnableMap.from({ doc: new RunnablePassthrough(), content: mapChain }),
-  RunnableLambda.from(
-    (input) =>
-      new Document({ pageContent: input.content, metadata: input.doc.metadata })
-  ),
-]).withConfig({ runName: "Summarize (return doc)" });
-
 // Define the collapse chain to format, collapse, and parse a list of documents
 const collapseChain = RunnableSequence.from([
-  { context: async (i: { documents: Document[] }) => formatDocs(i.documents) },
+  { context: async (documents: Document[]) => formatDocs(documents) },
   collapsePrompt,
   model,
   outputParser,
@@ -91,11 +74,8 @@ const collapse = async (
     if (editableConfig) {
       editableConfig.runName = `Collapse ${collapseCount}`;
     }
-    const invoke = partial(collapseChain.invoke);
-    const splitDocs = _splitListOfDocs(docs, getNumTokens, tokenMax);
-    docs = await Promise.all(
-      splitDocs.map((doc) => _collapseDocs(doc, invoke))
-    );
+    const splitDocs = splitListOfDocs(docs, getNumTokens, tokenMax);
+    docs = await Promise.all(splitDocs.map((doc) => collapseDocs(doc, collapseChain.invoke)));
     collapseCount += 1;
   }
   return docs;
@@ -111,7 +91,13 @@ const reduceChain = RunnableSequence.from([
 
 // Define the final map-reduce chain
 const mapReduceChain = RunnableSequence.from([
-  mapAsDocChain.map(),
+  RunnableSequence.from([
+    RunnableMap.from({ doc: new RunnablePassthrough(), content: mapChain }),
+    RunnableLambda.from(
+      (input) =>
+        new Document({ pageContent: input.content, metadata: input.doc.metadata })
+    ),
+  ]).withConfig({ runName: "Summarize (return doc)" }).map(),
   collapse,
   reduceChain,
 ]).withConfig({ runName: "Map reduce" });
