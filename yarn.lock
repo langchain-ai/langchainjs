@@ -22030,7 +22030,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
-    "@getzep/zep-js": ^0.9.0
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3
