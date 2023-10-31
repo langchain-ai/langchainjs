@@ -22,9 +22,9 @@ export class HuggingFaceInferenceEmbeddings
   implements HuggingFaceInferenceEmbeddingsParams
 {
   apiKey?: string;
-  
+
   model: string;
-  
+
   endpointUrl?: string;
 
   client: HfInference | HfInferenceEndpoint;
@@ -36,6 +36,7 @@ export class HuggingFaceInferenceEmbeddings
       fields?.model ?? "sentence-transformers/distilbert-base-nli-mean-tokens";
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
+    this.endpointUrl = fields?.endpointUrl;
     this.client = this.endpointUrl
       ? new HfInference(this.apiKey).endpoint(this.endpointUrl)
       : new HfInference(this.apiKey);
