@@ -510,7 +510,7 @@ export class ChatOpenAI<
       tokenUsage.promptTokens = promptTokenUsage;
       tokenUsage.completionTokens = completionTokenUsage;
       tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
-      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
+      return { generations, llmOutput: { tokenUsage: tokenUsage } };
     } else {
       const data = await this.completionWithRetry(
         {

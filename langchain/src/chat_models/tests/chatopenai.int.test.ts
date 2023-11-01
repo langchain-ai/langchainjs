@@ -652,8 +652,8 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
       {
         handleLLMEnd: async (output) => {
           streamingTokenUsed =
-            output.llmOutput?.estimatedTokenUsage?.totalTokens;
-          console.log("streaming usage", output.llmOutput?.estimatedTokenUsage);
+            output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("streaming usage", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
@@ -728,8 +728,8 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
       {
         handleLLMEnd: async (output) => {
           streamingTokenUsed =
-            output.llmOutput?.estimatedTokenUsage?.totalTokens;
-          console.log("streaming usage", output.llmOutput?.estimatedTokenUsage);
+            output.llmOutput?.tokenUsage?.totalTokens;
+          console.log("streaming usage", output.llmOutput?.tokenUsage);
         },
         handleLLMError: async (err) => {
           console.error(err);
