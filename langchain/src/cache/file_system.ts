@@ -3,8 +3,6 @@ import { getCacheKey } from "./base.js";
 import path from "path";
 import fs from "node:fs/promises";
 
-const DEFAULT_CACHE_DIR = path.join(process.cwd(), ".langchain-cache");
-
 /**
  * A cache that uses the local filesystem as the backing store.
  * This is useful for local development and testing. But it is not recommended for production use.
@@ -22,12 +20,14 @@ export class LocalFileCache extends BaseCache {
    * It ensures that the cache directory exists before returning.
    * @param cacheDir
    */
-  public static async create(
-    cacheDir: string = DEFAULT_CACHE_DIR
-  ): Promise<LocalFileCache> {
-    const cache = new LocalFileCache(cacheDir);
-    await fs.mkdir(cacheDir, { recursive: true });
-    return cache;
+  public static async create(cacheDir?: string): Promise<LocalFileCache> {
+    if (!cacheDir) {
+      cacheDir = await fs.mkdtemp("langchain-cache-");
+    } else {
+      // ensure the cache directory exists
+      await fs.mkdir(cacheDir, { recursive: true });
+    }
+    return new LocalFileCache(cacheDir);
   }
 
   /**
