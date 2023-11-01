@@ -1,10 +1,11 @@
 import { test, expect } from "@jest/globals";
 
-import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import * as os from "node:os";
+
+import { OpenAI } from "../../llms/openai.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
 import { LocalFileCache } from "../file_system.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
