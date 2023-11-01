@@ -178,7 +178,6 @@ const combineDocumentsChain = RunnableSequence.from([
   {
     question: (i: { question: string }) => i.question,
     chat_history: async () => {
-      console.log("calling combine docs chain");
       const { chat_history } = await memory.loadMemoryVariables({});
       return chat_history;
     },
@@ -193,7 +192,7 @@ const combineDocumentsChain = RunnableSequence.from([
 ]);
 ```
 
-Then, we define our question generator chain. This is used to regenerate the users question based on the chat history. Regenerating the question has been shown to lead to better outputs by LLMs since it can be updated to include past context.
+Then, we define our question generator chain. This is used to regenerate the users question based on the chat history. Using LLMs to regenerate questions has been shown to lead to better outputs by LLMs since it can be updated to include past context.
 
 ```typescript
 const question_generator_template = ChatPromptTemplate.fromMessages([
@@ -233,7 +232,6 @@ This chain is called whenever there is chat history so it can first rephrase the
 const questionGeneratorAndCombineDocumentsChain = RunnableSequence.from([
   {
     question: (i: { question: string }) => {
-      console.log("calling qa chain");
       return questionGeneratorChain.invoke(i);
     },
   },
@@ -338,10 +336,10 @@ const result2 = await conversationalQaChain.invoke({
   question: question2,
   chat_history: (await memory.loadMemoryVariables({})).chat_history,
 });
-console.log(result2);
 ```
 
 ```typescript
+console.log(result2);
 /**
 You can import and utilize the Wikipedia and File System tools from LangChain in your codebase by following these steps,
 
