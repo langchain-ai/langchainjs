@@ -80,9 +80,8 @@ export class Neo4jGraph {
       });
       return toObjects(result.records);
     } catch (error: any) {
-      // Catch missing APOC plugins
-      // eslint-disable-next-line
       if (
+        // eslint-disable-next-line
         error instanceof Neo4jError &&
         error.code === "Neo.ClientError.Procedure.ProcedureNotFound"
       ) {
