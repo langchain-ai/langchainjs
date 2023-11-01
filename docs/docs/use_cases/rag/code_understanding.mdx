@@ -137,15 +137,14 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 const model = new ChatOpenAI({ modelName: "gpt-4" });
 ```
 
-We're going to use `ConversationSummaryMemory` as our memory chain. Under the hood this is calling out to an LLM when saving memory to summarize each conversation.
+We're going to use `BufferMemory` as our memory chain. All this will do is take in inputs/outputs from the LLM and store them in memory.
 
 ```typescript
-import { ConversationSummaryMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory";
 ```
 
 ```typescript
-const memory = new ConversationSummaryMemory({
-  llm: model,
+const memory = new BufferMemory({
   returnMessages: true, // Return stored messages as instances of `BaseMessage`
   memoryKey: "chat_history", // This must match up with our prompt template input variable.
 });
@@ -167,9 +166,10 @@ First we construct the combine documents chain. This chain takes in the question
 const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
   [
     "ai",
-    `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\nQuestion: {question}\nHelpful Answer:`,
+    `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\nQuestion: {question}\n`,
   ],
   new MessagesPlaceholder("chat_history"),
+  ["ai", "Helpful answer:"],
 ]);
 ```
 
@@ -199,11 +199,12 @@ Then, we define our question generator chain. This is used to regenerate the use
 const question_generator_template = ChatPromptTemplate.fromMessages([
   [
     "ai",
-    `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
-
-Chat History:
-{chat_history}
-Follow Up Input: {question}
+    `Given the following conversation about a codebase and a follow up question, rephrase the follow up question to be a standalone question.`,
+  ],
+  new MessagesPlaceholder("chat_history"),
+  [
+    "ai",
+    `Follow Up Input: {question}
 Standalone question:`,
   ],
 ]);
@@ -289,33 +290,100 @@ await memory.saveContext(
 );
 ```
 
-````typescript
+```typescript
 console.log(result);
 /**
-{
-  text: 'You can initialize a ReAct agent by using the `initializeAgentExecutorWithOptions` function from the "langchain/agents" module. This function requires three arguments: a list of tools, a model, and an options object that specifies the agent type:\n' +
-    '\n' +
-    '```javascript\n' +
-    'import { initializeAgentExecutorWithOptions } from "langchain/agents";\n' +
-    'import { OpenAI } from "langchain/llms/openai";\n' +
-    'import { SerpAPI } from "langchain/tools";\n' +
-    'import { Calculator } from "langchain/tools/calculator";\n' +
-    '\n' +
-    'const model = new OpenAI({ temperature: 0 });\n' +
-    'const tools = [\n' +
-    '  new SerpAPI(process.env.SERPAPI_API_KEY, {\n' +
-    '    location: "Austin,Texas,United States",\n' +
-    '    hl: "en",\n' +
-    '    gl: "us",\n' +
-    '  }),\n' +
-    '  new Calculator(),\n' +
-    '];\n' +
-    'const executor = await initializeAgentExecutorWithOptions(tools, model, {\n' +
-    '  agentType: "zero-shot-react-description",\n' +
-    '});\n' +
-    '```\n' +
-    '\n' +
-    'In this example, the agent is initialized with an OpenAI model with a temperature of 0, and two tools: SerpAPI and Calculator. This particular agent is set to use the "zero-shot-react-description" type.'
-}
+You can initialize a ReAct agent using the "initializeAgentExecutorWithOptions" function provided by the "langchain/agents" package.
+
+Here's an example code snippet:
+
+\```javascript
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { OpenAI } from "langchain/llms/openai";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
+
+const model = new OpenAI({ temperature: 0 });
+
+const tools = [
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+  new Calculator(),
+];
+
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
+\```
+
+That's it. Now you can use the "executor" instance to make requests through your agent.
  */
-````
+```
+
+See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/d99bc61e-65a3-49d2-b797-0bd0138be0a2/r)
+
+### Next steps
+
+Since we're saving our inputs/outputs in memory we can ask followups to the LLM.
+
+Keep in mind, we're not implementing an agent with tools so it must derive answers from the relevant documents in our store. Because of this it may return answers with hallucinated imports, classes or more. 
+
+```typescript
+const question2 =
+  "How can I import and use the Wikipedia and File System tools from LangChain instead?";
+const result2 = await conversationalQaChain.invoke({
+  question: question2,
+  chat_history: (await memory.loadMemoryVariables({})).chat_history,
+});
+console.log(result2);
+```
+
+```typescript
+/**
+You can import and utilize the Wikipedia and File System tools from LangChain in your codebase by following these steps,
+
+1. Import the necessary tools:
+
+\```javascript
+import { ReadFileTool, WriteFileTool, NodeFileStore } from "langchain/tools";
+import { WikipediaQueryRun } from "langchain/tools";
+\```
+
+2. Initialize the file store:
+
+\```javascript
+const store = new NodeFileStore();
+\```
+
+3. Initialize your tools:
+
+\```javascript
+const tools = [
+  new ReadFileTool({ store }),
+  new WriteFileTool({ store }),
+];
+\```
+
+4. Initialize the Wikipedia query tool:
+
+\```javascript
+const wikipediaTool = new WikipediaQueryRun({
+  topKResults: 3,
+  maxDocContentLength: 4000,
+});
+\```
+
+5. You can now use these tools for file read/write operations and to run Wikipedia queries. For example, to run a query on Wikipedia:
+
+\```javascript
+const result = await wikipediaTool.call("Query term");
+console.log(result);
+\```
+ */
+```
+
+See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/21372f1a-edd5-4751-8788-a5da5f8a0ffb/r)
+
