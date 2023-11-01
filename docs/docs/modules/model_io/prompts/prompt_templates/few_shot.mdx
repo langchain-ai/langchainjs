@@ -98,7 +98,7 @@ const response = await prompt.pipe(model).invoke({
   few_shot_examples: formattedPrompt,
 });
 
-console.log(response);  
+console.log(response);
 ```
 
 ```txt
@@ -159,7 +159,6 @@ console.log(formattedPrompt);
 ## With Non Chat Models
 
 LangChain also provides a class for few shot prompt formatting for non chat models: `FewShotPromptTemplate`. The API is largely the same, but the output is formatted (chat messages vs strings)
-
 
 ### Partial Formatting
 
