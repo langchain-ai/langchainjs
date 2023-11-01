@@ -23,7 +23,7 @@ import {
   BaseStringPromptTemplate,
   TypedPromptInputValues,
 } from "./base.js";
-import { PromptTemplate, ParamsFromFString } from "./prompt.js";
+import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
