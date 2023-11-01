@@ -55,12 +55,33 @@ export type ConvexChatMessageHistoryInput<
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   readonly sessionId: DocumentByName<DataModel, TableName>[SessionIdFieldName];
+  /**
+   * Defaults to "messages"
+   */
   readonly table?: TableName;
+  /**
+   * Defaults to "bySessionId"
+   */
   readonly index?: IndexName;
+  /**
+   * Defaults to "sessionId"
+   */
   readonly sessionIdField?: SessionIdFieldName;
+  /**
+   * Defaults to "message"
+   */
   readonly messageTextFieldName?: MessageTextFieldName;
+  /**
+   * Defaults to `internal.langchain.db.insert`
+   */
   readonly insert?: InsertMutation;
+  /**
+   * Defaults to `internal.langchain.db.lookup`
+   */
   readonly lookup?: LookupQuery;
+  /**
+   * Defaults to `internal.langchain.db.deleteMany`
+   */
   readonly deleteMany?: DeleteManyMutation;
 };
 
