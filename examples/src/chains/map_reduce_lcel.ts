@@ -9,8 +9,6 @@ import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { formatDocument } from "langchain/schema/prompt_template";
 import {
-  RunnableLambda,
-  RunnableMap,
   RunnablePassthrough,
   RunnableSequence,
 } from "langchain/schema/runnable";
@@ -94,14 +92,12 @@ const reduceChain = RunnableSequence.from([
 // Define the final map-reduce chain
 const mapReduceChain = RunnableSequence.from([
   RunnableSequence.from([
-    RunnableMap.from({ doc: new RunnablePassthrough(), content: mapChain }),
-    RunnableLambda.from(
-      (input) =>
-        new Document({
-          pageContent: input.content,
-          metadata: input.doc.metadata,
-        })
-    ),
+    { doc: new RunnablePassthrough(), content: mapChain },
+    (input) =>
+      new Document({
+        pageContent: input.content,
+        metadata: input.doc.metadata,
+      }),
   ])
     .withConfig({ runName: "Summarize (return doc)" })
     .map(),
@@ -152,5 +148,5 @@ const result = await mapReduceChain.invoke(docs);
 console.log(result);
 /**
  * View the full sequence on LangSmith
- * @link https://smith.langchain.com/public/067ca077-19e9-4fa8-a3a4-9e99b7c8374f/r
+ * @link https://smith.langchain.com/public/f1c3b4ca-0861-4802-b1a0-10dcf70e7a89/r
  */
