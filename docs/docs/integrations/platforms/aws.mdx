@@ -14,7 +14,7 @@ import { Bedrock } from "langchain/llms/bedrock";
 
 ### SageMaker Endpoint
 
->[Amazon SageMaker](https://aws.amazon.com/sagemaker/) is a system that can build, train, and deploy machine learning (ML) models with fully managed infrastructure, tools, and workflows.
+> [Amazon SageMaker](https://aws.amazon.com/sagemaker/) is a system that can build, train, and deploy machine learning (ML) models with fully managed infrastructure, tools, and workflows.
 
 We use `SageMaker` to host our model and expose it as the `SageMaker Endpoint`.
 
@@ -32,6 +32,7 @@ import {
 ### Bedrock
 
 See a [usage example](/docs/integrations/text_embedding/bedrock).
+
 ```typescript
 import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 ```
@@ -39,9 +40,9 @@ import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 ## Document loaders
 
 ### AWS S3 Directory and File
->[Amazon Simple Storage Service (Amazon S3)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html) is an object storage service.
->[AWS S3 Directory](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html)
->[AWS S3 Buckets](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html)
+
+> [Amazon Simple Storage Service (Amazon S3)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html) is an object storage service.
+> [AWS S3 Directory](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html) >[AWS S3 Buckets](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html)
 
 See a [usage example for S3DirectoryLoader](/docs/integrations/document_loaders/aws_s3_directory).
 
@@ -59,10 +60,10 @@ import { S3Loader } from "langchain/document_loaders/web/s3";
 
 ### AWS DynamoDB
 
->[AWS DynamoDB](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/dynamodb/index.html) 
+> [AWS DynamoDB](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/dynamodb/index.html)
 > is a fully managed `NoSQL` database service that provides fast and predictable performance with seamless scalability.
- 
-We have to configure the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html). 
+
+We have to configure the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 
 We need to install the `boto3` library.
 

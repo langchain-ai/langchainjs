@@ -45,7 +45,6 @@ For example, putting words in Claude's mouth in a prompt like this:
 
 This will return a completion like this `A gummy bear!` instead of a whole new assistant message with a different random bear joke.
 
-
 ## `ChatAnthropic`
 
 `ChatAnthropic` is a subclass of LangChain's `ChatModel`, meaning it works best with `ChatPromptTemplate`.
@@ -63,8 +62,8 @@ Here is an example below of doing that:
 import { ChatPromptTemplate } from "langchain/prompts";
 
 const prompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a helpful chatbot"],
-    ["human", "Tell me a joke about {topic}"],
+  ["system", "You are a helpful chatbot"],
+  ["human", "Tell me a joke about {topic}"],
 ]);
 ```
 
@@ -85,7 +84,7 @@ model.convertPrompt(promptValue);
 This produces the following formatted string:
 
 ```typescript
-'\n\nHuman: <admin>You are a helpful chatbot</admin>\n\nHuman: Tell me a joke about bears\n\nAssistant:'
+"\n\nHuman: <admin>You are a helpful chatbot</admin>\n\nHuman: Tell me a joke about bears\n\nAssistant:";
 ```
 
 We can see that under the hood LangChain is representing `SystemMessage`s with `Human: <admin>...</admin>`,
@@ -105,7 +104,7 @@ model.convertPrompt(promptValue);
 This produces the following formatted string:
 
 ```typescript
-'\n\nHuman: Tell me a joke about bears\n\nAssistant:'
+"\n\nHuman: Tell me a joke about bears\n\nAssistant:";
 ```
 
 We can see that it automatically adds the Human and Assistant tags.
@@ -121,7 +120,7 @@ We can import it with:
 
 ```typescript
 import { Anthropic } from "langchain/llms";
-const model = new Anthropic({})
+const model = new Anthropic({});
 ```
 
 This model class is designed to work with normal `PromptTemplate`'s. An example of that is below:
@@ -142,7 +141,7 @@ model.convertPrompt(promptValue);
 This outputs the following
 
 ```typescript
-'\n\nHuman: Tell me a joke about bears\n\nAssistant: Sure, here you go:\n'
+"\n\nHuman: Tell me a joke about bears\n\nAssistant: Sure, here you go:\n";
 ```
 
 Notice that it adds the Human tag at the start of the string, and then finishes it with `\n\nAssistant: Sure, here you go:`.
@@ -151,15 +150,17 @@ The extra `Sure, here you go` was added on purpose by the Anthropic team.
 What happens if we have those symbols in the prompt directly?
 
 ```typescript
-const prompt = PromptTemplate.fromTemplate("Human: Tell me a joke about {topic}");
+const prompt = PromptTemplate.fromTemplate(
+  "Human: Tell me a joke about {topic}"
+);
 const promptValue = prompt.formatPrompt({ topic: "bears" });
-model.convertPrompt(promptValue)
+model.convertPrompt(promptValue);
 ```
 
 This outputs:
 
 ```typescript
-'\n\nHuman: Tell me a joke about bears'
+"\n\nHuman: Tell me a joke about bears";
 ```
 
 We can see that we detect that the user is trying to use the special tokens, and so we don't do any formatting.
