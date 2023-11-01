@@ -58,9 +58,13 @@ export class Neo4jGraph {
       await graph.refreshSchema();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      throw new Error(`Could not use APOC procedures.
-      Please ensure the APOC plugin is installed in Neo4j and that
-      'apoc.meta.data()' is allowed in Neo4j configuration`);
+      const message = [
+        "Could not use APOC procedures.",
+        "Please ensure the APOC plugin is installed in Neo4j and that",
+        "'apoc.meta.data()' is allowed in Neo4j configuration",
+      ].join("\n");
+
+      throw new Error(message);
     } finally {
       console.log("Schema refreshed successfully.");
     }
