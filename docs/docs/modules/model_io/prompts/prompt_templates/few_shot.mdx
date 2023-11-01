@@ -136,56 +136,98 @@ console.log(formattedPrompt);
 // Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
 ```
 
-You can also just initialize the prompt with the partialed variables:
+### Few Shot vs Chat Few Shot
 
-```typescript
-const prompt = new FewShotChatMessagePromptTemplate({
-  template: "Tell me a {adjective} joke about the day {date}",
-  inputVariables: ["adjective"],
-  partialVariables: {
-    date: getCurrentDate,
-  },
-});
-
-const formattedPrompt = await prompt.format({
-  adjective: "funny",
-});
-
-console.log(formattedPrompt);
-
-// Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
-```
-
-## With Non Chat Models
-
-LangChain also provides a class for few shot prompt formatting for non chat models: `FewShotPromptTemplate`. The API is largely the same, but the output is formatted differently (chat messages vs strings).
-
-### Partial Formatting
+The chat and non chat few shot prompt templates act in a similar way. The below example will demonstrate using chat and non chat, and the differences with their outputs.
 
 ```typescript
 import {
-  ChatPromptTemplate,
+  FewShotPromptTemplate,
   FewShotChatMessagePromptTemplate,
 } from "langchain/prompts";
 ```
 
 ```typescript
-const examplePrompt = PromptTemplate.fromTemplate("{foo}{bar}");
-const prompt = new FewShotPromptTemplate({
-  prefix: "{foo}{bar}",
-  examplePrompt,
-  inputVariables: ["foo"],
-  partialVariables: { bar: "baz" }, // Automatically set bar to baz
+const examples = [
+  {
+    input: "Could the members of The Police perform lawful arrests?",
+    output: "what can the members of The Police do?",
+  },
+  {
+    input: "Jan Sindel's was born in what country?",
+    output: "what is Jan Sindel's personal history?",
+  },
+];
+const examplePrompt = PromptTemplate.fromTemplate(`Human: {input}
+AI: {output}`);
+const exampleChatPrompt = ChatPromptTemplate.fromMessages([
+  ["human", "{input}"],
+  ["ai", "{output}"],
+]);
+const chatFewShotPrompt = new FewShotChatMessagePromptTemplate({
+  examplePrompt: exampleChatPrompt,
+  examples,
+  inputVariables: [], // no input variables
 });
-const formatted = await prompt.format({ foo: "foo" });
-console.log(formatted);
+const fewShotPrompt = new FewShotPromptTemplate({
+  examplePrompt,
+  examples,
+  inputVariables: [], // no input variables
+});
 ```
 
-```txt
-foobaz\n
+```typescript
+console.log("Chat Few Shot: ", await chatFewShotPrompt.formatMessages({}));
+/**
+Chat Few Shot:  [
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: 'Could the members of The Police perform lawful arrests?',
+    additional_kwargs: {}
+  },
+  AIMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: 'what can the members of The Police do?',
+    additional_kwargs: {}
+  },
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: "Jan Sindel's was born in what country?",
+    additional_kwargs: {}
+  },
+  AIMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: "what is Jan Sindel's personal history?",
+    additional_kwargs: {}
+  }
+]
+ */
 ```
 
-### With Functions
+```typescript
+console.log("Few Shot: ", await fewShotPrompt.formatPromptValue({}));
+/**
+Few Shot:
+
+Human: Could the members of The Police perform lawful arrests?
+AI: what can the members of The Police do?
+
+Human: Jan Sindel's was born in what country?
+AI: what is Jan Sindel's personal history?
+ */
+```
+
+Here we can see the main distinctions between `FewShotChatMessagePromptTemplate` and `FewShotPromptTemplate`: input and output values.
+
+`FewShotChatMessagePromptTemplate` works by taking in a list of `ChatPromptTemplate` for examples, and its output is a list of instances of `BaseMessage`.
+
+On the other hand, `FewShotPromptTemplate` works by taking in a `PromptTemplate` for examples, and its output is a string.
+
+## With Non Chat Models
+
+LangChain also provides a class for few shot prompt formatting for non chat models: `FewShotPromptTemplate`. The API is largely the same, but the output is formatted differently (chat messages vs strings).
+
+### Partials With Functions
 
 ```typescript
 import {
