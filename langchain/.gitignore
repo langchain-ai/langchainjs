@@ -130,6 +130,9 @@ embeddings/googlepalm.d.ts
 embeddings/minimax.cjs
 embeddings/minimax.js
 embeddings/minimax.d.ts
+embeddings/llama_cpp.cjs
+embeddings/llama_cpp.js
+embeddings/llama_cpp.d.ts
 llms/load.cjs
 llms/load.js
 llms/load.d.ts

@@ -15,6 +15,7 @@ import { Document } from "../document.js";
  * @argument {string} url - The URL of the Zep API.
  * @argument {number} [topK] - The number of results to return.
  * @argument {string} [apiKey] - The API key for the Zep API.
+ * @argument [searchScope] [searchScope] - The scope of the search: "messages" or "summary".
  * @argument [searchType] [searchType] - The type of search to perform: "similarity" or "mmr".
  * @argument {number} [mmrLambda] - The lambda value for the MMR search.
  * @argument {Record<string, unknown>} [filter] - The metadata filter to apply to the search.
@@ -24,6 +25,7 @@ export interface ZepRetrieverConfig extends BaseRetrieverInput {
   url: string;
   topK?: number;
   apiKey?: string;
+  searchScope?: "messages" | "summary";
   searchType?: "similarity" | "mmr";
   mmrLambda?: number;
   filter?: Record<string, unknown>;
@@ -57,6 +59,8 @@ export class ZepRetriever extends BaseRetriever {
 
   private topK?: number;
 
+  private searchScope?: "messages" | "summary";
+
   private searchType?: "similarity" | "mmr";
 
   private mmrLambda?: number;
@@ -67,6 +71,7 @@ export class ZepRetriever extends BaseRetriever {
     super(config);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
+    this.searchScope = config.searchScope;
     this.searchType = config.searchType;
     this.mmrLambda = config.mmrLambda;
     this.filter = config.filter;
@@ -74,11 +79,11 @@ export class ZepRetriever extends BaseRetriever {
   }
 
   /**
-   *  Converts an array of search results to an array of Document objects.
+   *  Converts an array of message search results to an array of Document objects.
    *  @param {MemorySearchResult[]} results - The array of search results.
    *  @returns {Document[]} An array of Document objects representing the search results.
    */
-  private searchResultToDoc(results: MemorySearchResult[]): Document[] {
+  private searchMessageResultToDoc(results: MemorySearchResult[]): Document[] {
     return results
       .filter((r) => r.message)
       .map(
@@ -95,6 +100,27 @@ export class ZepRetriever extends BaseRetriever {
   }
 
   /**
+   *  Converts an array of summary search results to an array of Document objects.
+   *  @param {MemorySearchResult[]} results - The array of search results.
+   *  @returns {Document[]} An array of Document objects representing the search results.
+   */
+  private searchSummaryResultToDoc(results: MemorySearchResult[]): Document[] {
+    return results
+      .filter((r) => r.summary)
+      .map(
+        ({
+          summary: { content, metadata: summaryMetadata } = {},
+          dist,
+          ...rest
+        }) =>
+          new Document({
+            pageContent: content ?? "",
+            metadata: { score: dist, ...summaryMetadata, ...rest },
+          })
+      );
+  }
+
+  /**
    *  Retrieves the relevant documents based on the given query.
    *  @param {string} query - The query string.
    *  @returns {Promise<Document[]>} A promise that resolves to an array of relevant Document objects.
@@ -103,6 +129,7 @@ export class ZepRetriever extends BaseRetriever {
     const payload: MemorySearchPayload = {
       text: query,
       metadata: this.filter,
+      search_scope: this.searchScope,
       search_type: this.searchType,
       mmr_lambda: this.mmrLambda,
     };
@@ -117,8 +144,9 @@ export class ZepRetriever extends BaseRetriever {
         payload,
         this.topK
       );
-
-      return this.searchResultToDoc(results);
+      return this.searchScope === "summary"
+        ? this.searchSummaryResultToDoc(results)
+        : this.searchMessageResultToDoc(results);
     } catch (error) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (error instanceof NotFoundError) {
