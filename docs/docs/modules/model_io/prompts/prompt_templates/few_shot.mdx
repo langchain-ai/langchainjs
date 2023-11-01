@@ -1,0 +1,157 @@
+# Few Shot Chat Message Prompt Templates
+
+Few shot prompting is a prompting technique which provides the Large Language Model (LLM) with a list of examples, and then asks the LLM to generate some text based on the examples provided.
+
+An example of this is the following:
+
+Say you want your LLM to respond in a specific format. You can few shot prompt the LLM with a list of question answer pairs so it knows what format to respond in.
+
+```txt
+Respond to the users question in the with the following format:
+
+Question: What is your name?
+Answer: My name is John.
+
+Question: What is your age?
+Answer: I am 25 years old.
+
+Question: What is your favorite color?
+Answer:
+```
+
+Here we left the last `Answer:` undefined so the LLM can fill it in. The LLM will then generate the following:
+
+```txt
+Answer: I don't have a favorite color; I don't have preferences.
+```
+
+### Use Case
+
+In the following example we're few shotting the LLM to rephrase questions into more general queries.
+
+We provide two sets of examples with specific questions, and rephrased general questions. The `FewShotChatMessagePromptTemplate` will use our examples and when `.format` is called, we'll see those examples formatted into a string we can pass to the LLM.
+
+```typescript
+import {
+  ChatPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examples = [
+  {
+    input: "Could the members of The Police perform lawful arrests?",
+    output: "what can the members of The Police do?",
+  },
+  {
+    input: "Jan Sindel's was born in what country?",
+    output: "what is Jan Sindel's personal history?",
+  },
+];
+const examplePrompt = ChatPromptTemplate.fromMessages([
+  ["human", "{input}"],
+  ["ai", "{output}"],
+]);
+const fewShotPrompt = new FewShotChatMessagePromptTemplate({
+  examplePrompt,
+  examples,
+  inputVariables: [], // no input variables
+});
+```
+
+```typescript
+const formattedPrompt = await fewShotPrompt.format({});
+console.log(formattedPrompt);
+```
+
+```txt
+Could the members of The Police perform lawful arrests?
+
+what can the members of The Police do?
+
+Jan Sindel's was born in what country?
+
+what is Jan Sindel's personal history?
+```
+
+Then, if we use this with another question, the LLM will rephrase the question how we want.
+
+```typescript
+import { ChatOpenAI } from "langchain/chat_models/openai";
+```
+
+```typescript
+const model = new ChatOpenAI({});
+
+const prompt = ChatPromptTemplate.fromMessages([
+  [
+    "ai",
+    `Rephrase the users query to be more general, using the following examples:
+{few_shot_examples}
+User query: {input}`,
+  ],
+]);
+
+const response = await prompt.pipe(model).invoke({
+  input: "What's France's main city?",
+  few_shot_examples: formattedPrompt,
+});
+
+console.log(response);  
+```
+
+```txt
+AIMessage {
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: 'What is the capital of France?',
+  additional_kwargs: { function_call: undefined }
+}
+```
+
+### Few Shotting With Functions
+
+You can also partial with a function. The use case for this is when you have a variable you know that you always want to fetch in a common way. A prime example of this is with date or time. Imagine you have a prompt which you always want to have the current date. You can't hard code it in the prompt, and passing it along with the other input variables can be tedious. In this case, it's very handy to be able to partial the prompt with a function that always returns the current date.
+
+```typescript
+const getCurrentDate = () => {
+  return new Date().toISOString();
+};
+
+const prompt = new FewShotChatMessagePromptTemplate({
+  template: "Tell me a {adjective} joke about the day {date}",
+  inputVariables: ["adjective", "date"],
+});
+
+const partialPrompt = await prompt.partial({
+  date: getCurrentDate,
+});
+
+const formattedPrompt = await partialPrompt.format({
+  adjective: "funny",
+});
+
+console.log(formattedPrompt);
+
+// Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
+```
+
+You can also just initialize the prompt with the partialed variables:
+
+```typescript
+const prompt = new FewShotChatMessagePromptTemplate({
+  template: "Tell me a {adjective} joke about the day {date}",
+  inputVariables: ["adjective"],
+  partialVariables: {
+    date: getCurrentDate,
+  },
+});
+
+const formattedPrompt = await prompt.format({
+  adjective: "funny",
+});
+
+console.log(formattedPrompt);
+
+// Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
+```
