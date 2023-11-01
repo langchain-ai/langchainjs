@@ -20,7 +20,7 @@ export class ChatIflytekXinghuo extends BaseChatIflytekXinghuo {
     const host = "spark-api.xf-yun.com";
     const date = new Date().toUTCString();
     const url = `GET /${this.version}/chat HTTP/1.1`;
-    const { createHmac } = await import("crypto");
+    const { createHmac } = await import("node:crypto");
     const hash = createHmac("sha256", this.iflytekApiSecret)
       .update(`host: ${host}\ndate: ${date}\n${url}`)
       .digest("base64");
