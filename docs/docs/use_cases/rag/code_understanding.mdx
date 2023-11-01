@@ -288,7 +288,7 @@ await memory.saveContext(
 );
 ```
 
-```typescript
+````typescript
 console.log(result);
 /**
 You can initialize a ReAct agent using the "initializeAgentExecutorWithOptions" function provided by the "langchain/agents" package.
@@ -319,7 +319,7 @@ const executor = await initializeAgentExecutorWithOptions(tools, model, {
 
 That's it. Now you can use the "executor" instance to make requests through your agent.
  */
-```
+````
 
 See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/d99bc61e-65a3-49d2-b797-0bd0138be0a2/r)
 
@@ -327,7 +327,7 @@ See the [LangSmith](https://smith.langchain.com) trace for this run [here](https
 
 Since we're saving our inputs/outputs in memory we can ask followups to the LLM.
 
-Keep in mind, we're not implementing an agent with tools so it must derive answers from the relevant documents in our store. Because of this it may return answers with hallucinated imports, classes or more. 
+Keep in mind, we're not implementing an agent with tools so it must derive answers from the relevant documents in our store. Because of this it may return answers with hallucinated imports, classes or more.
 
 ```typescript
 const question2 =
@@ -338,7 +338,7 @@ const result2 = await conversationalQaChain.invoke({
 });
 ```
 
-```typescript
+````typescript
 console.log(result2);
 /**
 You can import and utilize the Wikipedia and File System tools from LangChain in your codebase by following these steps,
@@ -381,7 +381,6 @@ const result = await wikipediaTool.call("Query term");
 console.log(result);
 \```
  */
-```
+````
 
 See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/21372f1a-edd5-4751-8788-a5da5f8a0ffb/r)
-
