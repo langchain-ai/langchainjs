@@ -45,6 +45,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
 
+  streaming = false;
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {};
   }
@@ -82,6 +84,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
+    this.streaming = fields?.streaming ?? this.streaming;
   }
 
   /** Call out to Bedrock service model.
@@ -96,12 +99,25 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const service = "bedrock-runtime";
     const endpointHost =
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
     const provider = this.model.split(".")[0];
+    if (this.streaming) {
+      const stream = this._streamResponseChunks(prompt, options, runManager);
+      let finalResult: GenerationChunk | undefined;
+      for await (const chunk of stream) {
+        if (finalResult === undefined) {
+          finalResult = chunk;
+        } else {
+          finalResult = finalResult.concat(chunk);
+        }
+      }
+      return finalResult?.text ?? "";
+    }
     const response = await this._signedFetch(prompt, options, {
       bedrockMethod: "invoke",
       endpointHost,
@@ -233,7 +249,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
             text,
             generationInfo: {},
           });
-          await runManager?.handleLLMNewToken(text);
+          // eslint-disable-next-line no-void
+          void runManager?.handleLLMNewToken(text);
         }
       }
     } else {
@@ -243,7 +260,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
         text,
         generationInfo: {},
       });
-      await runManager?.handleLLMNewToken(text);
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(text);
     }
   }
 

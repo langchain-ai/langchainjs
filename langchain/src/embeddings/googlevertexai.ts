@@ -3,6 +3,7 @@ import { Embeddings, EmbeddingsParams } from "./base.js";
 import {
   GoogleVertexAIBasePrediction,
   GoogleVertexAIBaseLLMInput,
+  GoogleVertexAILLMPredictions,
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../util/async_caller.js";
@@ -114,9 +115,9 @@ export class GoogleVertexAIEmbeddings
       responses
         ?.map(
           (response) =>
-            response.data?.predictions?.map(
-              (result) => result.embeddings.values
-            ) ?? []
+            (
+              response?.data as GoogleVertexAILLMPredictions<GoogleVertexEmbeddingsResults>
+            )?.predictions?.map((result) => result.embeddings.values) ?? []
         )
         .flat() ?? [];
     return result;

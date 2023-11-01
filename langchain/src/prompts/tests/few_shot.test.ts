@@ -251,28 +251,4 @@ An example about bar
 `
     );
   });
-
-  test.only("this", async () => {
-    const examples = [
-      {
-        input: "Could the members of The Police perform lawful arrests?",
-        output: "what can the members of The Police do?",
-      },
-      {
-        input: "Jan Sindel's was born in what country?",
-        output: "what is Jan Sindel's personal history?",
-      },
-    ];
-    const examplePrompt = ChatPromptTemplate.fromMessages([
-      ["human", "{input}"],
-      ["ai", "{output}"],
-    ]);
-    const fewShotPrompt = new FewShotChatMessagePromptTemplate({
-      examplePrompt,
-      examples,
-      inputVariables: ["input", "output"],
-    });
-
-    console.log(fewShotPrompt);
-  });
 });

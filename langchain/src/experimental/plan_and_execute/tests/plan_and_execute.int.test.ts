@@ -11,7 +11,7 @@ test.skip("Run agent on a simple input", async () => {
     modelName: "gpt-3.5-turbo",
     verbose: true,
   });
-  const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools({
+  const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
     llm: model,
     tools,
   });
@@ -30,7 +30,7 @@ test.skip("Run agent", async () => {
     modelName: "gpt-3.5-turbo",
     verbose: true,
   });
-  const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools({
+  const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
     llm: model,
     tools,
   });
@@ -50,7 +50,7 @@ test.skip("Run agent with a sequential math problem", async () => {
     modelName: "gpt-3.5-turbo",
     verbose: true,
   });
-  const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools({
+  const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
     llm: model,
     tools,
   });

@@ -52,6 +52,36 @@ test("Test Bedrock chat model streaming: Claude-v2", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
+test("Test Bedrock chat model handleLLMNewToken: Claude-v2", async () => {
+  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
+  const model = "anthropic.claude-v2";
+  const tokens: string[] = [];
+
+  const bedrock = new ChatBedrock({
+    maxTokens: 200,
+    region,
+    model,
+    maxRetries: 0,
+    credentials: {
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+    },
+    streaming: true,
+    callbacks: [
+      {
+        handleLLMNewToken: (token) => {
+          tokens.push(token);
+        },
+      },
+    ],
+  });
+  const stream = await bedrock.call([
+    new HumanMessage("What is your name and something about yourself?"),
+  ]);
+  expect(tokens.length).toBeGreaterThan(1);
+  expect(stream.content).toEqual(tokens.join(""));
+});
+
 test.skip.each([
   "amazon.titan-text-express-v1",
   // These models should be supported in the future
