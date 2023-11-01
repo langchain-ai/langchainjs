@@ -1,4 +1,4 @@
-# Few Shot Chat Message Prompt Templates
+# Few Shot Prompt Templates
 
 Few shot prompting is a prompting technique which provides the Large Language Model (LLM) with a list of examples, and then asks the LLM to generate some text based on the examples provided.
 
@@ -154,4 +154,95 @@ const formattedPrompt = await prompt.format({
 console.log(formattedPrompt);
 
 // Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
+```
+
+## With Non Chat Models
+
+LangChain also provides a class for few shot prompt formatting for non chat models: `FewShotPromptTemplate`. The API is largely the same, but the output is formatted (chat messages vs strings)
+
+
+### Partial Formatting
+
+```typescript
+import {
+  ChatPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examplePrompt = PromptTemplate.fromTemplate("{foo}{bar}");
+const prompt = new FewShotPromptTemplate({
+  prefix: "{foo}{bar}",
+  examplePrompt,
+  inputVariables: ["foo"],
+  partialVariables: { bar: "baz" }, // Automatically set bar to baz
+});
+const formatted = await prompt.format({ foo: "foo" });
+console.log(formatted);
+```
+
+```txt
+foobaz\n
+```
+
+### With Functions
+
+```typescript
+import {
+  ChatPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examplePrompt = PromptTemplate.fromTemplate("{foo}{bar}");
+const prompt = new FewShotPromptTemplate({
+  prefix: "{foo}{bar}",
+  examplePrompt,
+  inputVariables: ["foo", "bar"],
+});
+const partialPrompt = await prompt.partial({
+  foo: () => Promise.resolve("boo"),
+});
+const formatted = await partialPrompt.format({ bar: "baz" });
+console.log(formatted);
+```
+
+```txt
+boobaz\n
+```
+
+### With Functions and Example Selector
+
+```typescript
+import {
+  ChatPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examplePrompt = PromptTemplate.fromTemplate("An example about {x}");
+const exampleSelector = await LengthBasedExampleSelector.fromExamples(
+  [{ x: "foo" }, { x: "bar" }],
+  { examplePrompt, maxLength: 200 }
+);
+const prompt = new FewShotPromptTemplate({
+  prefix: "{foo}{bar}",
+  exampleSelector,
+  examplePrompt,
+  inputVariables: ["foo", "bar"],
+});
+const partialPrompt = await prompt.partial({
+  foo: () => Promise.resolve("boo"),
+});
+const formatted = await partialPrompt.format({ bar: "baz" });
+console.log(formatted);
+```
+
+```txt
+boobaz
+An example about foo
+An example about bar
 ```
