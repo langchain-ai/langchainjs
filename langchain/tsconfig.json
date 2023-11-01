@@ -194,6 +194,8 @@
       "src/chat_models/googlepalm.ts",
       "src/chat_models/fireworks.ts",
       "src/chat_models/baiduwenxin.ts",
+      "src/chat_models/iflytek_xinghuo/index.ts",
+      "src/chat_models/iflytek_xinghuo/web.ts",
       "src/chat_models/ollama.ts",
       "src/chat_models/minimax.ts",
       "src/chat_models/llama_cpp.ts",
