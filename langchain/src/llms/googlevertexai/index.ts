@@ -1,7 +1,8 @@
-import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
+import { GoogleAuthOptions } from "google-auth-library";
 import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
 import { GoogleVertexAIBaseLLMInput } from "../../types/googlevertexai-types.js";
 import { BaseGoogleVertexAI } from "./common.js";
+import { GAuthClient } from "../../util/googlevertexai-gauth.js";
 
 /**
  * Interface representing the input to the Google Vertex AI model.
@@ -31,7 +32,7 @@ export class GoogleVertexAI extends BaseGoogleVertexAI<GoogleAuthOptions> {
   constructor(fields?: GoogleVertexAITextInput) {
     super(fields);
 
-    const client = new GoogleAuth({
+    const client = new GAuthClient({
       scopes: "https://www.googleapis.com/auth/cloud-platform",
       ...fields?.authOptions,
     });
@@ -39,7 +40,15 @@ export class GoogleVertexAI extends BaseGoogleVertexAI<GoogleAuthOptions> {
     this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller,
-      client
+      client,
+      false
+    );
+
+    this.streamedConnection = new GoogleVertexAILLMConnection(
+      { ...fields, ...this },
+      this.caller,
+      client,
+      true
     );
   }
 }

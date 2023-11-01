@@ -76,6 +76,7 @@
       "src/embeddings/googlevertexai.ts",
       "src/embeddings/googlepalm.ts",
       "src/embeddings/minimax.ts",
+      "src/embeddings/llama_cpp.ts",
       "src/llms/load.ts",
       "src/llms/base.ts",
       "src/llms/openai.ts",

@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "rimraf ./docs/api &&  NODE_OPTIONS=--max-old-space-size=6144 docusaurus start",
-    "build": "rimraf ./build && NODE_OPTIONS=--max-old-space-size=6144 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "start": "rimraf ./docs/api &&  NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
+    "build": "rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",

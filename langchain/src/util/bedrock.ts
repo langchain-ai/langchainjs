@@ -46,6 +46,9 @@ export interface BaseBedrockInput {
 
   /** Additional kwargs to pass to the model. */
   modelKwargs?: Record<string, unknown>;
+
+  /** Whether or not to stream responses */
+  streaming: boolean;
 }
 
 type Dict = { [key: string]: unknown };

@@ -23,6 +23,7 @@ export const optionalImportEntrypoints = [
   "langchain/embeddings/hf_transformers",
   "langchain/embeddings/googlevertexai",
   "langchain/embeddings/googlepalm",
+  "langchain/embeddings/llama_cpp",
   "langchain/llms/load",
   "langchain/llms/cohere",
   "langchain/llms/hf",

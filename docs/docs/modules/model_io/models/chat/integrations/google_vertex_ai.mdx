@@ -79,6 +79,16 @@ import ChatGoogleVertexAI from "@examples/models/chat/integration_googlevertexai
 
 <CodeBlock language="typescript">{ChatGoogleVertexAI}</CodeBlock>
 
+### Streaming
+
+ChatGoogleVertexAI also supports streaming in multiple chunks for faster responses:
+
+import ChatGoogleVertexAIStreaming from "@examples/models/chat/integration_googlevertexai-streaming.ts";
+
+<CodeBlock language="typescript">{ChatGoogleVertexAIStreaming}</CodeBlock>
+
+### Examples
+
 There is also an optional `examples` constructor parameter that can help the model understand what an appropriate response
 looks like.
 

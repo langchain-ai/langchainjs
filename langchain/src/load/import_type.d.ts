@@ -67,6 +67,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/googlepalm"?:
     | typeof import("../embeddings/googlepalm.js")
     | Promise<typeof import("../embeddings/googlepalm.js")>;
+  "langchain/embeddings/llama_cpp"?:
+    | typeof import("../embeddings/llama_cpp.js")
+    | Promise<typeof import("../embeddings/llama_cpp.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
