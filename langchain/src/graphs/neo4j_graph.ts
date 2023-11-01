@@ -83,6 +83,7 @@ export class Neo4jGraph {
         database: this.database,
       });
       return toObjects(result.records);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (
         // eslint-disable-next-line
