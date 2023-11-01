@@ -49,10 +49,8 @@ const examples = [
     output: "what is Jan Sindel's personal history?",
   },
 ];
-const examplePrompt = ChatPromptTemplate.fromMessages([
-  ["human", "{input}"],
-  ["ai", "{output}"],
-]);
+const examplePrompt = ChatPromptTemplate.fromTemplate(`Human: {input}
+AI: {output}`);
 const fewShotPrompt = new FewShotChatMessagePromptTemplate({
   examplePrompt,
   examples,
@@ -65,14 +63,21 @@ const formattedPrompt = await fewShotPrompt.format({});
 console.log(formattedPrompt);
 ```
 
-```txt
-Could the members of The Police perform lawful arrests?
-
-what can the members of The Police do?
-
-Jan Sindel's was born in what country?
-
-what is Jan Sindel's personal history?
+```typescript
+[
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: 'Human: Could the members of The Police perform lawful arrests?\n' +
+      'AI: what can the members of The Police do?',
+    additional_kwargs: {}
+  },
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: "Human: Jan Sindel's was born in what country?\n" +
+      "AI: what is Jan Sindel's personal history?",
+    additional_kwargs: {}
+  }
+]
 ```
 
 Then, if we use this with another question, the LLM will rephrase the question how we want.
@@ -84,14 +89,10 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 ```typescript
 const model = new ChatOpenAI({});
 
-const prompt = ChatPromptTemplate.fromMessages([
-  [
-    "ai",
-    `Rephrase the users query to be more general, using the following examples:
+const prompt =
+  ChatPromptTemplate.fromTemplate(`Rephrase the users query to be more general, using the following examples:
 {few_shot_examples}
-User query: {input}`,
-  ],
-]);
+User query: {input}`);
 
 const response = await prompt.pipe(model).invoke({
   input: "What's France's main city?",
@@ -101,7 +102,7 @@ const response = await prompt.pipe(model).invoke({
 console.log(response);
 ```
 
-```txt
+```typescript
 AIMessage {
   lc_namespace: [ 'langchain', 'schema' ],
   content: 'What is the capital of France?',
@@ -158,19 +159,17 @@ const examples = [
     output: "what is Jan Sindel's personal history?",
   },
 ];
-const examplePrompt = PromptTemplate.fromTemplate(`Human: {input}
-AI: {output}`);
-const exampleChatPrompt = ChatPromptTemplate.fromMessages([
-  ["human", "{input}"],
-  ["ai", "{output}"],
-]);
+const prompt = `Human: {input}
+AI: {output}`;
+const examplePromptTemplate = PromptTemplate.fromTemplate(prompt);
+const exampleChatPromptTemplate = ChatPromptTemplate.fromTemplate(prompt);
 const chatFewShotPrompt = new FewShotChatMessagePromptTemplate({
-  examplePrompt: exampleChatPrompt,
+  examplePrompt: exampleChatPromptTemplate,
   examples,
   inputVariables: [], // no input variables
 });
 const fewShotPrompt = new FewShotPromptTemplate({
-  examplePrompt,
+  examplePrompt: examplePromptTemplate,
   examples,
   inputVariables: [], // no input variables
 });
@@ -182,22 +181,14 @@ console.log("Chat Few Shot: ", await chatFewShotPrompt.formatMessages({}));
 Chat Few Shot:  [
   HumanMessage {
     lc_namespace: [ 'langchain', 'schema' ],
-    content: 'Could the members of The Police perform lawful arrests?',
-    additional_kwargs: {}
-  },
-  AIMessage {
-    lc_namespace: [ 'langchain', 'schema' ],
-    content: 'what can the members of The Police do?',
+    content: 'Human: Could the members of The Police perform lawful arrests?\n' +
+      'AI: what can the members of The Police do?',
     additional_kwargs: {}
   },
   HumanMessage {
     lc_namespace: [ 'langchain', 'schema' ],
-    content: "Jan Sindel's was born in what country?",
-    additional_kwargs: {}
-  },
-  AIMessage {
-    lc_namespace: [ 'langchain', 'schema' ],
-    content: "what is Jan Sindel's personal history?",
+    content: "Human: Jan Sindel's was born in what country?\n" +
+      "AI: what is Jan Sindel's personal history?",
     additional_kwargs: {}
   }
 ]
