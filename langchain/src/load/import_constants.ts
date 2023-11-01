@@ -112,6 +112,8 @@ export const optionalImportEntrypoints = [
   "langchain/chat_models/googlevertexai",
   "langchain/chat_models/googlevertexai/web",
   "langchain/chat_models/googlepalm",
+  "langchain/chat_models/iflytek_xinghuo",
+  "langchain/chat_models/iflytek_xinghuo/web",
   "langchain/chat_models/llama_cpp",
   "langchain/sql_db",
   "langchain/callbacks/handlers/llmonitor",
