@@ -142,6 +142,9 @@
     "embeddings/minimax.cjs",
     "embeddings/minimax.js",
     "embeddings/minimax.d.ts",
+    "embeddings/llama_cpp.cjs",
+    "embeddings/llama_cpp.js",
+    "embeddings/llama_cpp.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -1576,6 +1579,11 @@
       "types": "./embeddings/minimax.d.ts",
       "import": "./embeddings/minimax.js",
       "require": "./embeddings/minimax.cjs"
+    },
+    "./embeddings/llama_cpp": {
+      "types": "./embeddings/llama_cpp.d.ts",
+      "import": "./embeddings/llama_cpp.js",
+      "require": "./embeddings/llama_cpp.cjs"
     },
     "./llms/load": {
       "types": "./llms/load.d.ts",

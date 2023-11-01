@@ -30,25 +30,15 @@ A note to LangChain.js contributors: if you want to run the tests associated wit
 
 ### Basic use
 
-In this case we pass in a prompt wrapped as a message and expect a response.
+We need to provide a path to our local Llama2 model, also the `embeddings` property is always set to `true` in this module.
 
 import CodeBlock from "@theme/CodeBlock";
-import BasicExample from "@examples/models/chat/integration_llama_cpp.ts";
+import BasicExample from "@examples/embeddings/llama_cpp_basic.ts";
 
 <CodeBlock language="typescript">{BasicExample}</CodeBlock>
 
-### System messages
+### Document embedding
 
-We can also provide a system message, note that with the `llama_cpp` module a system message will cause the creation of a new session.
+import DocsExample from "@examples/embeddings/llama_cpp_docs.ts";
 
-import SystemExample from "@examples/models/chat/integration_llama_cpp_system.ts";
-
-<CodeBlock language="typescript">{SystemExample}</CodeBlock>
-
-### Chains
-
-Finally we can also use this module with chains, note that using more complex chains will require suitably powerful version of `llama2` such as the 70B version.
-
-import ChainExample from "@examples/models/chat/integration_llama_cpp_chain.ts";
-
-<CodeBlock language="typescript">{ChainExample}</CodeBlock>
+<CodeBlock language="typescript">{DocsExample}</CodeBlock>
