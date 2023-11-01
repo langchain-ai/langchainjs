@@ -174,11 +174,7 @@ export class CloudflareWorkersAI
 
       return responseData.result.response;
     } else {
-      const stream = this._streamResponseChunks(
-        prompt,
-        options,
-        runManager
-      );
+      const stream = this._streamResponseChunks(prompt, options, runManager);
       let finalResult: GenerationChunk | undefined;
       for await (const chunk of stream) {
         if (finalResult === undefined) {

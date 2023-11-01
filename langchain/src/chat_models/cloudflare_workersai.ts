@@ -200,11 +200,7 @@ export class ChatCloudflareWorkersAI
 
       return responseData.result.response;
     } else {
-      const stream = this._streamResponseChunks(
-        messages,
-        options,
-        runManager
-      );
+      const stream = this._streamResponseChunks(messages, options, runManager);
       let finalResult: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {
         if (finalResult === undefined) {
