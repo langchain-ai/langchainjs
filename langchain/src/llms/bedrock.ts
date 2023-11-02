@@ -14,6 +14,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { GenerationChunk } from "../schema/index.js";
+import { SerializedFields } from "../load/map_keys.js";
 
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
@@ -39,6 +40,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   endpointHost?: string;
 
+  /** @deprecated */
   stopSequences?: string[];
 
   modelKwargs?: Record<string, unknown>;
@@ -47,8 +49,24 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   streaming = false;
 
+  lc_serializable = true;
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_id",
+      region: "region_name",
+    };
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
-    return {};
+    return {
+      "credentials.accessKeyId": "BEDROCK_AWS_ACCESS_KEY_ID",
+      "credentials.secretAccessKey": "BEDROCK_AWS_SECRET_ACCESS_KEY",
+    };
+  }
+
+  get lc_attributes(): SerializedFields | undefined {
+    return { region: this.region };
   }
 
   _llmType() {
@@ -63,7 +81,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
@@ -77,7 +95,15 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       );
     }
     this.region = region;
-    this.credentials = fields?.credentials ?? defaultProvider();
+
+    const credentials = fields?.credentials ?? defaultProvider();
+    if (!credentials) {
+      throw new Error(
+        "Please set the AWS credentials in the 'credentials' field."
+      );
+    }
+    this.credentials = credentials;
+
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.fetchFn = fields?.fetchFn ?? fetch;
@@ -148,8 +174,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       prompt,
       this.maxTokens,
       this.temperature,
-      this.stopSequences,
-      this.modelKwargs
+      options.stop ?? this.stopSequences,
+      this.modelKwargs,
+      fields.bedrockMethod
     );
 
     const url = new URL(
@@ -193,6 +220,17 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     return response;
   }
 
+  invocationParams(options?: this["ParsedCallOptions"]) {
+    return {
+      model: this.model,
+      region: this.region,
+      temperature: this.temperature,
+      maxTokens: this.maxTokens,
+      stop: options?.stop ?? this.stopSequences,
+      modelKwargs: this.modelKwargs,
+    };
+  }
+
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
@@ -200,7 +238,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   ): AsyncGenerator<GenerationChunk> {
     const provider = this.model.split(".")[0];
     const bedrockMethod =
-      provider === "anthropic" ? "invoke-with-response-stream" : "invoke";
+      provider === "anthropic" || provider === "cohere"
+        ? "invoke-with-response-stream"
+        : "invoke";
 
     const service = "bedrock-runtime";
     const endpointHost =
@@ -221,7 +261,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       );
     }
 
-    if (provider === "anthropic") {
+    if (provider === "anthropic" || provider === "cohere") {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
@@ -239,7 +279,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
         }
         if (body.bytes !== undefined) {
           const chunkResult = JSON.parse(
-            Buffer.from(body.bytes, "base64").toString()
+            decoder.decode(
+              Uint8Array.from(atob(body.bytes), (m) => m.codePointAt(0) ?? 0)
+            )
           );
           const text = BedrockLLMInputOutputAdapter.prepareOutput(
             provider,
