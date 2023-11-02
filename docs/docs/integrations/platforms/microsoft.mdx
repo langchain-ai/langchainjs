@@ -21,7 +21,7 @@ OPENAI_API_KEY="your AzureOpenAI key"
 OPENAI_API_VERSION="2023-05-15"
 ```
 
-See a [usage example](/docs/integrations/llms/azure_openai_example).
+See a [usage example](/docs/integrations/llms/azure).
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -31,7 +31,7 @@ import { OpenAI } from "langchain/llms/openai";
 
 ### Azure OpenAI
 
-See a [usage example](/docs/integrations/text_embedding/azureopenai)
+See a [usage example](/docs/integrations/text_embedding/azure_openai)
 
 ```typescript
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -50,7 +50,7 @@ const embeddings = new OpenAIEmbeddings({
 
 ### Azure OpenAI
 
-See a [usage example](/docs/integrations/chat/azure_chat_openai)
+See a [usage example](/docs/integrations/chat/azure)
 
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -89,24 +89,14 @@ const model = new ChatOpenAI({
 npm install @azure/storage-blob
 ```
 
-See a [usage example for the Azure Blob Storage](/docs/integrations/document_loaders/azure_blob_storage_container).
+See a [usage example for the Azure Blob Storage](/docs/integrations/document_loaders/web_loaders/azure_blob_storage_container).
 
 ```typescript
 import { AzureBlobStorageContainerLoader } from "langchain/document_loaders/web/azure_blob_storage_container";
 ```
 
-See a [usage example for the Azure Files](/docs/integrations/document_loaders/azure_blob_storage_file).
+See a [usage example for the Azure Files](/docs/integrations/document_loaders/web_loaders/azure_blob_storage_file).
 
 ```typescript
 import { AzureBlobStorageFileLoader } from "langchain/document_loaders/web/azure_blob_storage_file";
-```
-
-## Tools
-
-### Bing Search API
-
-See a [usage example](/docs/integrations/tools/bing_search).
-
-```typescript
-from langchain.utilities import BingSearchAPIWrapper
 ```

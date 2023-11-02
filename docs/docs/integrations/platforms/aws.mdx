@@ -18,7 +18,7 @@ import { Bedrock } from "langchain/llms/bedrock";
 
 We use `SageMaker` to host our model and expose it as the `SageMaker Endpoint`.
 
-See a [usage example](/docs/integrations/llms/sagemaker).
+See a [usage example](/docs/integrations/llms/aws_sagemaker).
 
 ```typescript
 import {
@@ -44,9 +44,9 @@ import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
 > [Amazon Simple Storage Service (Amazon S3)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html) is an object storage service.
 > [AWS S3 Directory](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html) >[AWS S3 Buckets](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html)
 
-See a [usage example for S3DirectoryLoader](/docs/integrations/document_loaders/aws_s3_directory).
+See a [usage example for S3DirectoryLoader](/docs/integrations/document_loaders/web_loaders/s3).
 
-See a [usage example for S3FileLoader](/docs/integrations/document_loaders/aws_s3_file).
+See a [usage example for S3FileLoader](/docs/integrations/document_loaders/web_loaders/s3).
 
 ```bash npm2yarn
 npm install @aws-sdk/client-s3
@@ -71,7 +71,7 @@ We need to install the `boto3` library.
 npm install @aws-sdk/client-dynamodb
 ```
 
-See a [usage example](/docs/integrations/memory/aws_dynamodb).
+See a [usage example](/docs/integrations/chat_memory/dynamodb).
 
 ```typescript
 import { DynamoDBChatMessageHistory } from "langchain/stores/message/dynamodb";
