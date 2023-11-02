@@ -1,5 +1,5 @@
 import { SignatureV4 } from "@smithy/signature-v4";
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
+
 import { HttpRequest } from "@smithy/protocol-http";
 import { EventStreamCodec } from "@smithy/eventstream-codec";
 import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
@@ -9,74 +9,12 @@ import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
-} from "../util/bedrock.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { SimpleChatModel, BaseChatModelParams } from "./base.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import {
-  AIMessageChunk,
-  BaseMessage,
-  AIMessage,
-  ChatGenerationChunk,
-  ChatMessage,
-} from "../schema/index.js";
-import { SerializedFields } from "../load/map_keys.js";
-
-function convertOneMessageToText(
-  message: BaseMessage,
-  humanPrompt: string,
-  aiPrompt: string
-): string {
-  if (message._getType() === "human") {
-    return `${humanPrompt} ${message.content}`;
-  } else if (message._getType() === "ai") {
-    return `${aiPrompt} ${message.content}`;
-  } else if (message._getType() === "system") {
-    return `${humanPrompt} <admin>${message.content}</admin>`;
-  } else if (ChatMessage.isInstance(message)) {
-    return `\n\n${
-      message.role[0].toUpperCase() + message.role.slice(1)
-    }: {message.content}`;
-  }
-  throw new Error(`Unknown role: ${message._getType()}`);
-}
-
-export function convertMessagesToPromptAnthropic(
-  messages: BaseMessage[],
-  humanPrompt = "\n\nHuman:",
-  aiPrompt = "\n\nAssistant:"
-): string {
-  const messagesCopy = [...messages];
-
-  if (
-    messagesCopy.length === 0 ||
-    messagesCopy[messagesCopy.length - 1]._getType() !== "ai"
-  ) {
-    messagesCopy.push(new AIMessage({ content: "" }));
-  }
-
-  return messagesCopy
-    .map((message) => convertOneMessageToText(message, humanPrompt, aiPrompt))
-    .join("");
-}
-
-/**
- * Function that converts an array of messages into a single string prompt
- * that can be used as input for a chat model. It delegates the conversion
- * logic to the appropriate provider-specific function.
- * @param messages Array of messages to be converted.
- * @param options Options to be used during the conversion.
- * @returns A string prompt that can be used as input for a chat model.
- */
-export function convertMessagesToPrompt(
-  messages: BaseMessage[],
-  provider: string
-): string {
-  if (provider === "anthropic") {
-    return convertMessagesToPromptAnthropic(messages);
-  }
-  throw new Error(`Provider ${provider} does not support chat.`);
-}
+} from "../../util/bedrock.js";
+import { getEnvironmentVariable } from "../../util/env.js";
+import { LLM, BaseLLMParams } from "../base.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
+import { GenerationChunk } from "../../schema/index.js";
+import { SerializedFields } from "../../load/map_keys.js";
 
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
@@ -87,7 +25,7 @@ export function convertMessagesToPrompt(
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
  */
-export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
+export class Bedrock extends LLM implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";
 
   region: string;
@@ -136,10 +74,10 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   }
 
   static lc_name() {
-    return "ChatBedrock";
+    return "Bedrock";
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
+  constructor(fields?: Partial<BaseBedrockInput> & BaseLLMParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -158,7 +96,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     }
     this.region = region;
 
-    const credentials = fields?.credentials ?? defaultProvider();
+    const credentials = fields?.credentials;
     if (!credentials) {
       throw new Error(
         "Please set the AWS credentials in the 'credentials' field."
@@ -186,7 +124,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       response = model.call("Tell me a joke.")
   */
   async _call(
-    messages: BaseMessage[],
+    prompt: string,
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
@@ -195,8 +133,8 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
     const provider = this.model.split(".")[0];
     if (this.streaming) {
-      const stream = this._streamResponseChunks(messages, options, runManager);
-      let finalResult: ChatGenerationChunk | undefined;
+      const stream = this._streamResponseChunks(prompt, options, runManager);
+      let finalResult: GenerationChunk | undefined;
       for await (const chunk of stream) {
         if (finalResult === undefined) {
           finalResult = chunk;
@@ -204,10 +142,9 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
           finalResult = finalResult.concat(chunk);
         }
       }
-      return finalResult?.message.content ?? "";
+      return finalResult?.text ?? "";
     }
-
-    const response = await this._signedFetch(messages, options, {
+    const response = await this._signedFetch(prompt, options, {
       bedrockMethod: "invoke",
       endpointHost,
       provider,
@@ -223,7 +160,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   }
 
   async _signedFetch(
-    messages: BaseMessage[],
+    prompt: string,
     options: this["ParsedCallOptions"],
     fields: {
       bedrockMethod: "invoke" | "invoke-with-response-stream";
@@ -234,7 +171,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     const { bedrockMethod, endpointHost, provider } = fields;
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
-      convertMessagesToPromptAnthropic(messages),
+      prompt,
       this.maxTokens,
       this.temperature,
       options.stop ?? this.stopSequences,
@@ -283,23 +220,34 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     return response;
   }
 
+  invocationParams(options?: this["ParsedCallOptions"]) {
+    return {
+      model: this.model,
+      region: this.region,
+      temperature: this.temperature,
+      maxTokens: this.maxTokens,
+      stop: options?.stop ?? this.stopSequences,
+      modelKwargs: this.modelKwargs,
+    };
+  }
+
   async *_streamResponseChunks(
-    messages: BaseMessage[],
+    prompt: string,
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
+  ): AsyncGenerator<GenerationChunk> {
     const provider = this.model.split(".")[0];
-    const service = "bedrock-runtime";
-
-    const endpointHost =
-      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
-
     const bedrockMethod =
       provider === "anthropic" || provider === "cohere"
         ? "invoke-with-response-stream"
         : "invoke";
 
-    const response = await this._signedFetch(messages, options, {
+    const service = "bedrock-runtime";
+    const endpointHost =
+      this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
+
+    // Send request to AWS using the low-level fetch API
+    const response = await this._signedFetch(prompt, options, {
       bedrockMethod,
       endpointHost,
       provider,
@@ -339,9 +287,9 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
             provider,
             chunkResult
           );
-          yield new ChatGenerationChunk({
+          yield new GenerationChunk({
             text,
-            message: new AIMessageChunk({ content: text }),
+            generationInfo: {},
           });
           // eslint-disable-next-line no-void
           void runManager?.handleLLMNewToken(text);
@@ -350,9 +298,9 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     } else {
       const json = await response.json();
       const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
-      yield new ChatGenerationChunk({
+      yield new GenerationChunk({
         text,
-        message: new AIMessageChunk({ content: text }),
+        generationInfo: {},
       });
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
@@ -371,13 +319,4 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       },
     };
   }
-
-  _combineLLMOutput() {
-    return {};
-  }
 }
-
-/**
- * @deprecated Use `BedrockChat` instead.
- */
-export const ChatBedrock = BedrockChat;

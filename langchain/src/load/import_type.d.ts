@@ -323,8 +323,8 @@ export interface OptionalImportMap {
     | typeof import("../chat_models/portkey.js")
     | Promise<typeof import("../chat_models/portkey.js")>;
   "langchain/chat_models/bedrock"?:
-    | typeof import("../chat_models/bedrock.js")
-    | Promise<typeof import("../chat_models/bedrock.js")>;
+    | typeof import("../chat_models/bedrock/web.ts")
+    | Promise<typeof import("../chat_models/bedrock/web.ts")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai/index.js")
     | Promise<typeof import("../chat_models/googlevertexai/index.js")>;

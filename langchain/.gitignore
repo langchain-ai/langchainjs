@@ -184,6 +184,9 @@ llms/sagemaker_endpoint.d.ts
 llms/bedrock.cjs
 llms/bedrock.js
 llms/bedrock.d.ts
+llms/bedrock/web.cjs
+llms/bedrock/web.js
+llms/bedrock/web.d.ts
 llms/llama_cpp.cjs
 llms/llama_cpp.js
 llms/llama_cpp.d.ts
@@ -466,6 +469,9 @@ chat_models/anthropic.d.ts
 chat_models/bedrock.cjs
 chat_models/bedrock.js
 chat_models/bedrock.d.ts
+chat_models/bedrock/web.cjs
+chat_models/bedrock/web.js
+chat_models/bedrock/web.d.ts
 chat_models/cloudflare_workersai.cjs
 chat_models/cloudflare_workersai.js
 chat_models/cloudflare_workersai.d.ts
