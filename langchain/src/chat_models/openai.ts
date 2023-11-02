@@ -94,7 +94,7 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 
 function messageToOpenAIMessage(message: BaseMessage): OpenAICompletionParam {
   const msg = {
-    content: message.content || null,
+    content: (message.content as any) || null,
     name: message.name,
     role: messageToOpenAIRole(message),
     function_call: message.additional_kwargs.function_call,
@@ -406,7 +406,7 @@ export class ChatOpenAI<
     const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
       messages.map((message) => ({
         role: messageToOpenAIRole(message),
-        content: message.content,
+        content: message.content as any,
         name: message.name,
         function_call: message.additional_kwargs
           .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
@@ -433,7 +433,7 @@ export class ChatOpenAI<
       };
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
-        text: chunk.content,
+        text: chunk.content as any,
         generationInfo: newTokenIndices,
       });
       yield generationChunk;
@@ -471,7 +471,7 @@ export class ChatOpenAI<
     const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
       messages.map((message) => ({
         role: messageToOpenAIRole(message),
-        content: message.content,
+        content: message.content as any,
         name: message.name,
         function_call: message.additional_kwargs
           .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
@@ -843,13 +843,13 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       let messageDict: OpenAIClient.Chat.ChatCompletionMessageParam;
 
       if (message._getType() === "human") {
-        messageDict = { role: "user", content: message.content };
+        messageDict = { role: "user", content: message.content as any };
       } else if (message._getType() === "ai") {
-        messageDict = { role: "assistant", content: message.content };
+        messageDict = { role: "assistant", content: message.content as any };
       } else if (message._getType() === "function") {
-        messageDict = { role: "assistant", content: message.content };
+        messageDict = { role: "assistant", content: message.content as any };
       } else if (message._getType() === "system") {
-        messageDict = { role: "system", content: message.content };
+        messageDict = { role: "system", content: message.content as any };
       } else if (message._getType() === "generic") {
         messageDict = {
           role: (message as ChatMessage).role as
@@ -857,7 +857,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
             | "assistant"
             | "user"
             | "function",
-          content: message.content,
+          content: message.content as any,
         };
       } else {
         throw new Error(`Got unknown type ${message}`);

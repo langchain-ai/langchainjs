@@ -75,7 +75,15 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
     } else {
       return this._callWithConfig(
         async (input: BaseMessage): Promise<T> =>
-          this.parseResult([{ message: input, text: input.content }]),
+          this.parseResult([
+            {
+              message: input,
+              text:
+                typeof input.content === "string"
+                  ? input.content
+                  : JSON.stringify(input.content),
+            },
+          ]),
         input,
         { ...options, runType: "parser" }
       );
@@ -146,7 +154,15 @@ export abstract class BaseTransformOutputParser<
       if (typeof chunk === "string") {
         yield this.parseResult([{ text: chunk }]);
       } else {
-        yield this.parseResult([{ message: chunk, text: chunk.content }]);
+        yield this.parseResult([
+          {
+            message: chunk,
+            text:
+              typeof chunk.content === "string"
+                ? chunk.content
+                : JSON.stringify(chunk.content),
+          },
+        ]);
       }
     }
   }
