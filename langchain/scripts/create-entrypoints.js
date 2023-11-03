@@ -458,6 +458,7 @@ const requiresOptionalDependency = [
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/cloudflare_d1",
+  "stores/message/cassandra",
   "stores/message/convex",
   "stores/message/dynamodb",
   "stores/message/firestore",

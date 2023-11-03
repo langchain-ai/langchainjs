@@ -135,6 +135,7 @@ export const optionalImportEntrypoints = [
   "langchain/cache/upstash_redis",
   "langchain/stores/doc/gcs",
   "langchain/stores/file/node",
+  "langchain/stores/message/cassandra",
   "langchain/stores/message/convex",
   "langchain/stores/message/cloudflare_d1",
   "langchain/stores/message/dynamodb",

@@ -652,6 +652,9 @@ stores/file/in_memory.d.ts
 stores/file/node.cjs
 stores/file/node.js
 stores/file/node.d.ts
+stores/message/cassandra.cjs
+stores/message/cassandra.js
+stores/message/cassandra.d.ts
 stores/message/convex.cjs
 stores/message/convex.js
 stores/message/convex.d.ts

@@ -403,6 +403,9 @@ export interface OptionalImportMap {
   "langchain/stores/file/node"?:
     | typeof import("../stores/file/node.js")
     | Promise<typeof import("../stores/file/node.js")>;
+  "langchain/stores/message/cassandra"?:
+    | typeof import("../stores/message/cassandra.js")
+    | Promise<typeof import("../stores/message/cassandra.js")>;
   "langchain/stores/message/convex"?:
     | typeof import("../stores/message/convex.js")
     | Promise<typeof import("../stores/message/convex.js")>;
