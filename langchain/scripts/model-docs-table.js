@@ -77,17 +77,19 @@ Each ChatModel integration can optionally provide native implementations to trul
 /**
  * Documentation paths to rewrite.
  */
-const LLM_DOC_INDEX_PATH = "../docs/docs/integrations/llms/index.mdx";
-const CHAT_MODELS_DOC_INDEX_PATH = "../docs/docs/integrations/chat/index.mdx";
+const CWD = process.cwd();
+const LLM_DOC_INDEX_PATH = path.join(CWD, "..", "./docs/docs/integrations/llms/index.mdx");
+const CHAT_MODELS_DOC_INDEX_PATH = path.join(CWD, "..", "./docs/docs/integrations/chat/index.mdx");
+const CHAT_MODEL_DIRECTORY = path.join(CWD, "./dist/chat_models");
+const LLM_DIRECTORY = path.join(CWD, "./dist/llms");
 
 /**
  * Fetch all files which are not .test.ts from a directory.
  * @param dir {string}
  */
 const getAllTSFilesInDir = async (dir) => {
-  const pattern = "**/!(*.test.ts)";
+  const pattern = "**/!(*.test.ts|*.cjs|*.d.ts)";
   const options = { nodir: true, cwd: dir };
-
   const globbered = await glob(pattern, options);
   return globbered;
 };
@@ -202,14 +204,11 @@ const checkClassMethods = async (
         hasBatchImplemented,
       };
     });
+
   return classExports;
 };
 
 export async function main() {
-  const CWD = process.cwd();
-  const CHAT_MODEL_DIRECTORY = path.join(CWD, "langchain/src/chat_models");
-  const LLM_DIRECTORY = path.join(CWD, "langchain/src/llms");
-
   const chatModelFiles = await getAllTSFilesInDir(CHAT_MODEL_DIRECTORY);
   const llmFiles = await getAllTSFilesInDir(LLM_DIRECTORY);
 
