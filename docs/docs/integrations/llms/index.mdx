@@ -13,4 +13,26 @@ All LLMs implement the Runnable interface, which comes with default implementati
 - _Batch_ support defaults to calling the underlying LLM in parallel for each input. The concurrency can be controlled with the `maxConcurrency` key in `RunnableConfig`.
 - _Map_ support defaults to calling `.invoke` across all instances of the array which it was called on.
 
-Each LLM integration can optionally provide native implementations for streaming or batch, which, for providers that support it, can be more efficient.
+Each LLM integration can optionally provide native implementations for invoke, streaming or batch, which, for providers that support it, can be more efficient. The table shows, for each integration, which features have been implemented with native support.
+
+
+
+| Model | Invoke | Stream | Batch |
+| :--- | :---: | :---: | :---: |
+| ChatYandexGPT | ✅ | ❌ | ✅ |
+| PortkeyChat | ✅ | ✅ | ✅ |
+| ChatOpenAI | ✅ | ✅ | ✅ |
+| PromptLayerChatOpenAI | ✅ | ✅ | ✅ |
+| ChatOllama | ✅ | ✅ | ✅ |
+| ChatMinimax | ✅ | ❌ | ✅ |
+| ChatLlamaCpp | ✅ | ❌ | ✅ |
+| ChatGooglePaLM | ✅ | ❌ | ✅ |
+| ChatFireworks | ✅ | ✅ | ✅ |
+| ChatCloudflareWorkersAI | ✅ | ✅ | ✅ |
+| ChatBedrock | ✅ | ✅ | ✅ |
+| ChatBaiduWenxin | ✅ | ❌ | ✅ |
+| ChatAnthropic | ✅ | ✅ | ✅ |
+| ChatIflytekXinghuo | ✅ | ❌ | ✅ |
+| ChatIflytekXinghuo | ✅ | ❌ | ✅ |
+| ChatGoogleVertexAI | ✅ | ✅ | ✅ |
+| ChatGoogleVertexAI | ✅ | ✅ | ✅ |
