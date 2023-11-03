@@ -232,8 +232,8 @@ async function main() {
   const fullLLMFileContent = [LLM_DOC_TEXT, llmTable].join("\n\n");
 
   await Promise.all([
-    await fs.writeFile(CHAT_MODELS_DOC_INDEX_PATH, fullChatModelFileContent),
-    await fs.writeFile(LLM_DOC_INDEX_PATH, fullLLMFileContent),
+    fs.writeFile(CHAT_MODELS_DOC_INDEX_PATH, fullChatModelFileContent),
+    fs.writeFile(LLM_DOC_INDEX_PATH, fullLLMFileContent),
   ]);
 }
 
