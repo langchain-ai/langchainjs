@@ -24,6 +24,17 @@ import { StructuredChatAgent } from "../../agents/index.js";
 import { SerializedLLMChain } from "../../chains/serde.js";
 
 /**
+ * A utility function to distiguish a dynamicstructuredtool over other tools.
+ * @param tool the tool to test
+ * @returns bool
+ */
+export const isDynamicStructuredTool = (tool: Tool | DynamicStructuredTool): tool is DynamicStructuredTool => {
+    // We check for the existence of the static lc_name method in the object's constructor
+    return typeof (tool.constructor as any).lc_name === 'function' 
+           && (tool.constructor as any).lc_name() === "DynamicStructuredTool";
+  }
+
+/**
  * Interface for the input to the PlanAndExecuteAgentExecutor class. It
  * extends ChainInputs and includes additional properties for the planner,
  * step executor, step container, and input and output keys.
@@ -81,19 +92,13 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
    * @param llm The Large Language Model (LLM) used to generate responses.
    * @returns A new LLMPlanner instance.
    */
-  static getDefaultPlanner({
-    llm,
-    tools,
-  }: {
-    llm: BaseLanguageModel;
-    tools: Tool[] | DynamicStructuredTool[];
-  }) {
+
   static async getDefaultPlanner({
     llm,
     tools,
   }: {
     llm: BaseLanguageModel;
-    tools: Tool[];
+    tools: Tool[] | DynamicStructuredTool[];
   }) {
     const plannerLlmChain = new LLMChain({
       llm,
@@ -122,7 +127,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
   }) {
     let agent;
 
-    if (tools[0] instanceof DynamicStructuredTool) {
+    if (isDynamicStructuredTool(tools[0])) {
       agent = StructuredChatAgent.fromLLMAndTools(llm, tools, {
         humanMessageTemplate,
         inputVariables: ["previous_steps", "current_step", "agent_scratchpad"]
