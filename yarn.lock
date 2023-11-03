@@ -22048,6 +22048,7 @@ __metadata:
     dotenv: ^16.0.3
     husky: ^8.0.0
     lint-staged: ^13.1.1
+    openai: ^4.14.2
     prettier: ^2.8.3
     turbo: latest
     typescript: ^5.0.0
@@ -24240,6 +24241,25 @@ __metadata:
     is-docker: ^2.1.1
     is-wsl: ^2.2.0
   checksum: 6388bfff21b40cb9bd8f913f9130d107f2ed4724ea81a8fd29798ee322b361ca31fa2cdfb491a5c31e43a3996cfe9566741238c7a741ada8d7af1cb78d85cf26
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.14.2":
+  version: 4.14.2
+  resolution: "openai@npm:4.14.2"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 1a380410f5f3254f7b812f08188462ffe37f2c644ab4a6fbbd3ba170e399d9fc9ce91089adc9447e5a7e275c53c69294cc1398eb632e24dace7526859bc362d3
   languageName: node
   linkType: hard
 
@@ -30382,7 +30402,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-streams-polyfill@npm:^3.0.3":
+"web-streams-polyfill@npm:^3.0.3, web-streams-polyfill@npm:^3.2.1":
   version: 3.2.1
   resolution: "web-streams-polyfill@npm:3.2.1"
   checksum: b119c78574b6d65935e35098c2afdcd752b84268e18746606af149e3c424e15621b6f1ff0b42b2676dc012fc4f0d313f964b41a4b5031e525faa03997457da02
