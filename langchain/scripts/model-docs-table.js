@@ -23,7 +23,6 @@ const LLM_IGNORE = [
   "BaseSageMakerContentHandler",
   "FakeListLLM",
   "BaseGoogleVertexAI",
-  "",
 ];
 
 /**
@@ -75,7 +74,7 @@ Each ChatModel integration can optionally provide native implementations to trul
 `;
 
 /**
- * Documentation paths to rewrite.
+ * Build code // documentation paths to rewrite.
  */
 const CWD = process.cwd();
 const LLM_DOC_INDEX_PATH = path.join(CWD, "..", "./docs/docs/integrations/llms/index.mdx");
@@ -84,7 +83,7 @@ const CHAT_MODEL_DIRECTORY = path.join(CWD, "./dist/chat_models");
 const LLM_DIRECTORY = path.join(CWD, "./dist/llms");
 
 /**
- * Fetch all files which are not .test.ts from a directory.
+ * Fetch all files which are not .test.ts/.cjs/.d.ts from a directory.
  * @param dir {string}
  */
 const getAllJSFilesInDir = async (dir) => {
@@ -95,7 +94,7 @@ const getAllJSFilesInDir = async (dir) => {
 };
 
 /**
- * Verifies the class being passed is a class, and is a subclass of BaseChatModel or BaseLLM.
+ * Verifies the arg being passed is a class, and is a subclass of BaseChatModel or BaseLLM.
  * @param item {string}
  */
 const isClass = (item) => {
@@ -127,7 +126,7 @@ const isClass = (item) => {
 
 /**
  * Create the MD table.
- * @param {Array<{name: string, hasStreamImplemented: boolean, hasInvokeImplemented: boolean, hasBatchImplemented: boolean}>} data
+ * @param {Array<{name: string, hasStreamImplemented: boolean, hasInvokeImplemented: boolean, hasBatchImplemented: boolean}>}
  * @returns {string}
  */
 const createTable = (data) => {
@@ -146,20 +145,14 @@ const createTable = (data) => {
 };
 
 /**
- * Check the provided class has implemented the required methods.
+ * Check the provided class has implemented the required methods.'
+ * @param {string} directory
+ * @param {string} file
+ * @param {"chat" | "llm"} type
  */
 const checkClassMethods = async (
-  /**
-   * @type {string}
-   */
   directory,
-  /**
-   * @type {string}
-   */
   file,
-  /**
-   * @type "chat" | "llm"
-   */
   type,
 ) => {
   const fullFilePath = path.join(directory, file);
@@ -175,7 +168,7 @@ const checkClassMethods = async (
     }
   }
 
-  const classExports = Object.entries(all)
+  const classMethodImplementations = Object.entries(all)
     .filter(([_, value]) => isClass(value))
     .map(([key, value]) => {
       const instance = value;
@@ -183,18 +176,14 @@ const checkClassMethods = async (
       const hasInvokeImplemented = instance.prototype.invoke !== undefined;
       const hasBatchImplemented = instance.prototype.batch !== undefined;
 
-      if (type === "chat") {
-        hasStreamImplemented = !!(
-          instance.prototype._streamResponseChunks &&
-          instance.prototype._streamResponseChunks !==
-            BaseChatModel.prototype._streamResponseChunks
-        );
-      } else {
-        hasStreamImplemented = !!(
-          instance.prototype._streamResponseChunks &&
-          instance.prototype._streamResponseChunks !==
-            BaseLLM.prototype._streamResponseChunks
-        );
+      if (instance.prototype._streamResponseChunks) {
+        if (type === "chat") {
+          hasStreamImplemented = instance.prototype._streamResponseChunks !==
+            BaseChatModel.prototype._streamResponseChunks;
+        } else {
+          hasStreamImplemented = instance.prototype._streamResponseChunks !==
+            BaseLLM.prototype._streamResponseChunks;
+        }
       }
 
       return {
@@ -205,7 +194,7 @@ const checkClassMethods = async (
       };
     });
 
-  return classExports;
+  return classMethodImplementations;
 };
 
 export async function main() {
