@@ -1,7 +1,7 @@
-import path from "node:path";
+import path from "path";
 import { glob } from "glob";
-import { BaseChatModel } from "../src/chat_models/base";
-import { BaseLLM } from "../src/llms/base";
+import { BaseChatModel } from "../dist/chat_models/base.js";
+import { BaseLLM } from "../dist/llms/base.js";
 import fs from "fs/promises";
 
 /**
@@ -77,8 +77,8 @@ Each ChatModel integration can optionally provide native implementations to trul
 /**
  * Documentation paths to rewrite.
  */
-const LLM_DOC_INDEX_PATH = "docs/docs/integrations/llms/index.mdx";
-const CHAT_MODELS_DOC_INDEX_PATH = "docs/docs/integrations/chat/index.mdx";
+const LLM_DOC_INDEX_PATH = "../docs/docs/integrations/llms/index.mdx";
+const CHAT_MODELS_DOC_INDEX_PATH = "../docs/docs/integrations/chat/index.mdx";
 
 /**
  * Fetch all files which are not .test.ts from a directory.
@@ -205,7 +205,7 @@ const checkClassMethods = async (
   return classExports;
 };
 
-async function main() {
+export async function main() {
   const CWD = process.cwd();
   const CHAT_MODEL_DIRECTORY = path.join(CWD, "langchain/src/chat_models");
   const LLM_DIRECTORY = path.join(CWD, "langchain/src/llms");
@@ -237,6 +237,10 @@ async function main() {
   ]);
 }
 
-main().catch((e) => {
-  console.error('Error generating docs table: ', e);
-})
+(async () => {
+  try {
+    await main();
+  } catch (e) {
+    console.error('Error generating docs table: ', e);
+  }
+})();
