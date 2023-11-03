@@ -199,6 +199,9 @@
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/bedrock/web.cjs",
+    "llms/bedrock/web.js",
+    "llms/bedrock/web.d.ts",
     "llms/llama_cpp.cjs",
     "llms/llama_cpp.js",
     "llms/llama_cpp.d.ts",
@@ -481,6 +484,9 @@
     "chat_models/bedrock.cjs",
     "chat_models/bedrock.js",
     "chat_models/bedrock.d.ts",
+    "chat_models/bedrock/web.cjs",
+    "chat_models/bedrock/web.js",
+    "chat_models/bedrock/web.d.ts",
     "chat_models/cloudflare_workersai.cjs",
     "chat_models/cloudflare_workersai.js",
     "chat_models/cloudflare_workersai.d.ts",
@@ -1695,6 +1701,11 @@
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
     },
+    "./llms/bedrock/web": {
+      "types": "./llms/bedrock/web.d.ts",
+      "import": "./llms/bedrock/web.js",
+      "require": "./llms/bedrock/web.cjs"
+    },
     "./llms/llama_cpp": {
       "types": "./llms/llama_cpp.d.ts",
       "import": "./llms/llama_cpp.js",
@@ -2164,6 +2175,11 @@
       "types": "./chat_models/bedrock.d.ts",
       "import": "./chat_models/bedrock.js",
       "require": "./chat_models/bedrock.cjs"
+    },
+    "./chat_models/bedrock/web": {
+      "types": "./chat_models/bedrock/web.d.ts",
+      "import": "./chat_models/bedrock/web.js",
+      "require": "./chat_models/bedrock/web.cjs"
     },
     "./chat_models/cloudflare_workersai": {
       "types": "./chat_models/cloudflare_workersai.d.ts",

@@ -41,7 +41,10 @@ export interface BaseBedrockInput {
   /** Override the default endpoint hostname. */
   endpointHost?: string;
 
-  /** Optional additional stop sequences to pass to the model. Currently only supported for Anthropic and AI21. */
+  /**
+   * Optional additional stop sequences to pass to the model. Currently only supported for Anthropic and AI21.
+   * @deprecated Use .bind({ "stop": [...] }) instead
+   * */
   stopSequences?: string[];
 
   /** Additional kwargs to pass to the model. */
@@ -70,7 +73,8 @@ export class BedrockLLMInputOutputAdapter {
     maxTokens = 50,
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
-    modelKwargs: Record<string, unknown> = {}
+    modelKwargs: Record<string, unknown> = {},
+    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke"
   ): Dict {
     const inputBody: Dict = {};
 
@@ -90,6 +94,14 @@ export class BedrockLLMInputOutputAdapter {
         maxTokenCount: maxTokens,
         temperature,
       };
+    } else if (provider === "cohere") {
+      inputBody.prompt = prompt;
+      inputBody.max_tokens = maxTokens;
+      inputBody.temperature = temperature;
+      inputBody.stop_sequences = stopSequences;
+      if (bedrockMethod === "invoke-with-response-stream") {
+        inputBody.stream = true;
+      }
     }
     return { ...inputBody, ...modelKwargs };
   }
@@ -106,6 +118,8 @@ export class BedrockLLMInputOutputAdapter {
       return responseBody.completion;
     } else if (provider === "ai21") {
       return responseBody?.completions?.[0]?.data?.text ?? "";
+    } else if (provider === "cohere") {
+      return responseBody?.generations?.[0]?.text ?? responseBody?.text ?? "";
     }
 
     // I haven't been able to get a response with more than one result in it.
