@@ -98,8 +98,11 @@ export interface OptionalImportMap {
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
   "langchain/llms/bedrock"?:
-    | typeof import("../llms/bedrock.js")
-    | Promise<typeof import("../llms/bedrock.js")>;
+    | typeof import("../llms/bedrock/index.js")
+    | Promise<typeof import("../llms/bedrock/index.js")>;
+  "langchain/llms/bedrock/web"?:
+    | typeof import("../llms/bedrock/web.js")
+    | Promise<typeof import("../llms/bedrock/web.js")>;
   "langchain/llms/llama_cpp"?:
     | typeof import("../llms/llama_cpp.js")
     | Promise<typeof import("../llms/llama_cpp.js")>;
@@ -323,8 +326,11 @@ export interface OptionalImportMap {
     | typeof import("../chat_models/portkey.js")
     | Promise<typeof import("../chat_models/portkey.js")>;
   "langchain/chat_models/bedrock"?:
-    | typeof import("../chat_models/bedrock/web.ts")
-    | Promise<typeof import("../chat_models/bedrock/web.ts")>;
+    | typeof import("../chat_models/bedrock/index.js")
+    | Promise<typeof import("../chat_models/bedrock/index.js")>;
+  "langchain/chat_models/bedrock/web"?:
+    | typeof import("../chat_models/bedrock/web.js")
+    | Promise<typeof import("../chat_models/bedrock/web.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai/index.js")
     | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
@@ -483,6 +489,8 @@ export interface SecretMap {
   AZURE_OPENAI_API_KEY?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
+  BEDROCK_AWS_ACCESS_KEY_ID?: string;
+  BEDROCK_AWS_SECRET_ACCESS_KEY?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   FIREWORKS_API_KEY?: string;

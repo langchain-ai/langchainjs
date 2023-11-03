@@ -376,3 +376,8 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     return {};
   }
 }
+
+/**
+ * @deprecated Use `BedrockChat` instead.
+ */
+export const ChatBedrock = BedrockChat;
