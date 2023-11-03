@@ -250,6 +250,7 @@
       "src/stores/doc/gcs.ts",
       "src/stores/file/in_memory.ts",
       "src/stores/file/node.ts",
+      "src/stores/message/cassandra.ts",
       "src/stores/message/convex.ts",
       "src/stores/message/cloudflare_d1.ts",
       "src/stores/message/in_memory.ts",
