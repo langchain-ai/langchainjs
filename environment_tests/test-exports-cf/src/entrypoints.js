@@ -21,6 +21,7 @@ export * from "langchain/embeddings/fake";
 export * from "langchain/embeddings/ollama";
 export * from "langchain/embeddings/openai";
 export * from "langchain/embeddings/minimax";
+export * from "langchain/embeddings/voyage";
 export * from "langchain/llms/base";
 export * from "langchain/llms/openai";
 export * from "langchain/llms/ai21";
