@@ -2,17 +2,12 @@ import { chunkArray } from "../util/chunk.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
-enum VoyageModelNames {
-  voyage01 = "voyage-01",
-  voyagelite01 = "voyage-lite-01"
-}
-
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the VoyageEmbeddings class.
  */
 export interface VoyageEmbeddingsParams extends EmbeddingsParams {
-  modelName: VoyageModelNames;
+  modelName: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
@@ -29,7 +24,7 @@ export interface CreateVoyageEmbeddingRequest {
    * @type {string}
    * @memberof CreateVoyageEmbeddingRequest
    */
-  model: VoyageModelNames;
+  model: string;
 
   /**
    *  Text to generate vector expectation
@@ -46,7 +41,7 @@ export class VoyageEmbeddings
   extends Embeddings
   implements VoyageEmbeddingsParams
 {
-  modelName = VoyageModelNames.voyage01;
+  modelName = "voyage-01";
 
   batchSize = 8;
 
@@ -68,7 +63,7 @@ export class VoyageEmbeddings
       apiKey?: string;
     }
   ) {
-    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
+    const fieldsWithDefaults = { ...fields };
 
     super(fieldsWithDefaults);
 
