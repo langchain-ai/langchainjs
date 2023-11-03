@@ -257,6 +257,7 @@ const entrypoints = {
   "stores/doc/gcs": "stores/doc/gcs",
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/cassandra": "stores/message/cassandra",
   "stores/message/convex": "stores/message/convex",
   "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
   "stores/message/in_memory": "stores/message/in_memory",
