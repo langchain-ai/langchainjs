@@ -87,7 +87,7 @@ const LLM_DIRECTORY = path.join(CWD, "./dist/llms");
  * Fetch all files which are not .test.ts from a directory.
  * @param dir {string}
  */
-const getAllTSFilesInDir = async (dir) => {
+const getAllJSFilesInDir = async (dir) => {
   const pattern = "**/!(*.test.ts|*.cjs|*.d.ts)";
   const options = { nodir: true, cwd: dir };
   const globbered = await glob(pattern, options);
@@ -209,8 +209,8 @@ const checkClassMethods = async (
 };
 
 export async function main() {
-  const chatModelFiles = await getAllTSFilesInDir(CHAT_MODEL_DIRECTORY);
-  const llmFiles = await getAllTSFilesInDir(LLM_DIRECTORY);
+  const chatModelFiles = await getAllJSFilesInDir(CHAT_MODEL_DIRECTORY);
+  const llmFiles = await getAllJSFilesInDir(LLM_DIRECTORY);
 
   const [chatClassCompatibility, llmClassCompatibility] = await Promise.all([
     Promise.all(
