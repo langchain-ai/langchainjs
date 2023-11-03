@@ -117,7 +117,7 @@ export class CassandraStore extends VectorStore {
     this.indices = indices;
     this.batchSize = batchSize >= 1 ? batchSize : 1;
   }
-  
+
   /**
    * Method to save vectors to the Cassandra database.
    * @param vectors Vectors to save.
@@ -366,7 +366,7 @@ export class CassandraStore extends VectorStore {
       typeof obj === "object" && obj !== null && "name" in obj && "value" in obj
     );
   }
-  
+
   /**
    * Helper to convert Record<string,unknown> to a Filter[]
    * @param record: a key-value Record collection
@@ -379,7 +379,7 @@ export class CassandraStore extends VectorStore {
       operator: "=",
     }));
   }
-  
+
   /**
    * Input santisation method for filters, as FilterType is not required to be
    * Filter[], but we want to use Filter[] internally.
@@ -390,11 +390,10 @@ export class CassandraStore extends VectorStore {
     if (!record) {
       return [];
     }
-  
+
     // If record is already an array
     if (Array.isArray(record)) {
-
-      return record.flatMap(item => {
+      return record.flatMap((item) => {
         // Check if item is a Filter before passing it to convertToFilters
         if (this.isFilter(item)) {
           return [item];
@@ -403,13 +402,13 @@ export class CassandraStore extends VectorStore {
           return this.convertToFilters(item);
         }
       });
-    }  
-    
+    }
+
     // If record is a single Filter object, return it in an array
     if (this.isFilter(record)) {
       return [record];
     }
-  
+
     // If record is a Record<string, unknown>, convert it to an array of Filter
     return this.convertToFilters(record);
   }
