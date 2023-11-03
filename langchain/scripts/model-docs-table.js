@@ -236,4 +236,7 @@ async function main() {
     await fs.writeFile(LLM_DOC_INDEX_PATH, fullLLMFileContent),
   ]);
 }
-main();
+
+main().catch((e) => {
+  console.error('Error generating docs table: ', e);
+})
