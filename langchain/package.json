@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.178",
+  "version": "0.0.179",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -82,6 +82,9 @@
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "chains/combine_documents/reduce.cjs",
+    "chains/combine_documents/reduce.js",
+    "chains/combine_documents/reduce.d.ts",
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
@@ -532,6 +535,9 @@
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
+    "schema/prompt_template.cjs",
+    "schema/prompt_template.js",
+    "schema/prompt_template.d.ts",
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
@@ -1497,6 +1503,11 @@
       "import": "./chains.js",
       "require": "./chains.cjs"
     },
+    "./chains/combine_documents/reduce": {
+      "types": "./chains/combine_documents/reduce.d.ts",
+      "import": "./chains/combine_documents/reduce.js",
+      "require": "./chains/combine_documents/reduce.cjs"
+    },
     "./chains/load": {
       "types": "./chains/load.d.ts",
       "import": "./chains/load.js",
@@ -2246,6 +2257,11 @@
       "types": "./schema/output_parser.d.ts",
       "import": "./schema/output_parser.js",
       "require": "./schema/output_parser.cjs"
+    },
+    "./schema/prompt_template": {
+      "types": "./schema/prompt_template.d.ts",
+      "import": "./schema/prompt_template.js",
+      "require": "./schema/prompt_template.cjs"
     },
     "./schema/query_constructor": {
       "types": "./schema/query_constructor.d.ts",

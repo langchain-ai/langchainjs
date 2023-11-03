@@ -70,6 +70,9 @@ tools/google_calendar.d.ts
 chains.cjs
 chains.js
 chains.d.ts
+chains/combine_documents/reduce.cjs
+chains/combine_documents/reduce.js
+chains/combine_documents/reduce.d.ts
 chains/load.cjs
 chains/load.js
 chains/load.d.ts
@@ -520,6 +523,9 @@ schema/document.d.ts
 schema/output_parser.cjs
 schema/output_parser.js
 schema/output_parser.d.ts
+schema/prompt_template.cjs
+schema/prompt_template.js
+schema/prompt_template.d.ts
 schema/query_constructor.cjs
 schema/query_constructor.js
 schema/query_constructor.d.ts

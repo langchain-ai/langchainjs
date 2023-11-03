@@ -1,4 +1,5 @@
 export * from "./src/core.js";
+export * from "./src/duplex.js";
 export {
   PatchError as JsonPatchError,
   _deepClone as deepClone,

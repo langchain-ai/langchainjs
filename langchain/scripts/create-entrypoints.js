@@ -37,6 +37,7 @@ const entrypoints = {
   "tools/google_calendar": "tools/google_calendar/index",
   // chains
   chains: "chains/index",
+  "chains/combine_documents/reduce": "chains/combine_documents/reduce",
   "chains/load": "chains/load",
   "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
@@ -205,6 +206,7 @@ const entrypoints = {
   schema: "schema/index",
   "schema/document": "schema/document",
   "schema/output_parser": "schema/output_parser",
+  "schema/prompt_template": "schema/prompt_template",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
   "schema/runnable": "schema/runnable/index",
