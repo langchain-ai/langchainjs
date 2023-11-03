@@ -9,6 +9,7 @@ import { Document } from "../document.js";
 export interface Column {
   type: string;
   name: string;
+  partition?: boolean;
 }
 
 export interface Index {
@@ -16,12 +17,24 @@ export interface Index {
   value: string;
 }
 
+export interface Filter {
+  name: string;
+  value: unknown;
+  operator?: string;
+}
+
+export type WhereClause = Filter[] | Filter | Record<string, unknown>;
+
+export type SupportedVectorTypes = "cosine" | "dot_product" | "euclidean";
+
 export interface CassandraLibArgs extends DseClientOptions, AsyncCallerParams {
   table: string;
   keyspace: string;
+  vectorType?: SupportedVectorTypes;
   dimensions: number;
-  primaryKey: Column;
+  primaryKey: Column | Column[];
   metadataColumns: Column[];
+  withClause?: string;
   indices?: Index[];
   batchSize?: number;
 }
@@ -34,17 +47,23 @@ export interface CassandraLibArgs extends DseClientOptions, AsyncCallerParams {
  */
 export class CassandraStore extends VectorStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  declare FilterType: Record<string, any>;
+  declare FilterType: WhereClause;
 
   private client: CassandraClient;
+
+  private readonly vectorType: SupportedVectorTypes;
 
   private readonly dimensions: number;
 
   private readonly keyspace: string;
 
-  private primaryKey: Column;
+  private primaryKey: Column[];
 
   private metadataColumns: Column[];
+
+  private withClause: string;
+
+  private selectColumns: string;
 
   private readonly table: string;
 
@@ -61,29 +80,42 @@ export class CassandraStore extends VectorStore {
   }
 
   constructor(embeddings: Embeddings, args: CassandraLibArgs) {
-    const argsWithDefaults = {
-      indices: [],
-      maxConcurrency: 25,
-      batchSize: 1,
-      ...args,
-    };
-    super(embeddings, argsWithDefaults);
-    this.asyncCaller = new AsyncCaller(argsWithDefaults ?? {});
+    super(embeddings, args);
 
+    const {
+      indices = [],
+      maxConcurrency = 25,
+      withClause = "",
+      batchSize = 1,
+      vectorType = "cosine",
+      dimensions,
+      keyspace,
+      table,
+      primaryKey,
+      metadataColumns,
+    } = args;
+
+    const argsWithDefaults = {
+      ...args,
+      indices,
+      maxConcurrency,
+      withClause,
+      batchSize,
+      vectorType,
+    };
+    this.asyncCaller = new AsyncCaller(argsWithDefaults);
     this.client = new CassandraClient(argsWithDefaults);
-    this.dimensions = argsWithDefaults.dimensions;
-    this.keyspace = argsWithDefaults.keyspace;
-    this.table = argsWithDefaults.table;
-    this.primaryKey = argsWithDefaults.primaryKey;
-    this.metadataColumns = argsWithDefaults.metadataColumns;
-    this.indices = argsWithDefaults.indices;
-    this.batchSize = argsWithDefaults.batchSize;
-    if (this.batchSize < 1) {
-      console.warn(
-        "batchSize must be greater than or equal to 1, defaulting to 1"
-      );
-      this.batchSize = 1;
-    }
+
+    // Assign properties
+    this.vectorType = vectorType;
+    this.dimensions = dimensions;
+    this.keyspace = keyspace;
+    this.table = table;
+    this.primaryKey = Array.isArray(primaryKey) ? primaryKey : [primaryKey];
+    this.metadataColumns = metadataColumns;
+    this.withClause = withClause.trim().replace(/^with\s*/i, "");
+    this.indices = indices;
+    this.batchSize = batchSize >= 1 ? batchSize : 1;
   }
 
   /**
@@ -126,24 +158,57 @@ export class CassandraStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: WhereClause
   ): Promise<[Document, number][]> {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
-    const queryStr = this.buildSearchQuery(query, k, filter);
-    const queryResultSet = await this.client.execute(queryStr);
+    // Ensure we have an array of Filter from the public interface
+    const filters = this.asFilters(filter);
 
-    return queryResultSet?.rows.map((row, index) => {
+    const queryStr = this.buildSearchQuery(filters);
+
+    // Search query will be of format:
+    //   SELECT ..., text, similarity_x(?) AS similarity_score
+    //     FROM ...
+    //   <WHERE ...>
+    //    ORDER BY vector ANN OF ?
+    //    LIMIT ?
+    // If any filter values are specified, they will be in the WHERE clause as
+    //   filter.name filter.operator ?
+    // queryParams is a list of bind variables sent with the prepared statement
+    const queryParams = [];
+    const vectorAsFloat32Array = new Float32Array(query);
+    queryParams.push(vectorAsFloat32Array);
+    if (filters) {
+      const values = (filters as Filter[]).map(({ value }) => value);
+      queryParams.push(...values);
+    }
+    queryParams.push(vectorAsFloat32Array);
+    queryParams.push(k);
+
+    const queryResultSet = await this.client.execute(queryStr, queryParams, {
+      prepare: true,
+    });
+
+    return queryResultSet?.rows.map((row) => {
       const textContent = row.text;
-      const sanitizedRow = Object.assign(row, {});
-      delete sanitizedRow.vector;
+      const sanitizedRow = { ...row };
       delete sanitizedRow.text;
+      delete sanitizedRow.similarity_score;
+
+      // A null value in Cassandra evaluates to a deleted column
+      // as this is treated as a tombstone record for the cell.
+      Object.keys(sanitizedRow).forEach((key) => {
+        if (sanitizedRow[key] === null) {
+          delete sanitizedRow[key];
+        }
+      });
 
       return [
         new Document({ pageContent: textContent, metadata: sanitizedRow }),
-        index,
+        row.similarity_score,
       ];
     });
   }
@@ -215,36 +280,154 @@ export class CassandraStore extends VectorStore {
    * @returns Promise that resolves when the database has been initialized.
    */
   private async initialize(): Promise<void> {
-    await this.client.execute(`CREATE TABLE IF NOT EXISTS ${this.keyspace}.${
-      this.table
-    } (
-      ${this.primaryKey.name} ${this.primaryKey.type} PRIMARY KEY,
-      text TEXT,
+    let cql = "";
+    cql = `CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
+      ${this.primaryKey.map((col) => `${col.name} ${col.type}`).join(", ")}
+      , text TEXT
       ${
         this.metadataColumns.length > 0
-          ? this.metadataColumns.map((col) => `${col.name} ${col.type},`)
+          ? ", " +
+            this.metadataColumns
+              .map((col) => `${col.name} ${col.type}`)
+              .join(", ")
           : ""
       }
-      vector VECTOR<FLOAT, ${this.dimensions}>
-    );`);
+      , vector VECTOR<FLOAT, ${this.dimensions}>
+      , ${this.buildPrimaryKey(this.primaryKey)}
+    ) ${this.withClause ? `WITH ${this.withClause}` : ""};`;
 
-    await this.client
-      .execute(`CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
-  ON ${this.keyspace}.${this.table}(vector) USING 'StorageAttachedIndex';`);
+    await this.client.execute(cql);
+
+    this.selectColumns = `${this.primaryKey
+      .map((col) => `${col.name}`)
+      .join(", ")}
+                          ${
+                            this.metadataColumns.length > 0
+                              ? ", " +
+                                this.metadataColumns
+                                  .map((col) => `${col.name}`)
+                                  .join(", ")
+                              : ""
+                          }`;
+
+    cql = `CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
+           ON ${this.keyspace}.${
+      this.table
+    }(vector) USING 'StorageAttachedIndex' WITH OPTIONS = {'similarity_function': '${this.vectorType.toUpperCase()}'};`;
+    await this.client.execute(cql);
 
     for await (const { name, value } of this.indices) {
-      await this.client
-        .execute(`CREATE CUSTOM INDEX IF NOT EXISTS idx_${this.table}_${name}
-  ON ${this.keyspace}.${this.table} ${value} USING 'StorageAttachedIndex';`);
+      cql = `CREATE CUSTOM INDEX IF NOT EXISTS idx_${this.table}_${name}
+             ON ${this.keyspace}.${this.table} ${value} USING 'StorageAttachedIndex';`;
+      await this.client.execute(cql);
     }
     this.isInitialized = true;
   }
 
-  private buildWhereClause(filter: this["FilterType"]): string {
-    const whereClause = Object.entries(filter)
-      .map(([key, value]) => `${key} = '${value}'`)
-      .join(" AND ");
-    return `WHERE ${whereClause}`;
+  /**
+   * Method to build the PRIMARY KEY clause for CREATE TABLE.
+   * @param columns: list of Column to include in the key
+   * @returns The clause, including PRIMARY KEY
+   */
+  private buildPrimaryKey(columns: Column[]): string {
+    // Partition columns may be specified with optional attribute col.partition
+    const partitionColumns = columns
+      .filter((col) => col.partition)
+      .map((col) => col.name)
+      .join(", ");
+
+    // All columns not part of the partition key are clustering columns
+    const clusteringColumns = columns
+      .filter((col) => !col.partition)
+      .map((col) => col.name)
+      .join(", ");
+
+    let primaryKey = "";
+
+    // If partition columns are specified, they are included in a () wrapper
+    // If not, the clustering columns are used, and the first clustering column
+    // is the partition key per normal Cassandra behaviour.
+    if (partitionColumns) {
+      primaryKey = `PRIMARY KEY ((${partitionColumns}), ${clusteringColumns})`;
+    } else {
+      primaryKey = `PRIMARY KEY (${clusteringColumns})`;
+    }
+
+    return primaryKey;
+  }
+
+  /**
+   * Type guard to check if an object is a Filter.
+   * @param obj: the object to check
+   * @returns boolean indicating if the object is a Filter
+   */
+  private isFilter(obj: unknown): obj is Filter {
+    return (
+      typeof obj === "object" && obj !== null && "name" in obj && "value" in obj
+    );
+  }
+
+  /**
+   * Helper to convert Record<string,unknown> to a Filter[]
+   * @param record: a key-value Record collection
+   * @returns Record as a Filter[]
+   */
+  private convertToFilters(record: Record<string, unknown>): Filter[] {
+    return Object.entries(record).map(([name, value]) => ({
+      name,
+      value,
+      operator: "=",
+    }));
+  }
+
+  /**
+   * Input santisation method for filters, as FilterType is not required to be
+   * Filter[], but we want to use Filter[] internally.
+   * @param record: the proposed filter
+   * @returns A Filter[], which may be empty
+   */
+  private asFilters(record: WhereClause | undefined): Filter[] {
+    if (!record) {
+      return [];
+    }
+
+    // If record is already an array
+    if (Array.isArray(record)) {
+      return record.flatMap((item) => {
+        // Check if item is a Filter before passing it to convertToFilters
+        if (this.isFilter(item)) {
+          return [item];
+        } else {
+          // Here item is treated as Record<string, unknown>
+          return this.convertToFilters(item);
+        }
+      });
+    }
+
+    // If record is a single Filter object, return it in an array
+    if (this.isFilter(record)) {
+      return [record];
+    }
+
+    // If record is a Record<string, unknown>, convert it to an array of Filter
+    return this.convertToFilters(record);
+  }
+
+  /**
+   * Method to build the WHERE clause of a CQL query, using bind variable ?
+   * @param filters list of filters to include in the WHERE clause
+   * @returns The WHERE clause
+   */
+  private buildWhereClause(filters?: Filter[]): string {
+    if (!filters || filters.length === 0) {
+      return "";
+    }
+
+    const whereConditions = filters.map(
+      ({ name, operator = "=" }) => `${name} ${operator} ?`
+    );
+
+    return `WHERE ${whereConditions.join(" AND ")}`;
   }
 
   /**
@@ -252,17 +435,16 @@ export class CassandraStore extends VectorStore {
    * Cassandra database.
    * @param query The query vector.
    * @param k The number of similar vectors to return.
-   * @param filter
+   * @param filters
    * @returns The CQL query string.
    */
-  private buildSearchQuery(
-    query: number[],
-    k = 1,
-    filter: this["FilterType"] | undefined = undefined
-  ): string {
-    const whereClause = filter ? this.buildWhereClause(filter) : "";
+  private buildSearchQuery(filters: Filter[]): string {
+    const whereClause = filters ? this.buildWhereClause(filters) : "";
 
-    return `SELECT * FROM ${this.keyspace}.${this.table} ${whereClause} ORDER BY vector ANN OF [${query}] LIMIT ${k}`;
+    const cqlQuery = `SELECT ${this.selectColumns}, text, similarity_${this.vectorType}(vector, ?) AS similarity_score
+                        FROM ${this.keyspace}.${this.table} ${whereClause} ORDER BY vector ANN OF ? LIMIT ?`;
+
+    return cqlQuery;
   }
 
   /**
@@ -304,7 +486,7 @@ export class CassandraStore extends VectorStore {
       const query = {
         query: `INSERT INTO ${this.keyspace}.${
           this.table
-        } (vector, text${metadataInsert}) 
+        } (vector, text${metadataInsert})
                 VALUES (?, ?${", ?".repeat(metadataColNames.length)})`,
         params: [preparedVector, document.pageContent, ...metadataVals],
       };

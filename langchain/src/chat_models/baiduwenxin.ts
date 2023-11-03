@@ -335,7 +335,7 @@ export class ChatBaiduWenxin
                   return;
                 }
                 rejected = true;
-                reject(data);
+                reject(new Error(data?.error_msg));
                 return;
               }
 
@@ -394,7 +394,12 @@ export class ChatBaiduWenxin
           },
           false,
           options?.signal
-        );
+        ).then((data) => {
+          if (data?.error_code) {
+            throw new Error(data?.error_msg);
+          }
+          return data;
+        });
 
     const {
       completion_tokens: completionTokens,
@@ -454,6 +459,20 @@ export class ChatBaiduWenxin
         return response.json();
       } else {
         if (response.body) {
+          // response will not be a stream if an error occurred
+          if (
+            !response.headers
+              .get("content-type")
+              ?.startsWith("text/event-stream")
+          ) {
+            onmessage?.(
+              new MessageEvent("message", {
+                data: await response.text(),
+              })
+            );
+            return;
+          }
+
           const reader = response.body.getReader();
 
           const decoder = new TextDecoder("utf-8");

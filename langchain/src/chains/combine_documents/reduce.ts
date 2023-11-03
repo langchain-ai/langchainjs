@@ -13,6 +13,7 @@ import { Document } from "../../document.js";
  */
 export function splitListOfDocs(
   docs: Document[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lengthFunc: (...args: any[]) => any,
   tokenMax: number
 ): Document[][] {

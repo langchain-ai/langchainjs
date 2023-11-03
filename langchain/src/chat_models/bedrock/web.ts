@@ -9,11 +9,74 @@ import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
-} from "../util/bedrock.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { LLM, BaseLLMParams } from "./base.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { GenerationChunk } from "../schema/index.js";
+} from "../../util/bedrock.js";
+import { getEnvironmentVariable } from "../../util/env.js";
+import { SimpleChatModel, BaseChatModelParams } from "../base.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  AIMessage,
+  ChatGenerationChunk,
+  ChatMessage,
+} from "../../schema/index.js";
+import { SerializedFields } from "../../load/map_keys.js";
+
+function convertOneMessageToText(
+  message: BaseMessage,
+  humanPrompt: string,
+  aiPrompt: string
+): string {
+  if (message._getType() === "human") {
+    return `${humanPrompt} ${message.content}`;
+  } else if (message._getType() === "ai") {
+    return `${aiPrompt} ${message.content}`;
+  } else if (message._getType() === "system") {
+    return `${humanPrompt} <admin>${message.content}</admin>`;
+  } else if (ChatMessage.isInstance(message)) {
+    return `\n\n${
+      message.role[0].toUpperCase() + message.role.slice(1)
+    }: {message.content}`;
+  }
+  throw new Error(`Unknown role: ${message._getType()}`);
+}
+
+export function convertMessagesToPromptAnthropic(
+  messages: BaseMessage[],
+  humanPrompt = "\n\nHuman:",
+  aiPrompt = "\n\nAssistant:"
+): string {
+  const messagesCopy = [...messages];
+
+  if (
+    messagesCopy.length === 0 ||
+    messagesCopy[messagesCopy.length - 1]._getType() !== "ai"
+  ) {
+    messagesCopy.push(new AIMessage({ content: "" }));
+  }
+
+  return messagesCopy
+    .map((message) => convertOneMessageToText(message, humanPrompt, aiPrompt))
+    .join("");
+}
+
+/**
+ * Function that converts an array of messages into a single string prompt
+ * that can be used as input for a chat model. It delegates the conversion
+ * logic to the appropriate provider-specific function.
+ * @param messages Array of messages to be converted.
+ * @param options Options to be used during the conversion.
+ * @returns A string prompt that can be used as input for a chat model.
+ */
+export function convertMessagesToPrompt(
+  messages: BaseMessage[],
+  provider: string
+): string {
+  if (provider === "anthropic") {
+    return convertMessagesToPromptAnthropic(messages);
+  }
+  throw new Error(`Provider ${provider} does not support chat.`);
+}
 
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
@@ -24,7 +87,7 @@ import { GenerationChunk } from "../schema/index.js";
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
  */
-export class Bedrock extends LLM implements BaseBedrockInput {
+export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";
 
   region: string;
@@ -39,6 +102,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   endpointHost?: string;
 
+  /** @deprecated */
   stopSequences?: string[];
 
   modelKwargs?: Record<string, unknown>;
@@ -47,8 +111,24 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   streaming = false;
 
+  lc_serializable = true;
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_id",
+      region: "region_name",
+    };
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
-    return {};
+    return {
+      "credentials.accessKeyId": "BEDROCK_AWS_ACCESS_KEY_ID",
+      "credentials.secretAccessKey": "BEDROCK_AWS_SECRET_ACCESS_KEY",
+    };
+  }
+
+  get lc_attributes(): SerializedFields | undefined {
+    return { region: this.region };
   }
 
   _llmType() {
@@ -56,14 +136,14 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   }
 
   static lc_name() {
-    return "Bedrock";
+    return "BedrockChat";
   }
 
-  constructor(fields?: Partial<BaseBedrockInput> & BaseLLMParams) {
+  constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
@@ -77,7 +157,15 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       );
     }
     this.region = region;
-    this.credentials = fields?.credentials ?? defaultProvider();
+
+    const credentials = fields?.credentials ?? defaultProvider();
+    if (!credentials) {
+      throw new Error(
+        "Please set the AWS credentials in the 'credentials' field."
+      );
+    }
+    this.credentials = credentials;
+
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.fetchFn = fields?.fetchFn ?? fetch;
@@ -98,7 +186,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       response = model.call("Tell me a joke.")
   */
   async _call(
-    prompt: string,
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
@@ -107,8 +195,8 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
     const provider = this.model.split(".")[0];
     if (this.streaming) {
-      const stream = this._streamResponseChunks(prompt, options, runManager);
-      let finalResult: GenerationChunk | undefined;
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      let finalResult: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {
         if (finalResult === undefined) {
           finalResult = chunk;
@@ -116,9 +204,10 @@ export class Bedrock extends LLM implements BaseBedrockInput {
           finalResult = finalResult.concat(chunk);
         }
       }
-      return finalResult?.text ?? "";
+      return finalResult?.message.content ?? "";
     }
-    const response = await this._signedFetch(prompt, options, {
+
+    const response = await this._signedFetch(messages, options, {
       bedrockMethod: "invoke",
       endpointHost,
       provider,
@@ -134,7 +223,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   }
 
   async _signedFetch(
-    prompt: string,
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     fields: {
       bedrockMethod: "invoke" | "invoke-with-response-stream";
@@ -145,11 +234,12 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     const { bedrockMethod, endpointHost, provider } = fields;
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
-      prompt,
+      convertMessagesToPromptAnthropic(messages),
       this.maxTokens,
       this.temperature,
-      this.stopSequences,
-      this.modelKwargs
+      options.stop ?? this.stopSequences,
+      this.modelKwargs,
+      fields.bedrockMethod
     );
 
     const url = new URL(
@@ -194,20 +284,22 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   }
 
   async *_streamResponseChunks(
-    prompt: string,
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<GenerationChunk> {
+  ): AsyncGenerator<ChatGenerationChunk> {
     const provider = this.model.split(".")[0];
-    const bedrockMethod =
-      provider === "anthropic" ? "invoke-with-response-stream" : "invoke";
-
     const service = "bedrock-runtime";
+
     const endpointHost =
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
 
-    // Send request to AWS using the low-level fetch API
-    const response = await this._signedFetch(prompt, options, {
+    const bedrockMethod =
+      provider === "anthropic" || provider === "cohere"
+        ? "invoke-with-response-stream"
+        : "invoke";
+
+    const response = await this._signedFetch(messages, options, {
       bedrockMethod,
       endpointHost,
       provider,
@@ -221,7 +313,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       );
     }
 
-    if (provider === "anthropic") {
+    if (provider === "anthropic" || provider === "cohere") {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
@@ -239,15 +331,17 @@ export class Bedrock extends LLM implements BaseBedrockInput {
         }
         if (body.bytes !== undefined) {
           const chunkResult = JSON.parse(
-            Buffer.from(body.bytes, "base64").toString()
+            decoder.decode(
+              Uint8Array.from(atob(body.bytes), (m) => m.codePointAt(0) ?? 0)
+            )
           );
           const text = BedrockLLMInputOutputAdapter.prepareOutput(
             provider,
             chunkResult
           );
-          yield new GenerationChunk({
+          yield new ChatGenerationChunk({
             text,
-            generationInfo: {},
+            message: new AIMessageChunk({ content: text }),
           });
           // eslint-disable-next-line no-void
           void runManager?.handleLLMNewToken(text);
@@ -256,9 +350,9 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     } else {
       const json = await response.json();
       const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
-      yield new GenerationChunk({
+      yield new ChatGenerationChunk({
         text,
-        generationInfo: {},
+        message: new AIMessageChunk({ content: text }),
       });
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
@@ -277,4 +371,13 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       },
     };
   }
+
+  _combineLLMOutput() {
+    return {};
+  }
 }
+
+/**
+ * @deprecated Use `BedrockChat` instead.
+ */
+export const ChatBedrock = BedrockChat;
