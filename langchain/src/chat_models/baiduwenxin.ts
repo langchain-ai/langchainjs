@@ -335,7 +335,7 @@ export class ChatBaiduWenxin
                   return;
                 }
                 rejected = true;
-                reject(data);
+                reject(new Error(data?.error_msg));
                 return;
               }
 
@@ -396,7 +396,7 @@ export class ChatBaiduWenxin
           options?.signal
         ).then((data) => {
           if (data?.error_code) {
-            throw data;
+            throw new Error(data?.error_msg);
           }
           return data;
         });
