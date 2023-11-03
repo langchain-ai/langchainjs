@@ -1,13 +1,18 @@
 import { BaseLLM } from "../base.js";
-import { Generation, LLMResult } from "../../schema/index.js";
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
+import { Generation, GenerationChunk, LLMResult } from "../../schema/index.js";
+import {
+  GoogleVertexAILLMConnection,
+  GoogleVertexAIStream,
+  GoogleVertexAILLMResponse,
+} from "../../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
-  GoogleVertexAILLMResponse,
+  GoogleVertexAILLMPredictions,
   GoogleVertexAIModelParams,
 } from "../../types/googlevertexai-types.js";
 import { BaseLanguageModelCallOptions } from "../../base_language/index.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/index.js";
 
 /**
  * Interface representing the instance of text input to the Google Vertex
@@ -68,6 +73,13 @@ export class BaseGoogleVertexAI<AuthOptions>
     AuthOptions
   >;
 
+  protected streamedConnection: GoogleVertexAILLMConnection<
+    BaseLanguageModelCallOptions,
+    GoogleVertexAILLMInstance,
+    TextPrediction,
+    AuthOptions
+  >;
+
   get lc_aliases(): Record<string, string> {
     return {
       model: "model_name",
@@ -97,6 +109,41 @@ export class BaseGoogleVertexAI<AuthOptions>
     return "vertexai";
   }
 
+  async *_streamResponseChunks(
+    _input: string,
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    // Make the call as a streaming request
+    const instance = this.formatInstance(_input);
+    const parameters = this.formatParameters();
+    const result = await this.streamedConnection.request(
+      [instance],
+      parameters,
+      _options
+    );
+
+    // Get the streaming parser of the response
+    const stream = result.data as GoogleVertexAIStream;
+
+    // Loop until the end of the stream
+    // During the loop, yield each time we get a chunk from the streaming parser
+    // that is either available or added to the queue
+    while (!stream.streamDone) {
+      const output = await stream.nextChunk();
+      const chunk =
+        output !== null
+          ? new GenerationChunk(
+              this.extractGenerationFromPrediction(output.outputs[0])
+            )
+          : new GenerationChunk({
+              text: "",
+              generationInfo: { finishReason: "stop" },
+            });
+      yield chunk;
+    }
+  }
+
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"]
@@ -112,24 +159,14 @@ export class BaseGoogleVertexAI<AuthOptions>
     options: this["ParsedCallOptions"]
   ): Promise<Generation[]> {
     const instance = this.formatInstance(prompt);
-    const parameters: GoogleVertexAIModelParams = {
-      temperature: this.temperature,
-      topK: this.topK,
-      topP: this.topP,
-      maxOutputTokens: this.maxOutputTokens,
-    };
+    const parameters = this.formatParameters();
     const result = await this.connection.request(
       [instance],
       parameters,
       options
     );
     const prediction = this.extractPredictionFromResponse(result);
-    return [
-      {
-        text: prediction.content,
-        generationInfo: prediction,
-      },
-    ];
+    return [this.extractGenerationFromPrediction(prediction)];
   }
 
   /**
@@ -164,6 +201,15 @@ export class BaseGoogleVertexAI<AuthOptions>
       : this.formatInstanceText(prompt);
   }
 
+  formatParameters(): GoogleVertexAIModelParams {
+    return {
+      temperature: this.temperature,
+      topK: this.topK,
+      topP: this.topP,
+      maxOutputTokens: this.maxOutputTokens,
+    };
+  }
+
   /**
    * Extracts the prediction from the API response.
    * @param result The API response from which to extract the prediction.
@@ -172,6 +218,14 @@ export class BaseGoogleVertexAI<AuthOptions>
   extractPredictionFromResponse(
     result: GoogleVertexAILLMResponse<TextPrediction>
   ): TextPrediction {
-    return result?.data?.predictions[0];
+    return (result?.data as GoogleVertexAILLMPredictions<TextPrediction>)
+      ?.predictions[0];
+  }
+
+  extractGenerationFromPrediction(prediction: TextPrediction): Generation {
+    return {
+      text: prediction.content,
+      generationInfo: prediction,
+    };
   }
 }

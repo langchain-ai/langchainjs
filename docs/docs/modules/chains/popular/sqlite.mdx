@@ -1,0 +1,64 @@
+# SQL
+
+This example demonstrates the use of `Runnables` with questions and more on a SQL database.
+
+import CodeBlock from "@theme/CodeBlock";
+import SqlDBExample from "@examples/chains/sql_db.ts";
+import SqlDBSqlOutputExample from "@examples/chains/sql_db_sql_output.ts";
+
+This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
+
+:::info
+Looking for the older, non-LCEL version? Click [here](/docs/modules/chains/popular/sqlite_legacy).
+:::
+
+## Set up
+
+First install `typeorm`:
+
+```bash npm2yarn
+npm install typeorm
+```
+
+Then, install the dependencies needed for your database. For example, for SQLite:
+
+```bash npm2yarn
+npm install sqlite3
+```
+
+LangChain offers default prompts for: default SQL, Postgres, SQLite, Microsoft SQL Server, MySQL, and SAP HANA.
+
+Finally follow the instructions on https://database.guide/2-sample-databases-sqlite/ to get the sample database for this example.
+
+<CodeBlock language="typescript">{SqlDBExample}</CodeBlock>
+
+You can include or exclude tables when creating the `SqlDatabase` object to help the chain focus on the tables you want.
+It can also reduce the number of tokens used in the chain.
+
+```typescript
+const db = await SqlDatabase.fromDataSourceParams({
+  appDataSource: datasource,
+  includesTables: ["Track"],
+});
+```
+
+If desired, you can return the used SQL command when calling the chain.
+
+<CodeBlock language="typescript">{SqlDBSqlOutputExample}</CodeBlock>
+
+# Disclaimer ⚠️
+
+The query chain may generate insert/update/delete queries. When this is not expected, use a custom prompt or create SQL users without write permissions.
+
+The final user might overload your SQL database by asking a simple question such as "run the biggest query possible". The generated query might look like:
+
+```sql
+SELECT * FROM "public"."users"
+    JOIN "public"."user_permissions" ON "public"."users".id = "public"."user_permissions".user_id
+    JOIN "public"."projects" ON "public"."users".id = "public"."projects".user_id
+    JOIN "public"."events" ON "public"."projects".id = "public"."events".project_id;
+```
+
+For a transactional SQL database, if one of the table above contains millions of rows, the query might cause trouble to other applications using the same database.
+
+Most datawarehouse oriented databases support user-level quota, for limiting resource usage.

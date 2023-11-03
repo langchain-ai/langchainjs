@@ -1,0 +1,92 @@
+# CSV
+
+> A [comma-separated values (CSV)](https://en.wikipedia.org/wiki/Comma-separated_values) file is a delimited text file that uses a comma to separate values. Each line of the file is a data record. Each record consists of one or more fields, separated by commas.
+
+Load CSV data with a single row per document.
+
+## Setup
+
+```bash npm2yarn
+npm install d3-dsv@2
+```
+
+## Usage, extracting all columns
+
+Example CSV file:
+
+```csv
+id,text
+1,This is a sentence.
+2,This is another sentence.
+```
+
+Example code:
+
+```typescript
+import { CSVLoader } from "langchain/document_loaders/fs/csv";
+
+const loader = new CSVLoader("src/document_loaders/example_data/example.csv");
+
+const docs = await loader.load();
+/*
+[
+  Document {
+    "metadata": {
+      "line": 1,
+      "source": "src/document_loaders/example_data/example.csv",
+    },
+    "pageContent": "id: 1
+text: This is a sentence.",
+  },
+  Document {
+    "metadata": {
+      "line": 2,
+      "source": "src/document_loaders/example_data/example.csv",
+    },
+    "pageContent": "id: 2
+text: This is another sentence.",
+  },
+]
+*/
+```
+
+## Usage, extracting a single column
+
+Example CSV file:
+
+```csv
+id,text
+1,This is a sentence.
+2,This is another sentence.
+```
+
+Example code:
+
+```typescript
+import { CSVLoader } from "langchain/document_loaders/fs/csv";
+
+const loader = new CSVLoader(
+  "src/document_loaders/example_data/example.csv",
+  "text"
+);
+
+const docs = await loader.load();
+/*
+[
+  Document {
+    "metadata": {
+      "line": 1,
+      "source": "src/document_loaders/example_data/example.csv",
+    },
+    "pageContent": "This is a sentence.",
+  },
+  Document {
+    "metadata": {
+      "line": 2,
+      "source": "src/document_loaders/example_data/example.csv",
+    },
+    "pageContent": "This is another sentence.",
+  },
+]
+*/
+```

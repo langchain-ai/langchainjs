@@ -1,0 +1,33 @@
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/custom_llm_agent.ts";
+import RunnableExample from "@examples/agents/custom_llm_agent_runnable.ts";
+
+# Custom LLM Agent
+
+This notebook goes through how to create your own custom LLM agent.
+
+An LLM agent consists of three parts:
+
+- PromptTemplate: This is the prompt template that can be used to instruct the language model on what to do
+- LLM: This is the language model that powers the agent
+- `stop` sequence: Instructs the LLM to stop generating as soon as this string is found
+- OutputParser: This determines how to parse the LLMOutput into an AgentAction or AgentFinish object
+
+The LLMAgent is used in an AgentExecutor. This AgentExecutor can largely be thought of as a loop that:
+
+1. Passes user input and any previous steps to the Agent (in this case, the LLMAgent)
+2. If the Agent returns an `AgentFinish`, then return that directly to the user
+3. If the Agent returns an `AgentAction`, then use that to call a tool and get an `Observation`
+4. Repeat, passing the `AgentAction` and `Observation` back to the Agent until an `AgentFinish` is emitted.
+
+`AgentAction` is a response that consists of `action` and `action_input`. `action` refers to which tool to use, and `action_input` refers to the input to that tool. `log` can also be provided as more context (that can be used for logging, tracing, etc).
+
+`AgentFinish` is a response that contains the final message to be sent back to the user. This should be used to end an agent run.
+
+# With LCEL
+
+<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+
+# With `LLMChain`
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

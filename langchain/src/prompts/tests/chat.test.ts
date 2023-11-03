@@ -117,6 +117,18 @@ test("Test format with invalid input variables", async () => {
   );
 });
 
+test("Test fromTemplate", async () => {
+  const chatPrompt = ChatPromptTemplate.fromTemplate("Hello {foo}, I'm {bar}");
+  expect(chatPrompt.inputVariables).toEqual(["foo", "bar"]);
+  const messages = await chatPrompt.formatPromptValue({
+    foo: "Foo",
+    bar: "Bar",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new HumanMessage("Hello Foo, I'm Bar"),
+  ]);
+});
+
 test("Test fromMessages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",

@@ -107,6 +107,8 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
 
   codec: EventStreamCodec = new EventStreamCodec(toUtf8, fromUtf8);
 
+  streaming = false;
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {};
   }
@@ -144,6 +146,7 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
+    this.streaming = fields?.streaming ?? this.streaming;
   }
 
   /** Call out to Bedrock service model.
@@ -158,12 +161,26 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
   */
   async _call(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const service = "bedrock-runtime";
     const endpointHost =
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
     const provider = this.model.split(".")[0];
+    if (this.streaming) {
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      let finalResult: ChatGenerationChunk | undefined;
+      for await (const chunk of stream) {
+        if (finalResult === undefined) {
+          finalResult = chunk;
+        } else {
+          finalResult = finalResult.concat(chunk);
+        }
+      }
+      return finalResult?.message.content ?? "";
+    }
+
     const response = await this._signedFetch(messages, options, {
       bedrockMethod: "invoke",
       endpointHost,
@@ -279,7 +296,6 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
         ) {
           throw Error(`Failed to get event chunk: got ${chunk}`);
         }
-        // console.log(decoder.decode(event.body));
         const body = JSON.parse(decoder.decode(event.body));
         if (body.message) {
           throw new Error(body.message);
@@ -296,7 +312,8 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
             text,
             message: new AIMessageChunk({ content: text }),
           });
-          await runManager?.handleLLMNewToken(text);
+          // eslint-disable-next-line no-void
+          void runManager?.handleLLMNewToken(text);
         }
       }
     } else {
@@ -306,7 +323,8 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
         text,
         message: new AIMessageChunk({ content: text }),
       });
-      await runManager?.handleLLMNewToken(text);
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(text);
     }
   }
 

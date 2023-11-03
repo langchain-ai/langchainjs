@@ -1,0 +1,104 @@
+---
+sidebar_class_name: node-only
+---
+
+# Cassandra
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+[Apache Cassandra®](https://cassandra.apache.org/_/index.html) is a NoSQL, row-oriented, highly scalable and highly available database.
+
+The [latest version](<https://cwiki.apache.org/confluence/display/CASSANDRA/CEP-30%3A+Approximate+Nearest+Neighbor(ANN)+Vector+Search+via+Storage-Attached+Indexes>) of Apache Cassandra natively supports Vector Similarity Search.
+
+## Setup
+
+1. Create an [Astra DB account](https://astra.datastax.com/register).
+2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
+3. Download your secure connect bundle and application token on your database's "Connect" tab.
+4. Set up the following env vars:
+
+```bash
+export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+export CASSANDRA_SCB=YOUR_CASSANDRA_SCB_HERE
+export CASSANDRA_TOKEN=YOUR_CASSANDRA_TOKEN_HERE
+```
+
+5. Install the Cassandra Node.js driver.
+
+```bash npm2yarn
+npm install cassandra-driver
+```
+
+## Indexing docs
+
+```typescript
+import { CassandraStore } from "langchain/vectorstores/cassandra";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+
+const config = {
+  cloud: {
+    secureConnectBundle: process.env.CASSANDRA_SCB as string,
+  },
+  credentials: {
+    username: "token",
+    password: process.env.CASSANDRA_TOKEN as string,
+  },
+  keyspace: "test",
+  dimensions: 1536,
+  table: "test",
+  indices: [{ name: "name", value: "(name)" }],
+  primaryKey: {
+    name: "id",
+    type: "int",
+  },
+  metadataColumns: [
+    {
+      name: "name",
+      type: "text",
+    },
+  ],
+};
+
+const vectorStore = await CassandraStore.fromTexts(
+  ["I am blue", "Green yellow purple", "Hello there hello"],
+  [
+    { id: 2, name: "2" },
+    { id: 1, name: "1" },
+    { id: 3, name: "3" },
+  ],
+  new OpenAIEmbeddings(),
+  cassandraConfig
+);
+```
+
+## Querying docs
+
+```typescript
+const results = await vectorStore.similaritySearch("Green yellow purple", 1);
+```
+
+or filtered query:
+
+```typescript
+const results = await vectorStore.similaritySearch("B", 1, { name: "Bubba" });
+```
+
+## Additional Configuration Options
+
+In the configuration document, optional parameters are provided; their defaults are:
+
+```
+  ...
+  indices: [],
+  maxConcurrency: 25,
+  batchSize: 1,
+  ...
+```
+
+| Parameter        | Usage                                                                                                                                                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `indices`        | Optional, but required if using filtered queries. Each metadata column (e.g. `<metadata_filter_column>`) to be indexed should appear as an entry in a list, in the format `[{name: "<metadata_filter_column>", value: "(<metadata_filter_column>)"}]`. |
+| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                                                |
+| `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged.                           |
