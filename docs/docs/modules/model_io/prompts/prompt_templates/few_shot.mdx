@@ -88,17 +88,31 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 
 ```typescript
 const model = new ChatOpenAI({});
-
-const prompt =
-  ChatPromptTemplate.fromTemplate(`Rephrase the users query to be more general, using the following examples:
-{few_shot_examples}
-User query: {input}`);
-
-const response = await prompt.pipe(model).invoke({
+const examples = [
+  {
+    input: "Could the members of The Police perform lawful arrests?",
+    output: "what can the members of The Police do?",
+  },
+  {
+    input: "Jan Sindel's was born in what country?",
+    output: "what is Jan Sindel's personal history?",
+  },
+];
+const examplePrompt = ChatPromptTemplate.fromTemplate(`Human: {input}
+AI: {output}`);
+const fewShotPrompt = new FewShotChatMessagePromptTemplate({
+  prefix:
+    "Rephrase the users query to be more general, using the following examples",
+  suffix: "Human: {input}",
+  examplePrompt,
+  examples,
+  inputVariables: ["input"],
+});
+const formattedPrompt = await fewShotPrompt.format({
   input: "What's France's main city?",
-  few_shot_examples: formattedPrompt,
 });
 
+const response = await model.invoke(formattedPrompt);
 console.log(response);
 ```
 
