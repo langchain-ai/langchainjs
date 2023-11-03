@@ -7135,14 +7135,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "@getzep/zep-js@npm:0.8.0"
+"@getzep/zep-js@npm:^0.9.0":
+  version: 0.9.0
+  resolution: "@getzep/zep-js@npm:0.9.0"
   dependencies:
     "@supercharge/promise-pool": ^3.1.0
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: fcc47ddf96fa52222b2beedd500ad25c42c93933a5167ca2887bfc965cc39c51519bbfac14883115418d9596249234ff49f00b5aeb94f0bf001c2ca4d41d63f0
+  checksum: 4378b7fb1bbff5b9705f2c81b5cef1811fd2fbf1c3606c085cfc2f898f18f1a685d87f7f149e1c579a3895340fa85b42e0ad954fd11de3de3a97224e0e291c82
   languageName: node
   linkType: hard
 
@@ -7353,10 +7353,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/inference@npm:^1.5.1":
-  version: 1.5.1
-  resolution: "@huggingface/inference@npm:1.5.1"
-  checksum: 34fa2e2194d57527f2e60693740f5f99bbd45c009e6b49c457416befad6b087e8bc35ed812710c99e86507d51388a21676b141c7a7c4a4a3b135a03ec7f1b794
+"@huggingface/inference@npm:^2.6.4":
+  version: 2.6.4
+  resolution: "@huggingface/inference@npm:2.6.4"
+  checksum: 7d48960a62d0621d4c3f1edd183aa5d7829d297110b5720c78291aac17ed58b6a9af8eaf8a3f2cbb9dabfda3cf48931f59cf491cdedefd624f90d93fa3927981
   languageName: node
   linkType: hard
 
@@ -11673,6 +11673,15 @@ __metadata:
     "@types/node": "*"
     "@types/webidl-conversions": "*"
   checksum: 5dc5afe078dfa1a8a266745586fa3db9baa8ce7cc904789211d1dca1d34d7f3dd17d0b7423c36bc9beab9d98aa99338f1fc60798c0af6cbb8356f20e20d9f243
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:^8":
+  version: 8.5.8
+  resolution: "@types/ws@npm:8.5.8"
+  dependencies:
+    "@types/node": "*"
+  checksum: 4ad30de842834d4dd8e6e1476470752709d4165352a3a36780f23f4fdb686d4ac8ca5e16a0e0622940ddace910b856ff8a0baa2e24e41d204fb7a6a02ab2172b
   languageName: node
   linkType: hard
 
@@ -17141,7 +17150,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.8.0
+    "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.44.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -21585,12 +21594,12 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.8.0
+    "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.44.1
     "@gomomento/sdk-core": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
-    "@huggingface/inference": ^1.5.1
+    "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
@@ -21625,6 +21634,7 @@ __metadata:
     "@types/pg": ^8
     "@types/pg-copy-streams": ^1.2.2
     "@types/uuid": ^9
+    "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
@@ -21741,13 +21751,13 @@ __metadata:
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.8.0
+    "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.44.1
     "@gomomento/sdk-core": ^1.44.1
     "@gomomento/sdk-web": ^1.44.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
-    "@huggingface/inference": ^1.5.1
+    "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": "*"
@@ -21821,6 +21831,7 @@ __metadata:
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
+    ws: ^8.14.2
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
   peerDependenciesMeta:
@@ -22011,6 +22022,8 @@ __metadata:
     weaviate-ts-client:
       optional: true
     web-auth-library:
+      optional: true
+    ws:
       optional: true
     youtube-transcript:
       optional: true

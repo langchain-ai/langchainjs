@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.176",
+  "version": "0.0.179",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -82,6 +82,9 @@
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "chains/combine_documents/reduce.cjs",
+    "chains/combine_documents/reduce.js",
+    "chains/combine_documents/reduce.d.ts",
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
@@ -142,6 +145,9 @@
     "embeddings/minimax.cjs",
     "embeddings/minimax.js",
     "embeddings/minimax.d.ts",
+    "embeddings/llama_cpp.cjs",
+    "embeddings/llama_cpp.js",
+    "embeddings/llama_cpp.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -493,6 +499,12 @@
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
+    "chat_models/iflytek_xinghuo.cjs",
+    "chat_models/iflytek_xinghuo.js",
+    "chat_models/iflytek_xinghuo.d.ts",
+    "chat_models/iflytek_xinghuo/web.cjs",
+    "chat_models/iflytek_xinghuo/web.js",
+    "chat_models/iflytek_xinghuo/web.d.ts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
@@ -517,6 +529,9 @@
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
+    "schema/prompt_template.cjs",
+    "schema/prompt_template.js",
+    "schema/prompt_template.d.ts",
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
@@ -806,12 +821,12 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.8.0",
+    "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.44.1",
     "@gomomento/sdk-core": "^1.44.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
-    "@huggingface/inference": "^1.5.1",
+    "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.10",
@@ -846,6 +861,7 @@
     "@types/pg": "^8",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
+    "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
@@ -942,13 +958,13 @@
     "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.8.0",
+    "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.44.1",
     "@gomomento/sdk-core": "^1.44.1",
     "@gomomento/sdk-web": "^1.44.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
-    "@huggingface/inference": "^1.5.1",
+    "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
@@ -1022,6 +1038,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
+    "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
@@ -1308,6 +1325,9 @@
     "web-auth-library": {
       "optional": true
     },
+    "ws": {
+      "optional": true
+    },
     "youtube-transcript": {
       "optional": true
     },
@@ -1477,6 +1497,11 @@
       "import": "./chains.js",
       "require": "./chains.cjs"
     },
+    "./chains/combine_documents/reduce": {
+      "types": "./chains/combine_documents/reduce.d.ts",
+      "import": "./chains/combine_documents/reduce.js",
+      "require": "./chains/combine_documents/reduce.cjs"
+    },
     "./chains/load": {
       "types": "./chains/load.d.ts",
       "import": "./chains/load.js",
@@ -1576,6 +1601,11 @@
       "types": "./embeddings/minimax.d.ts",
       "import": "./embeddings/minimax.js",
       "require": "./embeddings/minimax.cjs"
+    },
+    "./embeddings/llama_cpp": {
+      "types": "./embeddings/llama_cpp.d.ts",
+      "import": "./embeddings/llama_cpp.js",
+      "require": "./embeddings/llama_cpp.cjs"
     },
     "./llms/load": {
       "types": "./llms/load.d.ts",
@@ -2162,6 +2192,16 @@
       "import": "./chat_models/baiduwenxin.js",
       "require": "./chat_models/baiduwenxin.cjs"
     },
+    "./chat_models/iflytek_xinghuo": {
+      "types": "./chat_models/iflytek_xinghuo.d.ts",
+      "import": "./chat_models/iflytek_xinghuo.js",
+      "require": "./chat_models/iflytek_xinghuo.cjs"
+    },
+    "./chat_models/iflytek_xinghuo/web": {
+      "types": "./chat_models/iflytek_xinghuo/web.d.ts",
+      "import": "./chat_models/iflytek_xinghuo/web.js",
+      "require": "./chat_models/iflytek_xinghuo/web.cjs"
+    },
     "./chat_models/ollama": {
       "types": "./chat_models/ollama.d.ts",
       "import": "./chat_models/ollama.js",
@@ -2201,6 +2241,11 @@
       "types": "./schema/output_parser.d.ts",
       "import": "./schema/output_parser.js",
       "require": "./schema/output_parser.cjs"
+    },
+    "./schema/prompt_template": {
+      "types": "./schema/prompt_template.d.ts",
+      "import": "./schema/prompt_template.js",
+      "require": "./schema/prompt_template.cjs"
     },
     "./schema/query_constructor": {
       "types": "./schema/query_constructor.d.ts",

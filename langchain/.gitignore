@@ -70,6 +70,9 @@ tools/google_calendar.d.ts
 chains.cjs
 chains.js
 chains.d.ts
+chains/combine_documents/reduce.cjs
+chains/combine_documents/reduce.js
+chains/combine_documents/reduce.d.ts
 chains/load.cjs
 chains/load.js
 chains/load.d.ts
@@ -130,6 +133,9 @@ embeddings/googlepalm.d.ts
 embeddings/minimax.cjs
 embeddings/minimax.js
 embeddings/minimax.d.ts
+embeddings/llama_cpp.cjs
+embeddings/llama_cpp.js
+embeddings/llama_cpp.d.ts
 llms/load.cjs
 llms/load.js
 llms/load.d.ts
@@ -481,6 +487,12 @@ chat_models/fireworks.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
+chat_models/iflytek_xinghuo.cjs
+chat_models/iflytek_xinghuo.js
+chat_models/iflytek_xinghuo.d.ts
+chat_models/iflytek_xinghuo/web.cjs
+chat_models/iflytek_xinghuo/web.js
+chat_models/iflytek_xinghuo/web.d.ts
 chat_models/ollama.cjs
 chat_models/ollama.js
 chat_models/ollama.d.ts
@@ -505,6 +517,9 @@ schema/document.d.ts
 schema/output_parser.cjs
 schema/output_parser.js
 schema/output_parser.d.ts
+schema/prompt_template.cjs
+schema/prompt_template.js
+schema/prompt_template.d.ts
 schema/query_constructor.cjs
 schema/query_constructor.js
 schema/query_constructor.d.ts

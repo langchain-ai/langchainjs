@@ -164,6 +164,12 @@ const config = {
             label: "Use cases",
           },
           {
+            type: "docSidebar",
+            position: "left",
+            sidebarId: "integrations",
+            label: "Integrations",
+          },
+          {
             href: "/docs/api/",
             label: "API",
             position: "left",

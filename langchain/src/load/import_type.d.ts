@@ -67,6 +67,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/googlepalm"?:
     | typeof import("../embeddings/googlepalm.js")
     | Promise<typeof import("../embeddings/googlepalm.js")>;
+  "langchain/embeddings/llama_cpp"?:
+    | typeof import("../embeddings/llama_cpp.js")
+    | Promise<typeof import("../embeddings/llama_cpp.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
@@ -331,6 +334,12 @@ export interface OptionalImportMap {
   "langchain/chat_models/googlepalm"?:
     | typeof import("../chat_models/googlepalm.js")
     | Promise<typeof import("../chat_models/googlepalm.js")>;
+  "langchain/chat_models/iflytek_xinghuo"?:
+    | typeof import("../chat_models/iflytek_xinghuo/index.js")
+    | Promise<typeof import("../chat_models/iflytek_xinghuo/index.js")>;
+  "langchain/chat_models/iflytek_xinghuo/web"?:
+    | typeof import("../chat_models/iflytek_xinghuo/web.js")
+    | Promise<typeof import("../chat_models/iflytek_xinghuo/web.js")>;
   "langchain/chat_models/llama_cpp"?:
     | typeof import("../chat_models/llama_cpp.js")
     | Promise<typeof import("../chat_models/llama_cpp.js")>;
@@ -481,6 +490,8 @@ export interface SecretMap {
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
   HUGGINGFACEHUB_API_KEY?: string;
+  IFLYTEK_API_KEY?: string;
+  IFLYTEK_API_SECRET?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;

@@ -21,6 +21,9 @@ await graph.query(
     "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
 );
 
+// Refresh schema
+await graph.refreshSchema();
+
 /**
  * A good practice is to ask the LLM to return only Cypher statement or
  * wrap the generated Cypher statement with three backticks (```) to avoid
