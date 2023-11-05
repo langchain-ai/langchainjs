@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StructuredTool } from "./base.js";
+import { StructuredTool } from "../base.js";
 
 export class GraphQLClientTool extends StructuredTool {
   static lc_name() {

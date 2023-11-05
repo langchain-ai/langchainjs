@@ -4,7 +4,7 @@ import { RunnableSequence } from "../../schema/runnable/index.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { OpenAI } from "../../llms/openai.js";
 import { StructuredOutputParser } from "../../output_parsers/index.js";
-import { GraphQLClientTool } from "../graphql.js";
+import { GraphQLClientTool } from "../experimental/graphql.js";
 
 describe("GraphQL Test Suite", () => {
   test("make a graphql query", async () => {
