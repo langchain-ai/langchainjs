@@ -326,7 +326,7 @@ const requiresOptionalDependency = [
   "tools/sql",
   "tools/webbrowser",
   "tools/google_calendar",
-  "tools/pyinterpreter",
+  "tools/experimental/pyinterpreter",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",

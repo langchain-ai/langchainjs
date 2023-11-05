@@ -1,5 +1,5 @@
 import { loadPyodide, PyodideInterface } from "pyodide";
-import { Tool } from "./base.js";
+import { Tool } from "../base.js";
 
 export class PythonInterpreterTool extends Tool {
   static lc_name() {
