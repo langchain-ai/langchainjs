@@ -15,6 +15,18 @@ import OpenAI from "@examples/models/chat/integration_openai.ts";
 If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` with your OpenAI organization id, or pass it in as `organization` when
 initializing the model.
 
+## Multimodal messages
+
+:::info
+This feature is currently in preview. The message schema may change in future releases.
+:::
+
+OpenAI supports interleaving images with text in input messages with their `gpt-4-vision-preview`. Here's an example of how this looks:
+
+import OpenAIVision from "@examples/models/chat/integration_openai_vision.ts";
+
+<CodeBlock language="typescript">{OpenAIVision}</CodeBlock>
+
 ## Custom URLs
 
 You can customize the base URL the SDK sends requests to by passing a `configuration` parameter like this:
