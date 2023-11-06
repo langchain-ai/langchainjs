@@ -1,9 +1,6 @@
 name: Deploy API Docs Preview
 
 on:
-  push:
-    paths:
-      - 'langchain/**'
   pull_request:
     paths:
       - 'langchain/**'
