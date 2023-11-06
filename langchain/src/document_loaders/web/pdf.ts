@@ -1,11 +1,8 @@
-import {
-  getDocument,
-  version,
-  type TextItem,
-} from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
+import { type TextItem } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
 
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
+import { formatDocumentsAsString } from "../../util/document.js";
 
 /**
  * A document loader for loading data from PDFs.
@@ -15,10 +12,16 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
   protected splitPages = true;
 
-  constructor(blob: Blob, { splitPages = true } = {}) {
+  private pdfjs: typeof PDFLoaderImports;
+
+  constructor(
+    blob: Blob,
+    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+  ) {
     super();
     this.blob = blob;
     this.splitPages = splitPages ?? this.splitPages;
+    this.pdfjs = pdfjs;
   }
 
   /**
@@ -26,6 +29,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
    * @returns An array of Documents representing the retrieved data.
    */
   async load(): Promise<Document[]> {
+    const { getDocument, version } = await this.pdfjs();
     const parsedPdf = await getDocument({
       data: new Uint8Array(await this.blob.arrayBuffer()),
       useWorkerFetch: false,
@@ -76,7 +80,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
     return [
       new Document({
-        pageContent: documents.map((doc) => doc.pageContent).join("\n\n"),
+        pageContent: formatDocumentsAsString(documents),
         metadata: {
           pdf: {
             version,
@@ -89,5 +93,20 @@ export class WebPDFLoader extends BaseDocumentLoader {
     ];
 
     return documents;
+  }
+}
+
+async function PDFLoaderImports() {
+  try {
+    const { default: mod } = await import(
+      "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js"
+    );
+    const { getDocument, version } = mod;
+    return { getDocument, version };
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`."
+    );
   }
 }

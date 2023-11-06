@@ -1,0 +1,33 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/parent_document_retriever.ts";
+import ExampleWithScoreThreshold from "@examples/retrievers/parent_document_retriever_score_threshold.ts";
+
+# Parent Document Retriever
+
+When splitting documents for retrieval, there are often conflicting desires:
+
+1. You may want to have small documents, so that their embeddings can most accurately reflect their meaning. If too long, then the embeddings can lose meaning.
+2. You want to have long enough documents that the context of each chunk is retained.
+
+The ParentDocumentRetriever strikes that balance by splitting and storing small chunks of data. During retrieval, it first fetches the small chunks but then looks up the parent ids for those chunks and returns those larger documents.
+
+Note that "parent document" refers to the document that a small chunk originated from. This can either be the whole raw document OR a larger chunk.
+
+## Usage
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## With Score Threshold
+
+By setting the options in `scoreThresholdOptions` we can force the `ParentDocumentRetriever` to use the `ScoreThresholdRetriever` under the hood.
+This sets the vector store inside `ScoreThresholdRetriever` as the one we passed when initializing `ParentDocumentRetriever`, while also allowing us to also set a score threshold for the retriever.
+
+This can be helpful when you're not sure how many documents you want (or if you are sure, just set the `maxK` option), but you want to make sure that the documents you do get are within a certain relevancy threshold.
+
+Note: if a retriever is passed, `ParentDocumentRetriever` will default to use it for retrieving small chunks, as well as adding documents via the `addDocuments` method.
+
+<CodeBlock language="typescript">{ExampleWithScoreThreshold}</CodeBlock>

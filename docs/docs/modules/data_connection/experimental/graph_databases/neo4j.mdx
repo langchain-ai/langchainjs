@@ -1,0 +1,34 @@
+# Neo4j
+
+## Setup
+
+Install the dependencies needed for Neo4j:
+
+```bash npm2yarn
+npm install neo4j-driver
+```
+
+## Usage
+
+This walkthrough uses Neo4j to demonstrate a graph database integration.
+
+### Instantiate a graph and retrieve information the the graph by generating Cypher query language statements using GraphCypherQAChain.
+
+import CodeBlock from "@theme/CodeBlock";
+import GraphDBExample from "@examples/chains/graph_db_neo4j.ts";
+
+<CodeBlock language="typescript">{GraphDBExample}</CodeBlock>
+
+# Disclaimer ⚠️
+
+_Security note_: Make sure that the database connection uses credentials
+that are narrowly-scoped to only include necessary permissions.
+Failure to do so may result in data corruption or loss, since the calling
+code may attempt commands that would result in deletion, mutation
+of data if appropriately prompted or reading sensitive data if such
+data is present in the database.
+The best way to guard against such negative outcomes is to (as appropriate)
+limit the permissions granted to the credentials used with this tool.
+For example, creating read only users for the database is a good way to
+ensure that the calling code cannot mutate or delete data.
+See the [security page](/docs/security) for more information.

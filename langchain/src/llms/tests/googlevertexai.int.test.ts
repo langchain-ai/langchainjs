@@ -58,18 +58,21 @@ describe("Vertex AI", () => {
     console.log({ res });
   });
 
-  test("Test Google Vertex stream returns one chunk", async () => {
+  test("streaming text", async () => {
     const model = new GoogleVertexAI({
-      model: "code-bison",
+      model: "text-bison",
       maxOutputTokens: 2048,
     });
 
-    const stream = await model.stream("Count to 10 in JavaScript.");
+    const stream = await model.stream(
+      "What is the answer to life, the universe, and everything. Be Verbose."
+    );
     const chunks = [];
     for await (const chunk of stream) {
       chunks.push(chunk);
-      console.log(chunk);
+      console.log("chunk", chunk);
     }
-    expect(chunks.length).toBe(1);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks[chunks.length - 1]).toEqual("");
   });
 });

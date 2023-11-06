@@ -1,0 +1,38 @@
+# Supabase Self Query Retriever
+
+This example shows how to use a self query retriever with a [Supabase](https://supabase.com) vector store.
+
+If you haven't already set up Supabase, please [follow the instructions here](/docs/integrations/vectorstores/supabase).
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/supabase_self_query.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+You can also initialize the retriever with default search parameters that apply in
+addition to the generated query:
+
+```typescript
+const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  llm,
+  vectorStore,
+  documentContents,
+  attributeInfo,
+  /**
+   * We need to create a basic translator that translates the queries into a
+   * filter format that the vector store can understand. We provide a basic translator
+   * translator here, but you can create your own translator by extending BaseTranslator
+   * abstract class. Note that the vector store needs to support filtering on the metadata
+   * attributes you want to query on.
+   */
+  structuredQueryTranslator: new SupabaseTranslator(),
+  searchParams: {
+    filter: (rpc: SupabaseFilter) => rpc.filter("metadata->>type", "eq", "movie"),,
+    mergeFiltersOperator: "and",
+  }
+});
+```
+
+See the [official docs](https://postgrest.org/en/stable/references/api/tables_views.html?highlight=operators#json-columns) for more on how to construct metadata filters.

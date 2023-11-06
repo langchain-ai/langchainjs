@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { GoogleVertexAI } from "../googlevertexai/web.js";
 
-describe.skip("Web Vertex AI", () => {
+describe("Web Vertex AI", () => {
   test("Test Google Vertex", async () => {
     const model = new GoogleVertexAI({ maxOutputTokens: 50 });
     const res = await model.call("1 + 1 = ");
@@ -60,16 +60,18 @@ describe.skip("Web Vertex AI", () => {
 
   test("Test Google Vertex stream returns one chunk", async () => {
     const model = new GoogleVertexAI({
-      model: "code-bison",
+      model: "text-bison",
       maxOutputTokens: 2048,
     });
 
-    const stream = await model.stream("Count to 10 in JavaScript.");
+    const stream = await model.stream(
+      "What is the answer to life, the universe, and everything?"
+    );
     const chunks = [];
     for await (const chunk of stream) {
       chunks.push(chunk);
       console.log(chunk);
     }
-    expect(chunks.length).toBe(1);
+    expect(chunks.length).toBeGreaterThan(1);
   });
 });

@@ -51,7 +51,7 @@ export class QdrantVectorStore extends VectorStore {
 
   collectionName: string;
 
-  collectionConfig: QdrantSchemas["CreateCollection"];
+  collectionConfig?: QdrantSchemas["CreateCollection"];
 
   _vectorstoreType(): string {
     return "qdrant";
@@ -76,12 +76,7 @@ export class QdrantVectorStore extends VectorStore {
 
     this.collectionName = args.collectionName ?? "documents";
 
-    this.collectionConfig = args.collectionConfig ?? {
-      vectors: {
-        size: 1536,
-        distance: "Cosine",
-      },
-    };
+    this.collectionConfig = args.collectionConfig;
   }
 
   /**
@@ -123,10 +118,20 @@ export class QdrantVectorStore extends VectorStore {
       },
     }));
 
-    await this.client.upsert(this.collectionName, {
-      wait: true,
-      points,
-    });
+    try {
+      await this.client.upsert(this.collectionName, {
+        wait: true,
+        points,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      const error = new Error(
+        `${e?.status ?? "Undefined error code"} ${e?.message}: ${
+          e?.data?.status?.error
+        }`
+      );
+      throw error;
+    }
   }
 
   /**
@@ -181,10 +186,13 @@ export class QdrantVectorStore extends VectorStore {
     );
 
     if (!collectionNames.includes(this.collectionName)) {
-      await this.client.createCollection(
-        this.collectionName,
-        this.collectionConfig
-      );
+      const collectionConfig = this.collectionConfig ?? {
+        vectors: {
+          size: (await this.embeddings.embedQuery("test")).length,
+          distance: "Cosine",
+        },
+      };
+      await this.client.createCollection(this.collectionName, collectionConfig);
     }
   }
 

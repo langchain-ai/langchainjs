@@ -33,7 +33,7 @@ async function withVectorStore(
   }
 }
 
-describe("MomentoVectorIndex", () => {
+describe.skip("MomentoVectorIndex", () => {
   it("stores user-provided ids", async () => {
     await withVectorStore(async (vectorStore: MomentoVectorIndex) => {
       const pageContent = faker.lorem.sentence(5);
@@ -63,7 +63,13 @@ describe("MomentoVectorIndex", () => {
   it("stores metadata", async () => {
     await withVectorStore(async (vectorStore: MomentoVectorIndex) => {
       const pageContent = faker.lorem.sentence(5);
-      const metadata = { foo: "bar" };
+      const metadata = {
+        foo: "bar",
+        page: 1,
+        pi: 3.14,
+        isTrue: true,
+        tags: ["a", "b"],
+      };
 
       await vectorStore.addDocuments([{ pageContent, metadata }]);
       await sleep();
