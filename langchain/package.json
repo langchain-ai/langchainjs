@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.181",
+  "version": "0.0.182-rc.0",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -805,6 +805,7 @@
     "precommit": "lint-staged",
     "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
+    "prerelease": "npm publish",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
@@ -1360,7 +1361,7 @@
     "langchainhub": "~0.0.6",
     "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
-    "openai": "~4.4.0",
+    "openai": "~4.16.0",
     "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",

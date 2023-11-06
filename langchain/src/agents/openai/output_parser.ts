@@ -45,6 +45,9 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
    * @returns A FunctionsAgentAction or AgentFinish object.
    */
   parseAIMessage(message: BaseMessage): FunctionsAgentAction | AgentFinish {
+    if (message.content && typeof message.content !== "string") {
+      throw new Error("This agent cannot parse non-string model responses.");
+    }
     if (message.additional_kwargs.function_call) {
       // eslint-disable-next-line prefer-destructuring
       const function_call: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall =

@@ -101,8 +101,16 @@ export interface StoredGeneration {
 
 export type MessageType = "human" | "ai" | "generic" | "system" | "function";
 
+export type MessageContent =
+  | string
+  | {
+      type: "text" | "image_url";
+      text?: string;
+      image_url?: string | { url: string };
+    }[];
+
 export interface BaseMessageFields {
-  content: string;
+  content: MessageContent;
   name?: string;
   additional_kwargs?: {
     function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
@@ -116,6 +124,27 @@ export interface ChatMessageFieldsWithRole extends BaseMessageFields {
 
 export interface FunctionMessageFieldsWithName extends BaseMessageFields {
   name: string;
+}
+
+function mergeContent(
+  firstContent: MessageContent,
+  secondContent: MessageContent
+): MessageContent {
+  // If first content is a string
+  if (typeof firstContent === "string") {
+    if (typeof secondContent === "string") {
+      return firstContent + secondContent;
+    } else {
+      return [{ type: "text", text: firstContent }, ...secondContent];
+    }
+    // If both are arrays
+  } else if (Array.isArray(secondContent)) {
+    return [...firstContent, ...secondContent];
+    // If the first content is a list and second is a string
+  } else {
+    // Otherwise, add the second content as a new element of the list
+    return [...firstContent, { type: "text", text: secondContent }];
+  }
 }
 
 /**
@@ -136,11 +165,11 @@ export abstract class BaseMessage
    * Use {@link BaseMessage.content} instead.
    */
   get text(): string {
-    return this.content;
+    return typeof this.content === "string" ? this.content : "";
   }
 
-  /** The text of the message. */
-  content: string;
+  /** The content of the message. */
+  content: MessageContent;
 
   /** The name of the message sender in a multi-user chat. */
   name?: string;
@@ -273,7 +302,7 @@ export class HumanMessageChunk extends BaseMessageChunk {
 
   concat(chunk: HumanMessageChunk) {
     return new HumanMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: HumanMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -310,7 +339,7 @@ export class AIMessageChunk extends BaseMessageChunk {
 
   concat(chunk: AIMessageChunk) {
     return new AIMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: AIMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -347,7 +376,7 @@ export class SystemMessageChunk extends BaseMessageChunk {
 
   concat(chunk: SystemMessageChunk) {
     return new SystemMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: SystemMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -428,7 +457,7 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 
   concat(chunk: FunctionMessageChunk) {
     return new FunctionMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: FunctionMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -548,7 +577,7 @@ export class ChatMessageChunk extends BaseMessageChunk {
 
   concat(chunk: ChatMessageChunk) {
     return new ChatMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: ChatMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs

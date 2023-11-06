@@ -103,6 +103,11 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     } else if (!this._session) {
       prompt = this._buildSession(messages);
     } else {
+      if (typeof messages[0].content !== "string") {
+        throw new Error(
+          "ChatLlamaCpp does not support non-string message content in sessions."
+        );
+      }
       // If we already have a session then we should just have a single prompt
       prompt = messages[0].content;
     }
@@ -136,8 +141,15 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
         (message) => message._getType() === "system"
       );
 
+      const systemMessageContent = sysMessages[sysMessages.length - 1].content;
+
+      if (typeof systemMessageContent !== "string") {
+        throw new Error(
+          "ChatLlamaCpp does not support non-string message content in sessions."
+        );
+      }
       // Only use the last provided system message
-      sysMessage = sysMessages[sysMessages.length - 1].content;
+      sysMessage = systemMessageContent;
 
       // Now filter out the system messages
       noSystemMessages = messages.filter(
@@ -153,7 +165,14 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
       if (
         noSystemMessages[noSystemMessages.length - 1]._getType() === "human"
       ) {
-        prompt = noSystemMessages[noSystemMessages.length - 1].content;
+        const finalMessageContent =
+          noSystemMessages[noSystemMessages.length - 1].content;
+        if (typeof finalMessageContent !== "string") {
+          throw new Error(
+            "ChatLlamaCpp does not support non-string message content in sessions."
+          );
+        }
+        prompt = finalMessageContent;
         interactions = this._convertMessagesToInteractions(
           noSystemMessages.slice(0, noSystemMessages.length - 1)
         );
@@ -161,6 +180,11 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
         interactions = this._convertMessagesToInteractions(noSystemMessages);
       }
     } else {
+      if (typeof noSystemMessages[0].content !== "string") {
+        throw new Error(
+          "ChatLlamaCpp does not support non-string message content in sessions."
+        );
+      }
       // If there was only a single message we assume it's a prompt
       prompt = noSystemMessages[0].content;
     }
@@ -199,9 +223,16 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
     for (let i = 0; i < messages.length; i += 2) {
       if (i + 1 < messages.length) {
+        const prompt = messages[i].content;
+        const response = messages[i + 1].content;
+        if (typeof prompt !== "string" || typeof response !== "string") {
+          throw new Error(
+            "ChatLlamaCpp does not support non-string message content."
+          );
+        }
         result.push({
-          prompt: messages[i].content,
-          response: messages[i + 1].content,
+          prompt,
+          response,
         });
       }
     }
