@@ -44,3 +44,4 @@ next-env.d.ts
 /public/types
 /public/variables
 /public/index.html
+/public/.nojekyll
