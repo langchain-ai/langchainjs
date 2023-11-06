@@ -3,7 +3,7 @@ import { VoyageEmbeddings } from "../voyage.js";
 
 test.skip("Test VoyageEmbeddings.embedQuery", async () => {
   const embeddings = new VoyageEmbeddings();
-  const res = await embeddings.embedQuery("Hello world");  
+  const res = await embeddings.embedQuery("Hello world");
 
   expect(typeof res[0]).toBe("number");
 });

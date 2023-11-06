@@ -91,7 +91,7 @@ export class VoyageEmbeddings
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
         model: this.modelName,
-        input: batch
+        input: batch,
       })
     );
 
@@ -118,7 +118,7 @@ export class VoyageEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: text
+      input: text,
     });
 
     return data[0].embedding;
@@ -138,9 +138,9 @@ export class VoyageEmbeddings
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.apiKey}`,
-          ...this.headers
+          ...this.headers,
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       });
 
       const json = await response.json();
