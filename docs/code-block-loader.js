@@ -61,9 +61,10 @@ async function webpackLoader(content, map, meta) {
     const findExactPath = (moduleName, imported) => {
       let modulePath;
       CATEGORIES.forEach((category) => {
-        const docsPath = path.resolve(__dirname, "..", "api-docs", "public", category, `${moduleName}.${imported}.html`);
+        const componentPath = `${category}/${moduleName}.${imported}.html`;
+        const docsPath = path.resolve(__dirname, "..", "api-docs", "public", componentPath);
         if (fs.existsSync(docsPath)) {
-          modulePath = category + "/" + moduleName + "." + imported + ".html";
+          modulePath = componentPath
         }
       })
       return modulePath;
