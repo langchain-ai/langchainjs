@@ -34,7 +34,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: SKIP_API_DOCS=true yarn workspace langchain build
+        run: yarn workspace langchain build
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test esbuild exports
         run: docker compose -f docker-compose.yml run test-exports-esbuild
@@ -51,7 +53,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: SKIP_API_DOCS=true yarn workspace langchain build
+        run: yarn workspace langchain build
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test esm exports
         run: docker compose -f docker-compose.yml run test-exports-esm
@@ -68,7 +72,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: SKIP_API_DOCS=true yarn workspace langchain build
+        run: yarn workspace langchain build
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test cjs exports
         run: docker compose -f docker-compose.yml run test-exports-cjs
@@ -85,7 +91,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: SKIP_API_DOCS=true yarn workspace langchain build
+        run: yarn workspace langchain build
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test cf exports
         run: docker compose -f docker-compose.yml run test-exports-cf
@@ -102,7 +110,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: SKIP_API_DOCS=true yarn workspace langchain build
+        run: yarn workspace langchain build
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test vercel exports
         run: docker compose -f docker-compose.yml run test-exports-vercel
@@ -119,7 +129,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: SKIP_API_DOCS=true yarn workspace langchain build
+        run: yarn workspace langchain build
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test vite exports
         run: docker compose -f docker-compose.yml run test-exports-vite
@@ -136,7 +148,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: SKIP_API_DOCS=true yarn workspace langchain build
+        run: yarn workspace langchain build
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test bun exports
         run: docker compose -f docker-compose.yml run test-exports-bun
