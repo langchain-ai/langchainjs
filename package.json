@@ -18,7 +18,7 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
-    "build:api-docs": "npx typedoc --tsconfig ./langchain/tsconfig.json --out ./api-docs/public",
+    "build:api-docs": "cd ./api-docs && yarn gen:typedoc",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",

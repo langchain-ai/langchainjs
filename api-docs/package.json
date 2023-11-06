@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "gen:typedoc": "npx typedoc --tsconfig ../langchain/tsconfig.json --out ./public",
+    "gen:typedoc": "npx typedoc --options typedoc.json",
     "build": "yarn gen:typedoc && next build",
     "start": "next start",
     "lint": "next lint"
