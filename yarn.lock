@@ -11325,13 +11325,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/object-hash@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "@types/object-hash@npm:3.0.2"
-  checksum: 0332e59074e7df2e74c093a7419c05c1e1c5ae1e12d3779f3240b3031835ff045b4ac591362be0b411ace24d3b5e760386b434761c33af25904f7a3645cb3785
-  languageName: node
-  linkType: hard
-
 "@types/offscreencanvas@npm:~2019.3.0":
   version: 2019.3.0
   resolution: "@types/offscreencanvas@npm:2019.3.0"
@@ -21629,7 +21622,6 @@ __metadata:
     "@types/jsdom": ^21.1.1
     "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
-    "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
     "@types/pg-copy-streams": ^1.2.2
@@ -21688,7 +21680,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.6
-    langsmith: ~0.0.31
+    langsmith: ~0.0.48
     llmonitor: ^0.5.8
     lodash: ^4.17.21
     mammoth: ^1.5.1
@@ -21699,7 +21691,6 @@ __metadata:
     neo4j-driver: ^5.12.0
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
-    object-hash: ^3.0.0
     openai: ~4.4.0
     openapi-types: ^12.1.3
     p-queue: ^6.6.2
@@ -22048,15 +22039,16 @@ __metadata:
     dotenv: ^16.0.3
     husky: ^8.0.0
     lint-staged: ^13.1.1
+    openai: ^4.14.2
     prettier: ^2.8.3
     turbo: latest
     typescript: ^5.0.0
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:~0.0.31":
-  version: 0.0.31
-  resolution: "langsmith@npm:0.0.31"
+"langsmith@npm:~0.0.48":
+  version: 0.0.48
+  resolution: "langsmith@npm:0.0.48"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -22065,7 +22057,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 26c09a122c8541c92fdacae47d73621a975a69a4003b35c82a2a59f302cecff66e521cb9c0283055da1aa0d9cf37db4258e561314ac4cbba10997258cc480874
+  checksum: 2552c1a8549eab8e03a5530e73ce37ad0e147ca3084edbfd56b7a29b92c7c5579e5c1e53222bfb846b5ee8219d8d80cc9a7cc07e78717e95cdefedb95d76cd86
   languageName: node
   linkType: hard
 
@@ -24240,6 +24232,25 @@ __metadata:
     is-docker: ^2.1.1
     is-wsl: ^2.2.0
   checksum: 6388bfff21b40cb9bd8f913f9130d107f2ed4724ea81a8fd29798ee322b361ca31fa2cdfb491a5c31e43a3996cfe9566741238c7a741ada8d7af1cb78d85cf26
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.14.2":
+  version: 4.14.2
+  resolution: "openai@npm:4.14.2"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: 1a380410f5f3254f7b812f08188462ffe37f2c644ab4a6fbbd3ba170e399d9fc9ce91089adc9447e5a7e275c53c69294cc1398eb632e24dace7526859bc362d3
   languageName: node
   linkType: hard
 
@@ -30382,7 +30393,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-streams-polyfill@npm:^3.0.3":
+"web-streams-polyfill@npm:^3.0.3, web-streams-polyfill@npm:^3.2.1":
   version: 3.2.1
   resolution: "web-streams-polyfill@npm:3.2.1"
   checksum: b119c78574b6d65935e35098c2afdcd752b84268e18746606af149e3c424e15621b6f1ff0b42b2676dc012fc4f0d313f964b41a4b5031e525faa03997457da02

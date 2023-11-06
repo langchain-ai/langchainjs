@@ -210,6 +210,29 @@ export abstract class BaseMessage
         .kwargs as StoredMessageData,
     };
   }
+
+  toChunk(): BaseMessageChunk {
+    const type = this._getType();
+    if (type === "human") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new HumanMessageChunk({ ...this });
+    } else if (type === "ai") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new AIMessageChunk({ ...this });
+    } else if (type === "system") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new SystemMessageChunk({ ...this });
+    } else if (type === "function") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new FunctionMessageChunk({ ...this });
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    } else if (ChatMessage.isInstance(this)) {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new ChatMessageChunk({ ...this });
+    } else {
+      throw new Error("Unknown message type.");
+    }
+  }
 }
 
 /**
@@ -494,6 +517,15 @@ export function isBaseMessage(
   messageLike?: unknown
 ): messageLike is BaseMessage {
   return typeof (messageLike as BaseMessage)?._getType === "function";
+}
+
+export function isBaseMessageChunk(
+  messageLike?: unknown
+): messageLike is BaseMessageChunk {
+  return (
+    isBaseMessage(messageLike) &&
+    typeof (messageLike as BaseMessageChunk).concat === "function"
+  );
 }
 
 export function coerceMessageLikeToMessage(

@@ -1,7 +1,17 @@
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+
 import { ChatGeneration, Generation } from "../schema/index.js";
 import { Optional } from "../types/type-utils.js";
-import { BaseLLMOutputParser } from "../schema/output_parser.js";
+import {
+  BaseCumulativeTransformOutputParser,
+  type BaseCumulativeTransformOutputParserInput,
+  BaseLLMOutputParser,
+} from "../schema/output_parser.js";
+import {
+  compare,
+  type Operation as JSONPatchOperation,
+} from "../util/fast-json-patch/index.js";
+import { parsePartialJson } from "./json.js";
 
 /**
  * Represents optional parameters for a function in a JSON Schema.
@@ -26,7 +36,7 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
 
   argsOnly = true;
 
-  constructor(config?: { argsOnly: boolean }) {
+  constructor(config?: { argsOnly?: boolean }) {
     super();
     this.argsOnly = config?.argsOnly ?? this.argsOnly;
   }
@@ -69,7 +79,7 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
  * Class for parsing the output of an LLM into a JSON object. Uses an
  * instance of `OutputFunctionsParser` to parse the output.
  */
-export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
+export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputParser<object> {
   static lc_name() {
     return "JsonOutputFunctionsParser";
   }
@@ -82,10 +92,45 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
 
   argsOnly = true;
 
-  constructor(config?: { argsOnly: boolean }) {
-    super();
+  constructor(
+    config?: { argsOnly?: boolean } & BaseCumulativeTransformOutputParserInput
+  ) {
+    super(config);
     this.argsOnly = config?.argsOnly ?? this.argsOnly;
     this.outputParser = new OutputFunctionsParser(config);
+  }
+
+  protected _diff(
+    prev: JSONPatchOperation | undefined,
+    next: JSONPatchOperation
+  ): object | undefined {
+    if (!next) {
+      return undefined;
+    }
+    const ops = compare(prev ?? {}, next);
+    return ops;
+  }
+
+  async parsePartialResult(
+    generations: ChatGeneration[]
+  ): Promise<object | undefined> {
+    const generation = generations[0];
+    if (!generation.message) {
+      return undefined;
+    }
+    const { message } = generation;
+    const functionCall = message.additional_kwargs.function_call;
+    if (!functionCall) {
+      return undefined;
+    }
+    if (this.argsOnly) {
+      return parsePartialJson(functionCall.arguments);
+    }
+
+    return {
+      ...functionCall,
+      arguments: parsePartialJson(functionCall.arguments),
+    };
   }
 
   /**
@@ -109,6 +154,16 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
     }
     parsedResult.arguments = JSON.parse(parsedResult.arguments);
     return parsedResult;
+  }
+
+  // This method would be called by the default implementation of `parse_result`
+  // but we're overriding that method so it's not needed.
+  async parse(_text: string): Promise<object> {
+    throw new Error("Not implemented.");
+  }
+
+  getFormatInstructions(): string {
+    return "";
   }
 }
 
