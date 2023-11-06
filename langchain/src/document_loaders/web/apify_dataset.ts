@@ -15,8 +15,9 @@ import { getEnvironmentVariable } from "../../util/env.js";
  * A type that represents a function that takes a single object (an Apify
  * dataset item) and converts it to an instance of the Document class.
  */
-export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
-  (item: Record<string | number, unknown>) => Document<Metadata>;
+type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> = (
+  item: Record<string | number, unknown>
+) => Document<Metadata>;
 
 /**
  * A class that extends the BaseDocumentLoader and implements the
