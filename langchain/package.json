@@ -145,6 +145,9 @@
     "embeddings/minimax.cjs",
     "embeddings/minimax.js",
     "embeddings/minimax.d.ts",
+    "embeddings/voyage.cjs",
+    "embeddings/voyage.js",
+    "embeddings/voyage.d.ts",
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
@@ -1608,6 +1611,11 @@
       "types": "./embeddings/minimax.d.ts",
       "import": "./embeddings/minimax.js",
       "require": "./embeddings/minimax.cjs"
+    },
+    "./embeddings/voyage": {
+      "types": "./embeddings/voyage.d.ts",
+      "import": "./embeddings/voyage.js",
+      "require": "./embeddings/voyage.cjs"
     },
     "./embeddings/llama_cpp": {
       "types": "./embeddings/llama_cpp.d.ts",
