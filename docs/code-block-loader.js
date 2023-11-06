@@ -15,7 +15,13 @@ async function webpackLoader(content, map, meta) {
   const cb = this.async();
   const BASE_URL = "https://api.js.langchain.com";
   // Directories generated inside the API docs (excluding "modules").
-  const CATEGORIES = ["classes", "functions", "interfaces", "types", "variables"];
+  const CATEGORIES = [
+    "classes",
+    "functions",
+    "interfaces",
+    "types",
+    "variables",
+  ];
 
   if (!this.resourcePath.endsWith(".ts")) {
     cb(null, JSON.stringify({ content, imports: [] }), map, meta);
@@ -62,17 +68,23 @@ async function webpackLoader(content, map, meta) {
       let modulePath;
       CATEGORIES.forEach((category) => {
         const componentPath = `${category}/${moduleName}.${imported}.html`;
-        const docsPath = path.resolve(__dirname, "..", "api-docs", "public", componentPath);
+        const docsPath = path.resolve(
+          __dirname,
+          "..",
+          "api-docs",
+          "public",
+          componentPath
+        );
         if (fs.existsSync(docsPath)) {
-          modulePath = componentPath
+          modulePath = componentPath;
         }
-      })
+      });
       return modulePath;
-    }
+    };
 
     imports.forEach((imp) => {
       const { imported, source } = imp;
-      const moduleName =  source.split("/").slice(1).join("_");
+      const moduleName = source.split("/").slice(1).join("_");
       const exactPath = findExactPath(moduleName, imported);
       if (exactPath) {
         imp.docs = BASE_URL + "/" + exactPath;
