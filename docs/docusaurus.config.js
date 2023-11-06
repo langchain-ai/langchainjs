@@ -29,12 +29,6 @@ const config = {
   onBrokenMarkdownLinks: "throw",
 
   plugins: [
-    [
-      "docusaurus-plugin-typedoc",
-      {
-        tsconfig: "../langchain/tsconfig.json",
-      },
-    ],
     () => ({
       name: "custom-webpack-config",
       configureWebpack: () => ({
