@@ -107,7 +107,7 @@ export type MessageContent =
       | {
           type: "text" | "image_url";
           text?: string;
-          image_url: string;
+          image_url: string | { url: string };
         }
       | string
     )[];
