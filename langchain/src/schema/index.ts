@@ -101,7 +101,16 @@ export interface StoredGeneration {
 
 export type MessageType = "human" | "ai" | "generic" | "system" | "function";
 
-export type MessageContent = string | (Record<string, string> | string)[];
+export type MessageContent =
+  | string
+  | (
+      | {
+          type: "text" | "image_url";
+          text?: string;
+          image_url: string;
+        }
+      | string
+    )[];
 
 export interface BaseMessageFields {
   content: MessageContent;
