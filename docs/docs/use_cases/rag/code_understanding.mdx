@@ -165,38 +165,18 @@ import { BaseMessage } from "langchain/schema";
 import { StringOutputParser } from "langchain/schema/output_parser";
 ```
 
-First we construct the combine documents chain. This chain takes in the question, chat history (from memory) and context (relevant documents). It then passes all three into the prompt which answers the users question.
+## Construct the chain
 
-```typescript
-const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
-  AIMessagePromptTemplate.fromTemplate(
-    "Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\n"
-  ),
-  new MessagesPlaceholder("chat_history"),
-  HumanMessagePromptTemplate.fromTemplate("Question: {question}"),
-]);
-```
+The meat of this code understanding example will be inside a single `RunnableSequence` chain.
+Here, we'll have a single input parameter for the question, and preform retrieval for context and chat history (if available).
+Then we'll preform the first LLM call to rephrase the users question.
+Finally, using the rephrased question, context and chat history we'll query the LLM to generate the final answer which we'll return to the user.
 
-```typescript
-const combineDocumentsChain = RunnableSequence.from([
-  {
-    question: (i: { question: string }) => i.question,
-    chat_history: async () => {
-      const { chat_history } = await memory.loadMemoryVariables({});
-      return chat_history;
-    },
-    context: async (i: { question: string }) => {
-      const relevantDocs = await retriever.getRelevantDocuments(i.question);
-      return formatDocumentsAsString(relevantDocs);
-    },
-  },
-  combineDocumentsPrompt,
-  model,
-  new StringOutputParser(),
-]);
-```
+### Prompts
 
-Then, we define our question generator chain. This is used to regenerate the users question based on the chat history. Using LLMs to regenerate questions has been shown to lead to better outputs by LLMs since it can be updated to include past context.
+Step one is to define our prompts. We need two, the first we'll use to rephrase the users question, the second we'll use to combine the documents and question.
+
+Question generator prompt:
 
 ```typescript
 const questionGeneratorTemplate = ChatPromptTemplate.fromMessages([
@@ -209,8 +189,22 @@ Standalone question:`),
 ]);
 ```
 
+Combine documents prompt:
+
 ```typescript
-const questionGeneratorChain = RunnableSequence.from([
+const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
+  AIMessagePromptTemplate.fromTemplate(
+    "Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\n"
+  ),
+  new MessagesPlaceholder("chat_history"),
+  HumanMessagePromptTemplate.fromTemplate("Question: {question}"),
+]);
+```
+
+Next, we'll construct our chain.
+
+```typescript
+const conversationalQaChain = RunnableSequence.from([
   {
     question: (i: { question: string }) => i.question,
     chat_history: async () => {
@@ -221,49 +215,28 @@ const questionGeneratorChain = RunnableSequence.from([
   questionGeneratorTemplate,
   model,
   new StringOutputParser(),
-]);
-```
-
-In order to use the chain we defined above we create a new chain: `questionGeneratorAndCombineDocumentsChain`.
-
-This chain is called whenever there is chat history so it can first rephrase the question, then pass it through to `combineDocumentsChain` for an answer.
-
-```typescript
-const questionGeneratorAndCombineDocumentsChain = RunnableSequence.from([
   {
-    question: (i: { question: string }) => {
-      return questionGeneratorChain.invoke(i);
+    question: (output: string) => output,
+    chat_history: async () => {
+      const { chat_history } = await memory.loadMemoryVariables({});
+      return chat_history;
+    },
+    context: async (output: string) => {
+      const relevantDocs = await retriever.getRelevantDocuments(output);
+      return formatDocumentsAsString(relevantDocs);
     },
   },
-  combineDocumentsChain,
+  combineDocumentsPrompt,
+  model,
+  new StringOutputParser(),
 ]);
 ```
 
-Finally, we'll patch it all together using a [`RunnableBranch`](/docs/expression_language/how_to/routing#using-a-runnablebranch).
-
-The `RunnableBranch` allows us to pass in context, evaluate conditions, and invoke the first chain whose condition evaluated to true.
-
-In our case we'll be checking if there is chat history. If no history is present, we do not need to rephrase a users question (since there's no chat history to rephrase with) and can directly call the `combineDocumentsChain`.
-
-If there is chat history, we call the `questionGeneratorAndCombineDocumentsChain` which will rephrase the question and then pass it to `combineDocumentsChain`.
-
-Since we're using a `RunnableBranch` we must also pass a fallback chain. This chain is called if none of the conditions evaluate to true.
-
-```typescript
-const conversationalQaChain = RunnableBranch.from([
-  [
-    (i: { chat_history: BaseMessage[]; question: string }) =>
-      i.chat_history.length > 1,
-    questionGeneratorAndCombineDocumentsChain,
-  ],
-  [
-    (i: { chat_history: BaseMessage[]; question: string }) =>
-      i.chat_history.length <= 1,
-    combineDocumentsChain,
-  ],
-  combineDocumentsChain,
-]);
-```
+This is somewhat of a complex chain so let's break it down.
+- First, we define our single input parameter: `question: string`. Below this we also define `chat_history` which is not sourced from the user's input, but rather preforms a chat memory lookup.
+- Next, we pipe those variables through to our prompt, model and lastly an output parser. This first part will rephrase the question, and return a single string of the rephrased question.
+- In the next block we capture the output from the previous block and pipe it through to the next prompt. We also preform a retrieval call to get the relevant documents for the question and any chat history which might be present.
+- Finally, we pipe the output from the previous block through to the model and output parser. This will return the final answer as a string to the user.
 
 The last step is to invoke our chain!
 
@@ -271,7 +244,6 @@ The last step is to invoke our chain!
 const question = "How can I initialize a ReAct agent?";
 const result = await conversationalQaChain.invoke({
   question,
-  chat_history: (await memory.loadMemoryVariables({})).chat_history,
 });
 ```
 
@@ -288,40 +260,22 @@ await memory.saveContext(
 );
 ```
 
-````typescript
+```typescript
 console.log(result);
 /**
-You can initialize a ReAct agent using the "initializeAgentExecutorWithOptions" function provided by the "langchain/agents" package.
+Based on the provided code snippets, here are the steps to initialize a ReAct agent:
 
-Here's an example code snippet:
+1. Import the necessary modules and classes from the "langchain" package.
+2. Initialize the model using the "OpenAI" class or "ChatOpenAI" class with the temperature parameter set to 0.
+3. Initialize the tools you plan to use. In this context, "SerpAPI" and "Calculator" are used. For "SerpAPI," you need to provide an API key and some additional parameters such as location, language (hl), and geographical target (gl).
+4. Call the "initializeAgentExecutorWithOptions" function with the initialized tools, model, and options like "agentType". The "agentType" in this case is "zero-shot-react-description" or "chat-zero-shot-react-description".
+5. Use the "call" function on the executor to give the agent an input to process.
 
-\```javascript
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { OpenAI } from "langchain/llms/openai";
-import { SerpAPI } from "langchain/tools";
-import { Calculator } from "langchain/tools/calculator";
-
-const model = new OpenAI({ temperature: 0 });
-
-const tools = [
-  new SerpAPI(process.env.SERPAPI_API_KEY, {
-    location: "Austin,Texas,United States",
-    hl: "en",
-    gl: "us",
-  }),
-  new Calculator(),
-];
-
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "zero-shot-react-description",
-});
-\```
-
-That's it. Now you can use the "executor" instance to make requests through your agent.
+Note: In some versions of the code, an AbortController is set up to cancel the request if it takes too long. The signal from this controller is passed in the call to the executor
  */
-````
+```
 
-See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/d99bc61e-65a3-49d2-b797-0bd0138be0a2/r)
+See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/bd057e43-e7c6-4fad-a039-6100d9ddc557/r)
 
 ### Next steps
 
@@ -334,53 +288,49 @@ const question2 =
   "How can I import and use the Wikipedia and File System tools from LangChain instead?";
 const result2 = await conversationalQaChain.invoke({
   question: question2,
-  chat_history: (await memory.loadMemoryVariables({})).chat_history,
 });
 ```
 
-````typescript
+```typescript
 console.log(result2);
 /**
-You can import and utilize the Wikipedia and File System tools from LangChain in your codebase by following these steps,
+Based on the given code:
 
-1. Import the necessary tools:
+To import tools from LangChain:
+1. For Wikipedia Query Tool, you can import it from "langchain/tools" like this,
+    import { WikipediaQueryRun } from "langchain/tools";
 
-\```javascript
-import { ReadFileTool, WriteFileTool, NodeFileStore } from "langchain/tools";
-import { WikipediaQueryRun } from "langchain/tools";
-\```
+2. For File System tools (Read/Write), you can import it from "langchain/tools" like this,
+    import { ReadFileTool, WriteFileTool } from "langchain/tools";
 
-2. Initialize the file store:
+To utilize these tools:
 
-\```javascript
-const store = new NodeFileStore();
-\```
+1. Wikipedia Query Tool:
+   - After importing, initialize the Wikipedia Query tool with your specifications using,
+      const tool = new WikipediaQueryRun({
+        topKResults: 3,
+        maxDocContentLength: 4000,
+      });
 
-3. Initialize your tools:
+   - Use the WikipediaQueryRun object to query about a specific topic like,
+      const res = await tool.call("Langchain");
+      console.log(res);
 
-\```javascript
-const tools = [
-  new ReadFileTool({ store }),
-  new WriteFileTool({ store }),
-];
-\```
+2. Read/Write File system Tool:
+   - For using File system tool, import the "NodeFileStore" or "InMemoryFileStore" from "langchain/stores/file" first depending on where you want to store the file.
 
-4. Initialize the Wikipedia query tool:
+   - After importing, initialize the "store" object using,
+      const store = new NodeFileStore();
+      or
+      const store = new InMemoryFileStore();
 
-\```javascript
-const wikipediaTool = new WikipediaQueryRun({
-  topKResults: 3,
-  maxDocContentLength: 4000,
-});
-\```
-
-5. You can now use these tools for file read/write operations and to run Wikipedia queries. For example, to run a query on Wikipedia:
-
-\```javascript
-const result = await wikipediaTool.call("Query term");
-console.log(result);
-\```
+   - Now you have your fileStore object ready, use it to initialize the Read and Write File Tool,
+      const tools = [
+        new ReadFileTool({ store }),
+        new WriteFileTool({ store }),
+      ];
+   - Now you can use the ReadFileTool and WriteFileTool objects to interact with the filesystem.
  */
-````
+```
 
-See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/21372f1a-edd5-4751-8788-a5da5f8a0ffb/r)
+See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/d0bb9b2f-63ca-4028-8c06-3f44b8972ccb/r)
