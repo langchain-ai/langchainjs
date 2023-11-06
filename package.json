@@ -8,7 +8,8 @@
   "workspaces": [
     "langchain",
     "examples",
-    "docs"
+    "docs",
+    "api-docs"
   ],
   "repository": {
     "type": "git",
@@ -17,6 +18,7 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
+    "build:api-docs": "npx typedoc --tsconfig ./langchain/tsconfig.json --out ./api-docs/public",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
@@ -31,6 +33,7 @@
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start",
+    "docs:api": "yarn workspace api-docs start",
     "postinstall": "husky install"
   },
   "author": "LangChain",
