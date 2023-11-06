@@ -103,14 +103,11 @@ export type MessageType = "human" | "ai" | "generic" | "system" | "function";
 
 export type MessageContent =
   | string
-  | (
-      | {
-          type: "text" | "image_url";
-          text?: string;
-          image_url: string;
-        }
-      | string
-    )[];
+  | {
+      type: "text" | "image_url";
+      text?: string;
+      image_url?: string | { url: string };
+    }[];
 
 export interface BaseMessageFields {
   content: MessageContent;
@@ -132,30 +129,21 @@ export interface FunctionMessageFieldsWithName extends BaseMessageFields {
 function mergeContent(
   firstContent: MessageContent,
   secondContent: MessageContent
-) {
+): MessageContent {
   // If first content is a string
   if (typeof firstContent === "string") {
     if (typeof secondContent === "string") {
       return firstContent + secondContent;
     } else {
-      return [firstContent, ...secondContent];
+      return [{ type: "text", text: firstContent }, ...secondContent];
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
     return [...firstContent, ...secondContent];
     // If the first content is a list and second is a string
   } else {
-    // If the last element of the first content is a string
-    // Add the second content to the last element
-    if (typeof firstContent[firstContent.length - 1] === "string") {
-      return [
-        ...firstContent.slice(0, -1),
-        firstContent[firstContent.length - 1] + secondContent,
-      ];
-    } else {
-      // Otherwise, add the second content as a new element of the list
-      return [...firstContent, secondContent];
-    }
+    // Otherwise, add the second content as a new element of the list
+    return [...firstContent, { type: "text", text: secondContent }];
   }
 }
 

@@ -11,9 +11,7 @@ import {
   ChatMessageChunk,
   ChatResult,
   FunctionMessageChunk,
-  HumanMessage,
   HumanMessageChunk,
-  SystemMessage,
   SystemMessageChunk,
 } from "../schema/index.js";
 import { StructuredTool } from "../tools/base.js";
@@ -50,13 +48,12 @@ interface OpenAILLMOutput {
 }
 
 // TODO import from SDK when available
-type OpenAIRoleEnum = "system" | "assistant" | "user" | "function";
+type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
 
 type OpenAICompletionParam =
   OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
 type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
-type OpenAIFnCallOption =
-  OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
 
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
@@ -105,21 +102,17 @@ function messageToOpenAIMessage(message: BaseMessage): OpenAICompletionParam {
       JSON.parse(msg.function_call.arguments)
     );
   }
-  return msg;
+  return msg as OpenAICompletionParam;
 }
 
 function openAIResponseToChatMessage(
   message: OpenAIClient.Chat.Completions.ChatCompletionMessage
 ): BaseMessage {
   switch (message.role) {
-    case "user":
-      return new HumanMessage(message.content || "");
     case "assistant":
       return new AIMessage(message.content || "", {
         function_call: message.function_call,
       });
-    case "system":
-      return new SystemMessage(message.content || "");
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
@@ -404,13 +397,16 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
-      messages.map((message) => ({
-        role: messageToOpenAIRole(message),
-        content: message.content as any,
-        name: message.name,
-        function_call: message.additional_kwargs
-          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-      }));
+      messages.map(
+        (message) =>
+          ({
+            role: messageToOpenAIRole(message),
+            content: message.content as any,
+            name: message.name,
+            function_call: message.additional_kwargs
+              .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
+          } as OpenAICompletionParam)
+      );
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
@@ -469,13 +465,16 @@ export class ChatOpenAI<
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
-      messages.map((message) => ({
-        role: messageToOpenAIRole(message),
-        content: message.content as any,
-        name: message.name,
-        function_call: message.additional_kwargs
-          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-      }));
+      messages.map(
+        (message) =>
+          ({
+            role: messageToOpenAIRole(message),
+            content: message.content as any,
+            name: message.name,
+            function_call: message.additional_kwargs
+              .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
+          } as any)
+      );
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -613,7 +612,7 @@ export class ChatOpenAI<
   private async getNumTokensFromGenerations(generations: ChatGeneration[]) {
     const generationUsages = await Promise.all(
       generations.map(async (generation) => {
-        const openAIMessage = messageToOpenAIMessage(generation.message);
+        const openAIMessage: any = messageToOpenAIMessage(generation.message);
         if (openAIMessage.function_call) {
           return (await this.getNumTokensFromMessages([generation.message]))
             .countPerMessage[0];
@@ -651,8 +650,11 @@ export class ChatOpenAI<
         let count = textCount + tokensPerMessage + roleCount + nameCount;
 
         // From: https://github.com/hmarr/openai-chat-tokens/blob/main/src/index.ts messageTokenEstimate
-        const openAIMessage = messageToOpenAIMessage(message);
-        if (openAIMessage.role === "function") {
+        const openAIMessage: any = messageToOpenAIMessage(message);
+        if (
+          openAIMessage.role === "function" ||
+          openAIMessage.role === "tool"
+        ) {
           count -= 2;
         }
         if (openAIMessage.function_call) {
@@ -840,16 +842,16 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _convertMessageToDict = (message: BaseMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let messageDict: OpenAIClient.Chat.ChatCompletionMessageParam;
+      let messageDict: any;
 
       if (message._getType() === "human") {
-        messageDict = { role: "user", content: message.content as any };
+        messageDict = { role: "user", content: message.content };
       } else if (message._getType() === "ai") {
-        messageDict = { role: "assistant", content: message.content as any };
+        messageDict = { role: "assistant", content: message.content };
       } else if (message._getType() === "function") {
-        messageDict = { role: "assistant", content: message.content as any };
+        messageDict = { role: "assistant", content: message.content };
       } else if (message._getType() === "system") {
-        messageDict = { role: "system", content: message.content as any };
+        messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {
         messageDict = {
           role: (message as ChatMessage).role as
@@ -857,7 +859,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
             | "assistant"
             | "user"
             | "function",
-          content: message.content as any,
+          content: message.content,
         };
       } else {
         throw new Error(`Got unknown type ${message}`);

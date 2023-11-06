@@ -114,7 +114,7 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
 }
 
 export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
-  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  function_call?: OpenAIClient.Chat.ChatCompletionFunctionCallOption;
   functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
 }
 
