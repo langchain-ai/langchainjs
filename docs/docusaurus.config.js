@@ -164,7 +164,7 @@ const config = {
             label: "Integrations",
           },
           {
-            href: "/docs/api/",
+            href: "https://api.js.langchain.com",
             label: "API",
             position: "left",
           },
