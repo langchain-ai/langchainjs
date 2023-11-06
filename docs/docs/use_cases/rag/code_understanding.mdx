@@ -233,6 +233,7 @@ const conversationalQaChain = RunnableSequence.from([
 ```
 
 This is somewhat of a complex chain so let's break it down.
+
 - First, we define our single input parameter: `question: string`. Below this we also define `chat_history` which is not sourced from the user's input, but rather preforms a chat memory lookup.
 - Next, we pipe those variables through to our prompt, model and lastly an output parser. This first part will rephrase the question, and return a single string of the rephrased question.
 - In the next block we capture the output from the previous block and pipe it through to the next prompt. We also preform a retrieval call to get the relevant documents for the question and any chat history which might be present.
