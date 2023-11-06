@@ -9,6 +9,7 @@
     "alphabetical"
   ],
   "tsconfig": "../langchain/tsconfig.json",
+  "readme": "none",
   "excludePrivate": true,
   "excludeInternal": true,
   "excludeExternals": true,
