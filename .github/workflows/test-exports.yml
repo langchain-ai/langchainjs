@@ -35,6 +35,7 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
         env:
           SKIP_API_DOCS: true
 
@@ -54,6 +55,7 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
         env:
           SKIP_API_DOCS: true
 
@@ -73,6 +75,7 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
         env:
           SKIP_API_DOCS: true
 
@@ -92,6 +95,7 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
         env:
           SKIP_API_DOCS: true
 
@@ -111,6 +115,7 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
         env:
           SKIP_API_DOCS: true
 
@@ -130,6 +135,7 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
         env:
           SKIP_API_DOCS: true
 
@@ -149,6 +155,7 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
         env:
           SKIP_API_DOCS: true
 
