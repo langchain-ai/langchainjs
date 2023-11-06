@@ -62,6 +62,7 @@
     "../langchain/src/embeddings/googlevertexai.ts",
     "../langchain/src/embeddings/googlepalm.ts",
     "../langchain/src/embeddings/minimax.ts",
+    "../langchain/src/embeddings/voyage.ts",
     "../langchain/src/embeddings/llama_cpp.ts",
     "../langchain/src/llms/load.ts",
     "../langchain/src/llms/base.ts",
