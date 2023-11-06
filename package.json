@@ -33,7 +33,7 @@
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start",
-    "docs:api": "yarn workspace api-docs start",
+    "docs:api-docs": "yarn workspace api-docs start",
     "postinstall": "husky install"
   },
   "author": "LangChain",
