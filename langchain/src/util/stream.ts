@@ -16,7 +16,10 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
     try {
       const result = await this.reader.read();
       if (result.done) this.reader.releaseLock(); // release lock when stream becomes closed
-      return result;
+      return {
+        done: result.done,
+        value: result.value as T, // Cloudflare Workers typing fix
+      };
     } catch (e) {
       this.reader.releaseLock(); // release lock when stream becomes errored
       throw e;
