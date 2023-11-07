@@ -1,28 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
+  ActorCallOptions,
   ApifyClient,
   ApifyClientOptions,
-  ActorCallOptions,
   TaskCallOptions,
 } from "apify-client";
 
-import { Document } from "../../document.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+import { Document } from "../../document.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * A type that represents a function that takes a single object (an Apify
  * dataset item) and converts it to an instance of the Document class.
  */
-export type ApifyDatasetMappingFunction = (
-  item: Record<string | number, unknown>
-) => Document;
+export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
+  (item: Record<string | number, unknown>) => Document<Metadata>;
 
 /**
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader that loads
  * documents from an Apify dataset.
  */
-export class ApifyDatasetLoader
+export class ApifyDatasetLoader<Metadata extends Record<string, any>>
   extends BaseDocumentLoader
   implements DocumentLoader
 {
@@ -32,12 +33,12 @@ export class ApifyDatasetLoader
 
   protected datasetMappingFunction: (
     item: Record<string | number, unknown>
-  ) => Document;
+  ) => Document<Metadata>;
 
   constructor(
     datasetId: string,
     config: {
-      datasetMappingFunction: ApifyDatasetMappingFunction;
+      datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
       clientOptions?: ApifyClientOptions;
     }
   ) {
@@ -63,7 +64,7 @@ export class ApifyDatasetLoader
    * instances.
    * @returns An array of Document instances.
    */
-  async load(): Promise<Document[]> {
+  async load(): Promise<Document<Metadata>[]> {
     const datasetItems = (
       await this.apifyClient.dataset(this.datasetId).listItems({ clean: true })
     ).items;
@@ -78,15 +79,15 @@ export class ApifyDatasetLoader
    * @param options.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
    * @returns An instance of `ApifyDatasetLoader` with the results from the Actor run.
    */
-  static async fromActorCall(
+  static async fromActorCall<Metadata extends Record<string, any>>(
     actorId: string,
     input: Record<string | number, unknown>,
     config: {
       callOptions?: ActorCallOptions;
       clientOptions?: ApifyClientOptions;
-      datasetMappingFunction: ApifyDatasetMappingFunction;
+      datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
     }
-  ): Promise<ApifyDatasetLoader> {
+  ): Promise<ApifyDatasetLoader<Metadata>> {
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
       config.clientOptions
     );
@@ -110,15 +111,15 @@ export class ApifyDatasetLoader
    * @param options.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
    * @returns An instance of `ApifyDatasetLoader` with the results from the task's run.
    */
-  static async fromActorTaskCall(
+  static async fromActorTaskCall<Metadata extends Record<string, any>>(
     taskId: string,
     input: Record<string | number, unknown>,
     config: {
       callOptions?: TaskCallOptions;
       clientOptions?: ApifyClientOptions;
-      datasetMappingFunction: ApifyDatasetMappingFunction;
+      datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
     }
-  ): Promise<ApifyDatasetLoader> {
+  ): Promise<ApifyDatasetLoader<Metadata>> {
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
       config.clientOptions
     );
