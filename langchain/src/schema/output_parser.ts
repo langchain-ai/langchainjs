@@ -80,7 +80,15 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
     } else {
       return this._callWithConfig(
         async (input: BaseMessage): Promise<T> =>
-          this.parseResult([{ message: input, text: input.content }]),
+          this.parseResult([
+            {
+              message: input,
+              text:
+                typeof input.content === "string"
+                  ? input.content
+                  : JSON.stringify(input.content),
+            },
+          ]),
         input,
         { ...options, runType: "parser" }
       );
@@ -151,7 +159,15 @@ export abstract class BaseTransformOutputParser<
       if (typeof chunk === "string") {
         yield this.parseResult([{ text: chunk }]);
       } else {
-        yield this.parseResult([{ message: chunk, text: chunk.content }]);
+        yield this.parseResult([
+          {
+            message: chunk,
+            text:
+              typeof chunk.content === "string"
+                ? chunk.content
+                : JSON.stringify(chunk.content),
+          },
+        ]);
       }
     }
   }
@@ -208,13 +224,22 @@ export abstract class BaseCumulativeTransformOutputParser<
     let prevParsed: T | undefined;
     let accGen: GenerationChunk | undefined;
     for await (const chunk of inputGenerator) {
+      if (typeof chunk !== "string" && typeof chunk.content !== "string") {
+        throw new Error("Cannot handle non-string output.");
+      }
       let chunkGen: GenerationChunk;
       if (isBaseMessageChunk(chunk)) {
+        if (typeof chunk.content !== "string") {
+          throw new Error("Cannot handle non-string message output.");
+        }
         chunkGen = new ChatGenerationChunk({
           message: chunk,
           text: chunk.content,
         });
       } else if (isBaseMessage(chunk)) {
+        if (typeof chunk.content !== "string") {
+          throw new Error("Cannot handle non-string message output.");
+        }
         chunkGen = new ChatGenerationChunk({
           message: chunk.toChunk(),
           text: chunk.content,

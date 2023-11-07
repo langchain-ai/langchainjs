@@ -130,6 +130,11 @@ export class GoogleVertexAIChatMessage {
    * @returns A new Google Vertex AI chat message.
    */
   static fromChatMessage(message: BaseMessage, model: string) {
+    if (typeof message.content !== "string") {
+      throw new Error(
+        "ChatGoogleVertexAI does not support non-string message content."
+      );
+    }
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
         message,
@@ -299,6 +304,11 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     let context = "";
     let conversationMessages = messages;
     if (messages[0]?._getType() === "system") {
+      if (typeof messages[0].content !== "string") {
+        throw new Error(
+          "ChatGoogleVertexAI does not support non-string message content."
+        );
+      }
       context = messages[0].content;
       conversationMessages = messages.slice(1);
     }

@@ -21,6 +21,11 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
   let instruction = "";
 
   for (const message of history) {
+    if (typeof message.content !== "string") {
+      throw new Error(
+        "ChatYandexGPT does not support non-string message content."
+      );
+    }
     if ("content" in message) {
       if (message._getType() === "human") {
         chatHistory.push({ role: "user", text: message.content });
