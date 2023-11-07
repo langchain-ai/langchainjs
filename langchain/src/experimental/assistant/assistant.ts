@@ -49,7 +49,7 @@ export class OpenAIAssistant<
 
   /**
    * List all steps in the run.
-   * 
+   *
    * @param {string} runId The run ID to query steps on.
    * @param {StepListParams} input Optional input to filter steps.
    * @returns {Promise<RunStepsPage>} A class instance containing the steps and page cursor.
@@ -68,7 +68,7 @@ export class OpenAIAssistant<
 
   /**
    * Get a run's step by ID.
-   * 
+   *
    * @param {string} runId The run ID to query steps on.
    * @param {string} stepId The step ID to retrieve.
    * @returns {Promise<RunStep>} The step object.
@@ -84,7 +84,7 @@ export class OpenAIAssistant<
 
   /**
    * List all messages in the thread.
-   * 
+   *
    * @param {MessageListParams} input Optional input to filter messages.
    * @returns {Promise<ThreadMessagesPage>} A class instance containing the messages and page cursor.
    */
@@ -98,7 +98,7 @@ export class OpenAIAssistant<
 
   /**
    * Add a new message to the thread.
-   * 
+   *
    * @param {MessageCreateParams} input
    * @returns {Promise<ThreadMessage>} The created message.
    */
@@ -152,7 +152,7 @@ export class OpenAIAssistant<
   /**
    * Static method used for initializing an assistant. Optional inputs include a thread ID and thread create options.
    * If no threadId is provided one will be created.
-   * 
+   *
    * @param input
    * @param options
    * @returns {Promise<OpenAIAssistant<RunInput, RunOutput>>} The initialized assistant.
@@ -189,9 +189,9 @@ export class OpenAIAssistant<
 
   /**
    * Static method used for initializing an assistant from an existing assistant ID.
-   * 
-   * @param assistantId 
-   * @param options 
+   *
+   * @param assistantId
+   * @param options
    * @returns {Promise<OpenAIAssistant<RunInput, RunOutput>>}
    */
   static async fromExistingAssistant<

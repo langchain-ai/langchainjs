@@ -1,8 +1,8 @@
 import { OpenAIAssistant } from "../assistant.js";
 
 test("works", async () => {
-  const assistantId = "asst_id...";
-  const threadId = "thread_id...";
+  const assistantId = "asst_10kod7SgTuwiwQuzp1JdstKV";
+  const threadId = "thread_NZ7jRqSkdtwGM1Rbj6HHjO5i";
   const assistant = await OpenAIAssistant.fromExistingAssistant(assistantId, {
     threadId,
   });
