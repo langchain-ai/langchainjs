@@ -907,7 +907,6 @@
     "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.2.7",
     "firebase-admin": "^11.9.0",
-    "glob": "^10.3.10",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
     "graphql": "^16.6.0",
