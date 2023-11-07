@@ -204,7 +204,13 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
           finalResult = finalResult.concat(chunk);
         }
       }
-      return finalResult?.message.content ?? "";
+      const messageContent = finalResult?.message.content;
+      if (messageContent && typeof messageContent !== "string") {
+        throw new Error(
+          "Non-string output for ChatBedrock is currently not supported."
+        );
+      }
+      return messageContent ?? "";
     }
 
     const response = await this._signedFetch(messages, options, {

@@ -203,6 +203,12 @@ export class ChatGooglePaLM
       messages.length > 0 && getMessageAuthor(messages[0]) === "system"
         ? messages[0]
         : undefined;
+    if (
+      systemMessage?.content !== undefined &&
+      typeof systemMessage.content !== "string"
+    ) {
+      throw new Error("Non-string system message content is not supported.");
+    }
     return systemMessage?.content;
   }
 
@@ -226,15 +232,22 @@ export class ChatGooglePaLM
       }
     });
 
-    return nonSystemMessages.map((m) => ({
-      author: getMessageAuthor(m),
-      content: m.content,
-      citationMetadata: {
-        citationSources: m.additional_kwargs.citationSources as
-          | protos.google.ai.generativelanguage.v1beta2.ICitationSource[]
-          | undefined,
-      },
-    }));
+    return nonSystemMessages.map((m) => {
+      if (typeof m.content !== "string") {
+        throw new Error(
+          "ChatGooglePaLM does not support non-string message content."
+        );
+      }
+      return {
+        author: getMessageAuthor(m),
+        content: m.content,
+        citationMetadata: {
+          citationSources: m.additional_kwargs.citationSources as
+            | protos.google.ai.generativelanguage.v1beta2.ICitationSource[]
+            | undefined,
+        },
+      };
+    });
   }
 
   protected _mapPalmMessagesToChatResult(
