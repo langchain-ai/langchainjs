@@ -5,8 +5,7 @@ import { OpenAIToolType } from "../schema.js";
 
 // Example dummy function hard coded to return the same weather
 // In production, this could be your backend API or an external API
-function getCurrentWeather(location: string, unit = "fahrenheit") {
-  console.log("getCurrentWeather", location, unit);
+function getCurrentWeather(location: string, _unit = "fahrenheit") {
   if (location.toLowerCase().includes("tokyo")) {
     return JSON.stringify({ location, temperature: "10", unit: "celsius" });
   } else if (location.toLowerCase().includes("san francisco")) {
@@ -16,6 +15,9 @@ function getCurrentWeather(location: string, unit = "fahrenheit") {
   }
 }
 
+/**
+ * Dummy tool defined for testing custom functions.
+ */
 class WeatherTool extends Tool {
   name = "get_current_weather";
 
@@ -26,7 +28,6 @@ class WeatherTool extends Tool {
   }
 
   async _call(input: { location: string; unit: string }) {
-    console.log("calling", input);
     const { location, unit } = input;
     const result = getCurrentWeather(location, unit);
     return result;
@@ -54,7 +55,7 @@ const tools: OpenAIToolType = [
   },
 ];
 
-test("works", async () => {
+test("OpenAIAssistantRunnable can be passed as an agent", async () => {
   const agent = await OpenAIAssistantRunnable.create({
     model: "gpt-4-1106-preview",
     instructions:
@@ -74,4 +75,30 @@ test("works", async () => {
   });
 
   console.log(assistantResponse);
+  /**
+    {
+      output: '10 - 4 is 6, and 6 raised to the power of 2.7 is calculated as follows:\n' +
+        '\n' +
+        '\\( 6^{2.7} \\approx 246.418 \\)'
+    }
+   */
+});
+
+test.only("OpenAIAssistantRunnable is invokeable", async () => {
+  const assistant = await OpenAIAssistantRunnable.create({
+    model: "gpt-4-1106-preview",
+    instructions:
+      "You are a helpful assistant that provides weather information.",
+    name: "Weather Assistant",
+    tools: [{ type: "code_interpreter" }],
+  });
+
+  const assistantResponse = await assistant.invoke({
+    content: "What's 10 - 4 raised to the 2.7",
+  });
+
+  console.log(assistantResponse);
+  /**
+
+   */
 });
