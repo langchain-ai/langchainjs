@@ -99,6 +99,22 @@ test.only("OpenAIAssistantRunnable is invokeable", async () => {
 
   console.log(assistantResponse);
   /**
-
+    [
+      {
+        id: 'msg_OBH60nkVI40V9zY2PlxMzbEI',
+        thread_id: 'thread_wKpj4cu1XaYEVeJlx4yFbWx5',
+        role: 'assistant',
+        content: [ 
+          {
+            type: 'text',
+            value: '10 - 4 is 6, and 6 raised to the power of 2.7 is calculated as follows:\n' +
+              '\n' +
+              '\\( 6^{2.7} \\approx 246.418 \\)'
+          }
+        ],
+        assistant_id: 'asst_RtW03Vs6laTwqSSMCQpVND7i',
+        run_id: 'run_4Ve5Y9fyKMcSxHbaNHOFvdC6',
+      }
+    ]
    */
 });
