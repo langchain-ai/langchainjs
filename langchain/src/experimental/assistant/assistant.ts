@@ -1,5 +1,4 @@
 import {
-  Assistant,
   AssistantCreateParams,
   ThreadCreateParams,
 } from "openai/resources/beta/index";
