@@ -1,328 +1,282 @@
+import { OpenAI as OpenAIClient } from "openai";
 import {
-  AssistantCreateParams,
-  ThreadCreateParams,
-} from "openai/resources/beta/index";
-import { ClientOptions, OpenAI as OpenAIClient } from "openai";
-import {
-  MessageCreateParams,
-  MessageListParams,
+  RequiredActionFunctionToolCall,
   Run,
-  Thread,
   ThreadMessage,
-  ThreadMessagesPage,
 } from "openai/resources/beta/threads/index";
-import {
-  RunStep,
-  RunStepsPage,
-  StepListParams,
-} from "openai/resources/beta/threads/runs/index";
 import { Runnable } from "../../schema/runnable/base.js";
+import { sleep } from "../../util/time.js";
+import { RunnableConfig } from "../../schema/runnable/config.js";
+import { AgentAction, AgentFinish } from "../../schema/index.js";
 
-function sleep(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => {
-    setTimeout(() => resolve(), ms);
-  });
+interface OpenAIAssistantFinishInput<RunInput extends Record<string, any>> {
+  returnValues: RunInput;
+
+  log: string;
+
+  runId: string;
+
+  threadId: string;
 }
 
-interface FromAssistantOptions {
-  threadId?: string;
-  createThreadOptions?: ThreadCreateParams;
-  functions?: Record<string, (...args: any[]) => any>;
-  clientOptions?: ClientOptions;
+class OpenAIAssistantFinish<RunInput extends Record<string, any>>
+  implements AgentFinish
+{
+  returnValues: RunInput;
+
+  log: string;
+
+  runId: string;
+
+  threadId: string;
+
+  constructor(fields: OpenAIAssistantFinishInput<RunInput>) {
+    this.returnValues = fields.returnValues;
+    this.log = fields.log;
+    this.runId = fields.runId;
+    this.threadId = fields.threadId;
+  }
 }
 
-export class OpenAIAssistant<
+interface OpenAIAssistantActionInput {
+  tool: string;
+
+  toolInput: string;
+
+  log: string;
+
+  toolCallId: string;
+
+  runId: string;
+
+  threadId: string;
+}
+
+class OpenAIAssistantAction implements AgentAction {
+  tool: string;
+
+  toolInput: string;
+
+  log: string;
+
+  toolCallId: string;
+
+  runId: string;
+
+  threadId: string;
+
+  constructor(fields: OpenAIAssistantActionInput) {
+    this.tool = fields.tool;
+    this.toolInput = fields.toolInput;
+    this.log = fields.log;
+    this.toolCallId = fields.toolCallId;
+    this.runId = fields.runId;
+    this.threadId = fields.threadId;
+  }
+}
+
+type OutputType<RunInput extends Record<string, any>> =
+  | OpenAIAssistantAction[]
+  | OpenAIAssistantFinish<RunInput>
+  | ThreadMessage[]
+  | RequiredActionFunctionToolCall[];
+
+export class OpenAIAssistantRunnable<
   RunInput extends Record<string, any>,
-  RunOutput extends Record<string, any>
+  RunOutput extends OutputType<RunInput>
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "beta", "openai_assistant"];
-
-  /**
-   * @TODO which category should 'canceling' be in?
-   */
-  private nonFinishedStatuses = ["queued", "in_progress", "requires_action"];
-
-  private finishedStatuses = ["canceled", "failed", "completed", "expired"];
 
   private client: OpenAIClient;
 
   assistantId: string;
 
-  threadId: string;
+  pollIntervalMs = 1000;
 
-  functions: Record<string, (...args: any[]) => any> | null;
+  asAgent = false;
 
-  constructor(fields: {
-    assistantId: string;
-    threadId: string;
-    client: OpenAIClient;
-    functions?: Record<string, (...args: any[]) => any>;
-  }) {
+  constructor(fields: { client: OpenAIClient; assistantId: string }) {
     super();
-    this.client = fields.client;
+    this.client = fields.client || new OpenAIClient();
     this.assistantId = fields.assistantId;
-    this.threadId = fields.threadId;
-    this.functions = fields.functions || null;
   }
 
-  /**
-   * Submit tool outputs for an assistant run.
-   *
-   * @param {string} runId
-   * @param {Array<{ toolCallId: string; output: any }>} toolOutputs
-   * @returns {Promise<Run>} The updated run object.
-   */
-  async submitOutputs(
-    runId: string,
-    toolOutputs: Array<{ toolCallId: string; output: any }>
-  ): Promise<Run> {
-    const run = await this.client.beta.threads.runs.submitToolOutputs(
-      this.threadId,
-      runId,
-      {
-        tool_outputs: toolOutputs.map((output) => ({
-          tool_call_id: output.toolCallId,
-          output: output.output,
-        })),
-      }
-    );
+  static async create<
+    RunInput extends Record<string, any>,
+    RunOutput extends OutputType<RunInput>
+  >(
+    name: string,
+    instructions: string,
+    tools: any,
+    model: string,
+    client?: OpenAIClient
+  ) {
+    const oaiClient = client ?? new OpenAIClient();
+    const assistant = await oaiClient.beta.assistants.create({
+      name,
+      instructions,
+      tools,
+      model,
+    });
 
+    return new this<RunInput, RunOutput>({
+      client: oaiClient,
+      assistantId: assistant.id,
+    });
+  }
+
+  async invoke(input: RunInput, _options?: RunnableConfig): Promise<RunOutput> {
+    const parsedInput = this._parseInput(input);
+    let run: Run;
+    if (!("threadId" in parsedInput)) {
+      run = await this._createThreadAndRun(input);
+      await this.client.beta.threads.messages.create(run.thread_id, {
+        content: parsedInput.content,
+        role: "user",
+        file_ids: parsedInput.file_ids,
+        metadata: parsedInput.metadata,
+      });
+    } else if (!("runId" in parsedInput)) {
+      await this.client.beta.threads.messages.create(parsedInput.threadId, {
+        content: parsedInput.content,
+        role: "user",
+        file_ids: parsedInput.file_ids,
+        metadata: parsedInput.metadata,
+      });
+      run = await this._createRun(input);
+    } else {
+      run = await this.client.beta.threads.runs.submitToolOutputs(
+        parsedInput.threadId,
+        parsedInput.runId,
+        parsedInput.toolOutputs
+      );
+    }
+
+    return this._getResponse(run.id, run.thread_id) as unknown as RunOutput;
+  }
+
+  private _parseInput(input: RunInput): RunInput {
+    let newInput = {};
+    if (this.asAgent && input.intermediate_steps) {
+      const lastStep =
+        input.intermediate_steps[input.intermediate_steps.length - 1];
+      const [lastAction, lastOutput] = lastStep;
+      newInput = {
+        tool_outputs: [
+          { output: lastOutput, tool_call_id: lastAction.tool_call_id },
+        ],
+        run_id: lastAction.run_id,
+        thread_id: lastAction.thread_id,
+      };
+    }
+    return (newInput as RunInput) ?? input;
+  }
+
+  private async _createRun({
+    instructions,
+    model,
+    tools,
+    metadata,
+    threadId,
+  }: RunInput) {
+    const run = this.client.beta.threads.runs.create(threadId, {
+      assistant_id: this.assistantId,
+      instructions,
+      model,
+      tools,
+      metadata,
+    });
     return run;
   }
 
-  /**
-   * List all steps in the run.
-   *
-   * @param {string} runId The run ID to query steps on.
-   * @param {StepListParams} input Optional input to filter steps.
-   * @returns {Promise<RunStepsPage>} A class instance containing the steps and page cursor.
-   */
-  async listRunSteps(
-    runId: string,
-    input?: StepListParams
-  ): Promise<RunStepsPage> {
-    const steps = await this.client.beta.threads.runs.steps.list(
-      this.threadId,
-      runId,
-      input
-    );
-    return steps;
-  }
-
-  /**
-   * Get a run's step by ID.
-   *
-   * @param {string} runId The run ID to query steps on.
-   * @param {string} stepId The step ID to retrieve.
-   * @returns {Promise<RunStep>} The step object.
-   */
-  async getRuntStep(runId: string, stepId: string): Promise<RunStep> {
-    const step = await this.client.beta.threads.runs.steps.retrieve(
-      this.threadId,
-      runId,
-      stepId
-    );
-    return step;
-  }
-
-  /**
-   * List all messages in the thread.
-   *
-   * @param {MessageListParams} input Optional input to filter messages.
-   * @returns {Promise<ThreadMessagesPage>} A class instance containing the messages and page cursor.
-   */
-  async listMessages(input?: MessageListParams): Promise<ThreadMessagesPage> {
-    const messages = await this.client.beta.threads.messages.list(
-      this.threadId,
-      input
-    );
-    return messages;
-  }
-
-  /**
-   * Add a new message to the thread.
-   *
-   * @param {MessageCreateParams} input
-   * @returns {Promise<ThreadMessage>} The created message.
-   */
-  async addMessage(input: MessageCreateParams): Promise<ThreadMessage> {
-    const response = await this.client.beta.threads.messages.create(
-      this.threadId,
-      input
-    );
-    return response;
-  }
-
-  /**
-   * Handles calling the functions an assistant requested with the given function arguments.
-   * The function results are then submitted to the assistant via the `submitOutputs` method.
-   *
-   * @param {Run} run
-   */
-  private async handleToolCall(run: Run): Promise<void> {
-    const toolCalls = run.required_action?.submit_tool_outputs.tool_calls.map(
-      (tool) => tool
-    );
-    if (!toolCalls) {
-      throw new Error("No tool calls found");
-    }
-    if (!this.functions) {
-      throw new Error("No functions found");
-    }
-    const toolResults = toolCalls.map((tool) => {
-      const output = this.functions?.[tool.function.name](
-        tool.function.arguments
-      );
-      if (!output) {
-        throw new Error(
-          `No result returned from function: ${tool.function.name}`
-        );
-      }
-      return {
-        toolCallId: tool.id,
-        output,
-      };
-    });
-    await this.submitOutputs(run.id, toolResults);
-  }
-
-  /**
-   * Loop until the run status is no longer one of `nonFinishedStatuses` and handle the tool calls.
-   *
-   * @param {string} runId
-   */
-  private async waitForToolCalls(runId: string): Promise<void> {
-    let response: Run;
-    do {
-      response = await this.client.beta.threads.runs.retrieve(
-        this.threadId,
-        runId
-      );
-      if (response.status === "requires_action") {
-        await this.handleToolCall(response);
-      }
-    } while (this.nonFinishedStatuses.includes(response.status));
-  }
-
-  /**
-   * Stream run object until status is completed.
-   *
-   * @param {string} runId The run ID to stream.
-   * @param {number} intervalMs The MS interval at which to stream. Defaults to 1000ms.
-   * @returns {Promise<Run>}
-   */
-  async *streamRun(runId: string, intervalMs = 1000): AsyncGenerator<Run> {
-    let response;
-    do {
-      response = await this.client.beta.threads.runs.retrieve(
-        this.threadId,
-        runId
-      );
-      if (response.status === "in_progress") {
-        await sleep(intervalMs);
-      }
-      yield response;
-    } while (!this.finishedStatuses.includes(response.status));
-  }
-
-  /**
-   * Get the thread object based on the thread ID the class was initialized with.
-   *
-   * @returns {Promise<Thread>} The thread object.
-   */
-  async getThread(): Promise<Thread> {
-    const thread = await this.client.beta.threads.retrieve(this.threadId);
-    return thread;
-  }
-
-  async invoke(input: RunInput): Promise<RunOutput> {
-    const response = await this.client.beta.threads.runs.create(this.threadId, {
+  private async _createThreadAndRun({
+    instructions,
+    model,
+    tools,
+    thread,
+    metadata,
+  }: RunInput) {
+    const run = this.client.beta.threads.createAndRun({
       assistant_id: this.assistantId,
-      ...Object.fromEntries(
-        Object.entries(input).filter(([k]) => k !== "handleToolActions")
-      ),
+      instructions,
+      model,
+      tools,
+      thread,
+      metadata,
     });
-
-    if (
-      "shouldHandleToolActions" in input &&
-      input.handleToolActions === true
-    ) {
-      await this.waitForToolCalls(response.id);
-    }
-
-    return response as unknown as RunOutput;
+    return run;
   }
 
-  private static async createThread(
-    client: OpenAIClient,
-    options?: ThreadCreateParams
-  ) {
-    const thread = await client.beta.threads.create({
-      ...options,
-    });
-    return thread.id;
+  private async _waitForRun(runId: string, threadId: string) {
+    let inProgress = true;
+    let run = {} as Run;
+    while (inProgress) {
+      run = await this.client.beta.threads.runs.retrieve(threadId, runId);
+      inProgress = ["in_progress", "queued"].includes(run.status);
+      if (inProgress) {
+        await sleep(this.pollIntervalMs);
+      }
+    }
+    return run;
   }
 
-  /**
-   * Static method used for initializing an assistant. Optional inputs include a thread ID and thread create options.
-   * If no threadId is provided one will be created.
-   *
-   * @param input
-   * @param options
-   * @returns {Promise<OpenAIAssistant<RunInput, RunOutput>>} The initialized assistant.
-   */
-  static async fromAssistant<
-    RunInput extends Record<string, any>,
-    RunOutput extends Record<string, any>
-  >(
-    input: AssistantCreateParams,
-    options?: FromAssistantOptions
-  ): Promise<OpenAIAssistant<RunInput, RunOutput>> {
-    const openai = new OpenAIClient(options?.clientOptions);
-    const assistant = await openai.beta.assistants.create(input);
+  private async _getResponse(
+    runId: string,
+    threadId: string
+  ): Promise<OutputType<RunInput>> {
+    const run = await this._waitForRun(runId, threadId);
 
-    let threadId: string;
-    if (!options?.threadId) {
-      threadId = await this.createThread(openai, options?.createThreadOptions);
-    } else {
-      threadId = options.threadId;
+    if (run.status === "completed") {
+      const messages = await this.client.beta.threads.messages.list(threadId, {
+        order: "asc",
+      });
+      const newMessages = messages.data.filter((msg) => msg.run_id === runId);
+      if (!this.asAgent) {
+        return newMessages;
+      }
+      const answer = newMessages.flatMap((msg) => msg.content);
+      if (answer.every((item) => item.type === "text")) {
+        const answerString = answer
+          .map((item) => item.type === "text" && item.text.value)
+          .join("\n");
+
+        return new OpenAIAssistantFinish<RunInput>({
+          returnValues: {
+            output: answerString,
+          } as unknown as RunInput,
+          log: "",
+          runId,
+          threadId,
+        });
+      }
+    } else if (run.status === "requires_action") {
+      if (
+        !this.asAgent ||
+        !run.required_action?.submit_tool_outputs.tool_calls
+      ) {
+        return run.required_action?.submit_tool_outputs.tool_calls ?? [];
+      }
+      const actions: OpenAIAssistantAction[] = [];
+      console.log(run.required_action.submit_tool_outputs.tool_calls);
+      run.required_action.submit_tool_outputs.tool_calls.forEach((item) => {
+        const functionCall = item.function;
+        const args = JSON.parse(functionCall.arguments);
+        actions.push(
+          new OpenAIAssistantAction({
+            tool: functionCall.name,
+            toolInput: args,
+            toolCallId: item.id,
+            log: "",
+            runId,
+            threadId,
+          })
+        );
+      });
+      return actions;
     }
-
-    return new this({
-      assistantId: assistant.id,
-      threadId,
-      client: openai,
-      functions: options?.functions,
-    });
-  }
-
-  /**
-   * Static method used for initializing an assistant from an existing assistant ID.
-   *
-   * @param assistantId
-   * @param options
-   * @returns {Promise<OpenAIAssistant<RunInput, RunOutput>>}
-   */
-  static async fromExistingAssistant<
-    RunInput extends Record<string, any>,
-    RunOutput extends Record<string, any>
-  >(
-    assistantId: string,
-    options?: FromAssistantOptions
-  ): Promise<OpenAIAssistant<RunInput, RunOutput>> {
-    const openai = new OpenAIClient(options?.clientOptions);
-
-    let threadId: string;
-    if (!options?.threadId) {
-      threadId = await this.createThread(openai, options?.createThreadOptions);
-    } else {
-      threadId = options.threadId;
-    }
-
-    return new this({
-      assistantId,
-      threadId,
-      client: openai,
-    });
+    const runInfo = JSON.stringify(run, null, 2);
+    throw new Error(
+      `Unknown run status ${run.status}.\nFull run info:\n\n${runInfo}`
+    );
   }
 }
