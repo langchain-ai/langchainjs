@@ -31,6 +31,13 @@ export class OpenAIAssistant<
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "beta", "openai_assistant"];
 
+  /**
+   * @TODO which category should 'canceling' be in?
+   */
+  private nonFinishedStatuses = ["queued", "in_progress", "requires_action"];
+
+  private finishedStatuses = ["canceled", "failed", "completed", "expired"];
+
   private client: OpenAIClient;
 
   assistantId: string;
@@ -133,6 +140,46 @@ export class OpenAIAssistant<
     return response;
   }
 
+  private async handleToolCall(run: Run): Promise<void> {
+    const toolCalls = run.required_action?.submit_tool_outputs.tool_calls.map(
+      (tool) => tool
+    );
+    if (!toolCalls) {
+      throw new Error("No tool calls found");
+    }
+    if (!this.functions) {
+      throw new Error("No functions found");
+    }
+    const toolResults = toolCalls.map((tool) => {
+      const output = this.functions?.[tool.function.name](
+        tool.function.arguments
+      );
+      if (!output) {
+        throw new Error(
+          `No result returned from function: ${tool.function.name}`
+        );
+      }
+      return {
+        toolCallId: tool.id,
+        output,
+      };
+    });
+    await this.submitOutputs(run.id, toolResults);
+  }
+
+  private async waitForToolCall(runId: string): Promise<void> {
+    let response: Run;
+    do {
+      response = await this.client.beta.threads.runs.retrieve(
+        this.threadId,
+        runId
+      );
+      if (response.status === "requires_action") {
+        await this.handleToolCall(response);
+      }
+    } while (this.nonFinishedStatuses.includes(response.status));
+  }
+
   /**
    * Stream run object until status is completed.
    *
@@ -147,42 +194,11 @@ export class OpenAIAssistant<
         this.threadId,
         runId
       );
-      if (response.status === "requires_action") {
-        console.log("REQUIRES ACTION");
-        const toolCalls =
-          response.required_action?.submit_tool_outputs.tool_calls.map(
-            (tool) => tool
-          );
-        if (!toolCalls) {
-          throw new Error("No tool calls found");
-        }
-        if (!this.functions) {
-          throw new Error("No functions found");
-        }
-        const toolResults = toolCalls.map((tool) => {
-          const result = this.functions?.[tool.function.name](
-            tool.function.arguments
-          );
-          if (!result) {
-            throw new Error(
-              `No result returned from function: ${tool.function.name}`
-            );
-          }
-          return {
-            toolCallId: tool.id,
-            output: result,
-          };
-        });
-        const updatedRun = await this.submitOutputs(runId, toolResults);
-        console.log("updated run", updatedRun);
-        console.log();
-        console.log(toolResults);
-      }
       if (response.status === "in_progress") {
         await sleep(intervalMs);
       }
       yield response;
-    } while (response.status === "in_progress");
+    } while (!this.finishedStatuses.includes(response.status));
   }
 
   /**
@@ -198,8 +214,18 @@ export class OpenAIAssistant<
   async invoke(input: RunInput): Promise<RunOutput> {
     const response = await this.client.beta.threads.runs.create(this.threadId, {
       assistant_id: this.assistantId,
-      ...input,
+      ...Object.fromEntries(
+        Object.entries(input).filter(([k]) => k !== "handleToolActions")
+      ),
     });
+
+    if (
+      "shouldHandleToolActions" in input &&
+      input.handleToolActions === true
+    ) {
+      await this.waitForToolCall(response.id);
+    }
+
     return response as unknown as RunOutput;
   }
 

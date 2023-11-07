@@ -56,13 +56,11 @@ test("works", async () => {
     role: "user",
   });
 
-  const res = await assistant.invoke({});
+  const res = await assistant.invoke({
+    shouldHandleToolActions: true,
+  });
 
   console.log("res", res);
-
-  for await (const streamRes of assistant.streamRun(res.id)) {
-    console.log("streamRes", streamRes);
-  }
 
   const messages = await assistant.listMessages();
   const messageContent = messages.data.map((m) => m.content[0]);
