@@ -155,6 +155,7 @@ export interface ChatOpenAICallOptions
     BaseFunctionCallOptions {
   tools?: StructuredTool[];
   promptIndex?: number;
+  response_format?: { type: "json" };
 }
 
 /**
