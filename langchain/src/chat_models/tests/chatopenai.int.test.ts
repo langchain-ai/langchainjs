@@ -782,7 +782,7 @@ test("Test ChatOpenAI JSON mode", async () => {
     maxTokens: 128,
   }).bind({
     response_format: {
-      type: "json",
+      type: "json_object",
     },
   });
   const message = new HumanMessage("Hello!");
