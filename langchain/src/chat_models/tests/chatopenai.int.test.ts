@@ -789,3 +789,18 @@ test("Test ChatOpenAI JSON mode", async () => {
   const res = await chat.invoke([["system", "Only return JSON"], message]);
   console.log(JSON.stringify(res));
 });
+
+test("Test ChatOpenAI seed", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-4-1106-preview",
+    maxTokens: 128,
+    temperature: 1,
+  }).bind({
+    seed: 123454930394983,
+  });
+  const message = new HumanMessage("Say something random!");
+  const res = await chat.invoke([message]);
+  console.log(JSON.stringify(res));
+  const res2 = await chat.invoke([message]);
+  expect(res).toEqual(res2);
+});

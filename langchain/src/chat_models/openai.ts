@@ -156,6 +156,7 @@ export interface ChatOpenAICallOptions
   tools?: StructuredTool[];
   promptIndex?: number;
   response_format?: { type: "json_object" };
+  seed?: number;
 }
 
 /**
@@ -196,6 +197,7 @@ export class ChatOpenAI<
       "tools",
       "promptIndex",
       "response_format",
+      "seed",
     ];
   }
 
@@ -376,6 +378,7 @@ export class ChatOpenAI<
           : undefined),
       function_call: options?.function_call,
       response_format: options?.response_format,
+      seed: options?.seed,
       ...this.modelKwargs,
     };
   }
