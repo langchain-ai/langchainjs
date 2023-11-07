@@ -52,7 +52,7 @@ test("works", async () => {
   );
 
   await assistant.addMessage({
-    content: "What is the weather like in san francisco and tyoko?",
+    content: "What is the weather like in san francisco and tokyo?",
     role: "user",
   });
 
