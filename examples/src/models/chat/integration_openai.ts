@@ -79,7 +79,7 @@ const jsonModeModel = new ChatOpenAI({
   maxTokens: 128,
 }).bind({
   response_format: {
-    type: "json",
+    type: "json_object",
   },
 });
 
