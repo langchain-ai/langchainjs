@@ -1,85 +1,13 @@
 import { OpenAI as OpenAIClient } from "openai";
-import {
-  RequiredActionFunctionToolCall,
-  Run,
-  ThreadMessage,
-} from "openai/resources/beta/threads/index";
+import { Run } from "openai/resources/beta/threads/index";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import { RunnableConfig } from "../../schema/runnable/config.js";
-import { AgentAction, AgentFinish } from "../../schema/index.js";
-
-interface OpenAIAssistantFinishInput<RunInput extends Record<string, any>> {
-  returnValues: RunInput;
-
-  log: string;
-
-  runId: string;
-
-  threadId: string;
-}
-
-class OpenAIAssistantFinish<RunInput extends Record<string, any>>
-  implements AgentFinish
-{
-  returnValues: RunInput;
-
-  log: string;
-
-  runId: string;
-
-  threadId: string;
-
-  constructor(fields: OpenAIAssistantFinishInput<RunInput>) {
-    this.returnValues = fields.returnValues;
-    this.log = fields.log;
-    this.runId = fields.runId;
-    this.threadId = fields.threadId;
-  }
-}
-
-interface OpenAIAssistantActionInput {
-  tool: string;
-
-  toolInput: string;
-
-  log: string;
-
-  toolCallId: string;
-
-  runId: string;
-
-  threadId: string;
-}
-
-class OpenAIAssistantAction implements AgentAction {
-  tool: string;
-
-  toolInput: string;
-
-  log: string;
-
-  toolCallId: string;
-
-  runId: string;
-
-  threadId: string;
-
-  constructor(fields: OpenAIAssistantActionInput) {
-    this.tool = fields.tool;
-    this.toolInput = fields.toolInput;
-    this.log = fields.log;
-    this.toolCallId = fields.toolCallId;
-    this.runId = fields.runId;
-    this.threadId = fields.threadId;
-  }
-}
-
-type OutputType<RunInput extends Record<string, any>> =
-  | OpenAIAssistantAction[]
-  | OpenAIAssistantFinish<RunInput>
-  | ThreadMessage[]
-  | RequiredActionFunctionToolCall[];
+import {
+  OutputType,
+  OpenAIAssistantFinish,
+  OpenAIAssistantAction,
+} from "./schema.js";
 
 export class OpenAIAssistantRunnable<
   RunInput extends Record<string, any>,
