@@ -1,4 +1,5 @@
 import {
+  Assistant,
   AssistantCreateParams,
   ThreadCreateParams,
 } from "openai/resources/beta/index";
@@ -36,15 +37,37 @@ export class OpenAIAssistant<
 
   threadId: string;
 
+  functions: Record<string, (...args: any[]) => any> | null;
+
   constructor(fields: {
     assistantId: string;
     threadId: string;
     client: OpenAIClient;
+    functions?: Record<string, (...args: any[]) => any>;
   }) {
     super();
     this.client = fields.client;
     this.assistantId = fields.assistantId;
     this.threadId = fields.threadId;
+    this.functions = fields.functions || null;
+  }
+
+  async submitOutputs(
+    runId: string,
+    toolOutputs: Array<{ toolCallId: string; output: any }>
+  ): Promise<Run> {
+    const run = await this.client.beta.threads.runs.submitToolOutputs(
+      this.threadId,
+      runId,
+      {
+        tool_outputs: toolOutputs.map((output) => ({
+          tool_call_id: output.toolCallId,
+          output: output.output,
+        })),
+      }
+    );
+
+    return run;
   }
 
   /**
@@ -73,7 +96,7 @@ export class OpenAIAssistant<
    * @param {string} stepId The step ID to retrieve.
    * @returns {Promise<RunStep>} The step object.
    */
-  async geRuntStep(runId: string, stepId: string): Promise<RunStep> {
+  async getRuntStep(runId: string, stepId: string): Promise<RunStep> {
     const step = await this.client.beta.threads.runs.steps.retrieve(
       this.threadId,
       runId,
@@ -124,6 +147,37 @@ export class OpenAIAssistant<
         this.threadId,
         runId
       );
+      if (response.status === "requires_action") {
+        console.log("REQUIRES ACTION");
+        const toolCalls =
+          response.required_action?.submit_tool_outputs.tool_calls.map(
+            (tool) => tool
+          );
+        if (!toolCalls) {
+          throw new Error("No tool calls found");
+        }
+        if (!this.functions) {
+          throw new Error("No functions found");
+        }
+        const toolResults = toolCalls.map((tool) => {
+          const result = this.functions?.[tool.function.name](
+            tool.function.arguments
+          );
+          if (!result) {
+            throw new Error(
+              `No result returned from function: ${tool.function.name}`
+            );
+          }
+          return {
+            toolCallId: tool.id,
+            output: result,
+          };
+        });
+        const updatedRun = await this.submitOutputs(runId, toolResults);
+        console.log("updated run", updatedRun);
+        console.log();
+        console.log(toolResults);
+      }
       if (response.status === "in_progress") {
         await sleep(intervalMs);
       }
@@ -165,6 +219,7 @@ export class OpenAIAssistant<
     options?: {
       threadId?: string;
       createThreadOptions?: ThreadCreateParams;
+      functions?: Record<string, (...args: any[]) => any>;
     }
   ): Promise<OpenAIAssistant<RunInput, RunOutput>> {
     const openai = new OpenAIClient();
@@ -184,6 +239,7 @@ export class OpenAIAssistant<
       assistantId: assistant.id,
       threadId,
       client: openai,
+      functions: options?.functions,
     });
   }
 
@@ -202,6 +258,7 @@ export class OpenAIAssistant<
     options?: {
       threadId?: string;
       createThreadOptions?: ThreadCreateParams;
+      functions?: Array<Assistant.Function>;
     }
   ): Promise<OpenAIAssistant<RunInput, RunOutput>> {
     const openai = new OpenAIClient();
