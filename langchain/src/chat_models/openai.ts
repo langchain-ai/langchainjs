@@ -155,6 +155,7 @@ export interface ChatOpenAICallOptions
     BaseFunctionCallOptions {
   tools?: StructuredTool[];
   promptIndex?: number;
+  response_format?: { type: "json_object" };
 }
 
 /**
@@ -194,6 +195,7 @@ export class ChatOpenAI<
       "functions",
       "tools",
       "promptIndex",
+      "response_format",
     ];
   }
 
@@ -373,6 +375,7 @@ export class ChatOpenAI<
           ? options?.tools.map(formatToOpenAIFunction)
           : undefined),
       function_call: options?.function_call,
+      response_format: options?.response_format,
       ...this.modelKwargs,
     };
   }
