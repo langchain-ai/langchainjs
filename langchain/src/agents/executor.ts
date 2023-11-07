@@ -77,9 +77,7 @@ export class AgentExecutor<
     agent_scratchpad?: string | BaseMessage[];
     stop?: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends AgentAction | AgentFinish = any
+  } = any
 > extends BaseChain {
   static lc_name() {
     return "AgentExecutor";
@@ -123,7 +121,7 @@ export class AgentExecutor<
     return this.agent.returnValues;
   }
 
-  constructor(input: AgentExecutorInput<RunInput, RunOutput>) {
+  constructor(input: AgentExecutorInput<RunInput>) {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
     if (Runnable.isRunnable(input.agent)) {
       agent = new RunnableAgent({ runnable: input.agent });
@@ -157,11 +155,8 @@ export class AgentExecutor<
     RunInput extends ChainValues & {
       agent_scratchpad?: string | BaseMessage[];
       stop?: string[];
-    },
-    RunOutput extends AgentAction | AgentFinish
-  >(
-    fields: AgentExecutorInput<RunInput, RunOutput>
-  ): AgentExecutor<RunInput, RunOutput> {
+    }
+  >(fields: AgentExecutorInput<RunInput>): AgentExecutor<RunInput> {
     return new AgentExecutor(fields);
   }
 

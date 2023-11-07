@@ -1,11 +1,12 @@
 import {
   ThreadMessage,
   RequiredActionFunctionToolCall,
-} from "openai/resources/beta/threads/index.mjs";
+} from "openai/resources/beta/threads/index";
+import { AssistantCreateParams } from "openai/resources/beta/index";
 import { AgentFinish, AgentAction } from "../../schema/index.js";
 
-interface OpenAIAssistantFinishInput<RunInput extends Record<string, any>> {
-  returnValues: RunInput;
+interface OpenAIAssistantFinishInput {
+  returnValues: Record<string, any>;
 
   log: string;
 
@@ -14,10 +15,8 @@ interface OpenAIAssistantFinishInput<RunInput extends Record<string, any>> {
   threadId: string;
 }
 
-export class OpenAIAssistantFinish<RunInput extends Record<string, any>>
-  implements AgentFinish
-{
-  returnValues: RunInput;
+export class OpenAIAssistantFinish implements AgentFinish {
+  returnValues: Record<string, any>;
 
   log: string;
 
@@ -25,7 +24,7 @@ export class OpenAIAssistantFinish<RunInput extends Record<string, any>>
 
   threadId: string;
 
-  constructor(fields: OpenAIAssistantFinishInput<RunInput>) {
+  constructor(fields: OpenAIAssistantFinishInput) {
     this.returnValues = fields.returnValues;
     this.log = fields.log;
     this.runId = fields.runId;
@@ -70,8 +69,14 @@ export class OpenAIAssistantAction implements AgentAction {
   }
 }
 
-export type OutputType<RunInput extends Record<string, any>> =
+export type OutputType =
   | OpenAIAssistantAction[]
-  | OpenAIAssistantFinish<RunInput>
+  | OpenAIAssistantFinish
   | ThreadMessage[]
   | RequiredActionFunctionToolCall[];
+
+export type OpenAIToolType = Array<
+  | AssistantCreateParams.AssistantToolsCode
+  | AssistantCreateParams.AssistantToolsRetrieval
+  | AssistantCreateParams.AssistantToolsFunction
+>;

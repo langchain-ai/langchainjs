@@ -31,7 +31,7 @@ export interface RunnableAgentInput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends AgentAction | AgentFinish = any
+  RunOutput extends AgentAction[] | AgentFinish = any
 > {
   runnable: Runnable<RunInput, RunOutput>;
   stop?: string[];

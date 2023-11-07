@@ -1,5 +1,7 @@
-import { AssistantCreateParams } from "openai/resources/beta/index";
-import { OpenAIAssistant } from "../assistant.js";
+import { AgentExecutor } from "../../../agents/executor.js";
+import { Tool } from "../../../tools/base.js";
+import { OpenAIAssistantRunnable } from "../assistant.js";
+import { OpenAIToolType } from "../schema.js";
 
 // Example dummy function hard coded to return the same weather
 // In production, this could be your backend API or an external API
@@ -14,7 +16,24 @@ function getCurrentWeather(location: string, unit = "fahrenheit") {
   }
 }
 
-const tools: Array<AssistantCreateParams.AssistantToolsFunction> = [
+class WeatherTool extends Tool {
+  name = "get_current_weather";
+
+  description = "Get the current weather in a given location";
+
+  constructor() {
+    super();
+  }
+
+  async _call(input: { location: string; unit: string }) {
+    console.log("calling", input);
+    const { location, unit } = input;
+    const result = getCurrentWeather(location, unit);
+    return result;
+  }
+}
+
+const tools: OpenAIToolType = [
   {
     type: "function",
     function: {
@@ -36,66 +55,23 @@ const tools: Array<AssistantCreateParams.AssistantToolsFunction> = [
 ];
 
 test("works", async () => {
-  const assistant = await OpenAIAssistant.fromAssistant(
-    {
-      model: "gpt-4-1106-preview",
-      description:
-        "You are a helpful assistant that provides weather information.",
-      name: "Weather Assistant",
-      tools,
-    },
-    {
-      functions: {
-        get_current_weather: getCurrentWeather,
-      },
-    }
-  );
-
-  await assistant.addMessage({
-    content: "What is the weather like in san francisco and tokyo?",
-    role: "user",
+  const agent = await OpenAIAssistantRunnable.create({
+    model: "gpt-4-1106-preview",
+    instructions:
+      "You are a helpful assistant that provides weather information.",
+    name: "Weather Assistant",
+    tools,
+    asAgent: true,
   });
 
-  const res = await assistant.invoke({
-    shouldHandleToolActions: true,
+  const agentExecutor = AgentExecutor.fromAgentAndTools({
+    agent,
+    tools: [new WeatherTool()],
   });
 
-  console.log("res", res);
+  const assistantResponse = await agentExecutor.invoke({
+    content: "What's 10 - 4 raised to the 2.7",
+  });
 
-  const messages = await assistant.listMessages();
-  const messageContent = messages.data.map((m) => m.content[0]);
-
-  console.log(
-    "messageContent",
-    messageContent.map((m) => m.type === "text" && m.text)
-  );
-
-  const steps = await assistant.listRunSteps(res.id);
-  const stepsContent = steps.data.map((s) => s.step_details);
-
-  const functionOutputs = stepsContent.map((step) => ({
-    ...(step.type === "tool_calls" &&
-      step.tool_calls.map(
-        (toolCall) => toolCall.type === "function" && toolCall.function
-      )),
-  }));
-
-  console.log(functionOutputs);
-
-  /**
-    [
-      {
-        '0': {
-          name: 'get_current_weather',
-          arguments: '{"location": "San Francisco, CA", "unit": "fahrenheit"}',
-          output: '{"location":"{\\"location\\": \\"San Francisco, CA\\", \\"unit\\": \\"fahrenheit\\"}","temperature":"72","unit":"fahrenheit"}'
-        },
-        '1': {
-          name: 'get_current_weather',
-          arguments: '{"location": "Tokyo, Japan", "unit": "celsius"}',
-          output: '{"location":"{\\"location\\": \\"Tokyo, Japan\\", \\"unit\\": \\"celsius\\"}","temperature":"10","unit":"celsius"}'
-        }
-      }
-    ]
-   */
+  console.log(assistantResponse);
 });

@@ -121,53 +121,7 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
     steps: AgentStep[],
     inputs: ChainValues,
     callbackManager?: CallbackManager
-  ): Promise<AgentAction | AgentFinish>;
-}
-
-/**
- * Class representing a single action agent which accepts runnables.
- * Extends the BaseSingleActionAgent class and provides methods for
- * planning agent actions with runnables.
- */
-export class RunnableAgent<
-  RunInput extends ChainValues & {
-    agent_scratchpad?: string | BaseMessage[];
-    stop?: string[];
-  },
-  RunOutput extends AgentAction | AgentFinish
-> extends BaseSingleActionAgent {
-  protected lc_runnable = true;
-
-  lc_namespace = ["langchain", "agents", "runnable"];
-
-  runnable: Runnable<RunInput, RunOutput>;
-
-  stop?: string[];
-
-  get inputKeys(): string[] {
-    return [];
-  }
-
-  constructor(fields: RunnableAgentInput<RunInput, RunOutput>) {
-    super();
-    this.runnable = fields.runnable;
-    this.stop = fields.stop;
-  }
-
-  async plan(
-    steps: AgentStep[],
-    inputs: RunInput,
-    callbackManager?: CallbackManager
-  ): Promise<AgentAction | AgentFinish> {
-    const invokeInput = { ...inputs, steps };
-
-    const output = await this.runnable.invoke(invokeInput, {
-      callbacks: callbackManager,
-      runName: "RunnableAgent",
-    });
-
-    return output;
-  }
+  ): Promise<AgentAction | AgentAction[] | AgentFinish>;
 }
 
 /**
@@ -194,6 +148,52 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
     inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction[] | AgentFinish>;
+}
+
+/**
+ * Class representing a single action agent which accepts runnables.
+ * Extends the BaseSingleActionAgent class and provides methods for
+ * planning agent actions with runnables.
+ */
+export class RunnableAgent<
+  RunInput extends ChainValues & {
+    agent_scratchpad?: string | BaseMessage[];
+    stop?: string[];
+  },
+  RunOutput extends AgentAction[] | AgentFinish
+> extends BaseMultiActionAgent {
+  protected lc_runnable = true;
+
+  lc_namespace = ["langchain", "agents", "runnable"];
+
+  runnable: Runnable<RunInput, RunOutput>;
+
+  stop?: string[];
+
+  get inputKeys(): string[] {
+    return [];
+  }
+
+  constructor(fields: RunnableAgentInput<RunInput, RunOutput>) {
+    super();
+    this.runnable = fields.runnable;
+    this.stop = fields.stop;
+  }
+
+  async plan(
+    steps: AgentStep[],
+    inputs: RunInput,
+    callbackManager?: CallbackManager
+  ): Promise<AgentAction[] | AgentFinish> {
+    const invokeInput = { ...inputs, steps };
+
+    const output = await this.runnable.invoke(invokeInput, {
+      callbacks: callbackManager,
+      runName: "RunnableAgent",
+    });
+
+    return output;
+  }
 }
 
 /**

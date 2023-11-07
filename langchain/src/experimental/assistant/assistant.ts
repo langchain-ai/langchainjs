@@ -7,11 +7,13 @@ import {
   OutputType,
   OpenAIAssistantFinish,
   OpenAIAssistantAction,
+  OpenAIToolType,
 } from "./schema.js";
+import { Tool } from "../../tools/base.js";
 
 export class OpenAIAssistantRunnable<
   RunInput extends Record<string, any>,
-  RunOutput extends OutputType<RunInput>
+  RunOutput extends OutputType
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "beta", "openai_assistant"];
 
@@ -19,7 +21,7 @@ export class OpenAIAssistantRunnable<
 
   assistantId: string;
 
-  pollIntervalMs = 1000;
+  pollIntervalMs = 5000;
 
   asAgent = false;
 
@@ -31,19 +33,27 @@ export class OpenAIAssistantRunnable<
 
   static async create<
     RunInput extends Record<string, any>,
-    RunOutput extends OutputType<RunInput>
-  >(
-    name: string,
-    instructions: string,
-    tools: any,
-    model: string,
-    client?: OpenAIClient
-  ) {
+    RunOutput extends OutputType
+  >({
+    model,
+    name,
+    instructions,
+    tools,
+    client,
+  }: {
+    model: string;
+    name?: string;
+    instructions?: string;
+    tools?: OpenAIToolType | Array<Tool>;
+    client?: OpenAIClient;
+    asAgent?: boolean;
+  }) {
+    const castTools = tools as OpenAIToolType;
     const oaiClient = client ?? new OpenAIClient();
     const assistant = await oaiClient.beta.assistants.create({
       name,
       instructions,
-      tools,
+      tools: castTools,
       model,
     });
 
@@ -55,21 +65,30 @@ export class OpenAIAssistantRunnable<
 
   async invoke(input: RunInput, _options?: RunnableConfig): Promise<RunOutput> {
     const parsedInput = this._parseInput(input);
+
     let run: Run;
     if (!("threadId" in parsedInput)) {
-      run = await this._createThreadAndRun(input);
-      await this.client.beta.threads.messages.create(run.thread_id, {
-        content: parsedInput.content,
-        role: "user",
-        file_ids: parsedInput.file_ids,
-        metadata: parsedInput.metadata,
+      const thread = {
+        messages: [
+          {
+            role: "user",
+            content: parsedInput.content,
+            file_ids: parsedInput.fileIds,
+            metadata: parsedInput.messagesMetadata,
+          },
+        ],
+        metadata: parsedInput.threadMetadata,
+      };
+      run = await this._createThreadAndRun({
+        ...input,
+        thread,
       });
     } else if (!("runId" in parsedInput)) {
       await this.client.beta.threads.messages.create(parsedInput.threadId, {
         content: parsedInput.content,
         role: "user",
         file_ids: parsedInput.file_ids,
-        metadata: parsedInput.metadata,
+        metadata: parsedInput.messagesMetadata,
       });
       run = await this._createRun(input);
     } else {
@@ -84,7 +103,7 @@ export class OpenAIAssistantRunnable<
   }
 
   private _parseInput(input: RunInput): RunInput {
-    let newInput = {};
+    let newInput;
     if (this.asAgent && input.intermediate_steps) {
       const lastStep =
         input.intermediate_steps[input.intermediate_steps.length - 1];
@@ -97,7 +116,7 @@ export class OpenAIAssistantRunnable<
         thread_id: lastAction.thread_id,
       };
     }
-    return (newInput as RunInput) ?? input;
+    return (newInput ?? input) as RunInput;
   }
 
   private async _createRun({
@@ -117,20 +136,14 @@ export class OpenAIAssistantRunnable<
     return run;
   }
 
-  private async _createThreadAndRun({
-    instructions,
-    model,
-    tools,
-    thread,
-    metadata,
-  }: RunInput) {
+  private async _createThreadAndRun(input: RunInput) {
     const run = this.client.beta.threads.createAndRun({
+      metadata: input.threadMetadata,
+      model: input.model,
+      tools: input.tools,
+      thread: input.thread,
+      instructions: input.instructions,
       assistant_id: this.assistantId,
-      instructions,
-      model,
-      tools,
-      thread,
-      metadata,
     });
     return run;
   }
@@ -140,9 +153,12 @@ export class OpenAIAssistantRunnable<
     let run = {} as Run;
     while (inProgress) {
       run = await this.client.beta.threads.runs.retrieve(threadId, runId);
+      console.log("waiting", run);
       inProgress = ["in_progress", "queued"].includes(run.status);
       if (inProgress) {
         await sleep(this.pollIntervalMs);
+      } else {
+        console.log("not in progress or queued.");
       }
     }
     return run;
@@ -151,10 +167,11 @@ export class OpenAIAssistantRunnable<
   private async _getResponse(
     runId: string,
     threadId: string
-  ): Promise<OutputType<RunInput>> {
+  ): Promise<OutputType> {
     const run = await this._waitForRun(runId, threadId);
-
+    console.log("_getResponse run", run);
     if (run.status === "completed") {
+      console.log("completed");
       const messages = await this.client.beta.threads.messages.list(threadId, {
         order: "asc",
       });
@@ -167,15 +184,17 @@ export class OpenAIAssistantRunnable<
         const answerString = answer
           .map((item) => item.type === "text" && item.text.value)
           .join("\n");
-
-        return new OpenAIAssistantFinish<RunInput>({
+        console.log("returning finish");
+        return new OpenAIAssistantFinish({
           returnValues: {
             output: answerString,
-          } as unknown as RunInput,
+          },
           log: "",
           runId,
           threadId,
         });
+      } else {
+        console.log("answer not all text", answer);
       }
     } else if (run.status === "requires_action") {
       if (
