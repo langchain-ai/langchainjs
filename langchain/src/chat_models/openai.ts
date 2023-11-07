@@ -89,22 +89,6 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   }
 }
 
-function messageToOpenAIMessage(message: BaseMessage): OpenAICompletionParam {
-  const msg = {
-    content: (message.content as any) || null,
-    name: message.name,
-    role: messageToOpenAIRole(message),
-    function_call: message.additional_kwargs.function_call,
-  };
-  if (msg.function_call?.arguments) {
-    // Remove spaces, new line characters etc.
-    msg.function_call.arguments = JSON.stringify(
-      JSON.parse(msg.function_call.arguments)
-    );
-  }
-  return msg as OpenAICompletionParam;
-}
-
 function openAIResponseToChatMessage(
   message: OpenAIClient.Chat.Completions.ChatCompletionMessage
 ): BaseMessage {
@@ -402,17 +386,17 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
-      messages.map(
-        (message) =>
-          ({
-            role: messageToOpenAIRole(message),
-            content: message.content as any,
-            name: message.name,
-            function_call: message.additional_kwargs
-              .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-          } as OpenAICompletionParam)
-      );
+    const messagesMapped: OpenAICompletionParam[] = messages.map(
+      // TODO: Function messages do not support array content, fix cast
+      (message) =>
+        ({
+          role: messageToOpenAIRole(message),
+          content: message.content,
+          name: message.name,
+          function_call: message.additional_kwargs
+            .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
+        } as OpenAICompletionParam)
+    );
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
@@ -433,9 +417,15 @@ export class ChatOpenAI<
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,
       };
+      if (typeof chunk.content !== "string") {
+        console.log(
+          "[WARNING:] Received non-string content from OpenAI. This is currently not supported."
+        );
+        continue;
+      }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
-        text: chunk.content as any,
+        text: chunk.content,
         generationInfo: newTokenIndices,
       });
       yield generationChunk;
@@ -470,16 +460,17 @@ export class ChatOpenAI<
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
+    const messagesMapped: OpenAICompletionParam[] =
+      // TODO: Function messages do not support array content, fix cast
       messages.map(
         (message) =>
           ({
             role: messageToOpenAIRole(message),
-            content: message.content as any,
+            content: message.content,
             name: message.name,
             function_call: message.additional_kwargs
               .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-          } as any)
+          } as OpenAICompletionParam)
       );
 
     if (params.stream) {
@@ -503,7 +494,7 @@ export class ChatOpenAI<
       // OpenAI does not support token usage report under stream mode,
       // fallback to estimation.
 
-      const promptTokenUsage = await this.getNumTokensFromPrompt(
+      const promptTokenUsage = await this.getEstimatedTokenCountFromPrompt(
         messages,
         functions,
         function_call
@@ -572,15 +563,13 @@ export class ChatOpenAI<
    * Estimate the number of tokens a prompt will use.
    * Modified from: https://github.com/hmarr/openai-chat-tokens/blob/main/src/index.ts
    */
-  private async getNumTokensFromPrompt(
+  private async getEstimatedTokenCountFromPrompt(
     messages: BaseMessage[],
     functions?: OpenAIFnDef[],
     function_call?: "none" | "auto" | OpenAIFnCallOption
   ): Promise<number> {
     // It appears that if functions are present, the first system message is padded with a trailing newline. This
     // was inferred by trying lots of combinations of messages and functions and seeing what the token counts were.
-    // let paddedSystem = false;
-    const openaiMessages = messages.map((m) => messageToOpenAIMessage(m));
 
     let tokens = (await this.getNumTokensFromMessages(messages)).totalCount;
 
@@ -596,7 +585,7 @@ export class ChatOpenAI<
     // If there's a system message _and_ functions are present, subtract four tokens. I assume this is because
     // functions typically add a system message, but reuse the first one if it's already there. This offsets
     // the extra 9 tokens added by the function definitions.
-    if (functions && openaiMessages.find((m) => m.role === "system")) {
+    if (functions && messages.find((m) => m._getType() === "system")) {
       tokens -= 4;
     }
 
@@ -618,8 +607,7 @@ export class ChatOpenAI<
   private async getNumTokensFromGenerations(generations: ChatGeneration[]) {
     const generationUsages = await Promise.all(
       generations.map(async (generation) => {
-        const openAIMessage: any = messageToOpenAIMessage(generation.message);
-        if (openAIMessage.function_call) {
+        if (generation.message.additional_kwargs?.function_call) {
           return (await this.getNumTokensFromMessages([generation.message]))
             .countPerMessage[0];
         } else {
@@ -656,22 +644,21 @@ export class ChatOpenAI<
         let count = textCount + tokensPerMessage + roleCount + nameCount;
 
         // From: https://github.com/hmarr/openai-chat-tokens/blob/main/src/index.ts messageTokenEstimate
-        const openAIMessage: any = messageToOpenAIMessage(message);
-        if (
-          openAIMessage.role === "function" ||
-          openAIMessage.role === "tool"
-        ) {
+        const openAIMessage = message;
+        if (openAIMessage._getType() === "function") {
           count -= 2;
         }
-        if (openAIMessage.function_call) {
+        if (openAIMessage.additional_kwargs?.function_call) {
           count += 3;
         }
-        if (openAIMessage.function_call?.name) {
-          count += await this.getNumTokens(openAIMessage.function_call?.name);
-        }
-        if (openAIMessage.function_call?.arguments) {
+        if (openAIMessage?.additional_kwargs.function_call?.name) {
           count += await this.getNumTokens(
-            openAIMessage.function_call?.arguments
+            openAIMessage.additional_kwargs.function_call?.name
+          );
+        }
+        if (openAIMessage.additional_kwargs.function_call?.arguments) {
+          count += await this.getNumTokens(
+            openAIMessage.additional_kwargs.function_call?.arguments
           );
         }
 
