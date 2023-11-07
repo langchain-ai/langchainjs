@@ -3,7 +3,7 @@ import {
   AssistantCreateParams,
   ThreadCreateParams,
 } from "openai/resources/beta/index";
-import { OpenAI as OpenAIClient } from "openai";
+import { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import {
   MessageCreateParams,
   MessageListParams,
@@ -23,6 +23,13 @@ function sleep(ms: number): Promise<void> {
   return new Promise<void>((resolve) => {
     setTimeout(() => resolve(), ms);
   });
+}
+
+interface FromAssistantOptions {
+  threadId?: string;
+  createThreadOptions?: ThreadCreateParams;
+  functions?: Record<string, (...args: any[]) => any>;
+  clientOptions?: ClientOptions;
 }
 
 export class OpenAIAssistant<
@@ -59,6 +66,13 @@ export class OpenAIAssistant<
     this.functions = fields.functions || null;
   }
 
+  /**
+   * Submit tool outputs for an assistant run.
+   *
+   * @param {string} runId
+   * @param {Array<{ toolCallId: string; output: any }>} toolOutputs
+   * @returns {Promise<Run>} The updated run object.
+   */
   async submitOutputs(
     runId: string,
     toolOutputs: Array<{ toolCallId: string; output: any }>
@@ -140,6 +154,12 @@ export class OpenAIAssistant<
     return response;
   }
 
+  /**
+   * Handles calling the functions an assistant requested with the given function arguments.
+   * The function results are then submitted to the assistant via the `submitOutputs` method.
+   * 
+   * @param {Run} run 
+   */
   private async handleToolCall(run: Run): Promise<void> {
     const toolCalls = run.required_action?.submit_tool_outputs.tool_calls.map(
       (tool) => tool
@@ -167,7 +187,12 @@ export class OpenAIAssistant<
     await this.submitOutputs(run.id, toolResults);
   }
 
-  private async waitForToolCall(runId: string): Promise<void> {
+  /**
+   * Loop until the run status is no longer one of `nonFinishedStatuses` and handle the tool calls.
+   * 
+   * @param {string} runId 
+   */
+  private async waitForToolCalls(runId: string): Promise<void> {
     let response: Run;
     do {
       response = await this.client.beta.threads.runs.retrieve(
@@ -223,10 +248,20 @@ export class OpenAIAssistant<
       "shouldHandleToolActions" in input &&
       input.handleToolActions === true
     ) {
-      await this.waitForToolCall(response.id);
+      await this.waitForToolCalls(response.id);
     }
 
     return response as unknown as RunOutput;
+  }
+
+  private static async createThread(
+    client: OpenAIClient,
+    options?: ThreadCreateParams
+  ) {
+    const thread = await client.beta.threads.create({
+      ...options,
+    });
+    return thread.id;
   }
 
   /**
@@ -242,21 +277,14 @@ export class OpenAIAssistant<
     RunOutput extends Record<string, any>
   >(
     input: AssistantCreateParams,
-    options?: {
-      threadId?: string;
-      createThreadOptions?: ThreadCreateParams;
-      functions?: Record<string, (...args: any[]) => any>;
-    }
+    options?: FromAssistantOptions
   ): Promise<OpenAIAssistant<RunInput, RunOutput>> {
-    const openai = new OpenAIClient();
+    const openai = new OpenAIClient(options?.clientOptions);
     const assistant = await openai.beta.assistants.create(input);
 
     let threadId: string;
     if (!options?.threadId) {
-      const thread = await openai.beta.threads.create({
-        ...options?.createThreadOptions,
-      });
-      threadId = thread.id;
+      threadId = await this.createThread(openai, options?.createThreadOptions);
     } else {
       threadId = options.threadId;
     }
@@ -281,20 +309,13 @@ export class OpenAIAssistant<
     RunOutput extends Record<string, any>
   >(
     assistantId: string,
-    options?: {
-      threadId?: string;
-      createThreadOptions?: ThreadCreateParams;
-      functions?: Array<Assistant.Function>;
-    }
+    options?: FromAssistantOptions
   ): Promise<OpenAIAssistant<RunInput, RunOutput>> {
-    const openai = new OpenAIClient();
+    const openai = new OpenAIClient(options?.clientOptions);
 
     let threadId: string;
     if (!options?.threadId) {
-      const thread = await openai.beta.threads.create({
-        ...options?.createThreadOptions,
-      });
-      threadId = thread.id;
+      threadId = await this.createThread(openai, options?.createThreadOptions);
     } else {
       threadId = options.threadId;
     }
