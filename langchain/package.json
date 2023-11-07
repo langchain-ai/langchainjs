@@ -805,7 +805,7 @@
     "precommit": "lint-staged",
     "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
-    "prerelease": "npm publish",
+    "prerelease": "npm version prelease --preid=rc && npm publish",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
