@@ -157,8 +157,8 @@ export class OpenAIAssistant<
   /**
    * Handles calling the functions an assistant requested with the given function arguments.
    * The function results are then submitted to the assistant via the `submitOutputs` method.
-   * 
-   * @param {Run} run 
+   *
+   * @param {Run} run
    */
   private async handleToolCall(run: Run): Promise<void> {
     const toolCalls = run.required_action?.submit_tool_outputs.tool_calls.map(
@@ -189,8 +189,8 @@ export class OpenAIAssistant<
 
   /**
    * Loop until the run status is no longer one of `nonFinishedStatuses` and handle the tool calls.
-   * 
-   * @param {string} runId 
+   *
+   * @param {string} runId
    */
   private async waitForToolCalls(runId: string): Promise<void> {
     let response: Run;
