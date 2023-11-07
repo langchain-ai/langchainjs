@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { test, expect } from "@jest/globals";
-import { Bedrock } from "../bedrock.js";
+import { Bedrock } from "../bedrock/index.js";
 
 test("Test Bedrock LLM: AI21", async () => {
   const region = process.env.BEDROCK_AWS_REGION!;

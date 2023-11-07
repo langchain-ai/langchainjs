@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { test, expect } from "@jest/globals";
-import { ChatBedrock } from "../bedrock.js";
+import { ChatBedrock } from "../bedrock/web.js";
 import { HumanMessage } from "../../schema/index.js";
 
 test("Test Bedrock chat model: Claude-v2", async () => {

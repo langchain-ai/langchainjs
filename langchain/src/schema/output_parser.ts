@@ -4,9 +4,14 @@ import {
   Generation,
   ChatGeneration,
   BaseMessage,
+  isBaseMessage,
+  isBaseMessageChunk,
+  ChatGenerationChunk,
+  GenerationChunk,
 } from "./index.js";
 import { Runnable } from "./runnable/index.js";
 import { RunnableConfig } from "./runnable/config.js";
+import { deepCompareStrict } from "../util/@cfworker/json-schema/index.js";
 
 /**
  * Options for formatting instructions.
@@ -139,7 +144,7 @@ export abstract class BaseOutputParser<
 export abstract class BaseTransformOutputParser<
   T = unknown
 > extends BaseOutputParser<T> {
-  async *_transform(
+  protected async *_transform(
     inputGenerator: AsyncGenerator<string | BaseMessage>
   ): AsyncGenerator<T> {
     for await (const chunk of inputGenerator) {
@@ -170,6 +175,74 @@ export abstract class BaseTransformOutputParser<
         runType: "parser",
       }
     );
+  }
+}
+
+export type BaseCumulativeTransformOutputParserInput = { diff?: boolean };
+
+/**
+ * A base class for output parsers that can handle streaming input. It
+ * extends the `BaseTransformOutputParser` class and provides a method for
+ * converting parsed outputs into a diff format.
+ */
+export abstract class BaseCumulativeTransformOutputParser<
+  T = unknown
+> extends BaseTransformOutputParser<T> {
+  protected diff = false;
+
+  constructor(fields?: BaseCumulativeTransformOutputParserInput) {
+    super(fields);
+    this.diff = fields?.diff ?? this.diff;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected abstract _diff(prev: any | undefined, next: any): any;
+
+  abstract parsePartialResult(
+    generations: Generation[] | ChatGeneration[]
+  ): Promise<T | undefined>;
+
+  protected async *_transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>
+  ): AsyncGenerator<T> {
+    let prevParsed: T | undefined;
+    let accGen: GenerationChunk | undefined;
+    for await (const chunk of inputGenerator) {
+      let chunkGen: GenerationChunk;
+      if (isBaseMessageChunk(chunk)) {
+        chunkGen = new ChatGenerationChunk({
+          message: chunk,
+          text: chunk.content,
+        });
+      } else if (isBaseMessage(chunk)) {
+        chunkGen = new ChatGenerationChunk({
+          message: chunk.toChunk(),
+          text: chunk.content,
+        });
+      } else {
+        chunkGen = new GenerationChunk({ text: chunk });
+      }
+
+      if (accGen === undefined) {
+        accGen = chunkGen;
+      } else {
+        accGen = accGen.concat(chunkGen);
+      }
+
+      const parsed = await this.parsePartialResult([accGen]);
+      if (
+        parsed !== undefined &&
+        parsed !== null &&
+        !deepCompareStrict(parsed, prevParsed)
+      ) {
+        if (this.diff) {
+          yield this._diff(prevParsed, parsed);
+        } else {
+          yield parsed;
+        }
+        prevParsed = parsed;
+      }
+    }
   }
 }
 
