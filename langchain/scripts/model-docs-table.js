@@ -84,18 +84,37 @@ const LLM_DIRECTORY = path.join(CWD, "./dist/llms");
 
 /**
  * Fetch all files which are not .test.ts/.cjs/.d.ts from a directory.
- * @param dir {string}
+ * @param {string} pattern
+ * @param { nodir: boolean, cwd: string } options
  */
-const getAllJSFilesInDir = async (dir) => {
-  const pattern = "**/!(*.test.ts|*.cjs|*.d.ts)";
-  const options = { nodir: true, cwd: dir };
-  const globbered = await glob(pattern, options);
-  return globbered;
+const getAllJSFilesInDir = async (pattern, options) => {
+  let fileList = [];
+
+  async function walk(currentPath) {
+    let files = await fs.readdir(currentPath);
+    for (let file of files) {
+      let fullPath = path.join(currentPath, file);
+      let fileStat = await fs.stat(fullPath);
+
+      if (fileStat.isDirectory()) {
+        await walk(fullPath);
+      } else {
+        const ext = path.extname(fullPath);
+        if (ext === ".js") {
+          fileList.push(fullPath);
+        }
+      }
+    }
+  }
+
+  await walk(options.cwd || process.cwd());
+  const filteredFileList = fileList.filter(file => file.match(new RegExp(pattern))).map((file) => path.basename(file))
+  return filteredFileList
 };
 
 /**
  * Verifies the arg being passed is a class, and is a subclass of BaseChatModel or BaseLLM.
- * @param item {string}
+ * @param {string} item
  */
 const isClass = (item) => {
   const className = item.name;
@@ -126,7 +145,7 @@ const isClass = (item) => {
 
 /**
  * Create the MD table.
- * @param {Array<{name: string, hasStreamImplemented: boolean, hasInvokeImplemented: boolean, hasBatchImplemented: boolean}>}
+ * @param {Array<{name: string, hasStreamImplemented: boolean, hasInvokeImplemented: boolean, hasBatchImplemented: boolean}>} data
  * @returns {string}
  */
 const createTable = (data) => {
@@ -198,8 +217,9 @@ const checkClassMethods = async (
 };
 
 export async function main() {
-  const chatModelFiles = await getAllJSFilesInDir(CHAT_MODEL_DIRECTORY);
-  const llmFiles = await getAllJSFilesInDir(LLM_DIRECTORY);
+  const pattern = "^(?!.*(?:\.test\.ts|\.cjs|\.d\.ts)$).*";
+  const chatModelFiles = await getAllJSFilesInDir(pattern, { nodir: true, cwd: CHAT_MODEL_DIRECTORY });
+  const llmFiles = await getAllJSFilesInDir(pattern, { nodir: true, cwd: LLM_DIRECTORY });
 
   const [chatClassCompatibility, llmClassCompatibility] = await Promise.all([
     Promise.all(
