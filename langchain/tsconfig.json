@@ -280,7 +280,7 @@
       "src/util/math.ts",
       "src/util/time.ts",
       "src/experimental/autogpt/index.ts",
-      "src/experimental/openai_assistant/openai_assistant.ts",
+      "src/experimental/openai_assistant/index.ts",
       "src/experimental/babyagi/index.ts",
       "src/experimental/generative_agents/index.ts",
       "src/experimental/plan_and_execute/index.ts",

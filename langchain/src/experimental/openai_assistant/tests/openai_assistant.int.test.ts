@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ThreadMessage } from "openai/resources/beta/threads/index.mjs";
+import { OpenAI as OpenAIClient } from "openai";
 import { AgentExecutor } from "../../../agents/executor.js";
 import { StructuredTool } from "../../../tools/base.js";
-import { OpenAIAssistantRunnable } from "../openai_assistant.js";
+import { OpenAIAssistantRunnable } from "../index.js";
 
 function getCurrentWeather(location: string, _unit = "fahrenheit") {
   if (location.toLowerCase().includes("tokyo")) {
@@ -12,6 +12,13 @@ function getCurrentWeather(location: string, _unit = "fahrenheit") {
   } else {
     return JSON.stringify({ location, temperature: "22", unit: "celsius" });
   }
+}
+
+function convertWeatherToHumanReadable(location: string, temperature: string) {
+  if (temperature.length > 1) {
+    return JSON.stringify({ location, temperature, readable: "warm" });
+  }
+  return JSON.stringify({ location, temperature, readable: "cold" });
 }
 
 class WeatherTool extends StructuredTool {
@@ -35,8 +42,30 @@ class WeatherTool extends StructuredTool {
   }
 }
 
-test("OpenAIAssistantRunnable can be passed as an agent", async () => {
-  const tools = [new WeatherTool()];
+class HumanReadableChecker extends StructuredTool {
+  schema = z.object({
+    location: z.string().describe("The city and state, e.g. San Francisco, CA"),
+    temperature: z.string().describe("The temperature in degrees"),
+  });
+
+  name = "get_human_readable_weather";
+
+  description =
+    "Check whether or not the weather in a given location is warm or cold";
+
+  constructor() {
+    super(...arguments);
+  }
+
+  async _call(input: { location: string; temperature: string }) {
+    const { location, temperature } = input;
+    const result = convertWeatherToHumanReadable(location, temperature);
+    return result;
+  }
+}
+
+test.only("OpenAIAssistantRunnable can be passed as an agent", async () => {
+  const tools = [new WeatherTool(), new HumanReadableChecker()];
   const agent = await OpenAIAssistantRunnable.createAssistant({
     model: "gpt-3.5-turbo-1106",
     instructions:
@@ -50,12 +79,13 @@ test("OpenAIAssistantRunnable can be passed as an agent", async () => {
     tools,
   });
   const assistantResponse = await agentExecutor.invoke({
-    content: "What's the weather in San Francisco and Tokyo?",
+    content:
+      "What's the weather in San Francisco and Tokyo? And will it be warm or cold in those places?",
   });
   console.log(assistantResponse);
   /**
     {
-      output: 'The current weather in San Francisco is 72°F, and in Tokyo, it is 10°C.'
+      output: "The weather in San Francisco, CA is currently 72°F and it's warm. In Tokyo, Japan, the temperature is 10°C and it's also warm."
     }
    */
 });
@@ -88,9 +118,9 @@ test("OpenAIAssistantRunnable is invokeable", async () => {
       }
     ]
    */
-  const content = (assistantResponse as ThreadMessage[]).flatMap(
-    (res) => res.content
-  );
+  const content = (
+    assistantResponse as OpenAIClient.Beta.Threads.ThreadMessage[]
+  ).flatMap((res) => res.content);
   console.log(content);
   /**
     [
