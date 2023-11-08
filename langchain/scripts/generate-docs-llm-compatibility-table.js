@@ -2,6 +2,7 @@ import path from "path";
 import { BaseChatModel } from "../dist/chat_models/base.js";
 import { BaseLLM } from "../dist/llms/base.js";
 import fs from "fs/promises";
+import { exec } from "child_process";
 
 /**
  * Chat model classes to ignore.
@@ -179,7 +180,6 @@ const checkClassMethods = async (
     all = await import(fullFilePath);
   } catch (error) {
     if (error.code === "ERR_MODULE_NOT_FOUND") {
-      console.warn(`Skipping file due to missing module: ${fullFilePath}`);
       return [];
     } else {
       throw error;
@@ -241,6 +241,11 @@ export async function main() {
   await Promise.all([
     fs.writeFile(CHAT_MODELS_DOC_INDEX_PATH, fullChatModelFileContent),
     fs.writeFile(LLM_DOC_INDEX_PATH, fullLLMFileContent),
+  ]);
+
+  await Promise.all([
+    exec(`prettier --write ${CHAT_MODELS_DOC_INDEX_PATH}`),
+    exec(`prettier --write ${LLM_DOC_INDEX_PATH}`)
   ]);
 }
 
