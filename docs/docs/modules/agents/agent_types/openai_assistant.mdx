@@ -17,9 +17,7 @@ Creating an assistant is easy. Use the `createAssistant` method and pass in a mo
 
 ```typescript
 import { OpenAIAssistantRunnable } from "experimental/openai_assistant";
-```
 
-```typescript
 const assistant = await OpenAIAssistantRunnable.createAssistant({
   model: "gpt-4-1106-preview",
 });
@@ -44,6 +42,15 @@ console.log(assistantResponse);
       }
     ]
    */
+```
+
+If you have an existing assistant, you can pass it directly into the constructor:
+
+```typescript
+const assistant = new OpenAIAssistantRunnable({
+  assistantId: "asst_RtW03Vs6laTwqSSMCQpVND7i",
+  // asAgent: true
+});
 ```
 
 In this next example we'll show how you can turn your assistant into an agent.

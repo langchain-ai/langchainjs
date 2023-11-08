@@ -45,7 +45,7 @@ export class OpenAIAssistantRunnable<
   asAgent?: AsAgent;
 
   constructor(fields: OpenAIAssistantRunnableInput<AsAgent>) {
-    super();
+    super(fields);
     this.client = fields.client ?? new OpenAIClient(fields?.clientOptions);
     this.assistantId = fields.assistantId;
     this.asAgent = fields.asAgent ?? this.asAgent;
