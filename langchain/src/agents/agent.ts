@@ -121,7 +121,7 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
     steps: AgentStep[],
     inputs: ChainValues,
     callbackManager?: CallbackManager
-  ): Promise<AgentAction | AgentAction[] | AgentFinish>;
+  ): Promise<AgentAction | AgentFinish>;
 }
 
 /**
@@ -150,23 +150,24 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
+function isAgentAction(input: unknown): input is AgentAction {
+  return !Array.isArray(input) && (input as AgentAction)?.tool !== undefined;
+}
+
 /**
  * Class representing a single action agent which accepts runnables.
  * Extends the BaseSingleActionAgent class and provides methods for
  * planning agent actions with runnables.
  */
-export class RunnableAgent<
-  RunInput extends ChainValues & {
-    agent_scratchpad?: string | BaseMessage[];
-    stop?: string[];
-  },
-  RunOutput extends AgentAction[] | AgentFinish
-> extends BaseMultiActionAgent {
+export class RunnableAgent extends BaseMultiActionAgent {
   protected lc_runnable = true;
 
   lc_namespace = ["langchain", "agents", "runnable"];
 
-  runnable: Runnable<RunInput, RunOutput>;
+  runnable: Runnable<
+    ChainValues & { steps: AgentStep[] },
+    AgentAction[] | AgentAction | AgentFinish
+  >;
 
   stop?: string[];
 
@@ -174,7 +175,7 @@ export class RunnableAgent<
     return [];
   }
 
-  constructor(fields: RunnableAgentInput<RunInput, RunOutput>) {
+  constructor(fields: RunnableAgentInput) {
     super();
     this.runnable = fields.runnable;
     this.stop = fields.stop;
@@ -182,7 +183,7 @@ export class RunnableAgent<
 
   async plan(
     steps: AgentStep[],
-    inputs: RunInput,
+    inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction[] | AgentFinish> {
     const invokeInput = { ...inputs, steps };
@@ -191,6 +192,10 @@ export class RunnableAgent<
       callbacks: callbackManager,
       runName: "RunnableAgent",
     });
+
+    if (isAgentAction(output)) {
+      return [output];
+    }
 
     return output;
   }

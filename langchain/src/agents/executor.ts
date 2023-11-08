@@ -10,7 +10,6 @@ import {
   AgentAction,
   AgentFinish,
   AgentStep,
-  BaseMessage,
   ChainValues,
 } from "../schema/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
@@ -31,19 +30,14 @@ type ExtractToolType<T> = T extends { ToolType: infer Tool }
  * AgentExecutor. It extends ChainInputs and includes additional
  * properties specific to agent execution.
  */
-export interface AgentExecutorInput<
-  RunInput extends ChainValues & {
-    agent_scratchpad?: string | BaseMessage[];
-    stop?: string[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends AgentAction | AgentFinish = any
-> extends ChainInputs {
+export interface AgentExecutorInput extends ChainInputs {
   agent:
     | BaseSingleActionAgent
     | BaseMultiActionAgent
-    | Runnable<RunInput, RunOutput>;
+    | Runnable<
+        ChainValues & { steps: AgentStep[] },
+        AgentAction[] | AgentAction | AgentFinish
+      >;
   tools: ExtractToolType<this["agent"]>[];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
@@ -53,6 +47,10 @@ export interface AgentExecutorInput<
     | string
     | ((e: OutputParserException | ToolInputParsingException) => string);
 }
+
+export type AgentExecutorOutput = ChainValues & {
+  intermediateSteps?: AgentStep[];
+};
 
 /**
  * Tool that just returns the query.
@@ -72,13 +70,7 @@ export class ExceptionTool extends Tool {
  * A chain managing an agent using tools.
  * @augments BaseChain
  */
-export class AgentExecutor<
-  RunInput extends ChainValues & {
-    agent_scratchpad?: string | BaseMessage[];
-    stop?: string[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = any
-> extends BaseChain {
+export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   static lc_name() {
     return "AgentExecutor";
   }
@@ -121,7 +113,7 @@ export class AgentExecutor<
     return this.agent.returnValues;
   }
 
-  constructor(input: AgentExecutorInput<RunInput>) {
+  constructor(input: AgentExecutorInput) {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
     if (Runnable.isRunnable(input.agent)) {
       agent = new RunnableAgent({ runnable: input.agent });
@@ -151,12 +143,7 @@ export class AgentExecutor<
   }
 
   /** Create from agent and a list of tools. */
-  static fromAgentAndTools<
-    RunInput extends ChainValues & {
-      agent_scratchpad?: string | BaseMessage[];
-      stop?: string[];
-    }
-  >(fields: AgentExecutorInput<RunInput>): AgentExecutor<RunInput> {
+  static fromAgentAndTools(fields: AgentExecutorInput): AgentExecutor {
     return new AgentExecutor(fields);
   }
 
@@ -174,14 +161,16 @@ export class AgentExecutor<
   async _call(
     inputs: ChainValues,
     runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues> {
+  ): Promise<AgentExecutorOutput> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
     );
     const steps: AgentStep[] = [];
     let iterations = 0;
 
-    const getOutput = async (finishStep: AgentFinish) => {
+    const getOutput = async (
+      finishStep: AgentFinish
+    ): Promise<AgentExecutorOutput> => {
       const { returnValues } = finishStep;
       const additional = await this.agent.prepareForOutput(returnValues, steps);
 
