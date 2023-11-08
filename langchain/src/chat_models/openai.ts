@@ -17,7 +17,7 @@ import {
   ToolMessageChunk,
 } from "../schema/index.js";
 import { StructuredTool } from "../tools/base.js";
-import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
+import { formatToOpenAITool } from "../tools/convert_to_openai.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -401,25 +401,16 @@ export class ChatOpenAI<
       stop: options?.stop ?? this.stop,
       user: this.user,
       stream: this.streaming,
+      functions: options?.functions,
       function_call: options?.function_call,
+      tools: isStructuredToolArray(options?.tools)
+        ? options?.tools.map(formatToOpenAITool)
+        : options?.tools,
       tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
       ...this.modelKwargs,
     };
-    // TODO: Deprecate functions
-    if (
-      options?.functions ||
-      (options?.tools && isStructuredToolArray(options.tools))
-    ) {
-      params.functions =
-        options?.functions ??
-        (options?.tools
-          ? (options?.tools as StructuredTool[]).map(formatToOpenAIFunction)
-          : undefined);
-    } else if (!isStructuredToolArray(options?.tools)) {
-      params.tools = options?.tools;
-    }
     return params;
   }
 
