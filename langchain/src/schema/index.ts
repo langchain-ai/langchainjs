@@ -233,6 +233,18 @@ export abstract class BaseMessage
   }
 }
 
+// TODO: Deprecate when SDK typing is updated
+export type OpenAIToolCall = OpenAIClient.ChatCompletionMessageToolCall & {
+  index: number;
+};
+
+function isOpenAIToolCallArray(value?: unknown): value is OpenAIToolCall[] {
+  return (
+    Array.isArray(value) &&
+    value.every((v) => typeof (v as OpenAIToolCall).index === "number")
+  );
+}
+
 /**
  * Represents a chunk of a message, which can be concatenated with other
  * message chunks. It includes a method `_merge_kwargs_dict()` for merging
@@ -265,6 +277,32 @@ export abstract class BaseMessageChunk extends BaseMessage {
           merged[key] as NonNullable<BaseMessageFields["additional_kwargs"]>,
           value as NonNullable<BaseMessageFields["additional_kwargs"]>
         );
+      } else if (
+        key === "tool_calls" &&
+        isOpenAIToolCallArray(merged[key]) &&
+        isOpenAIToolCallArray(value)
+      ) {
+        for (const toolCall of value) {
+          if (merged[key]?.[toolCall.index] !== undefined) {
+            merged[key] = merged[key]?.map((value, i) => {
+              if (i !== toolCall.index) {
+                return value;
+              }
+              return {
+                ...value,
+                ...toolCall,
+                function: {
+                  name: toolCall.function.name ?? value.function.name,
+                  arguments:
+                    (value.function.arguments ?? "") +
+                    (toolCall.function.arguments ?? ""),
+                },
+              };
+            });
+          } else {
+            (merged[key] as OpenAIToolCall[])[toolCall.index] = toolCall;
+          }
+        }
       } else {
         throw new Error(
           `additional_kwargs[${key}] already exists in this message chunk.`
