@@ -1,9 +1,12 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import {
+  ThreadMessage,
+  RequiredActionFunctionToolCall,
+} from "openai/resources/beta/threads/index";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import { RunnableConfig } from "../../schema/runnable/config.js";
 import {
-  OutputType,
   OpenAIAssistantFinish,
   OpenAIAssistantAction,
   OpenAIToolType,
@@ -11,19 +14,26 @@ import {
 import { StructuredTool } from "../../tools/base.js";
 import { formatToOpenAIAssistantTool } from "../../tools/convert_to_openai.js";
 
-interface OpenAIAssistantRunnableInput {
+type ExtractRunOutput<AsAgent extends boolean | undefined> =
+  AsAgent extends true
+    ? OpenAIAssistantFinish | OpenAIAssistantAction[]
+    : ThreadMessage[] | RequiredActionFunctionToolCall[];
+
+export type OpenAIAssistantRunnableInput<
+  AsAgent extends boolean | undefined = undefined
+> = {
   client?: OpenAIClient;
   clientOptions?: ClientOptions;
   assistantId: string;
-  asAgent?: boolean;
   pollIntervalMs?: number;
-}
+  asAgent?: AsAgent;
+};
 
 export class OpenAIAssistantRunnable<
+  AsAgent extends boolean | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends Record<string, any>,
-  RunOutput extends OutputType
-> extends Runnable<RunInput, RunOutput> {
+  RunInput extends Record<string, any> = Record<string, any>
+> extends Runnable<RunInput, ExtractRunOutput<AsAgent>> {
   lc_namespace = ["langchain", "experimental", "openai_assistant"];
 
   private client: OpenAIClient;
@@ -32,20 +42,16 @@ export class OpenAIAssistantRunnable<
 
   pollIntervalMs = 1000;
 
-  asAgent = false;
+  asAgent?: AsAgent;
 
-  constructor(fields: OpenAIAssistantRunnableInput) {
+  constructor(fields: OpenAIAssistantRunnableInput<AsAgent>) {
     super();
     this.client = fields.client || new OpenAIClient(fields?.clientOptions);
     this.assistantId = fields.assistantId;
-    this.asAgent = fields.asAgent ?? false;
+    this.asAgent = fields.asAgent ?? this.asAgent;
   }
 
-  static async createAssistant<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends Record<string, any>,
-    RunOutput extends OutputType
-  >({
+  static async createAssistant<AsAgent extends boolean>({
     model,
     name,
     instructions,
@@ -54,7 +60,7 @@ export class OpenAIAssistantRunnable<
     clientOptions,
     asAgent,
     pollIntervalMs,
-  }: Omit<OpenAIAssistantRunnableInput, "assistantId"> & {
+  }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId"> & {
     model: string;
     name?: string;
     instructions?: string;
@@ -76,7 +82,7 @@ export class OpenAIAssistantRunnable<
       model,
     });
 
-    return new this<RunInput, RunOutput>({
+    return new this({
       client: oaiClient,
       assistantId: assistant.id,
       asAgent,
@@ -84,7 +90,10 @@ export class OpenAIAssistantRunnable<
     });
   }
 
-  async invoke(input: RunInput, _options?: RunnableConfig): Promise<RunOutput> {
+  async invoke(
+    input: RunInput,
+    _options?: RunnableConfig
+  ): Promise<ExtractRunOutput<AsAgent>> {
     let run: OpenAIClient.Beta.Threads.Run;
     if (this.asAgent && input.steps && input.steps.length > 0) {
       const parsedStepsInput = await this._parseStepsInput(input);
@@ -131,7 +140,7 @@ export class OpenAIAssistantRunnable<
       );
     }
 
-    return this._getResponse(run.id, run.thread_id) as unknown as RunOutput;
+    return this._getResponse(run.id, run.thread_id);
   }
 
   private async _parseStepsInput(input: RunInput): Promise<RunInput> {
@@ -217,7 +226,17 @@ export class OpenAIAssistantRunnable<
   private async _getResponse(
     runId: string,
     threadId: string
-  ): Promise<OutputType> {
+  ): Promise<ExtractRunOutput<AsAgent>>;
+
+  private async _getResponse(
+    runId: string,
+    threadId: string
+  ): Promise<
+    | OpenAIAssistantFinish
+    | OpenAIAssistantAction[]
+    | ThreadMessage[]
+    | RequiredActionFunctionToolCall[]
+  > {
     const run = await this._waitForRun(runId, threadId);
     if (run.status === "completed") {
       const messages = await this.client.beta.threads.messages.list(threadId, {
@@ -242,14 +261,11 @@ export class OpenAIAssistantRunnable<
         });
       }
     } else if (run.status === "requires_action") {
-      if (
-        !this.asAgent ||
-        !run.required_action?.submit_tool_outputs.tool_calls
-      ) {
+      if (!this.asAgent) {
         return run.required_action?.submit_tool_outputs.tool_calls ?? [];
       }
       const actions: OpenAIAssistantAction[] = [];
-      run.required_action.submit_tool_outputs.tool_calls.forEach((item) => {
+      run.required_action?.submit_tool_outputs.tool_calls.forEach((item) => {
         const functionCall = item.function;
         const args = JSON.parse(functionCall.arguments);
         actions.push(

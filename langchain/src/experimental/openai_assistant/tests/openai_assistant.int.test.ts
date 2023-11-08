@@ -64,7 +64,7 @@ class HumanReadableChecker extends StructuredTool {
   }
 }
 
-test.only("OpenAIAssistantRunnable can be passed as an agent", async () => {
+test("OpenAIAssistantRunnable can be passed as an agent", async () => {
   const tools = [new WeatherTool(), new HumanReadableChecker()];
   const agent = await OpenAIAssistantRunnable.createAssistant({
     model: "gpt-3.5-turbo-1106",
