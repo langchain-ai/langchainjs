@@ -27,6 +27,19 @@ import OpenAIVision from "@examples/models/chat/integration_openai_vision.ts";
 
 <CodeBlock language="typescript">{OpenAIVision}</CodeBlock>
 
+## Tool calling
+
+:::info
+This feature is currently only available for `gpt-3.5-turbo-1106` and `gpt-4-1106-preview` models.
+:::
+
+More recent OpenAI chat models support calling multiple functions to get all required data to answer a question.
+Here's an example how a conversation turn with this functionality might look:
+
+import OpenAITools from "@examples/models/chat/integration_openai_tool_calls.ts";
+
+<CodeBlock language="typescript">{OpenAITools}</CodeBlock>
+
 ## Custom URLs
 
 You can customize the base URL the SDK sends requests to by passing a `configuration` parameter like this:
