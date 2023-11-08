@@ -37,7 +37,7 @@ class WeatherTool extends StructuredTool {
 
 test("OpenAIAssistantRunnable can be passed as an agent", async () => {
   const tools = [new WeatherTool()];
-  const agent = await OpenAIAssistantRunnable.create({
+  const agent = await OpenAIAssistantRunnable.createAssistant({
     model: "gpt-3.5-turbo-1106",
     instructions:
       "You are a weather bot. Use the provided functions to answer questions.",
@@ -61,7 +61,7 @@ test("OpenAIAssistantRunnable can be passed as an agent", async () => {
 });
 
 test("OpenAIAssistantRunnable is invokeable", async () => {
-  const assistant = await OpenAIAssistantRunnable.create({
+  const assistant = await OpenAIAssistantRunnable.createAssistant({
     model: "gpt-4",
     instructions:
       "You are a helpful assistant that provides answers to math problems.",

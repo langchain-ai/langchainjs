@@ -1,24 +1,26 @@
 # OpenAI Assistant
 
 :::info
-The [OpenAI Assistant API](https://platform.openai.com/docs/assistants/overview) is still in beta. OpenAI does not recommend it for production use.
+The [OpenAI Assistant API](https://platform.openai.com/docs/assistants/overview) is still in beta.
 :::
 
 OpenAI released a new API for a conversational agent like system called Assistant.
-It's similar to LangChain's AgentExecutor, but includes some other features like a stateful API, integrated tools ([code interpreter](https://platform.openai.com/docs/assistants/tools/code-interpreter), [retrieval])(https://platform.openai.com/docs/assistants/tools/knowledge-retrieval) and the ability to pass custom tools (similar to [OpenAI functions](https://js.langchain.com/docs/modules/agents/agent_types/openai_functions_agent)).
+
+You can interact with OpenAI Assistants using OpenAI tools or custom tools. When using exclusively OpenAI tools, you can just invoke the assistant directly and get final answers. When using custom tools, you can run the assistant and tool execution loop using the built-in `AgentExecutor` or write your own executor.
+OpenAI assistants currently have access to two tools hosted by OpenAI: [code interpreter](https://platform.openai.com/docs/assistants/tools/code-interpreter), and [knowledge retrieval](https://platform.openai.com/docs/assistants/tools/knowledge-retrieval).
 
 We've implemented the assistant API in LangChain with some helpful abstractions. In this guide we'll go over those, and show how to use them to create powerful assistants.
 
 ## Creating an assistant
 
-Creating an assistant is easy. Use the `create` method and pass in a model ID, and optionally more parameters to further customize your assistant.
+Creating an assistant is easy. Use the `createAssistant` method and pass in a model ID, and optionally more parameters to further customize your assistant.
 
 ```typescript
 import { OpenAIAssistantRunnable } from "experimental/openai_assistant";
 ```
 
 ```typescript
-const assistant = await OpenAIAssistantRunnable.create({
+const assistant = await OpenAIAssistantRunnable.createAssistant({
   model: "gpt-4-1106-preview",
 });
 const assistantResponse = await assistant.invoke({
@@ -43,9 +45,6 @@ console.log(assistantResponse);
     ]
    */
 ```
-
-In the example above we're calling our assistant via the `.invoke` method because the OpenAI assistant is a [Runnable](/docs/expression_language/).
-Having the `OpenAIAssistantRunnable` be apart of the Expression Language allows for seamless integrations with other LangChain features like the `AgentExecutor`.
 
 In this next example we'll show how you can turn your assistant into an agent.
 
@@ -107,7 +106,7 @@ In the above code we've defined three things:
 Next, we construct the `OpenAIAssistantRunnable` and pass it to the `AgentExecutor`.
 
 ```typescript
-const agent = await OpenAIAssistantRunnable.create({
+const agent = await OpenAIAssistantRunnable.createAssistant({
   model: "gpt-3.5-turbo-1106",
   instructions:
     "You are a weather bot. Use the provided functions to answer questions.",
@@ -149,7 +148,7 @@ OpenAI currently offers two tools for the assistant API: a [code interpreter](ht
 You can offer these tools to the assistant simply by passing them in as part of the `tools` parameter when creating the assistant.
 
 ```typescript
-const assistant = await OpenAIAssistantRunnable.create({
+const assistant = await OpenAIAssistantRunnable.createAssistant({
   model: "gpt-3.5-turbo-1106",
   instructions:
     "You are a helpful assistant that provides answers to math problems.",

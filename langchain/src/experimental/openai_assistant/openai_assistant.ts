@@ -1,6 +1,4 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
-import { Run } from "openai/resources/beta/threads/index";
-import { AssistantCreateParams } from "openai/resources/beta/index.mjs";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import { RunnableConfig } from "../../schema/runnable/config.js";
@@ -11,7 +9,7 @@ import {
   OpenAIToolType,
 } from "./schema.js";
 import { StructuredTool } from "../../tools/base.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
+import { formatToOpenAIAssistantTool } from "../../tools/convert_to_openai.js";
 
 interface OpenAIAssistantRunnableInput {
   client?: OpenAIClient;
@@ -26,7 +24,7 @@ export class OpenAIAssistantRunnable<
   RunInput extends Record<string, any>,
   RunOutput extends OutputType
 > extends Runnable<RunInput, RunOutput> {
-  lc_namespace = ["langchain", "beta", "openai_assistant"];
+  lc_namespace = ["langchain", "experimental", "openai_assistant"];
 
   private client: OpenAIClient;
 
@@ -43,7 +41,7 @@ export class OpenAIAssistantRunnable<
     this.asAgent = fields.asAgent ?? false;
   }
 
-  static async create<
+  static async createAssistant<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends Record<string, any>,
     RunOutput extends OutputType
@@ -66,10 +64,7 @@ export class OpenAIAssistantRunnable<
       tools?.map((tool) => {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (tool instanceof StructuredTool) {
-          return {
-            type: "function",
-            function: formatToOpenAIFunction(tool),
-          } as AssistantCreateParams.AssistantToolsFunction;
+          return formatToOpenAIAssistantTool(tool);
         }
         return tool;
       }) ?? [];
@@ -90,7 +85,7 @@ export class OpenAIAssistantRunnable<
   }
 
   async invoke(input: RunInput, _options?: RunnableConfig): Promise<RunOutput> {
-    let run: Run;
+    let run: OpenAIClient.Beta.Threads.Run;
     if (this.asAgent && input.steps && input.steps.length > 0) {
       const parsedStepsInput = await this._parseStepsInput(input);
       run = await this.client.beta.threads.runs.submitToolOutputs(
@@ -208,7 +203,7 @@ export class OpenAIAssistantRunnable<
 
   private async _waitForRun(runId: string, threadId: string) {
     let inProgress = true;
-    let run = {} as Run;
+    let run = {} as OpenAIClient.Beta.Threads.Run;
     while (inProgress) {
       run = await this.client.beta.threads.runs.retrieve(threadId, runId);
       inProgress = ["in_progress", "queued"].includes(run.status);
