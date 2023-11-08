@@ -1,7 +1,6 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { Run } from "openai/resources/beta/threads/index";
 import { AssistantCreateParams } from "openai/resources/beta/index.mjs";
-import { RunStep } from "openai/resources/beta/threads/runs/index.mjs";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import { RunnableConfig } from "../../schema/runnable/config.js";
@@ -19,9 +18,11 @@ interface OpenAIAssistantRunnableInput {
   clientOptions?: ClientOptions;
   assistantId: string;
   asAgent?: boolean;
+  pollIntervalMs?: number;
 }
 
 export class OpenAIAssistantRunnable<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any>,
   RunOutput extends OutputType
 > extends Runnable<RunInput, RunOutput> {
@@ -31,7 +32,7 @@ export class OpenAIAssistantRunnable<
 
   assistantId: string;
 
-  pollIntervalMs = 5000;
+  pollIntervalMs = 1000;
 
   asAgent = false;
 
@@ -43,6 +44,7 @@ export class OpenAIAssistantRunnable<
   }
 
   static async create<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends Record<string, any>,
     RunOutput extends OutputType
   >({
@@ -53,6 +55,7 @@ export class OpenAIAssistantRunnable<
     client,
     clientOptions,
     asAgent,
+    pollIntervalMs,
   }: Omit<OpenAIAssistantRunnableInput, "assistantId"> & {
     model: string;
     name?: string;
@@ -82,42 +85,53 @@ export class OpenAIAssistantRunnable<
       client: oaiClient,
       assistantId: assistant.id,
       asAgent,
+      pollIntervalMs,
     });
   }
 
   async invoke(input: RunInput, _options?: RunnableConfig): Promise<RunOutput> {
-    const parsedInput = await this._parseInput(input);
     let run: Run;
-    if (!("threadId" in parsedInput)) {
+    if (this.asAgent && input.steps && input.steps.length > 0) {
+      const parsedStepsInput = await this._parseStepsInput(input);
+      run = await this.client.beta.threads.runs.submitToolOutputs(
+        parsedStepsInput.threadId,
+        parsedStepsInput.runId,
+        {
+          tool_outputs: parsedStepsInput.toolOutputs,
+        }
+      );
+    } else if (!("threadId" in input)) {
       const thread = {
         messages: [
           {
             role: "user",
-            content: parsedInput.content,
-            file_ids: parsedInput.fileIds,
-            metadata: parsedInput.messagesMetadata,
+            content: input.content,
+            file_ids: input.fileIds,
+            metadata: input.messagesMetadata,
           },
         ],
-        metadata: parsedInput.threadMetadata,
+        metadata: input.threadMetadata,
       };
       run = await this._createThreadAndRun({
         ...input,
         thread,
       });
-    } else if (!("runId" in parsedInput)) {
-      await this.client.beta.threads.messages.create(parsedInput.threadId, {
-        content: parsedInput.content,
+    } else if (!("runId" in input)) {
+      await this.client.beta.threads.messages.create(input.threadId, {
+        content: input.content,
         role: "user",
-        file_ids: parsedInput.file_ids,
-        metadata: parsedInput.messagesMetadata,
+        file_ids: input.file_ids,
+        metadata: input.messagesMetadata,
       });
       run = await this._createRun(input);
     } else {
+      // Submitting tool outputs to an existing run, outside the AgentExecutor
+      // framework.
       run = await this.client.beta.threads.runs.submitToolOutputs(
-        parsedInput.threadId,
-        parsedInput.runId,
+        input.runId,
+        input.threadId,
         {
-          tool_outputs: parsedInput.toolOutputs,
+          tool_outputs: input.toolOutputs,
         }
       );
     }
@@ -125,11 +139,7 @@ export class OpenAIAssistantRunnable<
     return this._getResponse(run.id, run.thread_id) as unknown as RunOutput;
   }
 
-  private async _parseInput(input: RunInput): Promise<RunInput> {
-    if (!this.asAgent || input.steps.length === 0) {
-      return input;
-    }
-
+  private async _parseStepsInput(input: RunInput): Promise<RunInput> {
     const {
       action: { runId, threadId },
     } = input.steps[input.steps.length - 1];
@@ -138,7 +148,6 @@ export class OpenAIAssistantRunnable<
     if (!toolCalls) {
       return input;
     }
-
     const toolOutputs = toolCalls.flatMap((toolCall) => {
       const matchedAction = (
         input.steps as {
@@ -156,9 +165,7 @@ export class OpenAIAssistantRunnable<
           ]
         : [];
     });
-
-    const newOutput = { toolOutputs, runId, threadId };
-    return (toolOutputs.length > 0 ? newOutput : input) as RunInput;
+    return { toolOutputs, runId, threadId } as unknown as RunInput;
   }
 
   private async _createRun({
