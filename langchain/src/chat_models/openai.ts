@@ -13,9 +13,11 @@ import {
   FunctionMessageChunk,
   HumanMessageChunk,
   SystemMessageChunk,
+  ToolMessage,
+  ToolMessageChunk,
 } from "../schema/index.js";
 import { StructuredTool } from "../tools/base.js";
-import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
+import { formatToOpenAITool } from "../tools/convert_to_openai.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -60,7 +62,8 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
     message.role !== "system" &&
     message.role !== "assistant" &&
     message.role !== "user" &&
-    message.role !== "function"
+    message.role !== "function" &&
+    message.role !== "tool"
   ) {
     console.warn(`Unknown message role: ${message.role}`);
   }
@@ -79,6 +82,8 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
       return "user";
     case "function":
       return "function";
+    case "tool":
+      return "tool";
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
@@ -96,6 +101,7 @@ function openAIResponseToChatMessage(
     case "assistant":
       return new AIMessage(message.content || "", {
         function_call: message.function_call,
+        tool_calls: message.tool_calls,
       });
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
@@ -114,6 +120,10 @@ function _convertDeltaToMessageChunk(
     additional_kwargs = {
       function_call: delta.function_call,
     };
+  } else if (delta.tool_calls) {
+    additional_kwargs = {
+      tool_calls: delta.tool_calls,
+    };
   } else {
     additional_kwargs = {};
   }
@@ -129,15 +139,37 @@ function _convertDeltaToMessageChunk(
       additional_kwargs,
       name: delta.name,
     });
+  } else if (role === "tool") {
+    return new ToolMessageChunk({
+      content,
+      additional_kwargs,
+      tool_call_id: delta.tool_call_id,
+    });
   } else {
     return new ChatMessageChunk({ content, role });
   }
 }
 
+function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
+  // TODO: Function messages do not support array content, fix cast
+  return messages.map(
+    (message) =>
+      ({
+        role: messageToOpenAIRole(message),
+        content: message.content,
+        name: message.name,
+        function_call: message.additional_kwargs.function_call,
+        tool_calls: message.additional_kwargs.tool_calls,
+        tool_call_id: (message as ToolMessage).tool_call_id,
+      } as OpenAICompletionParam)
+  );
+}
+
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredTool[];
+  tools?: StructuredTool[] | OpenAIClient.ChatCompletionTool[];
+  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
   promptIndex?: number;
   response_format?: { type: "json_object" };
   seed?: number;
@@ -179,6 +211,7 @@ export class ChatOpenAI<
       "function_call",
       "functions",
       "tools",
+      "tool_choice",
       "promptIndex",
       "response_format",
       "seed",
@@ -343,7 +376,20 @@ export class ChatOpenAI<
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
-    return {
+    function isStructuredToolArray(
+      tools?: unknown[]
+    ): tools is StructuredTool[] {
+      return (
+        tools !== undefined &&
+        tools.every((tool) =>
+          Array.isArray((tool as StructuredTool).lc_namespace)
+        )
+      );
+    }
+    const params: Omit<
+      OpenAIClient.Chat.ChatCompletionCreateParams,
+      "messages"
+    > = {
       model: this.modelName,
       temperature: this.temperature,
       top_p: this.topP,
@@ -355,16 +401,17 @@ export class ChatOpenAI<
       stop: options?.stop ?? this.stop,
       user: this.user,
       stream: this.streaming,
-      functions:
-        options?.functions ??
-        (options?.tools
-          ? options?.tools.map(formatToOpenAIFunction)
-          : undefined),
+      functions: options?.functions,
       function_call: options?.function_call,
+      tools: isStructuredToolArray(options?.tools)
+        ? options?.tools.map(formatToOpenAITool)
+        : options?.tools,
+      tool_choice: options?.tool_choice,
       response_format: options?.response_format,
       seed: options?.seed,
       ...this.modelKwargs,
     };
+    return params;
   }
 
   /** @ignore */
@@ -386,17 +433,8 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: OpenAICompletionParam[] = messages.map(
-      // TODO: Function messages do not support array content, fix cast
-      (message) =>
-        ({
-          role: messageToOpenAIRole(message),
-          content: message.content,
-          name: message.name,
-          function_call: message.additional_kwargs
-            .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-        } as OpenAICompletionParam)
-    );
+    const messagesMapped: OpenAICompletionParam[] =
+      convertMessagesToOpenAIParams(messages);
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
@@ -419,7 +457,7 @@ export class ChatOpenAI<
       };
       if (typeof chunk.content !== "string") {
         console.log(
-          "[WARNING:] Received non-string content from OpenAI. This is currently not supported."
+          "[WARNING]: Received non-string content from OpenAI. This is currently not supported."
         );
         continue;
       }
@@ -461,17 +499,7 @@ export class ChatOpenAI<
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
-      // TODO: Function messages do not support array content, fix cast
-      messages.map(
-        (message) =>
-          ({
-            role: messageToOpenAIRole(message),
-            content: message.content,
-            name: message.name,
-            function_call: message.additional_kwargs
-              .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-          } as OpenAICompletionParam)
-      );
+      convertMessagesToOpenAIParams(messages);
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -658,7 +686,12 @@ export class ChatOpenAI<
         }
         if (openAIMessage.additional_kwargs.function_call?.arguments) {
           count += await this.getNumTokens(
-            openAIMessage.additional_kwargs.function_call?.arguments
+            // Remove newlines and spaces
+            JSON.stringify(
+              JSON.parse(
+                openAIMessage.additional_kwargs.function_call?.arguments
+              )
+            )
           );
         }
 
@@ -851,7 +884,8 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
             | "system"
             | "assistant"
             | "user"
-            | "function",
+            | "function"
+            | "tool",
           content: message.content,
         };
       } else {
