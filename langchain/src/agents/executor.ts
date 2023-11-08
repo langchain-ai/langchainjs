@@ -35,7 +35,7 @@ export interface AgentExecutorInput extends ChainInputs {
     | BaseSingleActionAgent
     | BaseMultiActionAgent
     | Runnable<
-        ChainValues & { steps: AgentStep[] },
+        ChainValues & { steps?: AgentStep[] },
         AgentAction[] | AgentAction | AgentFinish
       >;
   tools: ExtractToolType<this["agent"]>[];
@@ -48,9 +48,8 @@ export interface AgentExecutorInput extends ChainInputs {
     | ((e: OutputParserException | ToolInputParsingException) => string);
 }
 
-export type AgentExecutorOutput = ChainValues & {
-  intermediateSteps?: AgentStep[];
-};
+// TODO: Type properly with { intermediateSteps?: AgentStep[] };
+export type AgentExecutorOutput = ChainValues;
 
 /**
  * Tool that just returns the query.
