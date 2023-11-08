@@ -147,3 +147,20 @@ test("Test deserialize", async () => {
 
   // chain === chain2?
 });
+
+test.only("Test passing a runnable to an LLMChain", async () => {
+  const model = new ChatOpenAI({});
+  const runnableModel = model.bind({
+    stop: ["T-O"],
+  });
+
+  const prompt = PromptTemplate.fromTemplate(
+    "You are a bee --I mean a spelling bee.\nQuestion:{input}"
+  );
+
+  const chain = new LLMChain({ llm: runnableModel, prompt });
+
+  const response = await chain.invoke({ input: "How do you spell today?" });
+  console.log({ response });
+  expect(response).not.toContain("T-O-D-A-Y");
+});
