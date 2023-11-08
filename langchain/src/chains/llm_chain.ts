@@ -38,10 +38,7 @@ type ExtractCallOptions<T> = T extends { CallOptions: infer CallOptions }
  */
 export interface LLMChainInput<
   T extends string | object = string,
-  Model extends LLMType =
-    | BaseLanguageModel
-    | Runnable<BaseLanguageModelInput, string>
-    | Runnable<BaseLanguageModelInput, BaseMessage>
+  Model extends LLMType = LLMType
 > extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
@@ -70,10 +67,7 @@ export interface LLMChainInput<
  */
 export class LLMChain<
     T extends string | object = string,
-    Model extends LLMType =
-      | BaseLanguageModel
-      | Runnable<BaseLanguageModelInput, string>
-      | Runnable<BaseLanguageModelInput, BaseMessage>
+    Model extends LLMType = LLMType
   >
   extends BaseChain
   implements LLMChainInput<T>
