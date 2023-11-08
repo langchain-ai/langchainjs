@@ -114,6 +114,7 @@ export interface BaseMessageFields {
   name?: string;
   additional_kwargs?: {
     function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
+    tool_calls?: OpenAIClient.Chat.ChatCompletionMessageToolCall[];
     [key: string]: unknown;
   };
 }

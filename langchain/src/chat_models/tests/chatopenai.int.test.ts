@@ -407,7 +407,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
 test("Function calling with streaming", async () => {
   let finalResult: BaseMessage | undefined;
   const modelForFunctionCalling = new ChatOpenAI({
-    modelName: "gpt-4-1106-preview",
+    modelName: "gpt-3.5-turbo",
     temperature: 0,
     callbacks: [
       {
@@ -778,7 +778,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-4-1106-preview",
+    modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
   }).bind({
     response_format: {
@@ -792,7 +792,7 @@ test("Test ChatOpenAI JSON mode", async () => {
 
 test("Test ChatOpenAI seed", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-4-1106-preview",
+    modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     temperature: 1,
   }).bind({
@@ -803,4 +803,38 @@ test("Test ChatOpenAI seed", async () => {
   console.log(JSON.stringify(res));
   const res2 = await chat.invoke([message]);
   expect(res).toEqual(res2);
+});
+
+test("Test ChatOpenAI tool calling", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    maxTokens: 128,
+  }).bind({
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      },
+    ],
+    tool_choice: "auto",
+  });
+  const res = await chat.invoke([
+    ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
+  ]);
+  console.log(JSON.stringify(res));
+  expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
 });
