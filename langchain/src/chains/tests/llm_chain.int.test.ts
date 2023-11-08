@@ -148,7 +148,7 @@ test("Test deserialize", async () => {
   // chain === chain2?
 });
 
-test.only("Test passing a runnable to an LLMChain", async () => {
+test("Test passing a runnable to an LLMChain", async () => {
   const model = new ChatOpenAI({});
   const runnableModel = model.bind({
     stop: ["T-O"],
