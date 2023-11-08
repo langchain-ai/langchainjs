@@ -1,3 +1,6 @@
+/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { z } from "zod";
 import { OpenAI as OpenAIClient } from "openai";
 import { AgentExecutor } from "../../../agents/executor.js";
@@ -64,7 +67,7 @@ class HumanReadableChecker extends StructuredTool {
   }
 }
 
-test("OpenAIAssistantRunnable can be passed as an agent", async () => {
+test.skip("New OpenAIAssistantRunnable can be passed as an agent", async () => {
   const tools = [new WeatherTool(), new HumanReadableChecker()];
   const agent = await OpenAIAssistantRunnable.createAssistant({
     model: "gpt-3.5-turbo-1106",
@@ -90,7 +93,29 @@ test("OpenAIAssistantRunnable can be passed as an agent", async () => {
    */
 });
 
-test("OpenAIAssistantRunnable is invokeable", async () => {
+test("OpenAIAssistantRunnable can be passed as an agent", async () => {
+  const tools = [new WeatherTool(), new HumanReadableChecker()];
+  const agent = new OpenAIAssistantRunnable({
+    assistantId: process.env.TEST_OPENAI_ASSISTANT_ID!,
+    asAgent: true,
+  });
+  const agentExecutor = AgentExecutor.fromAgentAndTools({
+    agent,
+    tools,
+  });
+  const assistantResponse = await agentExecutor.invoke({
+    content:
+      "What's the weather in San Francisco and Tokyo? And will it be warm or cold in those places?",
+  });
+  console.log(assistantResponse);
+  /**
+    {
+      output: "The weather in San Francisco, CA is currently 72°F and it's warm. In Tokyo, Japan, the temperature is 10°C and it's also warm."
+    }
+   */
+});
+
+test.skip("Created OpenAIAssistantRunnable is invokeable", async () => {
   const assistant = await OpenAIAssistantRunnable.createAssistant({
     model: "gpt-4",
     instructions:
