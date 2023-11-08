@@ -13,6 +13,8 @@ import {
   FunctionMessageChunk,
   HumanMessageChunk,
   SystemMessageChunk,
+  ToolMessage,
+  ToolMessageChunk,
 } from "../schema/index.js";
 import { StructuredTool } from "../tools/base.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
@@ -60,7 +62,8 @@ function extractGenericMessageCustomRole(message: ChatMessage) {
     message.role !== "system" &&
     message.role !== "assistant" &&
     message.role !== "user" &&
-    message.role !== "function"
+    message.role !== "function" &&
+    message.role !== "tool"
   ) {
     console.warn(`Unknown message role: ${message.role}`);
   }
@@ -79,6 +82,8 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
       return "user";
     case "function":
       return "function";
+    case "tool":
+      return "tool";
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
@@ -134,9 +139,30 @@ function _convertDeltaToMessageChunk(
       additional_kwargs,
       name: delta.name,
     });
+  } else if (role === "tool") {
+    return new ToolMessageChunk({
+      content,
+      additional_kwargs,
+      tool_call_id: delta.tool_call_id,
+    });
   } else {
     return new ChatMessageChunk({ content, role });
   }
+}
+
+function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
+  // TODO: Function messages do not support array content, fix cast
+  return messages.map(
+    (message) =>
+      ({
+        role: messageToOpenAIRole(message),
+        content: message.content,
+        name: message.name,
+        function_call: message.additional_kwargs.function_call,
+        tool_calls: message.additional_kwargs.tool_calls,
+        tool_call_id: (message as ToolMessage).tool_call_id,
+      } as OpenAICompletionParam)
+  );
 }
 
 export interface ChatOpenAICallOptions
@@ -416,17 +442,8 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: OpenAICompletionParam[] = messages.map(
-      // TODO: Function messages do not support array content, fix cast
-      (message) =>
-        ({
-          role: messageToOpenAIRole(message),
-          content: message.content,
-          name: message.name,
-          function_call: message.additional_kwargs
-            .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-        } as OpenAICompletionParam)
-    );
+    const messagesMapped: OpenAICompletionParam[] =
+      convertMessagesToOpenAIParams(messages);
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
@@ -491,17 +508,7 @@ export class ChatOpenAI<
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
-      // TODO: Function messages do not support array content, fix cast
-      messages.map(
-        (message) =>
-          ({
-            role: messageToOpenAIRole(message),
-            content: message.content,
-            name: message.name,
-            function_call: message.additional_kwargs
-              .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-          } as OpenAICompletionParam)
-      );
+      convertMessagesToOpenAIParams(messages);
 
     if (params.stream) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -886,7 +893,8 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
             | "system"
             | "assistant"
             | "user"
-            | "function",
+            | "function"
+            | "tool",
           content: message.content,
         };
       } else {

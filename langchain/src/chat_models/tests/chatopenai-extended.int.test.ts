@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
-import { HumanMessage } from "../../schema/index.js";
+import { HumanMessage, ToolMessage } from "../../schema/index.js";
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({
@@ -63,6 +63,70 @@ test("Test ChatOpenAI tool calling", async () => {
   ]);
   console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
+});
+
+test("Test ChatOpenAI tool calling with ToolMessages", async () => {
+  function getCurrentWeather(location: string) {
+    if (location.toLowerCase().includes("tokyo")) {
+      return JSON.stringify({ location, temperature: "10", unit: "celsius" });
+    } else if (location.toLowerCase().includes("san francisco")) {
+      return JSON.stringify({
+        location,
+        temperature: "72",
+        unit: "fahrenheit",
+      });
+    } else {
+      return JSON.stringify({ location, temperature: "22", unit: "celsius" });
+    }
+  }
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    maxTokens: 128,
+  }).bind({
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      },
+    ],
+    tool_choice: "auto",
+  });
+  const res = await chat.invoke([
+    ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
+  ]);
+  console.log(JSON.stringify(res));
+  expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const toolMessages = res.additional_kwargs.tool_calls!.map(
+    (toolCall) =>
+      new ToolMessage({
+        tool_call_id: toolCall.id,
+        name: toolCall.function.name,
+        content: getCurrentWeather(
+          JSON.parse(toolCall.function.arguments).location
+        ),
+      })
+  );
+  const finalResponse = await chat.invoke([
+    ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
+    res,
+    ...toolMessages,
+  ]);
+  console.log(finalResponse);
 });
 
 test("Test ChatOpenAI tool calling with streaming", async () => {
