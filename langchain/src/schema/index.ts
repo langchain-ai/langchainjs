@@ -85,6 +85,7 @@ export interface StoredMessageData {
   content: string;
   role: string | undefined;
   name: string | undefined;
+  tool_call_id: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
 }
@@ -99,7 +100,13 @@ export interface StoredGeneration {
   message?: StoredMessage;
 }
 
-export type MessageType = "human" | "ai" | "generic" | "system" | "function";
+export type MessageType =
+  | "human"
+  | "ai"
+  | "generic"
+  | "system"
+  | "function"
+  | "tool";
 
 export type MessageContent =
   | string
@@ -114,6 +121,7 @@ export interface BaseMessageFields {
   name?: string;
   additional_kwargs?: {
     function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
+    tool_calls?: OpenAIClient.Chat.ChatCompletionMessageToolCall[];
     [key: string]: unknown;
   };
 }
@@ -124,6 +132,10 @@ export interface ChatMessageFieldsWithRole extends BaseMessageFields {
 
 export interface FunctionMessageFieldsWithName extends BaseMessageFields {
   name: string;
+}
+
+export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
+  tool_call_id: string;
 }
 
 function mergeContent(
@@ -232,6 +244,18 @@ export abstract class BaseMessage
   }
 }
 
+// TODO: Deprecate when SDK typing is updated
+export type OpenAIToolCall = OpenAIClient.ChatCompletionMessageToolCall & {
+  index: number;
+};
+
+function isOpenAIToolCallArray(value?: unknown): value is OpenAIToolCall[] {
+  return (
+    Array.isArray(value) &&
+    value.every((v) => typeof (v as OpenAIToolCall).index === "number")
+  );
+}
+
 /**
  * Represents a chunk of a message, which can be concatenated with other
  * message chunks. It includes a method `_merge_kwargs_dict()` for merging
@@ -264,6 +288,32 @@ export abstract class BaseMessageChunk extends BaseMessage {
           merged[key] as NonNullable<BaseMessageFields["additional_kwargs"]>,
           value as NonNullable<BaseMessageFields["additional_kwargs"]>
         );
+      } else if (
+        key === "tool_calls" &&
+        isOpenAIToolCallArray(merged[key]) &&
+        isOpenAIToolCallArray(value)
+      ) {
+        for (const toolCall of value) {
+          if (merged[key]?.[toolCall.index] !== undefined) {
+            merged[key] = merged[key]?.map((value, i) => {
+              if (i !== toolCall.index) {
+                return value;
+              }
+              return {
+                ...value,
+                ...toolCall,
+                function: {
+                  name: toolCall.function.name ?? value.function.name,
+                  arguments:
+                    (value.function.arguments ?? "") +
+                    (toolCall.function.arguments ?? ""),
+                },
+              };
+            });
+          } else {
+            (merged[key] as OpenAIToolCall[])[toolCall.index] = toolCall;
+          }
+        }
       } else {
         throw new Error(
           `additional_kwargs[${key}] already exists in this message chunk.`
@@ -468,6 +518,74 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 }
 
 /**
+ * Represents a tool message in a conversation.
+ */
+export class ToolMessage extends BaseMessage {
+  static lc_name() {
+    return "ToolMessage";
+  }
+
+  tool_call_id: string;
+
+  constructor(fields: ToolMessageFieldsWithToolCallId);
+
+  constructor(
+    fields: string | BaseMessageFields,
+    tool_call_id: string,
+    name?: string
+  );
+
+  constructor(
+    fields: string | ToolMessageFieldsWithToolCallId,
+    tool_call_id?: string,
+    name?: string
+  ) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { content: fields, name, tool_call_id: tool_call_id! };
+    }
+    super(fields);
+    this.tool_call_id = fields.tool_call_id;
+  }
+
+  _getType(): MessageType {
+    return "tool";
+  }
+}
+
+/**
+ * Represents a chunk of a function message, which can be concatenated
+ * with other function message chunks.
+ */
+export class ToolMessageChunk extends BaseMessageChunk {
+  tool_call_id: string;
+
+  constructor(fields: ToolMessageFieldsWithToolCallId) {
+    super(fields);
+    this.tool_call_id = fields.tool_call_id;
+  }
+
+  static lc_name() {
+    return "ToolMessageChunk";
+  }
+
+  _getType(): MessageType {
+    return "tool";
+  }
+
+  concat(chunk: ToolMessageChunk) {
+    return new ToolMessageChunk({
+      content: mergeContent(this.content, chunk.content),
+      additional_kwargs: ToolMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+      tool_call_id: this.tool_call_id,
+    });
+  }
+}
+
+/**
  * Represents a chat message in a conversation.
  */
 export class ChatMessage
@@ -645,6 +763,7 @@ function mapV1MessageToStoredMessage(
         content: v1Message.text,
         role: v1Message.role,
         name: undefined,
+        tool_call_id: undefined,
       },
     };
   }
@@ -665,6 +784,13 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       }
       return new FunctionMessage(
         storedMessage.data as FunctionMessageFieldsWithName
+      );
+    case "tool":
+      if (storedMessage.data.tool_call_id === undefined) {
+        throw new Error("Tool call ID must be defined for tool messages");
+      }
+      return new ToolMessage(
+        storedMessage.data as ToolMessageFieldsWithToolCallId
       );
     case "chat": {
       if (storedMessage.data.role === undefined) {

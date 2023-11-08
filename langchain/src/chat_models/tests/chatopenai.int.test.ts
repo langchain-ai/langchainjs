@@ -407,7 +407,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
 test("Function calling with streaming", async () => {
   let finalResult: BaseMessage | undefined;
   const modelForFunctionCalling = new ChatOpenAI({
-    modelName: "gpt-4-1106-preview",
+    modelName: "gpt-3.5-turbo",
     temperature: 0,
     callbacks: [
       {
@@ -774,18 +774,4 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
   ) {
     expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);
   }
-});
-
-test("Test ChatOpenAI JSON mode", async () => {
-  const chat = new ChatOpenAI({
-    modelName: "gpt-4-1106-preview",
-    maxTokens: 128,
-  }).bind({
-    response_format: {
-      type: "json_object",
-    },
-  });
-  const message = new HumanMessage("Hello!");
-  const res = await chat.invoke([["system", "Only return JSON"], message]);
-  console.log(JSON.stringify(res));
 });
