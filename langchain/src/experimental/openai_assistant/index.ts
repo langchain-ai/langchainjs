@@ -283,7 +283,7 @@ export class OpenAIAssistantRunnable<
     }
     const runInfo = JSON.stringify(run, null, 2);
     throw new Error(
-      `Unknown run status ${run.status}.\nFull run info:\n\n${runInfo}`
+      `Unexpected run status ${run.status}.\nFull run info:\n\n${runInfo}`
     );
   }
 }
