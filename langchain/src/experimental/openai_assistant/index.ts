@@ -1,18 +1,18 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
-import {
-  ThreadMessage,
-  RequiredActionFunctionToolCall,
-} from "openai/resources/beta/threads/index";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
-import { RunnableConfig } from "../../schema/runnable/config.js";
-import {
+import type { RunnableConfig } from "../../schema/runnable/config.js";
+import type {
   OpenAIAssistantFinish,
   OpenAIAssistantAction,
   OpenAIToolType,
 } from "./schema.js";
 import { StructuredTool } from "../../tools/base.js";
 import { formatToOpenAIAssistantTool } from "../../tools/convert_to_openai.js";
+
+type ThreadMessage = OpenAIClient.Beta.Threads.ThreadMessage;
+type RequiredActionFunctionToolCall =
+  OpenAIClient.Beta.Threads.RequiredActionFunctionToolCall;
 
 type ExtractRunOutput<AsAgent extends boolean | undefined> =
   AsAgent extends true
@@ -46,7 +46,7 @@ export class OpenAIAssistantRunnable<
 
   constructor(fields: OpenAIAssistantRunnableInput<AsAgent>) {
     super();
-    this.client = fields.client || new OpenAIClient(fields?.clientOptions);
+    this.client = fields.client ?? new OpenAIClient(fields?.clientOptions);
     this.assistantId = fields.assistantId;
     this.asAgent = fields.asAgent ?? this.asAgent;
   }
@@ -251,14 +251,14 @@ export class OpenAIAssistantRunnable<
         const answerString = answer
           .map((item) => item.type === "text" && item.text.value)
           .join("\n");
-        return new OpenAIAssistantFinish({
+        return {
           returnValues: {
             output: answerString,
           },
           log: "",
           runId,
           threadId,
-        });
+        };
       }
     } else if (run.status === "requires_action") {
       if (!this.asAgent) {
@@ -268,16 +268,14 @@ export class OpenAIAssistantRunnable<
       run.required_action?.submit_tool_outputs.tool_calls.forEach((item) => {
         const functionCall = item.function;
         const args = JSON.parse(functionCall.arguments);
-        actions.push(
-          new OpenAIAssistantAction({
-            tool: functionCall.name,
-            toolInput: args,
-            toolCallId: item.id,
-            log: "",
-            runId,
-            threadId,
-          })
-        );
+        actions.push({
+          tool: functionCall.name,
+          toolInput: args,
+          toolCallId: item.id,
+          log: "",
+          runId,
+          threadId,
+        });
       });
       return actions;
     }
