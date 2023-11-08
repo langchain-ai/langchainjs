@@ -292,6 +292,7 @@ const entrypoints = {
   "util/time": "util/time",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
+  "experimental/openai_assistant": "experimental/openai_assistant/openai_assistant",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",

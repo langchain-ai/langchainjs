@@ -1,6 +1,7 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { OpenAI as OpenAIClient } from "openai";
 
+import { AssistantCreateParams } from "openai/resources/beta/index.mjs";
 import { StructuredTool } from "./base.js";
 
 /**
@@ -11,7 +12,9 @@ import { StructuredTool } from "./base.js";
  */
 export function formatToOpenAIFunction(
   tool: StructuredTool
-): OpenAIClient.Chat.ChatCompletionCreateParams.Function {
+):
+  | OpenAIClient.Chat.ChatCompletionCreateParams.Function
+  | AssistantCreateParams.AssistantToolsFunction {
   return {
     name: tool.name,
     description: tool.description,

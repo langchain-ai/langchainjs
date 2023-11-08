@@ -754,6 +754,9 @@
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
+    "experimental/openai_assistant.cjs",
+    "experimental/openai_assistant.js",
+    "experimental/openai_assistant.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
@@ -2627,6 +2630,11 @@
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
       "require": "./experimental/autogpt.cjs"
+    },
+    "./experimental/openai_assistant": {
+      "types": "./experimental/openai_assistant.d.ts",
+      "import": "./experimental/openai_assistant.js",
+      "require": "./experimental/openai_assistant.cjs"
     },
     "./experimental/babyagi": {
       "types": "./experimental/babyagi.d.ts",

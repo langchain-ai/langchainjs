@@ -1,5 +1,7 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { Run } from "openai/resources/beta/threads/index";
+import { AssistantCreateParams } from "openai/resources/beta/index.mjs";
+import { RunStep } from "openai/resources/beta/threads/runs/index.mjs";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import { RunnableConfig } from "../../schema/runnable/config.js";
@@ -10,6 +12,7 @@ import {
   OpenAIToolType,
 } from "./schema.js";
 import { StructuredTool } from "../../tools/base.js";
+import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 
 interface OpenAIAssistantRunnableInput {
   client?: OpenAIClient;
@@ -56,12 +59,22 @@ export class OpenAIAssistantRunnable<
     instructions?: string;
     tools?: OpenAIToolType | Array<StructuredTool>;
   }) {
-    const castTools = tools as OpenAIToolType;
+    const formattedTools =
+      tools?.map((tool) => {
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (tool instanceof StructuredTool) {
+          return {
+            type: "function",
+            function: formatToOpenAIFunction(tool),
+          } as AssistantCreateParams.AssistantToolsFunction;
+        }
+        return tool;
+      }) ?? [];
     const oaiClient = client ?? new OpenAIClient(clientOptions);
     const assistant = await oaiClient.beta.assistants.create({
       name,
       instructions,
-      tools: castTools,
+      tools: formattedTools,
       model,
     });
 
@@ -73,8 +86,9 @@ export class OpenAIAssistantRunnable<
   }
 
   async invoke(input: RunInput, _options?: RunnableConfig): Promise<RunOutput> {
-    const parsedInput = this._parseInput(input);
-
+    console.log("pre prep input", input);
+    const parsedInput = await this._parseInput(input);
+    console.log("invoking", parsedInput);
     let run: Run;
     if (!("threadId" in parsedInput)) {
       const thread = {
@@ -101,31 +115,80 @@ export class OpenAIAssistantRunnable<
       });
       run = await this._createRun(input);
     } else {
+      console.log("submit outputs", parsedInput);
       run = await this.client.beta.threads.runs.submitToolOutputs(
         parsedInput.threadId,
         parsedInput.runId,
-        parsedInput.toolOutputs
+        {
+          tool_outputs: parsedInput.toolOutputs,
+        }
       );
     }
 
     return this._getResponse(run.id, run.thread_id) as unknown as RunOutput;
   }
 
-  private _parseInput(input: RunInput): RunInput {
+  private async _parseInput(input: RunInput): Promise<RunInput> {
     let newInput;
-    if (this.asAgent && input.intermediate_steps) {
-      const lastStep =
-        input.intermediate_steps[input.intermediate_steps.length - 1];
-      const [lastAction, lastOutput] = lastStep;
+    if (this.asAgent && input.steps.length > 0) {
+      const lastAction = input.steps[input.steps.length - 1];
+      const { action } = lastAction;
+      const { runId, threadId } = action;
+      const runSteps = await this._listRunSteps(runId, threadId);
+      const toolCalls = this._getToolCallsFromSteps(runSteps);
+      // map over tooCalls and filter out completed
+      const requiresActionToolCalls = toolCalls.filter((tool) => {
+        if (!tool.function.output) return true;
+        return false;
+      });
+      // match requires actions tools with tools from input.steps
+      const matchedToolCalls = requiresActionToolCalls.flatMap((toolCall) => {
+        const castSteps = input.steps as {
+          action: OpenAIAssistantAction;
+          observation: string;
+        }[];
+        console.log("castSteps", castSteps);
+        const matchedAction = castSteps.find(
+          (step) => step.action.toolCallId === toolCall.id
+        );
+        return matchedAction ?? [];
+      });
+      const toolOutputs = matchedToolCalls.map((toolCall) => ({
+        output: toolCall.observation,
+        tool_call_id: toolCall.action.toolCallId,
+      }));
       newInput = {
-        tool_outputs: [
-          { output: lastOutput, tool_call_id: lastAction.tool_call_id },
-        ],
-        run_id: lastAction.run_id,
-        thread_id: lastAction.thread_id,
+        toolOutputs,
+        runId,
+        threadId,
       };
     }
     return (newInput ?? input) as RunInput;
+  }
+
+  private async _listRunSteps(runId: string, threadId: string) {
+    const runSteps = await this.client.beta.threads.runs.steps.list(
+      threadId,
+      runId,
+      {
+        order: "asc",
+      }
+    );
+    return runSteps.data;
+  }
+
+  private _getToolCallsFromSteps(steps: RunStep[]) {
+    const toolCalls = steps.flatMap((step) => {
+      if (step.step_details.type !== "tool_calls") {
+        return [];
+      }
+      const toolCall = step.step_details.tool_calls.flatMap((toolCall) =>
+        toolCall.type === "function" ? toolCall : []
+      );
+      return toolCall;
+    });
+
+    return toolCalls;
   }
 
   private async _createRun({
@@ -146,12 +209,21 @@ export class OpenAIAssistantRunnable<
   }
 
   private async _createThreadAndRun(input: RunInput) {
+    const params: Record<string, unknown> = [
+      "instructions",
+      "model",
+      "tools",
+      "run_metadata",
+    ]
+      .filter((key) => key in input)
+      .reduce((obj, key) => {
+        const newObj = obj;
+        newObj[key] = input[key];
+        return newObj;
+      }, {} as Record<string, unknown>);
     const run = this.client.beta.threads.createAndRun({
-      metadata: input.threadMetadata,
-      model: input.model,
-      tools: input.tools,
+      ...params,
       thread: input.thread,
-      instructions: input.instructions,
       assistant_id: this.assistantId,
     });
     return run;
