@@ -33,10 +33,12 @@ test.skip("Test ChatGooglePalm generate", async () => {
 test.skip("ChatGooglePalm, prompt templates", async () => {
   const chat = new ChatGooglePaLM({
     maxRetries: 1,
-    examples: [      {
-      input: new HumanMessage("What is your favorite sock color?"),
-      output: new AIMessage("My favorite sock color be arrrr-ange!"),
-    }]
+    examples: [
+      {
+        input: new HumanMessage("What is your favorite sock color?"),
+        output: new AIMessage("My favorite sock color be arrrr-ange!"),
+      },
+    ],
   });
 
   // PaLM doesn't support translation yet

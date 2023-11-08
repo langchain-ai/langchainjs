@@ -13,9 +13,9 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
 export type BaseMessageExamplePair = {
-  input: BaseMessage,
-  output: BaseMessage,
-}
+  input: BaseMessage;
+  output: BaseMessage;
+};
 
 /**
  * An interface defining the input to the ChatGooglePaLM class.
@@ -66,7 +66,9 @@ export interface GooglePaLMChatInput extends BaseChatModelParams {
    */
   topK?: number;
 
-  examples?: protos.google.ai.generativelanguage.v1beta2.IExample[] | BaseMessageExamplePair[];
+  examples?:
+    | protos.google.ai.generativelanguage.v1beta2.IExample[]
+    | BaseMessageExamplePair[];
 
   /**
    * Google Palm API key to use
@@ -135,24 +137,29 @@ export class ChatGooglePaLM
       throw new Error("`topK` must be a positive integer");
     }
 
-    this.examples = fields?.examples?.map((example) => {
-      if (
-        (isBaseMessage(example.input) && typeof example.input.content !== "string") ||
-        (isBaseMessage(example.output) && typeof example.output.content !== "string")
-      ) {
-        throw new Error("GooglePaLM example messages may only have string content.");
-      }
-      return {
-        input: {
-          ...example.input,
-          content: example.input?.content as string
-        },
-        output: {
-          ...example.output, 
-          content: example.output?.content as string
-        },
-      };
-    }) ?? this.examples;
+    this.examples =
+      fields?.examples?.map((example) => {
+        if (
+          (isBaseMessage(example.input) &&
+            typeof example.input.content !== "string") ||
+          (isBaseMessage(example.output) &&
+            typeof example.output.content !== "string")
+        ) {
+          throw new Error(
+            "GooglePaLM example messages may only have string content."
+          );
+        }
+        return {
+          input: {
+            ...example.input,
+            content: example.input?.content as string,
+          },
+          output: {
+            ...example.output,
+            content: example.output?.content as string,
+          },
+        };
+      }) ?? this.examples;
 
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("GOOGLE_PALM_API_KEY");
