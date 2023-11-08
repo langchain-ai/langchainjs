@@ -86,9 +86,7 @@ export class OpenAIAssistantRunnable<
   }
 
   async invoke(input: RunInput, _options?: RunnableConfig): Promise<RunOutput> {
-    console.log("pre prep input", input);
     const parsedInput = await this._parseInput(input);
-    console.log("invoking", parsedInput);
     let run: Run;
     if (!("threadId" in parsedInput)) {
       const thread = {
@@ -115,7 +113,6 @@ export class OpenAIAssistantRunnable<
       });
       run = await this._createRun(input);
     } else {
-      console.log("submit outputs", parsedInput);
       run = await this.client.beta.threads.runs.submitToolOutputs(
         parsedInput.threadId,
         parsedInput.runId,
@@ -147,7 +144,6 @@ export class OpenAIAssistantRunnable<
           action: OpenAIAssistantAction;
           observation: string;
         }[];
-        console.log("castSteps", castSteps);
         const matchedAction = castSteps.find(
           (step) => step.action.toolCallId === toolCall.id
         );
