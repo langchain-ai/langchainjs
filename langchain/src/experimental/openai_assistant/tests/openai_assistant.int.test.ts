@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ThreadMessage } from "openai/resources/beta/threads/index.mjs";
 import { AgentExecutor } from "../../../agents/executor.js";
 import { StructuredTool } from "../../../tools/base.js";
 import { OpenAIAssistantRunnable } from "../openai_assistant.js";
@@ -28,14 +29,13 @@ class WeatherTool extends StructuredTool {
   }
 
   async _call(input: { location: string; unit: string }) {
-    console.log("calling tool", input);
     const { location, unit } = input;
     const result = getCurrentWeather(location, unit);
     return result;
   }
 }
 
-test.only("OpenAIAssistantRunnable can be passed as an agent", async () => {
+test("OpenAIAssistantRunnable can be passed as an agent", async () => {
   const tools = [new WeatherTool()];
   const agent = await OpenAIAssistantRunnable.create({
     model: "gpt-3.5-turbo-1106",
@@ -45,21 +45,17 @@ test.only("OpenAIAssistantRunnable can be passed as an agent", async () => {
     tools,
     asAgent: true,
   });
-
   const agentExecutor = AgentExecutor.fromAgentAndTools({
     agent,
     tools,
   });
-
   const assistantResponse = await agentExecutor.invoke({
     content: "What's the weather in San Francisco and Tokyo?",
   });
   console.log(assistantResponse);
   /**
     {
-      output: '10 - 4 is 6, and 6 raised to the power of 2.7 is calculated as follows:\n' +
-        '\n' +
-        '\\( 6^{2.7} \\approx 246.418 \\)'
+      output: 'The current weather in San Francisco is 72°F, and in Tokyo, it is 10°C.'
     }
    */
 });
@@ -72,31 +68,38 @@ test("OpenAIAssistantRunnable is invokeable", async () => {
     name: "Math Assistant",
     tools: [{ type: "code_interpreter" }],
   });
-
   const assistantResponse = await assistant.invoke({
     content: "What's 10 - 4 raised to the 2.7",
   });
   console.log(assistantResponse);
-  if (Array.isArray(assistantResponse) && "content" in assistantResponse[0]) {
-    console.log(assistantResponse[0].content);
-  }
   /**
     [
       {
-        id: 'msg_OBH60nkVI40V9zY2PlxMzbEI',
-        thread_id: 'thread_wKpj4cu1XaYEVeJlx4yFbWx5',
+        id: 'msg_egqSo3AZTWJ0DAelzR6DdKbs',
+        object: 'thread.message',
+        created_at: 1699409656,
+        thread_id: 'thread_lAktOZkUetJ7Gl3hzMFdi42E',
         role: 'assistant',
-        content: [
-          {
-            type: 'text',
-            text: {
-              value: 'The result of 10 - 4 raised to the 2.7 is approximately -32.22.',
-              annotations: []
-            }
-          }
-        ],
-        assistant_id: 'asst_RtW03Vs6laTwqSSMCQpVND7i',
-        run_id: 'run_4Ve5Y9fyKMcSxHbaNHOFvdC6',
+        content: [ [Object] ],
+        file_ids: [],
+        assistant_id: 'asst_fPjLqVmN21EFGLNQb8iZckEy',
+        run_id: 'run_orPmWI9ri1HnqBXmX7LCWWax',
+        metadata: {}
+      }
+    ]
+   */
+  const content = (assistantResponse as ThreadMessage[]).flatMap(
+    (res) => res.content
+  );
+  console.log(content);
+  /**
+    [
+      {
+        type: 'text',
+        text: {
+          value: '10 - 4 raised to the 2.7 is approximately -32.22.',
+          annotations: []
+        }
       }
     ]
    */

@@ -126,40 +126,38 @@ export class OpenAIAssistantRunnable<
   }
 
   private async _parseInput(input: RunInput): Promise<RunInput> {
-    let newInput;
-    if (this.asAgent && input.steps.length > 0) {
-      const lastAction = input.steps[input.steps.length - 1];
-      const { action } = lastAction;
-      const { runId, threadId } = action;
-      const runSteps = await this._listRunSteps(runId, threadId);
-      const toolCalls = this._getToolCallsFromSteps(runSteps);
-      // map over tooCalls and filter out completed
-      const requiresActionToolCalls = toolCalls.filter((tool) => {
-        if (!tool.function.output) return true;
-        return false;
-      });
-      // match requires actions tools with tools from input.steps
-      const matchedToolCalls = requiresActionToolCalls.flatMap((toolCall) => {
-        const castSteps = input.steps as {
-          action: OpenAIAssistantAction;
-          observation: string;
-        }[];
-        const matchedAction = castSteps.find(
-          (step) => step.action.toolCallId === toolCall.id
-        );
-        return matchedAction ?? [];
-      });
-      const toolOutputs = matchedToolCalls.map((toolCall) => ({
-        output: toolCall.observation,
-        tool_call_id: toolCall.action.toolCallId,
-      }));
-      newInput = {
-        toolOutputs,
-        runId,
-        threadId,
-      };
+    if (!this.asAgent || input.steps.length === 0) {
+      return input;
     }
-    return (newInput ?? input) as RunInput;
+
+    const {
+      action: { runId, threadId },
+    } = input.steps[input.steps.length - 1];
+    const runSteps = await this._listRunSteps(runId, threadId);
+    const toolCalls = this._getToolCallsFromSteps(runSteps);
+
+    const toolOutputs = toolCalls
+      .filter((tool) => !tool.function.output)
+      .flatMap((toolCall) => {
+        const matchedAction = (
+          input.steps as {
+            action: OpenAIAssistantAction;
+            observation: string;
+          }[]
+        ).find((step) => step.action.toolCallId === toolCall.id);
+
+        return matchedAction
+          ? [
+              {
+                output: matchedAction.observation,
+                tool_call_id: matchedAction.action.toolCallId,
+              },
+            ]
+          : [];
+      });
+
+    const newOutput = { toolOutputs, runId, threadId };
+    return (toolOutputs.length > 0 ? newOutput : input) as RunInput;
   }
 
   private async _listRunSteps(runId: string, threadId: string) {
@@ -170,6 +168,7 @@ export class OpenAIAssistantRunnable<
         order: "asc",
       }
     );
+    // @TODO pagination
     return runSteps.data;
   }
 
