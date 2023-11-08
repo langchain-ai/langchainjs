@@ -53,12 +53,13 @@ In this next example we'll show how you can turn your assistant into an agent.
 
 ```typescript
 import { AgentExecutor } from "langchain/agents";
-import { Tool } from "langchain/tools";
+import { StructuredTool } from "langchain/tools";
 import { OpenAIAssistantRunnable } from "experimental/openai_assistant";
 ```
 
 The first step is to define a list of tools you want to pass to your assistant.
 Here we'll only define one for simplicity's sake, however the assistant API allows for passing in a list of tools, and from there the model can use multiple tools at once.
+Read more about the run steps lifecycle [here](https://platform.openai.com/docs/assistants/how-it-works/runs-and-run-steps)
 
 :::note
 Only models released >= 1106 are able to use multiple tools at once.
@@ -74,13 +75,18 @@ function getCurrentWeather(location: string, _unit = "fahrenheit") {
     return JSON.stringify({ location, temperature: "22", unit: "celsius" });
   }
 }
-class WeatherTool extends Tool {
+class WeatherTool extends StructuredTool {
+  schema = z.object({
+    location: z.string().describe("The city and state, e.g. San Francisco, CA"),
+    unit: z.enum(["celsius", "fahrenheit"]).optional(),
+  });
+
   name = "get_current_weather";
 
   description = "Get the current weather in a given location";
 
   constructor() {
-    super();
+    super(...arguments);
   }
 
   async _call(input: { location: string; unit: string }) {
@@ -89,26 +95,7 @@ class WeatherTool extends Tool {
     return result;
   }
 }
-const tools = [
-  {
-    type: "function",
-    function: {
-      name: "get_current_weather",
-      description: "Get the current weather in a given location",
-      parameters: {
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "The city and state, e.g. San Francisco, CA",
-          },
-          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-        },
-        required: ["location"],
-      },
-    },
-  },
-];
+const tools = [new WeatherTool()];
 ```
 
 In the above code we've defined three things:

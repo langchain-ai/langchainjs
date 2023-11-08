@@ -133,57 +133,32 @@ export class OpenAIAssistantRunnable<
     const {
       action: { runId, threadId },
     } = input.steps[input.steps.length - 1];
-    const runSteps = await this._listRunSteps(runId, threadId);
-    const toolCalls = this._getToolCallsFromSteps(runSteps);
+    const run = await this._waitForRun(runId, threadId);
+    const toolCalls = run.required_action?.submit_tool_outputs.tool_calls;
+    if (!toolCalls) {
+      return input;
+    }
 
-    const toolOutputs = toolCalls
-      .filter((tool) => !tool.function.output)
-      .flatMap((toolCall) => {
-        const matchedAction = (
-          input.steps as {
-            action: OpenAIAssistantAction;
-            observation: string;
-          }[]
-        ).find((step) => step.action.toolCallId === toolCall.id);
+    const toolOutputs = toolCalls.flatMap((toolCall) => {
+      const matchedAction = (
+        input.steps as {
+          action: OpenAIAssistantAction;
+          observation: string;
+        }[]
+      ).find((step) => step.action.toolCallId === toolCall.id);
 
-        return matchedAction
-          ? [
-              {
-                output: matchedAction.observation,
-                tool_call_id: matchedAction.action.toolCallId,
-              },
-            ]
-          : [];
-      });
+      return matchedAction
+        ? [
+            {
+              output: matchedAction.observation,
+              tool_call_id: matchedAction.action.toolCallId,
+            },
+          ]
+        : [];
+    });
 
     const newOutput = { toolOutputs, runId, threadId };
     return (toolOutputs.length > 0 ? newOutput : input) as RunInput;
-  }
-
-  private async _listRunSteps(runId: string, threadId: string) {
-    const runSteps = await this.client.beta.threads.runs.steps.list(
-      threadId,
-      runId,
-      {
-        order: "asc",
-      }
-    );
-    // @TODO pagination
-    return runSteps.data;
-  }
-
-  private _getToolCallsFromSteps(steps: RunStep[]) {
-    const toolCalls = steps.flatMap((step) => {
-      if (step.step_details.type !== "tool_calls") {
-        return [];
-      }
-      const toolCall = step.step_details.tool_calls.flatMap((toolCall) =>
-        toolCall.type === "function" ? toolCall : []
-      );
-      return toolCall;
-    });
-
-    return toolCalls;
   }
 
   private async _createRun({
