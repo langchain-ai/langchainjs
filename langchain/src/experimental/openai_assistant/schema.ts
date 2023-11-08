@@ -6,6 +6,7 @@ import { AssistantCreateParams } from "openai/resources/beta/index";
 import { AgentFinish, AgentAction } from "../../schema/index.js";
 
 interface OpenAIAssistantFinishInput {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   returnValues: Record<string, any>;
 
   log: string;
@@ -16,6 +17,7 @@ interface OpenAIAssistantFinishInput {
 }
 
 export class OpenAIAssistantFinish implements AgentFinish {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   returnValues: Record<string, any>;
 
   log: string;
