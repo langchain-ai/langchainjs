@@ -1,28 +1,33 @@
-import { InputValues, MemoryVariables, getBufferString, OutputValues } from "./base.js";
+import {
+  InputValues,
+  MemoryVariables,
+  getBufferString,
+  OutputValues,
+} from "./base.js";
 
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-
 
 /**
  * Interface for the input parameters of the `BufferTokenMemory` class.
  */
 
-export interface ConversationTokenBufferMemoryInput extends BaseChatMemoryInput {
-    /* Prefix for human messages in the buffer. */
-    humanPrefix?: string;
+export interface ConversationTokenBufferMemoryInput
+  extends BaseChatMemoryInput {
+  /* Prefix for human messages in the buffer. */
+  humanPrefix?: string;
 
-    /* Prefix for AI messages in the buffer.*/
-    aiPrefix?: string;
+  /* Prefix for AI messages in the buffer. */
+  aiPrefix?: string;
 
-    /* The LLM for this instance. */
-    llm: BaseLanguageModel;
+  /* The LLM for this instance. */
+  llm: BaseLanguageModel;
 
-    /* Memory key for buffer instance. */
-    memoryKey?: string;
+  /* Memory key for buffer instance. */
+  memoryKey?: string;
 
-    /* Maximmum number of tokens allowed in the buffer. */
-    maxTokenLimit?: number;
+  /* Maximmum number of tokens allowed in the buffer. */
+  maxTokenLimit?: number;
 }
 
 /**
@@ -31,80 +36,85 @@ export interface ConversationTokenBufferMemoryInput extends BaseChatMemoryInput 
  * `ConversationTokenBufferMemoryInput` interface.
  */
 
-export class ConversationTokenBufferMemory extends BaseChatMemory 
-    implements ConversationTokenBufferMemoryInput {
+export class ConversationTokenBufferMemory
+  extends BaseChatMemory
+  implements ConversationTokenBufferMemoryInput
+{
+  humanPrefix = "Human";
 
-    humanPrefix = "Human";
+  aiPrefix = "AI";
 
-    aiPrefix = "AI";
+  memoryKey = "history";
 
-    memoryKey = "history";
+  maxTokenLimit = 2000; // Default max token limit of 2000 which can be overridden
 
-    maxTokenLimit = 2000; // Default max token limit of 2000 which can be overridden
-    
-    llm: BaseLanguageModel;
+  llm: BaseLanguageModel;
 
-    constructor(fields: ConversationTokenBufferMemoryInput) {
-        super({returnMessages: fields?.returnMessages ?? false,
-            chatHistory: fields?.chatHistory,
-            inputKey: fields?.inputKey,
-            outputKey: fields?.outputKey,});
-        this.llm = fields.llm;
-        this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
-        this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
-        this.memoryKey = fields?.memoryKey ?? this.memoryKey;
-        this.maxTokenLimit = fields?.maxTokenLimit ?? this.maxTokenLimit;
+  constructor(fields: ConversationTokenBufferMemoryInput) {
+    super({
+      returnMessages: fields?.returnMessages ?? false,
+      chatHistory: fields?.chatHistory,
+      inputKey: fields?.inputKey,
+      outputKey: fields?.outputKey,
+    });
+    this.llm = fields.llm;
+    this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
+    this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
+    this.memoryKey = fields?.memoryKey ?? this.memoryKey;
+    this.maxTokenLimit = fields?.maxTokenLimit ?? this.maxTokenLimit;
+  }
+
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
+  /**
+   * Loads the memory variables. It takes an `InputValues` object as a
+   * parameter and returns a `Promise` that resolves with a
+   * `MemoryVariables` object.
+   * @param _values `InputValues` object.
+   * @returns A `Promise` that resolves with a `MemoryVariables` object.
+   */
+  async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+    const messages = await this.chatHistory.getMessages();
+    if (this.returnMessages) {
+      const result = {
+        [this.memoryKey]: messages,
+      };
+      return result;
     }
+    const result = {
+      [this.memoryKey]: getBufferString(
+        messages,
+        this.humanPrefix,
+        this.aiPrefix
+      ),
+    };
+    return result;
+  }
 
-    get memoryKeys() {
-        return [this.memoryKey];
+  /**
+   * Saves the context from this conversation to buffer. If the amount
+   * of tokens required to save the buffer exceeds MAX_TOKEN_LIMIT,
+   * prune it.
+   */
+  async saveContext(inputValues: InputValues, outputValues: OutputValues) {
+    await super.saveContext(inputValues, outputValues);
+
+    // Prune buffer if it exceeds the max token limit set for this instance.
+    const buffer = await this.chatHistory.getMessages();
+    let currBufferLength = await this.llm.getNumTokens(
+      getBufferString(buffer, this.humanPrefix, this.aiPrefix)
+    );
+
+    if (currBufferLength > this.maxTokenLimit) {
+      const prunedMemory = [];
+      while (currBufferLength > this.maxTokenLimit) {
+        prunedMemory.push(buffer.shift());
+        currBufferLength = await this.llm.getNumTokens(
+          getBufferString(buffer, this.humanPrefix, this.aiPrefix)
+        );
+      }
     }
-
-    /**
-    * Loads the memory variables. It takes an `InputValues` object as a
-    * parameter and returns a `Promise` that resolves with a
-    * `MemoryVariables` object.
-    * @param _values `InputValues` object.
-    * @returns A `Promise` that resolves with a `MemoryVariables` object.
-    */
-    async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
-        const messages = await this.chatHistory.getMessages();
-        if (this.returnMessages) {
-            const result = {
-                [this.memoryKey]: messages,
-            };
-            return result;
-        }
-        const result = {
-            [this.memoryKey]: getBufferString(
-                messages,
-                this.humanPrefix,
-                this.aiPrefix
-            ),
-        };
-        return result;
-    }
-
-    /**
-    * Saves the context from this conversation to buffer. If the amount
-    * of tokens required to save the buffer exceeds MAX_TOKEN_LIMIT,
-    * prune it. 
-    */
-    async saveContext(inputValues: InputValues, outputValues: OutputValues) {
-        await super.saveContext(inputValues, outputValues);
-
-        // Prune buffer if it exceeds the max token limit set for this instance.
-        const buffer = await this.chatHistory.getMessages();
-        let currBufferLength = await this.llm.getNumTokens(
-            getBufferString(buffer, this.humanPrefix, this.aiPrefix));
-        
-        if (currBufferLength > this.maxTokenLimit) {
-            const prunedMemory = [];
-            while (currBufferLength > this.maxTokenLimit) {
-                prunedMemory.push(buffer.shift())
-                currBufferLength = await this.llm.getNumTokens(
-                    getBufferString(buffer, this.humanPrefix, this.aiPrefix))
-            }
-        }
-    }
+  }
 }
