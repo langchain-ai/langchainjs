@@ -16,7 +16,7 @@ We've implemented the assistant API in LangChain with some helpful abstractions.
 Creating an assistant is easy. Use the `createAssistant` method and pass in a model ID, and optionally more parameters to further customize your assistant.
 
 ```typescript
-import { OpenAIAssistantRunnable } from "experimental/openai_assistant";
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
 
 const assistant = await OpenAIAssistantRunnable.createAssistant({
   model: "gpt-4-1106-preview",
@@ -60,7 +60,7 @@ In this next example we'll show how you can turn your assistant into an agent.
 ```typescript
 import { AgentExecutor } from "langchain/agents";
 import { StructuredTool } from "langchain/tools";
-import { OpenAIAssistantRunnable } from "experimental/openai_assistant";
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
 ```
 
 The first step is to define a list of tools you want to pass to your assistant.
