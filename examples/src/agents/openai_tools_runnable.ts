@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { DynamicStructuredTool } from "langchain/tools";
+import { DynamicStructuredTool, formatToOpenAITool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { BaseMessage, ToolMessage, AIMessage } from "langchain/schema";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
@@ -10,7 +10,6 @@ import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
 } from "langchain/agents/openai/output_parser";
-import { formatToOpenAITool } from "langchain/tools";
 
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",
