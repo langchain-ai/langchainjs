@@ -61,9 +61,19 @@ export class PDFLoader extends BufferLoader {
         continue;
       }
 
-      const text = content.items
-        .map((item) => (item as TextItem).str)
-        .join("\n");
+      let lastY = undefined;
+      const textItems = [];
+      for (const item of content.items) {
+        if ('str' in item) {
+          if (lastY == item.transform[5] || !lastY) {
+            textItems.push(item.str);
+          } else {
+            textItems.push(`\n${item.str}`);
+          }
+          lastY = item.transform[5];
+        }
+      }
+      const text = textItems.join('');
 
       documents.push(
         new Document({
