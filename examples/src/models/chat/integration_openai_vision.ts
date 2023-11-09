@@ -59,3 +59,30 @@ console.log({ res2 });
     }
   }
 */
+
+const lowDetailImage = new HumanMessage({
+  content: [
+    {
+      type: "text",
+      text: "Summarize the contents of this image.",
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "https://blog.langchain.dev/content/images/size/w1248/format/webp/2023/10/Screenshot-2023-10-03-at-4.55.29-PM.png",
+        detail: "low",
+      },
+    },
+  ],
+});
+const res3 = await chat.invoke([lowDetailImage]);
+console.log({ res3 });
+
+/*
+  {
+    res3: AIMessage {
+      content: 'The image shows a user interface for a service named "WebLangChain," which appears to be powered by "Twalv." It includes a text box with the prompt "Ask me anything about anything!" suggesting that users can enter questions on various topics. Below the text box, there are example questions that users might ask, such as "what is langchain?", "history of mesopotamia," "how to build a discord bot," "leonardo dicaprio girlfriend," "fun gift ideas for software engineers," "how does a prism separate light," and "what beer is best." The interface also includes a round blue button with a paper plane icon, presumably to submit the question. The overall theme of the image is dark with blue accents.',
+      additional_kwargs: { function_call: undefined }
+    }
+  }
+*/

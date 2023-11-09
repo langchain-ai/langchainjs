@@ -113,7 +113,7 @@ export type MessageContent =
   | {
       type: "text" | "image_url";
       text?: string;
-      image_url?: string | { url: string };
+      image_url?: string | { url: string; detail?: "low" | "high" };
     }[];
 
 export interface BaseMessageFields {
