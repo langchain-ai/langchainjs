@@ -45,6 +45,15 @@ export abstract class AgentActionOutputParser extends BaseOutputParser<
 > {}
 
 /**
+ * Abstract class representing an output parser specifically for agent
+ * actions and finishes in LangChain. It extends the `BaseOutputParser`
+ * class.
+ */
+export abstract class AgentMultiActionOutputParser extends BaseOutputParser<
+  AgentAction[] | AgentFinish
+> {}
+
+/**
  * Type representing the stopping method for an agent. It can be either
  * 'force' or 'generate'.
  */
