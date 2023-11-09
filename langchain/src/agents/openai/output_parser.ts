@@ -2,11 +2,15 @@ import type { OpenAI as OpenAIClient } from "openai";
 import {
   AgentAction,
   AgentFinish,
+  AgentStep,
   BaseMessage,
   ChatGeneration,
   isBaseMessage,
 } from "../../schema/index.js";
-import { AgentActionOutputParser } from "../types.js";
+import {
+  AgentActionOutputParser,
+  AgentMultiActionOutputParser,
+} from "../types.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 
 /**
@@ -80,6 +84,91 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
   getFormatInstructions(): string {
     throw new Error(
       "getFormatInstructions not implemented inside OpenAIFunctionsAgentOutputParser."
+    );
+  }
+}
+
+/**
+ * Type that represents an agent action with an optional message log.
+ */
+export type ToolsAgentAction = AgentAction & {
+  toolCallId: string;
+  messageLog?: BaseMessage[];
+};
+
+export type ToolsAgentStep = AgentStep & {
+  action: ToolsAgentAction;
+};
+
+export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
+  lc_namespace = ["langchain", "agents", "openai"];
+
+  static lc_name() {
+    return "OpenAIToolsAgentOutputParser";
+  }
+
+  async parse(text: string): Promise<AgentAction[] | AgentFinish> {
+    throw new Error(
+      `OpenAIFunctionsAgentOutputParser can only parse messages.\nPassed input: ${text}`
+    );
+  }
+
+  async parseResult(generations: ChatGeneration[]) {
+    if ("message" in generations[0] && isBaseMessage(generations[0].message)) {
+      return this.parseAIMessage(generations[0].message);
+    }
+    throw new Error(
+      "parseResult on OpenAIFunctionsAgentOutputParser only works on ChatGeneration output"
+    );
+  }
+
+  /**
+   * Parses the output message into a ToolsAgentAction[] or AgentFinish
+   * object.
+   * @param message The BaseMessage to parse.
+   * @returns A ToolsAgentAction[] or AgentFinish object.
+   */
+  parseAIMessage(message: BaseMessage): ToolsAgentAction[] | AgentFinish {
+    if (message.content && typeof message.content !== "string") {
+      throw new Error("This agent cannot parse non-string model responses.");
+    }
+    if (message.additional_kwargs.tool_calls) {
+      const toolCalls: OpenAIClient.Chat.ChatCompletionMessageToolCall[] =
+        message.additional_kwargs.tool_calls;
+      try {
+        return toolCalls.map((toolCall, i) => {
+          const toolInput = toolCall.function.arguments
+            ? JSON.parse(toolCall.function.arguments)
+            : {};
+          const messageLog = i === 0 ? [message] : [];
+          return {
+            tool: toolCall.function.name as string,
+            toolInput,
+            toolCallId: toolCall.id,
+            log: `Invoking "${toolCall.function.name}" with ${
+              toolCall.function.arguments ?? "{}"
+            }\n${message.content}`,
+            messageLog,
+          };
+        });
+      } catch (error) {
+        throw new OutputParserException(
+          `Failed to parse tool arguments from chat model response. Text: "${JSON.stringify(
+            toolCalls
+          )}". ${error}`
+        );
+      }
+    } else {
+      return {
+        returnValues: { output: message.content },
+        log: message.content,
+      };
+    }
+  }
+
+  getFormatInstructions(): string {
+    throw new Error(
+      "getFormatInstructions not implemented inside OpenAIToolsAgentOutputParser."
     );
   }
 }
