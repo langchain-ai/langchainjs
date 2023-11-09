@@ -225,7 +225,9 @@ export class LLMChain<
       promptValue,
       runManager?.getChild()
     );
-    return response;
+    return {
+      [this.outputKey]: response,
+    };
   }
 
   /**

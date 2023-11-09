@@ -207,12 +207,6 @@ export abstract class BaseChain<
       );
     }
     await runManager?.handleChainEnd(outputValues);
-
-    // If a runnable is being used `outputValues` is
-    // not guaranteed to be an object
-    if (typeof outputValues === "string") {
-      return outputValues;
-    }
     // add the runManager's currentRunId to the outputValues
     Object.defineProperty(outputValues, RUN_KEY, {
       value: runManager ? { runId: runManager?.runId } : undefined,
