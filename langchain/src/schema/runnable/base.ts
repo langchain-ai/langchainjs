@@ -1408,7 +1408,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     this.fallbacks = fields.fallbacks;
   }
 
-  get getRunnable() {
+  getRunnable() {
     return this.runnable;
   }
 

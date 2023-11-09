@@ -63,7 +63,7 @@ function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
     return _getLanguageModel(llmLike.bound);
     // eslint-disable-next-line no-instanceof/no-instanceof
   } else if (llmLike instanceof RunnableWithFallbacks) {
-    return _getLanguageModel(llmLike.getRunnable);
+    return _getLanguageModel(llmLike.getRunnable());
     // eslint-disable-next-line no-instanceof/no-instanceof
   } else if (llmLike instanceof RunnableBranch) {
     return _getLanguageModel(llmLike.default);
