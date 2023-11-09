@@ -2,10 +2,10 @@ import { z } from "zod";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { DynamicStructuredTool, formatToOpenAITool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
-import { BaseMessage, ToolMessage, AIMessage } from "langchain/schema";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { AgentExecutor } from "langchain/agents";
+import { formatToOpenAIToolMessages } from "langchain/agents/format_scratchpad/openai_tools";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
@@ -38,25 +38,10 @@ const weatherTool = new DynamicStructuredTool({
   }),
 });
 
+const tools = [new Calculator(), weatherTool];
+
 // Convert to OpenAI tool format
-const tools = [new Calculator(), weatherTool].map(formatToOpenAITool);
-
-const modelWithTools = model.bind({ tools });
-
-const formatAgentSteps = (steps: ToolsAgentStep[]): BaseMessage[] =>
-  steps.flatMap(({ action, observation }) => {
-    if ("messageLog" in action && action.messageLog !== undefined) {
-      const log = action.messageLog as BaseMessage[];
-      return log.concat(
-        new ToolMessage({
-          content: observation,
-          tool_call_id: action.toolCallId,
-        })
-      );
-    } else {
-      return [new AIMessage(action.log)];
-    }
-  });
+const modelWithTools = model.bind({ tools: tools.map(formatToOpenAITool) });
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
@@ -68,7 +53,7 @@ const runnableAgent = RunnableSequence.from([
   {
     input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
     agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) =>
-      formatAgentSteps(i.steps),
+      formatToOpenAIToolMessages(i.steps),
   },
   prompt,
   modelWithTools,

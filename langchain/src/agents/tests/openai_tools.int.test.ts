@@ -3,8 +3,8 @@ import { test } from "@jest/globals";
 import { z } from "zod";
 import { Calculator } from "../../tools/calculator.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
-import { BaseMessage, AIMessage, ToolMessage } from "../../schema/index.js";
 import { AgentExecutor } from "../executor.js";
+import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
 import {
   OpenAIToolsAgentOutputParser,
   ToolsAgentStep,
@@ -12,6 +12,7 @@ import {
 import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
 import { DynamicStructuredTool } from "../../tools/dynamic.js";
+import { formatToOpenAITool } from "../../tools/convert_to_openai.js";
 
 test("OpenAIToolsAgent", async () => {
   const model = new ChatOpenAI({
@@ -45,22 +46,7 @@ test("OpenAIToolsAgent", async () => {
 
   const tools = [new Calculator(), weatherTool];
 
-  const modelWithTools = model.bind({ tools });
-
-  const formatAgentSteps = (steps: ToolsAgentStep[]): BaseMessage[] =>
-    steps.flatMap(({ action, observation }) => {
-      if ("messageLog" in action && action.messageLog !== undefined) {
-        const log = action.messageLog as BaseMessage[];
-        return log.concat(
-          new ToolMessage({
-            content: observation,
-            tool_call_id: action.toolCallId,
-          })
-        );
-      } else {
-        return [new AIMessage(action.log)];
-      }
-    });
+  const modelWithTools = model.bind({ tools: tools.map(formatToOpenAITool) });
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
@@ -72,12 +58,12 @@ test("OpenAIToolsAgent", async () => {
     {
       input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
       agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) =>
-        formatAgentSteps(i.steps),
+        formatToOpenAIToolMessages(i.steps),
     },
     prompt,
     modelWithTools,
     new OpenAIToolsAgentOutputParser(),
-  ]).withConfig({ runName: "OpenAIToolsAgent " });
+  ]).withConfig({ runName: "OpenAIToolsAgent" });
 
   const executor = AgentExecutor.fromAgentAndTools({
     agent: runnableAgent,

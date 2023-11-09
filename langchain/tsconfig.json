@@ -40,6 +40,7 @@
       "src/agents/toolkits/aws_sfn.ts",
       "src/agents/toolkits/sql/index.ts",
       "src/agents/format_scratchpad/openai_functions.ts",
+      "src/agents/format_scratchpad/openai_tools.ts",
       "src/agents/format_scratchpad/log.ts",
       "src/agents/format_scratchpad/xml.ts",
       "src/agents/format_scratchpad/log_to_message.ts",

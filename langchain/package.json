@@ -34,6 +34,9 @@
     "agents/format_scratchpad.cjs",
     "agents/format_scratchpad.js",
     "agents/format_scratchpad.d.ts",
+    "agents/format_scratchpad/openai_tools.cjs",
+    "agents/format_scratchpad/openai_tools.js",
+    "agents/format_scratchpad/openai_tools.d.ts",
     "agents/format_scratchpad/log.cjs",
     "agents/format_scratchpad/log.js",
     "agents/format_scratchpad/log.d.ts",
@@ -1430,6 +1433,11 @@
       "types": "./agents/format_scratchpad.d.ts",
       "import": "./agents/format_scratchpad.js",
       "require": "./agents/format_scratchpad.cjs"
+    },
+    "./agents/format_scratchpad/openai_tools": {
+      "types": "./agents/format_scratchpad/openai_tools.d.ts",
+      "import": "./agents/format_scratchpad/openai_tools.js",
+      "require": "./agents/format_scratchpad/openai_tools.cjs"
     },
     "./agents/format_scratchpad/log": {
       "types": "./agents/format_scratchpad/log.d.ts",
