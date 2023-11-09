@@ -1408,6 +1408,10 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     this.fallbacks = fields.fallbacks;
   }
 
+  get getRunnable() {
+    return this.runnable;
+  }
+
   *runnables() {
     yield this.runnable;
     for (const fallback of this.fallbacks) {

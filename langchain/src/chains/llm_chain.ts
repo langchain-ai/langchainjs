@@ -22,17 +22,19 @@ import {
   Callbacks,
 } from "../callbacks/manager.js";
 import { NoOpOutputParser } from "../output_parsers/noop.js";
-import { Runnable } from "../schema/runnable/base.js";
+import {
+  Runnable,
+  RunnableBinding,
+  RunnableWithFallbacks,
+} from "../schema/runnable/base.js";
+import { RunnableBranch } from "../schema/runnable/branch.js";
 
 type LLMType =
   | BaseLanguageModel
   | Runnable<BaseLanguageModelInput, string>
   | Runnable<BaseLanguageModelInput, BaseMessage>;
 
-type ExtractCallOptions<T> = T extends { CallOptions: infer CallOptions }
-  ? CallOptions
-  : any;
-
+type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
 /**
  * Interface for the input parameters of the LLMChain class.
  */
@@ -45,11 +47,29 @@ export interface LLMChainInput<
   /** LLM Wrapper to use */
   llm: Model;
   /** Kwargs to pass to LLM */
-  llmKwargs?: ExtractCallOptions<this["llm"]>;
+  llmKwargs?: CallOptionsIfAvailable<Model>;
   /** OutputParser to use */
   outputParser?: BaseLLMOutputParser<T>;
   /** Key to use for output, defaults to `text` */
   outputKey?: string;
+}
+
+function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
+  // eslint-disable-next-line no-instanceof/no-instanceof
+  if (llmLike instanceof BaseLanguageModel) {
+    return llmLike;
+    // eslint-disable-next-line no-instanceof/no-instanceof
+  } else if (llmLike instanceof RunnableBinding) {
+    return _getLanguageModel(llmLike.bound);
+    // eslint-disable-next-line no-instanceof/no-instanceof
+  } else if (llmLike instanceof RunnableWithFallbacks) {
+    return _getLanguageModel(llmLike.getRunnable);
+    // eslint-disable-next-line no-instanceof/no-instanceof
+  } else if (llmLike instanceof RunnableBranch) {
+    return _getLanguageModel(llmLike.default);
+  } else {
+    throw new Error("Unable to extract BaseLanguageModel from llmLie object.");
+  }
 }
 
 /**
@@ -82,7 +102,7 @@ export class LLMChain<
 
   llm: Model;
 
-  llmKwargs?: ExtractCallOptions<this["llm"]>;
+  llmKwargs?: CallOptionsIfAvailable<Model>;
 
   outputKey = "text";
 
@@ -154,7 +174,7 @@ export class LLMChain<
    * Wraps _call and handles memory.
    */
   call(
-    values: ChainValues & ExtractCallOptions<this["llm"]>,
+    values: ChainValues & CallOptionsIfAvailable<Model>,
     config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     return super.call(values, config);
@@ -162,12 +182,12 @@ export class LLMChain<
 
   /** @ignore */
   async _call(
-    values: ChainValues & ExtractCallOptions<this["llm"]>,
+    values: ChainValues & CallOptionsIfAvailable<Model>,
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const valuesForPrompt = { ...values };
     console.log("values for prompt", valuesForPrompt);
-    const valuesForLLM: ExtractCallOptions<this["llm"]> | undefined = this
+    const valuesForLLM: CallOptionsIfAvailable<Model> | undefined = this
       .llmKwargs
       ? {
           ...this.llmKwargs,
@@ -177,40 +197,36 @@ export class LLMChain<
     for (const key of callKeys) {
       if (key in values) {
         if (valuesForLLM) {
-          valuesForLLM[key as keyof ExtractCallOptions<this["llm"]>] =
+          valuesForLLM[key as keyof CallOptionsIfAvailable<Model>] =
             values[key];
           delete valuesForPrompt[key];
         }
       }
     }
     const promptValue = await this.prompt.formatPromptValue(valuesForPrompt);
-    let response;
-    if (Runnable.isRunnable(this.llm)) {
-      const modelWithParser = this.outputParser
-        ? this.llm.pipe(this.outputParser)
-        : this.llm;
-      response = await modelWithParser.invoke(
-        promptValue,
+    if ("generatePrompt" in this.llm) {
+      const { generations } = await this.llm.generatePrompt(
+        [promptValue],
+        valuesForLLM,
         runManager?.getChild()
       );
-      return response;
+      return {
+        [this.outputKey]: await this._getFinalOutput(
+          generations[0],
+          promptValue,
+          runManager
+        ),
+      };
     }
 
-    // verify the generatePrompt method exists on this.llm
-    if (!("generatePrompt" in this.llm)) {
-      throw new Error("llm must have generatePrompt method or be a Runnable");
-    }
-
-    const { generations } = await (
-      this.llm as BaseLanguageModel
-    ).generatePrompt([promptValue], valuesForLLM, runManager?.getChild());
-    return {
-      [this.outputKey]: await this._getFinalOutput(
-        generations[0],
-        promptValue,
-        runManager
-      ),
-    };
+    const modelWithParser = this.outputParser
+      ? this.llm.pipe(this.outputParser)
+      : this.llm;
+    const response = await modelWithParser.invoke(
+      promptValue,
+      runManager?.getChild()
+    );
+    return response;
   }
 
   /**
@@ -226,7 +242,7 @@ export class LLMChain<
    * ```
    */
   async predict(
-    values: ChainValues & ExtractCallOptions<this["llm"]>,
+    values: ChainValues & CallOptionsIfAvailable<Model>,
     callbackManager?: CallbackManager
   ): Promise<T> {
     const output = await this.call(values, callbackManager);
@@ -261,5 +277,9 @@ export class LLMChain<
       llm: serialize,
       prompt: this.prompt.serialize(),
     };
+  }
+
+  _getNumTokens(text: string): Promise<number> {
+    return _getLanguageModel(this.llm).getNumTokens(text);
   }
 }
