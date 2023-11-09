@@ -15,7 +15,7 @@ import { Serialized } from "../../load/serializable.js";
 
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
-type Role = "user" | "ai" | "system" | "function";
+type Role = "user" | "ai" | "system" | "function" | "tool";
 
 // Langchain Helpers
 // Input can be either a single message, an array of message, or an array of array of messages (batch requests)
@@ -27,6 +27,7 @@ const parseRole = (id: string[]): Role => {
   if (roleHint.includes("System")) return "system";
   if (roleHint.includes("AI")) return "ai";
   if (roleHint.includes("Function")) return "function";
+  if (roleHint.includes("Tool")) return "tool";
 
   return "ai";
 };
@@ -53,12 +54,10 @@ export const convertToLLMonitorMessages = (
       const obj = message.kwargs;
       const text = message.text ?? obj.content;
 
-      const functionCall = obj.additional_kwargs?.function_call;
-
       return {
         role,
         text,
-        functionCall,
+        ...(obj.additional_kwargs ?? {}),
       };
     } catch (e) {
       // if parsing fails, return the original message
