@@ -10,6 +10,7 @@ import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
 } from "langchain/agents/openai/output_parser";
+import { formatToOpenAITool } from "langchain/tools";
 
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",
@@ -38,7 +39,8 @@ const weatherTool = new DynamicStructuredTool({
   }),
 });
 
-const tools = [new Calculator(), weatherTool];
+// Convert to OpenAI tool format
+const tools = [new Calculator(), weatherTool].map(formatToOpenAITool);
 
 const modelWithTools = model.bind({ tools });
 

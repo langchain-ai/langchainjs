@@ -168,7 +168,7 @@ export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
 
   getFormatInstructions(): string {
     throw new Error(
-      "getFormatInstructions not implemented inside OpenAIFunctionsAgentOutputParser."
+      "getFormatInstructions not implemented inside OpenAIToolsAgentOutputParser."
     );
   }
 }
