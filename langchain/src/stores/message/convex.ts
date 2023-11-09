@@ -10,7 +10,7 @@ import {
   GenericDataModel,
   NamedTableInfo,
   TableNamesInDataModel,
-  VectorIndexNames,
+  IndexNames,
   makeFunctionReference,
 } from "convex/server";
 import { BaseMessage, BaseListChatMessageHistory } from "../../schema/index.js";
@@ -27,7 +27,7 @@ import {
 export type ConvexChatMessageHistoryInput<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends VectorIndexNames<
+  IndexName extends IndexNames<
     NamedTableInfo<DataModel, TableName>
   > = "bySessionId",
   SessionIdFieldName extends FieldPaths<
@@ -91,7 +91,7 @@ export class ConvexChatMessageHistory<
     NamedTableInfo<DataModel, TableName>
   > = "sessionId",
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends VectorIndexNames<
+  IndexName extends IndexNames<
     NamedTableInfo<DataModel, TableName>
   > = "bySessionId",
   MessageTextFieldName extends FieldPaths<

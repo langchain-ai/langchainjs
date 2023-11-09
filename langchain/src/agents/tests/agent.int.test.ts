@@ -102,6 +102,9 @@ test("Custom output parser", async () => {
 
   const parser = (output: AIMessage) => {
     const text = output.content;
+    if (typeof text !== "string") {
+      throw new Error("Cannot parse non-string output.");
+    }
     if (text.includes("Final Answer:")) {
       return {
         returnValues: {

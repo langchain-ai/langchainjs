@@ -484,6 +484,11 @@ export class ChatMinimax
       })
       ?.map((message) => {
         const sender_type = messageToMinimaxRole(message);
+        if (typeof message.content !== "string") {
+          throw new Error(
+            "ChatMinimax does not support non-string message content."
+          );
+        }
         return {
           sender_type,
           text: message.content,
@@ -719,6 +724,12 @@ export class ChatMinimax
         return;
       }
       const lastSystemMessage = systemMessages[systemMessages.length - 1];
+
+      if (typeof lastSystemMessage.content !== "string") {
+        throw new Error(
+          "ChatMinimax does not support non-string message content."
+        );
+      }
 
       //  setting the default botSetting.
       this.botSetting = [

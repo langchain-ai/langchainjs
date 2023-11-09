@@ -742,6 +742,9 @@ util/time.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
+experimental/openai_assistant.cjs
+experimental/openai_assistant.js
+experimental/openai_assistant.d.ts
 experimental/babyagi.cjs
 experimental/babyagi.js
 experimental/babyagi.d.ts

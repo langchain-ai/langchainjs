@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.181",
+  "version": "0.0.184",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -754,6 +754,9 @@
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
+    "experimental/openai_assistant.cjs",
+    "experimental/openai_assistant.js",
+    "experimental/openai_assistant.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
@@ -796,10 +799,11 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js && yarn conditional:api-docs",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
+    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js && yarn conditional:api-docs && node scripts/generate-docs-llm-compatibility-table",
     "conditional:api-docs": "bash scripts/build-api-refs.sh",
     "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
@@ -1361,7 +1365,7 @@
     "langchainhub": "~0.0.6",
     "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
-    "openai": "~4.4.0",
+    "openai": "^4.16.1",
     "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -2627,6 +2631,11 @@
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
       "require": "./experimental/autogpt.cjs"
+    },
+    "./experimental/openai_assistant": {
+      "types": "./experimental/openai_assistant.d.ts",
+      "import": "./experimental/openai_assistant.js",
+      "require": "./experimental/openai_assistant.cjs"
     },
     "./experimental/babyagi": {
       "types": "./experimental/babyagi.d.ts",
