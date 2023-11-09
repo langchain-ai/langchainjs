@@ -22,6 +22,12 @@ export interface PGVectorStoreArgs {
   };
   filter?: Metadata;
   verbose?: boolean;
+  /**
+   * The amount of documents to chunk by when
+   * adding vectors.
+   * @default 500
+   */
+  chunkSize?: number;
 }
 
 /**
@@ -51,6 +57,8 @@ export class PGVectorStore extends VectorStore {
 
   client?: PoolClient;
 
+  chunkSize = 500;
+
   _vectorstoreType(): string {
     return "pgvector";
   }
@@ -67,6 +75,7 @@ export class PGVectorStore extends VectorStore {
 
     const pool = new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
+    this.chunkSize = config.chunkSize ?? 500;
 
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
@@ -132,12 +141,9 @@ export class PGVectorStore extends VectorStore {
    * @param chunkIndex - The starting index for generating query placeholders based on chunk positioning.
    * @returns The complete SQL INSERT INTO query string.
    */
-  private buildInsertQuery(
-    rows: (string | Record<string, unknown>)[][],
-    chunkIndex: number
-  ) {
+  private buildInsertQuery(rows: (string | Record<string, unknown>)[][]) {
     const valuesPlaceholders = rows
-      .map((_, j) => this.generatePlaceholderForRowAt(chunkIndex + j))
+      .map((_, j) => this.generatePlaceholderForRowAt(j))
       .join(", ");
 
     const text = `
@@ -169,13 +175,10 @@ export class PGVectorStore extends VectorStore {
       ];
     });
 
-    const chunkSize = 500;
-
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize);
-      const insertQuery = this.buildInsertQuery(chunk, i);
+    for (let i = 0; i < rows.length; i += this.chunkSize) {
+      const chunk = rows.slice(i, i + this.chunkSize);
+      const insertQuery = this.buildInsertQuery(chunk);
       const flatValues = chunk.flat();
-
       try {
         await this.pool.query(insertQuery, flatValues);
       } catch (e) {
@@ -206,7 +209,7 @@ export class PGVectorStore extends VectorStore {
     const queryString = `
       SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
       FROM ${this.tableName}
-      WHERE ${this.metadataColumnName} @> $2
+      WHERE ${this.metadataColumnName}::jsonb @> $2
       ORDER BY "_distance" ASC
       LIMIT $3;`;
 
@@ -303,7 +306,7 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when all clients are closed and the pool is terminated.
    */
   async end(): Promise<void> {
-    await this.client?.release();
+    this.client?.release();
     return this.pool.end();
   }
 }

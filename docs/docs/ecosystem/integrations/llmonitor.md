@@ -4,7 +4,7 @@ This page covers how to use [LLMonitor](https://llmonitor.com?utm_source=langcha
 
 ## What is LLMonitor?
 
-LLMonitor is an [open-source](https://github.com/llmonitor/llmonitor) observability and analytics platform that provides agent tracing, cost & usage analytics, user tracking and more.
+LLMonitor is an [open-source](https://github.com/llmonitor/llmonitor) observability and analytics platform that provides tracing, analytics, feedback tracking and more for conversational AI.
 
 <video controls width='100%' >
   <source src='https://llmonitor.com/videos/demo-annotated.mp4'/>
@@ -12,7 +12,7 @@ LLMonitor is an [open-source](https://github.com/llmonitor/llmonitor) observabil
 
 ## Installation
 
-You need to install the llmonitor package in your project:
+Start by installing the llmonitor package in your project:
 
 ```bash
 npm install llmonitor
@@ -76,9 +76,44 @@ const result = await executor.run(
   "What is the approximate result of 78 to the power of 5?",
   {
     callbacks: [new LLMonitorHandler()],
-    metadata: { agentName: "SuperCalculator" }, // Give a name to your agent to track it in the dashboard
+    metadata: { agentName: "SuperCalculator" },
   }
 );
+```
+
+## Tracking users
+
+You can track users by adding `userId` and `userProps` to the metadata of your calls:
+
+```ts
+const result = await executor.run(
+  "What is the approximate result of 78 to the power of 5?",
+  {
+    callbacks: [new LLMonitorHandler()],
+    metadata: {
+      agentName: "SuperCalculator",
+      userId: "user123",
+      userProps: {
+        name: "John Doe",
+        email: "email@example.org",
+      },
+    },
+  }
+);
+```
+
+## Tagging calls
+
+You can tag calls with `tags`:
+
+```ts
+const model = new ChatOpenAI({
+  callbacks: [new LLMonitorHandler()],
+});
+
+await model.call("Hello", {
+  tags: ["greeting"],
+});
 ```
 
 ## Usage with custom agents

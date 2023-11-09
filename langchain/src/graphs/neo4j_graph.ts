@@ -1,4 +1,4 @@
-import neo4j from "neo4j-driver";
+import neo4j, { Neo4jError } from "neo4j-driver";
 
 interface Neo4jGraphConfig {
   url: string;
@@ -7,6 +7,20 @@ interface Neo4jGraphConfig {
   database?: string;
 }
 
+/**
+ * @security *Security note*: Make sure that the database connection uses credentials
+ * that are narrowly-scoped to only include necessary permissions.
+ * Failure to do so may result in data corruption or loss, since the calling
+ * code may attempt commands that would result in deletion, mutation
+ * of data if appropriately prompted or reading sensitive data if such
+ * data is present in the database.
+ * The best way to guard against such negative outcomes is to (as appropriate)
+ * limit the permissions granted to the credentials used with this tool.
+ * For example, creating read only users for the database is a good way to
+ * ensure that the calling code cannot mutate or delete data.
+ *
+ * @link See https://js.langchain.com/docs/security for more information.
+ */
 export class Neo4jGraph {
   private driver: neo4j.Driver;
 
@@ -44,7 +58,13 @@ export class Neo4jGraph {
       await graph.refreshSchema();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      throw new Error(`Error: ${error.message}`);
+      const message = [
+        "Could not use APOC procedures.",
+        "Please ensure the APOC plugin is installed in Neo4j and that",
+        "'apoc.meta.data()' is allowed in Neo4j configuration",
+      ].join("\n");
+
+      throw new Error(message);
     } finally {
       console.log("Schema refreshed successfully.");
     }
@@ -63,8 +83,15 @@ export class Neo4jGraph {
         database: this.database,
       });
       return toObjects(result.records);
-    } catch (error) {
-      // ignore errors
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (
+        // eslint-disable-next-line
+        error instanceof Neo4jError &&
+        error.code === "Neo.ClientError.Procedure.ProcedureNotFound"
+      ) {
+        throw new Error("Procedure not found in Neo4j.");
+      }
     }
     return undefined;
   }

@@ -1,9 +1,12 @@
-import { ChatBedrock } from "langchain/chat_models/bedrock";
+import { BedrockChat } from "langchain/chat_models/bedrock";
+// Or, from web environments:
+// import { BedrockChat } from "langchain/chat_models/bedrock/web";
+
 import { HumanMessage } from "langchain/schema";
 
 // If no credentials are provided, the default credentials from
 // @aws-sdk/credential-provider-node will be used.
-const model = new ChatBedrock({
+const model = new BedrockChat({
   model: "anthropic.claude-v2",
   region: "us-east-1",
   // endpointUrl: "custom.amazonaws.com",

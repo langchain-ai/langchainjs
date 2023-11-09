@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 
 import { Document } from "../document.js";
-import { VectorStore } from "../vectorstores/base.js";
+import { VectorStore, VectorStoreRetriever } from "../vectorstores/base.js";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,
@@ -15,6 +15,11 @@ import {
 export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
   childSplitter: TextSplitter;
   parentSplitter?: TextSplitter;
+  /**
+   * A custom retriever to use when retrieving instead of
+   * the `.similaritySearch` method of the vectorstore.
+   */
+  childDocumentRetriever?: VectorStoreRetriever<VectorStore>;
 };
 
 /**
@@ -45,6 +50,8 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   protected parentK?: number;
 
+  childDocumentRetriever: VectorStoreRetriever<VectorStore> | undefined;
+
   constructor(fields: ParentDocumentRetrieverFields) {
     super(fields);
     this.vectorstore = fields.vectorstore;
@@ -54,10 +61,18 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     this.idKey = fields.idKey ?? this.idKey;
     this.childK = fields.childK;
     this.parentK = fields.parentK;
+    this.childDocumentRetriever = fields.childDocumentRetriever;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
-    const subDocs = await this.vectorstore.similaritySearch(query, this.childK);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let subDocs: Document<Record<string, any>>[] = [];
+    if (this.childDocumentRetriever) {
+      subDocs = await this.childDocumentRetriever.getRelevantDocuments(query);
+    } else {
+      subDocs = await this.vectorstore.similaritySearch(query, this.childK);
+    }
+
     // Maintain order
     const parentDocIds: string[] = [];
     for (const doc of subDocs) {
@@ -76,6 +91,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
 
   /**
    * Adds documents to the docstore and vectorstores.
+   * If a retriever is provided, it will be used to add documents instead of the vectorstore.
    * @param docs The documents to add
    * @param config.ids Optional list of ids for documents. If provided should be the same
    *   length as the list of documents. Can provided if parent documents
@@ -129,7 +145,11 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
       embeddedDocs.push(...taggedSubDocs);
       fullDocs[parentDocId] = parentDoc;
     }
-    await this.vectorstore.addDocuments(embeddedDocs);
+    if (this.childDocumentRetriever) {
+      await this.childDocumentRetriever.addDocuments(embeddedDocs);
+    } else {
+      await this.vectorstore.addDocuments(embeddedDocs);
+    }
     if (addToDocstore) {
       await this.docstore.mset(Object.entries(fullDocs));
     }

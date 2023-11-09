@@ -1,3 +1,7 @@
+---
+sidebar_position: 0
+---
+
 import CodeBlock from "@theme/CodeBlock";
 
 # Interface
@@ -9,9 +13,26 @@ This is a standard interface with a few different methods, which make it easy to
 - `invoke`: call the chain on an input
 - `batch`: call the chain on a list of inputs
 
-The type of the input varies by component. For a prompt it is an object, for a retriever it is a single string, for a model either a single string, a list of chat messages, or a PromptValue.
+The **input type** varies by component :
 
-The output type also varies by component. For an LLM it is a string, for a ChatModel it's a ChatMessage, for a prompt it's a PromptValue, and for a retriever it's a list of documents.
+| Component      | Input Type                                          |
+| -------------- | --------------------------------------------------- |
+| Prompt         | Object                                              |
+| Retriever      | Single string                                       |
+| LLM, ChatModel | Single string, list of chat messages or PromptValue |
+| Tool           | Single string, or object, depending on the tool     |
+| OutputParser   | The output of an LLM or ChatModel                   |
+
+The **output type** also varies by component :
+
+| Component    | Output Type           |
+| ------------ | --------------------- |
+| LLM          | String                |
+| ChatModel    | ChatMessage           |
+| Prompt       | PromptValue           |
+| Retriever    | List of documents     |
+| Tool         | Depends on the tool   |
+| OutputParser | Depends on the parser |
 
 You can combine runnables (and runnable-like objects such as functions and objects whose values are all functions) into sequences in two ways:
 

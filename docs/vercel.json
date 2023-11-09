@@ -351,6 +351,54 @@
     {
       "source": "/docs/guides/expression_language/interface(/?)",
       "destination": "/docs/expression_language/interface/"
+    },
+    {
+      "source": "/docs/additional_resources/scrimba(/?)",
+      "destination": "/docs/additional_resources/tutorials/"
+    },
+    {
+      "source": "/docs/additional_resources/expression_language_cheatsheet(/?)",
+      "destination": "/docs/additional_resources/tutorials/"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms/integrations(/.*)?",
+      "destination": "/docs/integrations/llms$1"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat/integrations(/.*)?",
+      "destination": "/docs/integrations/chat$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations(/.*)?",
+      "destination": "/docs/integrations/document_loaders$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/integrations(/.*)?",
+      "destination": "/docs/integrations/document_transformers$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/text_embedding/integrations(/.*)?",
+      "destination": "/docs/integrations/text_embedding$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations(/.*)?",
+      "destination": "/docs/integrations/vectorstores$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/integrations(/.*)?",
+      "destination": "/docs/integrations/retrievers$1"
+    },
+    {
+      "source": "/docs/modules/memory/integrations(/.*)?",
+      "destination": "/docs/integrations/chat_memory$1"
+    },
+    {
+      "source": "/docs/modules/agents/tools/integrations(/.*)?",
+      "destination": "/docs/integrations/tools$1"
+    },
+    {
+      "source": "/docs/modules/agents/toolkits(/.*)?",
+      "destination": "/docs/integrations/toolkits$1"
     }
   ]
 }

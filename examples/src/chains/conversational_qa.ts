@@ -5,8 +5,8 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
-import { Document } from "langchain/document";
 import { StringOutputParser } from "langchain/schema/output_parser";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 /* Initialize the LLM to use to answer the question */
 const model = new ChatOpenAI({});
@@ -18,9 +18,6 @@ const docs = await textSplitter.createDocuments([text]);
 /* Create the vectorstore */
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 const retriever = vectorStore.asRetriever();
-
-const serializeDocs = (docs: Array<Document>) =>
-  docs.map((doc) => doc.pageContent).join("\n\n");
 
 const formatChatHistory = (
   human: string,
@@ -62,7 +59,7 @@ const chain = RunnableSequence.from([
       input.chatHistory ?? "",
     context: async (input: { question: string; chatHistory?: string }) => {
       const relevantDocs = await retriever.getRelevantDocuments(input.question);
-      const serialized = serializeDocs(relevantDocs);
+      const serialized = formatDocumentsAsString(relevantDocs);
       return serialized;
     },
   },

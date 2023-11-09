@@ -1,5 +1,9 @@
 import { BaseChain, ChainInputs } from "../chains/base.js";
-import { BaseMultiActionAgent, BaseSingleActionAgent } from "./agent.js";
+import {
+  BaseMultiActionAgent,
+  BaseSingleActionAgent,
+  RunnableAgent,
+} from "./agent.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import {
@@ -10,7 +14,16 @@ import {
 } from "../schema/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { OutputParserException } from "../schema/output_parser.js";
-import { Tool, ToolInputParsingException } from "../tools/base.js";
+import {
+  StructuredTool,
+  Tool,
+  ToolInputParsingException,
+} from "../tools/base.js";
+import { Runnable } from "../schema/runnable/base.js";
+
+type ExtractToolType<T> = T extends { ToolType: infer Tool }
+  ? Tool
+  : StructuredTool;
 
 /**
  * Interface defining the structure of input data for creating an
@@ -18,8 +31,14 @@ import { Tool, ToolInputParsingException } from "../tools/base.js";
  * properties specific to agent execution.
  */
 export interface AgentExecutorInput extends ChainInputs {
-  agent: BaseSingleActionAgent | BaseMultiActionAgent;
-  tools: this["agent"]["ToolType"][];
+  agent:
+    | BaseSingleActionAgent
+    | BaseMultiActionAgent
+    | Runnable<
+        ChainValues & { steps?: AgentStep[] },
+        AgentAction[] | AgentAction | AgentFinish
+      >;
+  tools: ExtractToolType<this["agent"]>[];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
@@ -28,6 +47,9 @@ export interface AgentExecutorInput extends ChainInputs {
     | string
     | ((e: OutputParserException | ToolInputParsingException) => string);
 }
+
+// TODO: Type properly with { intermediateSteps?: AgentStep[] };
+export type AgentExecutorOutput = ChainValues;
 
 /**
  * Tool that just returns the query.
@@ -47,7 +69,7 @@ export class ExceptionTool extends Tool {
  * A chain managing an agent using tools.
  * @augments BaseChain
  */
-export class AgentExecutor extends BaseChain {
+export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   static lc_name() {
     return "AgentExecutor";
   }
@@ -91,8 +113,15 @@ export class AgentExecutor extends BaseChain {
   }
 
   constructor(input: AgentExecutorInput) {
+    let agent: BaseSingleActionAgent | BaseMultiActionAgent;
+    if (Runnable.isRunnable(input.agent)) {
+      agent = new RunnableAgent({ runnable: input.agent });
+    } else {
+      agent = input.agent;
+    }
+
     super(input);
-    this.agent = input.agent;
+    this.agent = agent;
     this.tools = input.tools;
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;
@@ -131,14 +160,16 @@ export class AgentExecutor extends BaseChain {
   async _call(
     inputs: ChainValues,
     runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues> {
+  ): Promise<AgentExecutorOutput> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
     );
     const steps: AgentStep[] = [];
     let iterations = 0;
 
-    const getOutput = async (finishStep: AgentFinish) => {
+    const getOutput = async (
+      finishStep: AgentFinish
+    ): Promise<AgentExecutorOutput> => {
       const { returnValues } = finishStep;
       const additional = await this.agent.prepareForOutput(returnValues, steps);
 

@@ -1,7 +1,13 @@
 import { LLMChain } from "../chains/llm_chain.js";
 import { SerializedLLMChain } from "../chains/serde.js";
-import { AgentAction, AgentFinish } from "../schema/index.js";
+import {
+  AgentAction,
+  AgentFinish,
+  BaseMessage,
+  ChainValues,
+} from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
+import { Runnable } from "../schema/runnable/base.js";
 
 /**
  * Interface defining the input for creating an agent. It includes the
@@ -12,6 +18,21 @@ export interface AgentInput {
   llmChain: LLMChain;
   outputParser: AgentActionOutputParser | undefined;
   allowedTools?: string[];
+}
+
+/**
+ * Interface defining the input for creating an agent that uses runnables.
+ * It includes the Runnable instance, and an optional list of stop strings.
+ */
+export interface RunnableAgentInput {
+  runnable: Runnable<
+    ChainValues & {
+      agent_scratchpad?: string | BaseMessage[];
+      stop?: string[];
+    },
+    AgentAction[] | AgentAction | AgentFinish
+  >;
+  stop?: string[];
 }
 
 /**

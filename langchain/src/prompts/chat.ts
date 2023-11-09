@@ -23,7 +23,7 @@ import {
   BaseStringPromptTemplate,
   TypedPromptInputValues,
 } from "./base.js";
-import { PromptTemplate } from "./prompt.js";
+import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -463,14 +463,14 @@ function _coerceMessagePromptTemplateLike(
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content);
+    return HumanMessagePromptTemplate.fromTemplate(message.content as string);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content);
+    return AIMessagePromptTemplate.fromTemplate(message.content as string);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content);
+    return SystemMessagePromptTemplate.fromTemplate(message.content as string);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
-      message.content,
+      message.content as string,
       message.role
     );
   } else {
@@ -612,6 +612,22 @@ export class ChatPromptTemplate<
         Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>
       >
     >(promptDict);
+  }
+
+  /**
+   * Load prompt template from a template f-string
+   */
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(template: T) {
+    const prompt = PromptTemplate.fromTemplate(template);
+    const humanTemplate = new HumanMessagePromptTemplate({ prompt });
+    return this.fromMessages<
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
+    >([humanTemplate]);
   }
 
   /**

@@ -1,5 +1,13 @@
 export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
-export { BaseMemory, getInputValue, getBufferString } from "./base.js";
+export {
+  BaseMemory,
+  getInputValue,
+  getOutputValue,
+  getBufferString,
+  type InputValues,
+  type OutputValues,
+  type MemoryVariables,
+} from "./base.js";
 export {
   ConversationSummaryMemory,
   type ConversationSummaryMemoryInput,
