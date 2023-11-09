@@ -3,6 +3,7 @@ const load_serializable = require("langchain/load/serializable");
 const agents = require("langchain/agents");
 const agents_toolkits = require("langchain/agents/toolkits");
 const agents_format_scratchpad = require("langchain/agents/format_scratchpad");
+const agents_format_scratchpad_openai_tools = require("langchain/agents/format_scratchpad/openai_tools");
 const agents_format_scratchpad_log = require("langchain/agents/format_scratchpad/log");
 const agents_format_scratchpad_xml = require("langchain/agents/format_scratchpad/xml");
 const agents_format_scratchpad_log_to_message = require("langchain/agents/format_scratchpad/log_to_message");
