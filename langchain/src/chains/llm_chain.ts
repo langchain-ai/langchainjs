@@ -68,7 +68,7 @@ function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
   } else if (llmLike instanceof RunnableBranch) {
     return _getLanguageModel(llmLike.default);
   } else {
-    throw new Error("Unable to extract BaseLanguageModel from llmLie object.");
+    throw new Error("Unable to extract BaseLanguageModel from llmLike object.");
   }
 }
 
@@ -186,7 +186,6 @@ export class LLMChain<
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const valuesForPrompt = { ...values };
-    console.log("values for prompt", valuesForPrompt);
     const valuesForLLM: CallOptionsIfAvailable<Model> | undefined = this
       .llmKwargs
       ? {
