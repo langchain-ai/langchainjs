@@ -1,4 +1,4 @@
-import hash from "object-hash";
+import { insecureHash } from "../util/js-sha1/hash.js";
 
 import { BaseStore } from "../schema/storage.js";
 import { EncoderBackedStore } from "../storage/encoder_backed.js";
@@ -112,7 +112,7 @@ export class CacheBackedEmbeddings extends Embeddings {
       Uint8Array
     >({
       store: documentEmbeddingStore,
-      keyEncoder: (key) => (options?.namespace ?? "") + hash(key),
+      keyEncoder: (key) => (options?.namespace ?? "") + insecureHash(key),
       valueSerializer: (value) => encoder.encode(JSON.stringify(value)),
       valueDeserializer: (serializedValue) =>
         JSON.parse(decoder.decode(serializedValue)),

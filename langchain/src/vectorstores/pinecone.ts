@@ -27,11 +27,12 @@ export interface PineconeLibArgs extends AsyncCallerParams {
 
 /**
  * Type that defines the parameters for the delete operation in the
- * PineconeStore class. It includes ids, deleteAll flag, and namespace.
+ * PineconeStore class. It includes ids, filter, deleteAll flag, and namespace.
  */
 export type PineconeDeleteParams = {
   ids?: string[];
   deleteAll?: boolean;
+  filter?: object;
   namespace?: string;
 };
 
@@ -161,7 +162,7 @@ export class PineconeStore extends VectorStore {
    * @returns Promise that resolves when the delete operation is complete.
    */
   async delete(params: PineconeDeleteParams): Promise<void> {
-    const { deleteAll, ids } = params;
+    const { deleteAll, ids, filter } = params;
     const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
 
     if (deleteAll) {
@@ -172,6 +173,8 @@ export class PineconeStore extends VectorStore {
         const batchIds = ids.slice(i, i + batchSize);
         await namespace.deleteMany(batchIds);
       }
+    } else if (filter) {
+      await namespace.deleteMany(filter);
     } else {
       throw new Error("Either ids or delete_all must be provided.");
     }

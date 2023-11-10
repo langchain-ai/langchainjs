@@ -1,5 +1,4 @@
 import { SignatureV4 } from "@smithy/signature-v4";
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { HttpRequest } from "@smithy/protocol-http";
 import { EventStreamCodec } from "@smithy/eventstream-codec";
 import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
@@ -9,17 +8,18 @@ import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
-} from "../util/bedrock.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { SimpleChatModel, BaseChatModelParams } from "./base.js";
-import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+} from "../../util/bedrock.js";
+import { getEnvironmentVariable } from "../../util/env.js";
+import { SimpleChatModel, BaseChatModelParams } from "../base.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessageChunk,
   BaseMessage,
   AIMessage,
   ChatGenerationChunk,
   ChatMessage,
-} from "../schema/index.js";
+} from "../../schema/index.js";
+import { SerializedFields } from "../../load/map_keys.js";
 
 function convertOneMessageToText(
   message: BaseMessage,
@@ -86,7 +86,7 @@ export function convertMessagesToPrompt(
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
  */
-export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
+export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";
 
   region: string;
@@ -101,6 +101,7 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
 
   endpointHost?: string;
 
+  /** @deprecated */
   stopSequences?: string[];
 
   modelKwargs?: Record<string, unknown>;
@@ -109,8 +110,24 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
 
   streaming = false;
 
+  lc_serializable = true;
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_id",
+      region: "region_name",
+    };
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
-    return {};
+    return {
+      "credentials.accessKeyId": "BEDROCK_AWS_ACCESS_KEY_ID",
+      "credentials.secretAccessKey": "BEDROCK_AWS_SECRET_ACCESS_KEY",
+    };
+  }
+
+  get lc_attributes(): SerializedFields | undefined {
+    return { region: this.region };
   }
 
   _llmType() {
@@ -118,14 +135,14 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
   }
 
   static lc_name() {
-    return "ChatBedrock";
+    return "BedrockChat";
   }
 
   constructor(fields?: Partial<BaseBedrockInput> & BaseChatModelParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
@@ -139,7 +156,15 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
       );
     }
     this.region = region;
-    this.credentials = fields?.credentials ?? defaultProvider();
+
+    const credentials = fields?.credentials;
+    if (!credentials) {
+      throw new Error(
+        "Please set the AWS credentials in the 'credentials' field."
+      );
+    }
+    this.credentials = credentials;
+
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.fetchFn = fields?.fetchFn ?? fetch;
@@ -178,7 +203,13 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
           finalResult = finalResult.concat(chunk);
         }
       }
-      return finalResult?.message.content ?? "";
+      const messageContent = finalResult?.message.content;
+      if (messageContent && typeof messageContent !== "string") {
+        throw new Error(
+          "Non-string output for ChatBedrock is currently not supported."
+        );
+      }
+      return messageContent ?? "";
     }
 
     const response = await this._signedFetch(messages, options, {
@@ -211,8 +242,9 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
       convertMessagesToPromptAnthropic(messages),
       this.maxTokens,
       this.temperature,
-      this.stopSequences,
-      this.modelKwargs
+      options.stop ?? this.stopSequences,
+      this.modelKwargs,
+      fields.bedrockMethod
     );
 
     const url = new URL(
@@ -268,7 +300,9 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
 
     const bedrockMethod =
-      provider === "anthropic" ? "invoke-with-response-stream" : "invoke";
+      provider === "anthropic" || provider === "cohere"
+        ? "invoke-with-response-stream"
+        : "invoke";
 
     const response = await this._signedFetch(messages, options, {
       bedrockMethod,
@@ -284,7 +318,7 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
       );
     }
 
-    if (provider === "anthropic") {
+    if (provider === "anthropic" || provider === "cohere") {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
@@ -302,7 +336,9 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
         }
         if (body.bytes !== undefined) {
           const chunkResult = JSON.parse(
-            Buffer.from(body.bytes, "base64").toString()
+            decoder.decode(
+              Uint8Array.from(atob(body.bytes), (m) => m.codePointAt(0) ?? 0)
+            )
           );
           const text = BedrockLLMInputOutputAdapter.prepareOutput(
             provider,
@@ -345,3 +381,8 @@ export class ChatBedrock extends SimpleChatModel implements BaseBedrockInput {
     return {};
   }
 }
+
+/**
+ * @deprecated Use `BedrockChat` instead.
+ */
+export const ChatBedrock = BedrockChat;

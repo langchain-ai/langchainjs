@@ -179,6 +179,11 @@ export class ChatCloudflareWorkersAI
         );
         role = "user";
       }
+      if (typeof message.content !== "string") {
+        throw new Error(
+          "ChatCloudflareWorkersAI currently does not support non-string message content."
+        );
+      }
       return {
         role,
         content: message.content,
@@ -209,7 +214,13 @@ export class ChatCloudflareWorkersAI
           finalResult = finalResult.concat(chunk);
         }
       }
-      return finalResult?.message?.content ?? "";
+      const messageContent = finalResult?.message.content;
+      if (messageContent && typeof messageContent !== "string") {
+        throw new Error(
+          "Non-string output for ChatCloudflareWorkersAI is currently not supported."
+        );
+      }
+      return messageContent ?? "";
     }
   }
 }
