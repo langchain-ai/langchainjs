@@ -450,7 +450,7 @@ export class ChatOpenAI<
 
       const { delta } = choice;
       const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
-      defaultRole = delta.role ?? defaultRole;
+      defaultRole = delta?.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,
