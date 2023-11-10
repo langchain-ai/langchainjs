@@ -3,6 +3,7 @@ import * as load_serializable from "langchain/load/serializable";
 import * as agents from "langchain/agents";
 import * as agents_toolkits from "langchain/agents/toolkits";
 import * as agents_format_scratchpad from "langchain/agents/format_scratchpad";
+import * as agents_format_scratchpad_openai_tools from "langchain/agents/format_scratchpad/openai_tools";
 import * as agents_format_scratchpad_log from "langchain/agents/format_scratchpad/log";
 import * as agents_format_scratchpad_xml from "langchain/agents/format_scratchpad/xml";
 import * as agents_format_scratchpad_log_to_message from "langchain/agents/format_scratchpad/log_to_message";

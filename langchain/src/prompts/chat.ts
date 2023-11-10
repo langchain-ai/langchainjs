@@ -559,17 +559,51 @@ export class ChatPromptTemplate<
     return "chat";
   }
 
+  private async _parseImagePrompts(
+    message: BaseMessage,
+    inputValues: InputValues<
+      PartialVariableName | Extract<keyof RunInput, string>
+    >
+  ): Promise<BaseMessage> {
+    if (typeof message.content === "string") {
+      return message;
+    }
+    const formattedMessageContent = await Promise.all(
+      message.content.map(async (item) => {
+        if (
+          item.type !== "image_url" ||
+          typeof item.image_url === "string" ||
+          !item.image_url?.url
+        ) {
+          return item;
+        }
+        const imageUrl = item.image_url.url;
+        const promptTemplatePlaceholder = PromptTemplate.fromTemplate(imageUrl);
+        const formattedUrl = await promptTemplatePlaceholder.format(
+          inputValues
+        );
+        // eslint-disable-next-line no-param-reassign
+        item.image_url.url = formattedUrl;
+        return item;
+      })
+    );
+    // eslint-disable-next-line no-param-reassign
+    message.content = formattedMessageContent;
+    return message;
+  }
+
   async formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
-
     let resultMessages: BaseMessage[] = [];
 
     for (const promptMessage of this.promptMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (promptMessage instanceof BaseMessage) {
-        resultMessages.push(promptMessage);
+        resultMessages.push(
+          await this._parseImagePrompts(promptMessage, allValues)
+        );
       } else {
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {

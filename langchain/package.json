@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.184",
+  "version": "0.0.185",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -34,6 +34,9 @@
     "agents/format_scratchpad.cjs",
     "agents/format_scratchpad.js",
     "agents/format_scratchpad.d.ts",
+    "agents/format_scratchpad/openai_tools.cjs",
+    "agents/format_scratchpad/openai_tools.js",
+    "agents/format_scratchpad/openai_tools.d.ts",
     "agents/format_scratchpad/log.cjs",
     "agents/format_scratchpad/log.js",
     "agents/format_scratchpad/log.d.ts",
@@ -839,8 +842,8 @@
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.44.1",
-    "@gomomento/sdk-core": "^1.44.1",
+    "@gomomento/sdk": "^1.47.1",
+    "@gomomento/sdk-core": "^1.47.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^2.6.4",
@@ -975,9 +978,9 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.44.1",
-    "@gomomento/sdk-core": "^1.44.1",
-    "@gomomento/sdk-web": "^1.44.1",
+    "@gomomento/sdk": "^1.47.1",
+    "@gomomento/sdk-core": "^1.47.1",
+    "@gomomento/sdk-web": "^1.47.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^2.6.4",
@@ -1365,7 +1368,7 @@
     "langchainhub": "~0.0.6",
     "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
-    "openai": "^4.16.1",
+    "openai": "^4.17.0",
     "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -1431,6 +1434,11 @@
       "types": "./agents/format_scratchpad.d.ts",
       "import": "./agents/format_scratchpad.js",
       "require": "./agents/format_scratchpad.cjs"
+    },
+    "./agents/format_scratchpad/openai_tools": {
+      "types": "./agents/format_scratchpad/openai_tools.d.ts",
+      "import": "./agents/format_scratchpad/openai_tools.js",
+      "require": "./agents/format_scratchpad/openai_tools.cjs"
     },
     "./agents/format_scratchpad/log": {
       "types": "./agents/format_scratchpad/log.d.ts",

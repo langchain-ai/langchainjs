@@ -5,7 +5,7 @@ sidebar_position: 0
 
 # OpenAI functions
 
-Certain OpenAI models (like `gpt-3.5-turbo` and `gpt-4`) have been fine-tuned to detect when a function should to be called and respond with the inputs that should be passed to the function.
+Certain OpenAI models (like `gpt-3.5-turbo` and `gpt-4`) have been fine-tuned to detect when a function should be called and respond with the inputs that should be passed to the function.
 In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call those functions.
 The goal of the OpenAI Function APIs is to more reliably return valid and useful function calls than a generic text completion or chat API.
 
@@ -22,7 +22,7 @@ Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/
 
 # With LCEL
 
-In this example we'll use LCEL to construct a highly customizable agent that is given two tools: search and calculator.
+In this example we'll use LCEL to construct a customizable agent that is given two tools: search and calculator.
 We'll then pull in a prompt template from the [LangChainHub](https://smith.langchain.com/hub) and pass that to our runnable agent.
 Lastly we'll use the default OpenAI functions output parser `OpenAIFunctionsAgentOutputParser`.
 This output parser contains a method `parseAIMessage` which when provided with a message, either returns an instance of `FunctionsAgentAction` if there is another action to be taken my the agent, or `AgentFinish` if the agent has completed its objective.
