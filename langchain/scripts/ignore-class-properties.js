@@ -12,7 +12,7 @@ async function processIgnoredClassProperties(filePath) {
   let previousLine = "";
 
   for (const line of lines) {
-    const asyncMethodRegex = /^\s{2}(static\s+|get\s+|abstract\s+|async\s+\*?|)(lc_|_)/;
+    const asyncMethodRegex = /^\s{2}(static\s+|get\s+|async\s+\*?|)(lc_|_)/;
     if (!previousLine.includes("@ignore") && asyncMethodRegex.test(line)) {
       if (previousLine.includes("*/")) {
         // Removes the `*/` from the previous line, replacing it
