@@ -463,7 +463,7 @@ export class ChatOpenAI<
       }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
-        text: chunk.content,
+        text: chunk?.content,
         generationInfo: newTokenIndices,
       });
       yield generationChunk;
