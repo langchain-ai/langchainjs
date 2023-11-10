@@ -1,6 +1,6 @@
-import { getEnvironmentVariable } from "../../util/env.js";
-import { Tool } from "../base.js";
 import { google } from "googleapis";
+import { Tool } from "../base.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 export interface GmailBaseToolParams {
   credentials?: {
@@ -11,10 +11,14 @@ export interface GmailBaseToolParams {
 }
 
 export abstract class GmailBaseTool extends Tool {
-  name: string = "Gmail";
-  description: string = "A tool to send and view emails through Gmail";
+  name = "Gmail";
+
+  description = "A tool to send and view emails through Gmail";
+
   protected clientEmail: string;
+
   protected privateKey: string;
+
   protected scopes: string[];
 
   constructor(

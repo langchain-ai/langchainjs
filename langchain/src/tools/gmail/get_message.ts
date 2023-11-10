@@ -1,10 +1,10 @@
 import { google } from "googleapis";
 import { CallbackManagerForToolRun } from "../../callbacks/manager.js";
-import { GmailBaseToolParams } from "./base.js";
-import { GmailBaseTool } from "./base.js";
+import { GmailBaseToolParams, GmailBaseTool } from "./base.js";
 
 export class GmailGetMessage extends GmailBaseTool {
   name = "gmail_get_message";
+
   description = "Get a message from Gmail";
 
   constructor(fields: GmailBaseToolParams) {
