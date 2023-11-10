@@ -123,8 +123,6 @@ const parseExtraAndName = (
     ...(metadata || {}),
   };
 
-  console.log(llm, extraParams);
-
   const { model, model_name, modelName, model_id, userId, userProps, ...rest } =
     params;
 
@@ -222,8 +220,6 @@ export class LLMonitorHandler
       extraParams,
       metadata
     );
-
-    console.log({ name, extra, userId, userProps });
 
     await this.monitor.trackEvent("llm", "start", {
       runId,
