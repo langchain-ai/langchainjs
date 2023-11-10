@@ -7,6 +7,7 @@ import {
   TaskCallOptions,
 } from "apify-client";
 
+import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
 import { getEnvironmentVariable } from "../../util/env.js";
@@ -16,7 +17,15 @@ import { getEnvironmentVariable } from "../../util/env.js";
  * dataset item) and converts it to an instance of the Document class.
  */
 export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
-  (item: Record<string | number, unknown>) => Document<Metadata>;
+  (
+    item: Record<string | number, unknown>
+  ) => Document<Metadata> | Promise<Document<Metadata>>;
+
+export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
+  extends AsyncCallerParams {
+  datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
+  clientOptions?: ApifyClientOptions;
+}
 
 /**
  * A class that extends the BaseDocumentLoader and implements the
@@ -31,27 +40,19 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
 
   protected datasetId: string;
 
-  protected datasetMappingFunction: (
-    item: Record<string | number, unknown>
-  ) => Document<Metadata>;
+  protected datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
 
-  constructor(
-    datasetId: string,
-    config: {
-      datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
-      clientOptions?: ApifyClientOptions;
-    }
-  ) {
+  protected caller: AsyncCaller;
+
+  constructor(datasetId: string, config: ApifyDatasetLoaderConfig<Metadata>) {
     super();
-    const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
-      config.clientOptions
-    );
-    this.apifyClient = new ApifyClient({
-      ...config.clientOptions,
-      token: apifyApiToken,
-    });
+    const { clientOptions, datasetMappingFunction, ...asyncCallerParams } =
+      config;
+    const token = ApifyDatasetLoader._getApifyApiToken(clientOptions);
+    this.apifyClient = new ApifyClient({ ...clientOptions, token });
     this.datasetId = datasetId;
-    this.datasetMappingFunction = config.datasetMappingFunction;
+    this.datasetMappingFunction = datasetMappingFunction;
+    this.caller = new AsyncCaller(asyncCallerParams);
   }
 
   private static _getApifyApiToken(config?: { token?: string }) {
@@ -68,7 +69,12 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
     const datasetItems = (
       await this.apifyClient.dataset(this.datasetId).listItems({ clean: true })
     ).items;
-    return datasetItems.map(this.datasetMappingFunction);
+
+    return await Promise.all(
+      datasetItems.map((item) =>
+        this.caller.call(async () => this.datasetMappingFunction(item))
+      )
+    );
   }
 
   /**
