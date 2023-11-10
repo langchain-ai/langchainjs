@@ -37,3 +37,5 @@ tmp/
 
 **/convex/.gitignore
 **/convex/tsconfig.json
+
+langchain/docs_dist/**/*

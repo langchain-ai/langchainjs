@@ -59,7 +59,7 @@ async function getAllTsFiles(dir, fileList = []) {
 }
 
 async function processFiles() {
-  const dir = join(process.cwd(), "src");
+  const dir = join(process.cwd(), "docs_dist/src");
   const allTsFiles = await getAllTsFiles(dir);
 
   await Promise.all(allTsFiles.map(async (file) => {
