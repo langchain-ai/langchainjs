@@ -77,35 +77,45 @@ Next, inside your `RunnableSequence` add a field for loading the `chat_history` 
 ```typescript
 const runnableAgent = RunnableSequence.from([
   {
-    input: (i: { input: string; steps: AgentStep[] }) => i.input,
-    agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
-      formatAgentSteps(i.steps),
+    input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) =>
+      formatToOpenAIToolMessages(i.steps),
     // Load memory here
-    chat_history: async (_: { input: string; steps: AgentStep[] }) => {
+    chat_history: async (_: { input: string; steps: ToolsAgentStep[] }) => {
       const { history } = await memory.loadMemoryVariables({});
       return history;
     },
   },
   prompt,
   modelWithTools,
-  new OpenAIFunctionsAgentOutputParser(),
-]);
+  new OpenAIToolsAgentOutputParser(),
+]).withConfig({ runName: "OpenAIToolsAgent" });
 ```
 
 Finally we can call the agent, and save the output after the response is returned.
 
 ```typescript
-const query = "What is the weather in New York?";
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+});
+
+const query =
+  "What is the sum of the current temperature in San Francisco, New York, and Tokyo?";
+
 console.log(`Calling agent executor with query: ${query}`);
+
 const result = await executor.call({
   input: query,
 });
+
 console.log(result);
+
 /*
-Calling agent executor with query: What is the weather in New York?
-{
-  output: 'The current weather in New York is sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 54% and the wind is blowing at 6 mph. There is 0% chance of precipitation.'
-}
+  Calling agent executor with query: What is the weather in New York?
+  {
+    output: 'The current weather in New York is sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 54% and the wind is blowing at 6 mph. There is 0% chance of precipitation.'
+  }
 */
 
 // Save the result and initial input to memory
@@ -118,14 +128,18 @@ await memory.saveContext(
   }
 );
 
-const query2 = "Do I need a jacket?";
+const query2 = "Do I need a jacket in New York?";
+
 const result2 = await executor.call({
   input: query2,
 });
 console.log(result2);
 /*
-{
-  output: 'Based on the current weather in New York, you may not need a jacket. However, if you feel cold easily or will be outside for a long time, you might want to bring a light jacket just in case.'
-}
- */
+  {
+    output: 'The sum of the current temperatures in San Francisco, New York, and Tokyo is 104 degrees.'
+  }
+  {
+    output: "The current temperature in New York is 22°C. It's a bit chilly, so you may want to bring a jacket with you."
+  }
+*/
 ```
