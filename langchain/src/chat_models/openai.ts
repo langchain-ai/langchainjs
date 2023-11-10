@@ -116,7 +116,7 @@ function _convertDeltaToMessageChunk(
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
   let additional_kwargs;
-  if (delta?.function_call) {
+  if (delta.function_call) {
     additional_kwargs = {
       function_call: delta.function_call,
     };
