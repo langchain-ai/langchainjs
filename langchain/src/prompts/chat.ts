@@ -601,16 +601,9 @@ export class ChatPromptTemplate<
     for (const promptMessage of this.promptMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (promptMessage instanceof BaseMessage) {
-        if (
-          typeof promptMessage.content !== "string" &&
-          promptMessage.content.some((content) => content.type === "image_url")
-        ) {
-          resultMessages.push(
-            await this._parseImagePrompts(promptMessage, allValues)
-          );
-        } else {
-          resultMessages.push(promptMessage);
-        }
+        resultMessages.push(
+          await this._parseImagePrompts(promptMessage, allValues)
+        );
       } else {
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {
