@@ -35,6 +35,7 @@ test("Test Directory loader", async () => {
     ...Array.from({ length: 15 }, (_) =>
       path.resolve(directoryPath, "1706.03762.pdf")
     ),
+    path.resolve(directoryPath, "Jacob_Lee_Resume_2023.pdf"),
     // CSV
     ...Array.from({ length: 32 }, (_) =>
       path.resolve(
