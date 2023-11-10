@@ -34,11 +34,13 @@ export interface OllamaInput {
   useMLock?: boolean;
   useMMap?: boolean;
   vocabOnly?: boolean;
+  format?: string;
 }
 
 export interface OllamaRequestParams {
   model: string;
   prompt: string;
+  format?: string;
   options: {
     embedding_only?: boolean;
     f16_kv?: boolean;

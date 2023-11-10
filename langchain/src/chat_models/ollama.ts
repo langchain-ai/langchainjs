@@ -94,6 +94,8 @@ export class ChatOllama
 
   vocabOnly?: boolean;
 
+  format?: string;
+
   constructor(fields: OllamaInput & BaseChatModelParams) {
     super(fields);
     this.model = fields.model ?? this.model;
@@ -130,6 +132,7 @@ export class ChatOllama
     this.useMLock = fields.useMLock;
     this.useMMap = fields.useMMap;
     this.vocabOnly = fields.vocabOnly;
+    this.format = fields.format;
   }
 
   _llmType() {
@@ -145,6 +148,7 @@ export class ChatOllama
   invocationParams(options?: this["ParsedCallOptions"]) {
     return {
       model: this.model,
+      format: this.format,
       options: {
         embedding_only: this.embeddingOnly,
         f16_kv: this.f16KV,
