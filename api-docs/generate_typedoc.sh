@@ -2,14 +2,15 @@
 
 BASE_DIR="../langchain"
 
-# Create a directory to use for docs.
+# Create a directory to temp hold the files in src
 # `docs_dist` is gitignored by default.
 mkdir -p "$BASE_DIR/docs_dist/src"
 
 # Copy the contents of src to docs_dist/src
 cp -r "$BASE_DIR/src/." "$BASE_DIR/docs_dist/src/"
 
-# Add `@ignore` to JSDoc comments for properties which should be ignored.
+# This command will add `@ignore` to JSDoc comments
+# for properties which should be ignored.
 yarn add-ignore-comments
 
 # This command will generate the docs
