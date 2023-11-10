@@ -22,9 +22,10 @@ async function processIgnoredClassProperties(filePath) {
         splitNewLines.pop();
         result = splitNewLines.join("\n");
         result +=  '\n   * @ignore\n   */\n';
-      } else if (previousLine.startsWith(" */")) {
+      } else if (previousLine.trim().endsWith(" */")) {
         // handle single line jsdoc
         // remove the */ from the previous line, replacing it with `@ignore */`
+        result = result.replace(/\*\/$/, ' @ignore */');
       } else {
         result += "  /** @ignore */\n";
       }
