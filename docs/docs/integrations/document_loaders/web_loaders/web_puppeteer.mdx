@@ -59,24 +59,15 @@ By passing these options to the `PuppeteerWebBaseLoader` constructor, you can cu
 
 Here is a basic example to do it:
 
-```typescript
-import { PuppeteerWebBaseLoader } from "langchain/document_loaders/web/puppeteer";
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/puppeteer_web.ts";
+import ScreenshotExample from "@examples/document_loaders/puppeteer_screenshot_web.ts";
 
-const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/", {
-  launchOptions: {
-    headless: true,
-  },
-  gotoOptions: {
-    waitUntil: "domcontentloaded",
-  },
-  /** Pass custom evaluate, in this case you get page and browser instances */
-  async evaluate(page: Page, browser: Browser) {
-    await page.waitForResponse("https://www.tabnews.com.br/va/view");
+<CodeBlock language="typescript">{Example}</CodeBlock>
 
-    const result = await page.evaluate(() => document.body.innerHTML);
-    return result;
-  },
-});
+### Screenshots
 
-const docs = await loader.load();
-```
+To take a screenshot of a site, initialize the loader the same as above, and call the `.screenshot()` method.
+This will return an instance of `Document` where the page content is a base64 encoded image, and the metadata contains a `source` field with the URL of the page.
+
+<CodeBlock language="typescript">{ScreenshotExample}</CodeBlock>
