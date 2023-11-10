@@ -34,7 +34,6 @@ test("Test PDF loader should not create documents with excessive newlines", asyn
   );
   const loader = new PDFLoader(filePath, { splitPages: false });
   const docs = await loader.load();
-  console.log(docs);
   expect(docs.length).toBe(1);
   expect(docs[0].pageContent.split("\n").length).toBeLessThan(100);
 });

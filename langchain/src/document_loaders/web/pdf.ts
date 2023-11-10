@@ -46,6 +46,8 @@ export class WebPDFLoader extends BaseDocumentLoader {
         continue;
       }
 
+      // Eliminate excessive newlines
+      // Source: https://github.com/albertcui/pdf-parse/blob/7086fc1cc9058545cdf41dd0646d6ae5832c7107/lib/pdf-parse.js#L16
       let lastY;
       const textItems = [];
       for (const item of content.items) {
