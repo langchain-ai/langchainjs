@@ -77,13 +77,13 @@ export class GmailGetMessage extends GmailBaseTool {
       throw new Error("No message id returned from Gmail");
     }
 
-    return {
+    return `Result for the prompt ${messageId} \n${JSON.stringify({
       subject: subject.value,
       body: body.value,
       from: from.value,
       to: to.value,
       date: date.value,
       messageId: messageIdHeader.value,
-    };
+    })}`;
   }
 }
