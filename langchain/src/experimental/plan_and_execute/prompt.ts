@@ -38,7 +38,9 @@ You may extract and combine relevant data from your previous steps when respondi
  * @param tools the tools available to the `planner`
  * @returns
  */
-export const getPlannerChatPrompt = async (tools: Tool[] | DynamicStructuredTool[]) => {
+export const getPlannerChatPrompt = async (
+  tools: Tool[] | DynamicStructuredTool[]
+) => {
   const toolStrings = tools
     .map((tool) => `${tool.name}: ${tool.description}`)
     .join("\n");
