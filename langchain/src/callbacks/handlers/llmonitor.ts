@@ -36,6 +36,16 @@ type Message = BaseMessage | Generation | string;
 
 type OutputMessage = ChatMessage | string;
 
+const PARAMS_TO_CAPTURE = [
+  "stop",
+  "stop_sequences",
+  "function_call",
+  "functions",
+  "tools",
+  "tool_choice",
+  "response_format",
+];
+
 export const convertToLLMonitorMessages = (
   input: Message | Message[] | Message[][]
 ): OutputMessage | OutputMessage[] | OutputMessage[][] => {
@@ -100,6 +110,38 @@ const parseOutput = (rawOutput: Record<string, unknown>) => {
   return rawOutput;
 };
 
+const parseExtraAndName = (
+  llm: Serialized,
+  extraParams?: KVMap,
+  metadata?: KVMap
+) => {
+  const params = {
+    ...(extraParams?.invocation_params ?? {}),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore this is a valid property
+    ...(llm?.kwargs ?? {}),
+    ...(metadata || {}),
+  };
+
+  console.log(llm, extraParams);
+
+  const { model, model_name, modelName, model_id, userId, userProps, ...rest } =
+    params;
+
+  const name = model || modelName || model_name || model_id || llm.id.at(-1);
+
+  // Filter rest to only include params we want to capture
+  const extra = Object.fromEntries(
+    Object.entries(rest).filter(
+      ([key]) =>
+        PARAMS_TO_CAPTURE.includes(key) ||
+        ["string", "number", "boolean"].includes(typeof rest[key])
+    )
+  );
+
+  return { name, extra, userId, userProps };
+};
+
 export interface Run extends BaseRun {
   id: string;
   child_runs: this[];
@@ -147,21 +189,18 @@ export class LLMonitorHandler
     tags?: string[],
     metadata?: KVMap
   ): Promise<void> {
-    const params = {
-      ...(extraParams?.invocation_params || {}),
-      ...(metadata || {}),
-    };
-
-    const { model, model_name, modelName, userId, userProps, ...rest } = params;
-
-    const name = model || modelName || model_name || llm.id.at(-1);
+    const { name, extra, userId, userProps } = parseExtraAndName(
+      llm,
+      extraParams,
+      metadata
+    );
 
     await this.monitor.trackEvent("llm", "start", {
       runId,
       parentRunId,
       name,
       input: convertToLLMonitorMessages(prompts),
-      extra: rest,
+      extra,
       userId,
       userProps,
       tags,
@@ -178,22 +217,20 @@ export class LLMonitorHandler
     tags?: string[],
     metadata?: KVMap
   ): Promise<void> {
-    const params = {
-      ...(extraParams?.invocation_params || {}),
-      ...(metadata || {}),
-    };
+    const { name, extra, userId, userProps } = parseExtraAndName(
+      llm,
+      extraParams,
+      metadata
+    );
 
-    // Expand them so they're excluded from the "extra" field
-    const { model, model_name, modelName, userId, userProps, ...rest } = params;
-
-    const name = model || modelName || model_name || llm.id.at(-1);
+    console.log({ name, extra, userId, userProps });
 
     await this.monitor.trackEvent("llm", "start", {
       runId,
       parentRunId,
       name,
       input: convertToLLMonitorMessages(messages),
-      extra: rest,
+      extra,
       userId,
       userProps,
       tags,
