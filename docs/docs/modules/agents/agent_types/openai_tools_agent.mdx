@@ -1,33 +1,43 @@
 ---
 hide_table_of_contents: true
-sidebar_position: 0
+sidebar_position: 1
 ---
 
-# OpenAI functions
-
-Certain OpenAI models (like `gpt-3.5-turbo` and `gpt-4`) have been fine-tuned to detect when a function should be called and respond with the inputs that should be passed to the function.
-In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call those functions.
-The goal of the OpenAI Function APIs is to more reliably return valid and useful function calls than a generic text completion or chat API.
-
-The OpenAI Functions Agent is designed to work with these models.
-
-import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/agents/openai.ts";
-import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
-import RunnableExample from "@examples/agents/openai_runnable.ts";
+# OpenAI tool calling
 
 :::tip Compatibility
-Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
+Tool calling is new and only available on [OpenAI's latest models](https://platform.openai.com/docs/guides/function-calling).
 :::
 
-# With LCEL
+OpenAI's latest `gpt-3.5-turbo-1106` and `gpt-4-1106-preview` models have been fine-tuned to detect when one or more tools should be called to gather sufficient information
+to answer the initial query, and respond with the inputs that should be passed to those tools.
 
-In this example we'll use LCEL to construct a customizable agent that is given two tools: search and calculator.
-We'll then pull in a prompt template from the [LangChainHub](https://smith.langchain.com/hub) and pass that to our runnable agent.
-Lastly we'll use the default OpenAI functions output parser `OpenAIFunctionsAgentOutputParser`.
-This output parser contains a method `parseAIMessage` which when provided with a message, either returns an instance of `FunctionsAgentAction` if there is another action to be taken my the agent, or `AgentFinish` if the agent has completed its objective.
+While the goal of more reliably returning valid and useful function calls is the same as the functions agent, the ability to return multiple tools at once results in
+both fewer roundtrips for complex questions.
+
+The OpenAI Tools Agent is designed to work with these models.
+
+import CodeBlock from "@theme/CodeBlock";
+import RunnableExample from "@examples/agents/openai_tools_runnable.ts";
+
+# Usage
+
+In this example we'll use LCEL to construct a customizable agent with a mocked weather tool and a calculator.
+
+The basic flow is this:
+
+1. Define the tools the agent will be able to call. You can use [OpenAI's tool syntax](https://platform.openai.com/docs/guides/function-calling), or LangChain tool instances as shown below.
+2. Initialize our model and bind those tools as arguments.
+3. Define a function that formats any previous agent steps as messages. The agent will pass those back to OpenAI for the next agent iteration.
+4. Create a `RunnableSequence` that will act as the agent. We use a specialized output parser to extract any tool calls from the model's output.
+5. Initialize an `AgentExecutor` with the agent and the tools to execute the agent on a loop.
+6. Run the `AgentExecutor` and see the output.
+
+Here's how it looks:
 
 <CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+
+You can check out this example trace for an inspectable view of the steps taken to answer the question: https://smith.langchain.com/public/2bbffb7d-4f9d-47ad-90be-09910e5b4b34/r
 
 ## Adding memory
 
@@ -119,20 +129,3 @@ console.log(result2);
 }
  */
 ```
-
-You may also inspect the LangSmith traces for both agent calls here:
-
-- [Question 1](https://smith.langchain.com/public/12f4022d-f02f-4b00-9122-8493afe5507d/r)
-- [Question 2](https://smith.langchain.com/public/2052d0d1-5640-44bc-9024-d443d46db2a4/r)
-
-# With `initializeAgentExecutorWithOptions`
-
-This agent also supports `StructuredTool`s with more complex input schemas.
-
-<CodeBlock language="typescript">{Example}</CodeBlock>
-
-## Prompt customization
-
-You can pass in a custom string to be used as the system message of the prompt as follows:
-
-<CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>

@@ -22,6 +22,9 @@ agents/toolkits/sql.d.ts
 agents/format_scratchpad.cjs
 agents/format_scratchpad.js
 agents/format_scratchpad.d.ts
+agents/format_scratchpad/openai_tools.cjs
+agents/format_scratchpad/openai_tools.js
+agents/format_scratchpad/openai_tools.d.ts
 agents/format_scratchpad/log.cjs
 agents/format_scratchpad/log.js
 agents/format_scratchpad/log.d.ts
