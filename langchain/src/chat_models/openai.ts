@@ -113,14 +113,14 @@ function _convertDeltaToMessageChunk(
   delta: Record<string, any>,
   defaultRole?: OpenAIRoleEnum
 ) {
-  const role = delta?.role ?? defaultRole;
-  const content = delta?.content ?? "";
+  const role = delta.role ?? defaultRole;
+  const content = delta.content ?? "";
   let additional_kwargs;
   if (delta?.function_call) {
     additional_kwargs = {
       function_call: delta.function_call,
     };
-  } else if (delta?.tool_calls) {
+  } else if (delta.tool_calls) {
     additional_kwargs = {
       tool_calls: delta.tool_calls,
     };
@@ -449,8 +449,11 @@ export class ChatOpenAI<
       }
 
       const { delta } = choice;
+      if (!delta) {
+        continue;
+      }
       const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
-      defaultRole = delta?.role ?? defaultRole;
+      defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,
@@ -463,7 +466,7 @@ export class ChatOpenAI<
       }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
-        text: chunk?.content,
+        text: chunk.content,
         generationInfo: newTokenIndices,
       });
       yield generationChunk;
