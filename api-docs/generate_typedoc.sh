@@ -12,8 +12,11 @@ cp -r "$BASE_DIR/src/." "$BASE_DIR/docs_dist/src/"
 # Add `@ignore` to JSDoc comments for properties which should be ignored.
 yarn add-ignore-comments
 
-# Run this command regardless of the NODE_ENV value
 # This command will generate the docs
 yarn typedoc
 
-rsync -av --delete "$BASE_DIR/docs_dist/src/" "$BASE_DIR/"
+# Remove the current contents of langchain/src
+rm -rf "$BASE_DIR/src/*"
+
+# Copy the unedited contents from docs_dist/src to langchain/src
+cp -r "$BASE_DIR/docs_dist/src/." "$BASE_DIR/src/"
