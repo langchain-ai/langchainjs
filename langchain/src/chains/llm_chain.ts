@@ -186,12 +186,11 @@ export class LLMChain<
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const valuesForPrompt = { ...values };
-    const valuesForLLM: CallOptionsIfAvailable<Model> | undefined = this
-      .llmKwargs
+    const valuesForLLM: CallOptionsIfAvailable<Model> = this.llmKwargs
       ? {
           ...this.llmKwargs,
         }
-      : undefined;
+      : ({} as CallOptionsIfAvailable<Model>);
     const callKeys = this.getCallKeys();
     for (const key of callKeys) {
       if (key in values) {
