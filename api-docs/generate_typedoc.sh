@@ -1,9 +1,13 @@
 #!/bin/bash
 
+BASE_DIR="../langchain"
+
 # Create a directory to use for docs.
 # `docs_dist` is gitignored by default.
-mkdir -p ../langchain/docs_dist/
-cp -r ../langchain/src ../langchain/docs_dist/src
+mkdir -p "$BASE_DIR/docs_dist/src"
+
+# Copy the contents of src to docs_dist/src
+cp -r "$BASE_DIR/src/." "$BASE_DIR/docs_dist/src/"
 
 # Add `@ignore` to JSDoc comments for properties which should be ignored.
 yarn add-ignore-comments
@@ -12,6 +16,4 @@ yarn add-ignore-comments
 # This command will generate the docs
 yarn typedoc
 
-rm -rf ../langchain/src
-mkdir -p ../langchain/src
-cp -r ../langchain/docs_dist/src ../langchain/
+rsync -av --delete "$BASE_DIR/docs_dist/src/" "$BASE_DIR/"
