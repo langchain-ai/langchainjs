@@ -1,5 +1,6 @@
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { IterableReadableStream } from "./stream.js";
+import type { StringWithAutocomplete } from "./types.js";
 
 export interface OllamaInput {
   embeddingOnly?: boolean;
@@ -34,13 +35,13 @@ export interface OllamaInput {
   useMLock?: boolean;
   useMMap?: boolean;
   vocabOnly?: boolean;
-  format?: string;
+  format?: StringWithAutocomplete<"json">;
 }
 
 export interface OllamaRequestParams {
   model: string;
   prompt: string;
-  format?: string;
+  format?: StringWithAutocomplete<"json">;
   options: {
     embedding_only?: boolean;
     f16_kv?: boolean;

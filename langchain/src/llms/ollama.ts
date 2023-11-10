@@ -6,6 +6,7 @@ import {
 } from "../util/ollama.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { GenerationChunk } from "../schema/index.js";
+import type { StringWithAutocomplete } from "../util/types.js";
 
 /**
  * Class that represents the Ollama language model. It extends the base
@@ -82,7 +83,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   vocabOnly?: boolean;
 
-  format?: string;
+  format?: StringWithAutocomplete<"json">;
 
   constructor(fields: OllamaInput & BaseLLMParams) {
     super(fields);

@@ -8,6 +8,7 @@ import {
   ChatGenerationChunk,
   ChatMessage,
 } from "../schema/index.js";
+import type { StringWithAutocomplete } from "../util/types.js";
 
 /**
  * An interface defining the options for an Ollama API call. It extends
@@ -94,7 +95,7 @@ export class ChatOllama
 
   vocabOnly?: boolean;
 
-  format?: string;
+  format?: StringWithAutocomplete<"json">;
 
   constructor(fields: OllamaInput & BaseChatModelParams) {
     super(fields);
