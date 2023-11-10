@@ -1395,9 +1395,9 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 
   lc_serializable = true;
 
-  protected runnable: Runnable<RunInput, RunOutput>;
+  runnable: Runnable<RunInput, RunOutput>;
 
-  protected fallbacks: Runnable<RunInput, RunOutput>[];
+  fallbacks: Runnable<RunInput, RunOutput>[];
 
   constructor(fields: {
     runnable: Runnable<RunInput, RunOutput>;
@@ -1406,10 +1406,6 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     super(fields);
     this.runnable = fields.runnable;
     this.fallbacks = fields.fallbacks;
-  }
-
-  getRunnable() {
-    return this.runnable;
   }
 
   *runnables() {

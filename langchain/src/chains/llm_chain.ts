@@ -22,12 +22,7 @@ import {
   Callbacks,
 } from "../callbacks/manager.js";
 import { NoOpOutputParser } from "../output_parsers/noop.js";
-import {
-  Runnable,
-  RunnableBinding,
-  RunnableWithFallbacks,
-} from "../schema/runnable/base.js";
-import { RunnableBranch } from "../schema/runnable/branch.js";
+import { Runnable } from "../schema/runnable/base.js";
 
 type LLMType =
   | BaseLanguageModel
@@ -55,17 +50,17 @@ export interface LLMChainInput<
 }
 
 function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
-  // eslint-disable-next-line no-instanceof/no-instanceof
-  if (llmLike instanceof BaseLanguageModel) {
-    return llmLike;
-    // eslint-disable-next-line no-instanceof/no-instanceof
-  } else if (llmLike instanceof RunnableBinding) {
+  if ("caller" in llmLike) {
+    return llmLike as BaseLanguageModel;
+  } else if ("bound" in llmLike && Runnable.isRunnable(llmLike.bound)) {
     return _getLanguageModel(llmLike.bound);
-    // eslint-disable-next-line no-instanceof/no-instanceof
-  } else if (llmLike instanceof RunnableWithFallbacks) {
-    return _getLanguageModel(llmLike.getRunnable());
-    // eslint-disable-next-line no-instanceof/no-instanceof
-  } else if (llmLike instanceof RunnableBranch) {
+  } else if (
+    "runnable" in llmLike &&
+    "fallbacks" in llmLike &&
+    Runnable.isRunnable(llmLike.runnable)
+  ) {
+    return _getLanguageModel(llmLike.runnable);
+  } else if ("default" in llmLike && Runnable.isRunnable(llmLike.default)) {
     return _getLanguageModel(llmLike.default);
   } else {
     throw new Error("Unable to extract BaseLanguageModel from llmLike object.");
