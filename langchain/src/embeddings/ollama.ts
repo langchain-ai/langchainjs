@@ -1,7 +1,10 @@
 import { OllamaInput, OllamaRequestParams } from "../util/ollama.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
-type CamelCasedRequestOptions = Omit<OllamaInput, "baseUrl" | "model" | "format">;
+type CamelCasedRequestOptions = Omit<
+  OllamaInput,
+  "baseUrl" | "model" | "format"
+>;
 
 /**
  * Interface for OllamaEmbeddings parameters. Extends EmbeddingsParams and
