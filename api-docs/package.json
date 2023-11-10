@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "gen:typedoc": "npx typedoc --options typedoc.json",
+    "typedoc": "npx typedoc --options typedoc.json",
+    "gen:typedoc": "bash ./generate_typedoc.sh",
+    "add-ignore-comments": "cd ../langchain && node scripts/ignore-class-properties.js",
     "build": "yarn gen:typedoc && next build",
     "start": "next start",
     "lint": "next lint"

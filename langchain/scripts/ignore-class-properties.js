@@ -14,7 +14,7 @@ async function processIgnoredClassProperties(filePath) {
   for (const line of lines) {
     const asyncMethodRegex = /^\s{2}(static\s+|get\s+|async\s+\*?|)(lc_|_)/;
     if (!previousLine.includes("@ignore") && asyncMethodRegex.test(line)) {
-      if (previousLine.includes("*/")) {
+      if (previousLine.startsWith("   */")) {
         // Removes the `*/` from the previous line, replacing it
         // with `@ignore` and then closing the JSDoc comment.
         const splitNewLines = result.split("\n");
@@ -22,6 +22,9 @@ async function processIgnoredClassProperties(filePath) {
         splitNewLines.pop();
         result = splitNewLines.join("\n");
         result +=  '\n   * @ignore\n   */\n';
+      } else if (previousLine.startsWith(" */")) {
+        // handle single line jsdoc
+        // remove the */ from the previous line, replacing it with `@ignore */`
       } else {
         result += "  /** @ignore */\n";
       }
