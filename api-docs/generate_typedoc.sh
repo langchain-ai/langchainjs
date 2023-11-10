@@ -12,4 +12,6 @@ yarn add-ignore-comments
 # This command will generate the docs
 yarn typedoc
 
-rm -rf ../langchain/docs_dist
+rm -rf ../langchain/src
+mkdir -p ../langchain/src
+cp -r ../langchain/docs_dist/src ../langchain/
