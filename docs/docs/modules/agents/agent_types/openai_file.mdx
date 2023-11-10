@@ -1,0 +1,76 @@
+# OpenAI File
+
+:::info
+The [OpenAI File is used in OpenAI Assistant API](https://platform.openai.com/docs/assistants/how-it-works/creating-assistants) is still in beta.
+[API reference](https://platform.openai.com/docs/api-reference/files/object)
+:::
+
+Files are used to upload documents that can be used with features like Assistants and Fine-tuning.
+
+We've implemented the File API in LangChain with create and delete.
+
+## Creating an File
+
+```typescript
+import * as fs from "fs";
+import * as path from "path";
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const file = await OpenAIFiles.create({
+  file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
+  purpose: "assistants",
+});
+/**
+   * Output 
+    {
+      "id": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
+      "object": "file",
+      "bytes": 120000,
+      "created_at": 1677610602,
+      "filename": "salesOverview.pdf",
+      "purpose": "assistants",
+    }
+   */
+```
+
+## Use File in AI Assistant
+
+```typescript
+import * as fs from "fs";
+import * as path from "path";
+import { OpenAIAssistants } from "langchain/experimental/openai_assistants";
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const file = await OpenAIFiles.create({
+  file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
+  purpose: "assistants",
+});
+
+const agent = await OpenAIAssistantRunnable.createAssistant({
+  model: "gpt-3.5-turbo-1106",
+  instructions:
+    "You are a weather bot. Use the provided functions to answer questions.",
+  name: "Weather Assistant",
+  tools,
+  asAgent: true,
+  file_ids: [file.id],
+});
+```
+
+## Delete an File
+
+```typescript
+import * as fs from "fs";
+import * as path from "path";
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const result = await OpenAIFiles.del({ fileId: file.id });
+/**
+   * Output:
+   {
+      "id": "file-abc123",
+      "object": "file",
+      "deleted": true
+    }
+   */
+```
