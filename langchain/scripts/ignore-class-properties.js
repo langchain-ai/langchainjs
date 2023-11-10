@@ -13,8 +13,16 @@ async function processIgnoredClassProperties(filePath) {
 
   for (const line of lines) {
     const asyncMethodRegex = /^\s{2}(static\s+|get\s+|async\s+\*?|)(lc_|_)/;
-    if (!previousLine.includes("@ignore")) {
-      if (asyncMethodRegex.test(line)) {
+    if (!previousLine.includes("@ignore") && asyncMethodRegex.test(line)) {
+      if (previousLine.includes("*/")) {
+        // Removes the `*/` from the previous line, replacing it
+        // with `@ignore` and then closing the JSDoc comment.
+        const splitNewLines = result.split("\n");
+        splitNewLines.pop();
+        splitNewLines.pop();
+        result = splitNewLines.join("\n");
+        result +=  '\n   * @ignore\n   */\n';
+      } else {
         result += "  /** @ignore */\n";
       }
     }
@@ -26,9 +34,14 @@ async function processIgnoredClassProperties(filePath) {
   // Ensure only one newline is present at bottom of each file.
   const finalResult = result.trim() + "\n";
   await writeFile(filePath, finalResult);
-  console.log("File processed successfully.");
 }
 
+/**
+ * Gets all files ending with `.ts` in the given directory.
+ * @param {string} dir 
+ * @param {Array<string>} fileList 
+ * @returns {Promise<Array<string>>}
+ */
 async function getAllTsFiles(dir, fileList = []) {
   const files = await readdir(dir);
 
