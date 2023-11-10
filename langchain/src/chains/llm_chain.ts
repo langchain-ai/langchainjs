@@ -29,6 +29,7 @@ type LLMType =
   | Runnable<BaseLanguageModelInput, string>
   | Runnable<BaseLanguageModelInput, BaseMessage>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
 /**
  * Interface for the input parameters of the LLMChain class.
@@ -49,9 +50,13 @@ export interface LLMChainInput<
   outputKey?: string;
 }
 
+function isBaseLanguageModel(llmLike: unknown): llmLike is BaseLanguageModel {
+  return typeof (llmLike as BaseLanguageModel)._llmType === "function";
+}
+
 function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
-  if ("caller" in llmLike) {
-    return llmLike as BaseLanguageModel;
+  if (isBaseLanguageModel(llmLike)) {
+    return llmLike;
   } else if ("bound" in llmLike && Runnable.isRunnable(llmLike.bound)) {
     return _getLanguageModel(llmLike.bound);
   } else if (
