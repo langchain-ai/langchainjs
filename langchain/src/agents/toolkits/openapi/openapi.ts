@@ -65,6 +65,14 @@ export class OpenApiToolkit extends RequestsToolkit {
  * @param openApiToolkit The OpenAPI toolkit to use.
  * @param args Optional arguments for creating the prompt.
  * @returns An AgentExecutor for executing the agent with the tools.
+ *
+ * @security **Security Notice** This agent provides access to external APIs.
+ * Use with caution as this agent can make API calls with arbitrary headers.
+ * Exposing this agent to users could lead to security vulnerabilities. Consider
+ * limiting access to what endpoints it can hit, what actions can be taken, and
+ * more.
+ *
+ * @link See https://js.langchain.com/docs/security for more information.
  */
 export function createOpenApiAgent(
   llm: BaseLanguageModel,

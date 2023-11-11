@@ -7,6 +7,7 @@ import {
   BaseMessageLike,
   BasePromptValue,
   LLMResult,
+  MessageContent,
   coerceMessageLikeToMessage,
 } from "../schema/index.js";
 import {
@@ -113,7 +114,7 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
 }
 
 export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
-  function_call?: OpenAIClient.Chat.ChatCompletionCreateParams.FunctionCallOption;
+  function_call?: OpenAIClient.Chat.ChatCompletionFunctionCallOption;
   functions?: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
 }
 
@@ -193,9 +194,13 @@ export abstract class BaseLanguageModel<
 
   private _encoding?: Tiktoken;
 
-  async getNumTokens(text: string) {
+  async getNumTokens(content: MessageContent) {
+    // TODO: Figure out correct value.
+    if (typeof content !== "string") {
+      return 0;
+    }
     // fallback to approximate calculation if tiktoken is not available
-    let numTokens = Math.ceil(text.length / 4);
+    let numTokens = Math.ceil(content.length / 4);
 
     if (!this._encoding) {
       try {
@@ -213,7 +218,7 @@ export abstract class BaseLanguageModel<
     }
 
     if (this._encoding) {
-      numTokens = this._encoding.encode(text).length;
+      numTokens = this._encoding.encode(content).length;
     }
 
     return numTokens;

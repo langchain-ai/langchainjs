@@ -1,10 +1,13 @@
 import { BaseLLMParams } from "../llms/base.js";
 
-export interface GoogleVertexAIConnectionParams<AuthOptions> {
+export interface GoogleConnectionParams<AuthOptions> {
+  authOptions?: AuthOptions;
+}
+
+export interface GoogleVertexAIConnectionParams<AuthOptions>
+  extends GoogleConnectionParams<AuthOptions> {
   /** Hostname for the API call */
   endpoint?: string;
-
-  authOptions?: AuthOptions;
 
   /** Region where the LLM is stored */
   location?: string;
@@ -53,29 +56,34 @@ export interface GoogleVertexAIBaseLLMInput<AuthOptions>
     GoogleVertexAIConnectionParams<AuthOptions>,
     GoogleVertexAIModelParams {}
 
-export interface GoogleVertexAIResponse {
+export interface GoogleResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
 }
 
-export interface GoogleVertexAIBasePrediction extends GoogleVertexAIResponse {
+export interface GoogleVertexAIBasePrediction {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   safetyAttributes?: any;
 }
 
-export interface GoogleVertexAILLMResponse<
+export interface GoogleVertexAILLMPredictions<
   PredictionType extends GoogleVertexAIBasePrediction
 > {
-  data: {
-    predictions: PredictionType[];
-  };
+  predictions: PredictionType[];
 }
 
-export interface GoogleVertexAIAbstractedClient {
-  request: (opts: {
-    url?: string;
-    method?: "GET" | "POST";
-    data?: unknown;
-  }) => unknown;
+export type GoogleAbstractedClientOpsMethod = "GET" | "POST";
+
+export type GoogleAbstractedClientOpsResponseType = "json" | "stream";
+
+export type GoogleAbstractedClientOps = {
+  url?: string;
+  method?: GoogleAbstractedClientOpsMethod;
+  data?: unknown;
+  responseType?: GoogleAbstractedClientOpsResponseType;
+};
+
+export interface GoogleAbstractedClient {
+  request: (opts: GoogleAbstractedClientOps) => unknown;
   getProjectId: () => Promise<string>;
 }

@@ -10,7 +10,7 @@ import {
 import { AgentExecutor } from "../../agents/executor.js";
 import {
   DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
-  PLANNER_CHAT_PROMPT,
+  getPlannerChatPrompt,
 } from "./prompt.js";
 import { ChainValues } from "../../schema/index.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
@@ -79,10 +79,16 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
    * @param llm The Large Language Model (LLM) used to generate responses.
    * @returns A new LLMPlanner instance.
    */
-  static getDefaultPlanner({ llm }: { llm: BaseLanguageModel }) {
+  static async getDefaultPlanner({
+    llm,
+    tools,
+  }: {
+    llm: BaseLanguageModel;
+    tools: Tool[];
+  }) {
     const plannerLlmChain = new LLMChain({
       llm,
-      prompt: PLANNER_CHAT_PROMPT,
+      prompt: await getPlannerChatPrompt(tools),
     });
     return new LLMPlanner(plannerLlmChain, new PlanOutputParser());
   }
@@ -126,7 +132,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
    * @param humanMessageTemplate The template for human messages. If not provided, a default template is used.
    * @returns A new PlanAndExecuteAgentExecutor instance.
    */
-  static fromLLMAndTools({
+  static async fromLLMAndTools({
     llm,
     tools,
     humanMessageTemplate,
@@ -136,7 +142,10 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     humanMessageTemplate?: string;
   } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {
     const executor = new PlanAndExecuteAgentExecutor({
-      planner: PlanAndExecuteAgentExecutor.getDefaultPlanner({ llm }),
+      planner: await PlanAndExecuteAgentExecutor.getDefaultPlanner({
+        llm,
+        tools,
+      }),
       stepExecutor: PlanAndExecuteAgentExecutor.getDefaultStepExecutor({
         llm,
         tools,

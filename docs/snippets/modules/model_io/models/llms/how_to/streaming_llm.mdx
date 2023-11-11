@@ -1,8 +1,0 @@
-To utilize streaming, use a [`CallbackHandler`](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/callbacks/base.ts) like so:
-
-import CodeBlock from "@theme/CodeBlock";
-import StreamingExample from "@examples/models/llm/llm_streaming.ts";
-
-<CodeBlock language="typescript">{StreamingExample}</CodeBlock>
-
-We still have access to the end `LLMResult` if using `generate`. However, `token_usage` is not currently supported for streaming.

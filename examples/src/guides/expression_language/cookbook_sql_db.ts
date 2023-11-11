@@ -1,6 +1,9 @@
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "langchain/sql_db";
-import { RunnableSequence } from "langchain/schema/runnable";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "langchain/schema/runnable";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -23,11 +26,13 @@ SQL Query:`);
 
 const model = new ChatOpenAI();
 
+// The `RunnablePassthrough.assign()` is used here to passthrough the input from the `.invoke()`
+// call (in this example it's the question), along with any inputs passed to the `.assign()` method.
+// In this case, we're passing the schema.
 const sqlQueryGeneratorChain = RunnableSequence.from([
-  {
+  RunnablePassthrough.assign({
     schema: async () => db.getTableInfo(),
-    question: (input: { question: string }) => input.question,
-  },
+  }),
   prompt,
   model.bind({ stop: ["\nSQLResult:"] }),
   new StringOutputParser(),
@@ -37,10 +42,14 @@ const result = await sqlQueryGeneratorChain.invoke({
   question: "How many employees are there?",
 });
 
-console.log(result);
+console.log({
+  result,
+});
 
 /*
-  SELECT COUNT(EmployeeId) AS TotalEmployees FROM Employee
+  {
+    result: "SELECT COUNT(EmployeeId) AS TotalEmployees FROM Employee"
+  }
 */
 
 const finalResponsePrompt =
@@ -52,10 +61,9 @@ SQL Query: {query}
 SQL Response: {response}`);
 
 const fullChain = RunnableSequence.from([
-  {
-    question: (input) => input.question,
+  RunnablePassthrough.assign({
     query: sqlQueryGeneratorChain,
-  },
+  }),
   {
     schema: async () => db.getTableInfo(),
     question: (input) => input.question,

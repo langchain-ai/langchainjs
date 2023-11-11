@@ -1,5 +1,5 @@
 import { Embeddings } from "../../embeddings/base.js";
-import { VectorStore } from "../../vectorstores/base.js";
+import { VectorStore, VectorStoreRetriever } from "../../vectorstores/base.js";
 import { Document } from "../../document.js";
 import { Example } from "../../schema/index.js";
 import { BaseExampleSelector } from "../base.js";
@@ -14,32 +14,55 @@ function sortedValues<T>(values: Record<string, T>): T[] {
  * Interface for the input data of the SemanticSimilarityExampleSelector
  * class.
  */
-export interface SemanticSimilarityExampleSelectorInput {
-  vectorStore: VectorStore;
-  k?: number;
-  exampleKeys?: string[];
-  inputKeys?: string[];
-}
+export type SemanticSimilarityExampleSelectorInput<
+  V extends VectorStore = VectorStore
+> =
+  | {
+      vectorStore: V;
+      k?: number;
+      filter?: V["FilterType"];
+      exampleKeys?: string[];
+      inputKeys?: string[];
+      vectorStoreRetriever?: never;
+    }
+  | {
+      vectorStoreRetriever: VectorStoreRetriever<V>;
+      exampleKeys?: string[];
+      inputKeys?: string[];
+      vectorStore?: never;
+      k?: never;
+      filter?: never;
+    };
 
 /**
  * Class that selects examples based on semantic similarity. It extends
  * the BaseExampleSelector class.
  */
-export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
-  vectorStore: VectorStore;
-
-  k = 4;
+export class SemanticSimilarityExampleSelector<
+  V extends VectorStore = VectorStore
+> extends BaseExampleSelector {
+  vectorStoreRetriever: VectorStoreRetriever<V>;
 
   exampleKeys?: string[];
 
   inputKeys?: string[];
 
-  constructor(data: SemanticSimilarityExampleSelectorInput) {
+  constructor(data: SemanticSimilarityExampleSelectorInput<V>) {
     super(data);
-    this.vectorStore = data.vectorStore;
-    this.k = data.k ?? 4;
     this.exampleKeys = data.exampleKeys;
     this.inputKeys = data.inputKeys;
+    if (data.vectorStore !== undefined) {
+      this.vectorStoreRetriever = data.vectorStore.asRetriever({
+        k: data.k ?? 4,
+        filter: data.filter,
+      });
+    } else if (data.vectorStoreRetriever) {
+      this.vectorStoreRetriever = data.vectorStoreRetriever;
+    } else {
+      throw new Error(
+        `You must specify one of "vectorStore" and "vectorStoreRetriever".`
+      );
+    }
   }
 
   /**
@@ -57,10 +80,10 @@ export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
       )
     ).join(" ");
 
-    await this.vectorStore.addDocuments([
+    await this.vectorStoreRetriever.addDocuments([
       new Document({
         pageContent: stringExample,
-        metadata: { example },
+        metadata: example,
       }),
     ]);
   }
@@ -83,7 +106,7 @@ export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
       )
     ).join(" ");
 
-    const exampleDocs = await this.vectorStore.similaritySearch(query, this.k);
+    const exampleDocs = await this.vectorStoreRetriever.invoke(query);
 
     const examples = exampleDocs.map((doc) => doc.metadata);
     if (this.exampleKeys) {

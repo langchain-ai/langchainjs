@@ -42,12 +42,18 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
     ),
   ]);
   const llm = new FakeChatModel({});
+  const retrieverOutputDocs = [
+    new Document({ pageContent: "foo" }),
+    new Document({ pageContent: "bar" }),
+  ];
   const inputs = {
     question: (input: string) => input,
     documents: RunnableSequence.from([
-      new FakeRetriever(),
+      new FakeRetriever({
+        output: retrieverOutputDocs,
+      }),
       (docs: Document[]) => JSON.stringify(docs),
-    ]),
+    ]).withConfig({ runName: "CUSTOM_NAME" }),
     extraField: new FakeLLM({
       response: "testing",
     }).withConfig({ tags: ["only_one"] }),
@@ -60,6 +66,7 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
     {},
     {
       includeTags: ["only_one"],
+      includeNames: ["CUSTOM_NAME"],
     }
   );
   let finalState;
@@ -70,8 +77,13 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
       finalState = finalState.concat(chunk);
     }
   }
-  expect((finalState as RunLog).state.logs.length).toEqual(1);
+  expect((finalState as RunLog).state.logs.FakeLLM).toBeDefined();
   expect(
-    (finalState as RunLog).state.logs[0].final_output.generations[0][0].text
+    (finalState as RunLog).state.logs.FakeLLM.final_output.generations[0][0]
+      .text
   ).toEqual("testing");
+  expect((finalState as RunLog).state.logs.CUSTOM_NAME).toBeDefined();
+  expect(
+    (finalState as RunLog).state.logs.CUSTOM_NAME.final_output.output
+  ).toEqual(JSON.stringify(retrieverOutputDocs));
 });

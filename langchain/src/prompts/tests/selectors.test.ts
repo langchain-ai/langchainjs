@@ -41,3 +41,36 @@ test("Test using SemanticSimilarityExampleSelector", async () => {
   const chosen = await selector.selectExamples({ id: 1 });
   expect(chosen).toEqual([{ id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }]);
 });
+
+test("Test using SemanticSimilarityExampleSelector with metadata filtering", async () => {
+  const vectorStore = await HNSWLib.fromTexts(
+    ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new FakeEmbeddings() // not using  OpenAIEmbeddings() because would be extra dependency
+  );
+  const selector = new SemanticSimilarityExampleSelector({
+    vectorStore,
+    filter: (doc) => doc.metadata.id === 2,
+  });
+  const chosen = await selector.selectExamples({ id: 1 });
+  expect(chosen).toEqual([{ id: 2 }]);
+});
+
+test("Test using SemanticSimilarityExampleSelector with a passed in retriever", async () => {
+  const vectorStore = await HNSWLib.fromTexts(
+    ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new FakeEmbeddings() // not using  OpenAIEmbeddings() because would be extra dependency
+  );
+  const selector = new SemanticSimilarityExampleSelector({
+    vectorStoreRetriever: vectorStore.asRetriever({ k: 5 }),
+  });
+  const chosen = await selector.selectExamples({ id: 1 });
+  expect(chosen).toEqual([
+    { id: 2 },
+    { id: 1 },
+    { id: 3 },
+    { id: 4 },
+    { id: 5 },
+  ]);
+});

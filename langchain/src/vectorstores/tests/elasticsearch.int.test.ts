@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
-import { Client } from "@elastic/elasticsearch";
+import { Client, ClientOptions } from "@elastic/elasticsearch";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { ElasticVectorSearch } from "../elasticsearch.js";
 import { Document } from "../../document.js";
@@ -13,8 +13,7 @@ describe("ElasticVectorSearch", () => {
       throw new Error("ELASTIC_URL not set");
     }
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const config: any = {
+    const config: ClientOptions = {
       node: process.env.ELASTIC_URL,
     };
     if (process.env.ELASTIC_API_KEY) {
@@ -32,7 +31,7 @@ describe("ElasticVectorSearch", () => {
     const indexName = "test_index";
 
     const embeddings = new OpenAIEmbeddings();
-    const store = new ElasticVectorSearch(embeddings, { client, indexName });
+    store = new ElasticVectorSearch(embeddings, { client, indexName });
     await store.deleteIfExists();
 
     expect(store).toBeDefined();

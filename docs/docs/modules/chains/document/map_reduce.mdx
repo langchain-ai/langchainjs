@@ -1,0 +1,26 @@
+# Map reduce
+
+import QAExample from "@examples/chains/question_answering_map_reduce.ts";
+import LcelExample from "@examples/chains/map_reduce_lcel.ts";
+import CodeBlock from "@theme/CodeBlock";
+
+The map reduce documents chain first applies an LLM chain to each document individually (the Map step), treating the chain output as a new document. It then passes all the new documents to a separate combine documents chain to get a single output (the Reduce step). It can optionally first compress, or collapse, the mapped documents to make sure that they fit in the combine documents chain (which will often pass them to an LLM). This compression step is performed recursively if necessary.
+
+![map_reduce_diagram](/img/map_reduce.jpg)
+
+Here's how it looks in practice:
+
+<CodeBlock language="typescript">{QAExample}</CodeBlock>
+
+## With LCEL
+
+To show how this can be implemented in Expression Language, we break the map-reduce chain down into three steps:
+
+1. Summarization of each document
+   - This step summarizes each relevant document so all relevant content can be passed through to the LLM.
+2. Collapsing
+   - Combines the summarized documents into a single document.
+3. Reducing
+   - This step passes the collapsed document through an LLM to get the final output.
+
+<CodeBlock language="typescript">{LcelExample}</CodeBlock>

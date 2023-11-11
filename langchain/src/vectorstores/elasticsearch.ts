@@ -76,7 +76,9 @@ export class ElasticVectorSearch extends VectorStore {
     this.efConstruction = args.vectorSearchOptions?.efConstruction ?? 100;
     this.candidates = args.vectorSearchOptions?.candidates ?? 200;
 
-    this.client = args.client;
+    this.client = args.client.child({
+      headers: { "user-agent": "langchain-js-vs/0.0.1" },
+    });
     this.indexName = args.indexName ?? "documents";
   }
 

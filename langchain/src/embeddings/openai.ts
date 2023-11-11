@@ -63,6 +63,8 @@ export class OpenAIEmbeddings
 
   azureOpenAIBasePath?: string;
 
+  organization?: string;
+
   private client: OpenAIClient;
 
   private clientConfig: ClientOptions;
@@ -72,6 +74,7 @@ export class OpenAIEmbeddings
       Partial<AzureOpenAIInput> & {
         verbose?: boolean;
         openAIApiKey?: string;
+        configuration?: ClientOptions;
       },
     configuration?: ClientOptions & LegacyOpenAIInput
   ) {
@@ -108,6 +111,10 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
+    this.organization =
+      fieldsWithDefaults?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
+
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize =
       fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
@@ -135,11 +142,13 @@ export class OpenAIEmbeddings
 
     this.clientConfig = {
       apiKey,
+      organization: this.organization,
       baseURL: configuration?.basePath,
       dangerouslyAllowBrowser: true,
       defaultHeaders: configuration?.baseOptions?.headers,
       defaultQuery: configuration?.baseOptions?.params,
       ...configuration,
+      ...fields?.configuration,
     };
   }
 

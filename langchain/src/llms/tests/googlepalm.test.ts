@@ -34,6 +34,15 @@ test("Google Palm - `topP` must be positive", async () => {
   ).toThrow();
 });
 
+test("Google Palm - `topP` must be in the range [0,1]", async () => {
+  expect(
+    () =>
+      new GooglePaLM({
+        topP: 3,
+      })
+  ).toThrow();
+});
+
 test("Google Palm - `topK` must be positive", async () => {
   expect(
     () =>

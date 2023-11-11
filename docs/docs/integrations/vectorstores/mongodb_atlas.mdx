@@ -1,0 +1,80 @@
+---
+sidebar_class_name: node-only
+---
+
+# MongoDB Atlas
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+LangChain.js supports MongoDB Atlas as a vector store, and supports both standard similarity search and maximal marginal relevance search,
+which takes a combination of documents are most similar to the inputs, then reranks and optimizes for diversity.
+
+## Setup
+
+### Installation
+
+First, add the Node MongoDB SDK to your project:
+
+```bash npm2yarn
+npm install -S mongodb
+```
+
+### Initial Cluster Configuration
+
+Next, you'll need create a MongoDB Atlas cluster. Navigate to the [MongoDB Atlas website](https://www.mongodb.com/atlas/database) and create an account if you don't already have one.
+
+Create and name a cluster when prompted, then find it under `Database`. Select `Collections` and create either a blank collection or one from the provided sample data.
+
+** Note ** The cluster created must be MongoDB 7.0 or higher. If you are using a pre-7.0 version of MongoDB, you must use a version of langchainjs<=0.0.163.
+
+### Creating an Index
+
+After configuring your cluster, you'll need to create an index on the collection field you want to search over.
+
+Go to the `Search` tab within your cluster, then select `Create Search Index`. Using the JSON editor option, add an index to the collection you wish to use.
+
+```js
+{
+  "mappings": {
+    "fields": {
+      // Default value, should match the name of the field within your collection that contains embeddings
+      "embedding": [
+        {
+          "dimensions": 1024,
+          "similarity": "euclidean",
+          "type": "knnVector"
+        }
+      ]
+    }
+  }
+}
+```
+
+The `dimensions` property should match the dimensionality of the embeddings you are using. For example, Cohere embeddings have 1024 dimensions, and OpenAI embeddings have 1536.
+
+**Note:** By default the vector store expects an index name of `default`, an indexed collection field name of `embedding`, and a raw text field name of `text`. You should initialize the vector store with field names matching your collection schema as shown below.
+
+Finally, proceed to build the index.
+
+## Usage
+
+### Ingestion
+
+import CodeBlock from "@theme/CodeBlock";
+import Ingestion from "@examples/indexes/vector_stores/mongodb_atlas_fromTexts.ts";
+
+<CodeBlock language="typescript">{Ingestion}</CodeBlock>
+
+### Search
+
+import Search from "@examples/indexes/vector_stores/mongodb_atlas_search.ts";
+
+<CodeBlock language="typescript">{Search}</CodeBlock>
+
+### Maximal marginal relevance
+
+import MMRExample from "@examples/indexes/vector_stores/mongodb_mmr.ts";
+
+<CodeBlock language="typescript">{MMRExample}</CodeBlock>

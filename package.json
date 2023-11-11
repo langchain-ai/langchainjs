@@ -12,14 +12,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/hwchase17/langchainjs.git"
+    "url": "https://github.com/langchain-ai/langchainjs.git"
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "build": "turbo run build --filter=\"!docs_skeleton\" --filter=\"!test-exports-*\"",
+    "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
-    "lint": "turbo run lint --filter=\"!docs_skeleton\"",
+    "lint": "turbo run lint --concurrency 1",
     "lint:fix": "yarn lint -- --fix",
     "test": "yarn test:unit && yarn workspace langchain build && yarn test:exports:docker",
     "test:unit": "turbo run test --filter langchain",
@@ -27,10 +27,10 @@
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
     "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
     "test:exports:docker": "docker compose up --force-recreate",
-    "publish": "bash langchain/scripts/release-branch.sh && turbo run --filter langchain build lint test && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
+    "publish": "bash langchain/scripts/release-branch.sh && turbo run --filter langchain build lint test && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
-    "docs": "yarn workspace docs dev",
+    "docs": "yarn workspace docs start",
     "postinstall": "husky install"
   },
   "author": "LangChain",

@@ -7,7 +7,6 @@ import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   BaseChatPromptTemplate,
-  BasePromptTemplate,
   SerializedBasePromptTemplate,
   renderTemplate,
 } from "langchain/prompts";
@@ -50,7 +49,7 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
   }
 
   _getPromptType(): string {
-    throw new Error("Not implemented");
+    return "chat";
   }
 
   async formatMessages(values: InputValues): Promise<BaseMessage[]> {

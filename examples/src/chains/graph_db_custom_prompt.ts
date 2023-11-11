@@ -21,6 +21,17 @@ await graph.query(
     "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
 );
 
+// Refresh schema
+await graph.refreshSchema();
+
+/**
+ * A good practice is to ask the LLM to return only Cypher statement or
+ * wrap the generated Cypher statement with three backticks (```) to avoid
+ * Cypher statement parsing errors.
+ * Custom prompts are also great for providing generated Cypher statement
+ * examples for particular questions.
+ */
+
 const cypherTemplate = `Task:Generate Cypher statement to query a graph database.
 Instructions:
 Use only the provided relationship types and properties in the schema.
@@ -30,6 +41,11 @@ Schema:
 Note: Do not include any explanations or apologies in your responses.
 Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
 Do not include any text except the generated Cypher statement.
+Follow these Cypher example when Generating Cypher statements:
+# How many actors played in Top Gun?
+MATCH (m:Movie {{title:"Top Gun"}})<-[:ACTED_IN]-()
+RETURN count(*) AS result 
+
 The question is:
 {question}`;
 

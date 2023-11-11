@@ -12,7 +12,8 @@ import {
 } from "../util/async_caller.js";
 import {
   GoogleVertexAIConnectionParams,
-  GoogleVertexAIResponse,
+  GoogleResponse,
+  GoogleAbstractedClientOpsMethod,
 } from "../types/googlevertexai-types.js";
 import { Docstore } from "../schema/index.js";
 
@@ -46,7 +47,7 @@ interface DeployedIndex {
   // There are other attributes, but we don't care about them right now
 }
 
-interface IndexEndpointResponse extends GoogleVertexAIResponse {
+interface IndexEndpointResponse extends GoogleResponse {
   data: {
     deployedIndexes: DeployedIndex[];
     publicEndpointDomainName: string;
@@ -73,7 +74,7 @@ class IndexEndpointConnection extends GoogleVertexAIConnection<
     return url;
   }
 
-  buildMethod() {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "GET";
   }
 
@@ -101,7 +102,7 @@ interface RemoveDatapointRequest {
   datapointIds: string[];
 }
 
-interface RemoveDatapointResponse extends GoogleVertexAIResponse {
+interface RemoveDatapointResponse extends GoogleResponse {
   // Should be empty
 }
 
@@ -124,7 +125,7 @@ class RemoveDatapointConnection extends GoogleVertexAIConnection<
     return url;
   }
 
-  buildMethod(): string {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "POST";
   }
 
@@ -165,7 +166,7 @@ interface UpsertDatapointRequest {
   datapoints: IndexDatapoint[];
 }
 
-interface UpsertDatapointResponse extends GoogleVertexAIResponse {
+interface UpsertDatapointResponse extends GoogleResponse {
   // Should be empty
 }
 
@@ -188,7 +189,7 @@ class UpsertDatapointConnection extends GoogleVertexAIConnection<
     return url;
   }
 
-  buildMethod(): string {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "POST";
   }
 
@@ -239,7 +240,7 @@ interface FindNeighborsResponseNearestNeighbor {
   neighbors: FindNeighborsResponseNeighbor[];
 }
 
-interface FindNeighborsResponse extends GoogleVertexAIResponse {
+interface FindNeighborsResponse extends GoogleResponse {
   data: {
     nearestNeighbors: FindNeighborsResponseNearestNeighbor[];
   };
@@ -270,7 +271,7 @@ class FindNeighborsConnection
     return url;
   }
 
-  buildMethod(): string {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "POST";
   }
 

@@ -2,6 +2,7 @@ import {
   BaseStringPromptTemplate,
   BasePromptTemplateInput,
   BaseExampleSelector,
+  TypedPromptInputValues,
 } from "./base.js";
 import {
   TemplateFormat,
@@ -10,7 +11,13 @@ import {
 } from "./template.js";
 import { PromptTemplate } from "./prompt.js";
 import { SerializedFewShotTemplate } from "./serde.js";
-import { Example, InputValues, PartialValues } from "../schema/index.js";
+import {
+  BaseMessage,
+  Example,
+  InputValues,
+  PartialValues,
+} from "../schema/index.js";
+import { BaseChatPromptTemplate, BaseMessagePromptTemplate } from "./chat.js";
 
 export interface FewShotPromptTemplateInput
   extends BasePromptTemplateInput<InputValues> {
@@ -123,6 +130,10 @@ export class FewShotPromptTemplate
     return "few_shot";
   }
 
+  static lc_name() {
+    return "FewShotPromptTemplate";
+  }
+
   private async getExamples(
     inputVariables: InputValues
   ): Promise<InputValues[]> {
@@ -225,5 +236,230 @@ export class FewShotPromptTemplate
       suffix: data.suffix,
       templateFormat: data.template_format,
     });
+  }
+}
+
+export interface FewShotChatMessagePromptTemplateInput
+  extends BasePromptTemplateInput<InputValues> {
+  /**
+   * Examples to format into the prompt. Exactly one of this or
+   * {@link exampleSelector} must be
+   * provided.
+   */
+  examples?: Example[];
+
+  /**
+   * An {@link BaseMessagePromptTemplate} | {@link BaseChatPromptTemplate} used to format a single example.
+   */
+  examplePrompt: BaseMessagePromptTemplate | BaseChatPromptTemplate;
+
+  /**
+   * String separator used to join the prefix, the examples, and suffix.
+   *
+   * @defaultValue `"\n\n"`
+   */
+  exampleSeparator?: string;
+
+  /**
+   * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
+   * {@link examples} must be
+   * provided.
+   */
+  exampleSelector?: BaseExampleSelector | undefined;
+
+  /**
+   * A prompt template string to put before the examples.
+   *
+   * @defaultValue `""`
+   */
+  prefix?: string;
+
+  /**
+   * A prompt template string to put after the examples.
+   *
+   * @defaultValue `""`
+   */
+  suffix?: string;
+
+  /**
+   * The format of the prompt template. Options are: 'f-string'
+   *
+   * @defaultValue `f-string`
+   */
+  templateFormat?: TemplateFormat;
+
+  /**
+   * Whether or not to try validating the template on initialization.
+   *
+   * @defaultValue `true`
+   */
+  validateTemplate?: boolean;
+}
+
+/**
+ * Chat prompt template that contains few-shot examples.
+ * @augments BasePromptTemplateInput
+ * @augments FewShotChatMessagePromptTemplateInput
+ */
+export class FewShotChatMessagePromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PartialVariableName extends string = any
+  >
+  extends BaseChatPromptTemplate
+  implements FewShotChatMessagePromptTemplateInput
+{
+  lc_serializable = true;
+
+  examples?: InputValues[];
+
+  exampleSelector?: BaseExampleSelector | undefined;
+
+  examplePrompt: BaseMessagePromptTemplate | BaseChatPromptTemplate;
+
+  suffix = "";
+
+  exampleSeparator = "\n\n";
+
+  prefix = "";
+
+  templateFormat: TemplateFormat = "f-string";
+
+  validateTemplate = true;
+
+  _getPromptType(): "few_shot_chat" {
+    return "few_shot_chat";
+  }
+
+  static lc_name() {
+    return "FewShotChatMessagePromptTemplate";
+  }
+
+  constructor(fields: FewShotChatMessagePromptTemplateInput) {
+    super(fields);
+
+    this.examples = fields.examples;
+    this.examplePrompt = fields.examplePrompt;
+    this.exampleSeparator = fields.exampleSeparator ?? "\n\n";
+    this.exampleSelector = fields.exampleSelector;
+    this.prefix = fields.prefix ?? "";
+    this.suffix = fields.suffix ?? "";
+    this.templateFormat = fields.templateFormat ?? "f-string";
+    this.validateTemplate = fields.validateTemplate ?? true;
+
+    if (this.examples !== undefined && this.exampleSelector !== undefined) {
+      throw new Error(
+        "Only one of 'examples' and 'example_selector' should be provided"
+      );
+    }
+
+    if (this.examples === undefined && this.exampleSelector === undefined) {
+      throw new Error(
+        "One of 'examples' and 'example_selector' should be provided"
+      );
+    }
+
+    if (this.validateTemplate) {
+      let totalInputVariables: string[] = this.inputVariables;
+      if (this.partialVariables) {
+        totalInputVariables = totalInputVariables.concat(
+          Object.keys(this.partialVariables)
+        );
+      }
+      checkValidTemplate(
+        this.prefix + this.suffix,
+        this.templateFormat,
+        totalInputVariables
+      );
+    }
+  }
+
+  private async getExamples(
+    inputVariables: InputValues
+  ): Promise<InputValues[]> {
+    if (this.examples !== undefined) {
+      return this.examples;
+    }
+    if (this.exampleSelector !== undefined) {
+      return this.exampleSelector.selectExamples(inputVariables);
+    }
+
+    throw new Error(
+      "One of 'examples' and 'example_selector' should be provided"
+    );
+  }
+
+  /**
+   * Formats the list of values and returns a list of formatted messages.
+   * @param values The values to format the prompt with.
+   * @returns A promise that resolves to a string representing the formatted prompt.
+   */
+  async formatMessages(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<BaseMessage[]> {
+    const allValues = await this.mergePartialAndUserVariables(values);
+    let examples = await this.getExamples(allValues);
+
+    examples = examples.map((example) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: Record<string, any> = {};
+      this.examplePrompt.inputVariables.forEach((inputVariable) => {
+        result[inputVariable] = example[inputVariable];
+      });
+      return result;
+    });
+
+    const messages: BaseMessage[] = [];
+    for (const example of examples) {
+      const exampleMessages = await this.examplePrompt.formatMessages(example);
+      messages.push(...exampleMessages);
+    }
+    return messages;
+  }
+
+  /**
+   * Formats the prompt with the given values.
+   * @param values The values to format the prompt with.
+   * @returns A promise that resolves to a string representing the formatted prompt.
+   */
+  async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
+    const allValues = await this.mergePartialAndUserVariables(values);
+    const examples = await this.getExamples(allValues);
+    const exampleMessages = await Promise.all(
+      examples.map((example) => this.examplePrompt.formatMessages(example))
+    );
+    const exampleStrings = exampleMessages
+      .flat()
+      .map((message) => message.content);
+    const template = [this.prefix, ...exampleStrings, this.suffix].join(
+      this.exampleSeparator
+    );
+    return renderTemplate(template, this.templateFormat, allValues);
+  }
+
+  /**
+   * Partially formats the prompt with the given values.
+   * @param values The values to partially format the prompt with.
+   * @returns A promise that resolves to an instance of `FewShotChatMessagePromptTemplate` with the given values partially formatted.
+   */
+  async partial(
+    values: PartialValues<PartialVariableName>
+  ): Promise<FewShotChatMessagePromptTemplate<RunInput, PartialVariableName>> {
+    const newInputVariables = this.inputVariables.filter(
+      (variable) => !(variable in values)
+    ) as Exclude<Extract<keyof RunInput, string>, PartialVariableName>[];
+    const newPartialVariables = {
+      ...(this.partialVariables ?? {}),
+      ...values,
+    } as PartialValues<PartialVariableName | PartialVariableName>;
+    const promptDict = {
+      ...this,
+      inputVariables: newInputVariables,
+      partialVariables: newPartialVariables,
+    };
+    return new FewShotChatMessagePromptTemplate<
+      InputValues<Exclude<Extract<keyof RunInput, string>, PartialVariableName>>
+    >(promptDict);
   }
 }

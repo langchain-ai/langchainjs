@@ -644,11 +644,13 @@ function genCollectionName(): string {
 
 function getTextFieldMaxLength(documents: Document[]) {
   let textMaxLength = 0;
+  const textEncoder = new TextEncoder();
   // eslint-disable-next-line no-plusplus
   for (let i = 0; i < documents.length; i++) {
     const text = documents[i].pageContent;
-    if (text.length > textMaxLength) {
-      textMaxLength = text.length;
+    const textLengthInBytes = textEncoder.encode(text).length;
+    if (textLengthInBytes > textMaxLength) {
+      textMaxLength = textLengthInBytes;
     }
   }
   return textMaxLength;

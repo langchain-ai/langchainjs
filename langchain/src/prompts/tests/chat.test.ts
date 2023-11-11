@@ -117,6 +117,18 @@ test("Test format with invalid input variables", async () => {
   );
 });
 
+test("Test fromTemplate", async () => {
+  const chatPrompt = ChatPromptTemplate.fromTemplate("Hello {foo}, I'm {bar}");
+  expect(chatPrompt.inputVariables).toEqual(["foo", "bar"]);
+  const messages = await chatPrompt.formatPromptValue({
+    foo: "Foo",
+    bar: "Bar",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new HumanMessage("Hello Foo, I'm Bar"),
+  ]);
+});
+
 test("Test fromMessages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
@@ -282,7 +294,7 @@ test("Test using partial", async () => {
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
-    `"[{"lc":1,"type":"constructor","id":["langchain","schema","HumanMessage"],"kwargs":{"content":"foobaz","additional_kwargs":{}}}]"`
+    `"Human: foobaz"`
   );
 });
 
@@ -303,4 +315,53 @@ test("Test BaseMessage", async () => {
     new AIMessage("Bob is my name."),
     new FunctionMessage({ content: "{}", name: "get_weather" }),
   ]);
+});
+
+test("Throws if trying to pass non BaseMessage inputs to MessagesPlaceholder", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "some string"],
+    new MessagesPlaceholder("chatHistory"),
+    ["human", "{question}"],
+  ]);
+  const value = "this is not a valid input type!";
+
+  try {
+    await prompt.formatMessages({
+      chatHistory: value,
+      question: "What is the meaning of life?",
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (e instanceof Error) {
+      expect(e.name).toBe("InputFormatError");
+    } else {
+      throw e;
+    }
+  }
+});
+
+test("Does not throws if null or undefined is passed as input to MessagesPlaceholder", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "some string"],
+    new MessagesPlaceholder("chatHistory"),
+    new MessagesPlaceholder("chatHistory2"),
+    ["human", "{question}"],
+  ]);
+  const value1 = null;
+  const value2 = undefined;
+
+  try {
+    await prompt.formatMessages({
+      chatHistory: value1,
+      chatHistory2: value2,
+      question: "What is the meaning of life?",
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (e instanceof Error) {
+      expect(e.name).toBe("InputFormatError");
+    } else {
+      throw e;
+    }
+  }
 });

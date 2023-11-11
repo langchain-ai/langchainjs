@@ -1,4 +1,3 @@
-import type { OpenAI as OpenAIClient } from "openai";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
@@ -24,47 +23,11 @@ import {
 } from "../../prompts/chat.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { OutputParserException } from "../../schema/output_parser.js";
-
-/**
- * Type that represents an agent action with an optional message log.
- */
-type FunctionsAgentAction = AgentAction & {
-  messageLog?: BaseMessage[];
-};
-
-/**
- * Parses the output message into a FunctionsAgentAction or AgentFinish
- * object.
- * @param message The BaseMessage to parse.
- * @returns A FunctionsAgentAction or AgentFinish object.
- */
-function parseOutput(message: BaseMessage): FunctionsAgentAction | AgentFinish {
-  if (message.additional_kwargs.function_call) {
-    // eslint-disable-next-line prefer-destructuring
-    const function_call: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall =
-      message.additional_kwargs.function_call;
-    try {
-      const toolInput = function_call.arguments
-        ? JSON.parse(function_call.arguments)
-        : {};
-      return {
-        tool: function_call.name as string,
-        toolInput,
-        log: `Invoking "${function_call.name}" with ${
-          function_call.arguments ?? "{}"
-        }\n${message.content}`,
-        messageLog: [message],
-      };
-    } catch (error) {
-      throw new OutputParserException(
-        `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
-      );
-    }
-  } else {
-    return { returnValues: { output: message.content }, log: message.content };
-  }
-}
+import {
+  FunctionsAgentAction,
+  OpenAIFunctionsAgentOutputParser,
+} from "./output_parser.js";
+import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 
 /**
  * Checks if the given action is a FunctionsAgentAction.
@@ -143,6 +106,9 @@ export class OpenAIAgent extends Agent {
   }
 
   tools: StructuredTool[];
+
+  outputParser: OpenAIFunctionsAgentOutputParser =
+    new OpenAIFunctionsAgentOutputParser();
 
   constructor(input: Omit<OpenAIAgentInput, "outputParser">) {
     super({ ...input, outputParser: undefined });
@@ -236,7 +202,7 @@ export class OpenAIAgent extends Agent {
     const llm = this.llmChain.llm as ChatOpenAI;
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: (typeof llm)["CallOptions"] = {
-      tools: this.tools,
+      functions: this.tools.map(formatToOpenAIFunction),
     };
     for (const key of this.llmChain.llm.callKeys) {
       if (key in inputs) {
@@ -253,6 +219,6 @@ export class OpenAIAgent extends Agent {
       valuesForLLM,
       callbackManager
     );
-    return parseOutput(message);
+    return this.outputParser.parseAIMessage(message);
   }
 }

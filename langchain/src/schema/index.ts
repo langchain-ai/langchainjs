@@ -85,6 +85,7 @@ export interface StoredMessageData {
   content: string;
   role: string | undefined;
   name: string | undefined;
+  tool_call_id: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
 }
@@ -99,13 +100,28 @@ export interface StoredGeneration {
   message?: StoredMessage;
 }
 
-export type MessageType = "human" | "ai" | "generic" | "system" | "function";
+export type MessageType =
+  | "human"
+  | "ai"
+  | "generic"
+  | "system"
+  | "function"
+  | "tool";
+
+export type MessageContent =
+  | string
+  | {
+      type: "text" | "image_url";
+      text?: string;
+      image_url?: string | { url: string };
+    }[];
 
 export interface BaseMessageFields {
-  content: string;
+  content: MessageContent;
   name?: string;
   additional_kwargs?: {
     function_call?: OpenAIClient.Chat.ChatCompletionMessage.FunctionCall;
+    tool_calls?: OpenAIClient.Chat.ChatCompletionMessageToolCall[];
     [key: string]: unknown;
   };
 }
@@ -116,6 +132,31 @@ export interface ChatMessageFieldsWithRole extends BaseMessageFields {
 
 export interface FunctionMessageFieldsWithName extends BaseMessageFields {
   name: string;
+}
+
+export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
+  tool_call_id: string;
+}
+
+function mergeContent(
+  firstContent: MessageContent,
+  secondContent: MessageContent
+): MessageContent {
+  // If first content is a string
+  if (typeof firstContent === "string") {
+    if (typeof secondContent === "string") {
+      return firstContent + secondContent;
+    } else {
+      return [{ type: "text", text: firstContent }, ...secondContent];
+    }
+    // If both are arrays
+  } else if (Array.isArray(secondContent)) {
+    return [...firstContent, ...secondContent];
+    // If the first content is a list and second is a string
+  } else {
+    // Otherwise, add the second content as a new element of the list
+    return [...firstContent, { type: "text", text: secondContent }];
+  }
 }
 
 /**
@@ -136,11 +177,11 @@ export abstract class BaseMessage
    * Use {@link BaseMessage.content} instead.
    */
   get text(): string {
-    return this.content;
+    return typeof this.content === "string" ? this.content : "";
   }
 
-  /** The text of the message. */
-  content: string;
+  /** The content of the message. */
+  content: MessageContent;
 
   /** The name of the message sender in a multi-user chat. */
   name?: string;
@@ -178,6 +219,41 @@ export abstract class BaseMessage
         .kwargs as StoredMessageData,
     };
   }
+
+  toChunk(): BaseMessageChunk {
+    const type = this._getType();
+    if (type === "human") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new HumanMessageChunk({ ...this });
+    } else if (type === "ai") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new AIMessageChunk({ ...this });
+    } else if (type === "system") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new SystemMessageChunk({ ...this });
+    } else if (type === "function") {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new FunctionMessageChunk({ ...this });
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    } else if (ChatMessage.isInstance(this)) {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return new ChatMessageChunk({ ...this });
+    } else {
+      throw new Error("Unknown message type.");
+    }
+  }
+}
+
+// TODO: Deprecate when SDK typing is updated
+export type OpenAIToolCall = OpenAIClient.ChatCompletionMessageToolCall & {
+  index: number;
+};
+
+function isOpenAIToolCallArray(value?: unknown): value is OpenAIToolCall[] {
+  return (
+    Array.isArray(value) &&
+    value.every((v) => typeof (v as OpenAIToolCall).index === "number")
+  );
 }
 
 /**
@@ -212,6 +288,32 @@ export abstract class BaseMessageChunk extends BaseMessage {
           merged[key] as NonNullable<BaseMessageFields["additional_kwargs"]>,
           value as NonNullable<BaseMessageFields["additional_kwargs"]>
         );
+      } else if (
+        key === "tool_calls" &&
+        isOpenAIToolCallArray(merged[key]) &&
+        isOpenAIToolCallArray(value)
+      ) {
+        for (const toolCall of value) {
+          if (merged[key]?.[toolCall.index] !== undefined) {
+            merged[key] = merged[key]?.map((value, i) => {
+              if (i !== toolCall.index) {
+                return value;
+              }
+              return {
+                ...value,
+                ...toolCall,
+                function: {
+                  name: toolCall.function.name ?? value.function.name,
+                  arguments:
+                    (value.function.arguments ?? "") +
+                    (toolCall.function.arguments ?? ""),
+                },
+              };
+            });
+          } else {
+            (merged[key] as OpenAIToolCall[])[toolCall.index] = toolCall;
+          }
+        }
       } else {
         throw new Error(
           `additional_kwargs[${key}] already exists in this message chunk.`
@@ -250,7 +352,7 @@ export class HumanMessageChunk extends BaseMessageChunk {
 
   concat(chunk: HumanMessageChunk) {
     return new HumanMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: HumanMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -287,7 +389,7 @@ export class AIMessageChunk extends BaseMessageChunk {
 
   concat(chunk: AIMessageChunk) {
     return new AIMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: AIMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -324,7 +426,7 @@ export class SystemMessageChunk extends BaseMessageChunk {
 
   concat(chunk: SystemMessageChunk) {
     return new SystemMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: SystemMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -405,12 +507,80 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 
   concat(chunk: FunctionMessageChunk) {
     return new FunctionMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: FunctionMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
       ),
       name: this.name ?? "",
+    });
+  }
+}
+
+/**
+ * Represents a tool message in a conversation.
+ */
+export class ToolMessage extends BaseMessage {
+  static lc_name() {
+    return "ToolMessage";
+  }
+
+  tool_call_id: string;
+
+  constructor(fields: ToolMessageFieldsWithToolCallId);
+
+  constructor(
+    fields: string | BaseMessageFields,
+    tool_call_id: string,
+    name?: string
+  );
+
+  constructor(
+    fields: string | ToolMessageFieldsWithToolCallId,
+    tool_call_id?: string,
+    name?: string
+  ) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { content: fields, name, tool_call_id: tool_call_id! };
+    }
+    super(fields);
+    this.tool_call_id = fields.tool_call_id;
+  }
+
+  _getType(): MessageType {
+    return "tool";
+  }
+}
+
+/**
+ * Represents a chunk of a function message, which can be concatenated
+ * with other function message chunks.
+ */
+export class ToolMessageChunk extends BaseMessageChunk {
+  tool_call_id: string;
+
+  constructor(fields: ToolMessageFieldsWithToolCallId) {
+    super(fields);
+    this.tool_call_id = fields.tool_call_id;
+  }
+
+  static lc_name() {
+    return "ToolMessageChunk";
+  }
+
+  _getType(): MessageType {
+    return "tool";
+  }
+
+  concat(chunk: ToolMessageChunk) {
+    return new ToolMessageChunk({
+      content: mergeContent(this.content, chunk.content),
+      additional_kwargs: ToolMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+      tool_call_id: this.tool_call_id,
     });
   }
 }
@@ -459,9 +629,18 @@ export type BaseMessageLike =
   | string;
 
 export function isBaseMessage(
-  messageLike: BaseMessageLike
+  messageLike?: unknown
 ): messageLike is BaseMessage {
-  return typeof (messageLike as BaseMessage)._getType === "function";
+  return typeof (messageLike as BaseMessage)?._getType === "function";
+}
+
+export function isBaseMessageChunk(
+  messageLike?: unknown
+): messageLike is BaseMessageChunk {
+  return (
+    isBaseMessage(messageLike) &&
+    typeof (messageLike as BaseMessageChunk).concat === "function"
+  );
 }
 
 export function coerceMessageLikeToMessage(
@@ -516,7 +695,7 @@ export class ChatMessageChunk extends BaseMessageChunk {
 
   concat(chunk: ChatMessageChunk) {
     return new ChatMessageChunk({
-      content: this.content + chunk.content,
+      content: mergeContent(this.content, chunk.content),
       additional_kwargs: ChatMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
         chunk.additional_kwargs
@@ -584,6 +763,7 @@ function mapV1MessageToStoredMessage(
         content: v1Message.text,
         role: v1Message.role,
         name: undefined,
+        tool_call_id: undefined,
       },
     };
   }
@@ -604,6 +784,13 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       }
       return new FunctionMessage(
         storedMessage.data as FunctionMessageFieldsWithName
+      );
+    case "tool":
+      if (storedMessage.data.tool_call_id === undefined) {
+        throw new Error("Tool call ID must be defined for tool messages");
+      }
+      return new ToolMessage(
+        storedMessage.data as ToolMessageFieldsWithToolCallId
       );
     case "chat": {
       if (storedMessage.data.role === undefined) {

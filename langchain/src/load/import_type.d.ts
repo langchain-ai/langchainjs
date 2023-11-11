@@ -43,6 +43,9 @@ export interface OptionalImportMap {
   "langchain/chains/graph_qa/cypher"?:
     | typeof import("../chains/graph_qa/cypher.js")
     | Promise<typeof import("../chains/graph_qa/cypher.js")>;
+  "langchain/embeddings/bedrock"?:
+    | typeof import("../embeddings/bedrock.js")
+    | Promise<typeof import("../embeddings/bedrock.js")>;
   "langchain/embeddings/cloudflare_workersai"?:
     | typeof import("../embeddings/cloudflare_workersai.js")
     | Promise<typeof import("../embeddings/cloudflare_workersai.js")>;
@@ -64,6 +67,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/googlepalm"?:
     | typeof import("../embeddings/googlepalm.js")
     | Promise<typeof import("../embeddings/googlepalm.js")>;
+  "langchain/embeddings/llama_cpp"?:
+    | typeof import("../embeddings/llama_cpp.js")
+    | Promise<typeof import("../embeddings/llama_cpp.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
@@ -92,26 +98,44 @@ export interface OptionalImportMap {
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
   "langchain/llms/bedrock"?:
-    | typeof import("../llms/bedrock.js")
-    | Promise<typeof import("../llms/bedrock.js")>;
+    | typeof import("../llms/bedrock/index.js")
+    | Promise<typeof import("../llms/bedrock/index.js")>;
+  "langchain/llms/bedrock/web"?:
+    | typeof import("../llms/bedrock/web.js")
+    | Promise<typeof import("../llms/bedrock/web.js")>;
   "langchain/llms/llama_cpp"?:
     | typeof import("../llms/llama_cpp.js")
     | Promise<typeof import("../llms/llama_cpp.js")>;
   "langchain/llms/writer"?:
     | typeof import("../llms/writer.js")
     | Promise<typeof import("../llms/writer.js")>;
+  "langchain/llms/portkey"?:
+    | typeof import("../llms/portkey.js")
+    | Promise<typeof import("../llms/portkey.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
+  "langchain/vectorstores/cassandra"?:
+    | typeof import("../vectorstores/cassandra.js")
+    | Promise<typeof import("../vectorstores/cassandra.js")>;
+  "langchain/vectorstores/convex"?:
+    | typeof import("../vectorstores/convex.js")
+    | Promise<typeof import("../vectorstores/convex.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
   "langchain/vectorstores/cloudflare_vectorize"?:
     | typeof import("../vectorstores/cloudflare_vectorize.js")
     | Promise<typeof import("../vectorstores/cloudflare_vectorize.js")>;
+  "langchain/vectorstores/closevector/web"?:
+    | typeof import("../vectorstores/closevector/web.js")
+    | Promise<typeof import("../vectorstores/closevector/web.js")>;
+  "langchain/vectorstores/closevector/node"?:
+    | typeof import("../vectorstores/closevector/node.js")
+    | Promise<typeof import("../vectorstores/closevector/node.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
@@ -130,6 +154,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/lancedb"?:
     | typeof import("../vectorstores/lancedb.js")
     | Promise<typeof import("../vectorstores/lancedb.js")>;
+  "langchain/vectorstores/momento_vector_index"?:
+    | typeof import("../vectorstores/momento_vector_index.js")
+    | Promise<typeof import("../vectorstores/momento_vector_index.js")>;
   "langchain/vectorstores/mongo"?:
     | typeof import("../vectorstores/mongo.js")
     | Promise<typeof import("../vectorstores/mongo.js")>;
@@ -154,6 +181,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/milvus"?:
     | typeof import("../vectorstores/milvus.js")
     | Promise<typeof import("../vectorstores/milvus.js")>;
+  "langchain/vectorstores/neo4j_vector"?:
+    | typeof import("../vectorstores/neo4j_vector.js")
+    | Promise<typeof import("../vectorstores/neo4j_vector.js")>;
   "langchain/vectorstores/typeorm"?:
     | typeof import("../vectorstores/typeorm.js")
     | Promise<typeof import("../vectorstores/typeorm.js")>;
@@ -292,9 +322,15 @@ export interface OptionalImportMap {
   "langchain/document_transformers/mozilla_readability"?:
     | typeof import("../document_transformers/mozilla_readability.js")
     | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
+  "langchain/chat_models/portkey"?:
+    | typeof import("../chat_models/portkey.js")
+    | Promise<typeof import("../chat_models/portkey.js")>;
   "langchain/chat_models/bedrock"?:
-    | typeof import("../chat_models/bedrock.js")
-    | Promise<typeof import("../chat_models/bedrock.js")>;
+    | typeof import("../chat_models/bedrock/index.js")
+    | Promise<typeof import("../chat_models/bedrock/index.js")>;
+  "langchain/chat_models/bedrock/web"?:
+    | typeof import("../chat_models/bedrock/web.js")
+    | Promise<typeof import("../chat_models/bedrock/web.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai/index.js")
     | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
@@ -304,6 +340,15 @@ export interface OptionalImportMap {
   "langchain/chat_models/googlepalm"?:
     | typeof import("../chat_models/googlepalm.js")
     | Promise<typeof import("../chat_models/googlepalm.js")>;
+  "langchain/chat_models/iflytek_xinghuo"?:
+    | typeof import("../chat_models/iflytek_xinghuo/index.js")
+    | Promise<typeof import("../chat_models/iflytek_xinghuo/index.js")>;
+  "langchain/chat_models/iflytek_xinghuo/web"?:
+    | typeof import("../chat_models/iflytek_xinghuo/web.js")
+    | Promise<typeof import("../chat_models/iflytek_xinghuo/web.js")>;
+  "langchain/chat_models/llama_cpp"?:
+    | typeof import("../chat_models/llama_cpp.js")
+    | Promise<typeof import("../chat_models/llama_cpp.js")>;
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;
@@ -364,6 +409,12 @@ export interface OptionalImportMap {
   "langchain/stores/file/node"?:
     | typeof import("../stores/file/node.js")
     | Promise<typeof import("../stores/file/node.js")>;
+  "langchain/stores/message/cassandra"?:
+    | typeof import("../stores/message/cassandra.js")
+    | Promise<typeof import("../stores/message/cassandra.js")>;
+  "langchain/stores/message/convex"?:
+    | typeof import("../stores/message/convex.js")
+    | Promise<typeof import("../stores/message/convex.js")>;
   "langchain/stores/message/cloudflare_d1"?:
     | typeof import("../stores/message/cloudflare_d1.js")
     | Promise<typeof import("../stores/message/cloudflare_d1.js")>;
@@ -394,15 +445,30 @@ export interface OptionalImportMap {
   "langchain/stores/message/xata"?:
     | typeof import("../stores/message/xata.js")
     | Promise<typeof import("../stores/message/xata.js")>;
+  "langchain/storage/convex"?:
+    | typeof import("../storage/convex.js")
+    | Promise<typeof import("../storage/convex.js")>;
   "langchain/storage/ioredis"?:
     | typeof import("../storage/ioredis.js")
     | Promise<typeof import("../storage/ioredis.js")>;
+  "langchain/storage/vercel_kv"?:
+    | typeof import("../storage/vercel_kv.js")
+    | Promise<typeof import("../storage/vercel_kv.js")>;
+  "langchain/storage/upstash_redis"?:
+    | typeof import("../storage/upstash_redis.js")
+    | Promise<typeof import("../storage/upstash_redis.js")>;
+  "langchain/storage/file_system"?:
+    | typeof import("../storage/file_system.js")
+    | Promise<typeof import("../storage/file_system.js")>;
   "langchain/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;
   "langchain/hub"?:
     | typeof import("../hub.js")
     | Promise<typeof import("../hub.js")>;
+  "langchain/util/convex"?:
+    | typeof import("../util/convex.js")
+    | Promise<typeof import("../util/convex.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
@@ -412,6 +478,9 @@ export interface OptionalImportMap {
   "langchain/experimental/llms/bittensor"?:
     | typeof import("../experimental/llms/bittensor.js")
     | Promise<typeof import("../experimental/llms/bittensor.js")>;
+  "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
+    | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
+    | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
 }
 
 export interface SecretMap {
@@ -423,6 +492,8 @@ export interface SecretMap {
   AZURE_OPENAI_API_KEY?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
+  BEDROCK_AWS_ACCESS_KEY_ID?: string;
+  BEDROCK_AWS_SECRET_ACCESS_KEY?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
@@ -430,6 +501,8 @@ export interface SecretMap {
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
   HUGGINGFACEHUB_API_KEY?: string;
+  IFLYTEK_API_KEY?: string;
+  IFLYTEK_API_SECRET?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
@@ -457,6 +530,8 @@ export interface SecretMap {
   VECTARA_CUSTOMER_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
+  YC_API_KEY?: string;
+  YC_IAM_TOKEN?: string;
   ZAPIER_NLA_API_KEY?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;

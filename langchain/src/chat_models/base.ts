@@ -63,7 +63,13 @@ export function createChatMessageChunkEncoderStream() {
   const textEncoder = new TextEncoder();
   return new TransformStream<BaseMessageChunk>({
     transform(chunk: BaseMessageChunk, controller) {
-      controller.enqueue(textEncoder.encode(chunk.content));
+      controller.enqueue(
+        textEncoder.encode(
+          typeof chunk.content === "string"
+            ? chunk.content
+            : JSON.stringify(chunk.content)
+        )
+      );
     },
   });
 }
@@ -164,7 +170,10 @@ export abstract class BaseChatModel<
         [messages],
         undefined,
         undefined,
-        extra
+        extra,
+        undefined,
+        undefined,
+        runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
       try {
@@ -228,7 +237,10 @@ export abstract class BaseChatModel<
       baseMessages,
       undefined,
       undefined,
-      extra
+      extra,
+      undefined,
+      undefined,
+      handledOptions.runName
     );
     // generate results
     const results = await Promise.allSettled(
@@ -467,6 +479,9 @@ export abstract class BaseChatModel<
   ): Promise<string> {
     const message = new HumanMessage(text);
     const result = await this.call([message], options, callbacks);
+    if (typeof result.content !== "string") {
+      throw new Error("Cannot use predict when output is not a string.");
+    }
     return result.content;
   }
 }
@@ -491,6 +506,11 @@ export abstract class SimpleChatModel<
   ): Promise<ChatResult> {
     const text = await this._call(messages, options, runManager);
     const message = new AIMessage(text);
+    if (typeof message.content !== "string") {
+      throw new Error(
+        "Cannot generate with a simple chat model when output is not a string."
+      );
+    }
     return {
       generations: [
         {
