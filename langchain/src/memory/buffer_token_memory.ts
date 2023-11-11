@@ -21,7 +21,7 @@ export interface ConversationTokenBufferMemoryInput extends BaseChatMemoryInput 
     /* Memory key for buffer instance. */
     memoryKey?: string;
 
-    /* Maximmum number of tokens allowed in the buffer. */
+    /* Maximum number of tokens allowed in the buffer. */
     maxTokenLimit?: number;
 }
 
