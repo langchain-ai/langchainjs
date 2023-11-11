@@ -93,7 +93,8 @@ console.log(res);
 
 /*
   AIMessage {
-    content: '```json\n{\n  "response": "Hello! How can I assist you today?"\n}\n```',
-    additional_kwargs: { function_call: undefined }
+    content: '{\n  "response": "How can I assist you today?"\n}',
+    name: undefined,
+    additional_kwargs: { function_call: undefined, tool_calls: undefined }
   }
 */

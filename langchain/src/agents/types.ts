@@ -45,6 +45,14 @@ export abstract class AgentActionOutputParser extends BaseOutputParser<
 > {}
 
 /**
+ * Abstract class representing an output parser specifically for agents
+ * that return multiple actions.
+ */
+export abstract class AgentMultiActionOutputParser extends BaseOutputParser<
+  AgentAction[] | AgentFinish
+> {}
+
+/**
  * Type representing the stopping method for an agent. It can be either
  * 'force' or 'generate'.
  */

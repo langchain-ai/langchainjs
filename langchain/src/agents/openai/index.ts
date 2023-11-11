@@ -204,7 +204,9 @@ export class OpenAIAgent extends Agent {
     const valuesForLLM: (typeof llm)["CallOptions"] = {
       functions: this.tools.map(formatToOpenAIFunction),
     };
-    for (const key of this.llmChain.llm.callKeys) {
+    const callKeys =
+      "callKeys" in this.llmChain.llm ? this.llmChain.llm.callKeys : [];
+    for (const key of callKeys) {
       if (key in inputs) {
         valuesForLLM[key as keyof (typeof llm)["CallOptions"]] = inputs[key];
         delete valuesForPrompt[key];
