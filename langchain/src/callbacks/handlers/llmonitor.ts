@@ -135,7 +135,7 @@ const parseExtraAndName = (
         PARAMS_TO_CAPTURE.includes(key) ||
         ["string", "number", "boolean"].includes(typeof rest[key])
     )
-  );
+  ) as cJSON;
 
   return { name, extra, userId, userProps };
 };
