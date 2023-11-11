@@ -101,7 +101,7 @@ export class ChatPromptValue extends BasePromptValue {
       fields = { messages: fields };
     }
 
-    super(...arguments);
+    super(fields);
     this.messages = fields.messages;
   }
 
