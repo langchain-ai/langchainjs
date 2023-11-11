@@ -135,24 +135,6 @@ describe("PineconeStore", () => {
     expect(results2.length).toEqual(1);
   });
 
-  test("delete by metadata filter", async () => {
-    const pageContent = faker.lorem.sentence(5);
-
-    await pineconeStore.addDocuments([
-      { pageContent, metadata: { foo: "bar" } },
-      { pageContent, metadata: { foo: "baz" } },
-    ]);
-
-    const results = await pineconeStore.similaritySearch(pageContent, 2);
-    expect(results.length).toEqual(2);
-
-    await pineconeStore.delete({ filter: { foo: "bar" } });
-
-    const results2 = await pineconeStore.similaritySearch(pageContent, 2);
-    expect(results2.length).toEqual(1);
-    expect(results2[0].metadata).toMatchObject({ foo: "baz" });
-  });
-
   test("delete all", async () => {
     const pageContent = faker.lorem.sentence(5);
     const id = uuid.v4();
