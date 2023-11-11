@@ -7,25 +7,37 @@ import { CallbackManager } from "../../callbacks/index.js";
 import { NewTokenIndices } from "../../callbacks/base.js";
 
 test("Test OpenAI", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const res = await model.call("Print hello world");
   console.log({ res });
 });
 
 test("Test OpenAI with stop", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const res = await model.call("Print hello world", ["world"]);
   console.log({ res });
 });
 
 test("Test OpenAI with stop in object", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const res = await model.call("Print hello world", { stop: ["world"] });
   console.log({ res });
 });
 
 test("Test OpenAI with timeout in call options", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
@@ -34,7 +46,10 @@ test("Test OpenAI with timeout in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with timeout in call options and node adapter", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
@@ -43,7 +58,10 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call("Print hello world", {
@@ -57,7 +75,10 @@ test("Test OpenAI with signal in call options", async () => {
 }, 5000);
 
 test("Test OpenAI with signal in call options and node adapter", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call("Print hello world", {
@@ -84,7 +105,10 @@ test("Test OpenAI with concurrency == 1", async () => {
 });
 
 test("Test OpenAI with maxTokens -1", async () => {
-  const model = new OpenAI({ maxTokens: -1, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: -1,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const res = await model.call("Print hello world", ["world"]);
   console.log({ res });
 });
@@ -219,7 +243,10 @@ test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
 });
 
 test("Test OpenAI prompt value", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const res = await model.generatePrompt([
     new StringPromptValue("Print hello world"),
   ]);
@@ -234,7 +261,10 @@ test("Test OpenAI prompt value", async () => {
 });
 
 test("Test OpenAI stream method", async () => {
-  const model = new OpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 50,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
@@ -245,7 +275,10 @@ test("Test OpenAI stream method", async () => {
 
 test("Test OpenAI stream method with abort", async () => {
   await expect(async () => {
-    const model = new OpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo-instruct" });
+    const model = new OpenAI({
+      maxTokens: 50,
+      modelName: "gpt-3.5-turbo-instruct",
+    });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose.",
       {
@@ -259,7 +292,10 @@ test("Test OpenAI stream method with abort", async () => {
 });
 
 test("Test OpenAI stream method with early break", async () => {
-  const model = new OpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({
+    maxTokens: 50,
+    modelName: "gpt-3.5-turbo-instruct",
+  });
   const stream = await model.stream(
     "How is your day going? Be extremely verbose."
   );
