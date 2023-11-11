@@ -95,7 +95,7 @@ export class GmailSearch extends GmailBaseTool {
 
   async parseThreads(
     threads: gmail_v1.Schema$Thread[]
-  ): Promise<gmail_v1$Thread[]> {
+  ): Promise<gmail_v1.Schema$Thread[]> {
     const auth = await this.getAuth();
     const gmail = google.gmail({ version: "v1", auth });
     const parsedThreads = await Promise.all(
