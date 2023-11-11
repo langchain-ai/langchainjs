@@ -10,10 +10,7 @@ export interface CreateDraftSchema {
   bcc?: string[];
 }
 
-export class GmailCreateDraft
-  extends GmailBaseTool
-{
-
+export class GmailCreateDraft extends GmailBaseTool {
   name = "create_gmail_draft";
 
   description =
@@ -23,49 +20,51 @@ export class GmailCreateDraft
     super(fields);
   }
 
-  static args = [
-    { name: "message", description: "The message to include in the draft" },
-    { name: "to", description: "The list of recipients" },
-    { name: "subject", description: "The subject of the message" },
-    { name: "cc", description: "The list of CC recipients", isList: true },
-    { name: "bcc", description: "The list of BCC recipients", isList: true },
-  ];
+  private prepareDraftMessage(
+    message: string,
+    to: string[],
+    subject: string,
+    cc?: string[],
+    bcc?: string[]
+  ) {
+    const draftMessage = {
+      message: {
+        raw: "",
+      },
+    };
 
-  protected prepareDraftMessage(message: string,
-    to: string[], subject: string, cc?: string[], bcc?: string[]) {
-        const draftMessage = {
-            message: {
-                raw: ""
-            }
-        }
+    const email = [
+      `To: ${to.join(", ")}`,
+      `Subject: ${subject}`,
+      cc ? `Cc: ${cc.join(", ")}` : "",
+      bcc ? `Bcc: ${bcc.join(", ")}` : "",
+      "",
+      message,
+    ].join("\n");
 
-        const email = [
-            `To: ${to.join(", ")}`,
-            `Subject: ${subject}`,
-            cc ? `Cc: ${cc.join(", ")}` : "",
-            bcc ? `Bcc: ${bcc.join(", ")}` : "",
-            "",
-            message,
-          ].join("\n");
+    draftMessage.message.raw = encodeToBase64(email);
 
-          draftMessage.message.raw = encodeToBase64(email);
+    return draftMessage;
+  }
 
-          return draftMessage;
-    }
+  async _call(args: CreateDraftSchema) {
+    const auth = await this.getAuth();
 
-    async _call(args: CreateDraftSchema) {
-        const auth = await this.getAuth();
+    const gmail = google.gmail({ version: "v1", auth });
+    const { message, to, subject, cc, bcc } = args;
+    const create_message = this.prepareDraftMessage(
+      message,
+      to,
+      subject,
+      cc,
+      bcc
+    );
 
-        const gmail = google.gmail({ version: "v1", auth });
-        const { message, to, subject, cc, bcc } = args;
-        const create_message = this.prepareDraftMessage(message, to, subject, cc, bcc);
+    const response = await gmail.users.drafts.create({
+      userId: "me",
+      requestBody: create_message,
+    });
 
-        const response = await gmail.users.drafts.create({
-            userId: "me",
-            requestBody: create_message
-        });
-
-        return `Draft created. Draft Id: ${response.data.id}`
-
-    }
+    return `Draft created. Draft Id: ${response.data.id}`;
+  }
 }
