@@ -19,7 +19,7 @@ const vectorStore = await Chroma.fromTexts(
   new OpenAIEmbeddings(),
   {
     collectionName: "godel-escher-bach",
-  },
+  }
 );
 
 const response = await vectorStore.similaritySearch("scared", 2);

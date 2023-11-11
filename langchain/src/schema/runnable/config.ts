@@ -11,6 +11,6 @@ export async function getCallbackMangerForConfig(config?: RunnableConfig) {
     undefined,
     config?.tags,
     undefined,
-    config?.metadata,
+    config?.metadata
   );
 }

@@ -23,7 +23,7 @@ test("TensorflowEmbeddings", async () => {
   const store = new MemoryVectorStore(embeddings);
 
   await store.addDocuments(
-    documents.map((pageContent) => new Document({ pageContent })),
+    documents.map((pageContent) => new Document({ pageContent }))
   );
 
   expect(await store.similaritySearch(documents[4], 2)).toMatchInlineSnapshot(`

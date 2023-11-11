@@ -51,7 +51,7 @@ Question: {input}
 Thought:`;
 
 async function formatMessages(
-  values: InputValues,
+  values: InputValues
 ): Promise<Array<BaseMessage>> {
   /** Check input and intermediate steps are both inside values */
   if (!("input" in values) || !("intermediate_steps" in values)) {

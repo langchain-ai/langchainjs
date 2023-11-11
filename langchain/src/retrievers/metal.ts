@@ -53,7 +53,7 @@ export class MetalRetriever extends BaseRetriever {
         new Document({
           pageContent: text,
           metadata: metadata as Record<string, unknown>,
-        }),
+        })
     );
   }
 }

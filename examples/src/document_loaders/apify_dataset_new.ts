@@ -27,7 +27,7 @@ const loader = await ApifyDatasetLoader.fromActorCall(
     clientOptions: {
       token: "your-apify-token", // Or set as process.env.APIFY_API_TOKEN
     },
-  },
+  }
 );
 
 const docs = await loader.load();

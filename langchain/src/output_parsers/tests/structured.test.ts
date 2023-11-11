@@ -41,7 +41,7 @@ enum StateProvinceEnum {
 
 test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
-    z.object({ url: z.string().describe("A link to the resource") }),
+    z.object({ url: z.string().describe("A link to the resource") })
   );
 
   expect(await parser.parse('```\n{"url": "value"}```')).toEqual({
@@ -69,11 +69,11 @@ Here is the JSON Schema instance your output must adhere to. Include the enclosi
 
 test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
-    z.object({ answer: z.enum(["yes", "no"]).describe("yes or no") }),
+    z.object({ answer: z.enum(["yes", "no"]).describe("yes or no") })
   );
 
   await expect(parser.parse('```\n{"answer": "YES"}```')).rejects.toThrow(
-    OutputParserException,
+    OutputParserException
   );
 });
 
@@ -84,13 +84,13 @@ test("StructuredOutputParser.fromZodSchema", async () => {
       sources: z
         .array(z.string())
         .describe("sources used to answer the question, should be websites."),
-    }),
+    })
   );
 
   expect(
     await parser.parse(
-      '```\n{"answer": "value", "sources": ["this-source"]}```',
-    ),
+      '```\n{"answer": "value", "sources": ["this-source"]}```'
+    )
   ).toEqual({
     answer: "value",
     sources: ["this-source"],
@@ -98,8 +98,8 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
-      '```json\n{"answer": "value", "sources": ["this-source"]}```',
-    ),
+      '```json\n{"answer": "value", "sources": ["this-source"]}```'
+    )
   ).toEqual({
     answer: "value",
     sources: ["this-source"],
@@ -107,8 +107,8 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
-      'some other stuff```json\n{"answer": "value", "sources": ["this-source"]}```some other stuff at the end',
-    ),
+      'some other stuff```json\n{"answer": "value", "sources": ["this-source"]}```some other stuff at the end'
+    )
   ).toEqual({
     answer: "value",
     sources: ["this-source"],
@@ -161,16 +161,16 @@ test("StructuredOutputParser.fromZodSchema", async () => {
               .nativeEnum(StateProvinceEnum)
               .optional()
               .describe("The state or province of the author"),
-          }),
+          })
         ),
       })
-      .describe("Only One object"),
+      .describe("Only One object")
   );
 
   expect(
     await parser.parse(
-      '```\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value", "stateProvince": "AZ"}]}```',
-    ),
+      '```\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value", "stateProvince": "AZ"}]}```'
+    )
   ).toEqual({
     url: "value",
     title: "value",

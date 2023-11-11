@@ -39,7 +39,7 @@ class LineListOutputParser extends BaseOutputParser<LineList> {
 
 // Default prompt is available at: https://smith.langchain.com/hub/jacob/multi-vector-retriever
 const prompt: PromptTemplate = await pull(
-  "jacob/multi-vector-retriever-german",
+  "jacob/multi-vector-retriever-german"
 );
 
 const vectorstore = await MemoryVectorStore.fromTexts(
@@ -53,7 +53,7 @@ const vectorstore = await MemoryVectorStore.fromTexts(
     "Mitochondrien bestehen aus Lipiden",
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-  new CohereEmbeddings(),
+  new CohereEmbeddings()
 );
 const model = new ChatAnthropic({});
 const llmChain = new LLMChain({

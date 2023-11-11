@@ -87,7 +87,7 @@ export class SqlDatabaseChain extends BaseChain {
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const llmChain = new LLMChain({
       prompt: this.prompt,
@@ -114,7 +114,7 @@ export class SqlDatabaseChain extends BaseChain {
 
     const sqlCommand = await llmChain.predict(
       llmInputs,
-      runManager?.getChild("sql_generation"),
+      runManager?.getChild("sql_generation")
     );
     let queryResult = "";
     try {
@@ -128,13 +128,13 @@ export class SqlDatabaseChain extends BaseChain {
       finalResult = { [this.outputKey]: queryResult };
     } else {
       inputText += `${sqlCommand}\nSQLResult: ${JSON.stringify(
-        queryResult,
+        queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;
       finalResult = {
         [this.outputKey]: await llmChain.predict(
           llmInputs,
-          runManager?.getChild("result_generation"),
+          runManager?.getChild("result_generation")
         ),
       };
     }
@@ -171,7 +171,7 @@ export class SqlDatabaseChain extends BaseChain {
    */
   private async verifyNumberOfTokens(
     inputText: string,
-    tableinfo: string,
+    tableinfo: string
   ): Promise<void> {
     // We verify it only for OpenAI for the moment
     if (this.llm._llmType() !== "openai") {
@@ -191,7 +191,7 @@ export class SqlDatabaseChain extends BaseChain {
       throw new Error(`The combination of the database structure and your question is too big for the model ${
         llm.modelName
       } which can compute only a max tokens of ${getModelContextSize(
-        llm.modelName,
+        llm.modelName
       )}.
       We suggest you to use the includeTables parameters when creating the SqlDatabase object to select only a subset of the tables. You can also use a model which can handle more tokens.`);
     }

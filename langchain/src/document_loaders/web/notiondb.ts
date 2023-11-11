@@ -117,7 +117,7 @@ export class NotionDBLoader
 
       if (!response.ok) {
         throw new Error(
-          `Failed to load data from Notion. Please check your integration token and database id.`,
+          `Failed to load data from Notion. Please check your integration token and database id.`
         );
       }
 
@@ -143,7 +143,7 @@ export class NotionDBLoader
 
     if (!response.ok) {
       throw new Error(
-        `Unable to fetch page: ${response.status} ${JSON.stringify(data)}`,
+        `Unable to fetch page: ${response.status} ${JSON.stringify(data)}`
       );
     }
 
@@ -211,13 +211,13 @@ export class NotionDBLoader
         {
           method: "GET",
           headers: this.headers,
-        },
+        }
       );
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          `Unable to fetch block: ${response.status} ${JSON.stringify(data)}`,
+          `Unable to fetch block: ${response.status} ${JSON.stringify(data)}`
         );
       }
 
@@ -233,7 +233,7 @@ export class NotionDBLoader
         for (const richText of resultObj.rich_text) {
           if (richText.text) {
             curResultTextArr.push(
-              "\t".repeat(numberOfTabs) + richText.text.content,
+              "\t".repeat(numberOfTabs) + richText.text.content
             );
           }
         }
@@ -241,7 +241,7 @@ export class NotionDBLoader
         if (result.has_children) {
           const childrenText = await this.loadBlocks(
             result.id,
-            numberOfTabs + 1,
+            numberOfTabs + 1
           );
           curResultTextArr.push(childrenText);
         }

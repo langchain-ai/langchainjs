@@ -63,7 +63,7 @@ test("Test ChatOpenAI Generate throws when one of the calls fails", async () => 
   await expect(() =>
     chat.generate([[message], [message]], {
       signal: AbortSignal.timeout(10),
-    }),
+    })
   ).rejects.toThrow();
 });
 
@@ -168,7 +168,7 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
 
   expect(nrNewTokens > 0).toBe(true);
   expect(result.generations.map((g) => g.map((gg) => gg.text))).toEqual(
-    streamedCompletions,
+    streamedCompletions
   );
 }, 10000);
 
@@ -194,7 +194,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
   const chat = new ChatOpenAI({ temperature: 0, maxTokens: 10 });
 
   const systemPrompt = PromptTemplate.fromTemplate(
-    "You are a helpful assistant that translates {input_language} to {output_language}.",
+    "You are a helpful assistant that translates {input_language} to {output_language}."
   );
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -217,7 +217,7 @@ test("Test OpenAI with stop", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   const res = await model.call(
     [new HumanMessage("Print hello world")],
-    ["world"],
+    ["world"]
   );
   console.log({ res });
 });
@@ -235,7 +235,7 @@ test("Test OpenAI with timeout in call options", async () => {
   await expect(() =>
     model.call([new HumanMessage("Print hello world")], {
       options: { timeout: 10 },
-    }),
+    })
   ).rejects.toThrow();
 }, 5000);
 
@@ -244,7 +244,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   await expect(() =>
     model.call([new HumanMessage("Print hello world")], {
       options: { timeout: 10 },
-    }),
+    })
   ).rejects.toThrow();
 }, 5000);
 
@@ -286,26 +286,26 @@ function createSampleMessages(): BaseMessage[] {
   // same example as in https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
   return [
     createSystemChatMessage(
-      "You are a helpful, pattern-following assistant that translates corporate jargon into plain English.",
+      "You are a helpful, pattern-following assistant that translates corporate jargon into plain English."
     ),
     createSystemChatMessage(
       "New synergies will help drive top-line growth.",
-      "example_user",
+      "example_user"
     ),
     createSystemChatMessage(
       "Things working well together will increase revenue.",
-      "example_assistant",
+      "example_assistant"
     ),
     createSystemChatMessage(
       "Let's circle back when we have more bandwidth to touch base on opportunities for increased leverage.",
-      "example_user",
+      "example_user"
     ),
     createSystemChatMessage(
       "Let's talk later when we're less busy about how to do better.",
-      "example_assistant",
+      "example_assistant"
     ),
     new HumanMessage(
-      "This late pivot means we don't have time to boil the ocean for the client deliverable.",
+      "This late pivot means we don't have time to boil the ocean for the client deliverable."
     ),
   ];
 }
@@ -340,7 +340,7 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
   const system_message = new ChatMessage(
     "You are to chat with a user.",
-    "system",
+    "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
   const res = await chat.call([system_message, user_message]);
@@ -365,7 +365,7 @@ test("Test ChatOpenAI stream method with abort", async () => {
       "How is your day going? Be extremely verbose.",
       {
         signal: AbortSignal.timeout(1000),
-      },
+      }
     );
     for await (const chunk of stream) {
       console.log(chunk);
@@ -376,7 +376,7 @@ test("Test ChatOpenAI stream method with abort", async () => {
 test("Test ChatOpenAI stream method with early break", async () => {
   const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
   const stream = await model.stream(
-    "How is your day going? Be extremely verbose.",
+    "How is your day going? Be extremely verbose."
   );
   let i = 0;
   for await (const chunk of stream) {
@@ -396,7 +396,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
       timeout: 1,
     });
     const stream = await model.stream(
-      "How is your day going? Be extremely verbose.",
+      "How is your day going? Be extremely verbose."
     );
     for await (const chunk of stream) {
       console.log(chunk);
@@ -441,7 +441,7 @@ test("Function calling with streaming", async () => {
       function_call: {
         name: "get_current_weather",
       },
-    },
+    }
   );
 
   const chunks = [];
@@ -458,11 +458,11 @@ test("Function calling with streaming", async () => {
   expect(finalResult).toEqual(streamedOutput);
   expect(chunks.length).toBeGreaterThan(1);
   expect(finalResult?.additional_kwargs?.function_call?.name).toBe(
-    "get_current_weather",
+    "get_current_weather"
   );
   console.log(
     JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
-      .location,
+      .location
   );
 });
 
@@ -578,7 +578,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
   expect(response1.generations.length).toBe(2);
   expect(
     (response2.generations[0][0] as ChatGeneration).message.additional_kwargs
-      .function_call?.name ?? "",
+      .function_call?.name ?? ""
   ).toEqual("extractor");
 
   const response3 = await chat.generate(messages, {
@@ -698,10 +698,10 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
     streamingResult.additional_kwargs.function_call?.arguments
   ) {
     const nonStreamingArguments = JSON.stringify(
-      JSON.parse(nonStreamingResult.additional_kwargs.function_call.arguments),
+      JSON.parse(nonStreamingResult.additional_kwargs.function_call.arguments)
     );
     const streamingArguments = JSON.stringify(
-      JSON.parse(streamingResult.additional_kwargs.function_call.arguments),
+      JSON.parse(streamingResult.additional_kwargs.function_call.arguments)
     );
     if (nonStreamingArguments === streamingArguments) {
       expect(streamingTokenUsed).toEqual(nonStreamingTokenUsed);

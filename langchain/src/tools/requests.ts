@@ -29,7 +29,7 @@ export class RequestsGetTool extends Tool implements RequestTool {
 
   constructor(
     public headers: Headers = {},
-    { maxOutputLength }: { maxOutputLength?: number } = {},
+    { maxOutputLength }: { maxOutputLength?: number } = {}
   ) {
     super(...arguments);
 
@@ -66,7 +66,7 @@ export class RequestsPostTool extends Tool implements RequestTool {
 
   constructor(
     public headers: Headers = {},
-    { maxOutputLength }: { maxOutputLength?: number } = {},
+    { maxOutputLength }: { maxOutputLength?: number } = {}
   ) {
     super(...arguments);
 

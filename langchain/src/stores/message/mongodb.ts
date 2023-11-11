@@ -38,7 +38,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
       {
         $push: { messages: { $each: messages } },
       },
-      { upsert: true },
+      { upsert: true }
     );
   }
 

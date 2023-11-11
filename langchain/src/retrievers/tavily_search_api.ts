@@ -66,14 +66,14 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("TAVILY_API_KEY");
     if (this.apiKey === undefined) {
       throw new Error(
-        `No Tavily API key found. Either set an environment variable named "TAVILY_API_KEY" or pass an API key as "apiKey".`,
+        `No Tavily API key found. Either set an environment variable named "TAVILY_API_KEY" or pass an API key as "apiKey".`
       );
     }
   }
 
   async _getRelevantDocuments(
     query: string,
-    _runManager?: CallbackManagerForRetrieverRun,
+    _runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
     const body: Record<string, unknown> = {
       query,
@@ -101,7 +101,7 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
     const json = await response.json();
     if (!response.ok) {
       throw new Error(
-        `Request failed with status code ${response.status}: ${json.error}`,
+        `Request failed with status code ${response.status}: ${json.error}`
       );
     }
     if (!Array.isArray(json.results)) {
@@ -117,8 +117,8 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
         source: result.url,
         ...Object.fromEntries(
           Object.entries(result).filter(
-            ([k]) => !["content", "title", "url", "raw_content"].includes(k),
-          ),
+            ([k]) => !["content", "title", "url", "raw_content"].includes(k)
+          )
         ),
         images: json.images,
       };
@@ -132,7 +132,7 @@ export class TavilySearchAPIRetriever extends BaseRetriever {
             title: "Suggested Answer",
             source: "https://tavily.com/",
           },
-        }),
+        })
       );
     }
     return docs;

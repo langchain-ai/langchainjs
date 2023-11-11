@@ -62,7 +62,7 @@ describe("RecursiveUrlLoader", () => {
     const docs = await loader.load();
 
     expect(docs.some((doc) => doc.metadata.source.startsWith(excludeDir))).toBe(
-      false,
+      false
     );
   });
 
@@ -81,7 +81,7 @@ describe("RecursiveUrlLoader", () => {
     const docs = await loader.load();
 
     expect(docs.some((doc) => doc.metadata.source.startsWith(excludeDir))).toBe(
-      false,
+      false
     );
   });
 });

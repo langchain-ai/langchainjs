@@ -64,7 +64,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     extraParams?: Record<string, unknown>,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    name?: string,
+    name?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -83,7 +83,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    fields?: HandleLLMNewTokenCallbackFields,
+    fields?: HandleLLMNewTokenCallbackFields
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -94,7 +94,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -105,7 +105,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     output: LLMResult,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -121,7 +121,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     extraParams?: Record<string, unknown>,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    name?: string,
+    name?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -137,7 +137,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runType?: string,
-    name?: string,
+    name?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -149,7 +149,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    kwargs?: { inputs?: Record<string, unknown> },
+    kwargs?: { inputs?: Record<string, unknown> }
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -161,7 +161,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    kwargs?: { inputs?: Record<string, unknown> },
+    kwargs?: { inputs?: Record<string, unknown> }
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -176,7 +176,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    name?: string,
+    name?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -187,7 +187,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -198,7 +198,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     output: string,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -206,7 +206,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     text: string,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -217,7 +217,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     action: AgentAction,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -228,7 +228,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     action: AgentFinish,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): Promise<void> | void;
 
   handleRetrieverStart?(
@@ -238,7 +238,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    name?: string,
+    name?: string
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -246,7 +246,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     documents: Document[],
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -254,7 +254,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[],
+    tags?: string[]
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 }
@@ -349,7 +349,7 @@ export abstract class BaseCallbackHandler
 
   copy(): BaseCallbackHandler {
     return new (this.constructor as new (
-      input?: BaseCallbackHandlerInput,
+      input?: BaseCallbackHandlerInput
     ) => BaseCallbackHandler)(this);
   }
 

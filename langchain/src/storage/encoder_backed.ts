@@ -59,7 +59,7 @@ export class EncoderBackedStore<K, V, SerializedType = any> extends BaseStore<
    */
   async mset(keyValuePairs: [K, V][]): Promise<void> {
     const encodedPairs: [string, SerializedType][] = keyValuePairs.map(
-      ([key, value]) => [this.keyEncoder(key), this.valueSerializer(value)],
+      ([key, value]) => [this.keyEncoder(key), this.valueSerializer(value)]
     );
     return this.store.mset(encodedPairs);
   }
@@ -85,7 +85,7 @@ export class EncoderBackedStore<K, V, SerializedType = any> extends BaseStore<
 }
 
 export function createDocumentStoreFromByteStore(
-  store: BaseStore<string, Uint8Array>,
+  store: BaseStore<string, Uint8Array>
 ) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
@@ -94,10 +94,7 @@ export function createDocumentStoreFromByteStore(
     keyEncoder: (key: string) => key,
     valueSerializer: (doc: Document) =>
       encoder.encode(
-        JSON.stringify({
-          pageContent: doc.pageContent,
-          metadata: doc.metadata,
-        }),
+        JSON.stringify({ pageContent: doc.pageContent, metadata: doc.metadata })
       ),
     valueDeserializer: (bytes: Uint8Array) =>
       new Document(JSON.parse(decoder.decode(bytes))),

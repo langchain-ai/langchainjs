@@ -6,7 +6,7 @@ import { EPubLoader } from "../fs/epub.js";
 test("Test EPub loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/attention.epub",
+    "./example_data/attention.epub"
   );
   const loader = new EPubLoader(filePath);
   const docs = await loader.load();
@@ -18,7 +18,7 @@ test("Test EPub loader from file", async () => {
 test("Test EPub loader from file to single document", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/attention.epub",
+    "./example_data/attention.epub"
   );
   const loader = new EPubLoader(filePath, { splitChapters: false });
   const docs = await loader.load();

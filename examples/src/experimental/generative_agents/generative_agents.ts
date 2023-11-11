@@ -30,7 +30,7 @@ const Simulation = async () => {
   const tommiesMemory: GenerativeAgentMemory = new GenerativeAgentMemory(
     llm,
     await createNewMemoryRetriever(),
-    { reflectionThreshold: 8 },
+    { reflectionThreshold: 8 }
   );
 
   const tommie: GenerativeAgent = new GenerativeAgent(llm, tommiesMemory, {
@@ -66,7 +66,7 @@ const Simulation = async () => {
   // Checking Tommie's summary again after giving him some memories
   console.log(
     "Tommie's second summary:\n",
-    await tommie.getSummary({ forceRefresh: true }),
+    await tommie.getSummary({ forceRefresh: true })
   );
 
   /*
@@ -78,7 +78,7 @@ const Simulation = async () => {
 
   const interviewAgent = async (
     agent: GenerativeAgent,
-    message: string,
+    message: string
   ): Promise<string> => {
     // Simple wrapper helping the user interact with the agent
     const newMessage = `${userName} says ${message}`;
@@ -132,7 +132,7 @@ const Simulation = async () => {
         } observations, Tommie's summary is:\n${await tommie.getSummary({
           forceRefresh: true,
         })}`,
-        "\x1b[0m",
+        "\x1b[0m"
       );
       console.log("*".repeat(40));
     }
@@ -177,7 +177,7 @@ const Simulation = async () => {
 
   // Interview after the day
   console.log(
-    await interviewAgent(tommie, "Tell me about how your day has been going"),
+    await interviewAgent(tommie, "Tell me about how your day has been going")
   );
   /*
     Tommie said "My day has been pretty hectic. I've been driving around looking for job openings, attending job fairs, and updating my resume and cover letter. It's been really exhausting, but I'm determined to find the perfect job for me."
@@ -187,7 +187,7 @@ const Simulation = async () => {
     Tommie said "I actually love coffee - it's one of my favorite things. I try to drink it every day, especially when I'm stressed from job searching."
   */
   console.log(
-    await interviewAgent(tommie, "Tell me about your childhood dog!"),
+    await interviewAgent(tommie, "Tell me about your childhood dog!")
   );
   /*
     Tommie said "My childhood dog was named Bruno. He was an adorable black Labrador Retriever who was always full of energy. Every time I came home he'd be so excited to see me, it was like he never stopped smiling. He was always ready for adventure and he was always my shadow. I miss him every day."
@@ -195,7 +195,7 @@ const Simulation = async () => {
 
   console.log(
     "Tommie's second summary:\n",
-    await tommie.getSummary({ forceRefresh: true }),
+    await tommie.getSummary({ forceRefresh: true })
   );
   /*
     Tommie's second summary:
@@ -211,7 +211,7 @@ const Simulation = async () => {
     {
       verbose: false,
       reflectionThreshold: 5,
-    },
+    }
   );
 
   const eve: GenerativeAgent = new GenerativeAgent(llm, evesMemory, {
@@ -261,8 +261,8 @@ const Simulation = async () => {
   console.log(
     await interviewAgent(
       eve,
-      "Tommie is looking to find a job. What are are some things you'd like to ask him?",
-    ),
+      "Tommie is looking to find a job. What are are some things you'd like to ask him?"
+    )
   );
   /*
     Eve said: "I'd really like to get to know more about Tommie's professional background and experience, and why he is looking for a job. And I'd also like to know more about his strengths and passions and what kind of work he would be best suited for. That way I can help him find the right job to fit his needs."
@@ -272,7 +272,7 @@ const Simulation = async () => {
   // Below, we run a simple conversation between Tommie and Eve.
   const runConversation = async (
     agents: GenerativeAgent[],
-    initialObservation: string,
+    initialObservation: string
   ): Promise<void> => {
     // Starts the conversation bewteen two agents
     let [, observation] = await agents[1].generateReaction(initialObservation);
@@ -300,7 +300,7 @@ const Simulation = async () => {
   const agents: GenerativeAgent[] = [tommie, eve];
   await runConversation(
     agents,
-    "Tommie said: Hi, Eve. Thanks for agreeing to meet with me today. I have a bunch of questions and am not sure where to start. Maybe you could first share about your experience?",
+    "Tommie said: Hi, Eve. Thanks for agreeing to meet with me today. I have a bunch of questions and am not sure where to start. Maybe you could first share about your experience?"
   );
 
   /*
@@ -340,7 +340,7 @@ const Simulation = async () => {
 
   const interviewOne: string = await interviewAgent(
     tommie,
-    "How was your conversation with Eve?",
+    "How was your conversation with Eve?"
   );
   console.log("USER: How was your conversation with Eve?\n");
   console.log(interviewOne);
@@ -350,7 +350,7 @@ const Simulation = async () => {
 
   const interviewTwo: string = await interviewAgent(
     eve,
-    "How was your conversation with Tommie?",
+    "How was your conversation with Tommie?"
   );
   console.log("USER: How was your conversation with Tommie?\n");
   console.log(interviewTwo);
@@ -360,7 +360,7 @@ const Simulation = async () => {
 
   const interviewThree: string = await interviewAgent(
     eve,
-    "What do you wish you would have said to Tommie?",
+    "What do you wish you would have said to Tommie?"
   );
   console.log("USER: What do you wish you would have said to Tommie?\n");
   console.log(interviewThree);

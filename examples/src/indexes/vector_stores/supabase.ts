@@ -22,7 +22,7 @@ export const run = async () => {
       client,
       tableName: "documents",
       queryName: "match_documents",
-    },
+    }
   );
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);

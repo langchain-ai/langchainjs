@@ -62,7 +62,7 @@ test.skip("XataVectorSearch integration", async () => {
       { pageContent: "adjective upserted", metadata: { a: createdAt } },
       { pageContent: "hi upserted", metadata: { a: createdAt } },
     ],
-    { ids: ids1 },
+    { ids: ids1 }
   );
 
   expect(ids1).toEqual(ids2);

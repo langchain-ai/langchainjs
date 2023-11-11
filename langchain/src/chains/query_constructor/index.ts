@@ -62,7 +62,7 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
     const { allowedComparators, allowedOperators } = fields;
     this.queryTransformer = new QueryTransformer(
       allowedComparators,
-      allowedOperators,
+      allowedOperators
     );
   }
 
@@ -97,7 +97,7 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
    */
   static fromComponents(
     allowedComparators: Comparator[] = [],
-    allowedOperators: Operator[] = [],
+    allowedOperators: Operator[] = []
   ) {
     return new StructuredQueryOutputParser({
       allowedComparators,
@@ -107,16 +107,13 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
 }
 
 export function formatAttributeInfo(info: AttributeInfo[]) {
-  const infoObj = info.reduce(
-    (acc, attr) => {
-      acc[attr.name] = {
-        type: attr.type,
-        description: attr.description,
-      };
-      return acc;
-    },
-    {} as { [name: string]: { type: string; description: string } },
-  );
+  const infoObj = info.reduce((acc, attr) => {
+    acc[attr.name] = {
+      type: attr.type,
+      description: attr.description,
+    };
+    return acc;
+  }, {} as { [name: string]: { type: string; description: string } });
 
   return JSON.stringify(infoObj, null, 2)
     .replaceAll("{", "{{")
@@ -130,7 +127,7 @@ function _getPrompt(
   attributeInfo: AttributeInfo[],
   allowedComparators?: Comparator[],
   allowedOperators?: Operator[],
-  examples: InputValues[] = defaultExample,
+  examples: InputValues[] = defaultExample
 ) {
   const myAllowedComparators: Comparator[] =
     allowedComparators ?? Object.values(Comparators);
@@ -152,7 +149,7 @@ function _getPrompt(
 
   const outputParser = StructuredQueryOutputParser.fromComponents(
     allowedComparators,
-    allowedOperators,
+    allowedOperators
   );
 
   return new FewShotPromptTemplate({
@@ -183,7 +180,7 @@ export function loadQueryConstructorChain(opts: QueryConstructorChainOptions) {
     opts.attributeInfo,
     opts.allowedComparators,
     opts.allowedOperators,
-    opts.examples,
+    opts.examples
   );
   return new LLMChain({
     llm: opts.llm,

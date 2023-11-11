@@ -1,5 +1,5 @@
 export interface WebSocketConnection<
-  T extends Uint8Array | string = Uint8Array | string,
+  T extends Uint8Array | string = Uint8Array | string
 > {
   readable: ReadableStream<T>;
   writable: WritableStream<T>;
@@ -23,7 +23,7 @@ export interface WebSocketStreamOptions {
  * @see https://web.dev/websocketstream/
  */
 export abstract class BaseWebSocketStream<
-  T extends Uint8Array | string = Uint8Array | string,
+  T extends Uint8Array | string = Uint8Array | string
 > {
   readonly url: string;
 
@@ -90,6 +90,6 @@ export abstract class BaseWebSocketStream<
 
   abstract openWebSocket(
     url: string,
-    options: WebSocketStreamOptions,
+    options: WebSocketStreamOptions
   ): WebSocket;
 }

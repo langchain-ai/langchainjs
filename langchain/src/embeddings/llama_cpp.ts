@@ -41,7 +41,7 @@ export class LlamaCppEmbeddings extends Embeddings {
         () =>
           new Promise((resolve) => {
             resolve(this._context.encode(text));
-          }),
+          })
       );
       tokensArray.push(encodings);
     }
@@ -74,7 +74,7 @@ export class LlamaCppEmbeddings extends Embeddings {
       () =>
         new Promise((resolve) => {
           resolve(this._context.encode(text));
-        }),
+        })
     );
 
     for (let i = 0; i < encodings.length; i += 1) {

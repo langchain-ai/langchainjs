@@ -132,7 +132,7 @@ test("Test Chat Model Run", async () => {
       "start_time": 1620000000000,
       "tags": [],
     }
-  `,
+  `
   );
 });
 
@@ -140,7 +140,7 @@ test("Test LLM Run no start", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
   await expect(tracer.handleLLMEnd({ generations: [] }, runId)).rejects.toThrow(
-    "No LLM run to end",
+    "No LLM run to end"
   );
 });
 
@@ -264,13 +264,13 @@ test("Test nested runs", async () => {
     { ...serialized, id: ["test_tool"] },
     "test",
     toolRunId,
-    chainRunId,
+    chainRunId
   );
   await tracer.handleLLMStart(
     { ...serialized, id: ["test_llm_child_run"] },
     ["test"],
     llmRunId,
-    toolRunId,
+    toolRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
   await tracer.handleToolEnd("output", toolRunId);
@@ -279,7 +279,7 @@ test("Test nested runs", async () => {
     { ...serialized, id: ["test_llm2"] },
     ["test"],
     llmRunId2,
-    chainRunId,
+    chainRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
   await tracer.handleChainEnd({ foo: "bar" }, chainRunId);

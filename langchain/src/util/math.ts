@@ -20,7 +20,7 @@ type VectorFunction = (xVector: number[], yVector: number[]) => number;
 export function matrixFunc(
   X: number[][],
   Y: number[][],
-  func: VectorFunction,
+  func: VectorFunction
 ): number[][] {
   if (
     X.length === 0 ||
@@ -36,21 +36,21 @@ export function matrixFunc(
       `Number of columns in X and Y must be the same. X has shape ${[
         X.length,
         X[0].length,
-      ]} and Y has shape ${[Y.length, Y[0].length]}.`,
+      ]} and Y has shape ${[Y.length, Y[0].length]}.`
     );
   }
 
   return X.map((xVector) =>
     Y.map((yVector) => func(xVector, yVector)).map((similarity) =>
-      Number.isNaN(similarity) ? 0 : similarity,
-    ),
+      Number.isNaN(similarity) ? 0 : similarity
+    )
   );
 }
 
 export function normalize(M: number[][], similarity = false): number[][] {
   const max = matrixMaxVal(M);
   return M.map((row) =>
-    row.map((val) => (similarity ? 1 - val / max : val / max)),
+    row.map((val) => (similarity ? 1 - val / max : val / max))
   );
 }
 
@@ -91,7 +91,7 @@ export function maximalMarginalRelevance(
   queryEmbedding: number[] | number[][],
   embeddingList: number[][],
   lambda = 0.5,
-  k = 4,
+  k = 4
 ): number[] {
   if (Math.min(k, embeddingList.length) <= 0) {
     return [];
@@ -103,7 +103,7 @@ export function maximalMarginalRelevance(
 
   const similarityToQuery = cosineSimilarity(
     queryEmbeddingExpanded,
-    embeddingList,
+    embeddingList
   )[0];
   const mostSimilarEmbeddingIndex = argMax(similarityToQuery).maxIndex;
 
@@ -116,7 +116,7 @@ export function maximalMarginalRelevance(
 
     const similarityToSelected = cosineSimilarity(
       embeddingList,
-      selectedEmbeddings,
+      selectedEmbeddings
     );
 
     similarityToQuery.forEach((queryScore, queryScoreIndex) => {
@@ -124,7 +124,7 @@ export function maximalMarginalRelevance(
         return;
       }
       const maxSimilarityToSelected = Math.max(
-        ...similarityToSelected[queryScoreIndex],
+        ...similarityToSelected[queryScoreIndex]
       );
       const score =
         lambda * queryScore - (1 - lambda) * maxSimilarityToSelected;
@@ -175,6 +175,6 @@ function argMax(array: number[]): MaxInfo {
 function matrixMaxVal(arrays: number[][]): number {
   return arrays.reduce(
     (acc, array) => Math.max(acc, argMax(array).maxValue),
-    0,
+    0
   );
 }

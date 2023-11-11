@@ -59,7 +59,7 @@ test("Test OpenAI with timeout in call options", async () => {
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
-    }),
+    })
   ).rejects.toThrow();
 }, 5000);
 
@@ -68,7 +68,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
-    }),
+    })
   ).rejects.toThrow();
 }, 5000);
 
@@ -118,7 +118,7 @@ test("Test OpenAIChat stream method with abort", async () => {
       "How is your day going? Be extremely verbose.",
       {
         signal: AbortSignal.timeout(1000),
-      },
+      }
     );
     for await (const chunk of stream) {
       console.log(chunk);
@@ -129,7 +129,7 @@ test("Test OpenAIChat stream method with abort", async () => {
 test("Test OpenAIChat stream method with early break", async () => {
   const model = new OpenAIChat({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
   const stream = await model.stream(
-    "How is your day going? Be extremely verbose.",
+    "How is your day going? Be extremely verbose."
   );
   let i = 0;
   for await (const chunk of stream) {

@@ -36,7 +36,7 @@ type Message = BaseMessage | Generation | string;
 type OutputMessage = ChatMessage | string;
 
 export const convertToLLMonitorMessages = (
-  input: Message | Message[] | Message[][],
+  input: Message | Message[] | Message[][]
 ): OutputMessage | OutputMessage[] | OutputMessage[][] => {
   const parseMessage = (raw: Message): OutputMessage => {
     if (typeof raw === "string") return raw;
@@ -146,7 +146,7 @@ export class LLMonitorHandler
     parentRunId?: string,
     extraParams?: KVMap,
     tags?: string[],
-    metadata?: KVMap,
+    metadata?: KVMap
   ): Promise<void> {
     const params = {
       ...(extraParams?.invocation_params || {}),
@@ -177,7 +177,7 @@ export class LLMonitorHandler
     parentRunId?: string,
     extraParams?: KVMap,
     tags?: string[],
-    metadata?: KVMap,
+    metadata?: KVMap
   ): Promise<void> {
     const params = {
       ...(extraParams?.invocation_params || {}),
@@ -228,7 +228,7 @@ export class LLMonitorHandler
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    metadata?: KVMap,
+    metadata?: KVMap
   ): Promise<void> {
     const { agentName, userId, userProps, ...rest } = metadata || {};
 
@@ -274,7 +274,7 @@ export class LLMonitorHandler
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    metadata?: KVMap,
+    metadata?: KVMap
   ): Promise<void> {
     const { toolName, userId, userProps, ...rest } = metadata || {};
     const name = toolName || tool.id.at(-1);

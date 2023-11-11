@@ -45,7 +45,7 @@ export type SingleStoreVectorStoreConfig = ConnectionConfig & {
 };
 
 function withConnectAttributes(
-  config: SingleStoreVectorStoreConfig,
+  config: SingleStoreVectorStoreConfig
 ): ConnectionOptions {
   let newOptions: ConnectionOptions = {};
   if (config.connectionURI) {
@@ -158,13 +158,13 @@ export class SingleStoreVectorStore extends VectorStore {
                 documents[idx].pageContent,
                 vector,
                 JSON.stringify(documents[idx].metadata),
-              ],
-            ),
+              ]
+            )
           );
         } catch (error) {
           console.error(`Error adding vector at index ${idx}:`, error);
         }
-      }),
+      })
     );
   }
 
@@ -179,7 +179,7 @@ export class SingleStoreVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: Metadata,
+    filter?: Metadata
   ): Promise<[Document, number][]> {
     // build the where clause from filter
     const whereArgs: string[] = [];
@@ -193,16 +193,16 @@ export class SingleStoreVectorStore extends VectorStore {
             !Array.isArray(record[key])
           ) {
             whereTokens.push(
-              buildWhereClause(record[key], argList.concat([key])),
+              buildWhereClause(record[key], argList.concat([key]))
             );
           } else {
             whereTokens.push(
               `JSON_EXTRACT_JSON(${this.metadataColumnName}, `.concat(
                 Array.from({ length: argList.length + 1 }, () => "?").join(
-                  ", ",
+                  ", "
                 ),
-                ") = ?",
-              ),
+                ") = ?"
+              )
             );
             whereArgs.push(...argList, key, JSON.stringify(record[key]));
           }
@@ -221,19 +221,19 @@ export class SingleStoreVectorStore extends VectorStore {
         | OkPacket[]
         | ResultSetHeader
       ),
-      FieldPacket[],
+      FieldPacket[]
     ] = await this.connectionPool.query(
       format(
         `SELECT ${this.contentColumnName},
       ${this.metadataColumnName},
       ${this.distanceMetric}(${
-        this.vectorColumnName
-      }, JSON_ARRAY_PACK('[?]')) as __score FROM ${
-        this.tableName
-      } ${whereClause}
+          this.vectorColumnName
+        }, JSON_ARRAY_PACK('[?]')) as __score FROM ${
+          this.tableName
+        } ${whereClause}
       ORDER BY __score ${OrderingDirective[this.distanceMetric]} LIMIT ?;`,
-        [query, ...whereArgs, k],
-      ),
+        [query, ...whereArgs, k]
+      )
     );
     const result: [Document, number][] = [];
     for (const row of rows as RowDataPacket[]) {
@@ -262,7 +262,7 @@ export class SingleStoreVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    dbConfig: SingleStoreVectorStoreConfig,
+    dbConfig: SingleStoreVectorStoreConfig
   ): Promise<SingleStoreVectorStore> {
     const docs = texts.map((text, idx) => {
       const metadata = Array.isArray(metadatas) ? metadatas[idx] : metadatas;
@@ -285,7 +285,7 @@ export class SingleStoreVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: SingleStoreVectorStoreConfig,
+    dbConfig: SingleStoreVectorStoreConfig
   ): Promise<SingleStoreVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);

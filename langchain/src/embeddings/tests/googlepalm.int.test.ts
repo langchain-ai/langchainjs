@@ -36,7 +36,7 @@ test.skip("Test end to end with HNSWLib", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new GooglePaLMEmbeddings({
       maxRetries: 1,
-    }),
+    })
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 

@@ -10,7 +10,7 @@ import { Document } from "../../document.js";
 const getClient = () => {
   if (!process.env.VERCEL_KV_API_URL || !process.env.VERCEL_KV_API_TOKEN) {
     throw new Error(
-      "VERCEL_KV_API_URL and VERCEL_KV_API_TOKEN must be set in the environment",
+      "VERCEL_KV_API_URL and VERCEL_KV_API_TOKEN must be set in the environment"
     );
   }
   const client = createClient({
@@ -53,7 +53,7 @@ describe("VercelKVStore", () => {
     const store = createDocumentStoreFromByteStore(
       new VercelKVStore({
         client,
-      }),
+      })
     );
     const value1 = new Date().toISOString();
     const value2 = new Date().toISOString() + new Date().toISOString();

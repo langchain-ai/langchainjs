@@ -75,7 +75,7 @@ export class BedrockEmbeddings
             }),
             contentType: "application/json",
             accept: "application/json",
-          }),
+          })
         );
 
         const body = new TextDecoder().decode(res.body);
@@ -87,12 +87,12 @@ export class BedrockEmbeddings
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof Error) {
           throw new Error(
-            `An error occurred while embedding documents with Bedrock: ${e.message}`,
+            `An error occurred while embedding documents with Bedrock: ${e.message}`
           );
         }
 
         throw new Error(
-          "An error occurred while embedding documents with Bedrock",
+          "An error occurred while embedding documents with Bedrock"
         );
       }
     });
@@ -109,7 +109,7 @@ export class BedrockEmbeddings
     return this.caller.callWithOptions(
       {},
       this._embedText.bind(this),
-      document,
+      document
     );
   }
 

@@ -38,16 +38,16 @@ export class ContextualCompressionRetriever extends BaseRetriever {
 
   async _getRelevantDocuments(
     query: string,
-    runManager?: CallbackManagerForRetrieverRun,
+    runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
     const docs = await this.baseRetriever.getRelevantDocuments(
       query,
-      runManager?.getChild("base_retriever"),
+      runManager?.getChild("base_retriever")
     );
     const compressedDocs = await this.baseCompressor.compressDocuments(
       docs,
       query,
-      runManager?.getChild("base_compressor"),
+      runManager?.getChild("base_compressor")
     );
     return compressedDocs;
   }

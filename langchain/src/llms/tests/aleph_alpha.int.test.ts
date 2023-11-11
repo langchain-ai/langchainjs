@@ -5,7 +5,7 @@ describe("Aleph Alpha", () => {
   test("test call", async () => {
     const aleph_alpha = new AlephAlpha({});
     const result = await aleph_alpha.call(
-      "What is a good name for a company that makes colorful socks?",
+      "What is a good name for a company that makes colorful socks?"
     );
     console.log({ result });
   });
@@ -13,7 +13,7 @@ describe("Aleph Alpha", () => {
   test("test translation call", async () => {
     const aleph_alpha = new AlephAlpha({});
     const result = await aleph_alpha.call(
-      `Translate "I love programming" into German.`,
+      `Translate "I love programming" into German.`
     );
     console.log({ result });
   });
@@ -21,7 +21,7 @@ describe("Aleph Alpha", () => {
   test("test JSON output call", async () => {
     const aleph_alpha = new AlephAlpha({});
     const result = await aleph_alpha.call(
-      `Output a JSON object with three string fields: "name", "birthplace", "bio".`,
+      `Output a JSON object with three string fields: "name", "birthplace", "bio".`
     );
     console.log({ result });
   });
@@ -35,7 +35,7 @@ describe("Aleph Alpha", () => {
         "Respond with an extremely verbose response",
         {
           signal: controller.signal,
-        },
+        }
       );
       controller.abort();
       return ret;
@@ -48,7 +48,7 @@ describe("Aleph Alpha", () => {
     });
 
     await expect(aleph_alpha.call("Test prompt")).rejects.toThrow(
-      'Aleph Alpha call failed with status 401 and body {"error":"InvalidToken","code":"UNAUTHENTICATED"}',
+      'Aleph Alpha call failed with status 401 and body {"error":"InvalidToken","code":"UNAUTHENTICATED"}'
     );
   });
 });

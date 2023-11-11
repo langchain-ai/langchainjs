@@ -7,7 +7,7 @@ const controller = new AbortController();
 const llm = new ChatOpenAI({ temperature: 0.9 });
 const model = llm.bind({ signal: controller.signal });
 const prompt = PromptTemplate.fromTemplate(
-  "Please write a 500 word essay about {topic}.",
+  "Please write a 500 word essay about {topic}."
 );
 const chain = prompt.pipe(model);
 

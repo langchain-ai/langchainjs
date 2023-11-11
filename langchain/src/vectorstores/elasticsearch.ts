@@ -95,7 +95,7 @@ export class ElasticVectorSearch extends VectorStore {
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options,
+      options
     );
   }
 
@@ -111,14 +111,14 @@ export class ElasticVectorSearch extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] },
+    options?: { ids?: string[] }
   ) {
     await this.ensureIndexExists(
       vectors[0].length,
       this.engine,
       this.similarity,
       this.efConstruction,
-      this.m,
+      this.m
     );
     const documentIds =
       options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
@@ -151,7 +151,7 @@ export class ElasticVectorSearch extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: ElasticFilter | undefined,
+    filter?: ElasticFilter | undefined
   ): Promise<[Document, number][]> {
     const result = await this.client.search({
       index: this.indexName,
@@ -205,7 +205,7 @@ export class ElasticVectorSearch extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    args: ElasticClientArgs,
+    args: ElasticClientArgs
   ): Promise<ElasticVectorSearch> {
     const documents = texts.map((text, idx) => {
       const metadata = Array.isArray(metadatas) ? metadatas[idx] : metadatas;
@@ -227,7 +227,7 @@ export class ElasticVectorSearch extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: ElasticClientArgs,
+    dbConfig: ElasticClientArgs
   ): Promise<ElasticVectorSearch> {
     const store = new ElasticVectorSearch(embeddings, dbConfig);
     await store.addDocuments(docs).then(() => store);
@@ -244,7 +244,7 @@ export class ElasticVectorSearch extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: ElasticClientArgs,
+    dbConfig: ElasticClientArgs
   ): Promise<ElasticVectorSearch> {
     const store = new ElasticVectorSearch(embeddings, dbConfig);
     const exists = await store.doesIndexExist();
@@ -259,7 +259,7 @@ export class ElasticVectorSearch extends VectorStore {
     engine = "hnsw",
     similarity = "l2_norm",
     efConstruction = 100,
-    m = 16,
+    m = 16
   ): Promise<void> {
     const request: estypes.IndicesCreateRequest = {
       index: this.indexName,
@@ -298,7 +298,7 @@ export class ElasticVectorSearch extends VectorStore {
   }
 
   private buildMetadataTerms(
-    filter?: ElasticFilter,
+    filter?: ElasticFilter
   ): { term: Record<string, unknown> }[] {
     if (filter == null) return [];
     const result = [];

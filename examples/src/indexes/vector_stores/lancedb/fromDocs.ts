@@ -20,7 +20,7 @@ export const run = async () => {
   const vectorStore = await LanceDB.fromDocuments(
     docs,
     new OpenAIEmbeddings(),
-    { table },
+    { table }
   );
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);

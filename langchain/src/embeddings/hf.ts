@@ -49,7 +49,7 @@ export class HuggingFaceInferenceEmbeddings
       this.client.featureExtraction({
         model: this.model,
         inputs: clean,
-      }),
+      })
     ) as Promise<number[][]>;
   }
 

@@ -25,7 +25,7 @@ await store.mset(
   messages.map((message, index) => [
     `message:id:${index}`,
     encoder.encode(JSON.stringify(message)),
-  ]),
+  ])
 );
 // Now you can get your messages from the store
 const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);

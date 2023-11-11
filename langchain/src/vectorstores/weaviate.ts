@@ -12,7 +12,7 @@ import { Document } from "../document.js";
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
 export const flattenObjectForWeaviate = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: Record<string, any>,
+  obj: Record<string, any>
 ) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const flattenedObject: Record<string, any> = {};
@@ -101,10 +101,7 @@ export class WeaviateStore extends VectorStore {
     return "weaviate";
   }
 
-  constructor(
-    public embeddings: Embeddings,
-    args: WeaviateLibArgs,
-  ) {
+  constructor(public embeddings: Embeddings, args: WeaviateLibArgs) {
     super(embeddings, args);
 
     this.client = args.client;
@@ -123,7 +120,7 @@ export class WeaviateStore extends VectorStore {
             const keyIsValid = /^[_A-Za-z][_0-9A-Za-z]*$/.test(k);
             if (!keyIsValid) {
               console.warn(
-                `Skipping metadata key ${k} as it is not a valid GraphQL Name`,
+                `Skipping metadata key ${k} as it is not a valid GraphQL Name`
               );
             }
             return keyIsValid;
@@ -144,13 +141,13 @@ export class WeaviateStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] },
+    options?: { ids?: string[] }
   ) {
     const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
     const batch: WeaviateObject[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
-          "Document inserted to Weaviate vectorstore should not have `id` in their metadata.",
+          "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
         );
 
       const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
@@ -179,8 +176,8 @@ export class WeaviateStore extends VectorStore {
             ...response.result.errors.error.map(
               (err) =>
                 err.message ??
-                "!! Unfortunately no error message was presented in the API response !!",
-            ),
+                "!! Unfortunately no error message was presented in the API response !!"
+            )
           );
         }
       });
@@ -205,7 +202,7 @@ export class WeaviateStore extends VectorStore {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents,
-      options,
+      options
     );
   }
 
@@ -247,7 +244,7 @@ export class WeaviateStore extends VectorStore {
       await batchDeleter.do();
     } else {
       throw new Error(
-        `This method requires either "ids" or "filter" to be set in the input object`,
+        `This method requires either "ids" or "filter" to be set in the input object`
       );
     }
   }
@@ -264,7 +261,7 @@ export class WeaviateStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: WeaviateFilter,
+    filter?: WeaviateFilter
   ): Promise<[Document, number][]> {
     try {
       let builder = await this.client.graphql
@@ -319,7 +316,7 @@ export class WeaviateStore extends VectorStore {
     texts: string[],
     metadatas: object | object[],
     embeddings: Embeddings,
-    args: WeaviateLibArgs,
+    args: WeaviateLibArgs
   ): Promise<WeaviateStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -344,7 +341,7 @@ export class WeaviateStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    args: WeaviateLibArgs,
+    args: WeaviateLibArgs
   ): Promise<WeaviateStore> {
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
@@ -360,7 +357,7 @@ export class WeaviateStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    args: WeaviateLibArgs,
+    args: WeaviateLibArgs
   ): Promise<WeaviateStore> {
     return new this(embeddings, args);
   }

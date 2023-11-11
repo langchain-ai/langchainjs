@@ -91,14 +91,14 @@ export class MultiRouteChain extends BaseChain {
 
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const { destination, nextInputs } = await this.routerChain.route(
       values,
-      runManager?.getChild(),
+      runManager?.getChild()
     );
     await runManager?.handleText(
-      `${destination}: ${JSON.stringify(nextInputs)}`,
+      `${destination}: ${JSON.stringify(nextInputs)}`
     );
     if (!destination) {
       return this.defaultChain
@@ -123,8 +123,8 @@ export class MultiRouteChain extends BaseChain {
     }
     throw new Error(
       `Destination ${destination} not found in destination chains with keys ${Object.keys(
-        this.destinationChains,
-      )}`,
+        this.destinationChains
+      )}`
     );
   }
 

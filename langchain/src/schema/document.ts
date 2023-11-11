@@ -14,7 +14,7 @@ import { Runnable } from "./runnable/index.js";
  */
 export abstract class BaseDocumentTransformer<
   RunInput extends Document[] = Document[],
-  RunOutput extends Document[] = Document[],
+  RunOutput extends Document[] = Document[]
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "document_transformers"];
 
@@ -34,7 +34,7 @@ export abstract class BaseDocumentTransformer<
    */
   invoke(
     input: RunInput,
-    _options?: Partial<BaseCallbackConfig>,
+    _options?: Partial<BaseCallbackConfig>
   ): Promise<RunOutput> {
     return this.transformDocuments(input);
   }

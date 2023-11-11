@@ -110,15 +110,15 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
  * The retriever will automatically convert these questions into queries that can be used to retrieve documents.
  */
 const query1 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are less than 90 minutes?",
+  "Which movies are less than 90 minutes?"
 );
 const query2 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are rated higher than 8.5?",
+  "Which movies are rated higher than 8.5?"
 );
 const query3 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are directed by Greta Gerwig?",
+  "Which movies are directed by Greta Gerwig?"
 );
 const query4 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are either comedy or drama and are less than 90 minutes?",
+  "Which movies are either comedy or drama and are less than 90 minutes?"
 );
 console.log(query1, query2, query3, query4);

@@ -29,7 +29,7 @@ const mockFetchForOpenAIStream = async ({
         headers: {
           "Content-Type": contentType,
         },
-      }),
+      })
   );
 
   let error: Error | null = null;
@@ -44,7 +44,7 @@ const mockFetchForOpenAIStream = async ({
         done = true;
       } else {
         receivedChunks.push(
-          JSON.parse(event.data).choices[0].delta.content ?? "",
+          JSON.parse(event.data).choices[0].delta.content ?? ""
         );
       }
     },
@@ -136,7 +136,7 @@ describe("OpenAI Stream Tests", () => {
     });
     expect(resp).toEqual(null);
     expect(error?.message).toBe(
-      "Expected content-type to be text/event-stream, Actual: text/plain",
+      "Expected content-type to be text/event-stream, Actual: text/plain"
     );
     expect(receivedChunks).toEqual([]);
   });

@@ -17,7 +17,7 @@ const model = new OpenAI(
   {},
   {
     basePath: "https://oai.hconeai.com/v1",
-  },
+  }
 );
 const res = await model.call("What is a helicone?");
 ```
@@ -38,7 +38,7 @@ const model = new OpenAI(
         "Helicone-Cache-Enabled": "true",
       },
     },
-  },
+  }
 );
 const res = await model.call("What is a helicone?");
 ```
@@ -59,7 +59,7 @@ const model = new OpenAI(
         "Helicone-Property-App": "mobile",
       },
     },
-  },
+  }
 );
 const res = await model.call("What is a helicone?");
 ```

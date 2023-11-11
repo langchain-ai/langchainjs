@@ -16,7 +16,7 @@ type RunViewEventParams = {
 const runViewEvents = async (
   query: string,
   { model, auth, calendarId }: RunViewEventParams,
-  runManager?: CallbackManagerForToolRun,
+  runManager?: CallbackManagerForToolRun
 ) => {
   const calendar = new calendar_v3.Calendar({});
 
@@ -41,7 +41,7 @@ const runViewEvents = async (
       u_timezone,
       dayName,
     },
-    runManager?.getChild(),
+    runManager?.getChild()
   );
   const loaded = JSON.parse(output.text);
 
@@ -68,14 +68,14 @@ const runViewEvents = async (
               description,
               start,
               end,
-            }),
+            })
           )
         : [];
 
     return `Result for the prompt "${query}": \n${JSON.stringify(
       curatedItems,
       null,
-      2,
+      2
     )}`;
   } catch (error) {
     return `An error occurred: ${error}`;

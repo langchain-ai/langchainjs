@@ -19,11 +19,11 @@ await vectorStore.addDocuments(
     "My name is Bob.",
     "My favourite food is pizza.",
     "My favourite food is pasta.",
-  ].map((pageContent) => new Document({ pageContent })),
+  ].map((pageContent) => new Document({ pageContent }))
 );
 
 const results = await retriever.getRelevantDocuments(
-  "What is my favourite food?",
+  "What is my favourite food?"
 );
 
 console.log(results);

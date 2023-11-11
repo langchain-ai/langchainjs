@@ -16,7 +16,7 @@ declare class Sql {
 
   constructor(
     rawStrings: ReadonlyArray<string>,
-    rawValues: ReadonlyArray<RawValue>,
+    rawValues: ReadonlyArray<RawValue>
   );
 }
 
@@ -28,7 +28,7 @@ type PrismaNamespace = {
     values: RawValue[],
     separator?: string,
     prefix?: string,
-    suffix?: string,
+    suffix?: string
   ) => Sql;
   sql: (strings: ReadonlyArray<string>, ...values: RawValue[]) => Sql;
 };
@@ -80,7 +80,7 @@ const OpMap = {
 
 type SimilarityModel<
   TModel extends Record<string, unknown> = Record<string, unknown>,
-  TColumns extends ModelColumns<TModel> = ModelColumns<TModel>,
+  TColumns extends ModelColumns<TModel> = ModelColumns<TModel>
 > = Pick<TModel, keyof ObjectIntersect<TModel, TColumns>> & {
   _distance: number | null;
 };
@@ -101,7 +101,7 @@ export class PrismaVectorStore<
   TModel extends Record<string, unknown>,
   TModelName extends string,
   TSelectModel extends ModelColumns<TModel>,
-  TFilterModel extends PrismaSqlFilter<TModel>,
+  TFilterModel extends PrismaSqlFilter<TModel>
 > extends VectorStore {
   protected tableName: string;
 
@@ -136,7 +136,7 @@ export class PrismaVectorStore<
       vectorColumnName: string;
       columns: TSelectModel;
       filter?: TFilterModel;
-    },
+    }
   ) {
     super(embeddings, {});
 
@@ -146,7 +146,7 @@ export class PrismaVectorStore<
     const entries = Object.entries(config.columns);
     const idColumn = entries.find((i) => i[1] === IdColumnSymbol)?.[0];
     const contentColumn = entries.find(
-      (i) => i[1] === ContentColumnSymbol,
+      (i) => i[1] === ContentColumnSymbol
     )?.[0];
 
     if (idColumn == null) throw new Error("Missing ID column");
@@ -176,7 +176,7 @@ export class PrismaVectorStore<
     function create<
       TPrisma extends PrismaNamespace,
       TColumns extends ModelColumns<TModel>,
-      TFilters extends PrismaSqlFilter<TModel>,
+      TFilters extends PrismaSqlFilter<TModel>
     >(
       embeddings: Embeddings,
       config: {
@@ -185,18 +185,18 @@ export class PrismaVectorStore<
         vectorColumnName: string;
         columns: TColumns;
         filter?: TFilters;
-      },
+      }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
       return new PrismaVectorStore<TModel, ModelName, TColumns, TFilters>(
         embeddings,
-        { ...config, db },
+        { ...config, db }
       );
     }
 
     async function fromTexts<
       TPrisma extends PrismaNamespace,
-      TColumns extends ModelColumns<TModel>,
+      TColumns extends ModelColumns<TModel>
     >(
       texts: string[],
       metadatas: TModel[],
@@ -206,7 +206,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
-      },
+      }
     ) {
       const docs: Document[] = [];
       for (let i = 0; i < texts.length; i += 1) {
@@ -227,7 +227,7 @@ export class PrismaVectorStore<
     async function fromDocuments<
       TPrisma extends PrismaNamespace,
       TColumns extends ModelColumns<TModel>,
-      TFilters extends PrismaSqlFilter<TModel>,
+      TFilters extends PrismaSqlFilter<TModel>
     >(
       docs: Document<TModel>[],
       embeddings: Embeddings,
@@ -236,7 +236,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
-      },
+      }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
       const instance = new PrismaVectorStore<
@@ -264,7 +264,7 @@ export class PrismaVectorStore<
         if (typeof pageContent !== "string")
           throw new Error("Content column must be a string");
         return new Document({ pageContent, metadata });
-      }),
+      })
     );
   }
 
@@ -277,7 +277,7 @@ export class PrismaVectorStore<
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents,
+      documents
     );
   }
 
@@ -300,8 +300,8 @@ export class PrismaVectorStore<
           UPDATE ${tableNameRaw}
           SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
           WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
-        `,
-      ),
+        `
+      )
     );
   }
 
@@ -317,11 +317,11 @@ export class PrismaVectorStore<
     query: string,
     k = 4,
     _filter: this["FilterType"] | undefined = undefined, // not used. here to make the interface compatible with the other stores
-    _callbacks: Callbacks | undefined = undefined, // implement passing to embedQuery later
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ): Promise<Document<SimilarityModel<TModel, TSelectModel>>[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
-      k,
+      k
     );
 
     return results.map((result) => result[0]);
@@ -340,7 +340,7 @@ export class PrismaVectorStore<
     query: string,
     k?: number,
     filter?: TFilterModel,
-    _callbacks: Callbacks | undefined = undefined, // implement passing to embedQuery later
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ) {
     return super.similaritySearchWithScore(query, k, filter);
   }
@@ -356,14 +356,14 @@ export class PrismaVectorStore<
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: TFilterModel,
+    filter?: TFilterModel
   ): Promise<[Document<SimilarityModel<TModel, TSelectModel>>, number][]> {
     // table name, column names cannot be parametrised
     // these fields are thus not escaped by Prisma and can be dangerous if user input is used
     const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
     const tableNameRaw = this.Prisma.raw(`"${this.tableName}"`);
     const selectRaw = this.Prisma.raw(
-      this.selectColumns.map((x) => `"${x}"`).join(", "),
+      this.selectColumns.map((x) => `"${x}"`).join(", ")
     );
 
     const vector = `[${query.join(",")}]`;
@@ -382,8 +382,8 @@ export class PrismaVectorStore<
             LIMIT ${k};
           `,
         ].filter((x) => x != null),
-        "",
-      ),
+        ""
+      )
     );
 
     const results: [Document<SimilarityModel<TModel, TSelectModel>>, number][] =
@@ -413,10 +413,10 @@ export class PrismaVectorStore<
           const colRaw = this.Prisma.raw(`"${key}"`);
           const opRaw = this.Prisma.raw(OpMap[opName as keyof typeof OpMap]);
           return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
-        }),
+        })
       ),
       " AND ",
-      " WHERE ",
+      " WHERE "
     );
   }
 
@@ -438,7 +438,7 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
-    },
+    }
   ): Promise<DefaultPrismaVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -469,7 +469,7 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
-    },
+    }
   ): Promise<DefaultPrismaVectorStore> {
     const instance = new PrismaVectorStore(embeddings, dbConfig);
     await instance.addDocuments(docs);

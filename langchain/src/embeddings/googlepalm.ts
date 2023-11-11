@@ -43,7 +43,7 @@ export class GooglePaLMEmbeddings
       fields?.apiKey ?? getEnvironmentVariable("GOOGLE_PALM_API_KEY");
     if (!this.apiKey) {
       throw new Error(
-        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor",
+        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
       );
     }
 
@@ -73,7 +73,7 @@ export class GooglePaLMEmbeddings
     return this.caller.callWithOptions(
       {},
       this._embedText.bind(this),
-      document,
+      document
     );
   }
 

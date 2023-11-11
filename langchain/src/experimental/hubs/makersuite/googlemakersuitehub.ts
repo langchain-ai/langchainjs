@@ -182,7 +182,7 @@ export class MakerSuitePrompt {
       if (column.isInput) {
         prompt += `${column.displayName} {${column.displayName.replace(
           ":",
-          "",
+          ""
         )}}\n`;
       }
     });
@@ -320,7 +320,7 @@ export class DriveFileReadConnection
       new GoogleAuth({
         scopes: "https://www.googleapis.com/auth/drive.readonly",
         ...fields.authOptions,
-      }),
+      })
     );
 
     this.endpoint = fields.endpoint ?? "www.googleapis.com";
@@ -338,7 +338,7 @@ export class DriveFileReadConnection
   }
 
   async request(
-    options?: DriveCallOptions,
+    options?: DriveCallOptions
   ): Promise<DriveFileMakerSuiteResponse> {
     return this._request(undefined, options ?? {});
   }

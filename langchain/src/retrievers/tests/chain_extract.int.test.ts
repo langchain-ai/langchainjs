@@ -12,7 +12,7 @@ import { LLMChainExtractor } from "../document_compressors/chain_extract.js";
 test("Test LLMChainExtractor", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = PromptTemplate.fromTemplate(
-    "Print {question}, and ignore {chat_history}",
+    "Print {question}, and ignore {chat_history}"
   );
   const baseCompressor = LLMChainExtractor.fromLLM(model);
   expect(baseCompressor).toBeDefined();
@@ -22,7 +22,7 @@ test("Test LLMChainExtractor", async () => {
     baseRetriever: await HNSWLib.fromTexts(
       ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
       [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-      new OpenAIEmbeddings(),
+      new OpenAIEmbeddings()
     ).then((vectorStore) => vectorStore.asRetriever()),
   });
 

@@ -147,7 +147,7 @@ export class DataForSeoAPISearch extends Tool {
     const params = config.params ?? {};
     if (!apiLogin || !apiPassword) {
       throw new Error(
-        "DataForSEO login or password not set. You can set it as DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD in your .env file, or pass it to DataForSeoAPISearch.",
+        "DataForSEO login or password not set. You can set it as DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD in your .env file, or pass it to DataForSeoAPISearch."
       );
     }
     this.params = { ...this.defaultParams, ...params };
@@ -200,7 +200,7 @@ export class DataForSeoAPISearch extends Tool {
 
     const credentials = Buffer.from(
       `${this.apiLogin}:${this.apiPassword}`,
-      "utf-8",
+      "utf-8"
     ).toString("base64");
     const headers = {
       Authorization: `Basic ${credentials}`,
@@ -234,7 +234,7 @@ export class DataForSeoAPISearch extends Tool {
 
     if (!response.ok) {
       throw new Error(
-        `Got ${response.status} error from DataForSEO: ${response.statusText}`,
+        `Got ${response.status} error from DataForSEO: ${response.statusText}`
       );
     }
 
@@ -251,13 +251,13 @@ export class DataForSeoAPISearch extends Tool {
   private checkResponse(response: ApiResponse): ApiResponse {
     if (response.status_code !== 20000) {
       throw new Error(
-        `Got error from DataForSEO SERP API: ${response.status_message}`,
+        `Got error from DataForSEO SERP API: ${response.status_message}`
       );
     }
     for (const task of response.tasks) {
       if (task.status_code !== 20000) {
         throw new Error(
-          `Got error from DataForSEO SERP API: ${task.status_message}`,
+          `Got error from DataForSEO SERP API: ${task.status_message}`
         );
       }
     }
@@ -274,7 +274,7 @@ export class DataForSeoAPISearch extends Tool {
    */
   private filterResults(
     res: ApiResponse,
-    types: Array<string> | undefined,
+    types: Array<string> | undefined
   ): Array<any> {
     const output: Array<any> = [];
     for (const task of res.tasks || []) {
@@ -346,27 +346,26 @@ export class DataForSeoAPISearch extends Tool {
         const items = result.items || [];
         if (item_types.includes("answer_box")) {
           returnValue = items.find(
-            (item: { type: string; text: string }) =>
-              item.type === "answer_box",
+            (item: { type: string; text: string }) => item.type === "answer_box"
           ).text;
         } else if (item_types.includes("knowledge_graph")) {
           returnValue = items.find(
             (item: { type: string; description: string }) =>
-              item.type === "knowledge_graph",
+              item.type === "knowledge_graph"
           ).description;
         } else if (item_types.includes("featured_snippet")) {
           returnValue = items.find(
             (item: { type: string; description: string }) =>
-              item.type === "featured_snippet",
+              item.type === "featured_snippet"
           ).description;
         } else if (item_types.includes("shopping")) {
           returnValue = items.find(
-            (item: { type: string; price: string }) => item.type === "shopping",
+            (item: { type: string; price: string }) => item.type === "shopping"
           ).price;
         } else if (item_types.includes("organic")) {
           returnValue = items.find(
             (item: { type: string; description: string }) =>
-              item.type === "organic",
+              item.type === "organic"
           ).description;
         }
         if (returnValue) {

@@ -63,7 +63,7 @@ export class CombinedMemory
         throw new Error(
           `The same variables ${[
             ...overlap,
-          ]} are found in multiple memory objects, which is not allowed by CombinedMemory.`,
+          ]} are found in multiple memory objects, which is not allowed by CombinedMemory.`
         );
       }
       allVariables.push(...memory.memoryKeys);
@@ -81,7 +81,7 @@ export class CombinedMemory
         (memory as BaseChatMemory).inputKey === undefined
       ) {
         console.warn(
-          `When using CombinedMemory, input keys should be set so the input is known. Was not set on ${memory}.`,
+          `When using CombinedMemory, input keys should be set so the input is known. Was not set on ${memory}.`
         );
       }
     }
@@ -93,7 +93,7 @@ export class CombinedMemory
    * @returns Promise that resolves with an object containing the loaded memory variables.
    */
   async loadMemoryVariables(
-    inputValues: InputValues,
+    inputValues: InputValues
   ): Promise<MemoryVariables> {
     let memoryData: Record<string, unknown> = {};
 

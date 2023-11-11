@@ -32,7 +32,7 @@ test("Test OpenAI with timeout", async () => {
     chain.call({
       foo: "my favorite color",
       timeout: 10,
-    }),
+    })
   ).rejects.toThrow();
 });
 
@@ -77,7 +77,7 @@ test("Test memory + cancellation", async () => {
     chain.call({
       foo: "my favorite color",
       signal: AbortSignal.timeout(20),
-    }),
+    })
   ).rejects.toThrow();
 });
 
@@ -96,7 +96,7 @@ test("Test memory + timeout", async () => {
     chain.call({
       foo: "my favorite color",
       timeout: 20,
-    }),
+    })
   ).rejects.toThrow();
 });
 

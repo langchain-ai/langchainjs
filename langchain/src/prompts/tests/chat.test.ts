@@ -77,7 +77,7 @@ test("Test format with invalid input values", async () => {
     chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",
-    }),
+    })
   ).rejects.toThrow("Missing value for input variable `bar`");
 });
 
@@ -98,9 +98,9 @@ test("Test format with invalid input variables", async () => {
           new HumanMessagePromptTemplate(userPrompt),
         ],
         inputVariables: ["context", "foo", "bar", "baz"],
-      }),
+      })
   ).toThrow(
-    "Input variables `baz` are not used in any of the prompt messages.",
+    "Input variables `baz` are not used in any of the prompt messages."
   );
 
   expect(
@@ -111,9 +111,9 @@ test("Test format with invalid input variables", async () => {
           new HumanMessagePromptTemplate(userPrompt),
         ],
         inputVariables: ["context", "foo"],
-      }),
+      })
   ).toThrow(
-    "Input variables `bar` are used in prompt messages but not in the prompt template.",
+    "Input variables `bar` are used in prompt messages but not in the prompt template."
   );
 });
 
@@ -294,7 +294,7 @@ test("Test using partial", async () => {
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
-    `"Human: foobaz"`,
+    `"Human: foobaz"`
   );
 });
 

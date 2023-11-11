@@ -7,7 +7,7 @@ const fullPrompt = PromptTemplate.fromTemplate(`{introduction}
 {start}`);
 
 const introductionPrompt = PromptTemplate.fromTemplate(
-  `You are impersonating {person}.`,
+  `You are impersonating {person}.`
 );
 
 const examplePrompt =

@@ -9,15 +9,15 @@ import { formatDocumentsAsString } from "../../../util/document.js";
 
 export function createRetrieverTool(
   retriever: BaseRetriever,
-  input: Omit<DynamicStructuredToolInput, "func" | "schema">,
+  input: Omit<DynamicStructuredToolInput, "func" | "schema">
 ) {
   const func = async (
     { input }: { input: string },
-    runManager?: CallbackManagerForToolRun,
+    runManager?: CallbackManagerForToolRun
   ) => {
     const docs = await retriever.getRelevantDocuments(
       input,
-      runManager?.getChild("retriever"),
+      runManager?.getChild("retriever")
     );
     return formatDocumentsAsString(docs, "\n");
   };

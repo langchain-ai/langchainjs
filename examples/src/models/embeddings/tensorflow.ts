@@ -14,5 +14,5 @@ const documents = [
 ];
 
 await store.addDocuments(
-  documents.map((pageContent) => new Document({ pageContent })),
+  documents.map((pageContent) => new Document({ pageContent }))
 );

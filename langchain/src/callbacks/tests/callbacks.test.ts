@@ -70,7 +70,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
 
   async handleChainStart(
     _chain: Serialized,
-    _inputs: ChainValues,
+    _inputs: ChainValues
   ): Promise<void> {
     this.starts += 1;
     this.chainStarts += 1;
@@ -115,14 +115,14 @@ class FakeCallbackHandler extends BaseCallbackHandler {
 
   async handleRetrieverStart(
     _retriever: Serialized,
-    _query: string,
+    _query: string
   ): Promise<void> {
     this.starts += 1;
     this.retrieverStarts += 1;
   }
 
   async handleRetrieverEnd(
-    _documents: Document<Record<string, unknown>>[],
+    _documents: Document<Record<string, unknown>>[]
   ): Promise<void> {
     this.ends += 1;
     this.retrieverEnds += 1;
@@ -159,7 +159,7 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
 
   async handleChatModelStart(
     _llm: Serialized,
-    _messages: BaseMessage[][],
+    _messages: BaseMessage[][]
   ): Promise<void> {
     this.starts += 1;
     this.chatModelStarts += 1;
@@ -186,7 +186,7 @@ test("CallbackManager", async () => {
       await llmCb.handleLLMEnd({ generations: [] });
       await llmCb.handleLLMNewToken("test");
       await llmCb.handleLLMError(new Error("test"));
-    }),
+    })
   );
   const chainCb = await manager.handleChainStart(serialized, { test: "test" });
   await chainCb.handleChainEnd({ test: "test" });
@@ -239,7 +239,7 @@ test("CallbackManager Chat Message Handling", async () => {
   await Promise.all(
     llmCbs.map(async (llmCb) => {
       await llmCb.handleLLMEnd({ generations: [] });
-    }),
+    })
   );
   // Everything treated as llm in handler 1
   expect(handler1.llmStarts).toBe(1);
@@ -266,7 +266,7 @@ test("CallbackHandler with ignoreLLM", async () => {
       await llmCb.handleLLMEnd({ generations: [] });
       await llmCb.handleLLMNewToken("test");
       await llmCb.handleLLMError(new Error("test"));
-    }),
+    })
   );
 
   expect(handler.starts).toBe(0);
@@ -347,7 +347,7 @@ test("CallbackManager with child manager", async () => {
       _llm: Serialized,
       _prompts: string[],
       _runId?: string,
-      parentRunId?: string,
+      parentRunId?: string
     ) {
       expect(parentRunId).toBe(chainRunId);
       llmWasCalled = true;
@@ -356,7 +356,7 @@ test("CallbackManager with child manager", async () => {
       _chain: Serialized,
       _inputs: ChainValues,
       runId?: string,
-      parentRunId?: string,
+      parentRunId?: string
     ) {
       expect(runId).toBe(chainRunId);
       expect(parentRunId).toBe(undefined);
@@ -366,7 +366,7 @@ test("CallbackManager with child manager", async () => {
   const chainCb = await manager.handleChainStart(
     serialized,
     { test: "test" },
-    chainRunId,
+    chainRunId
   );
   await chainCb.getChild().handleLLMStart(serialized, ["test"]);
   expect(llmWasCalled).toBe(true);

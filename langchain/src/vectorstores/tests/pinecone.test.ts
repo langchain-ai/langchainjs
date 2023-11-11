@@ -29,7 +29,7 @@ test("PineconeStore with external ids", async () => {
         },
       },
     ],
-    ["id1"],
+    ["id1"]
   );
 
   expect(upsert).toHaveBeenCalledTimes(1);
@@ -98,7 +98,7 @@ test("PineconeSo with string arrays", async () => {
         },
       },
     ],
-    ["id1"],
+    ["id1"]
   );
 
   expect(upsert).toHaveBeenCalledWith([

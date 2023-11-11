@@ -38,7 +38,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       throw new Error(
         `Error reading and parsing file at path: ${
           this.rootPath
-        }.\nError: ${JSON.stringify(e)}`,
+        }.\nError: ${JSON.stringify(e)}`
       );
     }
   }
@@ -53,8 +53,8 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
     } catch (error) {
       throw new Error(
         `Error writing file at path: ${this.getFullPath(
-          key,
-        )}.\nError: ${JSON.stringify(error)}`,
+          key
+        )}.\nError: ${JSON.stringify(error)}`
       );
     }
   }
@@ -70,7 +70,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       return fullPath;
     } catch (e) {
       throw new Error(
-        `Error getting full path for key: ${key}.\nError: ${JSON.stringify(e)}`,
+        `Error getting full path for key: ${key}.\nError: ${JSON.stringify(e)}`
       );
     }
   }
@@ -96,7 +96,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    */
   async mset(keyValuePairs: [string, Uint8Array][]): Promise<void> {
     await Promise.all(
-      keyValuePairs.map(([key, value]) => this.setFileContent(value, key)),
+      keyValuePairs.map(([key, value]) => this.setFileContent(value, key))
     );
   }
 
@@ -142,8 +142,8 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       } catch (error) {
         throw new Error(
           `An error occurred creating directory at: ${rootPath}.\nError: ${JSON.stringify(
-            error,
-          )}`,
+            error
+          )}`
         );
       }
     }

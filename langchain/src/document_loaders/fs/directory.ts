@@ -36,7 +36,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
     public directoryPath: string,
     public loaders: LoadersMapping,
     public recursive: boolean = true,
-    public unknown: UnknownHandling = UnknownHandling.Warn,
+    public unknown: UnknownHandling = UnknownHandling.Warn
   ) {
     super();
 
@@ -76,7 +76,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
             fullPath,
             this.loaders,
             this.recursive,
-            this.unknown,
+            this.unknown
           );
           documents.push(...(await loader.load()));
         }
@@ -125,7 +125,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Failed to load fs/promises. DirectoryLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`,
+        `Failed to load fs/promises. DirectoryLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
       );
     }
   }

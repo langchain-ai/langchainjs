@@ -25,7 +25,7 @@ const config = {
 
 const pgvectorStore = await PGVectorStore.initialize(
   new OpenAIEmbeddings(),
-  config,
+  config
 );
 
 await pgvectorStore.addDocuments([

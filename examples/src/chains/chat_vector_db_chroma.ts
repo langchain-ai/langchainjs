@@ -22,7 +22,7 @@ export const run = async () => {
   /* Create the chain */
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    vectorStore.asRetriever(),
+    vectorStore.asRetriever()
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";

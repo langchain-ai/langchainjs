@@ -21,7 +21,7 @@ const idsReturned = await vectorStore.addDocuments(
   ],
   {
     ids,
-  },
+  }
 );
 
 console.log(idsReturned);

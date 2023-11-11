@@ -50,7 +50,7 @@ test.skip("CreateAWSSfnAgent", async () => {
     `Got intermediate steps ${JSON.stringify(
       result.intermediateSteps,
       null,
-      2,
-    )}`,
+      2
+    )}`
   );
 });

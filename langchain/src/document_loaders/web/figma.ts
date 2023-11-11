@@ -96,7 +96,7 @@ export class FigmaFileLoader
 
     if (!response.ok) {
       throw new Error(
-        `Unable to get figma file: ${response.status} ${JSON.stringify(data)}`,
+        `Unable to get figma file: ${response.status} ${JSON.stringify(data)}`
       );
     }
 

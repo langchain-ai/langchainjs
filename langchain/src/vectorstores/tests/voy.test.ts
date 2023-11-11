@@ -20,7 +20,7 @@ test("it can create index using Voy.from text, add new elements to the index and
     ["initial first page", "initial second page"],
     [{ id: 1 }, { id: 2 }],
     new FakeEmbeddings(),
-    fakeClient,
+    fakeClient
   );
 
   // the number of dimensions is produced by fake embeddings
@@ -44,12 +44,12 @@ test("it can create index using Voy.from text, add new elements to the index and
         pageContent: "added third page",
         metadata: { id: 6 },
       }),
-    ],
+    ]
   );
   expect(vectorStore.docstore.length).toBe(5);
   const results = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
-    3,
+    3
   );
   expect(results[0][0].metadata.id).toBe(1);
   expect(results[1][0].metadata.id).toBe(2);

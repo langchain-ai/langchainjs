@@ -66,7 +66,7 @@ const chat_qa_prompt_template = `Context information is below.
 Given the context information and no prior knowledge, answer any questions`;
 const chat_messages = [
   /*#__PURE__*/ SystemMessagePromptTemplate.fromTemplate(
-    chat_qa_prompt_template,
+    chat_qa_prompt_template
   ),
   /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
 ];

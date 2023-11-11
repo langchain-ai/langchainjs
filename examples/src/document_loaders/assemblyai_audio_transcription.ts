@@ -15,7 +15,7 @@ const loader = new AudioTranscriptLoader(
   },
   {
     apiKey: "<ASSEMBLYAI_API_KEY>", // or set the `ASSEMBLYAI_API_KEY` env variable
-  },
+  }
 );
 const docs = await loader.load();
 console.dir(docs, { depth: Infinity });

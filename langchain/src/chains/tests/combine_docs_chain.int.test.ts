@@ -60,7 +60,7 @@ test("Test RefineDocumentsChain with QA chain", async () => {
 
 test("Load chain from hub", async () => {
   const chain = await loadChain(
-    "lc://chains/question_answering/stuff/chain.json",
+    "lc://chains/question_answering/stuff/chain.json"
   );
   const docs = [
     new Document({ pageContent: "foo" }),

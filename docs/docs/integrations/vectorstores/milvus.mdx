@@ -65,7 +65,7 @@ const vectorStore = await Milvus.fromTexts(
   new OpenAIEmbeddings(),
   {
     collectionName: "goldel_escher_bach",
-  },
+  }
 );
 
 // or alternatively from docs
@@ -86,7 +86,7 @@ const vectorStore = await Milvus.fromExistingCollection(
   new OpenAIEmbeddings(),
   {
     collectionName: "goldel_escher_bach",
-  },
+  }
 );
 
 const response = await vectorStore.similaritySearch("scared", 2);

@@ -38,7 +38,7 @@ CHAT HISTORY: {chatHistory}
 ----------
 QUESTION: {question}
 ----------
-Helpful Answer:`,
+Helpful Answer:`
 );
 
 const chain = RunnableSequence.from([

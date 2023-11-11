@@ -18,10 +18,7 @@ interface GitbookLoaderParams {
 export class GitbookLoader extends CheerioWebBaseLoader {
   shouldLoadAllPaths = false;
 
-  constructor(
-    public webPath: string,
-    params: GitbookLoaderParams = {},
-  ) {
+  constructor(public webPath: string, params: GitbookLoaderParams = {}) {
     const path =
       params.shouldLoadAllPaths === true ? `${webPath}/sitemap.xml` : webPath;
     super(path);
@@ -65,7 +62,7 @@ export class GitbookLoader extends CheerioWebBaseLoader {
       .contents()
       .toArray()
       .map((element) =>
-        element.type === "text" ? $(element).text().trim() : null,
+        element.type === "text" ? $(element).text().trim() : null
       )
       .filter((text) => text)
       .join("\n");

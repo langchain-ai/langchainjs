@@ -46,7 +46,7 @@ async function SRTLoaderImports(): Promise<{
     return { SRTParser2 };
   } catch (e) {
     throw new Error(
-      "Please install srt-parser-2 as a dependency with, e.g. `yarn add srt-parser-2`",
+      "Please install srt-parser-2 as a dependency with, e.g. `yarn add srt-parser-2`"
     );
   }
 }

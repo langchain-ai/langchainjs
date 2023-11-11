@@ -76,7 +76,7 @@ export const calculateMaxTokens = async ({
     ).encode(prompt).length;
   } catch (error) {
     console.warn(
-      "Failed to calculate number of tokens, falling back to approximate count",
+      "Failed to calculate number of tokens, falling back to approximate count"
     );
 
     // fallback to approximate calculation if tiktoken is not available

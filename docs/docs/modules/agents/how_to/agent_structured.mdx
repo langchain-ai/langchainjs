@@ -83,7 +83,7 @@ const responseSchema = z.object({
   sources: z
     .array(z.string())
     .describe(
-      "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information",
+      "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information"
     ),
 });
 ```
@@ -103,7 +103,7 @@ Next, we can construct the custom structured output parser.
 
 ```typescript
 const structuredOutputParser = (
-  output: AIMessage,
+  output: AIMessage
 ): AgentAction | AgentFinish => {
   // If no function call is passed, return the output as an instance of `AgentFinish`
   if (!("function_call" in output.additional_kwargs)) {

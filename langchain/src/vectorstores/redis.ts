@@ -16,7 +16,7 @@ import { Document } from "../document.js";
  */
 export type CreateSchemaVectorField<
   T extends VectorAlgorithms,
-  A extends Record<string, unknown>,
+  A extends Record<string, unknown>
 > = {
   ALGORITHM: T;
   DISTANCE_METRIC: "L2" | "IP" | "COSINE";
@@ -158,7 +158,7 @@ export class RedisVectorStore extends VectorStore {
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options,
+      options
     );
   }
 
@@ -175,7 +175,7 @@ export class RedisVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    { keys, batchSize = 1000 }: RedisAddOptions = {},
+    { keys, batchSize = 1000 }: RedisAddOptions = {}
   ) {
     if (!vectors.length || !vectors[0].length) {
       throw new Error("No vectors provided");
@@ -224,7 +224,7 @@ export class RedisVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: RedisVectorStoreFilterType,
+    filter?: RedisVectorStoreFilterType
   ): Promise<[Document, number][]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
@@ -233,7 +233,7 @@ export class RedisVectorStore extends VectorStore {
     const _filter = filter ?? this.filter;
     const results = await this.redisClient.ft.search(
       this.indexName,
-      ...this.buildQuery(query, k, _filter),
+      ...this.buildQuery(query, k, _filter)
     );
     const result: [Document, number][] = [];
 
@@ -246,7 +246,7 @@ export class RedisVectorStore extends VectorStore {
               new Document({
                 pageContent: document[this.contentKey] as string,
                 metadata: JSON.parse(
-                  this.unEscapeSpecialChars(document.metadata as string),
+                  this.unEscapeSpecialChars(document.metadata as string)
                 ),
               }),
               Number(document.vector_score),
@@ -273,7 +273,7 @@ export class RedisVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: RedisVectorStoreConfig,
+    dbConfig: RedisVectorStoreConfig
   ): Promise<RedisVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -298,7 +298,7 @@ export class RedisVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: RedisVectorStoreConfig,
+    dbConfig: RedisVectorStoreConfig
   ): Promise<RedisVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -316,7 +316,7 @@ export class RedisVectorStore extends VectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
         throw new Error(
-          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/redis#setup",
+          "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/redis#setup"
         );
       }
       // index doesn't exist
@@ -351,7 +351,7 @@ export class RedisVectorStore extends VectorStore {
     await this.redisClient.ft.create(
       this.indexName,
       schema,
-      this.createIndexOptions,
+      this.createIndexOptions
     );
   }
 
@@ -387,7 +387,7 @@ export class RedisVectorStore extends VectorStore {
   private buildQuery(
     query: number[],
     k: number,
-    filter?: RedisVectorStoreFilterType,
+    filter?: RedisVectorStoreFilterType
   ): [string, SearchOptions] {
     const vectorScoreField = "vector_score";
 

@@ -37,7 +37,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
    */
   abstract parseResult(
     generations: Generation[] | ChatGeneration[],
-    callbacks?: Callbacks,
+    callbacks?: Callbacks
   ): Promise<T>;
 
   /**
@@ -51,7 +51,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
   parseResultWithPrompt(
     generations: Generation[] | ChatGeneration[],
     _prompt: BasePromptValue,
-    callbacks?: Callbacks,
+    callbacks?: Callbacks
   ): Promise<T> {
     return this.parseResult(generations, callbacks);
   }
@@ -68,14 +68,14 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
    */
   async invoke(
     input: string | BaseMessage,
-    options?: RunnableConfig,
+    options?: RunnableConfig
   ): Promise<T> {
     if (typeof input === "string") {
       return this._callWithConfig(
         async (input: string): Promise<T> =>
           this.parseResult([{ text: input }]),
         input,
-        { ...options, runType: "parser" },
+        { ...options, runType: "parser" }
       );
     } else {
       return this._callWithConfig(
@@ -90,7 +90,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
             },
           ]),
         input,
-        { ...options, runType: "parser" },
+        { ...options, runType: "parser" }
       );
     }
   }
@@ -100,11 +100,11 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
  * Class to parse the output of an LLM call.
  */
 export abstract class BaseOutputParser<
-  T = unknown,
+  T = unknown
 > extends BaseLLMOutputParser<T> {
   parseResult(
     generations: Generation[] | ChatGeneration[],
-    callbacks?: Callbacks,
+    callbacks?: Callbacks
   ): Promise<T> {
     return this.parse(generations[0].text, callbacks);
   }
@@ -120,7 +120,7 @@ export abstract class BaseOutputParser<
   async parseWithPrompt(
     text: string,
     _prompt: BasePromptValue,
-    callbacks?: Callbacks,
+    callbacks?: Callbacks
   ): Promise<T> {
     return this.parse(text, callbacks);
   }
@@ -150,10 +150,10 @@ export abstract class BaseOutputParser<
  * Class to parse the output of an LLM call that also allows streaming inputs.
  */
 export abstract class BaseTransformOutputParser<
-  T = unknown,
+  T = unknown
 > extends BaseOutputParser<T> {
   protected async *_transform(
-    inputGenerator: AsyncGenerator<string | BaseMessage>,
+    inputGenerator: AsyncGenerator<string | BaseMessage>
   ): AsyncGenerator<T> {
     for await (const chunk of inputGenerator) {
       if (typeof chunk === "string") {
@@ -181,7 +181,7 @@ export abstract class BaseTransformOutputParser<
    */
   async *transform(
     inputGenerator: AsyncGenerator<string | BaseMessage>,
-    options: BaseCallbackConfig,
+    options: BaseCallbackConfig
   ): AsyncGenerator<T> {
     yield* this._transformStreamWithConfig(
       inputGenerator,
@@ -189,7 +189,7 @@ export abstract class BaseTransformOutputParser<
       {
         ...options,
         runType: "parser",
-      },
+      }
     );
   }
 }
@@ -202,7 +202,7 @@ export type BaseCumulativeTransformOutputParserInput = { diff?: boolean };
  * converting parsed outputs into a diff format.
  */
 export abstract class BaseCumulativeTransformOutputParser<
-  T = unknown,
+  T = unknown
 > extends BaseTransformOutputParser<T> {
   protected diff = false;
 
@@ -215,11 +215,11 @@ export abstract class BaseCumulativeTransformOutputParser<
   protected abstract _diff(prev: any | undefined, next: any): any;
 
   abstract parsePartialResult(
-    generations: Generation[] | ChatGeneration[],
+    generations: Generation[] | ChatGeneration[]
   ): Promise<T | undefined>;
 
   protected async *_transform(
-    inputGenerator: AsyncGenerator<string | BaseMessage>,
+    inputGenerator: AsyncGenerator<string | BaseMessage>
   ): AsyncGenerator<T> {
     let prevParsed: T | undefined;
     let accGen: GenerationChunk | undefined;
@@ -353,7 +353,7 @@ export class OutputParserException extends Error {
     message: string,
     llmOutput?: string,
     observation?: string,
-    sendToLLM = false,
+    sendToLLM = false
   ) {
     super(message);
     this.llmOutput = llmOutput;
@@ -363,7 +363,7 @@ export class OutputParserException extends Error {
     if (sendToLLM) {
       if (observation === undefined || llmOutput === undefined) {
         throw new Error(
-          "Arguments 'observation' & 'llmOutput' are required if 'sendToLlm' is true",
+          "Arguments 'observation' & 'llmOutput' are required if 'sendToLlm' is true"
         );
       }
     }

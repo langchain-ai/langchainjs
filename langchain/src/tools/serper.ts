@@ -37,13 +37,13 @@ export class Serper extends Tool {
 
   constructor(
     apiKey: string | undefined = getEnvironmentVariable("SERPER_API_KEY"),
-    params: Partial<SerperParameters> = {},
+    params: Partial<SerperParameters> = {}
   ) {
     super();
 
     if (!apiKey) {
       throw new Error(
-        "Serper API key not set. You can set it as SERPER_API_KEY in your .env file, or pass it to Serper.",
+        "Serper API key not set. You can set it as SERPER_API_KEY in your .env file, or pass it to Serper."
       );
     }
 

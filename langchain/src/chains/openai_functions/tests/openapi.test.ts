@@ -136,7 +136,7 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
 
   const createWidget = spec.getOperation(
     "/widgets",
-    OpenAPIV3.HttpMethods.POST,
+    OpenAPIV3.HttpMethods.POST
   );
   expect(createWidget).not.toBeUndefined();
   if (!createWidget) {
@@ -145,7 +145,7 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
 
   function getParamSchema(
     operation: OpenAPIV3_1.OperationObject,
-    paramName: string,
+    paramName: string
   ) {
     const param = spec
       .getParametersForOperation(operation)
@@ -168,7 +168,7 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
 
   function expectType<T extends keyof TypeMap>(
     type: T,
-    schema: JsonSchema7Type | undefined,
+    schema: JsonSchema7Type | undefined
   ): TypeMap[T] {
     if (!schema || !("type" in schema)) {
       throw new Error(`Schema has no type`);
@@ -181,13 +181,13 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
 
   const stringParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "stringParam"),
-    spec,
+    spec
   );
   expectType("string", stringParamSchema);
 
   const objectParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "objectParam"),
-    spec,
+    spec
   );
   const typedObjectParamSchema = expectType("object", objectParamSchema);
   expectType("string", typedObjectParamSchema.properties.foo);
@@ -195,42 +195,42 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
 
   const stringArrayParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "stringArrayParam"),
-    spec,
+    spec
   );
   const typedStringArrayParamSchema = expectType(
     "array",
-    stringArrayParamSchema,
+    stringArrayParamSchema
   );
   expect(typedStringArrayParamSchema.items).not.toBeUndefined();
   expectType("string", typedStringArrayParamSchema.items);
 
   const nestedObjectInArrayParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "nestedObjectInArrayParam"),
-    spec,
+    spec
   );
   expectType(
     "number",
     expectType(
       "object",
-      expectType("array", nestedObjectInArrayParamSchema).items,
-    ).properties.baz,
+      expectType("array", nestedObjectInArrayParamSchema).items
+    ).properties.baz
   );
 
   const nestedArrayInObjectParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "nestedArrayInObjectParam"),
-    spec,
+    spec
   );
   expectType(
     "string",
     expectType(
       "array",
-      expectType("object", nestedArrayInObjectParamSchema).properties.qux,
-    ).items,
+      expectType("object", nestedArrayInObjectParamSchema).properties.qux
+    ).items
   );
 
   const inceptionParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "inceptionParam"),
-    spec,
+    spec
   );
   expectType(
     "number",
@@ -241,9 +241,9 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
         expectType(
           "array",
           expectType("object", expectType("array", inceptionParamSchema).items)
-            .properties.nestedArray,
-        ).items,
-      ).properties.nestedObject,
-    ).properties.inception,
+            .properties.nestedArray
+        ).items
+      ).properties.nestedObject
+    ).properties.inception
   );
 });

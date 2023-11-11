@@ -15,7 +15,7 @@ A: {prediction}
 B: {predictionB}
 ---
 Reasoning:
-`,
+`
 );
 
 const chain = await loadEvaluator("labeled_pairwise_string", {

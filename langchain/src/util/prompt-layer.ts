@@ -12,7 +12,7 @@ export const promptLayerTrackRequest = async (
   requestResponse: any,
   startTime: number,
   endTime: number,
-  apiKey: string | undefined,
+  apiKey: string | undefined
 ) => {
   // https://github.com/MagnivOrg/promptlayer-js-helper
   const promptLayerResp = await callerFunc.call(
@@ -34,7 +34,7 @@ export const promptLayerTrackRequest = async (
         request_end_time: Math.floor(endTime / 1000),
         api_key: apiKey,
       }),
-    },
+    }
   );
 
   return promptLayerResp.json();

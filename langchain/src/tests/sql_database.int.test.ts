@@ -122,7 +122,7 @@ test("Test getTableInfo with error", async () => {
     });
     await db.getTableInfo(["users", "productss"]);
   }).rejects.toThrow(
-    "Wrong target table name: the table productss was not found in the database",
+    "Wrong target table name: the table productss was not found in the database"
   );
 });
 

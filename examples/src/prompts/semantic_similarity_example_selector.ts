@@ -8,7 +8,7 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 
 // Create a prompt template that will be used to format the examples.
 const examplePrompt = PromptTemplate.fromTemplate(
-  "Input: {input}\nOutput: {output}",
+  "Input: {input}\nOutput: {output}"
 );
 
 // Create a SemanticSimilarityExampleSelector that will be used to select the examples.
@@ -22,7 +22,7 @@ const exampleSelector = await SemanticSimilarityExampleSelector.fromExamples(
   ],
   new OpenAIEmbeddings(),
   HNSWLib,
-  { k: 1 },
+  { k: 1 }
 );
 
 // Create a FewShotPromptTemplate that will use the example selector.

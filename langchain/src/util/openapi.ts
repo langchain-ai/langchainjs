@@ -54,19 +54,19 @@ export class OpenAPISpec {
   }
 
   getRootReferencedParameter(
-    ref: OpenAPIV3_1.ReferenceObject,
+    ref: OpenAPIV3_1.ReferenceObject
   ): OpenAPIV3_1.ParameterObject {
     let parameter = this.getReferencedParameter(ref);
     while ((parameter as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
       parameter = this.getReferencedParameter(
-        parameter as OpenAPIV3_1.ReferenceObject,
+        parameter as OpenAPIV3_1.ReferenceObject
       );
     }
     return parameter as OpenAPIV3_1.ParameterObject;
   }
 
   getReferencedSchema(
-    ref: OpenAPIV3_1.ReferenceObject,
+    ref: OpenAPIV3_1.ReferenceObject
   ): OpenAPIV3_1.SchemaObject {
     const refComponents = ref.$ref.split("/");
     const refName = refComponents[refComponents.length - 1];
@@ -78,7 +78,7 @@ export class OpenAPISpec {
   }
 
   getSchema(
-    schema: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject,
+    schema: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject
   ): OpenAPIV3_1.SchemaObject {
     if ((schema as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
       return this.getReferencedSchema(schema as OpenAPIV3_1.ReferenceObject);
@@ -108,7 +108,7 @@ export class OpenAPISpec {
     let requestBody = this.getReferencedRequestBody(ref);
     while ((requestBody as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
       requestBody = this.getReferencedRequestBody(
-        requestBody as OpenAPIV3_1.ReferenceObject,
+        requestBody as OpenAPIV3_1.ReferenceObject
       );
     }
     return requestBody as OpenAPIV3_1.RequestBodyObject;
@@ -130,7 +130,7 @@ export class OpenAPISpec {
     ];
     return possibleMethods.filter(
       (possibleMethod) =>
-        pathItem[possibleMethod as OpenAPIV3.HttpMethods] !== undefined,
+        pathItem[possibleMethod as OpenAPIV3.HttpMethods] !== undefined
     ) as OpenAPIV3.HttpMethods[];
   }
 
@@ -142,7 +142,7 @@ export class OpenAPISpec {
     return pathItem.parameters.map((parameter) => {
       if ((parameter as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
         return this.getRootReferencedParameter(
-          parameter as OpenAPIV3_1.ReferenceObject,
+          parameter as OpenAPIV3_1.ReferenceObject
         );
       }
       return parameter as OpenAPIV3_1.ParameterObject;
@@ -164,7 +164,7 @@ export class OpenAPISpec {
     return operation.parameters.map((parameter) => {
       if ((parameter as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
         return this.getRootReferencedParameter(
-          parameter as OpenAPIV3_1.ReferenceObject,
+          parameter as OpenAPIV3_1.ReferenceObject
         );
       }
       return parameter as OpenAPIV3_1.ParameterObject;
@@ -172,12 +172,12 @@ export class OpenAPISpec {
   }
 
   getRequestBodyForOperation(
-    operation: OpenAPIV3_1.OperationObject,
+    operation: OpenAPIV3_1.OperationObject
   ): OpenAPIV3_1.RequestBodyObject {
     const { requestBody } = operation;
     if ((requestBody as OpenAPIV3_1.ReferenceObject)?.$ref !== undefined) {
       return this.getRootReferencedRequestBody(
-        requestBody as OpenAPIV3_1.ReferenceObject,
+        requestBody as OpenAPIV3_1.ReferenceObject
       );
     }
     return requestBody as OpenAPIV3_1.RequestBodyObject;
@@ -186,7 +186,7 @@ export class OpenAPISpec {
   static getCleanedOperationId(
     operation: OpenAPIV3_1.OperationObject,
     path: string,
-    method: OpenAPIV3_1.HttpMethods,
+    method: OpenAPIV3_1.HttpMethods
   ) {
     let { operationId } = operation;
     if (operationId === undefined) {
@@ -206,19 +206,19 @@ export class OpenAPISpec {
     const openAPIVersion = document.openapi;
     if (openAPIVersion !== undefined && openAPIVersion !== "3.1.0") {
       console.warn(
-        `Attempting to load an OpenAPI ${openAPIVersion} spec. ${warningMessage}`,
+        `Attempting to load an OpenAPI ${openAPIVersion} spec. ${warningMessage}`
       );
     } else if (swaggerVersion !== undefined) {
       console.warn(
-        `Attempting to load a Swagger ${swaggerVersion} spec. ${warningMessage}`,
+        `Attempting to load a Swagger ${swaggerVersion} spec. ${warningMessage}`
       );
     } else {
       throw new Error(
         `Attempting to load an unsupported spec:\n\n${JSON.stringify(
           document,
           null,
-          2,
-        )}.`,
+          2
+        )}.`
       );
     }
   }

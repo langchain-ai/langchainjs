@@ -23,7 +23,7 @@ export class QAEvalChain extends LLMChain {
     options: {
       prompt?: PromptTemplate;
       chainInput?: Omit<LLMChainInput, "llm">;
-    } = {},
+    } = {}
   ): QAEvalChain {
     const prompt = options.prompt || QA_PROMPT;
     const expectedInputVars: Set<string> = new Set([
@@ -38,7 +38,7 @@ export class QAEvalChain extends LLMChain {
       throw new Error(
         `Input variables should be ${[...expectedInputVars]}, but got ${
           prompt.inputVariables
-        }`,
+        }`
       );
     }
     return new this({ llm, prompt, ...options.chainInput });
@@ -51,7 +51,7 @@ export class QAEvalChain extends LLMChain {
       questionKey: "query",
       answerKey: "answer",
       predictionKey: "result",
-    },
+    }
   ): Promise<ChainValues> {
     const inputs = examples.map((example: ChainValues, i: number) => ({
       query: example[args.questionKey],

@@ -77,7 +77,7 @@ export class OpenApiToolkit extends RequestsToolkit {
 export function createOpenApiAgent(
   llm: BaseLanguageModel,
   openApiToolkit: OpenApiToolkit,
-  args?: ZeroShotCreatePromptArgs,
+  args?: ZeroShotCreatePromptArgs
 ) {
   const {
     prefix = OPENAPI_PREFIX,

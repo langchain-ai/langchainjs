@@ -30,7 +30,7 @@ const memory = new BufferMemory({
   }),
 });
 console.log(
-  `cacheName=${cacheName} and sessionId=${sessionId} . This will be used to store the chat history. You can inspect the values at your Momento console at https://console.gomomento.com.`,
+  `cacheName=${cacheName} and sessionId=${sessionId} . This will be used to store the chat history. You can inspect the values at your Momento console at https://console.gomomento.com.`
 );
 
 const model = new ChatOpenAI({

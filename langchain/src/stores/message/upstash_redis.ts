@@ -49,7 +49,7 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
       this.client = new Redis(config);
     } else {
       throw new Error(
-        `Upstash Redis message stores require either a config object or a pre-configured client.`,
+        `Upstash Redis message stores require either a config object or a pre-configured client.`
       );
     }
     this.sessionId = sessionId;
@@ -67,7 +67,7 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
     const orderedMessages = rawStoredMessages.reverse();
     const previousMessages = orderedMessages.filter(
       (x): x is StoredMessage =>
-        x.type !== undefined && x.data.content !== undefined,
+        x.type !== undefined && x.data.content !== undefined
     );
     return mapStoredMessagesToChatMessages(previousMessages);
   }

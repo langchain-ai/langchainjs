@@ -353,7 +353,7 @@ export class ChatMinimax
     fields?: Partial<MinimaxChatInput> &
       BaseChatModelParams & {
         configuration?: ConfigurationParameters;
-      },
+      }
   ) {
     super(fields ?? {});
 
@@ -428,7 +428,7 @@ export class ChatMinimax
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ): Omit<MinimaxChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
@@ -446,7 +446,7 @@ export class ChatMinimax
       reply_constraints: this.defaultReplyConstraints(options),
       sample_messages: this.messageToMinimaxMessage(
         options?.sampleMessages,
-        options,
+        options
       ),
       functions:
         options?.functions ??
@@ -473,7 +473,7 @@ export class ChatMinimax
    */
   messageToMinimaxMessage(
     messages?: BaseMessage[],
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ): MinimaxChatCompletionRequestMessage[] | undefined {
     return messages
       ?.filter((message) => {
@@ -486,7 +486,7 @@ export class ChatMinimax
         const sender_type = messageToMinimaxRole(message);
         if (typeof message.content !== "string") {
           throw new Error(
-            "ChatMinimax does not support non-string message content.",
+            "ChatMinimax does not support non-string message content."
           );
         }
         return {
@@ -505,7 +505,7 @@ export class ChatMinimax
   async _generate(
     messages: BaseMessage[],
     options?: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage = { totalTokens: 0 };
     this.botSettingFallback(options, messages);
@@ -570,7 +570,7 @@ export class ChatMinimax
               }
               resolved = true;
               resolve(response);
-            },
+            }
           ).catch((error) => {
             if (!rejected) {
               rejected = true;
@@ -584,7 +584,7 @@ export class ChatMinimax
             messages: messagesMapped,
           },
           false,
-          options?.signal,
+          options?.signal
         );
 
     const { total_tokens: totalTokens } = data.usage ?? {};
@@ -636,7 +636,7 @@ export class ChatMinimax
     request: MinimaxChatCompletionRequest,
     stream: boolean,
     signal?: AbortSignal,
-    onmessage?: (event: MessageEvent) => void,
+    onmessage?: (event: MessageEvent) => void
   ) {
     // The first run will get the accessToken
     const makeCompletionRequest = async () => {
@@ -708,7 +708,7 @@ export class ChatMinimax
 
   private botSettingFallback(
     options?: this["ParsedCallOptions"],
-    messages?: BaseMessage[],
+    messages?: BaseMessage[]
   ) {
     const botSettings = options?.botSetting ?? this.botSetting;
     if (!botSettings) {
@@ -727,7 +727,7 @@ export class ChatMinimax
 
       if (typeof lastSystemMessage.content !== "string") {
         throw new Error(
-          "ChatMinimax does not support non-string message content.",
+          "ChatMinimax does not support non-string message content."
         );
       }
 
@@ -744,7 +744,7 @@ export class ChatMinimax
 }
 
 function minimaxResponseToChatMessage(
-  message: ChatCompletionResponseMessage,
+  message: ChatCompletionResponseMessage
 ): BaseMessage {
   switch (message.sender_type) {
     case "USER":
@@ -758,7 +758,7 @@ function minimaxResponseToChatMessage(
     default:
       return new ChatMessage(
         message.text || "",
-        message.sender_type ?? "unknown",
+        message.sender_type ?? "unknown"
       );
   }
 }

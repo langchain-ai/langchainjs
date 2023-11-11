@@ -13,7 +13,7 @@ export const run = async () => {
     ],
   });
   const res = await model.stream(
-    "Question: Write a story about a king\nAnswer:",
+    "Question: Write a story about a king\nAnswer:"
   );
   for await (const i of res) {
     process.stdout.write(i);

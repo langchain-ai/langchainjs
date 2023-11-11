@@ -66,7 +66,7 @@ export class RedisCache extends BaseCache {
       const key = getCacheKey(prompt, llmKey, String(i));
       await this.redisClient.set(
         key,
-        JSON.stringify(serializeGeneration(value[i])),
+        JSON.stringify(serializeGeneration(value[i]))
       );
     }
   }

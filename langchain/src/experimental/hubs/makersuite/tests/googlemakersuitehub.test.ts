@@ -13,20 +13,20 @@ describe("Google Maker Suite Hub", () => {
   const chatFile = JSON.parse(
     fs.readFileSync(
       `${__dirname}/googlemakersuite-files/chatPrompt.json`,
-      "utf8",
-    ),
+      "utf8"
+    )
   );
   const dataFile = JSON.parse(
     fs.readFileSync(
       `${__dirname}/googlemakersuite-files/dataPrompt.json`,
-      "utf8",
-    ),
+      "utf8"
+    )
   );
   const textFile = JSON.parse(
     fs.readFileSync(
       `${__dirname}/googlemakersuite-files/textPrompt.json`,
-      "utf8",
-    ),
+      "utf8"
+    )
   );
 
   // We don't need a real key
@@ -43,7 +43,7 @@ describe("Google Maker Suite Hub", () => {
       const prompt = new MakerSuitePrompt(textFile);
       const template = prompt.toTemplate();
       expect(template.template).toEqual(
-        "What would be a good name for a company that makes {product}?",
+        "What would be a good name for a company that makes {product}?"
       );
     });
 
@@ -70,7 +70,7 @@ describe("Google Maker Suite Hub", () => {
           "description: hair ties\n" +
           "product: rainbows^2\n" +
           "description: {description}\n" +
-          "product: ",
+          "product: "
       );
     });
 

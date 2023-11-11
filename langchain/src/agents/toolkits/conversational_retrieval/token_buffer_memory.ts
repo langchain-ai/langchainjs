@@ -86,7 +86,7 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
       const bufferString = getBufferString(
         buffer,
         this.humanPrefix,
-        this.aiPrefix,
+        this.aiPrefix
       );
       return { [this.memoryKey]: bufferString };
     }
@@ -102,13 +102,13 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues,
+    outputValues: OutputValues
   ): Promise<void> {
     const inputValue = getInputValue(inputValues, this.inputKey);
     const outputValue = getOutputValue(outputValues, this.outputKey);
     await this.chatHistory.addUserMessage(inputValue);
     const intermediateStepMessages = _formatIntermediateSteps(
-      outputValues[this.intermediateStepsKey],
+      outputValues[this.intermediateStepsKey]
     );
     for (const message of intermediateStepMessages) {
       await this.chatHistory.addMessage(message);
@@ -122,7 +122,7 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
         const retainedMessage = currentMessages.pop();
         if (!retainedMessage) {
           console.warn(
-            `Could not prune enough messages from chat history to stay under ${this.maxTokenLimit} tokens.`,
+            `Could not prune enough messages from chat history to stay under ${this.maxTokenLimit} tokens.`
           );
           break;
         }

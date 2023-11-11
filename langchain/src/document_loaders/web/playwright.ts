@@ -20,7 +20,7 @@ export type PlaywrightGotoOptions = {
 export type PlaywrightEvaluate = (
   page: Page,
   browser: Browser,
-  response: Response | null,
+  response: Response | null
 ) => Promise<string>;
 
 export type PlaywrightWebBaseLoaderOptions = {
@@ -42,7 +42,7 @@ export class PlaywrightWebBaseLoader
 
   constructor(
     public webPath: string,
-    options?: PlaywrightWebBaseLoaderOptions,
+    options?: PlaywrightWebBaseLoaderOptions
   ) {
     super();
     this.options = options ?? undefined;
@@ -50,7 +50,7 @@ export class PlaywrightWebBaseLoader
 
   static async _scrape(
     url: string,
-    options?: PlaywrightWebBaseLoaderOptions,
+    options?: PlaywrightWebBaseLoaderOptions
   ): Promise<string> {
     const { chromium } = await PlaywrightWebBaseLoader.imports();
 
@@ -112,7 +112,7 @@ export class PlaywrightWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install playwright as a dependency with, e.g. `yarn add playwright`",
+        "Please install playwright as a dependency with, e.g. `yarn add playwright`"
       );
     }
   }

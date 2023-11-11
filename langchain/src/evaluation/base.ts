@@ -9,7 +9,7 @@ import { BaseCallbackConfig } from "../callbacks/manager.js";
  */
 export interface LLMEvalChainInput<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModel = BaseLanguageModel,
+  L extends BaseLanguageModel = BaseLanguageModel
 > extends LLMChainInput<T, L> {}
 
 /**
@@ -31,7 +31,7 @@ export type EvalOutputType = Record<string, string | number | boolean>;
  */
 export abstract class LLMEvalChain<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModel = BaseLanguageModel,
+  L extends BaseLanguageModel = BaseLanguageModel
 > extends LLMChain<T, L> {
   requiresInput?: boolean = false;
 
@@ -66,7 +66,7 @@ export abstract class LLMEvalChain<
  */
 export abstract class EvalChain<
   RunInput extends ChainValues = ChainValues,
-  RunOutput extends ChainValues = ChainValues,
+  RunOutput extends ChainValues = ChainValues
 > extends BaseChain<RunInput, RunOutput> {
   requiresInput?: boolean = false;
 
@@ -149,7 +149,7 @@ export interface LLMTrajectoryEvaluatorArgs {
  */
 export abstract class LLMStringEvaluator<
   T extends EvalOutputType = EvalOutputType,
-  L extends BaseLanguageModel = BaseLanguageModel,
+  L extends BaseLanguageModel = BaseLanguageModel
 > extends LLMEvalChain<T, L> {
   /**
    * The name of the evaluation.
@@ -169,7 +169,7 @@ export abstract class LLMStringEvaluator<
   abstract _evaluateStrings(
     args: StringEvaluatorArgs,
     callOptions?: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
   /**
@@ -185,7 +185,7 @@ export abstract class LLMStringEvaluator<
   evaluateStrings(
     args: StringEvaluatorArgs,
     callOptions?: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);
     return this._evaluateStrings(args, callOptions, config);
@@ -213,7 +213,7 @@ export abstract class StringEvaluator extends EvalChain {
    */
   abstract _evaluateStrings(
     args: StringEvaluatorArgs,
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
   /**
@@ -227,7 +227,7 @@ export abstract class StringEvaluator extends EvalChain {
    */
   evaluateStrings(
     args: StringEvaluatorArgs,
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);
     return this._evaluateStrings(args, config);
@@ -251,7 +251,7 @@ export abstract class PairwiseStringEvaluator extends EvalChain {
    */
   abstract _evaluateStringPairs(
     args: PairwiseStringEvaluatorArgs,
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
   /**
@@ -262,7 +262,7 @@ export abstract class PairwiseStringEvaluator extends EvalChain {
    */
   evaluateStringPairs(
     args: PairwiseStringEvaluatorArgs,
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     return this._evaluateStringPairs(args, config);
   }
@@ -287,7 +287,7 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
   abstract _evaluateStringPairs(
     args: LLMPairwiseStringEvaluatorArgs,
     callOptions?: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
   /**
@@ -300,7 +300,7 @@ export abstract class LLMPairwiseStringEvaluator extends LLMEvalChain {
   evaluateStringPairs(
     args: LLMPairwiseStringEvaluatorArgs,
     callOptions?: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);
     return this._evaluateStringPairs(args, callOptions, config);
@@ -328,7 +328,7 @@ export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
   abstract _evaluateAgentTrajectory(
     args: LLMTrajectoryEvaluatorArgs,
     callOptions?: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues>;
 
   /**
@@ -341,7 +341,7 @@ export abstract class AgentTrajectoryEvaluator extends LLMEvalChain {
   evaluateAgentTrajectory(
     args: LLMTrajectoryEvaluatorArgs,
     callOptions?: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     this.checkEvaluationArgs(args.reference, args.input);
     return this._evaluateAgentTrajectory(args, callOptions, config);

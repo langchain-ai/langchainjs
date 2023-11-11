@@ -57,7 +57,7 @@ export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
 
 export function createLlamaContext(
   model: LlamaModel,
-  inputs: LlamaBaseCppInputs,
+  inputs: LlamaBaseCppInputs
 ): LlamaContext {
   const options = {
     batchSize: inputs?.batchSize,

@@ -21,11 +21,11 @@ test("Hyde retriever", async () => {
       "My name is Bob.",
       "My favourite food is pizza.",
       "My favourite food is pasta.",
-    ].map((pageContent) => new Document({ pageContent })),
+    ].map((pageContent) => new Document({ pageContent }))
   );
 
   const results = await retriever.getRelevantDocuments(
-    "What is my favourite food?",
+    "What is my favourite food?"
   );
 
   expect(results.length).toBe(1);
@@ -49,11 +49,11 @@ test("Hyde retriever with default prompt template", async () => {
       "My name is Bob.",
       "My favourite food is pizza.",
       "My favourite food is pasta.",
-    ].map((pageContent) => new Document({ pageContent })),
+    ].map((pageContent) => new Document({ pageContent }))
   );
 
   const results = await retriever.getRelevantDocuments(
-    "What is my favourite food?",
+    "What is my favourite food?"
   );
 
   expect(results.length).toBe(1);

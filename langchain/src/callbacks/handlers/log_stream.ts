@@ -145,7 +145,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
     this.transformStream = new TransformStream();
     this.writer = this.transformStream.writable.getWriter();
     this.receiveStream = IterableReadableStream.fromReadableStream(
-      this.transformStream.readable,
+      this.transformStream.readable
     );
   }
 
@@ -207,7 +207,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
               },
             },
           ],
-        }),
+        })
       );
     }
 
@@ -243,7 +243,7 @@ export class LogStreamCallbackHandler extends BaseTracer {
             value: logEntry,
           },
         ],
-      }),
+      })
     );
   }
 

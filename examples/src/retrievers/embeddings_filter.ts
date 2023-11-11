@@ -25,7 +25,7 @@ const retriever = new ContextualCompressionRetriever({
 });
 
 const retrievedDocs = await retriever.getRelevantDocuments(
-  "What did the speaker say about Justice Breyer?",
+  "What did the speaker say about Justice Breyer?"
 );
 console.log({ retrievedDocs });
 

@@ -23,7 +23,7 @@ export class GoogleCalendarCreateTool extends GoogleCalendarBase {
         model,
         calendarId: this.calendarId,
       },
-      runManager,
+      runManager
     );
   }
 }

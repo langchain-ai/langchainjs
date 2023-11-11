@@ -96,7 +96,7 @@ export class StructuredChatAgent extends Agent {
   static getDefaultOutputParser(
     fields?: OutputParserArgs & {
       toolNames: string[];
-    },
+    }
   ) {
     if (fields?.llm) {
       return StructuredChatOutputParserWithRetries.fromLLM(fields.llm, {
@@ -133,8 +133,8 @@ export class StructuredChatAgent extends Agent {
       .map(
         (tool) =>
           `${tool.name}: ${tool.description}, args: ${JSON.stringify(
-            (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties,
-          )}`,
+            (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
+          )}`
       )
       .join("\n");
   }
@@ -151,7 +151,7 @@ export class StructuredChatAgent extends Agent {
    */
   static createPrompt(
     tools: StructuredTool[],
-    args?: StructuredChatCreatePromptArgs,
+    args?: StructuredChatCreatePromptArgs
   ) {
     const {
       prefix = PREFIX,
@@ -170,14 +170,14 @@ export class StructuredChatAgent extends Agent {
             tool_schemas: StructuredChatAgent.createToolSchemasString(tools),
             tool_names: tools.map((tool) => tool.name).join(", "),
           },
-        }),
+        })
       ),
       ...memoryPrompts,
       new HumanMessagePromptTemplate(
         new PromptTemplate({
           template: humanMessageTemplate,
           inputVariables,
-        }),
+        })
       ),
     ];
     return ChatPromptTemplate.fromMessages(messages);
@@ -195,7 +195,7 @@ export class StructuredChatAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: StructuredTool[],
-    args?: StructuredChatCreatePromptArgs & AgentArgs,
+    args?: StructuredChatCreatePromptArgs & AgentArgs
   ) {
     StructuredChatAgent.validateTools(tools);
     const prompt = StructuredChatAgent.createPrompt(tools, args);

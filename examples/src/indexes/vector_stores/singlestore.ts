@@ -14,7 +14,7 @@ export const run = async () => {
         password: process.env.SINGLESTORE_PASSWORD,
         database: process.env.SINGLESTORE_DATABASE,
       },
-    },
+    }
   );
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);

@@ -12,8 +12,8 @@ test("CombiningOutputParser", async () => {
     new RegexParser(
       /Confidence: (A|B|C), Explanation: (.*)/,
       ["confidence", "explanation"],
-      "noConfidence",
-    ),
+      "noConfidence"
+    )
   );
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
@@ -50,8 +50,8 @@ test("CombiningOutputParser", async () => {
 
 -----Output 1-----
 Confidence: A, Explanation: Because it is the capital of France.
------`,
-    ),
+-----`
+    )
   ).toMatchInlineSnapshot(`
     {
       "confidence": "A",
@@ -62,8 +62,8 @@ Confidence: A, Explanation: Because it is the capital of France.
 
   expect(
     await parser.parse(
-      '```\n{"url": "https://en.wikipedia.org/wiki/Paris"}\n```\nConfidence: A, Explanation: Because it is the capital of France.',
-    ),
+      '```\n{"url": "https://en.wikipedia.org/wiki/Paris"}\n```\nConfidence: A, Explanation: Because it is the capital of France.'
+    )
   ).toMatchInlineSnapshot(`
     {
       "confidence": "A",

@@ -94,7 +94,7 @@ export class MotorheadMemory extends BaseChatMemory {
 
     if (isManaged && !(this.apiKey && this.clientId)) {
       throw new Error(
-        "apiKey and clientId are required for managed motorhead. Visit https://getmetal.io to get your keys.",
+        "apiKey and clientId are required for managed motorhead. Visit https://getmetal.io to get your keys."
       );
     }
 
@@ -117,7 +117,7 @@ export class MotorheadMemory extends BaseChatMemory {
       {
         signal: this.timeout ? AbortSignal.timeout(this.timeout) : undefined,
         headers: this._getHeaders(),
-      },
+      }
     );
 
     const json = await res.json();
@@ -131,7 +131,7 @@ export class MotorheadMemory extends BaseChatMemory {
         } else {
           await this.chatHistory.addUserMessage(message.content);
         }
-      }),
+      })
     );
 
     if (context && context !== "NONE") {
@@ -170,7 +170,7 @@ export class MotorheadMemory extends BaseChatMemory {
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues,
+    outputValues: OutputValues
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
     const output = getOutputValue(outputValues, this.outputKey);

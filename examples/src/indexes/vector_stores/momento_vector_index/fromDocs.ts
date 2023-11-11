@@ -24,7 +24,7 @@ const vectorStore = await MomentoVectorIndex.fromDocuments(
       }),
     }),
     indexName: "langchain-example-index",
-  },
+  }
 );
 
 // because indexing is async, wait for it to finish to search directly after

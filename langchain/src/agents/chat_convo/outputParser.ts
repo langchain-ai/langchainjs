@@ -64,7 +64,7 @@ export class ChatConversationalAgentOutputParser extends AgentActionOutputParser
       return { tool: action, toolInput: action_input, log: text };
     } catch (e) {
       throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`,
+        `Failed to parse. Text: "${text}". Error: ${e}`
       );
     }
   }
@@ -117,7 +117,7 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
    * @returns Format instructions as a string.
    */
   getFormatInstructions(
-    options: ChatConversationalAgentOutputParserFormatInstructionsOptions,
+    options: ChatConversationalAgentOutputParserFormatInstructionsOptions
   ): string {
     if (options.raw) {
       return FORMAT_INSTRUCTIONS;
@@ -151,10 +151,7 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
    */
   static fromLLM(
     llm: BaseLanguageModel,
-    options: Omit<
-      ChatConversationalAgentOutputParserArgs,
-      "outputFixingParser"
-    >,
+    options: Omit<ChatConversationalAgentOutputParserArgs, "outputFixingParser">
   ): ChatConversationalAgentOutputParserWithRetries {
     const baseParser =
       options.baseParser ??

@@ -52,7 +52,7 @@ test("Test S3 loader", async () => {
   expect(fsMock.writeFileSync).toHaveBeenCalled();
   expect(UnstructuredLoaderMock).toHaveBeenCalledWith(
     path.join("tmp", "s3fileloader-12345", "test.txt"),
-    unstructuredOptions,
+    unstructuredOptions
   );
   expect(result).toEqual(["fake document"]);
 });

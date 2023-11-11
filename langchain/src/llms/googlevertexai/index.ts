@@ -41,14 +41,14 @@ export class GoogleVertexAI extends BaseGoogleVertexAI<GoogleAuthOptions> {
       { ...fields, ...this },
       this.caller,
       client,
-      false,
+      false
     );
 
     this.streamedConnection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller,
       client,
-      true,
+      true
     );
   }
 }

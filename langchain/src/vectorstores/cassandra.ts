@@ -144,7 +144,7 @@ export class CassandraStore extends VectorStore {
   async addDocuments(documents: Document[]): Promise<void> {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
-      documents,
+      documents
     );
   }
 
@@ -158,7 +158,7 @@ export class CassandraStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: WhereClause,
+    filter?: WhereClause
   ): Promise<[Document, number][]> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -225,7 +225,7 @@ export class CassandraStore extends VectorStore {
     texts: string[],
     metadatas: object | object[],
     embeddings: Embeddings,
-    args: CassandraLibArgs,
+    args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const docs: Document[] = [];
 
@@ -251,7 +251,7 @@ export class CassandraStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    args: CassandraLibArgs,
+    args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
@@ -267,7 +267,7 @@ export class CassandraStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    args: CassandraLibArgs,
+    args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const instance = new this(embeddings, args);
 
@@ -312,8 +312,8 @@ export class CassandraStore extends VectorStore {
 
     cql = `CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
            ON ${this.keyspace}.${
-             this.table
-           }(vector) USING 'StorageAttachedIndex' WITH OPTIONS = {'similarity_function': '${this.vectorType.toUpperCase()}'};`;
+      this.table
+    }(vector) USING 'StorageAttachedIndex' WITH OPTIONS = {'similarity_function': '${this.vectorType.toUpperCase()}'};`;
     await this.client.execute(cql);
 
     for await (const { name, value } of this.indices) {
@@ -424,7 +424,7 @@ export class CassandraStore extends VectorStore {
     }
 
     const whereConditions = filters.map(
-      ({ name, operator = "=" }) => `${name} ${operator} ?`,
+      ({ name, operator = "=" }) => `${name} ${operator} ?`
     );
 
     return `WHERE ${whereConditions.join(" AND ")}`;
@@ -455,12 +455,12 @@ export class CassandraStore extends VectorStore {
    */
   private async executeInsert(
     batchVectors: number[][],
-    batchDocuments: Document[],
+    batchDocuments: Document[]
   ): Promise<void> {
     // Input validation: Check if the lengths of batchVectors and batchDocuments are the same
     if (batchVectors.length !== batchDocuments.length) {
       throw new Error(
-        `The lengths of vectors (${batchVectors.length}) and documents (${batchDocuments.length}) must be the same.`,
+        `The lengths of vectors (${batchVectors.length}) and documents (${batchDocuments.length}) must be the same.`
       );
     }
 
@@ -514,12 +514,12 @@ export class CassandraStore extends VectorStore {
    */
   private async insertAll(
     vectors: number[][],
-    documents: Document[],
+    documents: Document[]
   ): Promise<void> {
     // Input validation: Check if the lengths of vectors and documents are the same
     if (vectors.length !== documents.length) {
       throw new Error(
-        `The lengths of vectors (${vectors.length}) and documents (${documents.length}) must be the same.`,
+        `The lengths of vectors (${vectors.length}) and documents (${documents.length}) must be the same.`
       );
     }
 
@@ -564,8 +564,8 @@ export class CassandraStore extends VectorStore {
           // Execute the insert using the AsyncCaller - it will handle concurrency and queueing.
           insertPromises.push(
             this.asyncCaller.call(() =>
-              this.executeInsert(batchVectors, batchDocuments),
-            ),
+              this.executeInsert(batchVectors, batchDocuments)
+            )
           );
 
           // Clear the current buffers for the next iteration

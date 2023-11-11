@@ -63,7 +63,7 @@ export class AWSSfnToolkit extends Toolkit {
         name: args.name,
         description: StartExecutionAWSSfnTool.formatDescription(
           args.name,
-          args.description,
+          args.description
         ),
         stateMachineArn: args.stateMachineArn,
       }),
@@ -75,8 +75,8 @@ export class AWSSfnToolkit extends Toolkit {
                 accessKeyId: args.accessKeyId,
                 secretAccessKey: args.secretAccessKey,
               }
-            : {},
-        ),
+            : {}
+        )
       ),
       new SendTaskSuccessAWSSfnTool(
         Object.assign(
@@ -86,8 +86,8 @@ export class AWSSfnToolkit extends Toolkit {
                 accessKeyId: args.accessKeyId,
                 secretAccessKey: args.secretAccessKey,
               }
-            : {},
-        ),
+            : {}
+        )
       ),
     ];
   }
@@ -96,7 +96,7 @@ export class AWSSfnToolkit extends Toolkit {
 export function createAWSSfnAgent(
   llm: BaseLanguageModel,
   toolkit: AWSSfnToolkit,
-  args?: AWSSfnCreatePromptArgs,
+  args?: AWSSfnCreatePromptArgs
 ) {
   const {
     prefix = SFN_PREFIX,

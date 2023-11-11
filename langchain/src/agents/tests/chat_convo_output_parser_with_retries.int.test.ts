@@ -32,7 +32,7 @@ test.skip("Can parse JSON with text in front of it", async () => {
     new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" }),
     {
       toolNames: ["blogpost", "ToolWithJson"],
-    },
+    }
   );
   for (const message of testCases) {
     const parsed = await p.parse(message.input);
@@ -44,7 +44,7 @@ test.skip("Can parse JSON with text in front of it", async () => {
       expect(typeof message.toolInput).toEqual("string");
       if (message.type === "stringified_object") {
         expect(JSON.parse(message.toolInput)).toStrictEqual(
-          JSON.parse((parsed as AgentAction).toolInput),
+          JSON.parse((parsed as AgentAction).toolInput)
         );
       } else {
         expect(message.toolInput).toContain((parsed as AgentAction).toolInput);

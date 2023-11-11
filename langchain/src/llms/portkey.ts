@@ -52,7 +52,7 @@ const defaultPortkeySession: {
  */
 export function getPortkeySession(options: PortkeyOptions = {}) {
   let session = defaultPortkeySession.find((session) =>
-    _.isEqual(session.options, options),
+    _.isEqual(session.options, options)
   )?.session;
 
   if (!session) {
@@ -98,7 +98,7 @@ export class Portkey extends BaseLLM {
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    _?: CallbackManagerForLLMRun,
+    _?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const choices = [];
     for (let i = 0; i < prompts.length; i += 1) {
@@ -116,7 +116,7 @@ export class Portkey extends BaseLLM {
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
         },
-      })),
+      }))
     );
 
     return {
@@ -127,7 +127,7 @@ export class Portkey extends BaseLLM {
   async *_streamResponseChunks(
     input: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const response = await this.session.portkey.completions.create({
       prompt: input,

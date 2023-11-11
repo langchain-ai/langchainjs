@@ -22,7 +22,7 @@ export interface JsonMarkdownFormatInstructionsOptions
 }
 
 export class StructuredOutputParser<
-  T extends z.ZodTypeAny,
+  T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
   static lc_name() {
     return "StructuredOutputParser";
@@ -54,15 +54,15 @@ export class StructuredOutputParser<
    * @returns A new instance of StructuredOutputParser.
    */
   static fromNamesAndDescriptions<S extends { [key: string]: string }>(
-    schemas: S,
+    schemas: S
   ) {
     const zodSchema = z.object(
       Object.fromEntries(
         Object.entries(schemas).map(
           ([name, description]) =>
-            [name, z.string().describe(description)] as const,
-        ),
-      ),
+            [name, z.string().describe(description)] as const
+        )
+      )
     );
 
     return new this(zodSchema);
@@ -106,7 +106,7 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
-        text,
+        text
       );
     }
   }
@@ -117,14 +117,14 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
  * formatted as a markdown code snippet.
  */
 export class JsonMarkdownStructuredOutputParser<
-  T extends z.ZodTypeAny,
+  T extends z.ZodTypeAny
 > extends StructuredOutputParser<T> {
   static lc_name() {
     return "JsonMarkdownStructuredOutputParser";
   }
 
   getFormatInstructions(
-    options?: JsonMarkdownFormatInstructionsOptions,
+    options?: JsonMarkdownFormatInstructionsOptions
   ): string {
     const interpolationDepth = options?.interpolationDepth ?? 1;
     if (interpolationDepth < 1) {
@@ -132,7 +132,7 @@ export class JsonMarkdownStructuredOutputParser<
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
-      zodToJsonSchema(this.schema),
+      zodToJsonSchema(this.schema)
     )
       .replaceAll("{", "{".repeat(interpolationDepth))
       .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
@@ -140,7 +140,7 @@ export class JsonMarkdownStructuredOutputParser<
 
   private _schemaToInstruction(
     schemaInput: JsonSchema7Type,
-    indent = 2,
+    indent = 2
   ): string {
     const schema = schemaInput as Extract<
       JsonSchema7Type,
@@ -176,7 +176,7 @@ export class JsonMarkdownStructuredOutputParser<
               : " (optional)";
             return `${" ".repeat(indent)}"${key}": ${this._schemaToInstruction(
               value,
-              indent + 2,
+              indent + 2
             )}${isOptional}`;
           })
           .join("\n");
@@ -188,7 +188,7 @@ export class JsonMarkdownStructuredOutputParser<
           : "";
         return `array[\n${" ".repeat(indent)}${this._schemaToInstruction(
           schema.items,
-          indent + 2,
+          indent + 2
         )}\n${" ".repeat(indent - 2)}] ${description}`;
       }
       const isNullable = nullable ? " (nullable)" : "";
@@ -210,15 +210,15 @@ export class JsonMarkdownStructuredOutputParser<
   }
 
   static fromNamesAndDescriptions<S extends { [key: string]: string }>(
-    schemas: S,
+    schemas: S
   ) {
     const zodSchema = z.object(
       Object.fromEntries(
         Object.entries(schemas).map(
           ([name, description]) =>
-            [name, z.string().describe(description)] as const,
-        ),
-      ),
+            [name, z.string().describe(description)] as const
+        )
+      )
     );
 
     return new this<typeof zodSchema>(zodSchema);
@@ -226,7 +226,7 @@ export class JsonMarkdownStructuredOutputParser<
 }
 
 export interface AsymmetricStructuredOutputParserFields<
-  T extends z.ZodTypeAny,
+  T extends z.ZodTypeAny
 > {
   inputSchema: T;
 }
@@ -237,14 +237,14 @@ export interface AsymmetricStructuredOutputParserFields<
  */
 export abstract class AsymmetricStructuredOutputParser<
   T extends z.ZodTypeAny,
-  Y = unknown,
+  Y = unknown
 > extends BaseOutputParser<Y> {
   private structuredInputParser: JsonMarkdownStructuredOutputParser<T>;
 
   constructor({ inputSchema }: AsymmetricStructuredOutputParserFields<T>) {
     super(...arguments);
     this.structuredInputParser = new JsonMarkdownStructuredOutputParser(
-      inputSchema,
+      inputSchema
     );
   }
 
@@ -263,7 +263,7 @@ export abstract class AsymmetricStructuredOutputParser<
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
-        text,
+        text
       );
     }
 

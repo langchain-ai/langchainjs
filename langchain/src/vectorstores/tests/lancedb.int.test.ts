@@ -26,7 +26,7 @@ describe("LanceDB", () => {
       embeddings,
       {
         table: lanceDBTable,
-      },
+      }
     );
 
     const results = await vectorStore.similaritySearch("hello bye", 10);

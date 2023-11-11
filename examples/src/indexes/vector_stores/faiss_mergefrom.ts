@@ -6,14 +6,14 @@ export const run = async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings(),
+    new OpenAIEmbeddings()
   );
 
   // Create another vector store from texts
   const vectorStore2 = await FaissStore.fromTexts(
     ["Some text"],
     [{ id: 1 }],
-    new OpenAIEmbeddings(),
+    new OpenAIEmbeddings()
   );
 
   // merge the first vector store into vectorStore2
@@ -25,7 +25,7 @@ export const run = async () => {
   // You can also create a new vector store from another FaissStore index
   const vectorStore3 = await FaissStore.fromIndex(
     vectorStore2,
-    new OpenAIEmbeddings(),
+    new OpenAIEmbeddings()
   );
   const resultTwo = await vectorStore3.similaritySearch("Bye bye", 1);
   console.log(resultTwo);

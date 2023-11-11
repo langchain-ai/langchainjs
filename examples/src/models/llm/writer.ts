@@ -6,6 +6,6 @@ const model = new Writer({
   orgId: "YOUR-ORGANIZATION-ID", // In Node.js defaults to process.env.WRITER_ORG_ID
 });
 const res = await model.invoke(
-  "What would be a good company name a company that makes colorful socks?",
+  "What would be a good company name a company that makes colorful socks?"
 );
 console.log({ res });

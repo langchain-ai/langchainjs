@@ -11,12 +11,12 @@ const parser = StructuredOutputParser.fromZodSchema(
     sources: z
       .array(z.string())
       .describe("sources used to answer the question, should be websites."),
-  }),
+  })
 );
 
 const chain = RunnableSequence.from([
   PromptTemplate.fromTemplate(
-    "Answer the users question as best as possible.\n{format_instructions}\n{question}",
+    "Answer the users question as best as possible.\n{format_instructions}\n{question}"
   ),
   new OpenAI({ temperature: 0 }),
   parser,

@@ -22,7 +22,7 @@ export function validate(
   recursiveAnchor: Schema | null = null,
   instanceLocation = "#",
   schemaLocation = "#",
-  evaluated: Evaluated = Object.create(null),
+  evaluated: Evaluated = Object.create(null)
 ): ValidationResult {
   if (schema === true) {
     return { valid: true, errors: [] };
@@ -62,7 +62,7 @@ export function validate(
     default:
       // undefined, bigint, function, symbol
       throw new Error(
-        `Instances of "${rawInstanceType}" type are not supported.`,
+        `Instances of "${rawInstanceType}" type are not supported.`
       );
   }
 
@@ -141,7 +141,7 @@ export function validate(
       refSchema,
       instanceLocation,
       keywordLocation,
-      evaluated,
+      evaluated
     );
     if (!result.valid) {
       errors.push(
@@ -151,7 +151,7 @@ export function validate(
           keywordLocation,
           error: "A subschema had errors.",
         },
-        ...result.errors,
+        ...result.errors
       );
     }
   }
@@ -177,7 +177,7 @@ export function validate(
       recursiveAnchor,
       instanceLocation,
       keywordLocation,
-      evaluated,
+      evaluated
     );
     if (!result.valid) {
       errors.push(
@@ -187,7 +187,7 @@ export function validate(
           keywordLocation,
           error: "A subschema had errors.",
         },
-        ...result.errors,
+        ...result.errors
       );
     }
     if (draft === "4" || draft === "7") {
@@ -216,7 +216,7 @@ export function validate(
         keyword: "type",
         keywordLocation: `${schemaLocation}/type`,
         error: `Instance type "${instanceType}" is invalid. Expected "${$type.join(
-          '", "',
+          '", "'
         )}".`,
       });
     }
@@ -289,7 +289,7 @@ export function validate(
       recursiveAnchor,
       instanceLocation,
       keywordLocation /*,
-      evaluated*/,
+      evaluated*/
     );
     if (result.valid) {
       errors.push({
@@ -319,7 +319,7 @@ export function validate(
         $recursiveAnchor === true ? recursiveAnchor : null,
         instanceLocation,
         `${keywordLocation}/${i}`,
-        subEvaluated,
+        subEvaluated
       );
       errors.push(...result.errors);
       anyValid = anyValid || result.valid;
@@ -355,7 +355,7 @@ export function validate(
         $recursiveAnchor === true ? recursiveAnchor : null,
         instanceLocation,
         `${keywordLocation}/${i}`,
-        subEvaluated,
+        subEvaluated
       );
       errors.push(...result.errors);
       allValid = allValid && result.valid;
@@ -389,7 +389,7 @@ export function validate(
         $recursiveAnchor === true ? recursiveAnchor : null,
         instanceLocation,
         `${keywordLocation}/${i}`,
-        subEvaluated,
+        subEvaluated
       );
       errors.push(...result.errors);
       if (result.valid) {
@@ -424,7 +424,7 @@ export function validate(
       recursiveAnchor,
       instanceLocation,
       keywordLocation,
-      evaluated,
+      evaluated
     ).valid;
     if (conditionResult) {
       if ($then !== undefined) {
@@ -437,7 +437,7 @@ export function validate(
           recursiveAnchor,
           instanceLocation,
           `${schemaLocation}/then`,
-          evaluated,
+          evaluated
         );
         if (!thenResult.valid) {
           errors.push(
@@ -447,7 +447,7 @@ export function validate(
               keywordLocation,
               error: `Instance does not match "then" schema.`,
             },
-            ...thenResult.errors,
+            ...thenResult.errors
           );
         }
       }
@@ -461,7 +461,7 @@ export function validate(
         recursiveAnchor,
         instanceLocation,
         `${schemaLocation}/else`,
-        evaluated,
+        evaluated
       );
       if (!elseResult.valid) {
         errors.push(
@@ -471,7 +471,7 @@ export function validate(
             keywordLocation,
             error: `Instance does not match "else" schema.`,
           },
-          ...elseResult.errors,
+          ...elseResult.errors
         );
       }
     }
@@ -523,7 +523,7 @@ export function validate(
           shortCircuit,
           recursiveAnchor,
           subInstancePointer,
-          keywordLocation,
+          keywordLocation
         );
         if (!result.valid) {
           errors.push(
@@ -533,7 +533,7 @@ export function validate(
               keywordLocation,
               error: `Property name "${key}" does not match schema.`,
             },
-            ...result.errors,
+            ...result.errors
           );
         }
       }
@@ -571,7 +571,7 @@ export function validate(
             recursiveAnchor,
             instanceLocation,
             `${keywordLocation}/${encodePointer(key)}`,
-            evaluated,
+            evaluated
           );
           if (!result.valid) {
             errors.push(
@@ -581,7 +581,7 @@ export function validate(
                 keywordLocation,
                 error: `Instance has "${key}" but does not match dependant schema.`,
               },
-              ...result.errors,
+              ...result.errors
             );
           }
         }
@@ -613,7 +613,7 @@ export function validate(
               shortCircuit,
               recursiveAnchor,
               instanceLocation,
-              `${keywordLocation}/${encodePointer(key)}`,
+              `${keywordLocation}/${encodePointer(key)}`
             );
             if (!result.valid) {
               errors.push(
@@ -623,7 +623,7 @@ export function validate(
                   keywordLocation,
                   error: `Instance has "${key}" but does not match dependant schema.`,
                 },
-                ...result.errors,
+                ...result.errors
               );
             }
           }
@@ -650,7 +650,7 @@ export function validate(
           shortCircuit,
           recursiveAnchor,
           subInstancePointer,
-          `${keywordLocation}/${encodePointer(key)}`,
+          `${keywordLocation}/${encodePointer(key)}`
         );
         if (result.valid) {
           evaluated[key] = thisEvaluated[key] = true;
@@ -663,7 +663,7 @@ export function validate(
               keywordLocation,
               error: `Property "${key}" does not match schema.`,
             },
-            ...result.errors,
+            ...result.errors
           );
           if (stop) break;
         }
@@ -680,7 +680,7 @@ export function validate(
             continue;
           }
           const subInstancePointer = `${instanceLocation}/${encodePointer(
-            key,
+            key
           )}`;
           const result = validate(
             instance[key],
@@ -690,7 +690,7 @@ export function validate(
             shortCircuit,
             recursiveAnchor,
             subInstancePointer,
-            `${keywordLocation}/${encodePointer(pattern)}`,
+            `${keywordLocation}/${encodePointer(pattern)}`
           );
           if (result.valid) {
             evaluated[key] = thisEvaluated[key] = true;
@@ -703,7 +703,7 @@ export function validate(
                 keywordLocation,
                 error: `Property "${key}" matches pattern "${pattern}" but does not match associated schema.`,
               },
-              ...result.errors,
+              ...result.errors
             );
           }
         }
@@ -725,7 +725,7 @@ export function validate(
           shortCircuit,
           recursiveAnchor,
           subInstancePointer,
-          keywordLocation,
+          keywordLocation
         );
         if (result.valid) {
           evaluated[key] = true;
@@ -738,7 +738,7 @@ export function validate(
               keywordLocation,
               error: `Property "${key}" does not match additional properties schema.`,
             },
-            ...result.errors,
+            ...result.errors
           );
         }
       }
@@ -747,7 +747,7 @@ export function validate(
       for (const key in instance) {
         if (!evaluated[key]) {
           const subInstancePointer = `${instanceLocation}/${encodePointer(
-            key,
+            key
           )}`;
           const result = validate(
             instance[key],
@@ -757,7 +757,7 @@ export function validate(
             shortCircuit,
             recursiveAnchor,
             subInstancePointer,
-            keywordLocation,
+            keywordLocation
           );
           if (result.valid) {
             evaluated[key] = true;
@@ -769,7 +769,7 @@ export function validate(
                 keywordLocation,
                 error: `Property "${key}" does not match unevaluated properties schema.`,
               },
-              ...result.errors,
+              ...result.errors
             );
           }
         }
@@ -810,7 +810,7 @@ export function validate(
           shortCircuit,
           recursiveAnchor,
           `${instanceLocation}/${i}`,
-          `${keywordLocation}/${i}`,
+          `${keywordLocation}/${i}`
         );
         evaluated[i] = true;
         if (!result.valid) {
@@ -822,7 +822,7 @@ export function validate(
               keywordLocation,
               error: `Items did not match schema.`,
             },
-            ...result.errors,
+            ...result.errors
           );
           if (stop) break;
         }
@@ -842,7 +842,7 @@ export function validate(
             shortCircuit,
             recursiveAnchor,
             `${instanceLocation}/${i}`,
-            `${keywordLocation}/${i}`,
+            `${keywordLocation}/${i}`
           );
           evaluated[i] = true;
           if (!result.valid) {
@@ -854,7 +854,7 @@ export function validate(
                 keywordLocation,
                 error: `Items did not match schema.`,
               },
-              ...result.errors,
+              ...result.errors
             );
             if (stop) break;
           }
@@ -869,7 +869,7 @@ export function validate(
             shortCircuit,
             recursiveAnchor,
             `${instanceLocation}/${i}`,
-            keywordLocation,
+            keywordLocation
           );
           evaluated[i] = true;
           if (!result.valid) {
@@ -881,7 +881,7 @@ export function validate(
                 keywordLocation,
                 error: `Items did not match schema.`,
               },
-              ...result.errors,
+              ...result.errors
             );
             if (stop) break;
           }
@@ -899,7 +899,7 @@ export function validate(
             shortCircuit,
             recursiveAnchor,
             `${instanceLocation}/${i}`,
-            keywordLocation,
+            keywordLocation
           );
           evaluated[i] = true;
           if (!result.valid) {
@@ -911,7 +911,7 @@ export function validate(
                 keywordLocation,
                 error: `Items did not match additional items schema.`,
               },
-              ...result.errors,
+              ...result.errors
             );
           }
         }
@@ -946,7 +946,7 @@ export function validate(
             shortCircuit,
             recursiveAnchor,
             `${instanceLocation}/${j}`,
-            keywordLocation,
+            keywordLocation
           );
           if (result.valid) {
             evaluated[j] = true;
@@ -1003,7 +1003,7 @@ export function validate(
           shortCircuit,
           recursiveAnchor,
           `${instanceLocation}/${i}`,
-          keywordLocation,
+          keywordLocation
         );
         evaluated[i] = true;
         if (!result.valid) {
@@ -1014,7 +1014,7 @@ export function validate(
               keywordLocation,
               error: `Items did not match unevaluated items schema.`,
             },
-            ...result.errors,
+            ...result.errors
           );
         }
       }

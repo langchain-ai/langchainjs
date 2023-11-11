@@ -8,7 +8,7 @@ import { SupabaseHybridSearch } from "../supabase.js";
 test("Supabase hybrid keyword search", async () => {
   const client = createClient(
     process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PRIVATE_KEY!,
+    process.env.SUPABASE_PRIVATE_KEY!
   );
 
   const embeddings = new OpenAIEmbeddings();

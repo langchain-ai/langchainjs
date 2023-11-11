@@ -48,7 +48,7 @@ export abstract class BaseSageMakerContentHandler<InputType, OutputType> {
    */
   abstract transformInput(
     prompt: InputType,
-    modelKwargs: Record<string, unknown>,
+    modelKwargs: Record<string, unknown>
   ): Promise<Uint8Array>;
 
   /**
@@ -135,7 +135,7 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
 
     if (!fields.clientOptions.region) {
       throw new Error(
-        `Please pass a "clientOptions" object with a "region" field to the constructor`,
+        `Please pass a "clientOptions" object with a "region" field to the constructor`
       );
     }
 
@@ -147,7 +147,7 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
     const contentHandler = fields?.contentHandler;
     if (!contentHandler) {
       throw new Error(
-        `Please pass a "contentHandler" field to the constructor`,
+        `Please pass a "contentHandler" field to the constructor`
       );
     }
 
@@ -174,7 +174,7 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     return this.streaming
       ? await this.streamingCall(prompt, options, runManager)
@@ -184,13 +184,13 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   private async streamingCall(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const chunks = [];
     for await (const chunk of this._streamResponseChunks(
       prompt,
       options,
-      runManager,
+      runManager
     )) {
       chunks.push(chunk.text);
     }
@@ -199,11 +199,11 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
 
   private async noStreamingCall(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const body = await this.contentHandler.transformInput(
       prompt,
-      this.modelKwargs ?? {},
+      this.modelKwargs ?? {}
     );
     const { contentType, accepts } = this.contentHandler;
 
@@ -216,8 +216,8 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
           Accept: accepts,
           ...this.endpointKwargs,
         }),
-        { abortSignal: options.signal },
-      ),
+        { abortSignal: options.signal }
+      )
     );
 
     if (response.Body === undefined) {
@@ -235,11 +235,11 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const body = await this.contentHandler.transformInput(
       prompt,
-      this.modelKwargs ?? {},
+      this.modelKwargs ?? {}
     );
     const { contentType, accepts } = this.contentHandler;
 
@@ -252,8 +252,8 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
           Accept: accepts,
           ...this.endpointKwargs,
         }),
-        { abortSignal: options.signal },
-      ),
+        { abortSignal: options.signal }
+      )
     );
 
     if (!stream.Body) {
@@ -263,7 +263,7 @@ export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
     for await (const chunk of stream.Body) {
       if (chunk.PayloadPart && chunk.PayloadPart.Bytes) {
         const text = await this.contentHandler.transformOutput(
-          chunk.PayloadPart.Bytes,
+          chunk.PayloadPart.Bytes
         );
         yield new GenerationChunk({
           text,

@@ -35,7 +35,7 @@ export class UpstashRedisCache extends BaseCache {
       this.redisClient = new Redis(config);
     } else {
       throw new Error(
-        `Upstash Redis caches require either a config object or a pre-configured client.`,
+        `Upstash Redis caches require either a config object or a pre-configured client.`
       );
     }
   }
@@ -69,7 +69,7 @@ export class UpstashRedisCache extends BaseCache {
       const key = getCacheKey(prompt, llmKey, String(i));
       await this.redisClient.set(
         key,
-        JSON.stringify(serializeGeneration(value[i])),
+        JSON.stringify(serializeGeneration(value[i]))
       );
     }
   }

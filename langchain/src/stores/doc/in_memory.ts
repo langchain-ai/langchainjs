@@ -55,7 +55,7 @@ export class InMemoryDocstore
 
   async mset(keyValuePairs: [string, Document][]): Promise<void> {
     await Promise.all(
-      keyValuePairs.map(([key, value]) => this.add({ [key]: value })),
+      keyValuePairs.map(([key, value]) => this.add({ [key]: value }))
     );
   }
 

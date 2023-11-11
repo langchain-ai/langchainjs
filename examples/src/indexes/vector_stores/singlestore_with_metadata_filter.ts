@@ -20,7 +20,7 @@ export const run = async () => {
         database: process.env.SINGLESTORE_DATABASE,
       },
       distanceMetric: "EUCLIDEAN_DISTANCE",
-    },
+    }
   );
 
   const resultOne = await vectorStore.similaritySearch("greetings", 1, {

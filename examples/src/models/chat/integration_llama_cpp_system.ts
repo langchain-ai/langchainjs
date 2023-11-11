@@ -7,7 +7,7 @@ const model = new ChatLlamaCpp({ modelPath: llamaPath });
 
 const response = await model.call([
   new SystemMessage(
-    "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence.",
+    "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence."
   ),
   new HumanMessage("Tell me where Llamas come from?"),
 ]);

@@ -11,7 +11,7 @@ test("Test HNSWLib.fromTexts", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings(),
+    new OpenAIEmbeddings()
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
@@ -28,7 +28,7 @@ test("Test HNSWLib.fromTexts + addDocuments", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings(),
+    new OpenAIEmbeddings()
   );
   expect(vectorStore.index?.getMaxElements()).toBe(3);
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
@@ -50,7 +50,7 @@ test("Test HNSWLib.load, HNSWLib.save, and HNSWLib.delete", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings(),
+    new OpenAIEmbeddings()
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
@@ -70,12 +70,12 @@ test("Test HNSWLib.load, HNSWLib.save, and HNSWLib.delete", async () => {
 
   const loadedVectorStore = await HNSWLib.load(
     tempDirectory,
-    new OpenAIEmbeddings(),
+    new OpenAIEmbeddings()
   );
 
   const resultThree = await loadedVectorStore.similaritySearch(
     "hello world",
-    1,
+    1
   );
 
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);

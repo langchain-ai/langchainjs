@@ -108,7 +108,7 @@ export class GraphCypherQAChain extends BaseChain {
 
     if (!cypherLLM && !llm) {
       throw new Error(
-        "Either 'llm' or 'cypherLLM' parameters must be provided",
+        "Either 'llm' or 'cypherLLM' parameters must be provided"
       );
     }
 
@@ -118,7 +118,7 @@ export class GraphCypherQAChain extends BaseChain {
 
     if (cypherLLM && qaLLM && llm) {
       throw new Error(
-        "You can specify up to two of 'cypherLLM', 'qaLLM', and 'llm', but not all three simultaneously.",
+        "You can specify up to two of 'cypherLLM', 'qaLLM', and 'llm', but not all three simultaneously."
       );
     }
 
@@ -149,7 +149,7 @@ export class GraphCypherQAChain extends BaseChain {
 
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const callbacks = runManager?.getChild();
     const question = values[this.inputKey];
@@ -158,7 +158,7 @@ export class GraphCypherQAChain extends BaseChain {
 
     const generatedCypher = await this.cypherGenerationChain.call(
       { question, schema: this.graph.getSchema() },
-      callbacks,
+      callbacks
     );
 
     const extractedCypher = this.extractCypher(generatedCypher.text);
@@ -183,7 +183,7 @@ export class GraphCypherQAChain extends BaseChain {
 
       const result = await this.qaChain.call(
         { question, context: JSON.stringify(context) },
-        callbacks,
+        callbacks
       );
 
       chainResult = {

@@ -4,7 +4,7 @@ export const run = async () => {
   const modelA = new OpenAI();
   // `call` is a simple string-in, string-out method for interacting with the model.
   const resA = await modelA.call(
-    "What would be a good company name a company that makes colorful socks?",
+    "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ resA });
   // { resA: '\n\nSocktastic Colors' }
@@ -50,7 +50,7 @@ export const run = async () => {
   // We can specify additional parameters the specific model provider supports, like `temperature`:
   const modelB = new OpenAI({ temperature: 0.9 });
   const resC = await modelA.call(
-    "What would be a good company name a company that makes colorful socks?",
+    "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ resC });
   // { resC: '\n\nKaleidoSox' }

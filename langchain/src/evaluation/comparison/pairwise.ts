@@ -50,7 +50,7 @@ export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOu
 
   parseResult(
     generations: Generation[] | ChatGeneration[],
-    _callbacks: Callbacks | undefined,
+    _callbacks: Callbacks | undefined
   ): Promise<EvalOutputType> {
     const { text } = generations[0];
 
@@ -70,7 +70,7 @@ export class PairwiseStringResultOutputParser extends BaseLLMOutputParser<EvalOu
     if (!["A", "B", "C"].includes(verdict)) {
       throw new Error(
         `Invalid verdict: ${verdict}. ` +
-          "Verdict must be one of 'A', 'B', or 'C'.",
+          "Verdict must be one of 'A', 'B', or 'C'."
       );
     }
     // C means the models are tied. Return 'None' meaning no preference
@@ -115,7 +115,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
   outputParser = new PairwiseStringResultOutputParser();
 
   static resolvePairwiseCriteria(
-    criteria?: CriteriaLike,
+    criteria?: CriteriaLike
   ): Record<string, string> {
     if (criteria === undefined) {
       const defaultCriteria: Criteria[] = [
@@ -130,7 +130,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
           accumulator[currentValue] = SUPPORTED_CRITERIA[currentValue];
           return accumulator;
         },
-        {},
+        {}
       );
     }
 
@@ -148,7 +148,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
         throw new Error(
           "Criteria cannot be empty. " +
             "Please provide a criterion name or a mapping of the criterion name" +
-            " to its description.",
+            " to its description."
         );
       }
       criteria_ = { ...criteria };
@@ -171,7 +171,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
       throw new Error(
         `Input variables should be ${[...expectedInputVars]}, but got ${
           _prompt.inputVariables
-        }`,
+        }`
       );
     }
     return _prompt;
@@ -186,7 +186,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
   static async fromLLM(
     llm: BaseLanguageModel,
     criteria?: CriteriaLike,
-    chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>,
+    chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     let prompt = this.resolvePairwisePrompt(chainOptions?.prompt);
 
@@ -220,7 +220,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
   async _evaluateStringPairs(
     args: LLMPairwiseStringEvaluatorArgs,
     callOptions: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const result = await this.call({ ...args, ...callOptions }, config);
 
@@ -256,7 +256,7 @@ export class LabeledPairwiseStringEvalChain extends PairwiseStringEvalChain {
       throw new Error(
         `Input variables should be ${[...expectedInputVars]}, but got ${
           _prompt.inputVariables
-        }`,
+        }`
       );
     }
     return _prompt;

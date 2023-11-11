@@ -15,7 +15,7 @@ export type RouterInput = {
 export class RouterRunnable<
   RunInput extends RouterInput,
   RunnableInput,
-  RunOutput,
+  RunOutput
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RouterRunnable";
@@ -36,7 +36,7 @@ export class RouterRunnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<RunnableConfig>,
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const { key, input: actualInput } = input;
     const runnable = this.runnables[key];
@@ -49,25 +49,25 @@ export class RouterRunnable<
   async batch(
     inputs: RunInput[],
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
-    batchOptions?: RunnableBatchOptions & { returnExceptions?: false },
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
   ): Promise<RunOutput[]>;
 
   async batch(
     inputs: RunInput[],
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
-    batchOptions?: RunnableBatchOptions & { returnExceptions: true },
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
-    batchOptions?: RunnableBatchOptions,
+    batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
     options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
-    batchOptions?: RunnableBatchOptions,
+    batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const keys = inputs.map((input) => input.key);
     const actualInputs = inputs.map((input) => input.input);
@@ -86,7 +86,7 @@ export class RouterRunnable<
       const batchPromises = actualInputs
         .slice(i, i + batchSize)
         .map((actualInput, i) =>
-          runnables[i].invoke(actualInput, optionsList[i]),
+          runnables[i].invoke(actualInput, optionsList[i])
         );
       const batchResult = await Promise.all(batchPromises);
       batchResults.push(batchResult);
@@ -96,7 +96,7 @@ export class RouterRunnable<
 
   async stream(
     input: RunInput,
-    options?: Partial<RunnableConfig>,
+    options?: Partial<RunnableConfig>
   ): Promise<IterableReadableStream<RunOutput>> {
     const { key, input: actualInput } = input;
     const runnable = this.runnables[key];

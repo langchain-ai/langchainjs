@@ -66,35 +66,35 @@ export class SqlDatabase
   }
 
   static async fromDataSourceParams(
-    fields: SqlDatabaseDataSourceParams,
+    fields: SqlDatabaseDataSourceParams
   ): Promise<SqlDatabase> {
     const sqlDatabase = new SqlDatabase(fields);
     if (!sqlDatabase.appDataSource.isInitialized) {
       await sqlDatabase.appDataSource.initialize();
     }
     sqlDatabase.allTables = await getTableAndColumnsName(
-      sqlDatabase.appDataSource,
+      sqlDatabase.appDataSource
     );
     sqlDatabase.customDescription = Object.fromEntries(
       Object.entries(fields?.customDescription ?? {}).filter(([key, _]) =>
         sqlDatabase.allTables
           .map((table: SqlTable) => table.tableName)
-          .includes(key),
-      ),
+          .includes(key)
+      )
     );
     verifyIncludeTablesExistInDatabase(
       sqlDatabase.allTables,
-      sqlDatabase.includesTables,
+      sqlDatabase.includesTables
     );
     verifyIgnoreTablesExistInDatabase(
       sqlDatabase.allTables,
-      sqlDatabase.ignoreTables,
+      sqlDatabase.ignoreTables
     );
     return sqlDatabase;
   }
 
   static async fromOptionsParams(
-    fields: SqlDatabaseOptionsParams,
+    fields: SqlDatabaseOptionsParams
   ): Promise<SqlDatabase> {
     const { DataSource } = await import("typeorm");
     const dataSource = new DataSource(fields.appDataSourceOptions);
@@ -118,13 +118,13 @@ export class SqlDatabase
     let selectedTables =
       this.includesTables.length > 0
         ? this.allTables.filter((currentTable) =>
-            this.includesTables.includes(currentTable.tableName),
+            this.includesTables.includes(currentTable.tableName)
           )
         : this.allTables;
 
     if (this.ignoreTables.length > 0) {
       selectedTables = selectedTables.filter(
-        (currentTable) => !this.ignoreTables.includes(currentTable.tableName),
+        (currentTable) => !this.ignoreTables.includes(currentTable.tableName)
       );
     }
 
@@ -132,10 +132,10 @@ export class SqlDatabase
       verifyListTablesExistInDatabase(
         this.allTables,
         targetTables,
-        "Wrong target table name:",
+        "Wrong target table name:"
       );
       selectedTables = this.allTables.filter((currentTable) =>
-        targetTables.includes(currentTable.tableName),
+        targetTables.includes(currentTable.tableName)
       );
     }
 
@@ -143,7 +143,7 @@ export class SqlDatabase
       selectedTables,
       this.appDataSource,
       this.sampleRowsInTableInfo,
-      this.customDescription,
+      this.customDescription
     );
   }
 
@@ -185,7 +185,7 @@ export class SqlDatabase
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Failed to load typeorm. Please install it with eg. `yarn add typeorm`.",
+        "Failed to load typeorm. Please install it with eg. `yarn add typeorm`."
       );
     }
   }

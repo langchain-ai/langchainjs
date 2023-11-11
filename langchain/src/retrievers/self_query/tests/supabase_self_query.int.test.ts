@@ -98,7 +98,7 @@ test("Supabase Store Self Query Retriever Test", async () => {
     !process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   ) {
     throw new Error(
-      "Supabase URL or private key not set. Please set it in the .env file",
+      "Supabase URL or private key not set. Please set it in the .env file"
     );
   }
 
@@ -107,7 +107,7 @@ test("Supabase Store Self Query Retriever Test", async () => {
   const documentContents = "Brief summary of a movie";
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   );
   const vectorStore = new SupabaseVectorStore(embeddings, { client });
   // idempotency
@@ -122,17 +122,17 @@ test("Supabase Store Self Query Retriever Test", async () => {
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are less than 90 minutes?",
+    "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are rated higher than 8.5?",
+    "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(3);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are directed by Greta Gerwig?",
+    "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(1);
@@ -245,7 +245,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
     !process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   ) {
     throw new Error(
-      "Supabase URL or private key not set. Please set it in the .env file",
+      "Supabase URL or private key not set. Please set it in the .env file"
     );
   }
 
@@ -254,7 +254,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   const documentContents = "Brief summary of a movie";
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   );
   const vectorStore = new SupabaseVectorStore(embeddings, { client });
   // idempotency
@@ -275,17 +275,17 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are less than 90 minutes?",
+    "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are rated higher than 8.5?",
+    "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(2);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are directed by Greta Gerwig?",
+    "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(1);
@@ -398,7 +398,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
     !process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   ) {
     throw new Error(
-      "Supabase URL or private key not set. Please set it in the .env file",
+      "Supabase URL or private key not set. Please set it in the .env file"
     );
   }
 
@@ -407,7 +407,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
   const documentContents = "Brief summary of a movie";
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   );
   const vectorStore = new SupabaseVectorStore(embeddings, { client });
   // idempotency
@@ -430,17 +430,17 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are less than 90 minutes?",
+    "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(5);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are rated higher than 8.5?",
+    "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(6);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are directed by Greta Gerwig?",
+    "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(5);
@@ -553,7 +553,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
     !process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   ) {
     throw new Error(
-      "Supabase URL or private key not set. Please set it in the .env file",
+      "Supabase URL or private key not set. Please set it in the .env file"
     );
   }
 
@@ -562,7 +562,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   const documentContents = "Brief summary of a movie";
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
   );
   const vectorStore = new SupabaseVectorStore(embeddings, { client });
   // idempotency
@@ -584,17 +584,17 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are less than 90 minutes?",
+    "Which movies are less than 90 minutes?"
   );
   console.log(query1);
   expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are rated higher than 8.5?",
+    "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
   expect(query2.length).toEqual(2);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are directed by Greta Gerwig?",
+    "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
   expect(query3.length).toEqual(1);

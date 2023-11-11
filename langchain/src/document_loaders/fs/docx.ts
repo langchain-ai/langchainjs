@@ -24,7 +24,7 @@ export class DocxLoader extends BufferLoader {
    */
   public async parse(
     raw: Buffer,
-    metadata: Document["metadata"],
+    metadata: Document["metadata"]
   ): Promise<Document[]> {
     const { extractRawText } = await DocxLoaderImports();
     const docx = await extractRawText({
@@ -50,7 +50,7 @@ async function DocxLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load mammoth. Please install it with eg. `npm install mammoth`.",
+      "Failed to load mammoth. Please install it with eg. `npm install mammoth`."
     );
   }
 }

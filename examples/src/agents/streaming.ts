@@ -87,7 +87,7 @@ export const run = async () => {
     {
       input: "What is 2 to the power of 8",
     },
-    [handler1],
+    [handler1]
   ); // this is needed to see handleAgentAction
   /*
   handleChainStart { chain: { name: 'agent_executor' } }

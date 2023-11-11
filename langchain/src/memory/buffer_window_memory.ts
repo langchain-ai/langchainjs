@@ -68,7 +68,7 @@ export class BufferWindowMemory
       [this.memoryKey]: getBufferString(
         messages.slice(-this.k * 2),
         this.humanPrefix,
-        this.aiPrefix,
+        this.aiPrefix
       ),
     };
     return result;

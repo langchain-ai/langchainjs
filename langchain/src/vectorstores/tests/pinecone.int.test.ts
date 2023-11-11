@@ -33,7 +33,7 @@ describe("PineconeStore", () => {
 
     await pineconeStore.addDocuments(
       [{ pageContent, metadata: {} }],
-      [documentId],
+      [documentId]
     );
 
     const results = await pineconeStore.similaritySearch(pageContent, 1);
@@ -42,7 +42,7 @@ describe("PineconeStore", () => {
 
     await pineconeStore.addDocuments(
       [{ pageContent: `${pageContent} upserted`, metadata: {} }],
-      [documentId],
+      [documentId]
     );
 
     const results2 = await pineconeStore.similaritySearch(pageContent, 1);
@@ -103,7 +103,7 @@ describe("PineconeStore", () => {
         k: 5,
         fetchK: 20,
         filter: { foo: id },
-      },
+      }
     );
 
     expect(results.length).toEqual(3);

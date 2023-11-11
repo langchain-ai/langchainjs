@@ -26,7 +26,7 @@ function shallowCopy<T extends object>(obj: T): T {
 
 function replaceSecrets(
   root: SerializedFields,
-  secretsMap: { [key: string]: string },
+  secretsMap: { [key: string]: string }
 ): SerializedFields {
   const result = shallowCopy(root);
   for (const [path, secretId] of Object.entries(secretsMap)) {
@@ -57,7 +57,7 @@ function replaceSecrets(
  */
 export function get_lc_unique_name(
   // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  serializableClass: typeof Serializable,
+  serializableClass: typeof Serializable
 ): string {
   // "super" here would refer to the parent class of Serializable,
   // when we want the parent class of the module actually calling this method.
@@ -206,7 +206,7 @@ export abstract class Serializable {
       kwargs: mapKeys(
         Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
         keyToJson,
-        aliases,
+        aliases
       ),
     };
   }

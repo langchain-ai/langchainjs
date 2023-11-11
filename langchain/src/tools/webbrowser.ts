@@ -33,7 +33,7 @@ export const parseInputs = (inputs: string): [string, string] => {
 export const getText = (
   html: string,
   baseUrl: string,
-  summary: boolean,
+  summary: boolean
 ): string => {
   // scriptingEnabled so noscript elements are parsed
   const $ = cheerio.load(html, { scriptingEnabled: true });
@@ -80,7 +80,7 @@ export const getText = (
 const getHtml = async (
   baseUrl: string,
   h: Headers,
-  config: AxiosRequestConfig,
+  config: AxiosRequestConfig
 ) => {
   const axios = (
     "default" in axiosMod ? axiosMod.default : axiosMod
@@ -246,18 +246,18 @@ export class WebBrowser extends Tool {
           new Document({
             pageContent,
             metadata: [],
-          }),
+          })
       );
 
       const vectorStore = await MemoryVectorStore.fromDocuments(
         docs,
-        this.embeddings,
+        this.embeddings
       );
       const results = await vectorStore.similaritySearch(
         task,
         4,
         undefined,
-        runManager?.getChild("vectorstore"),
+        runManager?.getChild("vectorstore")
       );
       context = formatDocumentsAsString(results, "\n");
     }

@@ -8,14 +8,14 @@ import {
 
 export function formatLogToMessage(
   intermediateSteps: AgentStep[],
-  templateToolResponse = "{observation}",
+  templateToolResponse = "{observation}"
 ): BaseMessage[] {
   // Get all input variables, if there is more than one, throw an error.
   const matches = [...templateToolResponse.matchAll(/{([^}]*)}/g)];
   const stringsInsideBrackets = matches.map((match) => match[1]);
   if (stringsInsideBrackets.length > 1) {
     throw new Error(
-      `templateToolResponse must contain one input variable: ${templateToolResponse}`,
+      `templateToolResponse must contain one input variable: ${templateToolResponse}`
     );
   }
 
@@ -27,8 +27,8 @@ export function formatLogToMessage(
       new HumanMessage(
         renderTemplate(templateToolResponse, "f-string", {
           [stringsInsideBrackets[0]]: step.observation,
-        }),
-      ),
+        })
+      )
     );
   }
   return thoughts;

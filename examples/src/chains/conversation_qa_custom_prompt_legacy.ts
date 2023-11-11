@@ -32,7 +32,7 @@ const vectorStore = await HNSWLib.fromTexts(
     "Mitochondria are made of lipids",
   ],
   [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-  new OpenAIEmbeddings(),
+  new OpenAIEmbeddings()
 );
 
 const chain = ConversationalRetrievalQAChain.fromLLM(
@@ -46,7 +46,7 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
     questionGeneratorChainOptions: {
       template: CUSTOM_QUESTION_GENERATOR_CHAIN_PROMPT,
     },
-  },
+  }
 );
 
 const res = await chain.call({

@@ -23,7 +23,7 @@ export const ingest = action({
       texts,
       metadatas,
       new OpenAIEmbeddings({ openAIApiKey }),
-      { ctx },
+      { ctx }
     );
   },
 });
@@ -36,7 +36,7 @@ export const similaritySearch = action({
   handler: async (ctx, { openAIApiKey, query }) => {
     const vectorStore = new ConvexVectorStore(
       new OpenAIEmbeddings({ openAIApiKey }),
-      { ctx },
+      { ctx }
     );
 
     const result = await vectorStore.similaritySearch(query, 3);

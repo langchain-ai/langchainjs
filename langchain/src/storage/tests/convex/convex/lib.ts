@@ -16,7 +16,7 @@ export const mset = action({
   },
   handler: async (ctx, { pairs }) => {
     await new ConvexKVStore({ ctx }).mset(
-      pairs.map(({ key, value }) => [key, value]),
+      pairs.map(({ key, value }) => [key, value])
     );
   },
 });
@@ -30,7 +30,7 @@ export const mget = action({
     // Convex only allows `null`s over the wire, so to make sure we're returning
     // `undefined`s, map them to strings
     return results.map((result) =>
-      result === undefined ? "undefined" : result,
+      result === undefined ? "undefined" : result
     );
   },
 });

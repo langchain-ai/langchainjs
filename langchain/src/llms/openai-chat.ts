@@ -132,7 +132,7 @@ export class OpenAIChat
         configuration?: ClientOptions & LegacyOpenAIInput;
       },
     /** @deprecated */
-    configuration?: ClientOptions & LegacyOpenAIInput,
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     super(fields ?? {});
 
@@ -188,7 +188,7 @@ export class OpenAIChat
 
     if (this.n > 1) {
       throw new Error(
-        "Cannot use n > 1 in OpenAIChat LLM. Use ChatOpenAI Chat Model instead.",
+        "Cannot use n > 1 in OpenAIChat LLM. Use ChatOpenAI Chat Model instead."
       );
     }
 
@@ -225,7 +225,7 @@ export class OpenAIChat
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     return {
       model: this.modelName,
@@ -279,7 +279,7 @@ export class OpenAIChat
    * @returns Array of formatted messages.
    */
   private formatMessages(
-    prompt: string,
+    prompt: string
   ): OpenAIClient.Chat.ChatCompletionMessageParam[] {
     const message: OpenAIClient.Chat.ChatCompletionMessageParam = {
       role: "user",
@@ -291,7 +291,7 @@ export class OpenAIChat
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const params = {
       ...this.invocationParams(options),
@@ -316,7 +316,7 @@ export class OpenAIChat
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
-        newTokenIndices,
+        newTokenIndices
       );
     }
     if (options.signal?.aborted) {
@@ -328,7 +328,7 @@ export class OpenAIChat
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const params = this.invocationParams(options);
 
@@ -336,7 +336,7 @@ export class OpenAIChat
       const stream = await this._streamResponseChunks(
         prompt,
         options,
-        runManager,
+        runManager
       );
       let finalChunk: GenerationChunk | undefined;
       for await (const chunk of stream) {
@@ -357,7 +357,7 @@ export class OpenAIChat
         {
           signal: options.signal,
           ...options.options,
-        },
+        }
       );
       return response?.choices[0]?.message?.content ?? "";
     }
@@ -371,19 +371,19 @@ export class OpenAIChat
    */
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request:
       | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
       | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
@@ -393,7 +393,7 @@ export class OpenAIChat
       try {
         const res = await this.client.chat.completions.create(
           request,
-          requestOptions,
+          requestOptions
         );
         return res;
       } catch (e) {
@@ -473,7 +473,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
       promptLayerApiKey?: string;
       plTags?: string[];
       returnPromptLayerId?: boolean;
-    },
+    }
   ) {
     super(fields);
 
@@ -491,7 +491,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     let choice: Generation[];
 
@@ -515,7 +515,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
           parsedResp,
           requestStartTime,
           requestEndTime,
-          this.promptLayerApiKey,
+          this.promptLayerApiKey
         );
 
         if (
@@ -528,7 +528,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
         }
 
         return choice;
-      }),
+      })
     );
 
     return { generations };

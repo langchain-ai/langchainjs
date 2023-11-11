@@ -188,7 +188,7 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
   validateEnvironment() {
     if (!this.aleph_alpha_api_key) {
       throw new Error(
-        "Aleph Alpha API Key is missing in environment variables.",
+        "Aleph Alpha API Key is missing in environment variables."
       );
     }
   }
@@ -250,7 +250,7 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
 
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     let stop = options?.stop;
     this.validateEnvironment();
@@ -276,7 +276,7 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
         // https://undici.nodejs.org/#/?id=garbage-collection
         const text = await response.text();
         const error = new Error(
-          `Aleph Alpha call failed with status ${response.status} and body ${text}`,
+          `Aleph Alpha call failed with status ${response.status} and body ${text}`
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;

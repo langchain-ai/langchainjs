@@ -56,13 +56,13 @@ test("Run agent with klarna and requests tools", async () => {
     new RequestsGetTool(),
     new RequestsPostTool(),
     await AIPluginTool.fromPluginUrl(
-      "https://www.klarna.com/.well-known/ai-plugin.json",
+      "https://www.klarna.com/.well-known/ai-plugin.json"
     ),
   ];
   const agent = await initializeAgentExecutorWithOptions(
     tools,
     new ChatOpenAI({ temperature: 0 }),
-    { agentType: "chat-zero-shot-react-description", verbose: true },
+    { agentType: "chat-zero-shot-react-description", verbose: true }
   );
 
   const result = await agent.call({
@@ -107,6 +107,6 @@ test("Run agent with incorrect api key should throw error", async () => {
   // Test that the agent throws the same error
   await expect(() => executor.call({ input })).rejects.toThrowError(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (error as any)?.message,
+    (error as any)?.message
   );
 });

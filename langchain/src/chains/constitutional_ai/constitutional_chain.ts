@@ -58,11 +58,11 @@ export class ConstitutionalChain
 
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let { [this.chain.outputKey]: response } = await this.chain.call(
       values,
-      runManager?.getChild("original"),
+      runManager?.getChild("original")
     );
     const inputPrompt = await this.chain.prompt.format(values);
 
@@ -74,7 +74,7 @@ export class ConstitutionalChain
             output_from_model: response,
             critique_request: this.constitutionalPrinciples[i].critiqueRequest,
           },
-          runManager?.getChild("critique"),
+          runManager?.getChild("critique")
         );
 
       const critique = ConstitutionalChain._parseCritique(rawCritique);
@@ -88,7 +88,7 @@ export class ConstitutionalChain
             critique,
             revision_request: this.constitutionalPrinciples[i].revisionRequest,
           },
-          runManager?.getChild("revision"),
+          runManager?.getChild("revision")
         );
       response = revisionRaw;
     }
@@ -126,7 +126,7 @@ export class ConstitutionalChain
     > & {
       critiqueChain?: LLMChain;
       revisionChain?: LLMChain;
-    },
+    }
   ) {
     const critiqueChain =
       options.critiqueChain ??
@@ -173,7 +173,7 @@ export class ConstitutionalChain
       _type: this._chainType(),
       chain: this.chain.serialize(),
       ConstitutionalPrinciple: this.constitutionalPrinciples.map((principle) =>
-        principle.serialize(),
+        principle.serialize()
       ),
       critiqueChain: this.critiqueChain.serialize(),
       revisionChain: this.revisionChain.serialize(),

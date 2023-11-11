@@ -13,7 +13,7 @@ const vectorStore = await AnalyticDBVectorStore.fromTexts(
   ["foo", "bar", "baz"],
   [{ page: 1 }, { page: 2 }, { page: 3 }],
   new OpenAIEmbeddings(),
-  { connectionOptions },
+  { connectionOptions }
 );
 const result = await vectorStore.similaritySearch("foo", 1);
 console.log(JSON.stringify(result));
@@ -30,7 +30,7 @@ console.log(JSON.stringify(filterResult));
 const filterWithScoreResult = await vectorStore.similaritySearchWithScore(
   "foo",
   1,
-  { page: 3 },
+  { page: 3 }
 );
 console.log(JSON.stringify(filterWithScoreResult));
 // [[{"pageContent":"baz","metadata":{"page":3}},0.26075905561447144]]
@@ -38,7 +38,7 @@ console.log(JSON.stringify(filterWithScoreResult));
 const filterNoMatchResult = await vectorStore.similaritySearchWithScore(
   "foo",
   1,
-  { page: 5 },
+  { page: 5 }
 );
 console.log(JSON.stringify(filterNoMatchResult));
 // []

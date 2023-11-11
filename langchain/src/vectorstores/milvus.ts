@@ -164,7 +164,7 @@ export class Milvus extends VectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents,
+      documents
     );
   }
 
@@ -195,7 +195,7 @@ export class Milvus extends VectorStore {
             if (!this.autoId) {
               if (doc.metadata[this.primaryField] === undefined) {
                 throw new Error(
-                  `The Collection's primaryField is configured with autoId=false, thus its value must be provided through metadata.`,
+                  `The Collection's primaryField is configured with autoId=false, thus its value must be provided through metadata.`
                 );
               }
               data[field] = doc.metadata[this.primaryField];
@@ -210,7 +210,7 @@ export class Milvus extends VectorStore {
           default: // metadata fields
             if (doc.metadata[field] === undefined) {
               throw new Error(
-                `The field "${field}" is not provided in documents[${index}].metadata.`,
+                `The field "${field}" is not provided in documents[${index}].metadata.`
               );
             } else if (typeof doc.metadata[field] === "object") {
               data[field] = JSON.stringify(doc.metadata[field]);
@@ -245,7 +245,7 @@ export class Milvus extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: string,
+    filter?: string
   ): Promise<[Document, number][]> {
     const hasColResp = await this.client.hasCollection({
       collection_name: this.collectionName,
@@ -255,7 +255,7 @@ export class Milvus extends VectorStore {
     }
     if (hasColResp.value === false) {
       throw new Error(
-        `Collection not found: ${this.collectionName}, please create collection before search.`,
+        `Collection not found: ${this.collectionName}, please create collection before search.`
       );
     }
 
@@ -272,7 +272,7 @@ export class Milvus extends VectorStore {
 
     // clone this.field and remove vectorField
     const outputFields = this.fields.filter(
-      (field) => field !== this.vectorField,
+      (field) => field !== this.vectorField
     );
 
     const searchResp = await this.client.search({
@@ -328,14 +328,14 @@ export class Milvus extends VectorStore {
     });
     if (hasColResp.status.error_code !== ErrorCode.SUCCESS) {
       throw new Error(
-        `Error checking collection: ${JSON.stringify(hasColResp, null, 2)}`,
+        `Error checking collection: ${JSON.stringify(hasColResp, null, 2)}`
       );
     }
 
     if (hasColResp.value === false) {
       if (vectors === undefined || documents === undefined) {
         throw new Error(
-          `Collection not found: ${this.collectionName}, please provide vectors and documents to create collection.`,
+          `Collection not found: ${this.collectionName}, please provide vectors and documents to create collection.`
         );
       }
       await this.createCollection(vectors, documents);
@@ -352,7 +352,7 @@ export class Milvus extends VectorStore {
    */
   async createCollection(
     vectors: number[][],
-    documents: Document[],
+    documents: Document[]
   ): Promise<void> {
     const fieldList: FieldType[] = [];
 
@@ -384,7 +384,7 @@ export class Milvus extends VectorStore {
         type_params: {
           dim: getVectorFieldDim(vectors).toString(),
         },
-      },
+      }
     );
 
     fieldList.forEach((field) => {
@@ -464,7 +464,7 @@ export class Milvus extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig?: MilvusLibArgs,
+    dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -488,7 +488,7 @@ export class Milvus extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig?: MilvusLibArgs,
+    dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const args: MilvusLibArgs = {
       collectionName: dbConfig?.collectionName || genCollectionName(),
@@ -516,7 +516,7 @@ export class Milvus extends VectorStore {
    */
   static async fromExistingCollection(
     embeddings: Embeddings,
-    dbConfig: MilvusLibArgs,
+    dbConfig: MilvusLibArgs
   ): Promise<Milvus> {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();
@@ -537,7 +537,7 @@ export class Milvus extends VectorStore {
     }
     if (hasColResp.value === false) {
       throw new Error(
-        `Collection not found: ${this.collectionName}, please create collection before search.`,
+        `Collection not found: ${this.collectionName}, please create collection before search.`
       );
     }
 
@@ -556,7 +556,7 @@ export class Milvus extends VectorStore {
 
 function createFieldTypeForMetadata(
   documents: Document[],
-  primaryFieldName: string,
+  primaryFieldName: string
 ): FieldType[] {
   const sampleMetadata = documents[0].metadata;
   let textFieldMaxLength = 0;
@@ -569,7 +569,7 @@ function createFieldTypeForMetadata(
         typeof metadata[key] !== typeof sampleMetadata[key]
       ) {
         throw new Error(
-          "All documents must have same metadata keys and datatype",
+          "All documents must have same metadata keys and datatype"
         );
       }
 

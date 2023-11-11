@@ -21,7 +21,7 @@ export const run = async () => {
 
   // We can also use the `fromTemplate` method to create a `PromptTemplate` object.
   const promptB = PromptTemplate.fromTemplate(
-    "What is a good name for a company that makes {product}?",
+    "What is a good name for a company that makes {product}?"
   );
   const responseB = await promptB.format({ product: "colorful socks" });
   console.log({ responseB });
@@ -34,7 +34,7 @@ export const run = async () => {
   // For chat models, we provide a `ChatPromptTemplate` class that can be used to format chat prompts.
   const chatPrompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
-      "You are a helpful assistant that translates {input_language} to {output_language}.",
+      "You are a helpful assistant that translates {input_language} to {output_language}."
     ),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);

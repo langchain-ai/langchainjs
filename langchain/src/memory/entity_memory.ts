@@ -107,7 +107,7 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     const serializedMessages = getBufferString(
       messages.slice(-this.k * 2),
       this.humanPrefix,
-      this.aiPrefix,
+      this.aiPrefix
     );
     const output = await this.entityExtractionChain.predict({
       history: serializedMessages,
@@ -120,7 +120,7 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     for (const entity of entities) {
       entitySummaries[entity] = await this.entityStore.get(
         entity,
-        "No current information known.",
+        "No current information known."
       );
     }
     this.entityCache = [...entities];
@@ -151,14 +151,14 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     const serializedMessages = getBufferString(
       messages.slice(-this.k * 2),
       this.humanPrefix,
-      this.aiPrefix,
+      this.aiPrefix
     );
     const inputData = inputs[promptInputKey];
 
     for (const entity of this.entityCache) {
       const existingSummary = await this.entityStore.get(
         entity,
-        "No current information known.",
+        "No current information known."
       );
       const output = await this.entitySummarizationChain.predict({
         summary: existingSummary,

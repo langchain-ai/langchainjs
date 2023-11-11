@@ -18,9 +18,7 @@ assert(typeof MemoryVectorStore === "function");
 assert(typeof OpenAIEmbeddings === "function");
 assert(typeof CallbackManager === "function");
 
-const vs = new MemoryVectorStore(
-  new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }),
-);
+const vs = new MemoryVectorStore(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }));
 
 await vs.addVectors(
   [
@@ -34,7 +32,7 @@ await vs.addVectors(
     new Document({
       pageContent: "b",
     }),
-  ],
+  ]
 );
 
 assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);

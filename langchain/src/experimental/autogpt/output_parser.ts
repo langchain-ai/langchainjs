@@ -11,7 +11,7 @@ export function preprocessJsonInput(inputStr: string): string {
   // while leaving already escaped ones intact
   const correctedStr = inputStr.replace(
     /(?<!\\)\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-    "\\\\",
+    "\\\\"
   );
   return correctedStr;
 }

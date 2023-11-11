@@ -38,17 +38,17 @@ export class GoogleCustomSearch extends Tool {
     fields: GoogleCustomSearchParams = {
       apiKey: getEnvironmentVariable("GOOGLE_API_KEY"),
       googleCSEId: getEnvironmentVariable("GOOGLE_CSE_ID"),
-    },
+    }
   ) {
     super(...arguments);
     if (!fields.apiKey) {
       throw new Error(
-        `Google API key not set. You can set it as "GOOGLE_API_KEY" in your environment variables.`,
+        `Google API key not set. You can set it as "GOOGLE_API_KEY" in your environment variables.`
       );
     }
     if (!fields.googleCSEId) {
       throw new Error(
-        `Google custom search engine id not set. You can set it as "GOOGLE_CSE_ID" in your environment variables.`,
+        `Google custom search engine id not set. You can set it as "GOOGLE_CSE_ID" in your environment variables.`
       );
     }
     this.apiKey = fields.apiKey;
@@ -59,12 +59,12 @@ export class GoogleCustomSearch extends Tool {
     const res = await fetch(
       `https://www.googleapis.com/customsearch/v1?key=${this.apiKey}&cx=${
         this.googleCSEId
-      }&q=${encodeURIComponent(input)}`,
+      }&q=${encodeURIComponent(input)}`
     );
 
     if (!res.ok) {
       throw new Error(
-        `Got ${res.status} error from Google custom search: ${res.statusText}`,
+        `Got ${res.status} error from Google custom search: ${res.statusText}`
       );
     }
 
@@ -76,7 +76,7 @@ export class GoogleCustomSearch extends Tool {
           title: item.title,
           link: item.link,
           snippet: item.snippet,
-        }),
+        })
       ) ?? [];
     return JSON.stringify(results);
   }

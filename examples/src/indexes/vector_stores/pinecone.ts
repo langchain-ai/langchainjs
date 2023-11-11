@@ -14,7 +14,7 @@ export const run = async () => {
     !process.env.PINECONE_INDEX
   ) {
     throw new Error(
-      "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set",
+      "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
     );
   }
 
@@ -25,7 +25,7 @@ export const run = async () => {
     ["Hello world", "Bye bye", "hello nice world"],
     [{ foo: "bar" }, { foo: "baz" }, { foo: "qux" }],
     new OpenAIEmbeddings(),
-    { pineconeIndex: index },
+    { pineconeIndex: index }
   );
 
   /* Without metadata filtering */

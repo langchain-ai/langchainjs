@@ -24,7 +24,7 @@ import { Calculator } from "langchain/tools/calculator";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 const formatInstructions = (
-  toolNames: string,
+  toolNames: string
 ) => `Use the following format in your response:
 
 Question: the input question you must answer
@@ -66,7 +66,7 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
       (thoughts, { action, observation }) =>
         thoughts +
         [action.log, `\nObservation: ${observation}`, "Thought:"].join("\n"),
-      "",
+      ""
     );
     const newInput = { agent_scratchpad: agentScratchpad, ...values };
     /** Format the template. */

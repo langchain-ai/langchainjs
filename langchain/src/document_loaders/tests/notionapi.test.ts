@@ -23,11 +23,11 @@ test("Properties Parser", async () => {
 
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/notion_api/notion_page_response.json",
+    "./example_data/notion_api/notion_page_response.json"
   );
 
   const pageDetails: PageObjectResponse = JSON.parse(
-    fs.readFileSync(filePath).toString(),
+    fs.readFileSync(filePath).toString()
   );
 
   // Accessing private class method
@@ -47,16 +47,16 @@ test("Properties Parser", async () => {
       "_italic_\n" +
       "**bold**\n" +
       "`inline code`\n" +
-      "~~strike through~~",
+      "~~strike through~~"
   );
   expect(contents["Last edited by"]).toBe(
-    '["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"]',
+    '["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"]'
   );
   expect(contents["Related Example Database"]).toBe(
-    '["7d9d1b96-34fa-4da3-b70d-9f71a75e1291", "7a1c25f2-d8a7-46d9-a2da-c9e39e018a56", "67662914-f22b-47fd-98aa-19988c40c77d"]',
+    '["7d9d1b96-34fa-4da3-b70d-9f71a75e1291", "7a1c25f2-d8a7-46d9-a2da-c9e39e018a56", "67662914-f22b-47fd-98aa-19988c40c77d"]'
   );
   expect(contents["Created by"]).toBe(
-    '["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"]',
+    '["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"]'
   );
   expect(contents.Checkbox).toBe("true");
   expect(contents.Formula).toBe("Unsupported type: formula");
@@ -66,10 +66,10 @@ test("Properties Parser", async () => {
   expect(contents["Created time"]).toBe("2023-06-14T10:29:00.000Z");
   expect(contents.ID).toBe("2");
   expect(contents.Date).toBe(
-    "2023-08-09T00:00:00.000+01:00 - 2023-08-09T00:00:00.000+01:00",
+    "2023-08-09T00:00:00.000+01:00 - 2023-08-09T00:00:00.000+01:00"
   );
   expect(contents.Person).toBe(
-    '[["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"], ["user", "9d6b0c60-efdd-48d1-b63e-027d9b7d66a0"]]',
+    '[["user", "c9b34ba3-5b62-4aa9-aae2-ed6024ffb0fd"], ["user", "9d6b0c60-efdd-48d1-b63e-027d9b7d66a0"]]'
   );
   expect(contents.Name).toBe("An example ~~page~~ in a database");
   expect(contents._title).toBe("An example ~~page~~ in a database");
@@ -88,11 +88,11 @@ test("Get Title (page)", async () => {
 
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/notion_api/notion_page_response.json",
+    "./example_data/notion_api/notion_page_response.json"
   );
 
   const pageDetails: PageObjectResponse = JSON.parse(
-    fs.readFileSync(filePath).toString(),
+    fs.readFileSync(filePath).toString()
   );
 
   // Accessing private class method
@@ -115,11 +115,11 @@ test("Get Title (database)", async () => {
 
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/notion_api/notion_database_response.json",
+    "./example_data/notion_api/notion_database_response.json"
   );
 
   const dbDetails: DatabaseObjectResponse = JSON.parse(
-    fs.readFileSync(filePath).toString(),
+    fs.readFileSync(filePath).toString()
   );
 
   // Accessing private class method

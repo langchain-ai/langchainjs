@@ -6,7 +6,7 @@ const ollama = new Ollama({
 });
 
 const stream = await ollama.stream(
-  `Translate "I love programming" into German.`,
+  `Translate "I love programming" into German.`
 );
 
 const chunks = [];

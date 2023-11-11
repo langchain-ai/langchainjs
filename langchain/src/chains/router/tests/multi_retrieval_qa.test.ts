@@ -35,7 +35,7 @@ class FakeLLM extends BaseLLM {
 
   async _generate(
     prompts: string[],
-    _: this["ParsedCallOptions"],
+    _: this["ParsedCallOptions"]
   ): Promise<LLMResult> {
     function buildResponse(name: string) {
       return `\`\`\`\n{\n\t"destination": "${name}",\n\t"next_inputs": {\n\t\t"query": "<from ${name}>"\n\t}\n}\n\`\`\``;
@@ -87,7 +87,7 @@ test("Test MultiRetrievalQAChain No Defaults With Retriever Prompts", async () =
       new PromptTemplate({
         template: `Retriever prompt for ${name} {context} {question}`,
         inputVariables: ["context", "question"],
-      }),
+      })
   );
 
   const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
@@ -97,7 +97,7 @@ test("Test MultiRetrievalQAChain No Defaults With Retriever Prompts", async () =
       retrieverDescriptions,
       retrievers,
       retrieverPrompts,
-    },
+    }
   );
 
   const { text: result } = await multiRetrievalQAChain.call({
@@ -126,7 +126,7 @@ test("Test MultiRetrievalQAChain No Defaults No Retriever Prompts", async () => 
       retrievalQAChainOpts: {
         returnSourceDocuments: true,
       },
-    },
+    }
   );
 
   const { text: result, sourceDocuments } = await multiRetrievalQAChain.call({
@@ -138,7 +138,7 @@ test("Test MultiRetrievalQAChain No Defaults No Retriever Prompts", async () => 
       new Document({
         pageContent: `Test document <from ${name}> ${name}`,
         metadata: {},
-      }),
+      })
   );
 
   expect(testDocs).toContainEqual(sourceDocuments[0]);

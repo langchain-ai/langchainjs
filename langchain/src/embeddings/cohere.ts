@@ -39,7 +39,7 @@ export class CohereEmbeddings
     fields?: Partial<CohereEmbeddingsParams> & {
       verbose?: boolean;
       apiKey?: string;
-    },
+    }
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
@@ -71,7 +71,7 @@ export class CohereEmbeddings
       this.embeddingWithRetry({
         model: this.modelName,
         texts: batch,
-      }),
+      })
     );
 
     const batchResponses = await Promise.all(batchRequests);
@@ -110,7 +110,7 @@ export class CohereEmbeddings
    * @returns A Promise that resolves to the API response.
    */
   private async embeddingWithRetry(
-    request: Parameters<typeof this.client.embed>[0],
+    request: Parameters<typeof this.client.embed>[0]
   ) {
     await this.maybeInitClient();
 
@@ -138,7 +138,7 @@ export class CohereEmbeddings
       return { cohere };
     } catch (e) {
       throw new Error(
-        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`",
+        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
       );
     }
   }

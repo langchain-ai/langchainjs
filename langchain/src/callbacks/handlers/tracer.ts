@@ -68,7 +68,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
         this._addChildRun(parentRun, run);
         parentRun.child_execution_order = Math.max(
           parentRun.child_execution_order,
-          run.child_execution_order,
+          run.child_execution_order
         );
       }
     }
@@ -82,7 +82,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (parentRun) {
       parentRun.child_execution_order = Math.max(
         parentRun.child_execution_order,
-        run.child_execution_order,
+        run.child_execution_order
       );
     } else {
       await this.persistRun(run);
@@ -109,7 +109,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     extraParams?: KVMap,
     tags?: string[],
     metadata?: KVMap,
-    name?: string,
+    name?: string
   ): Promise<Run> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -150,7 +150,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     extraParams?: KVMap,
     tags?: string[],
     metadata?: KVMap,
-    name?: string,
+    name?: string
   ): Promise<Run> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -223,7 +223,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     runType?: string,
-    name?: string,
+    name?: string
   ): Promise<Run> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -257,7 +257,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    kwargs?: { inputs?: Record<string, unknown> },
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run) {
@@ -282,7 +282,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    kwargs?: { inputs?: Record<string, unknown> },
+    kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run) {
@@ -309,7 +309,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRunId?: string,
     tags?: string[],
     metadata?: KVMap,
-    name?: string,
+    name?: string
   ): Promise<Run> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -407,7 +407,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRunId?: string,
     tags?: string[],
     metadata?: KVMap,
-    name?: string,
+    name?: string
   ): Promise<Run> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -439,7 +439,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleRetrieverEnd(
     documents: Document<Record<string, unknown>>[],
-    runId: string,
+    runId: string
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "retriever") {
@@ -491,12 +491,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    fields?: HandleLLMNewTokenCallbackFields,
+    fields?: HandleLLMNewTokenCallbackFields
   ): Promise<Run> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error(
-        `Invalid "runId" provided to "handleLLMNewToken" callback.`,
+        `Invalid "runId" provided to "handleLLMNewToken" callback.`
       );
     }
     run.events.push({

@@ -95,11 +95,11 @@ export abstract class RemoteRetriever
         method: "POST",
         headers: this.headers,
         body: JSON.stringify(body),
-      }),
+      })
     );
     if (!response.ok) {
       throw new Error(
-        `Failed to retrieve documents from ${this.url}: ${response.status} ${response.statusText}`,
+        `Failed to retrieve documents from ${this.url}: ${response.status} ${response.statusText}`
       );
     }
     const json = await response.json();

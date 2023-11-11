@@ -16,17 +16,17 @@ const memory = new VectorStoreRetrieverMemory({
 // used inside a chain.
 await memory.saveContext(
   { input: "My favorite food is pizza" },
-  { output: "thats good to know" },
+  { output: "thats good to know" }
 );
 await memory.saveContext(
   { input: "My favorite sport is soccer" },
-  { output: "..." },
+  { output: "..." }
 );
 await memory.saveContext({ input: "I don't the Celtics" }, { output: "ok" });
 
 // Now let's use the memory to retrieve the information we saved.
 console.log(
-  await memory.loadMemoryVariables({ prompt: "what sport should i watch?" }),
+  await memory.loadMemoryVariables({ prompt: "what sport should i watch?" })
 );
 /*
 { history: 'input: My favorite sport is soccer\noutput: ...' }

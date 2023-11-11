@@ -30,7 +30,7 @@ export type TranslatorOpts = {
  * mergeFilters.
  */
 export abstract class BaseTranslator<
-  T extends VectorStore = VectorStore,
+  T extends VectorStore = VectorStore
 > extends Visitor<T> {
   /**
    * Formats a given function (either an operator or a comparator) into a
@@ -52,7 +52,7 @@ export abstract class BaseTranslator<
     defaultFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
     generatedFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
     mergeType?: "and" | "or" | "replace",
-    forceDefaultFilter?: boolean,
+    forceDefaultFilter?: boolean
   ): this["VisitStructuredQueryOutput"]["filter"] | undefined;
 }
 
@@ -65,7 +65,7 @@ export abstract class BaseTranslator<
  * respectively.
  */
 export class BasicTranslator<
-  T extends VectorStore = VectorStore,
+  T extends VectorStore = VectorStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: VisitorOperationResult;
 
@@ -101,8 +101,8 @@ export class BasicTranslator<
       ) {
         throw new Error(
           `Comparator ${func} not allowed. Allowed operators: ${this.allowedComparators.join(
-            ", ",
-          )}`,
+            ", "
+          )}`
         );
       }
     } else if (func in Operators) {
@@ -112,8 +112,8 @@ export class BasicTranslator<
       ) {
         throw new Error(
           `Operator ${func} not allowed. Allowed operators: ${this.allowedOperators.join(
-            ", ",
-          )}`,
+            ", "
+          )}`
         );
       }
     } else {
@@ -129,7 +129,7 @@ export class BasicTranslator<
    */
   visitOperation(operation: Operation): this["VisitOperationOutput"] {
     const args = operation.args?.map((arg) =>
-      arg.accept(this),
+      arg.accept(this)
     ) as VisitorResult[];
     return {
       [this.formatFunction(operation.operator)]: args,
@@ -145,7 +145,7 @@ export class BasicTranslator<
     return {
       [comparison.attribute]: {
         [this.formatFunction(comparison.comparator)]: castValue(
-          comparison.value,
+          comparison.value
         ),
       },
     };
@@ -157,7 +157,7 @@ export class BasicTranslator<
    * @returns The result of visiting the structured query.
    */
   visitStructuredQuery(
-    query: StructuredQuery,
+    query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
     let nextArg = {};
     if (query.filter) {
@@ -172,7 +172,7 @@ export class BasicTranslator<
     defaultFilter: VisitorStructuredQueryResult["filter"] | undefined,
     generatedFilter: VisitorStructuredQueryResult["filter"] | undefined,
     mergeType = "and",
-    forceDefaultFilter = false,
+    forceDefaultFilter = false
   ): VisitorStructuredQueryResult["filter"] | undefined {
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;

@@ -16,10 +16,10 @@ test("OpenAI Moderation Test", async () => {
   });
 
   expect(badResult).toEqual(
-    "Text was found that violates OpenAI's content policy.",
+    "Text was found that violates OpenAI's content policy."
   );
   expect(goodResult).toEqual(
-    "The cat (Felis catus) is a domestic species of small carnivorous mammal.",
+    "The cat (Felis catus) is a domestic species of small carnivorous mammal."
   );
 });
 
@@ -39,10 +39,10 @@ test("OpenAI Moderation Test in non-english language", async () => {
   });
 
   expect(badResult).toEqual(
-    "Vi devus mortigi vin nun! Kaj donu al ĉiuj aliaj pecon da oksigeno kaj ozono, kovru ĝin, por ke ni povu spiri ene de ĉi tiu blua veziko. Ĉar por kio vi estas ĉi tie? Venu por adori min? Mortigu vin mem. Mi volas diri, cent procento. Mil procentoj.",
+    "Vi devus mortigi vin nun! Kaj donu al ĉiuj aliaj pecon da oksigeno kaj ozono, kovru ĝin, por ke ni povu spiri ene de ĉi tiu blua veziko. Ĉar por kio vi estas ĉi tie? Venu por adori min? Mortigu vin mem. Mi volas diri, cent procento. Mil procentoj."
   );
   expect(goodResult).toEqual(
-    "La kato ( Felis catus ) estas hejma specio de malgranda karnovora mamulo.",
+    "La kato ( Felis catus ) estas hejma specio de malgranda karnovora mamulo."
   );
 
   console.log(results[0].category_scores);

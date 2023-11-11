@@ -176,14 +176,14 @@ export class AmazonKendraRetriever extends BaseRetriever {
    */
   getRetrieverDocs(
     response: RetrieveCommandOutput,
-    pageSize: number,
+    pageSize: number
   ): Document[] {
     if (!response.ResultItems) return [];
     const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
 
     return response.ResultItems.slice(0, count).map((item) =>
-      this.convertRetrieverItem(item),
+      this.convertRetrieverItem(item)
     );
   }
 
@@ -207,7 +207,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
       }
 
       return this.cleanResult(
-        item.AdditionalAttributes[0].Value?.TextWithHighlightsValue?.Text || "",
+        item.AdditionalAttributes[0].Value?.TextWithHighlightsValue?.Text || ""
       );
     } else if (item.DocumentExcerpt) {
       return this.cleanResult(item.DocumentExcerpt.Text || "");
@@ -250,7 +250,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
     const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
     return response.ResultItems.slice(0, count).map((item) =>
-      this.convertQueryItem(item),
+      this.convertQueryItem(item)
     );
   }
 
@@ -266,7 +266,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
   async queryKendra(
     query: string,
     topK: number,
-    attributeFilter?: AttributeFilter,
+    attributeFilter?: AttributeFilter
   ) {
     const retrieveCommand = new RetrieveCommand({
       IndexId: this.indexId,

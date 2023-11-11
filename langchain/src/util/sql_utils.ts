@@ -49,16 +49,16 @@ export interface SqlColumn {
 export const verifyListTablesExistInDatabase = (
   tablesFromDatabase: Array<SqlTable>,
   listTables: Array<string>,
-  errorPrefixMsg: string,
+  errorPrefixMsg: string
 ): void => {
   const onlyTableNames: Array<string> = tablesFromDatabase.map(
-    (table: SqlTable) => table.tableName,
+    (table: SqlTable) => table.tableName
   );
   if (listTables.length > 0) {
     for (const tableName of listTables) {
       if (!onlyTableNames.includes(tableName)) {
         throw new Error(
-          `${errorPrefixMsg} the table ${tableName} was not found in the database`,
+          `${errorPrefixMsg} the table ${tableName} was not found in the database`
         );
       }
     }
@@ -67,28 +67,28 @@ export const verifyListTablesExistInDatabase = (
 
 export const verifyIncludeTablesExistInDatabase = (
   tablesFromDatabase: Array<SqlTable>,
-  includeTables: Array<string>,
+  includeTables: Array<string>
 ): void => {
   verifyListTablesExistInDatabase(
     tablesFromDatabase,
     includeTables,
-    "Include tables not found in database:",
+    "Include tables not found in database:"
   );
 };
 
 export const verifyIgnoreTablesExistInDatabase = (
   tablesFromDatabase: Array<SqlTable>,
-  ignoreTables: Array<string>,
+  ignoreTables: Array<string>
 ): void => {
   verifyListTablesExistInDatabase(
     tablesFromDatabase,
     ignoreTables,
-    "Ignore tables not found in database:",
+    "Ignore tables not found in database:"
   );
 };
 
 const formatToSqlTable = (
-  rawResultsTableAndColumn: Array<RawResultTableAndColumn>,
+  rawResultsTableAndColumn: Array<RawResultTableAndColumn>
 ): Array<SqlTable> => {
   const sqlTable: Array<SqlTable> = [];
   for (const oneResult of rawResultsTableAndColumn) {
@@ -98,7 +98,7 @@ const formatToSqlTable = (
       isNullable: oneResult.is_nullable === "YES",
     };
     const currentTable = sqlTable.find(
-      (oneTable) => oneTable.tableName === oneResult.table_name,
+      (oneTable) => oneTable.tableName === oneResult.table_name
     );
     if (currentTable) {
       currentTable.columns.push(sqlColumn);
@@ -115,7 +115,7 @@ const formatToSqlTable = (
 };
 
 export const getTableAndColumnsName = async (
-  appDataSource: DataSource,
+  appDataSource: DataSource
 ): Promise<Array<SqlTable>> => {
   let sql;
   if (appDataSource.options.type === "postgres") {
@@ -201,8 +201,9 @@ export const getTableAndColumnsName = async (
       FROM TABLE_COLUMNS
       WHERE SCHEMA_NAME='${schema}'`;
 
-    const rep: Array<{ [key: string]: string }> =
-      await appDataSource.query(sql);
+    const rep: Array<{ [key: string]: string }> = await appDataSource.query(
+      sql
+    );
 
     const repLowerCase: Array<RawResultTableAndColumn> = [];
     rep.forEach((_rep) =>
@@ -211,7 +212,7 @@ export const getTableAndColumnsName = async (
         column_name: _rep.COLUMN_NAME,
         data_type: _rep.DATA_TYPE,
         is_nullable: _rep.IS_NULLABLE,
-      }),
+      })
     );
 
     return formatToSqlTable(repLowerCase);
@@ -228,7 +229,7 @@ const formatSqlResponseToSimpleTableString = (rawResult: unknown): string => {
   for (const oneRow of rawResult) {
     globalString += `${Object.values(oneRow).reduce(
       (completeString, columnValue) => `${completeString} ${columnValue}`,
-      "",
+      ""
     )}\n`;
   }
 
@@ -239,7 +240,7 @@ export const generateTableInfoFromTables = async (
   tables: Array<SqlTable> | undefined,
   appDataSource: DataSource,
   nbSampleRow: number,
-  customDescription?: Record<string, string>,
+  customDescription?: Record<string, string>
 ): Promise<string> => {
   if (!tables) {
     return "";
@@ -297,7 +298,7 @@ export const generateTableInfoFromTables = async (
 
     const columnNamesConcatString = `${currentTable.columns.reduce(
       (completeString, column) => `${completeString} ${column.columnName}`,
-      "",
+      ""
     )}\n`;
 
     let sample = "";
@@ -316,7 +317,7 @@ export const generateTableInfoFromTables = async (
         sqlCreateTableQuery +
         sqlSelectInfoQuery +
         columnNamesConcatString +
-        sample,
+        sample
     );
   }
 
@@ -324,7 +325,7 @@ export const generateTableInfoFromTables = async (
 };
 
 export const getPromptTemplateFromDataSource = (
-  appDataSource: DataSource,
+  appDataSource: DataSource
 ): PromptTemplate => {
   if (appDataSource.options.type === "postgres") {
     return SQL_POSTGRES_PROMPT;

@@ -83,7 +83,7 @@ export class CriteriaResultOutputParser extends BaseLLMOutputParser<EvalOutputTy
 
   parseResult(
     generations: Generation[] | ChatGeneration[],
-    _callbacks: Callbacks | undefined,
+    _callbacks: Callbacks | undefined
   ): Promise<EvalOutputType> {
     const { text } = generations[0];
 
@@ -169,7 +169,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
         throw new Error(
           "Criteria cannot be empty. " +
             "Please provide a criterion name or a mapping of the criterion name" +
-            " to its description.",
+            " to its description."
         );
       }
       criteria_ = { ...criteria };
@@ -195,7 +195,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
       throw new Error(
         `Input variables should be ${[...expectedInputVars]}, but got ${
           _prompt.inputVariables
-        }`,
+        }`
       );
     }
     return _prompt;
@@ -210,14 +210,14 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
   static async fromLLM(
     llm: BaseLanguageModel,
     criteria?: CriteriaLike,
-    chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>,
+    chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     if (this.name === "CriteriaEvalChain" && criteria === "correctness") {
       throw new Error(
         "Correctness should not be used in the reference-free" +
           " 'criteria' evaluator (CriteriaEvalChain)." +
           " Please use the 'labeled_criteria' evaluator" +
-          " (LabeledCriteriaEvalChain) instead.",
+          " (LabeledCriteriaEvalChain) instead."
       );
     }
 
@@ -273,11 +273,11 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
   async _evaluateStrings(
     args: StringEvaluatorArgs,
     callOptions: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const result = await this.call(
       { ...this.getEvalInput(args), ...callOptions },
-      config,
+      config
     );
 
     return this._prepareOutput(result);
@@ -310,7 +310,7 @@ export class LabeledCriteriaEvalChain extends CriteriaEvalChain {
       throw new Error(
         `Input variables should be ${[...expectedInputVars]}, but got ${
           _prompt.inputVariables
-        }`,
+        }`
       );
     }
     return _prompt;

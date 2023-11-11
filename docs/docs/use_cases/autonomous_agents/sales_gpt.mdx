@@ -71,7 +71,7 @@ import { BaseLanguageModel } from "langchain/base_language";
 // Chain to analyze which conversation stage should the conversation move into.
 export function loadStageAnalyzerChain(
   llm: BaseLanguageModel,
-  verbose: boolean = false,
+  verbose: boolean = false
 ) {
   const prompt = new PromptTemplate({
     template: `You are a sales assistant helping your sales agent to determine which stage of a sales conversation should the agent stay at or move to when talking to a user.
@@ -103,7 +103,7 @@ export function loadStageAnalyzerChain(
 // Chain to generate the next utterance for the conversation.
 export function loadSalesConversationChain(
   llm: BaseLanguageModel,
-  verbose: boolean = false,
+  verbose: boolean = false
 ) {
   const prompt = new PromptTemplate({
     template: `Never forget your name is {salesperson_name}. You work as a {salesperson_role}.
@@ -183,7 +183,7 @@ const stage_analyzer_chain = loadStageAnalyzerChain(llm, verbose);
 
 const sales_conversation_utterance_chain = loadSalesConversationChain(
   llm,
-  verbose,
+  verbose
 );
 ```
 
@@ -353,12 +353,12 @@ export async function loadSalesDocVectorStore(FileName: string) {
 
 export async function setup_knowledge_base(
   FileName: string,
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModel
 ) {
   const vectorStore = await loadSalesDocVectorStore(FileName);
   const knowledge_base = RetrievalQAChain.fromLLM(
     retrievalLlm,
-    vectorStore.asRetriever(),
+    vectorStore.asRetriever()
   );
   return knowledge_base;
 }
@@ -386,7 +386,7 @@ export async function get_tools(product_catalog: string) {
 export async function setup_knowledge_base_test(query: string) {
   const knowledge_base = await setup_knowledge_base(
     "sample_product_catalog.txt",
-    llm,
+    llm
   );
   const response = await knowledge_base.call({ query });
   console.log(response);
@@ -444,7 +444,7 @@ export class CustomPromptTemplateForTools extends BaseStringPromptTemplate {
       (thoughts, { action, observation }) =>
         thoughts +
         [action.log, `\nObservation: ${observation}`, "Thought:"].join("\n"),
-      "",
+      ""
     );
     //Set the agent_scratchpad variable to that value
     input["agent_scratchpad"] = agentScratchpad;
@@ -463,7 +463,7 @@ export class CustomPromptTemplateForTools extends BaseStringPromptTemplate {
     return Promise.resolve(renderTemplate(this.template, "f-string", newInput));
   }
   partial(
-    _values: PartialValues,
+    _values: PartialValues
   ): Promise<BasePromptTemplate<any, StringPromptValue, any>> {
     throw new Error("Method not implemented.");
   }
@@ -683,7 +683,7 @@ export class SalesGPT extends BaseChain {
 
   async _call(
     _values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     // Run one step of the sales agent.
     // Generate agent's utterance
@@ -703,7 +703,7 @@ export class SalesGPT extends BaseChain {
           conversation_purpose: this.conversation_purpose,
           conversation_type: this.conversation_type,
         },
-        runManager?.getChild("sales_agent_executor"),
+        runManager?.getChild("sales_agent_executor")
       );
       ai_message = res.output;
     } else {
@@ -719,7 +719,7 @@ export class SalesGPT extends BaseChain {
           conversation_stage: this.current_conversation_stage,
           conversation_type: this.conversation_type,
         },
-        runManager?.getChild("sales_conversation_utterance"),
+        runManager?.getChild("sales_conversation_utterance")
       );
       ai_message = res.text;
     }
@@ -742,7 +742,7 @@ export class SalesGPT extends BaseChain {
       use_tools: boolean;
       product_catalog: string;
       salesperson_name: string;
-    },
+    }
   ) {
     const { use_tools, product_catalog, salesperson_name } = config;
     let sales_agent_executor;
@@ -793,7 +793,7 @@ export class SalesGPT extends BaseChain {
       stage_analyzer_chain: loadStageAnalyzerChain(llm, verbose),
       sales_conversation_utterance_chain: loadSalesConversationChain(
         llm,
-        verbose,
+        verbose
       ),
       sales_agent_executor,
       use_tools,
@@ -851,7 +851,7 @@ console.log(stepResponse);
 
 ```typescript
 await sales_agent.human_step(
-  "I am well, how are you? I would like to learn more about your mattresses.",
+  "I am well, how are you? I would like to learn more about your mattresses."
 );
 ```
 
@@ -875,7 +875,7 @@ console.log(stepResponse);
 
 ```typescript
 await sales_agent.human_step(
-  "Yes, what materials are you mattresses made from?",
+  "Yes, what materials are you mattresses made from?"
 );
 ```
 
@@ -899,7 +899,7 @@ console.log(stepResponse);
 
 ```typescript
 await sales_agent.human_step(
-  "Yes, I am looking for a queen sized mattress. Do you have any mattresses in queen size?",
+  "Yes, I am looking for a queen sized mattress. Do you have any mattresses in queen size?"
 );
 ```
 
@@ -923,7 +923,7 @@ console.log(stepResponse);
 
 ```typescript
 await sales_agent.human_step(
-  "Yea, compare and contrast those two options, please.",
+  "Yea, compare and contrast those two options, please."
 );
 ```
 
@@ -947,7 +947,7 @@ console.log(stepResponse);
 
 ```typescript
 await sales_agent.human_step(
-  "Great, thanks, that's it. I will talk to my wife and call back if she is onboard. Have a good day!",
+  "Great, thanks, that's it. I will talk to my wife and call back if she is onboard. Have a good day!"
 );
 ```
 

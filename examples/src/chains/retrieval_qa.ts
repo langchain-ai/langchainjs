@@ -48,7 +48,7 @@ const chain = RunnableSequence.from([
 ]);
 
 const answer = await chain.invoke(
-  "What did the president say about Justice Breyer?",
+  "What did the president say about Justice Breyer?"
 );
 
 console.log({ answer });

@@ -8,7 +8,7 @@ export const run = async () => {
     "src/document_loaders/example_data/",
     {
       ".pdf": (path: string) => new PDFLoader(path),
-    },
+    }
   );
 
   const docs = await directoryLoader.load();

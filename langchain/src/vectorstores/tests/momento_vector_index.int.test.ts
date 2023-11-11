@@ -14,7 +14,7 @@ import { MomentoVectorIndex } from "../momento_vector_index.js";
 import { sleep } from "../../util/time.js";
 
 async function withVectorStore(
-  block: (vectorStore: MomentoVectorIndex) => Promise<void>,
+  block: (vectorStore: MomentoVectorIndex) => Promise<void>
 ): Promise<void> {
   const indexName = uuid.v4();
   const vectorStore = new MomentoVectorIndex(new OpenAIEmbeddings(), {
@@ -95,10 +95,10 @@ describe.skip("MomentoVectorIndex", () => {
               environmentVariableName: "MOMENTO_API_KEY",
             }),
           }),
-        },
-      ),
+        }
+      )
     ).rejects.toThrow(
-      "Number of texts (1) does not equal number of metadatas (2)",
+      "Number of texts (1) does not equal number of metadatas (2)"
     );
   });
 
@@ -117,7 +117,7 @@ describe.skip("MomentoVectorIndex", () => {
         ],
         {
           ids: [documentId1, documentId2],
-        },
+        }
       );
 
       await sleep();

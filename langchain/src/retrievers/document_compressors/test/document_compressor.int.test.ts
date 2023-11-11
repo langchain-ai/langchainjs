@@ -25,7 +25,7 @@ test("Test DocumentCompressorPipeline", async () => {
   const docs = [new Document({ pageContent: texts.join(". ") })];
   const actual = await pipelineFilter.compressDocuments(
     docs,
-    "Tell me about farm animals",
+    "Tell me about farm animals"
   );
 
   expect(actual.length).toBe(1);

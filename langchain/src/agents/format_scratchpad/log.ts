@@ -10,15 +10,15 @@ import { AgentStep } from "../../schema/index.js";
 export function formatLogToString(
   intermediateSteps: AgentStep[],
   observationPrefix = "Observation: ",
-  llmPrefix = "Thought: ",
+  llmPrefix = "Thought: "
 ): string {
   const formattedSteps = intermediateSteps.reduce(
     (thoughts, { action, observation }) =>
       thoughts +
       [action.log, `\n${observationPrefix}${observation}`, llmPrefix].join(
-        "\n",
+        "\n"
       ),
-    "",
+    ""
   );
   return formattedSteps;
 }

@@ -101,7 +101,7 @@ export class OllamaEmbeddings extends Embeddings {
       // See https://github.com/node-fetch/node-fetch/issues/1624
       formattedBaseUrl = formattedBaseUrl.replace(
         "http://localhost:",
-        "http://127.0.0.1:",
+        "http://127.0.0.1:"
       );
     }
 
@@ -116,7 +116,7 @@ export class OllamaEmbeddings extends Embeddings {
     });
     if (!response.ok) {
       throw new Error(
-        `Request to Ollama server failed: ${response.status} ${response.statusText}`,
+        `Request to Ollama server failed: ${response.status} ${response.statusText}`
       );
     }
 

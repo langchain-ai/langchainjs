@@ -18,7 +18,7 @@ export const ask = action({
       new ConvexKVStore({ ctx }),
       {
         namespace: underlyingEmbeddings.modelName,
-      },
+      }
     );
 
     const loader = new TextLoader("./state_of_the_union.txt");
@@ -33,7 +33,7 @@ export const ask = action({
     const vectorstore = await ConvexVectorStore.fromDocuments(
       documents,
       cacheBackedEmbeddings,
-      { ctx },
+      { ctx }
     );
     console.log(`Initial creation time: ${Date.now() - time}ms`);
     /*
@@ -45,7 +45,7 @@ export const ask = action({
     const vectorstore2 = await ConvexVectorStore.fromDocuments(
       documents,
       cacheBackedEmbeddings,
-      { ctx },
+      { ctx }
     );
     console.log(`Cached creation time: ${Date.now() - time}ms`);
     /*

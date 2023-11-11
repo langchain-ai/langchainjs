@@ -18,7 +18,7 @@ export class RedisCache extends BaseCache {
     redisClient: Redis,
     config?: {
       ttl?: number;
-    },
+    }
   ) {
     super();
     this.redisClient = redisClient;
@@ -63,12 +63,12 @@ export class RedisCache extends BaseCache {
           key,
           JSON.stringify(serializeGeneration(value[i])),
           "EX",
-          this.ttl,
+          this.ttl
         );
       } else {
         await this.redisClient.set(
           key,
-          JSON.stringify(serializeGeneration(value[i])),
+          JSON.stringify(serializeGeneration(value[i]))
         );
       }
     }

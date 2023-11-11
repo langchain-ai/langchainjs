@@ -18,7 +18,7 @@ export abstract class BaseDocumentCompressor {
   abstract compressDocuments(
     documents: Document[],
     query: string,
-    callbacks?: Callbacks,
+    callbacks?: Callbacks
   ): Promise<Document[]>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,7 +43,7 @@ export class DocumentCompressorPipeline extends BaseDocumentCompressor {
   async compressDocuments(
     documents: Document[],
     query: string,
-    callbacks?: Callbacks,
+    callbacks?: Callbacks
   ): Promise<Document[]> {
     let transformedDocuments = documents;
     for (const transformer of this.transformers) {
@@ -51,11 +51,12 @@ export class DocumentCompressorPipeline extends BaseDocumentCompressor {
         transformedDocuments = await transformer.compressDocuments(
           transformedDocuments,
           query,
-          callbacks,
+          callbacks
         );
       } else {
-        transformedDocuments =
-          await transformer.transformDocuments(transformedDocuments);
+        transformedDocuments = await transformer.transformDocuments(
+          transformedDocuments
+        );
       }
     }
     return transformedDocuments;

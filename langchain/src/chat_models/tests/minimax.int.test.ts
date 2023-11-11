@@ -72,7 +72,7 @@ test.skip("Test ChatMinimax Generate throws when one of the calls fails", async 
   await expect(() =>
     chat.generate([[message], [message]], {
       signal: AbortSignal.timeout(10),
-    }),
+    })
   ).rejects.toThrow("TimeoutError: The operation was aborted due to timeout");
 });
 
@@ -167,7 +167,7 @@ test.skip("OpenAI Chat, docs, prompt templates", async () => {
   });
 
   const systemPrompt = PromptTemplate.fromTemplate(
-    "You are a helpful assistant that translates {input_language} to {output_language}.",
+    "You are a helpful assistant that translates {input_language} to {output_language}."
   );
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -204,7 +204,7 @@ test.skip("Test OpenAI with specific roles in ChatMessage", async () => {
   const chat = new ChatMinimax({ tokensToGenerate: 10 });
   const system_message = new ChatMessage(
     "You are to chat with a user.",
-    "system",
+    "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
   const res = await chat.call([system_message, user_message]);
@@ -308,7 +308,7 @@ test.skip("Test ChatMinimax Glyph", async () => {
 
   const messagesTemplate = ChatPromptTemplate.fromMessages([
     HumanMessagePromptTemplate.fromTemplate(
-      " Please help me translate the following sentence in English： {text}",
+      " Please help me translate the following sentence in English： {text}"
     ),
   ]);
 

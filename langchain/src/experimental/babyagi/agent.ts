@@ -143,7 +143,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     result: string,
     task_description: string,
     objective: string,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<Optional<Task, "taskID">[]> {
     const taskNames = this.taskList.map((t) => t.taskName);
     const incomplete_tasks = taskNames.join(", ");
@@ -155,7 +155,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
           incomplete_tasks,
           objective,
         },
-        runManager?.getChild(),
+        runManager?.getChild()
       );
     const newTasks = (text as string).split("\n");
     return newTasks
@@ -173,7 +173,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
   async prioritizeTasks(
     thisTaskID: number,
     objective: string,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ) {
     const taskNames = this.taskList.map((t) => t.taskName);
     const nextTaskID = thisTaskID + 1;
@@ -184,7 +184,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
           next_task_id: String(nextTaskID),
           objective,
         },
-        runManager?.getChild(),
+        runManager?.getChild()
       );
     const newTasks = (text as string).trim().split("\n");
     const prioritizedTaskList = [];
@@ -223,7 +223,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
   async executeTask(
     objective: string,
     task: string,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ) {
     const context = await this.getTopTasks(objective);
     const { [this.executionChain.outputKeys[0]]: text } =
@@ -233,14 +233,14 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
           context: context.join("\n"),
           task,
         },
-        runManager?.getChild(),
+        runManager?.getChild()
       );
     return text as string;
   }
 
   async _call(
     { objective, firstTask = "Make a todo list" }: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ) {
     this.taskList = [];
     this.taskIDCounter = 1;
@@ -257,7 +257,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
       const result = await this.executeTask(
         objective,
         task.taskName,
-        runManager,
+        runManager
       );
       const thisTaskID = parseInt(task.taskID, 10);
       this.printTaskResult(result);
@@ -273,7 +273,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
         result,
         task.taskName,
         objective,
-        runManager,
+        runManager
       );
       for (const newTask of newTasks) {
         this.taskIDCounter += 1;
@@ -283,7 +283,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
       this.taskList = await this.prioritizeTasks(
         thisTaskID,
         objective,
-        runManager,
+        runManager
       );
 
       numIters += 1;

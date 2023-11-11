@@ -12,7 +12,7 @@ export class OpenAIWhisperAudio extends BufferLoader {
     filePathOrBlob: string | Blob,
     fields?: {
       clientOptions?: ClientOptions;
-    },
+    }
   ) {
     super(filePathOrBlob);
     this.openAIClient = new OpenAIClient(fields?.clientOptions);
@@ -20,7 +20,7 @@ export class OpenAIWhisperAudio extends BufferLoader {
 
   protected async parse(
     raw: Buffer,
-    metadata: Record<string, string>,
+    metadata: Record<string, string>
   ): Promise<Document[]> {
     const fileName =
       metadata.source === "blob" ? metadata.blobType : metadata.source;

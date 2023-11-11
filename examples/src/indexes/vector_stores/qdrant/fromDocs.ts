@@ -12,7 +12,7 @@ const vectorStore = await QdrantVectorStore.fromDocuments(
   {
     url: process.env.QDRANT_URL,
     collectionName: "a_test_collection",
-  },
+  }
 );
 
 // Search for the most similar document

@@ -21,7 +21,7 @@ const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
   redisStore,
   {
     namespace: underlyingEmbeddings.modelName,
-  },
+  }
 );
 
 const loader = new TextLoader("./state_of_the_union.txt");
@@ -35,7 +35,7 @@ const documents = await splitter.splitDocuments(rawDocuments);
 let time = Date.now();
 const vectorstore = await FaissStore.fromDocuments(
   documents,
-  cacheBackedEmbeddings,
+  cacheBackedEmbeddings
 );
 console.log(`Initial creation time: ${Date.now() - time}ms`);
 /*
@@ -46,7 +46,7 @@ console.log(`Initial creation time: ${Date.now() - time}ms`);
 time = Date.now();
 const vectorstore2 = await FaissStore.fromDocuments(
   documents,
-  cacheBackedEmbeddings,
+  cacheBackedEmbeddings
 );
 console.log(`Cached creation time: ${Date.now() - time}ms`);
 /*

@@ -5,7 +5,7 @@ describe.skip("AI21", () => {
   test("test call", async () => {
     const ai21 = new AI21({});
     const result = await ai21.call(
-      "What is a good name for a company that makes colorful socks?",
+      "What is a good name for a company that makes colorful socks?"
     );
     console.log({ result });
   });
@@ -13,7 +13,7 @@ describe.skip("AI21", () => {
   test("test translation call", async () => {
     const ai21 = new AI21({});
     const result = await ai21.call(
-      `Translate "I love programming" into German.`,
+      `Translate "I love programming" into German.`
     );
     console.log({ result });
   });
@@ -21,7 +21,7 @@ describe.skip("AI21", () => {
   test("test JSON output call", async () => {
     const ai21 = new AI21({});
     const result = await ai21.call(
-      `Output a JSON object with three string fields: "name", "birthplace", "bio".`,
+      `Output a JSON object with three string fields: "name", "birthplace", "bio".`
     );
     console.log({ result });
   });
@@ -45,7 +45,7 @@ describe.skip("AI21", () => {
     });
 
     await expect(ai21.call("Test prompt")).rejects.toThrow(
-      "AI21 call failed with status code 401",
+      "AI21 call failed with status code 401"
     );
   });
 });

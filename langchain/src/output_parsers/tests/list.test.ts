@@ -23,11 +23,11 @@ test("CustomListOutputParser", async () => {
   expect(await parser1.parse("a; b;c")).toEqual(["a", "b", "c"]);
 
   await expect(() => parser1.parse("a; b c")).rejects.toThrow(
-    OutputParserException,
+    OutputParserException
   );
 
   await expect(() => parser1.parse("a; b; c; d")).rejects.toThrow(
-    OutputParserException,
+    OutputParserException
   );
 
   const parser2 = new CustomListOutputParser({ separator: "\n" });

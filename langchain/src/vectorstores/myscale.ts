@@ -125,7 +125,7 @@ export class MyScaleStore extends VectorStore {
   async addDocuments(documents: Document[]): Promise<void> {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
-      documents,
+      documents
     );
   }
 
@@ -139,7 +139,7 @@ export class MyScaleStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"],
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     if (!this.isInitialized) {
       await this.initialize(query.length);
@@ -171,7 +171,7 @@ export class MyScaleStore extends VectorStore {
     texts: string[],
     metadatas: object | object[],
     embeddings: Embeddings,
-    args: MyScaleLibArgs,
+    args: MyScaleLibArgs
   ): Promise<MyScaleStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -195,7 +195,7 @@ export class MyScaleStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    args: MyScaleLibArgs,
+    args: MyScaleLibArgs
   ): Promise<MyScaleStore> {
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
@@ -211,7 +211,7 @@ export class MyScaleStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    args: MyScaleLibArgs,
+    args: MyScaleLibArgs
   ): Promise<MyScaleStore> {
     const instance = new this(embeddings, args);
 
@@ -298,7 +298,7 @@ export class MyScaleStore extends VectorStore {
   private buildSearchQuery(
     query: number[],
     k: number,
-    filter?: MyScaleFilter,
+    filter?: MyScaleFilter
   ): string {
     const order = this.metric === "IP" ? "DESC" : "ASC";
 

@@ -93,7 +93,7 @@ export class PGVectorStore extends VectorStore {
    */
   static async initialize(
     embeddings: Embeddings,
-    config: PGVectorStoreArgs,
+    config: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const postgresqlVectorStore = new PGVectorStore(embeddings, config);
 
@@ -119,7 +119,7 @@ export class PGVectorStore extends VectorStore {
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents,
+      documents
     );
   }
 
@@ -201,7 +201,7 @@ export class PGVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"],
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter = filter ?? "{}";
@@ -265,7 +265,7 @@ export class PGVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: PGVectorStoreArgs,
+    dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -292,7 +292,7 @@ export class PGVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: PGVectorStoreArgs,
+    dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs);

@@ -307,13 +307,13 @@ export class SerpAPI extends Tool {
   constructor(
     apiKey: string | undefined = getEnvironmentVariable("SERPAPI_API_KEY"),
     params: Partial<SerpAPIParameters> = {},
-    baseUrl = "https://serpapi.com",
+    baseUrl = "https://serpapi.com"
   ) {
     super(...arguments);
 
     if (!apiKey) {
       throw new Error(
-        "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI.",
+        "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI."
       );
     }
 
@@ -334,7 +334,7 @@ export class SerpAPI extends Tool {
   protected buildUrl<P extends UrlParameters>(
     path: string,
     parameters: P,
-    baseUrl: string,
+    baseUrl: string
   ): string {
     const nonUndefinedParams: [string, string][] = Object.entries(parameters)
       .filter(([_, value]) => value !== undefined)
@@ -354,11 +354,11 @@ export class SerpAPI extends Tool {
           api_key: this.key,
           q: input,
         },
-        this.baseUrl,
+        this.baseUrl
       ),
       {
         signal: timeout ? AbortSignal.timeout(timeout) : undefined,
-      },
+      }
     );
 
     const res = await resp.json();
@@ -389,7 +389,7 @@ export class SerpAPI extends Tool {
               !(
                 typeof answer_box[k] === "string" &&
                 answer_box[k].startsWith("http")
-              ),
+              )
           )
           .forEach((k) => {
             answer[k] = answer_box[k];
@@ -463,10 +463,10 @@ export class SerpAPI extends Tool {
             k !== "description" &&
             !k.endsWith("_stick") &&
             !k.endsWith("_link") &&
-            !k.startsWith("http"),
+            !k.startsWith("http")
         )
         .forEach((k) =>
-          snippets.push(`${title} ${k}: ${res.knowledge_graph[k]}`),
+          snippets.push(`${title} ${k}: ${res.knowledge_graph[k]}`)
         );
     }
 

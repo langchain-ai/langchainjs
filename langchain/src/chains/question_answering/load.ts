@@ -34,7 +34,7 @@ export type QAChainParams =
 
 export const loadQAChain = (
   llm: BaseLanguageModel,
-  params: QAChainParams = { type: "stuff" },
+  params: QAChainParams = { type: "stuff" }
 ) => {
   const { type } = params;
   if (type === "stuff") {
@@ -66,7 +66,7 @@ export interface StuffQAChainParams {
  */
 export function loadQAStuffChain(
   llm: BaseLanguageModel,
-  params: StuffQAChainParams = {},
+  params: StuffQAChainParams = {}
 ) {
   const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm), verbose } = params;
   const llmChain = new LLMChain({ prompt, llm, verbose });
@@ -94,7 +94,7 @@ export interface MapReduceQAChainParams {
  */
 export function loadQAMapReduceChain(
   llm: BaseLanguageModel,
-  params: MapReduceQAChainParams = {},
+  params: MapReduceQAChainParams = {}
 ) {
   const {
     combineMapPrompt = COMBINE_QA_PROMPT_SELECTOR.getPrompt(llm),
@@ -142,7 +142,7 @@ export interface RefineQAChainParams {
  */
 export function loadQARefineChain(
   llm: BaseLanguageModel,
-  params: RefineQAChainParams = {},
+  params: RefineQAChainParams = {}
 ) {
   const {
     questionPrompt = QUESTION_PROMPT_SELECTOR.getPrompt(llm),

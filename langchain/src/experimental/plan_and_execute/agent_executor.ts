@@ -118,7 +118,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
       AgentExecutor.fromAgentAndTools({
         agent,
         tools,
-      }),
+      })
     );
   }
 
@@ -158,12 +158,12 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
   /** @ignore */
   async _call(
     inputs: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const plan = await this.planner.plan(inputs.input, runManager?.getChild());
     if (!plan.steps?.length) {
       throw new Error(
-        "Could not create and parse a plan to answer your question - please try again.",
+        "Could not create and parse a plan to answer your question - please try again."
       );
     }
     plan.steps[
@@ -177,7 +177,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
       };
       const response = await this.stepExecutor.step(
         newInputs,
-        runManager?.getChild(),
+        runManager?.getChild()
       );
       this.stepContainer.addStep(step, response);
     }

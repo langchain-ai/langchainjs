@@ -6,7 +6,7 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(
   {
     url: process.env.QDRANT_URL,
     collectionName: "goldel_escher_bach",
-  },
+  }
 );
 
 const response = await vectorStore.similaritySearch("scared", 2);

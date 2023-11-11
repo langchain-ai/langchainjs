@@ -25,7 +25,7 @@ test.skip("Test Llama_CPP", async () => {
   for (let i = 0; i < 5; i += 1) {
     const res = await model.call("Where do Pandas live?");
     expect(res).not.toContain(
-      "You are a helpful, respectful and honest assistant.",
+      "You are a helpful, respectful and honest assistant."
     );
   }
 }, 100000);

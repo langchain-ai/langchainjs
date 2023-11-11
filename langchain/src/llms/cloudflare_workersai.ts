@@ -66,12 +66,12 @@ export class CloudflareWorkersAI
     if (this.baseUrl === undefined) {
       if (!this.cloudflareAccountId) {
         throw new Error(
-          `No Cloudflare account ID found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_ACCOUNT_ID" in your environment variables.`,
+          `No Cloudflare account ID found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_ACCOUNT_ID" in your environment variables.`
         );
       }
       if (!this.cloudflareApiToken) {
         throw new Error(
-          `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`,
+          `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`
         );
       }
     }
@@ -99,7 +99,7 @@ export class CloudflareWorkersAI
   async _request(
     prompt: string,
     options: this["ParsedCallOptions"],
-    stream?: boolean,
+    stream?: boolean
   ) {
     this.validateEnvironment();
 
@@ -119,7 +119,7 @@ export class CloudflareWorkersAI
       });
       if (!response.ok) {
         const error = new Error(
-          `Cloudflare LLM call failed with status code ${response.status}`,
+          `Cloudflare LLM call failed with status code ${response.status}`
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;
@@ -132,14 +132,14 @@ export class CloudflareWorkersAI
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const response = await this._request(prompt, options, true);
     if (!response.body) {
       throw new Error("Empty response from Cloudflare. Please try again.");
     }
     const stream = convertEventStreamToIterableReadableDataStream(
-      response.body,
+      response.body
     );
     for await (const chunk of stream) {
       if (chunk !== "[DONE]") {
@@ -165,7 +165,7 @@ export class CloudflareWorkersAI
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     if (!this.streaming) {
       const response = await this._request(prompt, options);

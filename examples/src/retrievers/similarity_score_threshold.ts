@@ -13,7 +13,7 @@ const vectorStore = await MemoryVectorStore.fromTexts(
     "Cars are made out of plastic",
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-  new OpenAIEmbeddings(),
+  new OpenAIEmbeddings()
 );
 
 const retriever = ScoreThresholdRetriever.fromVectorStore(vectorStore, {
@@ -23,7 +23,7 @@ const retriever = ScoreThresholdRetriever.fromVectorStore(vectorStore, {
 });
 
 const result = await retriever.getRelevantDocuments(
-  "What are buildings made out of?",
+  "What are buildings made out of?"
 );
 
 console.log(result);

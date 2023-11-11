@@ -10,7 +10,7 @@ export const run = async () => {
       branch: "main",
       recursive: true,
       unknown: "warn",
-    },
+    }
   );
   const docs = await loader.load();
   console.log({ docs });

@@ -32,7 +32,7 @@ export class ToolInputParsingException extends Error {
  */
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
   string
@@ -49,7 +49,7 @@ export abstract class StructuredTool<
 
   protected abstract _call(
     arg: z.output<T>,
-    runManager?: CallbackManagerForToolRun,
+    runManager?: CallbackManagerForToolRun
   ): Promise<string>;
 
   /**
@@ -60,7 +60,7 @@ export abstract class StructuredTool<
    */
   async invoke(
     input: (z.output<T> extends string ? string : never) | z.input<T>,
-    config?: RunnableConfig,
+    config?: RunnableConfig
   ): Promise<string> {
     return this.call(input, config);
   }
@@ -78,7 +78,7 @@ export abstract class StructuredTool<
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
-    tags?: string[],
+    tags?: string[]
   ): Promise<string> {
     let parsed;
     try {
@@ -86,7 +86,7 @@ export abstract class StructuredTool<
     } catch (e) {
       throw new ToolInputParsingException(
         `Received tool input did not match expected schema`,
-        JSON.stringify(arg),
+        JSON.stringify(arg)
       );
     }
     const config = parseCallbackConfigArg(configArg);
@@ -97,7 +97,7 @@ export abstract class StructuredTool<
       this.tags,
       config.metadata,
       this.metadata,
-      { verbose: this.verbose },
+      { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
@@ -106,7 +106,7 @@ export abstract class StructuredTool<
       undefined,
       undefined,
       undefined,
-      config.runName,
+      config.runName
     );
     let result;
     try {
@@ -147,11 +147,11 @@ export abstract class Tool extends StructuredTool {
    */
   call(
     arg: string | undefined | z.input<this["schema"]>,
-    callbacks?: Callbacks,
+    callbacks?: Callbacks
   ): Promise<string> {
     return super.call(
       typeof arg === "string" || !arg ? { input: arg } : arg,
-      callbacks,
+      callbacks
     );
   }
 }

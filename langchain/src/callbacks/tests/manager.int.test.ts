@@ -40,7 +40,7 @@ test("Test grouping traces", async () => {
       return toolResult;
     },
     "I'm arg1",
-    { chain, nextChain },
+    { chain, nextChain }
   );
 
   console.log(result);

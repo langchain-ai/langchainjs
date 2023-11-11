@@ -7,12 +7,12 @@ import { PDFLoader } from "../fs/pdf.js";
 test("Test PDF loader from blob", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/1706.03762.pdf",
+    "./example_data/1706.03762.pdf"
   );
   const loader = new PDFLoader(
     new Blob([await fs.readFile(filePath)], {
       type: "application/pdf",
-    }),
+    })
   );
   const docs = await loader.load();
 

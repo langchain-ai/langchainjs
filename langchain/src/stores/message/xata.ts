@@ -60,7 +60,7 @@ const chatMemoryColumns: Schemas.Column[] = [
  * where the chat messages are stored.
  */
 export class XataChatMessageHistory<
-  XataClient extends BaseClient,
+  XataClient extends BaseClient
 > extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "xata"];
 
@@ -88,7 +88,7 @@ export class XataChatMessageHistory<
       this.client = new BaseClient(config) as XataClient;
     } else {
       throw new Error(
-        "Either a client or a config must be provided to XataChatMessageHistoryInput",
+        "Either a client or a config must be provided to XataChatMessageHistoryInput"
       );
     }
     if (fields.createTable !== false) {
@@ -96,7 +96,7 @@ export class XataChatMessageHistory<
       const apiKey = fields.apiKey || fields.config?.apiKey;
       if (!apiKey) {
         throw new Error(
-          "If createTable is set, an apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object",
+          "If createTable is set, an apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object"
         );
       }
       this.apiClient = new XataApiClient({ apiKey });
@@ -136,7 +136,7 @@ export class XataChatMessageHistory<
           type: message.type,
           data,
         };
-      },
+      }
     );
     return mapStoredMessagesToChatMessages(orderedMessages);
   }

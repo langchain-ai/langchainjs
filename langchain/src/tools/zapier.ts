@@ -71,7 +71,7 @@ export class ZapierNLAWrapper extends Serializable {
       zapierNlaApiKey ?? getEnvironmentVariable("ZAPIER_NLA_API_KEY");
     if (!apiKey && !oauthAccessToken) {
       throw new Error(
-        "Neither ZAPIER_NLA_OAUTH_ACCESS_TOKEN or ZAPIER_NLA_API_KEY are set",
+        "Neither ZAPIER_NLA_OAUTH_ACCESS_TOKEN or ZAPIER_NLA_API_KEY are set"
       );
     }
 
@@ -82,7 +82,7 @@ export class ZapierNLAWrapper extends Serializable {
     }
 
     this.caller = new AsyncCaller(
-      typeof params === "string" ? {} : params ?? {},
+      typeof params === "string" ? {} : params ?? {}
     );
   }
 
@@ -109,7 +109,7 @@ export class ZapierNLAWrapper extends Serializable {
   protected async _getActionRequest(
     actionId: string,
     instructions: string,
-    params?: ZapierValues,
+    params?: ZapierValues
   ): Promise<ZapierValues> {
     const data = params ?? {};
     data.instructions = instructions;
@@ -123,12 +123,12 @@ export class ZapierNLAWrapper extends Serializable {
         method: "POST",
         headers,
         body: JSON.stringify(data),
-      },
+      }
     );
 
     if (!resp.ok) {
       throw new Error(
-        `Failed to execute action ${actionId} with instructions ${instructions}`,
+        `Failed to execute action ${actionId} with instructions ${instructions}`
       );
     }
 
@@ -151,7 +151,7 @@ export class ZapierNLAWrapper extends Serializable {
   async runAction(
     actionId: string,
     instructions: string,
-    params?: ZapierValues,
+    params?: ZapierValues
   ): Promise<ZapierValues> {
     const resp = await this._getActionRequest(actionId, instructions, params);
     return resp.status === "error" ? resp.error : resp.result;
@@ -168,7 +168,7 @@ export class ZapierNLAWrapper extends Serializable {
   async previewAction(
     actionId: string,
     instructions: string,
-    params?: ZapierValues,
+    params?: ZapierValues
   ): Promise<ZapierValues> {
     const data = params ?? {};
     data.preview_only = true;
@@ -188,17 +188,17 @@ export class ZapierNLAWrapper extends Serializable {
       {
         method: "GET",
         headers,
-      },
+      }
     );
     if (!resp.ok) {
       if (resp.status === 401) {
         if (this.zapierNlaOAuthAccessToken) {
           throw new Error(
-            "A 401 Unauthorized error was returned. Check that your access token is correct and doesn't need to be refreshed.",
+            "A 401 Unauthorized error was returned. Check that your access token is correct and doesn't need to be refreshed."
           );
         }
         throw new Error(
-          "A 401 Unauthorized error was returned. Check that your API Key is correct.",
+          "A 401 Unauthorized error was returned. Check that your API Key is correct."
         );
       }
       throw new Error("Failed to list actions");
@@ -215,7 +215,7 @@ export class ZapierNLAWrapper extends Serializable {
   async runAsString(
     actionId: string,
     instructions: string,
-    params?: ZapierValues,
+    params?: ZapierValues
   ): Promise<string> {
     const result = await this.runAction(actionId, instructions, params);
     return JSON.stringify(result);
@@ -230,7 +230,7 @@ export class ZapierNLAWrapper extends Serializable {
   async previewAsString(
     actionId: string,
     instructions: string,
-    params?: ZapierValues,
+    params?: ZapierValues
   ): Promise<string> {
     const result = await this.previewAction(actionId, instructions, params);
     return JSON.stringify(result);
@@ -270,7 +270,7 @@ export class ZapierNLARunAction extends Tool {
     actionId: string,
     zapierDescription: string,
     paramsSchema: ZapierValues,
-    params?: ZapierValues,
+    params?: ZapierValues
   ) {
     super();
     this.apiWrapper = apiWrapper;
@@ -280,7 +280,7 @@ export class ZapierNLARunAction extends Tool {
     const paramsSchemaWithoutInstructions = { ...paramsSchema };
     delete paramsSchemaWithoutInstructions.instructions;
     const paramsSchemaKeysString = JSON.stringify(
-      Object.keys(paramsSchemaWithoutInstructions),
+      Object.keys(paramsSchemaWithoutInstructions)
     );
     this.description = renderTemplate(zapierNLABaseDescription, "f-string", {
       zapier_description: zapierDescription,

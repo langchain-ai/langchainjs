@@ -67,7 +67,7 @@ describe("ElasticVectorSearch", () => {
         { pageContent: "adjective upserted", metadata: { a: createdAt } },
         { pageContent: "hi upserted", metadata: { a: createdAt } },
       ],
-      { ids },
+      { ids }
     );
 
     expect(ids).toEqual(ids2);

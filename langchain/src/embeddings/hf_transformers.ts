@@ -49,7 +49,7 @@ export class HuggingFaceTransformersEmbeddings
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
-      this.batchSize,
+      this.batchSize
     );
 
     const batchRequests = batches.map((batch) => this.runEmbedding(batch));
@@ -76,7 +76,7 @@ export class HuggingFaceTransformersEmbeddings
   private async runEmbedding(texts: string[]) {
     const pipe = await (this.pipelinePromise ??= pipeline(
       "feature-extraction",
-      this.modelName,
+      this.modelName
     ));
 
     return this.caller.call(async () => {

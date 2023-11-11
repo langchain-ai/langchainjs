@@ -23,7 +23,7 @@ type XataFilter = object;
  * and perform similarity searches.
  */
 export class XataVectorSearch<
-  XataClient extends BaseClient,
+  XataClient extends BaseClient
 > extends VectorStore {
   declare FilterType: XataFilter;
 
@@ -55,7 +55,7 @@ export class XataVectorSearch<
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options,
+      options
     );
   }
 
@@ -71,7 +71,7 @@ export class XataVectorSearch<
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] },
+    options?: { ids?: string[] }
   ) {
     const rows = vectors
       .map((embedding, idx) => ({
@@ -116,7 +116,7 @@ export class XataVectorSearch<
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: XataFilter | undefined,
+    filter?: XataFilter | undefined
   ): Promise<[Document, number][]> {
     const records = await this.client.db[this.table].vectorSearch(
       "embedding",
@@ -124,7 +124,7 @@ export class XataVectorSearch<
       {
         size: k,
         filter,
-      },
+      }
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,8 +137,8 @@ export class XataVectorSearch<
               key !== "content" &&
               key !== "embedding" &&
               key !== "xata" &&
-              key !== "id",
-          ),
+              key !== "id"
+          )
         ),
       }),
       record.xata.score,

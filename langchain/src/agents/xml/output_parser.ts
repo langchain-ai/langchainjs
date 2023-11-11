@@ -31,7 +31,7 @@ export class XMLAgentOutputParser extends AgentActionOutputParser {
 
   getFormatInstructions(): string {
     throw new Error(
-      "getFormatInstructions not implemented inside OpenAIFunctionsAgentOutputParser.",
+      "getFormatInstructions not implemented inside OpenAIFunctionsAgentOutputParser."
     );
   }
 }

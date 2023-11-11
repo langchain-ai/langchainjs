@@ -18,7 +18,7 @@ export class ZapierToolKit extends Toolkit {
    * @returns A Promise that resolves to a ZapierToolKit instance.
    */
   static async fromZapierNLAWrapper(
-    zapierNLAWrapper: ZapierNLAWrapper,
+    zapierNLAWrapper: ZapierNLAWrapper
   ): Promise<ZapierToolKit> {
     const toolkit = new ZapierToolKit();
     const actions = await zapierNLAWrapper.listActions();
@@ -27,7 +27,7 @@ export class ZapierToolKit extends Toolkit {
         zapierNLAWrapper,
         action.id,
         action.description,
-        action.params,
+        action.params
       );
       toolkit.tools.push(tool);
     }

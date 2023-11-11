@@ -21,13 +21,10 @@ function combineAliasesAndInvert(constructor: typeof Serializable) {
   ) {
     Object.assign(aliases, Reflect.get(current.prototype, "lc_aliases"));
   }
-  return Object.entries(aliases).reduce(
-    (acc, [key, value]) => {
-      acc[value] = key;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
+  return Object.entries(aliases).reduce((acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  }, {} as Record<string, string>);
 }
 
 async function reviver(
@@ -36,7 +33,7 @@ async function reviver(
     secretsMap: SecretMap;
     path?: string[];
   },
-  value: unknown,
+  value: unknown
 ): Promise<unknown> {
   const { optionalImportsMap, secretsMap, path = ["$"] } = this;
   const pathStr = path.join(".");
@@ -60,7 +57,7 @@ async function reviver(
         return secretValueInEnv;
       } else {
         throw new Error(
-          `Missing key "${key}" for ${pathStr} in load(secretsMap={})`,
+          `Missing key "${key}" for ${pathStr} in load(secretsMap={})`
         );
       }
     }
@@ -77,7 +74,7 @@ async function reviver(
     const serialized = value as SerializedNotImplemented;
     const str = JSON.stringify(serialized);
     throw new Error(
-      `Trying to load an object that doesn't implement serialization: ${pathStr} -> ${str}`,
+      `Trying to load an object that doesn't implement serialization: ${pathStr} -> ${str}`
     );
   } else if (
     typeof value === "object" &&
@@ -102,15 +99,14 @@ async function reviver(
       namespace.join("/") in optionalImportsMap
     ) {
       if (namespace.join("/") in optionalImportsMap) {
-        module =
-          await optionalImportsMap[
-            namespace.join("/") as keyof typeof optionalImportsMap
-          ];
+        module = await optionalImportsMap[
+          namespace.join("/") as keyof typeof optionalImportsMap
+        ];
       } else {
         throw new Error(
           `Missing key "${namespace.join(
-            "/",
-          )}" for ${pathStr} in load(optionalImportsMap={})`,
+            "/"
+          )}" for ${pathStr} in load(optionalImportsMap={})`
         );
       }
     } else {
@@ -156,7 +152,7 @@ async function reviver(
       Object.values(module).find(
         (v) =>
           typeof v === "function" &&
-          get_lc_unique_name(v as typeof Serializable) === name,
+          get_lc_unique_name(v as typeof Serializable) === name
       );
     if (typeof builder !== "function") {
       throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);
@@ -165,7 +161,7 @@ async function reviver(
     // Recurse on the arguments, which may be serialized objects themselves
     const kwargs = await reviver.call(
       { ...this, path: [...path, "kwargs"] },
-      serialized.kwargs,
+      serialized.kwargs
     );
 
     // Construct the object
@@ -175,8 +171,8 @@ async function reviver(
         mapKeys(
           kwargs as SerializedFields,
           keyFromJson,
-          combineAliasesAndInvert(builder),
-        ),
+          combineAliasesAndInvert(builder)
+        )
       );
 
       // Minification in severless/edge runtimes will mange the
@@ -192,8 +188,8 @@ async function reviver(
     if (Array.isArray(value)) {
       return Promise.all(
         value.map((v, i) =>
-          reviver.call({ ...this, path: [...path, `${i}`] }, v),
-        ),
+          reviver.call({ ...this, path: [...path, `${i}`] }, v)
+        )
       );
     } else {
       return Object.fromEntries(
@@ -201,8 +197,8 @@ async function reviver(
           Object.entries(value).map(async ([key, value]) => [
             key,
             await reviver.call({ ...this, path: [...path, key] }, value),
-          ]),
-        ),
+          ])
+        )
       );
     }
   }
@@ -212,7 +208,7 @@ async function reviver(
 export async function load<T>(
   text: string,
   secretsMap: SecretMap = {},
-  optionalImportsMap: OptionalImportMap = {},
+  optionalImportsMap: OptionalImportMap = {}
 ): Promise<T> {
   const json = JSON.parse(text);
   return reviver.call({ secretsMap, optionalImportsMap }, json) as Promise<T>;

@@ -32,7 +32,7 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
 
   parseResult(
     generations: Generation[] | ChatGeneration[],
-    _callbacks: Callbacks | undefined,
+    _callbacks: Callbacks | undefined
   ): Promise<EvalOutputType> {
     const { text } = generations[0];
 
@@ -53,7 +53,7 @@ export class TrajectoryOutputParser extends BaseLLMOutputParser<EvalOutputType> 
     const scoreMatch = scoreStr.match(/(\d+(\.\d+)?)/);
     if (scoreMatch === null || scoreMatch[1].includes(".")) {
       throw new Error(
-        `Score is not an integer digit in the range 1-5: ${text}`,
+        `Score is not an integer digit in the range 1-5: ${text}`
       );
     }
 
@@ -94,7 +94,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
 
   static resolveTrajectoryPrompt(
     prompt?: BasePromptTemplate | undefined,
-    agentTools?: StructuredTool[],
+    agentTools?: StructuredTool[]
   ) {
     let _prompt;
     if (prompt) {
@@ -117,7 +117,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
     return agentTools
       .map(
         (tool, i) =>
-          `Tool ${i + 1}: ${tool.name}\n Description: ${tool.description}`,
+          `Tool ${i + 1}: ${tool.name}\n Description: ${tool.description}`
       )
       .join("\n\n");
   }
@@ -131,7 +131,7 @@ export class TrajectoryEvalChain extends AgentTrajectoryEvaluator {
   static async fromLLM(
     llm: BaseChatModel,
     agentTools?: StructuredTool[],
-    chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>,
+    chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {
     let prompt = this.resolveTrajectoryPrompt(chainOptions?.prompt, agentTools);
     if (agentTools) {
@@ -196,7 +196,7 @@ ${reference}
   async _evaluateAgentTrajectory(
     args: LLMTrajectoryEvaluatorArgs,
     callOptions: this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     const { input, prediction, reference, agentTrajectory } = args;
 

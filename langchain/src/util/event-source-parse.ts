@@ -36,7 +36,7 @@ function isNodeJSReadable(x: unknown): x is Readable {
  */
 export async function getBytes(
   stream: ReadableStream<Uint8Array>,
-  onChunk: (arr: Uint8Array, flush?: boolean) => void,
+  onChunk: (arr: Uint8Array, flush?: boolean) => void
 ) {
   // stream is a Node.js Readable / PassThrough stream
   // this can happen if node-fetch is polyfilled
@@ -90,7 +90,7 @@ const enum ControlChars {
  * @returns A function that should be called for each incoming byte chunk.
  */
 export function getLines(
-  onLine: (line: Uint8Array, fieldLength: number, flush?: boolean) => void,
+  onLine: (line: Uint8Array, fieldLength: number, flush?: boolean) => void
 ) {
   let buffer: Uint8Array | undefined;
   let position: number; // current read position
@@ -178,7 +178,7 @@ export function getLines(
 export function getMessages(
   onMessage?: (msg: EventSourceMessage) => void,
   onId?: (id: string) => void,
-  onRetry?: (retry: number) => void,
+  onRetry?: (retry: number) => void
 ) {
   let message = newMessage();
   const decoder = new TextDecoder();
@@ -187,7 +187,7 @@ export function getMessages(
   return function onLine(
     line: Uint8Array,
     fieldLength: number,
-    flush?: boolean,
+    flush?: boolean
   ) {
     if (flush) {
       if (!isEmpty(message)) {
@@ -256,7 +256,7 @@ function newMessage(): EventSourceMessage {
 }
 
 export function convertEventStreamToIterableReadableDataStream(
-  stream: ReadableStream,
+  stream: ReadableStream
 ) {
   const dataStream = new ReadableStream({
     async start(controller) {
@@ -266,7 +266,7 @@ export function convertEventStreamToIterableReadableDataStream(
       const onLine = (
         line: Uint8Array,
         fieldLength: number,
-        flush?: boolean,
+        flush?: boolean
       ) => {
         enqueueLine(line, fieldLength, flush);
         if (flush) controller.close();

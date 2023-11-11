@@ -62,7 +62,7 @@ export interface TypesenseConfig extends AsyncCallerParams {
    */
   import?<T extends Record<string, unknown> = Record<string, unknown>>(
     data: T[],
-    collectionName: string,
+    collectionName: string
   ): Promise<void>;
 }
 
@@ -88,7 +88,7 @@ export class Typesense extends VectorStore {
 
   private import: (
     data: Record<string, unknown>[],
-    collectionName: string,
+    collectionName: string
   ) => Promise<void>;
 
   _vectorstoreType(): string {
@@ -122,7 +122,7 @@ export class Typesense extends VectorStore {
    * @param collectionName
    */
   private async importToTypesense<
-    T extends Record<string, unknown> = Record<string, unknown>,
+    T extends Record<string, unknown> = Record<string, unknown>
   >(data: T[], collectionName: string) {
     const chunkSize = 2000;
     for (let i = 0; i < data.length; i += chunkSize) {
@@ -144,7 +144,7 @@ export class Typesense extends VectorStore {
    */
   _documentsToTypesenseRecords(
     documents: Document[],
-    vectors: number[][],
+    vectors: number[][]
   ): Record<string, unknown>[] {
     const metadatas = documents.map((doc) => doc.metadata);
 
@@ -174,7 +174,7 @@ export class Typesense extends VectorStore {
   _typesenseRecordsToDocuments(
     typesenseRecords:
       | { document?: Record<string, unknown>; vector_distance: number }[]
-      | undefined,
+      | undefined
   ): [Document, number][] {
     const documents: [Document, number][] =
       typesenseRecords?.map((hit) => {
@@ -204,8 +204,8 @@ export class Typesense extends VectorStore {
     const typesenseDocuments = this._documentsToTypesenseRecords(
       documents,
       await this.embeddings.embedDocuments(
-        documents.map((doc) => doc.pageContent),
-      ),
+        documents.map((doc) => doc.pageContent)
+      )
     );
     await this.import(typesenseDocuments, this.schemaName);
   }
@@ -218,7 +218,7 @@ export class Typesense extends VectorStore {
   async addVectors(vectors: number[][], documents: Document[]) {
     const typesenseDocuments = this._documentsToTypesenseRecords(
       documents,
-      vectors,
+      vectors
     );
     await this.import(typesenseDocuments, this.schemaName);
   }
@@ -232,7 +232,7 @@ export class Typesense extends VectorStore {
   async similaritySearchVectorWithScore(
     vectorPrompt: number[],
     k?: number,
-    filter: this["FilterType"] = {},
+    filter: this["FilterType"] = {}
   ) {
     const amount = k || this.searchParams.per_page || 5;
     const vector_query = `${this.vectorColumnName}:([${vectorPrompt}], k:${amount})`;
@@ -248,7 +248,7 @@ export class Typesense extends VectorStore {
           },
         ],
       },
-      {},
+      {}
     );
     const results = typesenseResponse.results[0].hits;
 
@@ -286,7 +286,7 @@ export class Typesense extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    config: TypesenseConfig,
+    config: TypesenseConfig
   ): Promise<Typesense> {
     const instance = new Typesense(embeddings, config);
     await instance.addDocuments(docs);
@@ -306,7 +306,7 @@ export class Typesense extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    config: TypesenseConfig,
+    config: TypesenseConfig
   ) {
     const instance = new Typesense(embeddings, config);
     const documents: Document[] = texts.map((text, i) => ({

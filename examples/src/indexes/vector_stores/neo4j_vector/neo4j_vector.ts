@@ -22,7 +22,7 @@ const documents = [
 const neo4jVectorIndex = await Neo4jVectorStore.fromDocuments(
   documents,
   new OpenAIEmbeddings(),
-  config,
+  config
 );
 
 const results = await neo4jVectorIndex.similaritySearch("water", 1);

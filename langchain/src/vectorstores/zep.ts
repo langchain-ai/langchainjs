@@ -89,7 +89,7 @@ export class ZepVectorStore extends VectorStore {
     this.client = await ZepClient.init(args.apiUrl, args.apiKey);
     try {
       this.collection = await this.client.document.getCollection(
-        args.collectionName,
+        args.collectionName
       );
 
       // If the Embedding passed in is fake, but the collection is not auto embedded, throw an error
@@ -142,7 +142,7 @@ export class ZepVectorStore extends VectorStore {
    */
   async addVectors(
     vectors: number[][],
-    documents: Document[],
+    documents: Document[]
   ): Promise<string[]> {
     if (!this.autoEmbed && vectors.length === 0) {
       throw new Error(`Vectors must be provided if autoEmbed is false`);
@@ -210,7 +210,7 @@ export class ZepVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: Record<string, unknown> | undefined,
+    filter?: Record<string, unknown> | undefined
   ): Promise<[Document, number][]> {
     await this.initPromise;
     const results = await this.collection.search(
@@ -218,7 +218,7 @@ export class ZepVectorStore extends VectorStore {
         embedding: new Float32Array(query),
         metadata: assignMetadata(filter),
       },
-      k,
+      k
     );
     return zepDocsToDocumentsAndScore(results);
   }
@@ -226,7 +226,7 @@ export class ZepVectorStore extends VectorStore {
   async _similaritySearchWithScore(
     query: string,
     k: number,
-    filter?: Record<string, unknown> | undefined,
+    filter?: Record<string, unknown> | undefined
   ): Promise<[Document, number][]> {
     await this.initPromise;
     const results = await this.collection.search(
@@ -234,7 +234,7 @@ export class ZepVectorStore extends VectorStore {
         text: query,
         metadata: assignMetadata(filter),
       },
-      k,
+      k
     );
     return zepDocsToDocumentsAndScore(results);
   }
@@ -243,7 +243,7 @@ export class ZepVectorStore extends VectorStore {
     query: string,
     k = 4,
     filter: Record<string, unknown> | undefined = undefined,
-    _callbacks = undefined, // implement passing to embedQuery later
+    _callbacks = undefined // implement passing to embedQuery later
   ): Promise<[Document, number][]> {
     if (this.autoEmbed) {
       return this._similaritySearchWithScore(query, k, filter);
@@ -251,7 +251,7 @@ export class ZepVectorStore extends VectorStore {
       return this.similaritySearchVectorWithScore(
         await this.embeddings.embedQuery(query),
         k,
-        filter,
+        filter
       );
     }
   }
@@ -271,7 +271,7 @@ export class ZepVectorStore extends VectorStore {
     query: string,
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    _callbacks: Callbacks | undefined = undefined, // implement passing to embedQuery later
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ): Promise<Document[]> {
     await this.initPromise;
 
@@ -279,14 +279,14 @@ export class ZepVectorStore extends VectorStore {
     if (this.autoEmbed) {
       const zepResults = await this.collection.search(
         { text: query, metadata: assignMetadata(filter) },
-        k,
+        k
       );
       results = zepDocsToDocumentsAndScore(zepResults);
     } else {
       results = await this.similaritySearchVectorWithScore(
         await this.embeddings.embedQuery(query),
         k,
-        assignMetadata(filter),
+        assignMetadata(filter)
       );
     }
 
@@ -310,7 +310,7 @@ export class ZepVectorStore extends VectorStore {
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5, filter } = options;
 
@@ -323,14 +323,14 @@ export class ZepVectorStore extends VectorStore {
           embedding: new Float32Array(queryEmbedding),
           metadata: assignMetadata(filter),
         },
-        fetchK,
+        fetchK
       );
     } else {
       let queryEmbeddingArray: Float32Array;
       [zepResults, queryEmbeddingArray] =
         await this.collection.searchReturnQueryVector(
           { text: query, metadata: assignMetadata(filter) },
-          fetchK,
+          fetchK
         );
       queryEmbedding = Array.from(queryEmbeddingArray);
     }
@@ -338,14 +338,14 @@ export class ZepVectorStore extends VectorStore {
     const results = zepDocsToDocumentsAndScore(zepResults);
 
     const embeddingList = zepResults.map((doc) =>
-      Array.from(doc.embedding ? doc.embedding : []),
+      Array.from(doc.embedding ? doc.embedding : [])
     );
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,
       lambda,
-      k,
+      k
     );
 
     return mmrIndexes.filter((idx) => idx !== -1).map((idx) => results[idx][0]);
@@ -364,7 +364,7 @@ export class ZepVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    zepConfig: IZepConfig,
+    zepConfig: IZepConfig
   ): Promise<ZepVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -389,7 +389,7 @@ export class ZepVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    zepConfig: IZepConfig,
+    zepConfig: IZepConfig
   ): Promise<ZepVectorStore> {
     const instance = new this(embeddings, zepConfig);
     // Wait for collection to be initialized
@@ -400,7 +400,7 @@ export class ZepVectorStore extends VectorStore {
 }
 
 function zepDocsToDocumentsAndScore(
-  results: IDocument[],
+  results: IDocument[]
 ): [Document, number][] {
   return results.map((d) => [
     new Document({
@@ -412,7 +412,7 @@ function zepDocsToDocumentsAndScore(
 }
 
 function assignMetadata(
-  value: string | Record<string, unknown> | object | undefined,
+  value: string | Record<string, unknown> | object | undefined
 ): Record<string, unknown> | undefined {
   if (typeof value === "object" && value !== null) {
     return value as Record<string, unknown>;

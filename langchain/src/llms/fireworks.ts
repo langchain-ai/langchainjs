@@ -49,14 +49,14 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     fields?: Partial<
       Omit<OpenAIInput, "openAIApiKey" | FireworksUnsupportedArgs>
     > &
-      BaseLLMParams & { fireworksApiKey?: string },
+      BaseLLMParams & { fireworksApiKey?: string }
   ) {
     const fireworksApiKey =
       fields?.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
       throw new Error(
-        `Fireworks API key not found. Please set the FIREWORKS_API_KEY environment variable or provide the key into "fireworksApiKey"`,
+        `Fireworks API key not found. Please set the FIREWORKS_API_KEY environment variable or provide the key into "fireworksApiKey"`
       );
     }
 
@@ -89,12 +89,12 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
 
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Completion>>;
 
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<OpenAIClient.Completions.Completion>;
 
   /**
@@ -107,7 +107,7 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     request:
       | OpenAIClient.CompletionCreateParamsStreaming
       | OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<
     AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
   > {

@@ -87,10 +87,8 @@ export class StartExecutionAWSSfnTool extends Tool {
         .send(command)
         .then((response) =>
           resolve(
-            response.executionArn
-              ? response.executionArn
-              : "request completed.",
-          ),
+            response.executionArn ? response.executionArn : "request completed."
+          )
         )
         .catch((error: Error) => {
           console.error("Error starting state machine execution:", error);
@@ -144,7 +142,7 @@ export class DescribeExecutionAWSSfnTool extends Tool {
               error: response.error,
               cause: response.cause,
             })
-          : "{}",
+          : "{}"
       )
       .catch((error: Error) => {
         console.error("Error describing state machine execution:", error);
@@ -199,7 +197,7 @@ export class SendTaskSuccessAWSSfnTool extends Tool {
       .catch((error: Error) => {
         console.error(
           "Error sending task success to state machine execution:",
-          error,
+          error
         );
         return "failed to complete request";
       });

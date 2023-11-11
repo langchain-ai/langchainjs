@@ -65,7 +65,7 @@ export declare interface OpenAIBaseInput {
 
 // TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available
 export type OpenAICoreRequestOptions<
-  Req extends object = Record<string, unknown>,
+  Req extends object = Record<string, unknown>
 > = {
   path?: string;
   query?: Req | undefined;

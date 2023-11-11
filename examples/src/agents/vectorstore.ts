@@ -35,5 +35,5 @@ console.log(`Executing: ${input}`);
 const result = await agent.call({ input });
 console.log(`Got output ${result.output}`);
 console.log(
-  `Got intermediate steps ${JSON.stringify(result.intermediateSteps, null, 2)}`,
+  `Got intermediate steps ${JSON.stringify(result.intermediateSteps, null, 2)}`
 );

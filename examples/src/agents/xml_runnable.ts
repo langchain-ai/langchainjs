@@ -19,7 +19,7 @@ import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_me
 const model = new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).bind(
   {
     stop: ["</tool_input>", "</final_answer>"],
-  },
+  }
 );
 /** Define your list of tools. */
 const tools = [new SerpAPI()];

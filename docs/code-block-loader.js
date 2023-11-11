@@ -56,14 +56,14 @@ async function webpackLoader(content, map, meta) {
       const found = available.find(
         (dirent) =>
           dirent.isDirectory() &&
-          fs.existsSync(path.resolve(docsPath, dirent.name, imported + ".md")),
+          fs.existsSync(path.resolve(docsPath, dirent.name, imported + ".md"))
       );
       if (found) {
         imp.docs =
           "/" + path.join("docs", "api", moduleName, found.name, imported);
       } else {
         throw new Error(
-          `Could not find docs for ${source}.${imported} in docs/api/`,
+          `Could not find docs for ${source}.${imported} in docs/api/`
         );
       }
     });

@@ -14,7 +14,7 @@ const answerParser = StructuredOutputParser.fromNamesAndDescriptions({
 const confidenceParser = new RegexParser(
   /Confidence: (A|B|C), Explanation: (.*)/,
   ["confidence", "explanation"],
-  "noConfidence",
+  "noConfidence"
 );
 
 const parser = new CombiningOutputParser(answerParser, confidenceParser);

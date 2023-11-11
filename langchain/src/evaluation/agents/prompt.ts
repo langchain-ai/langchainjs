@@ -100,12 +100,12 @@ Score: 2`;
 export const EVAL_CHAT_PROMPT = /* #__PURE__ */ ChatPromptTemplate.fromMessages(
   [
     /* #__PURE__ */ SystemMessagePromptTemplate.fromTemplate(
-      "You are a helpful assistant that evaluates language models.",
+      "You are a helpful assistant that evaluates language models."
     ),
     /* #__PURE__ */ HumanMessagePromptTemplate.fromTemplate(EXAMPLE_INPUT),
     /* #__PURE__ */ AIMessagePromptTemplate.fromTemplate(EXAMPLE_OUTPUT),
     /* #__PURE__ */ HumanMessagePromptTemplate.fromTemplate(EVAL_TEMPLATE),
-  ],
+  ]
 );
 
 const TOOL_FREE_EVAL_TEMPLATE = `An AI language model has been given access to a set of tools to help answer a user's question.
@@ -138,11 +138,11 @@ i. Is the final answer helpful?
 export const TOOL_FREE_EVAL_CHAT_PROMPT =
   /* #__PURE__ */ ChatPromptTemplate.fromMessages([
     /* #__PURE__ */ SystemMessagePromptTemplate.fromTemplate(
-      "You are a helpful assistant that evaluates language models.",
+      "You are a helpful assistant that evaluates language models."
     ),
     /* #__PURE__ */ HumanMessagePromptTemplate.fromTemplate(EXAMPLE_INPUT),
     /* #__PURE__ */ AIMessagePromptTemplate.fromTemplate(EXAMPLE_OUTPUT),
     /* #__PURE__ */ HumanMessagePromptTemplate.fromTemplate(
-      TOOL_FREE_EVAL_TEMPLATE,
+      TOOL_FREE_EVAL_TEMPLATE
     ),
   ]);

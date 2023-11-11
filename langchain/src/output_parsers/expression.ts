@@ -54,7 +54,7 @@ export class ExpressionParser extends BaseOutputParser<ParsedType> {
       const node = program.body;
       if (!ASTParser.isExpressionStatement(node)) {
         throw new Error(
-          `Expected ExpressionStatement, got ${(node as ExpressionNode).type}`,
+          `Expected ExpressionStatement, got ${(node as ExpressionNode).type}`
         );
       }
 

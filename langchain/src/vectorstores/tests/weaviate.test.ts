@@ -14,7 +14,7 @@ test("flattenObjectForWeaviate", () => {
           string: "even a deeper string",
         },
       },
-    }),
+    })
   ).toMatchInlineSnapshot(`
     {
       "deep_array3": [

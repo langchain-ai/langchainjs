@@ -91,7 +91,7 @@ export type OllamaGenerationChunk = {
 export async function* createOllamaStream(
   baseUrl: string,
   params: OllamaRequestParams,
-  options: OllamaCallOptions,
+  options: OllamaCallOptions
 ): AsyncGenerator<OllamaGenerationChunk> {
   let formattedBaseUrl = baseUrl;
   if (formattedBaseUrl.startsWith("http://localhost:")) {
@@ -99,7 +99,7 @@ export async function* createOllamaStream(
     // See https://github.com/node-fetch/node-fetch/issues/1624
     formattedBaseUrl = formattedBaseUrl.replace(
       "http://localhost:",
-      "http://127.0.0.1:",
+      "http://127.0.0.1:"
     );
   }
   const response = await fetch(`${formattedBaseUrl}/api/generate`, {
@@ -113,7 +113,7 @@ export async function* createOllamaStream(
   if (!response.ok) {
     const json = await response.json();
     const error = new Error(
-      `Ollama call failed with status code ${response.status}: ${json.error}`,
+      `Ollama call failed with status code ${response.status}: ${json.error}`
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).response = response;
@@ -121,7 +121,7 @@ export async function* createOllamaStream(
   }
   if (!response.body) {
     throw new Error(
-      "Could not begin Ollama stream. Please check the given URL and try again.",
+      "Could not begin Ollama stream. Please check the given URL and try again."
     );
   }
 
@@ -140,7 +140,7 @@ export async function* createOllamaStream(
       }
     } catch (e) {
       console.warn(
-        `Received a non-JSON parseable chunk: ${decoder.decode(chunk)}`,
+        `Received a non-JSON parseable chunk: ${decoder.decode(chunk)}`
       );
     }
   }

@@ -38,7 +38,7 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
   }>([
     SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
     HumanMessagePromptTemplate.fromTemplate(
-      `Context:\n{documents}\n\nQuestion:\n{question}`,
+      `Context:\n{documents}\n\nQuestion:\n{question}`
     ),
   ]);
   const llm = new FakeChatModel({});
@@ -67,7 +67,7 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
     {
       includeTags: ["only_one"],
       includeNames: ["CUSTOM_NAME"],
-    },
+    }
   );
   let finalState;
   for await (const chunk of stream) {
@@ -80,10 +80,10 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
   expect((finalState as RunLog).state.logs.FakeLLM).toBeDefined();
   expect(
     (finalState as RunLog).state.logs.FakeLLM.final_output.generations[0][0]
-      .text,
+      .text
   ).toEqual("testing");
   expect((finalState as RunLog).state.logs.CUSTOM_NAME).toBeDefined();
   expect(
-    (finalState as RunLog).state.logs.CUSTOM_NAME.final_output.output,
+    (finalState as RunLog).state.logs.CUSTOM_NAME.final_output.output
   ).toEqual(JSON.stringify(retrieverOutputDocs));
 });

@@ -30,13 +30,13 @@ export class JSONLoader extends TextLoader {
     // If there is no pointers specified we extract all strings we found
     const extractAllStrings = !(this.pointers.length > 0);
     const compiledPointers = this.pointers.map((pointer) =>
-      jsonpointer.compile(pointer),
+      jsonpointer.compile(pointer)
     );
 
     return this.extractArrayStringsFromObject(
       json,
       compiledPointers,
-      extractAllStrings,
+      extractAllStrings
     );
   }
 
@@ -51,7 +51,7 @@ export class JSONLoader extends TextLoader {
     json: any,
     pointers: jsonpointer[],
     extractAllStrings = false,
-    keyHasBeenFound = false,
+    keyHasBeenFound = false
   ): string[] {
     if (!json) {
       return [];
@@ -65,7 +65,7 @@ export class JSONLoader extends TextLoader {
       let extractedString: string[] = [];
       for (const element of json) {
         extractedString = extractedString.concat(
-          this.extractArrayStringsFromObject(element, pointers, true),
+          this.extractArrayStringsFromObject(element, pointers, true)
         );
       }
 
@@ -77,14 +77,14 @@ export class JSONLoader extends TextLoader {
         return this.extractArrayStringsFromObject(
           Object.values(json),
           pointers,
-          true,
+          true
         );
       }
 
       const targetedEntries = this.getTargetedEntries(json, pointers);
       const thisLevelEntries = Object.values(json) as object[];
       const notTargetedEntries = thisLevelEntries.filter(
-        (entry: object) => !targetedEntries.includes(entry),
+        (entry: object) => !targetedEntries.includes(entry)
       );
 
       let extractedStrings: string[] = [];
@@ -92,13 +92,13 @@ export class JSONLoader extends TextLoader {
       if (targetedEntries.length > 0) {
         for (const oneEntry of targetedEntries) {
           extractedStrings = extractedStrings.concat(
-            this.extractArrayStringsFromObject(oneEntry, pointers, true, true),
+            this.extractArrayStringsFromObject(oneEntry, pointers, true, true)
           );
         }
 
         for (const oneEntry of notTargetedEntries) {
           extractedStrings = extractedStrings.concat(
-            this.extractArrayStringsFromObject(oneEntry, pointers, false, true),
+            this.extractArrayStringsFromObject(oneEntry, pointers, false, true)
           );
         }
       } else if (extractAllStrings || !keyHasBeenFound) {
@@ -107,8 +107,8 @@ export class JSONLoader extends TextLoader {
             this.extractArrayStringsFromObject(
               oneEntry,
               pointers,
-              extractAllStrings,
-            ),
+              extractAllStrings
+            )
           );
         }
       }
@@ -149,10 +149,7 @@ export class JSONLoader extends TextLoader {
  * specifies the JSON pointer to extract.
  */
 export class JSONLinesLoader extends TextLoader {
-  constructor(
-    filePathOrBlob: string | Blob,
-    public pointer: string,
-  ) {
+  constructor(filePathOrBlob: string | Blob, public pointer: string) {
     super(filePathOrBlob);
   }
 

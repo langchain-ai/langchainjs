@@ -22,7 +22,7 @@ test("Test using partial with an extra variable", async () => {
 test("Test fromTemplate", async () => {
   const prompt = PromptTemplate.fromTemplate("{foo}{bar}");
   expect(
-    (await prompt.invoke({ foo: "foo", bar: "baz", unused: "eee" })).value,
+    (await prompt.invoke({ foo: "foo", bar: "baz", unused: "eee" })).value
   ).toBe("foobaz");
 });
 
@@ -53,7 +53,7 @@ test("Test fromTemplate with extra variable should work", async () => {
   const prompt = PromptTemplate.fromTemplate("{foo}");
   expect(await prompt.format({ foo: "test", unused: "eee" })).toBe("test");
   expect((await prompt.invoke({ foo: "test", unused: "eee" })).value).toBe(
-    "test",
+    "test"
   );
 });
 

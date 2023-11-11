@@ -24,7 +24,7 @@ export class GoogleCalendarViewTool extends GoogleCalendarBase {
         model,
         calendarId: this.calendarId,
       },
-      runManager,
+      runManager
     );
   }
 }

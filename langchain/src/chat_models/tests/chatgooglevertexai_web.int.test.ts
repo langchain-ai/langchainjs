@@ -50,7 +50,7 @@ describe("ChatGoogleVertexAIWeb", () => {
 
     // PaLM doesn't support translation yet
     const systemPrompt = PromptTemplate.fromTemplate(
-      "You are a helpful assistant who must always respond like a {job}.",
+      "You are a helpful assistant who must always respond like a {job}."
     );
 
     const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -89,7 +89,7 @@ describe("ChatGoogleVertexAIWeb", () => {
   test("with a memory in a chain", async () => {
     const chatPrompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
-        "You are a helpful assistant who must always respond like a pirate",
+        "You are a helpful assistant who must always respond like a pirate"
       ),
       new MessagesPlaceholder("history"),
       HumanMessagePromptTemplate.fromTemplate("{input}"),
@@ -119,7 +119,7 @@ describe("ChatGoogleVertexAIWeb", () => {
 
     const chatPrompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(
-        `Answer all questions using Python and just show the code without an explanation.`,
+        `Answer all questions using Python and just show the code without an explanation.`
       ),
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);

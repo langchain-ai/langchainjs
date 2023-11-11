@@ -109,7 +109,7 @@ test("Test maximal marginal relevance", async () => {
     queryEmbedding,
     embeddingList,
     25 / 71,
-    2,
+    2
   );
   expect(actual).toEqual(expected);
 
@@ -130,7 +130,7 @@ test("Test maximal marginal relevance query dim", async () => {
     queryEmbedding2D,
     embeddingList,
     1,
-    2,
+    2
   );
 
   expect(first).toEqual(second);
@@ -144,7 +144,7 @@ test("Test maximal marginal relevance has no duplicates", async () => {
     queryEmbedding,
     embeddingList,
     0.5,
-    200,
+    200
   );
   const expected = new Set(actual).size;
   expect(actual).toHaveLength(expected);

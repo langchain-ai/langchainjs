@@ -29,7 +29,7 @@ test("TigrisVectorStore with external ids", async () => {
         },
       },
     ],
-    ["id1"],
+    ["id1"]
   );
 
   expect(client.addDocumentsWithVectors).toHaveBeenCalledTimes(1);

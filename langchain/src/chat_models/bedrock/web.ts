@@ -24,7 +24,7 @@ import { SerializedFields } from "../../load/map_keys.js";
 function convertOneMessageToText(
   message: BaseMessage,
   humanPrompt: string,
-  aiPrompt: string,
+  aiPrompt: string
 ): string {
   if (message._getType() === "human") {
     return `${humanPrompt} ${message.content}`;
@@ -43,7 +43,7 @@ function convertOneMessageToText(
 export function convertMessagesToPromptAnthropic(
   messages: BaseMessage[],
   humanPrompt = "\n\nHuman:",
-  aiPrompt = "\n\nAssistant:",
+  aiPrompt = "\n\nAssistant:"
 ): string {
   const messagesCopy = [...messages];
 
@@ -69,7 +69,7 @@ export function convertMessagesToPromptAnthropic(
  */
 export function convertMessagesToPrompt(
   messages: BaseMessage[],
-  provider: string,
+  provider: string
 ): string {
   if (provider === "anthropic") {
     return convertMessagesToPromptAnthropic(messages);
@@ -145,14 +145,14 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
-        `Unknown model: '${this.model}', only these are supported: ${allowedModels}`,
+        `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
       );
     }
     const region =
       fields?.region ?? getEnvironmentVariable("AWS_DEFAULT_REGION");
     if (!region) {
       throw new Error(
-        "Please set the AWS_DEFAULT_REGION environment variable or pass it to the constructor as the region field.",
+        "Please set the AWS_DEFAULT_REGION environment variable or pass it to the constructor as the region field."
       );
     }
     this.region = region;
@@ -160,7 +160,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     const credentials = fields?.credentials;
     if (!credentials) {
       throw new Error(
-        "Please set the AWS credentials in the 'credentials' field.",
+        "Please set the AWS credentials in the 'credentials' field."
       );
     }
     this.credentials = credentials;
@@ -187,7 +187,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   async _call(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const service = "bedrock-runtime";
     const endpointHost =
@@ -206,7 +206,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       const messageContent = finalResult?.message.content;
       if (messageContent && typeof messageContent !== "string") {
         throw new Error(
-          "Non-string output for ChatBedrock is currently not supported.",
+          "Non-string output for ChatBedrock is currently not supported."
         );
       }
       return messageContent ?? "";
@@ -220,7 +220,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     const json = await response.json();
     if (!response.ok) {
       throw new Error(
-        `Error ${response.status}: ${json.message ?? JSON.stringify(json)}`,
+        `Error ${response.status}: ${json.message ?? JSON.stringify(json)}`
       );
     }
     const text = BedrockLLMInputOutputAdapter.prepareOutput(provider, json);
@@ -234,7 +234,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       bedrockMethod: "invoke" | "invoke-with-response-stream";
       endpointHost: string;
       provider: string;
-    },
+    }
   ) {
     const { bedrockMethod, endpointHost, provider } = fields;
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
@@ -244,11 +244,11 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       this.temperature,
       options.stop ?? this.stopSequences,
       this.modelKwargs,
-      fields.bedrockMethod,
+      fields.bedrockMethod
     );
 
     const url = new URL(
-      `https://${endpointHost}/model/${this.model}/${bedrockMethod}`,
+      `https://${endpointHost}/model/${this.model}/${bedrockMethod}`
     );
 
     const request = new HttpRequest({
@@ -283,7 +283,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
           headers: signedRequest.headers,
           body: signedRequest.body,
           method: signedRequest.method,
-        }),
+        })
     );
     return response;
   }
@@ -291,7 +291,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const provider = this.model.split(".")[0];
     const service = "bedrock-runtime";
@@ -314,7 +314,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       throw Error(
         `Failed to access underlying url '${endpointHost}': got ${
           response.status
-        } ${response.statusText}: ${await response.text()}`,
+        } ${response.statusText}: ${await response.text()}`
       );
     }
 
@@ -337,12 +337,12 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
         if (body.bytes !== undefined) {
           const chunkResult = JSON.parse(
             decoder.decode(
-              Uint8Array.from(atob(body.bytes), (m) => m.codePointAt(0) ?? 0),
-            ),
+              Uint8Array.from(atob(body.bytes), (m) => m.codePointAt(0) ?? 0)
+            )
           );
           const text = BedrockLLMInputOutputAdapter.prepareOutput(
             provider,
-            chunkResult,
+            chunkResult
           );
           yield new ChatGenerationChunk({
             text,

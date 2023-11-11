@@ -58,7 +58,7 @@ export class ConversationalRetrievalQAChain
 
   get outputKeys() {
     return this.combineDocumentsChain.outputKeys.concat(
-      this.returnSourceDocuments ? ["sourceDocuments"] : [],
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
     );
   }
 
@@ -87,7 +87,7 @@ export class ConversationalRetrievalQAChain
    * @returns A formatted string representing the chat history.
    */
   static getChatHistoryString(
-    chatHistory: string | BaseMessage[] | string[][],
+    chatHistory: string | BaseMessage[] | string[][]
   ) {
     let historyMessages: BaseMessage[];
     if (Array.isArray(chatHistory)) {
@@ -97,7 +97,7 @@ export class ConversationalRetrievalQAChain
         typeof chatHistory[0][0] === "string"
       ) {
         console.warn(
-          "Passing chat history as an array of strings is deprecated.\nPlease see https://js.langchain.com/docs/modules/chains/popular/chat_vector_db#externally-managed-memory for more information.",
+          "Passing chat history as an array of strings is deprecated.\nPlease see https://js.langchain.com/docs/modules/chains/popular/chat_vector_db#externally-managed-memory for more information."
         );
         historyMessages = chatHistory.flat().map((stringMessage, i) => {
           if (i % 2 === 0) {
@@ -127,7 +127,7 @@ export class ConversationalRetrievalQAChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
@@ -138,7 +138,7 @@ export class ConversationalRetrievalQAChain
     const question: string = values[this.inputKey];
     const chatHistory: string =
       ConversationalRetrievalQAChain.getChatHistoryString(
-        values[this.chatHistoryKey],
+        values[this.chatHistoryKey]
       );
     let newQuestion = question;
     if (chatHistory.length > 0) {
@@ -147,20 +147,20 @@ export class ConversationalRetrievalQAChain
           question,
           chat_history: chatHistory,
         },
-        runManager?.getChild("question_generator"),
+        runManager?.getChild("question_generator")
       );
       const keys = Object.keys(result);
       if (keys.length === 1) {
         newQuestion = result[keys[0]];
       } else {
         throw new Error(
-          "Return from llm chain has multiple values, only single values supported.",
+          "Return from llm chain has multiple values, only single values supported."
         );
       }
     }
     const docs = await this.retriever.getRelevantDocuments(
       newQuestion,
-      runManager?.getChild("retriever"),
+      runManager?.getChild("retriever")
     );
     const inputs = {
       question: newQuestion,
@@ -169,7 +169,7 @@ export class ConversationalRetrievalQAChain
     };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild("combine_documents"),
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {
@@ -186,7 +186,7 @@ export class ConversationalRetrievalQAChain
 
   static async deserialize(
     _data: SerializedChatVectorDBQAChain,
-    _values: LoadValues,
+    _values: LoadValues
   ): Promise<ConversationalRetrievalQAChain> {
     throw new Error("Not implemented.");
   }
@@ -223,7 +223,7 @@ export class ConversationalRetrievalQAChain
     } & Omit<
       ConversationalRetrievalQAChainInput,
       "retriever" | "combineDocumentsChain" | "questionGeneratorChain"
-    > = {},
+    > = {}
   ): ConversationalRetrievalQAChain {
     const {
       questionGeneratorTemplate,
@@ -244,7 +244,7 @@ export class ConversationalRetrievalQAChain
     const questionGeneratorChainPrompt = PromptTemplate.fromTemplate(
       questionGeneratorChainOptions?.template ??
         questionGeneratorTemplate ??
-        question_generator_template,
+        question_generator_template
     );
     const questionGeneratorChain = new LLMChain({
       prompt: questionGeneratorChainPrompt,

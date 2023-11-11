@@ -61,14 +61,14 @@ export class FaissStore extends SaveableVectorStore {
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options,
+      options
     );
   }
 
   public get index(): IndexFlatL2 {
     if (!this._index) {
       throw new Error(
-        "Vector store not initialised yet. Try calling `fromTexts`, `fromDocuments` or `fromIndex` first.",
+        "Vector store not initialised yet. Try calling `fromTexts`, `fromDocuments` or `fromIndex` first."
       );
     }
     return this._index;
@@ -88,7 +88,7 @@ export class FaissStore extends SaveableVectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] },
+    options?: { ids?: string[] }
   ) {
     if (vectors.length === 0) {
       return [];
@@ -104,7 +104,7 @@ export class FaissStore extends SaveableVectorStore {
     const d = this.index.getDimension();
     if (dv !== d) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${d})`,
+        `Vectors must have the same length as the number of dimensions (${d})`
       );
     }
 
@@ -131,13 +131,13 @@ export class FaissStore extends SaveableVectorStore {
     const d = this.index.getDimension();
     if (query.length !== d) {
       throw new Error(
-        `Query vector must have the same length as the number of dimensions (${d})`,
+        `Query vector must have the same length as the number of dimensions (${d})`
       );
     }
     if (k > this.index.ntotal()) {
       const total = this.index.ntotal();
       console.warn(
-        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`,
+        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`
       );
       // eslint-disable-next-line no-param-reassign
       k = total;
@@ -147,7 +147,7 @@ export class FaissStore extends SaveableVectorStore {
       const uuid = this._mapping[id];
       return [this.docstore.search(uuid), result.distances[index]] as [
         Document,
-        number,
+        number
       ];
     });
   }
@@ -168,7 +168,7 @@ export class FaissStore extends SaveableVectorStore {
         JSON.stringify([
           Array.from(this.docstore._docs.entries()),
           this._mapping,
-        ]),
+        ])
       ),
     ]);
   }
@@ -188,20 +188,20 @@ export class FaissStore extends SaveableVectorStore {
       Object.entries(this._mapping).map(([key, value]) => [
         parseInt(key, 10),
         value,
-      ]),
+      ])
     );
     const reversedMappings = new Map(
-      Array.from(mappings, (entry) => [entry[1], entry[0]]),
+      Array.from(mappings, (entry) => [entry[1], entry[0]])
     );
 
     const missingIds = new Set(
-      documentIds.filter((id) => !reversedMappings.has(id)),
+      documentIds.filter((id) => !reversedMappings.has(id))
     );
     if (missingIds.size > 0) {
       throw new Error(
         `Some specified documentIds do not exist in the current store. DocumentIds not found: ${Array.from(
-          missingIds,
-        ).join(", ")}`,
+          missingIds
+        ).join(", ")}`
       );
     }
 
@@ -310,7 +310,7 @@ export class FaissStore extends SaveableVectorStore {
     const readStore = async (directory: string) => {
       const pkl = await fs.readFile(
         path.join(directory, "index.pkl"),
-        "binary",
+        "binary"
       );
       const buffer = Buffer.from(pkl, "binary");
 
@@ -318,7 +318,7 @@ export class FaissStore extends SaveableVectorStore {
         .register(
           "langchain.docstore.in_memory",
           "InMemoryDocstore",
-          PyInMemoryDocstore,
+          PyInMemoryDocstore
         )
         .register("langchain.schema", "Document", PyDocument)
         .register("langchain.docstore.document", "Document", PyDocument)
@@ -331,7 +331,7 @@ export class FaissStore extends SaveableVectorStore {
       });
       const [rawStore, mapping] =
         pickleparser.parse<[PyInMemoryDocstore, Record<number, string>]>(
-          buffer,
+          buffer
         );
       const store = rawStore.toInMemoryDocstore();
       return { store, mapping };
@@ -366,7 +366,7 @@ export class FaissStore extends SaveableVectorStore {
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
-    },
+    }
   ): Promise<FaissStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -393,7 +393,7 @@ export class FaissStore extends SaveableVectorStore {
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
-    },
+    }
   ): Promise<FaissStore> {
     const args: FaissLibArgs = {
       docstore: dbConfig?.docstore,
@@ -416,7 +416,7 @@ export class FaissStore extends SaveableVectorStore {
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
-    },
+    }
   ): Promise<FaissStore> {
     const args: FaissLibArgs = {
       docstore: dbConfig?.docstore,
@@ -436,7 +436,7 @@ export class FaissStore extends SaveableVectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       throw new Error(
-        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\`.\n\nError: ${err?.message}`,
+        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\`.\n\nError: ${err?.message}`
       );
     }
   }
@@ -454,7 +454,7 @@ export class FaissStore extends SaveableVectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       throw new Error(
-        `Could not import pickleparser. Please install pickleparser as a dependency with, e.g. \`npm install -S pickleparser\`.\n\nError: ${err?.message}`,
+        `Could not import pickleparser. Please install pickleparser as a dependency with, e.g. \`npm install -S pickleparser\`.\n\nError: ${err?.message}`
       );
     }
   }

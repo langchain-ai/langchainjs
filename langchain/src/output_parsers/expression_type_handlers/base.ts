@@ -47,7 +47,7 @@ export class ASTParser {
       return ASTParser.astParseInstance;
     } catch (e) {
       throw new Error(
-        `Failed to import peggy. Please install peggy (i.e. "npm install peggy" or "yarn add peggy").`,
+        `Failed to import peggy. Please install peggy (i.e. "npm install peggy" or "yarn add peggy").`
       );
     }
   }
@@ -67,7 +67,7 @@ export class ASTParser {
    * @returns A boolean indicating whether the node is an ExpressionStatement node.
    */
   static isExpressionStatement(
-    node: ExpressionNode,
+    node: ExpressionNode
   ): node is ExpressionStatement {
     return node.type === "ExpressionStatement";
   }
@@ -141,7 +141,7 @@ export class ASTParser {
    * @returns A boolean indicating whether the node is a PropertyAssignment node.
    */
   static isPropertyAssignment(
-    node: ExpressionNode,
+    node: ExpressionNode
   ): node is PropertyAssignment {
     return node.type === "PropertyAssignment";
   }

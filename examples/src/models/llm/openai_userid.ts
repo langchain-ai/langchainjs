@@ -10,6 +10,6 @@ const res = await model.call(
         "User-Id": "123",
       },
     },
-  },
+  }
 );
 console.log(res);

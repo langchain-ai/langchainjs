@@ -32,7 +32,7 @@ export type TraverseType =
 export class QueryTransformer {
   constructor(
     public allowedComparators: Comparator[] = [],
-    public allowedOperators: Operator[] = [],
+    public allowedOperators: Operator[] = []
   ) {}
 
   /**
@@ -79,14 +79,14 @@ export class QueryTransformer {
         case "call_expression": {
           if (typeof node.funcCall !== "string") {
             throw new Error(
-              "Property access expression and element access expression not supported",
+              "Property access expression and element access expression not supported"
             );
           }
           const funcName = this.matchFunctionName(node.funcCall);
           if (funcName in Operators) {
             return new Operation(
               funcName as Operator,
-              node.args?.map((arg) => traverse(arg)) as FilterDirective[],
+              node.args?.map((arg) => traverse(arg)) as FilterDirective[]
             );
           }
           if (funcName in Comparators) {
@@ -94,7 +94,7 @@ export class QueryTransformer {
               return new Comparison(
                 funcName as Comparator,
                 traverse(node.args[0]) as string,
-                traverse(node.args[1]) as string | number,
+                traverse(node.args[1]) as string | number
               );
             }
             throw new Error("Comparator must have exactly 2 arguments");
@@ -111,13 +111,10 @@ export class QueryTransformer {
           return node.values.map((value) => traverse(value));
         }
         case "object_literal": {
-          return node.values.reduce(
-            (acc, value) => {
-              acc[value.identifier] = traverse(value.value);
-              return acc;
-            },
-            {} as { [key: string]: TraverseType },
-          );
+          return node.values.reduce((acc, value) => {
+            acc[value.identifier] = traverse(value.value);
+            return acc;
+          }, {} as { [key: string]: TraverseType });
         }
         case "boolean_literal": {
           return node.value;
@@ -139,7 +136,7 @@ export class QueryTransformer {
   async parse(expression: string): Promise<Operation | Comparison> {
     const expressionParser = new ExpressionParser();
     const parsed = (await expressionParser.parse(
-      expression,
+      expression
     )) as CallExpressionType;
     if (!parsed) {
       throw new Error("Could not parse expression");

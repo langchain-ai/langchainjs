@@ -31,7 +31,7 @@ export class ArrayLiteralExpressionHandler extends NodeHandler {
   async handle(node: ArrayExpression): Promise<ArrayLiteralType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler",
+        "ArrayLiteralExpressionHandler must have a parent handler"
       );
     }
     return {
@@ -39,8 +39,8 @@ export class ArrayLiteralExpressionHandler extends NodeHandler {
       values: await Promise.all(
         node.elements.map((innerNode) =>
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          this.parentHandler!.handle(innerNode as ExpressionNode),
-        ),
+          this.parentHandler!.handle(innerNode as ExpressionNode)
+        )
       ),
     };
   }

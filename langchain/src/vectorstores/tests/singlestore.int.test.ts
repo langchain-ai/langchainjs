@@ -31,7 +31,7 @@ test.skip("SingleStoreVectorStore", async () => {
       contentColumnName: "cont",
       metadataColumnName: "met",
       vectorColumnName: "vec",
-    },
+    }
   );
   expect(vectorStore).toBeDefined();
 
@@ -86,7 +86,7 @@ test.skip("SingleStoreVectorStore euclidean_distance", async () => {
       connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
       tableName: "euclidean_distance_test",
       distanceMetric: "EUCLIDEAN_DISTANCE",
-    },
+    }
   );
   expect(vectorStore).toBeDefined();
 
@@ -120,7 +120,7 @@ test.skip("SingleStoreVectorStore filtering", async () => {
     {
       connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
       tableName: "filtering_test",
-    },
+    }
   );
   expect(vectorStore).toBeDefined();
 

@@ -18,7 +18,7 @@ export type RouterOutputParserInput = {
  * RouterOutputParserInput object as parameters.
  */
 export class RouterOutputParser<
-  Y extends z.ZodTypeAny,
+  Y extends z.ZodTypeAny
 > extends JsonMarkdownStructuredOutputParser<Y> {
   defaultDestination = "DEFAULT";
 
@@ -51,7 +51,7 @@ export class RouterOutputParser<
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
-        text,
+        text
       );
     }
   }

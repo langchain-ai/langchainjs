@@ -84,7 +84,7 @@ describe("VectaraStore", () => {
       if (!process.env[envVar]) {
         throw new Error(`${envVar} not set`);
       }
-    },
+    }
   );
 
   describe("fromTexts", () => {
@@ -96,7 +96,7 @@ describe("VectaraStore", () => {
 
     test.skip("with fakeEmbeddings doesn't throw error", () => {
       expect(() =>
-        VectaraStore.fromTexts([], [], new FakeEmbeddings(), args),
+        VectaraStore.fromTexts([], [], new FakeEmbeddings(), args)
       ).not.toThrow();
     });
   });
@@ -110,7 +110,7 @@ describe("VectaraStore", () => {
 
     test.skip("with fakeEmbeddings doesn't throw error", async () => {
       await expect(
-        VectaraStore.fromDocuments(getDocs(), new FakeEmbeddings(), args),
+        VectaraStore.fromDocuments(getDocs(), new FakeEmbeddings(), args)
       ).resolves.toBeDefined();
     });
   });
@@ -134,15 +134,15 @@ describe("VectaraStore", () => {
       const resultsWithScore = await store.similaritySearchWithScore(
         "What did Sam do?",
         10, // Number of results needed
-        { lambda: 0.025 },
+        { lambda: 0.025 }
       );
       expect(resultsWithScore.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].pageContent.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].metadata.length).toBeGreaterThan(0);
       expect(
         resultsWithScore[0][0].metadata.find(
-          (item: { name: string }) => item.name === "title",
-        ).value,
+          (item: { name: string }) => item.name === "title"
+        ).value
       ).toBe("Lord of the Rings");
       expect(resultsWithScore[0][1]).toBeGreaterThan(0);
     });
@@ -157,7 +157,7 @@ describe("VectaraStore", () => {
             sentencesAfter: 1,
             sentencesBefore: 1,
           },
-        },
+        }
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
@@ -168,7 +168,7 @@ describe("VectaraStore", () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
-        { filter: "part.lang = 'fra'", lambda: 0.025 }, // Filter on the language of the document
+        { filter: "part.lang = 'fra'", lambda: 0.025 } // Filter on the language of the document
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
@@ -176,7 +176,7 @@ describe("VectaraStore", () => {
       const hasEnglish = results.some(
         (result) =>
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          result.metadata.lang === "eng",
+          result.metadata.lang === "eng"
       );
       expect(hasEnglish).toBe(false);
     });
@@ -203,7 +203,7 @@ describe("VectaraStore", () => {
       }
 
       const bitcoinBuffer = fs.readFileSync(
-        "../examples/src/document_loaders/example_data/bitcoin.pdf",
+        "../examples/src/document_loaders/example_data/bitcoin.pdf"
       );
       vectaraFiles.push({
         blob: new Blob([bitcoinBuffer], { type: "application/pdf" }),
@@ -220,7 +220,7 @@ describe("VectaraStore", () => {
       const searchResults = await store.similaritySearch("What is bitcoin");
       expect(searchResults.length).toBeGreaterThan(0);
       expect(searchResults[0].pageContent).toContain(
-        "A Peer-to-Peer Electronic Cash System",
+        "A Peer-to-Peer Electronic Cash System"
       );
     });
   });

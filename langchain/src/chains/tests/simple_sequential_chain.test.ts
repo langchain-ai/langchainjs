@@ -84,7 +84,7 @@ test("Test SimpleSequentialChain input chains' single input validation", async (
     /* eslint-disable no-new */
     new SimpleSequentialChain({ chains: [chain1, chain2] });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"Chains used in SimpleSequentialChain should all have one input, got 2 for llm."`,
+    `"Chains used in SimpleSequentialChain should all have one input, got 2 for llm."`
   );
 });
 
@@ -113,6 +113,6 @@ test("Test SimpleSequentialChain input chains' single ouput validation", async (
     /* eslint-disable no-new */
     new SimpleSequentialChain({ chains: [chain1, multipleOutputChain] });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"Chains used in SimpleSequentialChain should all have one output, got 2 for analyze_document_chain."`,
+    `"Chains used in SimpleSequentialChain should all have one output, got 2 for analyze_document_chain."`
   );
 });

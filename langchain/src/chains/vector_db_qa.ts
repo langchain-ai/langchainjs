@@ -44,7 +44,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   get outputKeys() {
     return this.combineDocumentsChain.outputKeys.concat(
-      this.returnSourceDocuments ? ["sourceDocuments"] : [],
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
     );
   }
 
@@ -67,7 +67,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
@@ -77,12 +77,12 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
       question,
       this.k,
       values.filter,
-      runManager?.getChild("vectorstore"),
+      runManager?.getChild("vectorstore")
     );
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild("combine_documents"),
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {
@@ -99,23 +99,23 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   static async deserialize(
     data: SerializedVectorDBQAChain,
-    values: LoadValues,
+    values: LoadValues
   ) {
     if (!("vectorstore" in values)) {
       throw new Error(
-        `Need to pass in a vectorstore to deserialize VectorDBQAChain`,
+        `Need to pass in a vectorstore to deserialize VectorDBQAChain`
       );
     }
     const { vectorstore } = values;
     if (!data.combine_documents_chain) {
       throw new Error(
-        `VectorDBQAChain must have combine_documents_chain in serialized data`,
+        `VectorDBQAChain must have combine_documents_chain in serialized data`
       );
     }
 
     return new VectorDBQAChain({
       combineDocumentsChain: await BaseChain.deserialize(
-        data.combine_documents_chain,
+        data.combine_documents_chain
       ),
       k: data.k,
       vectorstore,
@@ -144,7 +144,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     vectorstore: VectorStore,
     options?: Partial<
       Omit<VectorDBQAChainInput, "combineDocumentsChain" | "vectorstore">
-    >,
+    >
   ): VectorDBQAChain {
     const qaChain = loadQAStuffChain(llm);
     return new this({

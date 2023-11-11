@@ -14,7 +14,7 @@ test.skip("UpstashRedisCache does not parse non string cached values", async () 
     !process.env.OPENAI_API_KEY
   ) {
     throw new Error(
-      "Missing Upstash Redis REST URL // REST TOKEN or OpenAI API key",
+      "Missing Upstash Redis REST URL // REST TOKEN or OpenAI API key"
     );
   }
   const upstashRedisCache = new UpstashRedisCache({

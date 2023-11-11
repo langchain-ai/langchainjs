@@ -45,7 +45,7 @@ export class StuffDocumentsChain
 
   get inputKeys() {
     return [this.inputKey, ...this.llmChain.inputKeys].filter(
-      (key) => key !== this.documentVariableName,
+      (key) => key !== this.documentVariableName
     );
   }
 
@@ -78,11 +78,11 @@ export class StuffDocumentsChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const result = await this.llmChain.call(
       this._prepInputs(values),
-      runManager?.getChild("combine_documents"),
+      runManager?.getChild("combine_documents")
     );
     return result;
   }
@@ -179,7 +179,7 @@ export class MapReduceDocumentsChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
@@ -204,7 +204,7 @@ export class MapReduceDocumentsChain
             this.combineDocumentChain._prepInputs({
               [this.combineDocumentChain.inputKey]: currentDocs,
               ...rest,
-            }),
+            })
           );
         const length =
           await this.combineDocumentChain.llmChain.llm.getNumTokens(formatted);
@@ -223,16 +223,16 @@ export class MapReduceDocumentsChain
         // so that we can track the progress of each input.
         runManager
           ? Array.from({ length: inputs.length }, (_, i) =>
-              runManager.getChild(`map_${i + 1}`),
+              runManager.getChild(`map_${i + 1}`)
             )
-          : undefined,
+          : undefined
       );
       const { outputKey } = this.llmChain;
 
       // If the flag is set, then concat that to the intermediate steps
       if (this.returnIntermediateSteps) {
         intermediateSteps = intermediateSteps.concat(
-          results.map((r) => r[outputKey]),
+          results.map((r) => r[outputKey])
         );
       }
 
@@ -250,7 +250,7 @@ export class MapReduceDocumentsChain
     };
     const result = await this.combineDocumentChain.call(
       newInputs,
-      runManager?.getChild("combine_documents"),
+      runManager?.getChild("combine_documents")
     );
 
     // Return the intermediate steps results if the flag is set
@@ -276,7 +276,7 @@ export class MapReduceDocumentsChain
     return new MapReduceDocumentsChain({
       llmChain: await LLMChain.deserialize(data.llm_chain),
       combineDocumentChain: await StuffDocumentsChain.deserialize(
-        data.combine_document_chain,
+        data.combine_document_chain
       ),
     });
   }
@@ -344,7 +344,7 @@ export class RefineDocumentsChain
       ]),
     ].filter(
       (key) =>
-        key !== this.documentVariableName && key !== this.initialResponseName,
+        key !== this.documentVariableName && key !== this.initialResponseName
     );
   }
 
@@ -407,7 +407,7 @@ export class RefineDocumentsChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
@@ -418,11 +418,11 @@ export class RefineDocumentsChain
 
     const initialInputs = await this._constructInitialInputs(
       currentDocs[0],
-      rest,
+      rest
     );
     let res = await this.llmChain.predict(
       { ...initialInputs },
-      runManager?.getChild("answer"),
+      runManager?.getChild("answer")
     );
 
     const refineSteps = [res];
@@ -430,12 +430,12 @@ export class RefineDocumentsChain
     for (let i = 1; i < currentDocs.length; i += 1) {
       const refineInputs = await this._constructRefineInputs(
         currentDocs[i],
-        res,
+        res
       );
       const inputs = { ...refineInputs, ...rest };
       res = await this.refineLLMChain.predict(
         { ...inputs },
-        runManager?.getChild("refine"),
+        runManager?.getChild("refine")
       );
       refineSteps.push(res);
     }

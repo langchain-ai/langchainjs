@@ -97,7 +97,7 @@ export class MomentoVectorIndex extends VectorStore {
   private async ensureIndexExists(numDimensions: number): Promise<boolean> {
     const response = await this.client.createIndex(
       this.indexName,
-      numDimensions,
+      numDimensions
     );
     if (response instanceof CreateVectorIndex.Success) {
       return true;
@@ -123,7 +123,7 @@ export class MomentoVectorIndex extends VectorStore {
   private prepareItemBatch(
     vectors: number[][],
     documents: Document<Record<string, any>>[],
-    ids: string[],
+    ids: string[]
   ): VectorIndexItem[] {
     return vectors.map((vector, idx) => ({
       id: ids[idx],
@@ -148,7 +148,7 @@ export class MomentoVectorIndex extends VectorStore {
   public async addVectors(
     vectors: number[][],
     documents: Document<Record<string, any>>[],
-    documentProps?: DocumentProps,
+    documentProps?: DocumentProps
   ): Promise<void | string[]> {
     if (vectors.length === 0) {
       return;
@@ -156,7 +156,7 @@ export class MomentoVectorIndex extends VectorStore {
 
     if (documents.length !== vectors.length) {
       throw new Error(
-        `Number of vectors (${vectors.length}) does not equal number of documents (${documents.length})`,
+        `Number of vectors (${vectors.length}) does not equal number of documents (${documents.length})`
       );
     }
 
@@ -171,7 +171,7 @@ export class MomentoVectorIndex extends VectorStore {
       throw new Error(
         `Number of ids (${
           documentProps?.ids?.length || "null"
-        }) does not equal number of vectors (${vectors.length})`,
+        }) does not equal number of vectors (${vectors.length})`
       );
     }
 
@@ -197,7 +197,7 @@ export class MomentoVectorIndex extends VectorStore {
       // Insert the items to the index
       const response = await this.client.upsertItemBatch(
         this.indexName,
-        this.prepareItemBatch(batchVectors, batchDocuments, batchDocumentIds),
+        this.prepareItemBatch(batchVectors, batchDocuments, batchDocumentIds)
       );
       if (response instanceof VectorUpsertItemBatch.Success) {
         // eslint-disable-next-line no-continue
@@ -218,13 +218,13 @@ export class MomentoVectorIndex extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    documentProps?: DocumentProps,
+    documentProps?: DocumentProps
   ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      documentProps,
+      documentProps
     );
   }
 
@@ -235,7 +235,7 @@ export class MomentoVectorIndex extends VectorStore {
   public async delete(params: DeleteProps): Promise<void> {
     const response = await this.client.deleteItemBatch(
       this.indexName,
-      params.ids,
+      params.ids
     );
     if (response instanceof VectorDeleteItemBatch.Success) {
       // pass
@@ -255,7 +255,7 @@ export class MomentoVectorIndex extends VectorStore {
    */
   public async similaritySearchVectorWithScore(
     query: number[],
-    k: number,
+    k: number
   ): Promise<[Document<Record<string, any>>, number][]> {
     const response = await this.client.search(this.indexName, query, {
       topK: k,
@@ -271,8 +271,8 @@ export class MomentoVectorIndex extends VectorStore {
           pageContent: hit.metadata[this.textField]?.toString() ?? "",
           metadata: Object.fromEntries(
             Object.entries(hit.metadata).filter(
-              ([key]) => key !== this.textField,
-            ),
+              ([key]) => key !== this.textField
+            )
           ),
         }),
         hit.distance,
@@ -300,11 +300,11 @@ export class MomentoVectorIndex extends VectorStore {
     metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig: MomentoVectorIndexLibArgs,
-    documentProps?: DocumentProps,
+    documentProps?: DocumentProps
   ): Promise<MomentoVectorIndex> {
     if (Array.isArray(metadatas) && texts.length !== metadatas.length) {
       throw new Error(
-        `Number of texts (${texts.length}) does not equal number of metadatas (${metadatas.length})`,
+        `Number of texts (${texts.length}) does not equal number of metadatas (${metadatas.length})`
       );
     }
 
@@ -335,7 +335,7 @@ export class MomentoVectorIndex extends VectorStore {
     docs: Document[],
     embeddings: Embeddings,
     dbConfig: MomentoVectorIndexLibArgs,
-    documentProps?: DocumentProps,
+    documentProps?: DocumentProps
   ): Promise<MomentoVectorIndex> {
     const vectorStore = new MomentoVectorIndex(embeddings, dbConfig);
     await vectorStore.addDocuments(docs, documentProps);

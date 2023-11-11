@@ -54,7 +54,7 @@ export class MongoVectorStore extends VectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents,
+      documents
     );
   }
 
@@ -89,7 +89,7 @@ export class MongoVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: MongoVectorStoreQueryExtension,
+    filter?: MongoVectorStoreQueryExtension
   ): Promise<[Document, number][]> {
     // Search has to be the first pipeline step (https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/#behavior)
     // We hopefully this changes in the future
@@ -148,7 +148,7 @@ export class MongoVectorStore extends VectorStore {
       if (count !== 0) {
         console.warn(
           "MongoDB search query returned no results where results were expected:\n" +
-            "This may be because the index is improperly configured or because the indexing over recently added documents has not yet completed.",
+            "This may be because the index is improperly configured or because the indexing over recently added documents has not yet completed."
         );
       }
     }
@@ -171,7 +171,7 @@ export class MongoVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: MongoLibArgs,
+    dbConfig: MongoLibArgs
   ): Promise<MongoVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -197,7 +197,7 @@ export class MongoVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: MongoLibArgs,
+    dbConfig: MongoLibArgs
   ): Promise<MongoVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);

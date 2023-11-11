@@ -38,7 +38,7 @@ function portkeyResponseToChatMessage(message: Message): BaseMessage {
 
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delta: Record<string, any>,
+  delta: Record<string, any>
 ) {
   const { role } = delta;
   const content = delta.content ?? "";
@@ -99,12 +99,12 @@ export class PortkeyChat extends BaseChatModel {
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _?: CallbackManagerForLLMRun,
+    _?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const messagesList = messages.map((message) => {
       if (typeof message.content !== "string") {
         throw new Error(
-          "PortkeyChat does not support non-string message content.",
+          "PortkeyChat does not support non-string message content."
         );
       }
       return {
@@ -138,12 +138,12 @@ export class PortkeyChat extends BaseChatModel {
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesList = messages.map((message) => {
       if (typeof message.content !== "string") {
         throw new Error(
-          "PortkeyChat does not support non-string message content.",
+          "PortkeyChat does not support non-string message content."
         );
       }
       return {

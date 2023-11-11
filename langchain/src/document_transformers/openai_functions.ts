@@ -26,12 +26,12 @@ export class MetadataTagger extends MappingDocumentTransformer {
     this.taggingChain = fields.taggingChain;
     if (this.taggingChain.inputKeys.length !== 1) {
       throw new Error(
-        "Invalid input chain. The input chain must have exactly one input.",
+        "Invalid input chain. The input chain must have exactly one input."
       );
     }
     if (this.taggingChain.outputKeys.length !== 1) {
       throw new Error(
-        "Invalid input chain. The input chain must have exactly one output.",
+        "Invalid input chain. The input chain must have exactly one output."
       );
     }
   }
@@ -51,7 +51,7 @@ export class MetadataTagger extends MappingDocumentTransformer {
 
 export function createMetadataTagger(
   schema: JsonSchema7ObjectType,
-  options: TaggingChainOptions & { llm?: ChatOpenAI },
+  options: TaggingChainOptions & { llm?: ChatOpenAI }
 ) {
   const { llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }), ...rest } =
     options;
@@ -61,10 +61,10 @@ export function createMetadataTagger(
 
 export function createMetadataTaggerFromZod(
   schema: z.AnyZodObject,
-  options: TaggingChainOptions & { llm?: ChatOpenAI },
+  options: TaggingChainOptions & { llm?: ChatOpenAI }
 ) {
   return createMetadataTagger(
     zodToJsonSchema(schema) as JsonSchema7ObjectType,
-    options,
+    options
   );
 }

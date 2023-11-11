@@ -5,7 +5,7 @@ const retriever = new TavilySearchAPIRetriever({
 });
 
 const retrievedDocs = await retriever.getRelevantDocuments(
-  "What did the speaker say about Justice Breyer in the 2022 State of the Union?",
+  "What did the speaker say about Justice Breyer in the 2022 State of the Union?"
 );
 console.log({ retrievedDocs });
 

@@ -45,7 +45,7 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
       this.client = new UpstashRedis(fields.config);
     } else {
       throw new Error(
-        `Upstash Redis store requires either a config object or a pre-configured client.`,
+        `Upstash Redis store requires either a config object or a pre-configured client.`
       );
     }
     this.sessionTTL = fields.sessionTTL;
@@ -80,7 +80,7 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
 
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.client.mget<Uint8Array[]>(
-      ...prefixedKeys,
+      ...prefixedKeys
     );
     return retrievedValues.map((value) => {
       if (!value) {

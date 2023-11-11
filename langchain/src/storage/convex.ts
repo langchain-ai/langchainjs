@@ -39,7 +39,7 @@ export type ConvexKVStoreConfig<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >,
+  >
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   /**
@@ -99,7 +99,7 @@ export class ConvexKVStore<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  >,
+  >
 > extends BaseStore<string, T> {
   lc_namespace = ["langchain", "storage", "convex"];
 
@@ -129,7 +129,7 @@ export class ConvexKVStore<
       UpsertMutation,
       LookupQuery,
       DeleteManyMutation
-    >,
+    >
   ) {
     super(config);
     this.ctx = config.ctx;
@@ -165,7 +165,7 @@ export class ConvexKVStore<
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any)) as any;
         return found.length > 0 ? found[0][this.valueField] : undefined;
-      }),
+      })
     )) as (T | undefined)[];
   }
 
@@ -187,8 +187,8 @@ export class ConvexKVStore<
             key,
             document: { [this.keyField]: key, [this.valueField]: value },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any),
-        ),
+          } as any)
+        )
       );
     }
   }
@@ -207,8 +207,8 @@ export class ConvexKVStore<
           keyField: this.keyField,
           key,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any),
-      ),
+        } as any)
+      )
     );
   }
 

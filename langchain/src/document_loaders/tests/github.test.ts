@@ -37,7 +37,7 @@ describe("GithubRepoLoader recursion", () => {
         recursive: true,
         unknown: "warn",
         ignorePaths: ["*.md"],
-      },
+      }
     );
 
     const documents = await loader.load();
@@ -57,7 +57,7 @@ describe("GithubRepoLoader recursion", () => {
           processSubmodules: true,
           unknown: "warn",
           ignorePaths: ["*.md"],
-        }),
+        })
     ).toThrow();
   });
 });

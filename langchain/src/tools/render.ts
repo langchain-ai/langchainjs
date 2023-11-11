@@ -33,8 +33,8 @@ export function renderTextDescriptionAndArgs(tools: StructuredTool[]): string {
     .map(
       (tool) =>
         `${tool.name}: ${tool.description}, args: ${JSON.stringify(
-          (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties,
-        )}`,
+          (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
+        )}`
     )
     .join("\n");
 }

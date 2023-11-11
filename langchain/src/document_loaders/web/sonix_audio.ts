@@ -21,7 +21,7 @@ export class SonixAudioTranscriptionLoader extends BaseDocumentLoader {
   }) {
     super();
     this.sonixSpeechRecognitionService = new SonixSpeechRecognitionService(
-      sonixAuthKey,
+      sonixAuthKey
     );
     this.speechToTextRequest = speechToTextRequest;
   }
@@ -35,7 +35,7 @@ export class SonixAudioTranscriptionLoader extends BaseDocumentLoader {
   async load(): Promise<Document[]> {
     const { text, status, error } =
       await this.sonixSpeechRecognitionService.speechToText(
-        this.speechToTextRequest,
+        this.speechToTextRequest
       );
 
     if (status === "failed") {

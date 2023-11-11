@@ -140,7 +140,7 @@ export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
 
 function mergeContent(
   firstContent: MessageContent,
-  secondContent: MessageContent,
+  secondContent: MessageContent
 ): MessageContent {
   // If first content is a string
   if (typeof firstContent === "string") {
@@ -195,7 +195,7 @@ export abstract class BaseMessage
   constructor(
     fields: string | BaseMessageFields,
     /** @deprecated */
-    kwargs?: Record<string, unknown>,
+    kwargs?: Record<string, unknown>
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign
@@ -268,7 +268,7 @@ export abstract class BaseMessageChunk extends BaseMessage {
 
   static _mergeAdditionalKwargs(
     left: NonNullable<BaseMessageFields["additional_kwargs"]>,
-    right: NonNullable<BaseMessageFields["additional_kwargs"]>,
+    right: NonNullable<BaseMessageFields["additional_kwargs"]>
   ): NonNullable<BaseMessageFields["additional_kwargs"]> {
     const merged = { ...left };
     for (const [key, value] of Object.entries(right)) {
@@ -276,7 +276,7 @@ export abstract class BaseMessageChunk extends BaseMessage {
         merged[key] = value;
       } else if (typeof merged[key] !== typeof value) {
         throw new Error(
-          `additional_kwargs[${key}] already exists in the message chunk, but with a different type.`,
+          `additional_kwargs[${key}] already exists in the message chunk, but with a different type.`
         );
       } else if (typeof merged[key] === "string") {
         merged[key] = (merged[key] as string) + value;
@@ -286,7 +286,7 @@ export abstract class BaseMessageChunk extends BaseMessage {
       ) {
         merged[key] = this._mergeAdditionalKwargs(
           merged[key] as NonNullable<BaseMessageFields["additional_kwargs"]>,
-          value as NonNullable<BaseMessageFields["additional_kwargs"]>,
+          value as NonNullable<BaseMessageFields["additional_kwargs"]>
         );
       } else if (
         key === "tool_calls" &&
@@ -316,7 +316,7 @@ export abstract class BaseMessageChunk extends BaseMessage {
         }
       } else {
         throw new Error(
-          `additional_kwargs[${key}] already exists in this message chunk.`,
+          `additional_kwargs[${key}] already exists in this message chunk.`
         );
       }
     }
@@ -355,7 +355,7 @@ export class HumanMessageChunk extends BaseMessageChunk {
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: HumanMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
-        chunk.additional_kwargs,
+        chunk.additional_kwargs
       ),
     });
   }
@@ -392,7 +392,7 @@ export class AIMessageChunk extends BaseMessageChunk {
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: AIMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
-        chunk.additional_kwargs,
+        chunk.additional_kwargs
       ),
     });
   }
@@ -429,7 +429,7 @@ export class SystemMessageChunk extends BaseMessageChunk {
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: SystemMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
-        chunk.additional_kwargs,
+        chunk.additional_kwargs
       ),
     });
   }
@@ -472,13 +472,13 @@ export class FunctionMessage extends BaseMessage {
   constructor(
     fields: string | BaseMessageFields,
     /** @deprecated */
-    name: string,
+    name: string
   );
 
   constructor(
     fields: string | FunctionMessageFieldsWithName,
     /** @deprecated */
-    name?: string,
+    name?: string
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
@@ -510,7 +510,7 @@ export class FunctionMessageChunk extends BaseMessageChunk {
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: FunctionMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
-        chunk.additional_kwargs,
+        chunk.additional_kwargs
       ),
       name: this.name ?? "",
     });
@@ -532,13 +532,13 @@ export class ToolMessage extends BaseMessage {
   constructor(
     fields: string | BaseMessageFields,
     tool_call_id: string,
-    name?: string,
+    name?: string
   );
 
   constructor(
     fields: string | ToolMessageFieldsWithToolCallId,
     tool_call_id?: string,
-    name?: string,
+    name?: string
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
@@ -578,7 +578,7 @@ export class ToolMessageChunk extends BaseMessageChunk {
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: ToolMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
-        chunk.additional_kwargs,
+        chunk.additional_kwargs
       ),
       tool_call_id: this.tool_call_id,
     });
@@ -624,18 +624,18 @@ export type BaseMessageLike =
   | BaseMessage
   | [
       MessageType | "user" | "assistant" | (string & Record<never, never>),
-      string,
+      string
     ]
   | string;
 
 export function isBaseMessage(
-  messageLike?: unknown,
+  messageLike?: unknown
 ): messageLike is BaseMessage {
   return typeof (messageLike as BaseMessage)?._getType === "function";
 }
 
 export function isBaseMessageChunk(
-  messageLike?: unknown,
+  messageLike?: unknown
 ): messageLike is BaseMessageChunk {
   return (
     isBaseMessage(messageLike) &&
@@ -644,7 +644,7 @@ export function isBaseMessageChunk(
 }
 
 export function coerceMessageLikeToMessage(
-  messageLike: BaseMessageLike,
+  messageLike: BaseMessageLike
 ): BaseMessage {
   if (typeof messageLike === "string") {
     return new HumanMessage(messageLike);
@@ -660,7 +660,7 @@ export function coerceMessageLikeToMessage(
     return new SystemMessage({ content });
   } else {
     throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`,
+      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
     );
   }
 }
@@ -698,7 +698,7 @@ export class ChatMessageChunk extends BaseMessageChunk {
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: ChatMessageChunk._mergeAdditionalKwargs(
         this.additional_kwargs,
-        chunk.additional_kwargs,
+        chunk.additional_kwargs
       ),
       role: this.role,
     });
@@ -750,7 +750,7 @@ interface StoredMessageV1 {
  * compatibility with older message formats.
  */
 function mapV1MessageToStoredMessage(
-  message: StoredMessage | StoredMessageV1,
+  message: StoredMessage | StoredMessageV1
 ): StoredMessage {
   // TODO: Remove this mapper when we deprecate the old message format.
   if ((message as StoredMessage).data !== undefined) {
@@ -783,14 +783,14 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
         throw new Error("Name must be defined for function messages");
       }
       return new FunctionMessage(
-        storedMessage.data as FunctionMessageFieldsWithName,
+        storedMessage.data as FunctionMessageFieldsWithName
       );
     case "tool":
       if (storedMessage.data.tool_call_id === undefined) {
         throw new Error("Tool call ID must be defined for tool messages");
       }
       return new ToolMessage(
-        storedMessage.data as ToolMessageFieldsWithToolCallId,
+        storedMessage.data as ToolMessageFieldsWithToolCallId
       );
     case "chat": {
       if (storedMessage.data.role === undefined) {

@@ -132,7 +132,7 @@ export class ChatAgent extends Agent {
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
     const template = [prefix, toolStrings, formatInstructions, suffix].join(
-      "\n\n",
+      "\n\n"
     );
     const messages = [
       SystemMessagePromptTemplate.fromTemplate(template),
@@ -152,7 +152,7 @@ export class ChatAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: ChatCreatePromptArgs & AgentArgs,
+    args?: ChatCreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);
     const prompt = ChatAgent.createPrompt(tools, args);

@@ -39,7 +39,7 @@ describe.skip("CassandraChatMessageHistory", () => {
 
     await messageHistory.addUserMessage("I am a nice human.");
     await messageHistory.addAIChatMessage(
-      "Yes you seem to be. I am a nice AI.",
+      "Yes you seem to be. I am a nice AI."
     );
     await messageHistory.addUserMessage("We will see about that.");
 
@@ -62,7 +62,7 @@ describe.skip("CassandraChatMessageHistory", () => {
       sessionId: "test_session_B123",
     });
     expect(await messageHistorySameSession.getMessages()).toEqual(
-      expectedMessages,
+      expectedMessages
     );
   });
 
@@ -73,7 +73,7 @@ describe.skip("CassandraChatMessageHistory", () => {
     });
     await messageHistory.addUserMessage("I am a nice human.");
     await messageHistory.addAIChatMessage(
-      "Yes you seem to be. I am a nice AI.",
+      "Yes you seem to be. I am a nice AI."
     );
     await messageHistory.addUserMessage("We will see about that.");
     const expectedMessages = [
@@ -93,7 +93,7 @@ describe.skip("CassandraChatMessageHistory", () => {
       new AIMessage("Hello. How may I help?"),
     ];
     expect(await messageHistoryToClear.getMessages()).toEqual(
-      expectedMessagesToClear,
+      expectedMessagesToClear
     );
 
     await messageHistoryToClear.clear();

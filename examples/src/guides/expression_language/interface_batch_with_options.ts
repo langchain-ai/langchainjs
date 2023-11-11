@@ -5,7 +5,7 @@ const model = new ChatOpenAI({
   modelName: "badmodel",
 });
 const promptTemplate = PromptTemplate.fromTemplate(
-  "Tell me a joke about {topic}",
+  "Tell me a joke about {topic}"
 );
 
 const chain = promptTemplate.pipe(model);
@@ -13,7 +13,7 @@ const chain = promptTemplate.pipe(model);
 const result = await chain.batch(
   [{ topic: "bears" }, { topic: "cats" }],
   {},
-  { returnExceptions: true, maxConcurrency: 1 },
+  { returnExceptions: true, maxConcurrency: 1 }
 );
 
 console.log(result);

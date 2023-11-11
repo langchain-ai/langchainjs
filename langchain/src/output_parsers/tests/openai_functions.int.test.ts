@@ -27,7 +27,7 @@ const modelParams = {
 
 test("Streaming JSON patch", async () => {
   const prompt = ChatPromptTemplate.fromTemplate(
-    `tell me a long joke about {foo}`,
+    `tell me a long joke about {foo}`
   );
   const model = new ChatOpenAI({
     temperature: 0,
@@ -56,7 +56,7 @@ test("Streaming JSON patch", async () => {
 
 test("Streaming aggregated JSON", async () => {
   const prompt = ChatPromptTemplate.fromTemplate(
-    `tell me a long joke about {foo}`,
+    `tell me a long joke about {foo}`
   );
   const model = new ChatOpenAI({
     temperature: 0,

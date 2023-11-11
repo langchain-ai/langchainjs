@@ -35,7 +35,7 @@ export type StructuredOutputChainInput = Omit<
  * functionality for parsing the structured output based on a JSON schema.
  */
 export class FunctionCallStructuredOutputParser<
-  T extends z.AnyZodObject,
+  T extends z.AnyZodObject
 > extends BaseLLMOutputParser<z.infer<T>> {
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
@@ -57,8 +57,9 @@ export class FunctionCallStructuredOutputParser<
    * @returns The parsed result if it is valid according to the JSON schema.
    */
   async parseResult(generations: ChatGeneration[]) {
-    const initialResult =
-      await this.functionOutputParser.parseResult(generations);
+    const initialResult = await this.functionOutputParser.parseResult(
+      generations
+    );
     const parsedResult = JSON.parse(initialResult, (_, value) => {
       if (value === null) {
         return undefined;
@@ -71,9 +72,9 @@ export class FunctionCallStructuredOutputParser<
     } else {
       throw new OutputParserException(
         `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
-          result.errors,
+          result.errors
         )}`,
-        initialResult,
+        initialResult
       );
     }
   }
@@ -86,7 +87,7 @@ export class FunctionCallStructuredOutputParser<
  * @returns OpenAPIChain
  */
 export function createStructuredOutputChain<
-  T extends z.AnyZodObject = z.AnyZodObject,
+  T extends z.AnyZodObject = z.AnyZodObject
 >(input: StructuredOutputChainInput) {
   const {
     outputSchema,
@@ -119,7 +120,7 @@ export function createStructuredOutputChain<
 
 export function createStructuredOutputChainFromZod<T extends z.AnyZodObject>(
   zodSchema: T,
-  input: Omit<StructuredOutputChainInput, "outputSchema">,
+  input: Omit<StructuredOutputChainInput, "outputSchema">
 ) {
   return createStructuredOutputChain<T>({
     ...input,

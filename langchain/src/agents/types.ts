@@ -58,7 +58,7 @@ export type StoppingMethod = "force" | "generate";
 export type SerializedAgentT<
   TType extends string = string,
   FromLLMInput extends Record<string, unknown> = Record<string, unknown>,
-  ConstructorInput extends AgentInput = AgentInput,
+  ConstructorInput extends AgentInput = AgentInput
 > = {
   _type: TType;
   llm_chain?: SerializedLLMChain;

@@ -31,13 +31,13 @@ class BingSerpAPI extends Tool {
 
   constructor(
     apiKey: string | undefined = getEnvironmentVariable("BingApiKey"),
-    params: Record<string, string> = {},
+    params: Record<string, string> = {}
   ) {
     super(...arguments);
 
     if (!apiKey) {
       throw new Error(
-        "BingSerpAPI API key not set. You can set it as BingApiKey in your .env file.",
+        "BingSerpAPI API key not set. You can set it as BingApiKey in your .env file."
       );
     }
 

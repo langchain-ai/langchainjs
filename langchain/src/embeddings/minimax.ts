@@ -102,7 +102,7 @@ export class MinimaxEmbeddings
   constructor(
     fields?: Partial<MinimaxEmbeddingsParams> & {
       configuration?: ConfigurationParameters;
-    },
+    }
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
     super(fieldsWithDefaults);
@@ -140,7 +140,7 @@ export class MinimaxEmbeddings
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
-      this.batchSize,
+      this.batchSize
     );
 
     const batchRequests = batches.map((batch) =>
@@ -148,7 +148,7 @@ export class MinimaxEmbeddings
         model: this.modelName,
         texts: batch,
         type: this.type,
-      }),
+      })
     );
     const batchResponses = await Promise.all(batchRequests);
 

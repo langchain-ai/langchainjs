@@ -28,7 +28,7 @@ describe("PGVectorStore", () => {
 
     pgvectorVectorStore = await PGVectorStore.initialize(
       new OpenAIEmbeddings(),
-      config,
+      config
     );
   });
 
@@ -75,7 +75,7 @@ describe("PGVectorStore", () => {
 
       // Query the table to check the number of rows
       const result = await pgvectorVectorStore.pool.query(
-        `SELECT COUNT(*) FROM "${tableName}"`,
+        `SELECT COUNT(*) FROM "${tableName}"`
       );
       const rowCount = parseInt(result.rows[0].count, 10);
       // Check if the number of rows is equal to the number of documents added

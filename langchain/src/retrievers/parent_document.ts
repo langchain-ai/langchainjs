@@ -83,7 +83,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     const parentDocs: Document[] = [];
     const storedParentDocs = await this.docstore.mget(parentDocIds);
     const retrievedDocs: Document[] = storedParentDocs.filter(
-      (doc?: Document): doc is Document => doc !== undefined,
+      (doc?: Document): doc is Document => doc !== undefined
     );
     parentDocs.push(...retrievedDocs);
     return parentDocs.slice(0, this.parentK);
@@ -107,7 +107,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     config?: {
       ids?: string[];
       addToDocstore?: boolean;
-    },
+    }
   ): Promise<void> {
     const { ids, addToDocstore = true } = config ?? {};
     const parentDocs = this.parentSplitter
@@ -117,7 +117,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     if (ids === undefined) {
       if (!addToDocstore) {
         throw new Error(
-          `If ids are not passed in, "config.addToDocstore" MUST be true`,
+          `If ids are not passed in, "config.addToDocstore" MUST be true`
         );
       }
       parentDocIds = parentDocs.map((_doc: Document) => uuid.v4());
@@ -126,7 +126,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
     }
     if (parentDocs.length !== parentDocIds.length) {
       throw new Error(
-        `Got uneven list of documents and ids.\nIf "ids" is provided, should be same length as "documents".`,
+        `Got uneven list of documents and ids.\nIf "ids" is provided, should be same length as "documents".`
       );
     }
     const embeddedDocs: Document[] = [];
@@ -140,7 +140,7 @@ export class ParentDocumentRetriever extends MultiVectorRetriever {
           new Document({
             pageContent: subDoc.pageContent,
             metadata: { ...subDoc.metadata, [this.idKey]: parentDocId },
-          }),
+          })
       );
       embeddedDocs.push(...taggedSubDocs);
       fullDocs[parentDocId] = parentDoc;

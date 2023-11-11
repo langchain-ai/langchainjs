@@ -14,7 +14,7 @@ const aquaTeen = await MemoryVectorStore.fromTexts(
     "Aqua Teen Hunger Force number one in the hood G",
   ],
   { series: "Aqua Teen Hunger Force" },
-  embeddings,
+  embeddings
 );
 const mst3k = await MemoryVectorStore.fromTexts(
   [
@@ -24,7 +24,7 @@ const mst3k = await MemoryVectorStore.fromTexts(
     "If you're wondering how he eats and breathes and other science facts La la la just repeat to yourself it's just a show I should really just relax. For Mystery Science Theater 3000",
   ],
   { series: "Mystery Science Theater 3000" },
-  embeddings,
+  embeddings
 );
 const animaniacs = await MemoryVectorStore.fromTexts(
   [
@@ -39,7 +39,7 @@ const animaniacs = await MemoryVectorStore.fromTexts(
     "Animaniacs Those are the facts",
   ],
   { series: "Animaniacs" },
-  embeddings,
+  embeddings
 );
 
 const llm = new OpenAIChat();

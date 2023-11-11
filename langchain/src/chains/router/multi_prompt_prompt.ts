@@ -22,7 +22,7 @@ REMEMBER: "next_inputs" can just be the original input if you don't think any mo
 `;
 
 export const STRUCTURED_MULTI_PROMPT_ROUTER_TEMPLATE = (
-  formatting: string,
+  formatting: string
 ) => `Given a raw text input to a language model, select the model prompt best suited for the input. You will be given the names of the available prompts and a description of what the prompt is best suited for. You may also revise the original input if you think that revising it will ultimately lead to a better response from the language model.
 
 << FORMATTING >>

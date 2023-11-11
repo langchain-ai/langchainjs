@@ -56,7 +56,7 @@ describe("Chroma", () => {
 
     expect(mockClient.getOrCreateCollection).toHaveBeenCalled();
     expect(embeddings.embedDocuments).toHaveBeenCalledWith(
-      expectedPageContents,
+      expectedPageContents
     );
     expect(mockCollection.upsert).toHaveBeenCalled();
 
@@ -122,7 +122,7 @@ describe("Chroma", () => {
 
     const results = await chroma.similaritySearchVectorWithScore(
       query,
-      expectedResultCount,
+      expectedResultCount
     );
 
     expect(mockCollection.query).toHaveBeenCalledWith({

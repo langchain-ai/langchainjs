@@ -16,7 +16,7 @@ export async function getEncoding(
   options?: {
     signal?: AbortSignal;
     extendedSpecialTokens?: Record<string, number>;
-  },
+  }
 ) {
   if (!(encoding in cache)) {
     cache[encoding] = caller
@@ -38,7 +38,7 @@ export async function encodingForModel(
   options?: {
     signal?: AbortSignal;
     extendedSpecialTokens?: Record<string, number>;
-  },
+  }
 ) {
   return getEncoding(getEncodingNameForModel(model), options);
 }

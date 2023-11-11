@@ -55,7 +55,7 @@ export class ReActSingleInputOutputParser extends AgentActionOutputParser {
     if (actionMatch) {
       if (includesAnswer) {
         throw new Error(
-          `${FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE}: ${text}`,
+          `${FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE}: ${text}`
         );
       }
 

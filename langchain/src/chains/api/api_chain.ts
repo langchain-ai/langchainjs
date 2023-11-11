@@ -71,13 +71,13 @@ export class APIChain extends BaseChain implements APIChainInput {
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const question: string = values[this.inputKey];
 
     const api_url = await this.apiRequestChain.predict(
       { question, api_docs: this.apiDocs },
-      runManager?.getChild("request"),
+      runManager?.getChild("request")
     );
 
     const res = await fetch(api_url, { headers: this.headers });
@@ -85,7 +85,7 @@ export class APIChain extends BaseChain implements APIChainInput {
 
     const answer = await this.apiAnswerChain.predict(
       { question, api_docs: this.apiDocs, api_url, api_response },
-      runManager?.getChild("response"),
+      runManager?.getChild("response")
     );
 
     return { [this.outputKey]: answer };
@@ -137,10 +137,7 @@ export class APIChain extends BaseChain implements APIChainInput {
     llm: BaseLanguageModel,
     apiDocs: string,
     options: APIChainOptions &
-      Omit<
-        APIChainInput,
-        "apiAnswerChain" | "apiRequestChain" | "apiDocs"
-      > = {},
+      Omit<APIChainInput, "apiAnswerChain" | "apiRequestChain" | "apiDocs"> = {}
   ): APIChain {
     const {
       apiUrlPrompt = API_URL_PROMPT_TEMPLATE,

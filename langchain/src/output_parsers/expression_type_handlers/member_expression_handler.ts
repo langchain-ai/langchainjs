@@ -30,7 +30,7 @@ export class MemberExpressionHandler extends NodeHandler {
   async handle(node: MemberExpression): Promise<MemberExpressionType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler",
+        "ArrayLiteralExpressionHandler must have a parent handler"
       );
     }
     const { object, property } = node;
@@ -40,7 +40,7 @@ export class MemberExpressionHandler extends NodeHandler {
     } else if (ASTParser.isStringLiteral(property)) {
       prop = (`${property.value}` as string).replace(
         /^["'](.+(?=["']$))["']$/,
-        "$1",
+        "$1"
       );
     } else {
       throw new Error("Invalid property key type");
@@ -51,7 +51,7 @@ export class MemberExpressionHandler extends NodeHandler {
     } else if (ASTParser.isStringLiteral(object)) {
       identifier = (`${object.value}` as string).replace(
         /^["'](.+(?=["']$))["']$/,
-        "$1",
+        "$1"
       );
     } else {
       throw new Error("Invalid object type");

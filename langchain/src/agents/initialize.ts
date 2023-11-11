@@ -28,7 +28,7 @@ export const initializeAgentExecutor = async (
   llm: BaseLanguageModel,
   _agentType?: AgentType,
   _verbose?: boolean,
-  _callbackManager?: CallbackManager,
+  _callbackManager?: CallbackManager
 ): Promise<AgentExecutor> => {
   const agentType = _agentType ?? "zero-shot-react-description";
   const verbose = _verbose;
@@ -108,12 +108,12 @@ export type InitializeAgentExecutorOptionsStructured =
 export async function initializeAgentExecutorWithOptions(
   tools: StructuredTool[],
   llm: BaseLanguageModel,
-  options: InitializeAgentExecutorOptionsStructured,
+  options: InitializeAgentExecutorOptionsStructured
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
   tools: Tool[],
   llm: BaseLanguageModel,
-  options?: InitializeAgentExecutorOptions,
+  options?: InitializeAgentExecutorOptions
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
   tools: StructuredTool[] | Tool[],
@@ -125,7 +125,7 @@ export async function initializeAgentExecutorWithOptions(
       llm._modelType() === "base_chat_model"
         ? "chat-zero-shot-react-description"
         : "zero-shot-react-description",
-  },
+  }
 ): Promise<AgentExecutor> {
   // Note this tools cast is safe as the overload signatures prevent
   // the function from being called with a StructuredTool[] when
@@ -156,7 +156,7 @@ export async function initializeAgentExecutorWithOptions(
         agent: ChatConversationalAgent.fromLLMAndTools(
           llm,
           tools as Tool[],
-          agentArgs,
+          agentArgs
         ),
         tools,
         memory:

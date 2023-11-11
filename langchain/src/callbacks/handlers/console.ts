@@ -94,11 +94,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     console.log(
       `${wrap(
         color.green,
-        "[chain/start]",
+        "[chain/start]"
       )} [${crumbs}] Entering Chain run with input: ${tryJsonStringify(
         run.inputs,
-        "[inputs]",
-      )}`,
+        "[inputs]"
+      )}`
     );
   }
 
@@ -111,11 +111,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.cyan, "[chain/end]")} [${crumbs}] [${elapsed(
-        run,
+        run
       )}] Exiting Chain run with output: ${tryJsonStringify(
         run.outputs,
-        "[outputs]",
-      )}`,
+        "[outputs]"
+      )}`
     );
   }
 
@@ -128,11 +128,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.red, "[chain/error]")} [${crumbs}] [${elapsed(
-        run,
+        run
       )}] Chain run errored with error: ${tryJsonStringify(
         run.error,
-        "[error]",
-      )}`,
+        "[error]"
+      )}`
     );
   }
 
@@ -150,11 +150,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     console.log(
       `${wrap(
         color.green,
-        "[llm/start]",
+        "[llm/start]"
       )} [${crumbs}] Entering LLM run with input: ${tryJsonStringify(
         inputs,
-        "[inputs]",
-      )}`,
+        "[inputs]"
+      )}`
     );
   }
 
@@ -167,11 +167,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.cyan, "[llm/end]")} [${crumbs}] [${elapsed(
-        run,
+        run
       )}] Exiting LLM run with output: ${tryJsonStringify(
         run.outputs,
-        "[response]",
-      )}`,
+        "[response]"
+      )}`
     );
   }
 
@@ -184,11 +184,8 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.red, "[llm/error]")} [${crumbs}] [${elapsed(
-        run,
-      )}] LLM run errored with error: ${tryJsonStringify(
-        run.error,
-        "[error]",
-      )}`,
+        run
+      )}] LLM run errored with error: ${tryJsonStringify(run.error, "[error]")}`
     );
   }
 
@@ -202,8 +199,8 @@ export class ConsoleCallbackHandler extends BaseTracer {
     console.log(
       `${wrap(
         color.green,
-        "[tool/start]",
-      )} [${crumbs}] Entering Tool run with input: "${run.inputs.input?.trim()}"`,
+        "[tool/start]"
+      )} [${crumbs}] Entering Tool run with input: "${run.inputs.input?.trim()}"`
     );
   }
 
@@ -216,8 +213,8 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.cyan, "[tool/end]")} [${crumbs}] [${elapsed(
-        run,
-      )}] Exiting Tool run with output: "${run.outputs?.output?.trim()}"`,
+        run
+      )}] Exiting Tool run with output: "${run.outputs?.output?.trim()}"`
     );
   }
 
@@ -230,11 +227,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.red, "[tool/error]")} [${crumbs}] [${elapsed(
-        run,
+        run
       )}] Tool run errored with error: ${tryJsonStringify(
         run.error,
-        "[error]",
-      )}`,
+        "[error]"
+      )}`
     );
   }
 
@@ -248,11 +245,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     console.log(
       `${wrap(
         color.green,
-        "[retriever/start]",
+        "[retriever/start]"
       )} [${crumbs}] Entering Retriever run with input: ${tryJsonStringify(
         run.inputs,
-        "[inputs]",
-      )}`,
+        "[inputs]"
+      )}`
     );
   }
 
@@ -265,11 +262,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.cyan, "[retriever/end]")} [${crumbs}] [${elapsed(
-        run,
+        run
       )}] Exiting Retriever run with output: ${tryJsonStringify(
         run.outputs,
-        "[outputs]",
-      )}`,
+        "[outputs]"
+      )}`
     );
   }
 
@@ -282,11 +279,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.red, "[retriever/error]")} [${crumbs}] [${elapsed(
-        run,
+        run
       )}] Retriever run errored with error: ${tryJsonStringify(
         run.error,
-        "[error]",
-      )}`,
+        "[error]"
+      )}`
     );
   }
 
@@ -301,11 +298,11 @@ export class ConsoleCallbackHandler extends BaseTracer {
     console.log(
       `${wrap(
         color.blue,
-        "[agent/action]",
+        "[agent/action]"
       )} [${crumbs}] Agent selected action: ${tryJsonStringify(
         agentRun.actions[agentRun.actions.length - 1],
-        "[action]",
-      )}`,
+        "[action]"
+      )}`
     );
   }
 }

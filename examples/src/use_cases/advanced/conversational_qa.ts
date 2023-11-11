@@ -50,7 +50,7 @@ CONTEXT: {context}
 ----------------
 QUESTION: {question}
 ----------------
-Helpful Answer:`,
+Helpful Answer:`
   );
 
   /**
@@ -90,7 +90,7 @@ Standalone question:`);
       },
       {
         ai: text,
-      },
+      }
     );
 
     return text;
@@ -118,7 +118,7 @@ Standalone question:`);
       }) => {
         // Fetch relevant docs and serialize to a string.
         const relevantDocs = await retriever.getRelevantDocuments(
-          previousStepResult.question,
+          previousStepResult.question
         );
         const serialized = formatDocumentsAsString(relevantDocs);
         return serialized;

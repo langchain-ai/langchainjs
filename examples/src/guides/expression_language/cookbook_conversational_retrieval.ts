@@ -18,7 +18,7 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:`;
 const CONDENSE_QUESTION_PROMPT = PromptTemplate.fromTemplate(
-  condenseQuestionTemplate,
+  condenseQuestionTemplate
 );
 
 const answerTemplate = `Answer the question based only on the following context:
@@ -30,8 +30,7 @@ const ANSWER_PROMPT = PromptTemplate.fromTemplate(answerTemplate);
 
 const formatChatHistory = (chatHistory: [string, string][]) => {
   const formattedDialogueTurns = chatHistory.map(
-    (dialogueTurn) =>
-      `Human: ${dialogueTurn[0]}\nAssistant: ${dialogueTurn[1]}`,
+    (dialogueTurn) => `Human: ${dialogueTurn[0]}\nAssistant: ${dialogueTurn[1]}`
   );
   return formattedDialogueTurns.join("\n");
 };
@@ -42,7 +41,7 @@ const vectorStore = await HNSWLib.fromTexts(
     "mitochondria is made of lipids",
   ],
   [{ id: 1 }, { id: 2 }],
-  new OpenAIEmbeddings(),
+  new OpenAIEmbeddings()
 );
 const retriever = vectorStore.asRetriever();
 

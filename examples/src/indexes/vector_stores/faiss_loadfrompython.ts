@@ -7,7 +7,7 @@ const directory = "your/directory/here";
 // Load the vector store from the directory
 const loadedVectorStore = await FaissStore.loadFromPython(
   directory,
-  new OpenAIEmbeddings(),
+  new OpenAIEmbeddings()
 );
 
 // Search for the most similar document

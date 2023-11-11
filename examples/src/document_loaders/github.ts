@@ -8,7 +8,7 @@ export const run = async () => {
       recursive: false,
       unknown: "warn",
       maxConcurrency: 5, // Defaults to 2
-    },
+    }
   );
   const docs = await loader.load();
   console.log({ docs });

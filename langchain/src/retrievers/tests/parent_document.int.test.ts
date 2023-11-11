@@ -19,7 +19,7 @@ test("Should return the full document if an unsplit parent document has been add
     }),
   });
   const docs = await new TextLoader(
-    "../examples/state_of_the_union.txt",
+    "../examples/state_of_the_union.txt"
   ).load();
   await retriever.addDocuments(docs);
 
@@ -45,13 +45,14 @@ test("Should return a part of a document if a parent splitter is passed", async 
     }),
   });
   const docs = await new TextLoader(
-    "../examples/state_of_the_union.txt",
+    "../examples/state_of_the_union.txt"
   ).load();
   await retriever.addDocuments(docs);
   const query = "justice breyer";
   const retrievedDocs = await retriever.getRelevantDocuments(query);
-  const vectorstoreRetreivedDocs =
-    await vectorstore.similaritySearch("justice breyer");
+  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
+    "justice breyer"
+  );
   console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
   console.log(retrievedDocs);
   expect(retrievedDocs.length).toBeGreaterThan(1);
@@ -69,7 +70,7 @@ test("Should work with a backwards compatible docstore too", async () => {
     }),
   });
   const docs = await new TextLoader(
-    "../examples/state_of_the_union.txt",
+    "../examples/state_of_the_union.txt"
   ).load();
   await retriever.addDocuments(docs);
 
@@ -95,13 +96,14 @@ test("Should return a part of a document if a parent splitter is passed", async 
     }),
   });
   const docs = await new TextLoader(
-    "../examples/state_of_the_union.txt",
+    "../examples/state_of_the_union.txt"
   ).load();
   await retriever.addDocuments(docs);
   const query = "justice breyer";
   const retrievedDocs = await retriever.getRelevantDocuments(query);
-  const vectorstoreRetreivedDocs =
-    await vectorstore.similaritySearch("justice breyer");
+  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
+    "justice breyer"
+  );
   console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
   console.log(retrievedDocs);
   expect(retrievedDocs.length).toBeGreaterThan(1);
@@ -116,7 +118,7 @@ test("Should use a custom retriever to retrieve one doc", async () => {
     {
       minSimilarityScore: 0.01, // Essentially no threshold
       maxK: 1, // Only return the top result
-    },
+    }
   );
   const retriever = new ParentDocumentRetriever({
     vectorstore,
@@ -132,13 +134,14 @@ test("Should use a custom retriever to retrieve one doc", async () => {
     }),
   });
   const docs = await new TextLoader(
-    "../examples/state_of_the_union.txt",
+    "../examples/state_of_the_union.txt"
   ).load();
   await retriever.addDocuments(docs);
   const query = "justice breyer";
   const retrievedDocs = await retriever.getRelevantDocuments(query);
-  const vectorstoreRetreivedDocs =
-    await vectorstore.similaritySearch("justice breyer");
+  const vectorstoreRetreivedDocs = await vectorstore.similaritySearch(
+    "justice breyer"
+  );
   console.log(vectorstoreRetreivedDocs, vectorstoreRetreivedDocs.length);
   console.log(retrievedDocs);
   expect(retrievedDocs).toHaveLength(1);

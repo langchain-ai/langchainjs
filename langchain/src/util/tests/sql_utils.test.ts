@@ -17,7 +17,7 @@ test("Find include tables when there are there", () => {
   ];
 
   expect(() =>
-    verifyIncludeTablesExistInDatabase(allTables, includeTables),
+    verifyIncludeTablesExistInDatabase(allTables, includeTables)
   ).not.toThrow();
 });
 
@@ -30,7 +30,7 @@ test("Throw Error when include tables are not there", () => {
   ];
 
   expect(() =>
-    verifyIncludeTablesExistInDatabase(allTables, includeTables),
+    verifyIncludeTablesExistInDatabase(allTables, includeTables)
   ).toThrow();
 });
 
@@ -44,7 +44,7 @@ test("Find include tables when there are there", () => {
   ];
 
   expect(() =>
-    verifyIgnoreTablesExistInDatabase(allTables, includeTables),
+    verifyIgnoreTablesExistInDatabase(allTables, includeTables)
   ).not.toThrow();
 });
 
@@ -57,7 +57,7 @@ test("Throw Error when include tables are not there", () => {
   ];
 
   expect(() =>
-    verifyIgnoreTablesExistInDatabase(allTables, includeTables),
+    verifyIgnoreTablesExistInDatabase(allTables, includeTables)
   ).toThrow();
 });
 

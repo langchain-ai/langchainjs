@@ -22,12 +22,12 @@ export const run = async () => {
       client,
       tableName: "documents",
       queryName: "match_documents",
-    },
+    }
   );
 
   const resultOne = await vectorStore.maxMarginalRelevanceSearch(
     "Hello world",
-    { k: 1 },
+    { k: 1 }
   );
 
   console.log(resultOne);

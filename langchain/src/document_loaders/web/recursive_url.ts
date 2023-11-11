@@ -49,17 +49,17 @@ export class RecursiveUrlLoader
 
   private async fetchWithTimeout(
     resource: string,
-    options: { timeout: number } & RequestInit,
+    options: { timeout: number } & RequestInit
   ): Promise<Response> {
     const { timeout, ...rest } = options;
     return this.caller.call(() =>
-      fetch(resource, { ...rest, signal: AbortSignal.timeout(timeout) }),
+      fetch(resource, { ...rest, signal: AbortSignal.timeout(timeout) })
     );
   }
 
   private getChildLinks(html: string, baseUrl: string): Array<string> {
     const allLinks = Array.from(
-      new JSDOM(html).window.document.querySelectorAll("a"),
+      new JSDOM(html).window.document.querySelectorAll("a")
     ).map((a) => a.href);
     const absolutePaths = [];
     // eslint-disable-next-line no-script-url
@@ -152,7 +152,7 @@ export class RecursiveUrlLoader
   private async getChildUrlsRecursive(
     inputUrl: string,
     visited: Set<string> = new Set<string>(),
-    depth = 0,
+    depth = 0
   ): Promise<Document[]> {
     if (depth >= this.maxDepth) return [];
 
@@ -185,14 +185,14 @@ export class RecursiveUrlLoader
             const childUrlResponses = await this.getChildUrlsRecursive(
               childUrl,
               visited,
-              depth + 1,
+              depth + 1
             );
             return [childDoc, ...childUrlResponses];
           }
 
           return [childDoc];
-        })(),
-      ),
+        })()
+      )
     );
 
     return results.flat().filter((docs) => docs !== null) as Document[];
@@ -204,7 +204,7 @@ export class RecursiveUrlLoader
 
     const docs = [rootDoc];
     docs.push(
-      ...(await this.getChildUrlsRecursive(this.url, new Set([this.url]))),
+      ...(await this.getChildUrlsRecursive(this.url, new Set([this.url])))
     );
     return docs;
   }

@@ -37,7 +37,7 @@ const summaries = await chain.batch(
   {},
   {
     maxConcurrency: 5,
-  },
+  }
 );
 
 const idKey = "doc_id";
@@ -64,7 +64,7 @@ await docstore.mset(keyValuePairs);
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
   summaryDocs,
-  new OpenAIEmbeddings(),
+  new OpenAIEmbeddings()
 );
 
 const retriever = new MultiVectorRetriever({
@@ -81,8 +81,9 @@ const retriever = new MultiVectorRetriever({
 // retriever.vectorstore.addDocuments(taggedOriginalDocs);
 
 // Vectorstore alone retrieves the small chunks
-const vectorstoreResult =
-  await retriever.vectorstore.similaritySearch("justice breyer");
+const vectorstoreResult = await retriever.vectorstore.similaritySearch(
+  "justice breyer"
+);
 console.log(vectorstoreResult[0].pageContent.length);
 /*
   1118

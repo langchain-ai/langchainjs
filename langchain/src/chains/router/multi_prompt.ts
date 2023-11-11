@@ -26,7 +26,7 @@ export class MultiPromptChain extends MultiRouteChain {
     promptDescriptions: string[],
     promptTemplates: string[] | PromptTemplate[],
     defaultChain?: BaseChain,
-    options?: Omit<MultiRouteChainInput, "defaultChain">,
+    options?: Omit<MultiRouteChainInput, "defaultChain">
   ) {
     return MultiPromptChain.fromLLMAndPrompts(llm, {
       promptNames,
@@ -69,10 +69,10 @@ export class MultiPromptChain extends MultiRouteChain {
       llmChainOpts?: Omit<LLMChainInput, "llm" | "prompt">;
       conversationChainOpts?: Omit<LLMChainInput, "llm" | "outputKey">;
       multiRouteChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
-    },
+    }
   ): MultiPromptChain {
     const destinations = zipEntries(promptNames, promptDescriptions).map(
-      ([name, desc]) => `${name}: ${desc}`,
+      ([name, desc]) => `${name}: ${desc}`
     );
 
     const structuredOutputParserSchema = z.object({
@@ -94,11 +94,11 @@ export class MultiPromptChain extends MultiRouteChain {
     const destinationsStr = destinations.join("\n");
     const routerTemplate = interpolateFString(
       STRUCTURED_MULTI_PROMPT_ROUTER_TEMPLATE(
-        outputParser.getFormatInstructions({ interpolationDepth: 4 }),
+        outputParser.getFormatInstructions({ interpolationDepth: 4 })
       ),
       {
         destinations: destinationsStr,
-      },
+      }
     );
 
     const routerPrompt = new PromptTemplate({
@@ -110,29 +110,26 @@ export class MultiPromptChain extends MultiRouteChain {
     const routerChain = LLMRouterChain.fromLLM(llm, routerPrompt);
     const destinationChains = zipEntries<[string, string | PromptTemplate]>(
       promptNames,
-      promptTemplates,
-    ).reduce(
-      (acc, [name, template]) => {
-        let myPrompt: string | PromptTemplate;
-        if (typeof template === "object") {
-          myPrompt = template;
-        } else if (typeof template === "string") {
-          myPrompt = new PromptTemplate({
-            template: template as string,
-            inputVariables: ["input"],
-          });
-        } else {
-          throw new Error("Invalid prompt template");
-        }
-        acc[name as string] = new LLMChain({
-          ...llmChainOpts,
-          llm,
-          prompt: myPrompt,
+      promptTemplates
+    ).reduce((acc, [name, template]) => {
+      let myPrompt: string | PromptTemplate;
+      if (typeof template === "object") {
+        myPrompt = template;
+      } else if (typeof template === "string") {
+        myPrompt = new PromptTemplate({
+          template: template as string,
+          inputVariables: ["input"],
         });
-        return acc;
-      },
-      {} as { [name: string]: LLMChain },
-    );
+      } else {
+        throw new Error("Invalid prompt template");
+      }
+      acc[name as string] = new LLMChain({
+        ...llmChainOpts,
+        llm,
+        prompt: myPrompt,
+      });
+      return acc;
+    }, {} as { [name: string]: LLMChain });
 
     const convChain = new ConversationChain({
       ...conversationChainOpts,

@@ -89,7 +89,7 @@ export class OpenSearchVectorStore extends VectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents,
+      documents
     );
   }
 
@@ -104,7 +104,7 @@ export class OpenSearchVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] },
+    options?: { ids?: string[] }
   ): Promise<void> {
     await this.ensureIndexExists(
       vectors[0].length,
@@ -112,7 +112,7 @@ export class OpenSearchVectorStore extends VectorStore {
       this.spaceType,
       this.efSearch,
       this.efConstruction,
-      this.m,
+      this.m
     );
     const documentIds =
       options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
@@ -144,7 +144,7 @@ export class OpenSearchVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: OpenSearchFilter | undefined,
+    filter?: OpenSearchFilter | undefined
   ): Promise<[Document, number][]> {
     const search: RequestParams.Search = {
       index: this.indexName,
@@ -190,7 +190,7 @@ export class OpenSearchVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    args: OpenSearchClientArgs,
+    args: OpenSearchClientArgs
   ): Promise<OpenSearchVectorStore> {
     const documents = texts.map((text, idx) => {
       const metadata = Array.isArray(metadatas) ? metadatas[idx] : metadatas;
@@ -211,7 +211,7 @@ export class OpenSearchVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: OpenSearchClientArgs,
+    dbConfig: OpenSearchClientArgs
   ): Promise<OpenSearchVectorStore> {
     const store = new OpenSearchVectorStore(embeddings, dbConfig);
     await store.addDocuments(docs).then(() => store);
@@ -227,7 +227,7 @@ export class OpenSearchVectorStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: OpenSearchClientArgs,
+    dbConfig: OpenSearchClientArgs
   ): Promise<OpenSearchVectorStore> {
     const store = new OpenSearchVectorStore(embeddings, dbConfig);
     await store.client.cat.indices({ index: store.indexName });
@@ -240,7 +240,7 @@ export class OpenSearchVectorStore extends VectorStore {
     spaceType = "l2",
     efSearch = 512,
     efConstruction = 512,
-    m = 16,
+    m = 16
   ): Promise<void> {
     const body = {
       settings: {
@@ -285,7 +285,7 @@ export class OpenSearchVectorStore extends VectorStore {
   }
 
   private buildMetadataTerms(
-    filter?: OpenSearchFilter,
+    filter?: OpenSearchFilter
   ): { term: Record<string, unknown> }[] {
     if (filter == null) return [];
     const result = [];

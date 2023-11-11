@@ -89,7 +89,7 @@ export class ChatGPTPluginRetriever
         new Document({
           pageContent: result.text,
           metadata: result.metadata,
-        }),
+        })
     );
   }
 }

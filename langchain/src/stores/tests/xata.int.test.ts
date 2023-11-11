@@ -67,7 +67,7 @@ describe("XataChatMessageHistory", () => {
 
     await memory.saveContext(
       { input: "Who is the best vocalist?" },
-      { response: "Ozzy Osbourne" },
+      { response: "Ozzy Osbourne" }
     );
 
     const expectedHistory = [
@@ -123,7 +123,7 @@ describe("XataChatMessageHistory", () => {
       });
     };
     expect(t).toThrowError(
-      "If createTable is set, an apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object",
+      "If createTable is set, an apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object"
     );
 
     const t1 = () => {

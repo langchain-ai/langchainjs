@@ -60,7 +60,7 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
       this.database = database;
     } else {
       throw new Error(
-        "Either a client or config must be provided to CloudflareD1MessageHistory",
+        "Either a client or config must be provided to CloudflareD1MessageHistory"
       );
     }
 
@@ -127,7 +127,7 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
           type: message.type,
           data,
         };
-      },
+      }
     );
 
     return mapStoredMessagesToChatMessages(orderedMessages);
@@ -157,7 +157,7 @@ export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
         messageToAdd[0].data.content || null,
         messageToAdd[0].data.role || null,
         messageToAdd[0].data.name || null,
-        JSON.stringify(messageToAdd[0].data.additional_kwargs),
+        JSON.stringify(messageToAdd[0].data.additional_kwargs)
       )
       .all();
   }

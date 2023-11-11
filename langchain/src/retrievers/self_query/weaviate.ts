@@ -56,7 +56,7 @@ export type WeaviateStructuredQueryResult = {
  * class and provides specific implementation for Weaviate.
  */
 export class WeaviateTranslator<
-  T extends WeaviateStore,
+  T extends WeaviateStore
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: WeaviateOperationResult;
 
@@ -88,8 +88,8 @@ export class WeaviateTranslator<
       ) {
         throw new Error(
           `Comparator ${func} not allowed. Allowed operators: ${this.allowedComparators.join(
-            ", ",
-          )}`,
+            ", "
+          )}`
         );
       }
     } else if (func in Operators) {
@@ -99,8 +99,8 @@ export class WeaviateTranslator<
       ) {
         throw new Error(
           `Operator ${func} not allowed. Allowed operators: ${this.allowedOperators.join(
-            ", ",
-          )}`,
+            ", "
+          )}`
         );
       }
     } else {
@@ -127,7 +127,7 @@ export class WeaviateTranslator<
    */
   visitOperation(operation: Operation): this["VisitOperationOutput"] {
     const args = operation.args?.map((arg) =>
-      arg.accept(this as Visitor),
+      arg.accept(this as Visitor)
     ) as WeaviateVisitorResult[];
     return {
       operator: this.formatFunction(operation.operator),
@@ -175,7 +175,7 @@ export class WeaviateTranslator<
    * @returns A WeaviateStructuredQueryResult.
    */
   visitStructuredQuery(
-    query: StructuredQuery,
+    query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
     let nextArg = {};
     if (query.filter) {
@@ -200,7 +200,7 @@ export class WeaviateTranslator<
   mergeFilters(
     defaultFilter: WeaviateFilter | undefined,
     generatedFilter: WeaviateFilter | undefined,
-    mergeType = "and",
+    mergeType = "and"
   ): WeaviateFilter | undefined {
     if (
       isFilterEmpty(defaultFilter?.where) &&

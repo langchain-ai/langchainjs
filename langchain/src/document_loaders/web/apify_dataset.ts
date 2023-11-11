@@ -32,7 +32,7 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
   protected datasetId: string;
 
   protected datasetMappingFunction: (
-    item: Record<string | number, unknown>,
+    item: Record<string | number, unknown>
   ) => Document<Metadata>;
 
   constructor(
@@ -40,11 +40,11 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
     config: {
       datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
       clientOptions?: ApifyClientOptions;
-    },
+    }
   ) {
     super();
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
-      config.clientOptions,
+      config.clientOptions
     );
     this.apifyClient = new ApifyClient({
       ...config.clientOptions,
@@ -86,10 +86,10 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
       callOptions?: ActorCallOptions;
       clientOptions?: ApifyClientOptions;
       datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
-    },
+    }
   ): Promise<ApifyDatasetLoader<Metadata>> {
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
-      config.clientOptions,
+      config.clientOptions
     );
     const apifyClient = new ApifyClient({ token: apifyApiToken });
 
@@ -118,10 +118,10 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
       callOptions?: TaskCallOptions;
       clientOptions?: ApifyClientOptions;
       datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
-    },
+    }
   ): Promise<ApifyDatasetLoader<Metadata>> {
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
-      config.clientOptions,
+      config.clientOptions
     );
     const apifyClient = new ApifyClient({ token: apifyApiToken });
 

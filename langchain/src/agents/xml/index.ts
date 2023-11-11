@@ -73,7 +73,7 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   async plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     let log = "";
     for (const { action, observation } of steps) {
@@ -103,7 +103,7 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: XMLAgentInput & Pick<AgentArgs, "callbacks">,
+    args?: XMLAgentInput & Pick<AgentArgs, "callbacks">
   ) {
     const prompt = XMLAgent.createPrompt();
     const chain = new LLMChain({

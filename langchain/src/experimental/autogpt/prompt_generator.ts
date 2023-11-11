@@ -56,7 +56,7 @@ export class PromptGenerator {
   _generate_command_string(tool: ObjectTool): string {
     let output = `"${tool.name}": ${tool.description}`;
     output += `, args json schema: ${JSON.stringify(
-      (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties,
+      (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
     )}`;
     return output;
   }
@@ -83,7 +83,7 @@ export class PromptGenerator {
   _generate_numbered_list(items: any[], item_type = "list"): string {
     if (item_type === "command") {
       const command_strings = items.map(
-        (item, i) => `${i + 1}. ${this._generate_command_string(item)}`,
+        (item, i) => `${i + 1}. ${this._generate_command_string(item)}`
       );
       const finish_description =
         "use this to signal that you have finished all your objectives";
@@ -107,17 +107,17 @@ export class PromptGenerator {
     const formatted_response_format = JSON.stringify(
       this.response_format,
       null,
-      4,
+      4
     );
     const prompt_string =
       `Constraints:\n${this._generate_numbered_list(this.constraints)}\n\n` +
       `Commands:\n${this._generate_numbered_list(
         this.commands,
-        "command",
+        "command"
       )}\n\n` +
       `Resources:\n${this._generate_numbered_list(this.resources)}\n\n` +
       `Performance Evaluation:\n${this._generate_numbered_list(
-        this.performance_evaluation,
+        this.performance_evaluation
       )}\n\n` +
       `You should only respond in JSON format as described below ` +
       `\nResponse Format: \n${formatted_response_format} ` +
@@ -136,16 +136,16 @@ export function getPrompt(tools: ObjectTool[]): string {
   prompt_generator.add_constraint(
     "~4000 word limit for short term memory. " +
       "Your short term memory is short, " +
-      "so immediately save important information to files.",
+      "so immediately save important information to files."
   );
   prompt_generator.add_constraint(
     "If you are unsure how you previously did something " +
       "or want to recall past events, " +
-      "thinking about similar events will help you remember.",
+      "thinking about similar events will help you remember."
   );
   prompt_generator.add_constraint("No user assistance");
   prompt_generator.add_constraint(
-    'Exclusively use the commands listed in double quotes e.g. "command name"',
+    'Exclusively use the commands listed in double quotes e.g. "command name"'
   );
 
   for (const tool of tools) {
@@ -153,27 +153,27 @@ export function getPrompt(tools: ObjectTool[]): string {
   }
 
   prompt_generator.add_resource(
-    "Internet access for searches and information gathering.",
+    "Internet access for searches and information gathering."
   );
   prompt_generator.add_resource("Long Term memory management.");
   prompt_generator.add_resource(
-    "GPT-3.5 powered Agents for delegation of simple tasks.",
+    "GPT-3.5 powered Agents for delegation of simple tasks."
   );
   prompt_generator.add_resource("File output.");
 
   prompt_generator.add_performance_evaluation(
     "Continuously review and analyze your actions " +
-      "to ensure you are performing to the best of your abilities.",
+      "to ensure you are performing to the best of your abilities."
   );
   prompt_generator.add_performance_evaluation(
-    "Constructively self-criticize your big-picture behavior constantly.",
+    "Constructively self-criticize your big-picture behavior constantly."
   );
   prompt_generator.add_performance_evaluation(
-    "Reflect on past decisions and strategies to refine your approach.",
+    "Reflect on past decisions and strategies to refine your approach."
   );
   prompt_generator.add_performance_evaluation(
     "Every command has a cost, so be smart and efficient. " +
-      "Aim to complete tasks in the least number of steps.",
+      "Aim to complete tasks in the least number of steps."
   );
 
   const prompt_string = prompt_generator.generate_prompt_string();

@@ -6,6 +6,6 @@ const options = {
 
 const loader = new UnstructuredDirectoryLoader(
   "langchain/src/document_loaders/tests/example_data",
-  options,
+  options
 );
 const docs = await loader.load();

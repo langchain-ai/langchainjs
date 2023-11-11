@@ -48,8 +48,8 @@ function settle(resolve, reject, response) {
         response.config,
         null,
         response.request,
-        response,
-      ),
+        response
+      )
     );
   }
 }
@@ -275,7 +275,7 @@ async function getResponse(request, config) {
         }
         // If the non-stream response is also not an error, throw
         throw new Error(
-          `Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}`,
+          `Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}`
         );
       }
       await getBytes(stageOne.body, getLines(getMessages(config.onmessage)));
@@ -401,7 +401,7 @@ function createError(message, config, code, request, response) {
       axios.AxiosError[code],
       config,
       request,
-      response,
+      response
     );
   }
 

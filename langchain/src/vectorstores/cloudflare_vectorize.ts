@@ -47,7 +47,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     const { index, textKey, ...asyncCallerArgs } = args;
     if (!index) {
       throw new Error(
-        "Must supply a Vectorize index binding, eg { index: env.VECTORIZE }",
+        "Must supply a Vectorize index binding, eg { index: env.VECTORIZE }"
       );
     }
     this.index = index;
@@ -67,13 +67,13 @@ export class CloudflareVectorizeStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] } | string[],
+    options?: { ids?: string[] } | string[]
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options,
+      options
     );
   }
 
@@ -87,7 +87,7 @@ export class CloudflareVectorizeStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] } | string[],
+    options?: { ids?: string[] } | string[]
   ) {
     const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
@@ -107,7 +107,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     const chunkSize = 500;
     const chunkedVectors = chunkArray(vectorizeVectors, chunkSize);
     const batchRequests = chunkedVectors.map((chunk) =>
-      this.caller.call(async () => this.index.upsert(chunk)),
+      this.caller.call(async () => this.index.upsert(chunk))
     );
 
     await Promise.all(batchRequests);
@@ -124,7 +124,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     const batchSize = 1000;
     const batchedIds = chunkArray(params.ids, batchSize);
     const batchRequests = batchedIds.map((batchIds) =>
-      this.caller.call(async () => this.index.deleteByIds(batchIds)),
+      this.caller.call(async () => this.index.deleteByIds(batchIds))
     );
     await Promise.all(batchRequests);
   }
@@ -138,7 +138,7 @@ export class CloudflareVectorizeStore extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number,
+    k: number
   ): Promise<[Document, number][]> {
     const results = await this.index.query(query, {
       returnVectors: true,
@@ -177,7 +177,7 @@ export class CloudflareVectorizeStore extends VectorStore {
       | Record<string, VectorizeVectorMetadata>[]
       | Record<string, VectorizeVectorMetadata>,
     embeddings: Embeddings,
-    dbConfig: VectorizeLibArgs,
+    dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -203,7 +203,7 @@ export class CloudflareVectorizeStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: VectorizeLibArgs,
+    dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -219,7 +219,7 @@ export class CloudflareVectorizeStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: VectorizeLibArgs,
+    dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;

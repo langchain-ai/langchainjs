@@ -33,7 +33,7 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 const vectorStoreRetriever = vectorStore.asRetriever();
 
 const docs = retriever.getRelevantDocuments(
-  "what did he say about ketanji brown jackson",
+  "what did he say about ketanji brown jackson"
 );
 ```
 
@@ -46,6 +46,6 @@ You can specify a maximum number of documents to retrieve as well as a vector st
 const retriever = vectorStore.asRetriever(2, { metadataField: "value" });
 
 const docs = retriever.getRelevantDocuments(
-  "what did he say about ketanji brown jackson",
+  "what did he say about ketanji brown jackson"
 );
 ```

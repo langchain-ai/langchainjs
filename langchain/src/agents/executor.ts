@@ -129,7 +129,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
       for (const tool of this.tools) {
         if (tool.returnDirect) {
           throw new Error(
-            `Tool with return direct ${tool.name} not supported for multi-action agent.`,
+            `Tool with return direct ${tool.name} not supported for multi-action agent.`
           );
         }
       }
@@ -159,16 +159,16 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   /** @ignore */
   async _call(
     inputs: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<AgentExecutorOutput> {
     const toolsByName = Object.fromEntries(
-      this.tools.map((t) => [t.name.toLowerCase(), t]),
+      this.tools.map((t) => [t.name.toLowerCase(), t])
     );
     const steps: AgentStep[] = [];
     let iterations = 0;
 
     const getOutput = async (
-      finishStep: AgentFinish,
+      finishStep: AgentFinish
     ): Promise<AgentExecutorOutput> => {
       const { returnValues } = finishStep;
       const additional = await this.agent.prepareForOutput(returnValues, steps);
@@ -251,14 +251,14 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
               }
               observation = await new ExceptionTool().call(
                 observation,
-                runManager?.getChild(),
+                runManager?.getChild()
               );
               return { action, observation: observation ?? "" };
             }
           }
 
           return { action, observation: observation ?? "" };
-        }),
+        })
       );
 
       steps.push(...newSteps);
@@ -279,7 +279,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     const finish = await this.agent.returnStoppedResponse(
       this.earlyStoppingMethod,
       steps,
-      inputs,
+      inputs
     );
 
     return getOutput(finish);

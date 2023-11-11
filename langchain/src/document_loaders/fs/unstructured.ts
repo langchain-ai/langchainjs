@@ -161,7 +161,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   constructor(
     filePathOrLegacyApiUrl: string,
-    optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {},
+    optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {}
   ) {
     super();
 
@@ -219,7 +219,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     if (this.skipInferTableTypes) {
       formData.append(
         "skip_infer_table_types",
-        JSON.stringify(this.skipInferTableTypes),
+        JSON.stringify(this.skipInferTableTypes)
       );
     }
     if (this.hiResModelName) {
@@ -246,14 +246,14 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       throw new Error(
         `Failed to partition file ${this.filePath} with error ${
           response.status
-        } and message ${await response.text()}`,
+        } and message ${await response.text()}`
       );
     }
 
     const elements = await response.json();
     if (!Array.isArray(elements)) {
       throw new Error(
-        `Expected partitioning request to return an array, but got ${elements}`,
+        `Expected partitioning request to return an array, but got ${elements}`
       );
     }
     return elements.filter((el) => typeof el.text === "string") as Element[];
@@ -273,7 +273,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
               ...metadata,
               category: element.type,
             },
-          }),
+          })
         );
       }
     }
@@ -292,7 +292,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`,
+        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
       );
     }
   }
@@ -309,7 +309,7 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
     directoryPathOrLegacyApiUrl: string,
     optionsOrLegacyDirectoryPath: UnstructuredDirectoryLoaderOptions | string,
     legacyOptionRecursive = true,
-    legacyOptionUnknown: UnknownHandling = UnknownHandling.Warn,
+    legacyOptionUnknown: UnknownHandling = UnknownHandling.Warn
   ) {
     let directoryPath;
     let options: UnstructuredDirectoryLoaderOptions;
@@ -334,7 +334,7 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
         loadersObject[filetype] = loader;
         return loadersObject;
       },
-      {},
+      {}
     );
     super(directoryPath, loaders, options.recursive, options.unknown);
   }

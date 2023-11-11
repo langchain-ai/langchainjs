@@ -10,7 +10,7 @@ import { BasicTranslator } from "./base.js";
  * queries and compare results.
  */
 export class PineconeTranslator<
-  T extends PineconeStore,
+  T extends PineconeStore
 > extends BasicTranslator<T> {
   constructor() {
     super({

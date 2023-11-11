@@ -16,7 +16,7 @@ export const loadFileContents = (contents: string, format: string) => {
 export const parseFileConfig = (
   text: string,
   path: string,
-  supportedTypes?: string[],
+  supportedTypes?: string[]
 ) => {
   const suffix = extname(path);
 

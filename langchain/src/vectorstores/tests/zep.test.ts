@@ -95,16 +95,16 @@ describe("ZepVectorStore", () => {
 
     expect(ZepClient.init).toHaveBeenCalledWith(
       zepConfig.apiUrl,
-      zepConfig.apiKey,
+      zepConfig.apiKey
     );
     expect(mockClient.document.getCollection).toHaveBeenCalledWith(
-      zepConfig.collectionName,
+      zepConfig.collectionName
     );
   });
 
   test("should instantiate class successfully when a Collection does not exist", async () => {
     mockClient.document.getCollection.mockRejectedValueOnce(
-      new NotFoundError("Collection not found"),
+      new NotFoundError("Collection not found")
     );
 
     new ZepVectorStore(embeddings, zepConfig);
@@ -114,10 +114,10 @@ describe("ZepVectorStore", () => {
 
     expect(ZepClient.init).toHaveBeenCalledWith(
       zepConfig.apiUrl,
-      zepConfig.apiKey,
+      zepConfig.apiKey
     );
     expect(mockClient.document.getCollection).toHaveBeenCalledWith(
-      zepConfig.collectionName,
+      zepConfig.collectionName
     );
     expect(mockClient.document.addCollection).toHaveBeenCalledWith({
       name: zepConfig.collectionName,
@@ -149,7 +149,7 @@ describe("ZepVectorStore", () => {
           content: "foo bar baz",
           metadata: { foo: "bar" },
         }),
-      ]),
+      ])
     );
 
     expect(result).toEqual(["uuid1", "uuid2", "uuid3"]);
@@ -181,18 +181,18 @@ describe("ZepVectorStore", () => {
           ZepVectorStore,
           docs as Document[],
           embeddings as Embeddings,
-          zepConfig as IZepConfig,
+          zepConfig as IZepConfig
         );
         (zepVectorStore as any).collection = mockCollection;
         return zepVectorStore;
-      },
+      }
     );
 
     const zepVectorStore = await ZepVectorStore.fromTexts(
       texts,
       metadatas,
       embeddings,
-      zepConfig,
+      zepConfig
     );
 
     expect(zepVectorStore).toBeInstanceOf(ZepVectorStore);
@@ -203,7 +203,7 @@ describe("ZepVectorStore", () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
-      ]),
+      ])
     );
 
     // Check that each object is a valid IDocument
@@ -227,7 +227,7 @@ describe("ZepVectorStore", () => {
     const result = await zepVectorStore.similaritySearchVectorWithScore(
       query,
       k,
-      filter,
+      filter
     );
 
     expect(mockCollection.search).toHaveBeenCalledWith(
@@ -235,7 +235,7 @@ describe("ZepVectorStore", () => {
         embedding: new Float32Array(query),
         metadata: filter,
       }),
-      k,
+      k
     );
 
     const docsAndScores = mockZepDocuments.map((doc) => [
@@ -265,7 +265,7 @@ describe("ZepVectorStore", () => {
         text: query,
         metadata: filter,
       }),
-      k,
+      k
     );
 
     const docs = mockZepDocuments.map(
@@ -273,7 +273,7 @@ describe("ZepVectorStore", () => {
         new Document({
           pageContent: doc.content,
           metadata: doc.metadata,
-        }),
+        })
     );
 
     expect(result).toEqual(docs);
@@ -298,7 +298,7 @@ describe("ZepVectorStore", () => {
         text: query,
         metadata: options.filter,
       }),
-      options.fetchK,
+      options.fetchK
     );
   });
 });

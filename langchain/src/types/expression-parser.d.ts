@@ -6,7 +6,7 @@ declare interface ParseOptions {
 }
 declare type ParseFunction = <Options extends ParseOptions>(
   input: string,
-  options?: Options,
+  options?: Options
 ) => Options extends { startRule: infer StartRule }
   ? StartRule extends "Start"
     ? Start

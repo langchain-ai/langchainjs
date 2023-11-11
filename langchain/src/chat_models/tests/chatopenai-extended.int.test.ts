@@ -117,9 +117,9 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
         tool_call_id: toolCall.id,
         name: toolCall.function.name,
         content: getCurrentWeather(
-          JSON.parse(toolCall.function.arguments).location,
+          JSON.parse(toolCall.function.arguments).location
         ),
-      }),
+      })
   );
   const finalResponse = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],

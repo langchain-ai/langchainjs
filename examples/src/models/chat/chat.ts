@@ -6,7 +6,7 @@ export const run = async () => {
   // Pass in a list of messages to `call` to start a conversation. In this simple example, we only pass in one message.
   const responseA = await chat.call([
     new HumanMessage(
-      "What is a good name for a company that makes colorful socks?",
+      "What is a good name for a company that makes colorful socks?"
     ),
   ]);
   console.log(responseA);
@@ -17,7 +17,7 @@ export const run = async () => {
   // The second message is a human message that starts the conversation.
   const responseB = await chat.call([
     new SystemMessage(
-      "You are a helpful assistant that translates English to French.",
+      "You are a helpful assistant that translates English to French."
     ),
     new HumanMessage("Translate: I love programming."),
   ]);
@@ -28,18 +28,18 @@ export const run = async () => {
   const responseC = await chat.generate([
     [
       new SystemMessage(
-        "You are a helpful assistant that translates English to French.",
+        "You are a helpful assistant that translates English to French."
       ),
       new HumanMessage(
-        "Translate this sentence from English to French. I love programming.",
+        "Translate this sentence from English to French. I love programming."
       ),
     ],
     [
       new SystemMessage(
-        "You are a helpful assistant that translates English to French.",
+        "You are a helpful assistant that translates English to French."
       ),
       new HumanMessage(
-        "Translate this sentence from English to French. I love artificial intelligence.",
+        "Translate this sentence from English to French. I love artificial intelligence."
       ),
     ],
   ]);

@@ -6,20 +6,20 @@ export function identifySecrets() {
 
   const tsConfig = ts.parseJsonConfigFileContent(
     ts.readJsonConfigFile("./tsconfig.json", (p) =>
-      fs.readFileSync(p, "utf-8"),
+      fs.readFileSync(p, "utf-8")
     ),
     ts.sys,
-    "./src/",
+    "./src/"
   );
 
   for (const fileName of tsConfig.fileNames.filter(
-    (fn) => !fn.endsWith("test.ts"),
+    (fn) => !fn.endsWith("test.ts")
   )) {
     const sourceFile = ts.createSourceFile(
       fileName,
       fs.readFileSync(fileName, "utf-8"),
       tsConfig.options.target,
-      true,
+      true
     );
     sourceFile.forEachChild((node) => {
       switch (node.kind) {
@@ -48,12 +48,12 @@ export function identifySecrets() {
 
                           if (secret.toUpperCase() !== secret) {
                             throw new Error(
-                              `Secret identifier must be uppercase: ${secret} at ${fileName}`,
+                              `Secret identifier must be uppercase: ${secret} at ${fileName}`
                             );
                           }
                           if (/\s/.test(secret)) {
                             throw new Error(
-                              `Secret identifier must not contain whitespace: ${secret} at ${fileName}`,
+                              `Secret identifier must not contain whitespace: ${secret} at ${fileName}`
                             );
                           }
 

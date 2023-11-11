@@ -39,7 +39,7 @@ test("Test LangChain V2 tracer", async () => {
   await tracer.handleChatModelStart(
     serialized,
     [[new HumanMessage("I'm a human.")]],
-    chatRunId,
+    chatRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);
   await tracer.handleToolEnd("output", toolRunId);
@@ -81,7 +81,7 @@ test("Test traced chain with tags", async () => {
       question: "What is the meaning of life?",
     },
     [new LangChainTracer()],
-    ["test-for-tags"],
+    ["test-for-tags"]
   );
 });
 

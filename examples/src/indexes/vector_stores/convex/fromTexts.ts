@@ -11,7 +11,7 @@ export const ingest = action({
       ["Hello world", "Bye bye", "What's this?"],
       [{ prop: 2 }, { prop: 1 }, { prop: 3 }],
       new OpenAIEmbeddings(),
-      { ctx },
+      { ctx }
     );
   },
 });

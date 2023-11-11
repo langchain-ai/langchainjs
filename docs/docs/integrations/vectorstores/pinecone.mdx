@@ -74,7 +74,7 @@ const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
 const vectorStore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
-  { pineconeIndex },
+  { pineconeIndex }
 );
 
 /* Search the vector DB independently with meta filters */
@@ -206,7 +206,7 @@ const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX);
 
 const vectorStore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
-  { pineconeIndex },
+  { pineconeIndex }
 );
 
 /* Search the vector DB independently with meta filters */

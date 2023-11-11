@@ -85,7 +85,7 @@ export class RemoteLangChainRetriever
         new Document({
           pageContent: r[this.pageContentKey],
           metadata: r[this.metadataKey],
-        }),
+        })
     );
   }
 }

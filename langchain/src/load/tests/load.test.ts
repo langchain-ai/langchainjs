@@ -100,7 +100,7 @@ test("serialize + deserialize custom classes", async () => {
     {
       "langchain/tests": { Person },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
+    } as any
   );
   expect(person2).toBeInstanceOf(Person);
   expect(JSON.stringify(person2, null, 2)).toBe(str);
@@ -131,7 +131,7 @@ test("serialize + deserialize custom classes", async () => {
     {
       "langchain/tests": { SpecialPerson },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
+    } as any
   );
   expect(sperson2).toBeInstanceOf(SpecialPerson);
   expect(JSON.stringify(sperson2, null, 2)).toBe(sstr);
@@ -172,14 +172,14 @@ test("serialize + deserialize llm with optional deps", async () => {
   const llm2 = await load<Cohere>(
     str,
     { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": { Cohere } },
+    { "langchain/llms/cohere": { Cohere } }
   );
   expect(llm2).toBeInstanceOf(Cohere);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
   const llm3 = await load<Cohere>(
     str,
     { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": import("../../llms/cohere.js") },
+    { "langchain/llms/cohere": import("../../llms/cohere.js") }
   );
   expect(llm3).toBeInstanceOf(Cohere);
   expect(JSON.stringify(llm3, null, 2)).toBe(str);
@@ -265,9 +265,9 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
   await expect(
     load<LLMChain>(str, {
       OPENAI_API_KEY: "openai-key",
-    }),
+    })
   ).rejects.toThrowError(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}',
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
   );
 });
 
@@ -281,7 +281,7 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   const prompt = new FewShotPromptTemplate({
     exampleSelector: await LengthBasedExampleSelector.fromExamples(
       [{ yo: "1" }, { yo: "2" }],
-      { examplePrompt },
+      { examplePrompt }
     ),
     prefix: "You are a nice assistant",
     examplePrompt,
@@ -294,9 +294,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   await expect(
     load<LLMChain>(str, {
       OPENAI_API_KEY: "openai-key",
-    }),
+    })
   ).rejects.toThrow(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}',
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
   );
 });
 
@@ -308,7 +308,7 @@ test("serialize + deserialize llmchain with list output parser", async () => {
     callbacks: [new LangChainTracer()],
   });
   const prompt = PromptTemplate.fromTemplate(
-    "An example about {yo} {format_instructions}",
+    "An example about {yo} {format_instructions}"
   );
   const outputParser = new CommaSeparatedListOutputParser();
   const chain = new LLMChain({ llm, prompt, outputParser });
@@ -320,7 +320,7 @@ test("serialize + deserialize llmchain with list output parser", async () => {
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
   expect(await chain2.outputParser?.parseResult([{ text: "a, b, c" }])).toEqual(
-    ["a", "b", "c"],
+    ["a", "b", "c"]
   );
 });
 
@@ -332,7 +332,7 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
     callbacks: [new LangChainTracer()],
   });
   const prompt = PromptTemplate.fromTemplate(
-    "An example about {yo} {format_instructions}",
+    "An example about {yo} {format_instructions}"
   );
   const outputParser = new RegexParser({
     regex: /Confidence: (A|B|C), Explanation: (.*)/,
@@ -351,7 +351,7 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
       {
         text: "Confidence: A, Explanation: Because it is the capital of France.",
       },
-    ]),
+    ])
   ).toEqual({
     confidence: "A",
     explanation: "Because it is the capital of France.",
@@ -366,7 +366,7 @@ test("serialize + deserialize llmchain with fix + combining output parser", asyn
     callbacks: [new LangChainTracer()],
   });
   const prompt = PromptTemplate.fromTemplate(
-    "An example about {yo} {format_instructions}",
+    "An example about {yo} {format_instructions}"
   );
   const outputParser = OutputFixingParser.fromLLM(
     llm,
@@ -378,8 +378,8 @@ test("serialize + deserialize llmchain with fix + combining output parser", asyn
       new RegexParser({
         regex: /Confidence: (A|B|C), Explanation: (.*)/,
         outputKeys: ["confidence", "explanation"],
-      }),
-    ),
+      })
+    )
   );
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
@@ -400,12 +400,12 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
   });
 
   const prompt = PromptTemplate.fromTemplate(
-    "An example about {yo} {format_instructions}",
+    "An example about {yo} {format_instructions}"
   );
   const outputParser = new StructuredOutputParser(
     z.object({
       a: z.string(),
-    }),
+    })
   );
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
@@ -413,9 +413,9 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
   await expect(
     load<LLMChain>(str, {
       OPENAI_API_KEY: "openai-key",
-    }),
+    })
   ).rejects.toThrow(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.output_parser -> {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}',
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.output_parser -> {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
   );
 });
 
@@ -434,7 +434,7 @@ test.skip("serialize + deserialize agent", async () => {
     llm,
     {
       agentType: "chat-conversational-react-description",
-    },
+    }
   );
   const str = JSON.stringify(executor, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
@@ -443,7 +443,7 @@ test.skip("serialize + deserialize agent", async () => {
     { OPENAI_API_KEY: "openai-key" },
     {
       "langchain/tools/calculator": { Calculator },
-    },
+    }
   );
   expect(executor2).toBeInstanceOf(AgentExecutor);
   expect(JSON.stringify(executor2, null, 2)).toBe(str);
@@ -457,7 +457,7 @@ test("override name of objects when serialising", async () => {
   const llm2 = await load<Cohere>(
     str,
     { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": { Cohere: MangledName } },
+    { "langchain/llms/cohere": { Cohere: MangledName } }
   );
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
 });
@@ -473,7 +473,7 @@ test("Should load traces even if the constructor name changes (minified environm
   const llm2 = await load<Cohere>(
     str,
     { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": { Cohere } },
+    { "langchain/llms/cohere": { Cohere } }
   );
   console.log(JSON.stringify(llm2, null, 2));
   expect(JSON.stringify(llm2, null, 2)).toBe(str);

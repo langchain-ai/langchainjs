@@ -81,7 +81,7 @@ export class CustomListOutputParser extends ListOutputParser {
         .map((s) => s.trim());
       if (this.length !== undefined && items.length !== this.length) {
         throw new OutputParserException(
-          `Incorrect number of items. Expected ${this.length}, got ${items.length}.`,
+          `Incorrect number of items. Expected ${this.length}, got ${items.length}.`
         );
       }
       return items;

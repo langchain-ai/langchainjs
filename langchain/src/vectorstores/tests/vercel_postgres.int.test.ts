@@ -23,7 +23,7 @@ describe("Test VercelPostgres store", () => {
   test("Test embeddings creation", async () => {
     vercelPostgresStore = await VercelPostgres.initialize(
       new OpenAIEmbeddings(),
-      config,
+      config
     );
 
     expect(vercelPostgresStore).toBeDefined();
@@ -54,7 +54,7 @@ describe("Test VercelPostgres store", () => {
 
     await vercelPostgresStore.addDocuments(
       [{ pageContent: "Dog drinks milk", metadata: { a: 2 } }],
-      { ids: [ids[2]] },
+      { ids: [ids[2]] }
     );
 
     const results2 = await vercelPostgresStore.similaritySearch("hello", 2, {
@@ -76,7 +76,7 @@ describe("Test VercelPostgres store", () => {
   test("Test metadata filtering", async () => {
     vercelPostgresStore = await VercelPostgres.initialize(
       new OpenAIEmbeddings(),
-      config,
+      config
     );
 
     const docGreen = {
@@ -114,13 +114,13 @@ describe("Test VercelPostgres store", () => {
       5,
       {
         color: { in: ["blue", "yellow"] },
-      },
+      }
     );
 
     expect(results2).toHaveLength(2);
 
     const results2WithColorGreen = results2.filter(
-      (result) => result.metadata.color === "green",
+      (result) => result.metadata.color === "green"
     );
 
     expect(results2WithColorGreen).toHaveLength(0);

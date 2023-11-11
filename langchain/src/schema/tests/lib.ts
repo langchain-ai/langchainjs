@@ -43,7 +43,7 @@ export class FakeRunnable extends Runnable<string, Record<string, any>> {
 
   async invoke(
     input: string,
-    options?: Partial<BaseCallbackConfig>,
+    options?: Partial<BaseCallbackConfig>
   ): Promise<Record<string, any>> {
     if (this.returnOptions) {
       return options ?? {};
@@ -103,7 +103,7 @@ export class FakeChatModel extends BaseChatModel {
 
   async _generate(
     messages: BaseMessage[],
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     if (options?.stop?.length) {
       return {
@@ -142,7 +142,7 @@ export class FakeRetriever extends BaseRetriever {
   }
 
   async _getRelevantDocuments(
-    _query: string,
+    _query: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<Document<Record<string, any>>[]> {
     return this.output;

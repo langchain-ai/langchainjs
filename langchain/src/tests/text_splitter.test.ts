@@ -134,7 +134,7 @@ describe("Character text splitter", () => {
       {
         chunkHeader: `SOURCE NAME: testing\n-----\n`,
         appendChunkOverlapHeader: true,
-      },
+      }
     );
     const loc = { lines: { from: 1, to: 1 } };
     const expectedDocs = [

@@ -23,8 +23,8 @@ export function formatForOpenAIFunctions(steps: AgentStep[]): BaseMessage[] {
       new HumanMessage(
         renderTemplate(TEMPLATE_TOOL_RESPONSE, "f-string", {
           observation: step.observation,
-        }),
-      ),
+        })
+      )
     );
   }
   return thoughts;

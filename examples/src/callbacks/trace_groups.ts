@@ -25,7 +25,7 @@ export const run = async () => {
       "What is your name?",
       "What is your quest?",
       "What is your favorite color?",
-    ],
+    ]
   );
   // Or you can manually control the start and end of the grouped run
   const traceGroup = new TraceGroup("my_group_name");
@@ -35,7 +35,7 @@ export const run = async () => {
     await chain.call({ question: "What is your quest?" }, groupManager);
     await chain.call(
       { question: "What is the airspeed velocity of an unladen swallow?" },
-      groupManager,
+      groupManager
     );
   } finally {
     // Code goes here

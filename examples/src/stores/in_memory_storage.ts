@@ -18,7 +18,7 @@ const messages = Array.from({ length: 5 }).map((_, index) => {
 // The key will be prefixed with `message:id:` and end
 // with the index.
 await store.mset(
-  messages.map((message, index) => [`message:id:${index}`, message]),
+  messages.map((message, index) => [`message:id:${index}`, message])
 );
 // Now you can get your messages from the store
 const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);

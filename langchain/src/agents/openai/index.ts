@@ -35,18 +35,18 @@ import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
  * @returns True if the action is a FunctionsAgentAction, false otherwise.
  */
 function isFunctionsAgentAction(
-  action: AgentAction | FunctionsAgentAction,
+  action: AgentAction | FunctionsAgentAction
 ): action is FunctionsAgentAction {
   return (action as FunctionsAgentAction).messageLog !== undefined;
 }
 
 function _convertAgentStepToMessages(
   action: AgentAction | FunctionsAgentAction,
-  observation: string,
+  observation: string
 ) {
   if (isFunctionsAgentAction(action) && action.messageLog !== undefined) {
     return action.messageLog?.concat(
-      new FunctionMessage(observation, action.tool),
+      new FunctionMessage(observation, action.tool)
     );
   } else {
     return [new AIMessage(action.log)];
@@ -54,10 +54,10 @@ function _convertAgentStepToMessages(
 }
 
 export function _formatIntermediateSteps(
-  intermediateSteps: AgentStep[],
+  intermediateSteps: AgentStep[]
 ): BaseMessage[] {
   return intermediateSteps.flatMap(({ action, observation }) =>
-    _convertAgentStepToMessages(action, observation),
+    _convertAgentStepToMessages(action, observation)
   );
 }
 
@@ -124,7 +124,7 @@ export class OpenAIAgent extends Agent {
    */
   static createPrompt(
     _tools: StructuredTool[],
-    fields?: OpenAIAgentCreatePromptArgs,
+    fields?: OpenAIAgentCreatePromptArgs
   ): BasePromptTemplate {
     const { prefix = PREFIX } = fields || {};
     return ChatPromptTemplate.fromMessages([
@@ -145,7 +145,7 @@ export class OpenAIAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: StructuredTool[],
-    args?: OpenAIAgentCreatePromptArgs & Pick<AgentArgs, "callbacks">,
+    args?: OpenAIAgentCreatePromptArgs & Pick<AgentArgs, "callbacks">
   ) {
     OpenAIAgent.validateTools(tools);
     if (llm._modelType() !== "base_chat_model" || llm._llmType() !== "openai") {
@@ -170,7 +170,7 @@ export class OpenAIAgent extends Agent {
    * @returns A string or a list of BaseMessages representing the constructed scratch pad.
    */
   async constructScratchPad(
-    steps: AgentStep[],
+    steps: AgentStep[]
   ): Promise<string | BaseMessage[]> {
     return _formatIntermediateSteps(steps);
   }
@@ -186,7 +186,7 @@ export class OpenAIAgent extends Agent {
   async plan(
     steps: Array<AgentStep>,
     inputs: ChainValues,
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     // Add scratchpad and stop to inputs
     const thoughts = await this.constructScratchPad(steps);
@@ -211,12 +211,13 @@ export class OpenAIAgent extends Agent {
       }
     }
 
-    const promptValue =
-      await this.llmChain.prompt.formatPromptValue(valuesForPrompt);
+    const promptValue = await this.llmChain.prompt.formatPromptValue(
+      valuesForPrompt
+    );
     const message = await llm.predictMessages(
       promptValue.toChatMessages(),
       valuesForLLM,
-      callbackManager,
+      callbackManager
     );
     return this.outputParser.parseAIMessage(message);
   }

@@ -13,7 +13,7 @@ const childDocumentRetriever = ScoreThresholdRetriever.fromVectorStore(
   {
     minSimilarityScore: 0.01, // Essentially no threshold
     maxK: 1, // Only return the top result
-  },
+  }
 );
 const retriever = new ParentDocumentRetriever({
   vectorstore,

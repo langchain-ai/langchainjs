@@ -89,7 +89,7 @@ export class AsyncCaller {
 
   protected onFailedAttempt: AsyncCallerParams["onFailedAttempt"];
 
-  private queue: (typeof import("p-queue"))["default"]["prototype"];
+  private queue: typeof import("p-queue")["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
@@ -124,9 +124,9 @@ export class AsyncCaller {
             randomize: true,
             // If needed we can change some of the defaults here,
             // but they're quite sensible.
-          },
+          }
         ),
-      { throwOnTimeout: true },
+      { throwOnTimeout: true }
     );
   }
 
@@ -153,7 +153,7 @@ export class AsyncCaller {
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
     return this.call(() =>
-      fetch(...args).then((res) => (res.ok ? res : Promise.reject(res))),
+      fetch(...args).then((res) => (res.ok ? res : Promise.reject(res)))
     );
   }
 }

@@ -30,7 +30,7 @@ export abstract class BaseDocumentLoader implements DocumentLoader {
    * @returns A Promise that resolves with an array of Document instances, each split according to the provided TextSplitter.
    */
   async loadAndSplit(
-    splitter: TextSplitter = new RecursiveCharacterTextSplitter(),
+    splitter: TextSplitter = new RecursiveCharacterTextSplitter()
   ): Promise<Document[]> {
     const docs = await this.load();
     return splitter.splitDocuments(docs);

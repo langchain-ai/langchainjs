@@ -12,7 +12,7 @@ import { BasePromptTemplate } from "../prompts/base.js";
  */
 export const formatDocument = async (
   document: Document,
-  prompt: BasePromptTemplate,
+  prompt: BasePromptTemplate
 ): Promise<string> => {
   const baseInfo = {
     pageContent: document.pageContent,
@@ -22,7 +22,7 @@ export const formatDocument = async (
   const requiredMetadata = new Set(
     prompt.inputVariables
       .map((v) => (v !== "pageContent" ? v : null))
-      .filter((v) => v !== null),
+      .filter((v) => v !== null)
   );
   const missingMetadata = [];
   for (const variable of variables) {
@@ -33,10 +33,10 @@ export const formatDocument = async (
   if (missingMetadata.length) {
     throw new Error(
       `Document prompt requires documents to have metadata variables: ${JSON.stringify(
-        requiredMetadata,
+        requiredMetadata
       )}. Received document with missing metadata: ${JSON.stringify(
-        missingMetadata,
-      )}`,
+        missingMetadata
+      )}`
     );
   }
   return prompt.format(baseInfo);

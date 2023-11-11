@@ -38,7 +38,7 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
   constructor(
     embeddings: Embeddings,
     args: CloseVectorWebArgs,
-    credentials?: CloseVectorCredentials,
+    credentials?: CloseVectorCredentials
   ) {
     super(embeddings, args, credentials);
     if (args.instance) {
@@ -57,7 +57,7 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
   async saveToCloud(
     options: Parameters<typeof this.instance.saveToCloud>[0] & {
       uuid?: string;
-    },
+    }
   ) {
     if (!this.instance.uuid && !options.uuid) {
       throw new Error("No uuid provided");
@@ -81,13 +81,13 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
     options: Parameters<typeof CloseVectorHNSWWeb.loadFromCloud>[0] & {
       embeddings: Embeddings;
       credentials?: CloseVectorCredentials;
-    },
+    }
   ) {
     const instance = await CloseVectorHNSWWeb.loadFromCloud(options);
     const vectorstore = new this(
       options.embeddings,
       instance.args,
-      options.credentials,
+      options.credentials
     );
     return vectorstore;
   }
@@ -103,7 +103,7 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
   static async load(
     directory: string,
     embeddings: Embeddings,
-    credentials?: CloseVectorCredentials,
+    credentials?: CloseVectorCredentials
   ) {
     const instance = await CloseVectorHNSWWeb.load(directory, embeddings);
     const vectorstore = new this(embeddings, instance.args, credentials);
@@ -126,7 +126,7 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
     metadatas: object[] | object,
     embeddings: Embeddings,
     args?: Record<string, unknown>,
-    credential?: CloseVectorCredentials,
+    credential?: CloseVectorCredentials
   ): Promise<CloseVectorWeb> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -141,7 +141,7 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
       docs,
       embeddings,
       args,
-      credential,
+      credential
     );
   }
 
@@ -159,7 +159,7 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
     docs: Document[],
     embeddings: Embeddings,
     args?: Record<string, unknown>,
-    credentials?: CloseVectorCredentials,
+    credentials?: CloseVectorCredentials
   ): Promise<CloseVectorWeb> {
     const _args: Record<string, unknown> = args || {
       space: "cosine",
@@ -167,7 +167,7 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
     const instance = new this(
       embeddings,
       _args as unknown as CloseVectorWebArgs,
-      credentials,
+      credentials
     );
     await instance.addDocuments(docs);
     return instance;

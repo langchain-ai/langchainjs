@@ -74,7 +74,7 @@ export class BedrockLLMInputOutputAdapter {
     temperature = 0,
     stopSequences: string[] | undefined = undefined,
     modelKwargs: Record<string, unknown> = {},
-    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke",
+    bedrockMethod: "invoke" | "invoke-with-response-stream" = "invoke"
   ): Dict {
     const inputBody: Dict = {};
 

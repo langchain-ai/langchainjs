@@ -76,7 +76,7 @@ export class OpenAIEmbeddings
         openAIApiKey?: string;
         configuration?: ClientOptions;
       },
-    configuration?: ClientOptions & LegacyOpenAIInput,
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
@@ -162,14 +162,14 @@ export class OpenAIEmbeddings
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
-      this.batchSize,
+      this.batchSize
     );
 
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
         model: this.modelName,
         input: batch,
-      }),
+      })
     );
     const batchResponses = await Promise.all(batchRequests);
 
@@ -206,7 +206,7 @@ export class OpenAIEmbeddings
    * @returns Promise that resolves to the response from the API.
    */
   private async embeddingWithRetry(
-    request: OpenAIClient.EmbeddingCreateParams,
+    request: OpenAIClient.EmbeddingCreateParams
   ) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
@@ -247,7 +247,7 @@ export class OpenAIEmbeddings
       try {
         const res = await this.client.embeddings.create(
           request,
-          requestOptions,
+          requestOptions
         );
         return res;
       } catch (e) {

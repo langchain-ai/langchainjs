@@ -166,14 +166,14 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const stream = await this.caller.call(async () =>
       createOllamaStream(
         this.baseUrl,
         { ...this.invocationParams(options), prompt },
-        options,
-      ),
+        options
+      )
     );
     for await (const chunk of stream) {
       if (!chunk.done) {
@@ -206,13 +206,13 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const chunks = [];
     for await (const chunk of this._streamResponseChunks(
       prompt,
       options,
-      runManager,
+      runManager
     )) {
       chunks.push(chunk.text);
     }

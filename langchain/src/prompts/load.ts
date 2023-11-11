@@ -28,7 +28,7 @@ export const loadPrompt = async (uri: string): Promise<BasePromptTemplate> => {
     uri,
     loadPromptFromFile,
     "prompts",
-    new Set(["py", "json", "yaml"]),
+    new Set(["py", "json", "yaml"])
   );
   if (hubResult) {
     return hubResult;

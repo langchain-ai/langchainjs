@@ -20,7 +20,7 @@ export const run = async () => {
   });
 
   const resA = await model.call(
-    "What would be a good company name a company that makes colorful socks?",
+    "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ resA });
   // { resA: '\n\nSocktastic Colors' }

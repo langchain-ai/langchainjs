@@ -78,13 +78,13 @@ export class PineconeStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] } | string[],
+    options?: { ids?: string[] } | string[]
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options,
+      options
     );
   }
 
@@ -98,7 +98,7 @@ export class PineconeStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] } | string[],
+    options?: { ids?: string[] } | string[]
   ) {
     const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
@@ -148,7 +148,7 @@ export class PineconeStore extends VectorStore {
     const chunkSize = 100;
     const chunkedVectors = chunkArray(pineconeVectors, chunkSize);
     const batchRequests = chunkedVectors.map((chunk) =>
-      this.caller.call(async () => namespace.upsert(chunk)),
+      this.caller.call(async () => namespace.upsert(chunk))
     );
 
     await Promise.all(batchRequests);
@@ -184,7 +184,7 @@ export class PineconeStore extends VectorStore {
     query: number[],
     k: number,
     filter?: PineconeMetadata,
-    options?: { includeValues: boolean },
+    options?: { includeValues: boolean }
   ) {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
@@ -214,7 +214,7 @@ export class PineconeStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: PineconeMetadata,
+    filter?: PineconeMetadata
   ): Promise<[Document, number][]> {
     const results = await this._runPineconeQuery(query, k, filter);
     const result: [Document, number][] = [];
@@ -248,7 +248,7 @@ export class PineconeStore extends VectorStore {
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
@@ -256,7 +256,7 @@ export class PineconeStore extends VectorStore {
       queryEmbedding,
       options.fetchK ?? 20,
       options.filter,
-      { includeValues: true },
+      { includeValues: true }
     );
 
     const matches = results?.matches ?? [];
@@ -266,7 +266,7 @@ export class PineconeStore extends VectorStore {
       queryEmbedding,
       embeddingList,
       options.lambda,
-      options.k,
+      options.k
     );
 
     const topMmrMatches = mmrIndexes.map((idx) => matches[idx]);
@@ -302,7 +302,7 @@ export class PineconeStore extends VectorStore {
           textKey?: string;
           namespace?: string | undefined;
         }
-      | PineconeLibArgs,
+      | PineconeLibArgs
   ): Promise<PineconeStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -333,7 +333,7 @@ export class PineconeStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: PineconeLibArgs,
+    dbConfig: PineconeLibArgs
   ): Promise<PineconeStore> {
     const args = dbConfig;
     args.textKey = dbConfig.textKey ?? "text";
@@ -352,7 +352,7 @@ export class PineconeStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: PineconeLibArgs,
+    dbConfig: PineconeLibArgs
   ): Promise<PineconeStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;

@@ -43,7 +43,7 @@ export class LLMRouterChain extends RouterChain implements LLMRouterChainInput {
 
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun | undefined,
+    runManager?: CallbackManagerForChainRun | undefined
   ): Promise<RouterOutputSchema> {
     return this.llmChain.predict(values, runManager?.getChild());
   }
@@ -65,7 +65,7 @@ export class LLMRouterChain extends RouterChain implements LLMRouterChainInput {
   static fromLLM(
     llm: BaseLanguageModel,
     prompt: BasePromptTemplate,
-    options?: Omit<LLMRouterChainInput, "llmChain">,
+    options?: Omit<LLMRouterChainInput, "llmChain">
   ) {
     const llmChain = new LLMChain<RouterOutputSchema>({ llm, prompt });
     return new LLMRouterChain({ ...options, llmChain });

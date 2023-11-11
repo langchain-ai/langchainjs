@@ -20,7 +20,7 @@ import { NoOpOutputParser } from "../output_parsers/noop.js";
  */
 export interface LLMChainInput<
   T extends string | object = string,
-  L extends BaseLanguageModel = BaseLanguageModel,
+  L extends BaseLanguageModel = BaseLanguageModel
 > extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
@@ -49,7 +49,7 @@ export interface LLMChainInput<
  */
 export class LLMChain<
     T extends string | object = string,
-    L extends BaseLanguageModel = BaseLanguageModel,
+    L extends BaseLanguageModel = BaseLanguageModel
   >
   extends BaseChain
   implements LLMChainInput<T>
@@ -109,14 +109,14 @@ export class LLMChain<
   async _getFinalOutput(
     generations: Generation[],
     promptValue: BasePromptValue,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<unknown> {
     let finalCompletion: unknown;
     if (this.outputParser) {
       finalCompletion = await this.outputParser.parseResultWithPrompt(
         generations,
         promptValue,
-        runManager?.getChild(),
+        runManager?.getChild()
       );
     } else {
       finalCompletion = generations[0].text;
@@ -131,7 +131,7 @@ export class LLMChain<
    */
   call(
     values: ChainValues & this["llm"]["CallOptions"],
-    config?: Callbacks | BaseCallbackConfig,
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
     return super.call(values, config);
   }
@@ -139,7 +139,7 @@ export class LLMChain<
   /** @ignore */
   async _call(
     values: ChainValues & this["llm"]["CallOptions"],
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const valuesForPrompt = { ...values };
     const valuesForLLM: this["llm"]["CallOptions"] = {
@@ -155,13 +155,13 @@ export class LLMChain<
     const { generations } = await this.llm.generatePrompt(
       [promptValue],
       valuesForLLM,
-      runManager?.getChild(),
+      runManager?.getChild()
     );
     return {
       [this.outputKey]: await this._getFinalOutput(
         generations[0],
         promptValue,
-        runManager,
+        runManager
       ),
     };
   }
@@ -180,7 +180,7 @@ export class LLMChain<
    */
   async predict(
     values: ChainValues & this["llm"]["CallOptions"],
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<T> {
     const output = await this.call(values, callbackManager);
     return output[this.outputKey];

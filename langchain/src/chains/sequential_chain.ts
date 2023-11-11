@@ -59,7 +59,7 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     this.outputVariables = fields.outputVariables ?? [];
     if (this.outputVariables.length > 0 && fields.returnAll) {
       throw new Error(
-        "Either specify variables to return using `outputVariables` or use `returnAll` param. Cannot apply both conditions at the same time.",
+        "Either specify variables to return using `outputVariables` or use `returnAll` param. Cannot apply both conditions at the same time."
       );
     }
     this.returnAll = fields.returnAll ?? false;
@@ -79,8 +79,8 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     if (keysIntersection.size > 0) {
       throw new Error(
         `The following keys: ${formatSet(
-          keysIntersection,
-        )} are overlapping between memory and input keys of the chain variables. This can lead to unexpected behaviour. Please use input and memory keys that don't overlap.`,
+          keysIntersection
+        )} are overlapping between memory and input keys of the chain variables. This can lead to unexpected behaviour. Please use input and memory keys that don't overlap.`
       );
     }
 
@@ -95,8 +95,8 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
       if (missingKeys.size > 0) {
         throw new Error(
           `Missing variables for chain "${chain._chainType()}": ${formatSet(
-            missingKeys,
-          )}. Only got the following variables: ${formatSet(availableKeys)}.`,
+            missingKeys
+          )}. Only got the following variables: ${formatSet(availableKeys)}.`
         );
       }
       const outputKeysSet = new Set(chain.outputKeys);
@@ -104,8 +104,8 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
       if (overlappingOutputKeys.size > 0) {
         throw new Error(
           `The following output variables for chain "${chain._chainType()}" are overlapping: ${formatSet(
-            overlappingOutputKeys,
-          )}. This can lead to unexpected behaviour.`,
+            overlappingOutputKeys
+          )}. This can lead to unexpected behaviour.`
         );
       }
 
@@ -124,13 +124,13 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     } else {
       const missingKeys = difference(
         new Set(this.outputVariables),
-        new Set(availableKeys),
+        new Set(availableKeys)
       );
       if (missingKeys.size > 0) {
         throw new Error(
           `The following output variables were expected to be in the final chain output but were not found: ${formatSet(
-            missingKeys,
-          )}.`,
+            missingKeys
+          )}.`
         );
       }
     }
@@ -139,7 +139,7 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let input: ChainValues = {};
     const allChainValues: ChainValues = values;
@@ -148,7 +148,7 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
       i += 1;
       input = await chain.call(
         allChainValues,
-        runManager?.getChild(`step_${i}`),
+        runManager?.getChild(`step_${i}`)
       );
       for (const key of Object.keys(input)) {
         allChainValues[key] = input[key];
@@ -274,20 +274,20 @@ export class SimpleSequentialChain
     for (const chain of this.chains) {
       if (
         chain.inputKeys.filter(
-          (k) => !chain.memory?.memoryKeys.includes(k) ?? true,
+          (k) => !chain.memory?.memoryKeys.includes(k) ?? true
         ).length !== 1
       ) {
         throw new Error(
           `Chains used in SimpleSequentialChain should all have one input, got ${
             chain.inputKeys.length
-          } for ${chain._chainType()}.`,
+          } for ${chain._chainType()}.`
         );
       }
       if (chain.outputKeys.length !== 1) {
         throw new Error(
           `Chains used in SimpleSequentialChain should all have one output, got ${
             chain.outputKeys.length
-          } for ${chain._chainType()}.`,
+          } for ${chain._chainType()}.`
         );
       }
     }
@@ -296,7 +296,7 @@ export class SimpleSequentialChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let input: string = values[this.inputKey];
     let i = 0;
@@ -305,7 +305,7 @@ export class SimpleSequentialChain
       input = (
         await chain.call(
           { [chain.inputKeys[0]]: input, signal: values.signal },
-          runManager?.getChild(`step_${i}`),
+          runManager?.getChild(`step_${i}`)
         )
       )[chain.outputKeys[0]];
       if (this.trimOutputs) {

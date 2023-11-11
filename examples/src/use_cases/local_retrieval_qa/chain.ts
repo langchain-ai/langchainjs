@@ -12,7 +12,7 @@ import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_trans
 import { formatDocumentsAsString } from "langchain/util/document";
 
 const loader = new CheerioWebBaseLoader(
-  "https://lilianweng.github.io/posts/2023-06-23-agent/",
+  "https://lilianweng.github.io/posts/2023-06-23-agent/"
 );
 const docs = await loader.load();
 
@@ -25,7 +25,7 @@ const splitDocuments = await splitter.splitDocuments(docs);
 
 const vectorstore = await HNSWLib.fromDocuments(
   splitDocuments,
-  new HuggingFaceTransformersEmbeddings(),
+  new HuggingFaceTransformersEmbeddings()
 );
 
 const retriever = vectorstore.asRetriever();
@@ -54,7 +54,7 @@ const chain = RunnableSequence.from([
 ]);
 
 const result = await chain.invoke(
-  "What are the approaches to Task Decomposition?",
+  "What are the approaches to Task Decomposition?"
 );
 
 console.log(result);

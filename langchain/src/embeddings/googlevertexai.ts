@@ -85,7 +85,7 @@ export class GoogleVertexAIEmbeddings
       new GoogleAuth({
         scopes: "https://www.googleapis.com/auth/cloud-platform",
         ...fields?.authOptions,
-      }),
+      })
     );
   }
 
@@ -102,14 +102,14 @@ export class GoogleVertexAIEmbeddings
       documents.map((document) => ({
         content: document,
       })),
-      5,
+      5
     ); // Vertex AI accepts max 5 instances per prediction
     const parameters = {};
     const options = {};
     const responses = await Promise.all(
       instanceChunks.map((instances) =>
-        this.connection.request(instances, parameters, options),
-      ),
+        this.connection.request(instances, parameters, options)
+      )
     );
     const result: number[][] =
       responses
@@ -117,7 +117,7 @@ export class GoogleVertexAIEmbeddings
           (response) =>
             (
               response?.data as GoogleVertexAILLMPredictions<GoogleVertexEmbeddingsResults>
-            )?.predictions?.map((result) => result.embeddings.values) ?? [],
+            )?.predictions?.map((result) => result.embeddings.values) ?? []
         )
         .flat() ?? [];
     return result;

@@ -10,7 +10,7 @@ test("Test HNSWLib Retriever with Callback", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     [pageContent, pageContent, pageContent],
     [{ id: 2 }, { id: 3 }, { id: 4 }],
-    new FakeEmbeddings(),
+    new FakeEmbeddings()
   );
 
   const queryStr = "testing testing";
@@ -91,7 +91,7 @@ test("Test Faiss Retriever with Callback", async () => {
   const vectorStore = await FaissStore.fromTexts(
     [pageContent],
     [{ a: 1 }],
-    embeddings,
+    embeddings
   );
 
   expect(vectorStore).toBeDefined();

@@ -14,7 +14,7 @@ test("Test managed motörhead memory", async () => {
 
   await memory.saveContext(
     { input: "Who is the best vocalist?" },
-    { response: "Ozzy Osbourne" },
+    { response: "Ozzy Osbourne" }
   );
   const expectedString = "Human: Who is the best vocalist?\nAI: Ozzy Osbourne";
   const result2 = await memory.loadMemoryVariables({});

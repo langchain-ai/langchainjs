@@ -135,7 +135,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         configuration?: ClientOptions & LegacyOpenAIInput;
       },
     /** @deprecated */
-    configuration?: ClientOptions & LegacyOpenAIInput,
+    configuration?: ClientOptions & LegacyOpenAIInput
   ) {
     if (
       (fields?.modelName?.startsWith("gpt-3.5-turbo") ||
@@ -145,7 +145,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       // eslint-disable-next-line no-constructor-return
       return new OpenAIChat(
         fields,
-        configuration,
+        configuration
       ) as unknown as OpenAI<CallOptions>;
     }
     super(fields ?? {});
@@ -238,7 +238,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ): Omit<OpenAIClient.CompletionCreateParams, "prompt"> {
     return {
       model: this.modelName,
@@ -296,7 +296,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: OpenAIClient.CompletionChoice[] = [];
@@ -307,7 +307,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     if (params.max_tokens === -1) {
       if (prompts.length !== 1) {
         throw new Error(
-          "max_tokens set to -1 not supported for multiple inputs",
+          "max_tokens set to -1 not supported for multiple inputs"
         );
       }
       params.max_tokens = await calculateMaxTokens({
@@ -328,7 +328,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
                 stream: true,
                 prompt: subPrompts[i],
               },
-              options,
+              options
             );
             for await (const message of stream) {
               // on the first message set the response properties
@@ -371,7 +371,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
             {
               signal: options.signal,
               ...options.options,
-            },
+            }
           );
 
       choices.push(...data.choices);
@@ -408,7 +408,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
         },
-      })),
+      }))
     );
     return {
       generations,
@@ -420,7 +420,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   async *_streamResponseChunks(
     input: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const params = {
       ...this.invocationParams(options),
@@ -456,19 +456,19 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
    */
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Completion>>;
 
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<OpenAIClient.Completions.Completion>;
 
   async completionWithRetry(
     request:
       | OpenAIClient.CompletionCreateParamsStreaming
       | OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
+    options?: OpenAICoreRequestOptions
   ): Promise<
     AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
   > {
@@ -477,7 +477,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       try {
         const res = await this.client.completions.create(
           request,
-          requestOptions,
+          requestOptions
         );
         return res;
       } catch (e) {
@@ -564,7 +564,7 @@ export class PromptLayerOpenAI extends OpenAI {
       promptLayerApiKey?: string;
       plTags?: string[];
       returnPromptLayerId?: boolean;
-    },
+    }
   ) {
     super(fields);
 
@@ -582,7 +582,7 @@ export class PromptLayerOpenAI extends OpenAI {
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const requestStartTime = Date.now();
     const generations = await super._generate(prompts, options, runManager);
@@ -603,7 +603,7 @@ export class PromptLayerOpenAI extends OpenAI {
         parsedResp,
         requestStartTime,
         requestEndTime,
-        this.promptLayerApiKey,
+        this.promptLayerApiKey
       );
 
       let promptLayerRequestId;

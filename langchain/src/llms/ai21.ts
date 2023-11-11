@@ -90,7 +90,7 @@ export class AI21 extends LLM implements AI21Input {
   validateEnvironment() {
     if (!this.ai21ApiKey) {
       throw new Error(
-        `No AI21 API key found. Please set it as "AI21_API_KEY" in your environment variables.`,
+        `No AI21 API key found. Please set it as "AI21_API_KEY" in your environment variables.`
       );
     }
   }
@@ -148,7 +148,7 @@ export class AI21 extends LLM implements AI21Input {
    */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     let stop = options?.stop;
     this.validateEnvironment();
@@ -177,7 +177,7 @@ export class AI21 extends LLM implements AI21Input {
       });
       if (!response.ok) {
         const error = new Error(
-          `AI21 call failed with status code ${response.status}`,
+          `AI21 call failed with status code ${response.status}`
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;

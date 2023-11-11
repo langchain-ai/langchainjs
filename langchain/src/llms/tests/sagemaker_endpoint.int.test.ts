@@ -22,7 +22,7 @@ describe.skip("Test SageMaker LLM", () => {
 
       async transformInput(
         prompt: string,
-        modelKwargs: Record<string, unknown>,
+        modelKwargs: Record<string, unknown>
       ): Promise<Uint8Array> {
         const payload = {
           inputs: [[{ role: "user", content: prompt }]],
@@ -36,7 +36,7 @@ describe.skip("Test SageMaker LLM", () => {
 
       async transformOutput(output: Uint8Array): Promise<string> {
         const response_json = JSON.parse(
-          new TextDecoder("utf-8").decode(output),
+          new TextDecoder("utf-8").decode(output)
         ) as ResponseJsonInterface[];
         const content = response_json[0]?.generation.content ?? "";
         return content;
@@ -66,7 +66,7 @@ describe.skip("Test SageMaker LLM", () => {
     });
 
     const response = await model.call(
-      "hello, my name is John Doe, tell me a fun story about llamas.",
+      "hello, my name is John Doe, tell me a fun story about llamas."
     );
 
     expect(response.length).toBeGreaterThan(0);
@@ -80,7 +80,7 @@ describe.skip("Test SageMaker LLM", () => {
 
       async transformInput(
         prompt: string,
-        modelKwargs: Record<string, unknown>,
+        modelKwargs: Record<string, unknown>
       ): Promise<Uint8Array> {
         const payload = {
           inputs: [[{ role: "user", content: prompt }]],
@@ -120,7 +120,7 @@ describe.skip("Test SageMaker LLM", () => {
     });
 
     const response = await model.call(
-      "hello, my name is John Doe, tell me a fun story about llamas in 3 paragraphs",
+      "hello, my name is John Doe, tell me a fun story about llamas in 3 paragraphs"
     );
 
     const chunks = [];

@@ -55,7 +55,7 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
    */
   constructor(
     params: CreateTranscriptParameters | string,
-    assemblyAIOptions?: AssemblyAIOptions,
+    assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(assemblyAIOptions);
     if (typeof params === "string") {
@@ -71,7 +71,7 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
     }
     if (this.CreateTranscriptParameters) {
       return await this.client.transcripts.create(
-        this.CreateTranscriptParameters,
+        this.CreateTranscriptParameters
       );
     }
   }
@@ -109,14 +109,14 @@ export class AudioTranscriptParagraphsLoader extends CreateTranscriptLoader {
   override async load(): Promise<Document<TranscriptParagraph>[]> {
     const transcript = await this.getOrCreateTranscript();
     const paragraphsResponse = await this.client.transcripts.paragraphs(
-      transcript.id,
+      transcript.id
     );
     return paragraphsResponse.paragraphs.map(
       (p: TranscriptParagraph) =>
         new Document({
           pageContent: p.text,
           metadata: p,
-        }),
+        })
     );
   }
 }
@@ -133,14 +133,14 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
   override async load(): Promise<Document<TranscriptSentence>[]> {
     const transcript = await this.getOrCreateTranscript();
     const sentencesResponse = await this.client.transcripts.sentences(
-      transcript.id,
+      transcript.id
     );
     return sentencesResponse.sentences.map(
       (p: TranscriptSentence) =>
         new Document({
           pageContent: p.text,
           metadata: p,
-        }),
+        })
     );
   }
 }
@@ -159,7 +159,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
   constructor(
     CreateTranscriptParameters: CreateTranscriptParameters,
     subtitleFormat: SubtitleFormat,
-    assemblyAIOptions?: AssemblyAIOptions,
+    assemblyAIOptions?: AssemblyAIOptions
   );
 
   /**
@@ -172,7 +172,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
   constructor(
     transcriptId: string,
     subtitleFormat: SubtitleFormat,
-    assemblyAIOptions?: AssemblyAIOptions,
+    assemblyAIOptions?: AssemblyAIOptions
   );
 
   /**
@@ -185,7 +185,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
   constructor(
     params: CreateTranscriptParameters | string,
     private subtitleFormat: SubtitleFormat = "srt",
-    assemblyAIOptions?: AssemblyAIOptions,
+    assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(params, assemblyAIOptions);
     this.subtitleFormat = subtitleFormat;
@@ -199,7 +199,7 @@ export class AudioSubtitleLoader extends CreateTranscriptLoader {
     const transcript = await this.getOrCreateTranscript();
     const subtitles = await this.client.transcripts.subtitles(
       transcript.id,
-      this.subtitleFormat,
+      this.subtitleFormat
     );
 
     return [

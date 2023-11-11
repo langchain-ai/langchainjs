@@ -60,7 +60,7 @@ export class CombiningOutputParser extends BaseOutputParser<object> {
     const inputs = input
       .trim()
       .split(
-        new RegExp(`${this.outputDelimiter}Output \\d+${this.outputDelimiter}`),
+        new RegExp(`${this.outputDelimiter}Output \\d+${this.outputDelimiter}`)
       )
       .slice(1);
     const ret: CombinedOutput = {};
@@ -94,7 +94,7 @@ export class CombiningOutputParser extends BaseOutputParser<object> {
         (p, i) =>
           `${this.outputDelimiter}Output ${i + 1}${this.outputDelimiter}\n${p
             .getFormatInstructions()
-            .trim()}\n${this.outputDelimiter}`,
+            .trim()}\n${this.outputDelimiter}`
       ),
     ].join("\n\n")}\n`;
   }

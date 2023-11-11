@@ -22,7 +22,7 @@ const retriever = vectorStore.asRetriever();
 const formatChatHistory = (
   human: string,
   ai: string,
-  previousChatHistory?: string,
+  previousChatHistory?: string
 ) => {
   const newInteraction = `Human: ${human}\nAI: ${ai}`;
   if (!previousChatHistory) {
@@ -48,7 +48,7 @@ const questionPrompt = PromptTemplate.fromTemplate(
   ----------------
   QUESTION: {question}
   ----------------
-  Helpful Answer:`,
+  Helpful Answer:`
 );
 
 const chain = RunnableSequence.from([

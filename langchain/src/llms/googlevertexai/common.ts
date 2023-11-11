@@ -112,7 +112,7 @@ export class BaseGoogleVertexAI<AuthOptions>
   async *_streamResponseChunks(
     _input: string,
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun,
+    _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     // Make the call as a streaming request
     const instance = this.formatInstance(_input);
@@ -120,7 +120,7 @@ export class BaseGoogleVertexAI<AuthOptions>
     const result = await this.streamedConnection.request(
       [instance],
       parameters,
-      _options,
+      _options
     );
 
     // Get the streaming parser of the response
@@ -134,7 +134,7 @@ export class BaseGoogleVertexAI<AuthOptions>
       const chunk =
         output !== null
           ? new GenerationChunk(
-              this.extractGenerationFromPrediction(output.outputs[0]),
+              this.extractGenerationFromPrediction(output.outputs[0])
             )
           : new GenerationChunk({
               text: "",
@@ -146,24 +146,24 @@ export class BaseGoogleVertexAI<AuthOptions>
 
   async _generate(
     prompts: string[],
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<LLMResult> {
     const generations: Generation[][] = await Promise.all(
-      prompts.map((prompt) => this._generatePrompt(prompt, options)),
+      prompts.map((prompt) => this._generatePrompt(prompt, options))
     );
     return { generations };
   }
 
   async _generatePrompt(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<Generation[]> {
     const instance = this.formatInstance(prompt);
     const parameters = this.formatParameters();
     const result = await this.connection.request(
       [instance],
       parameters,
-      options,
+      options
     );
     const prediction = this.extractPredictionFromResponse(result);
     return [this.extractGenerationFromPrediction(prediction)];
@@ -216,7 +216,7 @@ export class BaseGoogleVertexAI<AuthOptions>
    * @returns A TextPrediction object representing the extracted prediction.
    */
   extractPredictionFromResponse(
-    result: GoogleVertexAILLMResponse<TextPrediction>,
+    result: GoogleVertexAILLMResponse<TextPrediction>
   ): TextPrediction {
     return (result?.data as GoogleVertexAILLMPredictions<TextPrediction>)
       ?.predictions[0];

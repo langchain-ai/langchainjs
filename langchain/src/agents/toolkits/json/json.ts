@@ -41,7 +41,7 @@ export class JsonToolkit extends Toolkit {
 export function createJsonAgent(
   llm: BaseLanguageModel,
   toolkit: JsonToolkit,
-  args?: ZeroShotCreatePromptArgs,
+  args?: ZeroShotCreatePromptArgs
 ) {
   const {
     prefix = JSON_PREFIX,

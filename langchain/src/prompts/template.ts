@@ -100,18 +100,18 @@ export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
 export const renderTemplate = (
   template: string,
   templateFormat: TemplateFormat,
-  inputValues: InputValues,
+  inputValues: InputValues
 ) => DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
 
 export const parseTemplate = (
   template: string,
-  templateFormat: TemplateFormat,
+  templateFormat: TemplateFormat
 ) => DEFAULT_PARSER_MAPPING[templateFormat](template);
 
 export const checkValidTemplate = (
   template: string,
   templateFormat: TemplateFormat,
-  inputVariables: string[],
+  inputVariables: string[]
 ) => {
   if (!(templateFormat in DEFAULT_FORMATTER_MAPPING)) {
     const validFormats = Object.keys(DEFAULT_FORMATTER_MAPPING);
@@ -119,13 +119,10 @@ export const checkValidTemplate = (
                          should be one of ${validFormats}`);
   }
   try {
-    const dummyInputs: InputValues = inputVariables.reduce(
-      (acc, v) => {
-        acc[v] = "foo";
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
+    const dummyInputs: InputValues = inputVariables.reduce((acc, v) => {
+      acc[v] = "foo";
+      return acc;
+    }, {} as Record<string, string>);
     renderTemplate(template, templateFormat, dummyInputs);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {

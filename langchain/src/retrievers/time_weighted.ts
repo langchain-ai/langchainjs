@@ -107,14 +107,14 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    */
   async _getRelevantDocuments(
     query: string,
-    runManager?: CallbackManagerForRetrieverRun,
+    runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
     const now = Math.floor(Date.now() / 1000);
     const memoryDocsAndScores = this.getMemoryDocsAndScores();
 
     const salientDocsAndScores = await this.getSalientDocuments(
       query,
-      runManager,
+      runManager
     );
     const docsAndScores = { ...memoryDocsAndScores, ...salientDocsAndScores };
 
@@ -153,7 +153,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
       const bufferIdx = doc.metadata[BUFFER_IDX];
       if (bufferIdx === undefined) {
         throw new Error(
-          `Found a document in the vector store that is missing required metadata. This retriever only supports vector stores with documents that have been added through the "addDocuments" method on a TimeWeightedVectorStoreRetriever, not directly added or loaded into the backing vector store.`,
+          `Found a document in the vector store that is missing required metadata. This retriever only supports vector stores with documents that have been added through the "addDocuments" method on a TimeWeightedVectorStoreRetriever, not directly added or loaded into the backing vector store.`
         );
       }
       memoryDocsAndScores[bufferIdx] = {
@@ -171,21 +171,21 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    */
   private async getSalientDocuments(
     query: string,
-    runManager?: CallbackManagerForRetrieverRun,
+    runManager?: CallbackManagerForRetrieverRun
   ): Promise<Record<number, { doc: Document; score: number }>> {
     const docAndScores: [Document, number][] =
       await this.vectorStore.similaritySearchWithScore(
         query,
         this.searchKwargs,
         undefined,
-        runManager?.getChild(),
+        runManager?.getChild()
       );
     const results: Record<number, { doc: Document; score: number }> = {};
     for (const [fetchedDoc, score] of docAndScores) {
       const bufferIdx = fetchedDoc.metadata[BUFFER_IDX];
       if (bufferIdx === undefined) {
         throw new Error(
-          `Found a document in the vector store that is missing required metadata. This retriever only supports vector stores with documents that have been added through the "addDocuments" method on a TimeWeightedVectorStoreRetriever, not directly added or loaded into the backing vector store.`,
+          `Found a document in the vector store that is missing required metadata. This retriever only supports vector stores with documents that have been added through the "addDocuments" method on a TimeWeightedVectorStoreRetriever, not directly added or loaded into the backing vector store.`
         );
       }
       const doc = this.memoryStream[bufferIdx];
@@ -202,7 +202,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    */
   private computeResults(
     docsAndScores: Record<number, { doc: Document; score: number }>,
-    now: number,
+    now: number
   ): Document[] {
     const recordedDocs = Object.values(docsAndScores)
       .map(({ doc, score }) => ({
@@ -251,11 +251,11 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   private getCombinedScore(
     doc: Document,
     vectorRelevance: number | null,
-    nowMsec: number,
+    nowMsec: number
   ): number {
     const hoursPassed = this.getHoursPassed(
       nowMsec,
-      doc.metadata[LAST_ACCESSED_AT_KEY],
+      doc.metadata[LAST_ACCESSED_AT_KEY]
     );
     let score = (1.0 - this.decayRate) ** hoursPassed;
     for (const key of this.otherScoreKeys) {

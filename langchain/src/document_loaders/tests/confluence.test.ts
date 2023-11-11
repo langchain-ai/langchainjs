@@ -37,10 +37,10 @@ test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
   const fetchConfluenceDataMock = jest
     .spyOn(loader, "fetchConfluenceData")
     .mockImplementationOnce(() =>
-      Promise.resolve({ size: 2, results: fakeResponse }),
+      Promise.resolve({ size: 2, results: fakeResponse })
     )
     .mockImplementationOnce(() =>
-      Promise.resolve({ size: 2, results: fakeResponse }),
+      Promise.resolve({ size: 2, results: fakeResponse })
     )
     .mockImplementationOnce(() => Promise.resolve({ size: 0, results: [] }));
 
@@ -57,23 +57,23 @@ test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
   // Ensure the arguments are correct for each call
   expect(fetchConfluenceDataMock).toHaveBeenNthCalledWith(
     1,
-    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=0&expand=body.storage",
+    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=0&expand=body.storage"
   );
   expect(fetchConfluenceDataMock).toHaveBeenNthCalledWith(
     2,
-    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=2&expand=body.storage",
+    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=2&expand=body.storage"
   );
   expect(fetchConfluenceDataMock).toHaveBeenNthCalledWith(
     3,
-    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=4&expand=body.storage",
+    "https://example.atlassian.net/wiki/rest/api/content?spaceKey=SPACEKEY&limit=25&start=4&expand=body.storage"
   );
 
   // Check if the generated URLs in the metadata are correct
   expect(documents[0].metadata.url).toBe(
-    "https://example.atlassian.net/wiki/spaces/SPACEKEY/pages/1",
+    "https://example.atlassian.net/wiki/spaces/SPACEKEY/pages/1"
   );
   expect(documents[1].metadata.url).toBe(
-    "https://example.atlassian.net/wiki/spaces/SPACEKEY/pages/2",
+    "https://example.atlassian.net/wiki/spaces/SPACEKEY/pages/2"
   );
 
   // Restore the mock to its original behavior

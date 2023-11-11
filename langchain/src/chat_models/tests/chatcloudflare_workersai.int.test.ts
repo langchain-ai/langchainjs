@@ -56,7 +56,7 @@ describe("ChatCloudflareWorkersAI", () => {
     expect(chunks.length).toBeGreaterThan(1);
     console.log(chunks.map((chunk) => chunk.content).join(""));
     expect(
-      chunks.map((chunk) => chunk.content).join("").length,
+      chunks.map((chunk) => chunk.content).join("").length
     ).toBeGreaterThan(1);
   });
 
@@ -71,7 +71,7 @@ describe("ChatCloudflareWorkersAI", () => {
 
     // PaLM doesn't support translation yet
     const systemPrompt = PromptTemplate.fromTemplate(
-      "You are a helpful assistant who must always respond like a {job}.",
+      "You are a helpful assistant who must always respond like a {job}."
     );
 
     const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -110,7 +110,7 @@ describe("ChatCloudflareWorkersAI", () => {
   test.skip("custom base url", async () => {
     const chat = new ChatCloudflareWorkersAI({
       baseUrl: `https://gateway.ai.cloudflare.com/v1/${getEnvironmentVariable(
-        "CLOUDFLARE_ACCOUNT_ID",
+        "CLOUDFLARE_ACCOUNT_ID"
       )}/lang-chainjs/workers-ai/`,
     });
 

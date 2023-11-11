@@ -9,7 +9,7 @@ import { LangChainTracerV1 } from "./tracer_langchain_v1.js";
  * @returns An instance of `LangChainTracerV1`.
  */
 export async function getTracingCallbackHandler(
-  session?: string,
+  session?: string
 ): Promise<LangChainTracerV1> {
   const tracer = new LangChainTracerV1();
   if (session) {

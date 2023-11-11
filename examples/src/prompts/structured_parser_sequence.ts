@@ -10,7 +10,7 @@ const parser = StructuredOutputParser.fromNamesAndDescriptions({
 
 const chain = RunnableSequence.from([
   PromptTemplate.fromTemplate(
-    "Answer the users question as best as possible.\n{format_instructions}\n{question}",
+    "Answer the users question as best as possible.\n{format_instructions}\n{question}"
   ),
   new OpenAI({ temperature: 0 }),
   parser,

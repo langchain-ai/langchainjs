@@ -33,7 +33,7 @@ test.skip("Test multiple messages", async () => {
   const response = await llamaCpp.call([
     new HumanMessage("My name is Nigel."),
     new AIMessage(
-      "Hello Nigel! It is great to meet you, how can I help you today?",
+      "Hello Nigel! It is great to meet you, how can I help you today?"
     ),
     new HumanMessage("What did I say my name was?"),
   ]);
@@ -45,7 +45,7 @@ test.skip("Test system message", async () => {
 
   const response = await llamaCpp.call([
     new SystemMessage(
-      "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence.",
+      "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence."
     ),
     new HumanMessage("Tell me where Llamas come from?"),
   ]);
@@ -55,7 +55,7 @@ test.skip("Test system message", async () => {
 test.skip("Test basic chain", async () => {
   const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.5 });
   const prompt = PromptTemplate.fromTemplate(
-    "What is a good name for a company that makes {product}?",
+    "What is a good name for a company that makes {product}?"
   );
   const chain = new LLMChain({ llm: llamaCpp, prompt });
 

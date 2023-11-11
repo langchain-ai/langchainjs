@@ -44,10 +44,7 @@ export class CheerioWebBaseLoader
 
   textDecoder?: TextDecoder;
 
-  constructor(
-    public webPath: string,
-    fields?: WebBaseLoaderParams,
-  ) {
+  constructor(public webPath: string, fields?: WebBaseLoaderParams) {
     super();
     const { timeout, selector, textDecoder, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;
@@ -60,7 +57,7 @@ export class CheerioWebBaseLoader
     url: string,
     caller: AsyncCaller,
     timeout: number | undefined,
-    textDecoder?: TextDecoder,
+    textDecoder?: TextDecoder
   ): Promise<CheerioAPI> {
     const { load } = await CheerioWebBaseLoader.imports();
     const response = await caller.call(fetch, url, {
@@ -83,7 +80,7 @@ export class CheerioWebBaseLoader
       this.webPath,
       this.caller,
       this.timeout,
-      this.textDecoder,
+      this.textDecoder
     );
   }
 
@@ -114,7 +111,7 @@ export class CheerioWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install cheerio as a dependency with, e.g. `yarn add cheerio`",
+        "Please install cheerio as a dependency with, e.g. `yarn add cheerio`"
       );
     }
   }

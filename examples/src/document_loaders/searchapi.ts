@@ -27,7 +27,7 @@ const splitDocs = await textSplitter.splitDocuments(docs);
 // Use MemoryVectorStore to store the loaded documents in memory
 const vectorStore = await MemoryVectorStore.fromDocuments(
   splitDocs,
-  embeddings,
+  embeddings
 );
 // Use RetrievalQAChain to retrieve documents and answer the question
 const chain = RetrievalQAChain.fromLLM(llm, vectorStore.asRetriever(), {

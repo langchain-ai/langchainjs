@@ -30,13 +30,13 @@ export class BraveSearch extends Tool {
   constructor(
     fields: BraveSearchParams = {
       apiKey: getEnvironmentVariable("BRAVE_SEARCH_API_KEY"),
-    },
+    }
   ) {
     super();
 
     if (!fields.apiKey) {
       throw new Error(
-        `Brave API key not set. Please pass it in or set it as an environment variable named "BRAVE_SEARCH_API_KEY".`,
+        `Brave API key not set. Please pass it in or set it as an environment variable named "BRAVE_SEARCH_API_KEY".`
       );
     }
 
@@ -51,8 +51,8 @@ export class BraveSearch extends Tool {
     };
     const searchUrl = new URL(
       `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(
-        input,
-      )}`,
+        input
+      )}`
     );
 
     const response = await fetch(searchUrl, { headers });
@@ -69,7 +69,7 @@ export class BraveSearch extends Tool {
             title: item.title,
             link: item.url,
             snippet: item.description,
-          }),
+          })
         )
       : [];
     return JSON.stringify(finalResults);

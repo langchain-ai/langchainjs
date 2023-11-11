@@ -103,7 +103,7 @@ export class NIBittensorChatModel
     try {
       // Retrieve API KEY
       const apiKeyResponse: Response = await fetch(
-        "https://test.neuralinternet.ai/admin/api-keys/",
+        "https://test.neuralinternet.ai/admin/api-keys/"
       );
       if (!apiKeyResponse.ok) {
         throw new Error("Network response was not ok");
@@ -119,7 +119,7 @@ export class NIBittensorChatModel
 
       const minerResponse: Response = await fetch(
         "https://test.neuralinternet.ai/top_miner_uids",
-        { headers },
+        { headers }
       );
       if (!minerResponse.ok) {
         throw new Error("Network response was not ok");
@@ -143,7 +143,7 @@ export class NIBittensorChatModel
                 method: "POST",
                 headers,
                 body: JSON.stringify(payload),
-              },
+              }
             );
 
             if (!response.ok) {
@@ -156,7 +156,7 @@ export class NIBittensorChatModel
               const generation: ChatGeneration = {
                 text: chatData.choices[0].message.content,
                 message: this.stringToChatMessage(
-                  chatData.choices[0].message.content,
+                  chatData.choices[0].message.content
                 ),
               };
               generations.push(generation);
@@ -171,7 +171,7 @@ export class NIBittensorChatModel
       const generation: ChatGeneration = {
         text: "Sorry I am unable to provide response now, Please try again later.",
         message: this.stringToChatMessage(
-          "Sorry I am unable to provide response now, Please try again later.",
+          "Sorry I am unable to provide response now, Please try again later."
         ),
       };
       generations.push(generation);
@@ -180,7 +180,7 @@ export class NIBittensorChatModel
     const generation: ChatGeneration = {
       text: "Sorry I am unable to provide response now, Please try again later.",
       message: this.stringToChatMessage(
-        "Sorry I am unable to provide response now, Please try again later.",
+        "Sorry I am unable to provide response now, Please try again later."
       ),
     };
     generations.push(generation);

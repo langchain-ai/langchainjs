@@ -39,7 +39,7 @@ await vs.addVectors(
     new Document({
       pageContent: "b",
     }),
-  ],
+  ]
 );
 
 assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);

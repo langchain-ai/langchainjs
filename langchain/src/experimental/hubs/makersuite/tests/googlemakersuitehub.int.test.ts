@@ -23,20 +23,20 @@ describe.skip("Google Maker Suite Hub Integration", () => {
     const chatFile = JSON.parse(
       fs.readFileSync(
         `${__dirname}/googlemakersuite-files/chatPrompt.json`,
-        "utf8",
-      ),
+        "utf8"
+      )
     );
     const dataFile = JSON.parse(
       fs.readFileSync(
         `${__dirname}/googlemakersuite-files/dataPrompt.json`,
-        "utf8",
-      ),
+        "utf8"
+      )
     );
     const textFile = JSON.parse(
       fs.readFileSync(
         `${__dirname}/googlemakersuite-files/textPrompt.json`,
-        "utf8",
-      ),
+        "utf8"
+      )
     );
 
     test("text chain", async () => {
@@ -87,7 +87,7 @@ describe.skip("Google Maker Suite Hub Integration", () => {
       const prompt = await hub.pull("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
       const model = prompt.toModel() as GooglePaLM;
       const result = await model.call(
-        "What would be a good name for a company that makes socks",
+        "What would be a good name for a company that makes socks"
       );
       console.log("text chain result", result);
       expect(result).toBeTruthy();

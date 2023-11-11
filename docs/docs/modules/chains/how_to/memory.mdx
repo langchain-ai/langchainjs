@@ -18,7 +18,7 @@ const memory = new BufferMemory();
 const chain = new ConversationChain({ llm: chat, memory });
 
 const res1 = await chain.run(
-  "Answer briefly. What are the first 3 colors of a rainbow?",
+  "Answer briefly. What are the first 3 colors of a rainbow?"
 );
 console.log(res1);
 

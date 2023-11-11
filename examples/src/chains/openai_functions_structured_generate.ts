@@ -24,7 +24,7 @@ const zodSchema = z.object({
 const prompt = new ChatPromptTemplate({
   promptMessages: [
     SystemMessagePromptTemplate.fromTemplate(
-      "Generate details of a hypothetical person.",
+      "Generate details of a hypothetical person."
     ),
     HumanMessagePromptTemplate.fromTemplate("Additional context: {inputText}"),
   ],

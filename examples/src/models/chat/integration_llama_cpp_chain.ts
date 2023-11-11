@@ -7,7 +7,7 @@ const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 const model = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.5 });
 
 const prompt = PromptTemplate.fromTemplate(
-  "What is a good name for a company that makes {product}?",
+  "What is a good name for a company that makes {product}?"
 );
 const chain = new LLMChain({ llm: model, prompt });
 

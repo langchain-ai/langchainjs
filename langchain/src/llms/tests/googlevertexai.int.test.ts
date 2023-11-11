@@ -65,7 +65,7 @@ describe("Vertex AI", () => {
     });
 
     const stream = await model.stream(
-      "What is the answer to life, the universe, and everything. Be Verbose.",
+      "What is the answer to life, the universe, and everything. Be Verbose."
     );
     const chunks = [];
     for await (const chunk of stream) {

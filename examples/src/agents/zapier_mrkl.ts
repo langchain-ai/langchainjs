@@ -15,7 +15,7 @@ const executor = await initializeAgentExecutorWithOptions(
   {
     agentType: "zero-shot-react-description",
     verbose: true,
-  },
+  }
 );
 console.log("Loaded agent.");
 

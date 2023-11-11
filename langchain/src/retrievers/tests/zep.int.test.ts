@@ -22,7 +22,7 @@ test.skip("ZepRetriever - memory exists", async () => {
       response:
         "Octavia Estelle Butler (June 22, 1947 – " +
         "February 24, 2006) was an American science fiction author.",
-    },
+    }
   );
 
   // 2-second delay to wait for memory to be embedded

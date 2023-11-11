@@ -13,8 +13,8 @@ class FakeEmbeddingsWithOsDimension extends FakeEmbeddings {
       documents.map((_, i) =>
         Array(OS_TOKEN_COUNT - 1)
           .fill(1.0)
-          .concat([i + 1.0]),
-      ),
+          .concat([i + 1.0])
+      )
     );
   }
 
@@ -67,7 +67,7 @@ test.skip("Test fromTexts", async () => {
       username,
       password,
       preDeleteCollection: true,
-    },
+    }
   );
 
   const output = await neo4jVectorStore.similaritySearch("foo", 2);
@@ -111,7 +111,7 @@ test.skip("Test fromTexts Hybrid", async () => {
       password,
       preDeleteCollection: true,
       searchType: "hybrid",
-    },
+    }
   );
 
   const output = await neo4jVectorStore.similaritySearch("foo", 2);
@@ -155,7 +155,7 @@ test.skip("Test fromExistingIndex", async () => {
       password,
       indexName: "vector",
       preDeleteCollection: true,
-    },
+    }
   );
 
   const existingIndex = await Neo4jVectorStore.fromExistingIndex(embeddings, {
@@ -209,7 +209,7 @@ test.skip("Test fromExistingIndex Hybrid", async () => {
       keywordIndexName: "keyword",
       searchType: "hybrid",
       preDeleteCollection: true,
-    },
+    }
   );
 
   const existingIndex = await Neo4jVectorStore.fromExistingIndex(embeddings, {
@@ -265,7 +265,7 @@ test.skip("Test retrievalQuery", async () => {
       preDeleteCollection: true,
       retrievalQuery:
         "RETURN node.text AS text, score, {foo:'bar'} AS metadata",
-    },
+    }
   );
 
   const output = await neo4jVectorStore.similaritySearch("foo", 2);
@@ -309,13 +309,13 @@ test.skip("Test fromExistingGraph", async () => {
       password,
       indexName: "vector",
       preDeleteCollection: true,
-    },
+    }
   );
 
   await neo4jVectorStore.query("MATCH (n) DETACH DELETE n");
 
   await neo4jVectorStore.query(
-    "CREATE (:Test {name:'Foo'}), (:Test {name:'Bar', foo:'bar'})",
+    "CREATE (:Test {name:'Foo'}), (:Test {name:'Bar', foo:'bar'})"
   );
 
   const existingGraph = await Neo4jVectorStore.fromExistingGraph(embeddings, {
@@ -370,13 +370,13 @@ test.skip("Test fromExistingGraph multiple properties", async () => {
       password,
       indexName: "vector",
       preDeleteCollection: true,
-    },
+    }
   );
 
   await neo4jVectorStore.query("MATCH (n) DETACH DELETE n");
 
   await neo4jVectorStore.query(
-    "CREATE (:Test {name:'Foo', name2:'Fooz'}), (:Test {name:'Bar', foo:'bar'})",
+    "CREATE (:Test {name:'Foo', name2:'Fooz'}), (:Test {name:'Bar', foo:'bar'})"
   );
 
   const existingGraph = await Neo4jVectorStore.fromExistingGraph(embeddings, {
@@ -431,13 +431,13 @@ test.skip("Test fromExistingGraph multiple properties hybrid", async () => {
       password,
       indexName: "vector",
       preDeleteCollection: true,
-    },
+    }
   );
 
   await neo4jVectorStore.query("MATCH (n) DETACH DELETE n");
 
   await neo4jVectorStore.query(
-    "CREATE (:Test {name:'Foo', name2:'Fooz'}), (:Test {name:'Bar', foo:'bar'})",
+    "CREATE (:Test {name:'Foo', name2:'Fooz'}), (:Test {name:'Bar', foo:'bar'})"
   );
 
   const existingGraph = await Neo4jVectorStore.fromExistingGraph(embeddings, {

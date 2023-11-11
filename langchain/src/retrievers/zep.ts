@@ -95,7 +95,7 @@ export class ZepRetriever extends BaseRetriever {
           new Document({
             pageContent: content ?? "",
             metadata: { score: dist, ...messageMetadata, ...rest },
-          }),
+          })
       );
   }
 
@@ -116,7 +116,7 @@ export class ZepRetriever extends BaseRetriever {
           new Document({
             pageContent: content ?? "",
             metadata: { score: dist, ...summaryMetadata, ...rest },
-          }),
+          })
       );
   }
 
@@ -142,7 +142,7 @@ export class ZepRetriever extends BaseRetriever {
       const results: MemorySearchResult[] = await zepClient.memory.searchMemory(
         this.sessionId,
         payload,
-        this.topK,
+        this.topK
       );
       return this.searchScope === "summary"
         ? this.searchSummaryResultToDoc(results)

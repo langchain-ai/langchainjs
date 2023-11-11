@@ -82,7 +82,7 @@ export class ChatVectorDBQAChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun,
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
@@ -99,7 +99,7 @@ export class ChatVectorDBQAChain
           question,
           chat_history: chatHistory,
         },
-        runManager?.getChild("question_generator"),
+        runManager?.getChild("question_generator")
       );
       const keys = Object.keys(result);
       console.log("_call", values, keys);
@@ -107,7 +107,7 @@ export class ChatVectorDBQAChain
         newQuestion = result[keys[0]];
       } else {
         throw new Error(
-          "Return from llm chain has multiple values, only single values supported.",
+          "Return from llm chain has multiple values, only single values supported."
         );
       }
     }
@@ -115,7 +115,7 @@ export class ChatVectorDBQAChain
       newQuestion,
       this.k,
       undefined,
-      runManager?.getChild("vectorstore"),
+      runManager?.getChild("vectorstore")
     );
     const inputs = {
       question: newQuestion,
@@ -124,7 +124,7 @@ export class ChatVectorDBQAChain
     };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild("combine_documents"),
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {
@@ -141,21 +141,21 @@ export class ChatVectorDBQAChain
 
   static async deserialize(
     data: SerializedChatVectorDBQAChain,
-    values: LoadValues,
+    values: LoadValues
   ) {
     if (!("vectorstore" in values)) {
       throw new Error(
-        `Need to pass in a vectorstore to deserialize VectorDBQAChain`,
+        `Need to pass in a vectorstore to deserialize VectorDBQAChain`
       );
     }
     const { vectorstore } = values;
 
     return new ChatVectorDBQAChain({
       combineDocumentsChain: await BaseChain.deserialize(
-        data.combine_documents_chain,
+        data.combine_documents_chain
       ),
       questionGeneratorChain: await LLMChain.deserialize(
-        data.question_generator,
+        data.question_generator
       ),
       k: data.k,
       vectorstore,
@@ -190,11 +190,11 @@ export class ChatVectorDBQAChain
       questionGeneratorTemplate?: string;
       qaTemplate?: string;
       verbose?: boolean;
-    } = {},
+    } = {}
   ): ChatVectorDBQAChain {
     const { questionGeneratorTemplate, qaTemplate, verbose, ...rest } = options;
     const question_generator_prompt = PromptTemplate.fromTemplate(
-      questionGeneratorTemplate || question_generator_template,
+      questionGeneratorTemplate || question_generator_template
     );
     const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
 

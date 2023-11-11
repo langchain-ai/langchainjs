@@ -57,7 +57,7 @@ export class CloudflareKVCache extends BaseCache {
       const key = getCacheKey(prompt, llmKey, String(i));
       await this.binding.put(
         key,
-        JSON.stringify(serializeGeneration(value[i])),
+        JSON.stringify(serializeGeneration(value[i]))
       );
     }
   }

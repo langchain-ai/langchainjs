@@ -57,7 +57,7 @@ export class Cohere extends LLM implements CohereInput {
 
     if (!apiKey) {
       throw new Error(
-        "Please set the COHERE_API_KEY environment variable or pass it to the constructor as the apiKey field.",
+        "Please set the COHERE_API_KEY environment variable or pass it to the constructor as the apiKey field."
       );
     }
 
@@ -74,7 +74,7 @@ export class Cohere extends LLM implements CohereInput {
   /** @ignore */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const { cohere } = await Cohere.imports();
 
@@ -90,7 +90,7 @@ export class Cohere extends LLM implements CohereInput {
         max_tokens: this.maxTokens,
         temperature: this.temperature,
         end_sequences: options.stop,
-      },
+      }
     );
     try {
       return generateResponse.body.generations[0].text;
@@ -109,7 +109,7 @@ export class Cohere extends LLM implements CohereInput {
       return { cohere };
     } catch (e) {
       throw new Error(
-        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`",
+        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
       );
     }
   }

@@ -20,7 +20,7 @@ export const run = async () => {
   const vectorStore = await ZepVectorStore.fromDocuments(
     docs,
     embeddings,
-    zepConfig,
+    zepConfig
   );
 
   // Wait for the documents to be embedded
@@ -28,7 +28,7 @@ export const run = async () => {
   while (true) {
     const c = await vectorStore.client.document.getCollection(collectionName);
     console.log(
-      `Embedding status: ${c.document_embedded_count}/${c.document_count} documents embedded`,
+      `Embedding status: ${c.document_embedded_count}/${c.document_count} documents embedded`
     );
     // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 1000));

@@ -73,7 +73,7 @@ If you don't know the answer, just say that you don't know. Don't try to make up
 {summaries}`;
 const combine_messages = [
   /*#__PURE__*/ SystemMessagePromptTemplate.fromTemplate(
-    system_combine_template,
+    system_combine_template
   ),
   /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
 ];

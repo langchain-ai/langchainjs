@@ -87,7 +87,7 @@ export class ConversationTokenBufferMemory
       [this.memoryKey]: getBufferString(
         messages,
         this.humanPrefix,
-        this.aiPrefix,
+        this.aiPrefix
       ),
     };
     return result;
@@ -104,7 +104,7 @@ export class ConversationTokenBufferMemory
     // Prune buffer if it exceeds the max token limit set for this instance.
     const buffer = await this.chatHistory.getMessages();
     let currBufferLength = await this.llm.getNumTokens(
-      getBufferString(buffer, this.humanPrefix, this.aiPrefix),
+      getBufferString(buffer, this.humanPrefix, this.aiPrefix)
     );
 
     if (currBufferLength > this.maxTokenLimit) {
@@ -112,7 +112,7 @@ export class ConversationTokenBufferMemory
       while (currBufferLength > this.maxTokenLimit) {
         prunedMemory.push(buffer.shift());
         currBufferLength = await this.llm.getNumTokens(
-          getBufferString(buffer, this.humanPrefix, this.aiPrefix),
+          getBufferString(buffer, this.humanPrefix, this.aiPrefix)
         );
       }
     }

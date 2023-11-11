@@ -51,7 +51,7 @@ export abstract class BaseMemory {
    */
   abstract saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues,
+    outputValues: OutputValues
   ): Promise<void>;
 }
 
@@ -75,7 +75,7 @@ export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
   if (!value) {
     const keys = Object.keys(inputValues);
     throw new Error(
-      `input values have ${keys.length} keys, you must specify an input key or pass only 1 key as input`,
+      `input values have ${keys.length} keys, you must specify an input key or pass only 1 key as input`
     );
   }
   return value;
@@ -89,13 +89,13 @@ export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
  */
 export const getOutputValue = (
   outputValues: OutputValues,
-  outputKey?: string,
+  outputKey?: string
 ) => {
   const value = getValue(outputValues, outputKey);
   if (!value) {
     const keys = Object.keys(outputValues);
     throw new Error(
-      `output values have ${keys.length} keys, you must specify an output key or pass only 1 key as output`,
+      `output values have ${keys.length} keys, you must specify an output key or pass only 1 key as output`
     );
   }
   return value;
@@ -108,7 +108,7 @@ export const getOutputValue = (
 export function getBufferString(
   messages: BaseMessage[],
   humanPrefix = "Human",
-  aiPrefix = "AI",
+  aiPrefix = "AI"
 ): string {
   const string_messages: string[] = [];
   for (const m of messages) {
@@ -139,14 +139,14 @@ export function getBufferString(
  */
 export function getPromptInputKey(
   inputs: Record<string, unknown>,
-  memoryVariables: string[],
+  memoryVariables: string[]
 ): string {
   const promptInputKeys = Object.keys(inputs).filter(
-    (key) => !memoryVariables.includes(key) && key !== "stop",
+    (key) => !memoryVariables.includes(key) && key !== "stop"
   );
   if (promptInputKeys.length !== 1) {
     throw new Error(
-      `One input key expected, but got ${promptInputKeys.length}`,
+      `One input key expected, but got ${promptInputKeys.length}`
     );
   }
   return promptInputKeys[0];

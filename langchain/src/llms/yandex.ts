@@ -63,7 +63,7 @@ export class YandexGPT extends LLM implements YandexGPTInputs {
 
     if (apiKey === undefined && iamToken === undefined) {
       throw new Error(
-        "Please set the YC_API_KEY or YC_IAM_TOKEN environment variable or pass it to the constructor as the apiKey or iamToken field.",
+        "Please set the YC_API_KEY or YC_IAM_TOKEN environment variable or pass it to the constructor as the apiKey or iamToken field."
       );
     }
 
@@ -81,7 +81,7 @@ export class YandexGPT extends LLM implements YandexGPTInputs {
   /** @ignore */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     // Hit the `generate` endpoint on the `large` model
     return this.caller.callWithOptions({ signal: options.signal }, async () => {
@@ -109,7 +109,7 @@ export class YandexGPT extends LLM implements YandexGPTInputs {
         });
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch ${apiUrl} from YandexGPT: ${response.status}`,
+            `Failed to fetch ${apiUrl} from YandexGPT: ${response.status}`
           );
         }
 

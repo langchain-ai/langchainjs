@@ -84,7 +84,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents,
+      documents
     );
   }
 
@@ -100,7 +100,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: MongoDBAtlasFilter,
+    filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
     const postFilterPipeline = filter?.postFilterPipeline ?? [];
     const preFilter: MongoDBDocument | undefined =
@@ -166,7 +166,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5, filter } = options;
 
@@ -184,18 +184,18 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const resultDocs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
       fetchK,
-      includeEmbeddingsFilter,
+      includeEmbeddingsFilter
     );
 
     const embeddingList = resultDocs.map(
-      (doc) => doc[0].metadata[this.embeddingKey],
+      (doc) => doc[0].metadata[this.embeddingKey]
     );
 
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,
       lambda,
-      k,
+      k
     );
 
     return mmrIndexes.map((idx) => {
@@ -223,7 +223,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: MongoDBAtlasVectorSearchLibArgs,
+    dbConfig: MongoDBAtlasVectorSearchLibArgs
   ): Promise<MongoDBAtlasVectorSearch> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -249,7 +249,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: MongoDBAtlasVectorSearchLibArgs,
+    dbConfig: MongoDBAtlasVectorSearchLibArgs
   ): Promise<MongoDBAtlasVectorSearch> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);

@@ -71,7 +71,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   async _call(
     prompt: string,
     // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ): Promise<string> {
     try {
       const promptOptions = {

@@ -30,7 +30,7 @@ test("Test end to end with HNSWLib", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new GoogleVertexAIEmbeddings(),
+    new GoogleVertexAIEmbeddings()
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
