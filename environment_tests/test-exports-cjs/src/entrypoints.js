@@ -36,6 +36,7 @@ const prompts = require("langchain/prompts");
 const vectorstores_base = require("langchain/vectorstores/base");
 const vectorstores_memory = require("langchain/vectorstores/memory");
 const vectorstores_prisma = require("langchain/vectorstores/prisma");
+const vectorstores_rockset = require("langchain/vectorstores/rockset");
 const vectorstores_vectara = require("langchain/vectorstores/vectara");
 const vectorstores_xata = require("langchain/vectorstores/xata");
 const text_splitter = require("langchain/text_splitter");
