@@ -57,7 +57,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
     const aiPluginRes = await fetch(url);
     if (!aiPluginRes.ok) {
       throw new Error(
-        `Failed to fetch plugin from ${url} with status ${aiPluginRes.status}`
+        `Failed to fetch plugin from ${url} with status ${aiPluginRes.status}`,
       );
     }
     const aiPluginJson = await aiPluginRes.json();
@@ -65,7 +65,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
     const apiUrlRes = await fetch(aiPluginJson.api.url);
     if (!apiUrlRes.ok) {
       throw new Error(
-        `Failed to fetch API spec from ${aiPluginJson.api.url} with status ${apiUrlRes.status}`
+        `Failed to fetch API spec from ${aiPluginJson.api.url} with status ${apiUrlRes.status}`,
       );
     }
     const apiUrlJson = await apiUrlRes.text();

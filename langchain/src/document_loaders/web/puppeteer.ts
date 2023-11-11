@@ -24,7 +24,7 @@ export type PuppeteerGotoOptions = WaitForOptions & {
  */
 export type PuppeteerEvaluate = (
   page: Page,
-  browser: Browser
+  browser: Browser,
 ) => Promise<string>;
 
 export type PuppeteerWebBaseLoaderOptions = {
@@ -44,14 +44,17 @@ export class PuppeteerWebBaseLoader
 {
   options: PuppeteerWebBaseLoaderOptions | undefined;
 
-  constructor(public webPath: string, options?: PuppeteerWebBaseLoaderOptions) {
+  constructor(
+    public webPath: string,
+    options?: PuppeteerWebBaseLoaderOptions,
+  ) {
     super();
     this.options = options ?? undefined;
   }
 
   static async _scrape(
     url: string,
-    options?: PuppeteerWebBaseLoaderOptions
+    options?: PuppeteerWebBaseLoaderOptions,
   ): Promise<string> {
     const { launch } = await PuppeteerWebBaseLoader.imports();
 
@@ -114,7 +117,7 @@ export class PuppeteerWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install puppeteer as a dependency with, e.g. `yarn add puppeteer`"
+        "Please install puppeteer as a dependency with, e.g. `yarn add puppeteer`",
       );
     }
   }

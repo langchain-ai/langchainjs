@@ -40,7 +40,7 @@ export type Plan = {
 export abstract class BasePlanner {
   abstract plan(
     inputs: ChainValues,
-    runManager?: CallbackManager
+    runManager?: CallbackManager,
   ): Promise<Plan>;
 }
 
@@ -51,7 +51,7 @@ export abstract class BasePlanner {
 export abstract class BaseStepExecutor {
   abstract step(
     inputs: ChainValues,
-    runManager?: CallbackManager
+    runManager?: CallbackManager,
   ): Promise<StepResult>;
 }
 
@@ -96,7 +96,7 @@ export class ListStepContainer extends BaseStepContainer {
 export class LLMPlanner extends BasePlanner {
   constructor(
     private llmChain: LLMChain,
-    private outputParser: BaseOutputParser<Plan>
+    private outputParser: BaseOutputParser<Plan>,
   ) {
     super();
   }
@@ -118,7 +118,7 @@ export class ChainStepExecutor extends BaseStepExecutor {
 
   async step(
     inputs: ChainValues,
-    runManager?: CallbackManager
+    runManager?: CallbackManager,
   ): Promise<StepResult> {
     const chainResponse = await this.chain.call(inputs, runManager);
     return { response: chainResponse.output };

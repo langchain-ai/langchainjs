@@ -12,7 +12,7 @@ import type { Document } from "langchain/document";
 const model = new ChatAnthropic();
 const vectorstore = await HNSWLib.fromDocuments(
   [{ pageContent: "mitochondria is the powerhouse of the cell", metadata: {} }],
-  new CohereEmbeddings()
+  new CohereEmbeddings(),
 );
 const retriever = vectorstore.asRetriever();
 const template = `Answer the question based only on the following context:
@@ -32,7 +32,7 @@ const retrievalChain = RunnableSequence.from([
 ]);
 
 const result = await retrievalChain.invoke(
-  "what is the powerhouse of the cell?"
+  "what is the powerhouse of the cell?",
 );
 console.log(result);
 

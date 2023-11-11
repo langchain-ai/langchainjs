@@ -90,7 +90,7 @@ export class S3Loader extends BaseDocumentLoader {
    */
   public async load() {
     const tempDir = this._fs.mkdtempSync(
-      path.join(os.tmpdir(), "s3fileloader-")
+      path.join(os.tmpdir(), "s3fileloader-"),
     );
 
     const filePath = path.join(tempDir, this.key);
@@ -124,7 +124,7 @@ export class S3Loader extends BaseDocumentLoader {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(
-        `Failed to download file ${this.key} from S3 bucket ${this.bucket}: ${e.message}`
+        `Failed to download file ${this.key} from S3 bucket ${this.bucket}: ${e.message}`,
       );
     }
 
@@ -136,7 +136,7 @@ export class S3Loader extends BaseDocumentLoader {
 
       const unstructuredLoader = new this._UnstructuredLoader(
         filePath,
-        options
+        options,
       );
 
       const docs = await unstructuredLoader.load();
@@ -144,7 +144,7 @@ export class S3Loader extends BaseDocumentLoader {
       return docs;
     } catch {
       throw new Error(
-        `Failed to load file ${filePath} using unstructured loader.`
+        `Failed to load file ${filePath} using unstructured loader.`,
       );
     }
   }

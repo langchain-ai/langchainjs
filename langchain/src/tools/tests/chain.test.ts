@@ -97,7 +97,7 @@ test("chain tool with vectordbqa chain", async () => {
 
   const chain = VectorDBQAChain.fromLLM(
     new FakeLLM({}),
-    await MemoryVectorStore.fromExistingIndex(new FakeEmbeddings())
+    await MemoryVectorStore.fromExistingIndex(new FakeEmbeddings()),
   );
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
   const result = await tool.call("hi", [

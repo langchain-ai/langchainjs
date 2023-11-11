@@ -31,7 +31,7 @@ test.skip("embedding image", async () => {
   const pathname = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
     "files",
-    "parrot.jpeg"
+    "parrot.jpeg",
   );
   const img = fs.readFileSync(pathname);
   const vector: number[] = await e.embedImageQuery(img);
@@ -45,7 +45,7 @@ test.skip("embedding image with text in a vector store", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["dog", "cat", "horse", "seagull"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }],
-    e
+    e,
   );
 
   const resultOne = await vectorStore.similaritySearch("bird", 2);
@@ -54,7 +54,7 @@ test.skip("embedding image with text in a vector store", async () => {
   const pathname = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
     "files",
-    "parrot.jpeg"
+    "parrot.jpeg",
   );
   const img = fs.readFileSync(pathname);
   const vector: number[] = await e.embedImageQuery(img);
@@ -71,14 +71,14 @@ test.skip("embedding image with text in a vector store", async () => {
   const pathname2 = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
     "files",
-    "parrot-icon.png"
+    "parrot-icon.png",
   );
   const img2 = fs.readFileSync(pathname2);
   const vector2: number[] = await e.embedImageQuery(img2);
 
   const resultTwo = await vectorStore.similaritySearchVectorWithScore(
     vector2,
-    2
+    2,
   );
   console.log(resultTwo);
 });

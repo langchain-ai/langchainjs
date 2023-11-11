@@ -119,7 +119,7 @@ describe("RemoteRunnable", () => {
       `${BASE_URL}/a/invoke`,
       expect.objectContaining({
         body: '{"input":{"text":"string"},"config":{},"kwargs":{}}',
-      })
+      }),
     );
     expect(result).toEqual(["a", "b", "c"]);
   });
@@ -157,7 +157,7 @@ describe("RemoteRunnable", () => {
     }
     expect(chunkCount).toBe(18);
     expect(accumulator?.content).toEqual(
-      '"object1, object2, object3, object4, object5"'
+      '"object1, object2, object3, object4, object5"',
     );
   });
 });

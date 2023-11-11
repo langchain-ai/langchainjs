@@ -29,7 +29,7 @@ const config = {
 // You should have a populated Neo4j database to use this method
 const neo4jVectorIndex = await Neo4jVectorStore.fromExistingGraph(
   new OpenAIEmbeddings(),
-  config
+  config,
 );
 
 await neo4jVectorIndex.close();

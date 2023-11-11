@@ -27,7 +27,7 @@ test("WeaviateStore", async () => {
       indexName: "Test",
       textKey: "text",
       metadataKeys: ["foo"],
-    }
+    },
   );
 
   const results = await store.similaritySearch("hello world", 1);
@@ -65,7 +65,7 @@ test("WeaviateStore", async () => {
       indexName: "DocumentTest",
       textKey: "text",
       metadataKeys: ["deep_string", "deep_deepdeep_string"],
-    }
+    },
   );
 
   const result3 = await documentStore.similaritySearch(
@@ -77,7 +77,7 @@ test("WeaviateStore", async () => {
         path: ["deep_string"],
         valueText: "deep string",
       },
-    }
+    },
   );
   expect(result3).toEqual([
     new Document({
@@ -117,7 +117,7 @@ test("WeaviateStore upsert + delete", async () => {
       indexName: "DocumentTest",
       textKey: "pageContent",
       metadataKeys: ["deletionTest"],
-    }
+    },
   );
 
   const ids = await store.addDocuments([
@@ -160,7 +160,7 @@ test("WeaviateStore upsert + delete", async () => {
         metadata: { deletionTest: (createdAt + 1).toString() },
       },
     ],
-    { ids }
+    { ids },
   );
 
   expect(ids2).toEqual(ids);
@@ -221,7 +221,7 @@ test("WeaviateStore delete with filter", async () => {
       indexName: "FilterDeletionTest",
       textKey: "text",
       metadataKeys: ["foo"],
-    }
+    },
   );
   const results = await store.similaritySearch("hello world", 1);
   expect(results).toEqual([

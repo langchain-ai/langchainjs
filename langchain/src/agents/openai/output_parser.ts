@@ -25,7 +25,7 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
 
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     throw new Error(
-      `OpenAIFunctionsAgentOutputParser can only parse messages.\nPassed input: ${text}`
+      `OpenAIFunctionsAgentOutputParser can only parse messages.\nPassed input: ${text}`,
     );
   }
 
@@ -34,7 +34,7 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
       return this.parseAIMessage(generations[0].message);
     }
     throw new Error(
-      "parseResult on OpenAIFunctionsAgentOutputParser only works on ChatGeneration output"
+      "parseResult on OpenAIFunctionsAgentOutputParser only works on ChatGeneration output",
     );
   }
 
@@ -66,7 +66,7 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
         };
       } catch (error) {
         throw new OutputParserException(
-          `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
+          `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`,
         );
       }
     } else {
@@ -79,7 +79,7 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
 
   getFormatInstructions(): string {
     throw new Error(
-      "getFormatInstructions not implemented inside OpenAIFunctionsAgentOutputParser."
+      "getFormatInstructions not implemented inside OpenAIFunctionsAgentOutputParser.",
     );
   }
 }

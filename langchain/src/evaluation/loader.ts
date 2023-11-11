@@ -45,7 +45,7 @@ export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
  */
 export async function loadEvaluator<T extends keyof EvaluatorType>(
   type: T,
-  options?: LoadEvaluatorOptions
+  options?: LoadEvaluatorOptions,
 ): Promise<EvaluatorType[T]> {
   const { llm, chainOptions, criteria, agentTools } = options || {};
 
@@ -65,21 +65,21 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(
       evaluator = await LabeledCriteriaEvalChain.fromLLM(
         llm_,
         criteria,
-        chainOptions
+        chainOptions,
       );
       break;
     case "pairwise_string":
       evaluator = await PairwiseStringEvalChain.fromLLM(
         llm_,
         criteria,
-        chainOptions
+        chainOptions,
       );
       break;
     case "labeled_pairwise_string":
       evaluator = await LabeledPairwiseStringEvalChain.fromLLM(
         llm_,
         criteria,
-        chainOptions
+        chainOptions,
       );
       break;
     case "trajectory":
@@ -90,7 +90,7 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(
       evaluator = await TrajectoryEvalChain.fromLLM(
         llm_,
         agentTools,
-        chainOptions
+        chainOptions,
       );
       break;
     case "embedding_distance":

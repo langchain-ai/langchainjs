@@ -14,7 +14,7 @@ describe("Fireworks", () => {
     console.log(JSON.stringify(res, null, 2));
 
     await expect(
-      async () => await model.generate(["1 + 1 = ", "2 + 2 = "])
+      async () => await model.generate(["1 + 1 = ", "2 + 2 = "]),
     ).rejects.toThrow();
   });
 });

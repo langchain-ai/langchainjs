@@ -26,7 +26,7 @@ const model = new ChatMinimax({
 
 const messagesTemplate = ChatPromptTemplate.fromMessages([
   HumanMessagePromptTemplate.fromTemplate(
-    " Please help me translate the following sentence in English： {text}"
+    " Please help me translate the following sentence in English： {text}",
   ),
 ]);
 

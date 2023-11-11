@@ -25,7 +25,7 @@ export class MyCustomChain extends BaseChain implements MyCustomChainInputs {
 
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<ChainValues> {
     // Your custom chain logic goes here
     // This is just an example that mimics LLMChain
@@ -40,7 +40,7 @@ export class MyCustomChain extends BaseChain implements MyCustomChainInputs {
       [promptValue],
       {},
       // This tag "a-tag" will be attached to this inner LLM call
-      runManager?.getChild("a-tag")
+      runManager?.getChild("a-tag"),
     );
 
     // If you want to log something about this run, you can do so by calling

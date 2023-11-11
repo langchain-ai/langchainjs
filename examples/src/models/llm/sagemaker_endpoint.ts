@@ -17,7 +17,7 @@ class LLama213BHandler implements SageMakerLLMContentHandler {
 
   async transformInput(
     prompt: string,
-    modelKwargs: Record<string, unknown>
+    modelKwargs: Record<string, unknown>,
   ): Promise<Uint8Array> {
     const payload = {
       inputs: [[{ role: "user", content: prompt }]],
@@ -31,7 +31,7 @@ class LLama213BHandler implements SageMakerLLMContentHandler {
 
   async transformOutput(output: Uint8Array): Promise<string> {
     const response_json = JSON.parse(
-      new TextDecoder("utf-8").decode(output)
+      new TextDecoder("utf-8").decode(output),
     ) as ResponseJsonInterface[];
     const content = response_json[0]?.generation.content ?? "";
     return content;
@@ -61,7 +61,7 @@ const model = new SageMakerEndpoint({
 });
 
 const res = await model.call(
-  "Hello, my name is John Doe, tell me a joke about llamas "
+  "Hello, my name is John Doe, tell me a joke about llamas ",
 );
 
 console.log(res);

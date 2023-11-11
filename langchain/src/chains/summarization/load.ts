@@ -41,7 +41,7 @@ export type SummarizationChainParams = BaseParams &
 
 export const loadSummarizationChain = (
   llm: BaseLanguageModel,
-  params: SummarizationChainParams = { type: "map_reduce" }
+  params: SummarizationChainParams = { type: "map_reduce" },
 ) => {
   const { verbose } = params;
   if (params.type === "stuff") {

@@ -15,7 +15,7 @@ export type ScoreThresholdRetrieverInput<V extends VectorStore> = Omit<
 };
 
 export class ScoreThresholdRetriever<
-  V extends VectorStore
+  V extends VectorStore,
 > extends VectorStoreRetriever<V> {
   minSimilarityScore: number;
 
@@ -39,10 +39,10 @@ export class ScoreThresholdRetriever<
       const results = await this.vectorStore.similaritySearchWithScore(
         query,
         currentK,
-        this.filter
+        this.filter,
       );
       filteredResults = results.filter(
-        ([, score]) => score >= this.minSimilarityScore
+        ([, score]) => score >= this.minSimilarityScore,
       );
     } while (filteredResults.length >= currentK && currentK < this.maxK);
     return filteredResults.map((documents) => documents[0]).slice(0, this.maxK);
@@ -50,7 +50,7 @@ export class ScoreThresholdRetriever<
 
   static fromVectorStore<V extends VectorStore>(
     vectorStore: V,
-    options: Omit<ScoreThresholdRetrieverInput<V>, "vectorStore">
+    options: Omit<ScoreThresholdRetrieverInput<V>, "vectorStore">,
   ) {
     return new this<V>({ ...options, vectorStore });
   }

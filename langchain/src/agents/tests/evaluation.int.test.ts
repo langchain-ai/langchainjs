@@ -14,13 +14,13 @@ const agents = [
     initializeAgentExecutorWithOptions(
       tools,
       new ChatOpenAI({ temperature: 0 }),
-      { agentType: "chat-zero-shot-react-description" }
+      { agentType: "chat-zero-shot-react-description" },
     ),
   (tools) =>
     initializeAgentExecutorWithOptions(
       tools,
       new ChatOpenAI({ temperature: 0 }),
-      { agentType: "chat-conversational-react-description" }
+      { agentType: "chat-conversational-react-description" },
     ),
   (tools) =>
     initializeAgentExecutorWithOptions(tools, new OpenAI({ temperature: 0 }), {
@@ -30,10 +30,10 @@ const agents = [
     initializeAgentExecutorWithOptions(
       tools,
       new ChatOpenAI({ temperature: 0 }),
-      { agentType: "structured-chat-zero-shot-react-description" }
+      { agentType: "structured-chat-zero-shot-react-description" },
     ),
 ] as ((
-  tools: Tool[]
+  tools: Tool[],
 ) => ReturnType<typeof initializeAgentExecutorWithOptions>)[];
 
 const scenarios = [
@@ -42,7 +42,7 @@ const scenarios = [
       new RequestsGetTool(),
       new RequestsPostTool(),
       await AIPluginTool.fromPluginUrl(
-        "https://www.klarna.com/.well-known/ai-plugin.json"
+        "https://www.klarna.com/.well-known/ai-plugin.json",
       ),
     ],
     input: "what t shirts are available in klarna?",

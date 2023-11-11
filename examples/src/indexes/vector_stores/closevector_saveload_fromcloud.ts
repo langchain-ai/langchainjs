@@ -17,7 +17,7 @@ const vectorStore = await CloseVectorNode.fromTexts(
   {
     key: "your access key",
     secret: "your secret",
-  }
+  },
 );
 
 // Save the vector store to cloud
@@ -67,6 +67,6 @@ console.log(result);
 // or
 const resultOnBrowser = await loadedVectorStoreOnBrowser.similaritySearch(
   "hello world",
-  1
+  1,
 );
 console.log(resultOnBrowser);

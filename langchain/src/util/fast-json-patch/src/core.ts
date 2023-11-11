@@ -34,7 +34,7 @@ export interface Validator<T> {
     operation: Operation,
     index: number,
     document: T,
-    existingPathFragment: string
+    existingPathFragment: string,
   ): void;
 }
 
@@ -213,7 +213,7 @@ export function applyOperation<T>(
   validateOperation: boolean | Validator<T> = false,
   mutateDocument: boolean = true,
   banPrototypeModifications: boolean = true,
-  index: number = 0
+  index: number = 0,
 ): OperationResult<T> {
   if (validateOperation) {
     if (typeof validateOperation == "function") {
@@ -248,7 +248,7 @@ export function applyOperation<T>(
           "TEST_OPERATION_FAILED",
           index,
           operation,
-          document
+          document,
         );
       }
       returnValue.newDocument = document;
@@ -269,7 +269,7 @@ export function applyOperation<T>(
           "OPERATION_OP_INVALID",
           index,
           operation,
-          document
+          document,
         );
       } else {
         return returnValue;
@@ -304,7 +304,7 @@ export function applyOperation<T>(
           (key == "prototype" && t > 0 && keys[t - 1] == "constructor"))
       ) {
         throw new TypeError(
-          "JSON-Patch: modifying `__proto__` or `constructor/prototype` prop is banned for security reasons, if this was on purpose, please set `banPrototypeModifications` flag false and pass it to this function. More info in fast-json-patch README"
+          "JSON-Patch: modifying `__proto__` or `constructor/prototype` prop is banned for security reasons, if this was on purpose, please set `banPrototypeModifications` flag false and pass it to this function. More info in fast-json-patch README",
         );
       }
 
@@ -331,7 +331,7 @@ export function applyOperation<T>(
               "OPERATION_PATH_ILLEGAL_ARRAY_INDEX",
               index,
               operation,
-              document
+              document,
             );
           } // only parse key when it's an integer for `arr.prop` to work
           else if (isInteger(key)) {
@@ -345,14 +345,14 @@ export function applyOperation<T>(
               "OPERATION_VALUE_OUT_OF_BOUNDS",
               index,
               operation,
-              document
+              document,
             );
           }
           const returnValue = arrOps[operation.op].call(
             operation,
             obj,
             key,
-            document
+            document,
           ); // Apply patch
           if (returnValue.test === false) {
             throw new JsonPatchError(
@@ -360,7 +360,7 @@ export function applyOperation<T>(
               "TEST_OPERATION_FAILED",
               index,
               operation,
-              document
+              document,
             );
           }
           return returnValue;
@@ -371,7 +371,7 @@ export function applyOperation<T>(
             operation,
             obj,
             key,
-            document
+            document,
           ); // Apply patch
           if (returnValue.test === false) {
             throw new JsonPatchError(
@@ -379,7 +379,7 @@ export function applyOperation<T>(
               "TEST_OPERATION_FAILED",
               index,
               operation,
-              document
+              document,
             );
           }
           return returnValue;
@@ -394,7 +394,7 @@ export function applyOperation<T>(
           "OPERATION_PATH_UNRESOLVABLE",
           index,
           operation,
-          document
+          document,
         );
       }
     }
@@ -420,13 +420,13 @@ export function applyPatch<T>(
   patch: ReadonlyArray<Operation>,
   validateOperation?: boolean | Validator<T>,
   mutateDocument: boolean = true,
-  banPrototypeModifications: boolean = true
+  banPrototypeModifications: boolean = true,
 ): PatchResult<T> {
   if (validateOperation) {
     if (!Array.isArray(patch)) {
       throw new JsonPatchError(
         "Patch sequence must be an array",
-        "SEQUENCE_NOT_AN_ARRAY"
+        "SEQUENCE_NOT_AN_ARRAY",
       );
     }
   }
@@ -443,7 +443,7 @@ export function applyPatch<T>(
       validateOperation,
       true,
       banPrototypeModifications,
-      i
+      i,
     );
     document = results[i].newDocument; // in case root was replaced
   }
@@ -463,11 +463,11 @@ export function applyPatch<T>(
 export function applyReducer<T>(
   document: T,
   operation: Operation,
-  index: number
+  index: number,
 ): T {
   const operationResult: OperationResult<T> = applyOperation(
     document,
-    operation
+    operation,
   );
   if (operationResult.test === false) {
     // failed test
@@ -476,7 +476,7 @@ export function applyReducer<T>(
       "TEST_OPERATION_FAILED",
       index,
       operation,
-      document
+      document,
     );
   }
   return operationResult.newDocument;
@@ -493,7 +493,7 @@ export function validator(
   operation: Operation,
   index: number,
   document?: any,
-  existingPathFragment?: string
+  existingPathFragment?: string,
 ): void {
   if (
     typeof operation !== "object" ||
@@ -505,7 +505,7 @@ export function validator(
       "OPERATION_NOT_AN_OBJECT",
       index,
       operation,
-      document
+      document,
     );
   } else if (!objOps[operation.op]) {
     throw new JsonPatchError(
@@ -513,7 +513,7 @@ export function validator(
       "OPERATION_OP_INVALID",
       index,
       operation,
-      document
+      document,
     );
   } else if (typeof operation.path !== "string") {
     throw new JsonPatchError(
@@ -521,7 +521,7 @@ export function validator(
       "OPERATION_PATH_INVALID",
       index,
       operation,
-      document
+      document,
     );
   } else if (operation.path.indexOf("/") !== 0 && operation.path.length > 0) {
     // paths that aren't empty string should start with "/"
@@ -530,7 +530,7 @@ export function validator(
       "OPERATION_PATH_INVALID",
       index,
       operation,
-      document
+      document,
     );
   } else if (
     (operation.op === "move" || operation.op === "copy") &&
@@ -541,7 +541,7 @@ export function validator(
       "OPERATION_FROM_REQUIRED",
       index,
       operation,
-      document
+      document,
     );
   } else if (
     (operation.op === "add" ||
@@ -554,7 +554,7 @@ export function validator(
       "OPERATION_VALUE_REQUIRED",
       index,
       operation,
-      document
+      document,
     );
   } else if (
     (operation.op === "add" ||
@@ -567,7 +567,7 @@ export function validator(
       "OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED",
       index,
       operation,
-      document
+      document,
     );
   } else if (document) {
     if (operation.op == "add") {
@@ -579,7 +579,7 @@ export function validator(
           "OPERATION_PATH_CANNOT_ADD",
           index,
           operation,
-          document
+          document,
         );
       }
     } else if (
@@ -593,7 +593,7 @@ export function validator(
           "OPERATION_PATH_UNRESOLVABLE",
           index,
           operation,
-          document
+          document,
         );
       }
     } else if (operation.op === "move" || operation.op === "copy") {
@@ -609,7 +609,7 @@ export function validator(
           "OPERATION_FROM_UNRESOLVABLE",
           index,
           operation,
-          document
+          document,
         );
       }
     }
@@ -626,13 +626,13 @@ export function validator(
 export function validate<T>(
   sequence: ReadonlyArray<Operation>,
   document?: T,
-  externalValidator?: Validator<T>
+  externalValidator?: Validator<T>,
 ): PatchError {
   try {
     if (!Array.isArray(sequence)) {
       throw new JsonPatchError(
         "Patch sequence must be an array",
-        "SEQUENCE_NOT_AN_ARRAY"
+        "SEQUENCE_NOT_AN_ARRAY",
       );
     }
     if (document) {
@@ -640,7 +640,7 @@ export function validate<T>(
       applyPatch(
         _deepClone(document),
         _deepClone(sequence),
-        externalValidator || true
+        externalValidator || true,
       );
     } else {
       externalValidator = externalValidator || validator;

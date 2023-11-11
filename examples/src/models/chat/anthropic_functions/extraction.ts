@@ -20,7 +20,7 @@ const schema = z.object({
       name: z.string().describe("The name of a person"),
       height: z.number().describe("The person's height"),
       hairColor: z.optional(z.string()).describe("The person's hair color"),
-    })
+    }),
   ),
 });
 

@@ -66,7 +66,7 @@ export class FunctionalTranslator extends BaseTranslator {
    * @returns A function that takes two arguments and returns a boolean based on the comparison.
    */
   getComparatorFunction<C extends Comparator>(
-    comparator: Comparator
+    comparator: Comparator,
   ): (a: string | number, b: ValueType[C]) => boolean {
     switch (comparator) {
       case Comparators.eq: {
@@ -174,7 +174,7 @@ export class FunctionalTranslator extends BaseTranslator {
    * @returns An object containing a `filter` property, which is a function that takes a `Document` as an argument and returns a boolean based on the structured query.
    */
   visitStructuredQuery(
-    query: StructuredQuery
+    query: StructuredQuery,
   ): this["VisitStructuredQueryOutput"] {
     if (!query.filter) {
       return {};
@@ -196,7 +196,7 @@ export class FunctionalTranslator extends BaseTranslator {
   mergeFilters(
     defaultFilter: FunctionFilter,
     generatedFilter: FunctionFilter,
-    mergeType = "and"
+    mergeType = "and",
   ): FunctionFilter | undefined {
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;

@@ -15,6 +15,6 @@ if (username && accessToken) {
   console.log(documents);
 } else {
   console.log(
-    "You must provide a username and access token to run this example."
+    "You must provide a username and access token to run this example.",
   );
 }

@@ -14,15 +14,15 @@ import { BasicTranslator } from "../../../retrievers/self_query/base.js";
 test("Query Chain Test", async () => {
   const sq1 = new StructuredQuery(
     "",
-    new Comparison(Comparators.lt, "length", 90)
+    new Comparison(Comparators.lt, "length", 90),
   );
   const sq3 = new StructuredQuery(
     "",
-    new Comparison(Comparators.gt, "rating", 8.5)
+    new Comparison(Comparators.gt, "rating", 8.5),
   );
   const sq4 = new StructuredQuery(
     "",
-    new Comparison(Comparators.eq, "director", "Greta Gerwig")
+    new Comparison(Comparators.eq, "director", "Greta Gerwig"),
   );
   const sq5 = new StructuredQuery(
     "",
@@ -32,7 +32,7 @@ test("Query Chain Test", async () => {
         new Comparison(Comparators.eq, "genre", "drama"),
       ]),
       new Comparison(Comparators.lt, "length", 90),
-    ])
+    ]),
   );
 
   const filter1 = { length: { $lt: 90 } };
@@ -113,16 +113,16 @@ test("Query Chain Test", async () => {
   const testTranslator = new BasicTranslator();
 
   const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(
-    r1 as StructuredQuery
+    r1 as StructuredQuery,
   );
   const { filter: parsedFilter3 } = testTranslator.visitStructuredQuery(
-    r3 as StructuredQuery
+    r3 as StructuredQuery,
   );
   const { filter: parsedFilter4 } = testTranslator.visitStructuredQuery(
-    r4 as StructuredQuery
+    r4 as StructuredQuery,
   );
   const { filter: parsedFilter5 } = testTranslator.visitStructuredQuery(
-    r5 as StructuredQuery
+    r5 as StructuredQuery,
   );
 
   expect(parsedFilter1).toMatchObject(filter1);

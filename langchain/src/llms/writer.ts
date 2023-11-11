@@ -101,13 +101,13 @@ export class Writer extends LLM implements WriterInput {
 
     if (!apiKey) {
       throw new Error(
-        "Please set the WRITER_API_KEY environment variable or pass it to the constructor as the apiKey field."
+        "Please set the WRITER_API_KEY environment variable or pass it to the constructor as the apiKey field.",
       );
     }
 
     if (!orgId) {
       throw new Error(
-        "Please set the WRITER_ORG_ID environment variable or pass it to the constructor as the orgId field."
+        "Please set the WRITER_ORG_ID environment variable or pass it to the constructor as the orgId field.",
       );
     }
 
@@ -132,7 +132,7 @@ export class Writer extends LLM implements WriterInput {
   /** @ignore */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
   ): Promise<string> {
     const sdk = new WriterClient({
       security: {

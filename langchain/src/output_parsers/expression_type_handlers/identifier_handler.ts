@@ -32,7 +32,7 @@ export class IdentifierHandler extends NodeHandler {
   async handle(node: Identifier): Promise<IdentifierType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler"
+        "ArrayLiteralExpressionHandler must have a parent handler",
       );
     }
     const text = node.name.replace(/^["'](.+(?=["']$))["']$/, "$1");

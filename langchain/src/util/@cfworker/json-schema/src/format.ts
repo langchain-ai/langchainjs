@@ -72,7 +72,7 @@ const DURATION = (input: string) =>
   (/^P\d+([.,]\d+)?W$/.test(input) ||
     (/^P[\dYMDTHS]*(\d[.,]\d+)?[YMDHS]$/.test(input) &&
       /^P([.,\d]+Y)?([.,\d]+M)?([.,\d]+D)?(T([.,\d]+H)?([.,\d]+M)?([.,\d]+S)?)?$/.test(
-        input
+        input,
       )));
 
 function bind(r: RegExp) {

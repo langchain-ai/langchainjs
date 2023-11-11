@@ -19,7 +19,7 @@ export const run = async () => {
 
   const typeormVectorStore = await TypeORMVectorStore.fromDataSource(
     new OpenAIEmbeddings(),
-    args
+    args,
   );
 
   await typeormVectorStore.ensureTableInDatabase();

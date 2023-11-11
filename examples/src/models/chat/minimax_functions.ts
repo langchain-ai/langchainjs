@@ -68,7 +68,7 @@ const result2 = await minimax.call(
   [new HumanMessage("What is the weather like in NewYork tomorrow?")],
   {
     functions: [functionSchema],
-  }
+  },
 );
 console.log(result2);
 

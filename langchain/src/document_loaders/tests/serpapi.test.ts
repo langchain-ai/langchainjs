@@ -5,7 +5,7 @@ test("Test buildUrl method", () => {
   const loader = new SerpAPILoader({ q: "testQuery", apiKey: "testApiKey" });
 
   expect(loader.buildUrl()).toBe(
-    "https://serpapi.com/search?api_key=testApiKey&q=testQuery"
+    "https://serpapi.com/search?api_key=testApiKey&q=testQuery",
   );
 });
 

@@ -52,7 +52,7 @@ Passage:
 export function createTaggingChain(
   schema: FunctionParameters,
   llm: BaseChatModel<BaseFunctionCallOptions>,
-  options: TaggingChainOptions = {}
+  options: TaggingChainOptions = {},
 ) {
   const { prompt = PromptTemplate.fromTemplate(TAGGING_TEMPLATE), ...rest } =
     options;
@@ -81,11 +81,11 @@ export function createTaggingChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodObject<any, any, any, any>,
   llm: BaseChatModel<BaseFunctionCallOptions>,
-  options?: TaggingChainOptions
+  options?: TaggingChainOptions,
 ) {
   return createTaggingChain(
     zodToJsonSchema(schema) as JsonSchema7ObjectType,
     llm,
-    options
+    options,
   );
 }

@@ -31,7 +31,7 @@ describe.skip("testCypherGeneratingRun", () => {
     // Create two nodes and a relationship
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-        "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
+        "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})",
     );
 
     await graph.refreshSchema();
@@ -60,7 +60,7 @@ describe.skip("testCypherGeneratingRun", () => {
     // Create two nodes and a relationship
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-        "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
+        "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})",
     );
 
     await graph.refreshSchema();
@@ -72,7 +72,7 @@ describe.skip("testCypherGeneratingRun", () => {
     });
 
     const output = (await chain.run(
-      "Who played in Pulp Fiction?"
+      "Who played in Pulp Fiction?",
     )) as never as ChainValues;
 
     const expectedOutput = [{ "a.name": "Bruce Willis" }];
@@ -92,7 +92,7 @@ describe.skip("testCypherGeneratingRun", () => {
     // Create two nodes and a relationship
     await graph.query(
       "CREATE (a:Actor {name:'Bruce Willis'})" +
-        "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
+        "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})",
     );
 
     await graph.refreshSchema();

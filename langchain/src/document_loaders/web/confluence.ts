@@ -85,11 +85,11 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
    * @returns Promise resolving to the JSON response from the API.
    */
   protected async fetchConfluenceData(
-    url: string
+    url: string,
   ): Promise<ConfluenceAPIResponse> {
     try {
       const authToken = Buffer.from(
-        `${this.username}:${this.accessToken}`
+        `${this.username}:${this.accessToken}`,
       ).toString("base64");
 
       const response = await fetch(url, {
@@ -102,7 +102,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
 
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch ${url} from Confluence: ${response.status}`
+          `Failed to fetch ${url} from Confluence: ${response.status}`,
         );
       }
 

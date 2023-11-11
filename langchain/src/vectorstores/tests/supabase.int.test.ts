@@ -10,7 +10,7 @@ import { SupabaseVectorStore, SupabaseFilterRPCCall } from "../supabase.js";
 test("SupabaseVectorStore with external ids", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -43,7 +43,7 @@ test("SupabaseVectorStore with external ids", async () => {
 test("Search a SupabaseVectorStore using a metadata filter", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -81,7 +81,7 @@ test("Search a SupabaseVectorStore using a metadata filter", async () => {
 test("Search a SupabaseVectorStore with a functional metadata filter", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -178,7 +178,7 @@ test("Search a SupabaseVectorStore with a functional metadata filter", async () 
 test("Search a SupabaseVectorStore with MMR", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -219,7 +219,7 @@ test("Search a SupabaseVectorStore with MMR", async () => {
 test("Search a SupabaseVectorStore with MMR and a functional metadata filter", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -289,7 +289,7 @@ test("Search a SupabaseVectorStore with MMR and a functional metadata filter", a
 test("Upsert on a SupabaseVectorStore", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -313,7 +313,7 @@ test("Upsert on a SupabaseVectorStore", async () => {
   expect(results).toHaveLength(1);
   const ids2 = await store.addDocuments(
     [{ pageContent: "hello 1", metadata: { created_at: createdAt } }],
-    { ids }
+    { ids },
   );
   expect(ids).toEqual(ids2);
   const results2 = await store.similaritySearch("hello", 2, {
@@ -326,7 +326,7 @@ test("Upsert on a SupabaseVectorStore", async () => {
 test("Delete on a SupabaseVectorStore", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -381,7 +381,7 @@ test("Delete on a SupabaseVectorStore", async () => {
 test("Add documents with manual ids", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,
-    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!,
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -410,7 +410,7 @@ test("Add documents with manual ids", async () => {
       { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
       { pageContent: "hello 3", metadata: { created_at: createdAt + 2 } },
     ],
-    { ids }
+    { ids },
   );
   expect(ids).toEqual(returnedIds.map((id) => id.toString()));
   await store.delete({ ids });

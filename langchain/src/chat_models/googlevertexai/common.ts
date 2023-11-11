@@ -99,7 +99,7 @@ export class GoogleVertexAIChatMessage {
    */
   static mapMessageTypeToVertexChatAuthor(
     message: BaseMessage,
-    model: string
+    model: string,
   ): GoogleVertexAIChatAuthor {
     const type = message._getType();
     switch (type) {
@@ -109,13 +109,13 @@ export class GoogleVertexAIChatMessage {
         return "user";
       case "system":
         throw new Error(
-          `System messages are only supported as the first passed message for Google Vertex AI.`
+          `System messages are only supported as the first passed message for Google Vertex AI.`,
         );
       case "generic": {
         if (!ChatMessage.isInstance(message))
           throw new Error("Invalid generic chat message");
         return GoogleVertexAIChatMessage.extractGenericMessageCustomRole(
-          message
+          message,
         );
       }
       default:
@@ -132,13 +132,13 @@ export class GoogleVertexAIChatMessage {
   static fromChatMessage(message: BaseMessage, model: string) {
     if (typeof message.content !== "string") {
       throw new Error(
-        "ChatGoogleVertexAI does not support non-string message content."
+        "ChatGoogleVertexAI does not support non-string message content.",
       );
     }
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
         message,
-        model
+        model,
       ),
       content: message.content,
     });
@@ -236,7 +236,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    _runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
     const instance: GoogleVertexAIChatInstance = this.createInstance(_messages);
@@ -244,7 +244,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     const result = await this.streamedConnection.request(
       [instance],
       parameters,
-      _options
+      _options,
     );
 
     // Get the streaming parser of the response
@@ -269,7 +269,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
   ): Promise<ChatResult> {
     const instance: GoogleVertexAIChatInstance = this.createInstance(messages);
     const parameters: GoogleVertexAIModelParams = this.formatParameters();
@@ -277,14 +277,14 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     const result = await this.connection.request(
       [instance],
       parameters,
-      options
+      options,
     );
 
     const generations =
       (
         result?.data as GoogleVertexAILLMPredictions<GoogleVertexAIChatPrediction>
       )?.predictions?.map((prediction) =>
-        BaseChatGoogleVertexAI.convertPrediction(prediction)
+        BaseChatGoogleVertexAI.convertPrediction(prediction),
       ) ?? [];
     return {
       generations,
@@ -306,7 +306,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     if (messages[0]?._getType() === "system") {
       if (typeof messages[0].content !== "string") {
         throw new Error(
-          "ChatGoogleVertexAI does not support non-string message content."
+          "ChatGoogleVertexAI does not support non-string message content.",
         );
       }
       context = messages[0].content;
@@ -315,26 +315,26 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts
     if (conversationMessages.length % 2 === 0) {
       throw new Error(
-        `Google Vertex AI requires an odd number of messages to generate a response.`
+        `Google Vertex AI requires an odd number of messages to generate a response.`,
       );
     }
     const vertexChatMessages = conversationMessages.map((baseMessage, i) => {
       const currMessage = GoogleVertexAIChatMessage.fromChatMessage(
         baseMessage,
-        this.model
+        this.model,
       );
       const prevMessage =
         i > 0
           ? GoogleVertexAIChatMessage.fromChatMessage(
               conversationMessages[i - 1],
-              this.model
+              this.model,
             )
           : null;
 
       // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/chat-prompts#messages
       if (prevMessage && currMessage.author === prevMessage.author) {
         throw new Error(
-          `Google Vertex AI requires AI and human messages to alternate.`
+          `Google Vertex AI requires AI and human messages to alternate.`,
         );
       }
       return currMessage;
@@ -343,11 +343,11 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     const examples = this.examples.map((example) => ({
       input: GoogleVertexAIChatMessage.fromChatMessage(
         example.input,
-        this.model
+        this.model,
       ),
       output: GoogleVertexAIChatMessage.fromChatMessage(
         example.output,
-        this.model
+        this.model,
       ),
     }));
 
@@ -376,7 +376,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
    * @returns The converted chat generation.
    */
   static convertPrediction(
-    prediction: GoogleVertexAIChatPrediction
+    prediction: GoogleVertexAIChatPrediction,
   ): ChatGeneration {
     const message = prediction?.candidates[0];
     return {
@@ -389,7 +389,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static convertPredictionChunk(output: any): ChatGenerationChunk {
     const generation: ChatGeneration = BaseChatGoogleVertexAI.convertPrediction(
-      output.outputs[0]
+      output.outputs[0],
     );
     return new ChatGenerationChunk({
       text: generation.text,

@@ -48,7 +48,7 @@ export abstract class TextSplitter
 
   async transformDocuments(
     documents: Document[],
-    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {},
   ): Promise<Document[]> {
     return this.splitDocuments(documents, chunkHeaderOptions);
   }
@@ -61,7 +61,7 @@ export abstract class TextSplitter
       if (this.keepSeparator) {
         const regexEscapedSeparator = separator.replace(
           /[/\-\\^$*+?.()|[\]{}]/g,
-          "\\$&"
+          "\\$&",
         );
         splits = text.split(new RegExp(`(?=${regexEscapedSeparator})`));
       } else {
@@ -77,7 +77,7 @@ export abstract class TextSplitter
     texts: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: Record<string, any>[] = [],
-    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {},
   ): Promise<Document[]> {
     // if no metadata is provided, we create an empty one for each text
     const _metadatas =
@@ -102,7 +102,7 @@ export abstract class TextSplitter
           const newLinesBeforeFirstChunk = this.numberOfNewLines(
             text,
             0,
-            indexChunk
+            indexChunk,
           );
           lineCounterIndex += newLinesBeforeFirstChunk;
         } else {
@@ -112,14 +112,14 @@ export abstract class TextSplitter
             const numberOfIntermediateNewLines = this.numberOfNewLines(
               text,
               indexEndPrevChunk,
-              indexChunk
+              indexChunk,
             );
             lineCounterIndex += numberOfIntermediateNewLines;
           } else if (indexEndPrevChunk > indexChunk) {
             const numberOfIntermediateNewLines = this.numberOfNewLines(
               text,
               indexChunk,
-              indexEndPrevChunk
+              indexEndPrevChunk,
             );
             lineCounterIndex -= numberOfIntermediateNewLines;
           }
@@ -147,7 +147,7 @@ export abstract class TextSplitter
           new Document({
             pageContent,
             metadata: metadataWithLinesNumber,
-          })
+          }),
         );
         lineCounterIndex += newLinesCount;
         prevChunk = chunk;
@@ -164,10 +164,10 @@ export abstract class TextSplitter
 
   async splitDocuments(
     documents: Document[],
-    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {},
   ): Promise<Document[]> {
     const selectedDocuments = documents.filter(
-      (doc) => doc.pageContent !== undefined
+      (doc) => doc.pageContent !== undefined,
     );
     const texts = selectedDocuments.map((doc) => doc.pageContent);
     const metadatas = selectedDocuments.map((doc) => doc.metadata);
@@ -192,7 +192,7 @@ export abstract class TextSplitter
         if (total > this.chunkSize) {
           console.warn(
             `Created a chunk of size ${total}, +
-which is longer than the specified ${this.chunkSize}`
+which is longer than the specified ${this.chunkSize}`,
           );
         }
         if (currentDoc.length > 0) {
@@ -347,7 +347,7 @@ export class RecursiveCharacterTextSplitter
 
   static fromLanguage(
     language: SupportedTextSplitterLanguage,
-    options?: Partial<RecursiveCharacterTextSplitterParams>
+    options?: Partial<RecursiveCharacterTextSplitterParams>,
   ) {
     return new RecursiveCharacterTextSplitter({
       ...options,
@@ -749,7 +749,7 @@ export class TokenTextSplitter
     const input_ids = this.tokenizer.encode(
       text,
       this.allowedSpecial,
-      this.disallowedSpecial
+      this.disallowedSpecial,
     );
 
     let start_idx = 0;

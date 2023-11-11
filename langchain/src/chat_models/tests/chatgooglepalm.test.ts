@@ -19,7 +19,7 @@ class ChatGooglePaLMTest extends ChatGooglePaLM {
   }
 
   public _mapPalmMessagesToChatResult(
-    msgRes: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse
+    msgRes: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse,
   ) {
     return super._mapPalmMessagesToChatResult(msgRes);
   }
@@ -30,13 +30,13 @@ test("Google Palm Chat - `temperature` must be in range [0.0,1.0]", async () => 
     () =>
       new ChatGooglePaLMTest({
         temperature: -1.0,
-      })
+      }),
   ).toThrow();
   expect(
     () =>
       new ChatGooglePaLMTest({
         temperature: 1.1,
-      })
+      }),
   ).toThrow();
 });
 
@@ -45,7 +45,7 @@ test("Google Palm Chat - `topP` must be positive", async () => {
     () =>
       new ChatGooglePaLMTest({
         topP: -1,
-      })
+      }),
   ).toThrow();
 });
 
@@ -54,7 +54,7 @@ test("Google Palm Chat - `topK` must be positive", async () => {
     () =>
       new ChatGooglePaLMTest({
         topK: -1,
-      })
+      }),
   ).toThrow();
 });
 
@@ -209,7 +209,7 @@ test("Google Palm Chat - maps Palm generated message to `AIMessage` chat result"
   expect(chatResult.generations[0].message.name).toBe("droid");
   expect(chatResult.generations[0].message.content).toBe("ai-1");
   expect(
-    chatResult.generations[0].message.additional_kwargs.citationSources
+    chatResult.generations[0].message.additional_kwargs.citationSources,
   ).toEqual([
     {
       startIndex: 0,

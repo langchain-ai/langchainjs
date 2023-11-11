@@ -13,7 +13,7 @@ import {
  * messages for use in a chat context.
  */
 export function mapStoredMessagesToChatMessages(
-  messages: StoredMessage[]
+  messages: StoredMessage[],
 ): BaseMessage[] {
   return messages.map(mapStoredMessageToChatMessage);
 }
@@ -25,7 +25,7 @@ export function mapStoredMessagesToChatMessages(
  * is used to prepare chat messages for storage.
  */
 export function mapChatMessagesToStoredMessages(
-  messages: BaseMessage[]
+  messages: BaseMessage[],
 ): StoredMessage[] {
   return messages.map((message) => message.toDict());
 }

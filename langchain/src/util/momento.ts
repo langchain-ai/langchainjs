@@ -10,7 +10,7 @@ import { ICacheClient, CreateCache } from "@gomomento/sdk";
  */
 export async function ensureCacheExists(
   client: ICacheClient,
-  cacheName: string
+  cacheName: string,
 ): Promise<void> {
   const createResponse = await client.createCache(cacheName);
   if (

@@ -18,7 +18,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // Intantiate a few things to test the exports
   new OpenAI({ openAIApiKey: process.env.OPENAI_API_KEY });

@@ -10,7 +10,7 @@ describe("getEndpoint", () => {
     };
     const result = getEndpoint(config);
     expect(result).toBe(
-      "https://westeurope.api.cognitive.microsoft.com/openai/deployments/deploymentName"
+      "https://westeurope.api.cognitive.microsoft.com/openai/deployments/deploymentName",
     );
   });
 
@@ -22,7 +22,7 @@ describe("getEndpoint", () => {
     };
     const result = getEndpoint(config);
     expect(result).toBe(
-      "https://instanceName.openai.azure.com/openai/deployments/deploymentName"
+      "https://instanceName.openai.azure.com/openai/deployments/deploymentName",
     );
   });
 
@@ -32,7 +32,7 @@ describe("getEndpoint", () => {
       azureOpenAIApiDeploymentName: "deploymentName",
     };
     expect(() => getEndpoint(config)).toThrowError(
-      "azureOpenAIApiInstanceName is required when using azureOpenAIApiKey"
+      "azureOpenAIApiInstanceName is required when using azureOpenAIApiKey",
     );
   });
 
@@ -42,7 +42,7 @@ describe("getEndpoint", () => {
       azureOpenAIApiInstanceName: "instanceName",
     };
     expect(() => getEndpoint(config)).toThrowError(
-      "azureOpenAIApiDeploymentName is a required parameter when using azureOpenAIApiKey"
+      "azureOpenAIApiDeploymentName is a required parameter when using azureOpenAIApiKey",
     );
   });
 

@@ -30,7 +30,7 @@ type OpenAPIExecutionMethod = (
   options?: {
     headers?: Record<string, string>;
     params?: Record<string, string>;
-  }
+  },
 ) => Promise<string>;
 
 /**
@@ -42,7 +42,7 @@ type OpenAPIExecutionMethod = (
  */
 function formatURL(url: string, pathParams: Record<string, string>): string {
   const expectedPathParamNames = [...url.matchAll(/{(.*?)}/g)].map(
-    (match) => match[1]
+    (match) => match[1],
   );
   const newParams: Record<string, string> = {};
   for (const paramName of expectedPathParamNames) {
@@ -62,7 +62,7 @@ function formatURL(url: string, pathParams: Record<string, string>): string {
     } else if (typeof value === "object") {
       const kvSeparator = paramName.endsWith("*") ? "=" : ",";
       const kvStrings = Object.entries(value).map(
-        ([k, v]) => k + kvSeparator + v
+        ([k, v]) => k + kvSeparator + v,
       );
       let entrySeparator;
       if (paramName.startsWith(".")) {
@@ -102,7 +102,7 @@ function formatURL(url: string, pathParams: Record<string, string>): string {
  */
 function convertOpenAPIParamsToJSONSchema(
   params: OpenAPIV3_1.ParameterObject[],
-  spec: OpenAPISpec
+  spec: OpenAPISpec,
 ) {
   return params.reduce(
     (jsonSchema: JsonSchema7ObjectType, param) => {
@@ -112,7 +112,7 @@ function convertOpenAPIParamsToJSONSchema(
         // eslint-disable-next-line no-param-reassign
         jsonSchema.properties[param.name] = convertOpenAPISchemaToJSONSchema(
           schema,
-          spec
+          spec,
         );
       } else if (param.content) {
         const mediaTypeSchema = Object.values(param.content)[0].schema;
@@ -128,7 +128,7 @@ function convertOpenAPIParamsToJSONSchema(
         // eslint-disable-next-line no-param-reassign
         jsonSchema.properties[param.name] = convertOpenAPISchemaToJSONSchema(
           schema,
-          spec
+          spec,
         );
       } else {
         return jsonSchema;
@@ -143,7 +143,7 @@ function convertOpenAPIParamsToJSONSchema(
       properties: {},
       required: [],
       additionalProperties: {},
-    }
+    },
   );
 }
 
@@ -156,7 +156,7 @@ function convertOpenAPIParamsToJSONSchema(
  */
 export function convertOpenAPISchemaToJSONSchema(
   schema: OpenAPIV3_1.SchemaObject,
-  spec: OpenAPISpec
+  spec: OpenAPISpec,
 ): JsonSchema7Type {
   if (schema.type === "object") {
     return Object.keys(schema.properties ?? {}).reduce(
@@ -171,7 +171,7 @@ export function convertOpenAPISchemaToJSONSchema(
         // eslint-disable-next-line no-param-reassign
         jsonSchema.properties[propertyName] = convertOpenAPISchemaToJSONSchema(
           openAPIProperty,
-          spec
+          spec,
         );
         if (openAPIProperty.required && jsonSchema.required !== undefined) {
           jsonSchema.required.push(propertyName);
@@ -183,7 +183,7 @@ export function convertOpenAPISchemaToJSONSchema(
         properties: {},
         required: [],
         additionalProperties: {},
-      }
+      },
     );
   }
   if (schema.type === "array") {
@@ -225,7 +225,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
         .reduce(
           (
             operationParams: Record<string, OpenAPIV3_1.ParameterObject[]>,
-            param
+            param,
           ) => {
             if (!operationParams[param.in]) {
               // eslint-disable-next-line no-param-reassign
@@ -234,7 +234,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
             operationParams[param.in].push(param);
             return operationParams;
           },
-          {}
+          {},
         );
       const paramLocationToRequestArgNameMap: Record<string, string> = {
         query: "params",
@@ -250,13 +250,13 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
             };
       } = {};
       for (const paramLocation of Object.keys(
-        paramLocationToRequestArgNameMap
+        paramLocationToRequestArgNameMap,
       )) {
         if (operationParametersByLocation[paramLocation]) {
           requestArgsSchema[paramLocationToRequestArgNameMap[paramLocation]] =
             convertOpenAPIParamsToJSONSchema(
               operationParametersByLocation[paramLocation],
-              spec
+              spec,
             );
         }
       }
@@ -264,13 +264,13 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
       if (requestBody?.content !== undefined) {
         const requestBodySchemas: Record<string, JsonSchema7ObjectType> = {};
         for (const [mediaType, mediaTypeObject] of Object.entries(
-          requestBody.content
+          requestBody.content,
         )) {
           if (mediaTypeObject.schema !== undefined) {
             const schema = spec.getSchema(mediaTypeObject.schema);
             requestBodySchemas[mediaType] = convertOpenAPISchemaToJSONSchema(
               schema,
-              spec
+              spec,
             ) as JsonSchema7ObjectType;
           }
         }
@@ -314,7 +314,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
       options?: {
         headers?: Record<string, string>;
         params?: Record<string, string>;
-      }
+      },
     ) => {
       const {
         headers: customHeaders,
@@ -336,7 +336,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
           }
           return filteredArgs;
         },
-        {}
+        {},
       );
       const queryString = new URLSearchParams({
         ...nonEmptyParams,
@@ -390,7 +390,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
 type SimpleRequestChainExecutionMethod = (
   name: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  requestArgs: Record<string, any>
+  requestArgs: Record<string, any>,
 ) => Promise<string>;
 
 /**
@@ -427,7 +427,7 @@ class SimpleRequestChain extends BaseChain {
   /** @ignore */
   async _call(
     values: ChainValues,
-    _runManager?: CallbackManagerForChainRun
+    _runManager?: CallbackManagerForChainRun,
   ): Promise<ChainValues> {
     const inputKeyValue = values[this.inputKey];
     const methodName = inputKeyValue.name;
@@ -458,7 +458,7 @@ export type OpenAPIChainOptions = {
  */
 export async function createOpenAPIChain(
   spec: OpenAPIV3_1.Document | string,
-  options: OpenAPIChainOptions = {}
+  options: OpenAPIChainOptions = {},
 ) {
   let convertedSpec;
   if (typeof spec === "string") {
@@ -478,14 +478,14 @@ export async function createOpenAPIChain(
     convertOpenAPISpecToOpenAIFunctions(convertedSpec);
   if (defaultExecutionMethod === undefined) {
     throw new Error(
-      `Could not parse any valid operations from the provided spec.`
+      `Could not parse any valid operations from the provided spec.`,
     );
   }
   const {
     llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }),
     prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
-        "Use the provided API's to respond to this user query:\n\n{query}"
+        "Use the provided API's to respond to this user query:\n\n{query}",
       ),
     ]),
     requestChain = new SimpleRequestChain({

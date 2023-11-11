@@ -29,7 +29,7 @@ export class NumericLiteralHandler extends NodeHandler {
   async handle(node: NumericLiteral): Promise<NumericLiteralType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler"
+        "ArrayLiteralExpressionHandler must have a parent handler",
       );
     }
     return {

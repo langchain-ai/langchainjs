@@ -20,7 +20,7 @@ import { formatForOpenAIFunctions } from "../format_scratchpad/openai_functions.
 
 /** Define a custom structured output parser. */
 const structuredOutputParser = (
-  output: AIMessage
+  output: AIMessage,
 ): AgentAction | AgentFinish => {
   if (typeof output.content !== "string") {
     throw new Error("Cannot parse non-string output.");
@@ -75,7 +75,7 @@ test("Pass custom structured output parsers", async () => {
     sources: z
       .array(z.string())
       .describe(
-        "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information"
+        "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information",
       ),
   });
   /** Create the response function */

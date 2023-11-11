@@ -54,7 +54,7 @@ export class VoyVectorStore extends VectorStore {
       this.numDimensions = firstVector.length;
     } else if (this.numDimensions !== firstVector.length) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`
+        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`,
       );
     }
     const restResults = await this.embeddings.embedDocuments(texts.slice(1));
@@ -80,7 +80,7 @@ export class VoyVectorStore extends VectorStore {
     }
     if (!vectors.every((v) => v.length === this.numDimensions)) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`
+        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`,
       );
     }
 
@@ -110,22 +110,22 @@ export class VoyVectorStore extends VectorStore {
     }
     if (query.length !== this.numDimensions) {
       throw new Error(
-        `Query vector must have the same length as the number of dimensions (${this.numDimensions})`
+        `Query vector must have the same length as the number of dimensions (${this.numDimensions})`,
       );
     }
     const itemsToQuery = Math.min(this.docstore.length, k);
     if (itemsToQuery > this.docstore.length) {
       console.warn(
-        `k (${k}) is greater than the number of elements in the index (${this.docstore.length}), setting k to ${itemsToQuery}`
+        `k (${k}) is greater than the number of elements in the index (${this.docstore.length}), setting k to ${itemsToQuery}`,
       );
     }
     const results: SearchResult = this.client.search(
       new Float32Array(query),
-      itemsToQuery
+      itemsToQuery,
     );
     return results.neighbors.map(
       ({ id }, idx) =>
-        [this.docstore[parseInt(id, 10)].document, idx] as [Document, number]
+        [this.docstore[parseInt(id, 10)].document, idx] as [Document, number],
     );
   }
 
@@ -157,7 +157,7 @@ export class VoyVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    client: VoyClient
+    client: VoyClient,
   ): Promise<VoyVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -182,7 +182,7 @@ export class VoyVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    client: VoyClient
+    client: VoyClient,
   ): Promise<VoyVectorStore> {
     const instance = new VoyVectorStore(client, embeddings);
     await instance.addDocuments(docs);

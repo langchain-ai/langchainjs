@@ -24,7 +24,7 @@ export const run = async () => {
       memory: new BufferMemory({
         memoryKey: "chat_history", // Must be set to "chat_history"
       }),
-    }
+    },
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";

@@ -24,7 +24,7 @@ export class InMemoryEntityStore extends BaseEntityStore {
    */
   async get(
     key: string,
-    defaultValue: string | undefined
+    defaultValue: string | undefined,
   ): Promise<string | undefined> {
     return key in this.store ? this.store[key] : defaultValue;
   }

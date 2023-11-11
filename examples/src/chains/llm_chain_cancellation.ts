@@ -5,7 +5,7 @@ import { LLMChain } from "langchain/chains";
 // Create a new LLMChain from a PromptTemplate and an LLM in streaming mode.
 const model = new OpenAI({ temperature: 0.9, streaming: true });
 const prompt = PromptTemplate.fromTemplate(
-  "Give me a long paragraph about {product}?"
+  "Give me a long paragraph about {product}?",
 );
 const chain = new LLMChain({ llm: model, prompt });
 const controller = new AbortController();
@@ -25,7 +25,7 @@ try {
           process.stdout.write(token);
         },
       },
-    ]
+    ],
   );
 } catch (e) {
   console.log(e);

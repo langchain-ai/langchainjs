@@ -9,7 +9,10 @@ import { BaseDocumentLoader } from "../base.js";
 export class EPubLoader extends BaseDocumentLoader {
   private splitChapters: boolean;
 
-  constructor(public filePath: string, { splitChapters = true } = {}) {
+  constructor(
+    public filePath: string,
+    { splitChapters = true } = {},
+  ) {
     super();
     this.splitChapters = splitChapters;
   }
@@ -22,7 +25,7 @@ export class EPubLoader extends BaseDocumentLoader {
    * @returns A promise that resolves to an array of objects representing the content and metadata of each chapter.
    */
   protected async parse(
-    epub: EPub
+    epub: EPub,
   ): Promise<{ pageContent: string; metadata?: object }[]> {
     const { htmlToText } = await HtmlToTextImport();
     const chapters = await Promise.all(
@@ -34,7 +37,7 @@ export class EPubLoader extends BaseDocumentLoader {
           html,
           title: chapter.title,
         };
-      })
+      }),
     );
     return chapters.filter(Boolean).map((chapter) => ({
       pageContent: htmlToText(chapter.html),
@@ -67,7 +70,7 @@ export class EPubLoader extends BaseDocumentLoader {
                 ...metadata,
                 ...chapter.metadata,
               },
-            })
+            }),
         )
       : [
           new Document({
@@ -83,7 +86,7 @@ export class EPubLoader extends BaseDocumentLoader {
 async function EpubImport() {
   const { EPub } = await import("epub2").catch(() => {
     throw new Error(
-      "Failed to load epub2. Please install it with eg. `npm install epub2`."
+      "Failed to load epub2. Please install it with eg. `npm install epub2`.",
     );
   });
   return { EPub };
@@ -92,7 +95,7 @@ async function EpubImport() {
 async function HtmlToTextImport() {
   const { htmlToText } = await import("html-to-text").catch(() => {
     throw new Error(
-      "Failed to load html-to-text. Please install it with eg. `npm install html-to-text`."
+      "Failed to load html-to-text. Please install it with eg. `npm install html-to-text`.",
     );
   });
   return { htmlToText };

@@ -55,7 +55,7 @@ Passage:
  */
 export function createExtractionChain(
   schema: FunctionParameters,
-  llm: BaseChatModel<BaseFunctionCallOptions>
+  llm: BaseChatModel<BaseFunctionCallOptions>,
 ) {
   const functions = getExtractionFunctions(schema);
   const prompt = PromptTemplate.fromTemplate(_EXTRACTION_TEMPLATE);
@@ -80,10 +80,10 @@ export function createExtractionChain(
 export function createExtractionChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodObject<any, any, any, any>,
-  llm: BaseChatModel<BaseFunctionCallOptions>
+  llm: BaseChatModel<BaseFunctionCallOptions>,
 ) {
   return createExtractionChain(
     zodToJsonSchema(schema) as JsonSchema7ObjectType,
-    llm
+    llm,
   );
 }

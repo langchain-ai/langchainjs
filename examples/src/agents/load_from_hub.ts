@@ -17,7 +17,7 @@ export const run = async () => {
 
   const agent = await loadAgent(
     "lc://agents/zero-shot-react-description/agent.json",
-    { llm: model, tools }
+    { llm: model, tools },
   );
   console.log("Loaded agent from Langchain hub");
 

@@ -50,7 +50,7 @@ export class FakeListChatModel extends BaseChatModel {
 
   async _generate(
     _messages: BaseMessage[],
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
   ): Promise<ChatResult> {
     await this._sleepIfRequested();
 
@@ -79,7 +79,7 @@ export class FakeListChatModel extends BaseChatModel {
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    _runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     const response = this._currentResponse();
     this._incrementResponse();

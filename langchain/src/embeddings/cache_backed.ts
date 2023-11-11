@@ -75,11 +75,10 @@ export class CacheBackedEmbeddings extends Embeddings {
       }
     }
     if (missingDocuments.length) {
-      const missingVectors = await this.underlyingEmbeddings.embedDocuments(
-        missingDocuments
-      );
+      const missingVectors =
+        await this.underlyingEmbeddings.embedDocuments(missingDocuments);
       const keyValuePairs: [string, number[]][] = missingDocuments.map(
-        (document, i) => [document, missingVectors[i]]
+        (document, i) => [document, missingVectors[i]],
       );
       await this.documentEmbeddingStore.mset(keyValuePairs);
       for (let i = 0; i < missingIndicies.length; i += 1) {
@@ -102,7 +101,7 @@ export class CacheBackedEmbeddings extends Embeddings {
     documentEmbeddingStore: BaseStore<string, Uint8Array>,
     options?: {
       namespace?: string;
-    }
+    },
   ) {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();

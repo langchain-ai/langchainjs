@@ -58,7 +58,7 @@ export class Replicate extends LLM implements ReplicateInput {
 
     if (!apiKey) {
       throw new Error(
-        "Please set the REPLICATE_API_TOKEN environment variable"
+        "Please set the REPLICATE_API_TOKEN environment variable",
       );
     }
 
@@ -75,7 +75,7 @@ export class Replicate extends LLM implements ReplicateInput {
   /** @ignore */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
   ): Promise<string> {
     const imports = await Replicate.imports();
 
@@ -89,7 +89,7 @@ export class Replicate extends LLM implements ReplicateInput {
       const version = await replicate.models.versions.get(
         modelString.split("/")[0],
         modelString.split("/")[1],
-        versionString
+        versionString,
       );
       const openapiSchema = version.openapi_schema;
       const inputProperties: { "x-order": number | undefined }[] =
@@ -103,7 +103,7 @@ export class Replicate extends LLM implements ReplicateInput {
             const orderA = valueA["x-order"] || 0;
             const orderB = valueB["x-order"] || 0;
             return orderA - orderB;
-          }
+          },
         );
         this.promptKey = sortedInputProperties[0][0] ?? "prompt";
       }
@@ -117,7 +117,7 @@ export class Replicate extends LLM implements ReplicateInput {
             [this.promptKey!]: prompt,
             ...this.input,
           },
-        })
+        }),
     );
 
     if (typeof output === "string") {
@@ -140,7 +140,7 @@ export class Replicate extends LLM implements ReplicateInput {
       return { Replicate };
     } catch (e) {
       throw new Error(
-        "Please install replicate as a dependency with, e.g. `yarn add replicate`"
+        "Please install replicate as a dependency with, e.g. `yarn add replicate`",
       );
     }
   }

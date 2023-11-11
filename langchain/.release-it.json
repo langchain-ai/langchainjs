@@ -5,8 +5,6 @@
     "tokenRef": "GITHUB_TOKEN_RELEASE"
   },
   "npm": {
-    "versionArgs": [
-      "--workspaces-update=false"
-    ]
+    "versionArgs": ["--workspaces-update=false"]
   }
 }

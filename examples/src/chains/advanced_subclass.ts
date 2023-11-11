@@ -10,7 +10,7 @@ abstract class BaseChain {
    */
   abstract _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<ChainValues>;
 
   /**

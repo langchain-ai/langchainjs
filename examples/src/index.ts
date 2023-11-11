@@ -34,7 +34,7 @@ try {
   ({ run: runExample } = await import(
     path.join(
       path.dirname(url.fileURLToPath(import.meta.url)),
-      exampleRelativePath
+      exampleRelativePath,
     )
   ));
 } catch (e) {

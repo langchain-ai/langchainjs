@@ -113,7 +113,7 @@ export class ZeroShotAgent extends Agent {
     });
 
     const template = [prefix, toolStrings, formatInstructions, suffix].join(
-      "\n\n"
+      "\n\n",
     );
 
     return new PromptTemplate({
@@ -132,7 +132,7 @@ export class ZeroShotAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: ZeroShotCreatePromptArgs & AgentArgs
+    args?: ZeroShotCreatePromptArgs & AgentArgs,
   ) {
     ZeroShotAgent.validateTools(tools);
     const prompt = ZeroShotAgent.createPrompt(tools, args);
@@ -152,7 +152,7 @@ export class ZeroShotAgent extends Agent {
   }
 
   static async deserialize(
-    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] },
   ): Promise<ZeroShotAgent> {
     const { llm, tools, ...rest } = data;
     return deserializeHelper(
@@ -162,14 +162,14 @@ export class ZeroShotAgent extends Agent {
       (
         llm: BaseLanguageModel,
         tools: Tool[],
-        args: SerializedFromLLMAndTools
+        args: SerializedFromLLMAndTools,
       ) =>
         ZeroShotAgent.fromLLMAndTools(llm, tools, {
           prefix: args.prefix,
           suffix: args.suffix,
           inputVariables: args.input_variables,
         }),
-      (args) => new ZeroShotAgent(args)
+      (args) => new ZeroShotAgent(args),
     );
   }
 }

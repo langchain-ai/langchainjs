@@ -29,7 +29,7 @@ test("Test OpenAI with timeout in call options", async () => {
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
-    })
+    }),
   ).rejects.toThrow();
 }, 5000);
 
@@ -38,7 +38,7 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   await expect(() =>
     model.call("Print hello world", {
       timeout: 10,
-    })
+    }),
   ).rejects.toThrow();
 }, 5000);
 
@@ -179,13 +179,13 @@ test("Test OpenAI in streaming mode with multiple prompts", async () => {
   const res = await model.generate(["Print hello world", "print hello sea"]);
   console.log(
     res.generations,
-    res.generations.map((g) => g[0].generationInfo)
+    res.generations.map((g) => g[0].generationInfo),
   );
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.generations.length).toBe(2);
   expect(res.generations.map((g) => g.map((gg) => gg.text))).toEqual(
-    completions
+    completions,
   );
 });
 
@@ -208,13 +208,13 @@ test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
   const res = await model.generate(["Print hello world", "print hello sea"]);
   console.log(
     res.generations,
-    res.generations.map((g) => g[0].generationInfo)
+    res.generations.map((g) => g[0].generationInfo),
   );
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.generations.length).toBe(2);
   expect(res.generations.map((g) => g.map((gg) => gg.text))).toEqual(
-    completions
+    completions,
   );
 });
 
@@ -250,7 +250,7 @@ test("Test OpenAI stream method with abort", async () => {
       "How is your day going? Be extremely verbose.",
       {
         signal: AbortSignal.timeout(1000),
-      }
+      },
     );
     for await (const chunk of stream) {
       console.log(chunk);
@@ -261,7 +261,7 @@ test("Test OpenAI stream method with abort", async () => {
 test("Test OpenAI stream method with early break", async () => {
   const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
   const stream = await model.stream(
-    "How is your day going? Be extremely verbose."
+    "How is your day going? Be extremely verbose.",
   );
   let i = 0;
   for await (const chunk of stream) {

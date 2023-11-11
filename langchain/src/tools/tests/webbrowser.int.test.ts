@@ -11,7 +11,7 @@ describe("webbrowser Test suite", () => {
 
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(
-      `"https://www.merriam-webster.com/word-of-the-day","word of the day"`
+      `"https://www.merriam-webster.com/word-of-the-day","word of the day"`,
     );
 
     expect(result).toContain("Word of the Day:");
@@ -29,7 +29,7 @@ describe("webbrowser Test suite", () => {
       },
     });
     const result = await browser.call(
-      `"https://www.merriam-webster.com/word-of-the-day",""`
+      `"https://www.merriam-webster.com/word-of-the-day",""`,
     );
 
     // fuzzy, sometimes its capped and others not
@@ -52,7 +52,7 @@ describe("webbrowser Test suite", () => {
 
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(
-      `"www.merriam-webster.com/word-of-the-day","word of the day"`
+      `"www.merriam-webster.com/word-of-the-day","word of the day"`,
     );
 
     expect(result).toEqual("TypeError [ERR_INVALID_URL]: Invalid URL");
@@ -64,11 +64,11 @@ describe("webbrowser Test suite", () => {
 
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(
-      `"https://www.hDjRBKoAD0EIbF29TWM4rbXDGGM5Nhy4uzNEAdDS.com","word of the day"`
+      `"https://www.hDjRBKoAD0EIbF29TWM4rbXDGGM5Nhy4uzNEAdDS.com","word of the day"`,
     );
 
     expect(result).toEqual(
-      "Error: getaddrinfo ENOTFOUND www.hdjrbkoad0eibf29twm4rbxdggm5nhy4uzneadds.com"
+      "Error: getaddrinfo ENOTFOUND www.hdjrbkoad0eibf29twm4rbxdggm5nhy4uzneadds.com",
     );
   });
 
@@ -78,7 +78,7 @@ describe("webbrowser Test suite", () => {
 
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(
-      `"https://www.musicgateway.com/spotify-pre-save",""`
+      `"https://www.musicgateway.com/spotify-pre-save",""`,
     );
 
     expect(result).not.toEqual("Error: http response 403");
@@ -91,7 +91,7 @@ describe("webbrowser Test suite", () => {
 
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(
-      `"https://parade.com/991228/marynliles/couples-goals",""`
+      `"https://parade.com/991228/marynliles/couples-goals",""`,
     );
     expect(result).not.toEqual("Error: http response 403");
   });
@@ -102,7 +102,7 @@ describe("webbrowser Test suite", () => {
 
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(
-      `"https://firstround.com/review/how-to-fix-the-co-founder-fights-youre-sick-of-having-lessons-from-couples-therapist-esther-perel",""`
+      `"https://firstround.com/review/how-to-fix-the-co-founder-fights-youre-sick-of-having-lessons-from-couples-therapist-esther-perel",""`,
     );
 
     expect(result).toContain("Esther Perel");
@@ -117,7 +117,7 @@ describe("webbrowser Test suite", () => {
 
     const browser = new WebBrowser({ model, embeddings });
     const result = await browser.call(
-      `"https://www.healtheuropa.eu/why-mdma-must-be-reclassified-as-a-schedule-2-drug/95780",""`
+      `"https://www.healtheuropa.eu/why-mdma-must-be-reclassified-as-a-schedule-2-drug/95780",""`,
     );
     expect(result).toContain("Beckley Foundation");
   });

@@ -3,7 +3,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const vectorStore = await Chroma.fromExistingCollection(
   new OpenAIEmbeddings(),
-  { collectionName: "godel-escher-bach" }
+  { collectionName: "godel-escher-bach" },
 );
 
 const response = await vectorStore.similaritySearch("scared", 2);

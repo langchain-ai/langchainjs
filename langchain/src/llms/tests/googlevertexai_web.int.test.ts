@@ -65,7 +65,7 @@ describe("Web Vertex AI", () => {
     });
 
     const stream = await model.stream(
-      "What is the answer to life, the universe, and everything?"
+      "What is the answer to life, the universe, and everything?",
     );
     const chunks = [];
     for await (const chunk of stream) {

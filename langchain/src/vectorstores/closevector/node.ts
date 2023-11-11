@@ -38,7 +38,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
   constructor(
     embeddings: Embeddings,
     args: CloseVectorNodeArgs,
-    credentials?: CloseVectorCredentials
+    credentials?: CloseVectorCredentials,
   ) {
     super(embeddings, args, credentials);
     if (args.instance) {
@@ -63,7 +63,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
    * @param options.onProgress A callback function that will be called with the progress of the upload.
    */
   async saveToCloud(
-    options: Parameters<CloseVectorHNSWNode["saveToCloud"]>[0]
+    options: Parameters<CloseVectorHNSWNode["saveToCloud"]>[0],
   ) {
     await this.instance.saveToCloud(options);
   }
@@ -83,7 +83,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
         credentials: CloseVectorCredentials;
       },
       "accessKey" | "secret"
-    >
+    >,
   ) {
     if (!options.credentials.key || !options.credentials.secret) {
       throw new Error("key and secret must be provided");
@@ -96,7 +96,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
     const vectorstore = new this(
       options.embeddings,
       instance.args,
-      options.credentials
+      options.credentials,
     );
     return vectorstore;
   }
@@ -112,7 +112,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
   static async load(
     directory: string,
     embeddings: Embeddings,
-    credentials?: CloseVectorCredentials
+    credentials?: CloseVectorCredentials,
   ) {
     const instance = await CloseVectorHNSWNode.load(directory, embeddings);
     const vectorstore = new this(embeddings, instance.args, credentials);
@@ -135,14 +135,14 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
     metadatas: object[] | object,
     embeddings: Embeddings,
     args?: Record<string, unknown>,
-    credential?: CloseVectorCredentials
+    credential?: CloseVectorCredentials,
   ): Promise<CloseVectorNode> {
     const docs = CloseVector.textsToDocuments(texts, metadatas);
     return await CloseVectorNode.fromDocuments(
       docs,
       embeddings,
       args,
-      credential
+      credential,
     );
   }
 
@@ -160,7 +160,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
     docs: Document[],
     embeddings: Embeddings,
     args?: Record<string, unknown>,
-    credentials?: CloseVectorCredentials
+    credentials?: CloseVectorCredentials,
   ): Promise<CloseVectorNode> {
     const _args: Record<string, unknown> = args || {
       space: "cosine",
@@ -168,7 +168,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
     const instance = new this(
       embeddings,
       _args as unknown as CloseVectorNodeArgs,
-      credentials
+      credentials,
     );
     await instance.addDocuments(docs);
     return instance;

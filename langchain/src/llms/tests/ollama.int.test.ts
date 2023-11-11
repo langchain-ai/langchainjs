@@ -6,7 +6,7 @@ import { BytesOutputParser } from "../../schema/output_parser.js";
 test.skip("test call", async () => {
   const ollama = new Ollama({});
   const result = await ollama.call(
-    "What is a good name for a company that makes colorful socks?"
+    "What is a good name for a company that makes colorful socks?",
   );
   console.log({ result });
 });
@@ -26,7 +26,7 @@ test.skip("test call with callback", async () => {
           },
         },
       ],
-    }
+    },
   );
   expect(tokens.length).toBeGreaterThan(1);
   expect(result).toEqual(tokens.join(""));
@@ -37,7 +37,7 @@ test.skip("test streaming call", async () => {
     baseUrl: "http://localhost:11434",
   });
   const stream = await ollama.stream(
-    `Translate "I love programming" into German.`
+    `Translate "I love programming" into German.`,
   );
   const chunks = [];
   for await (const chunk of stream) {

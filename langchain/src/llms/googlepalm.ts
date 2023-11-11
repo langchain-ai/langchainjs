@@ -142,11 +142,11 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
     this.safetySettings = fields?.safetySettings ?? this.safetySettings;
     if (this.safetySettings && this.safetySettings.length > 0) {
       const safetySettingsSet = new Set(
-        this.safetySettings.map((s) => s.category)
+        this.safetySettings.map((s) => s.category),
       );
       if (safetySettingsSet.size !== this.safetySettings.length) {
         throw new Error(
-          "The categories in `safetySettings` array must be unique"
+          "The categories in `safetySettings` array must be unique",
         );
       }
     }
@@ -155,7 +155,7 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
       fields?.apiKey ?? getEnvironmentVariable("GOOGLE_PALM_API_KEY");
     if (!this.apiKey) {
       throw new Error(
-        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
+        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor",
       );
     }
 
@@ -170,18 +170,18 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
 
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
   ): Promise<string> {
     const res = await this.caller.callWithOptions(
       { signal: options.signal },
       this._generateText.bind(this),
-      prompt
+      prompt,
     );
     return res ?? "";
   }
 
   protected async _generateText(
-    prompt: string
+    prompt: string,
   ): Promise<string | null | undefined> {
     const res = await this.client.generateText({
       model: this.modelName,

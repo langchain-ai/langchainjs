@@ -38,7 +38,7 @@ type ValueType = {
  * that can be understood by the Supabase database.
  */
 export class SupabaseTranslator<
-  T extends SupabaseVectorStore
+  T extends SupabaseVectorStore,
 > extends BaseTranslator<T> {
   declare VisitOperationOutput: SupabaseFilterRPCCall;
 
@@ -67,7 +67,7 @@ export class SupabaseTranslator<
    * @returns A function that applies the comparator operation on the attribute and value provided.
    */
   getComparatorFunction<C extends Comparator>(
-    comparator: Comparator
+    comparator: Comparator,
   ): (attr: string, value: ValueType[C]) => SupabaseFilterRPCCall {
     switch (comparator) {
       case Comparators.eq: {
@@ -142,7 +142,9 @@ export class SupabaseTranslator<
         } else if (arg.exprName === "Operation") {
           const { operator: innerOperator } = arg as Operation;
           acc.push(
-            `${innerOperator}(${this.visitOperationAsString(arg as Operation)})`
+            `${innerOperator}(${this.visitOperationAsString(
+              arg as Operation,
+            )})`,
           );
         }
         return acc;
@@ -205,7 +207,7 @@ export class SupabaseTranslator<
     return `${this.buildColumnName(
       attribute,
       value,
-      false
+      false,
     )}.${comparator}.${value}}`;
   }
 
@@ -220,7 +222,7 @@ export class SupabaseTranslator<
     const { comparator, attribute, value } = comparison;
     if (this.allowedComparators.includes(comparator)) {
       const comparatorFunction = this.getComparatorFunction(
-        comparator as Comparator
+        comparator as Comparator,
       );
       return comparatorFunction(attribute, value);
     } else {
@@ -236,7 +238,7 @@ export class SupabaseTranslator<
    * @returns A function that applies the query on a Supabase database.
    */
   visitStructuredQuery(
-    query: StructuredQuery
+    query: StructuredQuery,
   ): this["VisitStructuredQueryOutput"] {
     if (!query.filter) {
       return {};
@@ -256,7 +258,7 @@ export class SupabaseTranslator<
   mergeFilters(
     defaultFilter: SupabaseFilterRPCCall | SupabaseMetadata | undefined,
     generatedFilter: SupabaseFilterRPCCall | undefined,
-    mergeType = "and"
+    mergeType = "and",
   ): SupabaseFilterRPCCall | SupabaseMetadata | undefined {
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
@@ -277,7 +279,7 @@ export class SupabaseTranslator<
     let myDefaultFilter = defaultFilter;
     if (isObject(defaultFilter)) {
       const { filter } = this.visitStructuredQuery(
-        convertObjectFilterToStructuredQuery(defaultFilter)
+        convertObjectFilterToStructuredQuery(defaultFilter),
       );
 
       // just in case the built filter is empty somehow
@@ -294,7 +296,7 @@ export class SupabaseTranslator<
       return (rpc) => {
         const defaultFlattenedParams = ProxyParamsDuplicator.getFlattenedParams(
           rpc,
-          myDefaultFilter as SupabaseFilterRPCCall
+          myDefaultFilter as SupabaseFilterRPCCall,
         );
         const generatedFlattenedParams =
           ProxyParamsDuplicator.getFlattenedParams(rpc, generatedFilter);

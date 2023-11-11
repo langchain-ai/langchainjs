@@ -12,7 +12,7 @@ test("RunnablePassthrough can call .assign and pass prev result through", async 
   const promptTemplate = PromptTemplate.fromTemplate("{input}");
   const llm = new FakeChatModel({});
   const parser = StructuredOutputParser.fromZodSchema(
-    z.object({ outputValue: z.string().describe("A test value") })
+    z.object({ outputValue: z.string().describe("A test value") }),
   );
   const text = `\`\`\`
 {"outputValue": "testing"}
@@ -23,7 +23,7 @@ test("RunnablePassthrough can call .assign and pass prev result through", async 
   const chainWithAssign = chain.pipe(
     RunnablePassthrough.assign({
       outputValue: (i) => i.outputValue,
-    })
+    }),
   );
 
   const result = await chainWithAssign.invoke({ input: text });
@@ -67,6 +67,6 @@ test("RunnablePassthrough with RunnableAssign & memory", async () => {
   const response2 = await chain.invoke({ input: "test2" });
   console.log(response2);
   expect(response2).toEqual(
-    "You are a helpful chatbot\ntest\nYou are a helpful chatbot\ntest\ntest2"
+    "You are a helpful chatbot\ntest\nYou are a helpful chatbot\ntest\ntest2",
   );
 });

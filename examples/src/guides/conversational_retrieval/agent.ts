@@ -19,7 +19,7 @@ const texts = await splitter.splitDocuments(docs);
 
 const vectorStore = await FaissStore.fromDocuments(
   texts,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 const retriever = vectorStore.asRetriever();

@@ -15,7 +15,7 @@ test("Test summary buffer memory", async () => {
 
   await memory.saveContext(
     { input: "How's it going?" },
-    { response: "Hello! I'm doing fine. and you?" }
+    { response: "Hello! I'm doing fine. and you?" },
   );
 
   const result = await memory.loadMemoryVariables({});
@@ -38,7 +38,7 @@ test("Test summary buffer memory with chat model", async () => {
 
   await memory.saveContext(
     { input: "How's it going?" },
-    { response: "Hello! I'm doing fine. and you?" }
+    { response: "Hello! I'm doing fine. and you?" },
   );
   const result = await memory.loadMemoryVariables({});
   console.log("result", result);
@@ -63,7 +63,7 @@ test("Test summary buffer memory return messages", async () => {
 
   await memory.saveContext(
     { input: "How's it going?" },
-    { response: "Hello! I'm doing fine. and you?" }
+    { response: "Hello! I'm doing fine. and you?" },
   );
 
   const result = await memory.loadMemoryVariables({});

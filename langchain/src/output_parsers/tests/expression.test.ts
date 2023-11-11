@@ -326,10 +326,10 @@ test("ExpressionParser multiple expressions test", async () => {
     `l:::"""(}))))++===/...`,
   ];
   const parsedPromise = expressions.map((expression) =>
-    parser.parse(expression)
+    parser.parse(expression),
   );
   const badExpressionsPromise = badExpressions.map((expression) =>
-    parser.parse(expression).catch(() => "bad")
+    parser.parse(expression).catch(() => "bad"),
   );
 
   await Promise.allSettled(badExpressionsPromise).then((errors) => {

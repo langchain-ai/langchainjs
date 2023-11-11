@@ -36,7 +36,7 @@ const vectorStore = await RedisVectorStore.fromDocuments(
     createIndexOptions: {
       TEMPORARY: 1000,
     },
-  }
+  },
 );
 
 await client.disconnect();

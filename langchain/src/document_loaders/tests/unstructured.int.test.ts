@@ -13,7 +13,7 @@ import {
 test("Test Unstructured base loader", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/example.txt"
+    "./example_data/example.txt",
   );
 
   const options = {
@@ -32,7 +32,7 @@ test("Test Unstructured base loader", async () => {
 test("Test Unstructured base loader with fast strategy", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/1706.03762.pdf"
+    "./example_data/1706.03762.pdf",
   );
 
   const options = {
@@ -50,7 +50,7 @@ test("Test Unstructured base loader with fast strategy", async () => {
 test("Test Unstructured directory loader", async () => {
   const directoryPath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data"
+    "./example_data",
   );
 
   const options = {
@@ -62,7 +62,7 @@ test("Test Unstructured directory loader", async () => {
     directoryPath,
     options,
     true,
-    UnknownHandling.Ignore
+    UnknownHandling.Ignore,
   );
   const docs = await loader.load();
 

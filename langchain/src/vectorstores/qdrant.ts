@@ -90,7 +90,7 @@ export class QdrantVectorStore extends VectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
@@ -126,9 +126,8 @@ export class QdrantVectorStore extends VectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const error = new Error(
-        `${e?.status ?? "Undefined error code"} ${e?.message}: ${
-          e?.data?.status?.error
-        }`
+        `${e?.status ?? "Undefined error code"} ${e?.message}: ${e?.data?.status
+          ?.error}`,
       );
       throw error;
     }
@@ -146,7 +145,7 @@ export class QdrantVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k?: number,
-    filter?: QdrantSchemas["Filter"]
+    filter?: QdrantSchemas["Filter"],
   ): Promise<[Document, number][]> {
     if (!query) {
       return [];
@@ -182,7 +181,7 @@ export class QdrantVectorStore extends VectorStore {
     const response = await this.client.getCollections();
 
     const collectionNames = response.collections.map(
-      (collection) => collection.name
+      (collection) => collection.name,
     );
 
     if (!collectionNames.includes(this.collectionName)) {
@@ -210,7 +209,7 @@ export class QdrantVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: QdrantLibArgs
+    dbConfig: QdrantLibArgs,
   ): Promise<QdrantVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -235,7 +234,7 @@ export class QdrantVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: QdrantLibArgs
+    dbConfig: QdrantLibArgs,
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -251,7 +250,7 @@ export class QdrantVectorStore extends VectorStore {
    */
   static async fromExistingCollection(
     embeddings: Embeddings,
-    dbConfig: QdrantLibArgs
+    dbConfig: QdrantLibArgs,
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();

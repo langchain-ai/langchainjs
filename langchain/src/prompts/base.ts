@@ -49,7 +49,7 @@ export interface BasePromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > {
   /**
    * A list of variable names the prompt template expects
@@ -74,7 +74,7 @@ export abstract class BasePromptTemplate<
     RunInput extends InputValues = any,
     RunOutput extends BasePromptValue = BasePromptValue,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
+    PartialVariableName extends string = any,
   >
   extends Runnable<RunInput, RunOutput>
   implements BasePromptTemplateInput
@@ -102,14 +102,14 @@ export abstract class BasePromptTemplate<
     const { inputVariables } = input;
     if (inputVariables.includes("stop")) {
       throw new Error(
-        "Cannot have an input variable named 'stop', as it is used internally, please rename."
+        "Cannot have an input variable named 'stop', as it is used internally, please rename.",
       );
     }
     Object.assign(this, input);
   }
 
   abstract partial(
-    values: PartialValues
+    values: PartialValues,
   ): Promise<BasePromptTemplate<RunInput, RunOutput, PartialVariableName>>;
 
   /**
@@ -118,7 +118,7 @@ export abstract class BasePromptTemplate<
    * @returns A Promise that resolves to an object containing the merged variables.
    */
   async mergePartialAndUserVariables(
-    userVariables: TypedPromptInputValues<RunInput>
+    userVariables: TypedPromptInputValues<RunInput>,
   ): Promise<
     InputValues<Extract<keyof RunInput, string> | PartialVariableName>
   > {
@@ -148,12 +148,12 @@ export abstract class BasePromptTemplate<
    */
   async invoke(
     input: RunInput,
-    options?: BaseCallbackConfig
+    options?: BaseCallbackConfig,
   ): Promise<RunOutput> {
     return this._callWithConfig(
       (input: RunInput) => this.formatPromptValue(input),
       input,
-      { ...options, runType: "prompt" }
+      { ...options, runType: "prompt" },
     );
   }
 
@@ -176,7 +176,7 @@ export abstract class BasePromptTemplate<
    * @returns A formatted PromptValue.
    */
   abstract formatPromptValue(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<RunOutput>;
 
   /**
@@ -202,7 +202,7 @@ export abstract class BasePromptTemplate<
    * request.
    */
   static async deserialize(
-    data: SerializedBasePromptTemplate
+    data: SerializedBasePromptTemplate,
   ): Promise<BasePromptTemplate<InputValues, BasePromptValue, string>> {
     switch (data._type) {
       case "prompt": {
@@ -221,7 +221,7 @@ export abstract class BasePromptTemplate<
         throw new Error(
           `Invalid prompt type in config: ${
             (data as SerializedBasePromptTemplate)._type
-          }`
+          }`,
         );
     }
   }
@@ -236,7 +236,7 @@ export abstract class BaseStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplate<RunInput, StringPromptValue, PartialVariableName> {
   /**
    * Formats the prompt given the input values and returns a formatted
@@ -245,7 +245,7 @@ export abstract class BaseStringPromptTemplate<
    * @returns A Promise that resolves to a formatted prompt value.
    */
   async formatPromptValue(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<StringPromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);

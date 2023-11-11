@@ -14,7 +14,7 @@ export interface BaseDynamicToolInput extends ToolParams {
 export interface DynamicToolInput extends BaseDynamicToolInput {
   func: (
     input: string,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
   ) => Promise<string>;
 }
 
@@ -23,11 +23,11 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
  */
 export interface DynamicStructuredToolInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
 > extends BaseDynamicToolInput {
   func: (
     input: z.infer<T>,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
   ) => Promise<string>;
   schema: T;
 }
@@ -57,7 +57,7 @@ export class DynamicTool extends Tool {
   /** @ignore */
   async _call(
     input: string,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
   ): Promise<string> {
     return this.func(input, runManager);
   }
@@ -71,7 +71,7 @@ export class DynamicTool extends Tool {
  */
 export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>,
 > extends StructuredTool {
   static lc_name() {
     return "DynamicStructuredTool";
@@ -96,7 +96,7 @@ export class DynamicStructuredTool<
 
   protected _call(
     arg: z.output<T>,
-    runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun,
   ): Promise<string> {
     return this.func(arg, runManager);
   }

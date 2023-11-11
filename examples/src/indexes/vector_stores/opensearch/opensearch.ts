@@ -18,7 +18,7 @@ export async function run() {
     {
       client,
       indexName: "documents",
-    }
+    },
   );
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
@@ -59,7 +59,7 @@ export async function run() {
 
   const resultTwo = await vectorStore2.similaritySearchVectorWithScore(
     vectors[0],
-    3
+    3,
   );
   console.log(resultTwo);
 }

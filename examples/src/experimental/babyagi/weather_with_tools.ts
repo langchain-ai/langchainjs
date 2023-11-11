@@ -9,7 +9,7 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 // First, we create a custom agent which will serve as execution chain.
 const todoPrompt = PromptTemplate.fromTemplate(
-  "You are a planner who is an expert at coming up with a todo list for a given objective. Come up with a todo list for this objective: {objective}"
+  "You are a planner who is an expert at coming up with a todo list for a given objective. Come up with a todo list for this objective: {objective}",
 );
 const tools: Tool[] = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -38,7 +38,7 @@ const agentExecutor = await initializeAgentExecutorWithOptions(
 {agent_scratchpad}`,
       inputVariables: ["objective", "task", "context", "agent_scratchpad"],
     },
-  }
+  },
 );
 
 const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());

@@ -73,7 +73,7 @@ const createVectorStoreWithTypesense = async (documents: Document[] = []) =>
   Typesense.fromDocuments(
     documents,
     new OpenAIEmbeddings(),
-    typesenseVectorStoreConfig
+    typesenseVectorStoreConfig,
   );
 
 /**

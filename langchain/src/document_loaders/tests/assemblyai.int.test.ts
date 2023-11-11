@@ -15,11 +15,11 @@ describe.skip("AssemblyAI", () => {
       {
         audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
       },
-      { apiKey: "invalid" }
+      { apiKey: "invalid" },
     );
 
     await expect(loader.load()).rejects.toThrow(
-      "Authentication error, API token missing/invalid"
+      "Authentication error, API token missing/invalid",
     );
   });
 
@@ -88,7 +88,7 @@ describe.skip("AssemblyAI", () => {
       {
         audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
       },
-      "srt"
+      "srt",
     );
     const docs = await loader.load();
 

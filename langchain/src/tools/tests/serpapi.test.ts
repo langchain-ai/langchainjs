@@ -14,10 +14,10 @@ describe("serp api test suite", () => {
       {
         hl: "en",
         gl: "us",
-      }
+      },
     );
     expect(serpApi.testThisUrl()).toEqual(
-      "https://serpapi.com/search?hl=en&gl=us"
+      "https://serpapi.com/search?hl=en&gl=us",
     );
   });
 
@@ -27,11 +27,12 @@ describe("serp api test suite", () => {
       {
         gl: "us",
       },
-      "https://totallyProxied.com"
+      "https://totallyProxied.com",
     );
 
     expect(
-      serpApiProxied.testThisUrl() === "https://totallyProxied.com/search?gl=us"
+      serpApiProxied.testThisUrl() ===
+        "https://totallyProxied.com/search?gl=us",
     );
   });
 });

@@ -39,7 +39,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
     parser: BaseOutputParser<T>,
     fields?: {
       prompt?: BasePromptTemplate;
-    }
+    },
   ) {
     const prompt = fields?.prompt ?? NAIVE_FIX_PROMPT;
     const chain = new LLMChain({ llm, prompt });
@@ -78,7 +78,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
             completion,
             error: e,
           },
-          callbacks
+          callbacks,
         );
         const newCompletion: string = result[this.retryChain.outputKey];
         return this.parser.parse(newCompletion);

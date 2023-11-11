@@ -6,7 +6,7 @@ export const run = async () => {
   const parser = new RegexParser(
     /Humor: ([0-9]+), Sophistication: (A|B|C|D|E)/,
     ["mark", "grade"],
-    "noConfidence"
+    "noConfidence",
   );
   const formatInstructions = parser.getFormatInstructions();
 

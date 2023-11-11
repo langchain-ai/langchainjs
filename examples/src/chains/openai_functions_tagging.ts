@@ -18,8 +18,8 @@ const chain = createTaggingChain(schema, chatModel);
 
 console.log(
   await chain.run(
-    `Estoy increiblemente contento de haberte conocido! Creo que seremos muy buenos amigos!`
-  )
+    `Estoy increiblemente contento de haberte conocido! Creo que seremos muy buenos amigos!`,
+  ),
 );
 /*
 { tone: 'positive', language: 'Spanish' }

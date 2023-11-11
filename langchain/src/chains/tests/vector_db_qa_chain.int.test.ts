@@ -18,7 +18,7 @@ test("Test VectorDBQAChain", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const llmChain = new LLMChain({ prompt, llm: model });
   const combineDocsChain = new StuffDocumentsChain({
@@ -38,7 +38,7 @@ test("Test VectorDBQAChain from LLM", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = VectorDBQAChain.fromLLM(model, vectorStore);
   const res = await chain.call({ query: "What up" });
@@ -50,7 +50,7 @@ test("Test VectorDBQAChain from LLM with a filter function", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
     returnSourceDocuments: true,
@@ -66,7 +66,7 @@ test("Load chain from hub", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = await loadChain("lc://chains/vector-db-qa/stuff/chain.json", {
     vectorstore: vectorStore,

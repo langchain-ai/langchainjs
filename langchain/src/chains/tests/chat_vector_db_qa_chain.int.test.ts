@@ -10,12 +10,12 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 test("Test ChatVectorDBQAChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = PromptTemplate.fromTemplate(
-    "Print {question}, and ignore {chat_history}"
+    "Print {question}, and ignore {chat_history}",
   );
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const llmChain = new LLMChain({ prompt, llm: model });
   const combineDocsChain = new StuffDocumentsChain({
@@ -34,12 +34,12 @@ test("Test ChatVectorDBQAChain", async () => {
 test("Test ChatVectorDBQAChain with returnSourceDocuments", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = PromptTemplate.fromTemplate(
-    "Print {question}, and ignore {chat_history}"
+    "Print {question}, and ignore {chat_history}",
   );
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const llmChain = new LLMChain({ prompt, llm: model });
   const combineDocsChain = new StuffDocumentsChain({
@@ -61,7 +61,7 @@ test("Test ChatVectorDBQAChain from LLM", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = ChatVectorDBQAChain.fromLLM(model, vectorStore);
   const res = await chain.call({ question: "foo", chat_history: "bar" });
@@ -72,7 +72,7 @@ test("Test ChatVectorDBQAChain from LLM with flag option to return source", asyn
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = ChatVectorDBQAChain.fromLLM(model, vectorStore, {
     returnSourceDocuments: true,
@@ -90,7 +90,7 @@ test("Test ChatVectorDBQAChain from LLM with flag option to return source", asyn
           pageContent: expect.any(String),
         }),
       ]),
-    })
+    }),
   );
 });
 
@@ -99,7 +99,7 @@ test("Test ChatVectorDBQAChain from LLM with override default prompts", async ()
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say "Sorry I dont know, I am learning from Aliens", don't try to make up an answer.

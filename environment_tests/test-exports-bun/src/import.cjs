@@ -16,7 +16,9 @@ async function test() {
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof MemoryVectorStore === "function");
 
-  const vs = new MemoryVectorStore(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }));
+  const vs = new MemoryVectorStore(
+    new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }),
+  );
 
   await vs.addVectors(
     [
@@ -30,7 +32,7 @@ async function test() {
       new Document({
         pageContent: "b",
       }),
-    ]
+    ],
   );
 
   assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);

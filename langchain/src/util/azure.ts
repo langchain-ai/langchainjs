@@ -48,12 +48,12 @@ export function getEndpoint(config: OpenAIEndpointConfig) {
   if (azureOpenAIApiKey) {
     if (!azureOpenAIApiInstanceName) {
       throw new Error(
-        "azureOpenAIApiInstanceName is required when using azureOpenAIApiKey"
+        "azureOpenAIApiInstanceName is required when using azureOpenAIApiKey",
       );
     }
     if (!azureOpenAIApiDeploymentName) {
       throw new Error(
-        "azureOpenAIApiDeploymentName is a required parameter when using azureOpenAIApiKey"
+        "azureOpenAIApiDeploymentName is a required parameter when using azureOpenAIApiKey",
       );
     }
     return `https://${azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${azureOpenAIApiDeploymentName}`;

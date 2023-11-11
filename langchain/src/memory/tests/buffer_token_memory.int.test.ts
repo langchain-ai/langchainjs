@@ -5,7 +5,10 @@ import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 import { HumanMessage, AIMessage } from "../../schema/index.js";
 
 test("Test buffer token memory with LLM", async () => {
-  const memory = new ConversationTokenBufferMemory({llm: new OpenAI(), maxTokenLimit: 10});
+  const memory = new ConversationTokenBufferMemory({
+    llm: new OpenAI(),
+    maxTokenLimit: 10,
+  });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: "" });
 
@@ -22,7 +25,10 @@ test("Test buffer token memory with LLM", async () => {
 });
 
 test("Test buffer token memory return messages", async () => {
-  const memory = new ConversationTokenBufferMemory({llm: new OpenAI(), returnMessages: true });
+  const memory = new ConversationTokenBufferMemory({
+    llm: new OpenAI(),
+    returnMessages: true,
+  });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: [] });
 

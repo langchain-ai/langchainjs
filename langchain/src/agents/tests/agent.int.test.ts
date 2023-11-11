@@ -26,7 +26,7 @@ test("Run agent from hub", async () => {
   ];
   const agent = await loadAgent(
     "lc://agents/zero-shot-react-description/agent.json",
-    { llm: model, tools }
+    { llm: model, tools },
   );
   const executor = AgentExecutor.fromAgentAndTools({
     agent,
@@ -41,7 +41,7 @@ test("Run agent from hub", async () => {
     {
       res,
     },
-    "Run agent from hub response"
+    "Run agent from hub response",
   );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
@@ -83,7 +83,7 @@ test("Pass runnable to agent executor", async () => {
     {
       res,
     },
-    "Pass runnable to agent executor"
+    "Pass runnable to agent executor",
   );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
@@ -152,7 +152,7 @@ test("Custom output parser", async () => {
     {
       res,
     },
-    "Custom output parser"
+    "Custom output parser",
   );
   expect(res.output).toEqual("We did it!");
 });
@@ -197,7 +197,7 @@ test("Add a fallback method", async () => {
     {
       res,
     },
-    "Pass runnable to agent executor"
+    "Pass runnable to agent executor",
   );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
@@ -227,7 +227,7 @@ test("Run agent locally", async () => {
     {
       result,
     },
-    "Run agent locally"
+    "Run agent locally",
   );
   expect(result.output).not.toEqual("");
   expect(result.output).not.toEqual("Agent stopped due to max iterations.");
@@ -289,7 +289,7 @@ test("Run agent with incorrect api key should throw error", async () => {
   // Test that the agent throws the same error
   await expect(() => executor.call({ input })).rejects.toThrowError(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (error as any).message
+    (error as any).message,
   );
 }, 10000);
 
@@ -319,7 +319,7 @@ test("Run tool web-browser", async () => {
     {
       result,
     },
-    "Run tool web-browser"
+    "Run tool web-browser",
   );
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("web-browser");

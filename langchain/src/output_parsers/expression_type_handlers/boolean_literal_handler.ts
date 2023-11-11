@@ -31,7 +31,7 @@ export class BooleanLiteralHandler extends NodeHandler {
   async handle(node: BooleanLiteral): Promise<BooleanLiteralType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler"
+        "ArrayLiteralExpressionHandler must have a parent handler",
       );
     }
     return {

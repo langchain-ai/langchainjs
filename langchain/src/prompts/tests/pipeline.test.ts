@@ -34,7 +34,7 @@ test("Test simple pipeline", async () => {
   expect(
     await prompt.format({
       foo: "jim",
-    })
+    }),
   ).toEqual("jim");
 });
 
@@ -52,7 +52,7 @@ test("Test multi variable pipeline", async () => {
     await prompt.format({
       foo: "jim",
       baz: "halpert",
-    })
+    }),
   ).toEqual("okay jim halpert");
 });
 
@@ -74,7 +74,7 @@ test("Test longer pipeline", async () => {
     await prompt.format({
       foo: "pam",
       baz: "beasley",
-    })
+    }),
   ).toEqual("okay hi pam beasley");
 });
 
@@ -94,7 +94,7 @@ test("Test with .partial", async () => {
   expect(
     await partialPrompt.format({
       foo: "dwight",
-    })
+    }),
   ).toEqual("okay dwight schrute");
 });
 

@@ -78,26 +78,26 @@ export class SelfQueryRetriever<T extends VectorStore>
 
   async _getRelevantDocuments(
     query: string,
-    runManager?: CallbackManagerForRetrieverRun
+    runManager?: CallbackManagerForRetrieverRun,
   ): Promise<Document<Record<string, unknown>>[]> {
     const { [this.llmChain.outputKey]: output } = await this.llmChain.call(
       {
         [this.llmChain.inputKeys[0]]: query,
       },
-      runManager?.getChild("llm_chain")
+      runManager?.getChild("llm_chain"),
     );
 
     const generatedStructuredQuery = output as StructuredQuery;
 
     const nextArg = this.structuredQueryTranslator.visitStructuredQuery(
-      generatedStructuredQuery
+      generatedStructuredQuery,
     );
 
     const filter = this.structuredQueryTranslator.mergeFilters(
       this.searchParams?.filter,
       nextArg.filter,
       this.searchParams?.mergeFiltersOperator,
-      this.searchParams?.forceDefaultFilter
+      this.searchParams?.forceDefaultFilter,
     );
 
     const generatedQuery = generatedStructuredQuery.query;
@@ -114,7 +114,7 @@ export class SelfQueryRetriever<T extends VectorStore>
         myQuery,
         this.searchParams?.k,
         filter,
-        runManager?.getChild("vectorstore")
+        runManager?.getChild("vectorstore"),
       );
     }
   }
@@ -130,7 +130,7 @@ export class SelfQueryRetriever<T extends VectorStore>
    */
   static fromLLM<T extends VectorStore>(
     options: QueryConstructorChainOptions &
-      Omit<SelfQueryRetrieverArgs<T>, "llmChain">
+      Omit<SelfQueryRetrieverArgs<T>, "llmChain">,
   ): SelfQueryRetriever<T> {
     const {
       structuredQueryTranslator,

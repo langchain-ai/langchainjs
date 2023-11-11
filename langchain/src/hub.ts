@@ -13,7 +13,7 @@ import { Runnable } from "./schema/runnable/index.js";
 export async function push(
   repoFullName: string,
   runnable: Runnable,
-  options?: HubPushOptions & ClientConfiguration
+  options?: HubPushOptions & ClientConfiguration,
 ) {
   const client = new Client(options);
   return client.push(repoFullName, JSON.stringify(runnable), options);
@@ -27,7 +27,7 @@ export async function push(
  */
 export async function pull<T extends Runnable>(
   ownerRepoCommit: string,
-  options?: ClientConfiguration
+  options?: ClientConfiguration,
 ) {
   const client = new Client(options);
   const result = await client.pull(ownerRepoCommit);

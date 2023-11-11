@@ -6,6 +6,6 @@ const options = {
 
 const loader = new UnstructuredLoader(
   "src/document_loaders/example_data/notion.md",
-  options
+  options,
 );
 const docs = await loader.load();

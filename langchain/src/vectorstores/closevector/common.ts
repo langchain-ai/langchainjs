@@ -24,7 +24,7 @@ type CloseVectorCredentials = {
  * similarity searches, and saving and loading the vector store.
  */
 export abstract class CloseVector<
-  CloseVectorHNSWImplementation extends CloseVectorSaveableVectorStore
+  CloseVectorHNSWImplementation extends CloseVectorSaveableVectorStore,
 > extends SaveableVectorStore {
   declare FilterType: (doc: Document) => boolean;
 
@@ -44,7 +44,7 @@ export abstract class CloseVector<
       numDimensions?: number;
       maxElements?: number;
     },
-    credentials?: CloseVectorCredentials
+    credentials?: CloseVectorCredentials,
   ) {
     super(embeddings, args);
     this.credentials = credentials;
@@ -53,7 +53,7 @@ export abstract class CloseVector<
   public get instance(): CloseVectorHNSWImplementation {
     if (!this._instance) {
       throw new Error(
-        "Vector store not initialised yet. Try calling `addTexts` first."
+        "Vector store not initialised yet. Try calling `addTexts` first.",
       );
     }
     return this._instance;
@@ -111,7 +111,7 @@ export abstract class CloseVector<
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ) {
     const resp = await this.instance.similaritySearchVectorWithScore(
       query,
@@ -122,7 +122,7 @@ export abstract class CloseVector<
               pageContent: x.pageContent,
               metadata: x.metadata || {},
             }) || false
-        : undefined
+        : undefined,
     );
     const mapped: [Document<Record<string, unknown>>, number][] = resp.map(
       (x) => [
@@ -131,7 +131,7 @@ export abstract class CloseVector<
           metadata: x[0].metadata || {},
         }),
         x[1],
-      ]
+      ],
     );
     return mapped;
   }

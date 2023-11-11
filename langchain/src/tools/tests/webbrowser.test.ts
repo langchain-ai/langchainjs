@@ -13,24 +13,24 @@ describe("webbrowser Test suite", () => {
 
   test("parseInputs", () => {
     expect(
-      parseInputs(`"https://www.merriam-webster.com/word-of-the-day",""`)
+      parseInputs(`"https://www.merriam-webster.com/word-of-the-day",""`),
     ).toEqual(["https://www.merriam-webster.com/word-of-the-day", ""]);
     expect(
       parseInputs(
-        `"https://www.merriam-webster.com/word-of-the-day","word of the day"`
-      )
+        `"https://www.merriam-webster.com/word-of-the-day","word of the day"`,
+      ),
     ).toEqual([
       "https://www.merriam-webster.com/word-of-the-day",
       "word of the day",
     ]);
     expect(
-      parseInputs(`"https://www.merriam-webster.com/word-of-the-day","`)
+      parseInputs(`"https://www.merriam-webster.com/word-of-the-day","`),
     ).toEqual(["https://www.merriam-webster.com/word-of-the-day", ""]);
     expect(
-      parseInputs(`"https://www.merriam-webster.com/word-of-the-day",`)
+      parseInputs(`"https://www.merriam-webster.com/word-of-the-day",`),
     ).toEqual(["https://www.merriam-webster.com/word-of-the-day", ""]);
     expect(
-      parseInputs(`"https://www.merriam-webster.com/word-of-the-day"`)
+      parseInputs(`"https://www.merriam-webster.com/word-of-the-day"`),
     ).toEqual(["https://www.merriam-webster.com/word-of-the-day", undefined]);
   });
 });

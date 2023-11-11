@@ -16,7 +16,7 @@ describe("SonixAudioTranscriptionLoader", () => {
 
   beforeEach(() => {
     sonixSpeechRecognitionService = new SonixSpeechRecognitionService(
-      "auth-key"
+      "auth-key",
     );
     speechToTextRequest = {
       fileName: "test.mp3",

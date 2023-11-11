@@ -22,8 +22,8 @@ test("structured output parser", async () => {
         interests: z
           .array(z.string())
           .describe("json array of strings human interests"),
-      })
-    )
+      }),
+    ),
   );
 
   const result = await parser.parseResult([

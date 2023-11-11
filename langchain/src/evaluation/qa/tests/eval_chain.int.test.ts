@@ -29,6 +29,6 @@ test("Test QAEvalChain with incorrect input variables", async () => {
   });
 
   expect(() => QAEvalChain.fromLlm(model, { prompt })).toThrowError(
-    "Input variables should be query,answer,result, but got foo,bar,baz"
+    "Input variables should be query,answer,result, but got foo,bar,baz",
   );
 });

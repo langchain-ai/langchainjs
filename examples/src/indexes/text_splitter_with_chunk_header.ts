@@ -15,7 +15,7 @@ const jimDocs = await splitter.createDocuments(
   {
     chunkHeader: `DOCUMENT NAME: Jim Interview\n\n---\n\n`,
     appendChunkOverlapHeader: true,
-  }
+  },
 );
 
 const pamDocs = await splitter.createDocuments(
@@ -24,12 +24,12 @@ const pamDocs = await splitter.createDocuments(
   {
     chunkHeader: `DOCUMENT NAME: Pam Interview\n\n---\n\n`,
     appendChunkOverlapHeader: true,
-  }
+  },
 );
 
 const vectorStore = await HNSWLib.fromDocuments(
   jimDocs.concat(pamDocs),
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 const model = new OpenAI({ temperature: 0 });

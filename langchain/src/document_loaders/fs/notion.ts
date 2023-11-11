@@ -15,7 +15,7 @@ export class NotionLoader extends DirectoryLoader {
         ".md": (filePath) => new TextLoader(filePath),
       },
       true,
-      UnknownHandling.Ignore
+      UnknownHandling.Ignore,
     );
   }
 }

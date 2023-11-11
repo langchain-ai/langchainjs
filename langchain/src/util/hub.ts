@@ -6,7 +6,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 
 const fetchWithTimeout = async (
   url: string,
-  init: Omit<RequestInit, "signal"> & { timeout: number }
+  init: Omit<RequestInit, "signal"> & { timeout: number },
 ) => {
   const { timeout, ...rest } = init;
   const res = await fetch(url, {
@@ -25,7 +25,7 @@ export const loadFromHub = async <T>(
   loader: FileLoader<T>,
   validPrefix: string,
   validSuffixes: Set<string>,
-  values: LoadValues = {}
+  values: LoadValues = {},
 ): Promise<T | undefined> => {
   const LANGCHAIN_HUB_DEFAULT_REF =
     getEnvironmentVariable("LANGCHAIN_HUB_DEFAULT_REF") ?? "master";

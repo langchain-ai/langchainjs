@@ -45,7 +45,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
 
     if (!fields.binding) {
       throw new Error(
-        "Must supply a Workers AI binding, eg { binding: env.AI }"
+        "Must supply a Workers AI binding, eg { binding: env.AI }",
       );
     }
     this.ai = new Ai(fields.binding);
@@ -56,7 +56,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
-      this.batchSize
+      this.batchSize,
     );
 
     const batchRequests = batches.map((batch) => this.runEmbedding(batch));
@@ -86,7 +86,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
         this.modelName,
         {
           text: texts,
-        } as AiTextEmbeddingsInput
+        } as AiTextEmbeddingsInput,
       );
       return response.data;
     });

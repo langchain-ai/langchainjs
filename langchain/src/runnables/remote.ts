@@ -145,7 +145,7 @@ function deserialize<RunOutput>(str: string): RunOutput {
 }
 
 function removeCallbacks(
-  options?: RunnableConfig
+  options?: RunnableConfig,
 ): Omit<RunnableConfig, "callbacks"> {
   const rest = { ...options };
   delete rest.callbacks;
@@ -155,7 +155,7 @@ function removeCallbacks(
 export class RemoteRunnable<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig,
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   private url: string;
 
@@ -183,7 +183,7 @@ export class RemoteRunnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<CallOptions>
+    options?: Partial<CallOptions>,
   ): Promise<RunOutput> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
@@ -203,13 +203,13 @@ export class RemoteRunnable<
     inputs: RunInput[],
     options?: Partial<CallOptions>[],
     _?: (CallbackManagerForChainRun | undefined)[],
-    batchOptions?: RunnableBatchOptions
+    batchOptions?: RunnableBatchOptions,
   ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {
       throw new Error("returnExceptions is not supported for remote clients");
     }
     const configsAndKwargsArray = options?.map((opts) =>
-      this._separateRunnableConfigFromCallOptions(opts)
+      this._separateRunnableConfigFromCallOptions(opts),
     );
     const [configs, kwargs] = configsAndKwargsArray?.reduce(
       ([pc, pk], [c, k]) =>
@@ -218,12 +218,12 @@ export class RemoteRunnable<
           [...pk, k],
         ] as [
           RunnableConfig[],
-          Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
+          Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[],
         ],
       [[], []] as [
         RunnableConfig[],
-        Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
-      ]
+        Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[],
+      ],
     ) ?? [undefined, undefined];
     const response = await this.post<{
       inputs: RunInput[];
@@ -246,25 +246,25 @@ export class RemoteRunnable<
   async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false },
   ): Promise<RunOutput[]>;
 
   async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true },
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions
+    batchOptions?: RunnableBatchOptions,
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions
+    batchOptions?: RunnableBatchOptions,
   ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {
       throw Error("returnExceptions is not supported for remote clients");
@@ -273,13 +273,13 @@ export class RemoteRunnable<
       this._batch.bind(this),
       inputs,
       options,
-      batchOptions
+      batchOptions,
     );
   }
 
   async stream(
     input: RunInput,
-    options?: Partial<CallOptions>
+    options?: Partial<CallOptions>,
   ): Promise<IterableReadableStream<RunOutput>> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
@@ -295,7 +295,7 @@ export class RemoteRunnable<
     if (!response.ok) {
       const json = await response.json();
       const error = new Error(
-        `RemoteRunnable call failed with status code ${response.status}: ${json.message}`
+        `RemoteRunnable call failed with status code ${response.status}: ${json.message}`,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).response = response;
@@ -304,7 +304,7 @@ export class RemoteRunnable<
     const { body } = response;
     if (!body) {
       throw new Error(
-        "Could not begin remote stream. Please check the given URL and try again."
+        "Could not begin remote stream. Please check the given URL and try again.",
       );
     }
     const stream = new ReadableStream({
@@ -315,7 +315,7 @@ export class RemoteRunnable<
         const onLine = (
           line: Uint8Array,
           fieldLength: number,
-          flush?: boolean
+          flush?: boolean,
         ) => {
           enqueueLine(line, fieldLength, flush);
           if (flush) controller.close();

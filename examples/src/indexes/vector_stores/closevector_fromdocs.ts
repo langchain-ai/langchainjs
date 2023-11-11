@@ -13,7 +13,7 @@ const docs = await loader.load();
 // const vectorStore = await CloseVectorWeb.fromDocuments(
 const vectorStore = await CloseVectorNode.fromDocuments(
   docs,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 // Search for the most similar document

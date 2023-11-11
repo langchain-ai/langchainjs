@@ -6,7 +6,7 @@ import { parseFileConfig } from "../util/parse.js";
 const loadChainFromFile: FileLoader<BaseChain> = async (
   file: string,
   path: string,
-  values: LoadValues = {}
+  values: LoadValues = {},
 ) => {
   const serialized = parseFileConfig(file, path);
   return BaseChain.deserialize(serialized, values);
@@ -32,14 +32,14 @@ const loadChainFromFile: FileLoader<BaseChain> = async (
  */
 export const loadChain = async (
   uri: string,
-  values: LoadValues = {}
+  values: LoadValues = {},
 ): Promise<BaseChain> => {
   const hubResult = await loadFromHub(
     uri,
     loadChainFromFile,
     "chains",
     new Set(["json", "yaml"]),
-    values
+    values,
   );
   if (hubResult) {
     return hubResult;

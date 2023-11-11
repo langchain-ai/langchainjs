@@ -12,7 +12,7 @@ test("Test FaissStore.fromTexts", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   expect(vectorStore.index?.ntotal()).toBe(3);
 
@@ -29,7 +29,7 @@ test("Test FaissStore.fromTexts + addDocuments", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   expect(vectorStore.index?.ntotal()).toBe(3);
 
@@ -50,7 +50,7 @@ test("Test FaissStore.load and FaissStore.save", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   expect(vectorStore.index?.ntotal()).toBe(3);
 
@@ -70,12 +70,12 @@ test("Test FaissStore.load and FaissStore.save", async () => {
 
   const loadedVectorStore = await FaissStore.load(
     tempDirectory,
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const resultThree = await loadedVectorStore.similaritySearch(
     "hello world",
-    1
+    1,
   );
 
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
@@ -92,12 +92,12 @@ test("Test FaissStore.loadFromPython", async () => {
   const __dirname = path.dirname(__filename);
   const loadedFromPythonVectorStore = await FaissStore.loadFromPython(
     path.join(__dirname, "faiss.int.test.data/faiss_index"),
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   expect(loadedFromPythonVectorStore.index?.ntotal()).toBe(42);
 
   const results0 = await loadedFromPythonVectorStore.similaritySearch(
-    "What did the president say about Ketanji Brown Jackson"
+    "What did the president say about Ketanji Brown Jackson",
   );
 
   const expectedResultofPythonSaved = new Document({
@@ -171,7 +171,7 @@ And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketan
 
   const loadedVectorStore = await FaissStore.load(
     tempDirectory,
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const results2 = await loadedVectorStore.similaritySearch("早上", 1);
@@ -182,12 +182,12 @@ And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketan
     new Document({
       pageContent: "おはようございます。",
       metadata: { source: "addDocuments_2" },
-    })
+    }),
   );
 
   const results3 = await loadedVectorStore.similaritySearch(
     "What did the president say about Ketanji Brown Jackson",
-    1
+    1,
   );
 
   expect(results3).toHaveLength(1);

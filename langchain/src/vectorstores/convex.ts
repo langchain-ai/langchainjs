@@ -40,7 +40,7 @@ export type ConvexVectorStoreConfig<
     "internal",
     { id: string },
     object | null
-  >
+  >,
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   /**
@@ -97,7 +97,7 @@ export class ConvexVectorStore<
     "internal",
     { id: string },
     object | null
-  >
+  >,
 > extends VectorStore {
   /**
    * Type that defines the filter used in the
@@ -109,7 +109,7 @@ export class ConvexVectorStore<
       q: VectorFilterBuilder<
         DocumentByInfo<GenericTableInfo>,
         NamedVectorIndex<NamedTableInfo<DataModel, TableName>, IndexName>
-      >
+      >,
     ) => FilterExpression<boolean>;
     includeEmbeddings?: boolean;
   };
@@ -145,7 +145,7 @@ export class ConvexVectorStore<
       MetadataFieldName,
       InsertMutation,
       GetQuery
-    >
+    >,
   ) {
     super(embeddings, config);
     this.ctx = config.ctx;
@@ -184,8 +184,8 @@ export class ConvexVectorStore<
             table: this.table,
             document,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          } as any)
-        )
+          } as any),
+        ),
       );
     }
   }
@@ -201,7 +201,7 @@ export class ConvexVectorStore<
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
@@ -217,7 +217,7 @@ export class ConvexVectorStore<
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, number][]> {
     const idsAndScores = await this.ctx.vectorSearch(this.table, this.index, {
       vector: query,
@@ -228,8 +228,8 @@ export class ConvexVectorStore<
     const documents = await Promise.all(
       idsAndScores.map(({ _id }) =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.ctx.runQuery(this.get, { id: _id } as any)
-      )
+        this.ctx.runQuery(this.get, { id: _id } as any),
+      ),
     );
 
     return documents.map(
@@ -239,7 +239,7 @@ export class ConvexVectorStore<
           [this.embeddingField]: embedding,
           [this.metadataField]: metadata,
         },
-        idx
+        idx,
       ) => [
         new Document({
           pageContent: text as string,
@@ -249,7 +249,7 @@ export class ConvexVectorStore<
           },
         }),
         idsAndScores[idx]._score,
-      ]
+      ],
     );
   }
 
@@ -280,7 +280,7 @@ export class ConvexVectorStore<
       "internal",
       { id: string },
       object | null
-    >
+    >,
   >(
     texts: string[],
     metadatas: object[] | object,
@@ -294,7 +294,7 @@ export class ConvexVectorStore<
       MetadataFieldName,
       InsertMutation,
       GetQuery
-    >
+    >,
   ): Promise<
     ConvexVectorStore<
       DataModel,
@@ -312,7 +312,7 @@ export class ConvexVectorStore<
         new Document({
           pageContent: text,
           metadata: Array.isArray(metadatas) ? metadatas[i] : metadatas,
-        })
+        }),
     );
     return ConvexVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
@@ -343,7 +343,7 @@ export class ConvexVectorStore<
       "internal",
       { id: string },
       object | null
-    >
+    >,
   >(
     docs: Document[],
     embeddings: Embeddings,
@@ -356,7 +356,7 @@ export class ConvexVectorStore<
       MetadataFieldName,
       InsertMutation,
       GetQuery
-    >
+    >,
   ): Promise<
     ConvexVectorStore<
       DataModel,

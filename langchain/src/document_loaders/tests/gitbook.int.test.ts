@@ -3,7 +3,7 @@ import { GitbookLoader } from "../web/gitbook.js";
 
 test("Test GitbookLoader", async () => {
   const loader = new GitbookLoader(
-    "https://docs.gitbook.com/product-tour/navigation"
+    "https://docs.gitbook.com/product-tour/navigation",
   );
 
   const docs = await loader.load();

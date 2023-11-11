@@ -103,7 +103,7 @@ test.skip("test analyticdb from texts", async () => {
       collectionName: "test_collection",
       embeddingDimension: _LANGCHAIN_DEFAULT_EMBEDDING_DIM,
       preDeleteCollection: true,
-    }
+    },
   );
   expect(vectorStore).toBeDefined();
 
@@ -134,7 +134,7 @@ test.skip("test analyticdb from existing index", async () => {
       collectionName: "test_collection",
       embeddingDimension: _LANGCHAIN_DEFAULT_EMBEDDING_DIM,
       preDeleteCollection: true,
-    }
+    },
   );
 
   const vectorStore = await AnalyticDBVectorStore.fromExistingIndex(
@@ -144,7 +144,7 @@ test.skip("test analyticdb from existing index", async () => {
       collectionName: "test_collection",
       embeddingDimension: _LANGCHAIN_DEFAULT_EMBEDDING_DIM,
       preDeleteCollection: false,
-    }
+    },
   );
 
   const result1 = await vectorStore.similaritySearch("hello world", 1);

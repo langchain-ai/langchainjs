@@ -43,7 +43,6 @@ This library aims to assist in the development of those types of applications. C
 - [Documentation](https://js.langchain.com/docs/use_cases/question_answering/)
 - End-to-end Example: [Doc-Chatbot](https://github.com/dissorial/doc-chatbot)
 
-
 **💬 Chatbots**
 
 - [Documentation](https://js.langchain.com/docs/modules/model_io/models/chat/)
@@ -57,7 +56,6 @@ Please see [here](https://js.langchain.com/docs/) for full documentation on:
 - How-To examples (demos, integrations, helper functions)
 - Reference (full API docs)
 - Resources (high-level explanation of core concepts)
-
 
 ## 🖇️ Relationship with Python LangChain
 
@@ -95,8 +93,6 @@ Memory refers to persisting state between calls of a chain/agent. LangChain prov
 [BETA] Generative models are notoriously hard to evaluate with traditional metrics. One new way of evaluating them is using language models themselves to do the evaluation. LangChain provides some prompts/chains for assisting in this.
 
 For more information on these concepts, please see our [full documentation](https://js.langchain.com/docs/).
-
-
 
 ## 💁 Contributing
 

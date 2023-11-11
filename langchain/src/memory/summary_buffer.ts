@@ -79,7 +79,7 @@ export class ConversationSummaryBufferMemory
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues
+    outputValues: OutputValues,
   ): Promise<void> {
     await super.saveContext(inputValues, outputValues);
     await this.prune();
@@ -103,7 +103,7 @@ export class ConversationSummaryBufferMemory
     }
 
     let currBufferLength = await this.llm.getNumTokens(
-      getBufferString(buffer, this.humanPrefix, this.aiPrefix)
+      getBufferString(buffer, this.humanPrefix, this.aiPrefix),
     );
 
     if (currBufferLength > this.maxTokenLimit) {
@@ -113,13 +113,13 @@ export class ConversationSummaryBufferMemory
         if (poppedMessage) {
           prunedMemory.push(poppedMessage);
           currBufferLength = await this.llm.getNumTokens(
-            getBufferString(buffer, this.humanPrefix, this.aiPrefix)
+            getBufferString(buffer, this.humanPrefix, this.aiPrefix),
           );
         }
       }
       this.movingSummaryBuffer = await this.predictNewSummary(
         prunedMemory,
-        this.movingSummaryBuffer
+        this.movingSummaryBuffer,
       );
     }
   }

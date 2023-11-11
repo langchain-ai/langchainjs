@@ -16,7 +16,7 @@ test("Test using LengthBasedExampleSelector", async () => {
     {
       examplePrompt: prompt,
       maxLength: 10,
-    }
+    },
   );
   await selector.addExample({ foo: "one two three" });
   await selector.addExample({ foo: "four five six" });
@@ -33,7 +33,7 @@ test("Test using SemanticSimilarityExampleSelector", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new FakeEmbeddings() // not using  OpenAIEmbeddings() because would be extra dependency
+    new FakeEmbeddings(), // not using  OpenAIEmbeddings() because would be extra dependency
   );
   const selector = new SemanticSimilarityExampleSelector({
     vectorStore,
@@ -46,7 +46,7 @@ test("Test using SemanticSimilarityExampleSelector with metadata filtering", asy
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new FakeEmbeddings() // not using  OpenAIEmbeddings() because would be extra dependency
+    new FakeEmbeddings(), // not using  OpenAIEmbeddings() because would be extra dependency
   );
   const selector = new SemanticSimilarityExampleSelector({
     vectorStore,
@@ -60,7 +60,7 @@ test("Test using SemanticSimilarityExampleSelector with a passed in retriever", 
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new FakeEmbeddings() // not using  OpenAIEmbeddings() because would be extra dependency
+    new FakeEmbeddings(), // not using  OpenAIEmbeddings() because would be extra dependency
   );
   const selector = new SemanticSimilarityExampleSelector({
     vectorStoreRetriever: vectorStore.asRetriever({ k: 5 }),

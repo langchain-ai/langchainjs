@@ -11,6 +11,6 @@ const embeddings = new BedrockEmbeddings({
 });
 
 const res = await embeddings.embedQuery(
-  "What would be a good company name a company that makes colorful socks?"
+  "What would be a good company name a company that makes colorful socks?",
 );
 console.log({ res });

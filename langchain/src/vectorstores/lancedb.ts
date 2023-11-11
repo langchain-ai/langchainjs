@@ -38,7 +38,7 @@ export class LanceDB extends VectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
@@ -83,7 +83,7 @@ export class LanceDB extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
   ): Promise<[Document, number][]> {
     const results = await this.table.search(query).limit(k).execute();
 
@@ -119,7 +119,7 @@ export class LanceDB extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: LanceDBArgs
+    dbConfig: LanceDBArgs,
   ): Promise<LanceDB> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -143,7 +143,7 @@ export class LanceDB extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: LanceDBArgs
+    dbConfig: LanceDBArgs,
   ): Promise<LanceDB> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);

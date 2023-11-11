@@ -21,7 +21,7 @@ export const getCacheKey = (...strings: string[]): string =>
   insecureHash(strings.join("_"));
 
 export function deserializeStoredGeneration(
-  storedGeneration: StoredGeneration
+  storedGeneration: StoredGeneration,
 ) {
   if (storedGeneration.message !== undefined) {
     return {

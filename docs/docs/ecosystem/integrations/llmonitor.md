@@ -77,7 +77,7 @@ const result = await executor.run(
   {
     callbacks: [new LLMonitorHandler()],
     metadata: { agentName: "SuperCalculator" },
-  }
+  },
 );
 ```
 
@@ -98,7 +98,7 @@ const result = await executor.run(
         email: "email@example.org",
       },
     },
-  }
+  },
 );
 ```
 
@@ -135,10 +135,10 @@ const chat = new ChatOpenAI({
 async function TranslatorAgent(query) {
   const res = await chat.call([
     new SystemMessage(
-      "You are a translator agent that hides jokes in each translation."
+      "You are a translator agent that hides jokes in each translation.",
     ),
     new HumanMessage(
-      `Translate this sentence from English to French: ${query}`
+      `Translate this sentence from English to French: ${query}`,
     ),
   ]);
 

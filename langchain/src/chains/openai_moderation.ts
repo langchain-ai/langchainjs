@@ -94,7 +94,7 @@ export class OpenAIModerationChain
     let mod;
     try {
       mod = await this.caller.call(() =>
-        this.client.moderations.create(moderationRequest)
+        this.client.moderations.create(moderationRequest),
       );
     } catch (error) {
       // eslint-disable-next-line no-instanceof/no-instanceof

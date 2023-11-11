@@ -15,7 +15,7 @@ class WebSocketStream extends BaseWebSocketStream {
 
 export class ChatIflytekXinghuo extends BaseChatIflytekXinghuo {
   async openWebSocketStream<WebSocketStream>(
-    options: WebSocketStreamOptions
+    options: WebSocketStreamOptions,
   ): Promise<WebSocketStream> {
     const host = "spark-api.xf-yun.com";
     const date = new Date().toUTCString();

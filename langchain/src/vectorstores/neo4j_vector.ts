@@ -77,7 +77,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   static async initialize(
     embeddings: Embeddings,
-    config: Neo4jVectorStoreArgs
+    config: Neo4jVectorStoreArgs,
   ) {
     const store = new Neo4jVectorStore(embeddings, config);
     await store._initializeDriver(config);
@@ -122,7 +122,7 @@ export class Neo4jVectorStore extends VectorStore {
       this.database = database;
     } catch (error) {
       throw new Error(
-        "Could not create a Neo4j driver instance. Please check the connection details."
+        "Could not create a Neo4j driver instance. Please check the connection details.",
       );
     }
   }
@@ -163,7 +163,7 @@ export class Neo4jVectorStore extends VectorStore {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: any,
     embeddings: Embeddings,
-    config: Neo4jVectorStoreArgs
+    config: Neo4jVectorStoreArgs,
   ): Promise<Neo4jVectorStore> {
     const docs = [];
 
@@ -182,7 +182,7 @@ export class Neo4jVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    config: Neo4jVectorStoreArgs
+    config: Neo4jVectorStoreArgs,
   ): Promise<Neo4jVectorStore> {
     const {
       searchType = DEFAULT_SEARCH_TYPE,
@@ -200,7 +200,7 @@ export class Neo4jVectorStore extends VectorStore {
       throw new Error(
         `Index with name "${store.indexName}" already exists. The provided embedding function and vector index dimensions do not match.
         Embedding function dimension: ${store.embeddingDimension}
-        Vector index dimension: ${embeddingDimension}`
+        Vector index dimension: ${embeddingDimension}`,
       );
     }
 
@@ -212,7 +212,7 @@ export class Neo4jVectorStore extends VectorStore {
       } else {
         if (ftsNodeLabel !== store.nodeLabel) {
           throw Error(
-            "Vector and keyword index don't index the same node label"
+            "Vector and keyword index don't index the same node label",
           );
         }
       }
@@ -220,7 +220,7 @@ export class Neo4jVectorStore extends VectorStore {
 
     if (createIdIndex) {
       await store.query(
-        `CREATE CONSTRAINT IF NOT EXISTS FOR (n:${store.nodeLabel}) REQUIRE n.id IS UNIQUE;`
+        `CREATE CONSTRAINT IF NOT EXISTS FOR (n:${store.nodeLabel}) REQUIRE n.id IS UNIQUE;`,
       );
     }
 
@@ -231,14 +231,14 @@ export class Neo4jVectorStore extends VectorStore {
 
   static async fromExistingIndex(
     embeddings: Embeddings,
-    config: Neo4jVectorStoreArgs
+    config: Neo4jVectorStoreArgs,
   ) {
     const { searchType = DEFAULT_SEARCH_TYPE, keywordIndexName = "keyword" } =
       config;
 
     if (searchType === "hybrid" && !keywordIndexName) {
       throw Error(
-        "keyword_index name has to be specified when using hybrid search option"
+        "keyword_index name has to be specified when using hybrid search option",
       );
     }
 
@@ -247,7 +247,7 @@ export class Neo4jVectorStore extends VectorStore {
 
     if (!embeddingDimension) {
       throw Error(
-        "The specified vector index name does not exist. Make sure to check if you spelled it correctly"
+        "The specified vector index name does not exist. Make sure to check if you spelled it correctly",
       );
     }
 
@@ -255,7 +255,7 @@ export class Neo4jVectorStore extends VectorStore {
       throw new Error(
         `The provided embedding function and vector index dimensions do not match.
          Embedding function dimension: ${store.embeddingDimension}
-         Vector index dimension: ${embeddingDimension}`
+         Vector index dimension: ${embeddingDimension}`,
       );
     }
 
@@ -264,12 +264,12 @@ export class Neo4jVectorStore extends VectorStore {
 
       if (!ftsNodeLabel) {
         throw Error(
-          "The specified keyword index name does not exist. Make sure to check if you spelled it correctly"
+          "The specified keyword index name does not exist. Make sure to check if you spelled it correctly",
         );
       } else {
         if (ftsNodeLabel !== store.nodeLabel) {
           throw Error(
-            "Vector and keyword index don't index the same node label"
+            "Vector and keyword index don't index the same node label",
           );
         }
       }
@@ -280,7 +280,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   static async fromExistingGraph(
     embeddings: Embeddings,
-    config: Neo4jVectorStoreArgs
+    config: Neo4jVectorStoreArgs,
   ) {
     const {
       textNodeProperties = [],
@@ -294,7 +294,7 @@ export class Neo4jVectorStore extends VectorStore {
 
     if (textNodeProperties.length === 0) {
       throw Error(
-        "Parameter `text_node_properties` must not be an empty array"
+        "Parameter `text_node_properties` must not be an empty array",
       );
     }
 
@@ -303,8 +303,8 @@ export class Neo4jVectorStore extends VectorStore {
         RETURN reduce(str='', k IN ${JSON.stringify(textNodeProperties)} |
         str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text,
         node {.*, \`${embeddingNodeProperty}\`: Null, id: Null, ${textNodeProperties
-        .map((prop) => `\`${prop}\`: Null`)
-        .join(", ")} } AS metadata, score
+          .map((prop) => `\`${prop}\`: Null`)
+          .join(", ")} } AS metadata, score
       `;
     }
 
@@ -319,21 +319,20 @@ export class Neo4jVectorStore extends VectorStore {
       await store.createNewIndex();
     } else if (store.embeddingDimension !== embeddingDimension) {
       throw new Error(
-        `Index with name ${store.indexName} already exists. The provided embedding function and vector index dimensions do not match.\nEmbedding function dimension: ${store.embeddingDimension}\nVector index dimension: ${embeddingDimension}`
+        `Index with name ${store.indexName} already exists. The provided embedding function and vector index dimensions do not match.\nEmbedding function dimension: ${store.embeddingDimension}\nVector index dimension: ${embeddingDimension}`,
       );
     }
 
     if (searchType === "hybrid") {
-      const ftsNodeLabel = await store.retrieveExistingFtsIndex(
-        textNodeProperties
-      );
+      const ftsNodeLabel =
+        await store.retrieveExistingFtsIndex(textNodeProperties);
 
       if (!ftsNodeLabel) {
         await store.createNewKeywordIndex(textNodeProperties);
       } else {
         if (ftsNodeLabel !== store.nodeLabel) {
           throw Error(
-            "Vector and keyword index don't index the same node label"
+            "Vector and keyword index don't index the same node label",
           );
         }
       }
@@ -357,7 +356,7 @@ export class Neo4jVectorStore extends VectorStore {
       }
 
       const textEmbeddings = await embeddings.embedDocuments(
-        data.map((el) => el.text)
+        data.map((el) => el.text),
       );
 
       const params = {
@@ -375,7 +374,7 @@ export class Neo4jVectorStore extends VectorStore {
         CALL db.create.setVectorProperty(n, '${embeddingNodeProperty}', row.embedding)
         YIELD node RETURN count(*)
       `,
-        params
+        params,
       );
 
       if (data.length < 1000) {
@@ -421,7 +420,7 @@ export class Neo4jVectorStore extends VectorStore {
         index_name: this.indexName,
         node_label: this.nodeLabel,
         embedding_node_property: this.embeddingNodeProperty,
-      }
+      },
     );
 
     if (indexInformation) {
@@ -448,7 +447,7 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   async retrieveExistingFtsIndex(
-    textNodeProperties: string[] = []
+    textNodeProperties: string[] = [],
   ): Promise<string | null> {
     const indexInformation = await this.query(
       `
@@ -465,14 +464,14 @@ export class Neo4jVectorStore extends VectorStore {
           textNodeProperties.length > 0
             ? textNodeProperties
             : [this.textNodeProperty],
-      }
+      },
     );
 
     if (indexInformation) {
       // Sort the index information by index name
       const sortedIndexInformation = this.sortByIndexName(
         indexInformation,
-        this.indexName
+        this.indexName,
       );
 
       try {
@@ -494,7 +493,7 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   async createNewKeywordIndex(
-    textNodeProperties: string[] = []
+    textNodeProperties: string[] = [],
   ): Promise<void> {
     const nodeProps =
       textNodeProperties.length > 0
@@ -514,13 +513,13 @@ export class Neo4jVectorStore extends VectorStore {
   sortByIndexName(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     values: Array<{ [key: string]: any }>,
-    indexName: string
+    indexName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Array<{ [key: string]: any }> {
     return values.sort(
       (a, b) =>
         (a.index_name === indexName ? -1 : 0) -
-        (b.index_name === indexName ? -1 : 0)
+        (b.index_name === indexName ? -1 : 0),
     );
   }
 
@@ -529,7 +528,7 @@ export class Neo4jVectorStore extends VectorStore {
     documents: Document[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas?: Record<string, any>[],
-    ids?: string[]
+    ids?: string[],
   ): Promise<string[]> {
     let _ids = ids;
     let _metadatas = metadatas;
@@ -574,7 +573,7 @@ export class Neo4jVectorStore extends VectorStore {
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
@@ -584,7 +583,7 @@ export class Neo4jVectorStore extends VectorStore {
     const results = await this.similaritySearchVectorWithScore(
       embedding,
       k,
-      query
+      query,
     );
 
     return results.map((result) => result[0]);
@@ -593,7 +592,7 @@ export class Neo4jVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     vector: number[],
     k: number,
-    query: string
+    query: string,
   ): Promise<[Document, number][]> {
     const defaultRetrieval = `
     RETURN node.${this.textNodeProperty} AS text, score,
@@ -606,7 +605,7 @@ export class Neo4jVectorStore extends VectorStore {
       : defaultRetrieval;
 
     const readQuery = `${getSearchIndexQuery(
-      this.searchType
+      this.searchType,
     )} ${retrievalQuery}`;
 
     const parameters = {
@@ -624,7 +623,7 @@ export class Neo4jVectorStore extends VectorStore {
         new Document({
           pageContent: result.text,
           metadata: Object.fromEntries(
-            Object.entries(result.metadata).filter(([_, v]) => v !== null)
+            Object.entries(result.metadata).filter(([_, v]) => v !== null),
           ),
         }),
         result.score,
@@ -706,7 +705,7 @@ function extractPathForRows(path: neo4j.Path) {
       objIntToString(segment.start),
       objIntToString(segment.relationship),
       objIntToString(segment.end),
-    ].filter((part) => part !== null)
+    ].filter((part) => part !== null),
   );
 }
 

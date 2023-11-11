@@ -59,11 +59,11 @@ export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {
    */
   public async load() {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.connectionString
+      this.connectionString,
     );
 
     const containerClient = blobServiceClient.getContainerClient(
-      this.container
+      this.container,
     );
 
     let docs: Document[] = [];

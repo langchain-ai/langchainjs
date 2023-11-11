@@ -18,7 +18,7 @@ export const run = async () => {
 
   let response = await chat.call([
     new HumanMessage(
-      "Translate this sentence from English to French. I love programming."
+      "Translate this sentence from English to French. I love programming.",
     ),
   ]);
 
@@ -28,7 +28,7 @@ export const run = async () => {
 
   response = await chat.call([
     new SystemMessage(
-      "You are a helpful assistant that translates English to French."
+      "You are a helpful assistant that translates English to French.",
     ),
     new HumanMessage("Translate: I love programming."),
   ]);
@@ -40,18 +40,18 @@ export const run = async () => {
   const responseA = await chat.generate([
     [
       new SystemMessage(
-        "You are a helpful assistant that translates English to French."
+        "You are a helpful assistant that translates English to French.",
       ),
       new HumanMessage(
-        "Translate this sentence from English to French. I love programming."
+        "Translate this sentence from English to French. I love programming.",
       ),
     ],
     [
       new SystemMessage(
-        "You are a helpful assistant that translates English to French."
+        "You are a helpful assistant that translates English to French.",
       ),
       new HumanMessage(
-        "Translate this sentence from English to French. I love artificial intelligence."
+        "Translate this sentence from English to French. I love artificial intelligence.",
       ),
     ],
   ]);
@@ -62,7 +62,7 @@ export const run = async () => {
 
   const translatePrompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
-      "You are a helpful assistant that translates {input_language} to {output_language}."
+      "You are a helpful assistant that translates {input_language} to {output_language}.",
     ),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
@@ -72,7 +72,7 @@ export const run = async () => {
       input_language: "English",
       output_language: "French",
       text: "I love programming.",
-    })
+    }),
   );
 
   console.log(responseB);
@@ -97,7 +97,7 @@ export const run = async () => {
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
-      "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
+      "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.",
     ),
     new MessagesPlaceholder("history"),
     HumanMessagePromptTemplate.fromTemplate("{input}"),
@@ -138,7 +138,7 @@ export const run = async () => {
   const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
 
   const responseG = await executor.run(
-    "How many people live in canada as of 2023?"
+    "How many people live in canada as of 2023?",
   );
 
   console.log(responseG);

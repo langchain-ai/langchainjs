@@ -17,14 +17,14 @@ export const run = async () => {
     !process.env.GOOGLE_CLOUD_STORAGE_BUCKET
   ) {
     throw new Error(
-      "GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX, GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT, and GOOGLE_CLOUD_STORAGE_BUCKET must be set."
+      "GOOGLE_VERTEXAI_MATCHINGENGINE_INDEX, GOOGLE_VERTEXAI_MATCHINGENGINE_INDEXENDPOINT, and GOOGLE_CLOUD_STORAGE_BUCKET must be set.",
     );
   }
 
   const embeddings = new SyntheticEmbeddings({
     vectorSize: Number.parseInt(
       process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768",
-      10
+      10,
     ),
   });
 
@@ -141,7 +141,7 @@ export const run = async () => {
   const redNotEdibleResults = await engine.similaritySearch(
     "this",
     4,
-    redNotEditableFilter
+    redNotEditableFilter,
   );
   console.log("red not edible results", redNotEdibleResults);
   /*

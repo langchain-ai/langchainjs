@@ -25,7 +25,7 @@ export type ConversationalRetrievalAgentOptions = {
 export async function createConversationalRetrievalAgent(
   llm: ChatOpenAI,
   tools: StructuredTool[],
-  options?: ConversationalRetrievalAgentOptions
+  options?: ConversationalRetrievalAgentOptions,
 ) {
   const {
     rememberIntermediateSteps = true,

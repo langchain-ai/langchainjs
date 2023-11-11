@@ -26,7 +26,7 @@ const autogpt = AutoGPT.fromLLMAndTools(
     memory: vectorStore.asRetriever(),
     aiName: "Tom",
     aiRole: "Assistant",
-  }
+  },
 );
 
 await autogpt.run(["write a weather report for SF today"]);

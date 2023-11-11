@@ -6,7 +6,7 @@ import { DocxLoader } from "../fs/docx.js";
 test("Test Word doc loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/attention.docx"
+    "./example_data/attention.docx",
   );
   const loader = new DocxLoader(filePath);
   const docs = await loader.load();

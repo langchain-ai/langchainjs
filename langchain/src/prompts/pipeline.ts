@@ -7,7 +7,7 @@ import { SerializedBasePromptTemplate } from "./serde.js";
  * Type that includes the name of the prompt and the prompt itself.
  */
 export type PipelinePromptParams<
-  PromptTemplateType extends BasePromptTemplate
+  PromptTemplateType extends BasePromptTemplate,
 > = {
   name: string;
   prompt: PromptTemplateType;
@@ -19,7 +19,7 @@ export type PipelinePromptParams<
  * finalPrompt.
  */
 export type PipelinePromptTemplateInput<
-  PromptTemplateType extends BasePromptTemplate
+  PromptTemplateType extends BasePromptTemplate,
 > = Omit<BasePromptTemplateInput, "inputVariables"> & {
   pipelinePrompts: PipelinePromptParams<PromptTemplateType>[];
   finalPrompt: PromptTemplateType;
@@ -32,7 +32,7 @@ export type PipelinePromptTemplateInput<
  * prompts.
  */
 export class PipelinePromptTemplate<
-  PromptTemplateType extends BasePromptTemplate
+  PromptTemplateType extends BasePromptTemplate,
 > extends BasePromptTemplate {
   static lc_name() {
     return "PipelinePromptTemplate";
@@ -55,13 +55,13 @@ export class PipelinePromptTemplate<
    */
   protected computeInputValues() {
     const intermediateValues = this.pipelinePrompts.map(
-      (pipelinePrompt) => pipelinePrompt.name
+      (pipelinePrompt) => pipelinePrompt.name,
     );
     const inputValues = this.pipelinePrompts
       .map((pipelinePrompt) =>
         pipelinePrompt.prompt.inputVariables.filter(
-          (inputValue) => !intermediateValues.includes(inputValue)
-        )
+          (inputValue) => !intermediateValues.includes(inputValue),
+        ),
       )
       .flat();
     return [...new Set(inputValues)];
@@ -69,7 +69,7 @@ export class PipelinePromptTemplate<
 
   protected static extractRequiredInputValues(
     allValues: InputValues,
-    requiredValueNames: string[]
+    requiredValueNames: string[],
   ) {
     return requiredValueNames.reduce((requiredValues, valueName) => {
       // eslint-disable-next-line no-param-reassign
@@ -84,7 +84,7 @@ export class PipelinePromptTemplate<
    * @returns Promise that resolves with the formatted input values.
    */
   protected async formatPipelinePrompts(
-    values: InputValues
+    values: InputValues,
   ): Promise<InputValues> {
     const allValues = await this.mergePartialAndUserVariables(values);
     for (const { name: pipelinePromptName, prompt: pipelinePrompt } of this
@@ -92,22 +92,22 @@ export class PipelinePromptTemplate<
       const pipelinePromptInputValues =
         PipelinePromptTemplate.extractRequiredInputValues(
           allValues,
-          pipelinePrompt.inputVariables
+          pipelinePrompt.inputVariables,
         );
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (pipelinePrompt instanceof ChatPromptTemplate) {
         allValues[pipelinePromptName] = await pipelinePrompt.formatMessages(
-          pipelinePromptInputValues
+          pipelinePromptInputValues,
         );
       } else {
         allValues[pipelinePromptName] = await pipelinePrompt.format(
-          pipelinePromptInputValues
+          pipelinePromptInputValues,
         );
       }
     }
     return PipelinePromptTemplate.extractRequiredInputValues(
       allValues,
-      this.finalPrompt.inputVariables
+      this.finalPrompt.inputVariables,
     );
   }
 
@@ -117,10 +117,10 @@ export class PipelinePromptTemplate<
    * @returns Promise that resolves with the formatted final prompt value.
    */
   async formatPromptValue(
-    values: InputValues
+    values: InputValues,
   ): Promise<PromptTemplateType["PromptValueReturnType"]> {
     return this.finalPrompt.formatPromptValue(
-      await this.formatPipelinePrompts(values)
+      await this.formatPipelinePrompts(values),
     );
   }
 
@@ -135,11 +135,11 @@ export class PipelinePromptTemplate<
    * @returns Promise that resolves with a new PipelinePromptTemplate instance with updated input variables.
    */
   async partial(
-    values: PartialValues
+    values: PartialValues,
   ): Promise<PipelinePromptTemplate<PromptTemplateType>> {
     const promptDict = { ...this };
     promptDict.inputVariables = this.inputVariables.filter(
-      (iv) => !(iv in values)
+      (iv) => !(iv in values),
     );
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),

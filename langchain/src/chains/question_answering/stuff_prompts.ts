@@ -28,5 +28,5 @@ const CHAT_PROMPT = /*#__PURE__*/ ChatPromptTemplate.fromMessages(messages);
 
 export const QA_PROMPT_SELECTOR = /*#__PURE__*/ new ConditionalPromptSelector(
   DEFAULT_QA_PROMPT,
-  [[isChatModel, CHAT_PROMPT]]
+  [[isChatModel, CHAT_PROMPT]],
 );

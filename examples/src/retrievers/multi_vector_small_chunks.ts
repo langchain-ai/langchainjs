@@ -49,7 +49,7 @@ await docstore.mset(keyValuePairs);
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
   subDocs,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 const retriever = new MultiVectorRetriever({
@@ -66,9 +66,8 @@ const retriever = new MultiVectorRetriever({
 });
 
 // Vectorstore alone retrieves the small chunks
-const vectorstoreResult = await retriever.vectorstore.similaritySearch(
-  "justice breyer"
-);
+const vectorstoreResult =
+  await retriever.vectorstore.similaritySearch("justice breyer");
 console.log(vectorstoreResult[0].pageContent.length);
 /*
   390

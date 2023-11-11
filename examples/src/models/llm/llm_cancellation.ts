@@ -7,7 +7,7 @@ const controller = new AbortController();
 
 const res = await model.call(
   "What would be a good name for a company that makes colorful socks?",
-  { signal: controller.signal }
+  { signal: controller.signal },
 );
 
 console.log(res);

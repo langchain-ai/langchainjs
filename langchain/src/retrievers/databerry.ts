@@ -88,7 +88,7 @@ export class DataberryRetriever extends BaseRetriever {
             source,
             ...rest,
           },
-        })
+        }),
     );
   }
 }

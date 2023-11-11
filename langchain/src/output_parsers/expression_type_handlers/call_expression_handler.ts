@@ -46,7 +46,7 @@ export class CallExpressionHandler extends NodeHandler {
     }
     if (this.parentHandler === undefined) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler"
+        "ArrayLiteralExpressionHandler must have a parent handler",
       );
     }
     const { callee } = node;
@@ -55,7 +55,7 @@ export class CallExpressionHandler extends NodeHandler {
       funcCall = callee.name.replace(/^["'](.+(?=["']$))["']$/, "$1");
     } else if (ASTParser.isMemberExpression(callee)) {
       funcCall = (await this.parentHandler.handle(
-        callee as MemberExpression
+        callee as MemberExpression,
       )) as MemberExpressionType;
     } else {
       throw new Error("Unknown expression type");
@@ -70,7 +70,7 @@ export class CallExpressionHandler extends NodeHandler {
           throw new Error("CallExpressionHandler must have a parent handler");
         }
         return this.parentHandler.handle(arg as ExpressionNode);
-      })
+      }),
     );
     return { type: "call_expression", funcCall, args };
   }

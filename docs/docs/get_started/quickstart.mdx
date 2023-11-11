@@ -147,7 +147,7 @@ PromptTemplates help with exactly this! They bundle up all the logic for going f
 import { PromptTemplate } from "langchain/prompts";
 
 const prompt = PromptTemplate.fromTemplate(
-  "What is a good name for a company that makes {product}?"
+  "What is a good name for a company that makes {product}?",
 );
 
 const formattedPrompt = await prompt.format({

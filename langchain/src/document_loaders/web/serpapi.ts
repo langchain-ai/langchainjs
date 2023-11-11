@@ -28,7 +28,7 @@ export class SerpAPILoader extends BaseDocumentLoader {
     const { apiKey = getEnvironmentVariable("SERPAPI_API_KEY"), q } = params;
     if (!apiKey) {
       throw new Error(
-        "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI."
+        "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI.",
       );
     }
 
@@ -84,7 +84,7 @@ export class SerpAPILoader extends BaseDocumentLoader {
     for (const responseType of responseTypes) {
       if (responseType in data) {
         documents.push(
-          ...this.extractDocuments(data[responseType], responseType)
+          ...this.extractDocuments(data[responseType], responseType),
         );
       }
     }
@@ -104,7 +104,7 @@ export class SerpAPILoader extends BaseDocumentLoader {
 
     if (data.error) {
       throw new Error(
-        `Failed to load search results from SerpAPI due to: ${data.error}`
+        `Failed to load search results from SerpAPI due to: ${data.error}`,
       );
     }
 
@@ -125,7 +125,7 @@ export class SerpAPILoader extends BaseDocumentLoader {
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Failed to process search results from SerpAPI: ${error}`
+        `Failed to process search results from SerpAPI: ${error}`,
       );
     }
   }

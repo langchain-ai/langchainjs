@@ -4,13 +4,13 @@ export type LoadValues = Record<string, any>;
 export type FileLoader<T> = (
   text: string,
   filePath: string,
-  values: LoadValues
+  values: LoadValues,
 ) => Promise<T>;
 
 export const loadFromFile = async <T>(
   uri: string,
   loader: FileLoader<T>,
-  values: LoadValues = {}
+  values: LoadValues = {},
 ): Promise<T> => {
   try {
     const fs = await import("node:fs/promises");

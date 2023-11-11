@@ -23,7 +23,7 @@ export interface PromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
@@ -66,7 +66,7 @@ type NonAlphanumeric =
  */
 type ExtractTemplateParamsRecursive<
   T extends string,
-  Result extends string[] = []
+  Result extends string[] = [],
 > = T extends `${string}{${infer Param}}${infer Rest}`
   ? Param extends `${NonAlphanumeric}${string}`
     ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that look like template variables e.g. see https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
@@ -98,7 +98,7 @@ export class PromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
+    PartialVariableName extends string = any,
   >
   extends BaseStringPromptTemplate<RunInput, PartialVariableName>
   implements PromptTemplateInput<RunInput, PartialVariableName>
@@ -121,13 +121,13 @@ export class PromptTemplate<
       let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
-          Object.keys(this.partialVariables)
+          Object.keys(this.partialVariables),
         );
       }
       checkValidTemplate(
         this.template,
         this.templateFormat,
-        totalInputVariables
+        totalInputVariables,
       );
     }
   }
@@ -164,7 +164,7 @@ export class PromptTemplate<
     suffix: string,
     inputVariables: string[],
     exampleSeparator = "\n\n",
-    prefix = ""
+    prefix = "",
   ) {
     const template = [prefix, ...examples, suffix].join(exampleSeparator);
     return new PromptTemplate({
@@ -179,7 +179,7 @@ export class PromptTemplate<
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     {
@@ -188,7 +188,7 @@ export class PromptTemplate<
     }: Omit<
       PromptTemplateInput<RunInput, string>,
       "template" | "inputVariables"
-    > = {}
+    > = {},
   ) {
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
@@ -215,10 +215,10 @@ export class PromptTemplate<
    * @returns A new instance of PromptTemplate with the partially applied values.
    */
   async partial<NewPartialVariableName extends string>(
-    values: PartialValues<NewPartialVariableName>
+    values: PartialValues<NewPartialVariableName>,
   ) {
     const newInputVariables = this.inputVariables.filter(
-      (iv) => !(iv in values)
+      (iv) => !(iv in values),
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
@@ -239,7 +239,7 @@ export class PromptTemplate<
   serialize(): SerializedPromptTemplate {
     if (this.outputParser !== undefined) {
       throw new Error(
-        "Cannot serialize a prompt template with an output parser"
+        "Cannot serialize a prompt template with an output parser",
       );
     }
     return {
@@ -251,7 +251,7 @@ export class PromptTemplate<
   }
 
   static async deserialize(
-    data: SerializedPromptTemplate
+    data: SerializedPromptTemplate,
   ): Promise<PromptTemplate> {
     if (!data.template) {
       throw new Error("Prompt template must have a template");

@@ -58,7 +58,7 @@ export class AnalyzeDocumentChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
@@ -71,7 +71,7 @@ export class AnalyzeDocumentChain
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentsChain.call(
       newInputs,
-      runManager?.getChild("combine_documents")
+      runManager?.getChild("combine_documents"),
     );
     return result;
   }
@@ -82,24 +82,24 @@ export class AnalyzeDocumentChain
 
   static async deserialize(
     data: SerializedAnalyzeDocumentChain,
-    values: LoadValues
+    values: LoadValues,
   ) {
     if (!("text_splitter" in values)) {
       throw new Error(
-        `Need to pass in a text_splitter to deserialize AnalyzeDocumentChain.`
+        `Need to pass in a text_splitter to deserialize AnalyzeDocumentChain.`,
       );
     }
     const { text_splitter } = values;
 
     if (!data.combine_document_chain) {
       throw new Error(
-        `Need to pass in a combine_document_chain to deserialize AnalyzeDocumentChain.`
+        `Need to pass in a combine_document_chain to deserialize AnalyzeDocumentChain.`,
       );
     }
 
     return new AnalyzeDocumentChain({
       combineDocumentsChain: await BaseChain.deserialize(
-        data.combine_document_chain
+        data.combine_document_chain,
       ),
       textSplitter: text_splitter,
     });

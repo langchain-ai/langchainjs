@@ -146,7 +146,7 @@ export class ChatGooglePaLM
             typeof example.output.content !== "string")
         ) {
           throw new Error(
-            "GooglePaLM example messages may only have string content."
+            "GooglePaLM example messages may only have string content.",
           );
         }
         return {
@@ -165,7 +165,7 @@ export class ChatGooglePaLM
       fields?.apiKey ?? getEnvironmentVariable("GOOGLE_PALM_API_KEY");
     if (!this.apiKey) {
       throw new Error(
-        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
+        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor",
       );
     }
 
@@ -185,21 +185,21 @@ export class ChatGooglePaLM
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     const palmMessages = await this.caller.callWithOptions(
       { signal: options.signal },
       this._generateMessage.bind(this),
       this._mapBaseMessagesToPalmMessages(messages),
       this._getPalmContextInstruction(messages),
-      this.examples
+      this.examples,
     );
     const chatResult = this._mapPalmMessagesToChatResult(palmMessages);
 
     // Google Palm doesn't provide streaming as of now. But to support streaming handlers
     // we call the handler with entire response text
     void runManager?.handleLLMNewToken(
-      chatResult.generations.length > 0 ? chatResult.generations[0].text : ""
+      chatResult.generations.length > 0 ? chatResult.generations[0].text : "",
     );
 
     return chatResult;
@@ -208,7 +208,7 @@ export class ChatGooglePaLM
   protected async _generateMessage(
     messages: protos.google.ai.generativelanguage.v1beta2.IMessage[],
     context?: string,
-    examples?: protos.google.ai.generativelanguage.v1beta2.IExample[]
+    examples?: protos.google.ai.generativelanguage.v1beta2.IExample[],
   ): Promise<protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse> {
     const [palmMessages] = await this.client.generateMessage({
       candidateCount: 1,
@@ -226,7 +226,7 @@ export class ChatGooglePaLM
   }
 
   protected _getPalmContextInstruction(
-    messages: BaseMessage[]
+    messages: BaseMessage[],
   ): string | undefined {
     // get the first message and checks if it's a system 'system' messages
     const systemMessage =
@@ -243,11 +243,11 @@ export class ChatGooglePaLM
   }
 
   protected _mapBaseMessagesToPalmMessages(
-    messages: BaseMessage[]
+    messages: BaseMessage[],
   ): protos.google.ai.generativelanguage.v1beta2.IMessage[] {
     // remove all 'system' messages
     const nonSystemMessages = messages.filter(
-      (m) => getMessageAuthor(m) !== "system"
+      (m) => getMessageAuthor(m) !== "system",
     );
 
     // requires alternate human & ai messages. Throw error if two messages are consecutive
@@ -257,7 +257,7 @@ export class ChatGooglePaLM
         getMessageAuthor(msg) === getMessageAuthor(nonSystemMessages[index - 1])
       ) {
         throw new Error(
-          `Google PaLM requires alternate messages between authors`
+          `Google PaLM requires alternate messages between authors`,
         );
       }
     });
@@ -265,7 +265,7 @@ export class ChatGooglePaLM
     return nonSystemMessages.map((m) => {
       if (typeof m.content !== "string") {
         throw new Error(
-          "ChatGooglePaLM does not support non-string message content."
+          "ChatGooglePaLM does not support non-string message content.",
         );
       }
       return {
@@ -281,7 +281,7 @@ export class ChatGooglePaLM
   }
 
   protected _mapPalmMessagesToChatResult(
-    msgRes: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse
+    msgRes: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse,
   ): ChatResult {
     if (
       msgRes.candidates &&

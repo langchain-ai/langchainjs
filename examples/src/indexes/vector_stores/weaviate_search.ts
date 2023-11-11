@@ -9,7 +9,7 @@ export async function run() {
     scheme: process.env.WEAVIATE_SCHEME || "https",
     host: process.env.WEAVIATE_HOST || "localhost",
     apiKey: new (weaviate as any).ApiKey(
-      process.env.WEAVIATE_API_KEY || "default"
+      process.env.WEAVIATE_API_KEY || "default",
     ),
   });
 

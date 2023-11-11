@@ -52,7 +52,7 @@ test("Test SequentialChain example usage", async () => {
     era: "Victorian England",
   });
   expect(review.review.toLowerCase()).toContain(
-    "tragedy at sunset on the beach"
+    "tragedy at sunset on the beach",
   );
 });
 

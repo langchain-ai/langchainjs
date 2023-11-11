@@ -111,11 +111,11 @@ export abstract class Visitor<T extends VectorStore = VectorStore> {
   abstract visitOperation(operation: Operation): this["VisitOperationOutput"];
 
   abstract visitComparison(
-    comparison: Comparison
+    comparison: Comparison,
   ): this["VisitComparisonOutput"];
 
   abstract visitStructuredQuery(
-    structuredQuery: StructuredQuery
+    structuredQuery: StructuredQuery,
   ): this["VisitStructuredQueryOutput"];
 }
 
@@ -155,7 +155,7 @@ export class Comparison extends FilterDirective {
   constructor(
     public comparator: Comparator,
     public attribute: string,
-    public value: string | number
+    public value: string | number,
   ) {
     super();
   }
@@ -168,7 +168,10 @@ export class Comparison extends FilterDirective {
 export class Operation extends FilterDirective {
   exprName = "Operation" as const;
 
-  constructor(public operator: Operator, public args?: FilterDirective[]) {
+  constructor(
+    public operator: Operator,
+    public args?: FilterDirective[],
+  ) {
     super();
   }
 }
@@ -180,7 +183,10 @@ export class Operation extends FilterDirective {
 export class StructuredQuery extends Expression {
   exprName = "StructuredQuery" as const;
 
-  constructor(public query: string, public filter?: FilterDirective) {
+  constructor(
+    public query: string,
+    public filter?: FilterDirective,
+  ) {
     super();
   }
 }

@@ -77,7 +77,7 @@ test("Create a runnable sequence and run it", async () => {
   const promptTemplate = PromptTemplate.fromTemplate("{input}");
   const llm = new FakeChatModel({});
   const parser = StructuredOutputParser.fromZodSchema(
-    z.object({ outputValue: z.string().describe("A test value") })
+    z.object({ outputValue: z.string().describe("A test value") }),
   );
   const text = `\`\`\`
 {"outputValue": "testing"}
@@ -92,7 +92,7 @@ test("Create a runnable sequence with a static method with invalid output and ca
   const promptTemplate = PromptTemplate.fromTemplate("{input}");
   const llm = new FakeChatModel({});
   const parser = StructuredOutputParser.fromZodSchema(
-    z.object({ outputValue: z.string().describe("A test value") })
+    z.object({ outputValue: z.string().describe("A test value") }),
   );
   const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
   await expect(async () => {
@@ -108,7 +108,7 @@ test("Create a runnable sequence with a runnable map", async () => {
   }>([
     SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
     HumanMessagePromptTemplate.fromTemplate(
-      `Context:\n{documents}\n\nQuestion:\n{question}`
+      `Context:\n{documents}\n\nQuestion:\n{question}`,
     ),
   ]);
   const llm = new FakeChatModel({});
@@ -126,7 +126,7 @@ test("Create a runnable sequence with a runnable map", async () => {
   const result = await runnable.invoke("Do you know the Muffin Man?");
   console.log(result);
   expect(result.content).toEqual(
-    `You are a nice assistant.\nContext:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
+    `You are a nice assistant.\nContext:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`,
   );
 });
 
@@ -161,12 +161,12 @@ test("Router runnables", async () => {
   const mathLLM = new FakeLLM({});
   mathLLM.response = "I am a math genius!";
   const chain1 = PromptTemplate.fromTemplate(
-    "You are a math genius. Answer the question: {question}"
+    "You are a math genius. Answer the question: {question}",
   ).pipe(mathLLM);
   const englishLLM = new FakeLLM({});
   englishLLM.response = "I am an English genius!";
   const chain2 = PromptTemplate.fromTemplate(
-    "You are an english major. Answer the question: {question}"
+    "You are an english major. Answer the question: {question}",
   ).pipe(englishLLM);
   const router = new RouterRunnable({
     runnables: { math: chain1, english: chain2 },
@@ -220,7 +220,7 @@ test("RunnableEach", async () => {
     await parser
       .map()
       .map()
-      .invoke([["a, b", "c"], ["c, e"]])
+      .invoke([["a, b", "c"], ["c, e"]]),
   ).toEqual([[["a", "b"], ["c"]], [["c", "e"]]]);
 });
 

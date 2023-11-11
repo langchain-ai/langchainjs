@@ -24,7 +24,7 @@ describe("ZapierNLAWrapper", () => {
   describe("Giphy action", () => {
     test("returns a GIF", async () => {
       const giphy = actions.find(
-        (action) => action.description === "Giphy: Find GIF"
+        (action) => action.description === "Giphy: Find GIF",
       );
       const result = await zapier.runAction(giphy?.id, "cats");
 

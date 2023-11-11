@@ -56,7 +56,7 @@ export class VercelKVStore extends BaseStore<string, Uint8Array> {
   async mget(keys: string[]) {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.client.mget<(string | undefined)[]>(
-      ...prefixedKeys
+      ...prefixedKeys,
     );
     const encoder = new TextEncoder();
     return retrievedValues.map((value) => {

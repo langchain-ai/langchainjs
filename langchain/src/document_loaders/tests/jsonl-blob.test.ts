@@ -8,11 +8,11 @@ import { Document } from "../../document.js";
 test("Test JSONL loader from blob", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.jsonl"
+    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.jsonl",
   );
   const loader = new JSONLinesLoader(
     new Blob([await fs.readFile(filePath)], { type: "application/jsonl+json" }),
-    "/html"
+    "/html",
   );
   const docs = await loader.load();
   expect(docs.length).toBe(32);
@@ -21,7 +21,7 @@ test("Test JSONL loader from blob", async () => {
       metadata: { source: "blob", blobType: "application/jsonl+json", line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
-    })
+    }),
   );
 });
 
@@ -32,9 +32,9 @@ test("Test JSONL loader from blob", async () => {
         `{"html": "This is a sentence."}
 {"html": "This is another sentence."}`,
       ],
-      { type: "application/jsonl+json" }
+      { type: "application/jsonl+json" },
     ),
-    "/html"
+    "/html",
   );
   const docs = await loader.load();
   expect(docs.length).toBe(2);

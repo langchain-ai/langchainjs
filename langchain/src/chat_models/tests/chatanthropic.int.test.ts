@@ -64,7 +64,7 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
   });
   const controller = new AbortController();
   const message = new HumanMessage(
-    "How is your day going? Be extremely verbose!"
+    "How is your day going? Be extremely verbose!",
   );
   await expect(() => {
     const res = chat.generate([[message], [message]], {
@@ -127,7 +127,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
   });
   const controller = new AbortController();
   const message = new HumanMessage(
-    "Hello! Give me an extremely verbose response"
+    "Hello! Give me an extremely verbose response",
   );
   await expect(() => {
     const res = model.call([message], {
@@ -164,7 +164,7 @@ test("ChatAnthropic, docs, prompt templates", async () => {
   });
 
   const systemPrompt = PromptTemplate.fromTemplate(
-    "You are a helpful assistant that translates {input_language} to {output_language}."
+    "You are a helpful assistant that translates {input_language} to {output_language}.",
   );
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -271,7 +271,7 @@ test("Test ChatAnthropic stream method with abort", async () => {
       "How is your day going? Be extremely verbose.",
       {
         signal: AbortSignal.timeout(1000),
-      }
+      },
     );
     for await (const chunk of stream) {
       console.log(chunk);
@@ -285,7 +285,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
     modelName: "claude-instant-v1",
   });
   const stream = await model.stream(
-    "How is your day going? Be extremely verbose."
+    "How is your day going? Be extremely verbose.",
   );
   let i = 0;
   for await (const chunk of stream) {

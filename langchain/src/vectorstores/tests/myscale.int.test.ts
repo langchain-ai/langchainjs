@@ -19,7 +19,7 @@ test.skip("MyScaleStore.fromText", async () => {
       port: process.env.MYSCALE_PORT || "8443",
       username: process.env.MYSCALE_USERNAME || "username",
       password: process.env.MYSCALE_PASSWORD || "password",
-    }
+    },
   );
 
   const results = await vectorStore.similaritySearch("hello world", 1);
@@ -56,7 +56,7 @@ test.skip("MyScaleStore.fromExistingIndex", async () => {
       username: process.env.MYSCALE_USERNAME || "username",
       password: process.env.MYSCALE_PASSWORD || "password",
       table: "test_table",
-    }
+    },
   );
 
   const vectorStore = await MyScaleStore.fromExistingIndex(
@@ -67,7 +67,7 @@ test.skip("MyScaleStore.fromExistingIndex", async () => {
       username: process.env.MYSCALE_USERNAME || "username",
       password: process.env.MYSCALE_PASSWORD || "password",
       table: "test_table",
-    }
+    },
   );
 
   const results = await vectorStore.similaritySearch("hello world", 1);

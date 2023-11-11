@@ -41,7 +41,7 @@ test("Test SimpleSequentialChain example usage", async () => {
   });
   const review = await overallChain.run("Tragedy at sunset on the beach");
   expect(review.trim().toLowerCase()).toContain(
-    "tragedy at sunset on the beach"
+    "tragedy at sunset on the beach",
   );
 });
 
@@ -87,7 +87,7 @@ test("Test SimpleSequentialChain example usage", async () => {
     overallChain.call({
       input: "Tragedy at sunset on the beach",
       signal: AbortSignal.timeout(1000),
-    })
+    }),
   ).rejects.toThrow("AbortError");
 });
 
@@ -119,9 +119,8 @@ test("Test SimpleSequentialChain serialize/deserialize", async () => {
   const serializedChain = sampleSequentialChain.serialize();
   expect(serializedChain._type).toEqual("simple_sequential_chain");
   expect(serializedChain.chains.length).toEqual(2);
-  const deserializedChain = await SimpleSequentialChain.deserialize(
-    serializedChain
-  );
+  const deserializedChain =
+    await SimpleSequentialChain.deserialize(serializedChain);
   expect(deserializedChain.chains.length).toEqual(2);
   expect(deserializedChain._chainType()).toEqual("simple_sequential_chain");
   await deserializedChain.run("test");

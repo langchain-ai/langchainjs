@@ -73,7 +73,7 @@ export class RaycastAI extends LLM implements RaycastAIInput {
    */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
   ): Promise<string> {
     const response = await this.caller.call(async () => {
       // Rate limit calls to Raycast AI

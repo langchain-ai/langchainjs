@@ -17,7 +17,7 @@ const modelForFunctionCalling = new ChatOpenAI({
 
 await modelForFunctionCalling.predictMessages(
   [new HumanMessage("What is the weather in New York?")],
-  { tools: [new SerpAPI()] }
+  { tools: [new SerpAPI()] },
   // Tools will be automatically formatted as functions in the OpenAI format
 );
 /*
@@ -57,7 +57,7 @@ await modelForFunctionCalling.predictMessages(
     function_call: {
       name: "get_current_weather",
     },
-  }
+  },
 );
 /*
 AIMessage {

@@ -5,7 +5,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 const vectorStore = await HNSWLib.fromTexts(
   ["Hello world", "Bye bye", "hello nice world"],
   [{ id: 2 }, { id: 1 }, { id: 3 }],
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 // Save the vector store to a directory

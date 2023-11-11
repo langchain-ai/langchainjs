@@ -8,9 +8,9 @@ jest.mock("@aws-sdk/client-lambda", () => ({
     send: jest.fn().mockImplementation(() =>
       Promise.resolve({
         Payload: new TextEncoder().encode(
-          JSON.stringify({ body: "email sent." })
+          JSON.stringify({ body: "email sent." }),
         ),
-      })
+      }),
     ),
   })),
   InvokeCommand: jest.fn().mockImplementation(() => ({})),

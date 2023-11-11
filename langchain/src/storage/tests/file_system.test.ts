@@ -9,7 +9,7 @@ import { LocalFileStore } from "../file_system.js";
 describe("LocalFileStore", () => {
   const keys = ["key1", "key2"];
   const tempDir = fs.mkdtempSync(
-    path.join(os.tmpdir(), "file_system_store_test")
+    path.join(os.tmpdir(), "file_system_store_test"),
   );
   const secondaryRootPath = "./file_system_store_test_secondary";
 
@@ -84,7 +84,7 @@ describe("LocalFileStore", () => {
           throw new Error("Value is undefined");
         }
         return decoder.decode(v);
-      })
+      }),
     ).toEqual([value1, value2]);
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });

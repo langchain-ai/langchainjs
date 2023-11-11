@@ -20,7 +20,7 @@ export const run = async () => {
   const vectorStore = await ZepVectorStore.fromDocuments(
     docs,
     embeddings,
-    zepConfig
+    zepConfig,
   );
 
   const results = await vectorStore.similaritySearchWithScore("bar", 3);

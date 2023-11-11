@@ -7,7 +7,7 @@ test("Test FaissStore.fromTexts + addVectors", async () => {
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world"],
     [{ id: 2 }],
-    new FakeEmbeddings()
+    new FakeEmbeddings(),
   );
   expect(vectorStore.index?.ntotal()).toBe(1);
 
@@ -30,13 +30,13 @@ test("Test FaissStore.fromTexts + addVectors", async () => {
         pageContent: "hello you",
         metadata: { id: 6 },
       }),
-    ]
+    ],
   );
   expect(vectorStore.index?.ntotal()).toBe(4);
 
   const resultTwo = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
-    3
+    3,
   );
   const resultTwoMetadatas = resultTwo.map(([{ metadata }]) => metadata);
   expect(resultTwoMetadatas).toEqual([{ id: 4 }, { id: 6 }, { id: 2 }]);
@@ -58,7 +58,7 @@ test("Test FaissStore.fromDocuments + addVectors", async () => {
         metadata: { id: 6 },
       }),
     ],
-    new FakeEmbeddings()
+    new FakeEmbeddings(),
   );
   expect(vectorStore.index?.ntotal()).toBe(3);
 
@@ -76,13 +76,13 @@ test("Test FaissStore.fromDocuments + addVectors", async () => {
         pageContent: "our world",
         metadata: { id: 8 },
       }),
-    ]
+    ],
   );
   expect(vectorStore.index?.ntotal()).toBe(5);
 
   const results = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
-    2
+    2,
   );
   expect(results).toHaveLength(2);
   expect(results).toEqual([
@@ -99,7 +99,7 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
         metadata: { id: 1 },
       }),
     ],
-    new FakeEmbeddings()
+    new FakeEmbeddings(),
   );
   await vectorStore1.addVectors(
     [
@@ -115,7 +115,7 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
         pageContent: "our world",
         metadata: { id: 2 },
       }),
-    ]
+    ],
   );
   expect(vectorStore1.index?.ntotal()).toBe(3);
 
@@ -126,7 +126,7 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
         metadata: { id: 3 },
       }),
     ],
-    new FakeEmbeddings()
+    new FakeEmbeddings(),
   );
 
   await vectorStore2.mergeFrom(vectorStore1);
@@ -134,7 +134,7 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
 
   const results1 = await vectorStore2.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
-    2
+    2,
   );
   expect(results1).toHaveLength(2);
   expect(results1).toEqual([
@@ -144,11 +144,11 @@ test("Test FaissStore.fromIndex + mergeFrom", async () => {
 
   const vectorStore3 = await FaissStore.fromIndex(
     vectorStore2,
-    new FakeEmbeddings()
+    new FakeEmbeddings(),
   );
   const results2 = await vectorStore3.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
-    2
+    2,
   );
   expect(results2).toHaveLength(2);
   expect(results2).toEqual([
@@ -174,7 +174,7 @@ test("Test FaissStore.addDocuments", async () => {
     ],
     {
       ids,
-    }
+    },
   );
 
   expect(idsReturned1).toStrictEqual(ids);
@@ -208,7 +208,7 @@ test("Test FaissStore.delete", async () => {
     ],
     {
       ids,
-    }
+    },
   );
 
   expect(idsReturned).toStrictEqual(ids);
@@ -219,7 +219,7 @@ test("Test FaissStore.delete", async () => {
 
   const [[doc]] = await vectorStore.similaritySearchVectorWithScore(
     [1, 1, 0, 1],
-    1
+    1,
   );
   expect(doc.metadata.tag).toEqual(4);
 
@@ -231,7 +231,7 @@ test("Test FaissStore.delete", async () => {
 
   const [[doc1]] = await vectorStore.similaritySearchVectorWithScore(
     [1, 1, 0, 1],
-    1
+    1,
   );
   expect(doc1.metadata.tag).toEqual(1);
 
@@ -249,20 +249,20 @@ test("Test FaissStore.delete", async () => {
         pageContent: "our world 2",
         metadata: { tag: 8 },
       }),
-    ]
+    ],
   );
 
   expect(idsReturned1.length).toStrictEqual(2);
   const [[doc2]] = await vectorStore.similaritySearchVectorWithScore(
     [1, 1, 0, 1],
-    1
+    1,
   );
   expect(doc2.metadata.tag).toEqual(8);
 
   await vectorStore.delete({ ids: [idsReturned1[0]] });
   const [[doc3]] = await vectorStore.similaritySearchVectorWithScore(
     [1, 1, 0, 1],
-    1
+    1,
   );
   expect(doc3.metadata.tag).toEqual(8);
 });
@@ -270,7 +270,7 @@ test("Test FaissStore.delete", async () => {
 test("Test FaissStore Exceptions", async () => {
   const vectorStore = new FaissStore(new FakeEmbeddings(), {});
   expect(() => vectorStore.index).toThrow(
-    "Vector store not initialised yet. Try calling `fromTexts`, `fromDocuments` or `fromIndex` first."
+    "Vector store not initialised yet. Try calling `fromTexts`, `fromDocuments` or `fromIndex` first.",
   );
   await vectorStore.addVectors(
     [[1, 1]],
@@ -279,7 +279,7 @@ test("Test FaissStore Exceptions", async () => {
         pageContent: "our world",
         metadata: { id: 8 },
       }),
-    ]
+    ],
   );
   await expect(async () => {
     await vectorStore.addVectors(
@@ -292,7 +292,7 @@ test("Test FaissStore Exceptions", async () => {
           pageContent: "our world",
           metadata: { id: 8 },
         }),
-      ]
+      ],
     );
   }).rejects.toThrow("Vectors and documents must have the same length");
   await expect(async () => {
@@ -303,15 +303,15 @@ test("Test FaissStore Exceptions", async () => {
           pageContent: "our world",
           metadata: { id: 8 },
         }),
-      ]
+      ],
     );
   }).rejects.toThrow(
-    "Vectors must have the same length as the number of dimensions (2)"
+    "Vectors must have the same length as the number of dimensions (2)",
   );
   await expect(async () => {
     await vectorStore.similaritySearchVectorWithScore([1, 1, 1], 1);
   }).rejects.toThrow(
-    "Query vector must have the same length as the number of dimensions (2)"
+    "Query vector must have the same length as the number of dimensions (2)",
   );
   const vectorStore2 = new FaissStore(new FakeEmbeddings(), {});
   await vectorStore2.addVectors(
@@ -321,7 +321,7 @@ test("Test FaissStore Exceptions", async () => {
         pageContent: "different dimensions",
         metadata: { id: 9 },
       }),
-    ]
+    ],
   );
   await expect(async () => {
     await vectorStore2.mergeFrom(vectorStore);
@@ -339,6 +339,6 @@ test("Test FaissStore Exceptions", async () => {
   await expect(async () => {
     await vectorStore3.delete({ ids: ["123"] });
   }).rejects.toThrow(
-    "Some specified documentIds do not exist in the current store. DocumentIds not found: 123"
+    "Some specified documentIds do not exist in the current store. DocumentIds not found: 123",
   );
 });

@@ -22,7 +22,7 @@ REMEMBER: "next_inputs" can just be the original input if you don't think any mo
 `;
 
 export const STRUCTURED_MULTI_RETRIEVAL_ROUTER_TEMPLATE = (
-  formatting: string
+  formatting: string,
 ) => `Given a query to a question answering system, select the system best suited for the input. You will be given the names of the available systems and a description of what questions the system is best suited for. You may also revise the original input if you think that revising it will ultimately lead to a better response.
 
 << FORMATTING >>

@@ -306,7 +306,7 @@ export abstract class BaseChatIflytekXinghuo
    * @returns The auth websocketStream for making requests to the Iflytek Xinghuo API.
    */
   abstract openWebSocketStream<T extends BaseWebSocketStream<string>>(
-    options: WebSocketStreamOptions
+    options: WebSocketStreamOptions,
   ): Promise<T>;
 
   /**
@@ -318,19 +318,19 @@ export abstract class BaseChatIflytekXinghuo
   async completion(
     request: ChatCompletionRequest,
     stream: true,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<IterableReadableStream<string>>;
 
   async completion(
     request: ChatCompletionRequest,
     stream: false,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<ChatCompletionResponse>;
 
   async completion(
     request: ChatCompletionRequest,
     stream: boolean,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<IterableReadableStream<string> | ChatCompletionResponse> {
     const webSocketStream = await this.openWebSocketStream({
       signal,
@@ -391,14 +391,14 @@ export abstract class BaseChatIflytekXinghuo
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun | undefined
+    runManager?: CallbackManagerForLLMRun | undefined,
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams();
     const messagesMapped: XinghuoMessage[] = messages.map((message) => {
       if (typeof message.content !== "string") {
         throw new Error(
-          "ChatIflytekXinghuo does not support non-string message content."
+          "ChatIflytekXinghuo does not support non-string message content.",
         );
       }
       return {
@@ -411,7 +411,7 @@ export abstract class BaseChatIflytekXinghuo
           const streams = await this.completion(
             { messages: messagesMapped, ...params },
             true,
-            options.signal
+            options.signal,
           );
           let response: ChatCompletionResponse = { result: "" };
           for await (const chunk of streams) {
@@ -427,7 +427,7 @@ export abstract class BaseChatIflytekXinghuo
                 break;
               }
               void runManager?.handleLLMNewToken(
-                payload.choices?.text[0]?.content
+                payload.choices?.text[0]?.content,
               );
             } else {
               break;
@@ -439,7 +439,7 @@ export abstract class BaseChatIflytekXinghuo
       : await this.completion(
           { messages: messagesMapped, ...params },
           false,
-          options.signal
+          options.signal,
         );
 
     const {

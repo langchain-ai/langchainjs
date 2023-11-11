@@ -6,7 +6,7 @@ import { SRTLoader } from "../fs/srt.js";
 test("Test SRT loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.srt"
+    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.srt",
   );
   const loader = new SRTLoader(filePath);
   const docs = await loader.load();

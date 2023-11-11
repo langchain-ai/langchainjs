@@ -48,19 +48,19 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
    * @returns A string representation of the function call or its arguments.
    */
   async parseResult(
-    generations: Generation[] | ChatGeneration[]
+    generations: Generation[] | ChatGeneration[],
   ): Promise<string> {
     if ("message" in generations[0]) {
       const gen = generations[0] as ChatGeneration;
       const functionCall = gen.message.additional_kwargs.function_call;
       if (!functionCall) {
         throw new Error(
-          `No function_call in message ${JSON.stringify(generations)}`
+          `No function_call in message ${JSON.stringify(generations)}`,
         );
       }
       if (!functionCall.arguments) {
         throw new Error(
-          `No arguments in function_call ${JSON.stringify(generations)}`
+          `No arguments in function_call ${JSON.stringify(generations)}`,
         );
       }
       if (this.argsOnly) {
@@ -69,7 +69,7 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
       return JSON.stringify(functionCall);
     } else {
       throw new Error(
-        `No message in generations ${JSON.stringify(generations)}`
+        `No message in generations ${JSON.stringify(generations)}`,
       );
     }
   }
@@ -93,7 +93,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
   argsOnly = true;
 
   constructor(
-    config?: { argsOnly?: boolean } & BaseCumulativeTransformOutputParserInput
+    config?: { argsOnly?: boolean } & BaseCumulativeTransformOutputParserInput,
   ) {
     super(config);
     this.argsOnly = config?.argsOnly ?? this.argsOnly;
@@ -102,7 +102,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
 
   protected _diff(
     prev: JSONPatchOperation | undefined,
-    next: JSONPatchOperation
+    next: JSONPatchOperation,
   ): object | undefined {
     if (!next) {
       return undefined;
@@ -112,7 +112,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
   }
 
   async parsePartialResult(
-    generations: ChatGeneration[]
+    generations: ChatGeneration[],
   ): Promise<object | undefined> {
     const generation = generations[0];
     if (!generation.message) {
@@ -140,12 +140,12 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
    * @returns A JSON object representation of the function call or its arguments.
    */
   async parseResult(
-    generations: Generation[] | ChatGeneration[]
+    generations: Generation[] | ChatGeneration[],
   ): Promise<object> {
     const result = await this.outputParser.parseResult(generations);
     if (!result) {
       throw new Error(
-        `No result from "OutputFunctionsParser" ${JSON.stringify(generations)}`
+        `No result from "OutputFunctionsParser" ${JSON.stringify(generations)}`,
       );
     }
     const parsedResult = JSON.parse(result);
@@ -173,7 +173,7 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
  * to parse the output.
  */
 export class JsonKeyOutputFunctionsParser<
-  T = object
+  T = object,
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
     return "JsonKeyOutputFunctionsParser";

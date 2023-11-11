@@ -18,7 +18,7 @@ test.skip("Test embeddings creation", async () => {
 
   const typeormVectorStore = await TypeORMVectorStore.fromDataSource(
     new OpenAIEmbeddings(),
-    args
+    args,
   );
 
   expect(typeormVectorStore).toBeDefined();
@@ -44,7 +44,7 @@ test.skip("Test embeddings creation", async () => {
   expect(results[0].pageContent).toEqual(docCat.pageContent);
 
   await typeormVectorStore.appDataSource.query(
-    'TRUNCATE TABLE "testlangchain"'
+    'TRUNCATE TABLE "testlangchain"',
   );
 
   await typeormVectorStore.appDataSource.destroy();

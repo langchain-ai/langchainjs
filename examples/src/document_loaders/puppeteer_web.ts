@@ -24,7 +24,7 @@ export const run = async () => {
         await browser.close();
         return result;
       },
-    }
+    },
   );
   const docsFromLoaderWithOptions = await loaderWithOptions.load();
   console.log({ docsFromLoaderWithOptions });

@@ -33,7 +33,7 @@ test.skip(
       const tommiesMemory: GenerativeAgentMemory = new GenerativeAgentMemory(
         llm,
         await createNewMemoryRetriever(),
-        { reflectionThreshold: 8 }
+        { reflectionThreshold: 8 },
       );
 
       const tommie: GenerativeAgent = new GenerativeAgent(llm, tommiesMemory, {
@@ -66,7 +66,7 @@ test.skip(
       }
       console.log(
         "Tommie's second summary:\n",
-        await tommie.getSummary({ forceRefresh: true })
+        await tommie.getSummary({ forceRefresh: true }),
       );
 
       /*
@@ -78,7 +78,7 @@ test.skip(
 
       const interviewAgent = async (
         agent: GenerativeAgent,
-        message: string
+        message: string,
       ): Promise<string> => {
         // Simple wrapper helping the user interact with the agent
         const newMessage = `${userName} says ${message}`;
@@ -132,7 +132,7 @@ test.skip(
             } observations, Tommie's summary is:\n${await tommie.getSummary({
               forceRefresh: true,
             })}`,
-            "\x1b[0m"
+            "\x1b[0m",
           );
           console.log("*".repeat(40));
         }
@@ -179,20 +179,20 @@ test.skip(
       console.log(
         await interviewAgent(
           tommie,
-          "Tell me about how your day has been going"
-        )
+          "Tell me about how your day has been going",
+        ),
       );
       /*
         Tommie said "My day has been pretty hectic. I've been driving around looking for job openings, attending job fairs, and updating my resume and cover letter. It's been really exhausting, but I'm determined to find the perfect job for me."
       */
       console.log(
-        await interviewAgent(tommie, "How do you feel about coffee?")
+        await interviewAgent(tommie, "How do you feel about coffee?"),
       );
       /*
         Tommie said "I actually love coffee - it's one of my favorite things. I try to drink it every day, especially when I'm stressed from job searching."
       */
       console.log(
-        await interviewAgent(tommie, "Tell me about your childhood dog!")
+        await interviewAgent(tommie, "Tell me about your childhood dog!"),
       );
       /*
         Tommie said "My childhood dog was named Bruno. He was an adorable black Labrador Retriever who was always full of energy. Every time I came home he'd be so excited to see me, it was like he never stopped smiling. He was always ready for adventure and he was always my shadow. I miss him every day."
@@ -200,7 +200,7 @@ test.skip(
 
       console.log(
         "Tommie's second summary:\n",
-        await tommie.getSummary({ forceRefresh: true })
+        await tommie.getSummary({ forceRefresh: true }),
       );
       /*
         Tommie's second summary:
@@ -216,7 +216,7 @@ test.skip(
         {
           verbose: false,
           reflectionThreshold: 5,
-        }
+        },
       );
 
       const eve: GenerativeAgent = new GenerativeAgent(llm, evesMemory, {
@@ -256,7 +256,7 @@ test.skip(
 
       // Let’s “Interview” Eve before she speaks with Tommie.
       console.log(
-        await interviewAgent(eve, "How are you feeling about today?")
+        await interviewAgent(eve, "How are you feeling about today?"),
       );
       /*
         Eve said "I'm feeling a bit anxious about meeting my new client, but I'm sure it will be fine! How about you?".
@@ -268,8 +268,8 @@ test.skip(
       console.log(
         await interviewAgent(
           eve,
-          "Tommie is looking to find a job. What are are some things you'd like to ask him?"
-        )
+          "Tommie is looking to find a job. What are are some things you'd like to ask him?",
+        ),
       );
       /*
         Eve said: "I'd really like to get to know more about Tommie's professional background and experience, and why he is looking for a job. And I'd also like to know more about his strengths and passions and what kind of work he would be best suited for. That way I can help him find the right job to fit his needs."
@@ -279,12 +279,11 @@ test.skip(
       // Below, we run a simple conversation between Tommie and Eve.
       const runConversation = async (
         agents: GenerativeAgent[],
-        initialObservation: string
+        initialObservation: string,
       ): Promise<void> => {
         // Starts the conversation bewteen two agents
-        const [, observation] = await agents[1].generateReaction(
-          initialObservation
-        );
+        const [, observation] =
+          await agents[1].generateReaction(initialObservation);
         console.log("Initial reply:", observation);
 
         // eslint-disable-next-line no-constant-condition
@@ -308,7 +307,7 @@ test.skip(
       const agents: GenerativeAgent[] = [tommie, eve];
       await runConversation(
         agents,
-        "Tommie said: Hi, Eve. Thanks for agreeing to meet with me today. I have a bunch of questions and am not sure where to start. Maybe you could first share about your experience?"
+        "Tommie said: Hi, Eve. Thanks for agreeing to meet with me today. I have a bunch of questions and am not sure where to start. Maybe you could first share about your experience?",
       );
 
       /*
@@ -348,7 +347,7 @@ test.skip(
 
       const interviewOne: string = await interviewAgent(
         tommie,
-        "How was your conversation with Eve?"
+        "How was your conversation with Eve?",
       );
       console.log("USER: How was your conversation with Eve?\n");
       console.log(interviewOne);
@@ -358,7 +357,7 @@ test.skip(
 
       const interviewTwo: string = await interviewAgent(
         eve,
-        "How was your conversation with Tommie?"
+        "How was your conversation with Tommie?",
       );
       console.log("USER: How was your conversation with Tommie?\n");
       console.log(interviewTwo);
@@ -368,7 +367,7 @@ test.skip(
 
       const interviewThree: string = await interviewAgent(
         eve,
-        "What do you wish you would have said to Tommie?"
+        "What do you wish you would have said to Tommie?",
       );
       console.log("USER: What do you wish you would have said to Tommie?\n");
       console.log(interviewThree);
@@ -396,5 +395,5 @@ test.skip(
 
     await runSimulation();
   },
-  60000 * 30
+  60000 * 30,
 );

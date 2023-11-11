@@ -75,7 +75,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
 
     if (!this.apiKey) {
       throw new Error(
-        "Please set an API key for HuggingFace Hub in the environment variable HUGGINGFACEHUB_API_KEY or in the apiKey field of the HuggingFaceInference constructor."
+        "Please set an API key for HuggingFace Hub in the environment variable HUGGINGFACEHUB_API_KEY or in the apiKey field of the HuggingFaceInference constructor.",
       );
     }
   }
@@ -87,7 +87,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
   /** @ignore */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
   ): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = this.endpointUrl
@@ -109,7 +109,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
           repetition_penalty: this.frequencyPenalty,
         },
         inputs: prompt,
-      }
+      },
     );
     return res.generated_text;
   }
@@ -123,7 +123,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
       return { HfInference };
     } catch (e) {
       throw new Error(
-        "Please install huggingface as a dependency with, e.g. `yarn add @huggingface/inference`"
+        "Please install huggingface as a dependency with, e.g. `yarn add @huggingface/inference`",
       );
     }
   }

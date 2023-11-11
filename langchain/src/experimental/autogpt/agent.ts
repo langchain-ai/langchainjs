@@ -83,7 +83,7 @@ export class AutoGPT {
     const chunkSize = getEmbeddingContextSize(
       "modelName" in memory.vectorStore.embeddings
         ? (memory.vectorStore.embeddings.modelName as string)
-        : undefined
+        : undefined,
     );
     this.textSplitter = new TokenTextSplitter({
       chunkSize,
@@ -112,7 +112,7 @@ export class AutoGPT {
       maxIterations = 100,
       // humanInTheLoop = false,
       outputParser = new AutoGPTOutputParser(),
-    }: AutoGPTInput
+    }: AutoGPTInput,
   ): AutoGPT {
     const prompt = new AutoGPTPrompt({
       aiName,
@@ -120,7 +120,7 @@ export class AutoGPT {
       tools,
       tokenCounter: llm.getNumTokens.bind(llm),
       sendTokenLimit: getModelContextSize(
-        "modelName" in llm ? (llm.modelName as string) : "gpt2"
+        "modelName" in llm ? (llm.modelName as string) : "gpt2",
       ),
     });
     // const feedbackTool = humanInTheLoop ? new HumanInputRun() : null;
@@ -163,7 +163,7 @@ export class AutoGPT {
       const action = await this.outputParser.parse(assistantReply);
       const tools = this.tools.reduce(
         (acc, tool) => ({ ...acc, [tool.name]: tool }),
-        {} as { [key: string]: ObjectTool }
+        {} as { [key: string]: ObjectTool },
       );
       if (action.name === FINISH_NAME) {
         return action.args.response;

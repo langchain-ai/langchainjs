@@ -79,7 +79,7 @@ class IndexEndpointConnection extends GoogleVertexAIConnection<
   }
 
   async request(
-    options: AsyncCallerCallOptions
+    options: AsyncCallerCallOptions,
   ): Promise<IndexEndpointResponse> {
     return this._request(undefined, options);
   }
@@ -131,7 +131,7 @@ class RemoveDatapointConnection extends GoogleVertexAIConnection<
 
   async request(
     datapointIds: string[],
-    options: AsyncCallerCallOptions
+    options: AsyncCallerCallOptions,
   ): Promise<RemoveDatapointResponse> {
     const data: RemoveDatapointRequest = {
       datapointIds,
@@ -195,7 +195,7 @@ class UpsertDatapointConnection extends GoogleVertexAIConnection<
 
   async request(
     datapoints: IndexDatapoint[],
-    options: AsyncCallerCallOptions
+    options: AsyncCallerCallOptions,
   ): Promise<UpsertDatapointResponse> {
     const data: UpsertDatapointRequest = {
       datapoints,
@@ -277,7 +277,7 @@ class FindNeighborsConnection
 
   async request(
     request: FindNeighborsRequest,
-    options: AsyncCallerCallOptions
+    options: AsyncCallerCallOptions,
   ): Promise<FindNeighborsResponse> {
     return this._request(request, options);
   }
@@ -389,7 +389,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     };
     this.indexEndpointClient = new IndexEndpointConnection(
       indexClientParams,
-      this.caller
+      this.caller,
     );
 
     const removeClientParams: RemoveDatapointParams = {
@@ -400,7 +400,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     };
     this.removeDatapointClient = new RemoveDatapointConnection(
       removeClientParams,
-      this.caller
+      this.caller,
     );
 
     const upsertClientParams: UpsertDatapointParams = {
@@ -411,7 +411,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     };
     this.upsertDatapointClient = new UpsertDatapointConnection(
       upsertClientParams,
-      this.caller
+      this.caller,
     );
   }
 
@@ -430,12 +430,12 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       throw new Error(`Vectors and metadata must have the same length`);
     }
     const datapoints: IndexDatapoint[] = vectors.map((vector, idx) =>
-      this.buildDatapoint(vector, documents[idx])
+      this.buildDatapoint(vector, documents[idx]),
     );
     const options = {};
     const response = await this.upsertDatapointClient.request(
       datapoints,
-      options
+      options,
     );
     if (Object.keys(response?.data ?? {}).length === 0) {
       // Nothing in the response in the body means we saved it ok
@@ -462,7 +462,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     function getStringArrays(
       prefix: string,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      m: Record<string, any>
+      m: Record<string, any>,
     ): Record<string, string[]> {
       let ret: Record<string, string[]> = {};
 
@@ -485,7 +485,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
 
     const stringArrays: Record<string, string[]> = getStringArrays(
       "",
-      documentMetadata
+      documentMetadata,
     );
 
     const flatMetadata: metadataType = flatten(documentMetadata);
@@ -518,7 +518,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
    */
   metadataToRestrictions(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    documentMetadata: Record<string, any>
+    documentMetadata: Record<string, any>,
   ): this["FilterType"] {
     const metadata = this.cleanMetadata(documentMetadata);
 
@@ -584,7 +584,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, number][]> {
     // Format the query into the request
     const deployedIndexId = await this.getDeployedIndexId();
@@ -616,7 +616,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     };
     const connection = new FindNeighborsConnection(
       findNeighborsParams,
-      this.caller
+      this.caller,
     );
 
     // Make the call
@@ -644,13 +644,13 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
               `Document with id "${id}" is missing from the backing docstore.`,
               `This can occur if you clear the docstore without deleting from the corresponding Matching Engine index.`,
               `To resolve this, you should call .delete() with this id as part of the "ids" parameter.`,
-            ].join("\n")
+            ].join("\n"),
           );
           doc = new Document({ pageContent: `Missing document ${id}` });
         }
         doc.id ??= id;
         return [doc, distance];
-      })
+      }),
     );
 
     return ret;
@@ -714,13 +714,13 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: MatchingEngineArgs
+    dbConfig: MatchingEngineArgs,
   ): Promise<VectorStore> {
     const docs: Document[] = texts.map(
       (text, index): Document => ({
         pageContent: text,
         metadata: Array.isArray(metadatas) ? metadatas[index] : metadatas,
-      })
+      }),
     );
     return this.fromDocuments(docs, embeddings, dbConfig);
   }
@@ -728,7 +728,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: MatchingEngineArgs
+    dbConfig: MatchingEngineArgs,
   ): Promise<VectorStore> {
     const ret = new MatchingEngine(embeddings, dbConfig);
     await ret.addDocuments(docs);

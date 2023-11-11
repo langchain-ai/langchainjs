@@ -24,7 +24,7 @@ export abstract class BufferLoader extends BaseDocumentLoader {
    */
   protected abstract parse(
     raw: Buffer,
-    metadata: Document["metadata"]
+    metadata: Document["metadata"],
   ): Promise<Document[]>;
 
   /**
@@ -66,7 +66,7 @@ export abstract class BufferLoader extends BaseDocumentLoader {
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
+        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`,
       );
     }
   }

@@ -33,7 +33,7 @@ const vectorStore = await RedisVectorStore.fromDocuments(
   {
     redisClient: client,
     indexName: "docs",
-  }
+  },
 );
 
 await vectorStore.delete({ deleteAll: true });

@@ -6,7 +6,7 @@ import { PDFLoader } from "../fs/pdf.js";
 test("Test PDF loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/1706.03762.pdf"
+    "./example_data/1706.03762.pdf",
   );
   const loader = new PDFLoader(filePath);
   const docs = await loader.load();
@@ -18,7 +18,7 @@ test("Test PDF loader from file", async () => {
 test("Test PDF loader from file to single document", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/1706.03762.pdf"
+    "./example_data/1706.03762.pdf",
   );
   const loader = new PDFLoader(filePath, { splitPages: false });
   const docs = await loader.load();

@@ -52,7 +52,7 @@ CHAT HISTORY: {chatHistory}
 ----------
 QUESTION: {question}
 ----------
-Helpful Answer:`
+Helpful Answer:`,
 );
 const questionGeneratorTemplate = PromptTemplate.fromTemplate(
   `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
@@ -61,7 +61,7 @@ CHAT HISTORY: {chatHistory}
 ----------
 FOLLOWUP QUESTION: {question}
 ----------
-Standalone question:`
+Standalone question:`,
 );
 
 // Initialize fast and slow LLMs, along with chains for each
@@ -117,7 +117,7 @@ const performQuestionAnswering = async (input: {
     },
     {
       text: response.text,
-    }
+    },
   );
 
   return {

@@ -10,7 +10,7 @@ const vectorStore = await MyScaleStore.fromExistingIndex(
     password: process.env.MYSCALE_PASSWORD || "password",
     database: "default", // defaults to "default"
     table: "your_table", // defaults to "vector_table"
-  }
+  },
 );
 
 const results = await vectorStore.similaritySearch("hello world", 1);

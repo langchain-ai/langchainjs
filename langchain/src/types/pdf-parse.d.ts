@@ -665,7 +665,7 @@ declare module "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js" {
    * @returns {PDFDocumentLoadingTask}
    */
   export function getDocument(
-    src: string | URL | TypedArray | ArrayBuffer | DocumentInitParameters
+    src: string | URL | TypedArray | ArrayBuffer | DocumentInitParameters,
   ): PDFDocumentLoadingTask;
   export class LoopbackPort {
     postMessage(obj: any, transfer: any): void;
@@ -1145,7 +1145,7 @@ declare module "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js" {
       pageIndex: any,
       pageInfo: any,
       transport: any,
-      pdfBug?: boolean
+      pdfBug?: boolean,
     );
     _pageIndex: any;
     _pageInfo: any;

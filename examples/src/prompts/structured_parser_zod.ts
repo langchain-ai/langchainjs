@@ -10,7 +10,7 @@ const parser = StructuredOutputParser.fromZodSchema(
     sources: z
       .array(z.string())
       .describe("sources used to answer the question, should be websites."),
-  })
+  }),
 );
 
 const formatInstructions = parser.getFormatInstructions();

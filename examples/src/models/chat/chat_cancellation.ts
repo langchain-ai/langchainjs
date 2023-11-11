@@ -9,10 +9,10 @@ const controller = new AbortController();
 const res = await model.call(
   [
     new HumanMessage(
-      "What is a good name for a company that makes colorful socks?"
+      "What is a good name for a company that makes colorful socks?",
     ),
   ],
-  { signal: controller.signal }
+  { signal: controller.signal },
 );
 
 console.log(res);

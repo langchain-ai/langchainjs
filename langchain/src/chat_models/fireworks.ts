@@ -49,14 +49,14 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
     fields?: Partial<
       Omit<OpenAIChatInput, "openAIApiKey" | FireworksUnsupportedArgs>
     > &
-      BaseChatModelParams & { fireworksApiKey?: string }
+      BaseChatModelParams & { fireworksApiKey?: string },
   ) {
     const fireworksApiKey =
       fields?.fireworksApiKey || getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
       throw new Error(
-        `Fireworks API key not found. Please set the FIREWORKS_API_KEY environment variable or provide the key into "fireworksApiKey"`
+        `Fireworks API key not found. Please set the FIREWORKS_API_KEY environment variable or provide the key into "fireworksApiKey"`,
       );
     }
 
@@ -90,12 +90,12 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   /**
@@ -108,7 +108,7 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
     request:
       | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
       | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion

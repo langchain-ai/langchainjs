@@ -66,7 +66,7 @@ test("Test end to end with HNSWLib", async () => {
     new BedrockEmbeddings({
       maxRetries: 1,
       client,
-    })
+    }),
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 

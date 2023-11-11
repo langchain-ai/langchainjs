@@ -12,7 +12,7 @@ export const run = async () => {
       sources: z
         .array(z.string())
         .describe("sources used to answer the question, should be websites."),
-    })
+    }),
   );
   /** This is a bad output because sources is a string, not a list */
   const badOutput = `\`\`\`json
@@ -49,7 +49,7 @@ export const run = async () => {
   }
   const fixParser = OutputFixingParser.fromLLM(
     new ChatOpenAI({ temperature: 0 }),
-    parser
+    parser,
   );
   const output = await fixParser.parse(badOutput);
   console.log("Fixed output: ", output);

@@ -1,6 +1,6 @@
 import PQueueMod from "p-queue";
 
-let queue: typeof import("p-queue")["default"]["prototype"];
+let queue: (typeof import("p-queue"))["default"]["prototype"];
 
 /**
  * Creates a queue using the p-queue library. The queue is configured to
@@ -22,7 +22,7 @@ function createQueue() {
  */
 export async function consumeCallback<T>(
   promiseFn: () => Promise<T> | T | void,
-  wait: boolean
+  wait: boolean,
 ): Promise<void> {
   if (wait === true) {
     await promiseFn();

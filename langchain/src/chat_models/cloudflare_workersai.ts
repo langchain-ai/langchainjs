@@ -90,12 +90,12 @@ export class ChatCloudflareWorkersAI
   validateEnvironment() {
     if (!this.cloudflareAccountId) {
       throw new Error(
-        `No Cloudflare account ID found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_ACCOUNT_ID" in your environment variables.`
+        `No Cloudflare account ID found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_ACCOUNT_ID" in your environment variables.`,
       );
     }
     if (!this.cloudflareApiToken) {
       throw new Error(
-        `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`
+        `No Cloudflare API key found. Please provide it when instantiating the CloudflareWorkersAI class, or set it as "CLOUDFLARE_API_KEY" in your environment variables.`,
       );
     }
   }
@@ -103,7 +103,7 @@ export class ChatCloudflareWorkersAI
   async _request(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    stream?: boolean
+    stream?: boolean,
   ) {
     this.validateEnvironment();
     const url = `${this.baseUrl}/${this.model}`;
@@ -124,7 +124,7 @@ export class ChatCloudflareWorkersAI
       });
       if (!response.ok) {
         const error = new Error(
-          `Cloudflare LLM call failed with status code ${response.status}`
+          `Cloudflare LLM call failed with status code ${response.status}`,
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;
@@ -137,14 +137,14 @@ export class ChatCloudflareWorkersAI
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     const response = await this._request(messages, options, true);
     if (!response.body) {
       throw new Error("Empty response from Cloudflare. Please try again.");
     }
     const stream = convertEventStreamToIterableReadableDataStream(
-      response.body
+      response.body,
     );
     for await (const chunk of stream) {
       if (chunk !== "[DONE]") {
@@ -161,7 +161,7 @@ export class ChatCloudflareWorkersAI
   }
 
   protected _formatMessages(
-    messages: BaseMessage[]
+    messages: BaseMessage[],
   ): { role: string; content: string }[] {
     const formattedMessages = messages.map((message) => {
       let role;
@@ -175,13 +175,13 @@ export class ChatCloudflareWorkersAI
         role = message.role;
       } else {
         console.warn(
-          `Unsupported message type passed to Cloudflare: "${message._getType()}"`
+          `Unsupported message type passed to Cloudflare: "${message._getType()}"`,
         );
         role = "user";
       }
       if (typeof message.content !== "string") {
         throw new Error(
-          "ChatCloudflareWorkersAI currently does not support non-string message content."
+          "ChatCloudflareWorkersAI currently does not support non-string message content.",
         );
       }
       return {
@@ -196,7 +196,7 @@ export class ChatCloudflareWorkersAI
   async _call(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<string> {
     if (!this.streaming) {
       const response = await this._request(messages, options);
@@ -217,7 +217,7 @@ export class ChatCloudflareWorkersAI
       const messageContent = finalResult?.message.content;
       if (messageContent && typeof messageContent !== "string") {
         throw new Error(
-          "Non-string output for ChatCloudflareWorkersAI is currently not supported."
+          "Non-string output for ChatCloudflareWorkersAI is currently not supported.",
         );
       }
       return messageContent ?? "";

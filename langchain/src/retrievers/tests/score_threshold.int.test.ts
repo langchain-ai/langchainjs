@@ -17,7 +17,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursi
       "Cars are made out of plastic",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const model = new ChatOpenAI({
@@ -38,7 +38,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursi
         inputKey: "question",
         outputKey: "text",
       }),
-    }
+    },
   );
   const res = await chain.call({
     question: "Buildings are made out of what?",
@@ -66,7 +66,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursi
           }),
         }),
       ]),
-    })
+    }),
   );
 });
 
@@ -80,7 +80,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store to get 
       "Cars are made out of plastic",
     ],
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const model = new ChatOpenAI({
@@ -101,7 +101,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store to get 
         inputKey: "question",
         outputKey: "text",
       }),
-    }
+    },
   );
   const res = await chain.call({
     question: "Buildings are made out of what?",

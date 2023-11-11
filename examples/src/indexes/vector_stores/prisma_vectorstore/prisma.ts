@@ -16,14 +16,14 @@ export const run = async () => {
         id: PrismaVectorStore.IdColumn,
         content: PrismaVectorStore.ContentColumn,
       },
-    }
+    },
   );
 
   const texts = ["Hello world", "Bye bye", "What's this?"];
   await vectorStore.addModels(
     await db.$transaction(
-      texts.map((content) => db.document.create({ data: { content } }))
-    )
+      texts.map((content) => db.document.create({ data: { content } })),
+    ),
   );
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
@@ -45,13 +45,13 @@ export const run = async () => {
           equals: "default",
         },
       },
-    }
+    },
   );
 
   await vectorStore2.addModels(
     await db.$transaction(
-      texts.map((content) => db.document.create({ data: { content } }))
-    )
+      texts.map((content) => db.document.create({ data: { content } })),
+    ),
   );
 
   // Use the default filter a.k.a {"content": "default"}
@@ -62,7 +62,7 @@ export const run = async () => {
   const resultThree = await vectorStore.similaritySearchWithScore(
     "Hello world",
     1,
-    { content: { equals: "different_content" } }
+    { content: { equals: "different_content" } },
   );
   console.log(resultThree);
 };

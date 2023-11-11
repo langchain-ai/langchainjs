@@ -44,7 +44,7 @@ export class JsonSpec extends Serializable {
     }
 
     throw new Error(
-      `Value at ${input} is not a dictionary, get the value directly instead.`
+      `Value at ${input} is not a dictionary, get the value directly instead.`,
     );
   }
 

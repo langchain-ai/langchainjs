@@ -63,7 +63,7 @@ test("QuerySqlTool", async () => {
   const querySqlTool = new QuerySqlTool(db);
   const result = await querySqlTool.call("SELECT * FROM users");
   expect(result).toBe(
-    `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`
+    `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`,
   );
 });
 
@@ -126,7 +126,7 @@ test("InfoSqlTool with error", async () => {
   const infoSqlTool = new InfoSqlTool(db);
   const result = await infoSqlTool.call("userss, products");
   expect(result).toBe(
-    `Error: Wrong target table name: the table userss was not found in the database`
+    `Error: Wrong target table name: the table userss was not found in the database`,
   );
 });
 

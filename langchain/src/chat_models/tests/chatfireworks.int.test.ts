@@ -35,7 +35,7 @@ describe("ChatFireworks", () => {
 
     // PaLM doesn't support translation yet
     const systemPrompt = PromptTemplate.fromTemplate(
-      "You are a helpful assistant who must always respond like a {job}."
+      "You are a helpful assistant who must always respond like a {job}.",
     );
 
     const chatPrompt = ChatPromptTemplate.fromMessages([

@@ -6,7 +6,7 @@ const vectorStore = await MemoryVectorStore.fromTexts(
   ["Hello world", "Bye bye", "hello nice world"],
   [{ id: 2 }, { id: 1 }, { id: 3 }],
   new OpenAIEmbeddings(),
-  { similarity: similarity.pearson }
+  { similarity: similarity.pearson },
 );
 
 const resultOne = await vectorStore.similaritySearch("hello world", 1);

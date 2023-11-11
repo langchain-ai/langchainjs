@@ -4,7 +4,7 @@ import { RunnableSequence } from "langchain/schema/runnable";
 
 const model = new ChatOpenAI({});
 const promptTemplate = PromptTemplate.fromTemplate(
-  "Tell me a joke about {topic}"
+  "Tell me a joke about {topic}",
 );
 
 // You can also create a chain using an array of runnables

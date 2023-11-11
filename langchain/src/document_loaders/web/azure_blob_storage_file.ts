@@ -62,18 +62,18 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
    */
   public async load() {
     const tempDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "azureblobfileloader-")
+      path.join(os.tmpdir(), "azureblobfileloader-"),
     );
 
     const filePath = path.join(tempDir, this.blobName);
 
     try {
       const blobServiceClient = BlobServiceClient.fromConnectionString(
-        this.connectionString
+        this.connectionString,
       );
 
       const containerClient = blobServiceClient.getContainerClient(
-        this.container
+        this.container,
       );
 
       const blobClient = containerClient.getBlobClient(this.blobName);
@@ -86,21 +86,21 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
           this.blobName
         } from Azure Blob Storage container ${this.container}: ${
           (e as Error).message
-        }`
+        }`,
       );
     }
 
     try {
       const unstructuredLoader = new UnstructuredLoader(
         filePath,
-        this.unstructuredConfig
+        this.unstructuredConfig,
       );
 
       const docs = await unstructuredLoader.load();
       return docs;
     } catch {
       throw new Error(
-        `Failed to load file ${filePath} using unstructured loader.`
+        `Failed to load file ${filePath} using unstructured loader.`,
       );
     } finally {
       fs.rmSync(path.dirname(filePath), { recursive: true, force: true });

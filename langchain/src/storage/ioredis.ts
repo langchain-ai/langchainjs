@@ -114,7 +114,7 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
       "MATCH",
       pattern,
       "COUNT",
-      this.yieldKeysScanBatchSize
+      this.yieldKeysScanBatchSize,
     );
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
@@ -125,7 +125,7 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
         "MATCH",
         pattern,
         "COUNT",
-        this.yieldKeysScanBatchSize
+        this.yieldKeysScanBatchSize,
       );
       for (const key of batch) {
         yield this._getDeprefixedKey(key);

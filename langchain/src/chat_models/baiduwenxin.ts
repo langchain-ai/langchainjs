@@ -258,7 +258,7 @@ export class ChatBaiduWenxin
     if (!response.ok) {
       const text = await response.text();
       const error = new Error(
-        `Baidu get access token failed with status code ${response.status}, response: ${text}`
+        `Baidu get access token failed with status code ${response.status}, response: ${text}`,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).response = response;
@@ -295,7 +295,7 @@ export class ChatBaiduWenxin
   async _generate(
     messages: BaseMessage[],
     options?: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
 
@@ -303,7 +303,7 @@ export class ChatBaiduWenxin
 
     // Wenxin requires the system message to be put in the params, not messages array
     const systemMessage = messages.find(
-      (message) => message._getType() === "system"
+      (message) => message._getType() === "system",
     );
     if (systemMessage) {
       // eslint-disable-next-line no-param-reassign
@@ -379,7 +379,7 @@ export class ChatBaiduWenxin
                 resolved = true;
                 resolve(response);
               }
-            }
+            },
           ).catch((error) => {
             if (!rejected) {
               rejected = true;
@@ -393,7 +393,7 @@ export class ChatBaiduWenxin
             messages: messagesMapped,
           },
           false,
-          options?.signal
+          options?.signal,
         ).then((data) => {
           if (data?.error_code) {
             throw new Error(data?.error_msg);
@@ -437,7 +437,7 @@ export class ChatBaiduWenxin
     request: ChatCompletionRequest,
     stream: boolean,
     signal?: AbortSignal,
-    onmessage?: (event: MessageEvent) => void
+    onmessage?: (event: MessageEvent) => void,
   ) {
     // The first run will get the accessToken
     if (!this.accessToken) {
@@ -468,7 +468,7 @@ export class ChatBaiduWenxin
             onmessage?.(
               new MessageEvent("message", {
                 data: await response.text(),
-              })
+              }),
             );
             return;
           }

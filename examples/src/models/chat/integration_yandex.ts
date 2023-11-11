@@ -5,7 +5,7 @@ const chat = new ChatYandexGPT();
 
 const res = await chat.call([
   new SystemMessage(
-    "You are a helpful assistant that translates English to French."
+    "You are a helpful assistant that translates English to French.",
   ),
   new HumanMessage("I love programming."),
 ]);

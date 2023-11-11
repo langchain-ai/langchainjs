@@ -81,7 +81,7 @@ console.log(res.additional_kwargs.tool_calls);
 // Format the results from calling the tool calls back to OpenAI as ToolMessages
 const toolMessages = res.additional_kwargs.tool_calls?.map((toolCall) => {
   const toolCallResult = getCurrentWeather(
-    JSON.parse(toolCall.function.arguments).location
+    JSON.parse(toolCall.function.arguments).location,
   );
   return new ToolMessage({
     tool_call_id: toolCall.id,

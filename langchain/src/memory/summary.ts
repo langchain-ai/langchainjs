@@ -83,7 +83,7 @@ export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
    */
   async predictNewSummary(
     messages: BaseMessage[],
-    existingSummary: string
+    existingSummary: string,
   ): Promise<string> {
     const newLines = getBufferString(messages, this.humanPrefix, this.aiPrefix);
     const chain = new LLMChain({ llm: this.llm, prompt: this.prompt });
@@ -133,7 +133,7 @@ export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues
+    outputValues: OutputValues,
   ): Promise<void> {
     await super.saveContext(inputValues, outputValues);
     const messages = await this.chatHistory.getMessages();

@@ -17,7 +17,7 @@ const correctQuery = new StructuredQuery(
     ]),
     new Comparison(Comparators.lt, "length", 180),
     new Comparison(Comparators.eq, "genre", "pop"),
-  ])
+  ]),
 );
 
 test("StructuredQueryOutputParser test", async () => {
@@ -29,7 +29,7 @@ test("StructuredQueryOutputParser test", async () => {
       Comparators.lte,
       Comparators.lt,
     ],
-    [Operators.and, Operators.or, Operators.not]
+    [Operators.and, Operators.or, Operators.not],
   );
 
   const exampleOutput = `json\`\`\`

@@ -41,7 +41,7 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  * retrieve relevant documents.
  */
 export class HydeRetriever<
-  V extends VectorStore = VectorStore
+  V extends VectorStore = VectorStore,
 > extends VectorStoreRetriever<V> {
   static lc_name() {
     return "HydeRetriever";
@@ -66,7 +66,7 @@ export class HydeRetriever<
       const { inputVariables } = this.promptTemplate;
       if (inputVariables.length !== 1 && inputVariables[0] !== "question") {
         throw new Error(
-          `Prompt template must accept a single input variable 'question'. Invalid input variables for prompt template: ${inputVariables}`
+          `Prompt template must accept a single input variable 'question'. Invalid input variables for prompt template: ${inputVariables}`,
         );
       }
     }
@@ -74,7 +74,7 @@ export class HydeRetriever<
 
   async _getRelevantDocuments(
     query: string,
-    runManager?: CallbackManagerForRetrieverRun
+    runManager?: CallbackManagerForRetrieverRun,
   ): Promise<Document[]> {
     let value: BasePromptValue = new StringPromptValue(query);
 
@@ -92,7 +92,7 @@ export class HydeRetriever<
       answer,
       this.k,
       this.filter,
-      runManager?.getChild("vectorstore")
+      runManager?.getChild("vectorstore"),
     );
 
     return results;

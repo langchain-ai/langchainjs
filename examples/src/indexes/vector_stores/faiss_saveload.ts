@@ -5,7 +5,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 const vectorStore = await FaissStore.fromTexts(
   ["Hello world", "Bye bye", "hello nice world"],
   [{ id: 2 }, { id: 1 }, { id: 3 }],
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 // Save the vector store to a directory
@@ -16,7 +16,7 @@ await vectorStore.save(directory);
 // Load the vector store from the same directory
 const loadedVectorStore = await FaissStore.load(
   directory,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 // vectorStore and loadedVectorStore are identical

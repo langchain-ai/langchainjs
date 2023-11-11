@@ -127,9 +127,9 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
  * not exist in your Weaviate database.
  */
 const query1 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are rated higher than 8.5?"
+  "Which movies are rated higher than 8.5?",
 );
 const query2 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are directed by Greta Gerwig?"
+  "Which movies are directed by Greta Gerwig?",
 );
 console.log(query1, query2);

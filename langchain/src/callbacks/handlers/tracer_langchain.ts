@@ -55,7 +55,7 @@ export class LangChainTracer
 
   private async _convertToCreate(
     run: Run,
-    example_id: string | undefined = undefined
+    example_id: string | undefined = undefined,
   ): Promise<RunCreate> {
     return {
       ...run,
@@ -74,7 +74,7 @@ export class LangChainTracer
   protected async _persistRunSingle(run: Run): Promise<void> {
     const persistedRun: RunCreate = await this._convertToCreate(
       run,
-      this.exampleId
+      this.exampleId,
     );
     await this.client.createRun(persistedRun);
   }

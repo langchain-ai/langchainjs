@@ -23,7 +23,7 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
   for (const message of history) {
     if (typeof message.content !== "string") {
       throw new Error(
-        "ChatYandexGPT does not support non-string message content."
+        "ChatYandexGPT does not support non-string message content.",
       );
     }
     if ("content" in message) {
@@ -60,7 +60,7 @@ export class ChatYandexGPT extends BaseChatModel {
 
     if (apiKey === undefined && iamToken === undefined) {
       throw new Error(
-        "Please set the YC_API_KEY or YC_IAM_TOKEN environment variable or pass it to the constructor as the apiKey or iamToken field."
+        "Please set the YC_API_KEY or YC_IAM_TOKEN environment variable or pass it to the constructor as the apiKey or iamToken field.",
       );
     }
 
@@ -83,7 +83,7 @@ export class ChatYandexGPT extends BaseChatModel {
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _?: CallbackManagerForLLMRun | undefined
+    _?: CallbackManagerForLLMRun | undefined,
   ): Promise<ChatResult> {
     const [messageHistory, instruction] = _parseChatHistory(messages);
     const headers = { "Content-Type": "application/json", Authorization: "" };
@@ -109,7 +109,7 @@ export class ChatYandexGPT extends BaseChatModel {
     });
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch ${apiUrl} from YandexGPT: ${response.status}`
+        `Failed to fetch ${apiUrl} from YandexGPT: ${response.status}`,
       );
     }
     const responseData = await response.json();

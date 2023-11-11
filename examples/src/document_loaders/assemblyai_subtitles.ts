@@ -11,7 +11,7 @@ const loader = new AudioSubtitleLoader(
   "srt", // srt or vtt
   {
     apiKey: "<ASSEMBLYAI_API_KEY>", // or set the `ASSEMBLYAI_API_KEY` env variable
-  }
+  },
 );
 
 const docs = await loader.load();

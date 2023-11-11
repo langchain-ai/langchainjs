@@ -42,7 +42,7 @@ export class RetrievalQAChain
 
   get outputKeys() {
     return this.combineDocumentsChain.outputKeys.concat(
-      this.returnSourceDocuments ? ["sourceDocuments"] : []
+      this.returnSourceDocuments ? ["sourceDocuments"] : [],
     );
   }
 
@@ -64,7 +64,7 @@ export class RetrievalQAChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key "${this.inputKey}" not found.`);
@@ -72,12 +72,12 @@ export class RetrievalQAChain
     const question: string = values[this.inputKey];
     const docs = await this.retriever.getRelevantDocuments(
       question,
-      runManager?.getChild("retriever")
+      runManager?.getChild("retriever"),
     );
     const inputs = { question, input_documents: docs, ...values };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild("combine_documents")
+      runManager?.getChild("combine_documents"),
     );
     if (this.returnSourceDocuments) {
       return {
@@ -94,7 +94,7 @@ export class RetrievalQAChain
 
   static async deserialize(
     _data: SerializedVectorDBQAChain,
-    _values: LoadValues
+    _values: LoadValues,
   ): Promise<RetrievalQAChain> {
     throw new Error("Not implemented");
   }
@@ -120,7 +120,7 @@ export class RetrievalQAChain
         "retriever" | "combineDocumentsChain" | "index"
       >
     > &
-      StuffQAChainParams
+      StuffQAChainParams,
   ): RetrievalQAChain {
     const qaChain = loadQAStuffChain(llm, {
       prompt: options?.prompt,

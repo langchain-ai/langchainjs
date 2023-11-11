@@ -8,7 +8,7 @@ const parser = new CustomListOutputParser({ length: 3, separator: "\n" });
 
 const chain = RunnableSequence.from([
   PromptTemplate.fromTemplate(
-    "Provide a list of {subject}.\n{format_instructions}"
+    "Provide a list of {subject}.\n{format_instructions}",
   ),
   new OpenAI({ temperature: 0 }),
   parser,

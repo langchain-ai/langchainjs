@@ -50,7 +50,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     retrievers: BaseRetriever[],
     retrieverPrompts?: PromptTemplate[],
     defaults?: MultiRetrievalDefaults,
-    options?: Omit<MultiRouteChainInput, "defaultChain">
+    options?: Omit<MultiRouteChainInput, "defaultChain">,
   ) {
     return MultiRetrievalQAChain.fromLLMAndRetrievers(llm, {
       retrieverNames,
@@ -100,17 +100,17 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
       > & {
         prompt?: PromptTemplate;
       };
-    }
+    },
   ): MultiRetrievalQAChain {
     const { defaultRetriever, defaultPrompt, defaultChain } = defaults ?? {};
     if (defaultPrompt && !defaultRetriever) {
       throw new Error(
-        "`default_retriever` must be specified if `default_prompt` is \nprovided. Received only `default_prompt`."
+        "`default_retriever` must be specified if `default_prompt` is \nprovided. Received only `default_prompt`.",
       );
     }
     const destinations = zipEntries<[string, string]>(
       retrieverNames,
-      retrieverDescriptions
+      retrieverDescriptions,
     ).map(([name, desc]) => `${name}: ${desc}`);
 
     const structuredOutputParserSchema = z.object({
@@ -134,11 +134,11 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     const destinationsStr = destinations.join("\n");
     const routerTemplate = interpolateFString(
       STRUCTURED_MULTI_RETRIEVAL_ROUTER_TEMPLATE(
-        outputParser.getFormatInstructions({ interpolationDepth: 4 })
+        outputParser.getFormatInstructions({ interpolationDepth: 4 }),
       ),
       {
         destinations: destinationsStr,
-      }
+      },
     );
     const routerPrompt = new PromptTemplate({
       template: routerTemplate,
@@ -161,7 +161,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
         acc[name] = RetrievalQAChain.fromLLM(llm, retriever, opt);
         return acc;
       },
-      {} as { [name: string]: RetrievalQAChain }
+      {} as { [name: string]: RetrievalQAChain },
     );
 
     let _defaultChain;

@@ -71,7 +71,7 @@ export class VespaRetriever extends RemoteRetriever {
         new Document({
           pageContent: doc.fields[this.content_field] as string,
           metadata: { id: doc.id },
-        })
+        }),
     );
   }
 }

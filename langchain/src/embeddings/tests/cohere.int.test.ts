@@ -30,6 +30,6 @@ test("Test CohereEmbeddings concurrency", async () => {
   ]);
   expect(res).toHaveLength(6);
   expect(res.find((embedding) => typeof embedding[0] !== "number")).toBe(
-    undefined
+    undefined,
   );
 });

@@ -133,7 +133,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
         id: this.sessionId,
         user_id: this.userId,
       },
-      { merge: true }
+      { merge: true },
     );
     await this.document
       .collection("messages")

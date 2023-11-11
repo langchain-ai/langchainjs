@@ -98,7 +98,7 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
 
     await memory.saveContext(
       { input: "Who is the best vocalist?" },
-      { response: "Ozzy Osbourne" }
+      { response: "Ozzy Osbourne" },
     );
 
     const expectedHistory = [

@@ -40,13 +40,13 @@ export class TigrisVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] } | string[]
+    options?: { ids?: string[] } | string[],
   ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options
+      options,
     );
   }
 
@@ -60,7 +60,7 @@ export class TigrisVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] } | string[]
+    options?: { ids?: string[] } | string[],
   ) {
     if (vectors.length === 0) {
       return;
@@ -93,7 +93,7 @@ export class TigrisVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: object
+    filter?: object,
   ) {
     const result = await this.index?.similaritySearchVectorWithScore({
       query,
@@ -128,7 +128,7 @@ export class TigrisVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: TigrisLibArgs
+    dbConfig: TigrisLibArgs,
   ): Promise<TigrisVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -153,7 +153,7 @@ export class TigrisVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: TigrisLibArgs
+    dbConfig: TigrisLibArgs,
   ): Promise<TigrisVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -169,7 +169,7 @@ export class TigrisVectorStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: TigrisLibArgs
+    dbConfig: TigrisLibArgs,
   ): Promise<TigrisVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;

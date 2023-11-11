@@ -109,8 +109,8 @@ async function formatPrompt(inputValues: InputValues) {
   if (!("input" in inputValues) || !("agent_scratchpad" in inputValues)) {
     throw new Error(
       `Missing input or agent_scratchpad in input object: ${JSON.stringify(
-        inputValues
-      )}`
+        inputValues,
+      )}`,
     );
   }
   const input = inputValues.input as string;
@@ -121,7 +121,7 @@ async function formatPrompt(inputValues: InputValues) {
     (thoughts, { action, observation }) =>
       thoughts +
       [action.log, `\nObservation: ${observation}`, "Thought:"].join("\n"),
-    ""
+    "",
   );
   /** Format our prompts by passing in the input variables */
   const formattedPrefix = await PREFIX.format({

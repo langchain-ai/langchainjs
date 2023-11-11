@@ -27,17 +27,17 @@ test("structured output chain", async () => {
       prompt: new ChatPromptTemplate({
         promptMessages: [
           SystemMessagePromptTemplate.fromTemplate(
-            "Generate details of a hypothetical person."
+            "Generate details of a hypothetical person.",
           ),
           HumanMessagePromptTemplate.fromTemplate(
-            "Person description: {inputText}"
+            "Person description: {inputText}",
           ),
         ],
         inputVariables: ["inputText"],
       }),
       llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),
       outputKey: "person",
-    }
+    },
   );
 
   const response = await chain.call({ inputText: "A man, living in Poland." });

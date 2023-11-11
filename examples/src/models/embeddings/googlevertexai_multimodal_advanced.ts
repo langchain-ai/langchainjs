@@ -8,7 +8,7 @@ const embeddings = new GoogleVertexAIMultimodalEmbeddings();
 const vectorStore = await FaissStore.fromTexts(
   ["dog", "cat", "horse", "seagull"],
   [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }],
-  embeddings
+  embeddings,
 );
 
 const img = fs.readFileSync("parrot.jpeg");
@@ -32,7 +32,7 @@ const vectors2: number[] = await embeddings.embedImageQuery(img2);
 // Use the lower level, direct API
 const resultTwo = await vectorStore.similaritySearchVectorWithScore(
   vectors2,
-  2
+  2,
 );
 console.log(JSON.stringify(resultTwo, null, 2));
 

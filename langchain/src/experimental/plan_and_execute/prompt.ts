@@ -44,7 +44,7 @@ export const getPlannerChatPrompt = async (tools: Tool[]) => {
 
   return /* #__PURE__ */ ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
-      PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE
+      PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE,
     ),
     HumanMessagePromptTemplate.fromTemplate(`{input}`),
   ]).partial({ toolStrings });

@@ -22,7 +22,7 @@ const store = await VectaraStore.fromTexts(
   [{ foo: "bar" }, { foo: "baz" }],
   // This won't have an effect. Provide a FakeEmbeddings instance instead for clarity.
   new OpenAIEmbeddings(),
-  args
+  args,
 );
 ```
 

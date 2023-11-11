@@ -22,7 +22,7 @@ describe("Vertex AI matching", () => {
     embeddings = new SyntheticEmbeddings({
       vectorSize: Number.parseInt(
         process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768",
-        10
+        10,
       ),
     });
 

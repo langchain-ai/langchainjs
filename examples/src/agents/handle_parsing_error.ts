@@ -31,7 +31,7 @@ const tools = [
                   "Open House",
                 ])
                 .describe("The type of task"),
-            })
+            }),
           )
           .describe("The JSON for task, reminder or alert to create"),
       })

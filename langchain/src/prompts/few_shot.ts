@@ -101,13 +101,13 @@ export class FewShotPromptTemplate
 
     if (this.examples !== undefined && this.exampleSelector !== undefined) {
       throw new Error(
-        "Only one of 'examples' and 'example_selector' should be provided"
+        "Only one of 'examples' and 'example_selector' should be provided",
       );
     }
 
     if (this.examples === undefined && this.exampleSelector === undefined) {
       throw new Error(
-        "One of 'examples' and 'example_selector' should be provided"
+        "One of 'examples' and 'example_selector' should be provided",
       );
     }
 
@@ -115,13 +115,13 @@ export class FewShotPromptTemplate
       let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
-          Object.keys(this.partialVariables)
+          Object.keys(this.partialVariables),
         );
       }
       checkValidTemplate(
         this.prefix + this.suffix,
         this.templateFormat,
-        totalInputVariables
+        totalInputVariables,
       );
     }
   }
@@ -135,7 +135,7 @@ export class FewShotPromptTemplate
   }
 
   private async getExamples(
-    inputVariables: InputValues
+    inputVariables: InputValues,
   ): Promise<InputValues[]> {
     if (this.examples !== undefined) {
       return this.examples;
@@ -145,15 +145,15 @@ export class FewShotPromptTemplate
     }
 
     throw new Error(
-      "One of 'examples' and 'example_selector' should be provided"
+      "One of 'examples' and 'example_selector' should be provided",
     );
   }
 
   async partial<NewPartialVariableName extends string>(
-    values: PartialValues<NewPartialVariableName>
+    values: PartialValues<NewPartialVariableName>,
   ) {
     const newInputVariables = this.inputVariables.filter(
-      (iv) => !(iv in values)
+      (iv) => !(iv in values),
     );
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
@@ -177,10 +177,10 @@ export class FewShotPromptTemplate
     const examples = await this.getExamples(allValues);
 
     const exampleStrings = await Promise.all(
-      examples.map((example) => this.examplePrompt.format(example))
+      examples.map((example) => this.examplePrompt.format(example)),
     );
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
-      this.exampleSeparator
+      this.exampleSeparator,
     );
     return renderTemplate(template, this.templateFormat, allValues);
   }
@@ -188,12 +188,12 @@ export class FewShotPromptTemplate
   serialize(): SerializedFewShotTemplate {
     if (this.exampleSelector || !this.examples) {
       throw new Error(
-        "Serializing an example selector is not currently supported"
+        "Serializing an example selector is not currently supported",
       );
     }
     if (this.outputParser !== undefined) {
       throw new Error(
-        "Serializing an output parser is not currently supported"
+        "Serializing an output parser is not currently supported",
       );
     }
     return {
@@ -209,7 +209,7 @@ export class FewShotPromptTemplate
   }
 
   static async deserialize(
-    data: SerializedFewShotTemplate
+    data: SerializedFewShotTemplate,
   ): Promise<FewShotPromptTemplate> {
     const { example_prompt } = data;
     if (!example_prompt) {
@@ -223,7 +223,7 @@ export class FewShotPromptTemplate
       examples = data.examples;
     } else {
       throw new Error(
-        "Invalid examples format. Only list or string are supported."
+        "Invalid examples format. Only list or string are supported.",
       );
     }
 
@@ -305,7 +305,7 @@ export class FewShotChatMessagePromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
+    PartialVariableName extends string = any,
   >
   extends BaseChatPromptTemplate
   implements FewShotChatMessagePromptTemplateInput
@@ -350,13 +350,13 @@ export class FewShotChatMessagePromptTemplate<
 
     if (this.examples !== undefined && this.exampleSelector !== undefined) {
       throw new Error(
-        "Only one of 'examples' and 'example_selector' should be provided"
+        "Only one of 'examples' and 'example_selector' should be provided",
       );
     }
 
     if (this.examples === undefined && this.exampleSelector === undefined) {
       throw new Error(
-        "One of 'examples' and 'example_selector' should be provided"
+        "One of 'examples' and 'example_selector' should be provided",
       );
     }
 
@@ -364,19 +364,19 @@ export class FewShotChatMessagePromptTemplate<
       let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
-          Object.keys(this.partialVariables)
+          Object.keys(this.partialVariables),
         );
       }
       checkValidTemplate(
         this.prefix + this.suffix,
         this.templateFormat,
-        totalInputVariables
+        totalInputVariables,
       );
     }
   }
 
   private async getExamples(
-    inputVariables: InputValues
+    inputVariables: InputValues,
   ): Promise<InputValues[]> {
     if (this.examples !== undefined) {
       return this.examples;
@@ -386,7 +386,7 @@ export class FewShotChatMessagePromptTemplate<
     }
 
     throw new Error(
-      "One of 'examples' and 'example_selector' should be provided"
+      "One of 'examples' and 'example_selector' should be provided",
     );
   }
 
@@ -396,7 +396,7 @@ export class FewShotChatMessagePromptTemplate<
    * @returns A promise that resolves to a string representing the formatted prompt.
    */
   async formatMessages(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
     let examples = await this.getExamples(allValues);
@@ -427,13 +427,13 @@ export class FewShotChatMessagePromptTemplate<
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = await this.getExamples(allValues);
     const exampleMessages = await Promise.all(
-      examples.map((example) => this.examplePrompt.formatMessages(example))
+      examples.map((example) => this.examplePrompt.formatMessages(example)),
     );
     const exampleStrings = exampleMessages
       .flat()
       .map((message) => message.content);
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
-      this.exampleSeparator
+      this.exampleSeparator,
     );
     return renderTemplate(template, this.templateFormat, allValues);
   }
@@ -444,10 +444,10 @@ export class FewShotChatMessagePromptTemplate<
    * @returns A promise that resolves to an instance of `FewShotChatMessagePromptTemplate` with the given values partially formatted.
    */
   async partial(
-    values: PartialValues<PartialVariableName>
+    values: PartialValues<PartialVariableName>,
   ): Promise<FewShotChatMessagePromptTemplate<RunInput, PartialVariableName>> {
     const newInputVariables = this.inputVariables.filter(
-      (variable) => !(variable in values)
+      (variable) => !(variable in values),
     ) as Exclude<Extract<keyof RunInput, string>, PartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),

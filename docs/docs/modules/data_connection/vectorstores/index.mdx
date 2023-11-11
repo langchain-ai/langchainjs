@@ -46,7 +46,7 @@ interface VectorStore {
    */
   addDocuments(
     documents: Document[],
-    options?: Record<string, any>
+    options?: Record<string, any>,
   ): Promise<string[] | void>;
 
   /**
@@ -55,7 +55,7 @@ interface VectorStore {
   similaritySearch(
     query: string,
     k?: number,
-    filter?: object | undefined
+    filter?: object | undefined,
   ): Promise<Document[]>;
 
   /**
@@ -65,7 +65,7 @@ interface VectorStore {
   similaritySearchWithScore(
     query: string,
     k = 4,
-    filter: object | undefined = undefined
+    filter: object | undefined = undefined,
   ): Promise<[object, number][]>;
 
   /**
@@ -86,7 +86,7 @@ interface VectorStore {
   addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: Record<string, any>
+    options?: Record<string, any>,
   ): Promise<string[] | void>;
 
   /**
@@ -96,7 +96,7 @@ interface VectorStore {
   similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: object
+    filter?: object,
   ): Promise<[Document, number][]>;
 }
 ```
@@ -109,13 +109,13 @@ abstract class BaseVectorStore implements VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: Record<string, any>
+    dbConfig: Record<string, any>,
   ): Promise<VectorStore>;
 
   static fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: Record<string, any>
+    dbConfig: Record<string, any>,
   ): Promise<VectorStore>;
 }
 ```

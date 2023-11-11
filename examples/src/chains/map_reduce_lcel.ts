@@ -19,19 +19,19 @@ const model = new ChatOpenAI({});
 // Define prompt templates for document formatting, summarizing, collapsing, and combining
 const documentPrompt = PromptTemplate.fromTemplate("{pageContent}");
 const summarizePrompt = PromptTemplate.fromTemplate(
-  "Summarize this content:\n\n{context}"
+  "Summarize this content:\n\n{context}",
 );
 const collapsePrompt = PromptTemplate.fromTemplate(
-  "Collapse this content:\n\n{context}"
+  "Collapse this content:\n\n{context}",
 );
 const combinePrompt = PromptTemplate.fromTemplate(
-  "Combine these summaries:\n\n{context}"
+  "Combine these summaries:\n\n{context}",
 );
 
 // Wrap the `formatDocument` util so it can format a list of documents
 const formatDocs = async (documents: Document[]): Promise<string> => {
   const formattedDocs = await Promise.all(
-    documents.map((doc) => formatDocument(doc, documentPrompt))
+    documents.map((doc) => formatDocument(doc, documentPrompt)),
   );
   return formattedDocs.join("\n\n");
 };
@@ -63,7 +63,7 @@ const collapseChain = RunnableSequence.from([
 const collapse = async (
   documents: Document[],
   config?: BaseCallbackConfig,
-  tokenMax = 4000
+  tokenMax = 4000,
 ) => {
   const editableConfig = config;
   let docs = documents;
@@ -74,7 +74,7 @@ const collapse = async (
     }
     const splitDocs = splitListOfDocs(docs, getNumTokens, tokenMax);
     docs = await Promise.all(
-      splitDocs.map((doc) => collapseDocs(doc, collapseChain.invoke))
+      splitDocs.map((doc) => collapseDocs(doc, collapseChain.invoke)),
     );
     collapseCount += 1;
   }
@@ -140,7 +140,7 @@ const docs = text.split("\n\n").map(
       metadata: {
         source: "https://en.wikipedia.org/wiki/Nuclear_power_in_space",
       },
-    })
+    }),
 );
 const result = await mapReduceChain.invoke(docs);
 

@@ -68,7 +68,7 @@ export function unobserve<T>(root: T, observer: Observer<T>) {
  */
 export function observe<T>(
   obj: Object | Array<T>,
-  callback?: (patches: Operation[]) => void
+  callback?: (patches: Operation[]) => void,
 ): Observer<T> {
   var patches = [];
   var observer;
@@ -137,7 +137,7 @@ export function observe<T>(
  */
 export function generate<T>(
   observer: Observer<Object>,
-  invertible = false
+  invertible = false,
 ): Operation[] {
   var mirror = beforeDict.get(observer.object);
 
@@ -198,7 +198,7 @@ function _generate(mirror, obj, patches, path, invertible) {
           newVal,
           patches,
           path + "/" + escapePathComponent(key),
-          invertible
+          invertible,
         );
       } else {
         if (oldVal !== newVal) {
@@ -260,7 +260,7 @@ function _generate(mirror, obj, patches, path, invertible) {
 export function compare(
   tree1: Object | Array<any>,
   tree2: Object | Array<any>,
-  invertible = false
+  invertible = false,
 ): Operation[] {
   var patches = [];
   _generate(tree1, tree2, patches, "", invertible);

@@ -171,7 +171,7 @@ export class AnalyticDBVectorStore extends VectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
@@ -196,7 +196,7 @@ export class AnalyticDBVectorStore extends VectorStore {
     }
     if (vectors[0].length !== this.embeddingDimension) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.embeddingDimension})`
+        `Vectors must have the same length as the number of dimensions (${this.embeddingDimension})`,
       );
     }
 
@@ -229,15 +229,15 @@ export class AnalyticDBVectorStore extends VectorStore {
               rs.push(
                 `${data.id}\t{${data.embedding.join(",")}}\t${
                   data.document
-                }\t${JSON.stringify(data.metadata)}\n`
+                }\t${JSON.stringify(data.metadata)}\n`,
               );
               currentIndex += 1;
             }
           };
           const ws = client.query(
             copyFrom(
-              `COPY ${this.collectionName}(id, embedding, document, metadata) FROM STDIN`
-            )
+              `COPY ${this.collectionName}(id, embedding, document, metadata) FROM STDIN`,
+            ),
           );
 
           await pipeline(rs, ws);
@@ -258,15 +258,15 @@ export class AnalyticDBVectorStore extends VectorStore {
             rs.push(
               `${data.id}\t{${data.embedding.join(",")}}\t${
                 data.document
-              }\t${JSON.stringify(data.metadata)}\n`
+              }\t${JSON.stringify(data.metadata)}\n`,
             );
             currentIndex += 1;
           }
         };
         const ws = client.query(
           copyFrom(
-            `COPY ${this.collectionName}(id, embedding, document, metadata) FROM STDIN`
-          )
+            `COPY ${this.collectionName}(id, embedding, document, metadata) FROM STDIN`,
+          ),
         );
         await pipeline(rs, ws);
       }
@@ -288,7 +288,7 @@ export class AnalyticDBVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, number][]> {
     if (!this.isCreateCollection) {
       await this.createCollection();
@@ -298,7 +298,7 @@ export class AnalyticDBVectorStore extends VectorStore {
     const filterEntries = filter ? Object.entries(filter) : [];
     if (filterEntries.length > 0) {
       const conditions = filterEntries.map(
-        (_, index) => `metadata->>$${2 * index + 3} = $${2 * index + 4}`
+        (_, index) => `metadata->>$${2 * index + 3} = $${2 * index + 4}`,
       );
       filterCondition = `WHERE ${conditions.join(" AND ")}`;
     }
@@ -340,7 +340,7 @@ export class AnalyticDBVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: AnalyticDBArgs
+    dbConfig: AnalyticDBArgs,
   ): Promise<AnalyticDBVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -365,7 +365,7 @@ export class AnalyticDBVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: AnalyticDBArgs
+    dbConfig: AnalyticDBArgs,
   ): Promise<AnalyticDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -381,7 +381,7 @@ export class AnalyticDBVectorStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: AnalyticDBArgs
+    dbConfig: AnalyticDBArgs,
   ): Promise<AnalyticDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.createCollection();

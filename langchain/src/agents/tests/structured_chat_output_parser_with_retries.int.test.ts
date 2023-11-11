@@ -33,7 +33,7 @@ test("Can parse JSON with text in front of it", async () => {
     new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" }),
     {
       toolNames: ["blogpost"],
-    }
+    },
   );
   for (const message of testCases) {
     const parsed = await p.parse(message.input);

@@ -16,13 +16,13 @@ test("JsonListKeysTool", async () => {
   expect(await jsonListKeysTool.call("/baz")).toBe("test");
   expect(await jsonListKeysTool.call("/baz/test")).toBe("foo, qux");
   expect(await jsonListKeysTool.call("/baz/test/foo")).toContain(
-    "not a dictionary"
+    "not a dictionary",
   );
   expect(await jsonListKeysTool.call("/baz/test/foo/0")).toContain(
-    "not a dictionary"
+    "not a dictionary",
   );
   expect(await jsonListKeysTool.call("/baz/test/qux")).toContain(
-    "not a dictionary"
+    "not a dictionary",
   );
   expect(await jsonListKeysTool.call("/baz/test/qux/0")).toBe("x, y, z");
   expect(await jsonListKeysTool.call("/baz/test/qux/1")).toBe("a");
@@ -41,7 +41,7 @@ test("JsonListKeysTool, paths containing escaped characters", async () => {
 
   const jsonListKeyTool = new JsonListKeysTool(jsonSpec);
   expect(await jsonListKeyTool.call("/paths")).toBe(
-    "a~0b, a~1b, a~0~1b, a~1~1~0b"
+    "a~0b, a~1b, a~0~1b, a~1~1~0b",
   );
 });
 
@@ -52,22 +52,22 @@ test("JsonGetValueTool", async () => {
   });
   const jsonGetValueTool = new JsonGetValueTool(jsonSpec);
   expect(await jsonGetValueTool.call("")).toBe(
-    `{"foo":"bar","baz":{"test":{"foo":[1,2,3],"qux":[{"x":1,"y":2,"z":3},{"a":1}]}}}`
+    `{"foo":"bar","baz":{"test":{"foo":[1,2,3],"qux":[{"x":1,"y":2,"z":3},{"a":1}]}}}`,
   );
   expect(await jsonGetValueTool.call("/foo")).toBe("bar");
   expect(await jsonGetValueTool.call("/baz")).toBe(
-    `{"test":{"foo":[1,2,3],"qux":[{"x":1,"y":2,"z":3},{"a":1}]}}`
+    `{"test":{"foo":[1,2,3],"qux":[{"x":1,"y":2,"z":3},{"a":1}]}}`,
   );
   expect(await jsonGetValueTool.call("/baz/test")).toBe(
-    `{"foo":[1,2,3],"qux":[{"x":1,"y":2,"z":3},{"a":1}]}`
+    `{"foo":[1,2,3],"qux":[{"x":1,"y":2,"z":3},{"a":1}]}`,
   );
   expect(await jsonGetValueTool.call("/baz/test/foo")).toBe("[1,2,3]");
   expect(await jsonGetValueTool.call("/baz/test/foo/0")).toBe("1");
   expect(await jsonGetValueTool.call("/baz/test/qux")).toBe(
-    `[{"x":1,"y":2,"z":3},{"a":1}]`
+    `[{"x":1,"y":2,"z":3},{"a":1}]`,
   );
   expect(await jsonGetValueTool.call("/baz/test/qux/0")).toBe(
-    `{"x":1,"y":2,"z":3}`
+    `{"x":1,"y":2,"z":3}`,
   );
   expect(await jsonGetValueTool.call("/baz/test/qux/0/x")).toBe("1");
   expect(await jsonGetValueTool.call("/baz/test/qux/1")).toBe(`{"a":1}`);
@@ -77,14 +77,14 @@ test("JsonGetValueTool", async () => {
 test("JsonGetValueTool, large values", async () => {
   const jsonSpec = new JsonSpec(
     { foo: "bar", baz: { test: { foo: [1, 2, 3, 4] } } },
-    5
+    5,
   );
   const jsonGetValueTool = new JsonGetValueTool(jsonSpec);
   expect(await jsonGetValueTool.call("")).toContain("large dictionary");
   expect(await jsonGetValueTool.call("/foo")).toBe("bar");
   expect(await jsonGetValueTool.call("/baz")).toContain("large dictionary");
   expect(await jsonGetValueTool.call("/baz/test")).toContain(
-    "large dictionary"
+    "large dictionary",
   );
   expect(await jsonGetValueTool.call("/baz/test/foo")).toBe("[1,2,...");
   expect(await jsonGetValueTool.call("/baz/test/foo/0")).toBe("1");
@@ -102,18 +102,18 @@ test("JsonGetValueTool, paths containing escaped characters", async () => {
 
   const jsonGetValueTool = new JsonGetValueTool(jsonSpec);
   expect(await jsonGetValueTool.call("/paths/~0IDSGenericFXCrossRate")).toBe(
-    "1"
+    "1",
   );
 
   expect(await jsonGetValueTool.call("/paths/~1IDSGenericFXCrossRate")).toBe(
-    "2"
+    "2",
   );
 
   expect(await jsonGetValueTool.call("/paths/~0~1IDSGenericFXCrossRate")).toBe(
-    "3"
+    "3",
   );
 
   expect(await jsonGetValueTool.call("/paths/~1~0IDSGenericFXCrossRate")).toBe(
-    "4"
+    "4",
   );
 });

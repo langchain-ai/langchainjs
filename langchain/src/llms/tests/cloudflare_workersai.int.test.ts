@@ -42,7 +42,7 @@ test("Test CloudflareWorkersAI streaming", async () => {
 test.skip("Test custom base url", async () => {
   const model = new CloudflareWorkersAI({
     baseUrl: `https://gateway.ai.cloudflare.com/v1/${getEnvironmentVariable(
-      "CLOUDFLARE_ACCOUNT_ID"
+      "CLOUDFLARE_ACCOUNT_ID",
     )}/lang-chainjs/workers-ai/`,
   });
   const res = await model.call("1 + 1 =");

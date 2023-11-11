@@ -11,7 +11,7 @@ const model = new ChatOpenAI({});
 const vectorStore = await HNSWLib.fromTexts(
   ["mitochondria is the powerhouse of the cell"],
   [{ id: 1 }],
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 const retriever = vectorStore.asRetriever();
 

@@ -97,7 +97,7 @@ test("Test MongoDB memory with Buffer Memory", async () => {
 
   await memory.saveContext(
     { input: "Who is the best vocalist?" },
-    { response: "Ozzy Osbourne" }
+    { response: "Ozzy Osbourne" },
   );
 
   const expectedHistory = [

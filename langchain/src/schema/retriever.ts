@@ -48,7 +48,7 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
    */
   _getRelevantDocuments(
     _query: string,
-    _callbacks?: CallbackManagerForRetrieverRun
+    _callbacks?: CallbackManagerForRetrieverRun,
   ): Promise<Document[]> {
     throw new Error("Not implemented!");
   }
@@ -69,7 +69,7 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
    */
   async getRelevantDocuments(
     query: string,
-    config?: Callbacks | BaseCallbackConfig
+    config?: Callbacks | BaseCallbackConfig,
   ): Promise<Document[]> {
     const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
@@ -79,7 +79,7 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
       this.tags,
       parsedConfig.metadata,
       this.metadata,
-      { verbose: this.verbose }
+      { verbose: this.verbose },
     );
     const runManager = await callbackManager_?.handleRetrieverStart(
       this.toJSON(),
@@ -88,7 +88,7 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
       undefined,
       undefined,
       undefined,
-      parsedConfig.runName
+      parsedConfig.runName,
     );
     try {
       const results = await this._getRelevantDocuments(query, runManager);

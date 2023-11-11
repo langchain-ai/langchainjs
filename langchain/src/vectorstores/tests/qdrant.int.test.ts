@@ -40,7 +40,7 @@ describe.skip("QdrantVectorStore testcase", () => {
           url: process.env.QDRANT_URL,
           apiKey: process.env.QDRANT_API_KEY,
         }),
-      }
+      },
     );
 
     const results = await qdrantVectorStore.similaritySearch(pageContent, 1);

@@ -44,7 +44,7 @@ export default {
             metadata: {},
           },
         ],
-        { ids: ["id1", "id2", "id3"] }
+        { ids: ["id1", "id2", "id3"] },
       );
 
       return Response.json({ success: true });

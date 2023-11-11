@@ -27,7 +27,7 @@ export interface ChainInputs extends BaseLangChainParams {
  */
 export abstract class BaseChain<
     RunInput extends ChainValues = ChainValues,
-    RunOutput extends ChainValues = ChainValues
+    RunOutput extends ChainValues = ChainValues,
   >
   extends BaseLangChain<RunInput, RunOutput>
   implements ChainInputs
@@ -43,7 +43,7 @@ export abstract class BaseChain<
     /** @deprecated */
     verbose?: boolean,
     /** @deprecated */
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ) {
     if (
       arguments.length === 1 &&
@@ -88,7 +88,7 @@ export abstract class BaseChain<
    */
   abstract _call(
     values: RunInput,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<RunOutput>;
 
   /**
@@ -110,15 +110,15 @@ export abstract class BaseChain<
   async run(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
-    config?: Callbacks | RunnableConfig
+    config?: Callbacks | RunnableConfig,
   ): Promise<string> {
     const inputKeys = this.inputKeys.filter(
-      (k) => !this.memory?.memoryKeys.includes(k) ?? true
+      (k) => !this.memory?.memoryKeys.includes(k) ?? true,
     );
     const isKeylessInput = inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
-        `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
+        `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `,
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,12 +130,12 @@ export abstract class BaseChain<
       return returnValues[keys[0]];
     }
     throw new Error(
-      "return values have multiple keys, `run` only supported when one key currently"
+      "return values have multiple keys, `run` only supported when one key currently",
     );
   }
 
   protected async _formatValues(
-    values: ChainValues & { signal?: AbortSignal; timeout?: number }
+    values: ChainValues & { signal?: AbortSignal; timeout?: number },
   ) {
     const fullValues = { ...values } as typeof values;
     if (fullValues.timeout && !fullValues.signal) {
@@ -144,7 +144,7 @@ export abstract class BaseChain<
     }
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(
-        this._selectMemoryInputs(values)
+        this._selectMemoryInputs(values),
       );
       for (const [key, value] of Object.entries(newValues)) {
         fullValues[key] = value;
@@ -162,7 +162,7 @@ export abstract class BaseChain<
     values: ChainValues & { signal?: AbortSignal; timeout?: number },
     config?: Callbacks | RunnableConfig,
     /** @deprecated */
-    tags?: string[]
+    tags?: string[],
   ): Promise<RunOutput> {
     const fullValues = await this._formatValues(values);
     const parsedConfig = parseCallbackConfigArg(config);
@@ -173,7 +173,7 @@ export abstract class BaseChain<
       this.tags,
       parsedConfig.metadata,
       this.metadata,
-      { verbose: this.verbose }
+      { verbose: this.verbose },
     );
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -182,7 +182,7 @@ export abstract class BaseChain<
       undefined,
       undefined,
       undefined,
-      parsedConfig.runName
+      parsedConfig.runName,
     );
     let outputValues: RunOutput;
     try {
@@ -203,7 +203,7 @@ export abstract class BaseChain<
     if (!(this.memory == null)) {
       await this.memory.saveContext(
         this._selectMemoryInputs(values),
-        outputValues
+        outputValues,
       );
     }
     await runManager?.handleChainEnd(outputValues);
@@ -220,10 +220,10 @@ export abstract class BaseChain<
    */
   async apply(
     inputs: RunInput[],
-    config?: (Callbacks | RunnableConfig)[]
+    config?: (Callbacks | RunnableConfig)[],
   ): Promise<RunOutput[]> {
     return Promise.all(
-      inputs.map(async (i, idx) => this.call(i, config?.[idx]))
+      inputs.map(async (i, idx) => this.call(i, config?.[idx])),
     );
   }
 
@@ -232,7 +232,7 @@ export abstract class BaseChain<
    */
   static async deserialize(
     data: SerializedBaseChain,
-    values: LoadValues = {}
+    values: LoadValues = {},
   ): Promise<BaseChain> {
     switch (data._type) {
       case "llm_chain": {
@@ -275,7 +275,7 @@ export abstract class BaseChain<
         throw new Error(
           `Invalid prompt type in config: ${
             (data as SerializedBaseChain)._type
-          }`
+          }`,
         );
     }
   }

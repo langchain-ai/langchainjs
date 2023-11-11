@@ -94,7 +94,7 @@ export class GoogleVertexAIMultimodalEmbeddings
       new GoogleAuth({
         scopes: "https://www.googleapis.com/auth/cloud-platform",
         ...fields?.authOptions,
-      })
+      }),
     );
   }
 
@@ -105,7 +105,7 @@ export class GoogleVertexAIMultimodalEmbeddings
    * @returns An instance of media that can be used for generating embeddings.
    */
   mediaToInstance(
-    media: GoogleVertexAIMedia
+    media: GoogleVertexAIMedia,
   ): GoogleVertexAIMultimodalEmbeddingsInstance {
     const ret: GoogleVertexAIMultimodalEmbeddingsInstance = {};
 
@@ -128,7 +128,7 @@ export class GoogleVertexAIMultimodalEmbeddings
    * @returns An array of media embeddings.
    */
   responseToEmbeddings(
-    response: GoogleVertexAILLMResponse<GoogleVertexAIMultimodalEmbeddingsResults>
+    response: GoogleVertexAILLMResponse<GoogleVertexAIMultimodalEmbeddingsResults>,
   ): MediaEmbeddings[] {
     return (
       response?.data as GoogleVertexAILLMPredictions<GoogleVertexAIMultimodalEmbeddingsResults>
@@ -163,7 +163,7 @@ export class GoogleVertexAIMultimodalEmbeddings
     const responses = await this.connection.request(
       instances,
       parameters,
-      options
+      options,
     );
 
     const result = this.responseToEmbeddings(responses);
@@ -177,7 +177,7 @@ export class GoogleVertexAIMultimodalEmbeddings
    */
   async embedImage(images: Buffer[]): Promise<number[][]> {
     return this.embedMedia(images.map((image) => ({ image }))).then(
-      (embeddings) => embeddings.map((e) => e.image ?? [])
+      (embeddings) => embeddings.map((e) => e.image ?? []),
     );
   }
 
@@ -199,7 +199,7 @@ export class GoogleVertexAIMultimodalEmbeddings
    */
   async embedDocuments(documents: string[]): Promise<number[][]> {
     return this.embedMedia(documents.map((text) => ({ text }))).then(
-      (embeddings) => embeddings.map((e) => e.text ?? [])
+      (embeddings) => embeddings.map((e) => e.text ?? []),
     );
   }
 

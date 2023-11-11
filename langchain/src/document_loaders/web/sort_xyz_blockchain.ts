@@ -59,7 +59,7 @@ export class SortXYZBlockchainLoader extends BaseDocumentLoader {
 
     if (!apiKey) {
       throw new Error(
-        `apiKey is required! Head over to https://docs.sort.xyz/docs/api-keys to get your free Sort API key.`
+        `apiKey is required! Head over to https://docs.sort.xyz/docs/api-keys to get your free Sort API key.`,
       );
     }
 
@@ -84,7 +84,7 @@ export class SortXYZBlockchainLoader extends BaseDocumentLoader {
   public async load(): Promise<Document[]> {
     if (this.limit > 1000) {
       throw new Error(
-        `Limit is set too high. Please set limit to 1000 or lower.`
+        `Limit is set too high. Please set limit to 1000 or lower.`,
       );
     }
 

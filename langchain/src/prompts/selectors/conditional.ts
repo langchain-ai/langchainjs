@@ -31,7 +31,7 @@ export abstract class BasePromptSelector {
    */
   async getPromptAsync(
     llm: BaseLanguageModel,
-    options?: BaseGetPromptAsyncOptions
+    options?: BaseGetPromptAsyncOptions,
   ): Promise<BasePromptTemplate> {
     const prompt = this.getPrompt(llm);
     return prompt.partial(options?.partialVariables ?? {});
@@ -55,9 +55,9 @@ export class ConditionalPromptSelector extends BasePromptSelector {
     conditionals: Array<
       [
         condition: (llm: BaseLanguageModel) => boolean,
-        prompt: BasePromptTemplate
+        prompt: BasePromptTemplate,
       ]
-    > = []
+    > = [],
   ) {
     super();
     this.defaultPrompt = default_prompt;

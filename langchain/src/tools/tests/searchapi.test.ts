@@ -14,7 +14,7 @@ describe("SearchApi test suite", () => {
       gl: "us",
     });
     expect(searchApi.testThisUrl()).toEqual(
-      "https://www.searchapi.io/api/v1/search?engine=google&api_key=ApiKey&hl=en&gl=us&q=Query"
+      "https://www.searchapi.io/api/v1/search?engine=google&api_key=ApiKey&hl=en&gl=us&q=Query",
     );
   });
 });

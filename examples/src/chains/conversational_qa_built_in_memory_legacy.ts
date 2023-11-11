@@ -32,7 +32,7 @@ export const run = async () => {
       questionGeneratorChainOptions: {
         llm: fasterModel,
       },
-    }
+    },
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";

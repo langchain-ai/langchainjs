@@ -56,7 +56,7 @@ export class WebGoogleAuth implements GoogleAbstractedClient {
       getEnvironmentVariable("GOOGLE_VERTEX_AI_WEB_CREDENTIALS");
     if (credentials === undefined)
       throw new Error(
-        `Credentials not found. Please set the GOOGLE_VERTEX_AI_WEB_CREDENTIALS environment variable or pass credentials into "authOptions.credentials".`
+        `Credentials not found. Please set the GOOGLE_VERTEX_AI_WEB_CREDENTIALS environment variable or pass credentials into "authOptions.credentials".`,
       );
 
     const scope =
@@ -97,7 +97,7 @@ export class WebGoogleAuth implements GoogleAbstractedClient {
 
     if (!res.ok) {
       const error = new Error(
-        `Could not get access token for Vertex AI with status code: ${res.status}`
+        `Could not get access token for Vertex AI with status code: ${res.status}`,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).response = res;

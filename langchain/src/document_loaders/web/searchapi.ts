@@ -44,7 +44,7 @@ export class SearchApiLoader extends BaseDocumentLoader {
 
     if (!apiKey) {
       throw new Error(
-        "SearchApi API key not set. You can set it as SEARCHAPI_API_KEY in your .env file, or pass it to SearchApi."
+        "SearchApi API key not set. You can set it as SEARCHAPI_API_KEY in your .env file, or pass it to SearchApi.",
       );
     }
 
@@ -66,7 +66,7 @@ export class SearchApiLoader extends BaseDocumentLoader {
     const preparedParams: [string, string][] = Object.entries(this.parameters)
       .filter(
         ([key, value]) =>
-          value !== undefined && value !== null && key !== "apiKey"
+          value !== undefined && value !== null && key !== "apiKey",
       )
       .map(([key, value]) => [key, `${value}`]);
 
@@ -121,7 +121,7 @@ export class SearchApiLoader extends BaseDocumentLoader {
     for (const responseType of responseTypes) {
       if (responseType in data) {
         documents.push(
-          ...this.extractDocuments(data[responseType], responseType)
+          ...this.extractDocuments(data[responseType], responseType),
         );
       }
     }
@@ -141,7 +141,7 @@ export class SearchApiLoader extends BaseDocumentLoader {
 
     if (data.error) {
       throw new Error(
-        `Failed to load search results from SearchApi due to: ${data.error}`
+        `Failed to load search results from SearchApi due to: ${data.error}`,
       );
     }
 
@@ -162,7 +162,7 @@ export class SearchApiLoader extends BaseDocumentLoader {
     } catch (error) {
       console.error(error);
       throw new Error(
-        `Failed to process search results from SearchApi: ${error}`
+        `Failed to process search results from SearchApi: ${error}`,
       );
     }
   }

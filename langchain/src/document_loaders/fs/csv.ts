@@ -54,7 +54,7 @@ export class CSVLoader extends TextLoader {
 
   constructor(
     filePathOrBlob: string | Blob,
-    options?: CSVLoaderOptions | string
+    options?: CSVLoaderOptions | string,
   ) {
     super(filePathOrBlob);
     if (typeof options === "string") {
@@ -94,7 +94,7 @@ export class CSVLoader extends TextLoader {
     return parsed.map((row) =>
       Object.keys(row)
         .map((key) => `${key.trim()}: ${row[key]?.trim()}`)
-        .join("\n")
+        .join("\n"),
     );
   }
 }
@@ -106,7 +106,7 @@ async function CSVLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Please install d3-dsv as a dependency with, e.g. `yarn add d3-dsv@2`"
+      "Please install d3-dsv as a dependency with, e.g. `yarn add d3-dsv@2`",
     );
   }
 }

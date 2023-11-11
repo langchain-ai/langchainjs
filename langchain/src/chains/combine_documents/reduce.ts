@@ -15,7 +15,7 @@ export function splitListOfDocs(
   docs: Document[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lengthFunc: (...args: any[]) => any,
-  tokenMax: number
+  tokenMax: number,
 ): Document[][] {
   const newResultDocList: Document[][] = [];
   let subResultDocs: Document[] = [];
@@ -25,7 +25,7 @@ export function splitListOfDocs(
     if (numTokens > tokenMax) {
       if (subResultDocs.length === 1) {
         throw new Error(
-          "A single document was longer than the context length, we cannot handle this."
+          "A single document was longer than the context length, we cannot handle this.",
         );
       }
       newResultDocList.push(subResultDocs.slice(0, -1));
@@ -52,7 +52,7 @@ export function splitListOfDocs(
  */
 export async function collapseDocs(
   docs: Document[],
-  combineDocumentFunc: (docs: Document[]) => Promise<string>
+  combineDocumentFunc: (docs: Document[]) => Promise<string>,
 ): Promise<Document> {
   const result = await combineDocumentFunc(docs);
   const combinedMetadata: Record<string, string> = {};

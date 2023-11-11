@@ -4,10 +4,10 @@ import { RunnableMap } from "langchain/schema/runnable";
 
 const model = new ChatAnthropic({});
 const jokeChain = PromptTemplate.fromTemplate(
-  "Tell me a joke about {topic}"
+  "Tell me a joke about {topic}",
 ).pipe(model);
 const poemChain = PromptTemplate.fromTemplate(
-  "write a 2-line poem about {topic}"
+  "write a 2-line poem about {topic}",
 ).pipe(model);
 
 const mapChain = RunnableMap.from({

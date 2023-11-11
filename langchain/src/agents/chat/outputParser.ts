@@ -40,7 +40,7 @@ export class ChatAgentOutputParser extends AgentActionOutputParser {
       };
     } catch {
       throw new OutputParserException(
-        `Unable to parse JSON response from chat agent.\n\n${text}`
+        `Unable to parse JSON response from chat agent.\n\n${text}`,
       );
     }
   }

@@ -58,7 +58,7 @@ export type VectorStoreRetrieverInput<V extends VectorStore> =
  * similarity search or maximal marginal relevance search.
  */
 export class VectorStoreRetriever<
-  V extends VectorStore = VectorStore
+  V extends VectorStore = VectorStore,
 > extends BaseRetriever {
   static lc_name() {
     return "VectorStoreRetriever";
@@ -95,12 +95,12 @@ export class VectorStoreRetriever<
 
   async _getRelevantDocuments(
     query: string,
-    runManager?: CallbackManagerForRetrieverRun
+    runManager?: CallbackManagerForRetrieverRun,
   ): Promise<Document[]> {
     if (this.searchType === "mmr") {
       if (typeof this.vectorStore.maxMarginalRelevanceSearch !== "function") {
         throw new Error(
-          `The vector store backing this retriever, ${this._vectorstoreType()} does not support max marginal relevance search.`
+          `The vector store backing this retriever, ${this._vectorstoreType()} does not support max marginal relevance search.`,
         );
       }
       return this.vectorStore.maxMarginalRelevanceSearch(
@@ -110,20 +110,20 @@ export class VectorStoreRetriever<
           filter: this.filter,
           ...this.searchKwargs,
         },
-        runManager?.getChild("vectorstore")
+        runManager?.getChild("vectorstore"),
       );
     }
     return this.vectorStore.similaritySearch(
       query,
       this.k,
       this.filter,
-      runManager?.getChild("vectorstore")
+      runManager?.getChild("vectorstore"),
     );
   }
 
   async addDocuments(
     documents: Document[],
-    options?: AddDocumentOptions
+    options?: AddDocumentOptions,
   ): Promise<string[] | void> {
     return this.vectorStore.addDocuments(documents, options);
   }
@@ -152,12 +152,12 @@ export abstract class VectorStore extends Serializable {
   abstract addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: AddDocumentOptions
+    options?: AddDocumentOptions,
   ): Promise<string[] | void>;
 
   abstract addDocuments(
     documents: Document[],
-    options?: AddDocumentOptions
+    options?: AddDocumentOptions,
   ): Promise<string[] | void>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -168,19 +168,19 @@ export abstract class VectorStore extends Serializable {
   abstract similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, number][]>;
 
   async similaritySearch(
     query: string,
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+    _callbacks: Callbacks | undefined = undefined, // implement passing to embedQuery later
   ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,
-      filter
+      filter,
     );
 
     return results.map((result) => result[0]);
@@ -190,12 +190,12 @@ export abstract class VectorStore extends Serializable {
     query: string,
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+    _callbacks: Callbacks | undefined = undefined, // implement passing to embedQuery later
   ): Promise<[Document, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,
-      filter
+      filter,
     );
   }
 
@@ -217,7 +217,7 @@ export abstract class VectorStore extends Serializable {
   async maxMarginalRelevanceSearch?(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
-    _callbacks: Callbacks | undefined // implement passing to embedQuery later
+    _callbacks: Callbacks | undefined, // implement passing to embedQuery later
   ): Promise<Document[]>;
 
   static fromTexts(
@@ -225,10 +225,10 @@ export abstract class VectorStore extends Serializable {
     _metadatas: object[] | object,
     _embeddings: Embeddings,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _dbConfig: Record<string, any>
+    _dbConfig: Record<string, any>,
   ): Promise<VectorStore> {
     throw new Error(
-      "the Langchain vectorstore implementation you are using forgot to override this, please report a bug"
+      "the Langchain vectorstore implementation you are using forgot to override this, please report a bug",
     );
   }
 
@@ -236,10 +236,10 @@ export abstract class VectorStore extends Serializable {
     _docs: Document[],
     _embeddings: Embeddings,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _dbConfig: Record<string, any>
+    _dbConfig: Record<string, any>,
   ): Promise<VectorStore> {
     throw new Error(
-      "the Langchain vectorstore implementation you are using forgot to override this, please report a bug"
+      "the Langchain vectorstore implementation you are using forgot to override this, please report a bug",
     );
   }
 
@@ -249,7 +249,7 @@ export abstract class VectorStore extends Serializable {
     callbacks?: Callbacks,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    verbose?: boolean
+    verbose?: boolean,
   ): VectorStoreRetriever<this> {
     if (typeof kOrFields === "number") {
       return new VectorStoreRetriever({
@@ -292,7 +292,7 @@ export abstract class SaveableVectorStore extends VectorStore {
 
   static load(
     _directory: string,
-    _embeddings: Embeddings
+    _embeddings: Embeddings,
   ): Promise<SaveableVectorStore> {
     throw new Error("Not implemented");
   }

@@ -21,7 +21,7 @@ export function keyFromJson(key: string, map?: SerializedKeyAlias): string {
 export function mapKeys(
   fields: SerializedFields,
   mapper: typeof keyToJson,
-  map?: SerializedKeyAlias
+  map?: SerializedKeyAlias,
 ): SerializedFields {
   const mapped: SerializedFields = {};
 

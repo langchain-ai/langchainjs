@@ -99,7 +99,7 @@ export class TypeORMVectorStore extends VectorStore {
    */
   static async fromDataSource(
     embeddings: Embeddings,
-    fields: TypeORMVectorStoreArgs
+    fields: TypeORMVectorStoreArgs,
   ): Promise<TypeORMVectorStore> {
     const postgresqlVectorStore = new TypeORMVectorStore(embeddings, fields);
 
@@ -124,7 +124,7 @@ export class TypeORMVectorStore extends VectorStore {
     await this.ensureTableInDatabase();
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
@@ -148,7 +148,7 @@ export class TypeORMVectorStore extends VectorStore {
     });
 
     const documentRepository = this.appDataSource.getRepository(
-      this.documentEntity
+      this.documentEntity,
     );
 
     const chunkSize = 500;
@@ -176,7 +176,7 @@ export class TypeORMVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[TypeORMVectorStoreDocument, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter = filter ?? "{}";
@@ -214,7 +214,7 @@ export class TypeORMVectorStore extends VectorStore {
   async ensureTableInDatabase(): Promise<void> {
     await this.appDataSource.query("CREATE EXTENSION IF NOT EXISTS vector;");
     await this.appDataSource.query(
-      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";',
     );
 
     await this.appDataSource.query(`
@@ -241,7 +241,7 @@ export class TypeORMVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: TypeORMVectorStoreArgs
+    dbConfig: TypeORMVectorStoreArgs,
   ): Promise<TypeORMVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -267,11 +267,11 @@ export class TypeORMVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: TypeORMVectorStoreArgs
+    dbConfig: TypeORMVectorStoreArgs,
   ): Promise<TypeORMVectorStore> {
     const instance = await TypeORMVectorStore.fromDataSource(
       embeddings,
-      dbConfig
+      dbConfig,
     );
     await instance.addDocuments(docs);
 
@@ -287,11 +287,11 @@ export class TypeORMVectorStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: TypeORMVectorStoreArgs
+    dbConfig: TypeORMVectorStoreArgs,
   ): Promise<TypeORMVectorStore> {
     const instance = await TypeORMVectorStore.fromDataSource(
       embeddings,
-      dbConfig
+      dbConfig,
     );
     return instance;
   }

@@ -8,7 +8,7 @@ import { PROMPT_TEMPLATE } from "./chain_extract_prompt.js";
 
 function defaultGetInput(
   query: string,
-  doc: Document
+  doc: Document,
 ): Record<string, unknown> {
   return { question: query, context: doc.pageContent };
 }
@@ -79,7 +79,7 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
    */
   async compressDocuments(
     documents: Document[],
-    query: string
+    query: string,
   ): Promise<Document[]> {
     const compressedDocs = await Promise.all(
       documents.map(async (doc) => {
@@ -91,7 +91,7 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
               metadata: doc.metadata,
             })
           : undefined;
-      })
+      }),
     );
     return compressedDocs.filter((doc): doc is Document => doc !== undefined);
   }
@@ -107,7 +107,7 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
   static fromLLM(
     llm: BaseLanguageModel,
     prompt?: PromptTemplate,
-    getInput?: (query: string, doc: Document) => Record<string, unknown>
+    getInput?: (query: string, doc: Document) => Record<string, unknown>,
   ): LLMChainExtractor {
     const _prompt = prompt || getDefaultChainPrompt();
     const _getInput = getInput || defaultGetInput;

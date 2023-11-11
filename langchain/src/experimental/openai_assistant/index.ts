@@ -20,7 +20,7 @@ type ExtractRunOutput<AsAgent extends boolean | undefined> =
     : ThreadMessage[] | RequiredActionFunctionToolCall[];
 
 export type OpenAIAssistantRunnableInput<
-  AsAgent extends boolean | undefined = undefined
+  AsAgent extends boolean | undefined = undefined,
 > = {
   client?: OpenAIClient;
   clientOptions?: ClientOptions;
@@ -32,7 +32,7 @@ export type OpenAIAssistantRunnableInput<
 export class OpenAIAssistantRunnable<
   AsAgent extends boolean | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends Record<string, any> = Record<string, any>
+  RunInput extends Record<string, any> = Record<string, any>,
 > extends Runnable<RunInput, ExtractRunOutput<AsAgent>> {
   lc_namespace = ["langchain", "experimental", "openai_assistant"];
 
@@ -92,7 +92,7 @@ export class OpenAIAssistantRunnable<
 
   async invoke(
     input: RunInput,
-    _options?: RunnableConfig
+    _options?: RunnableConfig,
   ): Promise<ExtractRunOutput<AsAgent>> {
     let run: OpenAIClient.Beta.Threads.Run;
     if (this.asAgent && input.steps && input.steps.length > 0) {
@@ -102,7 +102,7 @@ export class OpenAIAssistantRunnable<
         parsedStepsInput.runId,
         {
           tool_outputs: parsedStepsInput.toolOutputs,
-        }
+        },
       );
     } else if (!("threadId" in input)) {
       const thread = {
@@ -136,7 +136,7 @@ export class OpenAIAssistantRunnable<
         input.threadId,
         {
           tool_outputs: input.toolOutputs,
-        }
+        },
       );
     }
 
@@ -197,11 +197,14 @@ export class OpenAIAssistantRunnable<
       "run_metadata",
     ]
       .filter((key) => key in input)
-      .reduce((obj, key) => {
-        const newObj = obj;
-        newObj[key] = input[key];
-        return newObj;
-      }, {} as Record<string, unknown>);
+      .reduce(
+        (obj, key) => {
+          const newObj = obj;
+          newObj[key] = input[key];
+          return newObj;
+        },
+        {} as Record<string, unknown>,
+      );
     const run = this.client.beta.threads.createAndRun({
       ...params,
       thread: input.thread,
@@ -225,12 +228,12 @@ export class OpenAIAssistantRunnable<
 
   private async _getResponse(
     runId: string,
-    threadId: string
+    threadId: string,
   ): Promise<ExtractRunOutput<AsAgent>>;
 
   private async _getResponse(
     runId: string,
-    threadId: string
+    threadId: string,
   ): Promise<
     | OpenAIAssistantFinish
     | OpenAIAssistantAction[]
@@ -281,7 +284,7 @@ export class OpenAIAssistantRunnable<
     }
     const runInfo = JSON.stringify(run, null, 2);
     throw new Error(
-      `Unexpected run status ${run.status}.\nFull run info:\n\n${runInfo}`
+      `Unexpected run status ${run.status}.\nFull run info:\n\n${runInfo}`,
     );
   }
 }

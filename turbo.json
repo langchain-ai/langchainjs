@@ -1,26 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "**/.env"
-  ],
+  "globalDependencies": ["**/.env"],
   "pipeline": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "dist/**",
-        "dist-cjs/**",
-        "*.js",
-        "*.cjs",
-        "*.d.ts"
-      ],
-      "inputs": [
-        "src/**",
-        "scripts/**",
-        "package.json",
-        "tsconfig.json"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
+      "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "lint": {
       "outputs": []
@@ -33,15 +18,11 @@
     },
     "test": {
       "outputs": [],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "test:integration": {
       "outputs": [],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "precommit": {},
     "start": {

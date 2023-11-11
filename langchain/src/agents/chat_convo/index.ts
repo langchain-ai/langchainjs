@@ -106,8 +106,8 @@ export class ChatConversationalAgent extends Agent {
         new HumanMessage(
           renderTemplate(TEMPLATE_TOOL_RESPONSE, "f-string", {
             observation: step.observation,
-          })
-        )
+          }),
+        ),
       );
     }
     return thoughts;
@@ -123,14 +123,14 @@ export class ChatConversationalAgent extends Agent {
   static getDefaultOutputParser(
     fields?: OutputParserArgs & {
       toolNames: string[];
-    }
+    },
   ): AgentActionOutputParser {
     if (fields?.llm) {
       return ChatConversationalAgentOutputParserWithRetries.fromLLM(
         fields.llm,
         {
           toolNames: fields.toolNames,
-        }
+        },
       );
     }
     return new ChatConversationalAgentOutputParserWithRetries({
@@ -149,7 +149,7 @@ export class ChatConversationalAgent extends Agent {
    */
   static createPrompt(
     tools: Tool[],
-    args?: ChatConversationalCreatePromptArgs
+    args?: ChatConversationalCreatePromptArgs,
   ) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
     const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
@@ -188,7 +188,7 @@ export class ChatConversationalAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: ChatConversationalCreatePromptArgs & AgentArgs
+    args?: ChatConversationalCreatePromptArgs & AgentArgs,
   ) {
     ChatConversationalAgent.validateTools(tools);
     const outputParser =

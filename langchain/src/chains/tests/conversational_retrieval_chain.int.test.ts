@@ -12,11 +12,11 @@ test("Test ConversationalRetrievalQAChain from LLM", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    vectorStore.asRetriever()
+    vectorStore.asRetriever(),
   );
   const res = await chain.call({ question: "foo", chat_history: "bar" });
   console.log({ res });
@@ -27,14 +27,14 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
     vectorStore.asRetriever(),
     {
       returnSourceDocuments: true,
-    }
+    },
   );
   const res = await chain.call({ question: "foo", chat_history: "bar" });
 
@@ -49,7 +49,7 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
           pageContent: expect.any(String),
         }),
       ]),
-    })
+    }),
   );
 });
 
@@ -58,7 +58,7 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
@@ -70,7 +70,7 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
         inputKey: "question",
         outputKey: "text",
       }),
-    }
+    },
   );
   const res = await chain.call({ question: "foo", chat_history: "bar" });
 
@@ -85,7 +85,7 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
           pageContent: expect.any(String),
         }),
       ]),
-    })
+    }),
   );
 });
 
@@ -94,7 +94,7 @@ test("Test ConversationalRetrievalQAChain from LLM with override default prompts
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say "Sorry I dont know, I am learning from Aliens", don't try to make up an answer.
@@ -108,7 +108,7 @@ test("Test ConversationalRetrievalQAChain from LLM with override default prompts
     vectorStore.asRetriever(),
     {
       qaTemplate: qa_template,
-    }
+    },
   );
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
@@ -126,7 +126,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say "Sorry I dont know, I am learning from Aliens", don't try to make up an answer.
   {context}
@@ -142,7 +142,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
         type: "stuff",
         prompt: PromptTemplate.fromTemplate(qa_template),
       },
-    }
+    },
   );
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
@@ -160,7 +160,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
@@ -170,7 +170,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
       qaChainOptions: {
         type: "map_reduce",
       },
-    }
+    },
   );
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
@@ -193,12 +193,12 @@ test("Test ConversationalRetrievalQAChain from LLM without memory", async () => 
       "Mitochondria are made of lipids",
     ],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    vectorStore.asRetriever()
+    vectorStore.asRetriever(),
   );
   const question = "What is the powerhouse of the cell?";
   const res = await chain.call({
@@ -230,12 +230,12 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model without mem
       "Mitochondria are made of lipids",
     ],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    vectorStore.asRetriever()
+    vectorStore.asRetriever(),
   );
   const question = "What is the powerhouse of the cell?";
   const res = await chain.call({
@@ -266,7 +266,7 @@ test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
       "Mitochondria are made of lipids",
     ],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
@@ -276,7 +276,7 @@ test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
       memory: new BufferMemory({
         memoryKey: "chat_history",
       }),
-    }
+    },
   );
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
@@ -305,7 +305,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
       "Mitochondria are made of lipids",
     ],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
@@ -316,7 +316,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
         memoryKey: "chat_history",
         returnMessages: true,
       }),
-    }
+    },
   );
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
@@ -344,12 +344,12 @@ test("Test ConversationalRetrievalQAChain from LLM with deprecated history synta
       "Mitochondria are made of lipids",
     ],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
 
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    vectorStore.asRetriever()
+    vectorStore.asRetriever(),
   );
   const question = "What is the powerhouse of the cell?";
   const res = await chain.call({

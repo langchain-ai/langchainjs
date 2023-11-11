@@ -92,7 +92,7 @@ describe("FewShotPromptTemplate", () => {
       `boobaz
 An example about foo
 An example about bar
-`
+`,
     );
   });
 
@@ -100,7 +100,7 @@ An example about bar
     const examplePrompt = PromptTemplate.fromTemplate("An example about {x}");
     const exampleSelector = await LengthBasedExampleSelector.fromExamples(
       [{ x: "foo" }, { x: "bar" }],
-      { examplePrompt, maxLength: 200 }
+      { examplePrompt, maxLength: 200 },
     );
     const prompt = new FewShotPromptTemplate({
       prefix: "{foo}{bar}",
@@ -119,7 +119,7 @@ An example about bar
       `boobaz
 An example about foo
 An example about bar
-`
+`,
     );
   });
 });
@@ -248,7 +248,7 @@ describe("FewShotChatMessagePromptTemplate", () => {
       `boobaz
 An example about foo
 An example about bar
-`
+`,
     );
   });
 });

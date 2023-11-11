@@ -30,7 +30,7 @@ If you want to load documents from a binary file, you can extend the `BufferLoad
 abstract class BufferLoader extends BaseDocumentLoader {
   abstract parse(
     raw: Buffer,
-    metadata: Document["metadata"]
+    metadata: Document["metadata"],
   ): Promise<Document[]>;
 }
 ```

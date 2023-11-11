@@ -27,7 +27,7 @@ test("AsyncCaller doesn't retry on timeout", async () => {
     });
 
   await expect(() => caller.call(callable)).rejects.toThrowError(
-    "TimeoutError: The operation was aborted due to timeout"
+    "TimeoutError: The operation was aborted due to timeout",
   );
 }, 5000);
 
@@ -45,6 +45,6 @@ test("AsyncCaller doesn't retry on signal abort", async () => {
   };
 
   await expect(() => caller.call(callable)).rejects.toThrowError(
-    "AbortError: This operation was aborted"
+    "AbortError: This operation was aborted",
   );
 }, 5000);

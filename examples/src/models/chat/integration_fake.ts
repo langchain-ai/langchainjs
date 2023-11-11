@@ -12,7 +12,7 @@ const chat = new FakeListChatModel({
 
 const firstMessage = new HumanMessage("You want to hear a JavasSript joke?");
 const secondMessage = new HumanMessage(
-  "How do you cheer up a JavaScript developer?"
+  "How do you cheer up a JavaScript developer?",
 );
 const firstResponse = await chat.call([firstMessage]);
 const secondResponse = await chat.call([secondMessage]);
@@ -44,7 +44,7 @@ const slowChat = new FakeListChatModel({
 });
 
 const thirdMessage = new HumanMessage(
-  "Why do programmers always mix up Halloween and Christmas?"
+  "Why do programmers always mix up Halloween and Christmas?",
 );
 const slowResponse = await slowChat.call([thirdMessage]);
 console.log({ slowResponse });

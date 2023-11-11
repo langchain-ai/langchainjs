@@ -91,7 +91,7 @@ export class LangChainTracerV1 extends BaseTracer {
   }
 
   protected async convertV2RunToRun(
-    run: Run
+    run: Run,
   ): Promise<LLMRun | ChainRun | ToolRun> {
     const session = this.session ?? (await this.loadDefaultSession());
     const serialized = run.serialized as { name: string };
@@ -100,7 +100,7 @@ export class LangChainTracerV1 extends BaseTracer {
       const prompts: string[] = run.inputs.prompts
         ? run.inputs.prompts
         : (run.inputs.messages as BaseMessage[][]).map((x) =>
-            getBufferString(x)
+            getBufferString(x),
           );
 
       const llmRun: LLMRun = {
@@ -118,7 +118,7 @@ export class LangChainTracerV1 extends BaseTracer {
       runResult = llmRun;
     } else if (run.run_type === "chain") {
       const child_runs = await Promise.all(
-        run.child_runs.map((child_run) => this.convertV2RunToRun(child_run))
+        run.child_runs.map((child_run) => this.convertV2RunToRun(child_run)),
       );
       const chainRun: ChainRun = {
         uuid: run.id,
@@ -132,20 +132,20 @@ export class LangChainTracerV1 extends BaseTracer {
         inputs: run.inputs,
         outputs: run.outputs,
         child_llm_runs: child_runs.filter(
-          (child_run) => child_run.type === "llm"
+          (child_run) => child_run.type === "llm",
         ) as LLMRun[],
         child_chain_runs: child_runs.filter(
-          (child_run) => child_run.type === "chain"
+          (child_run) => child_run.type === "chain",
         ) as ChainRun[],
         child_tool_runs: child_runs.filter(
-          (child_run) => child_run.type === "tool"
+          (child_run) => child_run.type === "tool",
         ) as ToolRun[],
       };
 
       runResult = chainRun;
     } else if (run.run_type === "tool") {
       const child_runs = await Promise.all(
-        run.child_runs.map((child_run) => this.convertV2RunToRun(child_run))
+        run.child_runs.map((child_run) => this.convertV2RunToRun(child_run)),
       );
       const toolRun: ToolRun = {
         uuid: run.id,
@@ -160,13 +160,13 @@ export class LangChainTracerV1 extends BaseTracer {
         output: run.outputs?.output,
         action: JSON.stringify(serialized),
         child_llm_runs: child_runs.filter(
-          (child_run) => child_run.type === "llm"
+          (child_run) => child_run.type === "llm",
         ) as LLMRun[],
         child_chain_runs: child_runs.filter(
-          (child_run) => child_run.type === "chain"
+          (child_run) => child_run.type === "chain",
         ) as ChainRun[],
         child_tool_runs: child_runs.filter(
-          (child_run) => child_run.type === "tool"
+          (child_run) => child_run.type === "tool",
         ) as ToolRun[],
       };
 
@@ -178,7 +178,7 @@ export class LangChainTracerV1 extends BaseTracer {
   }
 
   protected async persistRun(
-    run: Run | LLMRun | ChainRun | ToolRun
+    run: Run | LLMRun | ChainRun | ToolRun,
   ): Promise<void> {
     let endpoint;
     let v1Run: LLMRun | ChainRun | ToolRun;
@@ -202,13 +202,13 @@ export class LangChainTracerV1 extends BaseTracer {
     });
     if (!response.ok) {
       console.error(
-        `Failed to persist run: ${response.status} ${response.statusText}`
+        `Failed to persist run: ${response.status} ${response.statusText}`,
       );
     }
   }
 
   protected async persistSession(
-    sessionCreate: BaseTracerSession
+    sessionCreate: BaseTracerSession,
   ): Promise<TracerSessionV1> {
     const endpoint = `${this.endpoint}/sessions`;
     const response = await fetch(endpoint, {
@@ -218,7 +218,7 @@ export class LangChainTracerV1 extends BaseTracer {
     });
     if (!response.ok) {
       console.error(
-        `Failed to persist session: ${response.status} ${response.statusText}, using default session.`
+        `Failed to persist session: ${response.status} ${response.statusText}, using default session.`,
       );
       return {
         id: 1,
@@ -232,7 +232,7 @@ export class LangChainTracerV1 extends BaseTracer {
   }
 
   protected async _handleSessionResponse(
-    endpoint: string
+    endpoint: string,
   ): Promise<TracerSessionV1> {
     const response = await fetch(endpoint, {
       method: "GET",
@@ -241,7 +241,7 @@ export class LangChainTracerV1 extends BaseTracer {
     let tracerSession: TracerSessionV1;
     if (!response.ok) {
       console.error(
-        `Failed to load session: ${response.status} ${response.statusText}`
+        `Failed to load session: ${response.status} ${response.statusText}`,
       );
       tracerSession = {
         id: 1,

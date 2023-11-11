@@ -172,10 +172,10 @@ export class VectaraStore extends VectorStore {
    */
   async addVectors(
     _vectors: number[][],
-    _documents: Document[]
+    _documents: Document[],
   ): Promise<void> {
     throw new Error(
-      "Method not implemented. Please call addDocuments instead."
+      "Method not implemented. Please call addDocuments instead.",
     );
   }
 
@@ -211,7 +211,7 @@ export class VectaraStore extends VectorStore {
         const controller = new AbortController();
         const timeout = setTimeout(
           () => controller.abort(),
-          this.vectaraApiTimeoutSeconds * 1000
+          this.vectaraApiTimeoutSeconds * 1000,
         );
         const response = await fetch(`https://${this.apiEndpoint}/v1/index`, {
           method: "POST",
@@ -226,9 +226,8 @@ export class VectaraStore extends VectorStore {
           result.status?.code !== "ALREADY_EXISTS"
         ) {
           const error = new Error(
-            `Vectara API returned status code ${
-              result.status?.code
-            }: ${JSON.stringify(result.message)}`
+            `Vectara API returned status code ${result.status
+              ?.code}: ${JSON.stringify(result.message)}`,
           );
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (error as any).code = 500;
@@ -238,7 +237,7 @@ export class VectaraStore extends VectorStore {
         }
       } catch (e) {
         const error = new Error(
-          `Error ${(e as Error).message} while adding document`
+          `Error ${(e as Error).message} while adding document`,
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).code = 500;
@@ -261,7 +260,7 @@ export class VectaraStore extends VectorStore {
    */
   async addFiles(
     files: VectaraFile[],
-    metadatas: Record<string, unknown> | undefined = undefined
+    metadatas: Record<string, unknown> | undefined = undefined,
   ) {
     if (this.corpusId.length > 1)
       throw new Error("addFiles does not support multiple corpus ids");
@@ -284,7 +283,7 @@ export class VectaraStore extends VectorStore {
             "X-Source": this.source,
           },
           body: data,
-        }
+        },
       );
 
       const { status } = response;
@@ -315,7 +314,7 @@ export class VectaraStore extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 10,
-    filter: VectaraFilter | undefined = undefined
+    filter: VectaraFilter | undefined = undefined,
   ): Promise<[Document, number][]> {
     const headers = await this.getJsonHeader();
 
@@ -343,7 +342,7 @@ export class VectaraStore extends VectorStore {
     const controller = new AbortController();
     const timeout = setTimeout(
       () => controller.abort(),
-      this.vectaraApiTimeoutSeconds * 1000
+      this.vectaraApiTimeoutSeconds * 1000,
     );
     const response = await fetch(`https://${this.apiEndpoint}/v1/query`, {
       method: "POST",
@@ -387,7 +386,7 @@ export class VectaraStore extends VectorStore {
           metadata: response.metadata,
         }),
         response.score,
-      ]
+      ],
     );
     return documentsAndScores;
   }
@@ -402,12 +401,12 @@ export class VectaraStore extends VectorStore {
   async similaritySearch(
     query: string,
     k = 10,
-    filter: VectaraFilter | undefined = undefined
+    filter: VectaraFilter | undefined = undefined,
   ): Promise<Document[]> {
     const resultWithScore = await this.similaritySearchWithScore(
       query,
       k,
-      filter
+      filter,
     );
     return resultWithScore.map((result) => result[0]);
   }
@@ -423,10 +422,10 @@ export class VectaraStore extends VectorStore {
   async similaritySearchVectorWithScore(
     _query: number[],
     _k: number,
-    _filter?: VectaraFilter | undefined
+    _filter?: VectaraFilter | undefined,
   ): Promise<[Document, number][]> {
     throw new Error(
-      "Method not implemented. Please call similaritySearch or similaritySearchWithScore instead."
+      "Method not implemented. Please call similaritySearch or similaritySearchWithScore instead.",
     );
   }
 
@@ -442,7 +441,7 @@ export class VectaraStore extends VectorStore {
     texts: string[],
     metadatas: object | object[],
     _embeddings: Embeddings,
-    args: VectaraLibArgs
+    args: VectaraLibArgs,
   ): Promise<VectaraStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -467,7 +466,7 @@ export class VectaraStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     _embeddings: Embeddings,
-    args: VectaraLibArgs
+    args: VectaraLibArgs,
   ): Promise<VectaraStore> {
     const instance = new this(args);
     await instance.addDocuments(docs);

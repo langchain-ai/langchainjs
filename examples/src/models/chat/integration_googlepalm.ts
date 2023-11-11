@@ -20,7 +20,7 @@ export const run = async () => {
   // ask questions
   const questions = [
     new SystemMessage(
-      "You are a funny assistant that answers in pirate language."
+      "You are a funny assistant that answers in pirate language.",
     ),
     new HumanMessage("What is your favorite food?"),
   ];

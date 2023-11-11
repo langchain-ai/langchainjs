@@ -107,7 +107,7 @@ describe("Pinecone self query", () => {
       !testIndexName
     ) {
       throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
+        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set",
       );
     }
 
@@ -136,19 +136,19 @@ describe("Pinecone self query", () => {
     });
 
     const query1 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are less than 90 minutes?"
+      "Which movies are less than 90 minutes?",
     );
     const query2 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are rated higher than 8.5?"
+      "Which movies are rated higher than 8.5?",
     );
     const query3 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are directed by Greta Gerwig?"
+      "Which movies are directed by Greta Gerwig?",
     );
     const query4 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are either comedy or drama and are less than 90 minutes?"
+      "Which movies are either comedy or drama and are less than 90 minutes?",
     );
     const query5 = await selfQueryRetriever.getRelevantDocuments(
-      "Awawawawa hello hello hello huh where am i?"
+      "Awawawawa hello hello hello huh where am i?",
     );
     console.log(query1, query2, query3, query4, query5); // query 5 should return empty array
     expect(query5.length).toBe(0);
@@ -257,7 +257,7 @@ describe("Pinecone self query", () => {
       !testIndexName
     ) {
       throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
+        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set",
       );
     }
 
@@ -292,19 +292,19 @@ describe("Pinecone self query", () => {
     });
 
     const query1 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are less than 90 minutes?"
+      "Which movies are less than 90 minutes?",
     );
     const query2 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are rated higher than 8.5?"
+      "Which movies are rated higher than 8.5?",
     );
     const query3 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are directed by Greta Gerwig?"
+      "Which movies are directed by Greta Gerwig?",
     );
     const query4 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are either comedy or drama and are less than 90 minutes?"
+      "Which movies are either comedy or drama and are less than 90 minutes?",
     );
     const query5 = await selfQueryRetriever.getRelevantDocuments(
-      "Awawawawa hello hello hello huh where am i?"
+      "Awawawawa hello hello hello huh where am i?",
     );
     console.log(query1, query2, query3, query4, query5); // query 5 should return documents
     expect(query5.length).toBeGreaterThan(0);
@@ -413,7 +413,7 @@ describe("Pinecone self query", () => {
       !testIndexName
     ) {
       throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
+        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set",
       );
     }
 
@@ -448,19 +448,19 @@ describe("Pinecone self query", () => {
     });
 
     const query1 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are less than 90 minutes?"
+      "Which movies are less than 90 minutes?",
     );
     const query2 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are rated higher than 8.5?"
+      "Which movies are rated higher than 8.5?",
     );
     const query3 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are directed by Greta Gerwig?"
+      "Which movies are directed by Greta Gerwig?",
     );
     const query4 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are either comedy or drama and are less than 90 minutes?"
+      "Which movies are either comedy or drama and are less than 90 minutes?",
     );
     const query5 = await selfQueryRetriever.getRelevantDocuments(
-      "Awawawawa hello hello hello huh where am i?"
+      "Awawawawa hello hello hello huh where am i?",
     );
     console.log(query1, query2, query3, query4, query5); // query 5 should return empty array
     expect(query5.length).toEqual(0);
@@ -569,7 +569,7 @@ describe("Pinecone self query", () => {
       !testIndexName
     ) {
       throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
+        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set",
       );
     }
 
@@ -605,19 +605,19 @@ describe("Pinecone self query", () => {
     });
 
     const query1 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are less than 90 minutes?"
+      "Which movies are less than 90 minutes?",
     );
     const query2 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are rated higher than 8.5?"
+      "Which movies are rated higher than 8.5?",
     );
     const query3 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are directed by Greta Gerwig?"
+      "Which movies are directed by Greta Gerwig?",
     );
     const query4 = await selfQueryRetriever.getRelevantDocuments(
-      "Which movies are either comedy or drama and are less than 90 minutes?"
+      "Which movies are either comedy or drama and are less than 90 minutes?",
     );
     const query5 = await selfQueryRetriever.getRelevantDocuments(
-      "Awawawawa hello hello hello huh where am i?"
+      "Awawawawa hello hello hello huh where am i?",
     );
     console.log(query1, query2, query3, query4, query5); // query 5 should return documents
     expect(query5.length).toBeGreaterThan(0);

@@ -153,7 +153,7 @@ test("StructuredOutputParser handles a longer and more complex schema", async ()
       interests: z
         .array(z.string())
         .describe("json array of strings human interests"),
-    })
+    }),
   );
 
   const formatInstructions = parser.getFormatInstructions();

@@ -62,7 +62,7 @@ SUMMARY AND QUESTIONS:
 `;
 
 const SUMMARY_REFINE_PROMPT = PromptTemplate.fromTemplate(
-  summaryRefineTemplate
+  summaryRefineTemplate,
 );
 
 const summarizeChain = loadSummarizationChain(llmSummary, {

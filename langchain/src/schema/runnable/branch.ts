@@ -10,12 +10,12 @@ import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
  */
 export type Branch<RunInput, RunOutput> = [
   Runnable<RunInput, boolean>,
-  Runnable<RunInput, RunOutput>
+  Runnable<RunInput, RunOutput>,
 ];
 
 export type BranchLike<RunInput, RunOutput> = [
   RunnableLike<RunInput, boolean>,
-  RunnableLike<RunInput, RunOutput>
+  RunnableLike<RunInput, RunOutput>,
 ];
 
 /**
@@ -80,8 +80,8 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
   static from<RunInput = any, RunOutput = any>(
     branches: [
       ...BranchLike<RunInput, RunOutput>[],
-      RunnableLike<RunInput, RunOutput>
-    ]
+      RunnableLike<RunInput, RunOutput>,
+    ],
   ) {
     if (branches.length < 1) {
       throw new Error("RunnableBranch requires at least one branch");
@@ -94,10 +94,10 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
       ([condition, runnable]) => [
         _coerceToRunnable(condition),
         _coerceToRunnable(runnable),
-      ]
+      ],
     );
     const defaultBranch = _coerceToRunnable(
-      branches[branches.length - 1] as RunnableLike<RunInput, RunOutput>
+      branches[branches.length - 1] as RunnableLike<RunInput, RunOutput>,
     );
     return new this({
       branches: coercedBranches,
@@ -108,19 +108,19 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
   async _invoke(
     input: RunInput,
     config?: Partial<RunnableConfig>,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<RunOutput> {
     let result;
     for (let i = 0; i < this.branches.length; i += 1) {
       const [condition, branchRunnable] = this.branches[i];
       const conditionValue = await condition.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild(`condition:${i + 1}`))
+        this._patchConfig(config, runManager?.getChild(`condition:${i + 1}`)),
       );
       if (conditionValue) {
         result = await branchRunnable.invoke(
           input,
-          this._patchConfig(config, runManager?.getChild(`branch:${i + 1}`))
+          this._patchConfig(config, runManager?.getChild(`branch:${i + 1}`)),
         );
         break;
       }
@@ -128,7 +128,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     if (!result) {
       result = await this.default.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild("default"))
+        this._patchConfig(config, runManager?.getChild("default")),
       );
     }
     return result;
@@ -136,7 +136,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
 
   async invoke(
     input: RunInput,
-    config: RunnableConfig = {}
+    config: RunnableConfig = {},
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, config);
   }

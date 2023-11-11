@@ -45,7 +45,7 @@ This was your previous work (but I haven't seen any of it! I only see what you r
   const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
 
   const response = await executor.run(
-    "How many people live in canada as of 2023?"
+    "How many people live in canada as of 2023?",
   );
 
   console.log(response);

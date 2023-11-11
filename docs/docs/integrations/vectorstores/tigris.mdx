@@ -97,7 +97,7 @@ const index = new VectorDocumentStore({
 
 const vectorStore = await TigrisVectorStore.fromExistingIndex(
   new OpenAIEmbeddings(),
-  { index }
+  { index },
 );
 
 /* Search the vector DB independently with metadata filters */

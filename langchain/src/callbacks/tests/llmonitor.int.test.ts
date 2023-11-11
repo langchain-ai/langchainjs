@@ -35,7 +35,7 @@ test("Test traced agent with openai functions", async () => {
           name: "Test User",
         },
       },
-    }
+    },
   );
 
   console.log(result);
@@ -71,7 +71,7 @@ test("Test traced chain with tags", async () => {
     {
       tags: ["test-for-tags"],
       callbacks: [new LLMonitorHandler({ verbose: true })],
-    }
+    },
   );
 });
 
@@ -82,14 +82,14 @@ test("Test traced chat call with tags", async () => {
 
   const response = await chat.call([
     new HumanMessage(
-      "What is a good name for a company that makes colorful socks?"
+      "What is a good name for a company that makes colorful socks?",
     ),
   ]);
   console.log(response.content);
 
   const response2 = await chat.call([
     new SystemMessage(
-      "You are a helpful assistant that translates English to French."
+      "You are a helpful assistant that translates English to French.",
     ),
     new HumanMessage("Translate: I love programming."),
   ]);

@@ -43,7 +43,7 @@ test.skip("ChatGooglePalm, prompt templates", async () => {
 
   // PaLM doesn't support translation yet
   const systemPrompt = PromptTemplate.fromTemplate(
-    "You are a helpful assistant who must always respond like a {job}."
+    "You are a helpful assistant who must always respond like a {job}.",
   );
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
@@ -68,11 +68,11 @@ test.skip("ChatGooglePalm, longer chain of messages", async () => {
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
     AIMessagePromptTemplate.fromTemplate(
-      `Hello there! I'm Droid, your personal assistant.`
+      `Hello there! I'm Droid, your personal assistant.`,
     ),
     HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
     AIMessagePromptTemplate.fromTemplate(
-      `Nice to meet you, Joe! How can I help you today?`
+      `Nice to meet you, Joe! How can I help you today?`,
     ),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
@@ -89,7 +89,7 @@ test.skip("ChatGooglePalm, longer chain of messages", async () => {
 test.skip("ChatGooglePalm, with a memory in a chain", async () => {
   const chatPrompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
-      "You are a helpful assistant who must always respond like a pirate"
+      "You are a helpful assistant who must always respond like a pirate",
     ),
     new MessagesPlaceholder("history"),
     HumanMessagePromptTemplate.fromTemplate("{input}"),
@@ -123,7 +123,7 @@ test.skip("ChatGooglePalm, chain of messages on code", async () => {
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
-      `Answer all questions using Python and just show the code without an explanation.`
+      `Answer all questions using Python and just show the code without an explanation.`,
     ),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);

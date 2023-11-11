@@ -17,7 +17,7 @@ test("Test MultiPromptChain", async () => {
       "Aqua Teen Hunger Force number one in the hood G",
     ],
     { series: "Aqua Teen Hunger Force" },
-    embeddings
+    embeddings,
   );
   const mst3k = await MemoryVectorStore.fromTexts(
     [
@@ -27,7 +27,7 @@ test("Test MultiPromptChain", async () => {
       "If you're wondering how he eats and breathes and other science facts La la la just repeat to yourself it's just a show I should really just relax. For Mystery Science Theater 3000",
     ],
     { series: "Mystery Science Theater 3000" },
-    embeddings
+    embeddings,
   );
   const animaniacs = await MemoryVectorStore.fromTexts(
     [
@@ -42,7 +42,7 @@ test("Test MultiPromptChain", async () => {
       "Animaniacs Those are the facts",
     ],
     { series: "Animaniacs" },
-    embeddings
+    embeddings,
   );
 
   const llm = new OpenAIChat({
@@ -70,7 +70,7 @@ test("Test MultiPromptChain", async () => {
       retrievalQAChainOpts: {
         returnSourceDocuments: true,
       },
-    }
+    },
   );
   const testPromise1 = multiRetrievalQAChain.call({
     input:

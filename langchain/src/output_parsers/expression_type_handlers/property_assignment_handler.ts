@@ -30,7 +30,7 @@ export class PropertyAssignmentHandler extends NodeHandler {
   async handle(node: PropertyAssignment): Promise<PropertyAssignmentType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler"
+        "ArrayLiteralExpressionHandler must have a parent handler",
       );
     }
     let name;
@@ -46,7 +46,7 @@ export class PropertyAssignmentHandler extends NodeHandler {
     }
     const identifier = (`${name}` as string).replace(
       /^["'](.+(?=["']$))["']$/,
-      "$1"
+      "$1",
     );
     const value = await this.parentHandler.handle(node.value);
     return { type: "property_assignment", identifier, value };

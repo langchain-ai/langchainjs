@@ -71,7 +71,7 @@ describe("Chroma", () => {
         { pageContent, metadata: { foo: id } },
         { pageContent, metadata: { foo: id } },
       ],
-      { ids }
+      { ids },
     );
 
     expect(ids).toEqual(ids2);
@@ -155,7 +155,7 @@ describe("Chroma", () => {
 
     const results = await chromaStoreFromClient.similaritySearch(
       pageContent,
-      3
+      3,
     );
 
     expect(results.length).toEqual(3);

@@ -52,7 +52,7 @@ export class YoutubeLoader extends BaseDocumentLoader {
    */
   private static getVideoID(url: string): string {
     const match = url.match(
-      /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/
+      /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/,
     );
     if (match !== null && match[1].length === 11) {
       return match[1];
@@ -70,7 +70,7 @@ export class YoutubeLoader extends BaseDocumentLoader {
    */
   static createFromUrl(
     url: string,
-    config?: Omit<YoutubeConfig, "videoId">
+    config?: Omit<YoutubeConfig, "videoId">,
   ): YoutubeLoader {
     const videoId = YoutubeLoader.getVideoID(url);
     return new YoutubeLoader({ ...config, videoId });
@@ -104,7 +104,7 @@ export class YoutubeLoader extends BaseDocumentLoader {
       }
     } catch (e: unknown) {
       throw new Error(
-        `Failed to get YouTube video transcription: ${(e as Error).message}`
+        `Failed to get YouTube video transcription: ${(e as Error).message}`,
       );
     }
     const document = new Document({

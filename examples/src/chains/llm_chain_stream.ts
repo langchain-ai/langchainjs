@@ -5,7 +5,7 @@ import { LLMChain } from "langchain/chains";
 // Create a new LLMChain from a PromptTemplate and an LLM in streaming mode.
 const model = new OpenAI({ temperature: 0.9, streaming: true });
 const prompt = PromptTemplate.fromTemplate(
-  "What is a good name for a company that makes {product}?"
+  "What is a good name for a company that makes {product}?",
 );
 const chain = new LLMChain({ llm: model, prompt });
 

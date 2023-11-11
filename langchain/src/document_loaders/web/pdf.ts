@@ -16,7 +16,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
   constructor(
     blob: Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    { splitPages = true, pdfjs = PDFLoaderImports } = {},
   ) {
     super();
     this.blob = blob;
@@ -66,7 +66,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
               pageNumber: i,
             },
           },
-        })
+        }),
       );
     }
 
@@ -106,7 +106,7 @@ async function PDFLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`."
+      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`.",
     );
   }
 }

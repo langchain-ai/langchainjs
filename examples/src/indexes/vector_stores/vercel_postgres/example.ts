@@ -17,7 +17,7 @@ const config = {
 
 const vercelPostgresStore = await VercelPostgres.initialize(
   new CohereEmbeddings(),
-  config
+  config,
 );
 
 const docHello = {
@@ -51,7 +51,7 @@ const results2 = await vercelPostgresStore.similaritySearch(
   2,
   {
     topic: "science",
-  }
+  },
 );
 console.log(results2);
 /*
@@ -69,7 +69,7 @@ const results3 = await vercelPostgresStore.similaritySearch(
   3,
   {
     topic: { in: ["science", "nonsense"] },
-  }
+  },
 );
 console.log(results3);
 /*
@@ -97,12 +97,12 @@ await vercelPostgresStore.addDocuments(
       metadata: { topic: "science" },
     },
   ],
-  { ids: [ids[2]] }
+  { ids: [ids[2]] },
 );
 
 const results4 = await vercelPostgresStore.similaritySearch(
   "What is the powerhouse of the cell?",
-  1
+  1,
 );
 console.log(results4);
 /*
@@ -121,7 +121,7 @@ const results5 = await vercelPostgresStore.similaritySearch(
   2,
   {
     topic: "science",
-  }
+  },
 );
 console.log(results5);
 /*

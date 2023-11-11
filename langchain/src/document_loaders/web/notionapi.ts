@@ -45,7 +45,7 @@ export type PagePropertiesValue = PagePropertiesType[keyof PagePropertiesType];
 export const isPageResponse = (res: GetResponse): res is GetPageResponse =>
   !isNotionClientError(res) && res.object === "page";
 export const isDatabaseResponse = (
-  res: GetResponse
+  res: GetResponse,
 ): res is GetDatabaseResponse =>
   !isNotionClientError(res) && res.object === "database";
 export const isErrorResponse = (res: GetResponse): res is APIResponseError =>
@@ -67,7 +67,7 @@ export type OnDocumentLoadedCallback = (
   current: number,
   total: number,
   currentTitle?: string,
-  rootTitle?: string
+  rootTitle?: string,
 ) => void;
 
 export type NotionAPILoaderOptions = {
@@ -137,7 +137,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
    */
   private addToQueue(...items: string[]) {
     const deDuped = items.filter(
-      (item) => !this.pageCompleted.concat(this.pageQueue).includes(item)
+      (item) => !this.pageCompleted.concat(this.pageQueue).includes(item),
     );
     this.pageQueue.push(...deDuped);
     this.pageQueueTotal += deDuped.length;
@@ -151,14 +151,14 @@ export class NotionAPILoader extends BaseDocumentLoader {
   private getTitle(obj: GetResponse) {
     if (isPage(obj)) {
       const titleProp = Object.values(obj.properties).find(
-        (prop) => prop.type === "title"
+        (prop) => prop.type === "title",
       );
       if (titleProp) return this.getPropValue(titleProp);
     }
     if (isDatabase(obj))
       return obj.title
         .map((v) =>
-          this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+          this.n2mClient.annotatePlainText(v.plain_text, v.annotations),
         )
         .join("");
     return null;
@@ -206,13 +206,13 @@ export class NotionAPILoader extends BaseDocumentLoader {
       case "title":
         return prop[prop.type]
           .map((v) =>
-            this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+            this.n2mClient.annotatePlainText(v.plain_text, v.annotations),
           )
           .join("");
       case "rich_text":
         return prop[prop.type]
           .map((v) =>
-            this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+            this.n2mClient.annotatePlainText(v.plain_text, v.annotations),
           )
           .join("");
       case "people":
@@ -235,11 +235,14 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * @returns An object containing the parsed properties as key-value pairs.
    */
   private parsePageProperties(page: PageObjectResponse) {
-    return Object.entries(page.properties).reduce((accum, [propName, prop]) => {
-      const value = this.getPropValue(prop);
-      const props = { ...accum, [propName]: value };
-      return prop.type === "title" ? { ...props, _title: value } : props;
-    }, {} as { [key: string]: string });
+    return Object.entries(page.properties).reduce(
+      (accum, [propName, prop]) => {
+        const value = this.getPropValue(prop);
+        const props = { ...accum, [propName]: value };
+        return prop.type === "title" ? { ...props, _title: value } : props;
+      },
+      {} as { [key: string]: string },
+    );
   }
 
   /**
@@ -266,7 +269,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
       type: block.type,
       blockId: block.id,
       parent: await this.caller.call(() =>
-        this.n2mClient.blockToMarkdown(block)
+        this.n2mClient.blockToMarkdown(block),
       ),
       children: [],
     };
@@ -280,8 +283,8 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
       const childBlocks = await this.loadBlocks(
         await this.caller.call(() =>
-          getBlockChildren(this.notionClient, block_id, null)
-        )
+          getBlockChildren(this.notionClient, block_id, null),
+        ),
       );
 
       mdBlock.children = childBlocks;
@@ -296,7 +299,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
    * @returns A Promise that resolves to an array containing the loaded MdBlocks.
    */
   private async loadBlocks(
-    blocksResponse: ListBlockChildrenResponseResults
+    blocksResponse: ListBlockChildrenResponseResults,
   ): Promise<MdBlock[]> {
     const blocks = blocksResponse.filter(isFullBlock);
 
@@ -334,7 +337,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
       typeof page === "string"
         ? [
             this.caller.call(() =>
-              this.notionClient.pages.retrieve({ page_id: page })
+              this.notionClient.pages.retrieve({ page_id: page }),
             ),
             page,
           ]
@@ -377,7 +380,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
       this.documents.length,
       this.pageQueueTotal,
       this.getTitle(pageDetails) || undefined,
-      this.rootTitle
+      this.rootTitle,
     );
   }
 
@@ -392,7 +395,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
         {
           database_id: id,
           page_size: 50,
-        }
+        },
       )) {
         this.addToQueue(page.id);
       }
@@ -434,7 +437,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
       if (errors.every((e) => e.code === APIErrorCode.ObjectNotFound)) {
         throw new AggregateError([
           Error(
-            `Could not find object with ID: ${this.id}. Make sure the relevant pages and databases are shared with your integration.`
+            `Could not find object with ID: ${this.id}. Make sure the relevant pages and databases are shared with your integration.`,
           ),
           ...errors,
         ]);

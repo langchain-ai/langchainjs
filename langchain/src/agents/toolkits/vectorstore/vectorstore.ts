@@ -33,7 +33,7 @@ export class VectorStoreToolkit extends Toolkit {
     super();
     const description = VectorStoreQATool.getDescription(
       vectorStoreInfo.name,
-      vectorStoreInfo.description
+      vectorStoreInfo.description,
     );
     this.llm = llm;
     this.tools = [
@@ -64,7 +64,7 @@ export class VectorStoreRouterToolkit extends Toolkit {
     this.tools = vectorStoreInfos.map((vectorStoreInfo) => {
       const description = VectorStoreQATool.getDescription(
         vectorStoreInfo.name,
-        vectorStoreInfo.description
+        vectorStoreInfo.description,
       );
       return new VectorStoreQATool(vectorStoreInfo.name, description, {
         vectorStore: vectorStoreInfo.vectorStore,
@@ -77,7 +77,7 @@ export class VectorStoreRouterToolkit extends Toolkit {
 export function createVectorStoreAgent(
   llm: BaseLanguageModel,
   toolkit: VectorStoreToolkit,
-  args?: ZeroShotCreatePromptArgs
+  args?: ZeroShotCreatePromptArgs,
 ) {
   const {
     prefix = VECTOR_PREFIX,
@@ -105,7 +105,7 @@ export function createVectorStoreAgent(
 export function createVectorStoreRouterAgent(
   llm: BaseLanguageModel,
   toolkit: VectorStoreRouterToolkit,
-  args?: ZeroShotCreatePromptArgs
+  args?: ZeroShotCreatePromptArgs,
 ) {
   const {
     prefix = VECTOR_ROUTER_PREFIX,

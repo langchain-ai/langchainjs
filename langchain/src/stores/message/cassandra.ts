@@ -56,7 +56,7 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
     const resultSet = await this.client.execute(
       this.queries.select,
       [this.sessionId],
-      { prepare: true }
+      { prepare: true },
     );
     const storedMessages: StoredMessage[] = resultSet.rows.map((row) => ({
       type: row.message_type,
@@ -80,7 +80,7 @@ export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
       .execute(
         this.queries.insert,
         [this.sessionId, type, JSON.stringify(data)],
-        { prepare: true, ...this.options }
+        { prepare: true, ...this.options },
       )
       .then(() => {});
   }

@@ -6,13 +6,13 @@ import { ViolationOfExpectationsChain } from "../violation_of_expectations/viola
 
 const dummyMessages = [
   new HumanMessage(
-    "I've been thinking about the importance of time with myself to discover my voice. I feel like 1-2 hours is never enough."
+    "I've been thinking about the importance of time with myself to discover my voice. I feel like 1-2 hours is never enough.",
   ),
   new AIMessage(
-    "The concept of 'adequate time' varies. Have you tried different formats of introspection, such as morning pages or long-form writing, to see if they make the process more efficient?"
+    "The concept of 'adequate time' varies. Have you tried different formats of introspection, such as morning pages or long-form writing, to see if they make the process more efficient?",
   ),
   new HumanMessage(
-    "I have tried journaling but never consistently. Sometimes it feels like writing doesn't capture everything."
+    "I have tried journaling but never consistently. Sometimes it feels like writing doesn't capture everything.",
   ),
 ];
 
@@ -20,7 +20,7 @@ test.skip("should respond with the proper schema", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     [" "],
     [{ id: 1 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
   );
   const retriever = vectorStore.asRetriever();
 

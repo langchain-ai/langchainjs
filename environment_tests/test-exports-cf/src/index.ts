@@ -34,7 +34,7 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    ctx: ExecutionContext
+    ctx: ExecutionContext,
   ): Promise<Response> {
     const constructorParameters = env.AZURE_OPENAI_API_KEY
       ? {
@@ -64,7 +64,7 @@ export default {
     const res = await chain.run("hello");
 
     return new Response(
-      `Hello, from Cloudflare Worker at ${request.url}. Assistant says: ${res}`
+      `Hello, from Cloudflare Worker at ${request.url}. Assistant says: ${res}`,
     );
   },
 };

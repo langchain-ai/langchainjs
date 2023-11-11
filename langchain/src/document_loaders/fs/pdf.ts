@@ -14,7 +14,7 @@ export class PDFLoader extends BufferLoader {
 
   constructor(
     filePathOrBlob: string | Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    { splitPages = true, pdfjs = PDFLoaderImports } = {},
   ) {
     super(filePathOrBlob);
     this.splitPages = splitPages;
@@ -40,7 +40,7 @@ export class PDFLoader extends BufferLoader {
    */
   public async parse(
     raw: Buffer,
-    metadata: Document["metadata"]
+    metadata: Document["metadata"],
   ): Promise<Document[]> {
     const { getDocument, version } = await this.pdfjs();
     const pdf = await getDocument({
@@ -80,7 +80,7 @@ export class PDFLoader extends BufferLoader {
               pageNumber: i,
             },
           },
-        })
+        }),
       );
     }
 
@@ -119,7 +119,7 @@ async function PDFLoaderImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`."
+      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`.",
     );
   }
 }

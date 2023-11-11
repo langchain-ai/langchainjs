@@ -15,7 +15,7 @@ test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true",
   console.log(JSON.stringify({ res }, null, 2));
 
   expect(
-    typeof res.generations[0][0].generationInfo?.promptLayerRequestId
+    typeof res.generations[0][0].generationInfo?.promptLayerRequestId,
   ).toBe("number");
 
   const modelB = new PromptLayerOpenAI({
@@ -25,7 +25,7 @@ test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true",
   const resB = await modelB.generate(["Print hello world"]);
 
   expect(
-    resB.generations[0][0].generationInfo?.promptLayerRequestId
+    resB.generations[0][0].generationInfo?.promptLayerRequestId,
   ).toBeUndefined();
 });
 
@@ -43,7 +43,7 @@ test("Test PromptLayerOpenAIChat returns promptLayerID if returnPromptLayerId=tr
   const res = await model.generate(["Print hello world"]);
 
   expect(
-    typeof res.generations[0][0].generationInfo?.promptLayerRequestId
+    typeof res.generations[0][0].generationInfo?.promptLayerRequestId,
   ).toBe("number");
 
   const modelB = new PromptLayerOpenAIChat({
@@ -58,7 +58,7 @@ test("Test PromptLayerOpenAIChat returns promptLayerID if returnPromptLayerId=tr
   const resB = await modelB.generate(["Print hello world"]);
 
   expect(
-    resB.generations[0][0].generationInfo?.promptLayerRequestId
+    resB.generations[0][0].generationInfo?.promptLayerRequestId,
   ).toBeUndefined();
 });
 
@@ -70,13 +70,13 @@ test("Test PromptLayerChatOpenAI returns promptLayerID if returnPromptLayerId=tr
   const respA = await chat.generate([
     [
       new SystemMessage(
-        "You are a helpful assistant that translates English to French."
+        "You are a helpful assistant that translates English to French.",
       ),
     ],
   ]);
 
   expect(
-    typeof respA.generations[0][0].generationInfo?.promptLayerRequestId
+    typeof respA.generations[0][0].generationInfo?.promptLayerRequestId,
   ).toBe("number");
 
   const chatB = new PromptLayerChatOpenAI();
@@ -84,12 +84,12 @@ test("Test PromptLayerChatOpenAI returns promptLayerID if returnPromptLayerId=tr
   const respB = await chatB.generate([
     [
       new SystemMessage(
-        "You are a helpful assistant that translates English to French."
+        "You are a helpful assistant that translates English to French.",
       ),
     ],
   ]);
 
   expect(
-    respB.generations[0][0].generationInfo?.promptLayerRequestId
+    respB.generations[0][0].generationInfo?.promptLayerRequestId,
   ).toBeUndefined();
 });

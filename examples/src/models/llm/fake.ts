@@ -10,7 +10,7 @@ const llm = new FakeListLLM({
 
 const firstResponse = await llm.call("You want to hear a JavasSript joke?");
 const secondResponse = await llm.call(
-  "How do you cheer up a JavaScript developer?"
+  "How do you cheer up a JavaScript developer?",
 );
 
 console.log({ firstResponse });
@@ -38,12 +38,12 @@ const slowLLM = new FakeListLLM({
 });
 
 const slowResponse = await slowLLM.call(
-  "Why do programmers always mix up Halloween and Christmas?"
+  "Why do programmers always mix up Halloween and Christmas?",
 );
 console.log({ slowResponse });
 
 const slowStream = await slowLLM.stream(
-  "How do you cheer up a JavaScript developer?"
+  "How do you cheer up a JavaScript developer?",
 );
 const slowChunks = [];
 for await (const chunk of slowStream) {

@@ -39,7 +39,7 @@ const chatPromptMemory = new ConversationSummaryBufferMemory({
 await chatPromptMemory.saveContext({ input: "hi" }, { output: "whats up" });
 await chatPromptMemory.saveContext(
   { input: "not much you" },
-  { output: "not much" }
+  { output: "not much" },
 );
 
 // We can also utilize the predict_new_summary method directly.
@@ -47,7 +47,7 @@ const messages = await chatPromptMemory.chatHistory.getMessages();
 const previous_summary = "";
 const predictSummary = await chatPromptMemory.predictNewSummary(
   messages,
-  previous_summary
+  previous_summary,
 );
 console.log(JSON.stringify(predictSummary));
 
@@ -55,7 +55,7 @@ console.log(JSON.stringify(predictSummary));
 // Let's walk through an example, again setting verbose to true so we can see the prompt.
 const chatPrompt = ChatPromptTemplate.fromMessages([
   SystemMessagePromptTemplate.fromTemplate(
-    "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
+    "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.",
   ),
   new MessagesPlaceholder("history"),
   HumanMessagePromptTemplate.fromTemplate("{input}"),

@@ -7,7 +7,7 @@ export const run = async () => {
   /* Split text */
   const text = fs.readFileSync(
     path.resolve(__dirname, "../../state_of_the_union.txt"),
-    "utf8"
+    "utf8",
   );
 
   const splitter = new TokenTextSplitter({

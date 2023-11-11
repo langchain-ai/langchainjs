@@ -16,7 +16,7 @@ const model = new OpenAI({
   azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
 });
 const res = await model.call(
-  "What would be a good company name a company that makes colorful socks?"
+  "What would be a good company name a company that makes colorful socks?",
 );
 console.log({ res });
 ```
@@ -36,7 +36,7 @@ const model = new OpenAI({
     "https://westeurope.api.microsoft.com/openai/deployments", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
 });
 const res = await model.call(
-  "What would be a good company name a company that makes colorful socks?"
+  "What would be a good company name a company that makes colorful socks?",
 );
 console.log({ res });
 ```

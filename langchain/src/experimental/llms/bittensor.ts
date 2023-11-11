@@ -63,7 +63,7 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
     try {
       // Retrieve API KEY
       const apiKeyResponse: Response = await fetch(
-        "https://test.neuralinternet.ai/admin/api-keys/"
+        "https://test.neuralinternet.ai/admin/api-keys/",
       );
       if (!apiKeyResponse.ok) {
         throw new Error("Network response was not ok");
@@ -84,7 +84,7 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
 
       const minerResponse: Response = await fetch(
         "https://test.neuralinternet.ai/top_miner_uids",
-        { headers }
+        { headers },
       );
       if (!minerResponse.ok) {
         throw new Error("Network response was not ok");
@@ -108,7 +108,7 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
                 method: "POST",
                 headers,
                 body: JSON.stringify(payload),
-              }
+              },
             );
 
             if (!response.ok) {
@@ -144,7 +144,7 @@ export class NIBittensorLLM extends LLM implements BittensorInput {
           method: "POST",
           headers,
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {

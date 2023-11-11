@@ -26,7 +26,7 @@ test("Test LangChain tracer", async () => {
   await tracer.handleChatModelStart(
     serialized,
     [[new HumanMessage("this is a message")]],
-    chatRunId
+    chatRunId,
   );
   await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);
   await tracer.handleChainStart(serialized, { foo: "bar" }, chainRunId);

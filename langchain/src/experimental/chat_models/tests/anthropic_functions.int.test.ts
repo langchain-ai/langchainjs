@@ -87,7 +87,7 @@ test("Test AnthropicFunctions with a forced function call", async () => {
     function_call: { name: "extract_data" },
   });
   const message = new HumanMessage(
-    "Extract the desired information from the following passage:\n\nthis is really cool"
+    "Extract the desired information from the following passage:\n\nthis is really cool",
   );
   const res = await chat.invoke([message]);
   console.log(JSON.stringify(res));

@@ -61,7 +61,7 @@ export class VoyageEmbeddings
     fields?: Partial<VoyageEmbeddingsParams> & {
       verbose?: boolean;
       apiKey?: string;
-    }
+    },
   ) {
     const fieldsWithDefaults = { ...fields };
 
@@ -92,7 +92,7 @@ export class VoyageEmbeddings
       this.embeddingWithRetry({
         model: this.modelName,
         input: batch,
-      })
+      }),
     );
 
     const batchResponses = await Promise.all(batchRequests);

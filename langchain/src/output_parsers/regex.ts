@@ -48,13 +48,13 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
   constructor(
     regex: string | RegExp,
     outputKeys: string[],
-    defaultOutputKey?: string
+    defaultOutputKey?: string,
   );
 
   constructor(
     fields: string | RegExp | RegexParserFields,
     outputKeys?: string[],
-    defaultOutputKey?: string
+    defaultOutputKey?: string,
   ) {
     // eslint-disable-next-line no-instanceof/no-instanceof
     if (typeof fields === "string" || fields instanceof RegExp) {
@@ -95,20 +95,26 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
   async parse(text: string): Promise<Record<string, string>> {
     const match = text.match(this.regex);
     if (match) {
-      return this.outputKeys.reduce((acc, key, index) => {
-        acc[key] = match[index + 1];
-        return acc;
-      }, {} as Record<string, string>);
+      return this.outputKeys.reduce(
+        (acc, key, index) => {
+          acc[key] = match[index + 1];
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
     }
 
     if (this.defaultOutputKey === undefined) {
       throw new OutputParserException(`Could not parse output: ${text}`, text);
     }
 
-    return this.outputKeys.reduce((acc, key) => {
-      acc[key] = key === this.defaultOutputKey ? text : "";
-      return acc;
-    }, {} as Record<string, string>);
+    return this.outputKeys.reduce(
+      (acc, key) => {
+        acc[key] = key === this.defaultOutputKey ? text : "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
   }
 
   /**

@@ -61,7 +61,7 @@ export class LengthBasedExampleSelector extends BaseExampleSelector {
    */
   async calculateExampleTextLengths(
     v: number[],
-    values: LengthBasedExampleSelector
+    values: LengthBasedExampleSelector,
   ): Promise<number[]> {
     if (v.length > 0) {
       return v;
@@ -69,7 +69,7 @@ export class LengthBasedExampleSelector extends BaseExampleSelector {
 
     const { examples, examplePrompt } = values;
     const stringExamples = await Promise.all(
-      examples.map((eg: Example) => examplePrompt.format(eg))
+      examples.map((eg: Example) => examplePrompt.format(eg)),
     );
     return stringExamples.map((eg: string) => this.getTextLength(eg));
   }
@@ -109,7 +109,7 @@ export class LengthBasedExampleSelector extends BaseExampleSelector {
    */
   static async fromExamples(
     examples: Example[],
-    args: LengthBasedExampleSelectorInput
+    args: LengthBasedExampleSelectorInput,
   ) {
     const selector = new LengthBasedExampleSelector(args);
     await Promise.all(examples.map((eg) => selector.addExample(eg)));

@@ -81,13 +81,13 @@ export class SupabaseVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] | number[] }
+    options?: { ids?: string[] | number[] },
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options
+      options,
     );
   }
 
@@ -101,7 +101,7 @@ export class SupabaseVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] | number[] }
+    options?: { ids?: string[] | number[] },
   ) {
     const rows = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
@@ -123,7 +123,7 @@ export class SupabaseVectorStore extends VectorStore {
       const res = await this.client.from(this.tableName).upsert(chunk).select();
       if (res.error) {
         throw new Error(
-          `Error inserting: ${res.error.message} ${res.status} ${res.statusText}`
+          `Error inserting: ${res.error.message} ${res.status} ${res.statusText}`,
         );
       }
       if (res.data) {
@@ -148,7 +148,7 @@ export class SupabaseVectorStore extends VectorStore {
   protected async _searchSupabase(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<SearchEmbeddingsResponse[]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
@@ -176,7 +176,7 @@ export class SupabaseVectorStore extends VectorStore {
 
     if (error) {
       throw new Error(
-        `Error searching for documents: ${error.code} ${error.message} ${error.details}`
+        `Error searching for documents: ${error.code} ${error.message} ${error.details}`,
       );
     }
 
@@ -193,7 +193,7 @@ export class SupabaseVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, number][]> {
     const searches = await this._searchSupabase(query, k, filter);
     const result: [Document, number][] = searches.map((resp) => [
@@ -223,14 +223,14 @@ export class SupabaseVectorStore extends VectorStore {
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
   ): Promise<Document[]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
     const searches = await this._searchSupabase(
       queryEmbedding,
       options.fetchK ?? 20,
-      options.filter
+      options.filter,
     );
 
     const embeddingList = searches.map((searchResp) => searchResp.embedding);
@@ -239,7 +239,7 @@ export class SupabaseVectorStore extends VectorStore {
       queryEmbedding,
       embeddingList,
       options.lambda,
-      options.k
+      options.k,
     );
 
     return mmrIndexes.map(
@@ -247,7 +247,7 @@ export class SupabaseVectorStore extends VectorStore {
         new Document({
           metadata: searches[idx].metadata,
           pageContent: searches[idx].content,
-        })
+        }),
     );
   }
 
@@ -263,7 +263,7 @@ export class SupabaseVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: SupabaseLibArgs
+    dbConfig: SupabaseLibArgs,
   ): Promise<SupabaseVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -287,7 +287,7 @@ export class SupabaseVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: SupabaseLibArgs
+    dbConfig: SupabaseLibArgs,
   ): Promise<SupabaseVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -302,7 +302,7 @@ export class SupabaseVectorStore extends VectorStore {
    */
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: SupabaseLibArgs
+    dbConfig: SupabaseLibArgs,
   ): Promise<SupabaseVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;

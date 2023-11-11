@@ -40,7 +40,7 @@ export class StructuredChatOutputParser extends AgentActionOutputParser {
       const actionMatch = regex.exec(text);
       if (actionMatch === null) {
         throw new OutputParserException(
-          `Could not parse an action. The agent action must be within a markdown code block, and "action" must be a provided tool or "Final Answer"`
+          `Could not parse an action. The agent action must be within a markdown code block, and "action" must be a provided tool or "Final Answer"`,
         );
       }
       const response = JSON.parse(actionMatch[1].trim());
@@ -52,7 +52,7 @@ export class StructuredChatOutputParser extends AgentActionOutputParser {
       return { tool: action, toolInput: action_input || {}, log: text };
     } catch (e) {
       throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`
+        `Failed to parse. Text: "${text}". Error: ${e}`,
       );
     }
   }
@@ -111,7 +111,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
    */
   async parse(
     text: string,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<AgentAction | AgentFinish> {
     if (this.outputFixingParser !== undefined) {
       return this.outputFixingParser.parse(text, callbacks);
@@ -140,7 +140,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
    */
   static fromLLM(
     llm: BaseLanguageModel,
-    options: Omit<StructuredChatOutputParserArgs, "outputFixingParser">
+    options: Omit<StructuredChatOutputParserArgs, "outputFixingParser">,
   ): StructuredChatOutputParserWithRetries {
     const baseParser =
       options.baseParser ??

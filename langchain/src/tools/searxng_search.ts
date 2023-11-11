@@ -154,7 +154,7 @@ export class SearxngSearch extends Tool {
 
     if (!this.apiBase) {
       throw new Error(
-        `SEARXNG_API_BASE not set. You can set it as "SEARXNG_API_BASE" in your environment variables.`
+        `SEARXNG_API_BASE not set. You can set it as "SEARXNG_API_BASE" in your environment variables.`,
       );
     }
 
@@ -173,7 +173,7 @@ export class SearxngSearch extends Tool {
   protected buildUrl<P extends SearxngSearchParams>(
     path: string,
     parameters: P,
-    baseUrl: string
+    baseUrl: string,
   ): string {
     const nonUndefinedParams: [string, string][] = Object.entries(parameters)
       .filter(([_, value]) => value !== undefined)
@@ -217,7 +217,7 @@ export class SearxngSearch extends Tool {
             title: r.title || "",
             link: r.url || "",
             snippet: r.content || "",
-          })
+          }),
         );
       });
 

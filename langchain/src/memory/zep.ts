@@ -126,7 +126,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
             // default to generic ChatMessage
             return new ChatMessage(content, role);
           }
-        })
+        }),
       );
     }
 
@@ -139,7 +139,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
       [this.memoryKey]: getBufferString(
         messages,
         this.humanPrefix,
-        this.aiPrefix
+        this.aiPrefix,
       ),
     };
   }
@@ -152,7 +152,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues
+    outputValues: OutputValues,
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
     const output = getOutputValue(outputValues, this.outputKey);

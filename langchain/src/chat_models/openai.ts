@@ -95,7 +95,7 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
 }
 
 function openAIResponseToChatMessage(
-  message: OpenAIClient.Chat.Completions.ChatCompletionMessage
+  message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
 ): BaseMessage {
   switch (message.role) {
     case "assistant":
@@ -111,7 +111,7 @@ function openAIResponseToChatMessage(
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
-  defaultRole?: OpenAIRoleEnum
+  defaultRole?: OpenAIRoleEnum,
 ) {
   const role = delta.role ?? defaultRole;
   const content = delta.content ?? "";
@@ -161,7 +161,7 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
         function_call: message.additional_kwargs.function_call,
         tool_calls: message.additional_kwargs.tool_calls,
         tool_call_id: (message as ToolMessage).tool_call_id,
-      } as OpenAICompletionParam)
+      }) as OpenAICompletionParam,
   );
 }
 
@@ -195,7 +195,7 @@ export interface ChatOpenAICallOptions
  * if not explicitly available on this class.
  */
 export class ChatOpenAI<
-    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
   >
   extends BaseChatModel<CallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
@@ -290,7 +290,7 @@ export class ChatOpenAI<
         configuration?: ClientOptions & LegacyOpenAIInput;
       },
     /** @deprecated */
-    configuration?: ClientOptions & LegacyOpenAIInput
+    configuration?: ClientOptions & LegacyOpenAIInput,
   ) {
     super(fields ?? {});
 
@@ -374,15 +374,15 @@ export class ChatOpenAI<
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     function isStructuredToolArray(
-      tools?: unknown[]
+      tools?: unknown[],
     ): tools is StructuredTool[] {
       return (
         tools !== undefined &&
         tools.every((tool) =>
-          Array.isArray((tool as StructuredTool).lc_namespace)
+          Array.isArray((tool as StructuredTool).lc_namespace),
         )
       );
     }
@@ -431,7 +431,7 @@ export class ChatOpenAI<
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesMapped: OpenAICompletionParam[] =
       convertMessagesToOpenAIParams(messages);
@@ -457,7 +457,7 @@ export class ChatOpenAI<
       };
       if (typeof chunk.content !== "string") {
         console.log(
-          "[WARNING]: Received non-string content from OpenAI. This is currently not supported."
+          "[WARNING]: Received non-string content from OpenAI. This is currently not supported.",
         );
         continue;
       }
@@ -474,7 +474,7 @@ export class ChatOpenAI<
         undefined,
         undefined,
         undefined,
-        { chunk: generationChunk }
+        { chunk: generationChunk },
       );
     }
     if (options.signal?.aborted) {
@@ -494,7 +494,7 @@ export class ChatOpenAI<
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
@@ -525,11 +525,10 @@ export class ChatOpenAI<
       const promptTokenUsage = await this.getEstimatedTokenCountFromPrompt(
         messages,
         functions,
-        function_call
+        function_call,
       );
-      const completionTokenUsage = await this.getNumTokensFromGenerations(
-        generations
-      );
+      const completionTokenUsage =
+        await this.getNumTokensFromGenerations(generations);
 
       tokenUsage.promptTokens = promptTokenUsage;
       tokenUsage.completionTokens = completionTokenUsage;
@@ -545,7 +544,7 @@ export class ChatOpenAI<
         {
           signal: options?.signal,
           ...options?.options,
-        }
+        },
       );
       const {
         completion_tokens: completionTokens,
@@ -572,7 +571,7 @@ export class ChatOpenAI<
         const generation: ChatGeneration = {
           text,
           message: openAIResponseToChatMessage(
-            part.message ?? { role: "assistant" }
+            part.message ?? { role: "assistant" },
           ),
         };
         if (part.finish_reason) {
@@ -594,7 +593,7 @@ export class ChatOpenAI<
   private async getEstimatedTokenCountFromPrompt(
     messages: BaseMessage[],
     functions?: OpenAIFnDef[],
-    function_call?: "none" | "auto" | OpenAIFnCallOption
+    function_call?: "none" | "auto" | OpenAIFnCallOption,
   ): Promise<number> {
     // It appears that if functions are present, the first system message is padded with a trailing newline. This
     // was inferred by trying lots of combinations of messages and functions and seeing what the token counts were.
@@ -604,7 +603,7 @@ export class ChatOpenAI<
     // If there are functions, add the function definitions as they count towards token usage
     if (functions && function_call !== "auto") {
       const promptDefinitions = formatFunctionDefinitions(
-        functions as unknown as FunctionDef[]
+        functions as unknown as FunctionDef[],
       );
       tokens += await this.getNumTokens(promptDefinitions);
       tokens += 9; // Add nine per completion
@@ -641,7 +640,7 @@ export class ChatOpenAI<
         } else {
           return await this.getNumTokens(generation.message.content);
         }
-      })
+      }),
     );
 
     return generationUsages.reduce((a, b) => a + b, 0);
@@ -681,7 +680,7 @@ export class ChatOpenAI<
         }
         if (openAIMessage?.additional_kwargs.function_call?.name) {
           count += await this.getNumTokens(
-            openAIMessage.additional_kwargs.function_call?.name
+            openAIMessage.additional_kwargs.function_call?.name,
           );
         }
         if (openAIMessage.additional_kwargs.function_call?.arguments) {
@@ -689,15 +688,15 @@ export class ChatOpenAI<
             // Remove newlines and spaces
             JSON.stringify(
               JSON.parse(
-                openAIMessage.additional_kwargs.function_call?.arguments
-              )
-            )
+                openAIMessage.additional_kwargs.function_call?.arguments,
+              ),
+            ),
           );
         }
 
         totalCount += count;
         return count;
-      })
+      }),
     );
 
     totalCount += 3; // every reply is primed with <|start|>assistant<|message|>
@@ -713,19 +712,19 @@ export class ChatOpenAI<
    */
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request:
       | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
       | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
@@ -735,7 +734,7 @@ export class ChatOpenAI<
       try {
         const res = await this.client.chat.completions.create(
           request,
-          requestOptions
+          requestOptions,
         );
         return res;
       } catch (e) {
@@ -809,7 +808,7 @@ export class ChatOpenAI<
           promptTokens: 0,
           totalTokens: 0,
         },
-      }
+      },
     );
   }
 }
@@ -826,7 +825,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       promptLayerApiKey?: string;
       plTags?: string[];
       returnPromptLayerId?: boolean;
-    }
+    },
   ) {
     super(fields);
 
@@ -843,7 +842,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
   async _generate(
     messages: BaseMessage[],
     options?: string[] | ChatOpenAICallOptions,
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     const requestStartTime = Date.now();
 
@@ -862,7 +861,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
     const generatedResponses = await super._generate(
       messages,
       parsedOptions,
-      runManager
+      runManager,
     );
     const requestEndTime = Date.now();
 
@@ -897,7 +896,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _createMessageDicts = (
       messages: BaseMessage[],
-      callOptions?: ChatOpenAICallOptions
+      callOptions?: ChatOpenAICallOptions,
     ) => {
       const params = {
         ...this.invocationParams(),
@@ -910,7 +909,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
         }
       }
       const messageDicts = messages.map((message) =>
-        _convertMessageToDict(message)
+        _convertMessageToDict(message),
       );
       return messageDicts;
     };
@@ -935,7 +934,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
         parsedResp,
         requestStartTime,
         requestEndTime,
-        this.promptLayerApiKey
+        this.promptLayerApiKey,
       );
 
       if (this.returnPromptLayerId === true) {

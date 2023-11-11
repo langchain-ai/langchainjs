@@ -76,7 +76,7 @@ export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
       this.client = new PlanetScaleClient(config);
     } else {
       throw new Error(
-        "Either a client or config must be provided to PlanetScaleChatMessageHistory"
+        "Either a client or config must be provided to PlanetScaleChatMessageHistory",
       );
     }
 
@@ -145,7 +145,7 @@ export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
           type: message.type,
           data,
         };
-      }
+      },
     );
     return mapStoredMessagesToChatMessages(orderedMessages);
   }

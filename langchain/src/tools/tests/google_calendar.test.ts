@@ -56,7 +56,7 @@ describe("GoogleCalendarCreateTool", () => {
       model: new FakeLLM({}),
     };
     expect(() => new GoogleCalendarCreateTool(params)).toThrow(
-      "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar"
+      "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar",
     );
   });
 
@@ -67,7 +67,7 @@ describe("GoogleCalendarCreateTool", () => {
       },
     };
     expect(() => new GoogleCalendarCreateTool(params)).toThrow(
-      "Missing llm instance to interact with Google Calendar"
+      "Missing llm instance to interact with Google Calendar",
     );
   });
 });
@@ -93,7 +93,7 @@ describe("GoogleCalendarViewTool", () => {
       model: new FakeLLM({}),
     };
     expect(() => new GoogleCalendarViewTool(params)).toThrow(
-      "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar"
+      "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar",
     );
   });
 
@@ -104,7 +104,7 @@ describe("GoogleCalendarViewTool", () => {
       },
     };
     expect(() => new GoogleCalendarViewTool(params)).toThrow(
-      "Missing llm instance to interact with Google Calendar"
+      "Missing llm instance to interact with Google Calendar",
     );
   });
 });

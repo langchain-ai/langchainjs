@@ -17,7 +17,7 @@ const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
 
 const pineconeVectorstore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
-  { pineconeIndex }
+  { pineconeIndex },
 );
 
 const pineconeMmrRetriever = pineconeVectorstore.asRetriever({

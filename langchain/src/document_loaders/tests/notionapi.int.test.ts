@@ -11,7 +11,7 @@ test.skip("Test Notion API Loader Page", async () => {
     id: process.env.NOTION_PAGE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
       console.log(
-        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
+        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`,
       );
     },
   });
@@ -30,7 +30,7 @@ test.skip("Test Notion API Loader Database", async () => {
     id: process.env.NOTION_DATABASE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
       console.log(
-        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`
+        `Loaded ${currentTitle} in ${rootTitle}:  (${current}/${total})`,
       );
     },
   });
@@ -50,7 +50,7 @@ test.skip("Test Notion API Loader onDocumentLoad", async () => {
     id: process.env.NOTION_DATABASE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
       onDocumentLoadedCheck.push(
-        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`,
       );
     },
     propertiesAsHeader: true,
@@ -72,7 +72,7 @@ test.skip("Test docs with empty database page content", async () => {
     id: process.env.NOTION_DATABASE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
       onDocumentLoadedCheck.push(
-        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`,
       );
     },
   });
@@ -91,7 +91,7 @@ test.skip("Test docs with empty database page content and propertiesAsHeader ena
     id: process.env.NOTION_DATABASE_ID ?? "",
     onDocumentLoaded: (current, total, currentTitle, rootTitle) => {
       onDocumentLoadedCheck.push(
-        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`
+        `Loaded ${currentTitle} from ${rootTitle}: (${current}/${total})`,
       );
     },
     propertiesAsHeader: true,

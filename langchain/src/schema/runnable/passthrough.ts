@@ -9,7 +9,7 @@ export class RunnableAssign<
   RunInput extends Record<string, any> = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = any,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "schema", "runnable"];
 
@@ -22,7 +22,7 @@ export class RunnableAssign<
 
   async invoke(
     input: RunInput,
-    options?: Partial<CallOptions>
+    options?: Partial<CallOptions>,
   ): Promise<RunOutput> {
     const mapperResult = await this.mapper.invoke(input, options);
 
@@ -50,21 +50,21 @@ export class RunnablePassthrough<RunInput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<RunnableConfig>
+    options?: Partial<RunnableConfig>,
   ): Promise<RunInput> {
     return this._callWithConfig(
       (input: RunInput) => Promise.resolve(input),
       input,
-      options
+      options,
     );
   }
 
   static assign(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mapping: Record<string, RunnableLike<Record<string, unknown>, any>>
+    mapping: Record<string, RunnableLike<Record<string, unknown>, any>>,
   ): RunnableAssign<Record<string, unknown>, Record<string, unknown>> {
     return new RunnableAssign(
-      new RunnableMap<Record<string, unknown>>({ steps: mapping })
+      new RunnableMap<Record<string, unknown>>({ steps: mapping }),
     );
   }
 }

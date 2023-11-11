@@ -60,7 +60,7 @@ const conversationAgent = await initializeAgentExecutorWithOptions(
   model,
   {
     agentType: "chat-zero-shot-react-description",
-  }
+  },
 );
 
 const functionsAgent = await initializeAgentExecutorWithOptions(tools, model, {
@@ -80,7 +80,7 @@ const concurrencyLevel = 4; // How many concurrent agents to run. May need to de
 const batch = [];
 for (const example of dataset) {
   batch.push(
-    Promise.all(agents.map((agent) => agent.call({ input: example })))
+    Promise.all(agents.map((agent) => agent.call({ input: example }))),
   );
   if (batch.length >= concurrencyLevel) {
     const batchResults = await Promise.all(batch);
@@ -135,7 +135,7 @@ for (const [which_, name] of Object.entries(nameMap)) {
   console.log(
     `The "${name}" would be preferred between ${(low * 100).toFixed(2)}% and ${(
       high * 100
-    ).toFixed(2)}% percent of the time (with 95% confidence).`
+    ).toFixed(2)}% percent of the time (with 95% confidence).`,
   );
 }
 
@@ -150,7 +150,7 @@ function counter(arr: string[]): { [key: string]: number } {
       ...countMap,
       [word]: (countMap[word] || 0) + 1,
     }),
-    {}
+    {},
   );
 }
 
@@ -199,10 +199,10 @@ async function predictPreferences(dataset: string[], results: ChainValues[][]) {
 function wilsonScoreInterval(
   preferences: string[],
   which = "a",
-  z = 1.96
+  z = 1.96,
 ): [number, number] {
   const totalPreferences = preferences.filter(
-    (p) => p === "a" || p === "b"
+    (p) => p === "a" || p === "b",
   ).length;
   const ns = preferences.filter((p) => p === which).length;
 
@@ -217,7 +217,7 @@ function wilsonScoreInterval(
     (z / denominator) *
     Math.sqrt(
       (pHat * (1 - pHat)) / totalPreferences +
-        z ** 2 / (4 * totalPreferences ** 2)
+        z ** 2 / (4 * totalPreferences ** 2),
     );
   const center = (pHat + z ** 2 / (2 * totalPreferences)) / denominator;
   const lowerBound = Math.min(Math.max(center - adjustment, 0.0), 1.0);

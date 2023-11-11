@@ -70,7 +70,7 @@ export let initialBaseURI =
   typeof self !== "undefined" && self.location
     ? //@ts-ignore
       /* #__PURE__ */ new URL(
-        self.location.origin + self.location.pathname + location.search
+        self.location.origin + self.location.pathname + location.search,
       )
     : /* #__PURE__ */ new URL("https://github.com/cfworker");
 
@@ -78,7 +78,7 @@ export function dereference(
   schema: Schema | boolean,
   lookup: Record<string, Schema | boolean> = Object.create(null),
   baseURI = initialBaseURI,
-  basePointer = ""
+  basePointer = "",
 ) {
   if (schema && typeof schema === "object" && !Array.isArray(schema)) {
     const id: string = schema.$id || schema.id;
@@ -165,7 +165,7 @@ export function dereference(
           subSchema[subKey],
           lookup,
           baseURI,
-          `${keyBase}/${encodePointer(subKey)}`
+          `${keyBase}/${encodePointer(subKey)}`,
         );
       }
     } else {

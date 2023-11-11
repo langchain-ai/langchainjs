@@ -90,7 +90,7 @@ export class ProxyParamsDuplicator {
               return new Proxy(target, proxyHandler);
             } else {
               throw new Error(
-                "Filter operation not supported for 'or' mergeFiltersOperator"
+                "Filter operation not supported for 'or' mergeFiltersOperator",
               );
             }
           };
@@ -136,7 +136,7 @@ export class ProxyParamsDuplicator {
    */
   addOrClause(
     filters: string,
-    { foreignTable }: { foreignTable?: string } = {}
+    { foreignTable }: { foreignTable?: string } = {},
   ) {
     const key = foreignTable ? `${foreignTable}.or` : "or";
     this.values.push([this.removeType(key), `(${filters})`]);
@@ -198,7 +198,7 @@ export class ProxyParamsDuplicator {
     {
       config,
       type,
-    }: { config?: string; type?: "plain" | "phrase" | "websearch" } = {}
+    }: { config?: string; type?: "plain" | "phrase" | "websearch" } = {},
   ) {
     let typePart = "";
     if (type === "plain") {
@@ -254,7 +254,7 @@ export class ProxyParamsDuplicator {
    */
   static getFlattenedParams(
     rpc: SupabaseFilter,
-    filter: SupabaseFilterRPCCall
+    filter: SupabaseFilterRPCCall,
   ) {
     const proxiedDuplicator = new ProxyParamsDuplicator();
     const proxiedRpc = new Proxy(rpc, proxiedDuplicator.buildProxyHandler());
@@ -269,15 +269,15 @@ export class ProxyParamsDuplicator {
  * `Operation` and `Comparison` classes to build the query.
  */
 export function convertObjectFilterToStructuredQuery(
-  objFilter: SupabaseMetadata
+  objFilter: SupabaseMetadata,
 ): StructuredQuery {
   return new StructuredQuery(
     "",
     new Operation(
       Operators.and,
       Object.entries(objFilter).map(
-        ([column, value]) => new Comparison(Comparators.eq, column, value)
-      )
-    )
+        ([column, value]) => new Comparison(Comparators.eq, column, value),
+      ),
+    ),
   );
 }

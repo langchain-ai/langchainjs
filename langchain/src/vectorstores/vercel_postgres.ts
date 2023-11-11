@@ -91,7 +91,7 @@ export class VercelPostgres extends VectorStore {
     embeddings: Embeddings,
     config?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
-    }
+    },
   ): Promise<VercelPostgres> {
     // Default maxUses to 1 for edge environments:
     // https://github.com/vercel/storage/tree/main/packages/postgres#a-note-on-edge-environments
@@ -119,14 +119,14 @@ export class VercelPostgres extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[] },
   ): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options
+      options,
     );
   }
 
@@ -139,7 +139,7 @@ export class VercelPostgres extends VectorStore {
   protected generatePlaceholderForRowAt(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     row: (string | Record<string, any>)[],
-    index: number
+    index: number,
   ): string {
     const base = index * row.length;
     return `(${row.map((_, j) => `$${base + 1 + j}`)})`;
@@ -155,10 +155,10 @@ export class VercelPostgres extends VectorStore {
   protected async runInsertQuery(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rows: (string | Record<string, any>)[][],
-    useIdColumn: boolean
+    useIdColumn: boolean,
   ) {
     const values = rows.map((row, j) =>
-      this.generatePlaceholderForRowAt(row, j)
+      this.generatePlaceholderForRowAt(row, j),
     );
     const flatValues = rows.flat();
     return this.client.query(
@@ -176,7 +176,7 @@ export class VercelPostgres extends VectorStore {
     ${this.vectorColumnName} = EXCLUDED.${this.vectorColumnName},
     ${this.metadataColumnName} = EXCLUDED.${this.metadataColumnName}
     RETURNING ${this.idColumnName}`,
-      flatValues
+      flatValues,
     );
   }
 
@@ -191,11 +191,11 @@ export class VercelPostgres extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[] },
   ): Promise<string[]> {
     if (options?.ids !== undefined && options?.ids.length !== vectors.length) {
       throw new Error(
-        `If provided, the length of "ids" must be the same as the number of vectors.`
+        `If provided, the length of "ids" must be the same as the number of vectors.`,
       );
     }
     const rows = vectors.map((embedding, idx) => {
@@ -220,7 +220,7 @@ export class VercelPostgres extends VectorStore {
       try {
         const result = await this.runInsertQuery(
           chunk,
-          options?.ids !== undefined
+          options?.ids !== undefined,
         );
         ids.push(...result.rows.map((row) => row[this.idColumnName]));
       } catch (e) {
@@ -244,7 +244,7 @@ export class VercelPostgres extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter: this["FilterType"] = filter ?? {};
@@ -259,14 +259,14 @@ export class VercelPostgres extends VectorStore {
           .map((_, index) => `$${currentParamCount + index + 1}`)
           .join(",");
         whereClauses.push(
-          `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+          `${this.metadataColumnName}->>'${key}' IN (${placeholders})`,
         );
         values.push(...value.in);
         paramCount += value.in.length;
       } else {
         paramCount += 1;
         whereClauses.push(
-          `${this.metadataColumnName}->>'${key}' = $${paramCount}`
+          `${this.metadataColumnName}->>'${key}' = $${paramCount}`,
         );
         values.push(value);
       }
@@ -303,7 +303,7 @@ export class VercelPostgres extends VectorStore {
         `DELETE FROM ${this.tableName} WHERE ${
           this.idColumnName
         } IN (${params.ids.map((_, idx) => `$${idx + 1}`)})`,
-        params.ids
+        params.ids,
       );
     } else if (params.deleteAll) {
       await this.client.query(`TRUNCATE TABLE ${this.tableName}`);
@@ -344,7 +344,7 @@ export class VercelPostgres extends VectorStore {
     embeddings: Embeddings,
     dbConfig?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
-    }
+    },
   ): Promise<VercelPostgres> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -373,7 +373,7 @@ export class VercelPostgres extends VectorStore {
     embeddings: Embeddings,
     dbConfig?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
-    }
+    },
   ): Promise<VercelPostgres> {
     const instance = await this.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs);

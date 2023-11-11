@@ -12,7 +12,7 @@ export function isObject(obj: any): obj is object {
  */
 export function isFilterEmpty(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filter: ((q: any) => any) | object | string | undefined
+  filter: ((q: any) => any) | object | string | undefined,
 ): filter is undefined {
   if (!filter) return true;
   // for Milvus

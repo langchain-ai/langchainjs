@@ -39,7 +39,7 @@ export class Neo4jGraph {
       this.database = database;
     } catch (error) {
       throw new Error(
-        "Could not create a Neo4j driver instance. Please check the connection details."
+        "Could not create a Neo4j driver instance. Please check the connection details.",
       );
     }
   }
@@ -215,6 +215,6 @@ const extractPathForRows = (path: neo4j.Path) => {
       objIntToString(segment.start),
       objIntToString(segment.relationship),
       objIntToString(segment.end),
-    ].filter((part) => part !== null)
+    ].filter((part) => part !== null),
   );
 };

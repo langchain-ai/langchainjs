@@ -12,9 +12,9 @@ test("ReActSingleInputOutputParser identifies final answer", async () => {
   console.log(parsedOutput);
   expect(parsedOutput).toHaveProperty("returnValues");
   expect(
-    "returnValues" in parsedOutput && parsedOutput.returnValues.output
+    "returnValues" in parsedOutput && parsedOutput.returnValues.output,
   ).toEqual(
-    "Harry Styles, Olivia Wilde's boyfriend, is 29 years old and his age raised to the 0.23 power is 2.169459462491557."
+    "Harry Styles, Olivia Wilde's boyfriend, is 29 years old and his age raised to the 0.23 power is 2.169459462491557.",
   );
 });
 

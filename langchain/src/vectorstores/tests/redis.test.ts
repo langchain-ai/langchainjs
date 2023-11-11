@@ -48,7 +48,7 @@ test("RedisVectorStore with external keys", async () => {
         },
       },
     ],
-    { keys: ["id1"] }
+    { keys: ["id1"] },
   );
 
   expect(client.hSet).toHaveBeenCalledTimes(1);
@@ -110,7 +110,7 @@ test("RedisVectorStore with filters", async () => {
         from: 0,
         size: 1,
       },
-    }
+    },
   );
 });
 
@@ -170,7 +170,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
       {
         ON: "HASH",
         PREFIX: "doc:documents:",
-      }
+      },
     );
   });
 
@@ -216,7 +216,7 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         SKIPINITIALSCAN: true,
         STOPWORDS: ["a", "b"],
         LANGUAGE: "German",
-      }
+      },
     );
   });
 });

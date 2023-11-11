@@ -80,7 +80,7 @@ OpenAI's chat model also supports multiple messages as input. See [here](https:/
 ```typescript
 const response2 = await chat.call([
   new SystemMessage(
-    "You are a helpful assistant that translates English to French."
+    "You are a helpful assistant that translates English to French.",
   ),
   new HumanMessage("Translate: I love programming."),
 ]);
@@ -98,18 +98,18 @@ You can go one step further and generate completions for multiple sets of messag
 const response3 = await chat.generate([
   [
     new SystemMessage(
-      "You are a helpful assistant that translates English to French."
+      "You are a helpful assistant that translates English to French.",
     ),
     new HumanMessage(
-      "Translate this sentence from English to French. I love programming."
+      "Translate this sentence from English to French. I love programming.",
     ),
   ],
   [
     new SystemMessage(
-      "You are a helpful assistant that translates English to French."
+      "You are a helpful assistant that translates English to French.",
     ),
     new HumanMessage(
-      "Translate this sentence from English to French. I love artificial intelligence."
+      "Translate this sentence from English to French. I love artificial intelligence.",
     ),
   ],
 ]);

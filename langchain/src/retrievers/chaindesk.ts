@@ -55,7 +55,7 @@ export class ChaindeskRetriever extends BaseRetriever {
           "Content-Type": "application/json",
           ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
         },
-      }
+      },
     );
 
     const { results } = (await r.json()) as { results: Berry[] };
@@ -69,7 +69,7 @@ export class ChaindeskRetriever extends BaseRetriever {
             source,
             ...rest,
           },
-        })
+        }),
     );
   }
 }

@@ -38,7 +38,7 @@ export const run = async () => {
       questionGeneratorChainOptions: {
         llm: nonStreamingModel,
       },
-    }
+    },
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";

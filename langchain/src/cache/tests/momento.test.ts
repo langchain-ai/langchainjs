@@ -80,7 +80,7 @@ class MockClient implements ICacheClient {
   public async set(
     _: string,
     key: string,
-    value: string
+    value: string,
   ): Promise<CacheSet.Response> {
     this._cache.set(key, value);
     return new CacheSet.Success();

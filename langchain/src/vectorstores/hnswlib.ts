@@ -64,7 +64,7 @@ export class HNSWLib extends SaveableVectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
@@ -94,7 +94,7 @@ export class HNSWLib extends SaveableVectorStore {
   public get index(): HierarchicalNSWT {
     if (!this._index) {
       throw new Error(
-        "Vector store not initialised yet. Try calling `addTexts` first."
+        "Vector store not initialised yet. Try calling `addTexts` first.",
       );
     }
     return this._index;
@@ -127,7 +127,7 @@ export class HNSWLib extends SaveableVectorStore {
     }
     if (vectors[0].length !== this.args.numDimensions) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.args.numDimensions})`
+        `Vectors must have the same length as the number of dimensions (${this.args.numDimensions})`,
       );
     }
     const capacity = this.index.getMaxElements();
@@ -157,20 +157,20 @@ export class HNSWLib extends SaveableVectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ) {
     if (this.args.numDimensions && !this._index) {
       await this.initIndex([[]]);
     }
     if (query.length !== this.args.numDimensions) {
       throw new Error(
-        `Query vector must have the same length as the number of dimensions (${this.args.numDimensions})`
+        `Query vector must have the same length as the number of dimensions (${this.args.numDimensions})`,
       );
     }
     if (k > this.index.getCurrentCount()) {
       const total = this.index.getCurrentCount();
       console.warn(
-        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`
+        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`,
       );
       // eslint-disable-next-line no-param-reassign
       k = total;
@@ -189,14 +189,14 @@ export class HNSWLib extends SaveableVectorStore {
     const result = this.index.searchKnn(
       query,
       k,
-      filter ? filterFunction : undefined
+      filter ? filterFunction : undefined,
     );
     return result.neighbors.map(
       (docIndex, resultIndex) =>
         [
           this.docstore.search(String(docIndex)),
           result.distances[resultIndex],
-        ] as [Document, number]
+        ] as [Document, number],
     );
   }
 
@@ -214,7 +214,7 @@ export class HNSWLib extends SaveableVectorStore {
       await fs.access(path.join(params.directory, "hnswlib.index"));
     } catch (err) {
       throw new Error(
-        `Directory ${params.directory} does not contain a hnswlib.index file.`
+        `Directory ${params.directory} does not contain a hnswlib.index file.`,
       );
     }
 
@@ -243,11 +243,11 @@ export class HNSWLib extends SaveableVectorStore {
       this.index.writeIndex(path.join(directory, "hnswlib.index")),
       await fs.writeFile(
         path.join(directory, "args.json"),
-        JSON.stringify(this.args)
+        JSON.stringify(this.args),
       ),
       await fs.writeFile(
         path.join(directory, "docstore.json"),
-        JSON.stringify(Array.from(this.docstore._docs.entries()))
+        JSON.stringify(Array.from(this.docstore._docs.entries())),
       ),
     ]);
   }
@@ -264,7 +264,7 @@ export class HNSWLib extends SaveableVectorStore {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const args = JSON.parse(
-      await fs.readFile(path.join(directory, "args.json"), "utf8")
+      await fs.readFile(path.join(directory, "args.json"), "utf8"),
     );
     const index = await HNSWLib.getHierarchicalNSW(args);
     const [docstoreFiles] = await Promise.all([
@@ -296,7 +296,7 @@ export class HNSWLib extends SaveableVectorStore {
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
-    }
+    },
   ): Promise<HNSWLib> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -324,7 +324,7 @@ export class HNSWLib extends SaveableVectorStore {
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
-    }
+    },
   ): Promise<HNSWLib> {
     const args: HNSWLibArgs = {
       docstore: dbConfig?.docstore,
@@ -347,7 +347,7 @@ export class HNSWLib extends SaveableVectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       throw new Error(
-        `Could not import hnswlib-node. Please install hnswlib-node as a dependency with, e.g. \`npm install -S hnswlib-node\`.\n\nError: ${err?.message}`
+        `Could not import hnswlib-node. Please install hnswlib-node as a dependency with, e.g. \`npm install -S hnswlib-node\`.\n\nError: ${err?.message}`,
       );
     }
   }

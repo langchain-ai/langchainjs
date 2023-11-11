@@ -12,7 +12,7 @@ test("Test motörhead memory", async () => {
             { role: "AI", content: "Ozzy Osbourne" },
           ],
         }),
-    } as Response)
+    } as Response),
   );
 
   const memory = new MotorheadMemory({ url: "localhost:8080", sessionId: "1" });
@@ -21,7 +21,7 @@ test("Test motörhead memory", async () => {
 
   await memory.saveContext(
     { input: "Who is the best vocalist?" },
-    { response: "Ozzy Osbourne" }
+    { response: "Ozzy Osbourne" },
   );
   const expectedString = "Human: Who is the best vocalist?\nAI: Ozzy Osbourne";
   const result2 = await memory.loadMemoryVariables({});
@@ -43,7 +43,7 @@ test("Test motörhead memory with pre-loaded history", async () => {
             { role: "Human", content: "My name is Ozzy" },
           ],
         }),
-    } as Response)
+    } as Response),
   );
   const memory = new MotorheadMemory({
     url: "localhost:8080",

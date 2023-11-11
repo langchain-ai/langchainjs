@@ -53,7 +53,7 @@ export class TextLoader extends BaseDocumentLoader {
     parsed.forEach((pageContent, i) => {
       if (typeof pageContent !== "string") {
         throw new Error(
-          `Expected string, at position ${i} got ${typeof pageContent}`
+          `Expected string, at position ${i} got ${typeof pageContent}`,
         );
       }
     });
@@ -68,7 +68,7 @@ export class TextLoader extends BaseDocumentLoader {
                   ...metadata,
                   line: i + 1,
                 },
-        })
+        }),
     );
   }
 
@@ -89,7 +89,7 @@ export class TextLoader extends BaseDocumentLoader {
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
+        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`,
       );
     }
   }

@@ -31,7 +31,7 @@ const resultsWithScore = await store.similaritySearchWithScore(
   1,
   {
     lambda: 0.025,
-  }
+  },
 );
 
 // Print the results.

@@ -53,7 +53,7 @@ const functionCallingModel = new ChatOpenAI({
 const chain = RunnableSequence.from([
   { content: (doc: Document) => doc.pageContent },
   PromptTemplate.fromTemplate(
-    `Generate a list of 3 hypothetical questions that the below document could be used to answer:\n\n{content}`
+    `Generate a list of 3 hypothetical questions that the below document could be used to answer:\n\n{content}`,
   ),
   functionCallingModel,
   new JsonKeyOutputFunctionsParser<string[]>({ attrName: "questions" }),
@@ -64,7 +64,7 @@ const hypotheticalQuestions = await chain.batch(
   {},
   {
     maxConcurrency: 5,
-  }
+  },
 );
 
 const idKey = "doc_id";
@@ -96,7 +96,7 @@ await docstore.mset(keyValuePairs);
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
   hypotheticalQuestionDocs,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 const retriever = new MultiVectorRetriever({
@@ -113,9 +113,8 @@ const retriever = new MultiVectorRetriever({
 // retriever.vectorstore.addDocuments(taggedOriginalDocs);
 
 // Vectorstore alone retrieves the small chunks
-const vectorstoreResult = await retriever.vectorstore.similaritySearch(
-  "justice breyer"
-);
+const vectorstoreResult =
+  await retriever.vectorstore.similaritySearch("justice breyer");
 console.log(vectorstoreResult[0].pageContent);
 /*
   "What measures will be taken to crack down on corporations overcharging American businesses and consumers?"

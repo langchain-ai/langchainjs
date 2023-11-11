@@ -8,7 +8,7 @@ import { VercelKVStore } from "langchain/storage/vercel_kv";
 const getClient = () => {
   if (!process.env.VERCEL_KV_API_URL || !process.env.VERCEL_KV_API_TOKEN) {
     throw new Error(
-      "VERCEL_KV_API_URL and VERCEL_KV_API_TOKEN must be set in the environment"
+      "VERCEL_KV_API_URL and VERCEL_KV_API_TOKEN must be set in the environment",
     );
   }
   const client = createClient({
@@ -44,7 +44,7 @@ await store.mset(
   messages.map((message, index) => [
     `message:id:${index}`,
     encoder.encode(JSON.stringify(message)),
-  ])
+  ]),
 );
 // Now you can get your messages from the store
 const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);

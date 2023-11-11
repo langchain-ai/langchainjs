@@ -53,16 +53,16 @@ export class EmbeddingsFilter extends BaseDocumentCompressor {
 
   async compressDocuments(
     documents: Document[],
-    query: string
+    query: string,
   ): Promise<Document[]> {
     const embeddedDocuments = await this.embeddings.embedDocuments(
-      documents.map((doc) => doc.pageContent)
+      documents.map((doc) => doc.pageContent),
     );
     const embeddedQuery = await this.embeddings.embedQuery(query);
     const similarity = this.similarityFn([embeddedQuery], embeddedDocuments)[0];
     let includedIdxs = Array.from(
       { length: embeddedDocuments.length },
-      (_, i) => i
+      (_, i) => i,
     );
 
     if (this.k !== undefined) {

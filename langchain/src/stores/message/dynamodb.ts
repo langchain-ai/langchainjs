@@ -138,7 +138,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
       }))
       .filter(
         (x): x is StoredMessage =>
-          x.type !== undefined && x.data.content !== undefined
+          x.type !== undefined && x.data.content !== undefined,
       );
     return mapStoredMessagesToChatMessages(messages);
   }

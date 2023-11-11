@@ -35,7 +35,7 @@ export const run = async () => {
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
-      "You are a helpful assistant that translates {input_language} to {output_language}."
+      "You are a helpful assistant that translates {input_language} to {output_language}.",
     ),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);

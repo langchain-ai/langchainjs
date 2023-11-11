@@ -22,7 +22,7 @@ const modelParams = {
 };
 
 const prompt = ChatPromptTemplate.fromTemplate(
-  `tell me a long joke about {foo}`
+  `tell me a long joke about {foo}`,
 );
 const model = new ChatOpenAI({
   temperature: 0,

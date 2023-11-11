@@ -85,7 +85,7 @@ class AWSLambda extends DynamicTool {
         .send(command)
         .then((response) => {
           const responseData = JSON.parse(
-            new TextDecoder().decode(response.Payload)
+            new TextDecoder().decode(response.Payload),
           );
 
           resolve(responseData.body ? responseData.body : "request completed.");
@@ -116,7 +116,7 @@ async function LambdaImports() {
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load @aws-sdk/client-lambda'. Please install it eg. `yarn add @aws-sdk/client-lambda`."
+      "Failed to load @aws-sdk/client-lambda'. Please install it eg. `yarn add @aws-sdk/client-lambda`.",
     );
   }
 }

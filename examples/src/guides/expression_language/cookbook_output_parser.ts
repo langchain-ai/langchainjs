@@ -5,7 +5,7 @@ import { StringOutputParser } from "langchain/schema/output_parser";
 
 const model = new ChatOpenAI({});
 const promptTemplate = PromptTemplate.fromTemplate(
-  "Tell me a joke about {topic}"
+  "Tell me a joke about {topic}",
 );
 const outputParser = new StringOutputParser();
 

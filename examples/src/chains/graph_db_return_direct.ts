@@ -17,7 +17,7 @@ const model = new OpenAI({ temperature: 0 });
 // Populate the database with two nodes and a relationship
 await graph.query(
   "CREATE (a:Actor {name:'Bruce Willis'})" +
-    "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
+    "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})",
 );
 
 // Refresh schema

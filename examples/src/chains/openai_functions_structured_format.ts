@@ -16,7 +16,7 @@ const zodSchema = z.object({
         name: z.string().describe("The name of the food item"),
         healthy: z.boolean().describe("Whether the food is good for you"),
         color: z.string().optional().describe("The color of the food"),
-      })
+      }),
     )
     .describe("An array of food items mentioned in the text"),
 });
@@ -24,7 +24,7 @@ const zodSchema = z.object({
 const prompt = new ChatPromptTemplate({
   promptMessages: [
     SystemMessagePromptTemplate.fromTemplate(
-      "List all food items mentioned in the following text."
+      "List all food items mentioned in the following text.",
     ),
     HumanMessagePromptTemplate.fromTemplate("{inputText}"),
   ],

@@ -95,7 +95,7 @@ export class Chroma extends VectorStore {
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options
+      options,
     );
   }
 
@@ -134,7 +134,7 @@ export class Chroma extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[] },
   ) {
     if (vectors.length === 0) {
       return [];
@@ -147,7 +147,7 @@ export class Chroma extends VectorStore {
     }
     if (vectors[0].length !== this.numDimensions) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`
+        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`,
       );
     }
 
@@ -216,7 +216,7 @@ export class Chroma extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
   ) {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
@@ -287,7 +287,7 @@ export class Chroma extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: ChromaLibArgs
+    dbConfig: ChromaLibArgs,
   ): Promise<Chroma> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -312,7 +312,7 @@ export class Chroma extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: ChromaLibArgs
+    dbConfig: ChromaLibArgs,
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -328,7 +328,7 @@ export class Chroma extends VectorStore {
    */
   static async fromExistingCollection(
     embeddings: Embeddings,
-    dbConfig: ChromaLibArgs
+    dbConfig: ChromaLibArgs,
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();
@@ -347,7 +347,7 @@ export class Chroma extends VectorStore {
       return { ChromaClient };
     } catch (e) {
       throw new Error(
-        "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
+        "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`",
       );
     }
   }

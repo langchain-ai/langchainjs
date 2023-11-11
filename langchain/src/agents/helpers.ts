@@ -7,13 +7,13 @@ export const deserializeHelper = async <
   T extends string,
   U extends Record<string, unknown>,
   V extends AgentInput,
-  Z
+  Z,
 >(
   llm: BaseLanguageModel | undefined,
   tools: Tool[] | undefined,
   data: SerializedAgentT<T, U, V>,
   fromLLMAndTools: (llm: BaseLanguageModel, tools: Tool[], args: U) => Z,
-  fromConstructor: (args: V) => Z
+  fromConstructor: (args: V) => Z,
 ): Promise<Z> => {
   if (data.load_from_llm_and_tools) {
     if (!llm) {

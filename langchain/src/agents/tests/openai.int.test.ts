@@ -21,7 +21,7 @@ test("OpenAIAgent", async () => {
     {
       agentType: "openai-functions",
       verbose: true,
-    }
+    },
   );
 
   const result = await executor.run("What is the weather in New York?", {
@@ -33,7 +33,7 @@ test("OpenAIAgent", async () => {
   console.log(result);
 
   const result2 = await executor.run(
-    "And what is the weather like in the capital of that state?"
+    "And what is the weather like in the capital of that state?",
   );
 
   console.log(result2);
@@ -58,7 +58,7 @@ test("OpenAIAgent streaming", async () => {
       agentType: "openai-functions",
       returnIntermediateSteps: true,
       maxIterations: 3,
-    }
+    },
   );
 
   const result = await executor.call({
@@ -97,7 +97,7 @@ test("OpenAIAgent with parsing error handling", async () => {
                     "Open House",
                   ])
                   .describe("The type of task"),
-              })
+              }),
             )
             .describe("The JSON for task, reminder or alert to create"),
         })

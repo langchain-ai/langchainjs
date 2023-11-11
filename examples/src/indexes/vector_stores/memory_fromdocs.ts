@@ -9,7 +9,7 @@ const docs = await loader.load();
 // Load the docs into the vector store
 const vectorStore = await MemoryVectorStore.fromDocuments(
   docs,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 // Search for the most similar document

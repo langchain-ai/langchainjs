@@ -8,7 +8,7 @@ export const run = async () => {
       recursive: true,
       processSubmodules: true,
       unknown: "warn",
-    }
+    },
   );
   const docs = await loader.load();
   console.log({ docs });

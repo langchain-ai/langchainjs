@@ -12,10 +12,11 @@ pre {
   }
 }
 
-#my-component-root *, #headlessui-portal-root * {
+#my-component-root *,
+#headlessui-portal-root * {
   z-index: 10000;
 }
 
 .content-container p {
-    margin: revert;
+  margin: revert;
 }

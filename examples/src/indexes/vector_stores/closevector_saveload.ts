@@ -9,7 +9,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 const vectorStore = await CloseVectorNode.fromTexts(
   ["Hello world", "Bye bye", "hello nice world"],
   [{ id: 2 }, { id: 1 }, { id: 3 }],
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 // Save the vector store to a directory
@@ -22,7 +22,7 @@ await vectorStore.save(directory);
 // const loadedVectorStore = await CloseVectorWeb.load(
 const loadedVectorStore = await CloseVectorNode.load(
   directory,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
 );
 
 // vectorStore and loadedVectorStore are identical

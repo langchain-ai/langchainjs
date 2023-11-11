@@ -32,7 +32,7 @@ const loader = new DirectoryLoader(
     ".jsonl": (path) => new JSONLinesLoader(path, "/html"),
     ".txt": (path) => new TextLoader(path),
     ".csv": (path) => new CSVLoader(path, "text"),
-  }
+  },
 );
 const docs = await loader.load();
 console.log({ docs });

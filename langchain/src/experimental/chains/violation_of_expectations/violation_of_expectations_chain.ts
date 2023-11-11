@@ -162,7 +162,7 @@ export class ViolationOfExpectationsChain
    */
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<ChainValues> {
     if (!(this.chatHistoryKey in values)) {
       throw new Error(`Chat history key ${this.chatHistoryKey} not found`);
@@ -171,25 +171,25 @@ export class ViolationOfExpectationsChain
     const chatHistory: unknown[] = values[this.chatHistoryKey];
 
     const isEveryMessageBaseMessage = chatHistory.every((message) =>
-      isBaseMessage(message)
+      isBaseMessage(message),
     );
     if (!isEveryMessageBaseMessage) {
       throw new Error("Chat history must be an array of BaseMessages");
     }
 
     const messageChunks = this.chunkMessagesByAIResponse(
-      chatHistory as BaseMessage[]
+      chatHistory as BaseMessage[],
     );
 
     // Generate the initial prediction for every user message.
     const userPredictions = await Promise.all(
       messageChunks.map(async (chatHistoryChunk) => ({
         userPredictions: await this.predictNextUserMessage(
-          chatHistoryChunk.chunkedMessages
+          chatHistoryChunk.chunkedMessages,
         ),
         userResponse: chatHistoryChunk.userResponse,
         runManager,
-      }))
+      })),
     );
 
     // Generate insights, and prediction violations for every user message.
@@ -200,8 +200,8 @@ export class ViolationOfExpectationsChain
           userPredictions: prediction.userPredictions,
           userResponse: prediction.userResponse,
           runManager,
-        })
-      )
+        }),
+      ),
     );
 
     // Generate a fact/insight about the user for every set of messages.
@@ -213,8 +213,8 @@ export class ViolationOfExpectationsChain
             revisedPrediction: violation.revisedPrediction,
             explainedPredictionErrors: violation.explainedPredictionErrors,
           },
-        })
-      )
+        }),
+      ),
     );
 
     return {
@@ -234,7 +234,7 @@ export class ViolationOfExpectationsChain
    */
   private async predictNextUserMessage(
     chatHistory: BaseMessage[],
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<PredictNextUserMessageResponse> {
     const messageString = this.getChatHistoryString(chatHistory);
 
@@ -244,14 +244,14 @@ export class ViolationOfExpectationsChain
     });
 
     const chain = PREDICT_NEXT_USER_MESSAGE_PROMPT.pipe(llmWithFunctions).pipe(
-      this.jsonOutputParser
+      this.jsonOutputParser,
     );
 
     const res = await chain.invoke(
       {
         chat_history: messageString,
       },
-      runManager?.getChild("prediction")
+      runManager?.getChild("prediction"),
     );
 
     if (
@@ -268,7 +268,7 @@ export class ViolationOfExpectationsChain
 
     // Query the retriever for relevant insights. Use the generates insights as a query.
     const retrievedDocs = await this.retrieveRelevantInsights(
-      predictionResponse.insights
+      predictionResponse.insights,
     );
     const relevantDocs = this.removeDuplicateStrings([
       ...predictionResponse.insights,
@@ -289,20 +289,19 @@ export class ViolationOfExpectationsChain
    * @returns {Promise<Array<string>>} A promise that resolves to an array of relevant insights content.
    */
   private async retrieveRelevantInsights(
-    insights: Array<string>
+    insights: Array<string>,
   ): Promise<Array<string>> {
     // Only extract the first relevant doc from the retriever. We don't need more than one.
     const relevantInsightsDocuments = await Promise.all(
       insights.map(async (insight) => {
-        const relevantInsight = await this.retriever.getRelevantDocuments(
-          insight
-        );
+        const relevantInsight =
+          await this.retriever.getRelevantDocuments(insight);
         return relevantInsight[0];
-      })
+      }),
     );
 
     const relevantInsightsContent = relevantInsightsDocuments.map(
-      (document) => document.pageContent
+      (document) => document.pageContent,
     );
 
     return relevantInsightsContent;
@@ -336,7 +335,7 @@ export class ViolationOfExpectationsChain
     });
 
     const chain = PREDICTION_VIOLATIONS_PROMPT.pipe(llmWithFunctions).pipe(
-      this.jsonOutputParser
+      this.jsonOutputParser,
     );
 
     if (typeof userResponse?.content !== "string") {
@@ -348,7 +347,7 @@ export class ViolationOfExpectationsChain
         actual_output: userResponse?.content ?? "",
         user_insights: userPredictions.insights.join("\n"),
       },
-      runManager?.getChild("prediction_violations")
+      runManager?.getChild("prediction_violations"),
     )) as Awaited<{
       violationExplanation: string;
       explainedPredictionErrors: Array<string>;
@@ -393,7 +392,7 @@ export class ViolationOfExpectationsChain
     runManager?: CallbackManagerForChainRun;
   }): Promise<string> {
     const revisedPredictionChain = GENERATE_REVISED_PREDICTION_PROMPT.pipe(
-      this.llm
+      this.llm,
     ).pipe(this.stringOutputParser);
 
     const revisedPredictionRes = await revisedPredictionChain.invoke(
@@ -402,7 +401,7 @@ export class ViolationOfExpectationsChain
         explained_prediction_errors: explainedPredictionErrors.join("\n"),
         user_insights: userInsights.join("\n"),
       },
-      runManager?.getChild("prediction_revision")
+      runManager?.getChild("prediction_revision"),
     );
 
     return revisedPredictionRes;
@@ -436,7 +435,7 @@ export class ViolationOfExpectationsChain
     runManager?: CallbackManagerForChainRun;
   }): Promise<string> {
     const chain = GENERATE_FACTS_PROMPT.pipe(this.llm).pipe(
-      this.stringOutputParser
+      this.stringOutputParser,
     );
 
     if (typeof userResponse?.content !== "string") {
@@ -448,7 +447,7 @@ export class ViolationOfExpectationsChain
         prediction: predictions.revisedPrediction,
         user_message: userResponse?.content ?? "",
       },
-      runManager?.getChild("generate_facts")
+      runManager?.getChild("generate_facts"),
     );
 
     return res;
@@ -470,7 +469,7 @@ export class ViolationOfExpectationsChain
     retriever: BaseRetriever,
     options?: Partial<
       Omit<ViolationOfExpectationsChainInput, "llm" | "retriever">
-    >
+    >,
   ): ViolationOfExpectationsChain {
     return new this({
       retriever,

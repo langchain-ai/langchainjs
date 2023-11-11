@@ -53,14 +53,14 @@ export class USearch extends SaveableVectorStore {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
   public get index(): usearch.Index {
     if (!this._index) {
       throw new Error(
-        "Vector store not initialised yet. Try calling `fromTexts` or `fromDocuments` first."
+        "Vector store not initialised yet. Try calling `fromTexts` or `fromDocuments` first.",
       );
     }
     return this._index;
@@ -95,7 +95,7 @@ export class USearch extends SaveableVectorStore {
     const d = this.index.dimensions();
     if (BigInt(dv) !== d) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${d})`
+        `Vectors must have the same length as the number of dimensions (${d})`,
       );
     }
 
@@ -124,13 +124,13 @@ export class USearch extends SaveableVectorStore {
     const d = this.index.dimensions();
     if (BigInt(query.length) !== d) {
       throw new Error(
-        `Query vector must have the same length as the number of dimensions (${d})`
+        `Query vector must have the same length as the number of dimensions (${d})`,
       );
     }
     if (k > this.index.size()) {
       const total = this.index.size();
       console.warn(
-        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`
+        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`,
       );
       // eslint-disable-next-line no-param-reassign
       k = Number(total);
@@ -162,7 +162,7 @@ export class USearch extends SaveableVectorStore {
         JSON.stringify([
           Array.from(this.docstore._docs.entries()),
           this._mapping,
-        ])
+        ]),
       ),
     ]);
   }
@@ -183,7 +183,7 @@ export class USearch extends SaveableVectorStore {
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
-    }
+    },
   ): Promise<USearch> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -211,7 +211,7 @@ export class USearch extends SaveableVectorStore {
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
-    }
+    },
   ): Promise<USearch> {
     const args: USearchArgs = {
       docstore: dbConfig?.docstore,

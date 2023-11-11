@@ -187,7 +187,7 @@ export class ChatOllama
   async *_streamResponseChunks(
     input: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     const stream = await this.caller.call(async () =>
       createOllamaStream(
@@ -196,8 +196,8 @@ export class ChatOllama
           ...this.invocationParams(options),
           prompt: this._formatMessagesAsPrompt(input),
         },
-        options
-      )
+        options,
+      ),
     );
     for await (const chunk of stream) {
       if (!chunk.done) {
@@ -236,11 +236,11 @@ export class ChatOllama
           messageText = `<<SYS>> ${message.content} <</SYS>>`;
         } else if (ChatMessage.isInstance(message)) {
           messageText = `\n\n${message.role[0].toUpperCase()}${message.role.slice(
-            1
+            1,
           )}: ${message.content}`;
         } else {
           console.warn(
-            `Unsupported message type passed to Ollama: "${message._getType()}"`
+            `Unsupported message type passed to Ollama: "${message._getType()}"`,
           );
           messageText = "";
         }
@@ -254,13 +254,13 @@ export class ChatOllama
   async _call(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<string> {
     const chunks = [];
     for await (const chunk of this._streamResponseChunks(
       messages,
       options,
-      runManager
+      runManager,
     )) {
       chunks.push(chunk.message.content);
     }

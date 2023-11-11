@@ -7,12 +7,12 @@ import { WebPDFLoader } from "../web/pdf.js";
 test("Test Web PDF loader from blob", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/1706.03762.pdf"
+    "./example_data/1706.03762.pdf",
   );
   const loader = new WebPDFLoader(
     new Blob([await fs.readFile(filePath)], {
       type: "application/pdf",
-    })
+    }),
   );
   const docs = await loader.load();
 
@@ -51,7 +51,7 @@ test("Test Web PDF loader from blob", async () => {
 test("Test Web PDF loader with custom pdfjs", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/1706.03762.pdf"
+    "./example_data/1706.03762.pdf",
   );
   const loader = new WebPDFLoader(
     new Blob([await fs.readFile(filePath)], {
@@ -59,7 +59,7 @@ test("Test Web PDF loader with custom pdfjs", async () => {
     }),
     {
       pdfjs: () => import("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js"),
-    }
+    },
   );
   const docs = await loader.load();
 

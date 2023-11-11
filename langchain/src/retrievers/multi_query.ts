@@ -93,7 +93,7 @@ export class MultiQueryRetriever extends BaseRetriever {
     fields: Omit<MultiQueryRetrieverInput, "llmChain"> & {
       llm: BaseLanguageModel;
       prompt?: BasePromptTemplate;
-    }
+    },
   ): MultiQueryRetriever {
     const {
       retriever,
@@ -111,11 +111,11 @@ export class MultiQueryRetriever extends BaseRetriever {
   // Generate the different queries for each retrieval, using our llmChain
   private async _generateQueries(
     question: string,
-    runManager?: CallbackManagerForRetrieverRun
+    runManager?: CallbackManagerForRetrieverRun,
   ): Promise<string[]> {
     const response = await this.llmChain.call(
       { question, queryCount: this.queryCount },
-      runManager?.getChild()
+      runManager?.getChild(),
     );
     const lines = response.text[this.parserKey] || [];
     if (this.verbose) {
@@ -127,13 +127,13 @@ export class MultiQueryRetriever extends BaseRetriever {
   // Retrieve documents using the original retriever
   private async _retrieveDocuments(
     queries: string[],
-    runManager?: CallbackManagerForRetrieverRun
+    runManager?: CallbackManagerForRetrieverRun,
   ): Promise<Document[]> {
     const documents: Document[] = [];
     for (const query of queries) {
       const docs = await this.retriever.getRelevantDocuments(
         query,
-        runManager?.getChild()
+        runManager?.getChild(),
       );
       documents.push(...docs);
     }
@@ -146,7 +146,7 @@ export class MultiQueryRetriever extends BaseRetriever {
 
     for (const doc of documents) {
       const key = `${doc.pageContent}:${JSON.stringify(
-        Object.entries(doc.metadata).sort()
+        Object.entries(doc.metadata).sort(),
       )}`;
       uniqueDocumentsDict[key] = doc;
     }
@@ -157,7 +157,7 @@ export class MultiQueryRetriever extends BaseRetriever {
 
   async _getRelevantDocuments(
     question: string,
-    runManager?: CallbackManagerForRetrieverRun
+    runManager?: CallbackManagerForRetrieverRun,
   ): Promise<Document[]> {
     const queries = await this._generateQueries(question, runManager);
     const documents = await this._retrieveDocuments(queries, runManager);

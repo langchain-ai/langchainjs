@@ -5,7 +5,7 @@ test("Test buildUrl method without engine", () => {
   const loader = new SearchApiLoader({ apiKey: "ApiKey", q: "Query" });
 
   expect(loader.buildUrl()).toBe(
-    "https://www.searchapi.io/api/v1/search?engine=google&api_key=ApiKey&q=Query"
+    "https://www.searchapi.io/api/v1/search?engine=google&api_key=ApiKey&q=Query",
   );
 });
 
@@ -17,7 +17,7 @@ test("Test buildUrl method with engine override", () => {
   });
 
   expect(loader.buildUrl()).toBe(
-    "https://www.searchapi.io/api/v1/search?engine=google_news&api_key=ApiKey&q=Query"
+    "https://www.searchapi.io/api/v1/search?engine=google_news&api_key=ApiKey&q=Query",
   );
 });
 

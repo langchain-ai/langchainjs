@@ -15,7 +15,7 @@ function sortedValues<T>(values: Record<string, T>): T[] {
  * class.
  */
 export type SemanticSimilarityExampleSelectorInput<
-  V extends VectorStore = VectorStore
+  V extends VectorStore = VectorStore,
 > =
   | {
       vectorStore: V;
@@ -39,7 +39,7 @@ export type SemanticSimilarityExampleSelectorInput<
  * the BaseExampleSelector class.
  */
 export class SemanticSimilarityExampleSelector<
-  V extends VectorStore = VectorStore
+  V extends VectorStore = VectorStore,
 > extends BaseExampleSelector {
   vectorStoreRetriever: VectorStoreRetriever<V>;
 
@@ -60,7 +60,7 @@ export class SemanticSimilarityExampleSelector<
       this.vectorStoreRetriever = data.vectorStoreRetriever;
     } else {
       throw new Error(
-        `You must specify one of "vectorStore" and "vectorStoreRetriever".`
+        `You must specify one of "vectorStore" and "vectorStoreRetriever".`,
       );
     }
   }
@@ -76,8 +76,8 @@ export class SemanticSimilarityExampleSelector<
     const stringExample = sortedValues(
       inputKeys.reduce(
         (acc, key) => ({ ...acc, [key]: example[key] }),
-        {} as Example
-      )
+        {} as Example,
+      ),
     ).join(" ");
 
     await this.vectorStoreRetriever.addDocuments([
@@ -96,14 +96,14 @@ export class SemanticSimilarityExampleSelector<
    * @returns Promise that resolves with an array of the selected examples.
    */
   async selectExamples<T>(
-    inputVariables: Record<string, T>
+    inputVariables: Record<string, T>,
   ): Promise<Example[]> {
     const inputKeys = this.inputKeys ?? Object.keys(inputVariables);
     const query = sortedValues(
       inputKeys.reduce(
         (acc, key) => ({ ...acc, [key]: inputVariables[key] }),
-        {} as Record<string, T>
-      )
+        {} as Record<string, T>,
+      ),
     ).join(" ");
 
     const exampleDocs = await this.vectorStoreRetriever.invoke(query);
@@ -114,8 +114,8 @@ export class SemanticSimilarityExampleSelector<
       return examples.map((example) =>
         (this.exampleKeys as string[]).reduce(
           (acc, key) => ({ ...acc, [key]: example[key] }),
-          {}
-        )
+          {},
+        ),
       );
     }
     return examples;
@@ -142,7 +142,7 @@ export class SemanticSimilarityExampleSelector<
     options: {
       k?: number;
       inputKeys?: string[];
-    } & Parameters<C["fromTexts"]>[3] = {}
+    } & Parameters<C["fromTexts"]>[3] = {},
   ): Promise<SemanticSimilarityExampleSelector> {
     const inputKeys = options.inputKeys ?? null;
     const stringExamples = examples.map((example) =>
@@ -150,17 +150,17 @@ export class SemanticSimilarityExampleSelector<
         inputKeys
           ? inputKeys.reduce(
               (acc, key) => ({ ...acc, [key]: example[key] }),
-              {} as Record<string, string>
+              {} as Record<string, string>,
             )
-          : example
-      ).join(" ")
+          : example,
+      ).join(" "),
     );
 
     const vectorStore = await vectorStoreCls.fromTexts(
       stringExamples,
       examples, // metadatas
       embeddings,
-      options
+      options,
     );
 
     return new SemanticSimilarityExampleSelector({

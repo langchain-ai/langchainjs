@@ -79,7 +79,7 @@ export class VectorStoreRetrieverMemory
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues
+    outputValues: OutputValues,
   ): Promise<void> {
     const text = Object.entries(inputValues)
       .filter(([k]) => k !== this.memoryKey)

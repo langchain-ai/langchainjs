@@ -40,7 +40,7 @@ export class GoogleCalendarBase extends Tool {
         "https://www.googleapis.com/auth/calendar",
         "https://www.googleapis.com/auth/calendar.events",
       ],
-    }
+    },
   ) {
     super(...arguments);
 
@@ -54,19 +54,19 @@ export class GoogleCalendarBase extends Tool {
 
     if (!fields.credentials.clientEmail) {
       throw new Error(
-        "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar"
+        "Missing GOOGLE_CALENDAR_CLIENT_EMAIL to interact with Google Calendar",
       );
     }
 
     if (!fields.credentials.privateKey) {
       throw new Error(
-        "Missing GOOGLE_CALENDAR_PRIVATE_KEY to interact with Google Calendar"
+        "Missing GOOGLE_CALENDAR_PRIVATE_KEY to interact with Google Calendar",
       );
     }
 
     if (!fields.credentials.calendarId) {
       throw new Error(
-        "Missing GOOGLE_CALENDAR_CALENDAR_ID to interact with Google Calendar"
+        "Missing GOOGLE_CALENDAR_CALENDAR_ID to interact with Google Calendar",
       );
     }
 
@@ -86,7 +86,7 @@ export class GoogleCalendarBase extends Tool {
       this.clientEmail,
       undefined,
       this.privateKey,
-      this.scopes
+      this.scopes,
     );
 
     return auth;

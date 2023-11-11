@@ -80,7 +80,7 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     yield* this.llm._streamResponseChunks(messages, options, runManager);
   }
@@ -88,7 +88,7 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun | undefined
+    runManager?: CallbackManagerForLLMRun | undefined,
   ): Promise<ChatResult> {
     let promptMessages = messages;
     let forced = false;
@@ -96,7 +96,7 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
     if (options.tools) {
       // eslint-disable-next-line no-param-reassign
       options.functions = (options.functions ?? []).concat(
-        options.tools.map(formatToOpenAIFunction)
+        options.tools.map(formatToOpenAIFunction),
       );
     }
     if (options.functions !== undefined && options.functions.length > 0) {
@@ -119,11 +119,11 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
         }
         forced = true;
         const matchingFunction = options.functions.find(
-          (tool) => tool.name === functionCall
+          (tool) => tool.name === functionCall,
         );
         if (!matchingFunction) {
           throw new Error(
-            `No matching function found for passed "function_call"`
+            `No matching function found for passed "function_call"`,
           );
         }
         promptMessages = promptMessages.concat([
@@ -138,13 +138,13 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
       delete options.functions;
     } else if (options.function_call !== undefined) {
       throw new Error(
-        `If "function_call" is provided, "functions" must also be.`
+        `If "function_call" is provided, "functions" must also be.`,
       );
     }
     const chatResult = await this.llm._generate(
       promptMessages,
       options,
-      runManager
+      runManager,
     );
     const chatGenerationContent = chatResult.generations[0].message.content;
     if (typeof chatGenerationContent !== "string") {

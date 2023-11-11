@@ -19,7 +19,7 @@ test.skip("Test CloseVectorNode.fromTexts + addVectors", async () => {
     {
       key,
       secret,
-    }
+    },
   );
   expect(vectorStore.instance.index?.getMaxElements()).toBe(1);
   expect(vectorStore.instance.index?.getCurrentCount()).toBe(1);

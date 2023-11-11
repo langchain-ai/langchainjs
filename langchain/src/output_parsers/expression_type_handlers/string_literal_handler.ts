@@ -29,12 +29,12 @@ export class StringLiteralHandler extends NodeHandler {
   async handle(node: StringLiteral): Promise<StringLiteralType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler"
+        "ArrayLiteralExpressionHandler must have a parent handler",
       );
     }
     const text = (`${node.value}` as string).replace(
       /^["'](.+(?=["']$))["']$/,
-      "$1"
+      "$1",
     );
     return { type: "string_literal", value: text };
   }

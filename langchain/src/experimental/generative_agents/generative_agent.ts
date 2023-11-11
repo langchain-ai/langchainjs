@@ -73,7 +73,7 @@ export class GenerativeAgent extends BaseChain {
   constructor(
     llm: BaseLanguageModel,
     longTermMemory: GenerativeAgentMemory,
-    config: GenerativeAgentConfig
+    config: GenerativeAgentConfig,
   ) {
     super();
     this.llm = llm;
@@ -100,7 +100,7 @@ export class GenerativeAgent extends BaseChain {
     // parse a newline-seperated string into a list of strings
     const lines: string[] = text.trim().split("\n");
     const result: string[] = lines.map((line: string) =>
-      line.replace(/^\s*\d+\.\s*/, "").trim()
+      line.replace(/^\s*\d+\.\s*/, "").trim(),
     );
     return result;
   }
@@ -130,18 +130,18 @@ export class GenerativeAgent extends BaseChain {
    */
   async getEntityFromObservations(
     observation: string,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<string> {
     const prompt = PromptTemplate.fromTemplate(
       "What is the observed entity in the following observation? {observation}" +
-        "\nEntity="
+        "\nEntity=",
     );
 
     const result = await this.chain(prompt).call(
       {
         observation,
       },
-      runManager?.getChild("entity_extractor")
+      runManager?.getChild("entity_extractor"),
     );
 
     return result.output;
@@ -157,11 +157,11 @@ export class GenerativeAgent extends BaseChain {
   async getEntityAction(
     observation: string,
     entityName: string,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<string> {
     const prompt = PromptTemplate.fromTemplate(
       "What is the {entity} doing in the following observation? {observation}" +
-        "\nThe {entity} is"
+        "\nThe {entity} is",
     );
 
     const result = await this.chain(prompt).call(
@@ -169,7 +169,7 @@ export class GenerativeAgent extends BaseChain {
         entity: entityName,
         observation,
       },
-      runManager?.getChild("entity_action_extractor")
+      runManager?.getChild("entity_action_extractor"),
     );
     const trimmedResult = result.output.trim();
     return trimmedResult;
@@ -183,7 +183,7 @@ export class GenerativeAgent extends BaseChain {
    */
   async summarizeRelatedMemories(
     observation: string,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<string> {
     // summarize memories that are most relevant to an observation
     const prompt = PromptTemplate.fromTemplate(
@@ -191,16 +191,16 @@ export class GenerativeAgent extends BaseChain {
 {q1}?
 Context from memory:
 {relevant_memories}
-Relevant context:`
+Relevant context:`,
     );
     const entityName = await this.getEntityFromObservations(
       observation,
-      runManager
+      runManager,
     );
     const entityAction = await this.getEntityAction(
       observation,
       entityName,
-      runManager
+      runManager,
     );
     const q1 = `What is the relationship between ${this.name} and ${entityName}`;
     const q2 = `${entityName} is ${entityAction}`;
@@ -209,7 +209,7 @@ Relevant context:`
         q1,
         queries: [q1, q2],
       },
-      runManager?.getChild("entity_relationships")
+      runManager?.getChild("entity_relationships"),
     );
 
     return response.output.trim(); // added output
@@ -217,7 +217,7 @@ Relevant context:`
 
   async _call(
     values: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<ChainValues> {
     const { observation, suffix, now } = values;
     // react to a given observation or dialogue act
@@ -229,13 +229,13 @@ Relevant context:`
         "\n{relevant_memories}" +
         `\nMost recent observations: {most_recent_memories}` +
         `\nObservation: {observation}` +
-        `\n\n${suffix}`
+        `\n\n${suffix}`,
     );
 
     const agentSummaryDescription = await this.getSummary({}, runManager); // now = now in param
     const relevantMemoriesStr = await this.summarizeRelatedMemories(
       observation,
-      runManager
+      runManager,
     );
     const currentTime = (now || new Date()).toLocaleString("en-US", {
       month: "long",
@@ -258,14 +258,14 @@ Relevant context:`
       relevantMemoriesStr;
 
     const consumedTokens = await this.llm.getNumTokens(
-      await prompt.format({ ...chainInputs })
+      await prompt.format({ ...chainInputs }),
     );
 
     chainInputs[this.longTermMemory.getMostRecentMemoriesTokenKey()] =
       consumedTokens;
     const response = await this.chain(prompt).call(
       chainInputs,
-      runManager?.getChild("reaction_from_summary")
+      runManager?.getChild("reaction_from_summary"),
     );
 
     const rawOutput = response.output;
@@ -278,7 +278,7 @@ Relevant context:`
         `${this.name} observed ${observation} and reacted by ${reaction}`,
         now,
         {},
-        runManager?.getChild("memory")
+        runManager?.getChild("memory"),
       );
       output = `${reaction}`;
       continue_dialogue = false;
@@ -288,19 +288,19 @@ Relevant context:`
         `${this.name} observed ${observation} and said ${saidValue}`,
         now,
         {},
-        runManager?.getChild("memory")
+        runManager?.getChild("memory"),
       );
       output = `${this.name} said ${saidValue}`;
       continue_dialogue = true;
     } else if (rawOutput.includes("GOODBYE:")) {
       const farewell = this._cleanResponse(
-        rawOutput.split("GOODBYE:").pop() ?? ""
+        rawOutput.split("GOODBYE:").pop() ?? "",
       );
       await this.addMemory(
         `${this.name} observed ${observation} and said ${farewell}`,
         now,
         {},
-        runManager?.getChild("memory")
+        runManager?.getChild("memory"),
       );
       output = `${this.name} said ${farewell}`;
       continue_dialogue = false;
@@ -325,7 +325,7 @@ Relevant context:`
    */
   async generateReaction(
     observation: string,
-    now?: Date
+    now?: Date,
   ): Promise<[boolean, string]> {
     const callToActionTemplate: string =
       `Should {agent_name} react to the observation, and if so,` +
@@ -350,7 +350,7 @@ Relevant context:`
    */
   async generateDialogueResponse(
     observation: string,
-    now?: Date
+    now?: Date,
   ): Promise<[boolean, string]> {
     const callToActionTemplate = `What would ${this.name} say? To end the conversation, write: GOODBYE: "what to say". Otherwise to continue the conversation, write: SAY: "what to say next"\n\n`;
     const { output, continue_dialogue } = await this.call({
@@ -378,12 +378,12 @@ Relevant context:`
       now?: Date;
       forceRefresh?: boolean;
     },
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<string> {
     const { now = new Date(), forceRefresh = false } = config ?? {};
 
     const sinceRefresh = Math.floor(
-      (now.getTime() - this.lastRefreshed.getTime()) / 1000
+      (now.getTime() - this.lastRefreshed.getTime()) / 1000,
     );
 
     if (
@@ -414,7 +414,7 @@ ${this.summary}`;
    * @returns The computed summary as a string.
    */
   async computeAgentSummary(
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
   ): Promise<string> {
     const prompt = PromptTemplate.fromTemplate(
       "How would you summarize {name}'s core characteristics given the following statements:\n" +
@@ -422,7 +422,7 @@ ${this.summary}`;
         "{relevant_memories}" +
         "----------" +
         "Do not embellish." +
-        "\n\nSummary: "
+        "\n\nSummary: ",
     );
     // the agent seeks to think about their core characterisitics
     const result = await this.chain(prompt).call(
@@ -430,7 +430,7 @@ ${this.summary}`;
         name: this.name,
         queries: [`${this.name}'s core characteristics`],
       },
-      runManager?.getChild("compute_agent_summary")
+      runManager?.getChild("compute_agent_summary"),
     );
     return result.output.trim();
   }
@@ -444,7 +444,7 @@ ${this.summary}`;
     config: {
       now?: Date;
       forceRefresh?: boolean;
-    } = {}
+    } = {},
   ): string {
     const { now = new Date(), forceRefresh = false } = config;
     // return a full header of the agent's status, summary, and current time.
@@ -472,13 +472,13 @@ ${this.summary}`;
     memoryContent: string,
     now?: Date,
     metadata?: Record<string, unknown>,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ) {
     return this.longTermMemory.addMemory(
       memoryContent,
       now,
       metadata,
-      callbacks
+      callbacks,
     );
   }
 }

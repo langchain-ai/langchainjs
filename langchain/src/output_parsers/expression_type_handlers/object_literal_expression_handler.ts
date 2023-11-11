@@ -30,7 +30,7 @@ export class ObjectLiteralExpressionHandler extends NodeHandler {
   async handle(node: ObjectExpression): Promise<ObjectLiteralType> {
     if (!this.parentHandler) {
       throw new Error(
-        "ArrayLiteralExpressionHandler must have a parent handler"
+        "ArrayLiteralExpressionHandler must have a parent handler",
       );
     }
     const values: PropertyAssignmentType[] = [];
@@ -39,8 +39,8 @@ export class ObjectLiteralExpressionHandler extends NodeHandler {
       if (ASTParser.isPropertyAssignment(property)) {
         values.push(
           await new PropertyAssignmentHandler(this.parentHandler).handle(
-            property
-          )
+            property,
+          ),
         );
       }
     }

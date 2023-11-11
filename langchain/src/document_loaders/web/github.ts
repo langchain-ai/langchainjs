@@ -161,7 +161,7 @@ export class GithubRepoLoader
       maxConcurrency = 2,
       maxRetries = 2,
       ...rest
-    }: GithubRepoLoaderParams = {}
+    }: GithubRepoLoaderParams = {},
   ) {
     super();
     this.baseUrl = baseUrl;
@@ -175,7 +175,7 @@ export class GithubRepoLoader
     // processing submodules without processing contents of other directories makes no sense
     if (processSubmodules && !recursive) {
       throw new Error(
-        `Input property "recursive" must be true if "processSubmodules" is true.`
+        `Input property "recursive" must be true if "processSubmodules" is true.`,
       );
     }
     this.processSubmodules = processSubmodules;
@@ -216,7 +216,7 @@ export class GithubRepoLoader
     path: string;
   } {
     const match = url.match(
-      new RegExp(`${this.baseUrl}/([^/]+)/([^/]+)(/tree/[^/]+/(.+))?`, "i")
+      new RegExp(`${this.baseUrl}/([^/]+)/([^/]+)(/tree/[^/]+/(.+))?`, "i"),
     );
 
     if (!match) {
@@ -234,7 +234,7 @@ export class GithubRepoLoader
    */
   public async load(): Promise<Document[]> {
     this.log(
-      `Loading documents from ${this.baseUrl}/${this.owner}/${this.repo}/${this.initialPath}...`
+      `Loading documents from ${this.baseUrl}/${this.owner}/${this.repo}/${this.initialPath}...`,
     );
     // process repository without submodules
     const documents: Document[] = (await this.processRepo()).map(
@@ -242,7 +242,7 @@ export class GithubRepoLoader
         new Document({
           pageContent: fileResponse.contents,
           metadata: fileResponse.metadata,
-        })
+        }),
     );
     if (this.processSubmodules) {
       // process submodules
@@ -264,7 +264,7 @@ export class GithubRepoLoader
     // so it may be that we end up fetching this file list twice
     const repoFiles = await this.fetchRepoFiles("");
     const gitmodulesFile = repoFiles.filter(
-      ({ name }) => name === ".gitmodules"
+      ({ name }) => name === ".gitmodules",
     )?.[0];
     if (gitmodulesFile) {
       const gitmodulesContent = await this.fetchFileContent({
@@ -286,7 +286,7 @@ export class GithubRepoLoader
    * @param gitmodulesContent the content of a .gitmodules file
    */
   private async parseGitmodules(
-    gitmodulesContent: string
+    gitmodulesContent: string,
   ): Promise<SubmoduleInfo[]> {
     // catches the initial line of submodule entries
     const submodulePattern = /\[submodule "(.*?)"]\n((\s+.*?\s*=\s*.*?\n)*)/g;
@@ -295,7 +295,7 @@ export class GithubRepoLoader
 
     const submoduleInfos = [];
     for (const [, name, propertyLines] of gitmodulesContent.matchAll(
-      submodulePattern
+      submodulePattern,
     )) {
       if (!name || !propertyLines) {
         throw new Error("Could not parse submodule entry");
@@ -306,7 +306,7 @@ export class GithubRepoLoader
       for (const [, key, value] of submodulePropertyLines) {
         if (!key || !value) {
           throw new Error(
-            `Could not parse key/value pairs for submodule ${name}`
+            `Could not parse key/value pairs for submodule ${name}`,
           );
         }
         switch (key) {
@@ -345,19 +345,19 @@ export class GithubRepoLoader
    * @param submoduleInfo the info about the submodule to be loaded
    */
   private async loadSubmodule(
-    submoduleInfo: SubmoduleInfo
+    submoduleInfo: SubmoduleInfo,
   ): Promise<Document[]> {
     if (!submoduleInfo.url.startsWith(this.baseUrl)) {
       this.log(`Ignoring external submodule ${submoduleInfo.url}.`);
       return [];
     } else if (!submoduleInfo.path.startsWith(this.initialPath)) {
       this.log(
-        `Ignoring submodule ${submoduleInfo.url}, as it is not on initial path.`
+        `Ignoring submodule ${submoduleInfo.url}, as it is not on initial path.`,
       );
       return [];
     } else {
       this.log(
-        `Accessing submodule ${submoduleInfo.name} (${submoduleInfo.url})...`
+        `Accessing submodule ${submoduleInfo.name} (${submoduleInfo.url})...`,
       );
       return new GithubRepoLoader(submoduleInfo.url, {
         accessToken: this.accessToken,
@@ -412,7 +412,7 @@ export class GithubRepoLoader
    * @returns
    */
   private async fetchFileContentWrapper(
-    file: GithubFile
+    file: GithubFile,
   ): Promise<GetContentResponse> {
     const fileContent = await this.fetchFileContent(file).catch((error) => {
       this.handleError(`Failed wrap file content: ${file}, ${error}`);
@@ -431,7 +431,7 @@ export class GithubRepoLoader
    * Maps a list of files / directories to a list of promises that will fetch the file / directory contents
    */
   private async getCurrentDirectoryFilePromises(
-    files: GithubFile[]
+    files: GithubFile[],
   ): Promise<Promise<GetContentResponse>[]> {
     const currentDirectoryFilePromises: Promise<GetContentResponse>[] = [];
     // Directories have nested files / directories, which is why this is a list of promises of promises
@@ -455,7 +455,7 @@ export class GithubRepoLoader
         }
       } else if (this.recursive) {
         currentDirectoryDirectoryPromises.push(
-          this.processDirectory(file.path)
+          this.processDirectory(file.path),
         );
       }
     }
@@ -479,7 +479,7 @@ export class GithubRepoLoader
       return Promise.all(currentDirectoryFilePromises);
     } catch (error) {
       this.handleError(
-        `Failed to process directory: ${this.initialPath}, ${error}`
+        `Failed to process directory: ${this.initialPath}, ${error}`,
       );
       return Promise.reject(error);
     }
@@ -492,7 +492,7 @@ export class GithubRepoLoader
    * @returns A promise that resolves to an array of promises that will fetch the file / directory contents.
    */
   private async processDirectory(
-    path: string
+    path: string,
   ): Promise<Promise<GetContentResponse>[]> {
     try {
       const files = await this.fetchRepoFiles(path);
@@ -519,7 +519,7 @@ export class GithubRepoLoader
         throw new Error(
           `Unable to fetch repository files: ${
             response.status
-          } ${JSON.stringify(data)}`
+          } ${JSON.stringify(data)}`,
         );
       }
 

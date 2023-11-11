@@ -73,7 +73,7 @@ export class MomentoCache extends BaseCache {
    * @returns The Momento-backed cache.
    */
   public static async fromProps(
-    props: MomentoCacheProps
+    props: MomentoCacheProps,
   ): Promise<MomentoCache> {
     const instance = new MomentoCache(props);
     if (props.ensureCacheExists || props.ensureCacheExists === undefined) {
@@ -100,7 +100,7 @@ export class MomentoCache extends BaseCache {
    */
   public async lookup(
     prompt: string,
-    llmKey: string
+    llmKey: string,
   ): Promise<Generation[] | null> {
     const key = getCacheKey(prompt, llmKey);
     const getResponse = await this.client.get(this.cacheName, key);
@@ -133,14 +133,14 @@ export class MomentoCache extends BaseCache {
   public async update(
     prompt: string,
     llmKey: string,
-    value: Generation[]
+    value: Generation[],
   ): Promise<void> {
     const key = getCacheKey(prompt, llmKey);
     const setResponse = await this.client.set(
       this.cacheName,
       key,
       JSON.stringify(value.map(serializeGeneration)),
-      { ttl: this.ttlSeconds }
+      { ttl: this.ttlSeconds },
     );
 
     if (setResponse instanceof CacheSet.Success) {

@@ -9,7 +9,7 @@ export async function run() {
   // So we will fail fast, when Azure OpenAI API is used
   if (process.env.AZURE_OPENAI_API_KEY) {
     throw new Error(
-      "Azure OpenAI API does not support embedding with multiple inputs yet"
+      "Azure OpenAI API does not support embedding with multiple inputs yet",
     );
   }
 
@@ -17,13 +17,13 @@ export async function run() {
   const embeddings = new OpenAIEmbeddings(
     process.env.AZURE_OPENAI_API_KEY
       ? { azureOpenAIApiDeploymentName: "Embeddings2" }
-      : {}
+      : {},
   );
 
   const browser = new WebBrowser({ model, embeddings });
 
   const result = await browser.call(
-    `"https://www.themarginalian.org/2015/04/09/find-your-bliss-joseph-campbell-power-of-myth","who is joseph campbell"`
+    `"https://www.themarginalian.org/2015/04/09/find-your-bliss-joseph-campbell-power-of-myth","who is joseph campbell"`,
   );
 
   console.log(result);

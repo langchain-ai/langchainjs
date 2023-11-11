@@ -125,13 +125,13 @@ const messages = [
         tool_schemas: renderTextDescriptionAndArgs(tools),
         tool_names: toolNames.join(", "),
       },
-    })
+    }),
   ),
   new HumanMessagePromptTemplate(
     new PromptTemplate({
       template: humanMessageTemplate,
       inputVariables,
-    })
+    }),
   ),
 ];
 const prompt = ChatPromptTemplate.fromMessages(messages);
@@ -152,7 +152,7 @@ const outputParser = StructuredChatOutputParserWithRetries.fromLLM(
   new ChatOpenAI({ temperature: 0 }),
   {
     toolNames,
-  }
+  },
 );
 
 /**

@@ -71,7 +71,7 @@ export class GoogleCloudStorageDocstore extends Docstore {
    */
   async add(texts: Record<string, Document>): Promise<void> {
     await Promise.all(
-      Object.keys(texts).map((key) => this.addDocument(key, texts[key]))
+      Object.keys(texts).map((key) => this.addDocument(key, texts[key])),
     );
   }
 

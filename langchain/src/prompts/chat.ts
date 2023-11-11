@@ -33,7 +33,7 @@ import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 export abstract class BaseMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  RunOutput extends BaseMessage[] = BaseMessage[]
+  RunOutput extends BaseMessage[] = BaseMessage[],
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "prompts", "chat"];
 
@@ -48,7 +48,7 @@ export abstract class BaseMessagePromptTemplate<
    * @returns Formatted array of BaseMessages
    */
   abstract formatMessages(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<RunOutput>;
 
   /**
@@ -59,12 +59,12 @@ export abstract class BaseMessagePromptTemplate<
    */
   async invoke(
     input: RunInput,
-    options?: BaseCallbackConfig
+    options?: BaseCallbackConfig,
   ): Promise<RunOutput> {
     return this._callWithConfig(
       (input: RunInput) => this.formatMessages(input),
       input,
-      { ...options, runType: "prompt" }
+      { ...options, runType: "prompt" },
     );
   }
 }
@@ -127,7 +127,7 @@ export interface MessagePlaceholderFields<T extends string> {
  */
 export class MessagesPlaceholder<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessagePromptTemplate<RunInput> {
   static lc_name() {
     return "MessagesPlaceholder";
@@ -138,13 +138,13 @@ export class MessagesPlaceholder<
   constructor(variableName: Extract<keyof RunInput, string>);
 
   constructor(
-    fields: MessagePlaceholderFields<Extract<keyof RunInput, string>>
+    fields: MessagePlaceholderFields<Extract<keyof RunInput, string>>,
   );
 
   constructor(
     fields:
       | Extract<keyof RunInput, string>
-      | MessagePlaceholderFields<Extract<keyof RunInput, string>>
+      | MessagePlaceholderFields<Extract<keyof RunInput, string>>,
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign
@@ -160,13 +160,13 @@ export class MessagesPlaceholder<
 
   validateInputOrThrow(
     input: Array<unknown>,
-    variableName: Extract<keyof RunInput, string>
+    variableName: Extract<keyof RunInput, string>,
   ): input is BaseMessage[] {
     let isInputBaseMessage = false;
 
     if (Array.isArray(input)) {
       isInputBaseMessage = input.every((message) =>
-        isBaseMessage(message as BaseMessage)
+        isBaseMessage(message as BaseMessage),
       );
     } else {
       isInputBaseMessage = isBaseMessage(input as BaseMessage);
@@ -177,7 +177,7 @@ export class MessagesPlaceholder<
         typeof input === "string" ? input : JSON.stringify(input, null, 2);
 
       const error = new Error(
-        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: ${readableInput}`
+        `Error: Field "${variableName}" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: ${readableInput}`,
       );
       error.name = "InputFormatError";
       throw error;
@@ -187,7 +187,7 @@ export class MessagesPlaceholder<
   }
 
   async formatMessages(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<BaseMessage[]> {
     this.validateInputOrThrow(values[this.variableName], this.variableName);
 
@@ -200,7 +200,7 @@ export class MessagesPlaceholder<
  */
 export interface MessageStringPromptTemplateFields<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InputValues = any
+  T extends InputValues = any,
 > {
   prompt: BaseStringPromptTemplate<T, string>;
 }
@@ -211,7 +211,7 @@ export interface MessageStringPromptTemplateFields<
  */
 export abstract class BaseMessageStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessagePromptTemplate<RunInput> {
   prompt: BaseStringPromptTemplate<
     InputValues<Extract<keyof RunInput, string>>,
@@ -221,13 +221,13 @@ export abstract class BaseMessageStringPromptTemplate<
   constructor(
     prompt: BaseStringPromptTemplate<
       InputValues<Extract<keyof RunInput, string>>
-    >
+    >,
   );
 
   constructor(
     fields: MessageStringPromptTemplateFields<
       InputValues<Extract<keyof RunInput, string>>
-    >
+    >,
   );
 
   constructor(
@@ -238,7 +238,7 @@ export abstract class BaseMessageStringPromptTemplate<
       | BaseStringPromptTemplate<
           InputValues<Extract<keyof RunInput, string>>,
           string
-        >
+        >,
   ) {
     if (!("prompt" in fields)) {
       // eslint-disable-next-line no-param-reassign
@@ -253,11 +253,11 @@ export abstract class BaseMessageStringPromptTemplate<
   }
 
   abstract format(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<BaseMessage>;
 
   async formatMessages(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<BaseMessage[]> {
     return [await this.format(values)];
   }
@@ -271,14 +271,14 @@ export abstract class BaseChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplate<RunInput, ChatPromptValue, PartialVariableName> {
   constructor(input: BasePromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
   }
 
   abstract formatMessages(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<BaseMessage[]>;
 
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
@@ -286,7 +286,7 @@ export abstract class BaseChatPromptTemplate<
   }
 
   async formatPromptValue(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<ChatPromptValue> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
@@ -308,7 +308,7 @@ export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
  */
 export class ChatMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessageStringPromptTemplate<RunInput> {
   static lc_name() {
     return "ChatMessagePromptTemplate";
@@ -320,13 +320,13 @@ export class ChatMessagePromptTemplate<
     prompt: BaseStringPromptTemplate<
       InputValues<Extract<keyof RunInput, string>>
     >,
-    role: string
+    role: string,
   );
 
   constructor(
     fields: ChatMessagePromptTemplateFields<
       InputValues<Extract<keyof RunInput, string>>
-    >
+    >,
   );
 
   constructor(
@@ -335,7 +335,7 @@ export class ChatMessagePromptTemplate<
           InputValues<Extract<keyof RunInput, string>>
         >
       | BaseStringPromptTemplate<InputValues<Extract<keyof RunInput, string>>>,
-    role?: string
+    role?: string,
   ) {
     if (!("prompt" in fields)) {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
@@ -360,7 +360,7 @@ export class ChatMessagePromptTemplate<
  */
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessageStringPromptTemplate<RunInput> {
   static lc_name() {
     return "HumanMessagePromptTemplate";
@@ -381,7 +381,7 @@ export class HumanMessagePromptTemplate<
  */
 export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessageStringPromptTemplate<RunInput> {
   static lc_name() {
     return "AIMessagePromptTemplate";
@@ -402,7 +402,7 @@ export class AIMessagePromptTemplate<
  */
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
+  RunInput extends InputValues = any,
 > extends BaseMessageStringPromptTemplate<RunInput> {
   static lc_name() {
     return "SystemMessagePromptTemplate";
@@ -424,7 +424,7 @@ export interface ChatPromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt messages
@@ -444,7 +444,7 @@ export type BaseMessagePromptTemplateLike =
   | BaseMessageLike;
 
 function _isBaseMessagePromptTemplate(
-  baseMessagePromptTemplateLike: BaseMessagePromptTemplateLike
+  baseMessagePromptTemplateLike: BaseMessagePromptTemplateLike,
 ): baseMessagePromptTemplateLike is BaseMessagePromptTemplate {
   return (
     typeof (baseMessagePromptTemplateLike as BaseMessagePromptTemplate)
@@ -453,7 +453,7 @@ function _isBaseMessagePromptTemplate(
 }
 
 function _coerceMessagePromptTemplateLike(
-  messagePromptTemplateLike: BaseMessagePromptTemplateLike
+  messagePromptTemplateLike: BaseMessagePromptTemplateLike,
 ): BaseMessagePromptTemplate | BaseMessage {
   if (
     _isBaseMessagePromptTemplate(messagePromptTemplateLike) ||
@@ -471,11 +471,11 @@ function _coerceMessagePromptTemplateLike(
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,
-      message.role
+      message.role,
     );
   } else {
     throw new Error(
-      `Could not coerce message prompt template from input. Received message type: "${message._getType()}".`
+      `Could not coerce message prompt template from input. Received message type: "${message._getType()}".`,
     );
   }
 }
@@ -489,7 +489,7 @@ export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
+    PartialVariableName extends string = any,
   >
   extends BaseChatPromptTemplate<RunInput, PartialVariableName>
   implements ChatPromptTemplateInput<RunInput, PartialVariableName>
@@ -526,30 +526,30 @@ export class ChatPromptTemplate<
       const inputVariablesInstance = new Set(
         this.partialVariables
           ? totalInputVariables.concat(Object.keys(this.partialVariables))
-          : totalInputVariables
+          : totalInputVariables,
       );
       const difference = new Set(
         [...inputVariablesInstance].filter(
-          (x) => !inputVariablesMessages.has(x)
-        )
+          (x) => !inputVariablesMessages.has(x),
+        ),
       );
       if (difference.size > 0) {
         throw new Error(
           `Input variables \`${[
             ...difference,
-          ]}\` are not used in any of the prompt messages.`
+          ]}\` are not used in any of the prompt messages.`,
         );
       }
       const otherDifference = new Set(
         [...inputVariablesMessages].filter(
-          (x) => !inputVariablesInstance.has(x)
-        )
+          (x) => !inputVariablesInstance.has(x),
+        ),
       );
       if (otherDifference.size > 0) {
         throw new Error(
           `Input variables \`${[
             ...otherDifference,
-          ]}\` are used in prompt messages but not in the prompt template.`
+          ]}\` are used in prompt messages but not in the prompt template.`,
         );
       }
     }
@@ -560,7 +560,7 @@ export class ChatPromptTemplate<
   }
 
   async formatMessages(
-    values: TypedPromptInputValues<RunInput>
+    values: TypedPromptInputValues<RunInput>,
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
@@ -575,13 +575,13 @@ export class ChatPromptTemplate<
           (acc, inputVariable) => {
             if (!(inputVariable in allValues)) {
               throw new Error(
-                `Missing value for input variable \`${inputVariable.toString()}\``
+                `Missing value for input variable \`${inputVariable.toString()}\``,
               );
             }
             acc[inputVariable] = allValues[inputVariable];
             return acc;
           },
-          {} as InputValues
+          {} as InputValues,
         );
         const message = await promptMessage.formatMessages(inputValues);
         resultMessages = resultMessages.concat(message);
@@ -591,12 +591,12 @@ export class ChatPromptTemplate<
   }
 
   async partial<NewPartialVariableName extends string>(
-    values: PartialValues<NewPartialVariableName>
+    values: PartialValues<NewPartialVariableName>,
   ) {
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
     const newInputVariables = this.inputVariables.filter(
-      (iv) => !(iv in values)
+      (iv) => !(iv in values),
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
@@ -620,7 +620,7 @@ export class ChatPromptTemplate<
   static fromTemplate<
     // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(template: T) {
     const prompt = PromptTemplate.fromTemplate(template);
     const humanTemplate = new HumanMessagePromptTemplate({ prompt });
@@ -641,7 +641,7 @@ export class ChatPromptTemplate<
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
       | BaseMessagePromptTemplateLike
-    )[]
+    )[],
   ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
       (acc: Array<BaseMessagePromptTemplate | BaseMessage>, promptMessage) =>
@@ -649,9 +649,9 @@ export class ChatPromptTemplate<
           // eslint-disable-next-line no-instanceof/no-instanceof
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
-            : [_coerceMessagePromptTemplateLike(promptMessage)]
+            : [_coerceMessagePromptTemplateLike(promptMessage)],
         ),
-      []
+      [],
     );
     const flattenedPartialVariables = promptMessages.reduce(
       (acc, promptMessage) =>
@@ -659,7 +659,7 @@ export class ChatPromptTemplate<
         promptMessage instanceof ChatPromptTemplate
           ? Object.assign(acc, promptMessage.partialVariables)
           : acc,
-      Object.create(null) as PartialValues
+      Object.create(null) as PartialValues,
     );
 
     const inputVariables = new Set<string>();
@@ -686,7 +686,7 @@ export class ChatPromptTemplate<
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
       | BaseMessagePromptTemplateLike
-    )[]
+    )[],
   ): ChatPromptTemplate<RunInput> {
     return this.fromMessages(promptMessages);
   }

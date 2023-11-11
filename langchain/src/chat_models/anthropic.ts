@@ -143,7 +143,8 @@ type Kwargs = Record<string, any>;
  *
  */
 export class ChatAnthropic<
-    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+    CallOptions extends
+      BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
   >
   extends BaseChatModel<CallOptions>
   implements AnthropicInput
@@ -224,7 +225,7 @@ export class ChatAnthropic<
    * Get the parameters used to invoke the model
    */
   invocationParams(
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
   ): Omit<CompletionCreateParams, "prompt"> & Kwargs {
     return {
       model: this.modelName,
@@ -262,7 +263,7 @@ export class ChatAnthropic<
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
     const stream = await this.createStreamWithRetry({
@@ -319,11 +320,11 @@ export class ChatAnthropic<
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     if (this.stopSequences && options.stop) {
       throw new Error(
-        `"stopSequence" parameter found in input and default params`
+        `"stopSequence" parameter found in input and default params`,
       );
     }
 
@@ -338,7 +339,7 @@ export class ChatAnthropic<
       const stream = await this._streamResponseChunks(
         messages,
         options,
-        runManager
+        runManager,
       );
       for await (const chunk of stream) {
         response.completion += chunk.message.content;
@@ -354,7 +355,7 @@ export class ChatAnthropic<
           ...params,
           prompt: this.formatMessagesAsPrompt(messages),
         },
-        { signal: options.signal }
+        { signal: options.signal },
       );
     }
 
@@ -376,7 +377,7 @@ export class ChatAnthropic<
    * @returns A streaming request.
    */
   protected async createStreamWithRetry(
-    request: CompletionCreateParams & Kwargs
+    request: CompletionCreateParams & Kwargs,
   ): Promise<Stream<Anthropic.Completions.Completion>> {
     if (!this.streamingClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
@@ -390,7 +391,7 @@ export class ChatAnthropic<
     const makeCompletionRequest = async () =>
       this.streamingClient.completions.create(
         { ...request, stream: true },
-        { headers: request.headers }
+        { headers: request.headers },
       );
     return this.caller.call(makeCompletionRequest);
   }
@@ -398,7 +399,7 @@ export class ChatAnthropic<
   /** @ignore */
   protected async completionWithRetry(
     request: CompletionCreateParams & Kwargs,
-    options: { signal?: AbortSignal }
+    options: { signal?: AbortSignal },
   ): Promise<Anthropic.Completions.Completion> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
@@ -415,11 +416,11 @@ export class ChatAnthropic<
     const makeCompletionRequest = async () =>
       this.batchClient.completions.create(
         { ...request, stream: false },
-        { headers: request.headers }
+        { headers: request.headers },
       );
     return this.caller.callWithOptions(
       { signal: options.signal },
-      makeCompletionRequest
+      makeCompletionRequest,
     );
   }
 

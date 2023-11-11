@@ -20,7 +20,7 @@ class RandomEmbeddings extends Embeddings {
 test("Basic embeddings cache", async () => {
   const embeddingsCache = CacheBackedEmbeddings.fromBytesStore(
     new RandomEmbeddings({}),
-    new InMemoryStore()
+    new InMemoryStore(),
   );
   const documents = ["How are you?", "I am fine", "I am LangChain"];
   const result = await embeddingsCache.embedDocuments(documents);

@@ -45,7 +45,7 @@ export interface BaseLangChainParams {
 export abstract class BaseLangChain<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >
   extends Runnable<RunInput, RunOutput, CallOptions>
   implements BaseLangChainParams
@@ -129,7 +129,8 @@ export type BaseLanguageModelInput =
 export abstract class BaseLanguageModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput = any,
-    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+    CallOptions extends
+      BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
   >
   extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
   implements BaseLanguageModelParams
@@ -173,19 +174,19 @@ export abstract class BaseLanguageModel<
   abstract generatePrompt(
     promptValues: BasePromptValue[],
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<LLMResult>;
 
   abstract predict(
     text: string,
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<string>;
 
   abstract predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<BaseMessage>;
 
   abstract _modelType(): string;
@@ -207,12 +208,12 @@ export abstract class BaseLanguageModel<
         this._encoding = await encodingForModel(
           "modelName" in this
             ? getModelNameForTiktoken(this.modelName as string)
-            : "gpt2"
+            : "gpt2",
         );
       } catch (error) {
         console.warn(
           "Failed to calculate number of tokens, falling back to approximate count",
-          error
+          error,
         );
       }
     }
@@ -225,7 +226,7 @@ export abstract class BaseLanguageModel<
   }
 
   protected static _convertInputToPromptValue(
-    input: BaseLanguageModelInput
+    input: BaseLanguageModelInput,
   ): BasePromptValue {
     if (typeof input === "string") {
       return new StringPromptValue(input);
@@ -250,7 +251,7 @@ export abstract class BaseLanguageModel<
    * @returns A unique cache key.
    */
   protected _getSerializedCacheKeyParametersForCall(
-    callOptions: CallOptions
+    callOptions: CallOptions,
   ): string {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {
@@ -260,7 +261,7 @@ export abstract class BaseLanguageModel<
       _model: this._modelType(),
     };
     const filteredEntries = Object.entries(params).filter(
-      ([_, value]) => value !== undefined
+      ([_, value]) => value !== undefined,
     );
     const serializedEntries = filteredEntries
       .map(([key, value]) => `${key}:${JSON.stringify(value)}`)

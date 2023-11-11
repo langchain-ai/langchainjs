@@ -11,7 +11,7 @@ test("it can create index using Voy.from text, add new elements to the index and
     ["initial first page", "initial second page"],
     [{ id: 1 }, { id: 2 }],
     new OpenAIEmbeddings(),
-    client
+    client,
   );
   // the number of dimensions is produced by OpenAI
   expect(vectorStore.numDimensions).toBe(1536);
@@ -43,7 +43,7 @@ test("it can create index using Voy.from text, add new elements to the index and
   });
   const results2 = await vectorStore.similaritySearchWithScore(
     "added first",
-    6
+    6,
   );
   expect(results2.length).toBe(0);
 });

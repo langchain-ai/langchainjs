@@ -162,7 +162,7 @@ describe("VertexAI Connection", () => {
           },
         ],
         null,
-        2
+        2,
       );
       gen._skipTo("{");
       const obj = gen._getFullObject();
@@ -195,7 +195,7 @@ describe("VertexAI Connection", () => {
           },
         ],
         null,
-        2
+        2,
       );
       const part1 = overall.substring(0, overall.length / 2);
       const part2 = overall.substring(overall.length / 2);
@@ -392,13 +392,13 @@ describe("VertexAI Connection", () => {
       }
       expect(chunks).toHaveLength(4);
       expect(chunks[0]?.outputs[0]?.content).toBe(
-        " The answer to life, the universe, and everything is 42. This an"
+        " The answer to life, the universe, and everything is 42. This an",
       );
       expect(chunks[1]?.outputs[0]?.content).toBe(
-        "swer was given by Deep Thought, a supercomputer in Douglas Adams"
+        "swer was given by Deep Thought, a supercomputer in Douglas Adams",
       );
       expect(chunks[2]?.outputs[0]?.content).toBe(
-        "'s The Hitchhiker's Guide to the Galaxy."
+        "'s The Hitchhiker's Guide to the Galaxy.",
       );
       expect(chunks[3]).toBeNull();
     });

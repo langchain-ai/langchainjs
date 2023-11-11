@@ -55,13 +55,13 @@ export class SearchApi extends Tool {
 
   constructor(
     apiKey: string | undefined = getEnvironmentVariable("SEARCHAPI_API_KEY"),
-    params: Partial<SearchApiParameters> = {}
+    params: Partial<SearchApiParameters> = {},
   ) {
     super(...arguments);
 
     if (!apiKey) {
       throw new Error(
-        "SearchApi requires an API key. Please set it as SEARCHAPI_API_KEY in your .env file, or pass it as a parameter to the SearchApi constructor."
+        "SearchApi requires an API key. Please set it as SEARCHAPI_API_KEY in your .env file, or pass it as a parameter to the SearchApi constructor.",
       );
     }
 
@@ -85,7 +85,7 @@ export class SearchApi extends Tool {
     })
       .filter(
         ([key, value]) =>
-          value !== undefined && value !== null && key !== "apiKey"
+          value !== undefined && value !== null && key !== "apiKey",
       )
       .map(([key, value]) => [key, `${value}`]);
 
@@ -112,7 +112,7 @@ export class SearchApi extends Tool {
 
     if (json.error) {
       throw new Error(
-        `Failed to load search results from SearchApi due to: ${json.error}`
+        `Failed to load search results from SearchApi due to: ${json.error}`,
       );
     }
 
@@ -160,11 +160,14 @@ export class SearchApi extends Tool {
       const imageInfo = image_results
         .filter(
           (r: JSONObject) =>
-            r.title && r.original && isJSONObject(r.original) && r.original.link
+            r.title &&
+            r.original &&
+            isJSONObject(r.original) &&
+            r.original.link,
         )
         .map(
           (r: JSONObject) =>
-            `Title: "${r.title}" Link: ${(r.original as JSONObject).link}`
+            `Title: "${r.title}" Link: ${(r.original as JSONObject).link}`,
         );
       return imageInfo.join("\n");
     }

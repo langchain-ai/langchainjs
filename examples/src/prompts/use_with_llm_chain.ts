@@ -15,9 +15,9 @@ const outputParser = StructuredOutputParser.fromZodSchema(
           Name: z.string().describe("The name of the country"),
           Capital: z.string().describe("The country's capital"),
         }),
-      })
+      }),
     )
-    .describe("An array of Airtable records, each representing a country")
+    .describe("An array of Airtable records, each representing a country"),
 );
 
 const chatModel = new ChatOpenAI({

@@ -11,7 +11,7 @@ const getClient = () => {
     !process.env.UPSTASH_REDIS_REST_TOKEN
   ) {
     throw new Error(
-      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set in the environment"
+      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set in the environment",
     );
   }
   const client = new Redis({
@@ -47,7 +47,7 @@ await store.mset(
   messages.map((message, index) => [
     `message:id:${index}`,
     encoder.encode(JSON.stringify(message)),
-  ])
+  ]),
 );
 // Now you can get your messages from the store
 const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);

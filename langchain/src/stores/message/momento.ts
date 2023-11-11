@@ -91,7 +91,7 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
    * @returns A new chat message history backed by Momento.
    */
   public static async fromProps(
-    props: MomentoChatMessageHistoryProps
+    props: MomentoChatMessageHistoryProps,
   ): Promise<MomentoChatMessageHistory> {
     const instance = new MomentoChatMessageHistory(props);
     if (props.ensureCacheExists || props.ensureCacheExists === undefined) {
@@ -117,7 +117,7 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
   public async getMessages(): Promise<BaseMessage[]> {
     const fetchResponse = await this.client.listFetch(
       this.cacheName,
-      this.sessionId
+      this.sessionId,
     );
 
     let messages: StoredMessage[] = [];
@@ -142,14 +142,14 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
    */
   public async addMessage(message: BaseMessage): Promise<void> {
     const messageToAdd = JSON.stringify(
-      mapChatMessagesToStoredMessages([message])[0]
+      mapChatMessagesToStoredMessages([message])[0],
     );
 
     const pushResponse = await this.client.listPushBack(
       this.cacheName,
       this.sessionId,
       messageToAdd,
-      { ttl: this.sessionTtl }
+      { ttl: this.sessionTtl },
     );
     if (pushResponse instanceof CacheListPushBack.Success) {
       // pass
@@ -167,7 +167,7 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
   public async clear(): Promise<void> {
     const deleteResponse = await this.client.delete(
       this.cacheName,
-      this.sessionId
+      this.sessionId,
     );
     if (deleteResponse instanceof CacheDelete.Success) {
       // pass

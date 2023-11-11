@@ -51,7 +51,7 @@ export type ConvexChatMessageHistoryInput<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  > = any
+  > = any,
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   readonly sessionId: DocumentByName<DataModel, TableName>[SessionIdFieldName];
@@ -112,7 +112,7 @@ export class ConvexChatMessageHistory<
     "mutation",
     "internal",
     { table: string; index: string; keyField: string; key: string }
-  > = any
+  > = any,
 > extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "convex"];
 
@@ -146,7 +146,7 @@ export class ConvexChatMessageHistory<
       InsertMutation,
       LookupQuery,
       DeleteManyMutation
-    >
+    >,
   ) {
     super();
     this.ctx = config.ctx;
@@ -175,7 +175,7 @@ export class ConvexChatMessageHistory<
     } as any);
 
     return mapStoredMessagesToChatMessages(
-      convexDocuments.map((doc) => doc[this.messageTextFieldName])
+      convexDocuments.map((doc) => doc[this.messageTextFieldName]),
     );
   }
 
@@ -192,8 +192,8 @@ export class ConvexChatMessageHistory<
               [this.sessionIdField]: this.sessionId,
               [this.messageTextFieldName]: message,
             },
-          } as any)
-        )
+          } as any),
+        ),
       );
     }
   }

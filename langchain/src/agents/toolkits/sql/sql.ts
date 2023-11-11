@@ -49,7 +49,7 @@ export class SqlToolkit extends Toolkit {
 export function createSqlAgent(
   llm: BaseLanguageModel,
   toolkit: SqlToolkit,
-  args?: SqlCreatePromptArgs
+  args?: SqlCreatePromptArgs,
 ) {
   const {
     prefix = SQL_PREFIX,

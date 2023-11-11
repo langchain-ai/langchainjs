@@ -41,7 +41,7 @@ test("Test HTML to text transformer", async () => {
   expect(newDocuments.length).toBe(2);
   expect(newDocuments[0].pageContent.length).toBeLessThan(webpageText.length);
   expect(newDocuments[1].pageContent).toBe(
-    "Mitochondria is the powerhouse of the cell."
+    "Mitochondria is the powerhouse of the cell.",
   );
   expect(newDocuments[1].metadata).toEqual({ reliable: false });
 });

@@ -9,7 +9,7 @@ const model = new CloudflareWorkersAI({
 });
 
 const response = await model.invoke(
-  `Translate "I love programming" into German.`
+  `Translate "I love programming" into German.`,
 );
 
 console.log(response);
@@ -25,7 +25,7 @@ console.log(response);
 */
 
 const stream = await model.stream(
-  `Translate "I love programming" into German.`
+  `Translate "I love programming" into German.`,
 );
 
 for await (const chunk of stream) {

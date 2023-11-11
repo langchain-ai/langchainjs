@@ -58,7 +58,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     await setTimeout(2000);
     const results: Document[] = await vectorStore.similaritySearch(
       "Sandwich",
-      1
+      1,
     );
 
     expect(results.length).toEqual(1);
@@ -74,7 +74,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     const filteredResults = await vectorStore.similaritySearch(
       "That fence is purple",
       1,
-      preFilter
+      preFilter,
     );
 
     expect(filteredResults).toEqual([]);
@@ -95,7 +95,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
 test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
   expect(
-    process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
+    process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY,
   ).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -112,7 +112,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
       texts,
       {},
       new OpenAIEmbeddings(),
-      { collection, indexName: "default" }
+      { collection, indexName: "default" },
     );
 
     // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
@@ -137,7 +137,7 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
     expect(output).toHaveLength(texts.length);
 
     const standardRetrieverActual = standardRetrieverOutput.map(
-      (doc) => doc.pageContent
+      (doc) => doc.pageContent,
     );
     const standardRetrieverExpected = ["foo", "foo", "foy"];
     expect(standardRetrieverActual).toEqual(standardRetrieverExpected);

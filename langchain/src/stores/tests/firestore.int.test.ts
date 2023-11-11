@@ -59,7 +59,7 @@ test.skip("Test firestore message history store in a BufferMemory", async () => 
   });
   await memory.saveContext(
     { foo: "My name's Jonas" },
-    { bar: "Nice to meet you, Jonas!" }
+    { bar: "Nice to meet you, Jonas!" },
   );
   const result = await memory.loadMemoryVariables({});
   expect(result).toEqual({

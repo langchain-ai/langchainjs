@@ -15,7 +15,7 @@ import { GenerationChunk } from "../schema/index.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
-  ResponseType extends GoogleResponse
+  ResponseType extends GoogleResponse,
 > {
   caller: AsyncCaller;
 
@@ -26,7 +26,7 @@ export abstract class GoogleConnection<
   constructor(
     caller: AsyncCaller,
     client: GoogleAbstractedClient,
-    streaming?: boolean
+    streaming?: boolean,
   ) {
     this.caller = caller;
     this.client = client;
@@ -39,7 +39,7 @@ export abstract class GoogleConnection<
 
   async _request(
     data: unknown | undefined,
-    options: CallOptions
+    options: CallOptions,
   ): Promise<ResponseType> {
     const url = await this.buildUrl();
     const method = this.buildMethod();
@@ -60,7 +60,7 @@ export abstract class GoogleConnection<
     try {
       const callResponse = await this.caller.callWithOptions(
         { signal: options?.signal },
-        async () => this.client.request(opts)
+        async () => this.client.request(opts),
       );
       const response: unknown = callResponse; // Done for typecast safety, I guess
       return <ResponseType>response;
@@ -74,7 +74,7 @@ export abstract class GoogleConnection<
 export abstract class GoogleVertexAIConnection<
     CallOptions extends AsyncCallerCallOptions,
     ResponseType extends GoogleResponse,
-    AuthOptions
+    AuthOptions,
   >
   extends GoogleConnection<CallOptions, ResponseType>
   implements GoogleVertexAIConnectionParams<AuthOptions>
@@ -89,7 +89,7 @@ export abstract class GoogleVertexAIConnection<
     fields: GoogleVertexAIConnectionParams<AuthOptions> | undefined,
     caller: AsyncCaller,
     client: GoogleAbstractedClient,
-    streaming?: boolean
+    streaming?: boolean,
   ) {
     super(caller, client, streaming);
     this.caller = caller;
@@ -178,7 +178,7 @@ export class GoogleVertexAILLMConnection<
     CallOptions extends BaseLanguageModelCallOptions,
     InstanceType,
     PredictionType extends GoogleVertexAIBasePrediction,
-    AuthOptions
+    AuthOptions,
   >
   extends GoogleVertexAIConnection<
     CallOptions,
@@ -195,7 +195,7 @@ export class GoogleVertexAILLMConnection<
     fields: GoogleVertexAIBaseLLMInput<AuthOptions> | undefined,
     caller: AsyncCaller,
     client: GoogleAbstractedClient,
-    streaming?: boolean
+    streaming?: boolean,
   ) {
     super(fields, caller, client, streaming);
     this.client = client;
@@ -211,7 +211,7 @@ export class GoogleVertexAILLMConnection<
 
   formatStreamingData(
     inputs: InstanceType[],
-    parameters: GoogleVertexAIModelParams
+    parameters: GoogleVertexAIModelParams,
   ): unknown {
     return {
       inputs: [inputs.map((i) => complexValue(i))],
@@ -221,7 +221,7 @@ export class GoogleVertexAILLMConnection<
 
   formatStandardData(
     instances: InstanceType[],
-    parameters: GoogleVertexAIModelParams
+    parameters: GoogleVertexAIModelParams,
   ): unknown {
     return {
       instances,
@@ -231,7 +231,7 @@ export class GoogleVertexAILLMConnection<
 
   formatData(
     instances: InstanceType[],
-    parameters: GoogleVertexAIModelParams
+    parameters: GoogleVertexAIModelParams,
   ): unknown {
     return this.streaming
       ? this.formatStreamingData(instances, parameters)
@@ -241,7 +241,7 @@ export class GoogleVertexAILLMConnection<
   async request(
     instances: InstanceType[],
     parameters: GoogleVertexAIModelParams,
-    options: CallOptions
+    options: CallOptions,
   ): Promise<GoogleVertexAILLMResponse<PredictionType>> {
     const data = this.formatData(instances, parameters);
     const response = await this._request(data, options);
@@ -250,7 +250,7 @@ export class GoogleVertexAILLMConnection<
 }
 
 export interface GoogleVertexAILLMResponse<
-  PredictionType extends GoogleVertexAIBasePrediction
+  PredictionType extends GoogleVertexAIBasePrediction,
 > extends GoogleResponse {
   data: GoogleVertexAIStream | GoogleVertexAILLMPredictions<PredictionType>;
 }

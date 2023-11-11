@@ -7,7 +7,7 @@ import { Document } from "../../document.js";
 test("Test JSON loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.jsonl"
+    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.jsonl",
   );
   const loader = new JSONLinesLoader(filePath, "/html");
   const docs = await loader.load();
@@ -17,6 +17,6 @@ test("Test JSON loader from file", async () => {
       metadata: { source: filePath, line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
-    })
+    }),
   );
 });

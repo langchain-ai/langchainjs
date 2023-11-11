@@ -49,14 +49,14 @@ export abstract class BaseChatMemory extends BaseMemory {
    */
   async saveContext(
     inputValues: InputValues,
-    outputValues: OutputValues
+    outputValues: OutputValues,
   ): Promise<void> {
     // this is purposefully done in sequence so they're saved in order
     await this.chatHistory.addUserMessage(
-      getInputValue(inputValues, this.inputKey)
+      getInputValue(inputValues, this.inputKey),
     );
     await this.chatHistory.addAIChatMessage(
-      getOutputValue(outputValues, this.outputKey)
+      getOutputValue(outputValues, this.outputKey),
     );
   }
 

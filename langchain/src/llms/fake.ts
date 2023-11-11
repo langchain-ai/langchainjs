@@ -41,7 +41,7 @@ export class FakeListLLM extends LLM {
   async _call(
     _prompt: string,
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    _runManager?: CallbackManagerForLLMRun,
   ): Promise<string> {
     const response = this._currentResponse();
     this._incrementResponse();
@@ -65,7 +65,7 @@ export class FakeListLLM extends LLM {
   async *_streamResponseChunks(
     _input: string,
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    _runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<GenerationChunk> {
     const response = this._currentResponse();
     this._incrementResponse();

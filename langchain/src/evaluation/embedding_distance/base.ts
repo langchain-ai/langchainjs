@@ -54,7 +54,7 @@ type VectorFunction = (xVector: number[], yVector: number[]) => number;
  * @return The distance function.
  */
 export function getDistanceCalculationFunction(
-  distanceType: EmbeddingDistanceType
+  distanceType: EmbeddingDistanceType,
 ): VectorFunction {
   const distanceFunctions: { [key in EmbeddingDistanceType]: VectorFunction } =
     {
@@ -75,7 +75,7 @@ export function getDistanceCalculationFunction(
  */
 export function computeEvaluationScore(
   vectors: number[][],
-  distanceMetric: EmbeddingDistanceType
+  distanceMetric: EmbeddingDistanceType,
 ): number {
   const metricFunction = getDistanceCalculationFunction(distanceMetric);
   return metricFunction(vectors[0], vectors[1]);
@@ -111,7 +111,7 @@ export class EmbeddingDistanceEvalChain
 
   async _evaluateStrings(
     args: StringEvaluatorArgs,
-    config: Callbacks | BaseCallbackConfig | undefined
+    config: Callbacks | BaseCallbackConfig | undefined,
   ): Promise<ChainValues> {
     const result = await this.call(args, config);
 
@@ -128,7 +128,7 @@ export class EmbeddingDistanceEvalChain
 
   async _call(
     values: ChainValues,
-    _runManager: CallbackManagerForChainRun | undefined
+    _runManager: CallbackManagerForChainRun | undefined,
   ): Promise<ChainValues> {
     const { prediction, reference } = values;
 
@@ -174,7 +174,7 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   async _evaluateStringPairs(
     args: PairwiseStringEvaluatorArgs,
-    config?: Callbacks | BaseCallbackConfig
+    config?: Callbacks | BaseCallbackConfig,
   ): Promise<ChainValues> {
     const result = await this.call(args, config);
 
@@ -191,7 +191,7 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   async _call(
     values: ChainValues,
-    _runManager: CallbackManagerForChainRun | undefined
+    _runManager: CallbackManagerForChainRun | undefined,
   ): Promise<ChainValues> {
     const { prediction, predictionB } = values;
 

@@ -26,7 +26,7 @@ const createEvent = async (
     eventDescription = "",
   }: CreateEventParams,
   calendarId: string,
-  auth: JWT
+  auth: JWT,
 ) => {
   const calendar = google.calendar("v3");
   const event = {
@@ -67,7 +67,7 @@ type RunCreateEventParams = {
 const runCreateEvent = async (
   query: string,
   { calendarId, auth, model }: RunCreateEventParams,
-  runManager?: CallbackManagerForToolRun
+  runManager?: CallbackManagerForToolRun,
 ) => {
   const prompt = new PromptTemplate({
     template: CREATE_EVENT_PROMPT,
@@ -89,7 +89,7 @@ const runCreateEvent = async (
       u_timezone,
       dayName,
     },
-    runManager?.getChild()
+    runManager?.getChild(),
   );
   const loaded = JSON.parse(output.text);
 
@@ -112,7 +112,7 @@ const runCreateEvent = async (
       eventDescription,
     } as CreateEventParams,
     calendarId,
-    auth
+    auth,
   );
 
   if (!(event as { error: string }).error) {

@@ -71,7 +71,7 @@ import { GoogleCloudStorageDocstore } from "langchain/stores/doc/gcs";
 const embeddings = new SyntheticEmbeddings({
   vectorSize: Number.parseInt(
     process.env.SYNTHETIC_EMBEDDINGS_VECTOR_SIZE ?? "768",
-    10
+    10,
   ),
 });
 

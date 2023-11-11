@@ -10,7 +10,7 @@ import { StructuredTool } from "./base.js";
  * schema, which is then used as the parameters for the OpenAI function.
  */
 export function formatToOpenAIFunction(
-  tool: StructuredTool
+  tool: StructuredTool,
 ): OpenAIClient.Chat.ChatCompletionCreateParams.Function {
   return {
     name: tool.name,
@@ -20,7 +20,7 @@ export function formatToOpenAIFunction(
 }
 
 export function formatToOpenAITool(
-  tool: StructuredTool
+  tool: StructuredTool,
 ): OpenAIClient.Chat.ChatCompletionTool {
   return {
     type: "function",
@@ -33,7 +33,7 @@ export function formatToOpenAITool(
 }
 
 export function formatToOpenAIAssistantTool(
-  tool: StructuredTool
+  tool: StructuredTool,
 ): OpenAIClient.Beta.AssistantCreateParams.AssistantToolsFunction {
   return {
     type: "function",
