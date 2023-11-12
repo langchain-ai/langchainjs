@@ -1,0 +1,30 @@
+# Conversation token buffer memory
+
+This notebook covers how to use `ConversationTokenBufferMemory`. This memory keeps a buffer of recent interactions in memory, and uses token length rather than number of interactions to determine when to flush interactions.
+
+Below is a basic demonstration of the usage of token buffer memory.
+
+
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+import { ConversationTokenBufferMemory } from "langchain/memory";
+
+const model = new OpenAI({});
+const memory = new ConversationTokenBufferMemory({ llm: model, maxTokenLimit: 10 });
+
+await memory.saveContext( {input: "hi"}, {output: "whats up"});
+await memory.saveContext( {input: "not much you"}, {output: "not much"});
+const result1 = await memory.loadMemoryVariables({});
+console.log(result1);
+```
+
+```shell
+ { history: 'Human: not much you\nAI: not much' }
+```
+
+We can also get the history as a list of messages (this is useful if you are using this with a chat model)
+
+```typescript
+const memory = new ConversationTokenBufferMemory({ llm: model, maxTokenLimit: 10, returnMessages: true });
+```
