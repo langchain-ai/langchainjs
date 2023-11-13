@@ -1,12 +1,15 @@
 import { OpenAI as OpenAIClient } from "openai";
 import fs from "node:fs";
+import { Serializable } from "../../load/serializable.js";
 
 export type OpenAIFilesCreate = {
   file: fs.ReadStream;
   purpose: "assistants" | "fine-tune";
 };
 
-export class OpenAIFiles {
+export class OpenAIFiles extends Serializable {
+  lc_namespace = ["langchain", "experimental", "open_ai_files"];
+
   /**
    * Upload file
    * Upload a file that can be used across various endpoints. The size of all the files uploaded by one organization can be up to 100 GB.
@@ -16,7 +19,7 @@ export class OpenAIFiles {
    * @link {https://platform.openai.com/docs/api-reference/files/create}
    * @param {fs.ReadStream} file
    * @param {"assistants" | "fine-tune"} purpose
-   * @returns
+   * @returns {Promise<OpenAIClient.Files.FileObject>}
    */
   static async createFile({ file, purpose }: OpenAIFilesCreate) {
     const oaiClient = new OpenAIClient();
@@ -31,7 +34,7 @@ export class OpenAIFiles {
    * @link {https://platform.openai.com/docs/api-reference/files/delete}
    *
    * @param {string} fileId
-   * @returns
+   * @returns {Promise<OpenAIClient.Files.FileDeleted>}
    */
   static async deleteFile({ fileId }: { fileId: string }) {
     const oaiClient = new OpenAIClient();
@@ -44,7 +47,7 @@ export class OpenAIFiles {
    * @link {https://platform.openai.com/docs/api-reference/files/list}
    * @param {OpenAIClient.Files.FileListParams | undefined} query
    * @param {OpenAIClient.RequestOptions | undefined} options
-   * @returns
+   * @returns {Promise<OpenAIClient.Files.FileObjectsPage>}
    */
   static async listFiles(props?: {
     query?: OpenAIClient.Files.FileListParams;
@@ -59,7 +62,7 @@ export class OpenAIFiles {
    * Returns information about a specific file.
    * @link {https://platform.openai.com/docs/api-reference/files/retrieve}
    * @param {string} fileId
-   * @returns
+   * @returns {Promise<OpenAIClient.Files.FileObject>}
    */
   static async retrieveFile({ fileId }: { fileId: string }) {
     const oaiClient = new OpenAIClient();
@@ -74,7 +77,7 @@ export class OpenAIFiles {
    *
    * @link {https://platform.openai.com/docs/api-reference/files/retrieve-contents}
    * @param {string} fileId
-   * @returns
+   * @returns {Promise<string>}
    */
   static async retrieveFileContent({ fileId }: { fileId: string }) {
     const oaiClient = new OpenAIClient();
