@@ -1,6 +1,5 @@
 import { OpenAI as OpenAIClient } from "openai";
 import fs from "node:fs";
-import { RequestOptions } from "openai/core.mjs";
 
 export type OpenAIFilesCreate = {
   file: fs.ReadStream;
@@ -44,12 +43,12 @@ export class OpenAIFiles {
    * Returns a list of files that belong to the user's organization.
    * @link {https://platform.openai.com/docs/api-reference/files/list}
    * @param {OpenAIClient.Files.FileListParams | undefined} query
-   * @param {RequestOptions | undefined} options
+   * @param {OpenAIClient.RequestOptions | undefined} options
    * @returns
    */
   static async listFiles(props?: {
     query?: OpenAIClient.Files.FileListParams;
-    options?: RequestOptions;
+    options?: OpenAIClient.RequestOptions;
   }) {
     const oaiClient = new OpenAIClient();
     return oaiClient.files.list(props?.query, props?.options);
