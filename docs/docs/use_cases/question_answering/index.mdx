@@ -19,7 +19,7 @@ Below we will review Chat and QA on `Unstructured data`.
 
 `Unstructured data` can be loaded from many sources.
 
-Check out the [document loader integrations here](/docs/modules/data_connection/document_loaders/) to browse the set of supported loaders.
+Check out the [document loader integrations here](/docs/integrations/document_loaders/) to browse the set of supported loaders.
 
 Each loader returns data as a LangChain `Document`.
 
@@ -75,7 +75,7 @@ const textSplitter = new RecursiveCharacterTextSplitter({
 const splitDocs = await textSplitter.splitDocuments(data);
 ```
 
-Embed and store the splits in a vector database (for demo purposes we use an unoptimized, in-memory example but you can [browse integrations here](/docs/modules/data_connection/vectorstores/integrations/)):
+Embed and store the splits in a vector database (for demo purposes we use an unoptimized, in-memory example but you can [browse integrations here](/docs/integrations/vectorstores/)):
 
 ```typescript
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -99,7 +99,7 @@ Here are the three pieces together:
 
 `Document Loaders`
 
-- Browse document loader integrations [here](/docs/modules/data_connection/document_loaders/).
+- Browse document loader integrations [here](/docs/integrations/document_loaders/).
 
 - See further documentation on loaders [here](/docs/modules/data_connection/document_loaders/).
 
@@ -107,11 +107,11 @@ Here are the three pieces together:
 
 - All can ingest loaded `Documents` and process them (e.g., split).
 
-- See further documentation on transformers [here](/docs/modules/data_connection/document_transformers/).
+- See further documentation on transformers [here](/docs/integrations/document_transformers/).
 
 `Vectorstores`
 
-- Browse vectorstore integrations [here](/docs/modules/data_connection/vectorstores/integrations/).
+- Browse vectorstore integrations [here](/docs/integrations/vectorstores/).
 
 - See further documentation on vectorstores [here](/docs/modules/data_connection/vectorstores/).
 
@@ -176,7 +176,7 @@ console.log(response);
 
 `LLMs`
 
-- Browse LLM integrations and further documentation [here](/docs/modules/model_io/models/).
+- Browse LLM integrations and further documentation [here](/docs/integrations/llms/).
 
 #### 3.2.2 Customizing the prompt
 

@@ -1,7 +1,7 @@
 // Requires corepack: https://nodejs.org/api/corepack.html
 // Enable with:
 // $ corepack enable
-import { describe, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "../../schema/index.js";
 import {
   PromptTemplate,
@@ -15,7 +15,7 @@ import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatGoogleVertexAI } from "../googlevertexai/web.js";
 
-describe.skip("ChatGoogleVertexAIWeb", () => {
+describe("ChatGoogleVertexAIWeb", () => {
   test("call", async () => {
     const chat = new ChatGoogleVertexAI();
     const message = new HumanMessage("Hello!");
@@ -131,5 +131,16 @@ describe.skip("ChatGoogleVertexAIWeb", () => {
     ]);
 
     console.log(JSON.stringify(responseA.generations, null, 1));
+  });
+
+  test("stream method", async () => {
+    const model = new ChatGoogleVertexAI({});
+    const stream = await model.stream("Print hello world.");
+    const chunks = [];
+    for await (const chunk of stream) {
+      console.log(chunk);
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(1);
   });
 });

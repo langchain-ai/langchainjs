@@ -61,24 +61,29 @@ export interface GoogleResponse {
   data: any;
 }
 
-export interface GoogleVertexAIBasePrediction extends GoogleResponse {
+export interface GoogleVertexAIBasePrediction {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   safetyAttributes?: any;
 }
 
-export interface GoogleVertexAILLMResponse<
+export interface GoogleVertexAILLMPredictions<
   PredictionType extends GoogleVertexAIBasePrediction
 > {
-  data: {
-    predictions: PredictionType[];
-  };
+  predictions: PredictionType[];
 }
 
+export type GoogleAbstractedClientOpsMethod = "GET" | "POST";
+
+export type GoogleAbstractedClientOpsResponseType = "json" | "stream";
+
+export type GoogleAbstractedClientOps = {
+  url?: string;
+  method?: GoogleAbstractedClientOpsMethod;
+  data?: unknown;
+  responseType?: GoogleAbstractedClientOpsResponseType;
+};
+
 export interface GoogleAbstractedClient {
-  request: (opts: {
-    url?: string;
-    method?: "GET" | "POST";
-    data?: unknown;
-  }) => unknown;
+  request: (opts: GoogleAbstractedClientOps) => unknown;
   getProjectId: () => Promise<string>;
 }

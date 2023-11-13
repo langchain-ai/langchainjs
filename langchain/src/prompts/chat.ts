@@ -23,7 +23,7 @@ import {
   BaseStringPromptTemplate,
   TypedPromptInputValues,
 } from "./base.js";
-import { PromptTemplate } from "./prompt.js";
+import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -101,7 +101,7 @@ export class ChatPromptValue extends BasePromptValue {
       fields = { messages: fields };
     }
 
-    super(...arguments);
+    super(fields);
     this.messages = fields.messages;
   }
 
@@ -463,14 +463,14 @@ function _coerceMessagePromptTemplateLike(
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content);
+    return HumanMessagePromptTemplate.fromTemplate(message.content as string);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content);
+    return AIMessagePromptTemplate.fromTemplate(message.content as string);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content);
+    return SystemMessagePromptTemplate.fromTemplate(message.content as string);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
-      message.content,
+      message.content as string,
       message.role
     );
   } else {
@@ -559,17 +559,51 @@ export class ChatPromptTemplate<
     return "chat";
   }
 
+  private async _parseImagePrompts(
+    message: BaseMessage,
+    inputValues: InputValues<
+      PartialVariableName | Extract<keyof RunInput, string>
+    >
+  ): Promise<BaseMessage> {
+    if (typeof message.content === "string") {
+      return message;
+    }
+    const formattedMessageContent = await Promise.all(
+      message.content.map(async (item) => {
+        if (
+          item.type !== "image_url" ||
+          typeof item.image_url === "string" ||
+          !item.image_url?.url
+        ) {
+          return item;
+        }
+        const imageUrl = item.image_url.url;
+        const promptTemplatePlaceholder = PromptTemplate.fromTemplate(imageUrl);
+        const formattedUrl = await promptTemplatePlaceholder.format(
+          inputValues
+        );
+        // eslint-disable-next-line no-param-reassign
+        item.image_url.url = formattedUrl;
+        return item;
+      })
+    );
+    // eslint-disable-next-line no-param-reassign
+    message.content = formattedMessageContent;
+    return message;
+  }
+
   async formatMessages(
     values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
-
     let resultMessages: BaseMessage[] = [];
 
     for (const promptMessage of this.promptMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (promptMessage instanceof BaseMessage) {
-        resultMessages.push(promptMessage);
+        resultMessages.push(
+          await this._parseImagePrompts(promptMessage, allValues)
+        );
       } else {
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {
@@ -612,6 +646,22 @@ export class ChatPromptTemplate<
         Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>
       >
     >(promptDict);
+  }
+
+  /**
+   * Load prompt template from a template f-string
+   */
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(template: T) {
+    const prompt = PromptTemplate.fromTemplate(template);
+    const humanTemplate = new HumanMessagePromptTemplate({ prompt });
+    return this.fromMessages<
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      RunInput extends Symbol ? ParamsFromFString<T> : RunInput
+    >([humanTemplate]);
   }
 
   /**

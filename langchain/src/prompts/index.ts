@@ -23,6 +23,8 @@ export {
 export {
   FewShotPromptTemplate,
   type FewShotPromptTemplateInput,
+  type FewShotChatMessagePromptTemplateInput,
+  FewShotChatMessagePromptTemplate,
 } from "./few_shot.js";
 export {
   ChatPromptTemplate,

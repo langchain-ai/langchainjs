@@ -7135,50 +7135,50 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "@getzep/zep-js@npm:0.8.0"
+"@getzep/zep-js@npm:^0.9.0":
+  version: 0.9.0
+  resolution: "@getzep/zep-js@npm:0.9.0"
   dependencies:
     "@supercharge/promise-pool": ^3.1.0
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: fcc47ddf96fa52222b2beedd500ad25c42c93933a5167ca2887bfc965cc39c51519bbfac14883115418d9596249234ff49f00b5aeb94f0bf001c2ca4d41d63f0
+  checksum: 4378b7fb1bbff5b9705f2c81b5cef1811fd2fbf1c3606c085cfc2f898f18f1a685d87f7f149e1c579a3895340fa85b42e0ad954fd11de3de3a97224e0e291c82
   languageName: node
   linkType: hard
 
-"@gomomento/generated-types@npm:0.87.0":
-  version: 0.87.0
-  resolution: "@gomomento/generated-types@npm:0.87.0"
+"@gomomento/generated-types@npm:0.91.1":
+  version: 0.91.1
+  resolution: "@gomomento/generated-types@npm:0.91.1"
   dependencies:
     "@grpc/grpc-js": 1.9.0
     google-protobuf: 3.21.2
     grpc-tools: ^1.12.4
     protoc-gen-ts: ^0.8.6
-  checksum: 30e35a2d2ae4a7a8aca1274ca72132ce9a7070189eee7cacd106fb2e619cca194f8b95ea9f19c10dc8b8d3277f3f5b9303a5763f0a6b9d739b23007b41f5bfad
+  checksum: 25e987e2b2982323cf3e0955cb0cfa87d702678313da3378d35160d918d95f6e0d02845b25f3480e5da0b274beaf129e272811145a21f5df6d30ddb8676eca65
   languageName: node
   linkType: hard
 
-"@gomomento/sdk-core@npm:1.44.1, @gomomento/sdk-core@npm:^1.44.1":
-  version: 1.44.1
-  resolution: "@gomomento/sdk-core@npm:1.44.1"
+"@gomomento/sdk-core@npm:1.47.1, @gomomento/sdk-core@npm:^1.47.1":
+  version: 1.47.1
+  resolution: "@gomomento/sdk-core@npm:1.47.1"
   dependencies:
-    buffer: ^6.0.3
+    buffer: 6.0.3
     jwt-decode: 3.1.2
-  checksum: adb69c48e97cf7703ecef2b7430eb1fca01f062ceab93bea723ff5211e4f4b7ce083ccb8fe8460037b0aa92970369e136107086dc3586c5ca9f8a64b84f07592
+  checksum: 0ee894f4be6fab02b454f77a7592744c7da0788d7d37efbe91a3453b1a14f44683319c16c403bf864613fa56e4ec3309ec9f843d919ec625f8c7ddc2140c73e1
   languageName: node
   linkType: hard
 
-"@gomomento/sdk@npm:^1.44.1":
-  version: 1.44.1
-  resolution: "@gomomento/sdk@npm:1.44.1"
+"@gomomento/sdk@npm:^1.47.1":
+  version: 1.47.1
+  resolution: "@gomomento/sdk@npm:1.47.1"
   dependencies:
-    "@gomomento/generated-types": 0.87.0
-    "@gomomento/sdk-core": 1.44.1
+    "@gomomento/generated-types": 0.91.1
+    "@gomomento/sdk-core": 1.47.1
     "@grpc/grpc-js": 1.9.0
     "@types/google-protobuf": 3.15.6
     google-protobuf: 3.21.2
     jwt-decode: 3.1.2
-  checksum: a281c1ea350505bb5ae2d067ab73d90b04bdd9944de832c73f1bd95d81ccca554f7684527e97d50f98daa0ecc58cd9f85a4be22b1a9e3ffa7f9b3c00c0996f95
+  checksum: cf59a371855109b80bd95ca9f010e5cc94ca1ee130999a9dc5477b064e0352ad6f82e6e5cb3419610d4e21ae7b90b9f4b982463ea6ad5287b81553a1a587b804
   languageName: node
   linkType: hard
 
@@ -7353,10 +7353,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/inference@npm:^1.5.1":
-  version: 1.5.1
-  resolution: "@huggingface/inference@npm:1.5.1"
-  checksum: 34fa2e2194d57527f2e60693740f5f99bbd45c009e6b49c457416befad6b087e8bc35ed812710c99e86507d51388a21676b141c7a7c4a4a3b135a03ec7f1b794
+"@huggingface/inference@npm:^2.6.4":
+  version: 2.6.4
+  resolution: "@huggingface/inference@npm:2.6.4"
+  checksum: 7d48960a62d0621d4c3f1edd183aa5d7829d297110b5720c78291aac17ed58b6a9af8eaf8a3f2cbb9dabfda3cf48931f59cf491cdedefd624f90d93fa3927981
   languageName: node
   linkType: hard
 
@@ -11325,13 +11325,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/object-hash@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "@types/object-hash@npm:3.0.2"
-  checksum: 0332e59074e7df2e74c093a7419c05c1e1c5ae1e12d3779f3240b3031835ff045b4ac591362be0b411ace24d3b5e760386b434761c33af25904f7a3645cb3785
-  languageName: node
-  linkType: hard
-
 "@types/offscreencanvas@npm:~2019.3.0":
   version: 2019.3.0
   resolution: "@types/offscreencanvas@npm:2019.3.0"
@@ -11673,6 +11666,15 @@ __metadata:
     "@types/node": "*"
     "@types/webidl-conversions": "*"
   checksum: 5dc5afe078dfa1a8a266745586fa3db9baa8ce7cc904789211d1dca1d34d7f3dd17d0b7423c36bc9beab9d98aa99338f1fc60798c0af6cbb8356f20e20d9f243
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:^8":
+  version: 8.5.8
+  resolution: "@types/ws@npm:8.5.8"
+  dependencies:
+    "@types/node": "*"
+  checksum: 4ad30de842834d4dd8e6e1476470752709d4165352a3a36780f23f4fdb686d4ac8ca5e16a0e0622940ddace910b856ff8a0baa2e24e41d204fb7a6a02ab2172b
   languageName: node
   linkType: hard
 
@@ -13550,6 +13552,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"buffer@npm:6.0.3, buffer@npm:^6.0.3":
+  version: 6.0.3
+  resolution: "buffer@npm:6.0.3"
+  dependencies:
+    base64-js: ^1.3.1
+    ieee754: ^1.2.1
+  checksum: 5ad23293d9a731e4318e420025800b42bf0d264004c0286c8cc010af7a270c7a0f6522e84f54b9ad65cbd6db20b8badbfd8d2ebf4f80fa03dab093b89e68c3f9
+  languageName: node
+  linkType: hard
+
 "buffer@npm:^5.2.1, buffer@npm:^5.5.0":
   version: 5.7.1
   resolution: "buffer@npm:5.7.1"
@@ -13557,16 +13569,6 @@ __metadata:
     base64-js: ^1.3.1
     ieee754: ^1.1.13
   checksum: e2cf8429e1c4c7b8cbd30834ac09bd61da46ce35f5c22a78e6c2f04497d6d25541b16881e30a019c6fd3154150650ccee27a308eff3e26229d788bbdeb08ab84
-  languageName: node
-  linkType: hard
-
-"buffer@npm:^6.0.3":
-  version: 6.0.3
-  resolution: "buffer@npm:6.0.3"
-  dependencies:
-    base64-js: ^1.3.1
-    ieee754: ^1.2.1
-  checksum: 5ad23293d9a731e4318e420025800b42bf0d264004c0286c8cc010af7a270c7a0f6522e84f54b9ad65cbd6db20b8badbfd8d2ebf4f80fa03dab093b89e68c3f9
   languageName: node
   linkType: hard
 
@@ -17148,8 +17150,8 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.44.1
+    "@getzep/zep-js": ^0.9.0
+    "@gomomento/sdk": ^1.47.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
@@ -21592,12 +21594,12 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.44.1
-    "@gomomento/sdk-core": ^1.44.1
+    "@getzep/zep-js": ^0.9.0
+    "@gomomento/sdk": ^1.47.1
+    "@gomomento/sdk-core": ^1.47.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
-    "@huggingface/inference": ^1.5.1
+    "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
@@ -21627,11 +21629,11 @@ __metadata:
     "@types/jsdom": ^21.1.1
     "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
-    "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
     "@types/pg-copy-streams": ^1.2.2
     "@types/uuid": ^9
+    "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
@@ -21685,8 +21687,8 @@ __metadata:
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
     langchainhub: ~0.0.6
-    langsmith: ~0.0.31
-    llmonitor: ^0.5.8
+    langsmith: ~0.0.48
+    llmonitor: ^0.5.9
     lodash: ^4.17.21
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
@@ -21696,8 +21698,7 @@ __metadata:
     neo4j-driver: ^5.12.0
     node-llama-cpp: 2.7.3
     notion-to-md: ^3.1.0
-    object-hash: ^3.0.0
-    openai: ~4.4.0
+    openai: ^4.17.0
     openapi-types: ^12.1.3
     p-queue: ^6.6.2
     p-retry: 4
@@ -21749,13 +21750,13 @@ __metadata:
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.8.0
-    "@gomomento/sdk": ^1.44.1
-    "@gomomento/sdk-core": ^1.44.1
-    "@gomomento/sdk-web": ^1.44.1
+    "@getzep/zep-js": ^0.9.0
+    "@gomomento/sdk": ^1.47.1
+    "@gomomento/sdk-core": ^1.47.1
+    "@gomomento/sdk-web": ^1.47.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
-    "@huggingface/inference": ^1.5.1
+    "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": "*"
@@ -21802,7 +21803,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    llmonitor: ^0.5.8
+    llmonitor: ^0.5.9
     lodash: ^4.17.21
     mammoth: "*"
     mongodb: ^5.2.0
@@ -21830,6 +21831,7 @@ __metadata:
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
+    ws: ^8.14.2
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
   peerDependenciesMeta:
@@ -22021,6 +22023,8 @@ __metadata:
       optional: true
     web-auth-library:
       optional: true
+    ws:
+      optional: true
     youtube-transcript:
       optional: true
     youtubei.js:
@@ -22050,9 +22054,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:~0.0.31":
-  version: 0.0.31
-  resolution: "langsmith@npm:0.0.31"
+"langsmith@npm:~0.0.48":
+  version: 0.0.48
+  resolution: "langsmith@npm:0.0.48"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -22061,7 +22065,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 26c09a122c8541c92fdacae47d73621a975a69a4003b35c82a2a59f302cecff66e521cb9c0283055da1aa0d9cf37db4258e561314ac4cbba10997258cc480874
+  checksum: 2552c1a8549eab8e03a5530e73ce37ad0e147ca3084edbfd56b7a29b92c7c5579e5c1e53222bfb846b5ee8219d8d80cc9a7cc07e78717e95cdefedb95d76cd86
   languageName: node
   linkType: hard
 
@@ -22240,9 +22244,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"llmonitor@npm:^0.5.8":
-  version: 0.5.9
-  resolution: "llmonitor@npm:0.5.9"
+"llmonitor@npm:^0.5.9":
+  version: 0.5.10
+  resolution: "llmonitor@npm:0.5.10"
   dependencies:
     unctx: ^2.3.1
   peerDependencies:
@@ -22253,7 +22257,7 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: ce57cd3488fefb25a3c771f61ea13d394282c57a75c7e6b5964a87bc0e26a26ecabdb93495d9b60f1657824b9153906cebbb71879452006e978a2f1e4332c6a4
+  checksum: 52c3121f86b3aceccd518323640f6009b73ae08333046d72486920bcd0d3d464bfa65e458c370a75a4676c4692f256fdd9a33b7883b51c0dabad53f9a507cab9
   languageName: node
   linkType: hard
 
@@ -24239,9 +24243,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:~4.4.0":
-  version: 4.4.0
-  resolution: "openai@npm:4.4.0"
+"openai@npm:^4.17.0":
+  version: 4.17.0
+  resolution: "openai@npm:4.17.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -24251,9 +24255,10 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
   bin:
     openai: bin/cli
-  checksum: c89b47f3d66c41d8a2080c23192573e8ce985aa3ba099bbe410fac2facf62f665aefad9ea3a7a210e35e650d8568ed1186e12806472d8242fc3dc31e930e6084
+  checksum: 22b0a7704ba2dd4f139c1085e02aa45ca57c0df53b6f8d097a897da9cb17b9e1083e4dd65ec7ad2ca9a6c4110811bcb080e7fa01f61316b4e3a949c072d53666
   languageName: node
   linkType: hard
 
@@ -30388,7 +30393,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-streams-polyfill@npm:^3.0.3":
+"web-streams-polyfill@npm:^3.0.3, web-streams-polyfill@npm:^3.2.1":
   version: 3.2.1
   resolution: "web-streams-polyfill@npm:3.2.1"
   checksum: b119c78574b6d65935e35098c2afdcd752b84268e18746606af149e3c424e15621b6f1ff0b42b2676dc012fc4f0d313f964b41a4b5031e525faa03997457da02
