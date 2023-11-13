@@ -27,7 +27,7 @@
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
     "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
     "test:exports:docker": "docker compose up --force-recreate",
-    "publish": "bash langchain/scripts/release-branch.sh && turbo run --filter langchain build lint test && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
+    "publish": "bash langchain/scripts/release-branch.sh && turbo run --filter langchain build lint test --concurrency 1 && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start",

@@ -275,7 +275,7 @@ export class MomentoVectorIndex extends VectorStore {
             )
           ),
         }),
-        hit.distance,
+        hit.score,
       ]);
     } else if (response instanceof VectorSearch.Error) {
       throw new Error(response.toString());

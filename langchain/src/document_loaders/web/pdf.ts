@@ -1,5 +1,3 @@
-import { type TextItem } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
-
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { formatDocumentsAsString } from "../../util/document.js";
@@ -48,9 +46,22 @@ export class WebPDFLoader extends BaseDocumentLoader {
         continue;
       }
 
-      const text = content.items
-        .map((item) => (item as TextItem).str)
-        .join("\n");
+      // Eliminate excessive newlines
+      // Source: https://github.com/albertcui/pdf-parse/blob/7086fc1cc9058545cdf41dd0646d6ae5832c7107/lib/pdf-parse.js#L16
+      let lastY;
+      const textItems = [];
+      for (const item of content.items) {
+        if ("str" in item) {
+          if (lastY === item.transform[5] || !lastY) {
+            textItems.push(item.str);
+          } else {
+            textItems.push(`\n${item.str}`);
+          }
+          // eslint-disable-next-line prefer-destructuring
+          lastY = item.transform[5];
+        }
+      }
+      const text = textItems.join(" ");
 
       documents.push(
         new Document({

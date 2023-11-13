@@ -3,6 +3,7 @@ export * from "langchain/load/serializable";
 export * from "langchain/agents";
 export * from "langchain/agents/toolkits";
 export * from "langchain/agents/format_scratchpad";
+export * from "langchain/agents/format_scratchpad/openai_tools";
 export * from "langchain/agents/format_scratchpad/log";
 export * from "langchain/agents/format_scratchpad/xml";
 export * from "langchain/agents/format_scratchpad/log_to_message";
