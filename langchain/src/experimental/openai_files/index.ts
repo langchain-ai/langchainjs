@@ -14,9 +14,9 @@ export class OpenAIFiles {
    *
    * The size of individual files can be a maximum of 512 MB. See the Assistants Tools guide to learn more about the types of files supported. The Fine-tuning API only supports .jsonl files.
    *
-   * @link https://platform.openai.com/docs/api-reference/files/create
-   * @param file: fs.ReadStream
-   * @param purpose: "assistants" | "fine-tune"
+   * @link {https://platform.openai.com/docs/api-reference/files/create}
+   * @param {fs.ReadStream} file
+   * @param {"assistants" | "fine-tune"} purpose
    * @returns
    */
   static async createFile({ file, purpose }: OpenAIFilesCreate) {
@@ -29,9 +29,9 @@ export class OpenAIFiles {
 
   /**
    * Delete a file.
-   * @link https://platform.openai.com/docs/api-reference/files/delete
+   * @link {https://platform.openai.com/docs/api-reference/files/delete}
    *
-   * @param fileId: string
+   * @param {string} fileId
    * @returns
    */
   static async deleteFile({ fileId }: { fileId: string }) {
@@ -42,9 +42,9 @@ export class OpenAIFiles {
   /**
    * List files
    * Returns a list of files that belong to the user's organization.
-   * @link https://platform.openai.com/docs/api-reference/files/list
-   * @param query: OpenAIClient.Files.FileListParams | undefined
-   * @param options: RequestOptions | undefined
+   * @link {https://platform.openai.com/docs/api-reference/files/list}
+   * @param {OpenAIClient.Files.FileListParams | undefined} query
+   * @param {RequestOptions | undefined} options
    * @returns
    */
   static async listFiles(props?: {
@@ -58,8 +58,8 @@ export class OpenAIFiles {
   /**
    * Retrieve file
    * Returns information about a specific file.
-   * @link https://platform.openai.com/docs/api-reference/files/retrieve
-   * @param fileId: string
+   * @link {https://platform.openai.com/docs/api-reference/files/retrieve}
+   * @param {string} fileId
    * @returns
    */
   static async retrieveFile({ fileId }: { fileId: string }) {
@@ -71,10 +71,10 @@ export class OpenAIFiles {
    * Retrieve file content
    * Returns the contents of the specified file.
    *
-   * Note: You can't retrieve the contents of a file that was uploaded with the "purpose": "assistants" API.
+   * @note You can't retrieve the contents of a file that was uploaded with the "purpose": "assistants" API.
    *
-   * @link https://platform.openai.com/docs/api-reference/files/retrieve-contents
-   * @param fileId: string
+   * @link {https://platform.openai.com/docs/api-reference/files/retrieve-contents}
+   * @param {string} fileId
    * @returns
    */
   static async retrieveFileContent({ fileId }: { fileId: string }) {
