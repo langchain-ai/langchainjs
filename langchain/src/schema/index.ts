@@ -555,8 +555,8 @@ export class ToolMessage extends BaseMessage {
 }
 
 /**
- * Represents a chunk of a function message, which can be concatenated
- * with other function message chunks.
+ * Represents a chunk of a tool message, which can be concatenated
+ * with other tool message chunks.
  */
 export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
