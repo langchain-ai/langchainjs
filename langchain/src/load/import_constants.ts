@@ -161,4 +161,5 @@ export const optionalImportEntrypoints = [
   "langchain/experimental/chat_models/anthropic_functions",
   "langchain/experimental/llms/bittensor",
   "langchain/experimental/hubs/makersuite/googlemakersuitehub",
+  "langchain/experimental/tools/pyinterpreter",
 ];

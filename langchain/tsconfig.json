@@ -291,6 +291,7 @@
       "src/experimental/llms/bittensor.ts",
       "src/experimental/hubs/makersuite/googlemakersuitehub.ts",
       "src/experimental/chains/violation_of_expectations/index.ts",
+      "src/experimental/tools/pyinterpreter.ts",
       "src/evaluation/index.ts",
       "src/runnables/remote.ts"
     ],

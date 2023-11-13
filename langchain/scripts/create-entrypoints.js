@@ -307,6 +307,7 @@ const entrypoints = {
     "experimental/hubs/makersuite/googlemakersuitehub",
   "experimental/chains/violation_of_expectations":
     "experimental/chains/violation_of_expectations/index",
+  "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
   evaluation: "evaluation/index",
   // runnables
@@ -337,7 +338,6 @@ const requiresOptionalDependency = [
   "tools/sql",
   "tools/webbrowser",
   "tools/google_calendar",
-  "tools/experimental/pyinterpreter",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
@@ -489,6 +489,7 @@ const requiresOptionalDependency = [
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub",
+  "experimental/tools/pyinterpreter",
   "util/convex",
 ];
 

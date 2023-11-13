@@ -1,8 +1,8 @@
 import { test, expect } from "@jest/globals";
-import { StringOutputParser } from "../../schema/output_parser.js";
-import { OpenAI } from "../../llms/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { PythonInterpreterTool } from "../experimental/pyinterpreter.js";
+import { StringOutputParser } from "../../../schema/output_parser.js";
+import { OpenAI } from "../../../llms/openai.js";
+import { PromptTemplate } from "../../../prompts/index.js";
+import { PythonInterpreterTool } from "../pyinterpreter.js";
 
 describe("Python Interpreter testsuite", () => {
   test("fibonacci sequence", async () => {
@@ -12,7 +12,7 @@ describe("Python Interpreter testsuite", () => {
 
     const model = new OpenAI({});
 
-    const interpreter = new PythonInterpreterTool({
+    const interpreter = await PythonInterpreterTool.initialize({
       indexURL: "../node_modules/pyodide",
     });
     const chain = prompt

@@ -787,6 +787,9 @@
     "experimental/chains/violation_of_expectations.cjs",
     "experimental/chains/violation_of_expectations.js",
     "experimental/chains/violation_of_expectations.d.ts",
+    "experimental/tools/pyinterpreter.cjs",
+    "experimental/tools/pyinterpreter.js",
+    "experimental/tools/pyinterpreter.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -2693,6 +2696,11 @@
       "types": "./experimental/chains/violation_of_expectations.d.ts",
       "import": "./experimental/chains/violation_of_expectations.js",
       "require": "./experimental/chains/violation_of_expectations.cjs"
+    },
+    "./experimental/tools/pyinterpreter": {
+      "types": "./experimental/tools/pyinterpreter.d.ts",
+      "import": "./experimental/tools/pyinterpreter.js",
+      "require": "./experimental/tools/pyinterpreter.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
