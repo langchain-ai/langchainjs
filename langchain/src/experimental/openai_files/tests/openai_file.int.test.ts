@@ -1,13 +1,20 @@
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import { OpenAIFiles } from "../index.js";
 
-test("Send a file to Open AI", async () => {
-  const file = await OpenAIFiles.create({
-    file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
-    purpose: "assistants",
+/**
+ * Otherwise we got the error __dirname doesn't exist
+ */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+test("Use file with Open AI", async () => {
+  const file = await OpenAIFiles.createFile({
+    file: fs.createReadStream(path.resolve(__dirname, `./test.jsonl`)),
+    purpose: "fine-tune",
   });
-  console.log(file);
   expect(file.id).toBeDefined();
   expect(file.object).toBe("file");
   /**
@@ -21,8 +28,53 @@ test("Send a file to Open AI", async () => {
       "purpose": "assistants",
     }
    */
-  const result = await OpenAIFiles.del({ fileId: file.id });
-  console.log(result);
+  const fileContent = await OpenAIFiles.retrieveFileContent({
+    fileId: file.id,
+  });
+  console.log(fileContent);
+  expect(fileContent).toBeDefined();
+  /**
+   * Output 
+    {
+      "id": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
+      "object": "file",
+      "bytes": 120000,
+      "created_at": 1677610602,
+      "filename": "salesOverview.pdf",
+      "purpose": "assistants",
+    }
+   */
+  const retrievedFile = await OpenAIFiles.retrieveFile({
+    fileId: file.id,
+  });
+  expect(retrievedFile.id).toBeDefined();
+  expect(retrievedFile.object).toBe("file");
+  /**
+   * Output 
+    {
+      "id": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
+      "object": "file",
+      "bytes": 120000,
+      "created_at": 1677610602,
+      "filename": "salesOverview.pdf",
+      "purpose": "assistants",
+    }
+   */
+  const list = await OpenAIFiles.listFiles();
+  expect(list).toBeDefined();
+  expect(!!list.data.find((f) => f.id === file.id)).toBeTruthy();
+  /**
+   * Output 
+    {
+      "id": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
+      "object": "file",
+      "bytes": 120000,
+      "created_at": 1677610602,
+      "filename": "salesOverview.pdf",
+      "purpose": "assistants",
+    }
+   */
+  const result = await OpenAIFiles.deleteFile({ fileId: file.id });
   expect(result.id).toBe(file.id);
   expect(result.deleted).toBeTruthy();
   /**
