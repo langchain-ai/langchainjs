@@ -9,7 +9,24 @@ Files are used to upload documents that can be used with features like Assistant
 
 We've implemented the File API in LangChain with create and delete.
 
-## Creating an File
+The `File` object represents a document that has been uploaded to OpenAI.
+
+```
+{
+  "id": "file-abc123",
+  "object": "file",
+  "bytes": 120000,
+  "created_at": 1677610602,
+  "filename": "salesOverview.pdf",
+  "purpose": "assistants",
+}
+```
+
+## Create a File
+
+Upload a file that can be used across various endpoints. The size of all the files uploaded by one organization can be up to **100 GB**.
+
+The size of individual files can be a maximum of **512 MB**. See the Assistants Tools guide to learn more about the types of files supported. The Fine-tuning API only supports `.jsonl` files.
 
 ```typescript
 import * as fs from "fs";
@@ -21,16 +38,16 @@ const file = await OpenAIFiles.create({
   purpose: "assistants",
 });
 /**
-   * Output 
-    {
-      "id": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
-      "object": "file",
-      "bytes": 120000,
-      "created_at": 1677610602,
-      "filename": "salesOverview.pdf",
-      "purpose": "assistants",
-    }
-   */
+* Output 
+  {
+    "id": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
+    "object": "file",
+    "bytes": 120000,
+    "created_at": 1677610602,
+    "filename": "salesOverview.pdf",
+    "purpose": "assistants",
+  }
+*/
 ```
 
 ## Use File in AI Assistant
@@ -38,10 +55,10 @@ const file = await OpenAIFiles.create({
 ```typescript
 import * as fs from "fs";
 import * as path from "path";
-import { OpenAIAssistants } from "langchain/experimental/openai_assistants";
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const file = await OpenAIFiles.create({
+const file = await OpenAIFiles.createFile({
   file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
   purpose: "assistants",
 });
@@ -57,20 +74,99 @@ const agent = await OpenAIAssistantRunnable.createAssistant({
 });
 ```
 
-## Delete an File
+## Delete a File
+
+Delete a file.
 
 ```typescript
 import * as fs from "fs";
 import * as path from "path";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const result = await OpenAIFiles.del({ fileId: file.id });
+const result = await OpenAIFiles.deleteFile({ fileId: file.id });
 /**
-   * Output:
-   {
-      "id": "file-abc123",
-      "object": "file",
-      "deleted": true
-    }
-   */
+* Output:
+  {
+    "id": "file-abc123",
+    "object": "file",
+    "deleted": true
+  }
+*/
+```
+
+## List all Files
+
+Returns a list of files that belong to the user's organization.
+
+`purpose`?: string
+Only return files with the given purpose.
+
+```typescript
+import * as fs from "fs";
+import * as path from "path";
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const result = await OpenAIFiles.listFiles({ purpose: "assistants" });
+/**
+* Output:
+  {
+    "data": [
+      {
+        "id": "file-abc123",
+        "object": "file",
+        "bytes": 175,
+        "created_at": 1613677385,
+        "filename": "salesOverview.pdf",
+        "purpose": "assistants",
+      },
+      {
+        "id": "file-abc123",
+        "object": "file",
+        "bytes": 140,
+        "created_at": 1613779121,
+        "filename": "puppy.jsonl",
+        "purpose": "fine-tune",
+      }
+    ],
+    "object": "list"
+  }
+*/
+```
+
+## Retrieve File
+
+Returns information about a specific file.
+
+```typescript
+import * as fs from "fs";
+import * as path from "path";
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const result = await OpenAIFiles.retrieveFile({ fileId: file.id });
+/**
+* Output:
+  {
+    "id": "file-abc123",
+    "object": "file",
+    "bytes": 120000,
+    "created_at": 1677610602,
+    "filename": "mydata.jsonl",
+    "purpose": "fine-tune",
+  }
+*/
+```
+
+## Retrieve File Content
+
+Returns the contents of the specified file.
+
+You can't retrieve the contents of a file that was uploaded with the "purpose": "assistants" API.
+
+```typescript
+import * as fs from "fs";
+import * as path from "path";
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const result = await OpenAIFiles.retrieveFileContent({ fileId: file.id });
+// Return the file content.
 ```
