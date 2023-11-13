@@ -21714,7 +21714,7 @@ __metadata:
     srt-parser-2: ^1.2.2
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
-    typescript: ^5.2.0
+    typescript: ^5.2.2
     typesense: ^1.5.3
     usearch: ^1.1.1
     uuid: ^9.0.0
@@ -22041,7 +22041,7 @@ __metadata:
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest
-    typescript: ^5.2.0
+    typescript: ^5.2.2
   languageName: unknown
   linkType: soft
 
@@ -29474,7 +29474,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.2.0":
+"typescript@npm:^5.2.2":
   version: 5.2.2
   resolution: "typescript@npm:5.2.2"
   bin:
@@ -29514,7 +29514,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.2.0#~builtin<compat/typescript>":
+"typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>":
   version: 5.2.2
   resolution: "typescript@patch:typescript@npm%3A5.2.2#~builtin<compat/typescript>::version=5.2.2&hash=1f5320"
   bin:
