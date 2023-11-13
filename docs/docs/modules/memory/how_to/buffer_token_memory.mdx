@@ -4,27 +4,12 @@ This notebook covers how to use `ConversationTokenBufferMemory`. This memory kee
 
 Below is a basic demonstration of the usage of token buffer memory.
 
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-import { ConversationTokenBufferMemory } from "langchain/memory";
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/memory/token_buffer.ts";
 
-const model = new OpenAI({});
-const memory = new ConversationTokenBufferMemory({
-  llm: model,
-  maxTokenLimit: 10,
-});
+<CodeBlock language="typescript">{Example}</CodeBlock>
 
-await memory.saveContext({ input: "hi" }, { output: "whats up" });
-await memory.saveContext({ input: "not much you" }, { output: "not much" });
-const result1 = await memory.loadMemoryVariables({});
-console.log(result1);
-```
-
-```shell
- { history: 'Human: not much you\nAI: not much' }
-```
-
-We can also get the history as a list of messages (this is useful if you are using this with a chat model)
+We can also get the history as a list of messages, useful if you are using this with `MessagesPlaceholder` in a chat prompt template.
 
 ```typescript
 const memory = new ConversationTokenBufferMemory({
