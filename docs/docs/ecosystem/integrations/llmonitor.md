@@ -4,7 +4,7 @@ This page covers how to use [LLMonitor](https://llmonitor.com?utm_source=langcha
 
 ## What is LLMonitor?
 
-LLMonitor is an [open-source](https://github.com/llmonitor/llmonitor) observability and analytics platform that provides tracing, analytics, feedback tracking and more for conversational AI.
+LLMonitor is an [open-source](https://github.com/llmonitor/llmonitor) observability and analytics platform that provides tracing, analytics, feedback tracking and way more for AI apps.
 
 <video controls width='100%' >
   <source src='https://llmonitor.com/videos/demo-annotated.mp4'/>
@@ -12,7 +12,7 @@ LLMonitor is an [open-source](https://github.com/llmonitor/llmonitor) observabil
 
 ## Installation
 
-Start by installing the llmonitor package in your project:
+Start by installing the LLMonitor package in your project:
 
 ```bash
 npm install llmonitor
@@ -128,7 +128,7 @@ import { LLMonitorHandler } from "langchain/callbacks/handlers/llmonitor";
 import monitor from "llmonitor";
 
 const chat = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  modelName: "gpt-4",
   callbacks: [new LLMonitorHandler()],
 });
 
