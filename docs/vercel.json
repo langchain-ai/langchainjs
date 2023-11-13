@@ -399,6 +399,60 @@
     {
       "source": "/docs/modules/agents/toolkits(/.*)?",
       "destination": "/docs/integrations/toolkits$1"
+    },
+    {
+      "source": "/docs/api/:slug",
+      "destination": "https://api.js.langchain.com/modules/:slug.html"
+    },
+    {
+      "source": "/docs/:slug1/classes/:slug2",
+      "destination": "https://api.js.langchain.com/classes/:slug1.:slug2.html",
+      "has": [
+        {
+          "type": "path",
+          "value": "/classes/"
+        }
+      ]
+    },
+    {
+      "source": "/docs/:slug1/functions/:slug2",
+      "destination": "https://api.js.langchain.com/functions/:slug1.:slug2.html",
+      "has": [
+        {
+          "type": "path",
+          "value": "/functions/"
+        }
+      ]
+    },
+    {
+      "source": "/docs/:slug1/interfaces/:slug2",
+      "destination": "https://api.js.langchain.com/interfaces/:slug1.:slug2.html",
+      "has": [
+        {
+          "type": "path",
+          "value": "/interfaces/"
+        }
+      ]
+    },
+    {
+      "source": "/docs/:slug1/types/:slug2",
+      "destination": "https://api.js.langchain.com/types/:slug1.:slug2.html",
+      "has": [
+        {
+          "type": "path",
+          "value": "/types/"
+        }
+      ]
+    },
+    {
+      "source": "/docs/:slug1/variables/:slug2",
+      "destination": "https://api.js.langchain.com/variables/:slug1.:slug2.html",
+      "has": [
+        {
+          "type": "path",
+          "value": "/variables/"
+        }
+      ]
     }
   ]
 }
