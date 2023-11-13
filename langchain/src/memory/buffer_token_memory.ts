@@ -51,12 +51,7 @@ export class ConversationTokenBufferMemory
   llm: BaseLanguageModel;
 
   constructor(fields: ConversationTokenBufferMemoryInput) {
-    super({
-      returnMessages: fields?.returnMessages ?? false,
-      chatHistory: fields?.chatHistory,
-      inputKey: fields?.inputKey,
-      outputKey: fields?.outputKey,
-    });
+    super(fields);
     this.llm = fields.llm;
     this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
     this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
