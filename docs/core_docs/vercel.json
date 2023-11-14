@@ -406,53 +406,23 @@
     },
     {
       "source": "/docs/api/:slug1/classes/:slug2",
-      "destination": "https://api.js.langchain.com/classes/:slug1.:slug2.html",
-      "has": [
-        {
-          "type": "path",
-          "value": "/classes/"
-        }
-      ]
+      "destination": "https://api.js.langchain.com/classes/:slug1.:slug2.html"
     },
     {
       "source": "/docs/api/:slug1/functions/:slug2",
-      "destination": "https://api.js.langchain.com/functions/:slug1.:slug2.html",
-      "has": [
-        {
-          "type": "path",
-          "value": "/functions/"
-        }
-      ]
+      "destination": "https://api.js.langchain.com/functions/:slug1.:slug2.html"
     },
     {
       "source": "/docs/api/:slug1/interfaces/:slug2",
-      "destination": "https://api.js.langchain.com/interfaces/:slug1.:slug2.html",
-      "has": [
-        {
-          "type": "path",
-          "value": "/interfaces/"
-        }
-      ]
+      "destination": "https://api.js.langchain.com/interfaces/:slug1.:slug2.html"
     },
     {
       "source": "/docs/api/:slug1/types/:slug2",
-      "destination": "https://api.js.langchain.com/types/:slug1.:slug2.html",
-      "has": [
-        {
-          "type": "path",
-          "value": "/types/"
-        }
-      ]
+      "destination": "https://api.js.langchain.com/types/:slug1.:slug2.html"
     },
     {
       "source": "/docs/api/:slug1/variables/:slug2",
-      "destination": "https://api.js.langchain.com/variables/:slug1.:slug2.html",
-      "has": [
-        {
-          "type": "path",
-          "value": "/variables/"
-        }
-      ]
+      "destination": "https://api.js.langchain.com/variables/:slug1.:slug2.html"
     }
   ]
 }
