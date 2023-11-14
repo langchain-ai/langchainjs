@@ -195,7 +195,10 @@ export class OpenAPISpec {
         updatedPath.startsWith("/") ? updatedPath.slice(1) : updatedPath
       }_${method}`;
     }
-    return operationId.replaceAll("-", "_").replaceAll(".", "_").replaceAll("/", "_");
+    return operationId
+      .replaceAll("-", "_")
+      .replaceAll(".", "_")
+      .replaceAll("/", "_");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
