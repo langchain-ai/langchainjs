@@ -92,6 +92,7 @@ import * as util_math from "langchain/util/math";
 import * as util_time from "langchain/util/time";
 import * as experimental_autogpt from "langchain/experimental/autogpt";
 import * as experimental_openai_assistant from "langchain/experimental/openai_assistant";
+import * as experimental_openai_files from "langchain/experimental/openai_files";
 import * as experimental_babyagi from "langchain/experimental/babyagi";
 import * as experimental_generative_agents from "langchain/experimental/generative_agents";
 import * as experimental_plan_and_execute from "langchain/experimental/plan_and_execute";

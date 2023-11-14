@@ -748,6 +748,9 @@ experimental/autogpt.d.ts
 experimental/openai_assistant.cjs
 experimental/openai_assistant.js
 experimental/openai_assistant.d.ts
+experimental/openai_files.cjs
+experimental/openai_files.js
+experimental/openai_files.d.ts
 experimental/babyagi.cjs
 experimental/babyagi.js
 experimental/babyagi.d.ts
