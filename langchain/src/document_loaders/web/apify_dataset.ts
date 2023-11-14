@@ -15,11 +15,17 @@ import { getEnvironmentVariable } from "../../util/env.js";
 /**
  * A type that represents a function that takes a single object (an Apify
  * dataset item) and converts it to an instance of the Document class.
+ *
+ * Change function signature to only be asynchronous for simplicity in v0.1.0
+ * https://github.com/langchain-ai/langchainjs/pull/3262
  */
 export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
   (
     item: Record<string | number, unknown>
-  ) => Promise<Document<Metadata> | Array<Document<Metadata>>>;
+  ) =>
+    | Document<Metadata>
+    | Array<Document<Metadata>>
+    | Promise<Document<Metadata> | Array<Document<Metadata>>>;
 
 export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
   extends AsyncCallerParams {
@@ -72,7 +78,7 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
 
     const documentList = await Promise.all(
       dataset.items.map((item) =>
-        this.caller.call(this.datasetMappingFunction, item)
+        this.caller.call(async () => this.datasetMappingFunction(item))
       )
     );
 
