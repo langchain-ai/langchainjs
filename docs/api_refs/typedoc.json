@@ -274,6 +274,7 @@
     "../../langchain/src/experimental/multimodal_embeddings/googlevertexai.ts",
     "../../langchain/src/experimental/chat_models/anthropic_functions.ts",
     "../../langchain/src/experimental/chat_models/bittensor.ts",
+    "../../langchain/src/experimental/chat_models/ollama_functions.ts",
     "../../langchain/src/experimental/llms/bittensor.ts",
     "../../langchain/src/experimental/hubs/makersuite/googlemakersuitehub.ts",
     "../../langchain/src/experimental/chains/violation_of_expectations/index.ts",

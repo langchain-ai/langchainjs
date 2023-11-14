@@ -97,6 +97,7 @@ export * as experimental__babyagi from "../experimental/babyagi/index.js";
 export * as experimental__generative_agents from "../experimental/generative_agents/index.js";
 export * as experimental__plan_and_execute from "../experimental/plan_and_execute/index.js";
 export * as experimental__chat_models__bittensor from "../experimental/chat_models/bittensor.js";
+export * as experimental__chat_models__ollama_functions from "../experimental/chat_models/ollama_functions.js";
 export * as experimental__chains__violation_of_expectations from "../experimental/chains/violation_of_expectations/index.js";
 export * as evaluation from "../evaluation/index.js";
 export * as runnables__remote from "../runnables/remote.js";
