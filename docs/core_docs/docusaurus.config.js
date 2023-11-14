@@ -6,7 +6,7 @@
 const { ProvidePlugin } = require("webpack");
 const path = require("path");
 
-const examplesPath = path.resolve(__dirname, "..", "examples", "src");
+const examplesPath = path.resolve(__dirname, "..", "..", "examples", "src");
 
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
@@ -29,12 +29,6 @@ const config = {
   onBrokenMarkdownLinks: "throw",
 
   plugins: [
-    [
-      "docusaurus-plugin-typedoc",
-      {
-        tsconfig: "../langchain/tsconfig.json",
-      },
-    ],
     () => ({
       name: "custom-webpack-config",
       configureWebpack: () => ({
@@ -50,7 +44,7 @@ const config = {
           },
           alias: {
             "@examples": examplesPath,
-            react: path.resolve("../node_modules/react"),
+            react: path.resolve("../../node_modules/react"),
           },
         },
         module: {
@@ -170,7 +164,7 @@ const config = {
             label: "Integrations",
           },
           {
-            href: "/docs/api/",
+            href: "https://api.js.langchain.com",
             label: "API",
             position: "left",
           },

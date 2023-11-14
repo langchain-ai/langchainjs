@@ -540,15 +540,12 @@ const generateFiles = () => {
 };
 
 const updateConfig = () => {
-  // Update tsconfig.json `typedocOptions.entryPoints` field
-  updateJsonFile("./tsconfig.json", (json) => ({
+  // Update typedoc.json entryPoints field
+  updateJsonFile("../docs/api_refs/typedoc.json", (json) => ({
     ...json,
-    typedocOptions: {
-      ...json.typedocOptions,
-      entryPoints: [...Object.keys(entrypoints)]
-        .filter((key) => !deprecatedNodeOnly.includes(key))
-        .map((key) => `src/${entrypoints[key]}.ts`),
-    },
+    entryPoints: [...Object.keys(entrypoints)]
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();
