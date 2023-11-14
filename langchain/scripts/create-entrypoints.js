@@ -303,6 +303,8 @@ const entrypoints = {
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
   "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
+  "experimental/chat_models/ollama_functions":
+    "experimental/chat_models/ollama_functions",
   "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
@@ -541,15 +543,12 @@ const generateFiles = () => {
 };
 
 const updateConfig = () => {
-  // Update tsconfig.json `typedocOptions.entryPoints` field
-  updateJsonFile("./tsconfig.json", (json) => ({
+  // Update typedoc.json entryPoints field
+  updateJsonFile("../docs/api_refs/typedoc.json", (json) => ({
     ...json,
-    typedocOptions: {
-      ...json.typedocOptions,
-      entryPoints: [...Object.keys(entrypoints)]
-        .filter((key) => !deprecatedNodeOnly.includes(key))
-        .map((key) => `src/${entrypoints[key]}.ts`),
-    },
+    entryPoints: [...Object.keys(entrypoints)]
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();

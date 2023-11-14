@@ -72,7 +72,7 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
     });
     setTimeout(() => {
       controller.abort();
-    }, 500);
+    }, 1000);
     return res;
   }).rejects.toThrow();
 }, 10000);
