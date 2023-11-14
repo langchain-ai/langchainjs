@@ -19,7 +19,7 @@ import { getEnvironmentVariable } from "../../util/env.js";
 export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
   (
     item: Record<string | number, unknown>
-  ) => Document<Metadata> | Promise<Document<Metadata>>;
+  ) => Promise<Document<Metadata> | Array<Document<Metadata>>>;
 
 export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
   extends AsyncCallerParams {
@@ -66,15 +66,17 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
    * @returns An array of Document instances.
    */
   async load(): Promise<Document<Metadata>[]> {
-    const datasetItems = (
-      await this.apifyClient.dataset(this.datasetId).listItems({ clean: true })
-    ).items;
+    const dataset = await this.apifyClient
+      .dataset(this.datasetId)
+      .listItems({ clean: true });
 
-    return await Promise.all(
-      datasetItems.map((item) =>
-        this.caller.call(async () => this.datasetMappingFunction(item))
+    const documentList = await Promise.all(
+      dataset.items.map((item) =>
+        this.caller.call(this.datasetMappingFunction, item)
       )
     );
+
+    return documentList.flat();
   }
 
   /**
