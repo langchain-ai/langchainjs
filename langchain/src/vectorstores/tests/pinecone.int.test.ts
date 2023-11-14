@@ -86,6 +86,29 @@ describe("PineconeStore", () => {
     ]);
   });
 
+  test("max marginal relevance", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+
+    await pineconeStore.addDocuments([
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: id } },
+    ]);
+
+    // If the filter wasn't working, we'd get all 3 documents back
+    const results = await pineconeStore.maxMarginalRelevanceSearch(
+      pageContent,
+      {
+        k: 5,
+        fetchK: 20,
+        filter: { foo: id },
+      }
+    );
+
+    expect(results.length).toEqual(3);
+  });
+
   test("delete by id", async () => {
     const pageContent = faker.lorem.sentence(5);
     const id = uuid.v4();

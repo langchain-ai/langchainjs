@@ -20,6 +20,9 @@ await graph.query(
     "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
 );
 
+// Refresh schema
+await graph.refreshSchema();
+
 const chain = GraphCypherQAChain.fromLLM({
   llm: model,
   graph,

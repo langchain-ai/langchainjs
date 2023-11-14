@@ -1,4 +1,4 @@
-import hash from "object-hash";
+import { insecureHash } from "../util/js-sha1/hash.js";
 
 import {
   ChatGeneration,
@@ -18,7 +18,7 @@ import {
  * TODO: Make cache key consistent across versions of langchain.
  */
 export const getCacheKey = (...strings: string[]): string =>
-  hash(strings.join("_"));
+  insecureHash(strings.join("_"));
 
 export function deserializeStoredGeneration(
   storedGeneration: StoredGeneration

@@ -1,0 +1,47 @@
+---
+sidebar_position: 2
+title: Retrieval augmented generation (RAG)
+hide_table_of_contents: true
+---
+
+# RAG
+
+Let's now look at adding in a retrieval step to a prompt and an LLM, which adds up to a "retrieval-augmented generation" chain:
+
+<details>
+  <summary>Interactive tutorial</summary>
+  The screencast below interactively walks through an example. You can update and
+  run the code as it's being written in the video!
+  <iframe
+    src="https://scrimba.com/scrim/co0e040d09941b4000244db46?embed=langchain,mini-header"
+    width="100%"
+    height="600px"
+  ></iframe>
+</details>
+
+import CodeBlock from "@theme/CodeBlock";
+import RetrieverExample from "@examples/guides/expression_language/cookbook_retriever.ts";
+
+<CodeBlock language="typescript">{RetrieverExample}</CodeBlock>
+
+## Conversational Retrieval Chain
+
+Because `RunnableSequence.from` and `runnable.pipe` both accept runnable-like objects, including single-argument functions, we can add in conversation history via a formatting function.
+This allows us to recreate the popular `ConversationalRetrievalQAChain` to "chat with data":
+
+<details>
+  <summary>Interactive tutorial</summary>
+  The screencast below interactively walks through an example. You can update and
+  run the code as it's being written in the video!
+  <iframe
+    src="https://scrimba.com/scrim/co3ed4a9eb4c6c6d0361a507c?embed=langchain,mini-header"
+    width="100%"
+    height="600px"
+  ></iframe>
+</details>
+
+import ConversationalRetrievalExample from "@examples/guides/expression_language/cookbook_conversational_retrieval.ts";
+
+<CodeBlock language="typescript">{ConversationalRetrievalExample}</CodeBlock>
+
+Note that the individual chains we created are themselves `Runnables` and can therefore be piped into each other.

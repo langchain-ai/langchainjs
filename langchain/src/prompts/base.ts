@@ -14,9 +14,10 @@ import { SerializedBasePromptTemplate } from "./serde.js";
 import { SerializedFields } from "../load/map_keys.js";
 import { Runnable } from "../schema/runnable/index.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
+import type { StringWithAutocomplete } from "../util/types.js";
 
 export type TypedPromptInputValues<RunInput> = InputValues<
-  Extract<keyof RunInput, string> | (string & Record<never, never>)
+  StringWithAutocomplete<Extract<keyof RunInput, string>>
 >;
 
 /**
@@ -29,7 +30,7 @@ export class StringPromptValue extends BasePromptValue {
   value: string;
 
   constructor(value: string) {
-    super(...arguments);
+    super({ value });
     this.value = value;
   }
 

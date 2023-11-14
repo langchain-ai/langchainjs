@@ -10,7 +10,7 @@ import {
 import { AgentExecutor } from "../../agents/executor.js";
 import {
   DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
-  PLANNER_CHAT_PROMPT,
+  getPlannerChatPrompt,
 } from "./prompt.js";
 import { ChainValues } from "../../schema/index.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
@@ -18,8 +18,27 @@ import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PlanOutputParser } from "./outputParser.js";
 import { Tool } from "../../tools/base.js";
+import { DynamicStructuredTool } from "../../tools/dynamic.js";
 import { ChatAgent } from "../../agents/chat/index.js";
+import { StructuredChatAgent } from "../../agents/index.js";
 import { SerializedLLMChain } from "../../chains/serde.js";
+
+/**
+ * A utility function to distiguish a dynamicstructuredtool over other tools.
+ * @param tool the tool to test
+ * @returns bool
+ */
+export function isDynamicStructuredTool(
+  tool: Tool | DynamicStructuredTool
+): tool is DynamicStructuredTool {
+  // We check for the existence of the static lc_name method in the object's constructor
+  return (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (tool.constructor as any).lc_name === "function" &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (tool.constructor as any).lc_name() === "DynamicStructuredTool"
+  );
+}
 
 /**
  * Interface for the input to the PlanAndExecuteAgentExecutor class. It
@@ -79,10 +98,17 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
    * @param llm The Large Language Model (LLM) used to generate responses.
    * @returns A new LLMPlanner instance.
    */
-  static getDefaultPlanner({ llm }: { llm: BaseLanguageModel }) {
+
+  static async getDefaultPlanner({
+    llm,
+    tools,
+  }: {
+    llm: BaseLanguageModel;
+    tools: Tool[] | DynamicStructuredTool[];
+  }) {
     const plannerLlmChain = new LLMChain({
       llm,
-      prompt: PLANNER_CHAT_PROMPT,
+      prompt: await getPlannerChatPrompt(tools),
     });
     return new LLMPlanner(plannerLlmChain, new PlanOutputParser());
   }
@@ -102,10 +128,25 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     humanMessageTemplate = DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
   }: {
     llm: BaseLanguageModel;
-    tools: Tool[];
+    tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   }) {
-    const agent = ChatAgent.fromLLMAndTools(llm, tools, {
+    let agent;
+
+    if (isDynamicStructuredTool(tools[0])) {
+      agent = StructuredChatAgent.fromLLMAndTools(llm, tools, {
+        humanMessageTemplate,
+        inputVariables: ["previous_steps", "current_step", "agent_scratchpad"],
+      });
+      return new ChainStepExecutor(
+        AgentExecutor.fromAgentAndTools({
+          agent,
+          tools,
+        })
+      );
+    }
+
+    agent = ChatAgent.fromLLMAndTools(llm, tools as Tool[], {
       humanMessageTemplate,
     });
     return new ChainStepExecutor(
@@ -126,17 +167,20 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
    * @param humanMessageTemplate The template for human messages. If not provided, a default template is used.
    * @returns A new PlanAndExecuteAgentExecutor instance.
    */
-  static fromLLMAndTools({
+  static async fromLLMAndTools({
     llm,
     tools,
     humanMessageTemplate,
   }: {
     llm: BaseLanguageModel;
-    tools: Tool[];
+    tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {
     const executor = new PlanAndExecuteAgentExecutor({
-      planner: PlanAndExecuteAgentExecutor.getDefaultPlanner({ llm }),
+      planner: await PlanAndExecuteAgentExecutor.getDefaultPlanner({
+        llm,
+        tools,
+      }),
       stepExecutor: PlanAndExecuteAgentExecutor.getDefaultStepExecutor({
         llm,
         tools,

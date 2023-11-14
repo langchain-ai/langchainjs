@@ -1,0 +1,57 @@
+---
+hide_table_of_contents: true
+---
+
+# Cloudflare Vectorize
+
+If you're deploying your project in a Cloudflare worker, you can use [Cloudflare Vectorize](https://developers.cloudflare.com/vectorize/) with LangChain.js.
+It's a powerful and convenient option that's built directly into Cloudflare.
+
+## Setup
+
+:::tip Compatibility
+Cloudflare Vectorize is currently in open beta, and requires a Cloudflare account on a paid plan to use.
+:::
+
+After [setting up your project](https://developers.cloudflare.com/vectorize/get-started/intro/#prerequisites),
+create an index by running the following Wrangler command:
+
+```bash
+$ npx wrangler vectorize create <index_name> --preset @cf/baai/bge-small-en-v1.5
+```
+
+You can see a full list of options for the `vectorize` command [in the official documentation](https://developers.cloudflare.com/workers/wrangler/commands/#vectorize).
+
+You'll then need to update your `wrangler.toml` file to include an entry for `[[vectorize]]`:
+
+```toml
+[[vectorize]]
+binding = "VECTORIZE_INDEX"
+index_name = "<index_name>"
+```
+
+## Usage
+
+Below is an example worker that adds documents to a vectorstore, queries it, or clears it depending on the path used. It also uses [Cloudflare Workers AI Embeddings](/docs/integrations/text_embedding/cloudflare_ai).
+
+:::note
+If running locally, be sure to run wrangler as `npx wrangler dev --remote`!
+:::
+
+```toml
+name = "langchain-test"
+main = "worker.js"
+compatibility_date = "2023-09-22"
+
+[[vectorize]]
+binding = "VECTORIZE_INDEX"
+index_name = "langchain-test"
+
+[ai]
+binding = "AI"
+```
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/indexes/vector_stores/cloudflare_vectorize/example.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
