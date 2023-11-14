@@ -88,6 +88,10 @@ export class BedrockLLMInputOutputAdapter {
       inputBody.maxTokens = maxTokens;
       inputBody.temperature = temperature;
       inputBody.stopSequences = stopSequences;
+    } else if (provider === "meta") {
+      inputBody.prompt = prompt;
+      inputBody.max_gen_len = maxTokens;
+      inputBody.temperature = temperature;
     } else if (provider === "amazon") {
       inputBody.inputText = prompt;
       inputBody.textGenerationConfig = {
@@ -120,6 +124,8 @@ export class BedrockLLMInputOutputAdapter {
       return responseBody?.completions?.[0]?.data?.text ?? "";
     } else if (provider === "cohere") {
       return responseBody?.generations?.[0]?.text ?? responseBody?.text ?? "";
+    } else if (provider === "meta") {
+      return responseBody.generation;
     }
 
     // I haven't been able to get a response with more than one result in it.
