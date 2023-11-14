@@ -130,6 +130,21 @@ export class CohereEmbeddings
   ) {
     await this.maybeInitClient();
 
+    if (
+      request.model &&
+      [
+        "embed-english-v3.0",
+        "embed-multilingual-v3.0",
+        "embed-english-light-v3.0",
+        "embed-multilingual-light-v3.0",
+      ].includes(request.model) &&
+      !request.input_type
+    ) {
+      throw new Error(
+        'The "input_type" parameter is required for models v3.0 and above.'
+      );
+    }
+
     return this.caller.call(this.client.embed.bind(this.client), request);
   }
 
