@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "rimraf ./docs/api &&  NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
+    "start": "yarn build:typedoc && rimraf ./docs/api &&  NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
     "build": "yarn build:typedoc && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:typedoc": "cd ../api_refs && yarn build:typedoc",
     "swizzle": "docusaurus swizzle",
