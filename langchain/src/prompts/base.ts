@@ -30,7 +30,7 @@ export class StringPromptValue extends BasePromptValue {
   value: string;
 
   constructor(value: string) {
-    super(...arguments);
+    super({ value });
     this.value = value;
   }
 

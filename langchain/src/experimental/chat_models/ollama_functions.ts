@@ -10,10 +10,11 @@ import { ChatOllama } from "../../chat_models/ollama.js";
 import { OllamaInput } from "../../util/ollama.js";
 import { BaseFunctionCallOptions } from "../../base_language/index.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
+import type { BasePromptTemplate } from "../../prompts/base.js";
 
 const TOOL_SYSTEM_PROMPT =
   /* #__PURE__ */
-  PromptTemplate.fromTemplate(`You have access to the following tools.
+  PromptTemplate.fromTemplate(`You have access to the following tools:
 
 {tools}
 
@@ -29,10 +30,13 @@ export interface ChatOllamaFunctionsCallOptions
 export type OllamaFunctionsInput = Partial<OllamaInput> &
   BaseChatModelParams & {
     llm?: ChatOllama;
+    toolSystemPrompt?: BasePromptTemplate;
   };
 
 export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOptions> {
   llm: ChatOllama;
+
+  toolSystemPrompt: BasePromptTemplate = TOOL_SYSTEM_PROMPT;
 
   protected defaultResponseFunction = {
     name: "__conversational_response",
@@ -59,6 +63,7 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
   constructor(fields?: OllamaFunctionsInput) {
     super(fields ?? {});
     this.llm = fields?.llm ?? new ChatOllama({ ...fields, format: "json" });
+    this.toolSystemPrompt = fields?.toolSystemPrompt ?? this.toolSystemPrompt;
   }
 
   invocationParams() {
