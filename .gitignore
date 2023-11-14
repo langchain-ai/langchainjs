@@ -39,3 +39,6 @@ tmp/
 **/convex/tsconfig.json
 
 langchain/api_refs_docs_build/dist/**/*
+
+.docusaurus/
+docs/build/
