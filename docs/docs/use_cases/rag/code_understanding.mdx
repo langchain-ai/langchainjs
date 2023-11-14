@@ -133,8 +133,12 @@ We'll setup our model and memory system just as we'd do for any other chatbot ap
 import { ChatOpenAI } from "langchain/chat_models/openai";
 ```
 
+Pipe the `StringOutputParser` through since both chains which use this model will also need this output parser.
+
 ```typescript
-const model = new ChatOpenAI({ modelName: "gpt-4" });
+const model = new ChatOpenAI({ modelName: "gpt-4" }).pipe(
+  new StringOutputParser()
+);
 ```
 
 We're going to use `BufferMemory` as our memory chain. All this will do is take in inputs/outputs from the LLM and store them in memory.
@@ -159,7 +163,7 @@ import {
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
-import { RunnableBranch, RunnableSequence } from "langchain/schema/runnable";
+import { RunnableSequence } from "langchain/schema/runnable";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { BaseMessage } from "langchain/schema";
 import { StringOutputParser } from "langchain/schema/output_parser";
@@ -201,20 +205,10 @@ const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
 ]);
 ```
 
-Next, we'll construct our chain.
+Next, we'll construct both chains.
 
 ```typescript
-const conversationalQaChain = RunnableSequence.from([
-  {
-    question: (i: { question: string }) => i.question,
-    chat_history: async () => {
-      const { chat_history } = await memory.loadMemoryVariables({});
-      return chat_history;
-    },
-  },
-  questionGeneratorTemplate,
-  model,
-  new StringOutputParser(),
+const combineDocumentsChain = RunnableSequence.from([
   {
     question: (output: string) => output,
     chat_history: async () => {
@@ -230,14 +224,28 @@ const conversationalQaChain = RunnableSequence.from([
   model,
   new StringOutputParser(),
 ]);
+
+const conversationalQaChain = RunnableSequence.from([
+  {
+    question: (i: { question: string }) => i.question,
+    chat_history: async () => {
+      const { chat_history } = await memory.loadMemoryVariables({});
+      return chat_history;
+    },
+  },
+  questionGeneratorTemplate,
+  model,
+  new StringOutputParser(),
+  combineDocumentsChain,
+]);
 ```
 
-This is somewhat of a complex chain so let's break it down.
+These two are somewhat complex chain so let's break it down.
 
 - First, we define our single input parameter: `question: string`. Below this we also define `chat_history` which is not sourced from the user's input, but rather preforms a chat memory lookup.
 - Next, we pipe those variables through to our prompt, model and lastly an output parser. This first part will rephrase the question, and return a single string of the rephrased question.
-- In the next block we capture the output from the previous block and pipe it through to the next prompt. We also preform a retrieval call to get the relevant documents for the question and any chat history which might be present.
-- Finally, we pipe the output from the previous block through to the model and output parser. This will return the final answer as a string to the user.
+- In the next block we call the `combineDocumentsChain` which takes in the output from the first part of the `conversationalQaChain` and pipes it through to the next prompt. We also preform a retrieval call to get the relevant documents for the question and any chat history which might be present.
+- Finally, the `RunnableSequence` returns the result of the model & output parser call from the `combineDocumentsChain`. This will return the final answer as a string to the user.
 
 The last step is to invoke our chain!
 
