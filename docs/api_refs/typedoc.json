@@ -16,6 +16,7 @@
   "excludeNotDocumented": false,
   "includeVersion": true,
   "sourceLinkTemplate": "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
+  "logLevel": "Error",
   "entryPoints": [
     "../../langchain/src/load/index.ts",
     "../../langchain/src/load/serializable.ts",
