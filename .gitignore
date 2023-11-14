@@ -38,4 +38,4 @@ tmp/
 **/convex/.gitignore
 **/convex/tsconfig.json
 
-langchain/docs/dist/**/*
+langchain/api_refs_docs_build/dist/**/*
