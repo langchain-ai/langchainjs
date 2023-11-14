@@ -1,4 +1,4 @@
-# Autogeneratd API documentation for LangChainJS
+# Auto-generated API documentation for LangChainJS
 
 Do not edit the contents of this directory directly.
 

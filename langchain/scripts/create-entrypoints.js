@@ -541,11 +541,11 @@ const generateFiles = () => {
 
 const updateConfig = () => {
   // Update typedoc.json entryPoints field
-  updateJsonFile("../api-docs/typedoc.json", (json) => ({
+  updateJsonFile("../docs/api_refs/typedoc.json", (json) => ({
     ...json,
     entryPoints: [...Object.keys(entrypoints)]
       .filter((key) => !deprecatedNodeOnly.includes(key))
-      .map((key) => `../langchain/src/${entrypoints[key]}.ts`),
+      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();

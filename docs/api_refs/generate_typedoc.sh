@@ -1,13 +1,13 @@
 #!/bin/bash
 
-BASE_DIR="../langchain"
+BASE_DIR="../../langchain"
 
 # Create a directory to temp hold the files in src
 # `docs_dist` is gitignored by default.
-mkdir -p "$BASE_DIR/docs_dist/src"
+mkdir -p "$BASE_DIR/docs/dist"
 
-# Copy the contents of src to docs_dist/src
-cp -r "$BASE_DIR/src/." "$BASE_DIR/docs_dist/src/"
+# Copy the contents of src to docs/dist
+cp -r "$BASE_DIR/src/." "$BASE_DIR/docs/dist/"
 
 # This command will add `@ignore` to JSDoc comments
 # for properties which should be ignored.
@@ -19,5 +19,5 @@ yarn typedoc
 # Remove the current contents of langchain/src
 rm -rf "$BASE_DIR/src/*"
 
-# Copy the unedited contents from docs_dist/src to langchain/src
-cp -r "$BASE_DIR/docs_dist/src/." "$BASE_DIR/src/"
+# Copy the unedited contents from docs/dist to langchain/src
+cp -r "$BASE_DIR/docs/dist/." "$BASE_DIR/src/"

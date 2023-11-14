@@ -1,13 +1,13 @@
 {
-  "name": "api-docs",
+  "name": "api_refs",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "typedoc": "npx typedoc --options typedoc.json",
-    "gen:typedoc": "bash ./generate_typedoc.sh",
-    "add-ignore-comments": "cd ../langchain && node scripts/ignore-class-properties.js",
-    "build": "yarn gen:typedoc && next build",
+    "build:typedoc": "bash ./generate_typedoc.sh",
+    "add-ignore-comments": "cd ../../langchain && node scripts/build-for-api-ref-docs.js",
+    "build": "yarn build:typedoc && next build",
     "start": "next start",
     "lint": "next lint"
   },

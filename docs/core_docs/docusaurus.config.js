@@ -6,7 +6,7 @@
 const { ProvidePlugin } = require("webpack");
 const path = require("path");
 
-const examplesPath = path.resolve(__dirname, "..", "examples", "src");
+const examplesPath = path.resolve(__dirname, "..", "..", "examples", "src");
 
 const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
 const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
@@ -44,7 +44,7 @@ const config = {
           },
           alias: {
             "@examples": examplesPath,
-            react: path.resolve("../node_modules/react"),
+            react: path.resolve("../../node_modules/react"),
           },
         },
         module: {

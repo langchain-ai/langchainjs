@@ -12840,9 +12840,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"api-docs@workspace:api-docs":
+"api_refs@workspace:docs/api_refs":
   version: 0.0.0-use.local
-  resolution: "api-docs@workspace:api-docs"
+  resolution: "api_refs@workspace:docs/api_refs"
   dependencies:
     "@types/node": ^20
     "@types/react": ^18
@@ -15133,6 +15133,40 @@ __metadata:
   languageName: node
   linkType: hard
 
+"core_docs@workspace:docs/core_docs":
+  version: 0.0.0-use.local
+  resolution: "core_docs@workspace:docs/core_docs"
+  dependencies:
+    "@babel/eslint-parser": ^7.18.2
+    "@docusaurus/core": 2.4.1
+    "@docusaurus/preset-classic": 2.4.1
+    "@docusaurus/remark-plugin-npm2yarn": ^2.4.1
+    "@mdx-js/react": ^1.6.22
+    "@mendable/search": ^0.0.160
+    "@swc/core": ^1.3.62
+    clsx: ^1.2.1
+    docusaurus-plugin-typedoc: 1.0.0-next.5
+    eslint: ^8.19.0
+    eslint-config-airbnb: ^19.0.4
+    eslint-config-prettier: ^8.5.0
+    eslint-plugin-header: ^3.1.1
+    eslint-plugin-import: ^2.26.0
+    eslint-plugin-jsx-a11y: ^6.6.0
+    eslint-plugin-react: ^7.30.1
+    eslint-plugin-react-hooks: ^4.6.0
+    json-loader: ^0.5.7
+    prettier: ^2.7.1
+    process: ^0.11.10
+    react: ^17.0.2
+    react-dom: ^17.0.2
+    rimraf: ^5.0.1
+    swc-loader: ^0.2.3
+    typedoc: ^0.24.4
+    typedoc-plugin-markdown: next
+    webpack: ^5.75.0
+  languageName: unknown
+  linkType: soft
+
 "cosmiconfig@npm:8.0.0":
   version: 8.0.0
   resolution: "cosmiconfig@npm:8.0.0"
@@ -15980,40 +16014,6 @@ __metadata:
   checksum: 64c06457f0c6e143f7a0946e0aeb8de1c5f752217cfa143ef527467c00a6d78db1835cfdb6bb68333d9f9a4963cf23f410439b5262a8935cce1236f45e344b81
   languageName: node
   linkType: hard
-
-"docs@workspace:docs":
-  version: 0.0.0-use.local
-  resolution: "docs@workspace:docs"
-  dependencies:
-    "@babel/eslint-parser": ^7.18.2
-    "@docusaurus/core": 2.4.1
-    "@docusaurus/preset-classic": 2.4.1
-    "@docusaurus/remark-plugin-npm2yarn": ^2.4.1
-    "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.160
-    "@swc/core": ^1.3.62
-    clsx: ^1.2.1
-    docusaurus-plugin-typedoc: 1.0.0-next.5
-    eslint: ^8.19.0
-    eslint-config-airbnb: ^19.0.4
-    eslint-config-prettier: ^8.5.0
-    eslint-plugin-header: ^3.1.1
-    eslint-plugin-import: ^2.26.0
-    eslint-plugin-jsx-a11y: ^6.6.0
-    eslint-plugin-react: ^7.30.1
-    eslint-plugin-react-hooks: ^4.6.0
-    json-loader: ^0.5.7
-    prettier: ^2.7.1
-    process: ^0.11.10
-    react: ^17.0.2
-    react-dom: ^17.0.2
-    rimraf: ^5.0.1
-    swc-loader: ^0.2.3
-    typedoc: ^0.24.4
-    typedoc-plugin-markdown: next
-    webpack: ^5.75.0
-  languageName: unknown
-  linkType: soft
 
 "doctrine@npm:^2.1.0":
   version: 2.1.0

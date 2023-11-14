@@ -71,7 +71,7 @@ async function webpackLoader(content, map, meta) {
         const docsPath = path.resolve(
           __dirname,
           "..",
-          "api-docs",
+          "api_refs",
           "public",
           componentPath
         );
@@ -90,7 +90,7 @@ async function webpackLoader(content, map, meta) {
         imp.docs = BASE_URL + "/" + exactPath;
       } else {
         throw new Error(
-          `Could not find docs for ${source}.${imported} in api-docs/public/`
+          `Could not find docs for ${source}.${imported} in api_refs/public/`
         );
       }
     });

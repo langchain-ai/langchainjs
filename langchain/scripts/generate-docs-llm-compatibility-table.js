@@ -77,8 +77,8 @@ Each ChatModel integration can optionally provide native implementations to trul
  * Build code // documentation paths to rewrite.
  */
 const CWD = process.cwd();
-const LLM_DOC_INDEX_PATH = path.join(CWD, "..", "./docs/docs/integrations/llms/index.mdx");
-const CHAT_MODELS_DOC_INDEX_PATH = path.join(CWD, "..", "./docs/docs/integrations/chat/index.mdx");
+const LLM_DOC_INDEX_PATH = path.join(CWD, "..", "docs", "core_docs", "./docs/integrations/llms/index.mdx");
+const CHAT_MODELS_DOC_INDEX_PATH = path.join(CWD, "..", "docs", "core_docs", "./docs/integrations/chat/index.mdx");
 const CHAT_MODEL_DIRECTORY = path.join(CWD, "./dist/chat_models");
 const LLM_DIRECTORY = path.join(CWD, "./dist/llms");
 
