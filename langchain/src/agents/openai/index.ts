@@ -27,6 +27,7 @@ import {
   FunctionsAgentAction,
   OpenAIFunctionsAgentOutputParser,
 } from "./output_parser.js";
+import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 
 /**
  * Checks if the given action is a FunctionsAgentAction.
@@ -201,9 +202,11 @@ export class OpenAIAgent extends Agent {
     const llm = this.llmChain.llm as ChatOpenAI;
     const valuesForPrompt = { ...newInputs };
     const valuesForLLM: (typeof llm)["CallOptions"] = {
-      tools: this.tools,
+      functions: this.tools.map(formatToOpenAIFunction),
     };
-    for (const key of this.llmChain.llm.callKeys) {
+    const callKeys =
+      "callKeys" in this.llmChain.llm ? this.llmChain.llm.callKeys : [];
+    for (const key of callKeys) {
       if (key in inputs) {
         valuesForLLM[key as keyof (typeof llm)["CallOptions"]] = inputs[key];
         delete valuesForPrompt[key];

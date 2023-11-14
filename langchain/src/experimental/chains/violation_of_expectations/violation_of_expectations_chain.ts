@@ -339,6 +339,9 @@ export class ViolationOfExpectationsChain
       this.jsonOutputParser
     );
 
+    if (typeof userResponse?.content !== "string") {
+      throw new Error("This chain does not support non-string model output.");
+    }
     const res = (await chain.invoke(
       {
         predicted_output: userPredictions.predictedUserMessage,
@@ -436,6 +439,9 @@ export class ViolationOfExpectationsChain
       this.stringOutputParser
     );
 
+    if (typeof userResponse?.content !== "string") {
+      throw new Error("This chain does not support non-string model output.");
+    }
     const res = await chain.invoke(
       {
         prediction_violations: predictions.explainedPredictionErrors.join("\n"),

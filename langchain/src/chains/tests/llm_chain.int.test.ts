@@ -147,3 +147,20 @@ test("Test deserialize", async () => {
 
   // chain === chain2?
 });
+
+test("Test passing a runnable to an LLMChain", async () => {
+  const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
+  const runnableModel = model.bind({
+    response_format: {
+      type: "json_object",
+    },
+  });
+  const prompt = PromptTemplate.fromTemplate(
+    "You are a bee --I mean a spelling bee. Respond with a JSON key of 'spelling':\nQuestion:{input}"
+  );
+  const chain = new LLMChain({ llm: runnableModel, prompt });
+  const response = await chain.invoke({ input: "How do you spell today?" });
+  expect(JSON.parse(response.text)).toMatchObject({
+    spelling: expect.any(String),
+  });
+});
