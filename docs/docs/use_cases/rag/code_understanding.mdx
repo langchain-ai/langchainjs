@@ -272,19 +272,41 @@ await memory.saveContext(
 ```typescript
 console.log(result);
 /**
-Based on the provided code snippets, here are the steps to initialize a ReAct agent:
+The steps to initialize a ReAct agent are:
 
-1. Import the necessary modules and classes from the "langchain" package.
-2. Initialize the model using the "OpenAI" class or "ChatOpenAI" class with the temperature parameter set to 0.
-3. Initialize the tools you plan to use. In this context, "SerpAPI" and "Calculator" are used. For "SerpAPI," you need to provide an API key and some additional parameters such as location, language (hl), and geographical target (gl).
-4. Call the "initializeAgentExecutorWithOptions" function with the initialized tools, model, and options like "agentType". The "agentType" in this case is "zero-shot-react-description" or "chat-zero-shot-react-description".
-5. Use the "call" function on the executor to give the agent an input to process.
+1. Import the necessary modules from their respective packages. 
+    ```
+    import { initializeAgentExecutorWithOptions } from "langchain/agents";
+    import { OpenAI } from "langchain/llms/openai";
+    import { SerpAPI } from "langchain/tools";
+    import { Calculator } from "langchain/tools/calculator";
+    ```
 
-Note: In some versions of the code, an AbortController is set up to cancel the request if it takes too long. The signal from this controller is passed in the call to the executor
+2. Create instances of the needed tools (i.e., OpenAI model, SerpAPI, and Calculator), providing the necessary options.
+    ```
+    const model = new OpenAI({ temperature: 0 });
+    const tools = [
+      new SerpAPI(process.env.SERPAPI_API_KEY, {
+        location: "Austin,Texas,United States",
+        hl: "en",
+        gl: "us",
+      }),
+      new Calculator(),
+    ];
+    ```
+
+3. Call `initializeAgentExecutorWithOptions` function with the created tools and model, and with the desired options to create an agent instance.
+    ```
+    const executor = await initializeAgentExecutorWithOptions(tools, model, {
+      agentType: "zero-shot-react-description",
+    });
+    ```
+
+Note: In async environments, the steps can be wrapped in a try-catch block to handle any exceptions that might occur during execution. As shown in some of the examples, the process can be aborted using an AbortController to cancel the process after a certain period of time for fail-safe reasons.
  */
 ```
 
-See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/bd057e43-e7c6-4fad-a039-6100d9ddc557/r)
+See the [LangSmith](https://smith.langchain.com) trace for these two chains [here](https://smith.langchain.com/public/c28c4b76-e197-4c34-9955-2cea29fe1591/r)
 
 ### Next steps
 
@@ -303,43 +325,53 @@ const result2 = await conversationalQaChain.invoke({
 ```typescript
 console.log(result2);
 /**
-Based on the given code:
+Here is how to import and utilize WikipediaQueryRun and File System tools in the LangChain codebase:
 
-To import tools from LangChain:
-1. For Wikipedia Query Tool, you can import it from "langchain/tools" like this,
-    import { WikipediaQueryRun } from "langchain/tools";
+1. First, you have to import necessary tools and classes:
 
-2. For File System tools (Read/Write), you can import it from "langchain/tools" like this,
-    import { ReadFileTool, WriteFileTool } from "langchain/tools";
+```javascript
+// for file system tools
+import { ReadFileTool, WriteFileTool, NodeFileStore } from "langchain/tools";
+    
+// for wikipedia tools
+import { WikipediaQueryRun } from "langchain/tools";
+```
 
-To utilize these tools:
+2. To use File System tools, you need an instance of File Store, either `NodeFileStore` for the server-side file system or `InMemoryFileStore` for in-memory file storage:
 
-1. Wikipedia Query Tool:
-   - After importing, initialize the Wikipedia Query tool with your specifications using,
-      const tool = new WikipediaQueryRun({
-        topKResults: 3,
-        maxDocContentLength: 4000,
-      });
+```javascript
+// example of instancing NodeFileStore for server-side file system
+const store = new NodeFileStore();
+```
 
-   - Use the WikipediaQueryRun object to query about a specific topic like,
-      const res = await tool.call("Langchain");
-      console.log(res);
+3. Then you can instantiate your file system tools with this store:
 
-2. Read/Write File system Tool:
-   - For using File system tool, import the "NodeFileStore" or "InMemoryFileStore" from "langchain/stores/file" first depending on where you want to store the file.
+```javascript
+const tools = [
+    new ReadFileTool({ store }),
+    new WriteFileTool({ store })
+];
+```
 
-   - After importing, initialize the "store" object using,
-      const store = new NodeFileStore();
-      or
-      const store = new InMemoryFileStore();
+4. To use WikipediaQueryRun tool, first you have to instance it like this:
 
-   - Now you have your fileStore object ready, use it to initialize the Read and Write File Tool,
-      const tools = [
-        new ReadFileTool({ store }),
-        new WriteFileTool({ store }),
-      ];
-   - Now you can use the ReadFileTool and WriteFileTool objects to interact with the filesystem.
+```javascript
+const wikipediaTool = new WikipediaQueryRun({
+    topKResults: 3,
+    maxDocContentLength: 4000,
+});
+```
+
+5. After that, you can use the `call` method of the created instance for making queries. For example, to query the Wikipedia for "Langchain":
+
+```javascript
+const res = await wikipediaTool.call("Langchain");
+
+console.log(res);
+```
+
+Note: This example assumes you're running the code in an asynchronous context. For synchronous context, you may need to adjust the code accordingly.
  */
 ```
 
-See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/d0bb9b2f-63ca-4028-8c06-3f44b8972ccb/r)
+See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/bf89c194-7aa4-4384-a8a6-da00ce2f91dd/r)
