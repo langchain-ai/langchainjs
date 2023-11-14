@@ -1,4 +1,3 @@
-// pages/_document.js
 import Document, { Html, Head, Main, NextScript } from "next/document";
 
 const DESCRIPTION_COPY = "API documentation for LangChain.js";
