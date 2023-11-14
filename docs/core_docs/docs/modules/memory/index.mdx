@@ -142,7 +142,7 @@ To implement your own memory class you have two options:
 
 ### Subclassing `BaseChatMemory`
 
-This is the easiest way to implement your own memory class. You can subclass `BaseChatMemory`, which takes care of `saveContext` by saving inputs and outputs as [Chat Messages](/docs/api/schema/classes/BaseMessage), and implement only the `loadMemoryVariables` method. This method is responsible for returning the memory variables that are relevant for the current input values.
+This is the easiest way to implement your own memory class. You can subclass `BaseChatMemory`, which takes care of `saveContext` by saving inputs and outputs as [Chat Messages](https://api.js.langchain.com/classes/schema.BaseMessage.html), and implement only the `loadMemoryVariables` method. This method is responsible for returning the memory variables that are relevant for the current input values.
 
 ```typescript
 abstract class BaseChatMemory extends BaseMemory {
