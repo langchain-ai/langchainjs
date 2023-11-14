@@ -1,6 +1,7 @@
 import type { OpenAI as OpenAIClient } from "openai";
 import { Document } from "../document.js";
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
+import type { StringWithAutocomplete } from "../util/types.js";
 
 export const RUN_KEY = "__run";
 
@@ -554,8 +555,8 @@ export class ToolMessage extends BaseMessage {
 }
 
 /**
- * Represents a chunk of a function message, which can be concatenated
- * with other function message chunks.
+ * Represents a chunk of a tool message, which can be concatenated
+ * with other tool message chunks.
  */
 export class ToolMessageChunk extends BaseMessageChunk {
   tool_call_id: string;
@@ -622,10 +623,7 @@ export class ChatMessage
 
 export type BaseMessageLike =
   | BaseMessage
-  | [
-      MessageType | "user" | "assistant" | (string & Record<never, never>),
-      string
-    ]
+  | [StringWithAutocomplete<MessageType | "user" | "assistant">, string]
   | string;
 
 export function isBaseMessage(
