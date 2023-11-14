@@ -4,7 +4,7 @@ BASE_DIR="../../langchain"
 
 # Create a directory to temp hold the files in src
 # `docs_dist` is gitignored by default.
-mkdir -p "$BASE_DIR/docs/dist"
+mkdir -p "$BASE_DIR/api_refs_docs/dist"
 
 # Copy the contents of src to docs/dist
 cp -r "$BASE_DIR/src/." "$BASE_DIR/docs/dist/"
