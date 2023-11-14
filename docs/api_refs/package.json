@@ -8,7 +8,7 @@
     "build:typedoc": "bash ./generate_typedoc.sh",
     "add-ignore-comments": "cd ../../langchain && node scripts/build-for-api-ref-docs.js",
     "build": "yarn build:typedoc && next build",
-    "start": "yarn build && next start",
+    "start": "yarn build && next start -p 3001",
     "lint": "next lint"
   },
   "dependencies": {
