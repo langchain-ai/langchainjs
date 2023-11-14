@@ -288,6 +288,7 @@
       "src/experimental/multimodal_embeddings/googlevertexai.ts",
       "src/experimental/chat_models/anthropic_functions.ts",
       "src/experimental/chat_models/bittensor.ts",
+      "src/experimental/chat_models/ollama_functions.ts",
       "src/experimental/llms/bittensor.ts",
       "src/experimental/hubs/makersuite/googlemakersuitehub.ts",
       "src/experimental/chains/violation_of_expectations/index.ts",
