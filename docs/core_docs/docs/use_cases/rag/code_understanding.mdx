@@ -84,7 +84,7 @@ When setting up the vector store retriever:
 - We test max marginal relevance for retrieval
 - And 5 documents returned
 
-In this example we'll be using Supabase, however you can pick any vector store with MMR search you'd like from [our large list of integrations](/docs/modules/data_connection/vectorstores/integrations/).
+In this example we'll be using Supabase, however you can pick any vector store with MMR search you'd like from [our large list of integrations](/docs/integrations/vectorstores/).
 
 ```typescript
 import { createClient } from "@supabase/supabase-js";
@@ -104,7 +104,7 @@ const client = createClient(url, privateKey);
 
 Once we've initialized our client we can pass it, along with some more options to the `.fromDocuments` method on `SupabaseVectorStore`.
 
-For more instructions on how to set up Supabase, see the [Supabase docs](/docs/modules/data_connection/vectorstores/integrations/supabase).
+For more instructions on how to set up Supabase, see the [Supabase docs](/docs/integrations/vectorstores/supabase).
 
 ```typescript
 const vectorStore = await SupabaseVectorStore.fromDocuments(
