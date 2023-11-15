@@ -93,7 +93,7 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
     } else if (functions.length === 0) {
       functions.push(this.defaultResponseFunction);
     }
-    const defaultContent = await TOOL_SYSTEM_PROMPT.format({
+    const defaultContent = await this.toolSystemPrompt.format({
       tools: JSON.stringify(functions, null, 2),
     });
     const systemMessage = new SystemMessage({ content: defaultContent });
