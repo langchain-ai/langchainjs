@@ -152,7 +152,7 @@ export abstract class BaseOutputParser<
 export abstract class BaseTransformOutputParser<
   T = unknown
 > extends BaseOutputParser<T> {
-  protected async *_transform(
+  async *_transform(
     inputGenerator: AsyncGenerator<string | BaseMessage>
   ): AsyncGenerator<T> {
     for await (const chunk of inputGenerator) {
@@ -218,7 +218,7 @@ export abstract class BaseCumulativeTransformOutputParser<
     generations: Generation[] | ChatGeneration[]
   ): Promise<T | undefined>;
 
-  protected async *_transform(
+  async *_transform(
     inputGenerator: AsyncGenerator<string | BaseMessage>
   ): AsyncGenerator<T> {
     let prevParsed: T | undefined;
