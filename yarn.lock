@@ -12867,6 +12867,7 @@ __metadata:
     react: ^18
     react-dom: ^18
     tailwindcss: ^3.3.0
+    typedoc-plugin-extras: ^3.0.0
     typescript: ^5
   languageName: unknown
   linkType: soft
@@ -30243,6 +30244,15 @@ __metadata:
   dependencies:
     is-typedarray: ^1.0.0
   checksum: 99c11aaa8f45189fcfba6b8a4825fd684a321caa9bd7a76a27cf0c7732c174d198b99f449c52c3818107430b5f41c0ccbbfb75cb2ee3ca4a9451710986d61a60
+  languageName: node
+  linkType: hard
+
+"typedoc-plugin-extras@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "typedoc-plugin-extras@npm:3.0.0"
+  peerDependencies:
+    typedoc: 0.25.x
+  checksum: 5daaf73f5a48d504c66bee45f62cb230419f369f0d368fc3d1a26f2e16f41b4b0d49f08a3ec271c1cc77bf6197d2759fce8c93d912119af0c59baacc22a3de23
   languageName: node
   linkType: hard
 

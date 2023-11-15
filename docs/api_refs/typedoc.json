@@ -17,6 +17,8 @@
   "includeVersion": true,
   "sourceLinkTemplate": "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
   "logLevel": "Error",
+  "plugin": ["typedoc-plugin-extras"],
+  "customDescription": "API documentation for LangChain.js",
   "entryPoints": [
     "../../langchain/src/load/index.ts",
     "../../langchain/src/load/serializable.ts",
