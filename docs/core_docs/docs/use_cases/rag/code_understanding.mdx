@@ -269,7 +269,7 @@ await memory.saveContext(
 );
 ```
 
-```typescript
+````typescript
 console.log(result);
 /**
 The steps to initialize a ReAct agent are:
@@ -304,7 +304,7 @@ The steps to initialize a ReAct agent are:
 
 Note: In async environments, the steps can be wrapped in a try-catch block to handle any exceptions that might occur during execution. As shown in some of the examples, the process can be aborted using an AbortController to cancel the process after a certain period of time for fail-safe reasons.
  */
-```
+````
 
 See the [LangSmith](https://smith.langchain.com) trace for these two chains [here](https://smith.langchain.com/public/c28c4b76-e197-4c34-9955-2cea29fe1591/r)
 
@@ -322,7 +322,7 @@ const result2 = await conversationalQaChain.invoke({
 });
 ```
 
-```typescript
+````typescript
 console.log(result2);
 /**
 Here is how to import and utilize WikipediaQueryRun and File System tools in the LangChain codebase:
@@ -369,7 +369,6 @@ console.log(res);
 
 Note: This example assumes you're running the code in an asynchronous context. For synchronous context, you may need to adjust the code accordingly.
 \*/
-
-```
+````
 
 See the [LangSmith](https://smith.langchain.com) trace for this run [here](https://smith.langchain.com/public/bf89c194-7aa4-4384-a8a6-da00ce2f91dd/r)
