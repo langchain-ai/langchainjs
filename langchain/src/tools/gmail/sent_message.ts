@@ -34,6 +34,7 @@ export class GmailSendMessage extends GmailBaseTool {
 
         // Convert the email message to base64url string
         const email = emailLines.join("\r\n").trim();
+        // this encode may be an issue
         return Buffer.from(email).toString("base64url");
     }
 
