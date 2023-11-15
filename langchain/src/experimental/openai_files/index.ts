@@ -1,14 +1,20 @@
-import { OpenAI as OpenAIClient } from "openai";
-import fs from "node:fs";
+import { ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { Serializable } from "../../load/serializable.js";
 
-export type OpenAIFilesCreate = {
-  file: fs.ReadStream;
-  purpose: "assistants" | "fine-tune";
+export type OpenAIFilesInput = {
+  client?: OpenAIClient;
+  clientOptions?: ClientOptions;
 };
 
 export class OpenAIFiles extends Serializable {
-  lc_namespace = ["langchain", "experimental", "open_ai_files"];
+  lc_namespace = ["langchain", "experimental"];
+
+  private oaiClient: OpenAIClient;
+
+  constructor(fields?: OpenAIFilesInput) {
+    super(fields);
+    this.oaiClient = fields?.client ?? new OpenAIClient(fields?.clientOptions);
+  }
 
   /**
    * Upload file
@@ -17,16 +23,19 @@ export class OpenAIFiles extends Serializable {
    * The size of individual files can be a maximum of 512 MB. See the Assistants Tools guide to learn more about the types of files supported. The Fine-tuning API only supports .jsonl files.
    *
    * @link {https://platform.openai.com/docs/api-reference/files/create}
-   * @param {fs.ReadStream} file
-   * @param {"assistants" | "fine-tune"} purpose
+   * @param {OpenAIClient.FileCreateParams['file']} file
+   * @param {OpenAIClient.FileCreateParams['purpose']} purpose
+   * @param {OpenAIClient.RequestOptions | undefined} options
    * @returns {Promise<OpenAIClient.Files.FileObject>}
    */
-  static async createFile({ file, purpose }: OpenAIFilesCreate) {
-    const oaiClient = new OpenAIClient();
-    return oaiClient.files.create({
-      file,
-      purpose,
-    });
+  async createFile({
+    file,
+    purpose,
+    options,
+  }: OpenAIClient.FileCreateParams & {
+    options?: OpenAIClient.RequestOptions;
+  }) {
+    return this.oaiClient.files.create({ file, purpose }, options);
   }
 
   /**
@@ -34,11 +43,17 @@ export class OpenAIFiles extends Serializable {
    * @link {https://platform.openai.com/docs/api-reference/files/delete}
    *
    * @param {string} fileId
+   * @param {OpenAIClient.RequestOptions | undefined} options
    * @returns {Promise<OpenAIClient.Files.FileDeleted>}
    */
-  static async deleteFile({ fileId }: { fileId: string }) {
-    const oaiClient = new OpenAIClient();
-    return oaiClient.files.del(fileId);
+  async deleteFile({
+    fileId,
+    options,
+  }: {
+    fileId: string;
+    options?: OpenAIClient.RequestOptions;
+  }) {
+    return this.oaiClient.files.del(fileId, options);
   }
 
   /**
@@ -49,12 +64,11 @@ export class OpenAIFiles extends Serializable {
    * @param {OpenAIClient.RequestOptions | undefined} options
    * @returns {Promise<OpenAIClient.Files.FileObjectsPage>}
    */
-  static async listFiles(props?: {
+  async listFiles(props?: {
     query?: OpenAIClient.Files.FileListParams;
     options?: OpenAIClient.RequestOptions;
   }) {
-    const oaiClient = new OpenAIClient();
-    return oaiClient.files.list(props?.query, props?.options);
+    return this.oaiClient.files.list(props?.query, props?.options);
   }
 
   /**
@@ -62,11 +76,17 @@ export class OpenAIFiles extends Serializable {
    * Returns information about a specific file.
    * @link {https://platform.openai.com/docs/api-reference/files/retrieve}
    * @param {string} fileId
+   * @param {OpenAIClient.RequestOptions | undefined} options
    * @returns {Promise<OpenAIClient.Files.FileObject>}
    */
-  static async retrieveFile({ fileId }: { fileId: string }) {
-    const oaiClient = new OpenAIClient();
-    return oaiClient.files.retrieve(fileId);
+  async retrieveFile({
+    fileId,
+    options,
+  }: {
+    fileId: string;
+    options?: OpenAIClient.RequestOptions;
+  }) {
+    return this.oaiClient.files.retrieve(fileId, options);
   }
 
   /**
@@ -77,10 +97,16 @@ export class OpenAIFiles extends Serializable {
    *
    * @link {https://platform.openai.com/docs/api-reference/files/retrieve-contents}
    * @param {string} fileId
+   * @param {OpenAIClient.RequestOptions | undefined} options
    * @returns {Promise<string>}
    */
-  static async retrieveFileContent({ fileId }: { fileId: string }) {
-    const oaiClient = new OpenAIClient();
-    return oaiClient.files.retrieveContent(fileId);
+  async retrieveFileContent({
+    fileId,
+    options,
+  }: {
+    fileId: string;
+    options?: OpenAIClient.RequestOptions;
+  }) {
+    return this.oaiClient.files.retrieveContent(fileId, options);
   }
 }

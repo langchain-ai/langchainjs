@@ -11,7 +11,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 test("Use file with Open AI", async () => {
-  const file = await OpenAIFiles.createFile({
+  const openAIFiles = new OpenAIFiles();
+  const file = await openAIFiles.createFile({
     file: fs.createReadStream(path.resolve(__dirname, `./test.jsonl`)),
     purpose: "fine-tune",
   });
@@ -28,7 +29,7 @@ test("Use file with Open AI", async () => {
       "purpose": "assistants",
     }
    */
-  const fileContent = await OpenAIFiles.retrieveFileContent({
+  const fileContent = await openAIFiles.retrieveFileContent({
     fileId: file.id,
   });
   console.log(fileContent);
@@ -44,7 +45,7 @@ test("Use file with Open AI", async () => {
       "purpose": "assistants",
     }
    */
-  const retrievedFile = await OpenAIFiles.retrieveFile({
+  const retrievedFile = await openAIFiles.retrieveFile({
     fileId: file.id,
   });
   expect(retrievedFile.id).toBeDefined();
@@ -60,7 +61,7 @@ test("Use file with Open AI", async () => {
       "purpose": "assistants",
     }
    */
-  const list = await OpenAIFiles.listFiles();
+  const list = await openAIFiles.listFiles();
   expect(list).toBeDefined();
   expect(!!list.data.find((f) => f.id === file.id)).toBeTruthy();
   /**
@@ -74,7 +75,7 @@ test("Use file with Open AI", async () => {
       "purpose": "assistants",
     }
    */
-  const result = await OpenAIFiles.deleteFile({ fileId: file.id });
+  const result = await openAIFiles.deleteFile({ fileId: file.id });
   expect(result.id).toBe(file.id);
   expect(result.deleted).toBeTruthy();
   /**

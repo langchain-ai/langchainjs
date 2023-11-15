@@ -29,11 +29,10 @@ Upload a file that can be used across various endpoints. The size of all the fil
 The size of individual files can be a maximum of **512 MB**. See the Assistants Tools guide to learn more about the types of files supported. The Fine-tuning API only supports `.jsonl` files.
 
 ```typescript
-import * as fs from "fs";
-import * as path from "path";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const file = await OpenAIFiles.create({
+const openAIFiles = new OpenAIFiles();
+const file = await openAIFiles.create({
   file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
   purpose: "assistants",
 });
@@ -53,12 +52,11 @@ const file = await OpenAIFiles.create({
 ## Use File in AI Assistant
 
 ```typescript
-import * as fs from "fs";
-import * as path from "path";
 import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const file = await OpenAIFiles.createFile({
+const openAIFiles = new OpenAIFiles();
+const file = await openAIFiles.createFile({
   file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
   purpose: "assistants",
 });
@@ -79,11 +77,10 @@ const agent = await OpenAIAssistantRunnable.createAssistant({
 Delete a file.
 
 ```typescript
-import * as fs from "fs";
-import * as path from "path";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const result = await OpenAIFiles.deleteFile({ fileId: file.id });
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.deleteFile({ fileId: file.id });
 /**
 * Output:
   {
@@ -102,11 +99,10 @@ Returns a list of files that belong to the user's organization.
 Only return files with the given purpose.
 
 ```typescript
-import * as fs from "fs";
-import * as path from "path";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const result = await OpenAIFiles.listFiles({ purpose: "assistants" });
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.listFiles({ purpose: "assistants" });
 /**
 * Output:
   {
@@ -138,11 +134,10 @@ const result = await OpenAIFiles.listFiles({ purpose: "assistants" });
 Returns information about a specific file.
 
 ```typescript
-import * as fs from "fs";
-import * as path from "path";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const result = await OpenAIFiles.retrieveFile({ fileId: file.id });
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.retrieveFile({ fileId: file.id });
 /**
 * Output:
   {
@@ -163,10 +158,9 @@ Returns the contents of the specified file.
 You can't retrieve the contents of a file that was uploaded with the "purpose": "assistants" API.
 
 ```typescript
-import * as fs from "fs";
-import * as path from "path";
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
-const result = await OpenAIFiles.retrieveFileContent({ fileId: file.id });
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.retrieveFileContent({ fileId: file.id });
 // Return the file content.
 ```
