@@ -20,7 +20,7 @@ export class OpenAIFiles extends Serializable {
    * Upload file
    * Upload a file that can be used across various endpoints. The size of all the files uploaded by one organization can be up to 100 GB.
    *
-   * The size of individual files can be a maximum of 512 MB. See the Assistants Tools guide to learn more about the types of files supported. The Fine-tuning API only supports .jsonl files.
+   * @note The size of individual files can be a maximum of 512 MB. See the Assistants Tools guide to learn more about the types of files supported. The Fine-tuning API only supports .jsonl files.
    *
    * @link {https://platform.openai.com/docs/api-reference/files/create}
    * @param {OpenAIClient.FileCreateParams['file']} file
@@ -40,8 +40,8 @@ export class OpenAIFiles extends Serializable {
 
   /**
    * Delete a file.
-   * @link {https://platform.openai.com/docs/api-reference/files/delete}
    *
+   * @link {https://platform.openai.com/docs/api-reference/files/delete}
    * @param {string} fileId
    * @param {OpenAIClient.RequestOptions | undefined} options
    * @returns {Promise<OpenAIClient.Files.FileDeleted>}
@@ -59,6 +59,7 @@ export class OpenAIFiles extends Serializable {
   /**
    * List files
    * Returns a list of files that belong to the user's organization.
+   *
    * @link {https://platform.openai.com/docs/api-reference/files/list}
    * @param {OpenAIClient.Files.FileListParams | undefined} query
    * @param {OpenAIClient.RequestOptions | undefined} options
@@ -74,6 +75,7 @@ export class OpenAIFiles extends Serializable {
   /**
    * Retrieve file
    * Returns information about a specific file.
+   *
    * @link {https://platform.openai.com/docs/api-reference/files/retrieve}
    * @param {string} fileId
    * @param {OpenAIClient.RequestOptions | undefined} options
