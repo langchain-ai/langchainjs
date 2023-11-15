@@ -81,7 +81,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere", "meta"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
