@@ -76,11 +76,9 @@ export class Cohere extends LLM implements CohereInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const { CohereClient } = await Cohere.imports();
+    const { cohere } = await Cohere.imports();
 
-    const cohere = new CohereClient({
-      token: this.apiKey,
-    });
+    cohere.init(this.apiKey);
 
     // Hit the `generate` endpoint on the `large` model
     const generateResponse = await this.caller.callWithOptions(
@@ -89,13 +87,13 @@ export class Cohere extends LLM implements CohereInput {
       {
         prompt,
         model: this.model,
-        maxTokens: this.maxTokens,
+        max_tokens: this.maxTokens,
         temperature: this.temperature,
-        endSequences: options.stop,
+        end_sequences: options.stop,
       }
     );
     try {
-      return generateResponse.generations[0].text;
+      return generateResponse.body.generations[0].text;
     } catch {
       console.log(generateResponse);
       throw new Error("Could not parse response.");
@@ -104,11 +102,11 @@ export class Cohere extends LLM implements CohereInput {
 
   /** @ignore */
   static async imports(): Promise<{
-    CohereClient: typeof import("cohere-ai").CohereClient;
+    cohere: typeof import("cohere-ai");
   }> {
     try {
-      const { CohereClient } = await import("cohere-ai");
-      return { CohereClient };
+      const { default: cohere } = await import("cohere-ai");
+      return { cohere };
     } catch (e) {
       throw new Error(
         "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
