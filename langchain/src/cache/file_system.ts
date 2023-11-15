@@ -1,7 +1,8 @@
+import path from "node:path";
+import fs from "node:fs/promises";
+
 import { BaseCache, Generation } from "../schema/index.js";
 import { getCacheKey } from "./base.js";
-import path from "path";
-import fs from "node:fs/promises";
 
 /**
  * A cache that uses the local filesystem as the backing store.
@@ -22,6 +23,7 @@ export class LocalFileCache extends BaseCache {
    */
   public static async create(cacheDir?: string): Promise<LocalFileCache> {
     if (!cacheDir) {
+      // eslint-disable-next-line no-param-reassign
       cacheDir = await fs.mkdtemp("langchain-cache-");
     } else {
       // ensure the cache directory exists
@@ -39,7 +41,7 @@ export class LocalFileCache extends BaseCache {
    * @returns An array of Generations if found, null otherwise.
    */
   public async lookup(prompt: string, llmKey: string) {
-    const key = getCacheKey(prompt, llmKey) + ".json";
+    const key = `${getCacheKey(prompt, llmKey)}.json`;
     try {
       const content = await fs.readFile(path.join(this.cacheDir, key));
       return JSON.parse(content.toString()) as Generation[];
@@ -61,7 +63,7 @@ export class LocalFileCache extends BaseCache {
     llmKey: string,
     generations: Generation[]
   ) {
-    const key = getCacheKey(prompt, llmKey) + ".json";
+    const key = `${getCacheKey(prompt, llmKey)}.json`;
     await fs.writeFile(
       path.join(this.cacheDir, key),
       JSON.stringify(generations)
