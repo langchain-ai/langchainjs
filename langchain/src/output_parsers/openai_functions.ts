@@ -148,18 +148,16 @@ export class JsonOutputFunctionsParser extends BaseCumulativeTransformOutputPars
         `No result from "OutputFunctionsParser" ${JSON.stringify(generations)}`
       );
     }
-    const parsedResult = JSON.parse(result);
+    return this.parse(result);
+  }
+
+  async parse(text: string): Promise<object> {
+    const parsedResult = JSON.parse(text);
     if (this.argsOnly) {
       return parsedResult;
     }
     parsedResult.arguments = JSON.parse(parsedResult.arguments);
     return parsedResult;
-  }
-
-  // This method would be called by the default implementation of `parse_result`
-  // but we're overriding that method so it's not needed.
-  async parse(_text: string): Promise<object> {
-    throw new Error("Not implemented.");
   }
 
   getFormatInstructions(): string {

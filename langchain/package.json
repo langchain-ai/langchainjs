@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.186",
+  "version": "0.0.189",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -778,6 +778,9 @@
     "experimental/chat_models/bittensor.cjs",
     "experimental/chat_models/bittensor.js",
     "experimental/chat_models/bittensor.d.ts",
+    "experimental/chat_models/ollama_functions.cjs",
+    "experimental/chat_models/ollama_functions.js",
+    "experimental/chat_models/ollama_functions.d.ts",
     "experimental/llms/bittensor.cjs",
     "experimental/llms/bittensor.js",
     "experimental/llms/bittensor.d.ts",
@@ -951,6 +954,7 @@
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
+    "ts-morph": "^20.0.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",
@@ -2674,6 +2678,11 @@
       "types": "./experimental/chat_models/bittensor.d.ts",
       "import": "./experimental/chat_models/bittensor.js",
       "require": "./experimental/chat_models/bittensor.cjs"
+    },
+    "./experimental/chat_models/ollama_functions": {
+      "types": "./experimental/chat_models/ollama_functions.d.ts",
+      "import": "./experimental/chat_models/ollama_functions.js",
+      "require": "./experimental/chat_models/ollama_functions.cjs"
     },
     "./experimental/llms/bittensor": {
       "types": "./experimental/llms/bittensor.d.ts",

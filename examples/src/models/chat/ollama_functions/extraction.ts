@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { AnthropicFunctions } from "langchain/experimental/chat_models/anthropic_functions";
+import { OllamaFunctions } from "langchain/experimental/chat_models/ollama_functions";
 import { PromptTemplate } from "langchain/prompts";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 
@@ -24,8 +24,9 @@ const schema = z.object({
   ),
 });
 
-const model = new AnthropicFunctions({
+const model = new OllamaFunctions({
   temperature: 0.1,
+  model: "mistral",
 }).bind({
   functions: [
     {
@@ -47,7 +48,7 @@ const chain = await prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
 
 const response = await chain.invoke({
   input:
-    "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia is a brunette and Alex is blonde.",
+    "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia has orange hair and Alex is blonde.",
 });
 
 console.log(response);
@@ -56,7 +57,7 @@ console.log(response);
   {
     people: [
       { name: 'Alex', height: 5, hairColor: 'blonde' },
-      { name: 'Claudia', height: 6, hairColor: 'brunette' }
+      { name: 'Claudia', height: 6, hairColor: 'orange' }
     ]
   }
 */
