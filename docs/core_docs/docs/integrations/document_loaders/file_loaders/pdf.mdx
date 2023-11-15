@@ -48,3 +48,10 @@ const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
   pdfjs: () => import("pdfjs-dist/legacy/build/pdf.js"),
 });
 ```
+
+## Loading directories
+
+import CodeBlock from "@theme/CodeBlock";
+import MemoryExample from "@examples/document_loaders/pdf_directory.ts";
+
+<CodeBlock language="typescript">{MemoryExample}</CodeBlock>
