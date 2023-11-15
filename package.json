@@ -41,13 +41,14 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "dotenv": "^16.0.3",
-    "husky": "^8.0.0",
+    "husky": "^8.0.3",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "turbo": "latest"
+    "turbo": "latest",
+    "yarnhook": "^0.6.0"
   },
   "resolutions": {
     "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
@@ -60,5 +61,12 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --write"
+  },
+  "husky": {
+    "hooks": {
+      "post-checkout": "yarnhook",
+      "post-merge": "yarnhook",
+      "post-rewrite": "yarnhook"
+    }
   }
 }
