@@ -314,16 +314,15 @@ Since we're saving our inputs/outputs in memory we can ask followups to the LLM.
 
 Keep in mind, we're not implementing an agent with tools so it must derive answers from the relevant documents in our store. Because of this it may return answers with hallucinated imports, classes or more.
 
-``typescript
-const question2 =
-"How can I import and use the Wikipedia and File System tools from LangChain instead?";
-const result2 = await conversationalQaChain.invoke({
-question: question2,
-});
-
-````
-
 ```typescript
+const question2 =
+  "How can I import and use the Wikipedia and File System tools from LangChain instead?";
+const result2 = await conversationalQaChain.invoke({
+  question: question2,
+});
+```
+
+````typescript
 console.log(result2);
 /**
 Here is how to import and utilize WikipediaQueryRun and File System tools in the LangChain codebase:
