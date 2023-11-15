@@ -10,6 +10,15 @@ async function main() {
    */
   let changes = [];
 
+  const syntaxTypes = [
+    SyntaxKind.MethodDeclaration,
+    SyntaxKind.PropertyDeclaration,
+    SyntaxKind.GetAccessor,
+    SyntaxKind.SetAccessor,
+    SyntaxKind.MethodSignature,
+    SyntaxKind.PropertySignature,
+  ];
+
   sourceFiles.forEach((sourceFile) => {
     sourceFile.getClasses().forEach((cls) => {
       // Check instance members
@@ -23,15 +32,6 @@ async function main() {
       });
     });
   });
-
-  const syntaxTypes = [
-    SyntaxKind.MethodDeclaration,
-    SyntaxKind.PropertyDeclaration,
-    SyntaxKind.GetAccessor,
-    SyntaxKind.SetAccessor,
-    SyntaxKind.MethodSignature,
-    SyntaxKind.PropertySignature,
-  ];
 
   function checkMember(member) {
     if (syntaxTypes.includes(member.getKind())) {
