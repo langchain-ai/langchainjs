@@ -181,6 +181,10 @@ const config = {
                 to: "/docs/additional_resources/tutorials",
                 label: "Tutorials",
               },
+              {
+                to: "/docs/contributing",
+                label: "Contributing",
+              },
             ],
           },
           {
