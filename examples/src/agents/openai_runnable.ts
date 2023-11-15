@@ -36,7 +36,7 @@ const prompt = ChatPromptTemplate.fromMessages([
  * Here we're using the `formatToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
-const modelWithTools = model.bind({
+const modelWithFunctions = model.bind({
   functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
 });
 /**
@@ -68,7 +68,7 @@ const runnableAgent = RunnableSequence.from([
       formatAgentSteps(i.steps),
   },
   prompt,
-  modelWithTools,
+  modelWithFunctions,
   new OpenAIFunctionsAgentOutputParser(),
 ]);
 /** Pass the runnable along with the tools to create the Agent Executor */

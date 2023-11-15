@@ -1,0 +1,30 @@
+# Extraction
+
+Most APIs and databases still deal with structured information. Therefore, in order to better work with those, it can be useful to extract structured information from text. Examples of this include:
+
+- Extracting a structured row to insert into a database from a sentence
+- Extracting multiple rows to insert into a database from a long document
+- Extracting the correct API parameters from a user query
+
+This work is extremely related to output parsing. Output parsers are responsible for instructing the LLM to respond in a specific format. In this case, the output parsers specify the format of the data you would like to extract from the document.
+Then, in addition to the output format instructions, the prompt should also contain the data you would like to extract information from.
+
+While normal output parsers are good enough for basic structuring of response data, when doing extraction you often want to extract more complicated or nested structures.
+
+## With tool/function calling
+
+Tool/function calling is a powerful way to perform extraction. At a high level, function calling encourages the model to respond in a structured format.
+By specifying one or more JSON schemas that you want the LLM to use, you can guide the LLM to "fill in the blanks" and populate proper values for the keys to the JSON.
+
+Here's a concrete example using OpenAI's tool calling features. Note that this requires either the `gpt-3.5-turbo-1106` or `gpt-4-1106-preview` models.
+
+We'll use [Zod](https://zod.dev/), a popular open source package, to format schema in OpenAI's tool format:
+
+```bash npm2yarn
+$ npm install zod zod-to-json-schema
+```
+
+import CodeBlock from "@theme/CodeBlock";
+import ToolCalling from "@examples/extraction/openai_tool_calling_extraction.ts";
+
+<CodeBlock language="typescript">{ToolCalling}</CodeBlock>

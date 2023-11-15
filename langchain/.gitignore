@@ -22,6 +22,9 @@ agents/toolkits/sql.d.ts
 agents/format_scratchpad.cjs
 agents/format_scratchpad.js
 agents/format_scratchpad.d.ts
+agents/format_scratchpad/openai_tools.cjs
+agents/format_scratchpad/openai_tools.js
+agents/format_scratchpad/openai_tools.d.ts
 agents/format_scratchpad/log.cjs
 agents/format_scratchpad/log.js
 agents/format_scratchpad/log.d.ts
@@ -70,6 +73,9 @@ tools/google_calendar.d.ts
 chains.cjs
 chains.js
 chains.d.ts
+chains/combine_documents/reduce.cjs
+chains/combine_documents/reduce.js
+chains/combine_documents/reduce.d.ts
 chains/load.cjs
 chains/load.js
 chains/load.d.ts
@@ -130,6 +136,9 @@ embeddings/googlepalm.d.ts
 embeddings/minimax.cjs
 embeddings/minimax.js
 embeddings/minimax.d.ts
+embeddings/voyage.cjs
+embeddings/voyage.js
+embeddings/voyage.d.ts
 embeddings/llama_cpp.cjs
 embeddings/llama_cpp.js
 embeddings/llama_cpp.d.ts
@@ -184,6 +193,9 @@ llms/sagemaker_endpoint.d.ts
 llms/bedrock.cjs
 llms/bedrock.js
 llms/bedrock.d.ts
+llms/bedrock/web.cjs
+llms/bedrock/web.js
+llms/bedrock/web.d.ts
 llms/llama_cpp.cjs
 llms/llama_cpp.js
 llms/llama_cpp.d.ts
@@ -466,6 +478,9 @@ chat_models/anthropic.d.ts
 chat_models/bedrock.cjs
 chat_models/bedrock.js
 chat_models/bedrock.d.ts
+chat_models/bedrock/web.cjs
+chat_models/bedrock/web.js
+chat_models/bedrock/web.d.ts
 chat_models/cloudflare_workersai.cjs
 chat_models/cloudflare_workersai.js
 chat_models/cloudflare_workersai.d.ts
@@ -514,6 +529,9 @@ schema/document.d.ts
 schema/output_parser.cjs
 schema/output_parser.js
 schema/output_parser.d.ts
+schema/prompt_template.cjs
+schema/prompt_template.js
+schema/prompt_template.d.ts
 schema/query_constructor.cjs
 schema/query_constructor.js
 schema/query_constructor.d.ts
@@ -646,6 +664,9 @@ stores/file/in_memory.d.ts
 stores/file/node.cjs
 stores/file/node.js
 stores/file/node.d.ts
+stores/message/cassandra.cjs
+stores/message/cassandra.js
+stores/message/cassandra.d.ts
 stores/message/convex.cjs
 stores/message/convex.js
 stores/message/convex.d.ts
@@ -724,6 +745,9 @@ util/time.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
+experimental/openai_assistant.cjs
+experimental/openai_assistant.js
+experimental/openai_assistant.d.ts
 experimental/babyagi.cjs
 experimental/babyagi.js
 experimental/babyagi.d.ts
@@ -742,6 +766,9 @@ experimental/chat_models/anthropic_functions.d.ts
 experimental/chat_models/bittensor.cjs
 experimental/chat_models/bittensor.js
 experimental/chat_models/bittensor.d.ts
+experimental/chat_models/ollama_functions.cjs
+experimental/chat_models/ollama_functions.js
+experimental/chat_models/ollama_functions.d.ts
 experimental/llms/bittensor.cjs
 experimental/llms/bittensor.js
 experimental/llms/bittensor.d.ts

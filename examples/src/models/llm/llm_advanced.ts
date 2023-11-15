@@ -2,8 +2,8 @@ import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
   const model = new OpenAI({
-    // customize openai model that's used, `text-davinci-003` is the default
-    modelName: "text-ada-001",
+    // customize openai model that's used, `gpt-3.5-turbo-instruct` is the default
+    modelName: "gpt-3.5-turbo-instruct",
 
     // `max_tokens` supports a magic -1 param where the max token length for the specified modelName
     //  is calculated and included in the request to OpenAI as the `max_tokens` param

@@ -17,6 +17,7 @@ const entrypoints = {
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
+  "agents/format_scratchpad/openai_tools": "agents/format_scratchpad/openai_tools",
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/format_scratchpad/log_to_message":
@@ -37,6 +38,7 @@ const entrypoints = {
   "tools/google_calendar": "tools/google_calendar/index",
   // chains
   chains: "chains/index",
+  "chains/combine_documents/reduce": "chains/combine_documents/reduce",
   "chains/load": "chains/load",
   "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
@@ -58,6 +60,7 @@ const entrypoints = {
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
   "embeddings/minimax": "embeddings/minimax",
+  "embeddings/voyage": "embeddings/voyage",
   "embeddings/llama_cpp": "embeddings/llama_cpp",
   // llms
   "llms/load": "llms/load",
@@ -76,7 +79,8 @@ const entrypoints = {
   "llms/googlepalm": "llms/googlepalm",
   "llms/fireworks": "llms/fireworks",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
-  "llms/bedrock": "llms/bedrock",
+  "llms/bedrock": "llms/bedrock/index",
+  "llms/bedrock/web": "llms/bedrock/web",
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
   "llms/portkey": "llms/portkey",
@@ -185,7 +189,8 @@ const entrypoints = {
   "chat_models/openai": "chat_models/openai",
   "chat_models/portkey": "chat_models/portkey",
   "chat_models/anthropic": "chat_models/anthropic",
-  "chat_models/bedrock": "chat_models/bedrock",
+  "chat_models/bedrock": "chat_models/bedrock/index",
+  "chat_models/bedrock/web": "chat_models/bedrock/web",
   "chat_models/cloudflare_workersai": "chat_models/cloudflare_workersai",
   "chat_models/googlevertexai": "chat_models/googlevertexai/index",
   "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
@@ -203,6 +208,7 @@ const entrypoints = {
   schema: "schema/index",
   "schema/document": "schema/document",
   "schema/output_parser": "schema/output_parser",
+  "schema/prompt_template": "schema/prompt_template",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
   "schema/runnable": "schema/runnable/index",
@@ -255,6 +261,7 @@ const entrypoints = {
   "stores/doc/gcs": "stores/doc/gcs",
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/cassandra": "stores/message/cassandra",
   "stores/message/convex": "stores/message/convex",
   "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
   "stores/message/in_memory": "stores/message/in_memory",
@@ -286,6 +293,7 @@ const entrypoints = {
   "util/time": "util/time",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
+  "experimental/openai_assistant": "experimental/openai_assistant/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
@@ -294,6 +302,8 @@ const entrypoints = {
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
   "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
+  "experimental/chat_models/ollama_functions":
+    "experimental/chat_models/ollama_functions",
   "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
@@ -352,6 +362,7 @@ const requiresOptionalDependency = [
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "llms/bedrock",
+  "llms/bedrock/web",
   "llms/llama_cpp",
   "llms/writer",
   "llms/portkey",
@@ -426,6 +437,7 @@ const requiresOptionalDependency = [
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/bedrock",
+  "chat_models/bedrock/web",
   "chat_models/googlevertexai",
   "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
@@ -455,6 +467,7 @@ const requiresOptionalDependency = [
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/cloudflare_d1",
+  "stores/message/cassandra",
   "stores/message/convex",
   "stores/message/dynamodb",
   "stores/message/firestore",
@@ -529,15 +542,12 @@ const generateFiles = () => {
 };
 
 const updateConfig = () => {
-  // Update tsconfig.json `typedocOptions.entryPoints` field
-  updateJsonFile("./tsconfig.json", (json) => ({
+  // Update typedoc.json entryPoints field
+  updateJsonFile("../docs/api_refs/typedoc.json", (json) => ({
     ...json,
-    typedocOptions: {
-      ...json.typedocOptions,
-      entryPoints: [...Object.keys(entrypoints)]
-        .filter((key) => !deprecatedNodeOnly.includes(key))
-        .map((key) => `src/${entrypoints[key]}.ts`),
-    },
+    entryPoints: [...Object.keys(entrypoints)]
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.178",
+  "version": "0.0.187",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -34,6 +34,9 @@
     "agents/format_scratchpad.cjs",
     "agents/format_scratchpad.js",
     "agents/format_scratchpad.d.ts",
+    "agents/format_scratchpad/openai_tools.cjs",
+    "agents/format_scratchpad/openai_tools.js",
+    "agents/format_scratchpad/openai_tools.d.ts",
     "agents/format_scratchpad/log.cjs",
     "agents/format_scratchpad/log.js",
     "agents/format_scratchpad/log.d.ts",
@@ -82,6 +85,9 @@
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "chains/combine_documents/reduce.cjs",
+    "chains/combine_documents/reduce.js",
+    "chains/combine_documents/reduce.d.ts",
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
@@ -142,6 +148,9 @@
     "embeddings/minimax.cjs",
     "embeddings/minimax.js",
     "embeddings/minimax.d.ts",
+    "embeddings/voyage.cjs",
+    "embeddings/voyage.js",
+    "embeddings/voyage.d.ts",
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
@@ -196,6 +205,9 @@
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/bedrock/web.cjs",
+    "llms/bedrock/web.js",
+    "llms/bedrock/web.d.ts",
     "llms/llama_cpp.cjs",
     "llms/llama_cpp.js",
     "llms/llama_cpp.d.ts",
@@ -478,6 +490,9 @@
     "chat_models/bedrock.cjs",
     "chat_models/bedrock.js",
     "chat_models/bedrock.d.ts",
+    "chat_models/bedrock/web.cjs",
+    "chat_models/bedrock/web.js",
+    "chat_models/bedrock/web.d.ts",
     "chat_models/cloudflare_workersai.cjs",
     "chat_models/cloudflare_workersai.js",
     "chat_models/cloudflare_workersai.d.ts",
@@ -526,6 +541,9 @@
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
+    "schema/prompt_template.cjs",
+    "schema/prompt_template.js",
+    "schema/prompt_template.d.ts",
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
@@ -658,6 +676,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/cassandra.cjs",
+    "stores/message/cassandra.js",
+    "stores/message/cassandra.d.ts",
     "stores/message/convex.cjs",
     "stores/message/convex.js",
     "stores/message/convex.d.ts",
@@ -736,6 +757,9 @@
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
+    "experimental/openai_assistant.cjs",
+    "experimental/openai_assistant.js",
+    "experimental/openai_assistant.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
@@ -754,6 +778,9 @@
     "experimental/chat_models/bittensor.cjs",
     "experimental/chat_models/bittensor.js",
     "experimental/chat_models/bittensor.d.ts",
+    "experimental/chat_models/ollama_functions.cjs",
+    "experimental/chat_models/ollama_functions.js",
+    "experimental/chat_models/ollama_functions.d.ts",
     "experimental/llms/bittensor.cjs",
     "experimental/llms/bittensor.js",
     "experimental/llms/bittensor.d.ts",
@@ -778,10 +805,12 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
+    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js && yarn conditional:api_refs && node scripts/generate-docs-llm-compatibility-table",
+    "conditional:api_refs": "bash scripts/build-api-refs.sh",
     "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "lint-staged",
@@ -816,8 +845,8 @@
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.44.1",
-    "@gomomento/sdk-core": "^1.44.1",
+    "@gomomento/sdk": "^1.47.1",
+    "@gomomento/sdk-core": "^1.47.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^2.6.4",
@@ -850,7 +879,6 @@
     "@types/jsdom": "^21.1.1",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
-    "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
     "@types/pg-copy-streams": "^1.2.2",
@@ -874,7 +902,7 @@
     "closevector-common": "0.1.0-alpha.1",
     "closevector-node": "0.1.0-alpha.10",
     "closevector-web": "0.1.0-alpha.15",
-    "cohere-ai": ">=6.0.0",
+    "cohere-ai": "^7.2.0",
     "convex": "^1.3.1",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -899,7 +927,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
-    "llmonitor": "^0.5.8",
+    "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
@@ -953,9 +981,9 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.44.1",
-    "@gomomento/sdk-core": "^1.44.1",
-    "@gomomento/sdk-web": "^1.44.1",
+    "@gomomento/sdk": "^1.47.1",
+    "@gomomento/sdk-core": "^1.47.1",
+    "@gomomento/sdk-web": "^1.47.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^2.6.4",
@@ -991,7 +1019,7 @@
     "closevector-common": "0.1.0-alpha.1",
     "closevector-node": "0.1.0-alpha.10",
     "closevector-web": "0.1.0-alpha.16",
-    "cohere-ai": ">=6.0.0",
+    "cohere-ai": "^7.2.0",
     "convex": "^1.3.1",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
@@ -1005,7 +1033,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "llmonitor": "^0.5.8",
+    "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "mammoth": "*",
     "mongodb": "^5.2.0",
@@ -1341,10 +1369,9 @@
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "langchainhub": "~0.0.6",
-    "langsmith": "~0.0.31",
+    "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
-    "object-hash": "^3.0.0",
-    "openai": "~4.4.0",
+    "openai": "^4.17.0",
     "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -1410,6 +1437,11 @@
       "types": "./agents/format_scratchpad.d.ts",
       "import": "./agents/format_scratchpad.js",
       "require": "./agents/format_scratchpad.cjs"
+    },
+    "./agents/format_scratchpad/openai_tools": {
+      "types": "./agents/format_scratchpad/openai_tools.d.ts",
+      "import": "./agents/format_scratchpad/openai_tools.js",
+      "require": "./agents/format_scratchpad/openai_tools.cjs"
     },
     "./agents/format_scratchpad/log": {
       "types": "./agents/format_scratchpad/log.d.ts",
@@ -1490,6 +1522,11 @@
       "types": "./chains.d.ts",
       "import": "./chains.js",
       "require": "./chains.cjs"
+    },
+    "./chains/combine_documents/reduce": {
+      "types": "./chains/combine_documents/reduce.d.ts",
+      "import": "./chains/combine_documents/reduce.js",
+      "require": "./chains/combine_documents/reduce.cjs"
     },
     "./chains/load": {
       "types": "./chains/load.d.ts",
@@ -1591,6 +1628,11 @@
       "import": "./embeddings/minimax.js",
       "require": "./embeddings/minimax.cjs"
     },
+    "./embeddings/voyage": {
+      "types": "./embeddings/voyage.d.ts",
+      "import": "./embeddings/voyage.js",
+      "require": "./embeddings/voyage.cjs"
+    },
     "./embeddings/llama_cpp": {
       "types": "./embeddings/llama_cpp.d.ts",
       "import": "./embeddings/llama_cpp.js",
@@ -1680,6 +1722,11 @@
       "types": "./llms/bedrock.d.ts",
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
+    },
+    "./llms/bedrock/web": {
+      "types": "./llms/bedrock/web.d.ts",
+      "import": "./llms/bedrock/web.js",
+      "require": "./llms/bedrock/web.cjs"
     },
     "./llms/llama_cpp": {
       "types": "./llms/llama_cpp.d.ts",
@@ -2151,6 +2198,11 @@
       "import": "./chat_models/bedrock.js",
       "require": "./chat_models/bedrock.cjs"
     },
+    "./chat_models/bedrock/web": {
+      "types": "./chat_models/bedrock/web.d.ts",
+      "import": "./chat_models/bedrock/web.js",
+      "require": "./chat_models/bedrock/web.cjs"
+    },
     "./chat_models/cloudflare_workersai": {
       "types": "./chat_models/cloudflare_workersai.d.ts",
       "import": "./chat_models/cloudflare_workersai.js",
@@ -2230,6 +2282,11 @@
       "types": "./schema/output_parser.d.ts",
       "import": "./schema/output_parser.js",
       "require": "./schema/output_parser.cjs"
+    },
+    "./schema/prompt_template": {
+      "types": "./schema/prompt_template.d.ts",
+      "import": "./schema/prompt_template.js",
+      "require": "./schema/prompt_template.cjs"
     },
     "./schema/query_constructor": {
       "types": "./schema/query_constructor.d.ts",
@@ -2451,6 +2508,11 @@
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
     },
+    "./stores/message/cassandra": {
+      "types": "./stores/message/cassandra.d.ts",
+      "import": "./stores/message/cassandra.js",
+      "require": "./stores/message/cassandra.cjs"
+    },
     "./stores/message/convex": {
       "types": "./stores/message/convex.d.ts",
       "import": "./stores/message/convex.js",
@@ -2581,6 +2643,11 @@
       "import": "./experimental/autogpt.js",
       "require": "./experimental/autogpt.cjs"
     },
+    "./experimental/openai_assistant": {
+      "types": "./experimental/openai_assistant.d.ts",
+      "import": "./experimental/openai_assistant.js",
+      "require": "./experimental/openai_assistant.cjs"
+    },
     "./experimental/babyagi": {
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
@@ -2610,6 +2677,11 @@
       "types": "./experimental/chat_models/bittensor.d.ts",
       "import": "./experimental/chat_models/bittensor.js",
       "require": "./experimental/chat_models/bittensor.cjs"
+    },
+    "./experimental/chat_models/ollama_functions": {
+      "types": "./experimental/chat_models/ollama_functions.d.ts",
+      "import": "./experimental/chat_models/ollama_functions.js",
+      "require": "./experimental/chat_models/ollama_functions.cjs"
     },
     "./experimental/llms/bittensor": {
       "types": "./experimental/llms/bittensor.d.ts",
