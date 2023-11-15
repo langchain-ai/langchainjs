@@ -184,7 +184,7 @@ const config = {
               {
                 to: "/docs/contributing",
                 label: "Contributing",
-              }
+              },
             ],
           },
           {
