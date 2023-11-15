@@ -1,8 +1,8 @@
 name: Environment tests
 
 on:
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-  workflow_call:  # Allows triggering the workflow from another workflow
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
+  workflow_call: # Allows triggering the workflow from another workflow
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -35,6 +35,9 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test esbuild exports
         run: docker compose -f docker-compose.yml run test-exports-esbuild
@@ -52,6 +55,9 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test esm exports
         run: docker compose -f docker-compose.yml run test-exports-esm
@@ -69,6 +75,9 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test cjs exports
         run: docker compose -f docker-compose.yml run test-exports-cjs
@@ -86,6 +95,9 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test cf exports
         run: docker compose -f docker-compose.yml run test-exports-cf
@@ -103,6 +115,9 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test vercel exports
         run: docker compose -f docker-compose.yml run test-exports-vercel
@@ -120,6 +135,9 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test vite exports
         run: docker compose -f docker-compose.yml run test-exports-vite
@@ -137,6 +155,9 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn workspace langchain build
+        shell: bash
+        env:
+          SKIP_API_DOCS: true
 
       - name: Test bun exports
         run: docker compose -f docker-compose.yml run test-exports-bun

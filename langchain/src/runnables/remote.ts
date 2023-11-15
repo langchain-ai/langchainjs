@@ -17,6 +17,8 @@ import {
   HumanMessageChunk,
   SystemMessage,
   SystemMessageChunk,
+  ToolMessage,
+  ToolMessageChunk,
 } from "../schema/index.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
@@ -71,6 +73,12 @@ function revive(obj: any): any {
             name: obj.name,
           });
         }
+        if (obj.type === "tool") {
+          return new ToolMessage({
+            content: obj.content,
+            tool_call_id: obj.tool_call_id,
+          });
+        }
         if (obj.type === "ai") {
           return new AIMessage({
             content: obj.content,
@@ -97,6 +105,12 @@ function revive(obj: any): any {
           return new FunctionMessageChunk({
             content: obj.content,
             name: obj.name,
+          });
+        }
+        if (obj.type === "tool") {
+          return new ToolMessageChunk({
+            content: obj.content,
+            tool_call_id: obj.tool_call_id,
           });
         }
         if (obj.type === "ai") {

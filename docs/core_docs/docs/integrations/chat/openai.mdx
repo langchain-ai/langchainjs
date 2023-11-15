@@ -1,0 +1,63 @@
+---
+sidebar_label: OpenAI
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatOpenAI
+
+You can use OpenAI's chat models as follows:
+
+import OpenAI from "@examples/models/chat/integration_openai.ts";
+
+<CodeBlock language="typescript">{OpenAI}</CodeBlock>
+
+If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` with your OpenAI organization id, or pass it in as `organization` when
+initializing the model.
+
+## Multimodal messages
+
+:::info
+This feature is currently in preview. The message schema may change in future releases.
+:::
+
+OpenAI supports interleaving images with text in input messages with their `gpt-4-vision-preview`. Here's an example of how this looks:
+
+import OpenAIVision from "@examples/models/chat/integration_openai_vision.ts";
+
+<CodeBlock language="typescript">{OpenAIVision}</CodeBlock>
+
+## Tool calling
+
+:::info
+This feature is currently only available for `gpt-3.5-turbo-1106` and `gpt-4-1106-preview` models.
+:::
+
+More recent OpenAI chat models support calling multiple functions to get all required data to answer a question.
+Here's an example how a conversation turn with this functionality might look:
+
+import OpenAITools from "@examples/models/chat/integration_openai_tool_calls.ts";
+
+<CodeBlock language="typescript">{OpenAITools}</CodeBlock>
+
+## Custom URLs
+
+You can customize the base URL the SDK sends requests to by passing a `configuration` parameter like this:
+
+import OpenAICustomBase from "@examples/models/chat/integration_openai_custom_base.ts";
+
+<CodeBlock language="typescript">{OpenAICustomBase}</CodeBlock>
+
+You can also pass other `ClientOptions` parameters accepted by the official SDK.
+
+If you are hosting on Azure OpenAI, see the [dedicated page instead](/docs/integrations/chat/azure).
+
+## Calling fine-tuned models
+
+You can call fine-tuned OpenAI models by passing in your corresponding `modelName` parameter.
+
+This generally takes the form of `ft:{OPENAI_MODEL_NAME}:{ORG_NAME}::{MODEL_ID}`. For example:
+
+import OpenAIFineTuned from "@examples/models/chat/integration_openai_fine_tune.ts";
+
+<CodeBlock language="typescript">{OpenAIFineTuned}</CodeBlock>

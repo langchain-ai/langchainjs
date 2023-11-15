@@ -1,0 +1,39 @@
+---
+sidebar_position: 1
+title: Multiple chains
+hide_table_of_contents: true
+---
+
+# Multiple chains
+
+Runnables can be used to combine multiple Chains together:
+
+<details>
+  <summary>Interactive tutorial</summary>
+  The screencast below interactively walks through an example. You can update and
+  run the code as it's being written in the video!
+  <iframe
+    src="https://scrimba.com/scrim/co14344c29595bfb29c41f12a?embed=langchain,mini-header"
+    width="100%"
+    height="600px"
+  ></iframe>
+</details>
+
+import CodeBlock from "@theme/CodeBlock";
+
+import MultipleChainExample from "@examples/guides/expression_language/cookbook_multiple_chains.ts";
+
+<CodeBlock language="typescript">{MultipleChainExample}</CodeBlock>
+
+The `RunnableSequence` above coerces the object into a `RunnableMap`.
+Each property in the map receives the same parameters. The runnable or function set as the value of that property
+is invoked with those parameters, and the return value populates an object which is then passed onto the next runnable in the sequence.
+
+## Passthroughs
+
+In the example above, we use a passthrough in a runnable map to pass along original input variables to future steps in the chain.
+
+In general, how exactly you do this depends on what exactly the input is:
+
+- If the original input was a string, then you likely just want to pass along the string. This can be done with `RunnablePassthrough`. For an example of this, see the retrieval chain in the [RAG section](/docs/expression_language/cookbook/retrieval) of this cookbook.
+- If the original input was an object, then you likely want to pass along specific keys. For this, you can use an arrow function that takes the object as input and extracts the desired key, as shown above.
