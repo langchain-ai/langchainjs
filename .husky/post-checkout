@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+# If yarn install has never run, run it
+if [ ! -f './.yarn/install-state.gz' ]; then yarn install; fi
+
+. "$(dirname -- "$0")/_/husky.sh"
+
+[ -n "$CI" ] && exit 0
+
+# This argument is 0 if the checkout is a file, in which case bail on running yarnhook
+[ $3 -eq 0 ] && exit 0
+
+# run yarnhook but don't fail
+yarn yarnhook || true

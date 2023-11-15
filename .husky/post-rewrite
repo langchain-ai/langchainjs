@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# If yarn install has never run, run it
+if [ ! -f './.yarn/install-state.gz' ]; then yarn install; fi
+
+. "$(dirname -- "$0")/_/husky.sh"
+
+[ -n "$CI" ] && exit 0
+
+yarn yarnhook
