@@ -47,6 +47,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.9.1",
     "openai": "^4.19.0",
     "turbo": "latest"
   },

@@ -227,6 +227,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@anthropic-ai/sdk@npm:^0.9.1":
+  version: 0.9.1
+  resolution: "@anthropic-ai/sdk@npm:0.9.1"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  checksum: 0ec50abc0ffc694d903d516f4ac110aafa3a588438791851dd2c3d220da49ceaf2723e218b7f1bc13e737fee1561b18ad8c3b4cc4347e8212131f69637216413
+  languageName: node
+  linkType: hard
+
 "@apache-arrow/ts@npm:^12.0.0":
   version: 12.0.0
   resolution: "@apache-arrow/ts@npm:12.0.0"
@@ -22648,6 +22665,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
+    "@anthropic-ai/sdk": ^0.9.1
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3
