@@ -51,16 +51,6 @@ export class GmailSendMessage extends GmailBaseTool {
     cc,
     bcc,
   }: SendMessageParams): Promise<string> {
-    return this.sendMessage({ message, to, subject, cc, bcc });
-  }
-
-  async sendMessage({
-    message,
-    to,
-    subject,
-    cc,
-    bcc,
-  }: SendMessageParams): Promise<string> {
     const auth = await this.getAuth();
     const gmail = google.gmail({ version: "v1", auth });
 
