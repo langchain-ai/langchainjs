@@ -1,6 +1,6 @@
-import { Project, SyntaxKind } from "ts-morph";
-import { exec } from "child_process";
-import fse from "fs-extra";
+const { Project, SyntaxKind } = require("ts-morph");
+const { exec } = require("child_process");
+const fse = require("fs-extra");
 
 async function updateCodeWithIgnoreTags(tsConfigFilePath) {
   const project = new Project({
