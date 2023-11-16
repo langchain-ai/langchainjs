@@ -167,7 +167,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.fetchFn = fields?.fetchFn ?? fetch;
+    this.fetchFn = fields?.fetchFn ?? fetch.bind(globalThis);
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
