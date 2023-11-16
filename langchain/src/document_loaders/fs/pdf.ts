@@ -11,13 +11,16 @@ export class PDFLoader extends BufferLoader {
 
   private pdfjs: typeof PDFLoaderImports;
 
+  private skipBlank: boolean;
+
   constructor(
     filePathOrBlob: string | Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    { splitPages = true, pdfjs = PDFLoaderImports, skipBlank = false } = {}
   ) {
     super(filePathOrBlob);
     this.splitPages = splitPages;
     this.pdfjs = pdfjs;
+    this.skipBlank = skipBlank;
   }
 
   /**
@@ -76,7 +79,7 @@ export class PDFLoader extends BufferLoader {
         }
       }
 
-      const text = textItems.join("");
+      const text = textItems.join(this.skipBlank ? "" : " ");
 
       documents.push(
         new Document({
