@@ -47,6 +47,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "openai": "^4.19.0",
     "turbo": "latest"
   },
   "resolutions": {
