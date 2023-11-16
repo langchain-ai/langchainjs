@@ -16,7 +16,11 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
   constructor(
     blob: Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports, parsedItemSeparator = " " } = {}
+    {
+      splitPages = true,
+      pdfjs = PDFLoaderImports,
+      parsedItemSeparator = " ",
+    } = {}
   ) {
     super();
     this.blob = blob;

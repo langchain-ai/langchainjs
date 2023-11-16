@@ -15,7 +15,11 @@ export class PDFLoader extends BufferLoader {
 
   constructor(
     filePathOrBlob: string | Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports, parsedItemSeparator = " " } = {}
+    {
+      splitPages = true,
+      pdfjs = PDFLoaderImports,
+      parsedItemSeparator = " ",
+    } = {}
   ) {
     super(filePathOrBlob);
     this.splitPages = splitPages;
