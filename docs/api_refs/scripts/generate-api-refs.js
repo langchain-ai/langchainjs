@@ -93,18 +93,10 @@ const execAsync = async (command, options) => new Promise((resolve, reject) => {
 });
 
 async function main() {
-  console.log('starting main')
   const pathToLangChain = "../../langchain";
   const { rootPath, tsConfigPath } = await copyLangChain(pathToLangChain);
-  console.log('copied', {
-    rootPath,
-    tsConfigPath
-  })
   await updateCodeWithIgnoreTags(tsConfigPath);
-  console.log('Added ignore tags')
   await execAsync("yarn typedoc");
-  console.log("Built TypeDoc")
   await deleteLangChain(rootPath);
-  console.log("Deleted langchain")
 }
 main();
