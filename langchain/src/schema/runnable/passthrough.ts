@@ -42,7 +42,7 @@ export class RunnableAssign<
  *
  * The example below demonstrates how to use `RunnablePassthrough to
  * passthrough the input from the `.invoke()`
- * 
+ *
  * @example
  * ```typescript
  * const chain = RunnableSequence.from([
@@ -86,31 +86,28 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    * A runnable that assigns key-value pairs to the input.
    *
    * The example below shows how you could use it with an inline function.
-   * 
+   *
    * @example
    * ```typescript
-   * const chain = RunnableSequence.from([
+   * const prompt =
+   *   PromptTemplate.fromTemplate(`Write a SQL query to answer the question using the following schema: {schema}
+   * Question: {question}
+   * SQL Query:`);
+   * 
+   * // The `RunnablePassthrough.assign()` is used here to passthrough the input from the `.invoke()`
+   * // call (in this example it's the question), along with any inputs passed to the `.assign()` method.
+   * // In this case, we're passing the schema.
+   * const sqlQueryGeneratorChain = RunnableSequence.from([
    *   RunnablePassthrough.assign({
-   *     query: async () => getQuery(),
+   *     schema: async () => db.getTableInfo(),
    *   }),
-   *   {
-   *     question: (input) => {
-   *       if (
-   *         input.query ===
-   *         "SELECT COUNT(EmployeeId) AS TotalEmployees FROM Employee"
-   *       ) {
-   *         return "How many employees are there?";
-   *       } else {
-   *         return "What is the average salary?";
-   *       }
-   *     },
-   *   },
    *   prompt,
-   *   llm,
-   *   outputParser,
+   *   new ChatOpenAI({}).bind({ stop: ["\nSQLResult:"] }),
+   *   new StringOutputParser(),
    * ]);
-   *
-   * const response = await chain.invoke({});
+   * const result = await sqlQueryGeneratorChain.invoke({
+   *   question: "How many employees are there?",
+   * });
    * ```
    */
   static assign(
@@ -122,3 +119,5 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     );
   }
 }
+
+
