@@ -11122,6 +11122,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/fs-extra@npm:^11":
+  version: 11.0.4
+  resolution: "@types/fs-extra@npm:11.0.4"
+  dependencies:
+    "@types/jsonfile": "*"
+    "@types/node": "*"
+  checksum: 242cb84157631f057f76495c8220707541882c00a00195b603d937fb55e471afecebcb089bab50233ed3a59c69fd68bf65c1f69dd7fafe2347e139cc15b9b0e5
+  languageName: node
+  linkType: hard
+
 "@types/fs-extra@npm:^11.0.1":
   version: 11.0.1
   resolution: "@types/fs-extra@npm:11.0.1"
@@ -12856,17 +12866,20 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "api_refs@workspace:docs/api_refs"
   dependencies:
+    "@types/fs-extra": ^11
     "@types/node": ^20
     "@types/react": ^18
     "@types/react-dom": ^18
     autoprefixer: ^10.0.1
     eslint: ^8
     eslint-config-next: 14.0.1
+    fs-extra: ^11.1.1
     next: 14.0.1
     postcss: ^8
     react: ^18
     react-dom: ^18
     tailwindcss: ^3.3.0
+    ts-morph: ^20.0.0
     typescript: ^5
   languageName: unknown
   linkType: soft
@@ -22326,7 +22339,6 @@ __metadata:
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
     ts-jest: ^29.1.0
-    ts-morph: ^20.0.0
     typeorm: ^0.3.12
     typescript: ^5.0.0
     typesense: ^1.5.3

@@ -27,15 +27,15 @@ test("text/event-stream stream", async () => {
   }
   expect(chunks.length).toEqual("Hi there!".length + 1);
   expect(chunks).toEqual([
-    "event: data\ndata: H\n\n",
-    "event: data\ndata: i\n\n",
-    "event: data\ndata:  \n\n",
-    "event: data\ndata: t\n\n",
-    "event: data\ndata: h\n\n",
-    "event: data\ndata: e\n\n",
-    "event: data\ndata: r\n\n",
-    "event: data\ndata: e\n\n",
-    "event: data\ndata: !\n\n",
-    "event: end\n\n",
+    `event: data\ndata: "H"\n\n`,
+    `event: data\ndata: "i"\n\n`,
+    `event: data\ndata: " "\n\n`,
+    `event: data\ndata: "t"\n\n`,
+    `event: data\ndata: "h"\n\n`,
+    `event: data\ndata: "e"\n\n`,
+    `event: data\ndata: "r"\n\n`,
+    `event: data\ndata: "e"\n\n`,
+    `event: data\ndata: "!"\n\n`,
+    `event: end\n\n`,
   ]);
 });
