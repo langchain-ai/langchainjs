@@ -412,11 +412,11 @@ export class PrismaVectorStore<
         Object.entries(ops).map(([opName, value]) => {
           // column name, operators cannot be parametrised
           // these fields are thus not escaped by Prisma and can be dangerous if user input is used
-          const mappedOpName = opName as keyof typeof OpMap;
+          const opNameKey = opName as keyof typeof OpMap;
           const colRaw = this.Prisma.raw(`"${key}"`);
-          const opRaw = this.Prisma.raw(OpMap[mappedOpName]);
+          const opRaw = this.Prisma.raw(OpMap[opNameKey]);
 
-          switch (OpMap[mappedOpName]) {
+          switch (OpMap[opNameKey]) {
             case OpMap.in:
               return this.Prisma.sql`${colRaw} ${opRaw} (${(
                 value as string[]
