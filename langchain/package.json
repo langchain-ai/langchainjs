@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.189",
+  "version": "0.0.191",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -809,7 +809,7 @@
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
-    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js && yarn conditional:api_refs && node scripts/generate-docs-llm-compatibility-table",
+    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
     "conditional:api_refs": "bash scripts/build-api-refs.sh",
     "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
