@@ -1,8 +1,11 @@
 import { SearchApi } from "langchain/tools";
-import { OpenAI } from "langchain/llms/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatPromptTemplate } from "langchain/prompts";
+import { AgentExecutor } from "langchain/agents";
+import { RunnableSequence } from "langchain/schema/runnable";
+import { AgentFinish, AgentAction, BaseMessageChunk } from "langchain/schema";
 
-const model = new OpenAI({
+const model = new ChatOpenAI({
   temperature: 0,
 });
 const tools = [
@@ -10,15 +13,29 @@ const tools = [
     engine: "google_news",
   }),
 ];
-const prefix =
-  "Answer the following questions as best you can. In your final answer, use a bulleted list markdown format. You have access to the following tools:";
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "zero-shot-react-description",
-  agentArgs: {
-    prefix,
+const prefix = ChatPromptTemplate.fromMessages([
+  [
+    "ai",
+    "Answer the following questions as best you can. In your final answer, use a bulleted list markdown format.",
+  ],
+  ["human", "{input}"],
+]);
+// Replace this with your actual output parser.
+const customOutputParser = (
+  input: BaseMessageChunk
+): AgentAction | AgentFinish => ({
+  log: "test",
+  returnValues: {
+    output: input,
   },
 });
-const res = await executor.call({
+// Replace this placeholder agent with your actual implementation.
+const agent = RunnableSequence.from([prefix, model, customOutputParser]);
+const executor = AgentExecutor.fromAgentAndTools({
+  agent,
+  tools,
+});
+const res = await executor.invoke({
   input: "What's happening in Ukraine today?",
 });
-console.log(res.output);
+console.log(res);
