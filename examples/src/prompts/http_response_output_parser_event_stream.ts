@@ -8,6 +8,8 @@ const handler = async () => {
 
   const model = new ChatOpenAI({ temperature: 0 });
 
+  // Values are stringified to avoid dealing with newlines and should
+  // be parsed with `JSON.parse()` when consuming.
   const stream = await model.pipe(parser).stream("Hello there!");
 
   const httpResponse = new Response(stream, {

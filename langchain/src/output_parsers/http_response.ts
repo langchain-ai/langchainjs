@@ -57,15 +57,15 @@ export class HttpResponseOutputParser extends BaseTransformOutputParser<Uint8Arr
    */
   async parse(text: string): Promise<Uint8Array> {
     const chunk = await this.outputParser.parse(text);
+    const encoder = new TextEncoder();
+    if (this.contentType === "text/event-stream") {
+      return encoder.encode(`event: data\ndata: ${JSON.stringify(chunk)}\n\n`);
+    }
     let parsedChunk;
     if (typeof chunk === "string") {
       parsedChunk = chunk;
     } else {
       parsedChunk = JSON.stringify(chunk);
-    }
-    const encoder = new TextEncoder();
-    if (this.contentType === "text/event-stream") {
-      return encoder.encode(`event: data\ndata: ${parsedChunk}\n\n`);
     }
     return encoder.encode(parsedChunk);
   }
