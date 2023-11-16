@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "typedoc": "npx typedoc --options typedoc.json",
-    "build:scripts:": "node ./scripts/get-better-name.js && node ./scripts/update-typedoc-css.js",
+    "build:scripts:": "node ./scripts/generate-api-refs.js && node ./scripts/update-typedoc-css.js",
     "build": "echo buildin son! && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint"
