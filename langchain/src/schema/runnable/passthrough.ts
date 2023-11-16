@@ -93,7 +93,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    *   PromptTemplate.fromTemplate(`Write a SQL query to answer the question using the following schema: {schema}
    * Question: {question}
    * SQL Query:`);
-   * 
+   *
    * // The `RunnablePassthrough.assign()` is used here to passthrough the input from the `.invoke()`
    * // call (in this example it's the question), along with any inputs passed to the `.assign()` method.
    * // In this case, we're passing the schema.
@@ -119,5 +119,3 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     );
   }
 }
-
-
