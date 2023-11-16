@@ -120,6 +120,7 @@
     "../../langchain/src/vectorstores/typeorm.ts",
     "../../langchain/src/vectorstores/myscale.ts",
     "../../langchain/src/vectorstores/redis.ts",
+    "../../langchain/src/vectorstores/rockset.ts",
     "../../langchain/src/vectorstores/typesense.ts",
     "../../langchain/src/vectorstores/singlestore.ts",
     "../../langchain/src/vectorstores/tigris.ts",

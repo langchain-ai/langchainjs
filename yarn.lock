@@ -8917,13 +8917,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rushstack/eslint-patch@npm:^1.3.3":
-  version: 1.5.1
-  resolution: "@rushstack/eslint-patch@npm:1.5.1"
-  checksum: e4c25322312dbaa29e835a7ab4fbac53c8731dd0da65e46646e38945e296429e7fb91c2ef3da5af5d5938d44b0cde1d5290438ebb3dcb015e02b80b5e2530d24
-  languageName: node
-  linkType: hard
-
 "@rockset/client@npm:^0.9.1":
   version: 0.9.1
   resolution: "@rockset/client@npm:0.9.1"
@@ -8933,6 +8926,13 @@ __metadata:
     node-fetch: ^2.6.7
     url: ^0.11.0
   checksum: eed056b229d47ba0de4e092c1157061c0602ae62f9a650a8a089a1977a86f40a9465d8286ca5fc7075d315f0444d60ea13d39e39934373472e7dc9c72f6375fc
+  languageName: node
+  linkType: hard
+
+"@rushstack/eslint-patch@npm:^1.3.3":
+  version: 1.5.1
+  resolution: "@rushstack/eslint-patch@npm:1.5.1"
+  checksum: e4c25322312dbaa29e835a7ab4fbac53c8731dd0da65e46646e38945e296429e7fb91c2ef3da5af5d5938d44b0cde1d5290438ebb3dcb015e02b80b5e2530d24
   languageName: node
   linkType: hard
 

@@ -1,4 +1,4 @@
-import { MainApi } from '@rockset/client';
+import { MainApi } from "@rockset/client";
 import type { CreateCollectionRequest } from "@rockset/client/dist/codegen/api.d.ts";
 import { Collection } from "@rockset/client/dist/codegen/api.js";
 
@@ -21,9 +21,9 @@ export class RocksetStoreError extends Error {
 }
 
 /**
- * Error that is thrown when a RocksetStore function is called 
+ * Error that is thrown when a RocksetStore function is called
  * after `destroy()` is called (meaning the collection would be
- * deleted). 
+ * deleted).
  */
 export class RocksetStoreDestroyedError extends RocksetStoreError {
   constructor() {
@@ -37,14 +37,17 @@ export class RocksetStoreDestroyedError extends RocksetStoreError {
  * See https://rockset.com/docs/vector-functions/#vector-distance-functions
  * @enum SimilarityMetric
  */
-export const enum SimilarityMetric {
-  CosineSimilarity = "COSINE_SIM",
-  EuclideanDistance = "EUCLIDEAN_DIST",
-  DotProduct = "DOT_PRODUCT",
-}
+export const SimilarityMetric = {
+  CosineSimilarity: "COSINE_SIM",
+  EuclideanDistance: "EUCLIDEAN_DIST",
+  DotProduct: "DOT_PRODUCT",
+} as const;
+
+export type SimilarityMetric =
+  (typeof SimilarityMetric)[keyof typeof SimilarityMetric];
 
 interface CollectionNotFoundError {
-  message_key: string
+  message_key: string;
 }
 
 /**
@@ -56,44 +59,43 @@ export interface RocksetLibArgs {
    * The rockset client object constructed with `rocksetConfigure`
    * @type {MainAPI}
    */
-  client: MainApi,
+  client: MainApi;
   /**
    * The name of the Rockset collection to store vectors
    * @type {string}
    */
-  collectionName: string,
+  collectionName: string;
   /**
    * The name of othe Rockset workspace that holds @member collectionName
    * @type {string}
    */
-  workspaceName?: string,
+  workspaceName?: string;
   /**
    * The name of the collection column to contain page contnent of documents
    * @type {string}
    */
-  textKey?: string,
+  textKey?: string;
   /**
    * The name of the collection column to contain vectors
    * @type {string}
    */
-  embeddingKey?: string,
+  embeddingKey?: string;
   /**
    * The SQL `WHERE` clause to filter by
    * @type {string}
    */
-  filter?: string,
+  filter?: string;
   /**
    * The metric used to measure vector relationship
    * @type {SimilarityMetric}
    */
-  similarityMetric?: SimilarityMetric
+  similarityMetric?: SimilarityMetric;
 }
 
 /**
- * Exposes Rockset's vector store/search functionality 
+ * Exposes Rockset's vector store/search functionality
  */
 export class RocksetStore extends VectorStore {
-
   declare FilterType: string;
 
   client: MainApi;
@@ -124,7 +126,7 @@ export class RocksetStore extends VectorStore {
 
   /**
    * Constructs a new RocksetStore
-   * @param {Embeddings} embeddings  Object used to embed queries and 
+   * @param {Embeddings} embeddings  Object used to embed queries and
    *                                 page content
    * @param {RocksetLibArgs} args
    */
@@ -138,17 +140,21 @@ export class RocksetStore extends VectorStore {
     this.textKey = args.textKey ?? "text";
     this.embeddingKey = args.embeddingKey ?? "embedding";
     this.filter = args.filter;
-    this.similarityMetric = args.similarityMetric ?? SimilarityMetric.CosineSimilarity;
+    this.similarityMetric =
+      args.similarityMetric ?? SimilarityMetric.CosineSimilarity;
     this.setSimilarityOrder();
   }
 
   /**
-   * Sets the object's similarity order based on what 
+   * Sets the object's similarity order based on what
    * SimilarityMetric is being used
    */
   private setSimilarityOrder() {
     this.checkIfDestroyed();
-    this.similarityOrder = this.similarityMetric === SimilarityMetric.EuclideanDistance ? "ASC" : "DESC";
+    this.similarityOrder =
+      this.similarityMetric === SimilarityMetric.EuclideanDistance
+        ? "ASC"
+        : "DESC";
   }
 
   /**
@@ -179,16 +185,19 @@ export class RocksetStore extends VectorStore {
       rocksetDocs.push({
         [this.textKey]: currDoc.pageContent,
         [this.embeddingKey]: currVector,
-        ...currDoc.metadata
-      })
+        ...currDoc.metadata,
+      });
     }
 
-    return (await this.client.documents.addDocuments(
-      this.workspaceName, 
-      this.collectionName, {
-        data: rocksetDocs
-      }
-    )).data?.map((docStatus) => docStatus._id || "" )
+    return (
+      await this.client.documents.addDocuments(
+        this.workspaceName,
+        this.collectionName,
+        {
+          data: rocksetDocs,
+        }
+      )
+    ).data?.map((docStatus) => docStatus._id || "");
   }
 
   /**
@@ -201,14 +210,14 @@ export class RocksetStore extends VectorStore {
       this.workspaceName,
       this.collectionName,
       {
-        data: ids.map((id) => ({ _id: id }))
+        data: ids.map((id) => ({ _id: id })),
       }
-    )
+    );
   }
 
   /**
    * Gets the most relevant documents to a query along
-   * with their similarity score. The returned documents 
+   * with their similarity score. The returned documents
    * are ordered by similarity (most similar at the first
    * index)
    * @param {number[]} query  The embedded query to search
@@ -223,17 +232,23 @@ export class RocksetStore extends VectorStore {
   ): Promise<[Document, number][]> {
     this.checkIfDestroyed();
     if (filter && this.filter) {
-      throw new RocksetStoreError("cannot provide both `filter` and `this.filter`");
+      throw new RocksetStoreError(
+        "cannot provide both `filter` and `this.filter`"
+      );
     }
-    const similarityKey = "similarity"
+    const similarityKey = "similarity";
     const _filter = filter ?? this.filter;
-    return (await this.client.queries.query({
-      sql: {
-        query: `
+    return (
+      (
+        await this.client.queries.query({
+          sql: {
+            query: `
           SELECT
             * EXCEPT("${this.embeddingKey}"),
             "${this.textKey}",
-            ${this.similarityMetric}([${query}], "${this.embeddingKey}") AS "${similarityKey}"
+            ${this.similarityMetric}(:query, "${
+              this.embeddingKey
+            }") AS "${similarityKey}"
           FROM 
             "${this.workspaceName}"."${this.collectionName}"
           ${_filter ? `WHERE ${_filter}` : ""}
@@ -241,19 +256,28 @@ export class RocksetStore extends VectorStore {
             "${similarityKey}" ${this.similarityOrder}
           LIMIT
             ${k}
-        `
-      }
-    })).results?.map((rocksetDoc) => ([
+        `,
+            parameters: [
+              {
+                name: "query",
+                type: "",
+                value: "[" + query.toString() + "]",
+              },
+            ],
+          },
+        })
+      ).results?.map((rocksetDoc) => [
         new Document<Record<string, object>>({
           pageContent: rocksetDoc[this.textKey],
-          metadata: (({ 
-            [this.textKey]: t, 
-            [similarityKey]: s, 
-            ...rocksetDoc 
-          }) => rocksetDoc)(rocksetDoc)
+          metadata: (({
+            [this.textKey]: t,
+            [similarityKey]: s,
+            ...rocksetDoc
+          }) => rocksetDoc)(rocksetDoc),
         }),
-        rocksetDoc[similarityKey] as number
-    ])) ?? [];
+        rocksetDoc[similarityKey] as number,
+      ]) ?? []
+    );
   }
 
   /**
@@ -300,7 +324,7 @@ export class RocksetStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig: RocksetLibArgs
   ): Promise<RocksetStore> {
-    const args = {...dbConfig, textKey: dbConfig.textKey ?? "text"};
+    const args = { ...dbConfig, textKey: dbConfig.textKey ?? "text" };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
@@ -315,11 +339,14 @@ export class RocksetStore extends VectorStore {
   private static async collectionExists(dbConfig: RocksetLibArgs) {
     try {
       await dbConfig.client.collections.getCollection(
-        dbConfig.workspaceName ?? "commons", 
+        dbConfig.workspaceName ?? "commons",
         dbConfig.collectionName
       );
     } catch (err) {
-      if ((err as CollectionNotFoundError).message_key === "COLLECTION_DOES_NOT_EXIST") {
+      if (
+        (err as CollectionNotFoundError).message_key ===
+        "COLLECTION_DOES_NOT_EXIST"
+      ) {
         return false;
       }
       throw err;
@@ -334,15 +361,19 @@ export class RocksetStore extends VectorStore {
    * @return {boolean}                 whether the collection is ready
    */
   private static async collectionReady(dbConfig: RocksetLibArgs) {
-    return (await dbConfig.client.collections.getCollection(
-      dbConfig.workspaceName ?? "commons", 
-      dbConfig.collectionName
-    )).data?.status === Collection.StatusEnum.READY;
+    return (
+      (
+        await dbConfig.client.collections.getCollection(
+          dbConfig.workspaceName ?? "commons",
+          dbConfig.collectionName
+        )
+      ).data?.status === Collection.StatusEnum.READY
+    );
   }
 
   /**
    * Deletes the collection this RocksetStore uses
-   * @param {boolean?} waitUntilDeletion  Whether to sleep until the 
+   * @param {boolean?} waitUntilDeletion  Whether to sleep until the
    *                                      collection is ready to be
    *                                      queried
    */
@@ -353,10 +384,12 @@ export class RocksetStore extends VectorStore {
     );
     this.destroyed = true;
     if (waitUntilDeletion) {
-      while (await RocksetStore.collectionExists({
-        collectionName: this.collectionName,
-        client: this.client
-      }));
+      while (
+        await RocksetStore.collectionExists({
+          collectionName: this.collectionName,
+          client: this.client,
+        })
+      );
     }
   }
 
@@ -371,13 +404,13 @@ export class RocksetStore extends VectorStore {
   }
 
   /**
-   * Creates a new Rockset collection and returns a RocksetStore that 
+   * Creates a new Rockset collection and returns a RocksetStore that
    * uses it
-   * @param {Embeddings} embeddings    Object used to embed queries and 
+   * @param {Embeddings} embeddings    Object used to embed queries and
    *                                   page content
-   * @param {RocksetLibArgs} dbConfig  The options to be passed into the 
+   * @param {RocksetLibArgs} dbConfig  The options to be passed into the
    *                                   RocksetStore constructor
-   * @param {CreateCollectionRequest?} collectionOptions  The arguments to sent with the 
+   * @param {CreateCollectionRequest?} collectionOptions  The arguments to sent with the
    *                                                      HTTP request when creating the
    *                                                      collection. Setting a field mapping
    *                                                      that `VECTOR_ENFORCE`s is recommended
@@ -386,19 +419,22 @@ export class RocksetStore extends VectorStore {
    * @returns {RocsketStore}
    */
   static async withNewCollection(
-    embeddings: Embeddings, 
-    dbConfig: RocksetLibArgs, 
+    embeddings: Embeddings,
+    dbConfig: RocksetLibArgs,
     collectionOptions?: CreateCollectionRequest
   ): Promise<RocksetStore> {
     if (
-      collectionOptions?.name && dbConfig.collectionName !== collectionOptions?.name
+      collectionOptions?.name &&
+      dbConfig.collectionName !== collectionOptions?.name
     ) {
-      throw new RocksetStoreError("`dbConfig.name` and `collectionOptions.name` do not match");
+      throw new RocksetStoreError(
+        "`dbConfig.name` and `collectionOptions.name` do not match"
+      );
     }
     await dbConfig.client.collections.createCollection(
       dbConfig.workspaceName ?? "commons",
       collectionOptions || { name: dbConfig.collectionName }
-    )
+    );
     while (
       !(await this.collectionExists(dbConfig)) ||
       !(await this.collectionReady(dbConfig))
@@ -414,5 +450,4 @@ export class RocksetStore extends VectorStore {
     this._similarityMetric = metric;
     this.setSimilarityOrder();
   }
-
 }
