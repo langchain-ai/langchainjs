@@ -418,12 +418,15 @@ export class PrismaVectorStore<
 
           switch (OpMap[opNameKey]) {
             case OpMap.in: {
-              if (!Array.isArray(values) || !values.every((v) => typeof v === "string")) {
-                throw new Error("...")
+              if (
+                !Array.isArray(value) ||
+                !value.every((v) => typeof v === "string")
+              ) {
+                throw new Error(
+                  "Invalid filter: IN operator requires an array of strings"
+                );
               }
-              return this.Prisma.sql`${colRaw} ${opRaw} (${(
-                value as string[]
-              ).join(",")})`;
+              return this.Prisma.sql`${colRaw} ${opRaw} (${value.join(",")})`;
             }
             default:
               return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
