@@ -76,7 +76,7 @@ export class PDFLoader extends BufferLoader {
         }
       }
 
-      const text = textItems.join(" ");
+      const text = textItems.join("");
 
       documents.push(
         new Document({

@@ -61,7 +61,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
           lastY = item.transform[5];
         }
       }
-      const text = textItems.join(" ");
+      const text = textItems.join("");
 
       documents.push(
         new Document({
