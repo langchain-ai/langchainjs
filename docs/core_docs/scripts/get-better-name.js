@@ -82,20 +82,21 @@ async function deleteLangChain(pathToLangChain) {
   await fse.remove(pathToLangChain);
 }
 
+const execAsync = async (command, options) => new Promise((resolve, reject) => {
+  exec(command, options, (err, stdout, stderr) => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve(stdout);
+    }
+  });
+});
+
 async function main() {
   const pathToLangChain = "../../langchain";
   const { rootPath, tsConfigPath } = await copyLangChain(pathToLangChain);
   await updateCodeWithIgnoreTags(tsConfigPath);
-  const execPromise = new Promise((resolve, reject) => {
-    exec("yarn build", undefined, (err, stdout, stderr) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
-  await execPromise;
+  await execAsync("yarn typedoc", { cwd: "../api_refs" });
   await deleteLangChain(rootPath);
 }
 main();

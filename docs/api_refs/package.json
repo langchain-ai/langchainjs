@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "typedoc": "npx typedoc --options typedoc.json && yarn update-css",
     "build:typedoc": "bash ./generate_typedoc.sh",
     "add-ignore-comments": "cd ../../langchain && node scripts/build-for-api-ref-docs.js",
