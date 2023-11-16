@@ -2,11 +2,12 @@
   "name": "api_refs",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 3001",
-    "typedoc": "npx typedoc --options typedoc.json && yarn update-css",
-    "update-css": "node ./scripts/update-typedoc-css.js",
-    "build": "cd ../core_docs && node/get-better-name.js && && next build",
+    "typedoc": "npx typedoc --options typedoc.json",
+    "build:scripts:": "node ./scripts/get-better-name.js && node ./scripts/update-typedoc-css.js",
+    "build": "echo buildin son! && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint"
   },
@@ -24,6 +25,7 @@
     "eslint-config-next": "14.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
+    "ts-morph": "^20.0.0",
     "typescript": "^5"
   }
 }

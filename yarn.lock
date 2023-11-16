@@ -12867,6 +12867,7 @@ __metadata:
     react: ^18
     react-dom: ^18
     tailwindcss: ^3.3.0
+    ts-morph: ^20.0.0
     typescript: ^5
   languageName: unknown
   linkType: soft
@@ -15180,7 +15181,6 @@ __metadata:
     react-dom: ^17.0.2
     rimraf: ^5.0.1
     swc-loader: ^0.2.3
-    ts-morph: ^20.0.0
     typedoc: ^0.24.4
     typedoc-plugin-markdown: next
     webpack: ^5.75.0

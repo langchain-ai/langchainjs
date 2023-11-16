@@ -1,6 +1,6 @@
-const { Project, SyntaxKind } = require("ts-morph");
-const { exec } = require("child_process");
-const fse = require("fs-extra");
+import { Project, SyntaxKind } from "ts-morph";
+import { exec } from "child_process";
+import fse from "fs-extra";
 
 async function updateCodeWithIgnoreTags(tsConfigFilePath) {
   const project = new Project({
@@ -93,10 +93,18 @@ const execAsync = async (command, options) => new Promise((resolve, reject) => {
 });
 
 async function main() {
+  console.log('starting main')
   const pathToLangChain = "../../langchain";
   const { rootPath, tsConfigPath } = await copyLangChain(pathToLangChain);
+  console.log('copied', {
+    rootPath,
+    tsConfigPath
+  })
   await updateCodeWithIgnoreTags(tsConfigPath);
-  await execAsync("yarn typedoc", { cwd: "../api_refs" });
+  console.log('Added ignore tags')
+  await execAsync("yarn typedoc");
+  console.log("Built TypeDoc")
   await deleteLangChain(rootPath);
+  console.log("Deleted langchain")
 }
 main();

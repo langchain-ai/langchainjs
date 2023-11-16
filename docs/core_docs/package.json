@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "node scripts/get-better-name.js && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
-    "build": "node scripts/get-better-name.js && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
-    "build:typedoc": "cd ../api_refs && yarn typedoc",
+    "start": "rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
+    "build": "rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build:typedoc": "cd ../api_refs && echo Boutta build refs && yarn build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -47,7 +47,6 @@
     "prettier": "^2.7.1",
     "rimraf": "^5.0.1",
     "swc-loader": "^0.2.3",
-    "ts-morph": "^20.0.0",
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next"
   },
