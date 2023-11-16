@@ -423,7 +423,11 @@ export class PrismaVectorStore<
                 !value.every((v) => typeof v === "string")
               ) {
                 throw new Error(
-                  `Invalid filter: IN operator requires an array of strings. Received: ${JSON.stringify(value, null, 2)}`
+                  `Invalid filter: IN operator requires an array of strings. Received: ${JSON.stringify(
+                    value,
+                    null,
+                    2
+                  )}`
                 );
               }
               return this.Prisma.sql`${colRaw} ${opRaw} (${value.join(",")})`;
