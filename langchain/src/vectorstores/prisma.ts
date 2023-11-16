@@ -417,10 +417,14 @@ export class PrismaVectorStore<
           const opRaw = this.Prisma.raw(OpMap[opNameKey]);
 
           switch (OpMap[opNameKey]) {
-            case OpMap.in:
+            case OpMap.in: {
+              if (!Array.isArray(values) || !values.every((v) => typeof v === "string")) {
+                throw new Error("...")
+              }
               return this.Prisma.sql`${colRaw} ${opRaw} (${(
                 value as string[]
               ).join(",")})`;
+            }
             default:
               return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
           }
