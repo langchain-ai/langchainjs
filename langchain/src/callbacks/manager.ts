@@ -466,6 +466,24 @@ export class CallbackManagerForToolRun
   }
 }
 
+/**
+ * @example
+ * ```typescript
+ * const prompt = PromptTemplate.fromTemplate("What is the answer to {question}?");
+ *
+ * // Example of using LLMChain with OpenAI and a simple prompt
+ * const chain = new LLMChain({
+ *   llm: new ChatOpenAI({ temperature: 0.9 }),
+ *   prompt,
+ * });
+ *
+ * // Running the chain with a single question
+ * const result = await chain.call({
+ *   question: "What is the airspeed velocity of an unladen swallow?",
+ * });
+ * console.log("The answer is:", result);
+ * ```
+ */
 export class CallbackManager
   extends BaseCallbackManager
   implements BaseCallbackManagerMethods
@@ -938,6 +956,37 @@ function ensureHandler(
   return BaseCallbackHandler.fromMethods(handler);
 }
 
+/**
+ * @example
+ * ```typescript
+ * const prompt = PromptTemplate.fromTemplate(`What is the answer to {question}?`);
+ *
+ * // Example of using LLMChain to process a series of questions
+ * const chain = new LLMChain({
+ *   llm: new ChatOpenAI({ temperature: 0.9 }),
+ *   prompt,
+ * });
+ *
+ * // Process questions using the chain
+ * const processQuestions = async (questions) => {
+ *   for (const question of questions) {
+ *     const result = await chain.call({ question });
+ *     console.log(result);
+ *   }
+ * };
+ *
+ * // Example questions
+ * const questions = [
+ *   "What is your name?",
+ *   "What is your quest?",
+ *   "What is your favorite color?",
+ * ];
+ *
+ * // Run the example
+ * processQuestions(questions).catch(console.error);
+ *
+ * ```
+ */
 export class TraceGroup {
   private runManager?: CallbackManagerForChainRun;
 

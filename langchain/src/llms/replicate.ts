@@ -26,6 +26,17 @@ export interface ReplicateInput {
  * It handles the API key and model details, makes the actual API calls,
  * and converts the API response into a format usable by the rest of the
  * LangChain framework.
+ * @example
+ * ```typescript
+ * const model = new Replicate({
+ *   model: "replicate/flan-t5-xl:3ae0799123a1fe11f8c89fd99632f843fc5f7a761630160521c4253149754523",
+ * });
+ *
+ * const res = await model.call(
+ *   "Question: What would be a good company name for a company that makes colorful socks?\nAnswer:"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class Replicate extends LLM implements ReplicateInput {
   static lc_name() {
