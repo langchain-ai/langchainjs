@@ -286,11 +286,12 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private buildMetadataTerms(
     filter?: OpenSearchFilter
-  ): { term: Record<string, unknown> }[] {
+  ): { [key: string]: Record<string, unknown> }[] {
     if (filter == null) return [];
     const result = [];
     for (const [key, value] of Object.entries(filter)) {
-      result.push({ term: { [`metadata.${key}`]: value } });
+      const aggregatorKey = Array.isArray(value) ? "terms" : "term";
+      result.push({ [aggregatorKey]: { [`metadata.${key}`]: value } });
     }
     return result;
   }
