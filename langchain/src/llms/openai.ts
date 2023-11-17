@@ -48,7 +48,7 @@ interface TokenUsage {
  * if not explicitly available on this class.
  * @example
  * ```typescript
- * const model = new ChatOpenAI({
+ * const model = new OpenAI({
  *   modelName: "gpt-4",
  *   temperature: 0.7,
  *   maxTokens: 1000,

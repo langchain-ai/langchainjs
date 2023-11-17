@@ -33,17 +33,17 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
  * @example
  * ```typescript
  * const embeddings = new BedrockEmbeddings({
- *   region: 'your-aws-region',
+ *   region: "your-aws-region",
  *   credentials: {
- *     accessKeyId: 'your-access-key-id',
- *     secretAccessKey: 'your-secret-access-key',
+ *     accessKeyId: "your-access-key-id",
+ *     secretAccessKey: "your-secret-access-key",
  *   },
- *   model: 'amazon.titan-embed-text-v1',
+ *   model: "amazon.titan-embed-text-v1",
  * });
  *
  * // Embed a query and log the result
  * const res = await embeddings.embedQuery(
- *   'What would be a good company name for a company that makes colorful socks?'
+ *   "What would be a good company name for a company that makes colorful socks?"
  * );
  * console.log({ res });
  * ```

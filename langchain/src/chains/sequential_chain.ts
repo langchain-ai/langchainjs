@@ -34,36 +34,44 @@ export interface SequentialChainInput extends ChainInputs {
  * ```typescript
  * const promptTemplate = new PromptTemplate({
  *   template: `You are a playwright. Given the title of play and the era it is set in, it is your job to write a synopsis for that title.
- *
  * Title: {title}
  * Era: {era}
  * Playwright: This is a synopsis for the above play:`,
  *   inputVariables: ["title", "era"],
  * });
- *
+
  * const reviewPromptTemplate = new PromptTemplate({
  *   template: `You are a play critic from the New York Times. Given the synopsis of play, it is your job to write a review for that play.
  *   
- *    Play Synopsis:
- *    {synopsis}
- *    Review from a New York Times play critic of the above play:`,
+ *     Play Synopsis:
+ *     {synopsis}
+ *     Review from a New York Times play critic of the above play:`,
  *   inputVariables: ["synopsis"],
  * });
- *
+
  * const overallChain = new SequentialChain({
- *   chains: [new LLMChain({ llm: new ChatOpenAI({ temperature: 0 }), prompt: promptTemplate, outputKey: "synopsis", }),
- *            new LLMChain({ llm: new OpenAI({ temperature: 0 }), prompt: reviewPromptTemplate, outputKey: "review", })],
+ *   chains: [
+ *     new LLMChain({
+ *       llm: new ChatOpenAI({ temperature: 0 }),
+ *       prompt: promptTemplate,
+ *       outputKey: "synopsis",
+ *     }),
+ *     new LLMChain({
+ *       llm: new OpenAI({ temperature: 0 }),
+ *       prompt: reviewPromptTemplate,
+ *       outputKey: "review",
+ *     }),
+ *   ],
  *   inputVariables: ["era", "title"],
  *   outputVariables: ["synopsis", "review"],
  *   verbose: true,
  * });
- *
+
  * const chainExecutionResult = await overallChain.call({
  *   title: "Tragedy at sunset on the beach",
  *   era: "Victorian England",
  * });
  * console.log(chainExecutionResult);
- *
  * ```
  */
 export class SequentialChain extends BaseChain implements SequentialChainInput {

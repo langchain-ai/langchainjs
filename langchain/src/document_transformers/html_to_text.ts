@@ -7,10 +7,12 @@ import { MappingDocumentTransformer } from "../schema/document.js";
  * A transformer that converts HTML content to plain text.
  * @example
  * ```typescript
- * const loader = new CheerioWebBaseLoader('https://example.com/some-page');
+ * const loader = new CheerioWebBaseLoader("https://example.com/some-page");
  * const docs = await loader.load();
  *
- * const splitter = new RecursiveCharacterTextSplitter({ maxCharacterCount: 1000 });
+ * const splitter = new RecursiveCharacterTextSplitter({
+ *  maxCharacterCount: 1000,
+ * });
  * const transformer = new HtmlToTextTransformer();
  *
  * // The sequence of text splitting followed by HTML to text transformation

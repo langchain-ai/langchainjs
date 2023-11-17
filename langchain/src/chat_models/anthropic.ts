@@ -146,6 +146,8 @@ type Kwargs = Record<string, any>;
  *   temperature: 0.9,
  *   anthropicApiKey: 'YOUR-API-KEY',
  * });
+ * const res = await model.invoke({ input: 'Hello!' });
+ * console.log(res);
  * ```
  */
 export class ChatAnthropic<

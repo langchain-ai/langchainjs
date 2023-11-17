@@ -37,7 +37,6 @@ export interface FakeChatInput extends BaseChatModelParams {
  *
  * const secondResponse = await chat.call([secondMessage]);
  * console.log({ secondResponse });
- *
  * ```
  */
 export class FakeListChatModel extends BaseChatModel {

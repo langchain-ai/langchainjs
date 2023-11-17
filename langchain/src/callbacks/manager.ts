@@ -469,17 +469,19 @@ export class CallbackManagerForToolRun
 /**
  * @example
  * ```typescript
- * const prompt = PromptTemplate.fromTemplate('What is the answer to {question}?');
- *
+ * const prompt = PromptTemplate.fromTemplate("What is the answer to {question}?");
+* 
  * // Example of using LLMChain with OpenAI and a simple prompt
  * const chain = new LLMChain({
  *   llm: new ChatOpenAI({ temperature: 0.9 }),
  *   prompt,
  * });
- *
+ * 
  * // Running the chain with a single question
- * const result = await chain.call({ question: 'What is the airspeed velocity of an unladen swallow?' });
- * console.log('The answer is:', result);
+ * const result = await chain.call({
+ *   question: "What is the airspeed velocity of an unladen swallow?",
+ * });
+ * console.log("The answer is:", result);
  * ```
  */
 export class CallbackManager

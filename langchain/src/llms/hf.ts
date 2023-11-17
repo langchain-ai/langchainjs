@@ -39,13 +39,13 @@ export interface HFInput {
  * @example
  * ```typescript
  * const model = new HuggingFaceInference({
- *     model: "gpt2",
- *     temperature: 0.7,
- *     maxTokens: 50,
+ *   model: "gpt2",
+ *   temperature: 0.7,
+ *   maxTokens: 50,
  * });
  *
  * const res = await model.call(
- *     "Question: What would be a good company name for a company that makes colorful socks?\nAnswer:"
+ *   "Question: What would be a good company name for a company that makes colorful socks?\nAnswer:"
  * );
  * console.log({ res });
  * ```

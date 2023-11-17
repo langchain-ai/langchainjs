@@ -43,14 +43,14 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
 /**
  * @example
  * ```typescript
- * const chat = new ChatYandexGPT();
- *
+ * const chat = new ChatYandexGPT({});
  * // The assistant is set to translate English to French.
  * const res = await chat.call([
- *   new SystemMessage('You are a helpful assistant that translates English to French.'),
- *   new HumanMessage('I love programming.'),
+ *   new SystemMessage(
+ *     "You are a helpful assistant that translates English to French."
+ *   ),
+ *   new HumanMessage("I love programming."),
  * ]);
- *
  * console.log(res);
  * ```
  */

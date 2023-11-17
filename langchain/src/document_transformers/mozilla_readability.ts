@@ -9,10 +9,12 @@ import { MappingDocumentTransformer } from "../schema/document.js";
  * main content from a web page.
  * @example
  * ```typescript
- * const loader = new CheerioWebBaseLoader('https://example.com/article');
+ * const loader = new CheerioWebBaseLoader("https://example.com/article");
  * const docs = await loader.load();
  *
- * const splitter = new RecursiveCharacterTextSplitter({ maxCharacterCount: 5000 });
+ * const splitter = new RecursiveCharacterTextSplitter({
+ *  maxCharacterCount: 5000,
+ * });
  * const transformer = new MozillaReadabilityTransformer();
  *
  * // The sequence processes the loaded documents through the splitter and then the transformer.

@@ -21,7 +21,9 @@ type RedisClientType =
  * overrides its methods to provide the Redis-specific logic.
  * @example
  * ```typescript
- * const model = new ChatOpenAI({ cache: new RedisCache(new Redis(), { ttl: 60 }) });
+ * const model = new ChatOpenAI({
+ * cache: new RedisCache(new Redis(), { ttl: 60 }),
+ * });
  *
  * // Invoke the model to perform an action
  * const response = await model.invoke("Do something random!");
