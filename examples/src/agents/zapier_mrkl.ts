@@ -23,6 +23,6 @@ const input = `Summarize the last email I received regarding Silicon Valley Bank
 
 console.log(`Executing with input "${input}"...`);
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 console.log(`Got output ${result.output}`);

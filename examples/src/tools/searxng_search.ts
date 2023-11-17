@@ -46,7 +46,7 @@ const executor = AgentExecutor.fromAgentAndTools({
 console.log("Loaded agent.");
 const input = `What is Langchain? Describe in 50 words`;
 console.log(`Executing with input "${input}"...`);
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 console.log(result);
 /**
  * Langchain is a framework for developing applications powered by language models, such as chatbots, Generative Question-Answering, summarization, and more. It provides a standard interface, integrations with other tools, and end-to-end chains for common applications. Langchain enables data-aware and powerful applications.
