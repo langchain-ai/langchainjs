@@ -16,6 +16,15 @@ export const run = async () => {
   const chatPrompt = [new SystemMessage("Question: Write a story")];
   const res = await model.stream(chatPrompt);
   for await (const i of res) {
+    if (typeof i.content !== "string") {
+      throw new Error(
+        `Content is not a string. Received: ${JSON.stringify(
+          i.content,
+          null,
+          2
+        )}`
+      );
+    }
     process.stdout.write(i.content);
   }
 };

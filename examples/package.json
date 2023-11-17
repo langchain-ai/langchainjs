@@ -26,7 +26,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.44.1",
+    "@gomomento/sdk": "^1.47.1",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",

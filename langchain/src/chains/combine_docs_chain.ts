@@ -206,8 +206,9 @@ export class MapReduceDocumentsChain
               ...rest,
             })
           );
-        const length =
-          await this.combineDocumentChain.llmChain.llm.getNumTokens(formatted);
+        const length = await this.combineDocumentChain.llmChain._getNumTokens(
+          formatted
+        );
 
         const withinTokenLimit = length < this.maxTokens;
         // If we can skip the map step, and we're within the token limit, we don't

@@ -42,19 +42,33 @@ export type ConvexKVStoreConfig<
   >
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
-  // Defaults to "cache"
+  /**
+   * Defaults to "cache"
+   */
   readonly table?: TableName;
-  // Defaults to "byKey"
+  /**
+   * Defaults to "byKey"
+   */
   readonly index?: IndexName;
-  // Defaults to "key"
+  /**
+   * Defaults to "key"
+   */
   readonly keyField?: KeyFieldName;
-  // Defaults to "value"
+  /**
+   * Defaults to "value"
+   */
   readonly valueField?: ValueFieldName;
-  // Defaults to `internal.langchain.db.upsert`
+  /**
+   * Defaults to `internal.langchain.db.upsert`
+   */
   readonly upsert?: UpsertMutation;
-  // Defaults to `internal.langchain.db.lookup`
+  /**
+   * Defaults to `internal.langchain.db.lookup`
+   */
   readonly lookup?: LookupQuery;
-  // Defaults to `internal.langchain.db.deleteMany`
+  /**
+   * Defaults to `internal.langchain.db.deleteMany`
+   */
   readonly deleteMany?: DeleteManyMutation;
 };
 

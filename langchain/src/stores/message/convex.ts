@@ -10,7 +10,7 @@ import {
   GenericDataModel,
   NamedTableInfo,
   TableNamesInDataModel,
-  VectorIndexNames,
+  IndexNames,
   makeFunctionReference,
 } from "convex/server";
 import { BaseMessage, BaseListChatMessageHistory } from "../../schema/index.js";
@@ -27,7 +27,7 @@ import {
 export type ConvexChatMessageHistoryInput<
   DataModel extends GenericDataModel,
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends VectorIndexNames<
+  IndexName extends IndexNames<
     NamedTableInfo<DataModel, TableName>
   > = "bySessionId",
   SessionIdFieldName extends FieldPaths<
@@ -55,12 +55,33 @@ export type ConvexChatMessageHistoryInput<
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
   readonly sessionId: DocumentByName<DataModel, TableName>[SessionIdFieldName];
+  /**
+   * Defaults to "messages"
+   */
   readonly table?: TableName;
+  /**
+   * Defaults to "bySessionId"
+   */
   readonly index?: IndexName;
+  /**
+   * Defaults to "sessionId"
+   */
   readonly sessionIdField?: SessionIdFieldName;
+  /**
+   * Defaults to "message"
+   */
   readonly messageTextFieldName?: MessageTextFieldName;
+  /**
+   * Defaults to `internal.langchain.db.insert`
+   */
   readonly insert?: InsertMutation;
+  /**
+   * Defaults to `internal.langchain.db.lookup`
+   */
   readonly lookup?: LookupQuery;
+  /**
+   * Defaults to `internal.langchain.db.deleteMany`
+   */
   readonly deleteMany?: DeleteManyMutation;
 };
 
@@ -70,7 +91,7 @@ export class ConvexChatMessageHistory<
     NamedTableInfo<DataModel, TableName>
   > = "sessionId",
   TableName extends TableNamesInDataModel<DataModel> = "messages",
-  IndexName extends VectorIndexNames<
+  IndexName extends IndexNames<
     NamedTableInfo<DataModel, TableName>
   > = "bySessionId",
   MessageTextFieldName extends FieldPaths<

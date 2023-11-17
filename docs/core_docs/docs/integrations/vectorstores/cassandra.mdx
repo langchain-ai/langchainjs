@@ -1,0 +1,161 @@
+---
+sidebar_class_name: node-only
+---
+
+# Cassandra
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+[Apache Cassandra®](https://cassandra.apache.org/_/index.html) is a NoSQL, row-oriented, highly scalable and highly available database.
+
+The [latest version](<https://cwiki.apache.org/confluence/display/CASSANDRA/CEP-30%3A+Approximate+Nearest+Neighbor(ANN)+Vector+Search+via+Storage-Attached+Indexes>) of Apache Cassandra natively supports Vector Similarity Search.
+
+## Setup
+
+1. Create an [Astra DB account](https://astra.datastax.com/register).
+2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
+3. Download your secure connect bundle and application token on your database's "Connect" tab.
+4. Set up the following env vars:
+
+```bash
+export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+export CASSANDRA_SCB=YOUR_CASSANDRA_SCB_HERE
+export CASSANDRA_TOKEN=YOUR_CASSANDRA_TOKEN_HERE
+```
+
+5. Install the Cassandra Node.js driver.
+
+```bash npm2yarn
+npm install cassandra-driver
+```
+
+## Indexing docs
+
+```typescript
+import { CassandraStore } from "langchain/vectorstores/cassandra";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+
+const config = {
+  cloud: {
+    secureConnectBundle: process.env.CASSANDRA_SCB as string,
+  },
+  credentials: {
+    username: "token",
+    password: process.env.CASSANDRA_TOKEN as string,
+  },
+  keyspace: "test",
+  dimensions: 1536,
+  table: "test",
+  indices: [{ name: "name", value: "(name)" }],
+  primaryKey: {
+    name: "id",
+    type: "int",
+  },
+  metadataColumns: [
+    {
+      name: "name",
+      type: "text",
+    },
+  ],
+};
+
+const vectorStore = await CassandraStore.fromTexts(
+  ["I am blue", "Green yellow purple", "Hello there hello"],
+  [
+    { id: 2, name: "2" },
+    { id: 1, name: "1" },
+    { id: 3, name: "3" },
+  ],
+  new OpenAIEmbeddings(),
+  cassandraConfig
+);
+```
+
+## Querying docs
+
+```typescript
+const results = await vectorStore.similaritySearch("Green yellow purple", 1);
+```
+
+or filtered query:
+
+```typescript
+const results = await vectorStore.similaritySearch("B", 1, { name: "Bubba" });
+```
+
+## Vector Types
+
+Cassandra supports `cosine` (the default), `dot_product`, and `euclidean` similarity search; this is defined when the
+vector store is first created, and specifed in the constructor parameter `vectorType`, for example:
+
+```typescript
+  ...,
+  vectorType: "dot_product",
+  ...
+```
+
+## Non-Equality Filters
+
+By default, filters are applied with an equality `=`. For those fields that have an `indices` entry, you may
+provide an `operator` with a string of a value supported by the index; in this case, you specify one or
+more filters, as either a singleton or in a list (which will be `AND`-ed together). For example:
+
+```typescript
+   { name: "create_datetime", operator: ">", value: some_datetime_variable }
+```
+
+or
+
+```typescript
+[
+  { userid: userid_variable },
+  { name: "create_datetime", operator: ">", value: some_date_variable },
+];
+```
+
+## Data Partitioning and Composite Keys
+
+In some systems, you may wish to partition the data for various reasons, perhaps by user or by session. Data in Cassandra
+is always partitioned; by default this library will partition by the first primary key field. You may specify multiple
+columns which comprise the primary (unique) key of a record, and optionally indicate those fields which should be
+part of the partition key. For example, the vector store could be partitioned by both `userid` and `collectionid`, with
+additional fields `docid` and `docpart` making an individual entry unique:
+
+```typescript
+  ...,
+  primaryKey: [
+    {name: "userid", type: "text", partition: true},
+    {name: "collectionid", type: "text", partition: true},
+    {name: "docid", type: "text"},
+    {name: "docpart", type: "int"},
+  ],
+  ...
+```
+
+When searching, you may include partition keys on the filter without defining `indices` for these columns; you do
+not need to specify all partition keys, but must specify those in the key first. In the above example, you could
+specify a filter of `{userid: userid_variable}` and `{userid: userid_variable, collectionid: collectionid_variable}`,
+but if you wanted to specify a filter of only `{collectionid: collectionid_variable}` you would have to include
+`collectionid` on the `indices` list.
+
+## Additional Configuration Options
+
+In the configuration document, further optional parameters are provided; their defaults are:
+
+```typescript
+  ...,
+  indices: [],
+  maxConcurrency: 25,
+  batchSize: 1,
+  withClause: "",
+  ...
+```
+
+| Parameter        | Usage                                                                                                                                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `indices`        | Optional, but required if using filtered queries on non-partition columns. Each metadata column (e.g. `<metadata_filter_column>`) to be indexed should appear as an entry in a list, in the format `[{name: "<metadata_filter_column>", value: "(<metadata_filter_column>)"}]`. |
+| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                                                                         |
+| `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged.                                                    |
+| `withClause`     | Cassandra tables may be created with an optional `WITH` clause; this is generally not needed but provided for completeness.                                                                                                                                                     |

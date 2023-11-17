@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { test, expect } from "@jest/globals";
 import { getEnvironmentVariable } from "../../util/env.js";
 import { LlamaCppEmbeddings } from "../llama_cpp.js";
