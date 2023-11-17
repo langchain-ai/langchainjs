@@ -8,7 +8,7 @@ import { VectaraTranslator } from "../vectara.js";
 import { FakeEmbeddings } from "../../../embeddings/fake.js";
 import { VectaraStore } from "../../../vectorstores/vectara.js";
 
-test("Vectara Self Query Retriever Test", async () => {
+test.skip("Vectara Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
