@@ -17,6 +17,7 @@ const entrypoints = {
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
+  "agents/format_scratchpad/openai_tools": "agents/format_scratchpad/openai_tools",
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/format_scratchpad/log_to_message":
@@ -59,6 +60,7 @@ const entrypoints = {
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
   "embeddings/minimax": "embeddings/minimax",
+  "embeddings/voyage": "embeddings/voyage",
   "embeddings/llama_cpp": "embeddings/llama_cpp",
   // llms
   "llms/load": "llms/load",
@@ -117,6 +119,7 @@ const entrypoints = {
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/rockset": "vectorstores/rockset",
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
@@ -253,6 +256,7 @@ const entrypoints = {
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
   "cache/ioredis": "cache/ioredis",
+  "cache/file_system": "cache/file_system",
   "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
@@ -291,6 +295,7 @@ const entrypoints = {
   "util/time": "util/time",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
+  "experimental/openai_assistant": "experimental/openai_assistant/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
@@ -299,6 +304,8 @@ const entrypoints = {
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
   "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
+  "experimental/chat_models/ollama_functions":
+    "experimental/chat_models/ollama_functions",
   "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
@@ -388,6 +395,7 @@ const requiresOptionalDependency = [
   "vectorstores/myscale",
   "vectorstores/neo4j_vector",
   "vectorstores/redis",
+  "vectorstores/rockset",
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
@@ -458,6 +466,7 @@ const requiresOptionalDependency = [
   "cache/momento",
   "cache/redis",
   "cache/ioredis",
+  "cache/file_system",
   "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
@@ -537,15 +546,12 @@ const generateFiles = () => {
 };
 
 const updateConfig = () => {
-  // Update tsconfig.json `typedocOptions.entryPoints` field
-  updateJsonFile("./tsconfig.json", (json) => ({
+  // Update typedoc.json entryPoints field
+  updateJsonFile("../docs/api_refs/typedoc.json", (json) => ({
     ...json,
-    typedocOptions: {
-      ...json.typedocOptions,
-      entryPoints: [...Object.keys(entrypoints)]
-        .filter((key) => !deprecatedNodeOnly.includes(key))
-        .map((key) => `src/${entrypoints[key]}.ts`),
-    },
+    entryPoints: [...Object.keys(entrypoints)]
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .map((key) => `./langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();

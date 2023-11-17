@@ -1,7 +1,10 @@
 import { test } from "@jest/globals";
 import { Ollama } from "../ollama.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
-import { BytesOutputParser } from "../../schema/output_parser.js";
+import {
+  BytesOutputParser,
+  StringOutputParser,
+} from "../../schema/output_parser.js";
 
 test.skip("test call", async () => {
   const ollama = new Ollama({});
@@ -85,4 +88,26 @@ test.skip("should stream through with a bytes output parser", async () => {
   }
   console.log(chunks.join(""));
   expect(chunks.length).toBeGreaterThan(1);
+});
+
+test.skip("JSON mode", async () => {
+  const TEMPLATE = `You are a pirate named Patchy. All responses must be in pirate dialect and in JSON format, with a property named "response" followed by the value.
+
+  User: {input}
+  AI:`;
+
+  // Infer the input variables from the template
+  const prompt = PromptTemplate.fromTemplate(TEMPLATE);
+
+  const ollama = new Ollama({
+    model: "llama2",
+    baseUrl: "http://127.0.0.1:11434",
+    format: "json",
+  });
+  const outputParser = new StringOutputParser();
+  const chain = prompt.pipe(ollama).pipe(outputParser);
+  const res = await chain.invoke({
+    input: `Translate "I love programming" into German.`,
+  });
+  expect(JSON.parse(res).response).toBeDefined();
 });

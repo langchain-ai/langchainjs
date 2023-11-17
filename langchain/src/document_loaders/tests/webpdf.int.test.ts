@@ -94,3 +94,20 @@ test("Test Web PDF loader with custom pdfjs", async () => {
     }
   `);
 });
+
+test("Test Web PDF loader lines", async () => {
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/Jacob_Lee_Resume_2023.pdf"
+  );
+  const loader = new WebPDFLoader(
+    new Blob([await fs.readFile(filePath)], {
+      type: "application/pdf",
+    }),
+    { splitPages: false }
+  );
+  const docs = await loader.load();
+
+  expect(docs.length).toBe(1);
+  expect(docs[0].pageContent.split("\n").length).toBeLessThan(100);
+});

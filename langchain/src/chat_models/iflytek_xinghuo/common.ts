@@ -395,10 +395,17 @@ export abstract class BaseChatIflytekXinghuo
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams();
-    const messagesMapped: XinghuoMessage[] = messages.map((message) => ({
-      role: messageToXinghuoRole(message),
-      content: message.content,
-    }));
+    const messagesMapped: XinghuoMessage[] = messages.map((message) => {
+      if (typeof message.content !== "string") {
+        throw new Error(
+          "ChatIflytekXinghuo does not support non-string message content."
+        );
+      }
+      return {
+        role: messageToXinghuoRole(message),
+        content: message.content,
+      };
+    });
     const data = params.streaming
       ? await (async () => {
           const streams = await this.completion(

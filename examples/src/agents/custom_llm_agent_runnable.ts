@@ -111,7 +111,7 @@ function customOutputParser(text: string): AgentAction | AgentFinish {
     const finalAnswers = { output: input };
     return { log: text, returnValues: finalAnswers };
   }
-  /** Use RegEx to extract any actions and their values */
+  /** Use regex to extract any actions and their values */
   const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
   if (!match) {
     throw new Error(`Could not parse LLM output: ${text}`);
@@ -145,7 +145,7 @@ const input = `Who is Olivia Wilde's boyfriend? What is his current age raised t
 
 console.log(`Executing with input "${input}"...`);
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 console.log(`Got output ${result.output}`);
 /**

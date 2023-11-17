@@ -27,6 +27,8 @@ export interface StructuredChatCreatePromptArgs {
   suffix?: string;
   /** String to put before the list of tools. */
   prefix?: string;
+  /** String to use directly as the human message template. */
+  humanMessageTemplate?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
   /** List of historical prompts from memory.  */
@@ -157,10 +159,10 @@ export class StructuredChatAgent extends Agent {
       prefix = PREFIX,
       suffix = SUFFIX,
       inputVariables = ["input", "agent_scratchpad"],
+      humanMessageTemplate = "{input}\n\n{agent_scratchpad}",
       memoryPrompts = [],
     } = args ?? {};
     const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
-    const humanMessageTemplate = "{input}\n\n{agent_scratchpad}";
     const messages = [
       new SystemMessagePromptTemplate(
         new PromptTemplate({

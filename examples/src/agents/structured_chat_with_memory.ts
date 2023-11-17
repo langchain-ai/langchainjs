@@ -21,7 +21,9 @@ export const run = async () => {
     },
   });
 
-  const result = await executor.call({ input: `what is 9 to the 2nd power?` });
+  const result = await executor.invoke({
+    input: `what is 9 to the 2nd power?`,
+  });
 
   console.log(result);
 
@@ -31,7 +33,7 @@ export const run = async () => {
     }
   */
 
-  const result2 = await executor.call({
+  const result2 = await executor.invoke({
     input: `what is that number squared?`,
   });
 

@@ -1,5 +1,4 @@
 import { SignatureV4 } from "@smithy/signature-v4";
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { HttpRequest } from "@smithy/protocol-http";
 import { EventStreamCodec } from "@smithy/eventstream-codec";
 import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
@@ -143,7 +142,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere", "meta"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
@@ -158,7 +157,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     }
     this.region = region;
 
-    const credentials = fields?.credentials ?? defaultProvider();
+    const credentials = fields?.credentials;
     if (!credentials) {
       throw new Error(
         "Please set the AWS credentials in the 'credentials' field."
@@ -168,7 +167,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.fetchFn = fields?.fetchFn ?? fetch;
+    this.fetchFn = fields?.fetchFn ?? fetch.bind(globalThis);
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
@@ -204,7 +203,13 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
           finalResult = finalResult.concat(chunk);
         }
       }
-      return finalResult?.message.content ?? "";
+      const messageContent = finalResult?.message.content;
+      if (messageContent && typeof messageContent !== "string") {
+        throw new Error(
+          "Non-string output for ChatBedrock is currently not supported."
+        );
+      }
+      return messageContent ?? "";
     }
 
     const response = await this._signedFetch(messages, options, {
@@ -295,7 +300,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
 
     const bedrockMethod =
-      provider === "anthropic" || provider === "cohere"
+      provider === "anthropic" || provider === "cohere" || provider === "meta"
         ? "invoke-with-response-stream"
         : "invoke";
 
@@ -313,7 +318,11 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       );
     }
 
-    if (provider === "anthropic" || provider === "cohere") {
+    if (
+      provider === "anthropic" ||
+      provider === "cohere" ||
+      provider === "meta"
+    ) {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
