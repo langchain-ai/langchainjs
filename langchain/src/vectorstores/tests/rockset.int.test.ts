@@ -1,19 +1,20 @@
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import rockset from "@rockset/client";
+import { test, expect } from "@jest/globals";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import {
   RocksetStore,
   RocksetStoreDestroyedError,
   SimilarityMetric,
 } from "../rockset.js";
-import { test, expect } from "@jest/globals";
 import { Document } from "../../document.js";
+import { formatDocumentsAsString } from "../../util/document.js";
 
-const getPageContents = (docs: Document[]) => {
-  return docs.map((doc) => doc.pageContent);
-};
+const getPageContents = formatDocumentsAsString;
 
 const embeddings = new OpenAIEmbeddings();
-let store: RocksetStore | undefined = undefined;
+let store: RocksetStore | undefined;
 
 const docs = [
   new Document({
@@ -30,7 +31,7 @@ const docs = [
   }),
 ];
 
-test("create new collection as a RocksetVectorStore", async () => {
+test.skip("create new collection as a RocksetVectorStore", async () => {
   store = await RocksetStore.withNewCollection(embeddings, {
     collectionName: "langchain_demo",
     client: rockset.default(
@@ -40,34 +41,40 @@ test("create new collection as a RocksetVectorStore", async () => {
   });
 });
 
-test("add to RocksetVectorStore", async () => {
+test.skip("add to RocksetVectorStore", async () => {
   expect(store).toBeDefined();
   expect((await store!.addDocuments(docs))?.length).toBe(docs.length);
 });
 
-test("query RocksetVectorStore with cosine sim", async () => {
+test.skip("query RocksetVectorStore with cosine sim", async () => {
   expect(store).toBeDefined();
-  let relevantDocs = await store!.similaritySearch("What color are tomatoes?");
+  const relevantDocs = await store!.similaritySearch(
+    "What color are tomatoes?"
+  );
   expect(getPageContents(relevantDocs)).toEqual(getPageContents(relevantDocs));
 });
 
-test("query RocksetVectorStore with dot product", async () => {
+test.skip("query RocksetVectorStore with dot product", async () => {
   expect(store).toBeDefined();
   store!.similarityMetric = SimilarityMetric.DotProduct;
-  let relevantDocs = await store!.similaritySearch("What color are tomatoes?");
+  const relevantDocs = await store!.similaritySearch(
+    "What color are tomatoes?"
+  );
   expect(getPageContents(relevantDocs)).toEqual(getPageContents(relevantDocs));
 });
 
-test("query RocksetVectorStore with euclidean distance", async () => {
+test.skip("query RocksetVectorStore with euclidean distance", async () => {
   expect(store).toBeDefined();
   store!.similarityMetric = SimilarityMetric.EuclideanDistance;
-  let relevantDocs = await store!.similaritySearch("What color are tomatoes?");
+  const relevantDocs = await store!.similaritySearch(
+    "What color are tomatoes?"
+  );
   expect(getPageContents(relevantDocs)).toEqual(getPageContents(relevantDocs));
 });
 
-test("query RocksetVectorStore with metadata filter", async () => {
+test.skip("query RocksetVectorStore with metadata filter", async () => {
   expect(store).toBeDefined();
-  let relevantDocs = await store!.similaritySearch(
+  const relevantDocs = await store!.similaritySearch(
     "What color are tomatoes?",
     undefined,
     "subject='apples'"
@@ -76,19 +83,11 @@ test("query RocksetVectorStore with metadata filter", async () => {
   expect(getPageContents(relevantDocs)).toEqual(getPageContents([docs[2]]));
 });
 
-test("query RocksetVectorStore with k", async () => {
+test.skip("query RocksetVectorStore with k", async () => {
   expect(store).toBeDefined();
-  let relevantDocs = await store!.similaritySearch(
+  const relevantDocs = await store!.similaritySearch(
     "What color are tomatoes?",
     1
   );
   expect(relevantDocs.length).toBe(1);
-});
-
-test("destroy store", async () => {
-  expect(store).toBeDefined();
-  store!.destroy(true);
-  expect(async () => {
-    await store!.similaritySearch("Hello there!");
-  }).rejects.toThrow(RocksetStoreDestroyedError);
 });

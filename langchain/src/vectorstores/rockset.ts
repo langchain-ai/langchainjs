@@ -261,7 +261,7 @@ export class RocksetStore extends VectorStore {
               {
                 name: "query",
                 type: "",
-                value: "[" + query.toString() + "]",
+                value: `[${query.toString()}]`,
               },
             ],
           },
