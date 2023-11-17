@@ -5,7 +5,6 @@ import { test, expect } from "@jest/globals";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import {
   RocksetStore,
-  RocksetStoreDestroyedError,
   SimilarityMetric,
 } from "../rockset.js";
 import { Document } from "../../document.js";
