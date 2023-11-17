@@ -214,6 +214,72 @@ export interface LLMSingleActionAgentInput {
  * Class representing a single action agent using a LLMChain in LangChain.
  * Extends the BaseSingleActionAgent class and provides methods for
  * planning agent actions based on LLMChain outputs.
+ * @example
+ * ```typescript
+ * class CustomPromptTemplate extends BaseStringPromptTemplate {
+ *   tools: Tool[];
+ *
+ *   constructor(args: { tools: Tool[]; inputVariables: string[] }) {
+ *     super({ inputVariables: args.inputVariables });
+ *     this.tools = args.tools;
+ *   }
+ *
+ *   async format(input: InputValues): Promise<string> {
+ *     const toolStrings = this.tools
+ *       .map((tool) => `${tool.name}: ${tool.description}`)
+ *       .join("\n");
+ *     const toolNames = this.tools.map((tool) => tool.name).join(", ");
+ *     const instructions = formatInstructions(toolNames);
+ *     const template = [PREFIX, toolStrings, instructions, SUFFIX].join("\n\n");
+ *     const newInput = {
+ *       ...input,
+ *       agent_scratchpad: input.intermediate_steps
+ *         ?.map(
+ *           (step) =>
+ *             `Action: ${step.action.log}\nObservation: ${step.observation}\nThought:`,
+ *         )
+ *         .join("\n"),
+ *     };
+ *     return renderTemplate(template, "f-string", newInput);
+ *   }
+ * }
+ *
+ * class CustomOutputParser extends AgentActionOutputParser {
+ *   async parse(text: string): Promise<AgentAction | AgentFinish> {
+ *     if (text.includes("Final Answer:")) {
+ *       const finalAnswer = text.split("Final Answer:")[1].trim();
+ *       return { log: text, returnValues: { output: finalAnswer } };
+ *     }
+ *     const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
+ *     if (!match) throw new Error(`Could not parse LLM output: ${text}`);
+ *     return {
+ *       tool: match[1].trim(),
+ *       toolInput: match[2].trim().replace(/^"+|"+$/g, ""),
+ *       log: text,
+ *     };
+ *   }
+ * }
+ *
+ * // Example usage
+ * const tools = [new SerpAPI(), new Calculator()];
+ * const llmChain = new LLMChain({
+ *   prompt: new CustomPromptTemplate({
+ *     tools,
+ *     inputVariables: ["input", "agent_scratchpad"],
+ *   }),
+ *   llm: new OpenAI({ temperature: 0 }),
+ * });
+ * const agent = new LLMSingleActionAgent({
+ *   llmChain,
+ *   outputParser: new CustomOutputParser(),
+ *   stop: ["\nObservation"],
+ * });
+ * const executor = new AgentExecutor({ agent, tools });
+ * const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
+ * const result = await executor.invoke({ input });
+ * console.log(`Got output ${result.output}`);
+ *
+ * ```
  */
 export class LLMSingleActionAgent extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents"];

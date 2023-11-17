@@ -27,6 +27,55 @@ export interface VectorStoreRetrieverMemoryParams {
  * documents from a vector store database, which can be useful for
  * maintaining conversation history or other types of memory in an LLM
  * application.
+ * @example
+ * ```typescript
+ * const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
+ * const memory = new VectorStoreRetrieverMemory({
+ *   vectorStoreRetriever: vectorStore.asRetriever(1),
+ *   memoryKey: "history",
+ * });
+ *
+ * // Saving context to memory
+ * await memory.saveContext(
+ *   { input: "My favorite food is pizza" },
+ *   { output: "thats good to know" },
+ * );
+ * await memory.saveContext(
+ *   { input: "My favorite sport is soccer" },
+ *   { output: "..." },
+ * );
+ * await memory.saveContext({ input: "I don't the Celtics" }, { output: "ok" });
+ *
+ * // Loading memory variables
+ * console.log(
+ *   await memory.loadMemoryVariables({ prompt: "what sport should i watch?" }),
+ * );
+ *
+ * const model = new ChatAnthropic({ temperature: 0.9 });
+ * const prompt =
+ *   PromptTemplate.fromTemplate(`The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+ *
+ * Relevant pieces of previous conversation:
+ * {history}
+ *
+ * (You do not need to use these pieces of information if not relevant)
+ *
+ * Current conversation:
+ * Human: {input}
+ * AI:`);
+ * const chain = new LLMChain({ llm: model, prompt, memory });
+ *
+ * // Making calls to the chain with different inputs
+ * const res1 = await chain.call({ input: "Hi, my name is Perry, what's up?" });
+ * console.log({ res1 });
+ *
+ * const res2 = await chain.call({ input: "what's my favorite sport?" });
+ * console.log({ res2 });
+ *
+ * const res3 = await chain.call({ input: "what's my name?" });
+ * console.log({ res3 });
+ *
+ * ```
  */
 export class VectorStoreRetrieverMemory
   extends BaseMemory

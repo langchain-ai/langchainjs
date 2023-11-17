@@ -33,6 +33,22 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  *  This can be installed using `npm install -S node-llama-cpp` and the minimum
  *  version supported in version 2.0.0.
  *  This also requires that have a locally built version of Llama2 installed.
+ * @example
+ * ```typescript
+ * // Initialize the ChatLlamaCpp model with the path to the model binary file.
+ * const model = new ChatOpenAI({
+ *   modelPath: "/path/to/your/model/gguf-llama2-q4_0.bin",
+ * });
+ *
+ * // Call the model with a message and await the response.
+ * const response = await model.call([
+ *   new HumanMessage({ content: "My name is John." }),
+ * ]);
+ *
+ * // Log the response to the console.
+ * console.log({ response });
+ *
+ * ```
  */
 export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   declare CallOptions: LlamaCppCallOptions;

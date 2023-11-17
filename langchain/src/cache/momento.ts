@@ -42,6 +42,23 @@ export interface MomentoCacheProps {
 /**
  * A cache that uses Momento as the backing store.
  * See https://gomomento.com.
+ * @example
+ * ```typescript
+ * // Initialize the ChatOpenAI model with caching capabilities using MomentoCache.
+ * const model = new ChatAnthropic({
+ *   cache: new MomentoCache({
+ *     client: new CacheClient({
+ *       configuration: Configurations.Laptop.v1(),
+ *       credentialProvider: CredentialProvider.fromEnvironmentVariable({
+ *         environmentVariableName: "MOMENTO_API_KEY",
+ *       }),
+ *       defaultTtlSeconds: 60 * 60 * 24, // Cache TTL set to 24 hours.
+ *     }),
+ *     cacheName: "langchain",
+ *   }),
+ * });
+ *
+ * ```
  */
 export class MomentoCache extends BaseCache {
   private client: ICacheClient;

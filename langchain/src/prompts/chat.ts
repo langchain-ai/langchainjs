@@ -357,6 +357,39 @@ export class ChatMessagePromptTemplate<
 /**
  * Class that represents a human message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
+ * @example
+ * ```typescript
+ * const template = "What is a good name for a company that makes {product}?";
+ * const promptA = new PromptTemplate({ template, inputVariables: ["product"] });
+ *
+ * const responseA = await promptA.formatPromptValue({
+ *   product: "colorful socks",
+ * });
+ * const responseAString = responseA.toString();
+ * console.log({ responseAString });
+ *
+ * const responseAMessages = responseA.toChatMessages();
+ * console.log({ responseAMessages });
+ *
+ * const chatPrompt = ChatPromptTemplate.fromMessages([
+ *   SystemMessagePromptTemplate.fromTemplate(
+ *     "You are a helpful assistant that translates {input_language} to {output_language}.",
+ *   ),
+ *   HumanMessagePromptTemplate.fromTemplate("{text}"),
+ * ]);
+ *
+ * const responseB = await chatPrompt.formatPromptValue({
+ *   input_language: "English",
+ *   output_language: "French",
+ *   text: "I love programming.",
+ * });
+ * const responseBString = responseB.toString();
+ * console.log({ responseBString });
+ *
+ * const responseBMessages = responseB.toChatMessages();
+ * console.log({ responseBMessages });
+ *
+ * ```
  */
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -399,6 +432,39 @@ export class AIMessagePromptTemplate<
 /**
  * Class that represents a system message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
+ * @example
+ * ```typescript
+ * const template = "What is a good name for a company that makes {product}?";
+ * const promptA = new PromptTemplate({ template, inputVariables: ["product"] });
+ *
+ * const responseA = await promptA.formatPromptValue({
+ *   product: "colorful socks",
+ * });
+ * const responseAString = responseA.toString();
+ * console.log({ responseAString });
+ *
+ * const responseAMessages = responseA.toChatMessages();
+ * console.log({ responseAMessages });
+ *
+ * const chatPrompt = ChatPromptTemplate.fromMessages([
+ *   SystemMessagePromptTemplate.fromTemplate(
+ *     "You are a helpful assistant that translates {input_language} to {output_language}.",
+ *   ),
+ *   HumanMessagePromptTemplate.fromTemplate("{text}"),
+ * ]);
+ *
+ * const responseB = await chatPrompt.formatPromptValue({
+ *   input_language: "English",
+ *   output_language: "French",
+ *   text: "I love programming.",
+ * });
+ * const responseBString = responseB.toString();
+ * console.log({ responseBString });
+ *
+ * const responseBMessages = responseB.toChatMessages();
+ * console.log({ responseBMessages });
+ *
+ * ```
  */
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -484,6 +550,39 @@ function _coerceMessagePromptTemplateLike(
  * Class that represents a chat prompt. It extends the
  * BaseChatPromptTemplate and uses an array of BaseMessagePromptTemplate
  * instances to format a series of messages for a conversation.
+ * @example
+ * ```typescript
+ * const template = "What is a good name for a company that makes {product}?";
+ * const promptA = new PromptTemplate({ template, inputVariables: ["product"] });
+ *
+ * const responseA = await promptA.formatPromptValue({
+ *   product: "colorful socks",
+ * });
+ * const responseAString = responseA.toString();
+ * console.log({ responseAString });
+ *
+ * const responseAMessages = responseA.toChatMessages();
+ * console.log({ responseAMessages });
+ *
+ * const chatPrompt = ChatPromptTemplate.fromMessages([
+ *   SystemMessagePromptTemplate.fromTemplate(
+ *     "You are a helpful assistant that translates {input_language} to {output_language}.",
+ *   ),
+ *   HumanMessagePromptTemplate.fromTemplate("{text}"),
+ * ]);
+ *
+ * const responseB = await chatPrompt.formatPromptValue({
+ *   input_language: "English",
+ *   output_language: "French",
+ *   text: "I love programming.",
+ * });
+ * const responseBString = responseB.toString();
+ * console.log({ responseBString });
+ *
+ * const responseBMessages = responseB.toChatMessages();
+ * console.log({ responseBMessages });
+ *
+ * ```
  */
 export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

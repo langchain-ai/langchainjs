@@ -24,6 +24,53 @@ export interface ConversationSummaryBufferMemoryInput
  * history in a LangChain application by maintaining a buffer of chat
  * messages and providing methods to load, save, prune, and clear the
  * memory.
+ * @example
+ * ```typescript
+ * // Initialize the memory with a specific model and token limit
+ * const memory = new ConversationSummaryBufferMemory({
+ *   llm: new OpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
+ *   maxTokenLimit: 10,
+ * });
+ *
+ * // Save conversation context to memory
+ * await memory.saveContext({ input: "hi" }, { output: "whats up" });
+ * await memory.saveContext({ input: "not much you" }, { output: "not much" });
+ *
+ * // Load the conversation history from memory
+ * const history = await memory.loadMemoryVariables({});
+ * console.log({ history });
+ *
+ * // Create a chat prompt using the conversation history
+ * const chatPrompt = ChatPromptTemplate.fromMessages([
+ *   SystemMessagePromptTemplate.fromTemplate(
+ *     "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.",
+ *   ),
+ *   new MessagesPlaceholder("history"),
+ *   HumanMessagePromptTemplate.fromTemplate("{input}"),
+ * ]);
+ *
+ * // Initialize the conversation chain with the model, memory, and prompt
+ * const chain = new ConversationChain({
+ *   llm: new ChatOpenAI({ temperature: 0.9, verbose: true }),
+ *   memory: memory,
+ *   prompt: chatPrompt,
+ * });
+ *
+ * // Make predictions using the conversation chain
+ * const res1 = await chain.predict({ input: "Hi, what's up?" });
+ * console.log({ res1 });
+ *
+ * // Additional predictions can be made in the same manner
+ * // const res2 = await chain.predict({ input: "Just working on writing some documentation!" });
+ * // console.log({ res2 });
+ *
+ * // const res3 = await chain.predict({ input: "For LangChain! Have you heard of it?" });
+ * // console.log({ res3 });
+ *
+ * // const res4 = await chain.predict({ input: "That's not the right one, although a lot of people confuse it for that!" });
+ * // console.log({ res4 });
+ *
+ * ```
  */
 export class ConversationSummaryBufferMemory
   extends BaseConversationSummaryMemory
