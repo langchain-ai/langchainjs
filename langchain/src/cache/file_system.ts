@@ -2,7 +2,11 @@ import path from "node:path";
 import fs from "node:fs/promises";
 
 import { BaseCache, Generation } from "../schema/index.js";
-import { getCacheKey, serializeGeneration, deserializeStoredGeneration } from "./base.js";
+import {
+  getCacheKey,
+  serializeGeneration,
+  deserializeStoredGeneration,
+} from "./base.js";
 
 /**
  * A cache that uses the local filesystem as the backing store.
