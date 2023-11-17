@@ -434,36 +434,35 @@ export class AIMessagePromptTemplate<
  * BaseMessageStringPromptTemplate.
  * @example
  * ```typescript
- * const template = "What is a good name for a company that makes {product}?";
- * const promptA = new PromptTemplate({ template, inputVariables: ["product"] });
- *
- * const responseA = await promptA.formatPromptValue({
- *   product: "colorful socks",
- * });
- * const responseAString = responseA.toString();
- * console.log({ responseAString });
- *
- * const responseAMessages = responseA.toChatMessages();
- * console.log({ responseAMessages });
- *
  * const chatPrompt = ChatPromptTemplate.fromMessages([
- *   SystemMessagePromptTemplate.fromTemplate(
- *     "You are a helpful assistant that translates {input_language} to {output_language}.",
+ *   new SystemMessagePromptTemplate(
+ *     ZeroShotAgent.createPrompt([], {
+ *       prefix:
+ *         "Answer the following questions as best you can, but speaking as a pirate might speak.",
+ *       suffix:
+ *         'Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"',
+ *     }),
  *   ),
- *   HumanMessagePromptTemplate.fromTemplate("{text}"),
+ *   HumanMessagePromptTemplate.fromTemplate(`{input}
+ *
+ * This was your previous work (but I haven't seen any of it! I only see what you return as final answer):
+ * {agent_scratchpad}`),
  * ]);
  *
- * const responseB = await chatPrompt.formatPromptValue({
- *   input_language: "English",
- *   output_language: "French",
- *   text: "I love programming.",
+ * const agent = new AgentExecutor.fromAgentAndTools({
+ *   agent: new ZeroShotAgent({
+ *     llmChain: new LLMChain({
+ *       prompt: chatPrompt,
+ *       llm: new ChatOpenAI({}),
+ *     }),
+ *     allowedTools: [],
+ *   }),
+ *   tools: [],
+ * })
+ *
+ * const response = await agent.invoke({
+ *   input: "How many people live in canada as of 2023?",
  * });
- * const responseBString = responseB.toString();
- * console.log({ responseBString });
- *
- * const responseBMessages = responseB.toChatMessages();
- * console.log({ responseBMessages });
- *
  * ```
  */
 export class SystemMessagePromptTemplate<
