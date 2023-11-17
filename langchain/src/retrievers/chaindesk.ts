@@ -7,7 +7,7 @@ export interface ChaindeskRetrieverArgs
     BaseRetrieverInput {
   datastoreId: string;
   topK?: number;
-  filters?: Record<string, unknown>;
+  filter?: Record<string, unknown>;
   apiKey?: string;
 }
 
@@ -31,18 +31,18 @@ export class ChaindeskRetriever extends BaseRetriever {
 
   topK?: number;
 
-  filters?: Record<string, unknown>;
+  filter?: Record<string, unknown>;
 
   apiKey?: string;
 
-  constructor({ datastoreId, apiKey, topK, filters,...rest }: ChaindeskRetrieverArgs) {
+  constructor({ datastoreId, apiKey, topK, filter,...rest }: ChaindeskRetrieverArgs) {
     super();
 
     this.caller = new AsyncCaller(rest);
     this.datastoreId = datastoreId;
     this.apiKey = apiKey;
     this.topK = topK;
-    this.filters = filters;
+    this.filter = filter;
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
@@ -54,7 +54,7 @@ export class ChaindeskRetriever extends BaseRetriever {
         body: JSON.stringify({
           query,
           ...(this.topK ? { topK: this.topK } : {}),
-          ...(this.filters ? { filters: this.filters } : {}),
+          ...(this.filter ? { filters: this.filter } : {}),
         }),
         headers: {
           "Content-Type": "application/json",
