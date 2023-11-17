@@ -236,6 +236,7 @@
     "./langchain/src/cache/momento.ts",
     "./langchain/src/cache/redis.ts",
     "./langchain/src/cache/ioredis.ts",
+    "./langchain/src/cache/file_system.ts",
     "./langchain/src/cache/upstash_redis.ts",
     "./langchain/src/stores/doc/in_memory.ts",
     "./langchain/src/stores/doc/gcs.ts",
