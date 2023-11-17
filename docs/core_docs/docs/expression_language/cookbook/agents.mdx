@@ -117,7 +117,7 @@ console.log("Loaded executor");
 
 const input = "What is the weather in SF?";
 console.log(`Calling executor with input: ${input}`);
-const response = await executor.call({ input, tools });
+const response = await executor.invoke({ input, tools });
 console.log(response);
 ```
 

@@ -193,6 +193,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/rockset"?:
+    | typeof import("../vectorstores/rockset.js")
+    | Promise<typeof import("../vectorstores/rockset.js")>;
   "langchain/vectorstores/typesense"?:
     | typeof import("../vectorstores/typesense.js")
     | Promise<typeof import("../vectorstores/typesense.js")>;
@@ -400,6 +403,9 @@ export interface OptionalImportMap {
   "langchain/cache/ioredis"?:
     | typeof import("../cache/ioredis.js")
     | Promise<typeof import("../cache/ioredis.js")>;
+  "langchain/cache/file_system"?:
+    | typeof import("../cache/file_system.js")
+    | Promise<typeof import("../cache/file_system.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;

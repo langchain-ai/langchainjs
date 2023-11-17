@@ -62,7 +62,10 @@ export const run = async () => {
   const resultThree = await vectorStore.similaritySearchWithScore(
     "Hello world",
     1,
-    { content: { equals: "different_content" } }
+    {
+      content: { equals: "different_content" },
+      customForeignKey: { in: ["<id1>", "<id2>", "<id3>"] },
+    }
   );
   console.log(resultThree);
 };
