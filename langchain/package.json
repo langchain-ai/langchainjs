@@ -643,6 +643,9 @@
     "retrievers/self_query/weaviate.cjs",
     "retrievers/self_query/weaviate.js",
     "retrievers/self_query/weaviate.d.ts",
+    "retrievers/self_query/vectara.cjs",
+    "retrievers/self_query/vectara.js",
+    "retrievers/self_query/vectara.d.ts",
     "retrievers/vespa.cjs",
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
@@ -2453,6 +2456,11 @@
       "types": "./retrievers/self_query/weaviate.d.ts",
       "import": "./retrievers/self_query/weaviate.js",
       "require": "./retrievers/self_query/weaviate.cjs"
+    },
+    "./retrievers/self_query/vectara": {
+      "types": "./retrievers/self_query/vectara.d.ts",
+      "import": "./retrievers/self_query/vectara.js",
+      "require": "./retrievers/self_query/vectara.cjs"
     },
     "./retrievers/vespa": {
       "types": "./retrievers/vespa.d.ts",
