@@ -134,6 +134,7 @@ export const optionalImportEntrypoints = [
   "langchain/cache/momento",
   "langchain/cache/redis",
   "langchain/cache/ioredis",
+  "langchain/cache/file_system",
   "langchain/cache/upstash_redis",
   "langchain/stores/doc/gcs",
   "langchain/stores/file/node",

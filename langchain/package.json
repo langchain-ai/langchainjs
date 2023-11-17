@@ -661,6 +661,9 @@
     "cache/ioredis.cjs",
     "cache/ioredis.js",
     "cache/ioredis.d.ts",
+    "cache/file_system.cjs",
+    "cache/file_system.js",
+    "cache/file_system.d.ts",
     "cache/upstash_redis.cjs",
     "cache/upstash_redis.js",
     "cache/upstash_redis.d.ts",
@@ -2481,6 +2484,11 @@
       "types": "./cache/ioredis.d.ts",
       "import": "./cache/ioredis.js",
       "require": "./cache/ioredis.cjs"
+    },
+    "./cache/file_system": {
+      "types": "./cache/file_system.d.ts",
+      "import": "./cache/file_system.js",
+      "require": "./cache/file_system.cjs"
     },
     "./cache/upstash_redis": {
       "types": "./cache/upstash_redis.d.ts",

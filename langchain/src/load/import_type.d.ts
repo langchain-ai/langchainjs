@@ -400,6 +400,9 @@ export interface OptionalImportMap {
   "langchain/cache/ioredis"?:
     | typeof import("../cache/ioredis.js")
     | Promise<typeof import("../cache/ioredis.js")>;
+  "langchain/cache/file_system"?:
+    | typeof import("../cache/file_system.js")
+    | Promise<typeof import("../cache/file_system.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;

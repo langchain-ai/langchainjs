@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 
 import { BaseCache, Generation } from "../schema/index.js";
-import { getCacheKey } from "./base.js";
+import { getCacheKey, serializeGeneration, deserializeStoredGeneration } from "./base.js";
 
 /**
  * A cache that uses the local filesystem as the backing store.
@@ -44,7 +44,7 @@ export class LocalFileCache extends BaseCache {
     const key = `${getCacheKey(prompt, llmKey)}.json`;
     try {
       const content = await fs.readFile(path.join(this.cacheDir, key));
-      return JSON.parse(content.toString()) as Generation[];
+      return JSON.parse(content.toString()).map(deserializeStoredGeneration);
     } catch {
       return null;
     }
@@ -66,7 +66,7 @@ export class LocalFileCache extends BaseCache {
     const key = `${getCacheKey(prompt, llmKey)}.json`;
     await fs.writeFile(
       path.join(this.cacheDir, key),
-      JSON.stringify(generations)
+      JSON.stringify(generations.map(serializeGeneration))
     );
   }
 }
