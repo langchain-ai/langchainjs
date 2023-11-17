@@ -36,6 +36,19 @@ export interface HFInput {
 /**
  * Class implementing the Large Language Model (LLM) interface using the
  * Hugging Face Inference API for text generation.
+ * @example
+ * ```typescript
+ * const model = new HuggingFaceInference({
+ *   model: "gpt2",
+ *   temperature: 0.7,
+ *   maxTokens: 50,
+ * });
+ *
+ * const res = await model.call(
+ *   "Question: What would be a good company name for a company that makes colorful socks?\nAnswer:"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class HuggingFaceInference extends LLM implements HFInput {
   get lc_secrets(): { [key: string]: string } | undefined {
