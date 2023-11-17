@@ -25,6 +25,13 @@ export type ChatFireworksCallOptions = Partial<
  *
  * To use, you should have the `openai` package installed and
  * the `FIREWORKS_API_KEY` environment variable set.
+ * @example
+ * ```typescript
+ * const model = new ChatFireworks({
+ *   temperature: 0.9,
+ *   fireworksApiKey: "YOUR-API-KEY",
+ * });
+ * ```
  */
 export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
   static lc_name() {

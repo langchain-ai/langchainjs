@@ -140,7 +140,13 @@ type Kwargs = Record<string, any>;
  * https://console.anthropic.com/docs/api/reference |
  * `anthropic.complete`} can be passed through {@link invocationKwargs},
  * even if not explicitly available on this class.
- *
+ * @example
+ * ```typescript
+ * const model = new ChatAnthropic({
+ *   temperature: 0.9,
+ *   anthropicApiKey: 'YOUR-API-KEY',
+ * });
+ * ```
  */
 export class ChatAnthropic<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions

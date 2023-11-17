@@ -24,6 +24,24 @@ export interface HuggingFaceTransformersEmbeddingsParams
   stripNewLines?: boolean;
 }
 
+/**
+ * @example
+ * ```typescript
+ * const model = new HuggingFaceTransformersEmbeddings({
+ *   modelName: "Xenova/all-MiniLM-L6-v2",
+ * });
+ *
+ * // Embed a single query
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?"
+ * );
+ * console.log({ res });
+ *
+ * // Embed multiple documents
+ * const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
+ * console.log({ documentRes });
+ * ```
+ */
 export class HuggingFaceTransformersEmbeddings
   extends Embeddings
   implements HuggingFaceTransformersEmbeddingsParams
