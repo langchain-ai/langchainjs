@@ -36,7 +36,6 @@ export * from "langchain/prompts";
 export * from "langchain/vectorstores/base";
 export * from "langchain/vectorstores/memory";
 export * from "langchain/vectorstores/prisma";
-export * from "langchain/vectorstores/rockset";
 export * from "langchain/vectorstores/vectara";
 export * from "langchain/vectorstores/xata";
 export * from "langchain/text_splitter";

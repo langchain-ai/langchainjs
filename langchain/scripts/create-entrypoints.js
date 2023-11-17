@@ -394,6 +394,7 @@ const requiresOptionalDependency = [
   "vectorstores/myscale",
   "vectorstores/neo4j_vector",
   "vectorstores/redis",
+  "vectorstores/rockset",
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
