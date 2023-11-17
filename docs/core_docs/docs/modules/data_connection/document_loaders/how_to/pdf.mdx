@@ -16,6 +16,10 @@ npm install pdf-parse
 
 ```typescript
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+// Or, in web environments:
+// import { WebPDFLoader } from "langchain/document_loaders/web/pdf";
+// const blob = new Blob(); // e.g. from a file input
+// const loader = new WebPDFLoader(blob);
 
 const loader = new PDFLoader("src/document_loaders/example_data/example.pdf");
 
@@ -51,4 +55,19 @@ const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
   // you may need to add `.then(m => m.default)` to the end of the import
   pdfjs: () => import("pdfjs-dist/legacy/build/pdf.js"),
 });
+```
+
+## Eliminating extra spaces
+
+PDFs come in many varieties, which makes reading them a challenge. The loader parses individual text elements and joins them together with a space by default, but
+if you are seeing excessive spaces, this may not be the desired behavior. In that case, you can override the separator with an empty string like this:
+
+```typescript
+import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+
+const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
+  parsedItemSeparator: "",
+});
+
+const docs = await loader.load();
 ```
