@@ -41,7 +41,7 @@ Question: {input}
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await agentExecutor.call({ input });
+  const result = await agentExecutor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 };

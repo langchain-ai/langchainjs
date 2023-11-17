@@ -109,7 +109,7 @@ console.log("Loaded agent executor");
 
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 console.log(`Calling agent with prompt: ${input}`);
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 console.log(result);
 /**
 Loaded agent executor
