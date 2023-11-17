@@ -118,7 +118,7 @@ export type MessageContent =
         }
       | {
           type: "image_url";
-          image_url: string | { url: string; detail?: "low" | "high" };
+          image_url: string | { url: string; detail?: "auto" | "low" | "high" };
         }
     )[];
 
