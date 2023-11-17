@@ -3,10 +3,7 @@
 import rockset from "@rockset/client";
 import { test, expect } from "@jest/globals";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import {
-  RocksetStore,
-  SimilarityMetric,
-} from "../rockset.js";
+import { RocksetStore, SimilarityMetric } from "../rockset.js";
 import { Document } from "../../document.js";
 import { formatDocumentsAsString } from "../../util/document.js";
 
