@@ -26,8 +26,8 @@ export interface GooglePaLMEmbeddingsParams extends EmbeddingsParams {
  * @example
  * ```typescript
  * const model = new GooglePaLMEmbeddings({
- *   apiKey: "<YOUR API KEY>", 
- *   modelName: "models/embedding-gecko-001", 
+ *   apiKey: "<YOUR API KEY>",
+ *   modelName: "models/embedding-gecko-001",
  * });
  *
  * // Embed a single query

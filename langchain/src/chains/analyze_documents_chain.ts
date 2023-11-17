@@ -31,15 +31,15 @@ export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
  * const chain = new AnalyzeDocumentChain({
  *   combineDocumentsChain: combineDocsChain,
  * });
- * 
+ *
  * // Read the text from a file (this is a placeholder for actual file reading)
  * const text = readTextFromFile("state_of_the_union.txt");
- * 
+ *
  * // Invoke the chain to analyze the document
  * const res = await chain.call({
  *   input_document: text,
  * });
- * 
+ *
  * console.log({ res });
  * ```
  */

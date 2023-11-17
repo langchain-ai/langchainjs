@@ -31,7 +31,7 @@ export type ChatFireworksCallOptions = Partial<
  *   temperature: 0.9,
  *   fireworksApiKey: "YOUR-API-KEY",
  * });
- * 
+ *
  * const response = await model.invoke("Hello, how are you?");
  * console.log(response);
  * ```
