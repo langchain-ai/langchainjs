@@ -117,7 +117,9 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
  * We can also ask questions like "Which movies are either comedy or drama and are less than 90 minutes?".
  * The retriever will automatically convert these questions into queries that can be used to retrieve documents.
  */
-const query1 = await selfQueryRetriever.getRelevantDocuments("which movies");
+const query1 = await selfQueryRetriever.getRelevantDocuments(
+  "What are some movies about dinosaurs"
+);
 const query2 = await selfQueryRetriever.getRelevantDocuments(
   "I want to watch a movie rated higher than 8.5"
 );
