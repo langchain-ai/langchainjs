@@ -18,7 +18,7 @@ const executor = await initializeAgentExecutorWithOptions(tools, model, {
 
 try {
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
-  const result = await executor.call({ input, timeout: 2000 }); // 2 seconds
+  const result = await executor.invoke({ input, timeout: 2000 }); // 2 seconds
 } catch (e) {
   console.log(e);
   /*
