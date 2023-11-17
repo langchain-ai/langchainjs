@@ -193,6 +193,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/rockset"?:
+    | typeof import("../vectorstores/rockset.js")
+    | Promise<typeof import("../vectorstores/rockset.js")>;
   "langchain/vectorstores/typesense"?:
     | typeof import("../vectorstores/typesense.js")
     | Promise<typeof import("../vectorstores/typesense.js")>;
