@@ -24,6 +24,24 @@ export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
  * Chain that combines documents by stuffing into context.
  * @augments BaseChain
  * @augments StuffDocumentsChainInput
+ * @example
+ * ```typescript
+ * const model = new ChatOpenAI({ temperature: 0 });
+ * const combineDocsChain = loadSummarizationChain(model);
+ * const chain = new AnalyzeDocumentChain({
+ *   combineDocumentsChain: combineDocsChain,
+ * });
+ *
+ * // Read the text from a file (this is a placeholder for actual file reading)
+ * const text = readTextFromFile("state_of_the_union.txt");
+ *
+ * // Invoke the chain to analyze the document
+ * const res = await chain.call({
+ *   input_document: text,
+ * });
+ *
+ * console.log({ res });
+ * ```
  */
 export class AnalyzeDocumentChain
   extends BaseChain

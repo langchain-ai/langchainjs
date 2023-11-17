@@ -86,6 +86,30 @@ function getMessageAuthor(message: BaseMessage) {
 
 /**
  * A class that wraps the Google Palm chat model.
+ * @example
+ * ```typescript
+ * const model = new ChatGooglePaLM({
+ *   apiKey: "<YOUR API KEY>",
+ *   temperature: 0.7,
+ *   modelName: "models/chat-bison-001",
+ *   topK: 40,
+ *   topP: 1,
+ *   examples: [
+ *     {
+ *       input: new HumanMessage("What is your favorite sock color?"),
+ *       output: new AIMessage("My favorite sock color be arrrr-ange!"),
+ *     },
+ *   ],
+ * });
+ * const questions = [
+ *   new SystemMessage(
+ *     "You are a funny assistant that answers in pirate language."
+ *   ),
+ *   new HumanMessage("What is your favorite food?"),
+ * ];
+ * const res = await model.call(questions);
+ * console.log({ res });
+ * ```
  */
 export class ChatGooglePaLM
   extends BaseChatModel
