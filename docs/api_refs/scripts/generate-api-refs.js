@@ -1,8 +1,10 @@
-import { Project, SyntaxKind } from "ts-morph";
+const { Project, SyntaxKind } = require("ts-morph");
+const { exec } = require("child_process");
+const fse = require("fs-extra");
 
-async function main() {
+async function updateCodeWithIgnoreTags(tsConfigFilePath) {
   const project = new Project({
-    tsConfigFilePath: "./tsconfig.json",
+    tsConfigFilePath,
   });
   const sourceFiles = project.getSourceFiles();
   /**
@@ -63,5 +65,38 @@ async function main() {
   });
 
   await project.save();
+}
+
+async function copyLangChain(pathToLangChain) {
+  // copy the entire langchain dir to .
+
+  await fse.copy(pathToLangChain, "./langchain", { overwrite: false });
+  return {
+    rootPath: `${process.cwd()}/langchain`,
+    tsConfigPath: `${process.cwd()}/langchain/tsconfig.json`,
+  };
+}
+
+async function deleteLangChain(pathToLangChain) {
+  // delete the langchain dir
+  await fse.remove(pathToLangChain);
+}
+
+const execAsync = async (command, options) => new Promise((resolve, reject) => {
+  exec(command, options, (err, stdout, stderr) => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve(stdout);
+    }
+  });
+});
+
+async function main() {
+  const pathToLangChain = "../../langchain";
+  const { rootPath, tsConfigPath } = await copyLangChain(pathToLangChain);
+  await updateCodeWithIgnoreTags(tsConfigPath);
+  await execAsync("yarn typedoc");
+  await deleteLangChain(rootPath);
 }
 main();

@@ -11,13 +11,20 @@ export class PDFLoader extends BufferLoader {
 
   private pdfjs: typeof PDFLoaderImports;
 
+  protected parsedItemSeparator: string;
+
   constructor(
     filePathOrBlob: string | Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    {
+      splitPages = true,
+      pdfjs = PDFLoaderImports,
+      parsedItemSeparator = " ",
+    } = {}
   ) {
     super(filePathOrBlob);
     this.splitPages = splitPages;
     this.pdfjs = pdfjs;
+    this.parsedItemSeparator = parsedItemSeparator;
   }
 
   /**
@@ -76,7 +83,7 @@ export class PDFLoader extends BufferLoader {
         }
       }
 
-      const text = textItems.join(" ");
+      const text = textItems.join(this.parsedItemSeparator);
 
       documents.push(
         new Document({
