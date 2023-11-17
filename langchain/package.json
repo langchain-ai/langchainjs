@@ -316,6 +316,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/rockset.cjs",
+    "vectorstores/rockset.js",
+    "vectorstores/rockset.d.ts",
     "vectorstores/typesense.cjs",
     "vectorstores/typesense.js",
     "vectorstores/typesense.d.ts",
@@ -857,6 +860,7 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -993,6 +997,7 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -1146,6 +1151,9 @@
       "optional": true
     },
     "@raycast/api": {
+      "optional": true
+    },
+    "@rockset/client": {
       "optional": true
     },
     "@smithy/eventstream-codec": {
@@ -1906,6 +1914,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/rockset": {
+      "types": "./vectorstores/rockset.d.ts",
+      "import": "./vectorstores/rockset.js",
+      "require": "./vectorstores/rockset.cjs"
     },
     "./vectorstores/typesense": {
       "types": "./vectorstores/typesense.d.ts",
