@@ -65,7 +65,6 @@ export abstract class GoogleConnection<
       const response: unknown = callResponse; // Done for typecast safety, I guess
       return <ResponseType>response;
     } catch (x) {
-      console.error(JSON.stringify(x, null, 1));
       throw x;
     }
   }
