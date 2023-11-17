@@ -61,6 +61,7 @@ type ModelColumns<TModel extends Record<string, unknown>> = {
 export type PrismaSqlFilter<TModel extends Record<string, unknown>> = {
   [K in keyof TModel]?: {
     equals?: TModel[K];
+    in?: TModel[K][];
     lt?: TModel[K];
     lte?: TModel[K];
     gt?: TModel[K];
@@ -71,6 +72,7 @@ export type PrismaSqlFilter<TModel extends Record<string, unknown>> = {
 
 const OpMap = {
   equals: "=",
+  in: "IN",
   lt: "<",
   lte: "<=",
   gt: ">",
@@ -410,9 +412,29 @@ export class PrismaVectorStore<
         Object.entries(ops).map(([opName, value]) => {
           // column name, operators cannot be parametrised
           // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+          const opNameKey = opName as keyof typeof OpMap;
           const colRaw = this.Prisma.raw(`"${key}"`);
-          const opRaw = this.Prisma.raw(OpMap[opName as keyof typeof OpMap]);
-          return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
+          const opRaw = this.Prisma.raw(OpMap[opNameKey]);
+
+          switch (OpMap[opNameKey]) {
+            case OpMap.in: {
+              if (
+                !Array.isArray(value) ||
+                !value.every((v) => typeof v === "string")
+              ) {
+                throw new Error(
+                  `Invalid filter: IN operator requires an array of strings. Received: ${JSON.stringify(
+                    value,
+                    null,
+                    2
+                  )}`
+                );
+              }
+              return this.Prisma.sql`${colRaw} ${opRaw} (${value.join(",")})`;
+            }
+            default:
+              return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
+          }
         })
       ),
       " AND ",
