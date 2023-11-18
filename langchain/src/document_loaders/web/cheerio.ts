@@ -33,9 +33,7 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
  * web-based documents using Cheerio.
  * @example
  * ```typescript
- * const loader = new CheerioWebBaseLoader("https:
- *
- *
+ * const loader = new CheerioWebBaseLoader("https:exampleurl.com");
  * const docs = await loader.load();
  * console.log({ docs });
  * ```

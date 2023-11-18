@@ -6,11 +6,8 @@ import { CheerioWebBaseLoader } from "./cheerio.js";
  * College Confidential website. It extends the CheerioWebBaseLoader.
  * @example
  * ```typescript
- * const loader = new CollegeConfidentialLoader("https:
- *
- *
+ * const loader = new CollegeConfidentialLoader("https:exampleurl.com");
  * const docs = await loader.load();
- *
  * console.log({ docs });
  * ```
  */

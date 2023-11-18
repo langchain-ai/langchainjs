@@ -37,8 +37,6 @@ interface VideoMetadata {
  *   "en",
  *   true,
  * );
- *
- *
  * const docs = await loader.load();
  * ```
  */

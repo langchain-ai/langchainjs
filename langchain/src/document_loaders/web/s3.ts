@@ -50,18 +50,14 @@ export interface S3LoaderParams {
  *   key: "AccountingOverview.pdf",
  *   s3Config: {
  *     region: "us-east-1",
- *
  *     credentials: {
  *       accessKeyId: "<YourAccessKeyId>",
  *       secretAccessKey: "<YourSecretAccessKey>",
  *     },
  *   },
- *
  *   unstructuredAPIURL: "<YourUnstructuredAPIURL>",
  *   unstructuredAPIKey: "<YourUnstructuredAPIKey>",
  * });
- *
- *
  * const docs = await loader.load();
  * ```
  */

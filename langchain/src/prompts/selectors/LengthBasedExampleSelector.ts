@@ -41,8 +41,6 @@ export interface LengthBasedExampleSelectorInput {
  *     maxLength: 25,
  *   },
  * );
- *
- *
  * const dynamicPrompt = new FewShotPromptTemplate({
  *   exampleSelector,
  *   examplePrompt: new PromptTemplate({
@@ -53,11 +51,7 @@ export interface LengthBasedExampleSelectorInput {
  *   suffix: "Input: {adjective}\nOutput:",
  *   inputVariables: ["adjective"],
  * });
- *
- *
  * console.log(dynamicPrompt.format({ adjective: "big" }));
- *
- *
  * console.log(
  *   dynamicPrompt.format({
  *     adjective:

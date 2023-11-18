@@ -11,10 +11,7 @@ import { TextLoader } from "./text.js";
  * @example
  * ```typescript
  * const loader = new SRTLoader("path/to/file.srt");
- *
- *
  * const docs = await loader.load();
- *
  * console.log({ docs });
  * ```
  */

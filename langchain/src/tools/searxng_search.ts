@@ -94,25 +94,6 @@ interface SearxngSearchParams {
  * https://github.com/searxng/searxng
  * @example
  * ```typescript
- * const agent = RunnableSequence.from([
- *   ChatPromptTemplate.fromMessages([
- *     [
- *       "ai",
- *       "Answer the following questions as best you can. In your final answer, use a bulleted list markdown format.",
- *     ],
- *     ["human", "{input}"],
- *   ]),
- *   new ChatOpenAI({
- *     maxTokens: 1000,
- *     modelName: "gpt-4",
- *   }),
- *   (input: BaseMessageChunk): AgentAction | AgentFinish => ({
- *     log: "test",
- *     returnValues: {
- *       output: input,
- *     },
- *   }),
- * ]);
  * const executor = AgentExecutor.fromAgentAndTools({
  *   agent,
  *   tools: [

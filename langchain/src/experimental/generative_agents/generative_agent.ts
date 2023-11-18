@@ -33,7 +33,7 @@ export type GenerativeAgentConfig = {
  * const tommie: GenerativeAgent = new GenerativeAgent(
  *   new OpenAI({ temperature: 0.9, maxTokens: 1500 }),
  *   new GenerativeAgentMemory(
- *     new OpenAI(),
+ *     new ChatOpenAI(),
  *     new TimeWeightedVectorStoreRetriever({
  *       vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
  *       otherScoreKeys: ["importance"],
@@ -49,16 +49,11 @@ export type GenerativeAgentConfig = {
  *   },
  * );
  *
- *
  * await tommie.addMemory(
  *   "Tommie remembers his dog, Bruno, from when he was a kid",
  *   new Date(),
  * );
- *
- *
  * const summary = await tommie.getSummary({ forceRefresh: true });
- *
- *
  * const response = await tommie.generateDialogueResponse(
  *   "USER says Hello Tommie, how are you today?",
  * );

@@ -304,15 +304,11 @@ class GenerativeAgentMemoryChain extends BaseChain {
  *   });
  *   return retriever;
  * };
- *
- *
  * const tommiesMemory = new GenerativeAgentMemory(
  *   llm,
  *   await createNewMemoryRetriever(),
  *   { reflectionThreshold: 8 },
  * );
- *
- *
  * const summary = await tommiesMemory.getSummary();
  * ```
  */

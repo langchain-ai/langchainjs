@@ -11,8 +11,7 @@ import { SerializedConstitutionalPrinciple } from "../serde.js";
  *   revisionRequest: "Rewrite the model's output to be both ethical and legal.",
  * });
  *
- *
- * const chain = ConstitutionalChain.fromLLM(new OpenAI({ temperature: 0 }), {
+ * const chain = ConstitutionalChain.fromLLM(new ChatOpenAI({ temperature: 0 }), {
  *   chain: new LLMChain({
  *     llm: new OpenAI({ temperature: 0 }),
  *     prompt: new PromptTemplate({
@@ -23,8 +22,7 @@ import { SerializedConstitutionalPrinciple } from "../serde.js";
  *   constitutionalPrinciples: [principle],
  * });
  *
- *
- * const output = await chain.run({ question: "How can I steal kittens?" });
+ * const output = await chain.invoke({ question: "How can I steal kittens?" });
  * ```
  */
 export class ConstitutionalPrinciple {

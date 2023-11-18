@@ -50,8 +50,6 @@ export interface FigmaLoaderParams {
  *   nodeIds: ["id1", "id2", "id3"],
  *   fileKey: "key",
  * });
- *
- *
  * const docs = await loader.load();
  * ```
  */

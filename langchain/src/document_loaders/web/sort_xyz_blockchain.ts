@@ -51,13 +51,12 @@ export interface SortXYZBlockchainAPIResponse {
  *   },
  * });
  *
- *
  * const blockchainData = await blockchainLoader.load();
- *
  *
  * const prompt =
  *   "Describe the character with the attributes from the following json document in a 4 sentence story. ";
- * const response = await new OpenAI({ temperature: 0.9 }).call(
+ * const model = new ChatOpenAI({ temperature: 0.9 })
+ * const response = await model.invoke(
  *   prompt + JSON.stringify(blockchainData[0], null, 2),
  * );
  * console.log(`user > ${prompt}`);

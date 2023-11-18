@@ -85,8 +85,6 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
  *   { audio_url: "https:
  *   { apiKey: "ASSEMBLYAI_API_KEY" },
  * );
- *
- *
  * const docs = await loader.load();
  * console.dir(docs, { depth: Infinity });
  * ```

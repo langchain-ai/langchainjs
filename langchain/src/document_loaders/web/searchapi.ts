@@ -35,11 +35,6 @@ type SearchApiParameters = {
  *   engine: "google",
  * });
  * const docs = await loader.load();
- *
- *
- *
- * const answer = await retrievalQAChain.call({ query: "{question}" });
- * console.log(answer.text);
  * ```
  */
 export class SearchApiLoader extends BaseDocumentLoader {

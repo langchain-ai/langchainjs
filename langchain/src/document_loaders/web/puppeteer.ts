@@ -39,7 +39,7 @@ export type PuppeteerWebBaseLoaderOptions = {
  * web pages using Puppeteer.
  * @example
  * ```typescript
- * const loader = new PuppeteerWebBaseLoader("https:
+ * const loader = new PuppeteerWebBaseLoader("https:exampleurl.com", {
  *   launchOptions: {
  *     headless: true,
  *   },
@@ -47,8 +47,6 @@ export type PuppeteerWebBaseLoaderOptions = {
  *     waitUntil: "domcontentloaded",
  *   },
  * });
- *
- *
  * const screenshot = await loader.screenshot();
  * ```
  */

@@ -303,8 +303,6 @@ export class UnstructuredLoader extends BaseDocumentLoader {
  * const loader = new UnstructuredDirectoryLoader("path/to/directory", {
  *   apiKey: "MY_API_KEY",
  * });
- *
- *
  * const docs = await loader.load();
  * ```
  */

@@ -23,8 +23,6 @@ export interface EmbeddingsFilterParams {
  *   similarityThreshold: 0.8,
  *   k: 5,
  * });
- *
- *
  * const retrievedDocs = await embeddingsFilter.filterDocuments(
  *   getDocuments(),
  *   "What did the speaker say about Justice Breyer in the 2022 State of the Union?",

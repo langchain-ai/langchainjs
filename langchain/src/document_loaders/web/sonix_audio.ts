@@ -16,8 +16,6 @@ import { BaseDocumentLoader } from "../base.js";
  *     language: "en",
  *   },
  * });
- *
- *
  * const docs = await loader.load();
  * ```
  */

@@ -51,8 +51,6 @@ export type SemanticSimilarityExampleSelectorInput<
  *   HNSWLib,
  *   { k: 1 },
  * );
- *
- *
  * const dynamicPrompt = new FewShotPromptTemplate({
  *   exampleSelector,
  *   examplePrompt: PromptTemplate.fromTemplate(
@@ -62,8 +60,6 @@ export type SemanticSimilarityExampleSelectorInput<
  *   suffix: "Input: {adjective}\nOutput:",
  *   inputVariables: ["adjective"],
  * });
- *
- *
  * console.log(await dynamicPrompt.format({ adjective: "rainy" }));
  * ```
  */

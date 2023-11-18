@@ -10,16 +10,13 @@ import { BasicTranslator } from "./base.js";
  * @example
  * ```typescript
  * const chromaTranslator = new ChromaTranslator();
- *
- *
  * const selfQueryRetriever = new SelfQueryRetriever({
- *   llm: new OpenAI(),
+ *   llm: new ChatOpenAI(),
  *   vectorStore: new Chroma(),
  *   documentContents: "Brief summary of a movie",
  *   attributeInfo: [],
  *   structuredQueryTranslator: chromaTranslator,
  * });
- *
  *
  * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
  *   "Which movies are directed by Greta Gerwig?",

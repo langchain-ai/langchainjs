@@ -47,7 +47,6 @@ export interface BabyAGIInputs
  *   maxIterations: 3,
  * });
  *
- *
  * const result = await babyAGI.call({
  *   objective: "Write a weather report for SF today",
  * });

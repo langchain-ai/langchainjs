@@ -52,10 +52,8 @@ export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
  *
  * const docs = await loader.load();
  *
- *
  * const chain = new RetrievalQAChain();
- * const res = await chain.call({ query: "What is LangChain?" });
- *
+ * const res = await chain.invoke({ query: "What is LangChain?" });
  *
  * console.log(res.text);
  * console.log(res.sourceDocuments.map((d) => d.metadata.source));

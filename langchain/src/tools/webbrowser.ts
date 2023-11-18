@@ -177,9 +177,7 @@ export interface WebBrowserArgs extends ToolParams {
  *   model: new ChatOpenAI({ temperature: 0 }),
  *   embeddings: new OpenAIEmbeddings({}),
  * });
- *
- *
- * const result = await browser.call("https:
+ * const result = await browser.invoke("https:exampleurl.com");
  * ```
  */
 export class WebBrowser extends Tool {

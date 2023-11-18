@@ -42,8 +42,6 @@ export interface ChatGPTPluginRetrieverParams extends RemoteRetrieverParams {
  *     bearer: "super-secret-jwt-token-with-at-least-32-characters-long",
  *   },
  * });
- *
- *
  * const docs = await retriever.getRelevantDocuments("hello world");
  * ```
  */

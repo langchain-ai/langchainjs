@@ -22,15 +22,12 @@ export interface GoogleVertexAITextInput
  * environment variable or directly as "authOptions.credentials".
  * @example
  * ```typescript
- * const model = new ChatAnthropic({
+ * const model = new GoogleVertexAI({
  *   temperature: 0.7,
  * });
- *
- *
  * const stream = await model.stream(
  *   "What would be a good company name for a company that makes colorful socks?",
  * );
- *
  * for await (const chunk of stream) {
  *   console.log(chunk);
  * }

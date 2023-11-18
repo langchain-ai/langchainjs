@@ -47,8 +47,6 @@ interface NotionPage {
  *   databaseId: "{databaseId}",
  *   notionIntegrationToken: "{notionIntegrationToken}",
  * });
- *
- *
  * const docs = await loader.load();
  * ```
  */

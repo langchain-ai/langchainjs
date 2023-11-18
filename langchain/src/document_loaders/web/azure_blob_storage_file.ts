@@ -41,8 +41,6 @@ interface AzureBlobStorageFileLoaderConfig {
  *     blobName: "{blobName}",
  *   },
  * });
- *
- *
  * const docs = await loader.load();
  * ```
  */

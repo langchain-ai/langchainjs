@@ -42,7 +42,6 @@ export interface AutoGPTInput {
  *   [
  *     new ReadFileTool({ store: new InMemoryFileStore() }),
  *     new WriteFileTool({ store: new InMemoryFileStore() }),
- *
  *     new SerpAPI("YOUR_SERPAPI_API_KEY", {
  *       location: "San Francisco,California,United States",
  *       hl: "en",
@@ -55,8 +54,6 @@ export interface AutoGPTInput {
  *     aiRole: "Assistant",
  *   },
  * );
- *
- *
  * const result = await autogpt.run(["write a weather report for SF today"]);
  * ```
  */

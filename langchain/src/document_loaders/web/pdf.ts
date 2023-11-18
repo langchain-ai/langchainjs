@@ -7,11 +7,7 @@ import { formatDocumentsAsString } from "../../util/document.js";
  * @example
  * ```typescript
  * const loader = new WebPDFLoader(new Blob());
- *
- *
  * const docs = await loader.load();
- *
- *
  * console.log({ docs });
  * ```
  */

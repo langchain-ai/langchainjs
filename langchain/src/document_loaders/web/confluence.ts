@@ -45,8 +45,6 @@ export interface ConfluenceAPIResponse {
  *   username: "your-username",
  *   accessToken: "your-access-token",
  * });
- *
- *
  * const documents = await loader.load();
  * console.log(documents);
  * ```
