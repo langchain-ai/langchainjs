@@ -39,7 +39,17 @@ interface NotionPage {
   };
 }
 
-/** @deprecated use the `NotionAPILoader` class instead. */
+/** @deprecated use the `NotionAPILoader` class instead.
+ * @example
+ * ```typescript
+ * const loader = new NotionDBLoader({
+ *   pageSizeLimit: 10,
+ *   databaseId: "{databaseId}",
+ *   notionIntegrationToken: "{notionIntegrationToken}",
+ * });
+ * const docs = await loader.load();
+ * ```
+ */
 export class NotionDBLoader
   extends BaseDocumentLoader
   implements NotionDBLoaderParams

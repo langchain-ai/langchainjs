@@ -39,6 +39,18 @@ export interface BabyAGIInputs
  * prioritization, and execution. It uses three chains for these
  * operations: `creationChain`, `prioritizationChain`, and
  * `executionChain`.
+ * @example
+ * ```typescript
+ * const babyAGI = BabyAGI.fromLLM({
+ *   llm: new OpenAI({ temperature: 0 }),
+ *   vectorstore: new MemoryVectorStore(new OpenAIEmbeddings()),
+ *   maxIterations: 3,
+ * });
+ *
+ * const result = await babyAGI.call({
+ *   objective: "Write a weather report for SF today",
+ * });
+ * ```
  */
 export class BabyAGI extends BaseChain implements BabyAGIInputs {
   static lc_name() {

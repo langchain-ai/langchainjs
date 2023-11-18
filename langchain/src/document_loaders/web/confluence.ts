@@ -37,6 +37,17 @@ export interface ConfluenceAPIResponse {
 
 /**
  * Class representing a document loader for loading pages from Confluence.
+ * @example
+ * ```typescript
+ * const loader = new ConfluencePagesLoader({
+ *   baseUrl: "https:
+ *   spaceKey: "~EXAMPLE362906de5d343d49dcdbae5dEXAMPLE",
+ *   username: "your-username",
+ *   accessToken: "your-access-token",
+ * });
+ * const documents = await loader.load();
+ * console.log(documents);
+ * ```
  */
 export class ConfluencePagesLoader extends BaseDocumentLoader {
   public readonly baseUrl: string;
