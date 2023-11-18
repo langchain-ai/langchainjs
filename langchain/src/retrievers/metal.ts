@@ -30,7 +30,6 @@ interface ResponseItem {
  * pass to the Metal API during its initialization.
  * @example
  * ```typescript
- *
  * const retriever = new MetalRetriever({
  *   client: new Metal(
  *     process.env.METAL_API_KEY,
@@ -38,10 +37,7 @@ interface ResponseItem {
  *     process.env.METAL_INDEX_ID,
  *   ),
  * });
- *
- *
  * const docs = await retriever.getRelevantDocuments("hello");
- *
  * ```
  */
 export class MetalRetriever extends BaseRetriever {

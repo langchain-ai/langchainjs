@@ -18,14 +18,10 @@ import { GAuthClient } from "../../util/googlevertexai-gauth.js";
  *   Google Cloud project using Vertex AI.
  * @example
  * ```typescript
- *
- * const model = new ChatOpenAI({
+ * const model = new ChatGoogleVertexAI({
  *   temperature: 0.7,
  * });
- *
- *
- * const result = await model.call("What is the capital of France?");
- *
+ * const result = await model.invoke("What is the capital of France?");
  * ```
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<GoogleAuthOptions> {

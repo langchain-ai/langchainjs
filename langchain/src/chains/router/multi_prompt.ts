@@ -17,8 +17,7 @@ import { RouterOutputParser } from "../../output_parsers/router.js";
  * functionality specific to multi-prompt chains.
  * @example
  * ```typescript
- *
- * const multiPromptChain = MultiPromptChain.fromLLMAndPrompts(new OpenAIChat(), {
+ * const multiPromptChain = MultiPromptChain.fromLLMAndPrompts(new ChatOpenAI(), {
  *   promptNames: ["physics", "math", "history"],
  *   promptDescriptions: [
  *     "Good for answering questions about physics",
@@ -31,12 +30,9 @@ import { RouterOutputParser } from "../../output_parsers/router.js";
  *     `You are a very smart history professor. Here is a question:\n{input}\n`,
  *   ],
  * });
- *
- *
  * const result = await multiPromptChain.call({
  *   input: "What is the speed of light?",
  * });
- *
  * ```
  */
 export class MultiPromptChain extends MultiRouteChain {

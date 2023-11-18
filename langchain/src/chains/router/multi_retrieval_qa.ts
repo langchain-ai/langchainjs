@@ -36,9 +36,8 @@ export type MultiRetrievalDefaults = {
  * chains.
  * @example
  * ```typescript
- *
  * const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
- *   new OpenAIChat(),
+ *   new ChatOpenAI(),
  *   {
  *     retrieverNames: ["aqua teen", "mst3k", "animaniacs"],
  *     retrieverDescriptions: [
@@ -57,15 +56,12 @@ export type MultiRetrievalDefaults = {
  *   },
  * );
  *
- *
  * const result = await multiRetrievalQAChain.call({
  *   input:
  *     "In the Aqua Teen Hunger Force theme song, who calls himself the mike rula?",
  * });
  *
- *
  * console.log(result.sourceDocuments, result.text);
- *
  * ```
  */
 export class MultiRetrievalQAChain extends MultiRouteChain {

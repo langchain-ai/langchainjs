@@ -15,16 +15,12 @@ import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
  * environment variable or directly as "authOptions.credentials".
  * @example
  * ```typescript
- *
- * const model = new ChatOpenAI({
+ * const model = new ChatGoogleVertexAI({
  *   temperature: 0.7,
  * });
- *
- *
- * const result = await model.call(
+ * const result = await model.invoke(
  *   "How do I implement a binary search algorithm in Python?",
  * );
- *
  * ```
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOptions> {

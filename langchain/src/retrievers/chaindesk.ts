@@ -20,16 +20,12 @@ interface Berry {
 /**
  * @example
  * ```typescript
- *
  * const retriever = new ChaindeskRetriever({
  *   datastoreId: "DATASTORE_ID",
  *   apiKey: "CHAINDESK_API_KEY",
  *   topK: 8,
  * });
- *
- *
  * const docs = await retriever.getRelevantDocuments("hello");
- *
  * ```
  */
 export class ChaindeskRetriever extends BaseRetriever {

@@ -41,14 +41,11 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  * retrieve relevant documents.
  * @example
  * ```typescript
- *
  * const retriever = new HydeRetriever({
  *   vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
- *   llm: new OpenAI(),
+ *   llm: new ChatOpenAI(),
  *   k: 1,
  * });
- *
- *
  * await vectorStore.addDocuments(
  *   [
  *     "My name is John.",
@@ -57,12 +54,9 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  *     "My favourite food is pasta.",
  *   ].map((pageContent) => new Document({ pageContent })),
  * );
- *
- *
  * const results = await retriever.getRelevantDocuments(
  *   "What is my favourite food?",
  * );
- *
  * ```
  */
 export class HydeRetriever<

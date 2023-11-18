@@ -34,15 +34,11 @@ export interface FromLLMInput {
 /**
  * @example
  * ```typescript
- *
  * const chain = new GraphCypherQAChain({
- *   llm: new OpenAI({ temperature: 0 }),
+ *   llm: new ChatOpenAI({ temperature: 0 }),
  *   graph: new Neo4jGraph(),
  * });
- *
- *
  * const res = await chain.run("Who played in Pulp Fiction?");
- *
  * ```
  */
 export class GraphCypherQAChain extends BaseChain {

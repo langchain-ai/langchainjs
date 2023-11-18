@@ -36,17 +36,13 @@ export interface ZepRetrieverConfig extends BaseRetrieverInput {
  * Extends the BaseRetriever class.
  * @example
  * ```typescript
- *
  * const retriever = new ZepRetriever({
  *   url: "http:
  *   sessionId: "session_exampleUUID",
  *   topK: 3,
  * });
- *
- *
  * const query = "Can I drive red cars in France?";
  * const docs = await retriever.getRelevantDocuments(query);
- *
  * ```
  */
 export class ZepRetriever extends BaseRetriever {

@@ -46,17 +46,12 @@ export interface SqlDatabaseChainInput extends ChainInputs {
  * @link See https://js.langchain.com/docs/security for more information.
  * @example
  * ```typescript
- *
  * const chain = new SqlDatabaseChain({
  *   llm: new OpenAI({ temperature: 0 }),
- *   database: new SqlDatabase({
- *
- *   }),
+ *   database: new SqlDatabase({ ...config }),
  * });
  *
- *
  * const result = await chain.run("How many tracks are there?");
- *
  * ```
  */
 export class SqlDatabaseChain extends BaseChain {

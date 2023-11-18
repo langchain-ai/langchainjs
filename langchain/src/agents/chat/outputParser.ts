@@ -10,21 +10,16 @@ export const FINAL_ANSWER_ACTION = "Final Answer:";
  * final answer action or a JSON response, and parses it accordingly.
  * @example
  * ```typescript
- *
  * const prompt = ChatPromptTemplate.fromMessages([
  *   [
  *     "ai",
  *     `{PREFIX}
- *
  * {FORMAT_INSTRUCTIONS}
- *
  * {SUFFIX}`,
  *   ],
  *   ["human", "Question: {input}"],
  * ]);
- *
  * const runnableAgent = RunnableSequence.from([
- *
  *   {
  *     input: (i: { input: string; steps: AgentStep[] }) => i.input,
  *     agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
@@ -35,18 +30,15 @@ export const FINAL_ANSWER_ACTION = "Final Answer:";
  *   new ChatAgentOutputParser(),
  * ]);
  *
- *
  * const executor = AgentExecutor.fromAgentAndTools({
  *   agent: runnableAgent,
  *   tools: [new SerpAPI(), new Calculator()],
  * });
  *
- *
  * const result = await executor.invoke({
  *   input:
  *     "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
  * });
- *
  * ```
  */
 export class ChatAgentOutputParser extends AgentActionOutputParser {

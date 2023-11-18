@@ -57,15 +57,11 @@ interface PageResult {
  * extends the Tool class.
  * @example
  * ```typescript
- *
  * const wikipediaQuery = new WikipediaQueryRun({
  *   topKResults: 3,
  *   maxDocContentLength: 4000,
  * });
- *
- *
  * const result = await wikipediaQuery.call("Langchain");
- *
  * ```
  */
 export class WikipediaQueryRun extends Tool {

@@ -34,11 +34,14 @@ const FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE =
  * ```typescript
  *
  * const runnableAgent = RunnableSequence.from([
- *
+ *   ...rest of runnable
  *   new ReActSingleInputOutputParser({ toolNames: ["SerpAPI", "Calculator"] }),
  * ]);
- *
- * const result = await runnableAgent.invoke({
+ * const agent = AgentExecutor.fromAgentAndTools({
+ *   agent: runnableAgent,
+ *   tools: [new SerpAPI(), new Calculator()],
+ * });
+ * const result = await agent.invoke({
  *   input: "whats the weather in pomfret?",
  * });
  *

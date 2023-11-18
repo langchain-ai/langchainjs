@@ -26,25 +26,19 @@ export const BUFFER_IDX = "buffer_idx";
  * ref: https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/retrievers/time_weighted_retriever.py
  * @example
  * ```typescript
- *
  * const retriever = new TimeWeightedVectorStoreRetriever({
  *   vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
  *   memoryStream: [],
  *   searchKwargs: 2,
  * });
- *
- *
  * await retriever.addDocuments([
  *   { pageContent: "My name is John.", metadata: {} },
  *   { pageContent: "My favourite food is pizza.", metadata: {} },
  *
  * ]);
- *
- *
  * const results = await retriever.getRelevantDocuments(
  *   "What is my favourite food?",
  * );
- *
  * ```
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {

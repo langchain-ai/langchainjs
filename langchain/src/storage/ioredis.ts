@@ -8,10 +8,7 @@ import { BaseStore } from "../schema/storage.js";
  * as well as yielding keys from the database.
  * @example
  * ```typescript
- *
  * const store = new RedisByteStore({ client: new Redis({}) });
- *
- *
  * await store.mset([
  *   [
  *     "message:id:0",
@@ -24,21 +21,14 @@ import { BaseStore } from "../schema/storage.js";
  *     ),
  *   ],
  * ]);
- *
- *
  * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
  * console.log(retrievedMessages.map((v) => new TextDecoder().decode(v)));
- *
- *
  * const yieldedKeys = [];
  * for await (const key of store.yieldKeys("message:id:")) {
  *   yieldedKeys.push(key);
  * }
  * console.log(yieldedKeys);
- *
- *
  * await store.mdelete(yieldedKeys);
- *
  * ```
  */
 export class RedisByteStore extends BaseStore<string, Uint8Array> {

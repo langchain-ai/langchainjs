@@ -32,7 +32,6 @@ export type PipelinePromptTemplateInput<
  * prompts.
  * @example
  * ```typescript
- *
  * const composedPrompt = new PipelinePromptTemplate({
  *   pipelinePrompts: [
  *     {
@@ -58,13 +57,10 @@ export type PipelinePromptTemplateInput<
  *   ],
  *   finalPrompt: PromptTemplate.fromTemplate(
  *     `{introduction}
- *
  * {example}
- *
  * {start}`,
  *   ),
  * });
- *
  *
  * const formattedPrompt = await composedPrompt.format({
  *   person: "Elon Musk",
@@ -72,7 +68,6 @@ export type PipelinePromptTemplateInput<
  *   example_a: "Tesla",
  *   input: `What's your favorite social media site?`,
  * });
- *
  * ```
  */
 export class PipelinePromptTemplate<

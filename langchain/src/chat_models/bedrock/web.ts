@@ -87,17 +87,12 @@ export function convertMessagesToPrompt(
  * region, and the maximum number of tokens to generate.
  * @example
  * ```typescript
- *
- * const model = new ChatOpenAI({
+ * const model = new BedrockChat({
  *   model: "anthropic.claude-v2",
  *   region: "us-east-1",
  * });
- *
- *
  * const res = await model.invoke([{ content: "Tell me a joke" }]);
- *
  * console.log(res);
- *
  * ```
  */
 export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {

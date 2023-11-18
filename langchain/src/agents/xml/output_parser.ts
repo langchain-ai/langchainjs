@@ -5,28 +5,22 @@ import { AgentActionOutputParser } from "../types.js";
 /**
  * @example
  * ```typescript
- *
  * const prompt = ChatPromptTemplate.fromMessages([
  *   HumanMessagePromptTemplate.fromTemplate(AGENT_INSTRUCTIONS),
  *   new MessagesPlaceholder("agent_scratchpad"),
  * ]);
- *
  * const runnableAgent = RunnableSequence.from([
- *
- *   {},
+ *   ...rest of runnable
  *   prompt,
  *   new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).bind({
  *     stop: ["</tool_input>", "</final_answer>"],
  *   }),
  *   new XMLAgentOutputParser(),
  * ]);
- *
- *
  * const result = await executor.invoke({
  *   input: "What is the weather in Honolulu?",
  *   tools: [],
  * });
- *
  * ```
  */
 export class XMLAgentOutputParser extends AgentActionOutputParser {

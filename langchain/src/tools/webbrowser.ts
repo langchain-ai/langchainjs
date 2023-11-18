@@ -171,11 +171,6 @@ export interface WebBrowserArgs extends ToolParams {
  * information from them or to summarize their content. It uses the axios
  * library to send HTTP requests and the cheerio library to parse the
  * returned HTML.
- * @example
- * ```typescript
- *
- *
- * ```
  */
 export class WebBrowser extends Tool {
   static lc_name() {

@@ -22,7 +22,6 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
  * for a query and processing the JSON response from Vespa.
  * @example
  * ```typescript
- *
  * const retriever = new VespaRetriever({
  *   url: "https:
  *   auth: false,
@@ -34,10 +33,7 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
  *   },
  *   content_field: "content",
  * });
- *
- *
  * const result = await retriever.getRelevantDocuments("what is vespa?");
- *
  * ```
  */
 export class VespaRetriever extends RemoteRetriever {

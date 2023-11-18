@@ -20,7 +20,6 @@ export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
  * query, and then retrieves the full documents from the document store.
  * @example
  * ```typescript
- *
  * const retriever = new MultiVectorRetriever({
  *   vectorstore: new FaissStore(),
  *   docstore: new InMemoryStore(),
@@ -29,10 +28,8 @@ export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
  *   parentK: 5,
  * });
  *
- *
  * const retrieverResult = await retriever.getRelevantDocuments("justice breyer");
  * console.log(retrieverResult[0].pageContent.length);
- *
  * ```
  */
 export class MultiVectorRetriever extends BaseRetriever {

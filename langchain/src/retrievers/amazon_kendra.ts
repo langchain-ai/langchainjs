@@ -32,7 +32,6 @@ export interface AmazonKendraRetrieverArgs {
  * provided by AWS. Extends the BaseRetriever class.
  * @example
  * ```typescript
- *
  * const retriever = new AmazonKendraRetriever({
  *   topK: 10,
  *   indexId: "YOUR_INDEX_ID",
@@ -45,9 +44,7 @@ export interface AmazonKendraRetrieverArgs {
  *   },
  * });
  *
- *
  * const docs = await retriever.getRelevantDocuments("How are clouds formed?");
- *
  * ```
  */
 export class AmazonKendraRetriever extends BaseRetriever {

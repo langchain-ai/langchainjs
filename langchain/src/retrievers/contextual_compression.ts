@@ -19,17 +19,13 @@ export interface ContextualCompressionRetrieverArgs extends BaseRetrieverInput {
  * these documents using a specified document compressor.
  * @example
  * ```typescript
- *
  * const retriever = new ContextualCompressionRetriever({
  *   baseCompressor: new LLMChainExtractor(),
  *   baseRetriever: new HNSWLib().asRetriever(),
  * });
- *
- *
  * const retrievedDocs = await retriever.getRelevantDocuments(
  *   "What did the speaker say about Justice Breyer?",
  * );
- *
  * ```
  */
 export class ContextualCompressionRetriever extends BaseRetriever {

@@ -7,14 +7,10 @@ import { BaseStore } from "../schema/storage.js";
  * storing key-value pairs in the file system.
  * @example
  * ```typescript
- *
  * const store = await LocalFileStore.fromPath("./messages");
- *
- *
  * await store.mset(
  *   Array.from({ length: 5 }).map((_, index) => [
  *     `message:id:${index}`,
- *
  *     new TextEncoder().encode(
  *       JSON.stringify(
  *         index % 2 === 0
@@ -24,21 +20,11 @@ import { BaseStore } from "../schema/storage.js";
  *     ),
  *   ]),
  * );
- *
- *
  * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
- *
- *
  * console.log(retrievedMessages.map((v) => new TextDecoder().decode(v)));
- *
- *
  * for await (const key of store.yieldKeys("message:id:")) {
  *   await store.mdelete([key]);
  * }
- *
- *
- * await fs.promises.rm("./messages", { recursive: true, force: true });
- *
  * ```
  */
 export class LocalFileStore extends BaseStore<string, Uint8Array> {

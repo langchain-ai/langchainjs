@@ -8,29 +8,19 @@ import { BaseStore } from "../schema/storage.js";
  * as well as yielding keys from the database.
  * @example
  * ```typescript
- *
  * const store = new VercelKVStore({
  *   client: getClient(),
  * });
- *
- *
  * await store.mset([
  *   { key: "message:id:0", value: "encoded message 0" },
  *   { key: "message:id:1", value: "encoded message 1" },
  * ]);
- *
- *
  * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
- *
- *
  * const yieldedKeys = [];
  * for await (const key of store.yieldKeys("message:id:")) {
  *   yieldedKeys.push(key);
  * }
- *
- *
  * await store.mdelete(yieldedKeys);
- *
  * ```
  */
 export class VercelKVStore extends BaseStore<string, Uint8Array> {

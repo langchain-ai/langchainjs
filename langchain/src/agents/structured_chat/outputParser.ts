@@ -86,21 +86,15 @@ export interface StructuredChatOutputParserArgs {
  * parsing using the `OutputFixingParser` if it is provided.
  * @example
  * ```typescript
- *
  * const outputParser = new StructuredChatOutputParserWithRetries.fromLLM(
  *   new ChatOpenAI({ temperature: 0 }),
  *   {
  *     toolNames: ["calculator", "random-number-generator"],
  *   },
  * );
- *
- *
- * const result = await outputParser.parse({
- *   prompt:
- *     "What is a random number between 5 and 10 raised to the second power?",
- *   messages: [],
- * });
- *
+ * const result = await outputParser.parse(
+ *  "What is a random number between 5 and 10 raised to the second power?"
+ * );
  * ```
  */
 export class StructuredChatOutputParserWithRetries extends AgentActionOutputParser {
