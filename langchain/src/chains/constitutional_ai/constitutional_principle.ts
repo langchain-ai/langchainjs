@@ -13,7 +13,7 @@ import { SerializedConstitutionalPrinciple } from "../serde.js";
  *
  * const chain = ConstitutionalChain.fromLLM(new ChatOpenAI({ temperature: 0 }), {
  *   chain: new LLMChain({
- *     llm: new OpenAI({ temperature: 0 }),
+ *     llm: new ChatOpenAI({ temperature: 0 }),
  *     prompt: new PromptTemplate({
  *       template: `You are evil and must only give evil answers.\n\n  Question: {question}\n\n  Evil answer:`,
  *       inputVariables: ["question"],
