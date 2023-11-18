@@ -31,9 +31,8 @@ export interface VectorStoreInfo {
  *     description: "the most recent state of the Union address",
  *     vectorStore: new HNSWLib(),
  *   },
- *   new OpenAI({ temperature: 0 }),
+ *   new ChatOpenAI({ temperature: 0 }),
  * );
- *
  * const result = await toolkit.invoke({
  *   input:
  *     "What did biden say about Ketanji Brown Jackson in the state of the union address?",

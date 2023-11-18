@@ -50,9 +50,7 @@ interface selectStoredMessagesDTO {
  *   }),
  * });
  *
- *
  * const chainInput = { input };
- *
  *
  * const res = await memory.chatHistory.invoke(chainInput);
  * await memory.saveContext(chainInput, {

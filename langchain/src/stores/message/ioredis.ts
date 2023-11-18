@@ -29,14 +29,12 @@ export type RedisChatMessageHistoryInput = {
  *   url: "redis:
  * });
  *
- *
  * const chain = new ConversationChain({
- *   llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+ *   llm: new ChatOpenAI({ temperature: 0 }),
  *   memory: { chatHistory },
  * });
  *
- *
- * const response = await chain.call({
+ * const response = await chain.invoke({
  *   input: "What did I just say my name was?",
  * });
  * console.log({ response });

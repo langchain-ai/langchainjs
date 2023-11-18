@@ -42,14 +42,12 @@ export interface FirestoreDBChatMessageHistory {
  *   config: { projectId: "your-project-id" },
  * });
  *
- *
  * const chain = new ConversationChain({
  *   llm: new ChatOpenAI(),
  *   memory: new BufferMemory({ chatHistory }),
  * });
  *
- *
- * const response = await chain.call({
+ * const response = await chain.invoke({
  *   input: "What did I just say my name was?",
  * });
  * console.log({ response });

@@ -66,7 +66,6 @@ export interface MomentoChatMessageHistoryProps {
  *   sessionTtl: 300,
  * });
  *
- *
  * const messages = await chatHistory.getMessages();
  * console.log({ messages });
  * ```

@@ -17,15 +17,10 @@ import { CallbackManagerForToolRun } from "../../callbacks/manager.js";
  *     "https:
  *     "https:
  *   ],
- *   model: new OpenAI({
- *     temperature: 0,
- *     openAIApiKey: process.env.OPENAI_API_KEY,
- *   }),
+ *   model: new ChatOpenAI({}),
  * });
- *
- *
  * const viewInput = `What meetings do I have this week?`;
- * const viewResult = await googleCalendarViewTool.call({ input: viewInput });
+ * const viewResult = await googleCalendarViewTool.invoke({ input: viewInput });
  * console.log("View Result", viewResult);
  * ```
  */

@@ -14,12 +14,10 @@ export interface MongoDBChatMessageHistoryInput {
  * @example
  * ```typescript
  * const chatHistory = new MongoDBChatMessageHistory({
- *   collection: ,
+ *   collection: myCollection,
  *   sessionId: 'unique-session-id',
  * });
- *
  * const messages = await chatHistory.getMessages();
- *
  * await chatHistory.clear();
  * ```
  */

@@ -51,15 +51,11 @@ interface selectStoredMessagesDTO {
  *     url: "ADD_YOURS_HERE",
  *   },
  * });
- *
- *
  * const chain = new ConversationChain({
  *   llm: new ChatOpenAI(),
  *   memory: chatHistory,
  * });
- *
- *
- * const response = await chain.call({
+ * const response = await chain.invoke({
  *   input: "What did I just say my name was?",
  * });
  * console.log({ response });

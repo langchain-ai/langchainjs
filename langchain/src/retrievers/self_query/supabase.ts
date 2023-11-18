@@ -39,15 +39,12 @@ type ValueType = {
  * @example
  * ```typescript
  * const selfQueryRetriever = new SelfQueryRetriever({
- *   llm: new OpenAI(),
+ *   llm: new ChatOpenAI(),
  *   vectorStore: new SupabaseVectorStore(),
  *   documentContents: "Brief summary of a movie",
- *   attributeInfo: [
- *
- *   ],
+ *   attributeInfo: [],
  *   structuredQueryTranslator: new SupabaseTranslator(),
  * });
- *
  *
  * const queryResult = await selfQueryRetriever.getRelevantDocuments(
  *   "Which movies are directed by Greta Gerwig?",

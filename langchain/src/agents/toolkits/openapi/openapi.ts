@@ -40,9 +40,8 @@ export class RequestsToolkit extends Toolkit {
  * ```typescript
  * const toolkit = new OpenApiToolkit(
  *   new JsonSpec({
- *
  *   }),
- *   new OpenAI({ temperature: 0 }),
+ *   new ChatOpenAI({ temperature: 0 }),
  *   {
  *     "Content-Type": "application/json",
  *     Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,

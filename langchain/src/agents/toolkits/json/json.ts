@@ -17,7 +17,7 @@ import { AgentExecutor } from "../../executor.js";
  * @example
  * ```typescript
  * const toolkit = new JsonToolkit(new JsonSpec());
- * const executor = createJsonAgent(, toolkit);
+ * const executor = createJsonAgent(model, toolkit);
  * const result = await executor.invoke({
  *   input: 'What are the required parameters in the request body to the /completions endpoint?'
  * });

@@ -971,9 +971,7 @@ export class RunnableRetry<
  * const promptTemplate = PromptTemplate.fromTemplate(
  *   "Tell me a joke about {topic}",
  * );
- *
  * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
- *
  * const result = await chain.invoke({ topic: "bears" });
  * ```
  */
@@ -1280,7 +1278,6 @@ export class RunnableSequence<
  *     new ChatAnthropic({}),
  *   ),
  * });
- *
  * const result = await mapChain.invoke({ topic: "bear" });
  * ```
  */

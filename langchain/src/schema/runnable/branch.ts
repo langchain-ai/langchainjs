@@ -40,8 +40,6 @@ export type BranchLike<RunInput, RunOutput> = [
  *   generalChain,
  * ]);
  *
- *
- *
  * const fullChain = RunnableSequence.from([
  *   {
  *     topic: classificationChain,
@@ -49,7 +47,6 @@ export type BranchLike<RunInput, RunOutput> = [
  *   },
  *   branch,
  * ]);
- *
  *
  * const result = await fullChain.invoke({
  *   question: "how do I use LangChain?",
