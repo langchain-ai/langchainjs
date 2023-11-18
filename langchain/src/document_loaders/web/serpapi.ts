@@ -17,6 +17,18 @@ interface SerpAPIParameters {
 /**
  * Class representing a document loader for loading search results from
  * the SerpAPI. It extends the BaseDocumentLoader class.
+ * @example
+ * ```typescript
+ * const loader = new SerpAPILoader({ q: "{query}", apiKey: "{apiKey}" });
+ * const docs = await loader.load();
+ *
+ *
+ * const vectorStore = new MemoryVectorStore();
+ *
+ *
+ * const chain = new RetrievalQAChain();
+ * const answer = await chain.call({ query: "{question}" });
+ * ```
  */
 export class SerpAPILoader extends BaseDocumentLoader {
   private apiKey: string;

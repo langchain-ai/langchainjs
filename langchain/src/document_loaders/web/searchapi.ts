@@ -27,6 +27,20 @@ type SearchApiParameters = {
 /**
  * Class representing a document loader for loading search results from
  * the SearchApi. It extends the BaseDocumentLoader class.
+ * @example
+ * ```typescript
+ * const loader = new SearchApiLoader({
+ *   q: "{query}",
+ *   apiKey: "{apiKey}",
+ *   engine: "google",
+ * });
+ * const docs = await loader.load();
+ *
+ *
+ *
+ * const answer = await retrievalQAChain.call({ query: "{question}" });
+ * console.log(answer.text);
+ * ```
  */
 export class SearchApiLoader extends BaseDocumentLoader {
   private apiKey: string;

@@ -92,6 +92,43 @@ interface SearxngSearchParams {
  *
  * note: works best with *agentType*: `structured-chat-zero-shot-react-description`
  * https://github.com/searxng/searxng
+ * @example
+ * ```typescript
+ * const agent = RunnableSequence.from([
+ *   ChatPromptTemplate.fromMessages([
+ *     [
+ *       "ai",
+ *       "Answer the following questions as best you can. In your final answer, use a bulleted list markdown format.",
+ *     ],
+ *     ["human", "{input}"],
+ *   ]),
+ *   new ChatOpenAI({
+ *     maxTokens: 1000,
+ *     modelName: "gpt-4",
+ *   }),
+ *   (input: BaseMessageChunk): AgentAction | AgentFinish => ({
+ *     log: "test",
+ *     returnValues: {
+ *       output: input,
+ *     },
+ *   }),
+ * ]);
+ * const executor = AgentExecutor.fromAgentAndTools({
+ *   agent,
+ *   tools: [
+ *     new SearxngSearch({
+ *       params: {
+ *         format: "json",
+ *         engines: "google",
+ *       },
+ *       headers: {},
+ *     }),
+ *   ],
+ * });
+ * const result = await executor.invoke({
+ *   input: `What is Langchain? Describe in 50 words`,
+ * });
+ * ```
  */
 export class SearxngSearch extends Tool {
   static lc_name() {

@@ -37,6 +37,20 @@ export type PuppeteerWebBaseLoaderOptions = {
  * Class that extends the BaseDocumentLoader class and implements the
  * DocumentLoader interface. It represents a document loader for scraping
  * web pages using Puppeteer.
+ * @example
+ * ```typescript
+ * const loader = new PuppeteerWebBaseLoader("https:
+ *   launchOptions: {
+ *     headless: true,
+ *   },
+ *   gotoOptions: {
+ *     waitUntil: "domcontentloaded",
+ *   },
+ * });
+ *
+ *
+ * const screenshot = await loader.screenshot();
+ * ```
  */
 export class PuppeteerWebBaseLoader
   extends BaseDocumentLoader

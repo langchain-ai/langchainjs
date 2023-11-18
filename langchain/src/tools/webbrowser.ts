@@ -171,6 +171,16 @@ export interface WebBrowserArgs extends ToolParams {
  * information from them or to summarize their content. It uses the axios
  * library to send HTTP requests and the cheerio library to parse the
  * returned HTML.
+ * @example
+ * ```typescript
+ * const browser = new WebBrowser({
+ *   model: new ChatOpenAI({ temperature: 0 }),
+ *   embeddings: new OpenAIEmbeddings({}),
+ * });
+ *
+ *
+ * const result = await browser.call("https:
+ * ```
  */
 export class WebBrowser extends Tool {
   static lc_name() {
