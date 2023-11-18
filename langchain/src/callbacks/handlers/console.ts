@@ -29,6 +29,16 @@ const { color } = styles;
  * A tracer that logs all events to the console. It extends from the
  * `BaseTracer` class and overrides its methods to provide custom logging
  * functionality.
+ * @example
+ * ```typescript
+ *
+ * const llm = new ChatAnthropic({
+ *   temperature: 0,
+ *   tags: ["example", "callbacks", "constructor"],
+ *   callbacks: [new ConsoleCallbackHandler()],
+ * });
+ *
+ * ```
  */
 export class ConsoleCallbackHandler extends BaseTracer {
   name = "console_callback_handler" as const;

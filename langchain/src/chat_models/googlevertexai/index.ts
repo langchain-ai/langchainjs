@@ -16,6 +16,17 @@ import { GAuthClient } from "../../util/googlevertexai-gauth.js";
  * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
+ * @example
+ * ```typescript
+ *
+ * const model = new ChatOpenAI({
+ *   temperature: 0.7,
+ * });
+ *
+ *
+ * const result = await model.call("What is the capital of France?");
+ *
+ * ```
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<GoogleAuthOptions> {
   static lc_name() {

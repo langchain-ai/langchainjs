@@ -273,6 +273,21 @@ export abstract class BaseCumulativeTransformOutputParser<
 
 /**
  * OutputParser that parses LLMResult into the top likely string.
+ * @example
+ * ```typescript
+ * const promptTemplate = PromptTemplate.fromTemplate(
+ *   "Tell me a joke about {topic}",
+ * );
+ *
+ * const chain = RunnableSequence.from([
+ *   promptTemplate,
+ *   new ChatOpenAI({}),
+ *   new StringOutputParser(),
+ * ]);
+ *
+ * const result = await chain.invoke({ topic: "bears" });
+ * console.log("What do you call a bear with no teeth? A gummy bear!");
+ * ```
  */
 export class StringOutputParser extends BaseTransformOutputParser<string> {
   static lc_name() {

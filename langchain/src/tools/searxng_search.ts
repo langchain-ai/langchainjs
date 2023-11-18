@@ -91,7 +91,13 @@ interface SearxngSearchParams {
  * The input should be a search query, and the output is a JSON array of the query results.
  *
  * note: works best with *agentType*: `structured-chat-zero-shot-react-description`
- * https://github.com/searxng/searxng */
+ * https://github.com/searxng/searxng
+ * @example
+ * ```typescript
+ *
+ *
+ * ```
+ */
 export class SearxngSearch extends Tool {
   static lc_name() {
     return "SearxngSearch";
