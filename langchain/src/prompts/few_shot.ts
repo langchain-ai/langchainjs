@@ -72,6 +72,37 @@ export interface FewShotPromptTemplateInput
  * Prompt template that contains few-shot examples.
  * @augments BasePromptTemplate
  * @augments FewShotPromptTemplateInput
+ * @example
+ * ```typescript
+ * const examplePrompt = PromptTemplate.fromTemplate(
+ *   "Input: {input}\nOutput: {output}",
+ * );
+ *
+ * const exampleSelector = await SemanticSimilarityExampleSelector.fromExamples(
+ *   [
+ *     { input: "happy", output: "sad" },
+ *     { input: "tall", output: "short" },
+ *     { input: "energetic", output: "lethargic" },
+ *     { input: "sunny", output: "gloomy" },
+ *     { input: "windy", output: "calm" },
+ *   ],
+ *   new OpenAIEmbeddings(),
+ *   HNSWLib,
+ *   { k: 1 },
+ * );
+ *
+ * const dynamicPrompt = new FewShotPromptTemplate({
+ *   exampleSelector,
+ *   examplePrompt,
+ *   prefix: "Give the antonym of every input",
+ *   suffix: "Input: {adjective}\nOutput:",
+ *   inputVariables: ["adjective"],
+ * });
+ *
+ * // Format the dynamic prompt with the input 'rainy'
+ * console.log(await dynamicPrompt.format({ adjective: "rainy" }));
+ *
+ * ```
  */
 export class FewShotPromptTemplate
   extends BaseStringPromptTemplate

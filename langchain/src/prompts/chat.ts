@@ -357,6 +357,16 @@ export class ChatMessagePromptTemplate<
 /**
  * Class that represents a human message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
+ * @example
+ * ```typescript
+ * const message = HumanMessagePromptTemplate.fromTemplate("{text}");
+ * const formatted = await message.format({ text: "Hello world!" });
+ *
+ * const chatPrompt = ChatPromptTemplate.fromMessages([message]);
+ * const formattedChatPrompt = await chatPrompt.invoke({
+ *   text: "Hello world!",
+ * });
+ * ```
  */
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -399,6 +409,16 @@ export class AIMessagePromptTemplate<
 /**
  * Class that represents a system message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
+ * @example
+ * ```typescript
+ * const message = SystemMessagePromptTemplate.fromTemplate("{text}");
+ * const formatted = await message.format({ text: "Hello world!" });
+ *
+ * const chatPrompt = ChatPromptTemplate.fromMessages([message]);
+ * const formattedChatPrompt = await chatPrompt.invoke({
+ *   text: "Hello world!",
+ * });
+ * ```
  */
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -484,6 +504,17 @@ function _coerceMessagePromptTemplateLike(
  * Class that represents a chat prompt. It extends the
  * BaseChatPromptTemplate and uses an array of BaseMessagePromptTemplate
  * instances to format a series of messages for a conversation.
+ * @example
+ * ```typescript
+ * const message = SystemMessagePromptTemplate.fromTemplate("{text}");
+ * const chatPrompt = ChatPromptTemplate.fromMessages([
+ *   ["ai", "You are a helpful assistant."],
+ *   message,
+ * ]);
+ * const formattedChatPrompt = await chatPrompt.invoke({
+ *   text: "Hello world!",
+ * });
+ * ```
  */
 export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
