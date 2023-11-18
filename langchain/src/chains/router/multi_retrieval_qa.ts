@@ -34,6 +34,35 @@ export type MultiRetrievalDefaults = {
  * the LangChain framework. It extends the MultiRouteChain class and
  * provides additional functionality specific to multi-retrieval QA
  * chains.
+ * @example
+ * ```typescript
+ * const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
+ *   new ChatOpenAI(),
+ *   {
+ *     retrieverNames: ["aqua teen", "mst3k", "animaniacs"],
+ *     retrieverDescriptions: [
+ *       "Good for answering questions about Aqua Teen Hunger Force theme song",
+ *       "Good for answering questions about Mystery Science Theater 3000 theme song",
+ *       "Good for answering questions about Animaniacs theme song",
+ *     ],
+ *     retrievers: [
+ *       new MemoryVectorStore().asRetriever(3),
+ *       new MemoryVectorStore().asRetriever(3),
+ *       new MemoryVectorStore().asRetriever(3),
+ *     ],
+ *     retrievalQAChainOpts: {
+ *       returnSourceDocuments: true,
+ *     },
+ *   },
+ * );
+ *
+ * const result = await multiRetrievalQAChain.call({
+ *   input:
+ *     "In the Aqua Teen Hunger Force theme song, who calls himself the mike rula?",
+ * });
+ *
+ * console.log(result.sourceDocuments, result.text);
+ * ```
  */
 export class MultiRetrievalQAChain extends MultiRouteChain {
   get outputKeys(): string[] {
