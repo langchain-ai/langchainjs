@@ -43,6 +43,23 @@ export interface S3LoaderParams {
 /**
  * A class that extends the BaseDocumentLoader class. It represents a
  * document loader for loading files from an S3 bucket.
+ * @example
+ * ```typescript
+ * const loader = new S3Loader({
+ *   bucket: "my-document-bucket-123",
+ *   key: "AccountingOverview.pdf",
+ *   s3Config: {
+ *     region: "us-east-1",
+ *     credentials: {
+ *       accessKeyId: "<YourAccessKeyId>",
+ *       secretAccessKey: "<YourSecretAccessKey>",
+ *     },
+ *   },
+ *   unstructuredAPIURL: "<YourUnstructuredAPIURL>",
+ *   unstructuredAPIKey: "<YourUnstructuredAPIKey>",
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class S3Loader extends BaseDocumentLoader {
   private bucket: string;
