@@ -24,6 +24,34 @@ export type BranchLike<RunInput, RunOutput> = [
  * it evaluates the condition of each branch in order and executes the
  * corresponding branch if the condition is true. If none of the conditions
  * are true, it executes the default branch.
+ * @example
+ * ```typescript
+ * const branch = RunnableBranch.from([
+ *   [
+ *     (x: { topic: string; question: string }) =>
+ *       x.topic.toLowerCase().includes("anthropic"),
+ *     anthropicChain,
+ *   ],
+ *   [
+ *     (x: { topic: string; question: string }) =>
+ *       x.topic.toLowerCase().includes("langchain"),
+ *     langChainChain,
+ *   ],
+ *   generalChain,
+ * ]);
+ *
+ * const fullChain = RunnableSequence.from([
+ *   {
+ *     topic: classificationChain,
+ *     question: (input: { question: string }) => input.question,
+ *   },
+ *   branch,
+ * ]);
+ *
+ * const result = await fullChain.invoke({
+ *   question: "how do I use LangChain?",
+ * });
+ * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
