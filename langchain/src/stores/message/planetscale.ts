@@ -42,6 +42,28 @@ interface selectStoredMessagesDTO {
 /**
  * Class for storing and retrieving chat message history from a
  * PlanetScale database. Extends the BaseListChatMessageHistory class.
+ * @example
+ * ```typescript
+ * const chatHistory = new PlanetScaleChatMessageHistory({
+ *   tableName: "stored_message",
+ *   sessionId: "lc-example",
+ *   config: {
+ *     url: "ADD_YOURS_HERE",
+ *   },
+ * });
+ *
+ *
+ * const chain = new ConversationChain({
+ *   llm: new ChatOpenAI(),
+ *   memory: chatHistory,
+ * });
+ *
+ *
+ * const response = await chain.call({
+ *   input: "What did I just say my name was?",
+ * });
+ * console.log({ response });
+ * ```
  */
 export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "planetscale"];

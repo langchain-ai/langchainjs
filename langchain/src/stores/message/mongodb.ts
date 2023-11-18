@@ -10,6 +10,19 @@ export interface MongoDBChatMessageHistoryInput {
   sessionId: string;
 }
 
+/**
+ * @example
+ * ```typescript
+ * const chatHistory = new MongoDBChatMessageHistory({
+ *   collection: ,
+ *   sessionId: 'unique-session-id',
+ * });
+ *
+ * const messages = await chatHistory.getMessages();
+ *
+ * await chatHistory.clear();
+ * ```
+ */
 export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "mongodb"];
 
