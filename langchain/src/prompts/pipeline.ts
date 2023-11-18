@@ -30,6 +30,45 @@ export type PipelinePromptTemplateInput<
  * different input variables. Includes methods for formatting these
  * prompts, extracting required input values, and handling partial
  * prompts.
+ * @example
+ * ```typescript
+ * const composedPrompt = new PipelinePromptTemplate({
+ *   pipelinePrompts: [
+ *     {
+ *       name: "introduction",
+ *       prompt: PromptTemplate.fromTemplate(`You are impersonating {person}.`),
+ *     },
+ *     {
+ *       name: "example",
+ *       prompt: PromptTemplate.fromTemplate(
+ *         `Here's an example of an interaction:
+ * Q: {example_q}
+ * A: {example_a}`,
+ *       ),
+ *     },
+ *     {
+ *       name: "start",
+ *       prompt: PromptTemplate.fromTemplate(
+ *         `Now, do this for real!
+ * Q: {input}
+ * A:`,
+ *       ),
+ *     },
+ *   ],
+ *   finalPrompt: PromptTemplate.fromTemplate(
+ *     `{introduction}
+ * {example}
+ * {start}`,
+ *   ),
+ * });
+ *
+ * const formattedPrompt = await composedPrompt.format({
+ *   person: "Elon Musk",
+ *   example_q: `What's your favorite car?`,
+ *   example_a: "Tesla",
+ *   input: `What's your favorite social media site?`,
+ * });
+ * ```
  */
 export class PipelinePromptTemplate<
   PromptTemplateType extends BasePromptTemplate

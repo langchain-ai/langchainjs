@@ -3,6 +3,17 @@ import { BaseBedrockInput } from "../../util/bedrock.js";
 import { BedrockChat as BaseBedrockChat } from "./web.js";
 import { BaseChatModelParams } from "../base.js";
 
+/**
+ * @example
+ * ```typescript
+ * const model = new BedrockChat({
+ *   model: "anthropic.claude-v2",
+ *   region: "us-east-1",
+ * });
+ * const res = await model.invoke([{ content: "Tell me a joke" }]);
+ * console.log(res);
+ * ```
+ */
 export class BedrockChat extends BaseBedrockChat {
   static lc_name() {
     return "BedrockChat";
