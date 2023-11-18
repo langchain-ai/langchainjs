@@ -214,6 +214,30 @@ export interface LLMSingleActionAgentInput {
  * Class representing a single action agent using a LLMChain in LangChain.
  * Extends the BaseSingleActionAgent class and provides methods for
  * planning agent actions based on LLMChain outputs.
+ * @example
+ * ```typescript
+ * const customPromptTemplate = new CustomPromptTemplate({
+ *   tools: [new Calculator()],
+ *   inputVariables: ["input", "agent_scratchpad"],
+ * });
+ * const customOutputParser = new CustomOutputParser();
+ * const agent = new LLMSingleActionAgent({
+ *   llmChain: new LLMChain({
+ *     prompt: customPromptTemplate,
+ *     llm: new ChatOpenAI({ temperature: 0 }),
+ *   }),
+ *   outputParser: customOutputParser,
+ *   stop: ["\nObservation"],
+ * });
+ * const executor = new AgentExecutor({
+ *   agent,
+ *   tools: [new Calculator()],
+ * });
+ * const result = await executor.invoke({
+ *   input:
+ *     "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
+ * });
+ * ```
  */
 export class LLMSingleActionAgent extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents"];
