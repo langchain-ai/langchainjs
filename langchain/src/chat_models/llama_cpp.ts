@@ -36,8 +36,9 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  * @example
  * ```typescript
  * // Initialize the ChatLlamaCpp model with the path to the model binary file.
- * const model = new ChatOpenAI({
- *   modelPath: "/path/to/your/model/gguf-llama2-q4_0.bin",
+ * const model = new ChatLlamaCpp({
+ *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
+ *   temperature: 0.5,
  * });
  *
  * // Call the model with a message and await the response.

@@ -30,7 +30,7 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
  *   ["human", `Translate "{input}" into {language}.`],
  * ]);
  *
- * const model = new ChatAnthropic({
+ * const model = new ChatOllama({
  *   baseUrl: "http://api.example.com",
  *   model: "llama2",
  *   format: "json",

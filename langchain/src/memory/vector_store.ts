@@ -50,31 +50,6 @@ export interface VectorStoreRetrieverMemoryParams {
  * console.log(
  *   await memory.loadMemoryVariables({ prompt: "what sport should i watch?" }),
  * );
- *
- * const model = new ChatAnthropic({ temperature: 0.9 });
- * const prompt =
- *   PromptTemplate.fromTemplate(`The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
- *
- * Relevant pieces of previous conversation:
- * {history}
- *
- * (You do not need to use these pieces of information if not relevant)
- *
- * Current conversation:
- * Human: {input}
- * AI:`);
- * const chain = new LLMChain({ llm: model, prompt, memory });
- *
- * // Making calls to the chain with different inputs
- * const res1 = await chain.call({ input: "Hi, my name is Perry, what's up?" });
- * console.log({ res1 });
- *
- * const res2 = await chain.call({ input: "what's my favorite sport?" });
- * console.log({ res2 });
- *
- * const res3 = await chain.call({ input: "what's my name?" });
- * console.log({ res3 });
- *
  * ```
  */
 export class VectorStoreRetrieverMemory

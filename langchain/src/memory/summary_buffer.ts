@@ -28,7 +28,7 @@ export interface ConversationSummaryBufferMemoryInput
  * ```typescript
  * // Initialize the memory with a specific model and token limit
  * const memory = new ConversationSummaryBufferMemory({
- *   llm: new OpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
+ *   llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
  *   maxTokenLimit: 10,
  * });
  *
@@ -55,21 +55,6 @@ export interface ConversationSummaryBufferMemoryInput
  *   memory: memory,
  *   prompt: chatPrompt,
  * });
- *
- * // Make predictions using the conversation chain
- * const res1 = await chain.predict({ input: "Hi, what's up?" });
- * console.log({ res1 });
- *
- * // Additional predictions can be made in the same manner
- * // const res2 = await chain.predict({ input: "Just working on writing some documentation!" });
- * // console.log({ res2 });
- *
- * // const res3 = await chain.predict({ input: "For LangChain! Have you heard of it?" });
- * // console.log({ res3 });
- *
- * // const res4 = await chain.predict({ input: "That's not the right one, although a lot of people confuse it for that!" });
- * // console.log({ res4 });
- *
  * ```
  */
 export class ConversationSummaryBufferMemory

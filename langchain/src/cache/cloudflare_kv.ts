@@ -17,8 +17,6 @@ import {
  * const cache = new CloudflareKVCache(env.KV_NAMESPACE);
  * const model = new ChatAnthropic({
  *   cache,
- *   modelName: "gpt-3.5-turbo-instruct",
- *   openAIApiKey: env.OPENAI_API_KEY,
  * });
  * const response = await model.invoke("How are you today?");
  * return new Response(JSON.stringify(response), {

@@ -43,7 +43,7 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
  * @example
  * ```typescript
  * // Embed a query using OpenAIEmbeddings to generate embeddings for a given text
- * const model = new ChatOpenAI();
+ * const model = new OpenAIEmbeddings();
  * const res = await model.embedQuery(
  *   "What would be a good company name for a company that makes colorful socks?",
  * );

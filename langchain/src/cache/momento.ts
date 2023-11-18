@@ -44,20 +44,22 @@ export interface MomentoCacheProps {
  * See https://gomomento.com.
  * @example
  * ```typescript
- * // Initialize the ChatOpenAI model with caching capabilities using MomentoCache.
- * const model = new ChatAnthropic({
- *   cache: new MomentoCache({
- *     client: new CacheClient({
- *       configuration: Configurations.Laptop.v1(),
- *       credentialProvider: CredentialProvider.fromEnvironmentVariable({
- *         environmentVariableName: "MOMENTO_API_KEY",
- *       }),
- *       defaultTtlSeconds: 60 * 60 * 24, // Cache TTL set to 24 hours.
+ * const cache = new MomentoCache({
+ *   client: new CacheClient({
+ *     configuration: Configurations.Laptop.v1(),
+ *     credentialProvider: CredentialProvider.fromEnvironmentVariable({
+ *       environmentVariableName: "MOMENTO_API_KEY",
  *     }),
- *     cacheName: "langchain",
+ *     defaultTtlSeconds: 60 * 60 * 24, // Cache TTL set to 24 hours.
  *   }),
+ *   cacheName: "langchain",
  * });
- *
+ * // Initialize the OpenAI model with Momento cache for caching responses
+ * const model = new ChatOpenAI({
+ *   cache,
+ * });
+ * await model.invoke("How are you today?");
+ * const cachedValues = await cache.lookup("How are you today?", "llmKey");
  * ```
  */
 export class MomentoCache extends BaseCache {

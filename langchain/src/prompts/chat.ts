@@ -359,36 +359,13 @@ export class ChatMessagePromptTemplate<
  * BaseMessageStringPromptTemplate.
  * @example
  * ```typescript
- * const template = "What is a good name for a company that makes {product}?";
- * const promptA = new PromptTemplate({ template, inputVariables: ["product"] });
+ * const message = HumanMessagePromptTemplate.fromTemplate("{text}");
+ * const formatted = await message.format({ text: "Hello world!" });
  *
- * const responseA = await promptA.formatPromptValue({
- *   product: "colorful socks",
+ * const chatPrompt = ChatPromptTemplate.fromMessages([message]);
+ * const formattedChatPrompt = await chatPrompt.invoke({
+ *   text: "Hello world!",
  * });
- * const responseAString = responseA.toString();
- * console.log({ responseAString });
- *
- * const responseAMessages = responseA.toChatMessages();
- * console.log({ responseAMessages });
- *
- * const chatPrompt = ChatPromptTemplate.fromMessages([
- *   SystemMessagePromptTemplate.fromTemplate(
- *     "You are a helpful assistant that translates {input_language} to {output_language}.",
- *   ),
- *   HumanMessagePromptTemplate.fromTemplate("{text}"),
- * ]);
- *
- * const responseB = await chatPrompt.formatPromptValue({
- *   input_language: "English",
- *   output_language: "French",
- *   text: "I love programming.",
- * });
- * const responseBString = responseB.toString();
- * console.log({ responseBString });
- *
- * const responseBMessages = responseB.toChatMessages();
- * console.log({ responseBMessages });
- *
  * ```
  */
 export class HumanMessagePromptTemplate<
@@ -434,34 +411,12 @@ export class AIMessagePromptTemplate<
  * BaseMessageStringPromptTemplate.
  * @example
  * ```typescript
- * const chatPrompt = ChatPromptTemplate.fromMessages([
- *   new SystemMessagePromptTemplate(
- *     ZeroShotAgent.createPrompt([], {
- *       prefix:
- *         "Answer the following questions as best you can, but speaking as a pirate might speak.",
- *       suffix:
- *         'Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"',
- *     }),
- *   ),
- *   HumanMessagePromptTemplate.fromTemplate(`{input}
+ * const message = SystemMessagePromptTemplate.fromTemplate("{text}");
+ * const formatted = await message.format({ text: "Hello world!" });
  *
- * This was your previous work (but I haven't seen any of it! I only see what you return as final answer):
- * {agent_scratchpad}`),
- * ]);
- *
- * const agent = new AgentExecutor.fromAgentAndTools({
- *   agent: new ZeroShotAgent({
- *     llmChain: new LLMChain({
- *       prompt: chatPrompt,
- *       llm: new ChatOpenAI({}),
- *     }),
- *     allowedTools: [],
- *   }),
- *   tools: [],
- * })
- *
- * const response = await agent.invoke({
- *   input: "How many people live in canada as of 2023?",
+ * const chatPrompt = ChatPromptTemplate.fromMessages([message]);
+ * const formattedChatPrompt = await chatPrompt.invoke({
+ *   text: "Hello world!",
  * });
  * ```
  */
@@ -551,36 +506,14 @@ function _coerceMessagePromptTemplateLike(
  * instances to format a series of messages for a conversation.
  * @example
  * ```typescript
- * const template = "What is a good name for a company that makes {product}?";
- * const promptA = new PromptTemplate({ template, inputVariables: ["product"] });
- *
- * const responseA = await promptA.formatPromptValue({
- *   product: "colorful socks",
- * });
- * const responseAString = responseA.toString();
- * console.log({ responseAString });
- *
- * const responseAMessages = responseA.toChatMessages();
- * console.log({ responseAMessages });
- *
+ * const message = SystemMessagePromptTemplate.fromTemplate("{text}");
  * const chatPrompt = ChatPromptTemplate.fromMessages([
- *   SystemMessagePromptTemplate.fromTemplate(
- *     "You are a helpful assistant that translates {input_language} to {output_language}.",
- *   ),
- *   HumanMessagePromptTemplate.fromTemplate("{text}"),
+ *   ["ai", "You are a helpful assistant."],
+ *   message,
  * ]);
- *
- * const responseB = await chatPrompt.formatPromptValue({
- *   input_language: "English",
- *   output_language: "French",
- *   text: "I love programming.",
+ * const formattedChatPrompt = await chatPrompt.invoke({
+ *   text: "Hello world!",
  * });
- * const responseBString = responseB.toString();
- * console.log({ responseBString });
- *
- * const responseBMessages = responseB.toChatMessages();
- * console.log({ responseBMessages });
- *
  * ```
  */
 export class ChatPromptTemplate<

@@ -68,22 +68,6 @@ export class ExceptionTool extends Tool {
 /**
  * A chain managing an agent using tools.
  * @augments BaseChain
- * @example
- * ```typescript
- * // Assuming `getTableNameAndColumns` is a function that returns the table name and columns information
- * const sqlQueryGeneratorChain = RunnableSequence.from([
- *   RunnablePassthrough.assign({
- *     schema: async () => getTableNameAndColumns(),
- *   }),
- *   prompt,
- *   new ChatOpenAI({}).bind({ stop: ["\nSQLResult:"] }),
- *   new StringOutputParser(),
- * ]);
- * const result = await sqlQueryGeneratorChain.invoke({
- *   question: "How many employees are there?",
- * });
- *
- * ```
  */
 export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   static lc_name() {

@@ -41,7 +41,7 @@ export interface EntityMemoryInput extends BaseChatMemoryInput {
  * @example
  * ```typescript
  * const memory = new EntityMemory({
- *   llm: new OpenAI({ temperature: 0 }),
+ *   llm: new ChatOpenAI({ temperature: 0 }),
  *   chatHistoryKey: "history",
  *   entitiesKey: "entities",
  * });

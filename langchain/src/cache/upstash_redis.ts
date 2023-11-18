@@ -23,16 +23,18 @@ export type UpstashRedisCacheProps = {
  * See https://docs.upstash.com/redis.
  * @example
  * ```typescript
- * // Initialize the OpenAI model with Upstash Redis cache for caching responses
- * const model = new ChatOpenAI({
- *   cache: new UpstashRedisCache({
- *     config: {
- *       url: "UPSTASH_REDIS_REST_URL",
- *       token: "UPSTASH_REDIS_REST_TOKEN",
- *     },
- *   }),
- * });
- *
+* const cache = new UpstashRedisCache({
+*   config: {
+*     url: "UPSTASH_REDIS_REST_URL",
+*     token: "UPSTASH_REDIS_REST_TOKEN",
+*   },
+* });
+* // Initialize the OpenAI model with Upstash Redis cache for caching responses
+* const model = new ChatOpenAI({
+*   cache,
+* });
+* await model.invoke("How are you today?");
+* const cachedValues = await cache.lookup("How are you today?", "llmKey");
  * ```
  */
 export class UpstashRedisCache extends BaseCache {
