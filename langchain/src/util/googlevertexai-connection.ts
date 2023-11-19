@@ -57,17 +57,12 @@ export abstract class GoogleConnection<
       opts.responseType = "json";
     }
 
-    try {
-      const callResponse = await this.caller.callWithOptions(
-        { signal: options?.signal },
-        async () => this.client.request(opts)
-      );
-      const response: unknown = callResponse; // Done for typecast safety, I guess
-      return <ResponseType>response;
-    } catch (x) {
-      console.error(JSON.stringify(x, null, 1));
-      throw x;
-    }
+    const callResponse = await this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => this.client.request(opts)
+    );
+    const response: unknown = callResponse; // Done for typecast safety, I guess
+    return <ResponseType>response;
   }
 }
 
