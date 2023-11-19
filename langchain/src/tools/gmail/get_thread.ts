@@ -1,4 +1,3 @@
-import { google } from "googleapis";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
 export interface GetThreadSchema {
@@ -15,13 +14,9 @@ export class GmailGetThread extends GmailBaseTool {
   }
 
   async _call(args: GetThreadSchema) {
-    const auth = await this.getAuth();
-
-    const gmail = google.gmail({ version: "v1", auth });
-
     const { threadId } = args;
 
-    const thread = await gmail.users.threads.get({
+    const thread = await this.gmail.users.threads.get({
       userId: "me",
       id: threadId,
     });

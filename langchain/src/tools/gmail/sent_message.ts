@@ -1,4 +1,3 @@
-import { google } from "googleapis";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
 interface SendMessageParams {
@@ -51,9 +50,6 @@ export class GmailSendMessage extends GmailBaseTool {
     cc,
     bcc,
   }: SendMessageParams): Promise<string> {
-    const auth = await this.getAuth();
-    const gmail = google.gmail({ version: "v1", auth });
-
     const rawMessage = this.createEmailMessage({
       message,
       to,
@@ -63,7 +59,7 @@ export class GmailSendMessage extends GmailBaseTool {
     });
 
     try {
-      const response = await gmail.users.messages.send({
+      const response = await this.gmail.users.messages.send({
         userId: "me",
         requestBody: {
           raw: rawMessage,
