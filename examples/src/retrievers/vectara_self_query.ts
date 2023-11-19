@@ -51,6 +51,11 @@ const docs = [
  * in this case, we want to be able to query on the genre, year, director, rating, and length of the movie.
  * We also provide a description of each attribute and the type of the attribute.
  * This is used to generate the query prompts.
+ *
+ * We need to setup the filters in the vectara as well otherwise filter won't work.
+ * To setup the filter in vectara, go to Data -> {your_created_corpus} -> overview
+ * In the overview section edit the filters section and all the following attributes in
+ * the filters.
  */
 const attributeInfo: AttributeInfo[] = [
   {
@@ -104,7 +109,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   /**
    * We need to create a basic translator that translates the queries into a
    * filter format that the vector store can understand. We provide a basic translator
-   * translator here, but you can create your own translator by extending BaseTranslator
+   * here, but you can create your own translator by extending BaseTranslator
    * abstract class. Note that the vector store needs to support filtering on the metadata
    * attributes you want to query on.
    */
