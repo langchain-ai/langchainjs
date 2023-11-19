@@ -40,16 +40,15 @@ export abstract class GmailBaseTool extends Tool {
       throw new Error("Missing GMAIL_PRIVATE_KEY to interact with Gmail");
     }
 
-    this.gmail = this.getGmail(fields.credentials.clientEmail, fields.credentials.privateKey, fields.scopes || []);
+    this.gmail = this.getGmail(
+      fields.credentials.clientEmail,
+      fields.credentials.privateKey,
+      fields.scopes || []
+    );
   }
 
   private getGmail(email: string, key: string, scopes: string[] = []) {
-    const auth = new google.auth.JWT(
-      email,
-      undefined,
-      key,
-      scopes,
-    );
+    const auth = new google.auth.JWT(email, undefined, key, scopes);
 
     return google.gmail({ version: "v1", auth });
   }
