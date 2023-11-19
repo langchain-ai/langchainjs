@@ -8,19 +8,20 @@ import {
   RUN_KEY,
 } from "../schema/index.js";
 import {
-  BaseLanguageModel,
-  BaseLanguageModelCallOptions,
-  BaseLanguageModelInput,
-  BaseLanguageModelParams,
-} from "../base_language/index.js";
-import {
   BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
-import { getBufferString } from "../memory/base.js";
+import {
+  BaseLanguageModel,
+  BaseLanguageModelCallOptions,
+  BaseLanguageModelInput,
+  BaseLanguageModelParams,
+} from "../base_language/index.js";
+
 import { RunnableConfig } from "../schema/runnable/config.js";
+import { getBufferString } from "../memory/base.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -120,6 +121,7 @@ export abstract class BaseLLM<
       const extra = {
         options: callOptions,
         invocation_params: this?.invocationParams(callOptions),
+        batch_size: 1,
       };
       const runManagers = await callbackManager_?.handleLLMStart(
         this.toJSON(),
@@ -247,6 +249,7 @@ export abstract class BaseLLM<
     const extra = {
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
+      batch_size: prompts.length,
     };
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),

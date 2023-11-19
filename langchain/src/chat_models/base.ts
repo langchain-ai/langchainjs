@@ -1,15 +1,15 @@
 import {
   AIMessage,
   BaseMessage,
+  BaseMessageChunk,
+  BaseMessageLike,
   BasePromptValue,
   ChatGeneration,
+  ChatGenerationChunk,
   ChatResult,
   HumanMessage,
-  BaseMessageChunk,
   LLMResult,
   RUN_KEY,
-  ChatGenerationChunk,
-  BaseMessageLike,
   coerceMessageLikeToMessage,
 } from "../schema/index.js";
 import {
@@ -23,6 +23,7 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
+
 import { RunnableConfig } from "../schema/runnable/config.js";
 
 /**
@@ -164,6 +165,7 @@ export abstract class BaseChatModel<
       const extra = {
         options: callOptions,
         invocation_params: this?.invocationParams(callOptions),
+        batch_size: 1,
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
@@ -231,6 +233,7 @@ export abstract class BaseChatModel<
     const extra = {
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
+      batch_size: 1,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
