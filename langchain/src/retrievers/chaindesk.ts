@@ -35,7 +35,13 @@ export class ChaindeskRetriever extends BaseRetriever {
 
   apiKey?: string;
 
-  constructor({ datastoreId, apiKey, topK, filter,...rest }: ChaindeskRetrieverArgs) {
+  constructor({
+    datastoreId,
+    apiKey,
+    topK,
+    filter,
+    ...rest
+  }: ChaindeskRetrieverArgs) {
     super();
 
     this.caller = new AsyncCaller(rest);
