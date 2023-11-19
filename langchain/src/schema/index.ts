@@ -111,11 +111,16 @@ export type MessageType =
 
 export type MessageContent =
   | string
-  | {
-      type: "text" | "image_url";
-      text?: string;
-      image_url?: string | { url: string; detail?: "low" | "high" };
-    }[];
+  | (
+      | {
+          type: "text";
+          text: string;
+        }
+      | {
+          type: "image_url";
+          image_url: string | { url: string; detail?: "auto" | "low" | "high" };
+        }
+    )[];
 
 export interface BaseMessageFields {
   content: MessageContent;

@@ -29,6 +29,32 @@ export abstract class BaseDocumentCompressor {
 
 /**
  * Document compressor that uses a pipeline of Transformers.
+ * @example
+ * ```typescript
+ * const compressorPipeline = new DocumentCompressorPipeline({
+ *   transformers: [
+ *     new RecursiveCharacterTextSplitter({
+ *       chunkSize: 200,
+ *       chunkOverlap: 0,
+ *     }),
+ *     new EmbeddingsFilter({
+ *       embeddings: new OpenAIEmbeddings(),
+ *       similarityThreshold: 0.8,
+ *       k: 5,
+ *     }),
+ *   ],
+ * });
+ * const retriever = new ContextualCompressionRetriever({
+ *   baseCompressor: compressorPipeline,
+ *   baseRetriever: new TavilySearchAPIRetriever({
+ *     includeRawContent: true,
+ *   }),
+ * });
+ * const retrievedDocs = await retriever.getRelevantDocuments(
+ *   "What did the speaker say about Justice Breyer in the 2022 State of the Union?",
+ * );
+ * console.log({ retrievedDocs });
+ * ```
  */
 export class DocumentCompressorPipeline extends BaseDocumentCompressor {
   transformers: (BaseDocumentTransformer | BaseDocumentCompressor)[];

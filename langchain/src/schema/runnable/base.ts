@@ -966,6 +966,14 @@ export class RunnableRetry<
 
 /**
  * A sequence of runnables, where the output of each is the input of the next.
+ * @example
+ * ```typescript
+ * const promptTemplate = PromptTemplate.fromTemplate(
+ *   "Tell me a joke about {topic}",
+ * );
+ * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
+ * const result = await chain.invoke({ topic: "bears" });
+ * ```
  */
 export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1260,6 +1268,18 @@ export class RunnableSequence<
 /**
  * A runnable that runs a mapping of runnables in parallel,
  * and returns a mapping of their outputs.
+ * @example
+ * ```typescript
+ * const mapChain = RunnableMap.from({
+ *   joke: PromptTemplate.fromTemplate("Tell me a joke about {topic}").pipe(
+ *     new ChatAnthropic({}),
+ *   ),
+ *   poem: PromptTemplate.fromTemplate("write a 2-line poem about {topic}").pipe(
+ *     new ChatAnthropic({}),
+ *   ),
+ * });
+ * const result = await mapChain.invoke({ topic: "bear" });
+ * ```
  */
 export class RunnableMap<RunInput> extends Runnable<
   RunInput,

@@ -30,6 +30,22 @@ const FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE =
  * Thought: agent thought here
  * Final Answer: The temperature is 100 degrees
  * ```
+ * @example
+ * ```typescript
+ *
+ * const runnableAgent = RunnableSequence.from([
+ *   ...rest of runnable
+ *   new ReActSingleInputOutputParser({ toolNames: ["SerpAPI", "Calculator"] }),
+ * ]);
+ * const agent = AgentExecutor.fromAgentAndTools({
+ *   agent: runnableAgent,
+ *   tools: [new SerpAPI(), new Calculator()],
+ * });
+ * const result = await agent.invoke({
+ *   input: "whats the weather in pomfret?",
+ * });
+ *
+ * ```
  */
 export class ReActSingleInputOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "react"];

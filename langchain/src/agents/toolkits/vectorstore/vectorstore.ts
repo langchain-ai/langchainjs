@@ -23,6 +23,22 @@ export interface VectorStoreInfo {
  * Class representing a toolkit for working with a single vector store. It
  * initializes the vector store QA tool based on the provided vector store
  * information and language model.
+ * @example
+ * ```typescript
+ * const toolkit = new VectorStoreToolkit(
+ *   {
+ *     name: "state_of_union_address",
+ *     description: "the most recent state of the Union address",
+ *     vectorStore: new HNSWLib(),
+ *   },
+ *   new ChatOpenAI({ temperature: 0 }),
+ * );
+ * const result = await toolkit.invoke({
+ *   input:
+ *     "What did biden say about Ketanji Brown Jackson in the state of the union address?",
+ * });
+ * console.log(`Got output ${result.output}`);
+ * ```
  */
 export class VectorStoreToolkit extends Toolkit {
   tools: Tool[];

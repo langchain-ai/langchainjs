@@ -8,6 +8,12 @@ import { TextLoader } from "./text.js";
  * path to the SRT file or a `Blob` object. The `parse()` method is
  * implemented to parse the SRT file and extract the text content of each
  * subtitle.
+ * @example
+ * ```typescript
+ * const loader = new SRTLoader("path/to/file.srt");
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class SRTLoader extends TextLoader {
   constructor(filePathOrBlob: string | Blob) {

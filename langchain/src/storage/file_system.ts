@@ -5,6 +5,27 @@ import { BaseStore } from "../schema/storage.js";
 /**
  * File system implementation of the BaseStore using a dictionary. Used for
  * storing key-value pairs in the file system.
+ * @example
+ * ```typescript
+ * const store = await LocalFileStore.fromPath("./messages");
+ * await store.mset(
+ *   Array.from({ length: 5 }).map((_, index) => [
+ *     `message:id:${index}`,
+ *     new TextEncoder().encode(
+ *       JSON.stringify(
+ *         index % 2 === 0
+ *           ? new AIMessage("ai stuff...")
+ *           : new HumanMessage("human stuff..."),
+ *       ),
+ *     ),
+ *   ]),
+ * );
+ * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
+ * console.log(retrievedMessages.map((v) => new TextDecoder().decode(v)));
+ * for await (const key of store.yieldKeys("message:id:")) {
+ *   await store.mdelete([key]);
+ * }
+ * ```
  */
 export class LocalFileStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];

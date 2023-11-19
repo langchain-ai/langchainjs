@@ -293,6 +293,24 @@ class GenerativeAgentMemoryChain extends BaseChain {
  * formatting memories, getting memories until a token limit is reached,
  * loading memory variables, saving the context of a model run to memory,
  * and clearing memory contents.
+ * @example
+ * ```typescript
+ * const createNewMemoryRetriever = async () => {
+ *   const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
+ *   const retriever = new TimeWeightedVectorStoreRetriever({
+ *     vectorStore,
+ *     otherScoreKeys: ["importance"],
+ *     k: 15,
+ *   });
+ *   return retriever;
+ * };
+ * const tommiesMemory = new GenerativeAgentMemory(
+ *   llm,
+ *   await createNewMemoryRetriever(),
+ *   { reflectionThreshold: 8 },
+ * );
+ * const summary = await tommiesMemory.getSummary();
+ * ```
  */
 export class GenerativeAgentMemory extends BaseMemory {
   llm: BaseLanguageModel;
