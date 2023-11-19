@@ -91,6 +91,7 @@
     "./langchain/src/llms/fake.ts",
     "./langchain/src/prompts/index.ts",
     "./langchain/src/prompts/load.ts",
+    "./langchain/src/vectorstores/clickhouse.ts",
     "./langchain/src/vectorstores/analyticdb.ts",
     "./langchain/src/vectorstores/base.ts",
     "./langchain/src/vectorstores/cassandra.ts",

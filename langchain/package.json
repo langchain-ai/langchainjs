@@ -229,6 +229,9 @@
     "prompts/load.cjs",
     "prompts/load.js",
     "prompts/load.d.ts",
+    "vectorstores/clickhouse.cjs",
+    "vectorstores/clickhouse.js",
+    "vectorstores/clickhouse.d.ts",
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
@@ -843,7 +846,6 @@
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
-    "@clickhouse/client": "^0.0.14",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@elastic/elasticsearch": "^8.4.0",
@@ -982,7 +984,6 @@
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/storage-blob": "^12.15.0",
-    "@clickhouse/client": "^0.0.14",
     "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
@@ -1100,9 +1101,6 @@
       "optional": true
     },
     "@azure/storage-blob": {
-      "optional": true
-    },
-    "@clickhouse/client": {
       "optional": true
     },
     "@cloudflare/ai": {
@@ -1369,6 +1367,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
+    "@clickhouse/client": "^0.2.5",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",
@@ -1772,6 +1771,11 @@
       "types": "./prompts/load.d.ts",
       "import": "./prompts/load.js",
       "require": "./prompts/load.cjs"
+    },
+    "./vectorstores/clickhouse": {
+      "types": "./vectorstores/clickhouse.d.ts",
+      "import": "./vectorstores/clickhouse.js",
+      "require": "./vectorstores/clickhouse.cjs"
     },
     "./vectorstores/analyticdb": {
       "types": "./vectorstores/analyticdb.d.ts",
