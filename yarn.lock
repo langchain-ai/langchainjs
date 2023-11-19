@@ -17759,7 +17759,7 @@ __metadata:
     voy-search: 0.6.2
     weaviate-ts-client: ^1.0.0
     zod: ^3.22.3
-    zod-to-json-schema: ^3.21.4
+    zod-to-json-schema: 3.20.3
   languageName: unknown
   linkType: soft
 
@@ -22386,7 +22386,7 @@ __metadata:
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
     zod: ^3.22.3
-    zod-to-json-schema: ^3.20.4
+    zod-to-json-schema: 3.20.3
   peerDependencies:
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-bedrock-runtime": ^3.422.0
@@ -32222,21 +32222,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:^3.20.4":
-  version: 3.20.4
-  resolution: "zod-to-json-schema@npm:3.20.4"
+"zod-to-json-schema@npm:3.20.3":
+  version: 3.20.3
+  resolution: "zod-to-json-schema@npm:3.20.3"
   peerDependencies:
     zod: ^3.20.0
-  checksum: 55bc649dbc82ce25fbfbfdd42ca530d883d83be5d02cb81e89f6401d54bca151fc6b8cc57999c75eb6a3dcaa3f000697315fbd4f505637472621570ed52784d8
-  languageName: node
-  linkType: hard
-
-"zod-to-json-schema@npm:^3.21.4":
-  version: 3.21.4
-  resolution: "zod-to-json-schema@npm:3.21.4"
-  peerDependencies:
-    zod: ^3.21.4
-  checksum: 899c1f461fb6547c0b08a265c82040c250be9b88d3f408f2f3ff77a418fdfad7549077e589d418fccb312c1f6d555c3c7217b199cc9072762e1fab20716dd2a6
+  checksum: 1addf7e6f7d69398404dc90f5c9b76ea44e3f6deeb2fc7c72983a00e15b7340661d7e894b0a4eee3a07334dcdcc79d7064e44de46b4acc37d38ab2f3f7217ec8
   languageName: node
   linkType: hard
 
