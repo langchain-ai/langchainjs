@@ -1,9 +1,10 @@
+import * as uuid from "uuid";
+
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
-import * as uuid from "uuid";
 
 /**
  * Interface for the arguments required to initialize a VectaraStore
@@ -180,56 +181,54 @@ export class VectaraStore extends VectorStore {
     );
   }
 
-
   /**
    * Method to delete data from the Vectara corpus.
    * @param params an array of document IDs to be deleted
    * @returns Promise that resolves when the deletion is complete.
    */
   async deleteDocuments(ids: string[]): Promise<void> {
-      if (ids && ids.length > 0) {
+    if (ids && ids.length > 0) {
+      const headers = await this.getJsonHeader();
+      for (const id of ids) {
+        const data = {
+          customer_id: this.customerId,
+          corpus_id: this.corpusId[0],
+          document_id: id,
+        };
 
-        const headers = await this.getJsonHeader();
-        for (const id of ids) {        
-          const data = {
-            customer_id: this.customerId,
-            corpus_id: this.corpusId[0],
-            document_id: id
-          };
-    
-          try {
-            const controller = new AbortController();
-            const timeout = setTimeout(
-              () => controller.abort(),
-              this.vectaraApiTimeoutSeconds * 1000
-            );
-            const response = await fetch(`https://${this.apiEndpoint}/v1/delete-doc`, {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(
+            () => controller.abort(),
+            this.vectaraApiTimeoutSeconds * 1000
+          );
+          const response = await fetch(
+            `https://${this.apiEndpoint}/v1/delete-doc`,
+            {
               method: "POST",
               headers: headers?.headers,
               body: JSON.stringify(data),
               signal: controller.signal,
-            });
-            clearTimeout(timeout);
-            const status = response.status
-            if (status !== 200) {
-              throw new Error(`Vectara API returned status code ${status} when deleting document ${id}`);
             }
-          } catch (e) {
-            const error = new Error(
-              `Error ${(e as Error).message}`
+          );
+          clearTimeout(timeout);
+          if (response.status !== 200) {
+            throw new Error(
+              `Vectara API returned status code ${response.status} when deleting document ${id}`
             );
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (error as any).code = 500;
-            throw error;
           }
+        } catch (e) {
+          const error = new Error(`Error ${(e as Error).message}`);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).code = 500;
+          throw error;
         }
-      } else {
-        throw new Error(
-          `no "ids" specified for deletion`
-        );
       }
+    } else {
+      throw new Error(`no "ids" specified for deletion`);
+    }
   }
-    
+
   /**
    * Adds documents to the Vectara store.
    * @param documents An array of Document objects to add to the Vectara store.
@@ -240,9 +239,9 @@ export class VectaraStore extends VectorStore {
       throw new Error("addDocuments does not support multiple corpus ids");
 
     const headers = await this.getJsonHeader();
-    let doc_ids = [];
+    const doc_ids: string[] = [];
     let countAdded = 0;
-    for (const [_, document] of documents.entries()) {
+    for (const document of documents) {
       const doc_id: string = document.metadata?.document_id ?? uuid.v4();
       const data = {
         customer_id: this.customerId,
@@ -321,7 +320,7 @@ export class VectaraStore extends VectorStore {
     if (this.corpusId.length > 1)
       throw new Error("addFiles does not support multiple corpus ids");
 
-    let doc_ids: string[] = [];
+    const doc_ids: string[] = [];
 
     for (const [index, file] of files.entries()) {
       const md = metadatas ? metadatas[index] : {};

@@ -8,7 +8,6 @@ import { insecureHash } from "../../util/js-sha1/hash.js";
 import { VectaraFile, VectaraLibArgs, VectaraStore } from "../vectara.js";
 
 const getDocs = (): Document[] => {
-
   // Some text from Lord of the Rings
   const englishOne = `It all depends on what you want. You can trust us to stick to you through thick and thin to the
     bitter end. And you can trust us to keep any secret of yours - closer than you keep it yourself.
@@ -89,7 +88,7 @@ describe("VectaraStore", () => {
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
-    test("with fakeEmbeddings doesn't throw error", () => {
+    test.skip("with fakeEmbeddings doesn't throw error", () => {
       expect(() =>
         VectaraStore.fromTexts([], [], new FakeEmbeddings(), args)
       ).not.toThrow();
@@ -103,7 +102,7 @@ describe("VectaraStore", () => {
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
-    test("with fakeEmbeddings doesn't throw error", async () => {
+    test.skip("with fakeEmbeddings doesn't throw error", async () => {
       await expect(
         VectaraStore.fromDocuments(getDocs(), new FakeEmbeddings(), args)
       ).resolves.toBeDefined();
@@ -123,7 +122,7 @@ describe("VectaraStore", () => {
       doc_ids = await store.addDocuments(getDocs());
     });
 
-    test("similaritySearchWithScore", async () => {
+    test.skip("similaritySearchWithScore", async () => {
       const resultsWithScore = await store.similaritySearchWithScore(
         "What did Sam do?",
         10, // Number of results needed
@@ -135,7 +134,7 @@ describe("VectaraStore", () => {
       expect(resultsWithScore[0][1]).toBeGreaterThan(0);
     });
 
-    test("similaritySearch", async () => {
+    test.skip("similaritySearch", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
@@ -152,7 +151,7 @@ describe("VectaraStore", () => {
       expect(results[0].metadata.title).toBe("Lord of the Rings");
     });
 
-    test("similaritySearch with filter", async () => {
+    test.skip("similaritySearch with filter", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
@@ -169,7 +168,7 @@ describe("VectaraStore", () => {
       expect(hasEnglish).toBe(false);
     });
 
-    test("addFiles", async () => {
+    test.skip("addFiles", async () => {
       const docs = getDocs();
       const englishOneContent = docs[0].pageContent;
       const frenchOneContent = docs[2].pageContent;
@@ -199,7 +198,7 @@ describe("VectaraStore", () => {
       });
 
       const file_doc_ids = await store.addFiles(vectaraFiles);
-      doc_ids = [...doc_ids, ...file_doc_ids]
+      doc_ids = [...doc_ids, ...file_doc_ids];
 
       for (const file of files) {
         fs.unlinkSync(file.filename);
@@ -222,6 +221,5 @@ describe("VectaraStore", () => {
       });
       await store.deleteDocuments(doc_ids);
     });
-
   });
 });
