@@ -1,4 +1,3 @@
-import { encodeToBase64 } from "@gomomento/sdk-core/dist/src/internal/utils/string.js";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
 export interface CreateDraftSchema {
@@ -41,7 +40,7 @@ export class GmailCreateDraft extends GmailBaseTool {
       message,
     ].join("\n");
 
-    draftMessage.message.raw = encodeToBase64(email);
+    draftMessage.message.raw = Buffer.from(email).toString("base64url");
 
     return draftMessage;
   }
