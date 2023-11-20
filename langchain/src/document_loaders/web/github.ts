@@ -575,9 +575,7 @@ export class GithubRepoLoader
             `Failed to fetch file content: ${file.path}, ${error}`
           );
         }
-      }
-
-      if (this.recursive) {
+      } else if (this.recursive) {
         yield* await this.processDirectoryAsStream(file.path);
       }
     }
@@ -628,9 +626,7 @@ export class GithubRepoLoader
         } catch {
           this.handleError(`Failed to fetch file content: ${file.path}`);
         }
-      }
-
-      if (this.recursive) {
+      } else if (this.recursive) {
         yield* await this.processDirectoryAsStream(file.path);
       }
     }
