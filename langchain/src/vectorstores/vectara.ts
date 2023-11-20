@@ -1,3 +1,5 @@
+import * as uuid from "uuid";
+
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
@@ -180,23 +182,72 @@ export class VectaraStore extends VectorStore {
   }
 
   /**
+   * Method to delete data from the Vectara corpus.
+   * @param params an array of document IDs to be deleted
+   * @returns Promise that resolves when the deletion is complete.
+   */
+  async deleteDocuments(ids: string[]): Promise<void> {
+    if (ids && ids.length > 0) {
+      const headers = await this.getJsonHeader();
+      for (const id of ids) {
+        const data = {
+          customer_id: this.customerId,
+          corpus_id: this.corpusId[0],
+          document_id: id,
+        };
+
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(
+            () => controller.abort(),
+            this.vectaraApiTimeoutSeconds * 1000
+          );
+          const response = await fetch(
+            `https://${this.apiEndpoint}/v1/delete-doc`,
+            {
+              method: "POST",
+              headers: headers?.headers,
+              body: JSON.stringify(data),
+              signal: controller.signal,
+            }
+          );
+          clearTimeout(timeout);
+          if (response.status !== 200) {
+            throw new Error(
+              `Vectara API returned status code ${response.status} when deleting document ${id}`
+            );
+          }
+        } catch (e) {
+          const error = new Error(`Error ${(e as Error).message}`);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).code = 500;
+          throw error;
+        }
+      }
+    } else {
+      throw new Error(`no "ids" specified for deletion`);
+    }
+  }
+
+  /**
    * Adds documents to the Vectara store.
    * @param documents An array of Document objects to add to the Vectara store.
-   * @returns A Promise that resolves when the documents have been added.
+   * @returns A Promise that resolves to an array of document IDs indexed in Vectara.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[]): Promise<string[]> {
     if (this.corpusId.length > 1)
       throw new Error("addDocuments does not support multiple corpus ids");
 
     const headers = await this.getJsonHeader();
+    const doc_ids: string[] = [];
     let countAdded = 0;
-    for (const [index, document] of documents.entries()) {
+    for (const document of documents) {
+      const doc_id: string = document.metadata?.document_id ?? uuid.v4();
       const data = {
         customer_id: this.customerId,
         corpus_id: this.corpusId[0],
         document: {
-          document_id:
-            document.metadata?.document_id ?? `${Date.now()}${index}`,
+          document_id: doc_id,
           title: document.metadata?.title ?? "",
           metadata_json: JSON.stringify(document.metadata ?? {}),
           section: [
@@ -235,6 +286,7 @@ export class VectaraStore extends VectorStore {
           throw error;
         } else {
           countAdded += 1;
+          doc_ids.push(doc_id);
         }
       } catch (e) {
         const error = new Error(
@@ -248,6 +300,8 @@ export class VectaraStore extends VectorStore {
     if (this.verbose) {
       console.log(`Added ${countAdded} documents to Vectara`);
     }
+
+    return doc_ids;
   }
 
   /**
@@ -266,7 +320,7 @@ export class VectaraStore extends VectorStore {
     if (this.corpusId.length > 1)
       throw new Error("addFiles does not support multiple corpus ids");
 
-    let numDocs = 0;
+    const doc_ids: string[] = [];
 
     for (const [index, file] of files.entries()) {
       const md = metadatas ? metadatas[index] : {};
@@ -276,7 +330,7 @@ export class VectaraStore extends VectorStore {
       data.append("doc-metadata", JSON.stringify(md));
 
       const response = await fetch(
-        `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId[0]}`,
+        `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId[0]}&d=true`,
         {
           method: "POST",
           headers: {
@@ -293,7 +347,9 @@ export class VectaraStore extends VectorStore {
       } else if (status !== 200) {
         throw new Error(`Vectara API returned status code ${status}`);
       } else {
-        numDocs += 1;
+        const result = await response.json();
+        const doc_id = result.document.documentId;
+        doc_ids.push(doc_id);
       }
     }
 
@@ -301,7 +357,7 @@ export class VectaraStore extends VectorStore {
       console.log(`Uploaded ${files.length} files to Vectara`);
     }
 
-    return numDocs;
+    return doc_ids;
   }
 
   /**
