@@ -391,6 +391,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/weaviate"?:
     | typeof import("../retrievers/self_query/weaviate.js")
     | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
+  "langchain/retrievers/self_query/vectara"?:
+    | typeof import("../retrievers/self_query/vectara.js")
+    | Promise<typeof import("../retrievers/self_query/vectara.js")>;
   "langchain/cache/cloudflare_kv"?:
     | typeof import("../cache/cloudflare_kv.js")
     | Promise<typeof import("../cache/cloudflare_kv.js")>;
