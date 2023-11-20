@@ -61,7 +61,7 @@ test("Runnable variant", async () => {
 
   const query = "What is the weather in New York?";
   console.log(`Calling agent executor with query: ${query}`);
-  const result = await executor.call({
+  const result = await executor.invoke({
     input: query,
   });
   console.log(result);
@@ -75,9 +75,15 @@ test("Runnable variant works with executor", async () => {
     temperature: 0,
   }).bind({});
 
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["ai", "You are a helpful assistant"],
+    ["human", "{input}"],
+    new MessagesPlaceholder("agent_scratchpad"),
+  ]);
+
   // Prepare agent chain
   const llmChain = new LLMChain({
-    prompt: ChatPromptTemplate.fromTemplate("What is the weather in New York?"),
+    prompt,
     llm: runnableModel,
   });
   const agent = new OpenAIAgent({
@@ -90,5 +96,9 @@ test("Runnable variant works with executor", async () => {
     agent,
     tools,
   });
-  await executor.call({});
+  const result = await executor.invoke({
+    input: "What is the weather in New York?",
+  });
+
+  console.log(result);
 });

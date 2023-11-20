@@ -229,11 +229,12 @@ export class OpenAIAgent extends Agent {
       }
     }
 
-    const promptValue =
-      await this.llmChain.prompt.formatPromptValue(valuesForPrompt);
+    const promptValue = await this.llmChain.prompt.formatPromptValue(
+      valuesForPrompt
+    );
 
-    const message = await (llm as 
-      Runnable<
+    const message = await (
+      llm as Runnable<
         BaseLanguageModelInput,
         BaseMessageChunk,
         ChatOpenAICallOptions
