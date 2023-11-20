@@ -92,6 +92,7 @@ const util_math = require("langchain/util/math");
 const util_time = require("langchain/util/time");
 const experimental_autogpt = require("langchain/experimental/autogpt");
 const experimental_openai_assistant = require("langchain/experimental/openai_assistant");
+const experimental_openai_files = require("langchain/experimental/openai_files");
 const experimental_babyagi = require("langchain/experimental/babyagi");
 const experimental_generative_agents = require("langchain/experimental/generative_agents");
 const experimental_plan_and_execute = require("langchain/experimental/plan_and_execute");
