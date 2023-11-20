@@ -230,6 +230,7 @@
     "./langchain/src/retrievers/self_query/pinecone.ts",
     "./langchain/src/retrievers/self_query/supabase.ts",
     "./langchain/src/retrievers/self_query/weaviate.ts",
+    "./langchain/src/retrievers/self_query/vectara.ts",
     "./langchain/src/retrievers/vespa.ts",
     "./langchain/src/cache/index.ts",
     "./langchain/src/cache/cloudflare_kv.ts",

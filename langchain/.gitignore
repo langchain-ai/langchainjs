@@ -634,6 +634,9 @@ retrievers/self_query/supabase.d.ts
 retrievers/self_query/weaviate.cjs
 retrievers/self_query/weaviate.js
 retrievers/self_query/weaviate.d.ts
+retrievers/self_query/vectara.cjs
+retrievers/self_query/vectara.js
+retrievers/self_query/vectara.d.ts
 retrievers/vespa.cjs
 retrievers/vespa.js
 retrievers/vespa.d.ts
