@@ -232,24 +232,16 @@ export class OpenAIAgent extends Agent {
     const promptValue =
       await this.llmChain.prompt.formatPromptValue(valuesForPrompt);
 
-    let message: BaseMessage;
-    if (Runnable.isRunnable(llm)) {
-      message = await (
-        llm as Runnable<
-          BaseLanguageModelInput,
-          BaseMessageChunk,
-          ChatOpenAICallOptions
-        >
-      ).invoke(promptValue.toChatMessages(), {
-        callbacks: callbackManager,
-      });
-    } else {
-      message = await (llm as ChatOpenAI).predictMessages(
-        promptValue.toChatMessages(),
-        valuesForLLM,
-        callbackManager,
-      );
-    }
+    const message = await (llm as 
+      Runnable<
+        BaseLanguageModelInput,
+        BaseMessageChunk,
+        ChatOpenAICallOptions
+      >
+    ).invoke(promptValue.toChatMessages(), {
+      ...valuesForLLM,
+      callbacks: callbackManager,
+    });
     return this.outputParser.parseAIMessage(message);
   }
 }
