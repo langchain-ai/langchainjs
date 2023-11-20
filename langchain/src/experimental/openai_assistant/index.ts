@@ -60,11 +60,13 @@ export class OpenAIAssistantRunnable<
     clientOptions,
     asAgent,
     pollIntervalMs,
+    fileIds,
   }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId"> & {
     model: string;
     name?: string;
     instructions?: string;
     tools?: OpenAIToolType | Array<StructuredTool>;
+    fileIds?: string[];
   }) {
     const formattedTools =
       tools?.map((tool) => {
@@ -80,6 +82,7 @@ export class OpenAIAssistantRunnable<
       instructions,
       tools: formattedTools,
       model,
+      file_ids: fileIds,
     });
 
     return new this({
