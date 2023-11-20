@@ -1,4 +1,3 @@
-import { google } from "googleapis";
 import { encodeToBase64 } from "@gomomento/sdk-core/dist/src/internal/utils/string.js";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
@@ -48,9 +47,6 @@ export class GmailCreateDraft extends GmailBaseTool {
   }
 
   async _call(args: CreateDraftSchema) {
-    const auth = await this.getAuth();
-
-    const gmail = google.gmail({ version: "v1", auth });
     const { message, to, subject, cc, bcc } = args;
     const create_message = this.prepareDraftMessage(
       message,
@@ -60,7 +56,7 @@ export class GmailCreateDraft extends GmailBaseTool {
       bcc
     );
 
-    const response = await gmail.users.drafts.create({
+    const response = await this.gmail.users.drafts.create({
       userId: "me",
       requestBody: create_message,
     });

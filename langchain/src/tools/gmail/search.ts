@@ -1,4 +1,4 @@
-import { gmail_v1, google } from "googleapis";
+import { gmail_v1 } from "googleapis";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
 export interface SearchSchema {
@@ -18,11 +18,9 @@ export class GmailSearch extends GmailBaseTool {
   }
 
   async _call(args: SearchSchema) {
-    const auth = await this.getAuth();
-    const gmail = google.gmail({ version: "v1", auth });
     const { query, maxResults = 10, resource = "messages" } = args;
 
-    const response = await gmail.users.messages.list({
+    const response = await this.gmail.users.messages.list({
       userId: "me",
       q: query,
       maxResults,
@@ -56,11 +54,9 @@ export class GmailSearch extends GmailBaseTool {
   async parseMessages(
     messages: gmail_v1.Schema$Message[]
   ): Promise<gmail_v1.Schema$Message[]> {
-    const auth = await this.getAuth();
-    const gmail = google.gmail({ version: "v1", auth });
     const parsedMessages = await Promise.all(
       messages.map(async (message) => {
-        const messageData = await gmail.users.messages.get({
+        const messageData = await this.gmail.users.messages.get({
           userId: "me",
           format: "raw",
           id: message.id ?? "",
@@ -96,11 +92,9 @@ export class GmailSearch extends GmailBaseTool {
   async parseThreads(
     threads: gmail_v1.Schema$Thread[]
   ): Promise<gmail_v1.Schema$Thread[]> {
-    const auth = await this.getAuth();
-    const gmail = google.gmail({ version: "v1", auth });
     const parsedThreads = await Promise.all(
       threads.map(async (thread) => {
-        const threadData = await gmail.users.threads.get({
+        const threadData = await this.gmail.users.threads.get({
           userId: "me",
           format: "raw",
           id: thread.id ?? "",

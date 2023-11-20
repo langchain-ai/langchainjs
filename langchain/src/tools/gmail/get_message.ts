@@ -1,4 +1,3 @@
-import { google } from "googleapis";
 import { GmailBaseToolParams, GmailBaseTool } from "./base.js";
 
 export class GmailGetMessage extends GmailBaseTool {
@@ -11,11 +10,7 @@ export class GmailGetMessage extends GmailBaseTool {
   }
 
   async _call(messageId: string) {
-    const auth = await this.getAuth();
-
-    const gmail = google.gmail({ version: "v1", auth });
-
-    const message = await gmail.users.messages.get({
+    const message = await this.gmail.users.messages.get({
       userId: "me",
       id: messageId,
     });

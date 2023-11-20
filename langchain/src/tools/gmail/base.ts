@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { gmail_v1, google } from "googleapis";
 import { Tool } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
@@ -15,11 +15,7 @@ export abstract class GmailBaseTool extends Tool {
 
   description = "A tool to send and view emails through Gmail";
 
-  protected clientEmail: string;
-
-  protected privateKey: string;
-
-  protected scopes: string[];
+  protected gmail: gmail_v1.Gmail;
 
   constructor(
     fields: GmailBaseToolParams = {
@@ -44,19 +40,16 @@ export abstract class GmailBaseTool extends Tool {
       throw new Error("Missing GMAIL_PRIVATE_KEY to interact with Gmail");
     }
 
-    this.clientEmail = fields.credentials.clientEmail;
-    this.privateKey = fields.credentials.privateKey;
-    this.scopes = fields.scopes || [];
+    this.gmail = this.getGmail(
+      fields.credentials.clientEmail,
+      fields.credentials.privateKey,
+      fields.scopes || []
+    );
   }
 
-  async getAuth() {
-    const auth = new google.auth.JWT(
-      this.clientEmail,
-      undefined,
-      this.privateKey,
-      this.scopes
-    );
+  private getGmail(email: string, key: string, scopes: string[] = []) {
+    const auth = new google.auth.JWT(email, undefined, key, scopes);
 
-    return auth;
+    return google.gmail({ version: "v1", auth });
   }
 }
