@@ -14,6 +14,8 @@ import { SerpAPI } from "../../tools/serpapi.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { Calculator } from "../../tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { OpenAIAgent } from "../openai/index.js";
 
 test("Runnable variant", async () => {
   const tools = [new Calculator(), new SerpAPI()];
@@ -63,4 +65,30 @@ test("Runnable variant", async () => {
     input: query,
   });
   console.log(result);
+});
+
+test("Runnable variant works with executor", async () => {
+  // Prepare tools
+  const tools = [new Calculator(), new SerpAPI()];
+  const runnableModel = new ChatOpenAI({
+    modelName: "gpt-4",
+    temperature: 0,
+  }).bind({});
+
+  // Prepare agent chain
+  const llmChain = new LLMChain({
+    prompt: ChatPromptTemplate.fromTemplate("What is the weather in New York?"),
+    llm: runnableModel,
+  });
+  const agent = new OpenAIAgent({
+    llmChain,
+    tools,
+  });
+
+  // Prepare and run executor
+  const executor = new AgentExecutor({
+    agent,
+    tools,
+  });
+  await executor.call({});
 });
