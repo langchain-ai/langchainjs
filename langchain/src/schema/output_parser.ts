@@ -152,7 +152,7 @@ export abstract class BaseOutputParser<
 export abstract class BaseTransformOutputParser<
   T = unknown
 > extends BaseOutputParser<T> {
-  protected async *_transform(
+  async *_transform(
     inputGenerator: AsyncGenerator<string | BaseMessage>
   ): AsyncGenerator<T> {
     for await (const chunk of inputGenerator) {
@@ -218,7 +218,7 @@ export abstract class BaseCumulativeTransformOutputParser<
     generations: Generation[] | ChatGeneration[]
   ): Promise<T | undefined>;
 
-  protected async *_transform(
+  async *_transform(
     inputGenerator: AsyncGenerator<string | BaseMessage>
   ): AsyncGenerator<T> {
     let prevParsed: T | undefined;
@@ -273,6 +273,21 @@ export abstract class BaseCumulativeTransformOutputParser<
 
 /**
  * OutputParser that parses LLMResult into the top likely string.
+ * @example
+ * ```typescript
+ * const promptTemplate = PromptTemplate.fromTemplate(
+ *   "Tell me a joke about {topic}",
+ * );
+ *
+ * const chain = RunnableSequence.from([
+ *   promptTemplate,
+ *   new ChatOpenAI({}),
+ *   new StringOutputParser(),
+ * ]);
+ *
+ * const result = await chain.invoke({ topic: "bears" });
+ * console.log("What do you call a bear with no teeth? A gummy bear!");
+ * ```
  */
 export class StringOutputParser extends BaseTransformOutputParser<string> {
   static lc_name() {

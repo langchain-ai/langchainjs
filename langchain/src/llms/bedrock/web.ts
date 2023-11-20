@@ -81,7 +81,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere", "meta"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
@@ -106,7 +106,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.fetchFn = fields?.fetchFn ?? fetch;
+    this.fetchFn = fields?.fetchFn ?? fetch.bind(globalThis);
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
@@ -238,7 +238,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   ): AsyncGenerator<GenerationChunk> {
     const provider = this.model.split(".")[0];
     const bedrockMethod =
-      provider === "anthropic" || provider === "cohere"
+      provider === "anthropic" || provider === "cohere" || provider === "meta"
         ? "invoke-with-response-stream"
         : "invoke";
 
@@ -261,7 +261,11 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       );
     }
 
-    if (provider === "anthropic" || provider === "cohere") {
+    if (
+      provider === "anthropic" ||
+      provider === "cohere" ||
+      provider === "meta"
+    ) {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {

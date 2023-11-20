@@ -11,7 +11,9 @@ const executor = await initializeAgentExecutorWithOptions(tools, chat, {
   verbose: true,
 });
 
-const result = await executor.run("What is the weather in New York?");
+const result = await executor.invoke({
+  input: "What is the weather in New York?",
+});
 console.log(result);
 
 /*

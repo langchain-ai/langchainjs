@@ -36,6 +36,24 @@ export class RequestsToolkit extends Toolkit {
  * exploring JSON data. It creates a JSON agent using the `JsonToolkit`
  * and the provided language model, and adds the JSON explorer tool to the
  * toolkit.
+ * @example
+ * ```typescript
+ * const toolkit = new OpenApiToolkit(
+ *   new JsonSpec({
+ *   }),
+ *   new ChatOpenAI({ temperature: 0 }),
+ *   {
+ *     "Content-Type": "application/json",
+ *     Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+ *   },
+ * );
+ *
+ * const result = await toolkit.invoke({
+ *   input:
+ *     "Make a POST request to openai /completions. The prompt should be 'tell me a joke.'",
+ * });
+ * console.log(`Got output ${result.output}`);
+ * ```
  */
 export class OpenApiToolkit extends RequestsToolkit {
   constructor(jsonSpec: JsonSpec, llm: BaseLanguageModel, headers?: Headers) {

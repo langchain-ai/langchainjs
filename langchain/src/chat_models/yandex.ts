@@ -40,6 +40,20 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
   return [chatHistory, instruction];
 }
 
+/**
+ * @example
+ * ```typescript
+ * const chat = new ChatYandexGPT({});
+ * // The assistant is set to translate English to French.
+ * const res = await chat.call([
+ *   new SystemMessage(
+ *     "You are a helpful assistant that translates English to French."
+ *   ),
+ *   new HumanMessage("I love programming."),
+ * ]);
+ * console.log(res);
+ * ```
+ */
 export class ChatYandexGPT extends BaseChatModel {
   apiKey?: string;
 

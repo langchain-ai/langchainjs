@@ -14,13 +14,13 @@ export const run = async () => {
       "https://www.klarna.com/.well-known/ai-plugin.json"
     ),
   ];
-  const agent = await initializeAgentExecutorWithOptions(
+  const executor = await initializeAgentExecutorWithOptions(
     tools,
     new ChatOpenAI({ temperature: 0 }),
     { agentType: "chat-zero-shot-react-description", verbose: true }
   );
 
-  const result = await agent.call({
+  const result = await executor.invoke({
     input: "what t shirts are available in klarna?",
   });
 

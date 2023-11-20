@@ -37,6 +37,31 @@ export type SemanticSimilarityExampleSelectorInput<
 /**
  * Class that selects examples based on semantic similarity. It extends
  * the BaseExampleSelector class.
+ * @example
+ * ```typescript
+ * const exampleSelector = await SemanticSimilarityExampleSelector.fromExamples(
+ *   [
+ *     { input: "happy", output: "sad" },
+ *     { input: "tall", output: "short" },
+ *     { input: "energetic", output: "lethargic" },
+ *     { input: "sunny", output: "gloomy" },
+ *     { input: "windy", output: "calm" },
+ *   ],
+ *   new OpenAIEmbeddings(),
+ *   HNSWLib,
+ *   { k: 1 },
+ * );
+ * const dynamicPrompt = new FewShotPromptTemplate({
+ *   exampleSelector,
+ *   examplePrompt: PromptTemplate.fromTemplate(
+ *     "Input: {input}\nOutput: {output}",
+ *   ),
+ *   prefix: "Give the antonym of every input",
+ *   suffix: "Input: {adjective}\nOutput:",
+ *   inputVariables: ["adjective"],
+ * });
+ * console.log(await dynamicPrompt.format({ adjective: "rainy" }));
+ * ```
  */
 export class SemanticSimilarityExampleSelector<
   V extends VectorStore = VectorStore

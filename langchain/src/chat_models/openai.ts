@@ -193,6 +193,21 @@ export interface ChatOpenAICallOptions
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
+ * @example
+ * ```typescript
+ * // Create a new instance of ChatOpenAI with specific temperature and model name settings
+ * const model = new ChatOpenAI({
+ *   temperature: 0.9,
+ *   modelName: "ft:gpt-3.5-turbo-0613:{ORG_NAME}::{MODEL_ID}",
+ * });
+ *
+ * // Invoke the model with a message and await the response
+ * const message = await model.invoke("Hi there!");
+ *
+ * // Log the response to the console
+ * console.log(message);
+ *
+ * ```
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions

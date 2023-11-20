@@ -23,6 +23,42 @@ export interface LengthBasedExampleSelectorInput {
  * A specialized example selector that selects examples based on their
  * length, ensuring that the total length of the selected examples does
  * not exceed a specified maximum length.
+ * @example
+ * ```typescript
+ * const exampleSelector = new LengthBasedExampleSelector(
+ *   [
+ *     { input: "happy", output: "sad" },
+ *     { input: "tall", output: "short" },
+ *     { input: "energetic", output: "lethargic" },
+ *     { input: "sunny", output: "gloomy" },
+ *     { input: "windy", output: "calm" },
+ *   ],
+ *   {
+ *     examplePrompt: new PromptTemplate({
+ *       inputVariables: ["input", "output"],
+ *       template: "Input: {input}\nOutput: {output}",
+ *     }),
+ *     maxLength: 25,
+ *   },
+ * );
+ * const dynamicPrompt = new FewShotPromptTemplate({
+ *   exampleSelector,
+ *   examplePrompt: new PromptTemplate({
+ *     inputVariables: ["input", "output"],
+ *     template: "Input: {input}\nOutput: {output}",
+ *   }),
+ *   prefix: "Give the antonym of every input",
+ *   suffix: "Input: {adjective}\nOutput:",
+ *   inputVariables: ["adjective"],
+ * });
+ * console.log(dynamicPrompt.format({ adjective: "big" }));
+ * console.log(
+ *   dynamicPrompt.format({
+ *     adjective:
+ *       "big and huge and massive and large and gigantic and tall and much much much much much bigger than everything else",
+ *   }),
+ * );
+ * ```
  */
 export class LengthBasedExampleSelector extends BaseExampleSelector {
   protected examples: Example[] = [];
