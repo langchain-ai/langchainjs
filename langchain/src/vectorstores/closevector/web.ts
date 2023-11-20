@@ -59,13 +59,13 @@ export class CloseVectorWeb extends CloseVector<CloseVectorHNSWWeb> {
       uuid?: string;
     }
   ) {
-    if (!this.instance.uuid && !options.uuid) {
+    const _options = options;
+    if (!this.instance.uuid && !_options.uuid) {
       throw new Error("No uuid provided");
     }
-    if (!this.instance.uuid) {
-      this.instance._uuid = options.uuid;
+    if (this.instance.uuid && !_options.uuid) {
+      _options.uuid = this.instance.uuid;
     }
-    await this.save(this.instance.uuid);
     await this.instance.saveToCloud(options);
   }
 
