@@ -16,6 +16,7 @@ export interface PGVectorStoreArgs {
   tableName: string;
   collectionTableName?: string;
   collectionName?: string;
+  collectionMetadata?: Metadata | null;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
@@ -47,6 +48,8 @@ export class PGVectorStore extends VectorStore {
 
   collectionName = "langchain";
 
+  collectionMetadata: Metadata | null;
+
   idColumnName: string;
 
   vectorColumnName: string;
@@ -74,6 +77,7 @@ export class PGVectorStore extends VectorStore {
     this.tableName = config.tableName;
     this.collectionTableName = config.collectionTableName;
     this.collectionName = config.collectionName ?? "langchain";
+    this.collectionMetadata = config.collectionMetadata ?? null;
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
@@ -107,6 +111,9 @@ export class PGVectorStore extends VectorStore {
 
     await postgresqlVectorStore._initializeClient();
     await postgresqlVectorStore.ensureTableInDatabase();
+    if (postgresqlVectorStore.collectionTableName) {
+      await postgresqlVectorStore.ensureCollectionTableInDatabase();
+    }
 
     return postgresqlVectorStore;
   }
@@ -149,15 +156,17 @@ export class PGVectorStore extends VectorStore {
       const insertString = `
         INSERT INTO ${this.collectionTableName}(
           uuid,
-          name
+          name,
+          cmetadata
         )
         VALUES (
           uuid_generate_v4(),
-          $1
+          $1,
+          $2
         )
         RETURNING uuid;
       `;
-      const insertResult = await this.pool.query(insertString, [this.collectionName]);
+      const insertResult = await this.pool.query(insertString, [this.collectionName, this.collectionMetadata]);
       collectionId = insertResult.rows[0]?.uuid;
     }
 
@@ -329,30 +338,36 @@ export class PGVectorStore extends VectorStore {
         "${this.vectorColumnName}" vector
       );
     `);
+  }
 
-    if (this.collectionTableName) {
-      try {
-        await this.pool.query(`
-          CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
-            uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-            name character varying,
-            cmetadata jsonb
-          );
+  /**
+   * Method to ensure the existence of the collection table in the database.
+   * It creates the table if it does not already exist.
+   *
+   * @returns Promise that resolves when the collection table has been ensured.
+   */
+  async ensureCollectionTableInDatabase(): Promise<void> {
+    try {
+      await this.pool.query(`
+        CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
+          uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+          name character varying,
+          cmetadata jsonb
+        );
 
-          ALTER TABLE ${this.tableName}
-            ADD COLUMN collection_id uuid;
+        ALTER TABLE ${this.tableName}
+          ADD COLUMN collection_id uuid;
 
-          ALTER TABLE ${this.tableName}
-            ADD CONSTRAINT ${this.tableName}_collection_id_fkey
-            FOREIGN KEY (collection_id)
-            REFERENCES ${this.collectionTableName}(uuid)
-            ON DELETE CASCADE;
-        `);
-      } catch (e) {
-        if (!(e as Error).message.includes('already exists')) {
-          console.error(e);
-          throw new Error(`Error adding column: ${(e as Error).message}`);
-        }
+        ALTER TABLE ${this.tableName}
+          ADD CONSTRAINT ${this.tableName}_collection_id_fkey
+          FOREIGN KEY (collection_id)
+          REFERENCES ${this.collectionTableName}(uuid)
+          ON DELETE CASCADE;
+      `);
+    } catch (e) {
+      if (!(e as Error).message.includes('already exists')) {
+        console.error(e);
+        throw new Error(`Error adding column: ${(e as Error).message}`);
       }
     }
   }
