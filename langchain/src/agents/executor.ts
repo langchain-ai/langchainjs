@@ -20,6 +20,8 @@ import {
   ToolInputParsingException,
 } from "../tools/base.js";
 import { Runnable } from "../schema/runnable/base.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
+import { AgentExecutorIterator } from "./agent_iterator.js";
 
 type ExtractToolType<T> = T extends { ToolType: infer Tool }
   ? Tool
@@ -62,6 +64,35 @@ export class ExceptionTool extends Tool {
 
   async _call(query: string) {
     return query;
+  }
+}
+
+class AddableMap extends Map<string, any> {
+  merge(other: AddableMap): AddableMap {
+    const result = new AddableMap(this);
+    for (const [key, value] of other) {
+      if (!result.has(key) || result.get(key) === null) {
+        result.set(key, value);
+      } else if (value !== null) {
+        result.set(key, result.get(key) + value);
+      }
+    }
+    return result;
+  }
+}
+
+class AgentStreamOutput extends AddableMap {
+  get(key: string): any {
+    if (key === "intermediateSteps") {
+      const actions = this.get("actions") || [];
+      const observations = this.get("observations") || [];
+      return actions.map((action: any, index: number) => [
+        action,
+        observations[index],
+      ]);
+    } else {
+      return super.get(key);
+    }
   }
 }
 
@@ -158,6 +189,10 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   /** Create from agent and a list of tools. */
   static fromAgentAndTools(fields: AgentExecutorInput): AgentExecutor {
     return new AgentExecutor(fields);
+  }
+
+  get shouldContinueGetter() {
+    return this.shouldContinue.bind(this);
   }
 
   /**
@@ -297,6 +332,148 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     );
 
     return getOutput(finish);
+  }
+
+  async _takeNextStep(
+    nameToolMap: Record<string, Tool>,
+    inputs: ChainValues,
+    intermediateSteps: AgentStep[],
+    runManager?: CallbackManagerForChainRun
+  ): Promise<AgentFinish | AgentStep[]> {
+    let output;
+    try {
+      output = await this.agent.plan(
+        intermediateSteps,
+        inputs,
+        runManager?.getChild()
+      );
+    } catch (e) {
+      // handle rrr
+    }
+
+    if (output && "returnValues" in output) {
+      return output;
+    }
+
+    let actions: AgentAction[];
+    if (Array.isArray(output)) {
+      actions = output as AgentAction[];
+    } else {
+      actions = [output as AgentAction];
+    }
+
+    const result: AgentStep[] = [];
+    for (const agentAction of actions) {
+      let observation = "";
+      if (runManager) {
+        await runManager?.handleAgentAction(agentAction);
+      }
+      if (agentAction.tool in nameToolMap) {
+        const tool = nameToolMap[agentAction.tool];
+        try {
+          observation = await tool.call(
+            agentAction.toolInput,
+            runManager?.getChild()
+          );
+        } catch (e) {
+          // handle rrr
+        }
+        intermediateSteps.push({
+          action: agentAction,
+          observation: observation ?? "",
+        });
+      } else {
+        observation = `${
+          agentAction.tool
+        } is not a valid tool, try another available tool: ${Object.keys(
+          nameToolMap
+        ).join(", ")}`;
+      }
+      result.push({
+        action: agentAction,
+        observation: observation ?? "",
+      });
+    }
+    return result;
+  }
+
+  async _return(
+    output: AgentFinish,
+    intermediateSteps: AgentStep[],
+    runManager?: CallbackManagerForChainRun
+  ): Promise<AgentExecutorOutput> {
+    if (runManager) {
+      await runManager.handleAgentEnd(output);
+    }
+    const finalOutput: Record<string, unknown> = output.returnValues;
+    if (this.returnIntermediateSteps) {
+      finalOutput.intermediateSteps = intermediateSteps;
+    }
+    return finalOutput;
+  }
+
+  async _getToolReturn(nextStepOutput: AgentStep): Promise<AgentFinish | null> {
+    const { action, observation } = nextStepOutput;
+    const nameToolMap = Object.fromEntries(
+      this.tools.map((t) => [t.name.toLowerCase(), t])
+    );
+    const [returnValueKey = "output"] = this.agent.returnValues;
+    // Invalid tools won't be in the map, so we return False.
+    if (action.tool in nameToolMap) {
+      if (nameToolMap[action.tool].returnDirect) {
+        return {
+          returnValues: { [returnValueKey]: observation },
+          log: "",
+        };
+      }
+    }
+    return null;
+  }
+
+  _returnStoppedResponse(earlyStoppingMethod: StoppingMethod) {
+    if (earlyStoppingMethod === "force") {
+      return {
+        returnValues: {
+          output: "Agent stopped due to iteration limit or time limit.",
+        },
+        log: "",
+      } as AgentFinish;
+    }
+    throw new Error(
+      `Got unsupported early_stopping_method: ${earlyStoppingMethod}`
+    );
+  }
+
+  async *_streamIterator(
+    inputs: Record<string, any>,
+    /** @TODO Figure out where to use this. */
+    _config: RunnableConfig | null = null
+  ): AsyncGenerator<AgentStreamOutput> {
+    const iterator = new AgentExecutorIterator({
+      inputs,
+      agentExecutor: this,
+      metadata: this.metadata,
+      tags: this.tags,
+      callbacks: this.callbacks,
+    });
+    for await (const step of iterator) {
+      if (!step) {
+        continue;
+      }
+      if ("intermediateSteps" in step) {
+        const castStep = step as Record<string, AgentStep[]>;
+        yield new AgentStreamOutput(
+          Object.entries({
+            actions: castStep.intermediateSteps.map(({ action }) => action),
+            observations: castStep.intermediateSteps.map(
+              ({ observation }) => observation
+            ),
+          })
+        );
+      } else {
+        yield new AgentStreamOutput(Object.entries(step));
+      }
+    }
   }
 
   _chainType() {

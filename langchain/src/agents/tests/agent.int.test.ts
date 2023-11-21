@@ -315,14 +315,42 @@ test("Run tool web-browser", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const result = await executor.call({ input });
-  console.log(
-    {
-      result,
-    },
-    "Run tool web-browser"
-  );
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("web-browser");
   expect(result.output).not.toEqual("");
   expect(result.output).not.toEqual("Agent stopped due to max iterations.");
+});
+
+test.only("Agent can stream", async () => {
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-4-1106-preview",
+    streaming: true,
+  });
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+    new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
+  ];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    returnIntermediateSteps: true,
+  });
+  console.log("Loaded agent.");
+
+  const input = `What is the word of the day on merriam webster`;
+  console.log(`Executing with input "${input}"...`);
+
+  const result = await executor.stream({ input });
+  let streamIters = 0;
+  for await (const item of result) {
+    streamIters += 1;
+    console.log("Stream item:", item);
+  }
+  expect(streamIters).toBeGreaterThan(1);
 });
