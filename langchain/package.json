@@ -1384,7 +1384,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langchain-core": "^0.0.1-rc",
+    "langchain-core": "^0.0.1-rc.0",
     "langchainhub": "~0.0.6",
     "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
