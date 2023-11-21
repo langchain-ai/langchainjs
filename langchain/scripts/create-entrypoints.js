@@ -316,6 +316,7 @@ const entrypoints = {
   // evaluation
   evaluation: "evaluation/index",
   // runnables
+  "runnables": "runnables/index",
   "runnables/remote": "runnables/remote",
 };
 

@@ -393,4 +393,12 @@ export abstract class BaseLanguageModel<
       _model: this._modelType(),
     };
   }
+
+  /**
+   * @deprecated
+   * Load an LLM from a json-like object describing it.
+   */
+  static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
+    throw new Error("Use .toJSON() instead");
+  }
 }

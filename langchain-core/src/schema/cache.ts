@@ -1,4 +1,4 @@
-import { insecureHash } from "../util/js-sha1/hash.js";
+import { insecureHash } from "../util/hash.js";
 import type { Generation, ChatGeneration } from "./output.js";
 import {
   type StoredGeneration,

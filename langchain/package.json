@@ -805,6 +805,9 @@
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "runnables.cjs",
+    "runnables.js",
+    "runnables.d.ts",
     "runnables/remote.cjs",
     "runnables/remote.js",
     "runnables/remote.d.ts",
@@ -2739,6 +2742,11 @@
       "types": "./evaluation.d.ts",
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
+    },
+    "./runnables": {
+      "types": "./runnables.d.ts",
+      "import": "./runnables.js",
+      "require": "./runnables.cjs"
     },
     "./runnables/remote": {
       "types": "./runnables/remote.d.ts",
