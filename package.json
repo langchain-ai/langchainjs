@@ -17,7 +17,7 @@
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "build": "yarn workspace langchain-core build && turbo run build --filter=\"!test-exports-*\" --concurrency 1",
+    "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
