@@ -14,7 +14,7 @@ import { getEnvironmentVariable } from "../../util/env.js";
 import { LLM, BaseLLMParams } from "../base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import { GenerationChunk } from "../../schema/index.js";
-import { SerializedFields } from "../../load/map_keys.js";
+import type { SerializedFields } from "../../load/map_keys.js";
 
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock

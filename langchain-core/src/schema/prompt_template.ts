@@ -4,7 +4,7 @@
 import { InputValues, PartialValues } from "./index.js";
 import { type BasePromptValue } from "./prompt.js";
 import { BaseOutputParser } from "./output_parser.js";
-import { SerializedFields } from "../load/map_keys.js";
+import type { SerializedFields } from "../load/map_keys.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
 import type { SerializedBasePromptTemplate } from "../prompts/serde.js";
