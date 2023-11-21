@@ -26,4 +26,3 @@ export class Document<
     this.metadata = fields.metadata ?? ({} as Metadata);
   }
 }
-

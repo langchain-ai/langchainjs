@@ -1,11 +1,8 @@
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
-import {
-  BaseStringPromptTemplate,
-  BasePromptTemplateInput,
-  TypedPromptInputValues,
-} from "./base.js";
+import { BaseStringPromptTemplate, TypedPromptInputValues } from "./base.js";
+import type { BasePromptTemplateInput } from "../schema/prompt_template.js";
 import {
   checkValidTemplate,
   parseTemplate,

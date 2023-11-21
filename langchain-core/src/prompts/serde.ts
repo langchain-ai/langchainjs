@@ -1,4 +1,4 @@
-import type { Example } from "../schema/prompt_template.js";
+import type { Example } from "./example_selector/base.js";
 import type { TemplateFormat } from "./template.js";
 
 /**

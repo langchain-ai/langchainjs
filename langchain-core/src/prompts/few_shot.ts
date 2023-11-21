@@ -1,10 +1,10 @@
 import {
   BaseStringPromptTemplate,
-  type BasePromptTemplateInput,
   type TypedPromptInputValues,
   type Example,
 } from "./base.js";
-import type { BaseExampleSelector } from "../schema/prompt_template.js";
+import { type BasePromptTemplateInput } from "../schema/prompt_template.js";
+import type { BaseExampleSelector } from "./example_selector/base.js";
 import {
   type TemplateFormat,
   checkValidTemplate,

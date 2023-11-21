@@ -16,12 +16,11 @@ import {
 import { BasePromptValue } from "../schema/prompt.js";
 import { InputValues, PartialValues } from "../schema/index.js";
 import { Runnable } from "../runnables/base.js";
+import { BaseStringPromptTemplate, TypedPromptInputValues } from "./base.js";
 import {
   BasePromptTemplate,
-  BasePromptTemplateInput,
-  BaseStringPromptTemplate,
-  TypedPromptInputValues,
-} from "./base.js";
+  type BasePromptTemplateInput,
+} from "../schema/prompt_template.js";
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 
 /**

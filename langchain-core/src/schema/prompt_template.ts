@@ -1,44 +1,18 @@
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
-import { HumanMessage } from "./messages.js";
 import { InputValues, PartialValues } from "./index.js";
-import { BasePromptValue } from "./prompt.js";
+import { type BasePromptValue } from "./prompt.js";
 import { BaseOutputParser } from "./output_parser.js";
-import { Serializable } from "../load/serializable.js";
 import { SerializedFields } from "../load/map_keys.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
+import type { SerializedBasePromptTemplate } from "../prompts/serde.js";
 import type { StringWithAutocomplete } from "../util/types.js";
 
 export type TypedPromptInputValues<RunInput> = InputValues<
   StringWithAutocomplete<Extract<keyof RunInput, string>>
 >;
-
-export type Example = Record<string, string>;
-
-/**
- * Represents a prompt value as a string. It extends the BasePromptValue
- * class and overrides the toString and toChatMessages methods.
- */
-export class StringPromptValue extends BasePromptValue {
-  lc_namespace = ["langchain", "prompts", "base"];
-
-  value: string;
-
-  constructor(value: string) {
-    super({ value });
-    this.value = value;
-  }
-
-  toString() {
-    return this.value;
-  }
-
-  toChatMessages() {
-    return [new HumanMessage(this.value)];
-  }
-}
 
 /**
  * Input common to all prompt templates.
@@ -181,50 +155,40 @@ export abstract class BasePromptTemplate<
    * Return the string type key uniquely identifying this class of prompt template.
    */
   abstract _getPromptType(): string;
-}
 
-/**
- * Base class for string prompt templates. It extends the
- * BasePromptTemplate class and overrides the formatPromptValue method to
- * return a StringPromptValue.
- */
-export abstract class BaseStringPromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
-> extends BasePromptTemplate<RunInput, StringPromptValue, PartialVariableName> {
   /**
-   * Formats the prompt given the input values and returns a formatted
-   * prompt value.
-   * @param values The input values to format the prompt.
-   * @returns A Promise that resolves to a formatted prompt value.
+   * @deprecated
+   * Load a prompt template from a json-like object describing it.
+   *
+   * @remarks
+   * Deserializing needs to be async because templates (e.g. {@link FewShotPromptTemplate}) can
+   * reference remote resources that we read asynchronously with a web
+   * request.
    */
-  async formatPromptValue(
-    values: TypedPromptInputValues<RunInput>
-  ): Promise<StringPromptValue> {
-    const formattedPrompt = await this.format(values);
-    return new StringPromptValue(formattedPrompt);
+  static async deserialize(
+    data: SerializedBasePromptTemplate
+  ): Promise<BasePromptTemplate<InputValues, BasePromptValue, string>> {
+    switch (data._type) {
+      case "prompt": {
+        const { PromptTemplate } = await import("../prompts/prompt.js");
+        return PromptTemplate.deserialize(data);
+      }
+      case undefined: {
+        const { PromptTemplate } = await import("../prompts/prompt.js");
+        return PromptTemplate.deserialize({ ...data, _type: "prompt" });
+      }
+      case "few_shot": {
+        const { FewShotPromptTemplate } = await import(
+          "../prompts/few_shot.js"
+        );
+        return FewShotPromptTemplate.deserialize(data);
+      }
+      default:
+        throw new Error(
+          `Invalid prompt type in config: ${
+            (data as SerializedBasePromptTemplate)._type
+          }`
+        );
+    }
   }
-}
-
-/**
- * Base class for example selectors.
- */
-export abstract class BaseExampleSelector extends Serializable {
-  lc_namespace = ["langchain", "prompts", "selectors"];
-
-  /**
-   * Adds an example to the example selector.
-   * @param example The example to add to the example selector.
-   * @returns A Promise that resolves to void or a string.
-   */
-  abstract addExample(example: Example): Promise<void | string>;
-
-  /**
-   * Selects examples from the example selector given the input variables.
-   * @param input_variables The input variables to select examples with.
-   * @returns A Promise that resolves to an array of selected examples.
-   */
-  abstract selectExamples(input_variables: Example): Promise<Example[]>;
 }

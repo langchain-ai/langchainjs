@@ -5,9 +5,9 @@ import {
   SerializedSecret,
   get_lc_unique_name,
 } from "./serializable.js";
-import { optionalImportEntrypoints } from "./import_constants.js";
-import * as importMap from "./import_map.js";
-import { OptionalImportMap, SecretMap } from "./import_type.js";
+import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from "./import_constants.js";
+import * as defaultImportMap from "./import_map.js";
+import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
@@ -30,12 +30,20 @@ function combineAliasesAndInvert(constructor: typeof Serializable) {
 async function reviver(
   this: {
     optionalImportsMap: OptionalImportMap;
+    optionalImportEntrypoints: string[];
     secretsMap: SecretMap;
+    importMap: Record<string, unknown>;
     path?: string[];
   },
   value: unknown
 ): Promise<unknown> {
-  const { optionalImportsMap, secretsMap, path = ["$"] } = this;
+  const {
+    optionalImportsMap,
+    optionalImportEntrypoints,
+    importMap,
+    secretsMap,
+    path = ["$"],
+  } = this;
   const pathStr = path.join(".");
   if (
     typeof value === "object" &&
@@ -90,13 +98,16 @@ async function reviver(
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
+    const finalImportMap = { ...defaultImportMap, ...importMap };
 
     let module:
-      | (typeof importMap)[keyof typeof importMap]
+      | (typeof finalImportMap)[keyof typeof finalImportMap]
       | OptionalImportMap[keyof OptionalImportMap]
       | null = null;
     if (
-      optionalImportEntrypoints.includes(namespace.join("/")) ||
+      defaultOptionalImportEntrypoints
+        .concat(optionalImportEntrypoints)
+        .includes(namespace.join("/")) ||
       namespace.join("/") in optionalImportsMap
     ) {
       if (namespace.join("/") in optionalImportsMap) {
@@ -127,7 +138,7 @@ async function reviver(
       let importMapKey: string;
       do {
         importMapKey = namespace.join("__");
-        if (importMapKey in importMap) {
+        if (importMapKey in finalImportMap) {
           break;
         } else {
           namespace.pop();
@@ -135,8 +146,8 @@ async function reviver(
       } while (namespace.length > 0);
 
       // If no matching namespace is found, throw an error.
-      if (importMapKey in importMap) {
-        module = importMap[importMapKey as keyof typeof importMap];
+      if (importMapKey in finalImportMap) {
+        module = finalImportMap[importMapKey as keyof typeof finalImportMap];
       }
     }
 
@@ -208,9 +219,21 @@ async function reviver(
 
 export async function load<T>(
   text: string,
-  secretsMap: SecretMap = {},
-  optionalImportsMap: OptionalImportMap = {}
+  {
+    secretsMap,
+    importMap,
+    optionalImportsMap,
+    optionalImportEntrypoints,
+  }: {
+    secretsMap: SecretMap;
+    optionalImportsMap: OptionalImportMap;
+    optionalImportEntrypoints: string[];
+    importMap: Record<string, unknown>;
+  }
 ): Promise<T> {
   const json = JSON.parse(text);
-  return reviver.call({ secretsMap, optionalImportsMap }, json) as Promise<T>;
+  return reviver.call(
+    { secretsMap, optionalImportsMap, optionalImportEntrypoints, importMap },
+    json
+  ) as Promise<T>;
 }

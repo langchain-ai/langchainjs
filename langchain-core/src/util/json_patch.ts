@@ -1,4 +1,4 @@
-export { 
+export {
   compare,
   type Operation,
   applyPatch,

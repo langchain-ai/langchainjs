@@ -157,6 +157,11 @@
       "import": "./prompts/base.js",
       "require": "./prompts/base.cjs"
     },
+    "./prompts/chat": {
+      "types": "./prompts/chat.d.ts",
+      "import": "./prompts/chat.js",
+      "require": "./prompts/chat.cjs"
+    },
     "./prompts/few_shot": {
       "types": "./prompts/few_shot.d.ts",
       "import": "./prompts/few_shot.js",
@@ -167,6 +172,11 @@
       "import": "./prompts/pipeline.js",
       "require": "./prompts/pipeline.cjs"
     },
+    "./prompts/serde": {
+      "types": "./prompts/serde.d.ts",
+      "import": "./prompts/serde.js",
+      "require": "./prompts/serde.cjs"
+    },
     "./prompts/template": {
       "types": "./prompts/template.d.ts",
       "import": "./prompts/template.js",
@@ -176,6 +186,11 @@
       "types": "./prompts/example_selector/base.d.ts",
       "import": "./prompts/example_selector/base.js",
       "require": "./prompts/example_selector/base.cjs"
+    },
+    "./prompts/example_selector/conditional": {
+      "types": "./prompts/example_selector/conditional.d.ts",
+      "import": "./prompts/example_selector/conditional.js",
+      "require": "./prompts/example_selector/conditional.cjs"
     },
     "./prompts/example_selector/length_based": {
       "types": "./prompts/example_selector/length_based.d.ts",
@@ -364,18 +379,27 @@
     "prompts/base.cjs",
     "prompts/base.js",
     "prompts/base.d.ts",
+    "prompts/chat.cjs",
+    "prompts/chat.js",
+    "prompts/chat.d.ts",
     "prompts/few_shot.cjs",
     "prompts/few_shot.js",
     "prompts/few_shot.d.ts",
     "prompts/pipeline.cjs",
     "prompts/pipeline.js",
     "prompts/pipeline.d.ts",
+    "prompts/serde.cjs",
+    "prompts/serde.js",
+    "prompts/serde.d.ts",
     "prompts/template.cjs",
     "prompts/template.js",
     "prompts/template.d.ts",
     "prompts/example_selector/base.cjs",
     "prompts/example_selector/base.js",
     "prompts/example_selector/base.d.ts",
+    "prompts/example_selector/conditional.cjs",
+    "prompts/example_selector/conditional.js",
+    "prompts/example_selector/conditional.d.ts",
     "prompts/example_selector/length_based.cjs",
     "prompts/example_selector/length_based.js",
     "prompts/example_selector/length_based.d.ts",
