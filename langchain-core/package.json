@@ -1,6 +1,6 @@
 {
   "name": "langchain-core",
-  "version": "0.0.0",
+  "version": "0.0.1-rc",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -55,6 +55,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
+    "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
     "typescript": "^5.0.0"
   },

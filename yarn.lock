@@ -22248,6 +22248,7 @@ __metadata:
     p-queue: ^6.6.2
     p-retry: 4
     prettier: ^2.8.3
+    release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ^5.0.0
     uuid: ^9.0.0
