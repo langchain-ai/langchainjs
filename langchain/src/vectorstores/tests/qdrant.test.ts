@@ -81,3 +81,53 @@ test("QdrantVectorStore adds vectors with custom payload", async () => {
     ],
   });
 });
+
+test("QdrantVectorStore adds vectors with custom payload in Document", async () => {
+  // Mock Qdrant client
+  const client = {
+    upsert: jest.fn(),
+    search: jest.fn<any>().mockResolvedValue([]),
+    getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
+    createCollection: jest.fn(),
+  };
+
+  // Mock embeddings
+  const embeddings = new FakeEmbeddings();
+
+  // Create QdrantVectorStore instance with the mock client
+  const qdrantVectorStore = new QdrantVectorStore(embeddings, {
+    client: client as any,
+  });
+
+  // Define a custom payload
+  const customPayload = {
+    customField1: "value1",
+    customField2: "value2",
+  };
+
+  // Add documents with custom payload
+  await qdrantVectorStore.addDocuments(
+    [
+      {
+        pageContent: "hello",
+        metadata: {},
+        customPayload: customPayload
+      },
+    ],
+  );
+
+  // Verify that the Qdrant client's upsert method was called with the correct arguments
+  expect(client.upsert).toHaveBeenCalledTimes(1);
+  expect(client.upsert).toHaveBeenCalledWith("documents", {
+    wait: true,
+    points: [
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          content: "hello",
+          metadata: {},
+          ...customPayload,
+        }),
+      }),
+    ],
+  });
+});

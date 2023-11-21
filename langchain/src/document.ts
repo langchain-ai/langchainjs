@@ -5,6 +5,7 @@ export interface DocumentInput<
   pageContent: string;
 
   metadata?: Metadata;
+  customPayload?: object;
 }
 
 /**
@@ -18,6 +19,8 @@ export class Document<
   pageContent: string;
 
   metadata: Metadata;
+
+  customPayload?: object | undefined;
 
   constructor(fields: DocumentInput<Metadata>) {
     this.pageContent = fields.pageContent

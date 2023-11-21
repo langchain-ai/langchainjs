@@ -125,7 +125,8 @@ export class QdrantVectorStore extends VectorStore {
       payload: {
         content: documents[idx].pageContent,
         metadata: documents[idx].metadata,
-        ...customPayload,
+        ...(documents[idx].customPayload ? documents[idx].customPayload != customPayload ? 
+          documents[idx].customPayload : customPayload : customPayload),
       },
     }));
 
@@ -231,10 +232,11 @@ export class QdrantVectorStore extends VectorStore {
       const newDoc = new Document({
         pageContent: texts[i],
         metadata,
+        customPayload: customPayload,
       });
       docs.push(newDoc);
     }
-    return QdrantVectorStore.fromDocuments(docs, embeddings, dbConfig, customPayload);
+    return QdrantVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
