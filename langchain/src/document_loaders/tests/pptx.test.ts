@@ -1,7 +1,7 @@
-import {expect, test} from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import * as url from "node:url";
 import * as path from "node:path";
-import {PPTXLoader} from "../fs/pptx.js";
+import { PPTXLoader } from "../fs/pptx.js";
 
 test("Test PowerPoint loader from file", async () => {
   const filePath = path.resolve(
@@ -25,4 +25,3 @@ test("Test PowerPoint loader from empty powerpoint file", async () => {
 
   expect(docs.length).toBe(0); // not much text in the example
 });
-

@@ -1,5 +1,6 @@
-import {Document} from "../../document.js";
-import {BufferLoader} from "./buffer.js";
+import { parseOfficeAsync } from "officeparser";
+import { Document } from "../../document.js";
+import { BufferLoader } from "./buffer.js";
 
 /**
  * A class that extends the `BufferLoader` class. It represents a document
@@ -26,29 +27,15 @@ export class PPTXLoader extends BufferLoader {
     raw: Buffer,
     metadata: Document["metadata"]
   ): Promise<Document[]> {
-    const {parseOfficeAsync} = await PPTLoaderImports();
-    const pptx = await parseOfficeAsync(raw, {outputErrorToConsole: true});
+    const pptx = await parseOfficeAsync(raw, { outputErrorToConsole: true });
 
     if (!pptx) return [];
 
     return [
       new Document({
         pageContent: pptx,
-        metadata
+        metadata,
       }),
     ];
-  }
-}
-
-async function PPTLoaderImports() {
-  try {
-    const {default: mod} = await import("officeparser");
-    const {parseOfficeAsync} = mod;
-    return {parseOfficeAsync};
-  } catch (e) {
-    console.error(e);
-    throw new Error(
-      "Failed to load officeparser. Please install it with eg. `npm install officeparser`."
-    );
   }
 }
