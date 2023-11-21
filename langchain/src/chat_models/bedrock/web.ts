@@ -411,8 +411,6 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
           while (buffer.byteLength > 0 && buffer.byteLength >= messageLength) {
             yield buffer.slice(0, messageLength);
             buffer = buffer.slice(messageLength);
-
-            if (buffer.byteLength === 0) break;
             messageLength = getMessageLength(buffer);
           }
 
