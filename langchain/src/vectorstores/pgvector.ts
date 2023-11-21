@@ -149,7 +149,9 @@ export class PGVectorStore extends VectorStore {
       SELECT uuid from ${this.collectionTableName}
       WHERE name = $1;
     `;
-    const queryResult = await this.pool.query(queryString, [this.collectionName]);
+    const queryResult = await this.pool.query(queryString, [
+      this.collectionName,
+    ]);
     let collectionId = queryResult.rows[0]?.uuid;
 
     if (!collectionId) {
@@ -166,7 +168,10 @@ export class PGVectorStore extends VectorStore {
         )
         RETURNING uuid;
       `;
-      const insertResult = await this.pool.query(insertString, [this.collectionName, this.collectionMetadata]);
+      const insertResult = await this.pool.query(insertString, [
+        this.collectionName,
+        this.collectionMetadata,
+      ]);
       collectionId = insertResult.rows[0]?.uuid;
     }
 
@@ -180,7 +185,10 @@ export class PGVectorStore extends VectorStore {
    * @param numOfColumns - The number of columns we are inserting data into.
    * @returns The SQL placeholders for the row values.
    */
-  private generatePlaceholderForRowAt(index: number, numOfColumns: number): string {
+  private generatePlaceholderForRowAt(
+    index: number,
+    numOfColumns: number
+  ): string {
     const placeholders = [];
     for (let i = 0; i < numOfColumns; i += 1) {
       placeholders.push(`$${index * numOfColumns + i + 1}`);
@@ -204,7 +212,7 @@ export class PGVectorStore extends VectorStore {
     const columns = [
       this.contentColumnName,
       this.vectorColumnName,
-      this.metadataColumnName
+      this.metadataColumnName,
     ];
 
     if (collectionId) {
@@ -303,9 +311,7 @@ export class PGVectorStore extends VectorStore {
       LIMIT $3;
     `;
 
-    const documents = (
-      await this.pool.query(queryString, parameters)
-    ).rows;
+    const documents = (await this.pool.query(queryString, parameters)).rows;
 
     const results = [] as [Document, number][];
     for (const doc of documents) {
@@ -365,7 +371,7 @@ export class PGVectorStore extends VectorStore {
           ON DELETE CASCADE;
       `);
     } catch (e) {
-      if (!(e as Error).message.includes('already exists')) {
+      if (!(e as Error).message.includes("already exists")) {
         console.error(e);
         throw new Error(`Error adding column: ${(e as Error).message}`);
       }
