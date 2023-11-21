@@ -22224,7 +22224,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain-core@^0.0.1-rc.0, langchain-core@workspace:langchain-core":
+"langchain-core@workspace:*, langchain-core@workspace:langchain-core":
   version: 0.0.0-use.local
   resolution: "langchain-core@workspace:langchain-core"
   dependencies:
@@ -22367,7 +22367,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsdom: ^22.1.0
     jsonpointer: ^5.0.1
-    langchain-core: ^0.0.1-rc.0
+    langchain-core: "workspace:*"
     langchainhub: ~0.0.6
     langsmith: ~0.0.48
     llmonitor: ^0.5.9

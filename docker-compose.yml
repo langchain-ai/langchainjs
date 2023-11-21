@@ -10,6 +10,7 @@ services:
       - ./environment_tests/test-exports-esbuild:/package
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
+      - ./langchain-core:/langchain-core
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
     image: node:18
@@ -21,6 +22,7 @@ services:
       - ./environment_tests/test-exports-esm:/package
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
+      - ./langchain-core:/langchain-core
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cjs:
     image: node:18
@@ -32,6 +34,7 @@ services:
       - ./environment_tests/test-exports-cjs:/package
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
+      - ./langchain-core:/langchain-core
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
     image: node:18
@@ -43,6 +46,7 @@ services:
       - ./environment_tests/test-exports-cf:/package
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
+      - ./langchain-core:/langchain-core
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vercel:
     image: node:18
@@ -54,6 +58,7 @@ services:
       - ./environment_tests/test-exports-vercel:/package
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
+      - ./langchain-core:/langchain-core
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vite:
     image: node:18
@@ -65,6 +70,7 @@ services:
       - ./environment_tests/test-exports-vite:/package
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
+      - ./langchain-core:/langchain-core
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-bun:
     image: oven/bun
