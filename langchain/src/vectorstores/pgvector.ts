@@ -137,7 +137,7 @@ export class PGVectorStore extends VectorStore {
    *
    * @returns The collectionId for the given collectionName.
    */
-  async getOrCreateCollection(): Promise<Record<string, any>> {
+  async getOrCreateCollection(): Promise<string> {
     const queryString = `
       SELECT uuid from ${this.collectionTableName}
       WHERE name = $1;
@@ -173,7 +173,7 @@ export class PGVectorStore extends VectorStore {
    */
   private generatePlaceholderForRowAt(index: number, numOfColumns: number): string {
     const placeholders = [];
-    for (let i = 0; i < numOfColumns; i++) {
+    for (let i = 0; i < numOfColumns; i += 1) {
       placeholders.push(`$${index * numOfColumns + i + 1}`);
     }
     return `(${placeholders.join(", ")})`;
@@ -230,20 +230,19 @@ export class PGVectorStore extends VectorStore {
       collectionId = await this.getOrCreateCollection();
     }
 
-    let idx = 0;
-    for (const embedding of vectors) {
+    for (let i = 0; i < vectors.length; i += 1) {
       const values = [];
+      const embedding = vectors[i];
       const embeddingString = `[${embedding.join(",")}]`;
       values.push(
-        documents[idx].pageContent,
+        documents[i].pageContent,
         embeddingString,
-        documents[idx].metadata
+        documents[i].metadata
       );
       if (collectionId) {
         values.push(collectionId);
       }
       rows.push(values);
-      idx++;
     }
 
     for (let i = 0; i < rows.length; i += this.chunkSize) {
@@ -281,17 +280,22 @@ export class PGVectorStore extends VectorStore {
       collectionId = await this.getOrCreateCollection();
     }
 
-    let queryString = `
+    const parameters = [embeddingString, _filter, k];
+    if (collectionId) {
+      parameters.push(collectionId);
+    }
+
+    const queryString = `
       SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
       FROM ${this.tableName}
       WHERE ${this.metadataColumnName}::jsonb @> $2
-      ${collectionId ? "AND collection_id = '" + collectionId + "'" : ""}
+      ${collectionId ? "AND collection_id = $4" : ""}
       ORDER BY "_distance" ASC
       LIMIT $3;
     `;
 
     const documents = (
-      await this.pool.query(queryString, [embeddingString, _filter, k])
+      await this.pool.query(queryString, parameters)
     ).rows;
 
     const results = [] as [Document, number][];
@@ -345,12 +349,9 @@ export class PGVectorStore extends VectorStore {
             ON DELETE CASCADE;
         `);
       } catch (e) {
-        if (e instanceof Error) {
-          if (!e.message.includes('already exists')) {
-            console.error('Error adding column:', e.message);
-          }
-        } else {
-          console.error('An unexpected error occurred:', e);
+        if (!(e as Error).message.includes('already exists')) {
+          console.error(e);
+          throw new Error(`Error adding column: ${(e as Error).message}`);
         }
       }
     }
