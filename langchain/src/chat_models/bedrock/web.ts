@@ -386,6 +386,17 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       return newBuffer;
     }
 
+    function getMessageLength(buffer: Uint8Array) {
+      if (buffer.byteLength === 0) return 0;
+      const view = new DataView(
+        buffer.buffer,
+        buffer.byteOffset,
+        buffer.byteLength
+      );
+
+      return view.getUint32(0, false);
+    }
+
     return {
       async *[Symbol.asyncIterator]() {
         let readResult = await reader.read();
@@ -395,16 +406,14 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
           const chunk: Uint8Array = readResult.value;
 
           buffer = _concatChunks(buffer, chunk);
-          const view = new DataView(
-            buffer.buffer,
-            buffer.byteOffset,
-            buffer.byteLength
-          );
+          let messageLength = getMessageLength(buffer);
 
-          const messageLength = view.getUint32(0, false);
-          if (buffer.byteLength >= messageLength) {
+          while (buffer.byteLength > 0 && buffer.byteLength >= messageLength) {
             yield buffer.slice(0, messageLength);
             buffer = buffer.slice(messageLength);
+
+            if (buffer.byteLength === 0) break;
+            messageLength = getMessageLength(buffer);
           }
 
           readResult = await reader.read();
