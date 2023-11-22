@@ -4,7 +4,7 @@ import {
   HumanMessage,
   AIMessage,
   SystemMessage,
-} from "langchain-core/schema/messages";
+} from "langchain-core/messages";
 import { Document } from "../document.js";
 import { Serializable } from "../load/serializable.js";
 
@@ -12,11 +12,11 @@ export {
   type AgentAction,
   type AgentFinish,
   type AgentStep,
-} from "langchain-core/schema/agent";
+} from "langchain-core/agents";
 
-export { RUN_KEY } from "langchain-core/schema/output";
+export { RUN_KEY } from "langchain-core/outputs";
 
-export { type Example } from "langchain-core/prompts/base";
+export { type Example } from "langchain-core/prompts";
 
 // TODO: Deprecate when SDK typing is updated
 export type OpenAIToolCall = OpenAIClient.ChatCompletionMessageToolCall & {
@@ -48,7 +48,7 @@ export {
   coerceMessageLikeToMessage,
   isBaseMessage,
   isBaseMessageChunk,
-} from "langchain-core/schema/messages";
+} from "langchain-core/messages";
 
 export { BaseMessage, HumanMessage, AIMessage, SystemMessage };
 
@@ -84,23 +84,23 @@ export {
   type ChatGeneration,
   ChatGenerationChunk,
   type LLMResult,
-} from "langchain-core/schema/output";
+} from "langchain-core/outputs";
 
-export { BasePromptValue } from "langchain-core/schema/prompt";
+export { BasePromptValue } from "langchain-core/prompt_values";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export {
   type InputValues,
   type PartialValues,
   type ChainValues,
-} from "langchain-core/schema";
+} from "langchain-core/utils/types";
 
 export {
   BaseChatMessageHistory,
   BaseListChatMessageHistory,
-} from "langchain-core/schema/chat_history";
+} from "langchain-core/chat_history";
 
-export { BaseCache } from "langchain-core/schema/cache";
+export { BaseCache } from "langchain-core/caches";
 
 /**
  * Base class for all file stores. All file stores should extend this

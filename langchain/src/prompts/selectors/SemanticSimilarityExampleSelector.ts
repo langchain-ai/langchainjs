@@ -1,1 +1,1 @@
-export * from "langchain-core/prompts/example_selector/semantic_similarity";
+export * from "langchain-core/example_selectors";

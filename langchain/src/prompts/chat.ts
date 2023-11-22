@@ -1,1 +1,18 @@
-export * from "langchain-core/prompts/chat";
+export {
+  BaseMessagePromptTemplate,
+  type ChatPromptValueFields,
+  ChatPromptValue,
+  type MessagesPlaceholderFields as MessagePlaceholderFields,
+  MessagesPlaceholder,
+  type MessageStringPromptTemplateFields,
+  BaseMessageStringPromptTemplate,
+  BaseChatPromptTemplate,
+  type ChatMessagePromptTemplateFields,
+  ChatMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+  AIMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+  type ChatPromptTemplateInput,
+  type BaseMessagePromptTemplateLike,
+  ChatPromptTemplate,
+} from "langchain-core/prompts";

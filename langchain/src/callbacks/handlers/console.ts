@@ -1,1 +1,1 @@
-export * from "langchain-core/callbacks/tracers/console";
+export * from "langchain-core/tracers/console";

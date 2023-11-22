@@ -1,1 +1,7 @@
-export * from "langchain-core/prompts/example_selector/conditional";
+export {
+  type BaseGetPromptAsyncOptions,
+  BasePromptSelector,
+  ConditionalPromptSelector,
+  isLLM,
+  isChatModel,
+} from "langchain-core/example_selectors";

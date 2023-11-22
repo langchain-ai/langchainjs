@@ -7,7 +7,7 @@ export {
   type BaseFunctionCallOptions,
   type BaseLanguageModelInput,
   BaseLanguageModel,
-} from "langchain-core/schema/language_model";
+} from "langchain-core/language_models/base";
 
 /*
  * Export utility functions for token calculations:

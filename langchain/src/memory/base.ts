@@ -1,2 +1,2 @@
-export * from "langchain-core/schema/memory";
-export { getBufferString } from "langchain-core/schema/messages";
+export * from "langchain-core/memory";
+export { getBufferString } from "langchain-core/messages";

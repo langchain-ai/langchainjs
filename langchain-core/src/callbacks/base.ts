@@ -1,12 +1,12 @@
 import * as uuid from "uuid";
-import { ChainValues } from "../schema/index.js";
-import type { BaseMessage } from "../schema/messages.js";
-import type { AgentAction, AgentFinish } from "../schema/agent.js";
+import type { ChainValues } from "../utils/types.js";
+import type { BaseMessage } from "../messages/index.js";
+import type { AgentAction, AgentFinish } from "../agents.js";
 import type {
   ChatGenerationChunk,
   GenerationChunk,
   LLMResult,
-} from "../schema/output.js";
+} from "../outputs.js";
 import {
   Serializable,
   Serialized,
@@ -14,7 +14,7 @@ import {
   get_lc_unique_name,
 } from "../load/serializable.js";
 import type { SerializedFields } from "../load/map_keys.js";
-import { Document } from "../schema/document/document.js";
+import { Document } from "../documents.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
