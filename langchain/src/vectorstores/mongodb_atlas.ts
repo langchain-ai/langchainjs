@@ -255,6 +255,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     await instance.addDocuments(docs);
     return instance;
   }
+
   /**
    * Static method to fix the precision of the array that ensures that
    * every number in this array is always float when casted to other types.
@@ -264,15 +265,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * since introduced error is very small, only applies to integer numbers
    * returned by embeddings, and most embeddings shall not have precision
    * as high as 15 decimal places.
-   * @param array Array of number to be fixed. 
-   * @returns 
+   * @param array Array of number to be fixed.
+   * @returns
    */
   static fixArrayPrecision(array: number[]) {
-    for (let i = 0; i < array.length; i++) {
-        if (Number.isInteger(array[i])) {
-          array[i] += 0.000000000000001;
-        };
-    }
-    return array;
+    return array.map((value) => {
+      if (Number.isInteger(value)) {
+        return value + 0.000000000000001;
+      }
+      return value;
+    });
   }
 }
