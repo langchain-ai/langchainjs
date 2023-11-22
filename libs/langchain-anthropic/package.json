@@ -33,7 +33,7 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.0",
-    "langchain-core": "^0.0.3"
+    "langchain-core": "^0.0.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
