@@ -40,7 +40,7 @@ export class AgentExecutorIterator
   extends Serializable
   implements AgentExecutorIteratorInput
 {
-  lc_namespace = ["langchain", "agents", "executor", "iterator"];
+  lc_namespace = ["langchain", "agents", "executor_iterator"];
 
   agentExecutor: AgentExecutor;
 
@@ -110,8 +110,7 @@ export class AgentExecutorIterator
     this.iterations += 1;
   }
 
-  /** Method to initialize the iterator */
-  async *[Symbol.asyncIterator]() {
+  async *streamIterator() {
     this.reset();
 
     // Loop to handle iteration
@@ -142,6 +141,38 @@ export class AgentExecutorIterator
     }
   }
 
+  /** Method to initialize the iterator */
+  // async *[Symbol.asyncIterator]() {
+  //   this.reset();
+
+  //   // Loop to handle iteration
+  //   while (true) {
+  //     try {
+  //       if (this.iterations === 0) {
+  //         await this.onFirstStep();
+  //       }
+
+  //       const result = await this._callNext();
+  //       yield result;
+  //       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //     } catch (e: any) {
+  //       if (
+  //         "message" in e &&
+  //         e.message.startsWith("Final outputs already reached: ")
+  //       ) {
+  //         if (!this.finalOutputs) {
+  //           throw e;
+  //         }
+  //         return this.finalOutputs;
+  //       }
+  //       if (this.runManager) {
+  //         await this.runManager.handleChainError(e);
+  //       }
+  //       throw e;
+  //     }
+  //   }
+  // }
+
   /** Perform any necessary setup for the first step of the asynchronous iterator. */
   async onFirstStep(): Promise<void> {
     if (this.iterations === 0) {
@@ -167,31 +198,6 @@ export class AgentExecutorIterator
       );
     }
   }
-
-  /** Not used, tbd */
-  // async next(): Promise<Record<string, unknown>> {
-  //   if (this.iterations === 0) {
-  //     await this.onFirstStep();
-  //   }
-  //   try {
-  //     return this._callNext();
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   } catch (e: any) {
-  //     if (
-  //       "message" in e &&
-  //       e.message.startsWith("Final outputs already reached: ")
-  //     ) {
-  //       if (!this.finalOutputs) {
-  //         throw e;
-  //       }
-  //       return this.finalOutputs;
-  //     }
-  //     if (this.runManager) {
-  //       await this.runManager.handleChainError(e);
-  //     }
-  //     throw e;
-  //   }
-  // }
 
   /**
    * Execute the next step in the chain using the
@@ -337,27 +343,6 @@ export class ExceptionTool extends Tool {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-class AddableObject {
-  data: Record<string, any>;
-
-  constructor(initialData: Record<string, any> = {}) {
-    this.data = initialData;
-  }
-
-  merge(other: AddableObject): AddableObject {
-    const result = new AddableObject(this.data);
-    for (const key in other.data) {
-      if (!(key in result.data) || result.data[key] === null) {
-        result.data[key] = other.data[key];
-      } else if (other.data[key] !== null) {
-        result.data[key] += other.data[key];
-      }
-    }
-    return result;
-  }
-}
-
 /**
  * A chain managing an agent using tools.
  * @augments BaseChain
@@ -394,8 +379,6 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   maxIterations?: number = 15;
 
   earlyStoppingMethod: StoppingMethod = "force";
-
-  addableObject: AddableObject = new AddableObject();
 
   /**
    * How to handle errors raised by the agent's output parser.
@@ -640,7 +623,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
       }
     }
 
-    if (output && "returnValues" in output) {
+    if ("returnValues" in output) {
       return output;
     }
 
@@ -665,12 +648,24 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
             runManager?.getChild()
           );
         } catch (e) {
-          // handle rrr
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          if (e instanceof ToolInputParsingException) {
+            if (this.handleParsingErrors === true) {
+              observation =
+                "Invalid or incomplete tool input. Please try again.";
+            } else if (typeof this.handleParsingErrors === "string") {
+              observation = this.handleParsingErrors;
+            } else if (typeof this.handleParsingErrors === "function") {
+              observation = this.handleParsingErrors(e);
+            } else {
+              throw e;
+            }
+            observation = await new ExceptionTool().call(
+              observation,
+              runManager?.getChild()
+            );
+          }
         }
-        intermediateSteps.push({
-          action: agentAction,
-          observation: observation ?? "",
-        });
       } else {
         observation = `${
           agentAction.tool
@@ -680,7 +675,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
       }
       result.push({
         action: agentAction,
-        observation: observation ?? "",
+        observation,
       });
     }
     return result;
@@ -737,38 +732,19 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     inputs: Record<string, any>
   ): AsyncGenerator<ChainValues> {
-    const iterator = new AgentExecutorIterator({
+    const agentExecutorIterator = new AgentExecutorIterator({
       inputs,
       agentExecutor: this,
       metadata: this.metadata,
       tags: this.tags,
       callbacks: this.callbacks,
     });
+    const iterator = agentExecutorIterator.streamIterator();
     for await (const step of iterator) {
       if (!step) {
         continue;
       }
-      if ("intermediateSteps" in step) {
-        const { output } = step;
-        const intermediateSteps = (step.intermediateSteps as AgentStep[]).map(
-          (step) => ({ action: step.action, observation: step.observation })
-        );
-        if (output) {
-          yield {
-            output: output as string,
-            intermediateSteps,
-          };
-        } else {
-          yield {
-            actions: intermediateSteps.map(({ action }) => action),
-            observations: intermediateSteps.map(
-              ({ observation }) => observation
-            ),
-          };
-        }
-      } else {
-        yield step;
-      }
+      yield step;
     }
   }
 

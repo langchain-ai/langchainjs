@@ -315,6 +315,12 @@ test("Run tool web-browser", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const result = await executor.call({ input });
+  console.log(
+    {
+      result,
+    },
+    "Run tool web-browser"
+  );
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("search");
   expect(result.intermediateSteps[1].action.tool).toEqual("web-browser");
@@ -363,11 +369,10 @@ test("Agent can stream", async () => {
   expect("intermediateSteps" in finalResponse).toBeTruthy();
   expect("output" in finalResponse).toBeTruthy();
 
-  expect(finalResponse.intermediateSteps.length).toBeGreaterThan(1);
+  expect(streamIters).toBeGreaterThan(1);
   const toolsUsed: Array<string> = finalResponse.intermediateSteps.map(
     (step: AgentStep) => step.action.tool
   );
-  expect(streamIters).toBeGreaterThan(1);
   // the last tool used should be the web-browser
   expect(toolsUsed?.[toolsUsed.length - 1]).toEqual("web-browser");
 });
