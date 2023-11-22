@@ -146,6 +146,16 @@ export class OpenAIAssistantRunnable<
     return this._getResponse(run.id, run.thread_id);
   }
 
+  /**
+   * Delete an assistant.
+   *
+   * @link {https://platform.openai.com/docs/api-reference/assistants/deleteAssistant}
+   * @returns {Promise<AssistantDeleted>}
+   */
+  public async deleteAssistant() {
+    return await this.client.beta.assistants.del(this.assistantId);
+  }
+
   private async _parseStepsInput(input: RunInput): Promise<RunInput> {
     const {
       action: { runId, threadId },
