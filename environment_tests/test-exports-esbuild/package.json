@@ -16,6 +16,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@langchain/anthropic": "workspace:*",
     "d3-dsv": "2",
     "hnswlib-node": "^1.4.2",
     "langchain": "workspace:*",
