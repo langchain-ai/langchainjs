@@ -19,7 +19,10 @@ interface ReadEmailParams {
 }
 
 // ... other parameter types for different actions
-
+interface GetMailTipsParams {
+  emailAddresses: string[];  // Array of email addresses to get mail tips for
+  mailTipTypes: string[];    // Types of mail tips you want to retrieve (e.g., "automaticReplies", "mailboxFullStatus")
+}
 
 
 /**
@@ -101,9 +104,36 @@ export class OutlookIntegration extends Tool {
       throw error;
     }
   }
-
-  // Implement the abstract _call method
-  async _call(action: string, params: SendEmailParams | ReadEmailParams): Promise<void> {
+  async getMailTips(params: GetMailTipsParams): Promise<any> {
+    const payload = {
+      EmailAddresses: params.emailAddresses,
+      MailTipsOptions: params.mailTipTypes.join(','),
+    };
+  
+    try {
+      const response = await fetch("https://graph.microsoft.com/v1.0/me/getMailTips", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      return data.value; // Assuming 'value' contains the mail tips
+    } catch (error) {
+      console.error("Failed to get mail tips:", error);
+      throw error;
+    }
+  }
+  
+  // Combined _call method with all cases
+  async _call(action: string, params: SendEmailParams | ReadEmailParams | GetMailTipsParams): Promise<void> {
     switch (action) {
       case "sendEmail":
         const { to, subject, content } = params as SendEmailParams;
@@ -112,10 +142,14 @@ export class OutlookIntegration extends Tool {
       case "readEmails":
         await this.readEmails();
         break;
+      case "getMailTips":
+        await this.getMailTips(params as GetMailTipsParams);
+        break;
       default:
         throw new Error(`Action ${action} is not supported`);
     }
   }
+
   
 
   // You can add more methods for other features like managing contacts, calendar, etc.
