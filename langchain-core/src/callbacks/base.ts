@@ -281,8 +281,8 @@ export abstract class BaseCallbackHandler
 {
   lc_serializable = false;
 
-  get lc_namespace(): ["langchain", "callbacks", string] {
-    return ["langchain", "callbacks", this.name];
+  get lc_namespace(): ["langchain_core", "callbacks", string] {
+    return ["langchain_core", "callbacks", this.name];
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {

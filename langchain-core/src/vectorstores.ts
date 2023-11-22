@@ -65,7 +65,7 @@ export class VectorStoreRetriever<
   }
 
   get lc_namespace() {
-    return ["langchain", "retrievers", "base"];
+    return ["langchain_core", "vectorstores"];
   }
 
   vectorStore: V;
@@ -137,6 +137,7 @@ export class VectorStoreRetriever<
 export abstract class VectorStore extends Serializable {
   declare FilterType: object | string;
 
+  // Only ever instantiated in main LangChain
   lc_namespace = ["langchain", "vectorstores", this._vectorstoreType()];
 
   embeddings: Embeddings;

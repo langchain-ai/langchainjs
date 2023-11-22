@@ -131,7 +131,7 @@ export abstract class BaseMessage
   extends Serializable
   implements BaseMessageFields
 {
-  lc_namespace = ["langchain", "schema"];
+  lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
 

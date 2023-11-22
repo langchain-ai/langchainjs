@@ -21,7 +21,7 @@ export class RouterRunnable<
     return "RouterRunnable";
   }
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   lc_serializable = true;
 

@@ -573,7 +573,7 @@ export class RunnableBinding<
     return "RunnableBinding";
   }
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   lc_serializable = true;
 
@@ -738,7 +738,7 @@ export class RunnableEach<
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   bound: Runnable<RunInputItem, RunOutputItem, CallOptions>;
 
@@ -806,7 +806,7 @@ export class RunnableRetry<
     return "RunnableRetry";
   }
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   protected maxAttemptNumber = 3;
 
@@ -994,7 +994,7 @@ export class RunnableSequence<
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   constructor(fields: {
     first: Runnable<RunInput>;
@@ -1290,7 +1290,7 @@ export class RunnableMap<RunInput> extends Runnable<
     return "RunnableMap";
   }
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   lc_serializable = true;
 
@@ -1360,7 +1360,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     return "RunnableLambda";
   }
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   protected func: RunnableFunc<RunInput, RunOutput>;
 
@@ -1411,7 +1411,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
     return "RunnableWithFallbacks";
   }
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   lc_serializable = true;
 
