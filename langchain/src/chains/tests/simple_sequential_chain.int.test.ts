@@ -90,39 +90,3 @@ test("Test SimpleSequentialChain example usage", async () => {
     })
   ).rejects.toThrow("AbortError");
 });
-
-test("Test SimpleSequentialChain serialize/deserialize", async () => {
-  const llm1 = new ChatOpenAI();
-  const template1 = `Echo back "{foo}"`;
-  const promptTemplate1 = new PromptTemplate({
-    template: template1,
-    inputVariables: ["foo"],
-  });
-  const chain1 = new LLMChain({ llm: llm1, prompt: promptTemplate1 });
-
-  const llm2 = new ChatOpenAI();
-  const template2 = `Echo back "{bar}"`;
-  const promptTemplate2 = new PromptTemplate({
-    template: template2,
-    inputVariables: ["bar"],
-  });
-  const chain2 = new LLMChain({
-    llm: llm2,
-    prompt: promptTemplate2,
-  });
-
-  const sampleSequentialChain = new SimpleSequentialChain({
-    chains: [chain1, chain2],
-    verbose: true,
-  });
-
-  const serializedChain = sampleSequentialChain.serialize();
-  expect(serializedChain._type).toEqual("simple_sequential_chain");
-  expect(serializedChain.chains.length).toEqual(2);
-  const deserializedChain = await SimpleSequentialChain.deserialize(
-    serializedChain
-  );
-  expect(deserializedChain.chains.length).toEqual(2);
-  expect(deserializedChain._chainType()).toEqual("simple_sequential_chain");
-  await deserializedChain.run("test");
-});

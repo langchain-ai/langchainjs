@@ -100,4 +100,5 @@ const experimental_chat_models_bittensor = require("langchain/experimental/chat_
 const experimental_chat_models_ollama_functions = require("langchain/experimental/chat_models/ollama_functions");
 const experimental_chains_violation_of_expectations = require("langchain/experimental/chains/violation_of_expectations");
 const evaluation = require("langchain/evaluation");
+const runnables = require("langchain/runnables");
 const runnables_remote = require("langchain/runnables/remote");
