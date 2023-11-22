@@ -93,7 +93,7 @@ test.skip("New OpenAIAssistantRunnable can be passed as an agent", async () => {
    */
 });
 
-test("OpenAIAssistantRunnable create and delete agent", async () => {
+test("OpenAIAssistantRunnable create and delete assistant", async () => {
   const assistant = await OpenAIAssistantRunnable.createAssistant({
     name: "Personal Assistant",
     model: "gpt-4-1106-preview",
@@ -112,6 +112,20 @@ test("OpenAIAssistantRunnable create and delete agent", async () => {
       deleted: true
     }
    */
+});
+
+test("OpenAIAssistantRunnable create and modify assistant", async () => {
+  const assistant = await OpenAIAssistantRunnable.createAssistant({
+    name: "Personal Assistant",
+    model: "gpt-4-1106-preview",
+  });
+  const assistantResponse = await assistant.getAssistant();
+  expect(assistantResponse.name).toEqual("Personal Assistant");
+  const assistantResponseModified = await assistant.modifyAssistant({
+    name: "Personal Assistant 2",
+  });
+  expect(assistantResponseModified.name).toEqual("Personal Assistant 2");
+  expect(assistantResponseModified.model).toEqual("gpt-4-1106-preview");
 });
 
 test("OpenAIAssistantRunnable can be passed as an agent", async () => {
