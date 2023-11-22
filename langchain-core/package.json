@@ -1,6 +1,6 @@
 {
   "name": "langchain-core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -39,7 +39,8 @@
     "langsmith": "^0.0.48",
     "p-queue": "^6.6.2",
     "p-retry": "4",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "zod": "^3.22.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -111,11 +112,6 @@
       "types": "./documents.d.ts",
       "import": "./documents.js",
       "require": "./documents.cjs"
-    },
-    "./document_transformers": {
-      "types": "./document_transformers.d.ts",
-      "import": "./document_transformers.js",
-      "require": "./document_transformers.cjs"
     },
     "./embeddings": {
       "types": "./embeddings.d.ts",
@@ -196,6 +192,11 @@
       "types": "./stores.d.ts",
       "import": "./stores.js",
       "require": "./stores.cjs"
+    },
+    "./tools": {
+      "types": "./tools.d.ts",
+      "import": "./tools.js",
+      "require": "./tools.cjs"
     },
     "./tracers/base": {
       "types": "./tracers/base.d.ts",
@@ -302,9 +303,6 @@
     "documents.cjs",
     "documents.js",
     "documents.d.ts",
-    "document_transformers.cjs",
-    "document_transformers.js",
-    "document_transformers.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -353,6 +351,9 @@
     "stores.cjs",
     "stores.js",
     "stores.d.ts",
+    "tools.cjs",
+    "tools.js",
+    "tools.d.ts",
     "tracers/base.cjs",
     "tracers/base.js",
     "tracers/base.d.ts",

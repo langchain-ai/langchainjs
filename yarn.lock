@@ -22240,6 +22240,7 @@ __metadata:
     rimraf: ^5.0.1
     typescript: ^5.0.0
     uuid: ^9.0.0
+    zod: ^3.22.3
   languageName: unknown
   linkType: soft
 

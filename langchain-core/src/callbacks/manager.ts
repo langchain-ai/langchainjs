@@ -21,7 +21,7 @@ import {
 } from "../tracers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
-import { Document } from "../documents.js";
+import { Document } from "../documents/document.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
