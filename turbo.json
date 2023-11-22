@@ -5,6 +5,11 @@
   ],
   "pipeline": {
     "langchain-core#build": {},
+    "libs/langchain-anthropic#build": {
+      "dependsOn": [
+        "langchain-core#build"
+      ]
+    },
     "build": {
       "dependsOn": [
         "langchain-core#build",

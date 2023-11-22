@@ -8,6 +8,7 @@
   "workspaces": [
     "langchain",
     "langchain-core",
+    "libs/*",
     "examples",
     "docs/*"
   ],
