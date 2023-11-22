@@ -141,38 +141,6 @@ export class AgentExecutorIterator
     }
   }
 
-  /** Method to initialize the iterator */
-  // async *[Symbol.asyncIterator]() {
-  //   this.reset();
-
-  //   // Loop to handle iteration
-  //   while (true) {
-  //     try {
-  //       if (this.iterations === 0) {
-  //         await this.onFirstStep();
-  //       }
-
-  //       const result = await this._callNext();
-  //       yield result;
-  //       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //     } catch (e: any) {
-  //       if (
-  //         "message" in e &&
-  //         e.message.startsWith("Final outputs already reached: ")
-  //       ) {
-  //         if (!this.finalOutputs) {
-  //           throw e;
-  //         }
-  //         return this.finalOutputs;
-  //       }
-  //       if (this.runManager) {
-  //         await this.runManager.handleChainError(e);
-  //       }
-  //       throw e;
-  //     }
-  //   }
-  // }
-
   /** Perform any necessary setup for the first step of the asynchronous iterator. */
   async onFirstStep(): Promise<void> {
     if (this.iterations === 0) {
