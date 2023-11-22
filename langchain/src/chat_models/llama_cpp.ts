@@ -11,7 +11,12 @@ import {
   createLlamaContext,
 } from "../util/llama_cpp.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import type { BaseMessage } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import {
+	BaseMessage,
+	ChatGenerationChunk,
+	AIMessageChunk
+} from "../schema/index.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -126,6 +131,37 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     } catch (e) {
       throw new Error("Error getting prompt completion.");
     }
+  }
+
+  async *_streamResponseChunks(
+    input: BaseMessage[],
+	// @ts-expect-error - TS6133: 'options' is declared but its value is never read.
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+	  if (input.length != 1) {
+		  throw new Error("Only one human message should be provided.");
+	  } else {
+		  const promptOptions = {
+	        temperature: this?.temperature,
+	        topK: this?.topK,
+	        topP: this?.topP,
+	      };
+
+		  const stream = await this.caller.call(async () =>
+		  	this._context.evaluate(this._context.encode(input[0].content + ""), promptOptions)
+		);
+
+	  	for await (const chunk of stream) {
+	  		yield new ChatGenerationChunk({
+	            text: this._context.decode([chunk]),
+	            message: new AIMessageChunk({ content: this._context.decode([chunk]) }),
+	            generationInfo: {},
+	          });
+	  		await runManager?.handleLLMNewToken(this._context.decode([chunk]) ?? "");
+	  	}
+	  }
+
   }
 
   // This constructs a new session if we need to adding in any sys messages or previous chats
