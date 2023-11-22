@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
-import { RunnableSequence } from "langchain-core/runnables";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 import { load } from "../index.js";
 import { OpenAI } from "../../llms/openai.js";

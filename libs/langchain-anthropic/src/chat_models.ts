@@ -7,24 +7,24 @@ import {
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
-import { CallbackManagerForLLMRun } from "langchain-core/callbacks/manager";
+import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
   AIMessageChunk,
   type BaseMessage,
   ChatMessage,
-} from "langchain-core/messages";
+} from "@langchain/core/messages";
 import {
   type ChatGeneration,
   ChatGenerationChunk,
   type ChatResult,
-} from "langchain-core/outputs";
-import { getEnvironmentVariable } from "langchain-core/utils/env";
+} from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
   type BaseChatModelParams,
-} from "langchain-core/language_models/chat_models";
-import { type BaseLanguageModelCallOptions } from "langchain-core/language_models/base";
+} from "@langchain/core/language_models/chat_models";
+import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
 export { AI_PROMPT, HUMAN_PROMPT };
 

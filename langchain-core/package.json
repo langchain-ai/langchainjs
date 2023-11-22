@@ -1,7 +1,7 @@
 {
-  "name": "langchain-core",
-  "version": "0.0.4",
-  "description": "Typescript bindings for langchain",
+  "name": "@langchain/core",
+  "version": "0.0.0",
+  "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
     "node": ">=18"
