@@ -8,6 +8,7 @@
     "wrangler": "3.7.0"
   },
   "dependencies": {
+    "@langchain/anthropic": "workspace:*",
     "langchain": "workspace:*",
     "langchain-core": "workspace:*"
   },
