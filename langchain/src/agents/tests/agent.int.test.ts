@@ -355,6 +355,7 @@ test("Agent can stream", async () => {
 
   const result = await executor.stream({ input });
   let streamIters = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let finalResponse: any;
   for await (const item of result) {
     streamIters += 1;
