@@ -11,7 +11,7 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
-      - ./langchain-anthropic:/libs/langchain-anthropic
+      - ./libs/langchain-anthropic:/langchain-anthropic
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
     image: node:18
@@ -24,7 +24,7 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
-      - ./langchain-anthropic:/libs/langchain-anthropic
+      - ./libs/langchain-anthropic:/langchain-anthropic
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cjs:
     image: node:18
@@ -37,7 +37,7 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
-      - ./langchain-anthropic:/libs/langchain-anthropic
+      - ./libs/langchain-anthropic:/langchain-anthropic
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
     image: node:18
@@ -50,7 +50,7 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
-      - ./langchain-anthropic:/libs/langchain-anthropic
+      - ./libs/langchain-anthropic:/langchain-anthropic
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vercel:
     image: node:18
@@ -63,7 +63,7 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
-      - ./langchain-anthropic:/libs/langchain-anthropic
+      - ./libs/langchain-anthropic:/langchain-anthropic
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vite:
     image: node:18
@@ -76,7 +76,7 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
-      - ./langchain-anthropic:/libs/langchain-anthropic
+      - ./libs/langchain-anthropic:/langchain-anthropic
     command: bash /scripts/docker-ci-entrypoint.sh
   # test-exports-bun:
   #   image: oven/bun
@@ -86,7 +86,7 @@ services:
   #     - ./environment_tests/scripts:/scripts
   #     - ./langchain:/langchain-workspace
   #     - ./langchain-core:/langchain-core
-  - ./langchain-anthropic:/libs/langchain-anthropic-workspace
+  #     - ./libs/langchain-anthropic:/langchain-anthropic-workspace
   #   command: bash /scripts/docker-bun-ci-entrypoint.sh
   success:
     image: alpine:3.14
