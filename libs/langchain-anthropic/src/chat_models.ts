@@ -26,10 +26,7 @@ import {
 } from "langchain-core/language_models/chat_models";
 import { type BaseLanguageModelCallOptions } from "langchain-core/language_models/base";
 
-export {
-  AI_PROMPT,
-  HUMAN_PROMPT,
-};
+export { AI_PROMPT, HUMAN_PROMPT };
 
 /**
  * Extracts the custom role of a generic chat message.
