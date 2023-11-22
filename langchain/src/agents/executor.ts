@@ -138,7 +138,10 @@ export class AgentExecutorIterator
     }
   }
 
-  /** Perform any necessary setup for the first step of the asynchronous iterator. */
+  /**
+   * Perform any necessary setup for the first step
+   * of the asynchronous iterator.
+   */
   async onFirstStep(): Promise<void> {
     if (this.iterations === 0) {
       const callbackManager = await CallbackManager.configure(
