@@ -43,7 +43,7 @@ export abstract class StructuredTool<
   abstract schema: T | z.ZodEffects<T>;
 
   get lc_namespace() {
-    return ["langchain_core", "tools"];
+    return ["langchain", "tools"];
   }
 
   constructor(fields?: ToolParams) {

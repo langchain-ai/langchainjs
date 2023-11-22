@@ -1,7 +1,5 @@
 export {
   BaseMessagePromptTemplate,
-  type ChatPromptValueFields,
-  ChatPromptValue,
   type MessagesPlaceholderFields as MessagePlaceholderFields,
   MessagesPlaceholder,
   type MessageStringPromptTemplateFields,
@@ -16,3 +14,8 @@ export {
   type BaseMessagePromptTemplateLike,
   ChatPromptTemplate,
 } from "langchain-core/prompts";
+
+export {
+  type ChatPromptValueFields,
+  ChatPromptValue,
+} from "langchain-core/prompt_values";

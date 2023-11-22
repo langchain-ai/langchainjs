@@ -1,6 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
+import { RunnableSequence } from "langchain-core/runnables";
 
 import { load } from "../index.js";
 import { OpenAI } from "../../llms/openai.js";
@@ -17,7 +18,6 @@ import { LangChainTracer } from "../../callbacks/index.js";
 import {
   FewShotPromptTemplate,
   LengthBasedExampleSelector,
-  StringPromptValue,
 } from "../../prompts/index.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { Calculator } from "../../tools/calculator.js";
@@ -234,24 +234,26 @@ test("serialize + deserialize with new and old ids", async () => {
   expect(prompt3).toBeInstanceOf(PromptTemplate);
 });
 
-test("serialize + deserialize prompt value with new and old ids", async () => {
-  const prompt = StringPromptValue.fromTemplate("Hello, {name}!");
-  const strWithNewId = JSON.stringify(prompt, null, 2);
+test("serialize + deserialize runnable sequence with new and old ids", async () => {
+  const runnable = RunnableSequence.from([
+    ChatPromptTemplate.fromTemplate("hi there"),
+    new ChatOpenAI(),
+  ]);
+  const strWithNewId = JSON.stringify(runnable, null, 2);
   expect(stringify(JSON.parse(strWithNewId))).toMatchSnapshot();
   expect(JSON.parse(strWithNewId).id).toEqual([
     "langchain_core",
-    "prompts",
-    "prompt",
-    "PromptTemplate",
+    "runnables",
+    "RunnableSequence",
   ]);
   const strWithOldId = JSON.stringify({
     ...JSON.parse(strWithNewId),
-    id: ["langchain", "prompts", "prompt", "PromptTemplate"],
+    id: ["langchain", "schema", "runnable", "RunnableSequence"],
   });
-  const prompt2 = await load<PromptTemplate>(strWithOldId);
-  expect(prompt2).toBeInstanceOf(PromptTemplate);
-  const prompt3 = await load<PromptTemplate>(strWithNewId);
-  expect(prompt3).toBeInstanceOf(PromptTemplate);
+  const runnable2 = await load<RunnableSequence>(strWithOldId);
+  expect(runnable2).toBeInstanceOf(RunnableSequence);
+  const runnable3 = await load<RunnableSequence>(strWithNewId);
+  expect(runnable3).toBeInstanceOf(RunnableSequence);
 });
 
 test("serialize + deserialize llm chain chat prompt", async () => {

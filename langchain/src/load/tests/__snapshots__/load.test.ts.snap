@@ -125,7 +125,7 @@ kwargs:
         - lc: 1
           type: constructor
           id:
-            - langchain
+            - langchain_core
             - prompts
             - chat
             - SystemMessagePromptTemplate
@@ -146,7 +146,7 @@ kwargs:
         - lc: 1
           type: constructor
           id:
-            - langchain
+            - langchain_core
             - prompts
             - chat
             - HumanMessagePromptTemplate
@@ -498,7 +498,7 @@ kwargs:
     lc: 1
     type: constructor
     id:
-      - langchain
+      - langchain_core
       - output_parsers
       - list
       - CommaSeparatedListOutputParser
@@ -610,6 +610,63 @@ kwargs:
       - output_parsers
       - structured
       - StructuredOutputParser
+"
+`;
+
+exports[`serialize + deserialize runnable sequence with new and old ids 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain_core
+  - runnables
+  - RunnableSequence
+kwargs:
+  first:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - chat
+      - ChatPromptTemplate
+    kwargs:
+      input_variables: []
+      messages:
+        - lc: 1
+          type: constructor
+          id:
+            - langchain_core
+            - prompts
+            - chat
+            - HumanMessagePromptTemplate
+          kwargs:
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain_core
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                input_variables: []
+                template_format: f-string
+                template: hi there
+  middle: []
+  last:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - chat_models
+      - openai
+      - ChatOpenAI
+    kwargs:
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
 "
 `;
 
