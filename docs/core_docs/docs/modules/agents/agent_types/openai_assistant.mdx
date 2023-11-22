@@ -55,6 +55,18 @@ const assistant = new OpenAIAssistantRunnable({
 
 In this next example we'll show how you can turn your assistant into an agent.
 
+## Delete assistant
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+
+const assistant = await OpenAIAssistantRunnable.createAssistant({
+  name: "Personal Assistant",
+  model: "gpt-4-1106-preview",
+});
+const deleteStatus = await assistant.deleteAssistant();
+```
+
 ## Assistant as an agent
 
 ```typescript
