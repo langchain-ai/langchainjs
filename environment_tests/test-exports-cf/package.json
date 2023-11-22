@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
-    "langchain": "workspace:*",
-    "langchain-core": "workspace:*"
+    "@langchain/core": "workspace:*",
+    "langchain": "workspace:*"
   },
   "private": true,
   "scripts": {

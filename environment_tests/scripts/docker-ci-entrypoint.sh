@@ -18,7 +18,7 @@ cp ../root/yarn.lock ../root/.yarnrc.yml .
 # Replace the workspace dependency with the local copy, and install all others
 # Avoid calling "yarn add ../langchain" as yarn berry does seem to hang for ~30s
 # before installation actually occurs
-sed -i 's/"langchain-core": "workspace:\*"/"langchain-core": "..\/langchain-core"/g' package.json
+sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": "..\/@langchain\/core"/g' package.json
 sed -i 's/"@langchain\/anthropic": "workspace:\*"/"@langchain\/anthropic": "..\/langchain-anthropic"/g' package.json
 sed -i 's/"langchain": "workspace:\*"/"langchain": "..\/langchain"/g' package.json
 
