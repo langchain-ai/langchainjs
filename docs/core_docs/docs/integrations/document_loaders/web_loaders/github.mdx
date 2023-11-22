@@ -55,3 +55,11 @@ import SubmodulesExample from "@examples/document_loaders/github_submodules.ts";
 <CodeBlock language="typescript">{SubmodulesExample}</CodeBlock>
 
 Note, that the loader will not follow submodules which are located on another GitHub instance than the one of the current repository.
+
+### Stream large repository
+
+For situations where processing large repositories in a memory-efficient manner is required. You can use the `loadAsStream` method to asynchronously streams documents from the entire GitHub repository.
+
+import StreamExample from "@examples/document_loaders/github_stream.ts";
+
+<CodeBlock language="typescript">{StreamExample}</CodeBlock>

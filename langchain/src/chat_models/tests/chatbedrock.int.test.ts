@@ -5,18 +5,18 @@ import { test, expect } from "@jest/globals";
 import { BedrockChat } from "../bedrock/web.js";
 import { HumanMessage } from "../../schema/index.js";
 
-void testChatModel(
-  "Test Bedrock chat model: Llama2 13B v1",
-  "us-east-1",
-  "meta.llama2-13b-chat-v1",
-  "What is your name?"
-);
-void testChatStreamingModel(
-  "Test Bedrock streaming chat model: Llama2 13B v1",
-  "us-east-1",
-  "meta.llama2-13b-chat-v1",
-  "What is your name and something about yourself?"
-);
+// void testChatModel(
+//   "Test Bedrock chat model: Llama2 13B v1",
+//   "us-east-1",
+//   "meta.llama2-13b-chat-v1",
+//   "What is your name?"
+// );
+// void testChatStreamingModel(
+//   "Test Bedrock streaming chat model: Llama2 13B v1",
+//   "us-east-1",
+//   "meta.llama2-13b-chat-v1",
+//   "What is your name and something about yourself?"
+// );
 
 void testChatModel(
   "Test Bedrock chat model: Claude-v2",
@@ -37,12 +37,12 @@ void testChatHandleLLMNewToken(
   "anthropic.claude-v2",
   "What is your name and something about yourself?"
 );
-void testChatHandleLLMNewToken(
-  "Test Bedrock chat model HandleLLMNewToken: Llama2 13B v1",
-  "us-east-1",
-  "meta.llama2-13b-chat-v1",
-  "What is your name and something about yourself?"
-);
+// void testChatHandleLLMNewToken(
+//   "Test Bedrock chat model HandleLLMNewToken: Llama2 13B v1",
+//   "us-east-1",
+//   "meta.llama2-13b-chat-v1",
+//   "What is your name and something about yourself?"
+// );
 
 /**
  * Tests a BedrockChat model

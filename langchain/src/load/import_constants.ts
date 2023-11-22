@@ -131,6 +131,7 @@ export const optionalImportEntrypoints = [
   "langchain/retrievers/self_query/pinecone",
   "langchain/retrievers/self_query/supabase",
   "langchain/retrievers/self_query/weaviate",
+  "langchain/retrievers/self_query/vectara",
   "langchain/cache/cloudflare_kv",
   "langchain/cache/momento",
   "langchain/cache/redis",

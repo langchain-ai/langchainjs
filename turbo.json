@@ -4,8 +4,10 @@
     "**/.env"
   ],
   "pipeline": {
+    "langchain-core#build": {},
     "build": {
       "dependsOn": [
+        "langchain-core#build",
         "^build"
       ],
       "outputs": [

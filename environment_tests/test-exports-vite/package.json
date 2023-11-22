@@ -10,7 +10,8 @@
     "test": "tsc"
   },
   "dependencies": {
-    "langchain": "workspace:*"
+    "langchain": "workspace:*",
+    "langchain-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
