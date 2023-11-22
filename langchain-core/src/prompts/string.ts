@@ -1,33 +1,9 @@
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
-import { HumanMessage } from "../messages/index.js";
 import type { InputValues } from "../utils/types.js";
-import { BasePromptValue } from "../prompt_values.js";
+import { StringPromptValue } from "../prompt_values.js";
 import { BasePromptTemplate, type TypedPromptInputValues } from "./base.js";
-
-/**
- * Represents a prompt value as a string. It extends the BasePromptValue
- * class and overrides the toString and toChatMessages methods.
- */
-export class StringPromptValue extends BasePromptValue {
-  lc_namespace = ["langchain", "prompts", "base"];
-
-  value: string;
-
-  constructor(value: string) {
-    super({ value });
-    this.value = value;
-  }
-
-  toString() {
-    return this.value;
-  }
-
-  toChatMessages() {
-    return [new HumanMessage(this.value)];
-  }
-}
 
 /**
  * Base class for string prompt templates. It extends the

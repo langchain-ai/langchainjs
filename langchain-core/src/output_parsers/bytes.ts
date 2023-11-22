@@ -9,7 +9,7 @@ export class BytesOutputParser extends BaseTransformOutputParser<Uint8Array> {
     return "BytesOutputParser";
   }
 
-  lc_namespace = ["langchain", "schema", "output_parser"];
+  lc_namespace = ["langchain_core", "output_parsers", "bytes"];
 
   lc_serializable = true;
 
