@@ -56,14 +56,9 @@ async function webpackLoader(content, map, meta) {
         });
       }
     });
-    
-    const getDocsPath = (componentPath) => path.resolve(
-      __dirname,
-      "..",
-      "api_refs",
-      "public",
-      componentPath
-    );
+
+    const getDocsPath = (componentPath) =>
+      path.resolve(__dirname, "..", "api_refs", "public", componentPath);
 
     /**
      * Somewhat of a hacky solution to finding the exact path of the docs file.
@@ -78,7 +73,10 @@ async function webpackLoader(content, map, meta) {
         const componentPath = `${category}/${moduleName}.${imported}.html`;
         const docsPath = getDocsPath(componentPath);
         // The modules from `langchain-core` are named differently in the API docs.
-        const componentPathWithSchema = `${category}/schema_${moduleName.slice(0, -1)}.${imported}.html`;
+        const componentPathWithSchema = `${category}/schema_${moduleName.slice(
+          0,
+          -1
+        )}.${imported}.html`;
         const newDocsPath = getDocsPath(componentPathWithSchema);
         if (fs.existsSync(docsPath)) {
           modulePath = componentPath;
