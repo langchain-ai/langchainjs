@@ -95,7 +95,7 @@ export class AgentExecutorIterator
 
   /**
    * Reset the iterator to its initial state, clearing intermediate steps,
-   * iterations, and time elapsed.
+   * iterations, and the final output.
    */
   reset(): void {
     this.intermediateSteps = [];
