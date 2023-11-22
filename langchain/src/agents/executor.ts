@@ -85,7 +85,7 @@ export class AgentExecutorIterator
   }
 
   constructor(fields: AgentExecutorIteratorInput) {
-    super();
+    super(fields);
     this.agentExecutor = fields.agentExecutor;
     this.inputs = fields.inputs;
     this.tags = fields.tags;
@@ -622,7 +622,32 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
         runManager?.getChild()
       );
     } catch (e) {
-      // handle rrr
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (e instanceof OutputParserException) {
+        let observation;
+        let text = e.message;
+        if (this.handleParsingErrors === true) {
+          if (e.sendToLLM) {
+            observation = e.observation;
+            text = e.llmOutput ?? "";
+          } else {
+            observation = "Invalid or incomplete response";
+          }
+        } else if (typeof this.handleParsingErrors === "string") {
+          observation = this.handleParsingErrors;
+        } else if (typeof this.handleParsingErrors === "function") {
+          observation = this.handleParsingErrors(e);
+        } else {
+          throw e;
+        }
+        output = {
+          tool: "_Exception",
+          toolInput: observation,
+          log: text,
+        } as AgentAction;
+      } else {
+        throw e;
+      }
     }
 
     if (output && "returnValues" in output) {
