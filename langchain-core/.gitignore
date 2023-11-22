@@ -19,9 +19,6 @@ chat_history.d.ts
 documents.cjs
 documents.js
 documents.d.ts
-document_transformers.cjs
-document_transformers.js
-document_transformers.d.ts
 embeddings.cjs
 embeddings.js
 embeddings.d.ts
@@ -70,6 +67,9 @@ retrievers.d.ts
 stores.cjs
 stores.js
 stores.d.ts
+tools.cjs
+tools.js
+tools.d.ts
 tracers/base.cjs
 tracers/base.js
 tracers/base.d.ts
