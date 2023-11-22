@@ -5,7 +5,7 @@ import {
   Callbacks,
   parseCallbackConfigArg,
 } from "./callbacks/manager.js";
-import { Document } from "./documents.js";
+import { Document } from "./documents/document.js";
 import { Runnable } from "./runnables/base.js";
 import { RunnableConfig } from "./runnables/config.js";
 

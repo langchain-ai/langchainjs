@@ -11,7 +11,7 @@ import {
   HandleLLMNewTokenCallbackFields,
   NewTokenIndices,
 } from "../callbacks/base.js";
-import type { Document } from "../documents.js";
+import type { Document } from "../documents/document.js";
 
 export type RunType = string;
 

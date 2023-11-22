@@ -1,5 +1,5 @@
 import type { Embeddings } from "./embeddings.js";
-import type { Document } from "./documents.js";
+import type { Document } from "./documents/document.js";
 import { BaseRetriever, BaseRetrieverInput } from "./retrievers.js";
 import { Serializable } from "./load/serializable.js";
 import {
