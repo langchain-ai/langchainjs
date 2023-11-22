@@ -1,4 +1,4 @@
-import { BaseDocumentTransformer } from "langchain-core/schema/document";
+import { BaseDocumentTransformer } from "langchain-core/document_transformers";
 import { Document } from "../document.js";
 
 export { BaseDocumentTransformer };

@@ -1,10 +1,10 @@
-import {
-  BaseStringPromptTemplate,
-  type TypedPromptInputValues,
-  type Example,
+import { BaseStringPromptTemplate } from "./string.js";
+import type {
+  BasePromptTemplateInput,
+  TypedPromptInputValues,
+  Example,
 } from "./base.js";
-import { type BasePromptTemplateInput } from "../schema/prompt_template.js";
-import type { BaseExampleSelector } from "./example_selector/base.js";
+import type { BaseExampleSelector } from "../example_selectors/base.js";
 import {
   type TemplateFormat,
   checkValidTemplate,
@@ -12,8 +12,8 @@ import {
 } from "./template.js";
 import { PromptTemplate } from "./prompt.js";
 import type { SerializedFewShotTemplate } from "./serde.js";
-import type { InputValues, PartialValues } from "../schema/index.js";
-import type { BaseMessage } from "../schema/messages.js";
+import type { InputValues, PartialValues } from "../utils/types.js";
+import type { BaseMessage } from "../messages/index.js";
 import {
   BaseChatPromptTemplate,
   type BaseMessagePromptTemplate,

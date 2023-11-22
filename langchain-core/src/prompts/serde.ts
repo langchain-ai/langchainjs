@@ -1,4 +1,3 @@
-import type { Example } from "./example_selector/base.js";
 import type { TemplateFormat } from "./template.js";
 
 /**
@@ -30,7 +29,8 @@ export type SerializedPromptTemplate = {
 export type SerializedFewShotTemplate = {
   _type: "few_shot";
   input_variables: string[];
-  examples: string | Example[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  examples: string | any[];
   example_prompt?: SerializedPromptTemplate;
   example_separator: string;
   prefix?: string;

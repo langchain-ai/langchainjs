@@ -9,11 +9,11 @@ import {
   LogStreamCallbackHandler,
   LogStreamCallbackHandlerInput,
   RunLogPatch,
-} from "../callbacks/tracers/log_stream.js";
+} from "../tracers/log_stream.js";
 import { Serializable } from "../load/serializable.js";
-import { IterableReadableStream } from "../util/stream.js";
+import { IterableReadableStream } from "../utils/stream.js";
 import { RunnableConfig, getCallbackMangerForConfig } from "./config.js";
-import { AsyncCaller } from "../util/async_caller.js";
+import { AsyncCaller } from "../utils/async_caller.js";
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput

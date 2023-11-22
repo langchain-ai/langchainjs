@@ -1,1 +1,6 @@
-export * from "langchain-core/prompts/few_shot";
+export {
+  type FewShotPromptTemplateInput,
+  FewShotPromptTemplate,
+  type FewShotChatMessagePromptTemplateInput,
+  FewShotChatMessagePromptTemplate,
+} from "langchain-core/prompts";

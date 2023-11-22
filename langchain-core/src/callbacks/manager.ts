@@ -1,27 +1,27 @@
 import { v4 as uuidv4 } from "uuid";
-import { AgentAction, AgentFinish } from "../schema/agent.js";
-import { ChainValues } from "../schema/index.js";
-import { LLMResult } from "../schema/output.js";
+import { AgentAction, AgentFinish } from "../agents.js";
+import type { ChainValues } from "../utils/types.js";
+import { LLMResult } from "../outputs.js";
 import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
   HandleLLMNewTokenCallbackFields,
   NewTokenIndices,
 } from "./base.js";
-import { ConsoleCallbackHandler } from "./tracers/console.js";
+import { ConsoleCallbackHandler } from "../tracers/console.js";
 import {
   getTracingCallbackHandler,
   getTracingV2CallbackHandler,
-} from "./tracers/initialize.js";
-import { type BaseMessage, getBufferString } from "../schema/messages.js";
-import { getEnvironmentVariable } from "../util/env.js";
+} from "../tracers/initialize.js";
+import { type BaseMessage, getBufferString } from "../messages/index.js";
+import { getEnvironmentVariable } from "../utils/env.js";
 import {
   LangChainTracer,
   LangChainTracerFields,
-} from "./tracers/tracer_langchain.js";
+} from "../tracers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
-import { Document } from "../schema/document/document.js";
+import { Document } from "../documents.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (

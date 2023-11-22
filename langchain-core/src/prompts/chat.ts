@@ -2,7 +2,7 @@
 // Replace with "string" when we are comfortable with a breaking change.
 
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
-import { getBufferString } from "../schema/messages.js";
+import { getBufferString } from "../messages/index.js";
 import {
   AIMessage,
   HumanMessage,
@@ -12,15 +12,16 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   isBaseMessage,
-} from "../schema/messages.js";
-import { BasePromptValue } from "../schema/prompt.js";
-import { InputValues, PartialValues } from "../schema/index.js";
+} from "../messages/index.js";
+import { BasePromptValue } from "../prompt_values.js";
+import type { InputValues, PartialValues } from "../utils/types.js";
 import { Runnable } from "../runnables/base.js";
-import { BaseStringPromptTemplate, TypedPromptInputValues } from "./base.js";
+import { BaseStringPromptTemplate } from "./string.js";
 import {
   BasePromptTemplate,
   type BasePromptTemplateInput,
-} from "../schema/prompt_template.js";
+  type TypedPromptInputValues,
+} from "./base.js";
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 
 /**
@@ -115,7 +116,7 @@ export class ChatPromptValue extends BasePromptValue {
 /**
  * Interface for the fields of a MessagePlaceholder.
  */
-export interface MessagePlaceholderFields<T extends string> {
+export interface MessagesPlaceholderFields<T extends string> {
   variableName: T;
 }
 
@@ -136,13 +137,13 @@ export class MessagesPlaceholder<
   constructor(variableName: Extract<keyof RunInput, string>);
 
   constructor(
-    fields: MessagePlaceholderFields<Extract<keyof RunInput, string>>
+    fields: MessagesPlaceholderFields<Extract<keyof RunInput, string>>
   );
 
   constructor(
     fields:
       | Extract<keyof RunInput, string>
-      | MessagePlaceholderFields<Extract<keyof RunInput, string>>
+      | MessagesPlaceholderFields<Extract<keyof RunInput, string>>
   ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign

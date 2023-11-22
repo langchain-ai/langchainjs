@@ -1,1 +1,1 @@
-export * from "langchain-core/schema/retriever";
+export * from "langchain-core/retrievers";
