@@ -22404,6 +22404,7 @@ __metadata:
     "@aws-sdk/client-sfn": ^3.310.0
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@azure/storage-blob": ^12.15.0
+    "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
@@ -22511,6 +22512,8 @@ __metadata:
     "@aws-sdk/credential-provider-node":
       optional: true
     "@azure/storage-blob":
+      optional: true
+    "@clickhouse/client":
       optional: true
     "@cloudflare/ai":
       optional: true
