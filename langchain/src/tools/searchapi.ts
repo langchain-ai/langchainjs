@@ -34,6 +34,33 @@ export type SearchApiParameters = {
  *
  * Ensure you've set the SEARCHAPI_API_KEY environment variable for authentication.
  * You can obtain a free API key from https://www.searchapi.io/.
+ * @example
+ * ```typescript
+ * const searchApi = new SearchApi("your-api-key", {
+ *   engine: "google_news",
+ * });
+ * const agent = RunnableSequence.from([
+ *   ChatPromptTemplate.fromMessages([
+ *     ["ai", "Answer the following questions using a bulleted list markdown format.""],
+ *     ["human", "{input}"],
+ *   ]),
+ *   new ChatOpenAI({ temperature: 0 }),
+ *   (input: BaseMessageChunk) => ({
+ *     log: "test",
+ *     returnValues: {
+ *       output: input,
+ *     },
+ *   }),
+ * ]);
+ * const executor = AgentExecutor.fromAgentAndTools({
+ *   agent,
+ *   tools: [searchApi],
+ * });
+ * const res = await executor.invoke({
+ *   input: "What's happening in Ukraine today?"",
+ * });
+ * console.log(res);
+ * ```
  */
 export class SearchApi extends Tool {
   static lc_name() {

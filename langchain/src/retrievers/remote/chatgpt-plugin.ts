@@ -34,6 +34,16 @@ export interface ChatGPTPluginRetrieverParams extends RemoteRetrieverParams {
  * Class that connects ChatGPT to third-party applications via plugins. It
  * extends the RemoteRetriever class and implements the
  * ChatGPTPluginRetrieverParams interface.
+ * @example
+ * ```typescript
+ * const retriever = new ChatGPTPluginRetriever({
+ *   url: "http:
+ *   auth: {
+ *     bearer: "super-secret-jwt-token-with-at-least-32-characters-long",
+ *   },
+ * });
+ * const docs = await retriever.getRelevantDocuments("hello world");
+ * ```
  */
 export class ChatGPTPluginRetriever
   extends RemoteRetriever

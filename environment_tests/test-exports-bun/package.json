@@ -19,7 +19,8 @@
   "dependencies": {
     "d3-dsv": "2",
     "hnswlib-node": "^1.4.2",
-    "langchain": "workspace:*"
+    "langchain": "workspace:*",
+    "langchain-core": "workspace:*"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",

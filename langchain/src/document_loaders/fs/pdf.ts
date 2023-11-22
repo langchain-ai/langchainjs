@@ -5,6 +5,12 @@ import { formatDocumentsAsString } from "../../util/document.js";
 /**
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads documents from PDF files.
+ * @example
+ * ```typescript
+ * const loader = new PDFLoader("path/to/bitcoin.pdf");
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class PDFLoader extends BufferLoader {
   private splitPages: boolean;

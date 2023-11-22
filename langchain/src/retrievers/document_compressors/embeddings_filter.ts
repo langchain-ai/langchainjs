@@ -16,6 +16,19 @@ export interface EmbeddingsFilterParams {
 /**
  * Class that represents a document compressor that uses embeddings to
  * drop documents unrelated to the query.
+ * @example
+ * ```typescript
+ * const embeddingsFilter = new EmbeddingsFilter({
+ *   embeddings: new OpenAIEmbeddings(),
+ *   similarityThreshold: 0.8,
+ *   k: 5,
+ * });
+ * const retrievedDocs = await embeddingsFilter.filterDocuments(
+ *   getDocuments(),
+ *   "What did the speaker say about Justice Breyer in the 2022 State of the Union?",
+ * );
+ * console.log({ retrievedDocs });
+ * ```
  */
 export class EmbeddingsFilter extends BaseDocumentCompressor {
   /**

@@ -4,6 +4,12 @@ import { formatDocumentsAsString } from "../../util/document.js";
 
 /**
  * A document loader for loading data from PDFs.
+ * @example
+ * ```typescript
+ * const loader = new WebPDFLoader(new Blob());
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class WebPDFLoader extends BaseDocumentLoader {
   protected blob: Blob;

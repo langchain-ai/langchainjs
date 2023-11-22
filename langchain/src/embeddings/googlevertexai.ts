@@ -60,6 +60,14 @@ interface GoogleVertexEmbeddingsResults extends GoogleVertexAIBasePrediction {
  * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
+ * @example
+ * ```typescript
+ * const model = new GoogleVertexAIEmbeddings();
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class GoogleVertexAIEmbeddings
   extends Embeddings

@@ -10,7 +10,7 @@ const store = new VectaraStore({
 });
 
 // Add two documents with some metadata.
-await store.addDocuments([
+const doc_ids = await store.addDocuments([
   new Document({
     pageContent: "Do I dare to eat a peach?",
     metadata: {
@@ -58,3 +58,6 @@ console.log(JSON.stringify(resultsWithScore, null, 2));
 //     0.38169062
 //   ]
 // ]
+
+// Delete the documents.
+await store.deleteDocuments(doc_ids);
