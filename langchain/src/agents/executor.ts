@@ -103,9 +103,6 @@ export class AgentExecutorIterator
     this._finalOutputs = undefined;
   }
 
-  /**
-   * Increment the number of iterations and update the time elapsed.
-   */
   updateIterations(): void {
     this.iterations += 1;
   }
