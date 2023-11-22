@@ -19,7 +19,7 @@ import {
   ChatGenerationChunk,
   ChatMessage,
 } from "../../schema/index.js";
-import { SerializedFields } from "../../load/map_keys.js";
+import type { SerializedFields } from "../../load/map_keys.js";
 
 function convertOneMessageToText(
   message: BaseMessage,

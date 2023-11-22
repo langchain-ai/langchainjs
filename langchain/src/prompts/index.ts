@@ -1,10 +1,10 @@
 export {
-  BaseExampleSelector,
   BasePromptTemplate,
   type BasePromptTemplateInput,
   StringPromptValue,
   BaseStringPromptTemplate,
 } from "./base.js";
+export { BaseExampleSelector } from "langchain-core/prompts/example_selector/base";
 export { PromptTemplate, type PromptTemplateInput } from "./prompt.js";
 export {
   BasePromptSelector,

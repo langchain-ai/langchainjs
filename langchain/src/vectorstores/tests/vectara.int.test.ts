@@ -2,9 +2,9 @@
 /* eslint-disable no-process-env */
 import fs from "fs";
 import { expect, beforeAll } from "@jest/globals";
+import { insecureHash } from "langchain-core/util/hash";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
-import { insecureHash } from "../../util/js-sha1/hash.js";
 import { VectaraFile, VectaraLibArgs, VectaraStore } from "../vectara.js";
 
 const getDocs = (): Document[] => {

@@ -283,6 +283,7 @@
     "./langchain/src/experimental/hubs/makersuite/googlemakersuitehub.ts",
     "./langchain/src/experimental/chains/violation_of_expectations/index.ts",
     "./langchain/src/evaluation/index.ts",
+    "./langchain/src/runnables/index.ts",
     "./langchain/src/runnables/remote.ts"
   ]
 }
