@@ -67,6 +67,7 @@ export class ExceptionTool extends Tool {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 class AddableMap extends Map<string, any> {
   merge(other: AddableMap): AddableMap {
     const result = new AddableMap(this);
@@ -82,10 +83,12 @@ class AddableMap extends Map<string, any> {
 }
 
 class AgentStreamOutput extends AddableMap {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   get(key: string): any {
     if (key === "intermediateSteps") {
       const actions = this.get("actions") || [];
       const observations = this.get("observations") || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return actions.map((action: any, index: number) => [
         action,
         observations[index],
@@ -445,6 +448,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   }
 
   async *_streamIterator(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     inputs: Record<string, any>,
     /** @TODO Figure out where to use this. */
     _config: RunnableConfig | null = null

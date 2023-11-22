@@ -6,7 +6,7 @@ import {
 import { Serializable } from "../load/serializable.js";
 import { AgentFinish, AgentStep } from "../schema/index.js";
 import { Tool } from "../tools/base.js";
-import { AgentExecutor } from "./executor.js";
+import type { AgentExecutor } from "./executor.js";
 
 interface AgentExecutorIteratorInput {
   agentExecutor: AgentExecutor;
@@ -59,7 +59,9 @@ export class AgentExecutorIterator
   iterations = 0;
 
   get nameToToolMap(): Record<string, Tool> {
-    const toolMap = this.agentExecutor.tools.map((tool) => ({ [tool.name]: tool }));
+    const toolMap = this.agentExecutor.tools.map((tool) => ({
+      [tool.name]: tool,
+    }));
     return Object.assign({}, ...toolMap);
   }
 
@@ -103,6 +105,7 @@ export class AgentExecutorIterator
 
         const result = await this._callNext();
         yield result;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         if (
           "message" in e &&
