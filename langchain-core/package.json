@@ -1,0 +1,488 @@
+{
+  "name": "langchain-core",
+  "version": "0.0.1",
+  "description": "Typescript bindings for langchain",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:langchain-ai/langchainjs.git"
+  },
+  "scripts": {
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
+    "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
+    "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
+    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint:fix": "yarn lint --fix",
+    "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "prepack": "yarn build",
+    "release": "release-it --only-version --config .release-it.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
+  },
+  "author": "LangChain",
+  "license": "MIT",
+  "dependencies": {
+    "ansi-styles": "^5.0.0",
+    "camelcase": "6",
+    "decamelize": "1.2.0",
+    "js-tiktoken": "^1.0.7",
+    "langsmith": "^0.0.48",
+    "p-queue": "^6.6.2",
+    "p-retry": "4",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.5.0",
+    "@swc/core": "^1.3.90",
+    "@swc/jest": "^0.2.29",
+    "dpdm": "^3.12.0",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-no-instanceof": "^1.0.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jest": "^29.5.0",
+    "jest-environment-node": "^29.6.4",
+    "prettier": "^2.8.3",
+    "release-it": "^15.10.1",
+    "rimraf": "^5.0.1",
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "gpt3",
+    "chain",
+    "prompt",
+    "prompt engineering",
+    "chatgpt",
+    "machine learning",
+    "ml",
+    "openai",
+    "embeddings",
+    "vectorstores"
+  ],
+  "exports": {
+    "./callbacks/base": {
+      "types": "./callbacks/base.d.ts",
+      "import": "./callbacks/base.js",
+      "require": "./callbacks/base.cjs"
+    },
+    "./callbacks/manager": {
+      "types": "./callbacks/manager.d.ts",
+      "import": "./callbacks/manager.js",
+      "require": "./callbacks/manager.cjs"
+    },
+    "./callbacks/promises": {
+      "types": "./callbacks/promises.d.ts",
+      "import": "./callbacks/promises.js",
+      "require": "./callbacks/promises.cjs"
+    },
+    "./callbacks/tracers/base": {
+      "types": "./callbacks/tracers/base.d.ts",
+      "import": "./callbacks/tracers/base.js",
+      "require": "./callbacks/tracers/base.cjs"
+    },
+    "./callbacks/tracers/console": {
+      "types": "./callbacks/tracers/console.d.ts",
+      "import": "./callbacks/tracers/console.js",
+      "require": "./callbacks/tracers/console.cjs"
+    },
+    "./callbacks/tracers/initialize": {
+      "types": "./callbacks/tracers/initialize.d.ts",
+      "import": "./callbacks/tracers/initialize.js",
+      "require": "./callbacks/tracers/initialize.cjs"
+    },
+    "./callbacks/tracers/log_stream": {
+      "types": "./callbacks/tracers/log_stream.d.ts",
+      "import": "./callbacks/tracers/log_stream.js",
+      "require": "./callbacks/tracers/log_stream.cjs"
+    },
+    "./callbacks/tracers/run_collector": {
+      "types": "./callbacks/tracers/run_collector.d.ts",
+      "import": "./callbacks/tracers/run_collector.js",
+      "require": "./callbacks/tracers/run_collector.cjs"
+    },
+    "./callbacks/tracers/tracer_langchain_v1": {
+      "types": "./callbacks/tracers/tracer_langchain_v1.d.ts",
+      "import": "./callbacks/tracers/tracer_langchain_v1.js",
+      "require": "./callbacks/tracers/tracer_langchain_v1.cjs"
+    },
+    "./callbacks/tracers/tracer_langchain": {
+      "types": "./callbacks/tracers/tracer_langchain.d.ts",
+      "import": "./callbacks/tracers/tracer_langchain.js",
+      "require": "./callbacks/tracers/tracer_langchain.cjs"
+    },
+    "./chat_model": {
+      "types": "./chat_model.d.ts",
+      "import": "./chat_model.js",
+      "require": "./chat_model.cjs"
+    },
+    "./llm": {
+      "types": "./llm.d.ts",
+      "import": "./llm.js",
+      "require": "./llm.cjs"
+    },
+    "./load": {
+      "types": "./load.d.ts",
+      "import": "./load.js",
+      "require": "./load.cjs"
+    },
+    "./load/serializable": {
+      "types": "./load/serializable.d.ts",
+      "import": "./load/serializable.js",
+      "require": "./load/serializable.cjs"
+    },
+    "./prompts": {
+      "types": "./prompts.d.ts",
+      "import": "./prompts.js",
+      "require": "./prompts.cjs"
+    },
+    "./prompts/base": {
+      "types": "./prompts/base.d.ts",
+      "import": "./prompts/base.js",
+      "require": "./prompts/base.cjs"
+    },
+    "./prompts/chat": {
+      "types": "./prompts/chat.d.ts",
+      "import": "./prompts/chat.js",
+      "require": "./prompts/chat.cjs"
+    },
+    "./prompts/few_shot": {
+      "types": "./prompts/few_shot.d.ts",
+      "import": "./prompts/few_shot.js",
+      "require": "./prompts/few_shot.cjs"
+    },
+    "./prompts/pipeline": {
+      "types": "./prompts/pipeline.d.ts",
+      "import": "./prompts/pipeline.js",
+      "require": "./prompts/pipeline.cjs"
+    },
+    "./prompts/serde": {
+      "types": "./prompts/serde.d.ts",
+      "import": "./prompts/serde.js",
+      "require": "./prompts/serde.cjs"
+    },
+    "./prompts/template": {
+      "types": "./prompts/template.d.ts",
+      "import": "./prompts/template.js",
+      "require": "./prompts/template.cjs"
+    },
+    "./prompts/example_selector/base": {
+      "types": "./prompts/example_selector/base.d.ts",
+      "import": "./prompts/example_selector/base.js",
+      "require": "./prompts/example_selector/base.cjs"
+    },
+    "./prompts/example_selector/conditional": {
+      "types": "./prompts/example_selector/conditional.d.ts",
+      "import": "./prompts/example_selector/conditional.js",
+      "require": "./prompts/example_selector/conditional.cjs"
+    },
+    "./prompts/example_selector/length_based": {
+      "types": "./prompts/example_selector/length_based.d.ts",
+      "import": "./prompts/example_selector/length_based.js",
+      "require": "./prompts/example_selector/length_based.cjs"
+    },
+    "./prompts/example_selector/semantic_similarity": {
+      "types": "./prompts/example_selector/semantic_similarity.d.ts",
+      "import": "./prompts/example_selector/semantic_similarity.js",
+      "require": "./prompts/example_selector/semantic_similarity.cjs"
+    },
+    "./runnables": {
+      "types": "./runnables.d.ts",
+      "import": "./runnables.js",
+      "require": "./runnables.cjs"
+    },
+    "./schema": {
+      "types": "./schema.d.ts",
+      "import": "./schema.js",
+      "require": "./schema.cjs"
+    },
+    "./schema/agent": {
+      "types": "./schema/agent.d.ts",
+      "import": "./schema/agent.js",
+      "require": "./schema/agent.cjs"
+    },
+    "./schema/cache": {
+      "types": "./schema/cache.d.ts",
+      "import": "./schema/cache.js",
+      "require": "./schema/cache.cjs"
+    },
+    "./schema/chat_history": {
+      "types": "./schema/chat_history.d.ts",
+      "import": "./schema/chat_history.js",
+      "require": "./schema/chat_history.cjs"
+    },
+    "./schema/document": {
+      "types": "./schema/document.d.ts",
+      "import": "./schema/document.js",
+      "require": "./schema/document.cjs"
+    },
+    "./schema/embeddings": {
+      "types": "./schema/embeddings.d.ts",
+      "import": "./schema/embeddings.js",
+      "require": "./schema/embeddings.cjs"
+    },
+    "./schema/language_model": {
+      "types": "./schema/language_model.d.ts",
+      "import": "./schema/language_model.js",
+      "require": "./schema/language_model.cjs"
+    },
+    "./schema/memory": {
+      "types": "./schema/memory.d.ts",
+      "import": "./schema/memory.js",
+      "require": "./schema/memory.cjs"
+    },
+    "./schema/messages": {
+      "types": "./schema/messages.d.ts",
+      "import": "./schema/messages.js",
+      "require": "./schema/messages.cjs"
+    },
+    "./schema/output_parser": {
+      "types": "./schema/output_parser.d.ts",
+      "import": "./schema/output_parser.js",
+      "require": "./schema/output_parser.cjs"
+    },
+    "./schema/output": {
+      "types": "./schema/output.d.ts",
+      "import": "./schema/output.js",
+      "require": "./schema/output.cjs"
+    },
+    "./schema/prompt_template": {
+      "types": "./schema/prompt_template.d.ts",
+      "import": "./schema/prompt_template.js",
+      "require": "./schema/prompt_template.cjs"
+    },
+    "./schema/prompt": {
+      "types": "./schema/prompt.d.ts",
+      "import": "./schema/prompt.js",
+      "require": "./schema/prompt.cjs"
+    },
+    "./schema/retriever": {
+      "types": "./schema/retriever.d.ts",
+      "import": "./schema/retriever.js",
+      "require": "./schema/retriever.cjs"
+    },
+    "./schema/storage": {
+      "types": "./schema/storage.d.ts",
+      "import": "./schema/storage.js",
+      "require": "./schema/storage.cjs"
+    },
+    "./schema/vectorstore": {
+      "types": "./schema/vectorstore.d.ts",
+      "import": "./schema/vectorstore.js",
+      "require": "./schema/vectorstore.cjs"
+    },
+    "./util/async_caller": {
+      "types": "./util/async_caller.d.ts",
+      "import": "./util/async_caller.js",
+      "require": "./util/async_caller.cjs"
+    },
+    "./util/env": {
+      "types": "./util/env.d.ts",
+      "import": "./util/env.js",
+      "require": "./util/env.cjs"
+    },
+    "./util/hash": {
+      "types": "./util/hash.d.ts",
+      "import": "./util/hash.js",
+      "require": "./util/hash.cjs"
+    },
+    "./util/json_patch": {
+      "types": "./util/json_patch.d.ts",
+      "import": "./util/json_patch.js",
+      "require": "./util/json_patch.cjs"
+    },
+    "./util/json_schema": {
+      "types": "./util/json_schema.d.ts",
+      "import": "./util/json_schema.js",
+      "require": "./util/json_schema.cjs"
+    },
+    "./util/stream": {
+      "types": "./util/stream.d.ts",
+      "import": "./util/stream.js",
+      "require": "./util/stream.cjs"
+    },
+    "./util/tiktoken": {
+      "types": "./util/tiktoken.d.ts",
+      "import": "./util/tiktoken.js",
+      "require": "./util/tiktoken.cjs"
+    },
+    "./util/types": {
+      "types": "./util/types.d.ts",
+      "import": "./util/types.js",
+      "require": "./util/types.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "callbacks/base.cjs",
+    "callbacks/base.js",
+    "callbacks/base.d.ts",
+    "callbacks/manager.cjs",
+    "callbacks/manager.js",
+    "callbacks/manager.d.ts",
+    "callbacks/promises.cjs",
+    "callbacks/promises.js",
+    "callbacks/promises.d.ts",
+    "callbacks/tracers/base.cjs",
+    "callbacks/tracers/base.js",
+    "callbacks/tracers/base.d.ts",
+    "callbacks/tracers/console.cjs",
+    "callbacks/tracers/console.js",
+    "callbacks/tracers/console.d.ts",
+    "callbacks/tracers/initialize.cjs",
+    "callbacks/tracers/initialize.js",
+    "callbacks/tracers/initialize.d.ts",
+    "callbacks/tracers/log_stream.cjs",
+    "callbacks/tracers/log_stream.js",
+    "callbacks/tracers/log_stream.d.ts",
+    "callbacks/tracers/run_collector.cjs",
+    "callbacks/tracers/run_collector.js",
+    "callbacks/tracers/run_collector.d.ts",
+    "callbacks/tracers/tracer_langchain_v1.cjs",
+    "callbacks/tracers/tracer_langchain_v1.js",
+    "callbacks/tracers/tracer_langchain_v1.d.ts",
+    "callbacks/tracers/tracer_langchain.cjs",
+    "callbacks/tracers/tracer_langchain.js",
+    "callbacks/tracers/tracer_langchain.d.ts",
+    "chat_model.cjs",
+    "chat_model.js",
+    "chat_model.d.ts",
+    "llm.cjs",
+    "llm.js",
+    "llm.d.ts",
+    "load.cjs",
+    "load.js",
+    "load.d.ts",
+    "load/serializable.cjs",
+    "load/serializable.js",
+    "load/serializable.d.ts",
+    "prompts.cjs",
+    "prompts.js",
+    "prompts.d.ts",
+    "prompts/base.cjs",
+    "prompts/base.js",
+    "prompts/base.d.ts",
+    "prompts/chat.cjs",
+    "prompts/chat.js",
+    "prompts/chat.d.ts",
+    "prompts/few_shot.cjs",
+    "prompts/few_shot.js",
+    "prompts/few_shot.d.ts",
+    "prompts/pipeline.cjs",
+    "prompts/pipeline.js",
+    "prompts/pipeline.d.ts",
+    "prompts/serde.cjs",
+    "prompts/serde.js",
+    "prompts/serde.d.ts",
+    "prompts/template.cjs",
+    "prompts/template.js",
+    "prompts/template.d.ts",
+    "prompts/example_selector/base.cjs",
+    "prompts/example_selector/base.js",
+    "prompts/example_selector/base.d.ts",
+    "prompts/example_selector/conditional.cjs",
+    "prompts/example_selector/conditional.js",
+    "prompts/example_selector/conditional.d.ts",
+    "prompts/example_selector/length_based.cjs",
+    "prompts/example_selector/length_based.js",
+    "prompts/example_selector/length_based.d.ts",
+    "prompts/example_selector/semantic_similarity.cjs",
+    "prompts/example_selector/semantic_similarity.js",
+    "prompts/example_selector/semantic_similarity.d.ts",
+    "runnables.cjs",
+    "runnables.js",
+    "runnables.d.ts",
+    "schema.cjs",
+    "schema.js",
+    "schema.d.ts",
+    "schema/agent.cjs",
+    "schema/agent.js",
+    "schema/agent.d.ts",
+    "schema/cache.cjs",
+    "schema/cache.js",
+    "schema/cache.d.ts",
+    "schema/chat_history.cjs",
+    "schema/chat_history.js",
+    "schema/chat_history.d.ts",
+    "schema/document.cjs",
+    "schema/document.js",
+    "schema/document.d.ts",
+    "schema/embeddings.cjs",
+    "schema/embeddings.js",
+    "schema/embeddings.d.ts",
+    "schema/language_model.cjs",
+    "schema/language_model.js",
+    "schema/language_model.d.ts",
+    "schema/memory.cjs",
+    "schema/memory.js",
+    "schema/memory.d.ts",
+    "schema/messages.cjs",
+    "schema/messages.js",
+    "schema/messages.d.ts",
+    "schema/output_parser.cjs",
+    "schema/output_parser.js",
+    "schema/output_parser.d.ts",
+    "schema/output.cjs",
+    "schema/output.js",
+    "schema/output.d.ts",
+    "schema/prompt_template.cjs",
+    "schema/prompt_template.js",
+    "schema/prompt_template.d.ts",
+    "schema/prompt.cjs",
+    "schema/prompt.js",
+    "schema/prompt.d.ts",
+    "schema/retriever.cjs",
+    "schema/retriever.js",
+    "schema/retriever.d.ts",
+    "schema/storage.cjs",
+    "schema/storage.js",
+    "schema/storage.d.ts",
+    "schema/vectorstore.cjs",
+    "schema/vectorstore.js",
+    "schema/vectorstore.d.ts",
+    "util/async_caller.cjs",
+    "util/async_caller.js",
+    "util/async_caller.d.ts",
+    "util/env.cjs",
+    "util/env.js",
+    "util/env.d.ts",
+    "util/hash.cjs",
+    "util/hash.js",
+    "util/hash.d.ts",
+    "util/json_patch.cjs",
+    "util/json_patch.js",
+    "util/json_patch.d.ts",
+    "util/json_schema.cjs",
+    "util/json_schema.js",
+    "util/json_schema.d.ts",
+    "util/stream.cjs",
+    "util/stream.js",
+    "util/stream.d.ts",
+    "util/tiktoken.cjs",
+    "util/tiktoken.js",
+    "util/tiktoken.d.ts",
+    "util/types.cjs",
+    "util/types.js",
+    "util/types.d.ts",
+    "index.cjs",
+    "index.js",
+    "index.d.ts"
+  ]
+}

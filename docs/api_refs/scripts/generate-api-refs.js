@@ -1,6 +1,5 @@
 const { Project, SyntaxKind } = require("ts-morph");
 const { exec } = require("child_process");
-const fse = require("fs-extra");
 
 async function updateCodeWithIgnoreTags(tsConfigFilePath) {
   const project = new Project({
@@ -70,7 +69,7 @@ async function updateCodeWithIgnoreTags(tsConfigFilePath) {
 async function copyLangChain(pathToLangChain) {
   // copy the entire langchain dir to .
 
-  await fse.copy(pathToLangChain, "./langchain", { overwrite: false });
+  await execAsync(`cp -r ${pathToLangChain} ./langchain`);
   return {
     rootPath: `${process.cwd()}/langchain`,
     tsConfigPath: `${process.cwd()}/langchain/tsconfig.json`,
@@ -79,7 +78,7 @@ async function copyLangChain(pathToLangChain) {
 
 async function deleteLangChain(pathToLangChain) {
   // delete the langchain dir
-  await fse.remove(pathToLangChain);
+  await execAsync(`rm -rf ${pathToLangChain}`);
 }
 
 const execAsync = async (command, options) => new Promise((resolve, reject) => {
