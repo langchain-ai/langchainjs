@@ -114,7 +114,7 @@ kwargs:
     lc: 1
     type: constructor
     id:
-      - langchain
+      - langchain_core
       - prompts
       - chat
       - ChatPromptTemplate
@@ -134,7 +134,7 @@ kwargs:
               lc: 1
               type: constructor
               id:
-                - langchain
+                - langchain_core
                 - prompts
                 - prompt
                 - PromptTemplate
@@ -155,7 +155,7 @@ kwargs:
               lc: 1
               type: constructor
               id:
-                - langchain
+                - langchain_core
                 - prompts
                 - prompt
                 - PromptTemplate
@@ -195,7 +195,7 @@ kwargs:
     lc: 1
     type: not_implemented
     id:
-      - langchain
+      - langchain_core
       - prompts
       - few_shot
       - FewShotPromptTemplate
@@ -231,7 +231,7 @@ kwargs:
     lc: 1
     type: not_implemented
     id:
-      - langchain
+      - langchain_core
       - prompts
       - few_shot
       - FewShotPromptTemplate
@@ -267,7 +267,7 @@ kwargs:
     lc: 1
     type: constructor
     id:
-      - langchain
+      - langchain_core
       - prompts
       - prompt
       - PromptTemplate
@@ -326,7 +326,7 @@ kwargs:
     lc: 1
     type: constructor
     id:
-      - langchain
+      - langchain_core
       - prompts
       - prompt
       - PromptTemplate
@@ -412,7 +412,7 @@ kwargs:
             lc: 1
             type: constructor
             id:
-              - langchain
+              - langchain_core
               - prompts
               - prompt
               - PromptTemplate
@@ -484,7 +484,7 @@ kwargs:
     lc: 1
     type: constructor
     id:
-      - langchain
+      - langchain_core
       - prompts
       - prompt
       - PromptTemplate
@@ -535,7 +535,7 @@ kwargs:
     lc: 1
     type: constructor
     id:
-      - langchain
+      - langchain_core
       - prompts
       - prompt
       - PromptTemplate
@@ -592,7 +592,7 @@ kwargs:
     lc: 1
     type: constructor
     id:
-      - langchain
+      - langchain_core
       - prompts
       - prompt
       - PromptTemplate
@@ -610,5 +610,21 @@ kwargs:
       - output_parsers
       - structured
       - StructuredOutputParser
+"
+`;
+
+exports[`serialize + deserialize with new and old ids 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain_core
+  - prompts
+  - prompt
+  - PromptTemplate
+kwargs:
+  input_variables:
+    - name
+  template_format: f-string
+  template: Hello, {name}!
 "
 `;

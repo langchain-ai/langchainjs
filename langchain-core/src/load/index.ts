@@ -123,7 +123,7 @@ async function reviver(
       }
     } else {
       // Currently, we only support langchain imports.
-      if (namespace[0] === "langchain") {
+      if (namespace[0] === "langchain" || namespace[0] === "langchain_core") {
         namespace.shift();
       } else {
         throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
