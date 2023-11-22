@@ -1,1 +1,1 @@
-export * from "langchain-core/callbacks/tracers/run_collector";
+export * from "langchain-core/tracers/run_collector";

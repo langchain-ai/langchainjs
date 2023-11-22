@@ -1,1 +1,1 @@
-export * from "langchain-core/schema/storage";
+export * from "langchain-core/stores";

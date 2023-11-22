@@ -1,1 +1,4 @@
-export * from "langchain-core/prompts/example_selector/length_based";
+export {
+  type LengthBasedExampleSelectorInput,
+  LengthBasedExampleSelector,
+} from "langchain-core/example_selectors";

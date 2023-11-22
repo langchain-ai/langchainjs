@@ -2,4 +2,4 @@ export {
   calculateMaxTokens,
   getModelContextSize,
   getEmbeddingContextSize,
-} from "langchain-core/schema/language_model";
+} from "langchain-core/language_models/base";

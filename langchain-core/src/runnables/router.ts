@@ -1,5 +1,5 @@
 import { Runnable, type RunnableBatchOptions } from "./base.js";
-import { IterableReadableStream } from "../util/stream.js";
+import { IterableReadableStream } from "../utils/stream.js";
 import type { RunnableConfig } from "./config.js";
 
 export type RouterInput = {

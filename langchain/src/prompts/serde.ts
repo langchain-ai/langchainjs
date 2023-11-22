@@ -1,1 +1,5 @@
-export * from "langchain-core/prompts/serde";
+export {
+  type SerializedPromptTemplate,
+  type SerializedFewShotTemplate,
+  type SerializedBasePromptTemplate,
+} from "langchain-core/prompts";

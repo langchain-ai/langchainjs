@@ -1,4 +1,4 @@
-import type { InputValues } from "../schema/index.js";
+import type { InputValues } from "../utils/types.js";
 
 /**
  * Type that specifies the format of a template. Only

@@ -9,7 +9,7 @@ import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from ".
 import * as defaultImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
-import { getEnvironmentVariable } from "../util/env.js";
+import { getEnvironmentVariable } from "../utils/env.js";
 
 function combineAliasesAndInvert(constructor: typeof Serializable) {
   const aliases: { [key: string]: string } = {};
