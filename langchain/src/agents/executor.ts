@@ -24,7 +24,6 @@ import {
   Tool,
 } from "../tools/base.js";
 import { Runnable } from "../schema/runnable/base.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
 import { Serializable } from "../load/serializable.js";
 
 interface AgentExecutorIteratorInput {
@@ -339,34 +338,23 @@ export class ExceptionTool extends Tool {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-class AddableMap extends Map<string, any> {
-  merge(other: AddableMap): AddableMap {
-    const result = new AddableMap(this);
-    for (const [key, value] of other) {
-      if (!result.has(key) || result.get(key) === null) {
-        result.set(key, value);
-      } else if (value !== null) {
-        result.set(key, result.get(key) + value);
+class AddableObject {
+  data: Record<string, any>;
+
+  constructor(initialData: Record<string, any> = {}) {
+    this.data = initialData;
+  }
+
+  merge(other: AddableObject): AddableObject {
+    const result = new AddableObject(this.data);
+    for (const key in other.data) {
+      if (!(key in result.data) || result.data[key] === null) {
+        result.data[key] = other.data[key];
+      } else if (other.data[key] !== null) {
+        result.data[key] += other.data[key];
       }
     }
     return result;
-  }
-}
-
-class AgentStreamOutput extends AddableMap {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  get(key: string): any {
-    if (key === "intermediateSteps") {
-      const actions = this.get("actions") || [];
-      const observations = this.get("observations") || [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return actions.map((action: any, index: number) => [
-        action,
-        observations[index],
-      ]);
-    } else {
-      return super.get(key);
-    }
   }
 }
 
@@ -406,6 +394,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   maxIterations?: number = 15;
 
   earlyStoppingMethod: StoppingMethod = "force";
+
+  addableObject: AddableObject = new AddableObject();
 
   /**
    * How to handle errors raised by the agent's output parser.
@@ -745,10 +735,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   async *_streamIterator(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    inputs: Record<string, any>,
-    /** @TODO Figure out where to use this. */
-    _config: RunnableConfig | null = null
-  ): AsyncGenerator<AgentStreamOutput> {
+    inputs: Record<string, any>
+  ): AsyncGenerator<ChainValues> {
     const iterator = new AgentExecutorIterator({
       inputs,
       agentExecutor: this,
@@ -761,17 +749,25 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
         continue;
       }
       if ("intermediateSteps" in step) {
-        const castStep = step as Record<string, AgentStep[]>;
-        yield new AgentStreamOutput(
-          Object.entries({
-            actions: castStep.intermediateSteps.map(({ action }) => action),
-            observations: castStep.intermediateSteps.map(
+        const { output } = step;
+        const intermediateSteps = (step.intermediateSteps as AgentStep[]).map(
+          (step) => ({ action: step.action, observation: step.observation })
+        );
+        if (output) {
+          yield {
+            output: output as string,
+            intermediateSteps,
+          };
+        } else {
+          yield {
+            actions: intermediateSteps.map(({ action }) => action),
+            observations: intermediateSteps.map(
               ({ observation }) => observation
             ),
-          })
-        );
+          };
+        }
       } else {
-        yield new AgentStreamOutput(Object.entries(step));
+        yield step;
       }
     }
   }

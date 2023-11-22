@@ -12,7 +12,7 @@ import { Tool } from "../../tools/base.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
 import { OutputParserException } from "../../schema/output_parser.js";
-import { AIMessage } from "../../schema/index.js";
+import { AIMessage, AgentStep } from "../../schema/index.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -316,12 +316,13 @@ test("Run tool web-browser", async () => {
 
   const result = await executor.call({ input });
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
-  expect(result.intermediateSteps[0].action.tool).toEqual("web-browser");
+  expect(result.intermediateSteps[0].action.tool).toEqual("search");
+  expect(result.intermediateSteps[1].action.tool).toEqual("web-browser");
   expect(result.output).not.toEqual("");
   expect(result.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
-test.only("Agent can stream", async () => {
+test("Agent can stream", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-4-1106-preview",
@@ -348,9 +349,25 @@ test.only("Agent can stream", async () => {
 
   const result = await executor.stream({ input });
   let streamIters = 0;
+  let finalResponse: any;
   for await (const item of result) {
     streamIters += 1;
     console.log("Stream item:", item);
+    // each stream contains the previous steps,
+    // so we can overwrite on each stream.
+    finalResponse = item;
   }
+
+  console.log("__finalResponse__", finalResponse);
+
+  expect("intermediateSteps" in finalResponse).toBeTruthy();
+  expect("output" in finalResponse).toBeTruthy();
+
+  expect(finalResponse.intermediateSteps.length).toBeGreaterThan(1);
+  const toolsUsed: Array<string> = finalResponse.intermediateSteps.map(
+    (step: AgentStep) => step.action.tool
+  );
   expect(streamIters).toBeGreaterThan(1);
+  // the last tool used should be the web-browser
+  expect(toolsUsed?.[toolsUsed.length - 1]).toEqual("web-browser");
 });
