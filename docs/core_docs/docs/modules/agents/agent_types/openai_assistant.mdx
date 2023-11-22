@@ -224,7 +224,7 @@ The size of individual files can be a maximum of **512 MB**. See the Assistants 
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
 const openAIFiles = new OpenAIFiles();
-const file = await openAIFiles.create({
+const file = await openAIFiles.createFile({
   file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
   purpose: "assistants",
 });
