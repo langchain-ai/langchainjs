@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Anthropic integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -33,7 +33,7 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.0",
-    "@langchain/core": "^0.0.0"
+    "@langchain/core": "~0.0.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

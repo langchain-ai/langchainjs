@@ -21,6 +21,8 @@ export abstract class BasePromptValue extends Serializable {
 export class StringPromptValue extends BasePromptValue {
   lc_namespace = ["langchain_core", "prompt_values"];
 
+  lc_serializable = true;
+
   value: string;
 
   constructor(value: string) {
