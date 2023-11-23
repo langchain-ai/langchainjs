@@ -78,7 +78,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
 
   endpointUrl: string | undefined = undefined;
 
-  includeCredentials: string | boolean = undefined;
+  includeCredentials: string | boolean | undefined = undefined;
 
   constructor(fields?: Partial<HFInput> & BaseLLMParams) {
     super(fields ?? {});
