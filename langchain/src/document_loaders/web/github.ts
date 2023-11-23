@@ -458,7 +458,7 @@ export class GithubRepoLoader
     if (this.ignore !== undefined) {
       return this.ignore.ignores(path);
     }
-    if(this.onlyAllowFileTypes && this.onlyAllowFileTypes.length > 0) {
+    if (this.onlyAllowFileTypes && this.onlyAllowFileTypes.length > 0) {
       return !this.onlyAllowFileTypes.includes(fileType);
     }
     return (
