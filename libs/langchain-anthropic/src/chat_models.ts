@@ -179,8 +179,6 @@ export class ChatAnthropic<
     };
   }
 
-  lc_namespace = ["langchain_anthropic", "chat_models"];
-
   lc_serializable = true;
 
   anthropicApiKey?: string;

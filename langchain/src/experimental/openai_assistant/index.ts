@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAIClient } from "@langchain/openai";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import type { RunnableConfig } from "../../schema/runnable/config.js";
