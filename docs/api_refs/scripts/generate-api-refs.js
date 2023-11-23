@@ -66,16 +66,16 @@ async function updateCodeWithIgnoreTags(tsConfigFilePath) {
   await project.save();
 }
 
-async function copyLangChain(pathToLangChain, destinationPath = "langchain") {
+async function copyLangChain(pathToLangChain) {
   try {
-    await execAsync(`rm -rf ${destinationPath}`);
+    await execAsync(`rm -rf ./langchain`);
   } catch (_) {
     // no-op
   }
-  await execAsync(`cp -r ${pathToLangChain} ./${destinationPath}`);
+  await execAsync(`cp -r ${pathToLangChain} ./langchain`);
   return {
-    rootPath: `${process.cwd()}/${destinationPath}`,
-    tsConfigPath: `${process.cwd()}/${destinationPath}/tsconfig.json`,
+    rootPath: `${process.cwd()}/langchain`,
+    tsConfigPath: `${process.cwd()}/langchain/tsconfig.json`,
   };
 }
 
@@ -96,20 +96,9 @@ const execAsync = async (command, options) => new Promise((resolve, reject) => {
 
 async function main() {
   const pathToLangChain = "../../langchain";
-  const pathToLangChainCore = "../../langchain-core";
-
   const { rootPath, tsConfigPath } = await copyLangChain(pathToLangChain);
-  const {
-    rootPath: rootCorePath,
-    tsConfigPath: tsConfigCorePath
-  } = await copyLangChain(pathToLangChainCore, 'langchain-core');
-
   await updateCodeWithIgnoreTags(tsConfigPath);
-  await updateCodeWithIgnoreTags(tsConfigCorePath);
-
   await execAsync("yarn typedoc");
-
   await deleteLangChain(rootPath);
-  await deleteLangChain(rootCorePath);
 }
 main();
