@@ -20104,15 +20104,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"husky@npm:^8.0.0":
-  version: 8.0.3
-  resolution: "husky@npm:8.0.3"
-  bin:
-    husky: lib/bin.js
-  checksum: 837bc7e4413e58c1f2946d38fb050f5d7324c6f16b0fd66411ffce5703b294bd21429e8ba58711cd331951ee86ed529c5be4f76805959ff668a337dbfa82a1b0
-  languageName: node
-  linkType: hard
-
 "iconv-lite@npm:0.4, iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.24":
   version: 0.4.24
   resolution: "iconv-lite@npm:0.4.24"
@@ -22742,7 +22733,6 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3
-    husky: ^8.0.0
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest
