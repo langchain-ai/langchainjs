@@ -1380,9 +1380,9 @@
     }
   },
   "dependencies": {
-    "@langchain/anthropic": "^0.0.2",
+    "@langchain/anthropic": "^0.0.3",
     "@langchain/core": "^0.0.1",
-    "@langchain/openai": "^0.0.0",
+    "@langchain/openai": "^0.0.1",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
