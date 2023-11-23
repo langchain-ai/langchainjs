@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { z } from "zod";
-import { OpenAI as OpenAIClient } from "openai";
+import { OpenAIClient } from "@langchain/openai";
 import { AgentExecutor } from "../../../agents/executor.js";
 import { StructuredTool } from "../../../tools/base.js";
 import { OpenAIAssistantRunnable } from "../index.js";

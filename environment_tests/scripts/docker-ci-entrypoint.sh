@@ -20,6 +20,7 @@ cp ../root/yarn.lock ../root/.yarnrc.yml .
 # before installation actually occurs
 sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": "..\/langchain-core"/g' package.json
 sed -i 's/"@langchain\/anthropic": "workspace:\*"/"@langchain\/anthropic": "..\/langchain-anthropic"/g' package.json
+sed -i 's/"@langchain\/openai": "workspace:\*"/"@langchain\/openai": "..\/langchain-openai"/g' package.json
 sed -i 's/"langchain": "workspace:\*"/"langchain": "..\/langchain"/g' package.json
 
 yarn install --no-immutable

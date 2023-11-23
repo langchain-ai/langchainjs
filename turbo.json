@@ -10,6 +10,11 @@
         "@langchain/core#build"
       ]
     },
+    "libs/langchain-openai#build": {
+      "dependsOn": [
+        "@langchain/core#build"
+      ]
+    },
     "build": {
       "dependsOn": [
         "@langchain/core#build",
