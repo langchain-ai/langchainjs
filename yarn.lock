@@ -14667,9 +14667,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"closevector-web@npm:0.1.0-alpha.15":
-  version: 0.1.0-alpha.15
-  resolution: "closevector-web@npm:0.1.0-alpha.15"
+"closevector-web@npm:0.1.0-alpha.18":
+  version: 0.1.0-alpha.18
+  resolution: "closevector-web@npm:0.1.0-alpha.18"
   dependencies:
     axios: ^1.4.0
     closevector-browserify-zlib: 0.1.0-alpha.3
@@ -14680,7 +14680,7 @@ __metadata:
     gunzip-maybe: ^1.4.2
     tar-stream: ^3.1.6
     typescript: ^5.1.6
-  checksum: 2f8b0b53b0aa944a00ffda9215d5b3ddafedbae3bee7e78ed49d0b183b03f2ec6340876a21b020381f2e193578b29e067f76ca0e4c34c10d439232147c93ace8
+  checksum: b7fa154ccf3b1600b09abe870b937d159931d113fae5176a321afaaba519f2a8033c54f4e774b3ce58c08dab2c71d0a086a4001b42899599e383838e0fc5a429
   languageName: node
   linkType: hard
 
@@ -22307,7 +22307,7 @@ __metadata:
     chromadb: ^1.5.3
     closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
-    closevector-web: 0.1.0-alpha.15
+    closevector-web: 0.1.0-alpha.18
     cohere-ai: ">=6.0.0"
     convex: ^1.3.1
     d3-dsv: ^2.0.0
