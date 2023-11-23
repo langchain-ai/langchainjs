@@ -1,1 +1,1 @@
-export * from "langchain-core/language_models/llms";
+export * from "@langchain/core/language_models/llms";

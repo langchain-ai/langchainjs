@@ -4,4 +4,4 @@ export {
   ConditionalPromptSelector,
   isLLM,
   isChatModel,
-} from "langchain-core/example_selectors";
+} from "@langchain/core/example_selectors";

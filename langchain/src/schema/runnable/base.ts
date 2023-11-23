@@ -13,4 +13,4 @@ export {
   RunnableLambda,
   RunnableWithFallbacks,
   _coerceToRunnable,
-} from "langchain-core/runnables";
+} from "@langchain/core/runnables";

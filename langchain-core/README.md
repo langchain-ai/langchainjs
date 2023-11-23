@@ -1,1 +1,1 @@
-# langchain-core
+# @langchain/core

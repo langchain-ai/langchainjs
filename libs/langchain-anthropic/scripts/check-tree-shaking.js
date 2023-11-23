@@ -26,7 +26,7 @@ export function listExternals() {
     ...Object.keys(packageJson.dependencies),
     ...Object.keys(packageJson.peerDependencies ?? {}),
     /node\:/,
-    /langchain-core\//,
+    /@langchain\/core\//,
   ];
 }
 

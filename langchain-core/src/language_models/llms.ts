@@ -41,6 +41,7 @@ export abstract class BaseLLM<
     keyof RunnableConfig & "timeout"
   >;
 
+  // Only ever instantiated in main LangChain
   lc_namespace = ["langchain", "llms", this._llmType()];
 
   constructor({ concurrency, ...rest }: BaseLLMParams) {
