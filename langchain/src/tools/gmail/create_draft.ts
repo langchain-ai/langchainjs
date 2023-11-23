@@ -15,7 +15,7 @@ export class GmailCreateDraft extends GmailBaseTool {
   description =
     "Use this tool to create a draft email with the provided message fields.";
 
-  constructor(fields: GmailBaseToolParams) {
+  constructor(fields?: GmailBaseToolParams) {
     super(fields);
   }
 

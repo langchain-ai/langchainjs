@@ -13,7 +13,7 @@ export class GmailSearch extends GmailBaseTool {
   description =
     "Use this tool to search for email messages or threads. The input must be a valid Gmail query. The output is a JSON list of the requested resource.";
 
-  constructor(fields: GmailBaseToolParams) {
+  constructor(fields?: GmailBaseToolParams) {
     super(fields);
   }
 

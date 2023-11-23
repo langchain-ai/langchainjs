@@ -5,7 +5,7 @@ export class GmailGetMessage extends GmailBaseTool {
 
   description = "Get a message from Gmail";
 
-  constructor(fields: GmailBaseToolParams) {
+  constructor(fields?: GmailBaseToolParams) {
     super(fields);
   }
 

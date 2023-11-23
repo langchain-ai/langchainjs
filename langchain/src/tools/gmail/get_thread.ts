@@ -9,7 +9,7 @@ export class GmailGetThread extends GmailBaseTool {
 
   description = "Get a thread from Gmail";
 
-  constructor(fields: GmailBaseToolParams) {
+  constructor(fields?: GmailBaseToolParams) {
     super(fields);
   }
 
