@@ -1,4 +1,4 @@
-import { insecureHash } from "../util/js-sha1/hash.js";
+import { insecureHash } from "@langchain/core/utils/hash";
 
 import { BaseStore } from "../schema/storage.js";
 import { EncoderBackedStore } from "../storage/encoder_backed.js";

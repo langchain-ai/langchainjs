@@ -10,6 +10,8 @@
     "test": "tsc"
   },
   "dependencies": {
+    "@langchain/anthropic": "workspace:*",
+    "@langchain/core": "workspace:*",
     "langchain": "workspace:*"
   },
   "devDependencies": {
