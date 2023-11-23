@@ -1,7 +1,11 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
 import { type BaseCache, InMemoryCache } from "../caches.js";
-import { type BasePromptValue, StringPromptValue } from "../prompt_values.js";
+import {
+  type BasePromptValue,
+  StringPromptValue,
+  ChatPromptValue,
+} from "../prompt_values.js";
 import {
   type BaseMessage,
   type BaseMessageLike,
@@ -18,7 +22,6 @@ import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
 import { encodingForModel } from "../utils/tiktoken.js";
 import { Runnable } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
-import { ChatPromptValue } from "../prompts/chat.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 

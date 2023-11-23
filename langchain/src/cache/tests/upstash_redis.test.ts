@@ -1,5 +1,5 @@
 import { test, expect, jest } from "@jest/globals";
-import { insecureHash } from "langchain-core/utils/hash";
+import { insecureHash } from "@langchain/core/utils/hash";
 
 import { UpstashRedisCache } from "../upstash_redis.js";
 import { StoredGeneration } from "../../schema/index.js";

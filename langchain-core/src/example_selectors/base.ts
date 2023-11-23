@@ -5,7 +5,7 @@ import type { Example } from "../prompts/base.js";
  * Base class for example selectors.
  */
 export abstract class BaseExampleSelector extends Serializable {
-  lc_namespace = ["langchain", "prompts", "selectors"];
+  lc_namespace = ["langchain_core", "example_selectors", "base"];
 
   /**
    * Adds an example to the example selector.

@@ -2,7 +2,6 @@
 // Replace with "string" when we are comfortable with a breaking change.
 
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
-import { getBufferString } from "../messages/index.js";
 import {
   AIMessage,
   HumanMessage,
@@ -13,7 +12,7 @@ import {
   coerceMessageLikeToMessage,
   isBaseMessage,
 } from "../messages/index.js";
-import { BasePromptValue } from "../prompt_values.js";
+import { ChatPromptValue } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseStringPromptTemplate } from "./string.js";
@@ -34,7 +33,7 @@ export abstract class BaseMessagePromptTemplate<
   RunInput extends InputValues = any,
   RunOutput extends BaseMessage[] = BaseMessage[]
 > extends Runnable<RunInput, RunOutput> {
-  lc_namespace = ["langchain", "prompts", "chat"];
+  lc_namespace = ["langchain_core", "prompts", "chat"];
 
   lc_serializable = true;
 
@@ -65,51 +64,6 @@ export abstract class BaseMessagePromptTemplate<
       input,
       { ...options, runType: "prompt" }
     );
-  }
-}
-
-/**
- * Interface for the fields of a ChatPromptValue.
- */
-export interface ChatPromptValueFields {
-  messages: BaseMessage[];
-}
-
-/**
- * Class that represents a chat prompt value. It extends the
- * BasePromptValue and includes an array of BaseMessage instances.
- */
-export class ChatPromptValue extends BasePromptValue {
-  lc_namespace = ["langchain", "prompts", "chat"];
-
-  lc_serializable = true;
-
-  static lc_name() {
-    return "ChatPromptValue";
-  }
-
-  messages: BaseMessage[];
-
-  constructor(messages: BaseMessage[]);
-
-  constructor(fields: ChatPromptValueFields);
-
-  constructor(fields: BaseMessage[] | ChatPromptValueFields) {
-    if (Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign
-      fields = { messages: fields };
-    }
-
-    super(fields);
-    this.messages = fields.messages;
-  }
-
-  toString() {
-    return getBufferString(this.messages);
-  }
-
-  toChatMessages() {
-    return this.messages;
   }
 }
 

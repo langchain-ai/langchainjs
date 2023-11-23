@@ -16,7 +16,7 @@ export abstract class BaseDocumentTransformer<
   RunInput extends Document[] = Document[],
   RunOutput extends Document[] = Document[]
 > extends Runnable<RunInput, RunOutput> {
-  lc_namespace = ["langchain", "document_transformers"];
+  lc_namespace = ["langchain_core", "documents", "transformers"];
 
   /**
    * Transform a list of documents.
