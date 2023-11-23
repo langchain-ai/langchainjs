@@ -538,6 +538,7 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WATSONX_PROJECT_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
   YC_API_KEY?: string;
