@@ -86,7 +86,7 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
   accessToken?: string;
   ignoreFiles?: (string | RegExp)[];
   ignorePaths?: string[];
-  onlyAllowFileTypes: string[];
+  onlyAllowFileTypes?: string[];
   verbose?: boolean;
   /**
    * The maximum number of concurrent calls that can be made. Defaults to 2.
