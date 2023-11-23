@@ -1,1 +1,1 @@
-export * from "langchain-core/stores";
+export * from "@langchain/core/stores";

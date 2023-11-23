@@ -166,7 +166,7 @@ const generateImportMap = () => {
 const importTypes = [
   "langchain-core",
   (k, p) =>
-    `  "langchain-core/${k}"?:
+    `  "@langchain/core/${k}"?:
     | typeof import("../${p}.js")
     | Promise<typeof import("../${p}.js")>;`,
   "src/load/import_type.d.ts",

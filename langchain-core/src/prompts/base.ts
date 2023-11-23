@@ -60,7 +60,7 @@ export abstract class BasePromptTemplate<
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain", "prompts", this._getPromptType()];
+  lc_namespace = ["langchain_core", "prompts", this._getPromptType()];
 
   get lc_attributes(): SerializedFields | undefined {
     return {

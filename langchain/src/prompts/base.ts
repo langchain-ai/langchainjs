@@ -1,9 +1,10 @@
 export {
   type TypedPromptInputValues,
-  StringPromptValue,
   BaseStringPromptTemplate,
   type BasePromptTemplateInput,
   BasePromptTemplate,
-} from "langchain-core/prompts";
+} from "@langchain/core/prompts";
 
-export { BaseExampleSelector } from "langchain-core/example_selectors";
+export { StringPromptValue } from "@langchain/core/prompt_values";
+
+export { BaseExampleSelector } from "@langchain/core/example_selectors";

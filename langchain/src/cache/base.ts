@@ -1,1 +1,1 @@
-export * from "langchain-core/caches";
+export * from "@langchain/core/caches";
