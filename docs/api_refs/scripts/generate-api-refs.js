@@ -67,8 +67,11 @@ async function updateCodeWithIgnoreTags(tsConfigFilePath) {
 }
 
 async function copyLangChain(pathToLangChain) {
-  // copy the entire langchain dir to .
-
+  try {
+    await execAsync(`rm -rf ./langchain`);
+  } catch (_) {
+    // no-op
+  }
   await execAsync(`cp -r ${pathToLangChain} ./langchain`);
   return {
     rootPath: `${process.cwd()}/langchain`,
