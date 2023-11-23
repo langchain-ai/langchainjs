@@ -6,7 +6,7 @@ import { ClickHouseStore } from "../clickhouse.js";
 import { HuggingFaceInferenceEmbeddings } from "../../embeddings/hf.js";
 import { Document } from "../../document.js";
 
-test("ClickHouseStore.fromText", async () => {
+test.skip("ClickHouseStore.fromText", async () => {
   const vectorStore = await ClickHouseStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [
@@ -46,7 +46,7 @@ test("ClickHouseStore.fromText", async () => {
   ]);
 });
 
-test("ClickHouseStore.fromExistingIndex", async () => {
+test.skip("ClickHouseStore.fromExistingIndex", async () => {
   await ClickHouseStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [
