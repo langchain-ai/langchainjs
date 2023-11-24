@@ -1,4 +1,5 @@
 import { gmail_v1, google } from "googleapis";
+import { z } from "zod";
 import { Tool } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
@@ -11,6 +12,29 @@ export interface GmailBaseToolParams {
   scopes?: string[];
 }
 
+const CredentialsSchema = z
+  .object({
+    clientEmail: z
+      .string()
+      .default(getEnvironmentVariable("GMAIL_CLIENT_EMAIL") ?? ""),
+    privateKey: z
+      .string()
+      .default(getEnvironmentVariable("GMAIL_PRIVATE_KEY") ?? ""),
+    keyfile: z.string().default(getEnvironmentVariable("GMAIL_KEYFILE") ?? ""),
+  })
+  .refine((data) => data.clientEmail !== "", {
+    message: "Missing GMAIL_CLIENT_EMAIL to interact with Gmail",
+  })
+  .refine((data) => data.privateKey !== "" || data.keyfile !== "", {
+    message:
+      "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE to interact with Gmail",
+  });
+
+const GmailBaseToolParamsSchema = z.object({
+  credentials: CredentialsSchema.default({}),
+  scopes: z.array(z.string()).default(["https://mail.google.com/"]),
+});
+
 export abstract class GmailBaseTool extends Tool {
   name = "Gmail";
 
@@ -21,46 +45,23 @@ export abstract class GmailBaseTool extends Tool {
   constructor(fields?: Partial<GmailBaseToolParams>) {
     super(...arguments);
 
-    const defaultCredentials = {
-      clientEmail: getEnvironmentVariable("GMAIL_CLIENT_EMAIL"),
-      privateKey: getEnvironmentVariable("GMAIL_PRIVATE_KEY"),
-      keyfile: getEnvironmentVariable("GMAIL_KEYFILE"),
-    };
-
-    const credentials = {
-      ...defaultCredentials,
-      ...(fields?.credentials ?? {}),
-    };
-
-    const scopes = fields?.scopes || ["https://mail.google.com/"];
-
-    if (!credentials) {
-      throw new Error("Missing credentials to authenticate to Gmail");
-    }
-
-    if (!credentials.clientEmail) {
-      throw new Error("Missing GMAIL_CLIENT_EMAIL to interact with Gmail");
-    }
-
-    if (!credentials.privateKey && !credentials.keyfile) {
-      throw new Error(
-        "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE to interact with Gmail"
-      );
-    }
+    const { credentials, scopes } = GmailBaseToolParamsSchema.parse(
+      fields ?? {}
+    );
 
     this.gmail = this.getGmail(
+      scopes,
       credentials.clientEmail,
       credentials.privateKey,
-      credentials.keyfile,
-      scopes
+      credentials.keyfile
     );
   }
 
   private getGmail(
+    scopes: string[],
     email: string,
     key?: string,
-    keyfile?: string,
-    scopes: string[] = []
+    keyfile?: string
   ) {
     const auth = new google.auth.JWT(email, keyfile, key, scopes);
 
