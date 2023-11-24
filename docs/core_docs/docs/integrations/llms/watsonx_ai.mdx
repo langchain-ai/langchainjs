@@ -10,6 +10,13 @@ You will need to set the following environment variables for using the WatsonX A
 2. `WATSONX_PROJECT_ID` which can be found in your [project's manage tab](https://dataplatform.cloud.ibm.com/projects/?context=wx)
 
 Alternatively, these can be set during the WatsonxAI Class instantiation as `ibmCloudApiKey` and `projectId` respectively.
+For example:
+```typescript
+new WatsonxAI({
+    ibmCloudApiKey: "My secret IBM Cloud API Key"
+    projectId: "My secret WatsonX AI Project id"
+})
+```
 
 ## Usage
 
