@@ -165,7 +165,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
       "grant_type",
       "urn:ibm:params:oauth:grant-type:apikey"
     );
-    urlTokenParams.append("apikey", this.ibmCloudApiKey);
+    urlTokenParams.append("apikey", this.ibmCloudApiKey as string);
 
     const tokenData = (await fetch("https://iam.cloud.ibm.com/identity/token", {
       method: "POST",
