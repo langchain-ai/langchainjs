@@ -122,7 +122,11 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
         generated_text: string;
         generated_token_count: number;
         input_token_count: number;
-      }[];
+      }[],
+      errors: {
+        code: string,
+        message: string,
+      }[]
     }
     const response = (await this.caller.call(async () =>
       fetch(this.endpoint, {
@@ -140,6 +144,13 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
         }),
       }).then((res) => res.json())
     )) as WatsonxAIResponse;
+
+    /**
+     * Handle Errors for invalid requests.
+     */
+    if (response.errors) {
+      throw new Error(response.errors[0].message);
+    }
 
     return response.results[0].generated_text;
   }
