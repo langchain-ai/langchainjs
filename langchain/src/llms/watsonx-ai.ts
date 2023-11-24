@@ -36,6 +36,10 @@ export interface WatsonxAIParams extends BaseLLMParams {
    * Parameters accepted by the WatsonX AI Endpoint.
    */
   modelParameters?: Record<string, unknown>;
+  /**
+   * WatsonX AI Model ID.
+   */
+  modelId?: string;
 }
 
 const endpointConstructor = (region: string, version: string) =>
@@ -65,6 +69,8 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
   version = "2023-05-29";
 
+  modelId = "meta-llama/llama-2-70b-chat";
+
   modelKwargs?: Record<string, unknown>;
 
   ibmCloudApiKey: string;
@@ -78,6 +84,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
     this.region = fields?.region ?? this.region;
     this.version = fields?.version ?? this.version;
+    this.modelId = fields?.modelId ?? this.modelId;
     this.ibmCloudApiKey =
       fields?.ibmCloudApiKey ??
       getEnvironmentVariable("IBM_CLOUD_API_KEY") ??
@@ -130,7 +137,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
       },
       body: JSON.stringify({
         project_id: this.projectId,
-        model_id: "google/flan-ul2",
+        model_id: this.modelId,
         input: prompt,
         parameters: this.modelParameters,
       }),
