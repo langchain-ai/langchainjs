@@ -99,6 +99,10 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
     if (!this.ibmCloudApiKey) {
       throw new Error("Missing IBM Cloud API Key");
     }
+
+    if (!this.projectId) {
+      throw new Error("Missing WatsonX AI Project ID");
+    }
   }
 
   _llmType() {
