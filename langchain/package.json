@@ -1384,6 +1384,7 @@
     "@langchain/core": "^0.0.1",
     "@langchain/openai": "^0.0.1",
     "binary-extensions": "^2.2.0",
+    "discord.js": "^14.14.1",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.7",
