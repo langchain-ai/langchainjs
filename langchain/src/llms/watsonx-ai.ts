@@ -108,8 +108,6 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   /**
    * Calls the WatsonX AI endpoint and retrieves the result.
    * @param {string} prompt The input prompt.
-   * @param {this["ParsedCallOptions"]} options Parsed call options.
-   * @param {CallbackManagerForLLMRun} runManager Optional run manager.
    * @returns {Promise<string>} A promise that resolves to the generated string.
    */
   /** @ignore */
