@@ -26,10 +26,8 @@ export class GooglePlacesAPI extends Tool {
 
   protected apiKey: string;
 
-  description = `A wrapper around Google Places API.
-  Useful for when you need to validate or
-  discover addressed from ambiguous text.
-  Input should be a search query.`;
+  description = `A wrapper around Google Places API. Useful for when you need to validate or 
+  discover addresses from ambiguous text. Input should be a search query.`;
 
   constructor(
     fields: GooglePlacesAPIParams = {
@@ -60,7 +58,6 @@ export class GooglePlacesAPI extends Tool {
     );
 
     if (!res.ok) {
-      await res.text().then((text) => console.log(text));
       throw new Error(
         `Got ${res.status} error from Google Places API: ${res.statusText}`
       );

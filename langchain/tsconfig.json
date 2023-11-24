@@ -56,6 +56,7 @@
       "src/tools/sql.ts",
       "src/tools/webbrowser.ts",
       "src/tools/google_calendar/index.ts",
+      "src/tools/google_place.ts",
       "src/chains/index.ts",
       "src/chains/combine_documents/reduce.ts",
       "src/chains/load.ts",
