@@ -120,11 +120,11 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
         generated_text: string;
         generated_token_count: number;
         input_token_count: number;
-      }[],
+      }[];
       errors: {
-        code: string,
-        message: string,
-      }[]
+        code: string;
+        message: string;
+      }[];
     }
     const response = (await this.caller.call(async () =>
       fetch(this.endpoint, {
