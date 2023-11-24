@@ -72,7 +72,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     prompt: string,
-	// @ts-expect-error - TS6133: 'options' is declared but its value is never read.
+    // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
     options?: this["ParsedCallOptions"]
   ): Promise<string> {
     try {
@@ -90,30 +90,28 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     }
   }
 
-
   async *_streamResponseChunks(
     prompt: string,
-	// @ts-expect-error - TS6133: 'options' is declared but its value is never read.
+    // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-	const promptOptions = {
-  	  temperature: this?.temperature,
-  	  topK: this?.topK,
-  	  topP: this?.topP,
-  	};
+    const promptOptions = {
+      temperature: this?.temperature,
+      topK: this?.topK,
+      topP: this?.topP,
+    };
 
-	const stream = await this.caller.call(async () =>
-		this._context.evaluate(this._context.encode(prompt), promptOptions)
-	);
+    const stream = await this.caller.call(async () =>
+      this._context.evaluate(this._context.encode(prompt), promptOptions)
+    );
 
-
-	for await (const chunk of stream) {
-		yield new GenerationChunk({
-          text: this._context.decode([chunk]),
-          generationInfo: {},
-        });
-		await runManager?.handleLLMNewToken(this._context.decode([chunk]) ?? "");
-	}
+    for await (const chunk of stream) {
+      yield new GenerationChunk({
+        text: this._context.decode([chunk]),
+        generationInfo: {},
+      });
+      await runManager?.handleLLMNewToken(this._context.decode([chunk]) ?? "");
+    }
   }
 }
