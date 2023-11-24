@@ -319,6 +319,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/openai_whisper_audio"?:
     | typeof import("../document_loaders/fs/openai_whisper_audio.js")
     | Promise<typeof import("../document_loaders/fs/openai_whisper_audio.js")>;
+  "langchain/document_loaders/fs/pptx"?:
+    | typeof import("../document_loaders/fs/pptx.js")
+    | Promise<typeof import("../document_loaders/fs/pptx.js")>;
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;

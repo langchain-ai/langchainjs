@@ -107,6 +107,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/fs/notion",
   "langchain/document_loaders/fs/unstructured",
   "langchain/document_loaders/fs/openai_whisper_audio",
+  "langchain/document_loaders/fs/pptx",
   "langchain/document_transformers/html_to_text",
   "langchain/document_transformers/mozilla_readability",
   "langchain/chat_models/portkey",
