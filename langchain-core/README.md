@@ -1,5 +1,9 @@
 # 🦜️🔗 @langchain/core
 
+:::note
+This package is experimental at the moment and may change.
+:::
+
 `@langchain/core` contains the core abstractions and schemas of LangChain.js, including base classes for language models,
 chat models, vectorstores, retrievers, and runnables.
 
