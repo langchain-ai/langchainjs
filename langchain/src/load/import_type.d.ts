@@ -493,10 +493,12 @@ export interface OptionalImportMap {
 }
 
 export interface SecretMap {
+  ANTHROPIC_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
+  AZURE_OPENAI_API_KEY?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
@@ -516,6 +518,7 @@ export interface SecretMap {
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
   OPENAI_API_KEY?: string;
+  OPENAI_ORGANIZATION?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
