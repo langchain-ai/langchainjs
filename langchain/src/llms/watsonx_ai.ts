@@ -73,7 +73,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
   modelKwargs?: Record<string, unknown>;
 
-  ibmCloudApiKey: string;
+  ibmCloudApiKey?: string;
 
   projectId?: string;
 
@@ -86,9 +86,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
     this.version = fields?.version ?? this.version;
     this.modelId = fields?.modelId ?? this.modelId;
     this.ibmCloudApiKey =
-      fields?.ibmCloudApiKey ??
-      getEnvironmentVariable("IBM_CLOUD_API_KEY") ??
-      "";
+      fields?.ibmCloudApiKey ?? getEnvironmentVariable("IBM_CLOUD_API_KEY");
     this.projectId =
       fields?.projectId ?? getEnvironmentVariable("WATSONX_PROJECT_ID");
 
