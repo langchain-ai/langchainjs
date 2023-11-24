@@ -28,15 +28,18 @@ export interface WatsonxAIParams extends BaseLLMParams {
    */
   ibmCloudApiKey?: string;
   /**
+   * WatsonX AI Key.
+   * Provide API Key if you do not wish to automatically pull from env.
+   */
+  projectId?: string;
+  /**
    * Parameters accepted by the WatsonX AI Endpoint.
    */
   endpointOptions?: Record<string, unknown>;
 }
 
-
-const endpointConstructor = (region: string, version: string) => {
-  return `https://${region}.ml.cloud.ibm.com/ml/v1-beta/generation/text?version=${version}`
-};
+const endpointConstructor = (region: string, version: string) =>
+  `https://${region}.ml.cloud.ibm.com/ml/v1-beta/generation/text?version=${version}`;
 
 /**
  * The WatsonxAI class is used to interact with Watsonx AI
@@ -52,6 +55,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       ibmCloudApiKey: "IBM_CLOUD_API_KEY",
+      projectId: "WATSONX_PROJECT_ID",
     };
   }
 
@@ -63,7 +67,9 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
   modelKwargs?: Record<string, unknown>;
 
-  ibmCloudApiKey?: string;
+  ibmCloudApiKey: string;
+
+  projectId?: string;
 
   endpointOptions?: Record<string, unknown>;
 
@@ -72,10 +78,20 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
     this.region = fields?.region ?? this.region;
     this.version = fields?.version ?? this.version;
-    this.ibmCloudApiKey = fields?.ibmCloudApiKey ?? getEnvironmentVariable("IBM_CLOUD_API_KEY");
+    this.ibmCloudApiKey =
+      fields?.ibmCloudApiKey ??
+      getEnvironmentVariable("IBM_CLOUD_API_KEY") ??
+      "";
+    this.projectId =
+      fields?.projectId ?? getEnvironmentVariable("WATSONX_PROJECT_ID");
 
-    this.endpoint = fields?.endpoint ?? endpointConstructor(this.region, this.version);
+    this.endpoint =
+      fields?.endpoint ?? endpointConstructor(this.region, this.version);
     this.endpointOptions = fields.endpointOptions;
+
+    if (!this.ibmCloudApiKey) {
+      throw new Error("Missing IBM Cloud API Key");
+    }
   }
 
   _llmType() {
@@ -92,12 +108,63 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   /** @ignore */
   async _call(
     prompt: string,
-    options: this["ParsedCallOptions"],
+    _options: this["ParsedCallOptions"]
   ): Promise<string> {
     // const response = await this.caller.call(() =>
     //   // Send request to WatsonX AI endpoint
     // );
-    console.log(prompt, options)
-    return "test";
+    interface WatsonxAIResponse {
+      results: {
+        generated_text: string;
+        generated_token_count: number;
+        input_token_count: number;
+      }[];
+    }
+
+    const response = (await fetch(this.endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${await this.generateToken()}`,
+      },
+      body: JSON.stringify({
+        project_id: this.projectId,
+        model_id: "google/flan-ul2",
+        input: prompt,
+        parameters: {
+          decoding_method: "greedy",
+          max_new_tokens: 20,
+          min_new_tokens: 0,
+          stop_sequences: [],
+          repetition_penalty: 1,
+        },
+      }),
+    }).then((res) => res.json())) as WatsonxAIResponse;
+
+    return response.results[0].generated_text;
+  }
+
+  async generateToken(): Promise<string> {
+    interface TokenResponse {
+      access_token: string;
+    }
+
+    const urlTokenParams = new URLSearchParams();
+    urlTokenParams.append(
+      "grant_type",
+      "urn:ibm:params:oauth:grant-type:apikey"
+    );
+    urlTokenParams.append("apikey", this.ibmCloudApiKey);
+
+    const tokenData = (await fetch("https://iam.cloud.ibm.com/identity/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: urlTokenParams,
+    }).then((res) => res.json())) as TokenResponse;
+
+    return tokenData.access_token;
   }
 }
