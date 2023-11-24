@@ -8,8 +8,8 @@ export const run = async () => {
       max_new_tokens: 100,
       min_new_tokens: 0,
       stop_sequences: [],
-      repetition_penalty: 1
-    }
+      repetition_penalty: 1,
+    },
   });
 
   const res = await model.predict(
