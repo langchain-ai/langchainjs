@@ -124,20 +124,22 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
         input_token_count: number;
       }[];
     }
-    const response = await this.caller.call(async () => fetch(this.endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${await this.generateToken()}`,
-      },
-      body: JSON.stringify({
-        project_id: this.projectId,
-        model_id: this.modelId,
-        input: prompt,
-        parameters: this.modelParameters,
-      }),
-    }).then((res) => res.json())) as WatsonxAIResponse;
+    const response = (await this.caller.call(async () =>
+      fetch(this.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${await this.generateToken()}`,
+        },
+        body: JSON.stringify({
+          project_id: this.projectId,
+          model_id: this.modelId,
+          input: prompt,
+          parameters: this.modelParameters,
+        }),
+      }).then((res) => res.json())
+    )) as WatsonxAIResponse;
 
     return response.results[0].generated_text;
   }
