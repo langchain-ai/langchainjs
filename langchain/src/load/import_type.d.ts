@@ -500,6 +500,7 @@ export interface SecretMap {
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
+  GPLACES_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   IFLYTEK_API_KEY?: string;
   IFLYTEK_API_SECRET?: string;
