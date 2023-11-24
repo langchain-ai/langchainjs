@@ -5,7 +5,7 @@ import { Tool } from "./base.js";
  * It extends the BaseToolConfig interface from the BaseTool class.
  */
 
-import { Version3Client } from "jira.js";
+import { Version3Client, Version3Models } from "jira.js";
 import { Serializable } from "../load/serializable.js";
 
 export interface JiraAPIWrapper {
@@ -14,7 +14,31 @@ export interface JiraAPIWrapper {
   password: string;
 }
 
+export type Issue = {
+  key: string;
+  summary: string;
+  created: string;
+  assignee: string | undefined;
+  priority: string | undefined;
+  status: string | undefined;
+  related_issues: Array<{
+    rel_type: string | undefined;
+    rel_key: string | undefined;
+    rel_summary: string | undefined;
+  }>;
+};
+
+export type Project = {
+  id: string;
+  key: string;
+  name: string;
+  type: string | undefined;
+  style: string | undefined;
+};
+
 export class JiraAPIWrapper extends Serializable {
+  client: Version3Client;
+
   lc_namespace = ["langchain", "tools", "jira"];
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -31,7 +55,7 @@ export class JiraAPIWrapper extends Serializable {
     const jiraUsername = params.username;
     const jiraPassword = params.password;
 
-    const client = new Version3Client({
+    this.client = new Version3Client({
       host: jiraHost,
       authentication: {
         basic: {
@@ -43,36 +67,111 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   //TODO: takes in an issues object and returns a list of the issues issues
-  protected _parse_issues(
-    issues: Record<string, any>
-  ): Array<Record<string, any>> {
-    return [];
+  protected _parse_issues(issues: Version3Models.SearchResults): Array<Issue> {
+    var parsed: Array<Issue> = [];
+
+    issues.issues?.forEach((issue) => {
+      var rel_issues: Array<{
+        rel_type: string | undefined;
+        rel_key: string | undefined;
+        rel_summary: string | undefined;
+      }> = [];
+
+      issue.fields.issuelinks.forEach((related_issue) => {
+        if (related_issue.inwardIssue) {
+          rel_issues.push({
+            rel_type: related_issue.type?.inward,
+            rel_key: related_issue.inwardIssue.key,
+            rel_summary: related_issue.inwardIssue.fields?.summary,
+          });
+        } else {
+          rel_issues.push({
+            rel_type: related_issue.type?.outward,
+            rel_key: related_issue.outwardIssue?.key,
+            rel_summary: related_issue.outwardIssue?.fields?.summary,
+          });
+        }
+      });
+
+      parsed.push({
+        key: issue.key,
+        summary: issue.fields.summary,
+        created: issue.fields.created,
+        assignee: issue.fields.assignee.displayName,
+        priority: issue.fields.priority.name,
+        status: issue.fields.status.name,
+        related_issues: rel_issues,
+      });
+    });
+    return parsed;
   }
 
   protected _parse_projects(
-    projects: Array<Record<string, any>>
-  ): Array<Record<string, any>> {
-    return [];
+    projects: Array<Version3Models.Project>
+  ): Array<Project> {
+    var parsed: Array<Project> = [];
+
+    projects.forEach((project) => {
+      parsed.push({
+        id: project.id,
+        key: project.key,
+        name: project.name,
+        type: project.projectTypeKey,
+        style: project.style,
+      });
+    });
+
+    return parsed;
   }
 
   async jqlQuery(query: string): Promise<string> {
-    return "";
+    var issues = await this.client.issueSearch.searchForIssuesUsingJqlPost({
+      jql: query,
+    });
+    var parsed_issues = this._parse_issues(issues);
+    var parsed_issues_str = `Found ${parsed_issues.length} issues:\n ${parsed_issues}`;
+
+    return parsed_issues_str;
   }
 
-  async getProjects(query: string): Promise<string> {
-    return "";
+  async getProjects(): Promise<string> {
+    var projects = await this.client.projects.searchProjects();
+    var parsed_projects = this._parse_projects(projects.values);
+    var parsed_projects_str = `Found ${parsed_projects.length} projects:\n ${parsed_projects}`;
+
+    return parsed_projects_str;
   }
 
   async createIssue(query: string): Promise<string> {
+    //TODO implement function
     return "";
   }
 
   async createPage(query: string): Promise<string> {
+    //TODO implement function
     return "";
   }
 
   async other(query: string): Promise<string> {
+    //TODO implement function
     return "";
+  }
+
+  async run(mode: string, query: string) {
+    switch (mode) {
+      case "jql":
+        return await this.jqlQuery(query);
+      case "get_projects":
+        return await this.getProjects();
+      case "create_issue":
+        return await this.createIssue(query);
+      case "other":
+        return await this.other(query);
+      case "create_page":
+        return await this.createPage(query);
+      default:
+        throw new Error(`Invalid mode: ${mode}`);
+    }
   }
 }
 
@@ -90,11 +189,8 @@ export interface JiraActionConfig {
  */
 export class JiraAction extends Tool implements JiraActionConfig {
   name: string;
-
   description: string;
-
   mode: string;
-
   apiWrapper: JiraAPIWrapper;
 
   constructor(config: JiraActionConfig) {
@@ -120,25 +216,8 @@ export class JiraAction extends Tool implements JiraActionConfig {
     };
   }
 
-  async run(query: string) {
-    switch (this.mode) {
-      case "jql":
-        return this.apiWrapper.jqlQuery(query);
-      case "get_projects":
-        return this.apiWrapper.getProjects(query);
-      case "create_issue":
-        return this.apiWrapper.createIssue(query);
-      case "other":
-        return this.apiWrapper.other(query);
-      case "create_page":
-        return this.apiWrapper.createPage(query);
-      default:
-        throw new Error(`Invalid mode: ${this.mode}`);
-    }
-  }
-
   /** @ignore */
   async _call(input: string) {
-    return this.run(input);
+    return await this.apiWrapper.run(this.mode, input);
   }
 }
