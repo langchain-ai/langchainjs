@@ -97,9 +97,9 @@ export interface OptionalImportMap {
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
-  "langchain/llms/watsonx-ai"?:
-    | typeof import("../llms/watsonx-ai.js")
-    | Promise<typeof import("../llms/watsonx-ai.js")>;
+  "langchain/llms/watsonx_ai"?:
+    | typeof import("../llms/watsonx_ai.js")
+    | Promise<typeof import("../llms/watsonx_ai.js")>;
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock/index.js")
     | Promise<typeof import("../llms/bedrock/index.js")>;

@@ -1,4 +1,4 @@
-import { WatsonxAI } from "langchain/llms/watsonx-ai";
+import { WatsonxAI } from "langchain/llms/watsonx_ai";
 
 export const run = async () => {
   // Note that modelParameters are optional
