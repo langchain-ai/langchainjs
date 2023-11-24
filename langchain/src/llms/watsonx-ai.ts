@@ -117,9 +117,6 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
     prompt: string,
     _options: this["ParsedCallOptions"]
   ): Promise<string> {
-    // const response = await this.caller.call(() =>
-    //   // Send request to WatsonX AI endpoint
-    // );
     interface WatsonxAIResponse {
       results: {
         generated_text: string;
@@ -127,8 +124,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
         input_token_count: number;
       }[];
     }
-
-    const response = (await fetch(this.endpoint, {
+    const response = await this.caller.call(async () => fetch(this.endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
