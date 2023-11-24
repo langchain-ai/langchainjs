@@ -1,6 +1,5 @@
 import {
   JIRA_CATCH_ALL_PROMPT,
-  JIRA_CONFLUENCE_PAGE_CREATE_PROMPT,
   JIRA_GET_ALL_PROJECTS_PROMPT,
   JIRA_ISSUE_CREATE_PROMPT,
   JIRA_JQL_PROMPT,
@@ -38,12 +37,6 @@ export class JiraToolkit extends Toolkit {
       name: "Catch all Jira API call",
       description: JIRA_CATCH_ALL_PROMPT,
       mode: "other",
-      apiWrapper: this.apiWrapper,
-    }),
-    new JiraAction({
-      name: "Create confluence page",
-      description: JIRA_CONFLUENCE_PAGE_CREATE_PROMPT,
-      mode: "create_page",
       apiWrapper: this.apiWrapper,
     }),
   ];

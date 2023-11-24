@@ -6,6 +6,7 @@ import { Tool } from "./base.js";
  */
 
 import { Version3Client, Version3Models } from "jira.js";
+
 import { Serializable } from "../load/serializable.js";
 
 export interface JiraAPIWrapper {
@@ -36,8 +37,14 @@ export type Project = {
   style: string | undefined;
 };
 
+export type JiraFunction = {
+  class: string;
+  function: string;
+  args: Record<string, string>;
+};
+
 export class JiraAPIWrapper extends Serializable {
-  client: Version3Client;
+  jira: Version3Client;
 
   lc_namespace = ["langchain", "tools", "jira"];
 
@@ -55,7 +62,7 @@ export class JiraAPIWrapper extends Serializable {
     const jiraUsername = params.username;
     const jiraPassword = params.password;
 
-    this.client = new Version3Client({
+    this.jira = new Version3Client({
       host: jiraHost,
       authentication: {
         basic: {
@@ -125,7 +132,7 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   async jqlQuery(query: string): Promise<string> {
-    var issues = await this.client.issueSearch.searchForIssuesUsingJqlPost({
+    var issues = await this.jira.issueSearch.searchForIssuesUsingJqlPost({
       jql: query,
     });
     var parsed_issues = this._parse_issues(issues);
@@ -135,7 +142,7 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   async getProjects(): Promise<string> {
-    var projects = await this.client.projects.searchProjects();
+    var projects = await this.jira.projects.searchProjects();
     var parsed_projects = this._parse_projects(projects.values);
     var parsed_projects_str = `Found ${parsed_projects.length} projects:\n ${parsed_projects}`;
 
@@ -143,16 +150,14 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   async createIssue(query: string): Promise<string> {
-    //TODO implement function
-    return "";
-  }
-
-  async createPage(query: string): Promise<string> {
-    //TODO implement function
-    return "";
+    var params = JSON.parse(query);
+    return this.jira.issues.createIssue({ fields: params });
   }
 
   async other(query: string): Promise<string> {
+    var params: JiraFunction = JSON.parse(query);
+    //var jira_function: any = this.jira[params.class][params.function];
+
     //TODO implement function
     return "";
   }
@@ -167,8 +172,6 @@ export class JiraAPIWrapper extends Serializable {
         return await this.createIssue(query);
       case "other":
         return await this.other(query);
-      case "create_page":
-        return await this.createPage(query);
       default:
         throw new Error(`Invalid mode: ${mode}`);
     }
@@ -211,7 +214,6 @@ export class JiraAction extends Tool implements JiraActionConfig {
         { name: "Get Projects", value: "get_projects" },
         { name: "Create Issue", value: "create_issue" },
         { name: "Catch all Jira API call", value: "other" },
-        { name: "Create confluence page", value: "create_page" },
       ],
     };
   }
