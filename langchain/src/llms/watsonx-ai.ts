@@ -35,7 +35,7 @@ export interface WatsonxAIParams extends BaseLLMParams {
   /**
    * Parameters accepted by the WatsonX AI Endpoint.
    */
-  endpointOptions?: Record<string, unknown>;
+  modelParameters?: Record<string, unknown>;
 }
 
 const endpointConstructor = (region: string, version: string) =>
@@ -71,7 +71,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
   projectId?: string;
 
-  endpointOptions?: Record<string, unknown>;
+  modelParameters?: Record<string, unknown>;
 
   constructor(fields: WatsonxAIParams) {
     super(fields);
@@ -87,7 +87,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
     this.endpoint =
       fields?.endpoint ?? endpointConstructor(this.region, this.version);
-    this.endpointOptions = fields.endpointOptions;
+    this.modelParameters = fields.modelParameters;
 
     if (!this.ibmCloudApiKey) {
       throw new Error("Missing IBM Cloud API Key");
@@ -132,13 +132,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
         project_id: this.projectId,
         model_id: "google/flan-ul2",
         input: prompt,
-        parameters: {
-          decoding_method: "greedy",
-          max_new_tokens: 20,
-          min_new_tokens: 0,
-          stop_sequences: [],
-          repetition_penalty: 1,
-        },
+        parameters: this.modelParameters,
       }),
     }).then((res) => res.json())) as WatsonxAIResponse;
 
