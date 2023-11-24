@@ -1,4 +1,4 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAIClient } from "@langchain/openai";
 import {
   AgentAction,
   AgentFinish,
@@ -20,6 +20,40 @@ export type FunctionsAgentAction = AgentAction & {
   messageLog?: BaseMessage[];
 };
 
+/**
+ * @example
+ * ```typescript
+ *
+ * const prompt = ChatPromptTemplate.fromMessages([
+ *   ["ai", "You are a helpful assistant"],
+ *   ["human", "{input}"],
+ *   new MessagesPlaceholder("agent_scratchpad"),
+ * ]);
+ *
+ * const modelWithFunctions = new ChatOpenAI({
+ *   modelName: "gpt-4",
+ *   temperature: 0,
+ * }).bind({
+ *   functions: tools.map((tool) => formatToOpenAIFunction(tool)),
+ * });
+ *
+ * const runnableAgent = RunnableSequence.from([
+ *   {
+ *     input: (i) => i.input,
+ *     agent_scratchpad: (i) => formatAgentSteps(i.steps),
+ *   },
+ *   prompt,
+ *   modelWithFunctions,
+ *   new OpenAIFunctionsAgentOutputParser(),
+ * ]);
+ *
+ * const result = await runnableAgent.invoke({
+ *   input: "What is the weather in New York?",
+ *   steps: agentSteps,
+ * });
+ *
+ * ```
+ */
 export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "openai"];
 
@@ -100,6 +134,37 @@ export type ToolsAgentStep = AgentStep & {
   action: ToolsAgentAction;
 };
 
+/**
+ * @example
+ * ```typescript
+ *
+ * const prompt = ChatPromptTemplate.fromMessages([
+ *   ["ai", "You are a helpful assistant"],
+ *   ["human", "{input}"],
+ *   new MessagesPlaceholder("agent_scratchpad"),
+ * ]);
+ *
+ * const runnableAgent = RunnableSequence.from([
+ *   {
+ *     input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
+ *     agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) =>
+ *       formatToOpenAIToolMessages(i.steps),
+ *   },
+ *   prompt,
+ *   new ChatOpenAI({
+ *     modelName: "gpt-3.5-turbo-1106",
+ *     temperature: 0,
+ *   }).bind({ tools: tools.map(formatToOpenAITool) }),
+ *   new OpenAIToolsAgentOutputParser(),
+ * ]).withConfig({ runName: "OpenAIToolsAgent" });
+ *
+ * const result = await runnableAgent.invoke({
+ *   input:
+ *     "What is the sum of the current temperature in San Francisco, New York, and Tokyo?",
+ * });
+ *
+ * ```
+ */
 export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
   lc_namespace = ["langchain", "agents", "openai"];
 

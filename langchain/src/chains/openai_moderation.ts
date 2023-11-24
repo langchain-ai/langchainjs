@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAIClient } from "@langchain/openai";
 import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
@@ -20,6 +20,34 @@ export interface OpenAIModerationChainInput
  * Class representing a chain for moderating text using the OpenAI
  * Moderation API. It extends the BaseChain class and implements the
  * OpenAIModerationChainInput interface.
+ * @example
+ * ```typescript
+ * const moderation = new ChatOpenAIModerationChain({ throwError: true });
+ *
+ * const badString = "Bad naughty words from user";
+ *
+ * try {
+ *   const { output: moderatedContent, results } = await moderation.call({
+ *     input: badString,
+ *   });
+ *
+ *   if (results[0].category_scores["harassment/threatening"] > 0.01) {
+ *     throw new Error("Harassment detected!");
+ *   }
+ *
+ *   const model = new OpenAI({ temperature: 0 });
+ *   const promptTemplate = "Hello, how are you today {person}?";
+ *   const prompt = new PromptTemplate({
+ *     template: promptTemplate,
+ *     inputVariables: ["person"],
+ *   });
+ *   const chain = new LLMChain({ llm: model, prompt });
+ *   const response = await chain.call({ person: moderatedContent });
+ *   console.log({ response });
+ * } catch (error) {
+ *   console.error("Naughty words detected!");
+ * }
+ * ```
  */
 export class OpenAIModerationChain
   extends BaseChain

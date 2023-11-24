@@ -4,6 +4,12 @@ import { formatDocumentsAsString } from "../../util/document.js";
 
 /**
  * A document loader for loading data from PDFs.
+ * @example
+ * ```typescript
+ * const loader = new WebPDFLoader(new Blob());
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class WebPDFLoader extends BaseDocumentLoader {
   protected blob: Blob;
@@ -12,14 +18,21 @@ export class WebPDFLoader extends BaseDocumentLoader {
 
   private pdfjs: typeof PDFLoaderImports;
 
+  protected parsedItemSeparator: string;
+
   constructor(
     blob: Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    {
+      splitPages = true,
+      pdfjs = PDFLoaderImports,
+      parsedItemSeparator = " ",
+    } = {}
   ) {
     super();
     this.blob = blob;
     this.splitPages = splitPages ?? this.splitPages;
     this.pdfjs = pdfjs;
+    this.parsedItemSeparator = parsedItemSeparator;
   }
 
   /**
@@ -61,7 +74,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
           lastY = item.transform[5];
         }
       }
-      const text = textItems.join(" ");
+      const text = textItems.join(this.parsedItemSeparator);
 
       documents.push(
         new Document({

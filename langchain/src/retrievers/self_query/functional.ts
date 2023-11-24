@@ -34,6 +34,13 @@ export type FunctionFilter = (document: Document) => boolean;
 /**
  * A class that extends `BaseTranslator` to translate structured queries
  * into functional filters.
+ * @example
+ * ```typescript
+ * const functionalTranslator = new FunctionalTranslator();
+ * const relevantDocuments = await functionalTranslator.getRelevantDocuments(
+ *   "Which movies are rated higher than 8.5?",
+ * );
+ * ```
  */
 export class FunctionalTranslator extends BaseTranslator {
   declare VisitOperationOutput: FunctionFilter;

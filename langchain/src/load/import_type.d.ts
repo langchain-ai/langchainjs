@@ -193,6 +193,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/rockset"?:
+    | typeof import("../vectorstores/rockset.js")
+    | Promise<typeof import("../vectorstores/rockset.js")>;
   "langchain/vectorstores/typesense"?:
     | typeof import("../vectorstores/typesense.js")
     | Promise<typeof import("../vectorstores/typesense.js")>;
@@ -388,6 +391,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/weaviate"?:
     | typeof import("../retrievers/self_query/weaviate.js")
     | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
+  "langchain/retrievers/self_query/vectara"?:
+    | typeof import("../retrievers/self_query/vectara.js")
+    | Promise<typeof import("../retrievers/self_query/vectara.js")>;
   "langchain/cache/cloudflare_kv"?:
     | typeof import("../cache/cloudflare_kv.js")
     | Promise<typeof import("../cache/cloudflare_kv.js")>;
@@ -400,6 +406,9 @@ export interface OptionalImportMap {
   "langchain/cache/ioredis"?:
     | typeof import("../cache/ioredis.js")
     | Promise<typeof import("../cache/ioredis.js")>;
+  "langchain/cache/file_system"?:
+    | typeof import("../cache/file_system.js")
+    | Promise<typeof import("../cache/file_system.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;
@@ -484,12 +493,10 @@ export interface OptionalImportMap {
 }
 
 export interface SecretMap {
-  ANTHROPIC_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
-  AZURE_OPENAI_API_KEY?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
@@ -509,7 +516,6 @@ export interface SecretMap {
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
   OPENAI_API_KEY?: string;
-  OPENAI_ORGANIZATION?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;

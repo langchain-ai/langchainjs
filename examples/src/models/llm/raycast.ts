@@ -22,7 +22,7 @@ export default async function main() {
 
   const input = `Describe my today's schedule as Gabriel Garcia Marquez would describe it`;
 
-  const answer = await executor.call({ input });
+  const answer = await executor.invoke({ input });
 
   await showHUD(answer.output);
 }

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 
-import { Validator } from "../../util/@cfworker/json-schema/index.js";
+import { Validator } from "@langchain/core/utils/json_schema";
 import { LLMChain, LLMChainInput } from "../llm_chain.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/index.js";

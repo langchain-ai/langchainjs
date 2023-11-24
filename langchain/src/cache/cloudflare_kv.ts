@@ -11,6 +11,19 @@ import {
  * Represents a specific implementation of a caching mechanism using Cloudflare KV
  * as the underlying storage system. It extends the `BaseCache` class and
  * overrides its methods to provide the Cloudflare KV-specific logic.
+ * @example
+ * ```typescript
+ * // Example of using OpenAI with Cloudflare KV as cache in a Cloudflare Worker
+ * const cache = new CloudflareKVCache(env.KV_NAMESPACE);
+ * const model = new ChatAnthropic({
+ *   cache,
+ * });
+ * const response = await model.invoke("How are you today?");
+ * return new Response(JSON.stringify(response), {
+ *   headers: { "content-type": "application/json" },
+ * });
+ *
+ * ```
  */
 export class CloudflareKVCache extends BaseCache {
   private binding: KVNamespace;

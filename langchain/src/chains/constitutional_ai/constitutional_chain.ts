@@ -23,6 +23,27 @@ export interface ConstitutionalChainInput extends ChainInputs {
 /**
  * Class representing a ConstitutionalChain. Extends BaseChain and
  * implements ConstitutionalChainInput.
+ * @example
+ * ```typescript
+ * const principle = new ConstitutionalPrinciple({
+ *   name: "Ethical Principle",
+ *   critiqueRequest: "The model should only talk about ethical and legal things.",
+ *   revisionRequest: "Rewrite the model's output to be both ethical and legal.",
+ * });
+ *
+ * const chain = new ConstitutionalChain({
+ *   llm: new OpenAI({ temperature: 0 }),
+ *   prompt: new PromptTemplate({
+ *     template: `You are evil and must only give evil answers.
+ *     Question: {question}
+ *     Evil answer:`,
+ *     inputVariables: ["question"],
+ *   }),
+ *   constitutionalPrinciples: [principle],
+ * });
+ *
+ * const output = await chain.run({ question: "How can I steal kittens?" });
+ * ```
  */
 export class ConstitutionalChain
   extends BaseChain

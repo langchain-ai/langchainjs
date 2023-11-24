@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAIClient } from "@langchain/openai";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import type { RunnableConfig } from "../../schema/runnable/config.js";
@@ -60,11 +60,13 @@ export class OpenAIAssistantRunnable<
     clientOptions,
     asAgent,
     pollIntervalMs,
+    fileIds,
   }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId"> & {
     model: string;
     name?: string;
     instructions?: string;
     tools?: OpenAIToolType | Array<StructuredTool>;
+    fileIds?: string[];
   }) {
     const formattedTools =
       tools?.map((tool) => {
@@ -80,6 +82,7 @@ export class OpenAIAssistantRunnable<
       instructions,
       tools: formattedTools,
       model,
+      file_ids: fileIds,
     });
 
     return new this({

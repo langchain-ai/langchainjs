@@ -28,6 +28,17 @@ interface ResponseItem {
  * semantic search and retrieval on it. It extends the `BaseRetriever`
  * class and requires a `Metal` instance and a dictionary of parameters to
  * pass to the Metal API during its initialization.
+ * @example
+ * ```typescript
+ * const retriever = new MetalRetriever({
+ *   client: new Metal(
+ *     process.env.METAL_API_KEY,
+ *     process.env.METAL_CLIENT_ID,
+ *     process.env.METAL_INDEX_ID,
+ *   ),
+ * });
+ * const docs = await retriever.getRelevantDocuments("hello");
+ * ```
  */
 export class MetalRetriever extends BaseRetriever {
   static lc_name() {

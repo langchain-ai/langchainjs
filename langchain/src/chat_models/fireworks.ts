@@ -1,4 +1,4 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAIClient } from "@langchain/openai";
 import type { ChatOpenAICallOptions, OpenAIChatInput } from "./openai.js";
 import type { OpenAICoreRequestOptions } from "../types/openai-types.js";
 import type { BaseChatModelParams } from "./base.js";
@@ -25,6 +25,16 @@ export type ChatFireworksCallOptions = Partial<
  *
  * To use, you should have the `openai` package installed and
  * the `FIREWORKS_API_KEY` environment variable set.
+ * @example
+ * ```typescript
+ * const model = new ChatFireworks({
+ *   temperature: 0.9,
+ *   fireworksApiKey: "YOUR-API-KEY",
+ * });
+ *
+ * const response = await model.invoke("Hello, how are you?");
+ * console.log(response);
+ * ```
  */
 export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
   static lc_name() {
