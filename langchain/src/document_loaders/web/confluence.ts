@@ -9,8 +9,9 @@ import { BaseDocumentLoader } from "../base.js";
 export interface ConfluencePagesLoaderParams {
   baseUrl: string;
   spaceKey: string;
-  username: string;
-  accessToken: string;
+  username?: string;
+  accessToken?: string;
+  personalAccessToken?: string;
   limit?: number;
 }
 
@@ -54,18 +55,21 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
 
   public readonly spaceKey: string;
 
-  public readonly username: string;
+  public readonly username?: string;
 
-  public readonly accessToken: string;
+  public readonly accessToken?: string;
 
   public readonly limit: number;
+  
+  public readonly personalAccessToken?: string;
 
   constructor({
     baseUrl,
     spaceKey,
-    username,
-    accessToken,
+    username = "",
+    accessToken = "",
     limit = 25,
+    personalAccessToken = "",
   }: ConfluencePagesLoaderParams) {
     super();
     this.baseUrl = baseUrl;
@@ -73,6 +77,18 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.username = username;
     this.accessToken = accessToken;
     this.limit = limit;
+    this.personalAccessToken = personalAccessToken;
+  }
+
+  private authorizationHeader(): string {
+    if (this.personalAccessToken) {
+      return `Bearer ${this.personalAccessToken}`;
+    } else {
+      const authToken = Buffer.from(
+        `${this.username}:${this.accessToken}`
+      ).toString("base64");
+      return `Basic ${authToken}`;
+    }
   }
 
   /**
@@ -99,13 +115,10 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     url: string
   ): Promise<ConfluenceAPIResponse> {
     try {
-      const authToken = Buffer.from(
-        `${this.username}:${this.accessToken}`
-      ).toString("base64");
-
+      const authHeader = this.authorizationHeader();
       const response = await fetch(url, {
         headers: {
-          Authorization: `Basic ${authToken}`,
+          Authorization: authHeader,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
