@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import { ClickHouseClient, createClient } from "@clickhouse/client";
-
+import { format } from "mysql2";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
@@ -268,26 +268,27 @@ export class ClickHouseStore extends VectorStore {
       )
     ).join(", ");
 
-    const data: string[] = [];
+    const placeholders = vectors.map(() => "(?, ?, ?, ?)").join(", ");
+    const values = [];
+
     for (let i = 0; i < vectors.length; i += 1) {
       const vector = vectors[i];
       const document = documents[i];
-      const item = [
-        `'${uuid.v4()}'`,
-        `'${this.escapeString(document.pageContent)}'`,
-        `[${vector}]`,
-        `'${JSON.stringify(document.metadata)}'`,
-      ].join(", ");
-      data.push(`(${item})`);
+      values.push(
+        uuid.v4(),
+        this.escapeString(document.pageContent),
+        JSON.stringify(vector),
+        JSON.stringify(document.metadata)
+      );
     }
-    const dataStr = data.join(", ");
 
-    return `
-      INSERT INTO TABLE
-        ${this.database}.${this.table}(${columnsStr})
-      VALUES
-        ${dataStr}
+    const insertQueryStr = `
+      INSERT INTO TABLE ${this.database}.${this.table}(${columnsStr}) 
+      VALUES ${placeholders}
     `;
+
+    const insertQuery = format(insertQueryStr, values);
+    return insertQuery;
   }
 
   private escapeString(str: string): string {
@@ -308,8 +309,8 @@ export class ClickHouseStore extends VectorStore {
     filter?: ClickHouseFilter
   ): string {
     const order = "ASC";
-
     const whereStr = filter ? `PREWHERE ${filter.whereStr}` : "";
+    const placeholders = query.map(() => "?").join(", ");
 
     const settingStrings: string[] = [];
     if (this.indexQueryParams) {
@@ -318,7 +319,7 @@ export class ClickHouseStore extends VectorStore {
       }
     }
 
-    return `
+    const searchQueryStr = `
       SELECT ${this.columnMap.document} AS document, ${
       this.columnMap.metadata
     } AS metadata, dist
@@ -326,8 +327,12 @@ export class ClickHouseStore extends VectorStore {
       ${whereStr}
       ORDER BY L2Distance(${
         this.columnMap.embedding
-      }, [${query}]) AS dist ${order}
+      }, [${placeholders}]) AS dist ${order}
       LIMIT ${k} ${settingStrings.join(" ")}
     `;
+
+    // Format the query with actual values
+    const searchQuery = format(searchQueryStr, query);
+    return searchQuery;
   }
 }
