@@ -38,6 +38,7 @@
     "./langchain/src/tools/aws_lambda.ts",
     "./langchain/src/tools/aws_sfn.ts",
     "./langchain/src/tools/calculator.ts",
+    "./langchain/src/tools/discord.ts",
     "./langchain/src/tools/render.ts",
     "./langchain/src/tools/sql.ts",
     "./langchain/src/tools/webbrowser.ts",
