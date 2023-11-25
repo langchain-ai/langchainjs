@@ -8,7 +8,7 @@ import { Tool } from "./base.js";
 import { Version3Client, Version3Models } from "jira.js";
 import { Serializable } from "../load/serializable.js";
 
-export interface JiraAPIWrapper {
+export interface JiraAPIWrapperParams {
   host: string;
   username: string;
   password: string;
@@ -54,7 +54,7 @@ export class JiraAPIWrapper extends Serializable {
     };
   }
 
-  constructor(params: JiraAPIWrapper) {
+  constructor(params: JiraAPIWrapperParams) {
     super(params);
 
     const jiraHost = params.host;

@@ -503,6 +503,8 @@ export interface SecretMap {
   HUGGINGFACEHUB_API_KEY?: string;
   IFLYTEK_API_KEY?: string;
   IFLYTEK_API_SECRET?: string;
+  JIRA_PASSWORD?: string;
+  JIRA_USERNAME?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
