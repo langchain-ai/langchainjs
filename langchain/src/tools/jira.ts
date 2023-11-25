@@ -6,7 +6,6 @@ import { Tool } from "./base.js";
  */
 
 import { Version3Client, Version3Models } from "jira.js";
-
 import { Serializable } from "../load/serializable.js";
 
 export interface JiraAPIWrapper {
@@ -39,8 +38,8 @@ export type Project = {
 
 export type JiraFunction = {
   class: string;
-  function: string;
-  args: Record<string, string>;
+  method: string;
+  args: Object;
 };
 
 export class JiraAPIWrapper extends Serializable {
@@ -156,10 +155,12 @@ export class JiraAPIWrapper extends Serializable {
 
   async other(query: string): Promise<string> {
     var params: JiraFunction = JSON.parse(query);
-    //var jira_function: any = this.jira[params.class][params.function];
+    params.class = "announcementBanner";
+    var jira_class = this.jira[params.class as keyof Version3Client];
+    var jira_function = jira_class[params.method as keyof typeof jira_class];
 
-    //TODO implement function
-    return "";
+    // @ts-ignore
+    return jira_function(params.args);
   }
 
   async run(mode: string, query: string) {
