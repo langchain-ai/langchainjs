@@ -16,24 +16,28 @@ const CredentialsSchema = z
   .object({
     clientEmail: z
       .string()
+      .min(1)
       .default(getEnvironmentVariable("GMAIL_CLIENT_EMAIL") ?? ""),
     privateKey: z
       .string()
       .default(getEnvironmentVariable("GMAIL_PRIVATE_KEY") ?? ""),
     keyfile: z.string().default(getEnvironmentVariable("GMAIL_KEYFILE") ?? ""),
   })
-  .refine((data) => data.clientEmail !== "", {
-    message: "Missing GMAIL_CLIENT_EMAIL to interact with Gmail",
-  })
-  .refine((data) => data.privateKey !== "" || data.keyfile !== "", {
-    message:
-      "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE to interact with Gmail",
-  });
+  .refine(
+    (credentials) =>
+      credentials.privateKey !== "" || credentials.keyfile !== "",
+    {
+      message:
+        "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE to interact with Gmail",
+    }
+  );
 
-const GmailBaseToolParamsSchema = z.object({
-  credentials: CredentialsSchema.default({}),
-  scopes: z.array(z.string()).default(["https://mail.google.com/"]),
-});
+const GmailBaseToolParamsSchema = z
+  .object({
+    credentials: CredentialsSchema.default({}),
+    scopes: z.array(z.string()).default(["https://mail.google.com/"]),
+  })
+  .default({});
 
 export abstract class GmailBaseTool extends Tool {
   name = "Gmail";
@@ -45,9 +49,7 @@ export abstract class GmailBaseTool extends Tool {
   constructor(fields?: Partial<GmailBaseToolParams>) {
     super(...arguments);
 
-    const { credentials, scopes } = GmailBaseToolParamsSchema.parse(
-      fields ?? {}
-    );
+    const { credentials, scopes } = GmailBaseToolParamsSchema.parse(fields);
 
     this.gmail = this.getGmail(
       scopes,
