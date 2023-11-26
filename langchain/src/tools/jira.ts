@@ -10,8 +10,8 @@ import { Serializable } from "../load/serializable.js";
 
 export interface JiraAPIWrapperParams {
   host: string;
-  username: string;
-  password: string;
+  email: string;
+  jiraAPIToken: string;
 }
 
 export type Issue = {
@@ -49,24 +49,20 @@ export class JiraAPIWrapper extends Serializable {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      username: "JIRA_USERNAME",
-      password: "JIRA_PASSWORD",
+      email: "JIRA_EMAIL",
+      apiToken: "JIRA_API_TOKEN",
     };
   }
 
   constructor(params: JiraAPIWrapperParams) {
     super(params);
 
-    const jiraHost = params.host;
-    const jiraUsername = params.username;
-    const jiraPassword = params.password;
-
     this.jira = new Version3Client({
-      host: jiraHost,
+      host: params.host,
       authentication: {
         basic: {
-          username: jiraUsername,
-          password: jiraPassword,
+          username: params.email,
+          password: params.jiraAPIToken,
         },
       },
     });
