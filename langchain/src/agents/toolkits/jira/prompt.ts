@@ -27,8 +27,8 @@ use this tool if you need to perform any other actions allowed by the jira.js Ji
 The input to this tool is a dictionary specifying a function from jira.js's Jira API, 
 as well as a list of arguments and dictionary of keyword arguments to pass into the function.
 For example, to get the email of a user with accountId 'foo' you would pass in the following object:
-{{class: "Users", function: "getUserEmail", args: {{accountId: "foo"}}}}
+{{"class": "Users", "function": "getUserEmail", "args": {{"accountId": "foo"}}}}
 or to find out how many groups are in the Jira instance, you would pass in the following string:
-{{"class": "Groups", function: "findGroups", args: {{}}}}
+{{"class": "Groups", "function": "findGroups", "args": {{}}}}
 For more information on the Jira API, refer to https://mrrefactoring.github.io/jira.js/modules/Version3.html
 `;
