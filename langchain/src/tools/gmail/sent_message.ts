@@ -1,6 +1,6 @@
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
-interface SendMessageParams {
+export interface SendMessageParams {
   message: string;
   to: string | string[];
   subject: string;
@@ -13,7 +13,7 @@ export class GmailSendMessage extends GmailBaseTool {
 
   description = "Send a message using Gmail";
 
-  constructor(fields: GmailBaseToolParams) {
+  constructor(fields?: GmailBaseToolParams) {
     super(fields);
   }
 
@@ -43,7 +43,7 @@ export class GmailSendMessage extends GmailBaseTool {
     return Buffer.from(email).toString("base64url");
   }
 
-  protected async _call({
+  async _call({
     message,
     to,
     subject,
