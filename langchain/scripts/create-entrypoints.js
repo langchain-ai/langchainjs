@@ -368,6 +368,7 @@ const requiresOptionalDependency = [
   "llms/llama_cpp",
   "llms/writer",
   "llms/portkey",
+  "llms/azure_ml",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/cassandra",

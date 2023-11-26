@@ -112,6 +112,9 @@ export interface OptionalImportMap {
   "langchain/llms/portkey"?:
     | typeof import("../llms/portkey.js")
     | Promise<typeof import("../llms/portkey.js")>;
+  "langchain/llms/azure_ml"?:
+    | typeof import("../llms/azure_ml.js")
+    | Promise<typeof import("../llms/azure_ml.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;

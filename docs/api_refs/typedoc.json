@@ -89,6 +89,7 @@
     "./langchain/src/llms/portkey.ts",
     "./langchain/src/llms/yandex.ts",
     "./langchain/src/llms/fake.ts",
+    "./langchain/src/llms/azure_ml.ts",
     "./langchain/src/prompts/index.ts",
     "./langchain/src/prompts/load.ts",
     "./langchain/src/vectorstores/analyticdb.ts",

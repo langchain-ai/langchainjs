@@ -223,6 +223,9 @@
     "llms/fake.cjs",
     "llms/fake.js",
     "llms/fake.d.ts",
+    "llms/azure_ml.cjs",
+    "llms/azure_ml.js",
+    "llms/azure_ml.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -1762,6 +1765,11 @@
       "types": "./llms/fake.d.ts",
       "import": "./llms/fake.js",
       "require": "./llms/fake.cjs"
+    },
+    "./llms/azure_ml": {
+      "types": "./llms/azure_ml.d.ts",
+      "import": "./llms/azure_ml.js",
+      "require": "./llms/azure_ml.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
