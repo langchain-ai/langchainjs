@@ -7,6 +7,12 @@ interface Neo4jGraphConfig {
   database?: string;
 }
 
+interface StructuredSchema {
+  nodeProps: { [key: string]: any[] };
+  relProps: { [key: string]: any[] };
+  relationships: any[];
+}
+
 /**
  * @security *Security note*: Make sure that the database connection uses credentials
  * that are narrowly-scoped to only include necessary permissions.
@@ -27,6 +33,7 @@ export class Neo4jGraph {
   private database: string;
 
   private schema = "";
+  private structuredSchema = {};
 
   constructor({
     url,
@@ -76,6 +83,10 @@ export class Neo4jGraph {
     return this.schema;
   }
 
+  getStructuredSchema(): StructuredSchema {
+    return this.structuredSchema;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async query(query: string, params: any = {}): Promise<any[] | undefined> {
     try {
@@ -122,23 +133,59 @@ export class Neo4jGraph {
       YIELD label, other, elementType, type, property
       WHERE type = "RELATIONSHIP" AND elementType = "node"
       UNWIND other AS other_node
-      RETURN "(:" + label + ")-[:" + property + "]->(:" + toString(other_node) + ")" AS output
+      RETURN {start: label, type: property, end: toString(other_node)} AS output
     `;
 
-    const nodeProperties = await this.query(nodePropertiesQuery);
-    const relationshipsProperties = await this.query(relPropertiesQuery);
-    const relationships = await this.query(relQuery);
+    // Assuming query method is defined and returns a Promise
+    const nodeProperties = (await this.query(nodePropertiesQuery))?.map(
+      (el) => el.output
+    );
+    const relationshipsProperties = (await this.query(relPropertiesQuery))?.map(
+      (el) => el.output
+    );
+    const relationships = (await this.query(relQuery))?.map((el) => el.output);
 
-    this.schema = `
-      Node properties are the following:
-      ${JSON.stringify(nodeProperties?.map((el) => el.output))}
+    // Structured schema similar to Python's dictionary comprehension
+    this.structuredSchema = {
+      nodeProps: Object.fromEntries(
+        nodeProperties?.map((el) => [el.labels, el.properties])
+      ),
+      relProps: Object.fromEntries(
+        relationshipsProperties?.map((el) => [el.type, el.properties])
+      ),
+      relationships,
+    };
 
-      Relationship properties are the following:
-      ${JSON.stringify(relationshipsProperties?.map((el) => el.output))}
+    // Format node properties
+    const formattedNodeProps = nodeProperties?.map((el) => {
+      const propsStr = el.properties
+        .map((prop) => `${prop.property}: ${prop.type}`)
+        .join(", ");
+      return `${el.labels} {${propsStr}}`;
+    });
 
-      The relationships are the following:
-      ${JSON.stringify(relationships?.map((el) => el.output))}
-    `;
+    // Format relationship properties
+    const formattedRelProps = relationshipsProperties?.map((el) => {
+      const propsStr = el.properties
+        .map((prop) => `${prop.property}: ${prop.type}`)
+        .join(", ");
+      return `${el.type} {${propsStr}}`;
+    });
+
+    // Format relationships
+    const formattedRels = relationships?.map(
+      (el) => `(:${el.start})-[:${el.type}]->(:${el.end})`
+    );
+
+    // Combine all formatted elements into a single string
+    this.schema = [
+      "Node properties are the following:",
+      formattedNodeProps?.join(", "),
+      "Relationship properties are the following:",
+      formattedRelProps?.join(", "),
+      "The relationships are the following:",
+      formattedRels?.join(", "),
+    ].join("\n");
   }
 
   async close() {
