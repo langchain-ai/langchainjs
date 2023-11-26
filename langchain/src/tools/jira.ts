@@ -47,25 +47,16 @@ export class JiraAPIWrapper extends Serializable {
 
   lc_namespace = ["langchain", "tools", "jira"];
 
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      email: "JIRA_EMAIL",
-      apiToken: "JIRA_API_TOKEN",
-    };
-  }
+  // get lc_secrets(): { [key: string]: string } | undefined {
+  //   return {
+  //     email: "JIRA_EMAIL",
+  //     apiToken: "JIRA_API_TOKEN",
+  //   };
+  // }
 
-  constructor(params: JiraAPIWrapperParams) {
-    super(params);
-
-    this.jira = new Version3Client({
-      host: params.host,
-      authentication: {
-        basic: {
-          username: params.email,
-          password: params.jiraAPIToken,
-        },
-      },
-    });
+  constructor(jira: Version3Client) {
+    super(jira);
+    this.jira = jira;
   }
 
   //TODO: takes in an issues object and returns a list of the issues issues
