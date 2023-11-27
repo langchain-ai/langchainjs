@@ -1,7 +1,7 @@
 {
-  "name": "@langchain/anthropic",
-  "version": "0.0.3",
-  "description": "Anthropic integrations for LangChain.js",
+  "name": "@langchain/openai",
+  "version": "0.0.1",
+  "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -32,8 +32,10 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.10.0",
-    "@langchain/core": "~0.0.1"
+    "@langchain/core": "~0.0.1",
+    "js-tiktoken": "^1.0.7",
+    "openai": "^4.19.0",
+    "zod-to-json-schema": "3.20.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -67,7 +69,7 @@
     "chatgpt",
     "machine learning",
     "ml",
-    "anthropic",
+    "openai",
     "embeddings",
     "vectorstores"
   ],
