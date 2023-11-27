@@ -4131,6 +4131,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/msal-common@npm:14.4.0":
+  version: 14.4.0
+  resolution: "@azure/msal-common@npm:14.4.0"
+  checksum: 63c63fac0915b4dbd026add260e2527138a02ba6f9ccd8d92d2641fc3e2b5d59c6943415d470e40af2f34c55e77ccfc2d3f90e8a2befc1eeae3a9896ec65ade8
+  languageName: node
+  linkType: hard
+
+"@azure/msal-node@npm:^2.5.1":
+  version: 2.5.1
+  resolution: "@azure/msal-node@npm:2.5.1"
+  dependencies:
+    "@azure/msal-common": 14.4.0
+    jsonwebtoken: ^9.0.0
+    uuid: ^8.3.0
+  checksum: f2e5cfbfeea010e88885d19d1fca22aa70fbdc488ec58e8c76b8da8a632be002ffacddd54671c7e58162bce3f5f1ddfcb440c330ddd627aa74134b6a81d1753e
+  languageName: node
+  linkType: hard
+
 "@azure/storage-blob@npm:^12.15.0":
   version: 12.15.0
   resolution: "@azure/storage-blob@npm:12.15.0"
@@ -22199,6 +22217,7 @@ __metadata:
     "@aws-sdk/client-sfn": ^3.362.0
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
+    "@azure/msal-node": ^2.5.1
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.0.14
     "@cloudflare/ai": ^1.0.12

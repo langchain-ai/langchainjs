@@ -1,5 +1,6 @@
 import { Tool, type ToolParams } from "./base.js";
-import fetch from 'node-fetch';
+import { getEnvironmentVariable } from "../util/env.js";
+import * as msal from '@azure/msal-node';
 
 
 export interface Email {
@@ -38,13 +39,66 @@ export class OutlookIntegration extends Tool {
   name = "outlook-integration";
   description = `Useful for sending and reading emails. The input to this tool should be a valid email address.`;
 
-  constructor(params: ToolParams, accessToken: string) {
+  constructor(params: ToolParams) {
     super(params);
-    this.accessToken = accessToken; // Initialize with an OAuth2 access token
-    this.
   }
 
-  
+  async getToken(): Promise<string> {
+    if (this.accessToken) {
+      return this.accessToken;
+    }
+
+    const AAD_ENDPOINT = "https://login.microsoftonline.com/";
+    const GRAPH_ENDPOINT = "https://graph.microsoft.com/";
+
+    const clientId = getEnvironmentVariable("CLIENT_ID");
+    const tenantId = getEnvironmentVariable("TENANT_ID");
+    const clientSecret = getEnvironmentVariable("CLIENT_SECRET");
+
+    if (!clientId || !tenantId || !clientSecret) {
+      throw new Error("Missing environment variables");
+    }
+
+    const msalConfig = {
+      auth: {
+        clientId: clientId,
+        authority: AAD_ENDPOINT + tenantId,
+        clientSecret: clientSecret,
+      }
+    }
+    const cca = new msal.ConfidentialClientApplication(msalConfig);
+    const tokenRequest = {
+      scopes: [GRAPH_ENDPOINT + '.default'], // e.g. 'https://graph.microsoft.com/.default'
+    };
+    const result = await cca.acquireTokenByClientCredential(tokenRequest);
+    if (result === null) {
+      throw new Error('Failed to obtain access token');
+    } else {
+      this.accessToken = result.accessToken;
+      return this.accessToken;
+    }
+  }
+
+
+  async readme(): Promise<string> {
+    try {
+      const response = await fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.mail; // Assuming 'value' contains the array of emails
+    } catch (error) {
+      console.error("Failed to read me:", error);
+      throw error;
+    }
+  }
 
   async readEmails(): Promise<Email[]> {
     try {
