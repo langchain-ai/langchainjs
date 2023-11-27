@@ -1,19 +1,19 @@
 import { OpenAI } from "langchain/llms/openai";
-import { JiraAPIWrapper } from "langchain/tools";
+import { JiraAPIWrapper, JiraAction } from "langchain/tools";
 import { Version3Client } from "jira.js";
 import {
   initializeAgentExecutorWithOptions,
-  JiraToolkit,
+  JiraToolkit
 } from "langchain/agents";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
   const client = await new Version3Client({
-    host: "https://wenduosky.atlassian.net",
+    host: "https://yourdomain.atlassian.net",
     authentication: {
         basic: {
-            email: "",
-            apiToken: "",
+            email: "example@email.com",
+            apiToken: "yourapitoken",
         },
     },
 });
@@ -31,7 +31,7 @@ export const run = async () => {
   );
   console.log("Loaded agent.");
 
-  const input = `Create an issue in the YourScope project reminding that Miles is Terry Davis in the flesh.`;
+  const input = `Make a new issue in project PW to remind me to make more fried rice.`;
 
   console.log(`Executing with input "${input}"...`);
 

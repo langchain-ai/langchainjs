@@ -1,3 +1,4 @@
+import { Version3Client, Version3Models } from "jira.js";
 import { Tool } from "./base.js";
 
 /**
@@ -5,7 +6,6 @@ import { Tool } from "./base.js";
  * It extends the BaseToolConfig interface from the BaseTool class.
  */
 
-import { Version3Client, Version3Models } from "jira.js";
 import { Serializable } from "../load/serializable.js";
 
 export interface JiraAPIWrapperParams {
@@ -39,7 +39,7 @@ export type Project = {
 export type JiraFunction = {
   class: string;
   method: string;
-  args: Object;
+  args: object;
 };
 
 export class JiraAPIWrapper extends Serializable {
@@ -47,24 +47,16 @@ export class JiraAPIWrapper extends Serializable {
 
   lc_namespace = ["langchain", "tools", "jira"];
 
-  // get lc_secrets(): { [key: string]: string } | undefined {
-  //   return {
-  //     email: "JIRA_EMAIL",
-  //     apiToken: "JIRA_API_TOKEN",
-  //   };
-  // }
-
   constructor(jira: Version3Client) {
     super(jira);
     this.jira = jira;
   }
 
-  //TODO: takes in an issues object and returns a list of the issues issues
   protected _parse_issues(issues: Version3Models.SearchResults): Array<string> {
-    var parsed: Array<string> = [];
+    const parsed: Array<string> = [];
 
     issues.issues?.forEach((issue) => {
-      var rel_issues: Array<{
+      const rel_issues: Array<{
         rel_type: string | undefined;
         rel_key: string | undefined;
         rel_summary: string | undefined;
@@ -86,7 +78,7 @@ export class JiraAPIWrapper extends Serializable {
         }
       });
 
-      var stringifiedIssue = `{
+      const stringifiedIssue = `{
         key: ${issue.key},
         summary: ${issue.fields.summary},
         created: ${issue.fields.created},
@@ -105,10 +97,10 @@ export class JiraAPIWrapper extends Serializable {
   protected _parse_projects(
     projects: Array<Version3Models.Project>
   ): Array<string> {
-    var parsed: Array<string> = [];
+    const parsed: Array<string> = [];
 
     projects.forEach((project) => {
-      var stringifiedProject = `{
+      const stringifiedProject = `{
         id: ${project.id},
         key: ${project.key},
         name: ${project.name},
@@ -123,33 +115,33 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   async jqlQuery(query: string): Promise<string> {
-    var issues = await this.jira.issueSearch.searchForIssuesUsingJqlPost({
+    const issues = await this.jira.issueSearch.searchForIssuesUsingJqlPost({
       jql: query,
     });
-    var parsed_issues = this._parse_issues(issues);
-    var parsed_issues_str = `Found ${parsed_issues.length} issues:\n ${parsed_issues}`;
+    const parsed_issues = this._parse_issues(issues);
+    const parsed_issues_str = `Found ${parsed_issues.length} issues:\n ${parsed_issues}`;
 
     return parsed_issues_str;
   }
 
   async getProjects(): Promise<string> {
-    var projects = await this.jira.projects.searchProjects();
-    var parsed_projects = this._parse_projects(projects.values);
-    var parsed_projects_str = `Found ${parsed_projects.length} projects:\n ${parsed_projects}`;
+    const projects = await this.jira.projects.searchProjects();
+    const parsed_projects = this._parse_projects(projects.values);
+    const parsed_projects_str = `Found ${parsed_projects.length} projects:\n ${parsed_projects}`;
 
     return parsed_projects_str;
   }
 
   async createIssue(query: string): Promise<string> {
-    var params = JSON.parse(query);
+    const params = JSON.parse(query);
+
     return await this.jira.issues.createIssue({ fields: params });
   }
 
   async other(query: string): Promise<string> {
-    var params: JiraFunction = JSON.parse(query);
+    const params: JiraFunction = JSON.parse(query);
     params.class = params.class.toLowerCase();
-
-    // @ts-ignore
+    
     return await this.jira[params.class][params.method](params.args);
   }
 
@@ -183,8 +175,11 @@ export interface JiraActionConfig {
  */
 export class JiraAction extends Tool implements JiraActionConfig {
   name: string;
+
   description: string;
+  
   mode: string;
+
   apiWrapper: JiraAPIWrapper;
 
   constructor(config: JiraActionConfig) {
