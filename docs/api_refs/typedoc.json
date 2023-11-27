@@ -231,6 +231,7 @@
     "./langchain/src/retrievers/self_query/pinecone.ts",
     "./langchain/src/retrievers/self_query/supabase.ts",
     "./langchain/src/retrievers/self_query/weaviate.ts",
+    "./langchain/src/retrievers/self_query/vectara.ts",
     "./langchain/src/retrievers/vespa.ts",
     "./langchain/src/cache/index.ts",
     "./langchain/src/cache/cloudflare_kv.ts",
@@ -271,6 +272,7 @@
     "./langchain/src/util/time.ts",
     "./langchain/src/experimental/autogpt/index.ts",
     "./langchain/src/experimental/openai_assistant/index.ts",
+    "./langchain/src/experimental/openai_files/index.ts",
     "./langchain/src/experimental/babyagi/index.ts",
     "./langchain/src/experimental/generative_agents/index.ts",
     "./langchain/src/experimental/plan_and_execute/index.ts",
@@ -282,6 +284,7 @@
     "./langchain/src/experimental/hubs/makersuite/googlemakersuitehub.ts",
     "./langchain/src/experimental/chains/violation_of_expectations/index.ts",
     "./langchain/src/evaluation/index.ts",
+    "./langchain/src/runnables/index.ts",
     "./langchain/src/runnables/remote.ts"
   ]
 }

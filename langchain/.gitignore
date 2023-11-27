@@ -637,6 +637,9 @@ retrievers/self_query/supabase.d.ts
 retrievers/self_query/weaviate.cjs
 retrievers/self_query/weaviate.js
 retrievers/self_query/weaviate.d.ts
+retrievers/self_query/vectara.cjs
+retrievers/self_query/vectara.js
+retrievers/self_query/vectara.d.ts
 retrievers/vespa.cjs
 retrievers/vespa.js
 retrievers/vespa.d.ts
@@ -757,6 +760,9 @@ experimental/autogpt.d.ts
 experimental/openai_assistant.cjs
 experimental/openai_assistant.js
 experimental/openai_assistant.d.ts
+experimental/openai_files.cjs
+experimental/openai_files.js
+experimental/openai_files.d.ts
 experimental/babyagi.cjs
 experimental/babyagi.js
 experimental/babyagi.d.ts
@@ -790,6 +796,9 @@ experimental/chains/violation_of_expectations.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts
+runnables.cjs
+runnables.js
+runnables.d.ts
 runnables/remote.cjs
 runnables/remote.js
 runnables/remote.d.ts

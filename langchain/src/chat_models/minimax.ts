@@ -1,4 +1,4 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAIClient } from "@langchain/openai";
 
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {

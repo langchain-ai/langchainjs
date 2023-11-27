@@ -250,6 +250,7 @@ const entrypoints = {
   "retrievers/self_query/pinecone": "retrievers/self_query/pinecone",
   "retrievers/self_query/supabase": "retrievers/self_query/supabase",
   "retrievers/self_query/weaviate": "retrievers/self_query/weaviate",
+  "retrievers/self_query/vectara": "retrievers/self_query/vectara",
   "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
@@ -297,6 +298,7 @@ const entrypoints = {
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/openai_assistant": "experimental/openai_assistant/index",
+  "experimental/openai_files": "experimental/openai_files/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
@@ -315,6 +317,7 @@ const entrypoints = {
   // evaluation
   evaluation: "evaluation/index",
   // runnables
+  "runnables": "runnables/index",
   "runnables/remote": "runnables/remote",
 };
 
@@ -461,6 +464,7 @@ const requiresOptionalDependency = [
   "retrievers/self_query/pinecone",
   "retrievers/self_query/supabase",
   "retrievers/self_query/weaviate",
+  "retrievers/self_query/vectara",
   "output_parsers/expression",
   "chains/query_constructor",
   "chains/query_constructor/ir",
