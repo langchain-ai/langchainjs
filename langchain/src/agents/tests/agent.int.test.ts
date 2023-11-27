@@ -308,7 +308,7 @@ test("Run tool web-browser", async () => {
   ];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "chat-conversational-react-description",
+    agentType: "zero-shot-react-description",
     returnIntermediateSteps: true,
   });
   console.log("Loaded agent.");
