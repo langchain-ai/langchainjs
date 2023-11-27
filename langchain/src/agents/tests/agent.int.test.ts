@@ -372,7 +372,7 @@ test("Agent can stream", async () => {
       return item.intermediateSteps;
     }
     return [];
-  })
+  });
 
   expect(streamIters).toBeGreaterThan(1);
   const toolsUsed: Array<string> = intermediateSteps.map(
