@@ -1,9 +1,10 @@
 import { loadPyodide, type PyodideInterface } from "pyodide";
 import { Tool, ToolParams } from "../../tools/base.js";
 
-export type PythonInterpreterToolParams = Parameters<typeof loadPyodide>[0] & ToolParams & {
-  instance: PyodideInterface;
-}
+export type PythonInterpreterToolParams = Parameters<typeof loadPyodide>[0] &
+  ToolParams & {
+    instance: PyodideInterface;
+  };
 
 export class PythonInterpreterTool extends Tool {
   static lc_name() {
@@ -37,8 +38,8 @@ ${this.availableDefaultPackages}`;
     });
   }
 
-  addPackage(packageName: string) {
-    this.pyodideInstance.loadPackage(packageName);
+  async addPackage(packageName: string) {
+    await this.pyodideInstance.loadPackage(packageName);
     this.description += `, ${packageName}`;
   }
 

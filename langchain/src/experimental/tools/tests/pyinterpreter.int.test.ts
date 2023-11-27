@@ -5,7 +5,7 @@ import { PromptTemplate } from "../../../prompts/index.js";
 import { PythonInterpreterTool } from "../pyinterpreter.js";
 
 describe("Python Interpreter testsuite", () => {
-  test("fibonacci sequence", async () => {
+  test("hello langchain", async () => {
     const prompt = PromptTemplate.fromTemplate(
       `Can you generate python code that: {input}?`
     );
@@ -21,9 +21,9 @@ describe("Python Interpreter testsuite", () => {
       .pipe(interpreter);
 
     const result = await chain.invoke({
-      input: "print the first 10 numbers of the fibonacci sequence",
+      input: `prints "Hello LangChain"`,
     });
 
-    expect(JSON.parse(result).stdout).toContain("0112358132134");
+    expect(JSON.parse(result).stdout).toBe("Hello LangChain");
   });
 });
