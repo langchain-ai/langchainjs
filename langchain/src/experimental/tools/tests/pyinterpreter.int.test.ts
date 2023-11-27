@@ -7,7 +7,7 @@ import { PythonInterpreterTool } from "../pyinterpreter.js";
 describe("Python Interpreter testsuite", () => {
   test("hello langchain", async () => {
     const prompt = PromptTemplate.fromTemplate(
-      `Can you generate python code that: {input}?`
+      `Can you generate python code that: {input}? Do not generate anything else.`
     );
 
     const model = new OpenAI({});
