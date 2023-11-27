@@ -8,10 +8,20 @@ interface Neo4jGraphConfig {
 }
 
 interface StructuredSchema {
-  nodeProps: { [key: string]: any[] };
-  relProps: { [key: string]: any[] };
-  relationships: any[];
+  nodeProps: { [key: NodeType["labels"]]: NodeType["properties"] };
+  relProps: { [key: RelType["type"]]: RelType["properties"] };
+  relationships: PathType[];
 }
+
+type NodeType = {
+  labels: string;
+  properties: { property: string; type: string }[];
+};
+type RelType = {
+  type: string;
+  properties: { property: string; type: string }[];
+};
+type PathType = { start: string; type: string; end: string };
 
 /**
  * @security *Security note*: Make sure that the database connection uses credentials
@@ -33,7 +43,12 @@ export class Neo4jGraph {
   private database: string;
 
   private schema = "";
-  private structuredSchema = {};
+
+  private structuredSchema: StructuredSchema = {
+    nodeProps: {},
+    relProps: {},
+    relationships: [],
+  };
 
   constructor({
     url,
@@ -83,7 +98,7 @@ export class Neo4jGraph {
     return this.schema;
   }
 
-  getStructuredSchema(): StructuredSchema {
+  getStructuredSchema() {
     return this.structuredSchema;
   }
 
@@ -137,23 +152,27 @@ export class Neo4jGraph {
     `;
 
     // Assuming query method is defined and returns a Promise
-    const nodeProperties = (await this.query(nodePropertiesQuery))?.map(
-      (el) => el.output
-    );
-    const relationshipsProperties = (await this.query(relPropertiesQuery))?.map(
-      (el) => el.output
-    );
-    const relationships = (await this.query(relQuery))?.map((el) => el.output);
+    const nodeProperties: NodeType[] | undefined = (
+      await this.query(nodePropertiesQuery)
+    )?.map((el: { output: NodeType }) => el.output);
+
+    const relationshipsProperties: RelType[] | undefined = (
+      await this.query(relPropertiesQuery)
+    )?.map((el: { output: RelType }) => el.output);
+
+    const relationships: PathType[] | undefined = (
+      await this.query(relQuery)
+    )?.map((el: { output: PathType }) => el.output);
 
     // Structured schema similar to Python's dictionary comprehension
     this.structuredSchema = {
       nodeProps: Object.fromEntries(
-        nodeProperties?.map((el) => [el.labels, el.properties])
+        nodeProperties?.map((el) => [el.labels, el.properties]) || []
       ),
       relProps: Object.fromEntries(
-        relationshipsProperties?.map((el) => [el.type, el.properties])
+        relationshipsProperties?.map((el) => [el.type, el.properties]) || []
       ),
-      relationships,
+      relationships: relationships || [],
     };
 
     // Format node properties
