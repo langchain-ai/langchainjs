@@ -104,7 +104,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   }
 
   _llmType() {
-    return "WatsonxAI";
+    return "watsonx_ai";
   }
 
   /**
