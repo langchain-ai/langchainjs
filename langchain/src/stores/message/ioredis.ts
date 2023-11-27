@@ -21,6 +21,24 @@ export type RedisChatMessageHistoryInput = {
 /**
  * Class used to store chat message history in Redis. It provides methods
  * to add, retrieve, and clear messages from the chat history.
+ * @example
+ * ```typescript
+ * const chatHistory = new RedisChatMessageHistory({
+ *   sessionId: new Date().toISOString(),
+ *   sessionTTL: 300,
+ *   url: "redis:
+ * });
+ *
+ * const chain = new ConversationChain({
+ *   llm: new ChatOpenAI({ temperature: 0 }),
+ *   memory: { chatHistory },
+ * });
+ *
+ * const response = await chain.invoke({
+ *   input: "What did I just say my name was?",
+ * });
+ * console.log({ response });
+ * ```
  */
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "ioredis"];

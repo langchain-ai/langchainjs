@@ -32,8 +32,7 @@ export class HuggingFaceInferenceEmbeddings
   constructor(fields?: HuggingFaceInferenceEmbeddingsParams) {
     super(fields ?? {});
 
-    this.model =
-      fields?.model ?? "sentence-transformers/distilbert-base-nli-mean-tokens";
+    this.model = fields?.model ?? "BAAI/bge-base-en-v1.5";
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     this.endpointUrl = fields?.endpointUrl;

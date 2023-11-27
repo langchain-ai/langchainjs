@@ -39,6 +39,24 @@ interface selectStoredMessagesDTO {
 /**
  * Class for storing and retrieving chat message history from a
  * Cloudflare D1 database. Extends the BaseListChatMessageHistory class.
+ * @example
+ * ```typescript
+ * const memory = new BufferMemory({
+ *   returnMessages: true,
+ *   chatHistory: new CloudflareD1MessageHistory({
+ *     tableName: "stored_message",
+ *     sessionId: "example",
+ *     database: env.DB,
+ *   }),
+ * });
+ *
+ * const chainInput = { input };
+ *
+ * const res = await memory.chatHistory.invoke(chainInput);
+ * await memory.saveContext(chainInput, {
+ *   output: res,
+ * });
+ * ```
  */
 export class CloudflareD1MessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "cloudflare_d1"];

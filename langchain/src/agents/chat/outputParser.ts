@@ -8,6 +8,38 @@ export const FINAL_ANSWER_ACTION = "Final Answer:";
  * A class that extends the AgentActionOutputParser to parse the output of
  * the ChatAgent in LangChain. It checks if the output text contains the
  * final answer action or a JSON response, and parses it accordingly.
+ * @example
+ * ```typescript
+ * const prompt = ChatPromptTemplate.fromMessages([
+ *   [
+ *     "ai",
+ *     `{PREFIX}
+ * {FORMAT_INSTRUCTIONS}
+ * {SUFFIX}`,
+ *   ],
+ *   ["human", "Question: {input}"],
+ * ]);
+ * const runnableAgent = RunnableSequence.from([
+ *   {
+ *     input: (i: { input: string; steps: AgentStep[] }) => i.input,
+ *     agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
+ *       formatLogToString(i.steps),
+ *   },
+ *   prompt,
+ *   new OpenAI({ temperature: 0 }),
+ *   new ChatAgentOutputParser(),
+ * ]);
+ *
+ * const executor = AgentExecutor.fromAgentAndTools({
+ *   agent: runnableAgent,
+ *   tools: [new SerpAPI(), new Calculator()],
+ * });
+ *
+ * const result = await executor.invoke({
+ *   input:
+ *     "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
+ * });
+ * ```
  */
 export class ChatAgentOutputParser extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "chat"];

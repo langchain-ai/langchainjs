@@ -22,6 +22,21 @@ export interface ChatCloudflareWorkersAICallOptions
  * A class that enables calls to the Cloudflare Workers AI API to access large language
  * models in a chat-like fashion. It extends the SimpleChatModel class and
  * implements the CloudflareWorkersAIInput interface.
+ * @example
+ * ```typescript
+ * const model = new ChatCloudflareWorkersAI({
+ *   model: "@cf/meta/llama-2-7b-chat-int8",
+ *   cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID,
+ *   cloudflareApiToken: process.env.CLOUDFLARE_API_TOKEN
+ * });
+ *
+ * const response = await model.invoke([
+ *   ["system", "You are a helpful assistant that translates English to German."],
+ *   ["human", `Translate "I love programming".`]
+ * ]);
+ *
+ * console.log(response);
+ * ```
  */
 export class ChatCloudflareWorkersAI
   extends SimpleChatModel
@@ -60,6 +75,12 @@ export class ChatCloudflareWorkersAI
     if (this.baseUrl.endsWith("/")) {
       this.baseUrl = this.baseUrl.slice(0, -1);
     }
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      cloudflareApiToken: "CLOUDFLARE_API_TOKEN",
+    };
   }
 
   _llmType() {

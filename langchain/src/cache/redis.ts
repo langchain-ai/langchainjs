@@ -19,6 +19,16 @@ type RedisClientType =
  * Represents a specific implementation of a caching mechanism using Redis
  * as the underlying storage system. It extends the `BaseCache` class and
  * overrides its methods to provide the Redis-specific logic.
+ * @example
+ * ```typescript
+ * const model = new ChatOpenAI({
+ * cache: new RedisCache(new Redis(), { ttl: 60 }),
+ * });
+ *
+ * // Invoke the model to perform an action
+ * const response = await model.invoke("Do something random!");
+ * console.log(response);
+ * ```
  */
 export class RedisCache extends BaseCache {
   private redisClient: RedisClientType;

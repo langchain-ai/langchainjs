@@ -255,6 +255,27 @@ export class GithubRepoLoader
   }
 
   /**
+   * Asynchronously streams documents from the entire GitHub repository.
+   * It is suitable for situations where processing large repositories in a memory-efficient manner is required.
+   * @yields Yields a Promise that resolves to a Document object for each file or submodule content found in the repository.
+   */
+  public async *loadAsStream(): AsyncGenerator<Document, void, undefined> {
+    this.log(
+      `Loading documents from ${this.baseUrl}/${this.owner}/${this.repo}/${this.initialPath}...`
+    );
+    yield* await this.processRepoAsStream(this.initialPath);
+
+    if (!this.processSubmodules) {
+      return;
+    }
+
+    await this.getSubmoduleInfo();
+    for (const submoduleInfo of this.submoduleInfos) {
+      yield* await this.loadSubmoduleAsStream(submoduleInfo);
+    }
+  }
+
+  /**
    * Loads the information about Git submodules from the repository, if available.
    */
   private async getSubmoduleInfo(): Promise<void> {
@@ -377,6 +398,47 @@ export class GithubRepoLoader
   }
 
   /**
+   * Asynchronously processes and streams the contents of a specified submodule in the GitHub repository.
+   * @param submoduleInfo the info about the submodule to be loaded
+   * @yields Yields a Promise that resolves to a Document object for each file found in the submodule.
+   */
+  private async *loadSubmoduleAsStream(
+    submoduleInfo: SubmoduleInfo
+  ): AsyncGenerator<Document, void, undefined> {
+    if (!submoduleInfo.url.startsWith(this.baseUrl)) {
+      this.log(`Ignoring external submodule ${submoduleInfo.url}.`);
+      yield* [];
+    }
+
+    if (!submoduleInfo.path.startsWith(this.initialPath)) {
+      this.log(
+        `Ignoring submodule ${submoduleInfo.url}, as it is not on initial path.`
+      );
+      yield* [];
+    }
+
+    this.log(
+      `Accessing submodule ${submoduleInfo.name} (${submoduleInfo.url})...`
+    );
+    const submoduleLoader = new GithubRepoLoader(submoduleInfo.url, {
+      accessToken: this.accessToken,
+      baseUrl: this.baseUrl,
+      apiUrl: this.apiUrl,
+      branch: submoduleInfo.ref,
+      recursive: this.recursive,
+      processSubmodules: this.processSubmodules,
+      unknown: this.unknown,
+      ignoreFiles: this.ignoreFiles,
+      ignorePaths: this.ignorePaths,
+      verbose: this.verbose,
+      maxConcurrency: this.maxConcurrency,
+      maxRetries: this.maxRetries,
+    });
+
+    yield* await submoduleLoader.processRepoAsStream(submoduleInfo.path);
+  }
+
+  /**
    * Determines whether a file or directory should be ignored based on its
    * path and type.
    * @param path The path of the file or directory.
@@ -486,6 +548,40 @@ export class GithubRepoLoader
   }
 
   /**
+   * Asynchronously processes the contents of the entire GitHub repository,
+   * streaming each file as a Document object.
+   * @param path The path of the directory to process.
+   * @yields Yields a Promise that resolves to a Document object for each file found in the repository.
+   */
+  private async *processRepoAsStream(
+    path: string
+  ): AsyncGenerator<Document, void, undefined> {
+    const files = await this.fetchRepoFiles(path);
+    for (const file of files) {
+      if (this.shouldIgnore(file.path, file.type)) {
+        continue;
+      }
+
+      if (file.type === "file") {
+        try {
+          const fileResponse = await this.fetchFileContentWrapper(file);
+
+          yield new Document({
+            pageContent: fileResponse.contents,
+            metadata: fileResponse.metadata,
+          });
+        } catch (error) {
+          this.handleError(
+            `Failed to fetch file content: ${file.path}, ${error}`
+          );
+        }
+      } else if (this.recursive) {
+        yield* await this.processDirectoryAsStream(file.path);
+      }
+    }
+  }
+
+  /**
    * Fetches the contents of a directory and maps the file / directory paths
    * to promises that will fetch the file / directory contents.
    * @param path The path of the directory to process.
@@ -500,6 +596,39 @@ export class GithubRepoLoader
     } catch (error) {
       this.handleError(`Failed to process directory: ${path}, ${error}`);
       return Promise.reject(error);
+    }
+  }
+
+  /**
+   * Asynchronously processes the contents of a given directory in the GitHub repository,
+   * streaming each file as a Document object.
+   * @param path The path of the directory to process.
+   * @yields Yields a Promise that resolves to a Document object for each file in the directory.
+   */
+  private async *processDirectoryAsStream(
+    path: string
+  ): AsyncGenerator<Document, void, undefined> {
+    const files = await this.fetchRepoFiles(path);
+
+    for (const file of files) {
+      if (this.shouldIgnore(file.path, file.type)) {
+        continue;
+      }
+
+      if (file.type === "file") {
+        try {
+          const fileResponse = await this.fetchFileContentWrapper(file);
+
+          yield new Document({
+            pageContent: fileResponse.contents,
+            metadata: fileResponse.metadata,
+          });
+        } catch {
+          this.handleError(`Failed to fetch file content: ${file.path}`);
+        }
+      } else if (this.recursive) {
+        yield* await this.processDirectoryAsStream(file.path);
+      }
     }
   }
 

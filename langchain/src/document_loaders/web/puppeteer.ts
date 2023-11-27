@@ -37,6 +37,18 @@ export type PuppeteerWebBaseLoaderOptions = {
  * Class that extends the BaseDocumentLoader class and implements the
  * DocumentLoader interface. It represents a document loader for scraping
  * web pages using Puppeteer.
+ * @example
+ * ```typescript
+ * const loader = new PuppeteerWebBaseLoader("https:exampleurl.com", {
+ *   launchOptions: {
+ *     headless: true,
+ *   },
+ *   gotoOptions: {
+ *     waitUntil: "domcontentloaded",
+ *   },
+ * });
+ * const screenshot = await loader.screenshot();
+ * ```
  */
 export class PuppeteerWebBaseLoader
   extends BaseDocumentLoader
@@ -96,6 +108,50 @@ export class PuppeteerWebBaseLoader
 
     const metadata = { source: this.webPath };
     return [new Document({ pageContent: text, metadata })];
+  }
+
+  /**
+   * Static class method used to screenshot a web page and return
+   * it as a {@link Document} object where  the pageContent property
+   * is the screenshot encoded in base64.
+   *
+   * @param {string} url
+   * @param {PuppeteerWebBaseLoaderOptions} options
+   * @returns {Document} A document object containing the screenshot of the page encoded in base64.
+   */
+  static async _screenshot(
+    url: string,
+    options?: PuppeteerWebBaseLoaderOptions
+  ): Promise<Document> {
+    const { launch } = await PuppeteerWebBaseLoader.imports();
+
+    const browser = await launch({
+      headless: true,
+      defaultViewport: null,
+      ignoreDefaultArgs: ["--disable-extensions"],
+      ...options?.launchOptions,
+    });
+    const page = await browser.newPage();
+
+    await page.goto(url, {
+      timeout: 180000,
+      waitUntil: "domcontentloaded",
+      ...options?.gotoOptions,
+    });
+    const screenshot = await page.screenshot();
+    const base64 = screenshot.toString("base64");
+    const metadata = { source: url };
+    return new Document({ pageContent: base64, metadata });
+  }
+
+  /**
+   * Screenshot a web page and return it as a {@link Document} object where
+   * the pageContent property is the screenshot encoded in base64.
+   *
+   * @returns {Promise<Document>} A document object containing the screenshot of the page encoded in base64.
+   */
+  async screenshot(): Promise<Document> {
+    return PuppeteerWebBaseLoader._screenshot(this.webPath, this.options);
   }
 
   /**

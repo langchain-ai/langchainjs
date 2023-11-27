@@ -1,6 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 import { load } from "../index.js";
 import { OpenAI } from "../../llms/openai.js";
@@ -213,6 +214,48 @@ test("serialize + deserialize llm chain string prompt", async () => {
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
 
+test("serialize + deserialize with new and old ids", async () => {
+  const prompt = PromptTemplate.fromTemplate("Hello, {name}!");
+  const strWithNewId = JSON.stringify(prompt, null, 2);
+  expect(stringify(JSON.parse(strWithNewId))).toMatchSnapshot();
+  expect(JSON.parse(strWithNewId).id).toEqual([
+    "langchain_core",
+    "prompts",
+    "prompt",
+    "PromptTemplate",
+  ]);
+  const strWithOldId = JSON.stringify({
+    ...JSON.parse(strWithNewId),
+    id: ["langchain", "prompts", "prompt", "PromptTemplate"],
+  });
+  const prompt2 = await load<PromptTemplate>(strWithOldId);
+  expect(prompt2).toBeInstanceOf(PromptTemplate);
+  const prompt3 = await load<PromptTemplate>(strWithNewId);
+  expect(prompt3).toBeInstanceOf(PromptTemplate);
+});
+
+test("serialize + deserialize runnable sequence with new and old ids", async () => {
+  const runnable = RunnableSequence.from([
+    ChatPromptTemplate.fromTemplate("hi there"),
+    new ChatOpenAI(),
+  ]);
+  const strWithNewId = JSON.stringify(runnable, null, 2);
+  expect(stringify(JSON.parse(strWithNewId))).toMatchSnapshot();
+  expect(JSON.parse(strWithNewId).id).toEqual([
+    "langchain_core",
+    "runnables",
+    "RunnableSequence",
+  ]);
+  const strWithOldId = JSON.stringify({
+    ...JSON.parse(strWithNewId),
+    id: ["langchain", "schema", "runnable", "RunnableSequence"],
+  });
+  const runnable2 = await load<RunnableSequence>(strWithOldId);
+  expect(runnable2).toBeInstanceOf(RunnableSequence);
+  const runnable3 = await load<RunnableSequence>(strWithNewId);
+  expect(runnable3).toBeInstanceOf(RunnableSequence);
+});
+
 test("serialize + deserialize llm chain chat prompt", async () => {
   // eslint-disable-next-line no-process-env
   process.env.OPENAI_API_KEY = undefined;
@@ -267,7 +310,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
       OPENAI_API_KEY: "openai-key",
     })
   ).rejects.toThrowError(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain_core","prompts","few_shot","FewShotPromptTemplate"]}'
   );
 });
 
@@ -296,7 +339,7 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
       OPENAI_API_KEY: "openai-key",
     })
   ).rejects.toThrow(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain_core","prompts","few_shot","FewShotPromptTemplate"]}'
   );
 });
 

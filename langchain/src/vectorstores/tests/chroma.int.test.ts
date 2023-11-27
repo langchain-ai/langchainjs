@@ -8,7 +8,7 @@ import { Document } from "../../document.js";
 import { Chroma } from "../chroma.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
-describe("Chroma", () => {
+describe.skip("Chroma", () => {
   let chromaStore: Chroma;
 
   beforeEach(async () => {

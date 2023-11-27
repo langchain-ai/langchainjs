@@ -46,6 +46,20 @@ interface TokenUsage {
  * https://platform.openai.com/docs/api-reference/completions/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
+ * @example
+ * ```typescript
+ * const model = new OpenAI({
+ *   modelName: "gpt-4",
+ *   temperature: 0.7,
+ *   maxTokens: 1000,
+ *   maxRetries: 5,
+ * });
+ *
+ * const res = await model.call(
+ *   "Question: What would be a good company name for a company that makes colorful socks?\nAnswer:"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   extends BaseLLM<CallOptions>
@@ -96,7 +110,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   logitBias?: Record<string, number>;
 
-  modelName = "text-davinci-003";
+  modelName = "gpt-3.5-turbo-instruct";
 
   modelKwargs?: OpenAIInput["modelKwargs"];
 
