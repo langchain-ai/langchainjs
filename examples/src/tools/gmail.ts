@@ -1,6 +1,12 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { OpenAI } from "langchain/llms/openai";
-import { GmailCreateDraft, GmailViewDraft } from "langchain/tools/gmail";
+import {
+  GmailCreateDraft,
+  GmailGetMessage,
+  GmailGetThread,
+  GmailSearch,
+  GmailSendMessage,
+} from "langchain/tools/gmail";
 
 export async function run() {
   const model = new OpenAI({
@@ -18,7 +24,13 @@ export async function run() {
   //   };
 
   // For custom parameters, uncomment the code above, replace the values with your own, and pass it to the tools below
-  const tools = [new GmailCreateDraft(), new GmailViewDraft()];
+  const tools = [
+    new GmailCreateDraft(),
+    new GmailGetMessage(),
+    new GmailGetThread(),
+    new GmailSearch(),
+    new GmailSendMessage(),
+  ];
 
   const gmailAgent = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
