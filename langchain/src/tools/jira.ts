@@ -137,7 +137,7 @@ export class JiraAPIWrapper extends Serializable {
 
   async createIssue(query: string): Promise<string> {
     var params = JSON.parse(query);
-    return this.jira.issues.createIssue({ fields: params });
+    return await this.jira.issues.createIssue({ fields: params });
   }
 
   async other(query: string): Promise<string> {
@@ -147,7 +147,7 @@ export class JiraAPIWrapper extends Serializable {
     var jira_function = jira_class[params.method as keyof typeof jira_class];
 
     // @ts-ignore
-    return jira_function(params.args);
+    return await jira_function(params.args);
   }
 
   async run(mode: string, query: string) {
