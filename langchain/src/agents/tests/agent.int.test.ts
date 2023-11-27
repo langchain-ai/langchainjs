@@ -380,7 +380,7 @@ test("Agent can stream", async () => {
   expect(toolsUsed?.[toolsUsed.length - 1]).toEqual("web-browser");
 });
 
-test.only("Agent can stream with chat messages", async () => {
+test("Agent can stream with chat messages", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-4-1106-preview",
