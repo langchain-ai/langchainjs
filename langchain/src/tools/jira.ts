@@ -60,8 +60,8 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   //TODO: takes in an issues object and returns a list of the issues issues
-  protected _parse_issues(issues: Version3Models.SearchResults): Array<Issue> {
-    var parsed: Array<Issue> = [];
+  protected _parse_issues(issues: Version3Models.SearchResults): Array<string> {
+    var parsed: Array<string> = [];
 
     issues.issues?.forEach((issue) => {
       var rel_issues: Array<{
@@ -86,32 +86,37 @@ export class JiraAPIWrapper extends Serializable {
         }
       });
 
-      parsed.push({
-        key: issue.key,
-        summary: issue.fields.summary,
-        created: issue.fields.created,
-        assignee: issue.fields.assignee.displayName,
-        priority: issue.fields.priority.name,
-        status: issue.fields.status.name,
-        related_issues: rel_issues,
-      });
+      var stringifiedIssue = `{
+        key: ${issue.key},
+        summary: ${issue.fields.summary},
+        created: ${issue.fields.created},
+        assignee: ${issue.fields.assignee.displayName},
+        priority: ${issue.fields.priority.name},
+        status: ${issue.fields.status.name},
+        related_issues: ${rel_issues},
+      }`;
+
+      parsed.push(stringifiedIssue);
     });
+
     return parsed;
   }
 
   protected _parse_projects(
     projects: Array<Version3Models.Project>
-  ): Array<Project> {
-    var parsed: Array<Project> = [];
+  ): Array<string> {
+    var parsed: Array<string> = [];
 
     projects.forEach((project) => {
-      parsed.push({
-        id: project.id,
-        key: project.key,
-        name: project.name,
-        type: project.projectTypeKey,
-        style: project.style,
-      });
+      var stringifiedProject = `{
+        id: ${project.id},
+        key: ${project.key},
+        name: ${project.name},
+        type: ${project.projectTypeKey},
+        style: ${project.style},
+      }
+      `;
+      parsed.push(stringifiedProject);
     });
 
     return parsed;
