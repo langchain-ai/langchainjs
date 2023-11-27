@@ -397,9 +397,9 @@ test("Agent can stream with chat messages", async () => {
   ];
   const memory = new BufferMemory({
     chatHistory: new ChatMessageHistory([]),
-    memoryKey: 'chat_history', // this is the key expected by https://github.com/langchain-ai/langchainjs/blob/a13a8969345b0f149c1ca4a120d63508b06c52a5/langchain/src/agents/initialize.ts#L166
-    inputKey: 'input',
-    outputKey: 'output',
+    memoryKey: "chat_history", // this is the key expected by https://github.com/langchain-ai/langchainjs/blob/a13a8969345b0f149c1ca4a120d63508b06c52a5/langchain/src/agents/initialize.ts#L166
+    inputKey: "input",
+    outputKey: "output",
     returnMessages: true,
   });
 
