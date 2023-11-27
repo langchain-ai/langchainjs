@@ -13,6 +13,8 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 import { AIMessage, AgentStep } from "../../schema/index.js";
+import { BufferMemory } from "../../memory/buffer_memory.js";
+import { ChatMessageHistory } from "../../memory/index.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -393,10 +395,18 @@ test.only("Agent can stream with chat messages", async () => {
     new Calculator(),
     new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
   ];
+  const memory = new BufferMemory({
+    chatHistory: new ChatMessageHistory([]),
+    memoryKey: 'chat_history', // this is the key expected by https://github.com/langchain-ai/langchainjs/blob/a13a8969345b0f149c1ca4a120d63508b06c52a5/langchain/src/agents/initialize.ts#L166
+    inputKey: 'input',
+    outputKey: 'output',
+    returnMessages: true,
+  });
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "chat-conversational-react-description",
     returnIntermediateSteps: true,
+    memory,
   });
   console.log("Loaded agent.");
 
