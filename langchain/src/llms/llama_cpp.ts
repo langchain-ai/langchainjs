@@ -72,8 +72,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     prompt: string,
-    // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
-    options?: this["ParsedCallOptions"]
+    _options?: this["ParsedCallOptions"]
   ): Promise<string> {
     try {
       const promptOptions = {
@@ -92,8 +91,7 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   async *_streamResponseChunks(
     prompt: string,
-    // @ts-expect-error - TS6133: 'options' is declared but its value is never read.
-    options: this["ParsedCallOptions"],
+    _options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const promptOptions = {
