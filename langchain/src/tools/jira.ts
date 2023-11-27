@@ -143,11 +143,9 @@ export class JiraAPIWrapper extends Serializable {
   async other(query: string): Promise<string> {
     var params: JiraFunction = JSON.parse(query);
     params.class = params.class.toLowerCase();
-    var jira_class = this.jira[params.class as keyof Version3Client];
-    var jira_function = jira_class[params.method as keyof typeof jira_class];
 
     // @ts-ignore
-    return await jira_function(params.args);
+    return await this.jira[params.class][params.method](params.args);
   }
 
   async run(mode: string, query: string) {
