@@ -15,7 +15,6 @@ export async function run() {
   //       privateKey: process.env.GMAIL_PRIVATE_KEY,
   //     },
   //     scopes: ["https://mail.google.com/"],
-  //     model,
   //   };
 
   // For custom parameters, uncomment the code above, replace the values with your own, and pass it to the tools below
