@@ -14342,15 +14342,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chainsaw@npm:>=0.0.7 <0.1":
-  version: 0.0.9
-  resolution: "chainsaw@npm:0.0.9"
-  dependencies:
-    traverse: ">=0.3.0 <0.4"
-  checksum: 88d19956954f428e6a11d803c6bf608520c3f25974c400165ed6af9628015ef30c333658268dbcf42f2b4ce2cd263fe85b28adafc8a446d8e53ac4c3e25b5219
-  languageName: node
-  linkType: hard
-
 "chalk@npm:5.2.0, chalk@npm:^5.0.0, chalk@npm:^5.0.1, chalk@npm:^5.2.0":
   version: 5.2.0
   resolution: "chalk@npm:5.2.0"
@@ -19772,15 +19763,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hashish@npm:>=0.0.2 <0.1":
-  version: 0.0.4
-  resolution: "hashish@npm:0.0.4"
-  dependencies:
-    traverse: ">=0.2.4"
-  checksum: 8571cee91809661957dba8ae2ca605b1ab1e432b2781e6fc161ffb0caa55658075aecc14a518efe42a5597168dfab37cbdc2483d323851785f234b24b39455da
-  languageName: node
-  linkType: hard
-
 "hasown@npm:^2.0.0":
   version: 2.0.0
   resolution: "hasown@npm:2.0.0"
@@ -22546,7 +22528,6 @@ __metadata:
     puppeteer: ^19.7.2
     redis: ^4.6.6
     release-it: ^15.10.1
-    remove: ^0.1.5
     replicate: ^0.18.0
     rimraf: ^5.0.1
     rollup: ^3.19.1
@@ -27888,15 +27869,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remove@npm:^0.1.5":
-  version: 0.1.5
-  resolution: "remove@npm:0.1.5"
-  dependencies:
-    seq: ">= 0.3.5"
-  checksum: 5ee886cb3509e09e706789bc4a9014c1d20b0ee6d004db581b382f3a256a45888526e23b36ce441fbd96ba3ecc453a18785d1e0d4d10dddb8e2e118961f93d9f
-  languageName: node
-  linkType: hard
-
 "renderkid@npm:^3.0.0":
   version: 3.0.0
   resolution: "renderkid@npm:3.0.0"
@@ -28602,16 +28574,6 @@ __metadata:
   version: 0.0.5
   resolution: "seq-queue@npm:0.0.5"
   checksum: f8695a6cb613e1b378b9686cde4ea626944091a412fc1c9d24c5039283d4351dd115f4505e4cf103d3a2e4a9a6a72fc7698fdce703839fb1fec9627aa4ce5563
-  languageName: node
-  linkType: hard
-
-"seq@npm:>= 0.3.5":
-  version: 0.3.5
-  resolution: "seq@npm:0.3.5"
-  dependencies:
-    chainsaw: ">=0.0.7 <0.1"
-    hashish: ">=0.0.2 <0.1"
-  checksum: 5b35acaadbb39ba26879a4395fe931b76addd90fd8bbca0efed3a96c26ecd003be9bc65d7fbf42b98eeb604f216f2ed22f22b01555aa04208f832d5c9b15403b
   languageName: node
   linkType: hard
 
@@ -30082,20 +30044,6 @@ __metadata:
   version: 0.0.3
   resolution: "tr46@npm:0.0.3"
   checksum: 726321c5eaf41b5002e17ffbd1fb7245999a073e8979085dacd47c4b4e8068ff5777142fc6726d6ca1fd2ff16921b48788b87225cbc57c72636f6efa8efbffe3
-  languageName: node
-  linkType: hard
-
-"traverse@npm:>=0.2.4":
-  version: 0.6.7
-  resolution: "traverse@npm:0.6.7"
-  checksum: 21018085ab72f717991597e12e2b52446962ed59df591502e4d7e1a709bc0a989f7c3d451aa7d882666ad0634f1546d696c5edecda1f2fc228777df7bb529a1e
-  languageName: node
-  linkType: hard
-
-"traverse@npm:>=0.3.0 <0.4":
-  version: 0.3.9
-  resolution: "traverse@npm:0.3.9"
-  checksum: 982982e4e249e9bbf063732a41fe5595939892758524bbef5d547c67cdf371b13af72b5434c6a61d88d4bb4351d6dabc6e22d832e0d16bc1bc684ef97a1cc59e
   languageName: node
   linkType: hard
 
