@@ -31,6 +31,12 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader for loading
  * web-based documents using Cheerio.
+ * @example
+ * ```typescript
+ * const loader = new CheerioWebBaseLoader("https:exampleurl.com");
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class CheerioWebBaseLoader
   extends BaseDocumentLoader

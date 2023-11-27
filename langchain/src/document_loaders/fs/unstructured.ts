@@ -298,6 +298,13 @@ export class UnstructuredLoader extends BaseDocumentLoader {
  * using the UnstructuredLoader. It creates a UnstructuredLoader instance
  * for each supported file type and passes it to the DirectoryLoader
  * constructor.
+ * @example
+ * ```typescript
+ * const loader = new UnstructuredDirectoryLoader("path/to/directory", {
+ *   apiKey: "MY_API_KEY",
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(

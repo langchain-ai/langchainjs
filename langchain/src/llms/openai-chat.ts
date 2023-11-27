@@ -45,6 +45,23 @@ export interface OpenAIChatCallOptions extends OpenAICallOptions {
  * @augments BaseLLM
  * @augments OpenAIInput
  * @augments AzureOpenAIChatInput
+ * @example
+ * ```typescript
+ * const model = new OpenAIChat({
+ *   prefixMessages: [
+ *     {
+ *       role: "system",
+ *       content: "You are a helpful assistant that answers in pirate language",
+ *     },
+ *   ],
+ *   maxTokens: 50,
+ * });
+ *
+ * const res = await model.call(
+ *   "What would be a good company name for a company that makes colorful socks?"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class OpenAIChat
   extends LLM<OpenAIChatCallOptions>

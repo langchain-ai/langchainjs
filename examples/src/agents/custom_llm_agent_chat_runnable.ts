@@ -105,6 +105,15 @@ async function formatMessages(
 /** Define the custom output parser */
 function customOutputParser(message: BaseMessage): AgentAction | AgentFinish {
   const text = message.content;
+  if (typeof text !== "string") {
+    throw new Error(
+      `Message content is not a string. Received: ${JSON.stringify(
+        text,
+        null,
+        2
+      )}`
+    );
+  }
   /** If the input includes "Final Answer" return as an instance of `AgentFinish` */
   if (text.includes("Final Answer:")) {
     const parts = text.split("Final Answer:");
@@ -146,7 +155,7 @@ const input = `Who is Olivia Wilde's boyfriend? What is his current age raised t
 
 console.log(`Executing with input "${input}"...`);
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 console.log(`Got output ${result.output}`);
 /**

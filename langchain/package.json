@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.186",
+  "version": "0.0.197",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -316,6 +316,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/rockset.cjs",
+    "vectorstores/rockset.js",
+    "vectorstores/rockset.d.ts",
     "vectorstores/typesense.cjs",
     "vectorstores/typesense.js",
     "vectorstores/typesense.d.ts",
@@ -643,6 +646,9 @@
     "retrievers/self_query/weaviate.cjs",
     "retrievers/self_query/weaviate.js",
     "retrievers/self_query/weaviate.d.ts",
+    "retrievers/self_query/vectara.cjs",
+    "retrievers/self_query/vectara.js",
+    "retrievers/self_query/vectara.d.ts",
     "retrievers/vespa.cjs",
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
@@ -661,6 +667,9 @@
     "cache/ioredis.cjs",
     "cache/ioredis.js",
     "cache/ioredis.d.ts",
+    "cache/file_system.cjs",
+    "cache/file_system.js",
+    "cache/file_system.d.ts",
     "cache/upstash_redis.cjs",
     "cache/upstash_redis.js",
     "cache/upstash_redis.d.ts",
@@ -760,6 +769,9 @@
     "experimental/openai_assistant.cjs",
     "experimental/openai_assistant.js",
     "experimental/openai_assistant.d.ts",
+    "experimental/openai_files.cjs",
+    "experimental/openai_files.js",
+    "experimental/openai_files.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
@@ -778,6 +790,9 @@
     "experimental/chat_models/bittensor.cjs",
     "experimental/chat_models/bittensor.js",
     "experimental/chat_models/bittensor.d.ts",
+    "experimental/chat_models/ollama_functions.cjs",
+    "experimental/chat_models/ollama_functions.js",
+    "experimental/chat_models/ollama_functions.d.ts",
     "experimental/llms/bittensor.cjs",
     "experimental/llms/bittensor.js",
     "experimental/llms/bittensor.d.ts",
@@ -793,6 +808,9 @@
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "runnables.cjs",
+    "runnables.js",
+    "runnables.d.ts",
     "runnables/remote.cjs",
     "runnables/remote.js",
     "runnables/remote.d.ts",
@@ -809,7 +827,7 @@
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
-    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js && node scripts/generate-docs-llm-compatibility-table",
+    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
     "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "lint-staged",
@@ -844,8 +862,8 @@
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.47.1",
-    "@gomomento/sdk-core": "^1.47.1",
+    "@gomomento/sdk": "^1.51.1",
+    "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^2.6.4",
@@ -857,6 +875,7 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -981,9 +1000,9 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.47.1",
-    "@gomomento/sdk-core": "^1.47.1",
-    "@gomomento/sdk-web": "^1.47.1",
+    "@gomomento/sdk": "^1.51.1",
+    "@gomomento/sdk-core": "^1.51.1",
+    "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^2.6.4",
@@ -994,6 +1013,7 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -1148,6 +1168,9 @@
       "optional": true
     },
     "@raycast/api": {
+      "optional": true
+    },
+    "@rockset/client": {
       "optional": true
     },
     "@smithy/eventstream-codec": {
@@ -1362,11 +1385,9 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.6.2",
-    "ansi-styles": "^5.0.0",
+    "@anthropic-ai/sdk": "^0.9.1",
+    "@langchain/core": "^0.0.1",
     "binary-extensions": "^2.2.0",
-    "camelcase": "6",
-    "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.7",
@@ -1375,14 +1396,13 @@
     "langchainhub": "~0.0.6",
     "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
-    "openai": "^4.17.0",
+    "openai": "^4.19.0",
     "openapi-types": "^12.1.3",
-    "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
     "zod": "^3.22.3",
-    "zod-to-json-schema": "^3.20.4"
+    "zod-to-json-schema": "3.20.3"
   },
   "publishConfig": {
     "access": "public"
@@ -1911,6 +1931,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/rockset": {
+      "types": "./vectorstores/rockset.d.ts",
+      "import": "./vectorstores/rockset.js",
+      "require": "./vectorstores/rockset.cjs"
     },
     "./vectorstores/typesense": {
       "types": "./vectorstores/typesense.d.ts",
@@ -2457,6 +2482,11 @@
       "import": "./retrievers/self_query/weaviate.js",
       "require": "./retrievers/self_query/weaviate.cjs"
     },
+    "./retrievers/self_query/vectara": {
+      "types": "./retrievers/self_query/vectara.d.ts",
+      "import": "./retrievers/self_query/vectara.js",
+      "require": "./retrievers/self_query/vectara.cjs"
+    },
     "./retrievers/vespa": {
       "types": "./retrievers/vespa.d.ts",
       "import": "./retrievers/vespa.js",
@@ -2486,6 +2516,11 @@
       "types": "./cache/ioredis.d.ts",
       "import": "./cache/ioredis.js",
       "require": "./cache/ioredis.cjs"
+    },
+    "./cache/file_system": {
+      "types": "./cache/file_system.d.ts",
+      "import": "./cache/file_system.js",
+      "require": "./cache/file_system.cjs"
     },
     "./cache/upstash_redis": {
       "types": "./cache/upstash_redis.d.ts",
@@ -2652,6 +2687,11 @@
       "import": "./experimental/openai_assistant.js",
       "require": "./experimental/openai_assistant.cjs"
     },
+    "./experimental/openai_files": {
+      "types": "./experimental/openai_files.d.ts",
+      "import": "./experimental/openai_files.js",
+      "require": "./experimental/openai_files.cjs"
+    },
     "./experimental/babyagi": {
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
@@ -2682,6 +2722,11 @@
       "import": "./experimental/chat_models/bittensor.js",
       "require": "./experimental/chat_models/bittensor.cjs"
     },
+    "./experimental/chat_models/ollama_functions": {
+      "types": "./experimental/chat_models/ollama_functions.d.ts",
+      "import": "./experimental/chat_models/ollama_functions.js",
+      "require": "./experimental/chat_models/ollama_functions.cjs"
+    },
     "./experimental/llms/bittensor": {
       "types": "./experimental/llms/bittensor.d.ts",
       "import": "./experimental/llms/bittensor.js",
@@ -2706,6 +2751,11 @@
       "types": "./evaluation.d.ts",
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
+    },
+    "./runnables": {
+      "types": "./runnables.d.ts",
+      "import": "./runnables.js",
+      "require": "./runnables.cjs"
     },
     "./runnables/remote": {
       "types": "./runnables/remote.d.ts",

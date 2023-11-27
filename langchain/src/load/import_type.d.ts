@@ -193,6 +193,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/rockset"?:
+    | typeof import("../vectorstores/rockset.js")
+    | Promise<typeof import("../vectorstores/rockset.js")>;
   "langchain/vectorstores/typesense"?:
     | typeof import("../vectorstores/typesense.js")
     | Promise<typeof import("../vectorstores/typesense.js")>;
@@ -388,6 +391,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/weaviate"?:
     | typeof import("../retrievers/self_query/weaviate.js")
     | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
+  "langchain/retrievers/self_query/vectara"?:
+    | typeof import("../retrievers/self_query/vectara.js")
+    | Promise<typeof import("../retrievers/self_query/vectara.js")>;
   "langchain/cache/cloudflare_kv"?:
     | typeof import("../cache/cloudflare_kv.js")
     | Promise<typeof import("../cache/cloudflare_kv.js")>;
@@ -400,6 +406,9 @@ export interface OptionalImportMap {
   "langchain/cache/ioredis"?:
     | typeof import("../cache/ioredis.js")
     | Promise<typeof import("../cache/ioredis.js")>;
+  "langchain/cache/file_system"?:
+    | typeof import("../cache/file_system.js")
+    | Promise<typeof import("../cache/file_system.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;
@@ -497,6 +506,7 @@ export interface SecretMap {
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
   BEDROCK_AWS_SECRET_ACCESS_KEY?: string;
+  CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
