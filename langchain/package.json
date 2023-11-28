@@ -79,6 +79,9 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/gmail.cjs",
+    "tools/gmail.js",
+    "tools/gmail.d.ts",
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
@@ -1522,6 +1525,11 @@
       "types": "./tools/webbrowser.d.ts",
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
+    },
+    "./tools/gmail": {
+      "types": "./tools/gmail.d.ts",
+      "import": "./tools/gmail.js",
+      "require": "./tools/gmail.cjs"
     },
     "./tools/google_calendar": {
       "types": "./tools/google_calendar.d.ts",
