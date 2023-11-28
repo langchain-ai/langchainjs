@@ -38,7 +38,7 @@ export interface ElasticClientArgs {
 /**
  * Type representing a filter object in Elasticsearch.
  */
-type ElasticFilter = object | { field: string, operator: string, value: any }[];
+type ElasticFilter = object | { field: string; operator: string; value: any }[];
 
 /**
  * Class for interacting with an Elasticsearch database. It extends the
@@ -302,9 +302,19 @@ export class ElasticVectorSearch extends VectorStore {
   ): { [operator: string]: { [field: string]: any } }[] {
     if (filter == null) return [];
     const result = [];
-    const filters = Array.isArray(filter) ? filter : Object.entries(filter).map(([key, value]) => ({ operator: 'term', field: key, value }))
+    const filters = Array.isArray(filter)
+      ? filter
+      : Object.entries(filter).map(([key, value]) => ({
+          operator: "term",
+          field: key,
+          value,
+        }));
     for (const condition of filters) {
-      result.push({ [condition.operator]: { [`metadata.${condition.field}`]: condition.value } });
+      result.push({
+        [condition.operator]: {
+          [`metadata.${condition.field}`]: condition.value,
+        },
+      });
     }
     return result;
   }
