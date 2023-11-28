@@ -284,7 +284,6 @@ export abstract class BaseLLM<
     return output;
   }
 
-  /** @ignore */
   async _generateCached(
     prompts: string[],
     cache: BaseCache<Generation[]>,

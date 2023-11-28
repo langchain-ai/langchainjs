@@ -296,7 +296,6 @@ export abstract class BaseChatModel<
     return output;
   }
 
-  /** @ignore */
   async _generateCached(
     messages: BaseMessageLike[][],
     cache: BaseCache<Generation[]>,
