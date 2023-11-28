@@ -75,6 +75,10 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
   ibmCloudApiKey?: string;
 
+  ibmCloudToken?: string;
+
+  ibmCloudTokenExpiresAt?: number;
+
   projectId?: string;
 
   modelParameters?: Record<string, unknown>;
@@ -156,8 +160,15 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   }
 
   async generateToken(): Promise<string> {
+    if (this.ibmCloudToken && this.ibmCloudTokenExpiresAt) {
+      if (this.ibmCloudTokenExpiresAt > Date.now()) {
+        return this.ibmCloudToken;
+      }
+    }
+
     interface TokenResponse {
       access_token: string;
+      expires_in: number;
     }
 
     const urlTokenParams = new URLSearchParams();
@@ -167,7 +178,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
     );
     urlTokenParams.append("apikey", this.ibmCloudApiKey as string);
 
-    const tokenData = (await fetch("https://iam.cloud.ibm.com/identity/token", {
+    const data = (await fetch("https://iam.cloud.ibm.com/identity/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -175,6 +186,9 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
       body: urlTokenParams,
     }).then((res) => res.json())) as TokenResponse;
 
-    return tokenData.access_token;
+    this.ibmCloudTokenExpiresAt = Date.now() + data.expires_in * 1000;
+    this.ibmCloudToken = data.access_token;
+
+    return this.ibmCloudToken;
   }
 }
