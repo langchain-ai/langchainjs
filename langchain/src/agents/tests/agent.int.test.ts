@@ -13,6 +13,8 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { RunnableSequence } from "../../schema/runnable/base.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 import { AIMessage, AgentStep } from "../../schema/index.js";
+import { BufferMemory } from "../../memory/buffer_memory.js";
+import { ChatMessageHistory } from "../../memory/index.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -335,18 +337,13 @@ test("Agent can stream", async () => {
     streaming: true,
   });
   const tools = [
-    new SerpAPI(process.env.SERPAPI_API_KEY, {
-      location: "Austin,Texas,United States",
-      hl: "en",
-      gl: "us",
-    }),
     new Calculator(),
     new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
   ];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
-    returnIntermediateSteps: true,
+    returnIntermediateSteps: false,
   });
   console.log("Loaded agent.");
 
@@ -356,11 +353,72 @@ test("Agent can stream", async () => {
   const result = await executor.stream({ input });
   let streamIters = 0;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const finalResponse: any = [];
+  for await (const item of result) {
+    streamIters += 1;
+    console.log("Stream item:", item);
+    // each stream does NOT contain the previous steps,
+    // because returnIntermediateSteps is false so we
+    // push each new stream item to the array.
+    finalResponse.push(item);
+  }
+
+  // The last item should contain "output"
+  expect("output" in finalResponse[finalResponse.length - 1]).toBeTruthy();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const intermediateSteps = finalResponse.flatMap((item: any) => {
+    if ("intermediateSteps" in item) {
+      return item.intermediateSteps;
+    }
+    return [];
+  });
+
+  expect(streamIters).toBeGreaterThan(1);
+  const toolsUsed: Array<string> = intermediateSteps.map(
+    (step: AgentStep) => step.action.tool
+  );
+  // the last tool used should be the web-browser
+  expect(toolsUsed?.[toolsUsed.length - 1]).toEqual("web-browser");
+});
+
+test("Agent can stream with chat messages", async () => {
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-4-1106-preview",
+    streaming: true,
+  });
+  const tools = [
+    new Calculator(),
+    new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
+  ];
+  const memory = new BufferMemory({
+    chatHistory: new ChatMessageHistory([]),
+    memoryKey: "chat_history",
+    inputKey: "input",
+    outputKey: "output",
+    returnMessages: true,
+  });
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "chat-conversational-react-description",
+    returnIntermediateSteps: true,
+    memory,
+  });
+  console.log("Loaded agent.");
+
+  const input = `What is the word of the day on merriam webster, and what is the sum of all letter indices (relative to the english alphabet) in the word?`;
+  console.log(`Executing with input "${input}"...`);
+
+  const result = await executor.stream({ input, chat_history: [] });
+  let streamIters = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let finalResponse: any;
   for await (const item of result) {
     streamIters += 1;
     console.log("Stream item:", item);
-    // each stream contains the previous steps,
+    // each stream contains the previous steps
+    // because returnIntermediateSteps is true),
     // so we can overwrite on each stream.
     finalResponse = item;
   }
@@ -374,6 +432,8 @@ test("Agent can stream", async () => {
   const toolsUsed: Array<string> = finalResponse.intermediateSteps.map(
     (step: AgentStep) => step.action.tool
   );
-  // the last tool used should be the web-browser
-  expect(toolsUsed?.[toolsUsed.length - 1]).toEqual("web-browser");
+  // the first tool used should be web-browser, and last should be calculator.
+  // This can be flaky so if the test is failing, inspect these conditions first.
+  expect(toolsUsed?.[toolsUsed.length - 1]).toEqual("calculator");
+  expect(toolsUsed?.[0]).toEqual("web-browser");
 });
