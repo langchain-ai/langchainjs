@@ -1,5 +1,5 @@
-import { Version3Client, Version3Models } from "jira.js";
 import { Tool } from "./base.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 /**
  * Interface that represents the configuration options for a JiraAction.
@@ -36,33 +36,67 @@ export type Project = {
   style: string | undefined;
 };
 
-export type JiraFunction = {
-  class: string;
-  method: string;
-  args: object;
+export type JiraAPICall = {
+  endpoint: string;
+  queryParams: Record<string, string>;
+  bodyParams: BodyInit;
 };
 
+export interface JiraAPIWrapperParams extends AsyncCallerParams {
+  host: string;
+  email: string;
+  apiToken?: string;
+}
+
 export class JiraAPIWrapper extends Serializable {
-  jira: Version3Client;
+  host: string;
+  jiraEmail: string;
+  jiraApiToken?: string;
+  caller: AsyncCaller;
 
   lc_namespace = ["langchain", "tools", "jira"];
 
-  constructor(jira: Version3Client) {
-    super(jira);
-    this.jira = jira;
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "JIRA_API_TOKEN",
+    };
+  }
+  constructor(params: JiraAPIWrapperParams) {
+    super(params);
+    this.host = params.host;
+    this.jiraEmail = params.email;
+    this.jiraApiToken = params.apiToken;
+    this.caller = new AsyncCaller(
+      typeof params === "string" ? {} : params ?? {}
+    );
   }
 
-  protected _parse_issues(issues: Version3Models.SearchResults): Array<string> {
+  protected _getHeaders(): Record<string, string> {
+    const headers: {
+      "Content-Type": string;
+      Accept: string;
+      Authorization?: string;
+      "X-Atlassian-Token"?: string;
+    } = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
+    headers["X-Atlassian-Token"] = this.jiraApiToken;
+    return headers;
+  }
+
+  protected _parse_issues(issues: any): Array<string> {
     const parsed: Array<string> = [];
 
-    issues.issues?.forEach((issue) => {
+    issues.issues?.forEach((issue: any) => {
       const rel_issues: Array<{
         rel_type: string | undefined;
         rel_key: string | undefined;
         rel_summary: string | undefined;
       }> = [];
 
-      issue.fields.issuelinks.forEach((related_issue) => {
+      issue.fields.issuelinks.forEach((related_issue: any) => {
         if (related_issue.inwardIssue) {
           rel_issues.push({
             rel_type: related_issue.type?.inward,
@@ -94,9 +128,7 @@ export class JiraAPIWrapper extends Serializable {
     return parsed;
   }
 
-  protected _parse_projects(
-    projects: Array<Version3Models.Project>
-  ): Array<string> {
+  protected _parse_projects(projects: Array<any>): Array<string> {
     const parsed: Array<string> = [];
 
     projects.forEach((project) => {
@@ -115,9 +147,20 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   async jqlQuery(query: string): Promise<string> {
-    const issues = await this.jira.issueSearch.searchForIssuesUsingJqlPost({
-      jql: query,
-    });
+    const headers = this._getHeaders();
+    const queryParams = new URLSearchParams({ jql: query });
+    const resp = await this.caller.call(
+      fetch,
+      `${this.host}/rest/api/3/search/${queryParams}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+    const issues = resp.json();
     const parsed_issues = this._parse_issues(issues);
     const parsed_issues_str = `Found ${parsed_issues.length} issues:\n ${parsed_issues}`;
 
@@ -125,7 +168,20 @@ export class JiraAPIWrapper extends Serializable {
   }
 
   async getProjects(): Promise<string> {
-    const projects = await this.jira.projects.searchProjects();
+    const headers = this._getHeaders();
+    const resp = await this.caller.call(
+      fetch,
+      `${this.host}/rest/api/3/project/search`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+    const projects: any = resp.json();
+
     const parsed_projects = this._parse_projects(projects.values);
     const parsed_projects_str = `Found ${parsed_projects.length} projects:\n ${parsed_projects}`;
 
@@ -134,15 +190,45 @@ export class JiraAPIWrapper extends Serializable {
 
   async createIssue(query: string): Promise<string> {
     const params = JSON.parse(query);
+    const headers = this._getHeaders();
+    const resp = await this.caller.call(
+      fetch,
+      `${this.host}/rest/api/3/project/issue`,
+      {
+        method: "POST",
+        headers,
+        body: params,
+      }
+    );
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
 
-    return await this.jira.issues.createIssue({ fields: params });
+    return await resp.text();
   }
 
   async other(query: string): Promise<string> {
-    const params: JiraFunction = JSON.parse(query);
-    params.class = params.class.toLowerCase();
-    
-    return await this.jira[params.class][params.method](params.args);
+    const params: JiraAPICall = JSON.parse(query);
+    const headers = this._getHeaders();
+
+    var queryParams = new URLSearchParams(params.queryParams);
+    const resp = await this.caller.call(
+      fetch,
+      `${this.host}/rest/api/3/${queryParams}`,
+      {
+        method: "POST",
+        headers,
+        body: params.bodyParams,
+      }
+    );
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    return await resp.text();
+
+    //return await this.jira[params.class][params.method](params.args);
+    return "";
   }
 
   async run(mode: string, query: string) {
@@ -177,7 +263,7 @@ export class JiraAction extends Tool implements JiraActionConfig {
   name: string;
 
   description: string;
-  
+
   mode: string;
 
   apiWrapper: JiraAPIWrapper;
