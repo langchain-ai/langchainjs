@@ -32,6 +32,7 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   returnSourceDocuments?: boolean;
+  returnGeneratedQuestion?: boolean;
   inputKey?: string;
 }
 
@@ -99,6 +100,8 @@ export class ConversationalRetrievalQAChain
 
   returnSourceDocuments = false;
 
+  returnGeneratedQuestion = false;
+
   constructor(fields: ConversationalRetrievalQAChainInput) {
     super(fields);
     this.retriever = fields.retriever;
@@ -107,6 +110,8 @@ export class ConversationalRetrievalQAChain
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
+    this.returnGeneratedQuestion =
+      fields.returnGeneratedQuestion ?? this.returnGeneratedQuestion;
   }
 
   /**
@@ -196,14 +201,20 @@ export class ConversationalRetrievalQAChain
       input_documents: docs,
       chat_history: chatHistory,
     };
-    const result = await this.combineDocumentsChain.call(
+    let result = await this.combineDocumentsChain.call(
       inputs,
       runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
-      return {
+      result = {
         ...result,
         sourceDocuments: docs,
+      };
+    }
+    if (this.returnGeneratedQuestion) {
+      result = {
+        ...result,
+        generatedQuestion: newQuestion,
       };
     }
     return result;
