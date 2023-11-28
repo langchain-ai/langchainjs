@@ -168,7 +168,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
     interface TokenResponse {
       access_token: string;
-      expires_in: number;
+      expiration: number;
     }
 
     const urlTokenParams = new URLSearchParams();
@@ -186,7 +186,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
       body: urlTokenParams,
     }).then((res) => res.json())) as TokenResponse;
 
-    this.ibmCloudTokenExpiresAt = Date.now() + data.expires_in * 1000;
+    this.ibmCloudTokenExpiresAt = data.expiration * 1000;
     this.ibmCloudToken = data.access_token;
 
     return this.ibmCloudToken;
