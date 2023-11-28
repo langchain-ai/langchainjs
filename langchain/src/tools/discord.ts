@@ -1,8 +1,14 @@
+import {
+  Client,
+  TextChannel,
+  GatewayIntentBits,
+  Message,
+  ChannelType,
+} from "discord.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
-import { Client, TextChannel, GatewayIntentBits, Message, ChannelType } from "discord.js";
 
-/*
+/**
  * A tool for retrieving messages from a discord channel using a bot.
  * It extends the base Tool class and implements the _call method to
  * perform the retrieve operation. Requires an bot token which can be set
@@ -11,7 +17,6 @@ import { Client, TextChannel, GatewayIntentBits, Message, ChannelType } from "di
  * The bot must have read permissions to the given channel. It returns the
  * message content, author, and time the message was created for each message.
  */
-
 export class DiscordGetMessagesTool extends Tool {
   static lc_name() {
     return "DiscordGetMessagesTool";
@@ -24,6 +29,7 @@ export class DiscordGetMessagesTool extends Tool {
     permissions for the channel`;
 
   protected botToken: string;
+
   protected messageLimit: number;
 
   client = new Client({
@@ -31,14 +37,14 @@ export class DiscordGetMessagesTool extends Tool {
   });
 
   constructor(
-    botToken: string | undefined = getEnvironmentVariable("DiscordBotToken"),
+    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
     messageLimit: number | undefined = 100
   ) {
     super(...arguments);
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DiscordBotToken in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
       );
     }
 
@@ -57,7 +63,7 @@ export class DiscordGetMessagesTool extends Tool {
     }
 
     const messages = await channel.messages.fetch({ limit: this.messageLimit });
-    this.client.destroy();
+    await this.client.destroy();
     const results =
       messages.map((message: Message) => ({
         author: message.author.tag,
@@ -70,9 +76,9 @@ export class DiscordGetMessagesTool extends Tool {
 }
 
 /**
- * A tool for retrieving all servers a bot is a member of. It extends the 
- * base `Tool` class and implements the `_call` method to perform the retrieve 
- * operation. Requires a bot token which can be set in the environment 
+ * A tool for retrieving all servers a bot is a member of. It extends the
+ * base `Tool` class and implements the `_call` method to perform the retrieve
+ * operation. Requires a bot token which can be set in the environment
  * variables.
  */
 export class DiscordGetGuildsTool extends Tool {
@@ -91,13 +97,13 @@ export class DiscordGetGuildsTool extends Tool {
   });
 
   constructor(
-    botToken: string | undefined = getEnvironmentVariable("DiscordBotToken")
+    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
   ) {
     super(...arguments);
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DiscordBotToken in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
       );
     }
     this.botToken = botToken;
@@ -108,7 +114,7 @@ export class DiscordGetGuildsTool extends Tool {
     await this.client.login(this.botToken);
 
     const guilds = await this.client.guilds.fetch();
-    this.client.destroy();
+    await this.client.destroy();
 
     const results =
       guilds.map((guild) => ({
@@ -116,16 +122,16 @@ export class DiscordGetGuildsTool extends Tool {
         name: guild.name,
         createdAt: guild.createdAt,
       })) ?? [];
-    
+
     return JSON.stringify(results);
   }
 }
 
 /**
  * A tool for retrieving text channels within a server/guild a bot is a member
- * of. It extends the base `Tool` class and implements the `_call` method to 
- * perform the retrieve operation. Requires a bot token which can be set in 
- * the environment variables. The `_call` method takes a server/guild ID 
+ * of. It extends the base `Tool` class and implements the `_call` method to
+ * perform the retrieve operation. Requires a bot token which can be set in
+ * the environment variables. The `_call` method takes a server/guild ID
  * to get its text channels.
  */
 export class DiscordGetTextChannelsTool extends Tool {
@@ -144,13 +150,13 @@ export class DiscordGetTextChannelsTool extends Tool {
   });
 
   constructor(
-    botToken: string | undefined = getEnvironmentVariable("DiscordBotToken")
+    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
   ) {
     super(...arguments);
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DiscordBotToken in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
       );
     }
     this.botToken = botToken;
@@ -162,29 +168,28 @@ export class DiscordGetTextChannelsTool extends Tool {
 
     const guild = await this.client.guilds.fetch(input);
     const channels = await guild.channels.fetch();
-    this.client.destroy();
+    await this.client.destroy();
 
     const results =
       channels
-        .filter(channel => channel?.type == ChannelType.GuildText)
+        .filter((channel) => channel?.type === ChannelType.GuildText)
         .map((channel) => ({
           id: channel?.id,
           name: channel?.name,
           createdAt: channel?.createdAt,
-    })) ?? [];
+        })) ?? [];
 
     return JSON.stringify(results);
   }
 }
 
-/*
+/**
  * A tool for sending messages to a discord channel using a bot.
  * It extends the base Tool class and implements the _call method to
  * perform the retrieve operation. Requires a bot token which can be set
- * in the environment variables. The _call method takes the message to be 
+ * in the environment variables. The _call method takes the message to be
  * sent as the input argument.
  */
-
 export class DiscordSendMessagesTool extends Tool {
   static lc_name() {
     return "DiscordSendMessagesTool";
@@ -196,6 +201,7 @@ export class DiscordSendMessagesTool extends Tool {
   Input should be the discord channel message, since we will already have the channel ID.`;
 
   protected botToken: string;
+
   protected channelId: string;
 
   client = new Client({
@@ -204,53 +210,52 @@ export class DiscordSendMessagesTool extends Tool {
 
   constructor(
     channelId: string,
-    botToken: string | undefined = getEnvironmentVariable("DiscordBotToken")
+    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
   ) {
     super(...arguments);
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DiscordBotToken in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
       );
     }
     this.botToken = botToken;
     if (!channelId) {
-      throw new Error(
-        "Discord channel not set."
-      )
+      throw new Error("Discord channel not set.");
     }
     this.channelId = channelId;
   }
-  
+
   /** @ignore */
   async _call(message: string): Promise<string> {
-
-    await this.client.login(this.botToken);
-
-    const channel = (await this.client.channels.fetch(this.channelId)) as TextChannel;
-
-    if (!channel) {
-      return "Channel not found";
-    }
-
-    if (!(channel instanceof TextChannel)) {
-      return "Channel is not text channel, cannot send message"
-    }
-
     try {
+      await this.client.login(this.botToken);
+
+      const channel = (await this.client.channels.fetch(
+        this.channelId
+      )) as TextChannel;
+
+      if (!channel) {
+        throw new Error("Channel not found");
+      }
+
+      if (!(channel.constructor === TextChannel)) {
+        throw new Error("Channel is not text channel, cannot send message");
+      }
+
       await channel.send(message);
-      this.client.destroy();
+
+      await this.client.destroy();
+
       return "Message sent successfully";
-    } 
-    catch (err) {
-      this.client.destroy();
-      console.log("Error sending message:", err);
+    } catch (err) {
+      await this.client.destroy();
       return "Error sending message";
     }
   }
 }
 
-/*
+/**
  * A tool for searching for messages within a discord channel using a bot.
  * It extends the base Tool class and implements the _call method to
  * perform the retrieve operation. Requires an bot token which can be set
@@ -259,7 +264,6 @@ export class DiscordSendMessagesTool extends Tool {
  * The bot must have read permissions to the given channel. It returns the
  * message content, author, and time the message was created for each message.
  */
-
 export class DiscordChannelSearchTool extends Tool {
   static lc_name() {
     return "DiscordChannelSearchTool";
@@ -272,6 +276,7 @@ export class DiscordChannelSearchTool extends Tool {
   should have read permissions for the channel`;
 
   protected botToken: string;
+
   protected channelId: string;
 
   client = new Client({
@@ -280,45 +285,52 @@ export class DiscordChannelSearchTool extends Tool {
 
   constructor(
     channelId: string,
-    botToken: string | undefined = getEnvironmentVariable("DiscordBotToken")
+    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
   ) {
     super(...arguments);
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DiscordBotToken in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
       );
     }
     this.botToken = botToken;
     if (!channelId) {
-      throw new Error(
-        "Discord channel not set."
-      )
+      throw new Error("Discord channel not set.");
     }
     this.channelId = channelId;
   }
 
   /** @ignore */
   async _call(searchTerm: string): Promise<string> {
-    await this.client.login(this.botToken);
+    try {
+      await this.client.login(this.botToken);
 
-    const channel = (await this.client.channels.fetch(this.channelId)) as TextChannel;
+      const channel = (await this.client.channels.fetch(
+        this.channelId
+      )) as TextChannel;
 
-    if (!channel) {
-      return "Channel not found";
+      if (!channel) {
+        return "Channel not found";
+      }
+
+      const messages = await channel.messages.fetch();
+      await this.client.destroy();
+      const filtered = messages.filter((message) =>
+        message.content.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      const results =
+        filtered.map((message) => ({
+          author: message.author.tag,
+          content: message.content,
+          timestamp: message.createdAt,
+        })) ?? [];
+
+      return JSON.stringify(results);
+    } catch (err) {
+      await this.client.destroy();
+      return "Error sending message";
     }
-
-    const messages = await channel.messages.fetch();
-    this.client.destroy();
-    const filtered = messages.filter((message) => message.content.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const results =
-      filtered.map((message) => ({
-        author: message.author.tag,
-        content: message.content,
-        timestamp: message.createdAt,
-      })) ?? [];
-
-    return JSON.stringify(results);
   }
 }
