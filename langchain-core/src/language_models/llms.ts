@@ -287,6 +287,7 @@ export abstract class BaseLLM<
   async _generateCached(
     prompts: string[],
     cache: BaseCache<Generation[]>,
+    llmStringKey: string,
     parsedOptions: this["ParsedCallOptions"],
     handledOptions: RunnableConfig
   ): Promise<LLMResult & { missingPromptIndices: number[] }> {
@@ -317,8 +318,6 @@ export abstract class BaseLLM<
     );
 
     // generate results
-    const llmStringKey =
-      this._getSerializedCacheKeyParametersForCall(parsedOptions);
     const missingPromptIndices: number[] = [];
     const results = await Promise.allSettled(
       prompts.map(async (prompt, index) => {
@@ -407,6 +406,7 @@ export abstract class BaseLLM<
     const { generations, missingPromptIndices } = await this._generateCached(
       prompts,
       cache,
+      llmStringKey,
       callOptions,
       runnableConfig
     );

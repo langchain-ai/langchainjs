@@ -299,6 +299,7 @@ export abstract class BaseChatModel<
   async _generateCached(
     messages: BaseMessageLike[][],
     cache: BaseCache<Generation[]>,
+    llmStringKey: string,
     parsedOptions: this["ParsedCallOptions"],
     handledOptions: RunnableConfig
   ): Promise<LLMResult & { missingPromptIndices: number[] }> {
@@ -334,8 +335,6 @@ export abstract class BaseChatModel<
     );
 
     // generate results
-    const llmStringKey =
-      this._getSerializedCacheKeyParametersForCall(parsedOptions);
     const missingPromptIndices: number[] = [];
     const results = await Promise.allSettled(
       baseMessages.map(async (baseMessage, index) => {
@@ -432,6 +431,7 @@ export abstract class BaseChatModel<
     const { generations, missingPromptIndices } = await this._generateCached(
       baseMessages,
       cache,
+      llmStringKey,
       callOptions,
       runnableConfig
     );
