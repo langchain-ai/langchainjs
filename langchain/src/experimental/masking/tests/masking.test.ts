@@ -38,6 +38,31 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
       expect(rehydratedMessage).toBe(expectedOriginalMessage);
     });
+
+    function generateLargeMessage() {
+      let largeMessage = "";
+      for (let i = 0; i < 10000; i++) {
+        // Adjust the number for desired message size
+        largeMessage += `User${i}: jane.doe${i}@email.com, 555-123-${i
+          .toString()
+          .padStart(4, "0")}. `;
+      }
+      return largeMessage;
+    }
+
+    describe("Performance Testing", () => {
+      it("efficiently processes large data sets", async () => {
+        const largeMessage = generateLargeMessage();
+        const startTime = performance.now();
+        const maskedMessage = await maskingParser.parse(largeMessage);
+        const endTime = performance.now();
+
+        const someAcceptableDuration = 5000; // Set this to a duration you consider acceptable, e.g., 5000 milliseconds (5 seconds)
+
+        expect(maskedMessage).toBeDefined();
+        expect(endTime - startTime).toBeLessThan(someAcceptableDuration);
+      });
+    });
   });
 
   describe("Masking with Dynamic Identifiers", () => {
@@ -149,10 +174,13 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     });
 
     const customHashFunction = (input: string) => {
-      // Simple custom hash function for testing purposes
-      return `hashed-${input}`;
+      // A simple hash function that creates a mock hash representation of the input.
+      // This is just for demonstration purposes and not a secure hashing method.
+      return input
+        .split("")
+        .map((char) => "*")
+        .join("");
     };
-
     it("should mask email and phone using custom hash function", async () => {
       const piiMaskingTransformer = new PIIMaskingTransformer(
         {
@@ -174,8 +202,14 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       const message = "Contact me at jane.doe@email.com or 555-123-4567.";
       const maskedMessage = await maskingParser.parse(message);
 
-      expect(maskedMessage).toContain("custom-email-hashed-jane.doe@email.com");
-      expect(maskedMessage).toContain("custom-phone-hashed-555-123-4567");
+      // The lengths of the masked parts should be equal to the lengths of the original email and phone number.
+      const expectedEmailMask =
+        "custom-email-" + "*".repeat("jane.doe@email.com".length);
+      const expectedPhoneMask =
+        "custom-phone-" + "*".repeat("555-123-4567".length);
+
+      expect(maskedMessage).toContain(expectedEmailMask);
+      expect(maskedMessage).toContain(expectedPhoneMask);
     });
 
     it("should rehydrate masked data correctly using custom hash function", async () => {
