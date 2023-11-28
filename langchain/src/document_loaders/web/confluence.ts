@@ -80,15 +80,21 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.personalAccessToken = personalAccessToken;
   }
 
-  private authorizationHeader(): string {
+    /**
+    * Returns the authorization header for the request.
+    * @returns The authorization header as a string, or undefined if no credentials were provided.
+   */
+  private authorizationHeader(): string | undefined {
     if (this.personalAccessToken) {
       return `Bearer ${this.personalAccessToken}`;
-    } else {
+    } else if (this.username && this.accessToken) {
       const authToken = Buffer.from(
         `${this.username}:${this.accessToken}`
       ).toString("base64");
       return `Basic ${authToken}`;
     }
+
+    return undefined;
   }
 
   /**
@@ -115,13 +121,18 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     url: string
   ): Promise<ConfluenceAPIResponse> {
     try {
+      const initialHeaders: HeadersInit = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
       const authHeader = this.authorizationHeader();
+      if (authHeader) {
+        initialHeaders.Authorization = authHeader;
+      }
+
       const response = await fetch(url, {
-        headers: {
-          Authorization: authHeader,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+        headers: initialHeaders,
       });
 
       if (!response.ok) {
