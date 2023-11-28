@@ -18,6 +18,8 @@ test("DiscordChannelSearchTool", async () => {
     console.log(result)
   } catch (error) {
     console.error(error);
+  }
+});
 
 test("DiscordSendMessagesTool", async () => {
   const tool = new DiscordSendMessagesTool("1153400523718938780");
