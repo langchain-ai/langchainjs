@@ -18,8 +18,8 @@ describe("PGVectorStore", () => {
         database: "api",
       } as PoolConfig,
       tableName: "testlangchain",
-      collectionTableName: "langchain_pg_collection",
-      collectionName: "langchain",
+      // collectionTableName: "langchain_pg_collection",
+      // collectionName: "langchain",
       columns: {
         idColumnName: "id",
         vectorColumnName: "vector",
