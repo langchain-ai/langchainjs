@@ -31,6 +31,17 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
+interface GenerateCachedParameters<
+  T extends BaseLLM<CallOptions>,
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions,
+> {
+  prompts: string[];
+  cache: BaseCache<Generation[]>;
+  llmStringKey: string;
+  parsedOptions: T["ParsedCallOptions"];
+  handledOptions: RunnableConfig;
+}
+
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
  */
@@ -59,13 +70,13 @@ export abstract class BaseLLM<
    */
   async invoke(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: CallOptions,
   ): Promise<string> {
     const promptValue = BaseLLM._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
       [promptValue],
       options,
-      options?.callbacks
+      options?.callbacks,
     );
     return result.generations[0][0].text;
   }
@@ -74,13 +85,13 @@ export abstract class BaseLLM<
   async *_streamResponseChunks(
     _input: string,
     _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    _runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<GenerationChunk> {
     throw new Error("Not implemented.");
   }
 
   protected _separateRunnableConfigFromCallOptions(
-    options?: Partial<CallOptions>
+    options?: Partial<CallOptions>,
   ): [RunnableConfig, this["ParsedCallOptions"]] {
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
@@ -92,7 +103,7 @@ export abstract class BaseLLM<
 
   async *_streamIterator(
     input: BaseLanguageModelInput,
-    options?: CallOptions
+    options?: CallOptions,
   ): AsyncGenerator<string> {
     // Subclass check required to avoid double callbacks with default implementation
     if (
@@ -110,7 +121,7 @@ export abstract class BaseLLM<
         this.tags,
         runnableConfig.metadata,
         this.metadata,
-        { verbose: this.verbose }
+        { verbose: this.verbose },
       );
       const extra = {
         options: callOptions,
@@ -125,7 +136,7 @@ export abstract class BaseLLM<
         extra,
         undefined,
         undefined,
-        runnableConfig.runName
+        runnableConfig.runName,
       );
       let generation = new GenerationChunk({
         text: "",
@@ -134,7 +145,7 @@ export abstract class BaseLLM<
         for await (const chunk of this._streamResponseChunks(
           input.toString(),
           callOptions,
-          runManagers?.[0]
+          runManagers?.[0],
         )) {
           if (!generation) {
             generation = chunk;
@@ -148,8 +159,8 @@ export abstract class BaseLLM<
       } catch (err) {
         await Promise.all(
           (runManagers ?? []).map(
-            (runManager) => runManager?.handleLLMError(err)
-          )
+            (runManager) => runManager?.handleLLMError(err),
+          ),
         );
         throw err;
       }
@@ -158,8 +169,8 @@ export abstract class BaseLLM<
           (runManager) =>
             runManager?.handleLLMEnd({
               generations: [[generation]],
-            })
-        )
+            }),
+        ),
       );
     }
   }
@@ -175,10 +186,10 @@ export abstract class BaseLLM<
   async generatePrompt(
     promptValues: BasePromptValue[],
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
-      promptValue.toString()
+      promptValue.toString(),
     );
     return this.generate(prompts, options, callbacks);
   }
@@ -189,7 +200,7 @@ export abstract class BaseLLM<
   abstract _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<LLMResult>;
 
   /**
@@ -230,7 +241,7 @@ export abstract class BaseLLM<
   async _generateUncached(
     prompts: string[],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: BaseCallbackConfig
+    handledOptions: BaseCallbackConfig,
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -239,7 +250,7 @@ export abstract class BaseLLM<
       this.tags,
       handledOptions.metadata,
       this.metadata,
-      { verbose: this.verbose }
+      { verbose: this.verbose },
     );
     const extra = {
       options: parsedOptions,
@@ -254,7 +265,7 @@ export abstract class BaseLLM<
       extra,
       undefined,
       undefined,
-      handledOptions?.runName
+      handledOptions?.runName,
     );
 
     let output;
@@ -262,7 +273,9 @@ export abstract class BaseLLM<
       output = await this._generate(prompts, parsedOptions, runManagers?.[0]);
     } catch (err) {
       await Promise.all(
-        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+        (runManagers ?? []).map(
+          (runManager) => runManager?.handleLLMError(err),
+        ),
       );
       throw err;
     }
@@ -270,8 +283,8 @@ export abstract class BaseLLM<
     const flattenedOutputs: LLMResult[] = this._flattenLLMResult(output);
     await Promise.all(
       (runManagers ?? []).map(
-        (runManager, i) => runManager?.handleLLMEnd(flattenedOutputs[i])
-      )
+        (runManager, i) => runManager?.handleLLMEnd(flattenedOutputs[i]),
+      ),
     );
     const runIds = runManagers?.map((manager) => manager.runId) || undefined;
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -284,13 +297,15 @@ export abstract class BaseLLM<
     return output;
   }
 
-  async _generateCached(
-    prompts: string[],
-    cache: BaseCache<Generation[]>,
-    llmStringKey: string,
-    parsedOptions: this["ParsedCallOptions"],
-    handledOptions: RunnableConfig
-  ): Promise<LLMResult & { missingPromptIndices: number[] }> {
+  async _generateCached({
+    prompts,
+    cache,
+    llmStringKey,
+    parsedOptions,
+    handledOptions,
+  }: GenerateCachedParameters<typeof this>): Promise<
+    LLMResult & { missingPromptIndices: number[] }
+  > {
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
@@ -298,7 +313,7 @@ export abstract class BaseLLM<
       this.tags,
       handledOptions.metadata,
       this.metadata,
-      { verbose: this.verbose }
+      { verbose: this.verbose },
     );
     const extra = {
       options: parsedOptions,
@@ -314,7 +329,7 @@ export abstract class BaseLLM<
       extra,
       undefined,
       undefined,
-      handledOptions?.runName
+      handledOptions?.runName,
     );
 
     // generate results
@@ -326,14 +341,14 @@ export abstract class BaseLLM<
           missingPromptIndices.push(index);
         }
         return result;
-      })
+      }),
     );
 
     // Ignore results with a null value. These are just absent from the cache.
     const cachedResults = results.filter(
       (result) =>
         (result.status === "fulfilled" && result.value != null) ||
-        result.status === "rejected"
+        result.status === "rejected",
     ) as PromiseSettledResult<Generation[]>[];
 
     // handle results
@@ -351,7 +366,7 @@ export abstract class BaseLLM<
           await runManagers?.[i]?.handleLLMError(pResult.reason);
           return Promise.reject(pResult.reason);
         }
-      })
+      }),
     );
 
     // create combined output
@@ -379,7 +394,7 @@ export abstract class BaseLLM<
   async generate(
     prompts: string[],
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
@@ -403,27 +418,27 @@ export abstract class BaseLLM<
     const { cache } = this;
     const llmStringKey =
       this._getSerializedCacheKeyParametersForCall(callOptions);
-    const { generations, missingPromptIndices } = await this._generateCached(
+    const { generations, missingPromptIndices } = await this._generateCached({
       prompts,
       cache,
       llmStringKey,
-      callOptions,
-      runnableConfig
-    );
+      parsedOptions: callOptions,
+      handledOptions: runnableConfig,
+    });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => prompts[i]),
         callOptions,
-        runnableConfig
+        runnableConfig,
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
           return cache.update(prompts[promptIndex], llmStringKey, generation);
-        })
+        }),
       );
       llmOutput = results.llmOutput ?? {};
     }
@@ -437,7 +452,7 @@ export abstract class BaseLLM<
   async call(
     prompt: string,
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<string> {
     const { generations } = await this.generate([prompt], options, callbacks);
     return generations[0][0].text;
@@ -454,7 +469,7 @@ export abstract class BaseLLM<
   async predict(
     text: string,
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<string> {
     return this.call(text, options, callbacks);
   }
@@ -470,7 +485,7 @@ export abstract class BaseLLM<
   async predictMessages(
     messages: BaseMessage[],
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<BaseMessage> {
     const text = getBufferString(messages);
     const prediction = await this.call(text, options, callbacks);
@@ -523,20 +538,20 @@ export abstract class LLM<
   abstract _call(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<string>;
 
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<LLMResult> {
     const generations: Generation[][] = await Promise.all(
       prompts.map((prompt, promptIndex) =>
         this._call(prompt, { ...options, promptIndex }, runManager).then(
-          (text) => [{ text }]
-        )
-      )
+          (text) => [{ text }],
+        ),
+      ),
     );
     return { generations };
   }
