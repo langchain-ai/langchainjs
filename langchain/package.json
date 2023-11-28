@@ -802,6 +802,9 @@
     "experimental/chains/violation_of_expectations.cjs",
     "experimental/chains/violation_of_expectations.js",
     "experimental/chains/violation_of_expectations.d.ts",
+    "experimental/tools/pyinterpreter.cjs",
+    "experimental/tools/pyinterpreter.js",
+    "experimental/tools/pyinterpreter.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -961,6 +964,7 @@
     "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
+    "pyodide": "^0.24.1",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
     "replicate": "^0.18.0",
@@ -1066,6 +1070,7 @@
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
     "puppeteer": "^19.7.2",
+    "pyodide": "^0.24.1",
     "redis": "^4.6.4",
     "replicate": "^0.18.0",
     "sonix-speech-recognition": "^2.1.1",
@@ -1332,6 +1337,9 @@
       "optional": true
     },
     "puppeteer": {
+      "optional": true
+    },
+    "pyodide": {
       "optional": true
     },
     "redis": {
@@ -2734,6 +2742,11 @@
       "types": "./experimental/chains/violation_of_expectations.d.ts",
       "import": "./experimental/chains/violation_of_expectations.js",
       "require": "./experimental/chains/violation_of_expectations.cjs"
+    },
+    "./experimental/tools/pyinterpreter": {
+      "types": "./experimental/tools/pyinterpreter.d.ts",
+      "import": "./experimental/tools/pyinterpreter.js",
+      "require": "./experimental/tools/pyinterpreter.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
