@@ -39,6 +39,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/writer",
   "langchain/llms/portkey",
   "langchain/prompts/load",
+  "langchain/vectorstores/clickhouse",
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/cassandra",
   "langchain/vectorstores/convex",

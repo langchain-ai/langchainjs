@@ -115,6 +115,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/clickhouse"?:
+    | typeof import("../vectorstores/clickhouse.js")
+    | Promise<typeof import("../vectorstores/clickhouse.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;

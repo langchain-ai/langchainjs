@@ -5974,13 +5974,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@clickhouse/client@npm:^0.0.14":
-  version: 0.0.14
-  resolution: "@clickhouse/client@npm:0.0.14"
+"@clickhouse/client-common@npm:0.2.5":
+  version: 0.2.5
+  resolution: "@clickhouse/client-common@npm:0.2.5"
+  checksum: fb5c941d13d5532e473827ea4624bc1130840d883d206096a3982a38ace40d1926d15f2dc4169ae5d0bb3538afbf97150c144956186dd3000d98d677821b698e
+  languageName: node
+  linkType: hard
+
+"@clickhouse/client@npm:^0.2.5":
+  version: 0.2.5
+  resolution: "@clickhouse/client@npm:0.2.5"
   dependencies:
-    node-abort-controller: ^3.0.1
-    uuid: ^9.0.0
-  checksum: dc4ce8091856497ffaa50a68194c7ff555357f2a6b0355cfa35cb335d0629000a10ef60c15a2cc33d1cd368730056c2bdd164c80a520f0550ab57c5bbfb7ad2c
+    "@clickhouse/client-common": 0.2.5
+  checksum: e91ee1564ee9fec5754817b6e332c07b75dc13cfee08db15ebd055921b1e3cfb7ec966f69211a84c092c3a94a09a1095ed12ffb4be566cc144ddc90261eb1965
   languageName: node
   linkType: hard
 
@@ -17996,7 +18002,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "examples@workspace:examples"
   dependencies:
-    "@clickhouse/client": ^0.0.14
+    "@clickhouse/client": ^0.2.5
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.9.0
@@ -22578,7 +22584,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
     "@azure/storage-blob": ^12.15.0
-    "@clickhouse/client": ^0.0.14
+    "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
     "@elastic/elasticsearch": ^8.4.0
@@ -22736,7 +22742,7 @@ __metadata:
     "@aws-sdk/client-sfn": ^3.310.0
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@azure/storage-blob": ^12.15.0
-    "@clickhouse/client": ^0.0.14
+    "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
@@ -24676,13 +24682,6 @@ __metadata:
   dependencies:
     semver: ^7.3.5
   checksum: 0d230724ecae7b42c3b6d7c1577e52e621ca6626d8683ecdbe0ba231c39d395d5dd94b6e50a40d905d40d80b63a12ad57daa5b5892f72e0a94df0c719722e16d
-  languageName: node
-  linkType: hard
-
-"node-abort-controller@npm:^3.0.1":
-  version: 3.1.1
-  resolution: "node-abort-controller@npm:3.1.1"
-  checksum: 2c340916af9710328b11c0828223fc65ba320e0d082214a211311bf64c2891028e42ef276b9799188c4ada9e6e1c54cf7a0b7c05dd9d59fcdc8cd633304c8047
   languageName: node
   linkType: hard
 

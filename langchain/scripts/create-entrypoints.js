@@ -90,6 +90,7 @@ const entrypoints = {
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
   // vectorstores
+  "vectorstores/clickhouse": "vectorstores/clickhouse",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/cassandra": "vectorstores/cassandra",
@@ -376,6 +377,7 @@ const requiresOptionalDependency = [
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/cassandra",
+  "vectorstores/clickhouse",
   "vectorstores/chroma",
   "vectorstores/cloudflare_vectorize",
   "vectorstores/closevector/web",

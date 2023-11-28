@@ -217,6 +217,9 @@ prompts.d.ts
 prompts/load.cjs
 prompts/load.js
 prompts/load.d.ts
+vectorstores/clickhouse.cjs
+vectorstores/clickhouse.js
+vectorstores/clickhouse.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
