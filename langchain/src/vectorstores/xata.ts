@@ -127,21 +127,28 @@ export class XataVectorSearch<
       }
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return records.map((record: any) => [
-      new Document({
-        pageContent: record.content,
-        metadata: Object.fromEntries(
-          Object.entries(record).filter(
-            ([key]) =>
-              key !== "content" &&
-              key !== "embedding" &&
-              key !== "xata" &&
-              key !== "id"
-          )
-        ),
-      }),
-      record.xata.score,
-    ]);
+    let results;
+    if (records) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      results = records?.map((record) => [
+        new Document({
+          pageContent: record.content,
+          metadata: Object.fromEntries(
+            Object.entries(record).filter(
+              ([key]) =>
+                key !== "content" &&
+                key !== "embedding" &&
+                key !== "xata" &&
+                key !== "id"
+            )
+          ),
+        }),
+        record.xata.score,
+      ]);
+    } else {
+      results = [];
+    }
+
+    return results;
   }
 }
