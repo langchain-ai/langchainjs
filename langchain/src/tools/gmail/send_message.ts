@@ -1,6 +1,6 @@
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
-export interface SendMessageParams {
+export interface SendMessageSchema {
   message: string;
   to: string | string[];
   subject: string;
@@ -23,7 +23,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: SendMessageParams): string {
+  }: SendMessageSchema): string {
     const emailLines: string[] = [];
 
     // Format the recipient(s)
@@ -49,7 +49,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: SendMessageParams): Promise<string> {
+  }: SendMessageSchema): Promise<string> {
     const rawMessage = this.createEmailMessage({
       message,
       to,
