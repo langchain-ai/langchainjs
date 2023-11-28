@@ -1,69 +1,34 @@
-# CSV files
+# ChatGPT files
 
 This example goes over how to load conversations.json from your ChatGPT data export folder. You can get your data export by email by going to: ChatGPT -> (Profile) - Settings -> Export data -> Confirm export -> Check email.
 
 ```
 ```
 
-## Usage
-
-Example ChatGPT file:
-
-```json
-id,text
-1,This is a sentence.
-2,This is another sentence.
-```
+## Usage, extracting all logs
 
 Example code:
 
 ```typescript
 import { ChatGPTLoader } from "langchain/document_loaders/web/chatgpt";
 
-const loader = new ChatGPTLoader(logFile="./example_data/example_conversations.json")
+const loader = new ChatGPTLoader("./example_data/example_conversations.json")
 
 const docs = await loader.load();
 
 console.log(docs);
 ```
 
-## Usage, extracting a single column
-
-Example CSV file:
-
-```csv
-id,text
-1,This is a sentence.
-2,This is another sentence.
-```
+## Usage, extracting a single log
 
 Example code:
 
 ```typescript
-import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import { ChatGPTLoader } from "langchain/document_loaders/web/chatgpt";
 
-const loader = new CSVLoader(
-  "src/document_loaders/example_data/example.csv",
-  "text"
-);
+const loader = new ChatGPTLoader("./example_data/example_conversations.json", 1)
 
 const docs = await loader.load();
-/*
-[
-  Document {
-    "metadata": {
-      "line": 1,
-      "source": "src/document_loaders/example_data/example.csv",
-    },
-    "pageContent": "This is a sentence.",
-  },
-  Document {
-    "metadata": {
-      "line": 2,
-      "source": "src/document_loaders/example_data/example.csv",
-    },
-    "pageContent": "This is another sentence.",
-  },
-]
-*/
+
+console.log(docs);
 ```
