@@ -37,6 +37,7 @@ export type Project = {
 };
 
 export type JiraAPICall = {
+  httpverb: string;
   endpoint: string;
   queryParams: Record<string, string>;
   bodyParams: BodyInit;
@@ -58,7 +59,7 @@ export class JiraAPIWrapper extends Serializable {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "JIRA_API_TOKEN",
+      apiToken: "JIRA_API_TOKEN",
     };
   }
   constructor(params: JiraAPIWrapperParams) {
@@ -80,9 +81,10 @@ export class JiraAPIWrapper extends Serializable {
     } = {
       "Content-Type": "application/json",
       Accept: "application/json",
+      Authorization: `Basic ${Buffer.from(
+        `${this.jiraEmail}:${this.jiraApiToken}`
+      ).toString("base64")}`,
     };
-
-    headers["X-Atlassian-Token"] = this.jiraApiToken;
     return headers;
   }
 
@@ -146,6 +148,27 @@ export class JiraAPIWrapper extends Serializable {
     return parsed;
   }
 
+  protected _create_issue_header(params: any) {
+    return `{
+      "fields": {
+          "summary": ${params.summary},
+          "description": {
+              "content": [{
+                  "content": [{
+                      "text": ${params.description},
+                      "type": "text"
+                  }],
+                  "type": "paragraph"
+              }],
+              "type": "doc",
+              "version": 1
+          },
+          "project": ${params.project},
+          "issuetype": ${params.issuetype},
+      }
+    }`;
+  }
+
   async jqlQuery(query: string): Promise<string> {
     const headers = this._getHeaders();
     const queryParams = new URLSearchParams({ jql: query });
@@ -193,11 +216,11 @@ export class JiraAPIWrapper extends Serializable {
     const headers = this._getHeaders();
     const resp = await this.caller.call(
       fetch,
-      `${this.host}/rest/api/3/project/issue`,
+      `${this.host}/rest/api/3/issue`,
       {
         method: "POST",
         headers,
-        body: params,
+        body: this._create_issue_header(params),
       }
     );
     if (!resp.ok) {
@@ -214,9 +237,9 @@ export class JiraAPIWrapper extends Serializable {
     var queryParams = new URLSearchParams(params.queryParams);
     const resp = await this.caller.call(
       fetch,
-      `${this.host}/rest/api/3/${queryParams}`,
+      `${this.host}${params.endpoint}${queryParams}`,
       {
-        method: "POST",
+        method: params.httpverb,
         headers,
         body: params.bodyParams,
       }
