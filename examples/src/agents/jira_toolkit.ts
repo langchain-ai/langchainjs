@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms/openai";
-import { JiraAPIWrapper, JiraAction } from "langchain/tools";
+import { JiraAPIWrapper } from "langchain/tools";
 import {
   initializeAgentExecutorWithOptions,
   JiraToolkit,
@@ -11,7 +11,6 @@ export const run = async () => {
     host: "",
     email: "",
     apiToken: "",
-    jiraApiToken: "",
   });
 
   const toolkit = await new JiraToolkit(jira);
@@ -26,7 +25,7 @@ export const run = async () => {
   );
   console.log("Loaded agent.");
 
-  const input = `Make a new issue in project YS to remind me to make more fried rice.`;
+  const input = `Delete the issue in project YS with id 221.`;
 
   console.log(`Executing with input "${input}"...`);
 
