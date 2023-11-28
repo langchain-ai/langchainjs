@@ -91,6 +91,7 @@
     "./langchain/src/llms/fake.ts",
     "./langchain/src/prompts/index.ts",
     "./langchain/src/prompts/load.ts",
+    "./langchain/src/vectorstores/clickhouse.ts",
     "./langchain/src/vectorstores/analyticdb.ts",
     "./langchain/src/vectorstores/base.ts",
     "./langchain/src/vectorstores/cassandra.ts",
@@ -171,6 +172,7 @@
     "./langchain/src/document_loaders/fs/notion.ts",
     "./langchain/src/document_loaders/fs/unstructured.ts",
     "./langchain/src/document_loaders/fs/openai_whisper_audio.ts",
+    "./langchain/src/document_loaders/fs/pptx.ts",
     "./langchain/src/document_transformers/html_to_text.ts",
     "./langchain/src/document_transformers/mozilla_readability.ts",
     "./langchain/src/document_transformers/openai_functions.ts",
@@ -282,6 +284,7 @@
     "./langchain/src/experimental/llms/bittensor.ts",
     "./langchain/src/experimental/hubs/makersuite/googlemakersuitehub.ts",
     "./langchain/src/experimental/chains/violation_of_expectations/index.ts",
+    "./langchain/src/experimental/tools/pyinterpreter.ts",
     "./langchain/src/evaluation/index.ts",
     "./langchain/src/runnables/index.ts",
     "./langchain/src/runnables/remote.ts"

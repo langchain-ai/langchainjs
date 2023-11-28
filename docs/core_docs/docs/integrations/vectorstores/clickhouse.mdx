@@ -1,0 +1,37 @@
+---
+sidebar_class_name: node-only
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ClickHouse
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+[ClickHouse](https://clickhouse.com/) is a robust and open-source columnar database that is used for handling analytical queries and efficient storage, ClickHouse is designed to provide a powerful combination of vector search and analytics.
+
+## Setup
+
+1. Launch a ClickHouse cluster. Refer to the [ClickHouse Installation Guide](https://clickhouse.com/docs/en/getting-started/install/) for details.
+2. After launching a ClickHouse cluster, retrieve the `Connection Details` from the cluster's `Actions` menu. You will need the host, port, username, and password.
+3. Install the required Node.js peer dependency for ClickHouse in your workspace.
+
+You will need to install the following peer dependencies:
+
+```bash npm2yarn
+npm install -S @clickhouse/client mysql2
+```
+
+## Index and Query Docs
+
+import InsertExample from "@examples/indexes/vector_stores/clickhouse_fromTexts.ts";
+
+<CodeBlock language="typescript">{InsertExample}</CodeBlock>
+
+## Query Docs From an Existing Collection
+
+import SearchExample from "@examples/indexes/vector_stores/clickhouse_search.ts";
+
+<CodeBlock language="typescript">{SearchExample}</CodeBlock>
