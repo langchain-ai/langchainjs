@@ -118,6 +118,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/clickhouse"?:
+    | typeof import("../vectorstores/clickhouse.js")
+    | Promise<typeof import("../vectorstores/clickhouse.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
@@ -322,6 +325,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/openai_whisper_audio"?:
     | typeof import("../document_loaders/fs/openai_whisper_audio.js")
     | Promise<typeof import("../document_loaders/fs/openai_whisper_audio.js")>;
+  "langchain/document_loaders/fs/pptx"?:
+    | typeof import("../document_loaders/fs/pptx.js")
+    | Promise<typeof import("../document_loaders/fs/pptx.js")>;
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
@@ -493,6 +499,9 @@ export interface OptionalImportMap {
   "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
     | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
     | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
+  "langchain/experimental/tools/pyinterpreter"?:
+    | typeof import("../experimental/tools/pyinterpreter.js")
+    | Promise<typeof import("../experimental/tools/pyinterpreter.js")>;
 }
 
 export interface SecretMap {
