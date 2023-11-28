@@ -1,6 +1,6 @@
 import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
-import { Client, TextChannel, GatewayIntentBits, Message } from "discord.js";
+import { Client, TextChannel, GatewayIntentBits, Message, ChannelType } from "discord.js";
 
 /*
  * A tool for retrieving messages from a discord channel using a bot.
@@ -64,6 +64,114 @@ export class DiscordGetMessagesTool extends Tool {
         content: message.content,
         timestamp: message.createdAt,
       })) ?? [];
+
+    return JSON.stringify(results);
+  }
+}
+
+/**
+ * A tool for retrieving all servers a bot is a member of. It extends the 
+ * base `Tool` class and implements the `_call` method to perform the retrieve 
+ * operation. Requires a bot token which can be set in the environment 
+ * variables.
+ */
+export class DiscordGetGuildsTool extends Tool {
+  static lc_name() {
+    return "DiscordGetGuildsTool";
+  }
+
+  name = "discord-get-guilds";
+
+  description = `a discord tool. useful for getting a list of all servers/guilds the bot is a member of. no input required.`;
+
+  protected botToken: string;
+
+  client = new Client({
+    intents: [GatewayIntentBits.Guilds],
+  });
+
+  constructor(
+    botToken: string | undefined = getEnvironmentVariable("DiscordBotToken")
+  ) {
+    super(...arguments);
+
+    if (!botToken) {
+      throw new Error(
+        "Discord API key not set. You can set it as DiscordBotToken in your .env file."
+      );
+    }
+    this.botToken = botToken;
+  }
+
+  /** @ignore */
+  async _call(): Promise<string> {
+    await this.client.login(this.botToken);
+
+    const guilds = await this.client.guilds.fetch();
+    this.client.destroy();
+
+    const results =
+      guilds.map((guild) => ({
+        id: guild.id,
+        name: guild.name,
+        createdAt: guild.createdAt,
+      })) ?? [];
+    
+    return JSON.stringify(results);
+  }
+}
+
+/**
+ * A tool for retrieving text channels within a server/guild a bot is a member
+ * of. It extends the base `Tool` class and implements the `_call` method to 
+ * perform the retrieve operation. Requires a bot token which can be set in 
+ * the environment variables. The `_call` method takes a server/guild ID 
+ * to get its text channels.
+ */
+export class DiscordGetTextChannelsTool extends Tool {
+  static lc_name() {
+    return "DiscordGetTextChannelsTool";
+  }
+
+  name = "discord-get-text-channels";
+
+  description = `a discord tool. useful for getting a list of all text channels in a server/guild. input should be a discord server/guild ID`;
+
+  protected botToken: string;
+
+  client = new Client({
+    intents: [GatewayIntentBits.Guilds],
+  });
+
+  constructor(
+    botToken: string | undefined = getEnvironmentVariable("DiscordBotToken")
+  ) {
+    super(...arguments);
+
+    if (!botToken) {
+      throw new Error(
+        "Discord API key not set. You can set it as DiscordBotToken in your .env file."
+      );
+    }
+    this.botToken = botToken;
+  }
+
+  /** @ignore */
+  async _call(input: string): Promise<string> {
+    await this.client.login(this.botToken);
+
+    const guild = await this.client.guilds.fetch(input);
+    const channels = await guild.channels.fetch();
+    this.client.destroy();
+
+    const results =
+      channels
+        .filter(channel => channel?.type == ChannelType.GuildText)
+        .map((channel) => ({
+          id: channel?.id,
+          name: channel?.name,
+          createdAt: channel?.createdAt,
+    })) ?? [];
 
     return JSON.stringify(results);
   }
