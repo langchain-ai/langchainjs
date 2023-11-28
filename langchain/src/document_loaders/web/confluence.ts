@@ -84,7 +84,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     * Returns the authorization header for the request.
     * @returns The authorization header as a string, or undefined if no credentials were provided.
    */
-  private authorizationHeader(): string | undefined {
+  private get authorizationHeader(): string | undefined {
     if (this.personalAccessToken) {
       return `Bearer ${this.personalAccessToken}`;
     } else if (this.username && this.accessToken) {
