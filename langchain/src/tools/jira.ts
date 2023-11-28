@@ -8,12 +8,6 @@ import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 import { Serializable } from "../load/serializable.js";
 
-export interface JiraAPIWrapperParams {
-  host: string;
-  email: string;
-  jiraAPIToken: string;
-}
-
 export type Issue = {
   key: string;
   summary: string;
@@ -51,8 +45,11 @@ export interface JiraAPIWrapperParams extends AsyncCallerParams {
 
 export class JiraAPIWrapper extends Serializable {
   host: string;
+
   jiraEmail: string;
+
   jiraApiToken?: string;
+
   caller: AsyncCaller;
 
   lc_namespace = ["langchain", "tools", "jira"];
@@ -62,6 +59,7 @@ export class JiraAPIWrapper extends Serializable {
       apiToken: "JIRA_API_TOKEN",
     };
   }
+
   constructor(params: JiraAPIWrapperParams) {
     super(params);
     this.host = params.host;
@@ -234,14 +232,14 @@ export class JiraAPIWrapper extends Serializable {
     const params: JiraAPICall = JSON.parse(query);
     const headers = this._getHeaders();
 
-    var queryParams = new URLSearchParams(params.queryParams);
+    const queryParams = new URLSearchParams(params.queryParams);
     const resp = await this.caller.call(
       fetch,
       `${this.host}${params.endpoint}${queryParams}`,
       {
         method: params.httpverb,
         headers,
-        body: params.bodyParams,
+        body: JSON.stringify(params.bodyParams),
       }
     );
     if (!resp.ok) {
@@ -249,9 +247,6 @@ export class JiraAPIWrapper extends Serializable {
     }
 
     return await resp.text();
-
-    //return await this.jira[params.class][params.method](params.args);
-    return "";
   }
 
   async run(mode: string, query: string) {
