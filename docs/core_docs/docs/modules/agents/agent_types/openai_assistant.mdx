@@ -195,6 +195,49 @@ console.log(assistantResponse);
 
 Here the assistant was able to utilize the `code_interpreter` tool to calculate the answer to our question.
 
+## Retrieves an assistant
+
+Retrieves an assistant.
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+
+const assistant = new OpenAIAssistantRunnable({
+  assistantId,
+});
+const assistantResponse = await assistant.getAssistant();
+```
+
+## Modifies an assistant
+
+Modifies an assistant.
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+
+const assistant = await OpenAIAssistantRunnable.createAssistant({
+  name: "Personal Assistant",
+  model: "gpt-4-1106-preview",
+});
+const assistantModified = await assistant.modifyAssistant({
+  name: "Personal Assistant 2",
+});
+```
+
+## Delete an assistant
+
+Delete an assistant.
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+
+const assistant = await OpenAIAssistantRunnable.createAssistant({
+  name: "Personal Assistant",
+  model: "gpt-4-1106-preview",
+});
+const deleteStatus = await assistant.deleteAssistant();
+```
+
 # OpenAI Files
 
 Files are used to upload documents that can be used with features like Assistants and Fine-tuning.
@@ -224,7 +267,7 @@ The size of individual files can be a maximum of **512 MB**. See the Assistants 
 import { OpenAIFiles } from "langchain/experimental/openai_files";
 
 const openAIFiles = new OpenAIFiles();
-const file = await openAIFiles.create({
+const file = await openAIFiles.createFile({
   file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
   purpose: "assistants",
 });
