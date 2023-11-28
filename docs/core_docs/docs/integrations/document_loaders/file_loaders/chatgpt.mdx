@@ -10,7 +10,7 @@ This example goes over how to load conversations.json from your ChatGPT data exp
 Example code:
 
 ```typescript
-import { ChatGPTLoader } from "langchain/document_loaders/web/chatgpt";
+import { ChatGPTLoader } from "langchain/document_loaders/fs/chatgpt";
 
 const loader = new ChatGPTLoader("./example_data/example_conversations.json")
 
@@ -24,7 +24,7 @@ console.log(docs);
 Example code:
 
 ```typescript
-import { ChatGPTLoader } from "langchain/document_loaders/web/chatgpt";
+import { ChatGPTLoader } from "langchain/document_loaders/fs/chatgpt";
 
 const loader = new ChatGPTLoader("./example_data/example_conversations.json", 1)
 
