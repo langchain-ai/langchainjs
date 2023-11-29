@@ -24,7 +24,7 @@
   },
   "include": [
     "src/**/*"
-  ],
+, "../langchain-core/src/tracers/root_listener.ts"  ],
   "exclude": [
     "node_modules",
     "dist",
