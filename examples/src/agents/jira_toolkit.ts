@@ -8,9 +8,9 @@ import {
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
   const jira = new JiraAPIWrapper({
-    host: "",
-    email: "",
-    apiToken: "",
+    host: "https://yourdomain.atlassian.net",
+    email: "example@email.com",
+    apiToken: "<api_token>",
   });
 
   const toolkit = await new JiraToolkit(jira);
@@ -23,6 +23,7 @@ export const run = async () => {
       verbose: true,
     }
   );
+
   console.log("Loaded agent.");
 
   const input = `Make a new issue in project PW to remind me to make more fried rice.`;

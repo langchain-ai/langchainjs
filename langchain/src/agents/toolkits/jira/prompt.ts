@@ -1,8 +1,8 @@
 export const JIRA_ISSUE_CREATE_PROMPT = `
 This tool is a wrapper around the Jira API, useful when you need to create a Jira issue. 
 The input to this tool is a object specifying the fields of the Jira issue, and will be passed into the Jira \`createIssue\` function.
-For example, to create a low priority task called "test issue" with description "test description", you would pass in the following object: 
-{{"summary": "test issue", "description": "test description", "issuetype": {{"name": "Task"}}, "priority": {{"name": "Low"}}}}
+For example, to create a low priority task called "test issue" with description "test description" in project PW, you would pass in the following object: 
+{{"summary": "test issue", "description": "test description", "project": "PW", "issuetype": "Task", "priority": "Low"}}
 `;
 
 export const JIRA_GET_ALL_PROJECTS_PROMPT = `

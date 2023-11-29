@@ -1,32 +1,46 @@
 import { Tool } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
-
-/**
- * Interface that represents the configuration options for a JiraAction.
- * It extends the BaseToolConfig interface from the BaseTool class.
- */
-
 import { Serializable } from "../load/serializable.js";
 
-export type Issue = {
+export type JiraInwardIssue = {
   key: string;
-  summary: string;
-  created: string;
-  assignee: string | undefined;
-  priority: string | undefined;
-  status: string | undefined;
-  related_issues: Array<{
-    rel_type: string | undefined;
-    rel_key: string | undefined;
-    rel_summary: string | undefined;
-  }>;
+  fields: { summary: string } | undefined;
 };
 
-export type Project = {
+export type JiraOutwardIssue = {
+  key: string;
+  fields: { summary: string } | undefined;
+};
+
+export type JiraIssueLink = {
+  type: { inward: string; outward: string } | undefined;
+  inwardIssue: JiraInwardIssue | undefined;
+  outwardIssue: JiraOutwardIssue | undefined;
+};
+
+export type JiraIssueFields = {
+  summary: string;
+  created: string;
+  assignee: { displayName: string };
+  priority: { name: string };
+  status: { name: string };
+  issuelinks: Array<JiraIssueLink>;
+};
+
+export type JiraIssue = {
+  key: string;
+  fields: JiraIssueFields;
+};
+
+export type JiraIssueResponse = {
+  issues: Array<JiraIssue> | undefined;
+};
+
+export type JiraProject = {
   id: string;
   key: string;
   name: string;
-  type: string | undefined;
+  projectTypeKey: string | undefined;
   style: string | undefined;
 };
 
@@ -35,6 +49,18 @@ export type JiraAPICall = {
   endpoint: string;
   queryParams: Record<string, string>;
   bodyParams: BodyInit;
+};
+
+export type JiraProjectResponse = {
+  values: Array<JiraProject>;
+};
+
+export type JiraIssueHeaderParams = {
+  summary: string;
+  description: string;
+  project: string;
+  issuetype: string;
+  priority: string;
 };
 
 export interface JiraAPIWrapperParams extends AsyncCallerParams {
@@ -86,17 +112,17 @@ export class JiraAPIWrapper extends Serializable {
     return headers;
   }
 
-  protected _parse_issues(issues: any): Array<string> {
+  protected _parse_issues(issues: JiraIssueResponse): Array<string> {
     const parsed: Array<string> = [];
 
-    issues.issues?.forEach((issue: any) => {
+    issues.issues?.forEach((issue: JiraIssue) => {
       const rel_issues: Array<{
         rel_type: string | undefined;
         rel_key: string | undefined;
         rel_summary: string | undefined;
       }> = [];
 
-      issue.fields.issuelinks.forEach((related_issue: any) => {
+      issue.fields.issuelinks.forEach((related_issue: JiraIssueLink) => {
         if (related_issue.inwardIssue) {
           rel_issues.push({
             rel_type: related_issue.type?.inward,
@@ -128,7 +154,7 @@ export class JiraAPIWrapper extends Serializable {
     return parsed;
   }
 
-  protected _parse_projects(projects: Array<any>): Array<string> {
+  protected _parse_projects(projects: Array<JiraProject>): Array<string> {
     const parsed: Array<string> = [];
 
     projects.forEach((project) => {
@@ -146,14 +172,14 @@ export class JiraAPIWrapper extends Serializable {
     return parsed;
   }
 
-  protected _create_issue_header(params: any) {
+  protected _create_issue_header(params: JiraIssueHeaderParams) {
     return `{
       "fields": {
-          "summary": ${params.summary},
+          "summary": "${params.summary}",
           "description": {
               "content": [{
                   "content": [{
-                      "text": ${params.description},
+                      "text": "${params.description}",
                       "type": "text"
                   }],
                   "type": "paragraph"
@@ -161,8 +187,9 @@ export class JiraAPIWrapper extends Serializable {
               "type": "doc",
               "version": 1
           },
-          "project": ${params.project},
-          "issuetype": ${params.issuetype},
+          "project": { "key": "${params.project}" },
+          "issuetype": { "name": "${params.issuetype}" },
+          "priority": { "name": "${params.priority}" }
       }
     }`;
   }
@@ -205,9 +232,11 @@ export class JiraAPIWrapper extends Serializable {
       const error = await resp.text();
       return `Received ${error}. Make sure the correct tool is being used and try again.`;
     }
-    const projects: any = resp.json();
+    const projects: unknown = await resp.json();
 
-    const parsed_projects = this._parse_projects(projects.values);
+    const parsed_projects = this._parse_projects(
+      (projects as JiraProjectResponse).values
+    );
     const parsed_projects_str = `Found ${parsed_projects.length} projects:\n ${parsed_projects}`;
 
     return parsed_projects_str;
