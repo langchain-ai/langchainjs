@@ -1,5 +1,5 @@
 export { MaskingParser } from "./parser.js";
-export { PIIMaskingTransformer } from "./pii_masking_transformer.js";
+export { RegexMaskingTransformer } from "./regex_masking_transformer.js";
 export {
   type MaskingParserConfig,
   type HashFunction,

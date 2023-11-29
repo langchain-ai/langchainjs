@@ -1,16 +1,16 @@
 //  yarn test:single src/experimental/masking/tests/masking.test.ts
-import { MaskingParser, PIIMaskingTransformer } from "../index.js";
+import { MaskingParser, RegexMaskingTransformer } from "../index.js";
 import { jest } from "@jest/globals";
 
 describe("MaskingParser and PIIMaskingTransformer", () => {
   describe("Masking with Static Identifiers", () => {
     let maskingParser: MaskingParser;
-    let piiMaskingTransformer: PIIMaskingTransformer;
+    let piiMaskingTransformer: RegexMaskingTransformer;
     const emailPattern = { regex: /\S+@\S+\.\S+/, replacement: "[email]" };
     const phonePattern = { regex: /\d{3}-\d{3}-\d{4}/, replacement: "[phone]" };
 
     beforeEach(() => {
-      piiMaskingTransformer = new PIIMaskingTransformer({
+      piiMaskingTransformer = new RegexMaskingTransformer({
         email: emailPattern,
         phone: phonePattern,
       });
@@ -67,14 +67,14 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
   describe("Masking with Dynamic Identifiers", () => {
     let maskingParser: MaskingParser;
-    let piiMaskingTransformer: PIIMaskingTransformer;
+    let piiMaskingTransformer: RegexMaskingTransformer;
     const emailMask = (match: string) =>
       `[email-${Math.random().toString(16).slice(2)}]`;
     const phoneMask = (match: string) =>
       `[phone-${Math.random().toString(16).slice(2)}]`;
 
     beforeEach(() => {
-      piiMaskingTransformer = new PIIMaskingTransformer({
+      piiMaskingTransformer = new RegexMaskingTransformer({
         email: { regex: /\S+@\S+\.\S+/g, mask: emailMask },
         phone: { regex: /\d{3}-\d{3}-\d{4}/g, mask: phoneMask },
       });
@@ -125,12 +125,12 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
   describe("PIIMaskingTransformer with Default Hash Function", () => {
     let maskingParser: MaskingParser;
-    let piiMaskingTransformer: PIIMaskingTransformer;
+    let piiMaskingTransformer: RegexMaskingTransformer;
     const emailPattern = { regex: /\S+@\S+\.\S+/, replacement: "[email]" };
     const phonePattern = { regex: /\d{3}-\d{3}-\d{4}/, replacement: "[phone]" };
 
     beforeEach(() => {
-      piiMaskingTransformer = new PIIMaskingTransformer({
+      piiMaskingTransformer = new RegexMaskingTransformer({
         email: emailPattern,
         phone: phonePattern,
       });
@@ -140,7 +140,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     });
 
     it("should mask email and phone using default hash function", async () => {
-      const piiMaskingTransformer = new PIIMaskingTransformer({
+      const piiMaskingTransformer = new RegexMaskingTransformer({
         email: emailPattern,
         phone: phonePattern,
       });
@@ -161,10 +161,10 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     const phonePattern = { regex: /\d{3}-\d{3}-\d{4}/, replacement: "[phone]" };
 
     let maskingParser: MaskingParser;
-    let piiMaskingTransformer: PIIMaskingTransformer;
+    let piiMaskingTransformer: RegexMaskingTransformer;
 
     beforeEach(() => {
-      piiMaskingTransformer = new PIIMaskingTransformer({
+      piiMaskingTransformer = new RegexMaskingTransformer({
         email: emailPattern,
         phone: phonePattern,
       });
@@ -182,7 +182,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
         .join("");
     };
     it("should mask email and phone using custom hash function", async () => {
-      const piiMaskingTransformer = new PIIMaskingTransformer(
+      const piiMaskingTransformer = new RegexMaskingTransformer(
         {
           email: {
             regex: /\S+@\S+\.\S+/,
@@ -213,7 +213,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     });
 
     it("should rehydrate masked data correctly using custom hash function", async () => {
-      const piiMaskingTransformer = new PIIMaskingTransformer(
+      const piiMaskingTransformer = new RegexMaskingTransformer(
         {
           email: {
             regex: /\S+@\S+\.\S+/,
@@ -240,10 +240,10 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
   describe("Error Handling in MaskingParser", () => {
     let maskingParser: MaskingParser;
-    let piiMaskingTransformer: PIIMaskingTransformer;
+    let piiMaskingTransformer: RegexMaskingTransformer;
 
     beforeEach(() => {
-      piiMaskingTransformer = new PIIMaskingTransformer({});
+      piiMaskingTransformer = new RegexMaskingTransformer({});
       maskingParser = new MaskingParser();
     });
 
@@ -279,7 +279,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
   describe("Error Handling in PIIMaskingTransformer", () => {
     it("throws an error for invalid message type in transform", () => {
-      const transformer = new PIIMaskingTransformer({});
+      const transformer = new RegexMaskingTransformer({});
       const invalidMessage: any = 123; // intentionally incorrect type
       const state = new Map<string, string>();
       expect(() => transformer.transform(invalidMessage, state)).toThrow(
@@ -288,7 +288,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     });
 
     it("throws an error for invalid state type in transform", () => {
-      const transformer = new PIIMaskingTransformer({});
+      const transformer = new RegexMaskingTransformer({});
       const message = "Some message";
       const invalidState: any = {}; // intentionally incorrect type
       expect(() => transformer.transform(message, invalidState)).toThrow(
@@ -299,18 +299,18 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("throws an error when initialized with invalid regex pattern", () => {
       expect(() => {
         // @ts-expect-error
-        new PIIMaskingTransformer({ invalid: { regex: null } });
+        new RegexMaskingTransformer({ invalid: { regex: null } });
       }).toThrow("Invalid pattern configuration.");
     });
   });
 
   describe("MaskingParser Hooks", () => {
     let maskingParser: MaskingParser;
-    let piiMaskingTransformer: PIIMaskingTransformer;
+    let piiMaskingTransformer: RegexMaskingTransformer;
     const emailPattern = { regex: /\S+@\S+\.\S+/, replacement: "[email]" };
 
     beforeEach(() => {
-      piiMaskingTransformer = new PIIMaskingTransformer({
+      piiMaskingTransformer = new RegexMaskingTransformer({
         email: emailPattern,
       });
     });

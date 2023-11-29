@@ -1,5 +1,5 @@
 // yarn test:single src/experimental/masking/tests/mask-integration.test.ts
-import { MaskingParser, PIIMaskingTransformer } from "../index.js";
+import { MaskingParser, RegexMaskingTransformer } from "../index.js";
 
 // Mock database for simulating state storage and retrieval
 const mockDB = (() => {
@@ -24,12 +24,12 @@ function deserializeState(serializedState: string): Map<string, string> {
 
 describe("MaskingParser Integration Test", () => {
   let parser: MaskingParser;
-  let transformer: PIIMaskingTransformer;
+  let transformer: RegexMaskingTransformer;
   const emailPattern = { regex: /\S+@\S+\.\S+/, replacement: "[email]" };
   const phonePattern = { regex: /\d{3}-\d{3}-\d{4}/, replacement: "[phone]" };
 
   beforeEach(() => {
-    transformer = new PIIMaskingTransformer({
+    transformer = new RegexMaskingTransformer({
       email: emailPattern,
       phone: phonePattern,
     });

@@ -1,14 +1,14 @@
 import { MaskingTransformer } from "./transformer.js";
 import { HashFunction, MaskingPattern } from "./types.js";
 /**
- * PIIMaskingTransformer class for masking and rehydrating messages with PII.
+ * RegexMaskingTransformer class for masking and rehydrating messages with Regex.
  */
-export class PIIMaskingTransformer extends MaskingTransformer {
+export class RegexMaskingTransformer extends MaskingTransformer {
   private patterns: { [key: string]: MaskingPattern };
   private hashFunction: HashFunction;
 
   /**
-   * Constructs a PIIMaskingTransformer with given patterns and an optional hash function.
+   * Constructs a RegexMaskingTransformer with given patterns and an optional hash function.
    * Validates the provided patterns to ensure they conform to the expected structure.
    *
    * @param patterns - An object containing masking patterns. Each pattern should include
@@ -64,13 +64,13 @@ export class PIIMaskingTransformer extends MaskingTransformer {
   ): [string, Map<string, string>] {
     if (typeof message !== "string") {
       throw new TypeError(
-        "PIIMaskingTransformer.transform Error: The 'message' argument must be a string."
+        "RegexMaskingTransformer.transform Error: The 'message' argument must be a string."
       );
     }
 
     if (!(state instanceof Map)) {
       throw new TypeError(
-        "PIIMaskingTransformer.transform Error: The 'state' argument must be an instance of Map."
+        "RegexMaskingTransformer.transform Error: The 'state' argument must be an instance of Map."
       );
     }
 
@@ -113,13 +113,13 @@ export class PIIMaskingTransformer extends MaskingTransformer {
   rehydrate(message: string, state: Map<string, string>): string {
     if (typeof message !== "string") {
       throw new TypeError(
-        "PIIMaskingTransformer.rehydrate Error: The 'message' argument must be a string."
+        "RegexMaskingTransformer.rehydrate Error: The 'message' argument must be a string."
       );
     }
 
     if (!(state instanceof Map)) {
       throw new TypeError(
-        "PIIMaskingTransformer.rehydrate Error: The 'state' argument must be an instance of Map."
+        "RegexMaskingTransformer.rehydrate Error: The 'state' argument must be an instance of Map."
       );
     }
 
