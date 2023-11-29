@@ -1,0 +1,20 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Python interpreter tool
+
+:::warning
+This tool executes code and can potentially perform destructive actions. Be careful that you trust any code passed to it!
+:::
+
+LangChain offers an experimental tool for executing arbitrary Python code.
+This can be useful in combination with an LLM that can generate code to perform more powerful computations.
+
+## Usage
+
+import ToolExample from "@examples/tools/pyinterpreter.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>

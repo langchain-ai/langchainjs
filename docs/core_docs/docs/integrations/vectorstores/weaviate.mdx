@@ -30,7 +30,15 @@ import QueryExample from "@examples/indexes/vector_stores/weaviate_search.ts";
 
 <CodeBlock language="typescript">{QueryExample}</CodeBlock>
 
-## Usage delete documents
+## Usage, maximal marginal relevance
+
+import MaximumMarginalRelevanceExample from "@examples/indexes/vector_stores/weaviate_mmr.ts";
+
+You can use maximal marginal relevance search, which optimizes for similarity to the query AND diversity.
+
+<CodeBlock language="typescript">{MaximumMarginalRelevanceExample}</CodeBlock>
+
+## Usage, delete documents
 
 import DeleteExample from "@examples/indexes/vector_stores/weaviate_delete.ts";
 

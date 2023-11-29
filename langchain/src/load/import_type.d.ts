@@ -118,6 +118,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/clickhouse"?:
+    | typeof import("../vectorstores/clickhouse.js")
+    | Promise<typeof import("../vectorstores/clickhouse.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
@@ -322,6 +325,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/openai_whisper_audio"?:
     | typeof import("../document_loaders/fs/openai_whisper_audio.js")
     | Promise<typeof import("../document_loaders/fs/openai_whisper_audio.js")>;
+  "langchain/document_loaders/fs/pptx"?:
+    | typeof import("../document_loaders/fs/pptx.js")
+    | Promise<typeof import("../document_loaders/fs/pptx.js")>;
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
@@ -493,17 +499,23 @@ export interface OptionalImportMap {
   "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
     | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
     | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
+  "langchain/experimental/tools/pyinterpreter"?:
+    | typeof import("../experimental/tools/pyinterpreter.js")
+    | Promise<typeof import("../experimental/tools/pyinterpreter.js")>;
 }
 
 export interface SecretMap {
+  ANTHROPIC_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
+  AZURE_OPENAI_API_KEY?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
   BEDROCK_AWS_SECRET_ACCESS_KEY?: string;
+  CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
@@ -519,6 +531,7 @@ export interface SecretMap {
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
   OPENAI_API_KEY?: string;
+  OPENAI_ORGANIZATION?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
