@@ -181,7 +181,7 @@ export class JiraAPIWrapper extends Serializable {
 
     if (!resp.ok) {
       const error = await resp.text();
-      return "Received error " + error + ". Is the correct tool being used?";
+      return `Received ${error}. Make sure the correct tool is being used and try again.`;
     }
     const issues = resp.json();
     const parsed_issues = this._parse_issues(issues);
@@ -203,7 +203,7 @@ export class JiraAPIWrapper extends Serializable {
 
     if (!resp.ok) {
       const error = await resp.text();
-      return "Received error " + error + ". Is the correct tool being used?";
+      return `Received ${error}. Make sure the correct tool is being used and try again.`;
     }
     const projects: any = resp.json();
 
@@ -228,7 +228,7 @@ export class JiraAPIWrapper extends Serializable {
 
     if (!resp.ok) {
       const error = await resp.text();
-      return "Received error " + error + ". Is the correct tool being used?";
+      return `Received ${error}. Make sure the correct tool is being used and try again.`;
     }
 
     return await resp.text();
@@ -263,7 +263,7 @@ export class JiraAPIWrapper extends Serializable {
 
     if (!resp.ok) {
       const error = await resp.text();
-      return "Received error " + error + ". Is the correct tool being used?";
+      return `Received ${error}. Make sure the correct tool is being used and try again.`;
     }
 
     return await resp.text();
