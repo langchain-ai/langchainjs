@@ -250,7 +250,6 @@ test("Runnable withConfig", async () => {
 });
 
 test("Listeners work", async () => {
-  // implement
   const prompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
     ["human", "{question}"],
@@ -265,8 +264,49 @@ test("Listeners work", async () => {
 
   await chain
     .withListeners({
-      onStart: mockStart,
-      onEnd: mockEnd,
+      onStart: (run) => {
+        mockStart(run);
+      },
+      onEnd: (run) => {
+        mockEnd(run);
+      },
+    })
+    .invoke({ question: "What is the meaning of life?" });
+
+  expect(mockStart).toHaveBeenCalledTimes(1);
+  expect((mockStart.mock.calls[0][0] as { name: string }).name).toBe(
+    "RunnableSequence"
+  );
+  expect(mockEnd).toHaveBeenCalledTimes(1);
+});
+
+test("Listeners work with async handlers", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
+    ["human", "{question}"],
+  ]);
+  const model = new FakeListChatModel({
+    responses: ["foo"],
+  });
+  const chain = prompt.pipe(model);
+
+  const mockStart = jest.fn();
+  const mockEnd = jest.fn();
+
+  await chain
+    .withListeners({
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onStart: async (run) => {
+        const promise = new Promise((resolve) => setTimeout(resolve, 2000));
+        await promise;
+        mockStart(run);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onEnd: async (run) => {
+        const promise = new Promise((resolve) => setTimeout(resolve, 2000));
+        await promise;
+        mockEnd(run);
+      },
     })
     .invoke({ question: "What is the meaning of life?" });
 
