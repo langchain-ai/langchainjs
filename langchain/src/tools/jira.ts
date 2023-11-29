@@ -97,7 +97,8 @@ export class JiraAPIWrapper extends Serializable {
     super(params);
     this.host = params.host;
     this.jiraEmail = params.email;
-    this.jiraApiToken = params.apiToken ?? getEnvironmentVariable("JIRA_API_TOKEN");
+    this.jiraApiToken =
+      params.apiToken ?? getEnvironmentVariable("JIRA_API_TOKEN");
     this.caller = new AsyncCaller(
       typeof params === "string" ? {} : params ?? {}
     );
