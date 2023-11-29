@@ -6,5 +6,5 @@ const question = "Where do Llamas come from?";
 const model = new LlamaCpp({ modelPath: llamaPath });
 
 console.log(`You: ${question}`);
-const response = await model.call(question);
+const response = await model.invoke(question);
 console.log(`AI : ${response}`);

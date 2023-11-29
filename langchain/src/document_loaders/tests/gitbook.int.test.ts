@@ -10,7 +10,7 @@ test("Test GitbookLoader", async () => {
   console.log("Loaded", docs.length, "Gitbook documents");
 });
 
-test.only("Test GitbookLoader with shouldLoadAllPaths", async () => {
+test("Test GitbookLoader with shouldLoadAllPaths", async () => {
   const loader = new GitbookLoader("https://docs.maildrop.cc", {
     shouldLoadAllPaths: true,
   });

@@ -39,6 +39,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/writer",
   "langchain/llms/portkey",
   "langchain/prompts/load",
+  "langchain/vectorstores/clickhouse",
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/cassandra",
   "langchain/vectorstores/convex",
@@ -107,6 +108,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/fs/notion",
   "langchain/document_loaders/fs/unstructured",
   "langchain/document_loaders/fs/openai_whisper_audio",
+  "langchain/document_loaders/fs/pptx",
   "langchain/document_transformers/html_to_text",
   "langchain/document_transformers/mozilla_readability",
   "langchain/chat_models/portkey",
@@ -164,4 +166,5 @@ export const optionalImportEntrypoints = [
   "langchain/experimental/chat_models/anthropic_functions",
   "langchain/experimental/llms/bittensor",
   "langchain/experimental/hubs/makersuite/googlemakersuitehub",
+  "langchain/experimental/tools/pyinterpreter",
 ];

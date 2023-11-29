@@ -31,6 +31,11 @@ export interface HFInput {
 
   /** API key to use. */
   apiKey?: string;
+
+  /**
+   * Credentials to use for the request. If this is a string, it will be passed straight on. If it's a boolean, true will be "include" and false will not send credentials at all.
+   */
+  includeCredentials?: string | boolean;
 }
 
 /**
@@ -73,6 +78,8 @@ export class HuggingFaceInference extends LLM implements HFInput {
 
   endpointUrl: string | undefined = undefined;
 
+  includeCredentials: string | boolean | undefined = undefined;
+
   constructor(fields?: Partial<HFInput> & BaseLLMParams) {
     super(fields ?? {});
 
@@ -85,6 +92,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     this.endpointUrl = fields?.endpointUrl;
+    this.includeCredentials = fields?.includeCredentials;
 
     if (!this.apiKey) {
       throw new Error(
@@ -104,8 +112,12 @@ export class HuggingFaceInference extends LLM implements HFInput {
   ): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = this.endpointUrl
-      ? new HfInference(this.apiKey).endpoint(this.endpointUrl)
-      : new HfInference(this.apiKey);
+      ? new HfInference(this.apiKey, {
+          includeCredentials: this.includeCredentials,
+        }).endpoint(this.endpointUrl)
+      : new HfInference(this.apiKey, {
+          includeCredentials: this.includeCredentials,
+        });
 
     const res = await this.caller.callWithOptions(
       { signal: options.signal },
