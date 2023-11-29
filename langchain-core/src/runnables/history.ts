@@ -16,6 +16,7 @@ import { RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...args: Array<any>
 ) => BaseChatMessageHistory;
 
@@ -52,6 +53,7 @@ export class RunnableWithMessageHistory<
       fields.historyMessagesKey ?? this.historyMessagesKey;
 
     let historyChain: Runnable = new RunnableLambda({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       func: (input: any) => (config: CallOptions) =>
         this._enterHistory(input, config),
     }).withConfig({ runName: "load_history" });
@@ -113,13 +115,12 @@ export class RunnableWithMessageHistory<
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _enterHistory(input: any, config: CallOptions): Array<BaseMessage> {
-    // what the hell is python doin?
     const history = config.configurable?.messageHistory;
 
     if (this.historyMessagesKey) {
-      // from python, once again, what the??
-      // return history.messages.copy();
+      // todo: this is def not right brace!
       return history.messages;
     }
 
@@ -130,7 +131,6 @@ export class RunnableWithMessageHistory<
   }
 
   _exitHistory(run: Run, config: CallOptions): void {
-    // what the hell is python doin?
     const history = config.configurable?.messageHistory;
 
     // Get input messages
