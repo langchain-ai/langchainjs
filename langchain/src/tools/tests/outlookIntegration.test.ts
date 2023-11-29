@@ -6,10 +6,7 @@ let outlookTool: OutlookIntegration;
 
 describe("outlook integration test suite", () => {
   beforeAll(async() => {
-    const clientId = '6e6fad12-297a-4f81-9472-11b2d07831be';
-    const clientSecret = 'ACm8Q~ErjhV4weyW5uBBUoDQprkWpP.rgwwI1c-y';
-    const redirectUri = 'http://localhost:3000/oauth-callback';
-    const authflow = new AuthFlowREST(clientId, clientSecret, redirectUri)
+    const authflow = new AuthFlowREST()
     const access_token = await authflow.getAccessToken();
     outlookTool = new OutlookIntegration(access_token);
   });

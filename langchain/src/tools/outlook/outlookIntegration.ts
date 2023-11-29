@@ -1,6 +1,4 @@
 // import { Tool, type ToolParams } from "../base.js";
-// import { getEnvironmentVariable } from "../../util/env.js";
-// import * as msal from '@azure/msal-node';
 
 
 export interface Email {

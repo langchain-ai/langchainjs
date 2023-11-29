@@ -2,6 +2,7 @@ import * as http from 'http';
 import * as url from 'url';
 import * as openurl from 'openurl';
 import { AuthFlowBase } from './authFlowBase.js';
+import { getEnvironmentVariable } from '../../util/env.js';
 
 interface AccessTokenResponse {
     access_token: string;
@@ -9,11 +10,23 @@ interface AccessTokenResponse {
 
 export class AuthFlowREST extends AuthFlowBase {
 
+    private clientSecret: string;
+    private redirectUri: string;
     private port: number;
     private pathname: string;
 
-    constructor(clientId: string, clientSecret: string, redirectUri: string) {
-        super(clientId, clientSecret, redirectUri);
+    constructor(clientId?: string, clientSecret?: string, redirectUri?: string) {
+        if (!clientId || !clientSecret || !redirectUri) {
+            clientId = getEnvironmentVariable('CLIENT_ID');
+            clientSecret = getEnvironmentVariable('CLIENT_SECRET');
+            redirectUri = getEnvironmentVariable('REDIRECT_URI');
+        }
+        if (!clientId || !clientSecret || !redirectUri) {
+            throw new Error('Missing clientId, clientSecret or redirectUri.');
+        }
+        super(clientId);
+        this.clientSecret = clientSecret;
+        this.redirectUri = redirectUri;
         const parsedUrl = new URL(this.redirectUri);
         this.port = parsedUrl.port ? parseInt(parsedUrl.port) : 3000;
         this.pathname = parsedUrl.pathname || '';
