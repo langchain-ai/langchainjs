@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { z } from "zod";
-import { test } from "@jest/globals";
+import { jest, test } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../chat_models/base.js";
 import {
   ChatPromptTemplate,
@@ -28,6 +28,7 @@ import {
   FakeStreamingLLM,
   FakeSplitIntoListParser,
 } from "./lib.js";
+import { FakeListChatModel } from "../../chat_models/fake.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -246,4 +247,32 @@ test("Runnable withConfig", async () => {
   expect(chunks.length).toEqual(1);
   expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
   expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
+});
+
+test("Listeners work", async () => {
+  // implement
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
+    ["human", "{question}"],
+  ]);
+  const model = new FakeListChatModel({
+    responses: ["foo"],
+  });
+  const chain = prompt.pipe(model);
+
+  const mockStart = jest.fn();
+  const mockEnd = jest.fn();
+
+  await chain
+    .withListeners({
+      onStart: mockStart,
+      onEnd: mockEnd,
+    })
+    .invoke({ question: "What is the meaning of life?" });
+
+  expect(mockStart).toHaveBeenCalledTimes(1);
+  expect((mockStart.mock.calls[0][0] as { name: string }).name).toBe(
+    "RunnableSequence"
+  );
+  expect(mockEnd).toHaveBeenCalledTimes(1);
 });
