@@ -6,6 +6,7 @@ import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { getEnvironmentVariable } from "../util/env.js";
+import { custom } from "zod";
 
 /**
  * Interface for the arguments that can be passed to the
@@ -125,8 +126,7 @@ export class QdrantVectorStore extends VectorStore {
       payload: {
         content: documents[idx].pageContent,
         metadata: documents[idx].metadata,
-        ...(documents[idx].customPayload ? documents[idx].customPayload != customPayload ? 
-          documents[idx].customPayload : customPayload : customPayload),
+        ...(documents[idx].customPayload ?? customPayload),
       },
     }));
 
@@ -224,7 +224,7 @@ export class QdrantVectorStore extends VectorStore {
     metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig: QdrantLibArgs,
-    customPayload? : object
+    customPayload?: object
   ): Promise<QdrantVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -232,7 +232,7 @@ export class QdrantVectorStore extends VectorStore {
       const newDoc = new Document({
         pageContent: texts[i],
         metadata,
-        customPayload: customPayload,
+        customPayload,
       });
       docs.push(newDoc);
     }
