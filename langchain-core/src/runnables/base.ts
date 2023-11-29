@@ -576,7 +576,6 @@ export abstract class Runnable<
     onEnd?: (run: Run) => void;
     onError?: (run: Run) => void;
   }): Runnable<RunInput, RunOutput, CallOptions> {
-    console.log("gets called");
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
       bound: this,
@@ -648,7 +647,6 @@ export class RunnableBinding<
         ? this.configFactories.map((f) => f(config))
         : [])
     );
-    // return mergeConfigs<CallOptions>(this.config, options);
   }
 
   bind(
