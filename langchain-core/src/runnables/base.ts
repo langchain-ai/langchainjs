@@ -576,6 +576,7 @@ export abstract class Runnable<
     onEnd?: (run: Run) => void;
     onError?: (run: Run) => void;
   }): Runnable<RunInput, RunOutput, CallOptions> {
+    console.log("gets called");
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
       bound: this,
@@ -603,7 +604,7 @@ export type RunnableBindingArgs<
   bound: Runnable<RunInput, RunOutput, CallOptions>;
   kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
-  configFactories?: Array<() => RunnableConfig>;
+  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
 };
 
 /**
@@ -628,7 +629,7 @@ export class RunnableBinding<
 
   protected kwargs?: Partial<CallOptions>;
 
-  configFactories?: Array<() => RunnableConfig>;
+  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
 
   constructor(fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>) {
     super(fields);
@@ -639,8 +640,15 @@ export class RunnableBinding<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _mergeConfig(options?: Record<string, any>) {
-    return mergeConfigs<CallOptions>(this.config, options);
+  _mergeConfig(options?: Record<string, any>): Partial<CallOptions> {
+    const config = mergeConfigs(this.config, options);
+    return mergeConfigs(
+      config,
+      ...(this.configFactories
+        ? this.configFactories.map((f) => f(config))
+        : [])
+    );
+    // return mergeConfigs<CallOptions>(this.config, options);
   }
 
   bind(
