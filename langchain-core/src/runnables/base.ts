@@ -12,8 +12,14 @@ import {
 } from "../tracers/log_stream.js";
 import { Serializable } from "../load/serializable.js";
 import { IterableReadableStream } from "../utils/stream.js";
-import { RunnableConfig, getCallbackMangerForConfig } from "./config.js";
+import {
+  RunnableConfig,
+  getCallbackMangerForConfig,
+  mergeConfigs,
+} from "./config.js";
 import { AsyncCaller } from "../utils/async_caller.js";
+import { Run } from "../tracers/base.js";
+import { RootListenersTracer } from "../tracers/root_listener.js";
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput
@@ -549,6 +555,44 @@ export abstract class Runnable<
   static isRunnable(thing: any): thing is Runnable {
     return thing ? thing.lc_runnable : false;
   }
+
+  /**
+   * Bind lifecycle listeners to a Runnable, returning a new Runnable.
+   * The Run object contains information about the run, including its id,
+   * type, input, output, error, startTime, endTime, and any tags or metadata
+   * added to the run.
+   *
+   * @param {Object} params - The object containing the callback functions.
+   * @param {(run: Run) => void} params.onStart - Called before the runnable starts running, with the Run object.
+   * @param {(run: Run) => void} params.onEnd - Called after the runnable finishes running, with the Run object.
+   * @param {(run: Run) => void} params.onError - Called if the runnable throws an error, with the Run object.
+   */
+  withListeners({
+    onStart,
+    onEnd,
+    onError,
+  }: {
+    onStart?: (run: Run) => void;
+    onEnd?: (run: Run) => void;
+    onError?: (run: Run) => void;
+  }): Runnable<RunInput, RunOutput, CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableBinding<RunInput, RunOutput, CallOptions>({
+      bound: this,
+      config: {},
+      configFactories: [
+        () => ({
+          callbacks: [
+            new RootListenersTracer({
+              onStart,
+              onEnd,
+              onError,
+            }),
+          ],
+        }),
+      ],
+    });
+  }
 }
 
 export type RunnableBindingArgs<
@@ -557,8 +601,9 @@ export type RunnableBindingArgs<
   CallOptions extends RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
-  kwargs: Partial<CallOptions>;
+  kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
+  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
 };
 
 /**
@@ -581,31 +626,27 @@ export class RunnableBinding<
 
   config: RunnableConfig;
 
-  protected kwargs: Partial<CallOptions>;
+  protected kwargs?: Partial<CallOptions>;
+
+  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
 
   constructor(fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>) {
     super(fields);
     this.bound = fields.bound;
     this.kwargs = fields.kwargs;
     this.config = fields.config;
+    this.configFactories = fields.configFactories;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _mergeConfig(options?: Record<string, any>) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const copy: Record<string, any> = { ...this.config };
-    if (options) {
-      for (const key of Object.keys(options)) {
-        if (key === "metadata") {
-          copy[key] = { ...copy[key], ...options[key] };
-        } else if (key === "tags") {
-          copy[key] = (copy[key] ?? []).concat(options[key] ?? []);
-        } else {
-          copy[key] = options[key] ?? copy[key];
-        }
-      }
-    }
-    return copy as Partial<CallOptions>;
+  _mergeConfig(options?: Record<string, any>): Partial<CallOptions> {
+    const config = mergeConfigs(this.config, options);
+    return mergeConfigs(
+      config,
+      ...(this.configFactories
+        ? this.configFactories.map((f) => f(config))
+        : [])
+    );
   }
 
   bind(
@@ -721,6 +762,45 @@ export class RunnableBinding<
   ): thing is RunnableBinding<any, any, any> {
     return thing.bound && Runnable.isRunnable(thing.bound);
   }
+
+  /**
+   * Bind lifecycle listeners to a Runnable, returning a new Runnable.
+   * The Run object contains information about the run, including its id,
+   * type, input, output, error, startTime, endTime, and any tags or metadata
+   * added to the run.
+   *
+   * @param {Object} params - The object containing the callback functions.
+   * @param {(run: Run) => void} params.onStart - Called before the runnable starts running, with the Run object.
+   * @param {(run: Run) => void} params.onEnd - Called after the runnable finishes running, with the Run object.
+   * @param {(run: Run) => void} params.onError - Called if the runnable throws an error, with the Run object.
+   */
+  withListeners({
+    onStart,
+    onEnd,
+    onError,
+  }: {
+    onStart?: (run: Run) => void;
+    onEnd?: (run: Run) => void;
+    onError?: (run: Run) => void;
+  }): Runnable<RunInput, RunOutput, CallOptions> {
+    //
+    return new RunnableBinding<RunInput, RunOutput, CallOptions>({
+      bound: this.bound,
+      kwargs: this.kwargs,
+      config: this.config,
+      configFactories: [
+        () => ({
+          callbacks: [
+            new RootListenersTracer({
+              onStart,
+              onEnd,
+              onError,
+            }),
+          ],
+        }),
+      ],
+    });
+  }
 }
 
 /**
@@ -788,6 +868,32 @@ export class RunnableEach<
       inputs,
       this._patchConfig(config, runManager?.getChild())
     );
+  }
+
+  /**
+   * Bind lifecycle listeners to a Runnable, returning a new Runnable.
+   * The Run object contains information about the run, including its id,
+   * type, input, output, error, startTime, endTime, and any tags or metadata
+   * added to the run.
+   *
+   * @param {Object} params - The object containing the callback functions.
+   * @param {(run: Run) => void} params.onStart - Called before the runnable starts running, with the Run object.
+   * @param {(run: Run) => void} params.onEnd - Called after the runnable finishes running, with the Run object.
+   * @param {(run: Run) => void} params.onError - Called if the runnable throws an error, with the Run object.
+   */
+  withListeners({
+    onStart,
+    onEnd,
+    onError,
+  }: {
+    onStart?: (run: Run) => void;
+    onEnd?: (run: Run) => void;
+    onError?: (run: Run) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Runnable<any, any, CallOptions> {
+    return new RunnableEach<RunInputItem, RunOutputItem, CallOptions>({
+      bound: this.bound.withListeners({ onStart, onEnd, onError }),
+    });
   }
 }
 
