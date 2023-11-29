@@ -194,3 +194,208 @@ console.log(assistantResponse);
 ```
 
 Here the assistant was able to utilize the `code_interpreter` tool to calculate the answer to our question.
+
+## Retrieves an assistant
+
+Retrieves an assistant.
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+
+const assistant = new OpenAIAssistantRunnable({
+  assistantId,
+});
+const assistantResponse = await assistant.getAssistant();
+```
+
+## Modifies an assistant
+
+Modifies an assistant.
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+
+const assistant = await OpenAIAssistantRunnable.createAssistant({
+  name: "Personal Assistant",
+  model: "gpt-4-1106-preview",
+});
+const assistantModified = await assistant.modifyAssistant({
+  name: "Personal Assistant 2",
+});
+```
+
+## Delete an assistant
+
+Delete an assistant.
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+
+const assistant = await OpenAIAssistantRunnable.createAssistant({
+  name: "Personal Assistant",
+  model: "gpt-4-1106-preview",
+});
+const deleteStatus = await assistant.deleteAssistant();
+```
+
+# OpenAI Files
+
+Files are used to upload documents that can be used with features like Assistants and Fine-tuning.
+
+We've implemented the File API in LangChain with create and delete. You can see [the official API reference here](https://platform.openai.com/docs/api-reference/files/object).
+
+The `File` object represents a document that has been uploaded to OpenAI.
+
+```
+{
+  "id": "file-abc123",
+  "object": "file",
+  "bytes": 120000,
+  "created_at": 1677610602,
+  "filename": "salesOverview.pdf",
+  "purpose": "assistants",
+}
+```
+
+## Create a File
+
+Upload a file that can be used across various endpoints. The size of all the files uploaded by one organization can be up to **100 GB**.
+
+The size of individual files can be a maximum of **512 MB**. See the Assistants Tools guide above to learn more about the types of files supported. The Fine-tuning API only supports `.jsonl` files.
+
+```typescript
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const openAIFiles = new OpenAIFiles();
+const file = await openAIFiles.createFile({
+  file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
+  purpose: "assistants",
+});
+/**
+* Output
+  {
+    "id": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
+    "object": "file",
+    "bytes": 120000,
+    "created_at": 1677610602,
+    "filename": "salesOverview.pdf",
+    "purpose": "assistants",
+  }
+*/
+```
+
+## Use File in AI Assistant
+
+```typescript
+import { OpenAIAssistantRunnable } from "langchain/experimental/openai_assistant";
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const openAIFiles = new OpenAIFiles();
+const file = await openAIFiles.createFile({
+  file: fs.createReadStream(path.resolve(__dirname, `./test.txt`)),
+  purpose: "assistants",
+});
+
+const agent = await OpenAIAssistantRunnable.createAssistant({
+  model: "gpt-3.5-turbo-1106",
+  instructions:
+    "You are a weather bot. Use the provided functions to answer questions.",
+  name: "Weather Assistant",
+  tools,
+  asAgent: true,
+  file_ids: [file.id],
+});
+```
+
+## Delete a File
+
+Delete a file.
+
+```typescript
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.deleteFile({ fileId: file.id });
+/**
+* Output:
+  {
+    "id": "file-abc123",
+    "object": "file",
+    "deleted": true
+  }
+*/
+```
+
+## List all Files
+
+Returns a list of files that belong to the user's organization.
+
+`purpose`?: string
+Only return files with the given purpose.
+
+```typescript
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.listFiles({ purpose: "assistants" });
+/**
+* Output:
+  {
+    "data": [
+      {
+        "id": "file-abc123",
+        "object": "file",
+        "bytes": 175,
+        "created_at": 1613677385,
+        "filename": "salesOverview.pdf",
+        "purpose": "assistants",
+      },
+      {
+        "id": "file-abc123",
+        "object": "file",
+        "bytes": 140,
+        "created_at": 1613779121,
+        "filename": "puppy.jsonl",
+        "purpose": "fine-tune",
+      }
+    ],
+    "object": "list"
+  }
+*/
+```
+
+## Retrieve File
+
+Returns information about a specific file.
+
+```typescript
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.retrieveFile({ fileId: file.id });
+/**
+* Output:
+  {
+    "id": "file-abc123",
+    "object": "file",
+    "bytes": 120000,
+    "created_at": 1677610602,
+    "filename": "mydata.jsonl",
+    "purpose": "fine-tune",
+  }
+*/
+```
+
+## Retrieve File Content
+
+Returns the contents of the specified file.
+
+You can't retrieve the contents of a file that was uploaded with the "purpose": "assistants" API.
+
+```typescript
+import { OpenAIFiles } from "langchain/experimental/openai_files";
+
+const openAIFiles = new OpenAIFiles();
+const result = await openAIFiles.retrieveFileContent({ fileId: file.id });
+// Return the file content.
+```

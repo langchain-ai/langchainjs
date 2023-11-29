@@ -1,6 +1,7 @@
 {
   "eslint.workingDirectories": [
     "./langchain",
+    "./langchain-core",
     "./examples",
     "./docs",
     "./test-exports-vercel"

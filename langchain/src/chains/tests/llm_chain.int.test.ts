@@ -7,7 +7,6 @@ import {
   PromptTemplate,
 } from "../../prompts/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { loadChain } from "../load.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Test OpenAI", async () => {
@@ -111,12 +110,6 @@ test("Test apply", async () => {
   console.log({ res });
 });
 
-test("Load chain from hub", async () => {
-  const chain = await loadChain("lc://chains/hello-world/chain.json");
-  const res = await chain.call({ topic: "my favorite color" });
-  console.log({ res });
-});
-
 test("Test LLMChain with ChatOpenAI", async () => {
   const model = new ChatOpenAI({ temperature: 0.9 });
   const template = "What is a good name for a company that makes {product}?";
@@ -128,24 +121,6 @@ test("Test LLMChain with ChatOpenAI", async () => {
   const chatChain = new LLMChain({ llm: model, prompt: chatPromptTemplate });
   const res = await chatChain.call({ product: "colorful socks" });
   console.log({ res });
-});
-
-test("Test deserialize", async () => {
-  const model = new ChatOpenAI();
-  const prompt = new PromptTemplate({
-    template: "Print {foo}",
-    inputVariables: ["foo"],
-  });
-  const chain = new LLMChain({ prompt, llm: model });
-
-  const serialized = chain.serialize();
-  // console.log(serialized)
-  const chain2 = await LLMChain.deserialize({ ...serialized });
-
-  const res = await chain2.run("my favorite color");
-  console.log({ res });
-
-  // chain === chain2?
 });
 
 test("Test passing a runnable to an LLMChain", async () => {
