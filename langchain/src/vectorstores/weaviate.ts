@@ -346,7 +346,7 @@ export class WeaviateStore extends VectorStore {
   override async maxMarginalRelevanceSearch(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
-    _callbacks: undefined
+    _callbacks?: undefined
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5, filter } = options;
     const queryEmbedding: number[] = await this.embeddings.embedQuery(query);
