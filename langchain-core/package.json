@@ -219,6 +219,11 @@
       "import": "./tracers/log_stream.js",
       "require": "./tracers/log_stream.cjs"
     },
+    "./tracers/root_listener": {
+      "types": "./tracers/root_listener.d.ts",
+      "import": "./tracers/root_listener.js",
+      "require": "./tracers/root_listener.cjs"
+    },
     "./tracers/run_collector": {
       "types": "./tracers/run_collector.d.ts",
       "import": "./tracers/run_collector.js",
@@ -367,6 +372,9 @@
     "tracers/log_stream.cjs",
     "tracers/log_stream.js",
     "tracers/log_stream.d.ts",
+    "tracers/root_listener.cjs",
+    "tracers/root_listener.js",
+    "tracers/root_listener.d.ts",
     "tracers/run_collector.cjs",
     "tracers/run_collector.js",
     "tracers/run_collector.d.ts",

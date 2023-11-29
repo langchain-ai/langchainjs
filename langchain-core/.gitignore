@@ -82,6 +82,9 @@ tracers/initialize.d.ts
 tracers/log_stream.cjs
 tracers/log_stream.js
 tracers/log_stream.d.ts
+tracers/root_listener.cjs
+tracers/root_listener.js
+tracers/root_listener.d.ts
 tracers/run_collector.cjs
 tracers/run_collector.js
 tracers/run_collector.d.ts

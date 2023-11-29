@@ -36,6 +36,7 @@ const entrypoints = {
   "tracers/console": "tracers/console",
   "tracers/initialize": "tracers/initialize",
   "tracers/log_stream": "tracers/log_stream",
+  "tracers/root_listener": "tracers/root_listener",
   "tracers/run_collector": "tracers/run_collector",
   "tracers/tracer_langchain_v1": "tracers/tracer_langchain_v1",
   "tracers/tracer_langchain": "tracers/tracer_langchain",
