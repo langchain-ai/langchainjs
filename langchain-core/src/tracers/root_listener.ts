@@ -1,3 +1,4 @@
+import { RunnableConfig } from "../runnables/config.js";
 import { BaseTracer, Run } from "./base.js";
 
 export class RootListenersTracer extends BaseTracer {
@@ -6,22 +7,45 @@ export class RootListenersTracer extends BaseTracer {
   /** The Run's ID. Type UUID */
   rootId?: string;
 
-  argOnStart?: (run: Run) => void | Promise<void>;
+  config: RunnableConfig;
 
-  argOnEnd?: (run: Run) => void | Promise<void>;
+  argOnStart?: {
+    (run: Run): void | Promise<void>;
+    (run: Run, config: RunnableConfig): void | Promise<void>;
+  };
 
-  argOnError?: (run: Run) => void | Promise<void>;
+  argOnEnd?: {
+    (run: Run): void | Promise<void>;
+    (run: Run, config: RunnableConfig): void | Promise<void>;
+  };
+
+  argOnError?: {
+    (run: Run): void | Promise<void>;
+    (run: Run, config: RunnableConfig): void | Promise<void>;
+  };
 
   constructor({
+    config,
     onStart,
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void | Promise<void>;
-    onEnd?: (run: Run) => void | Promise<void>;
-    onError?: (run: Run) => void | Promise<void>;
+    config: RunnableConfig;
+    onStart?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onEnd?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onError?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
   }) {
     super();
+    this.config = config;
     this.argOnStart = onStart;
     this.argOnEnd = onEnd;
     this.argOnError = onError;
@@ -44,7 +68,11 @@ export class RootListenersTracer extends BaseTracer {
     this.rootId = run.id;
 
     if (this.argOnStart) {
-      await this.argOnStart(run);
+      if (this.argOnStart.length === 1) {
+        await this.argOnStart(run);
+      } else if (this.argOnStart.length === 2) {
+        await this.argOnStart(run, this.config);
+      }
     }
   }
 
@@ -54,10 +82,18 @@ export class RootListenersTracer extends BaseTracer {
     }
     if (!run.error) {
       if (this.argOnEnd) {
-        await this.argOnEnd(run);
+        if (this.argOnEnd.length === 1) {
+          await this.argOnEnd(run);
+        } else if (this.argOnEnd.length === 2) {
+          await this.argOnEnd(run, this.config);
+        }
       }
     } else if (this.argOnError) {
-      await this.argOnError(run);
+      if (this.argOnError.length === 1) {
+        await this.argOnError(run);
+      } else if (this.argOnError.length === 2) {
+        await this.argOnError(run, this.config);
+      }
     }
   }
 }

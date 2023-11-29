@@ -572,18 +572,28 @@ export abstract class Runnable<
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void | Promise<void>;
-    onEnd?: (run: Run) => void | Promise<void>;
-    onError?: (run: Run) => void | Promise<void>;
+    onStart?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onEnd?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onError?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
   }): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
       bound: this,
       config: {},
       configFactories: [
-        () => ({
+        (config) => ({
           callbacks: [
             new RootListenersTracer({
+              config,
               onStart,
               onEnd,
               onError,
@@ -788,9 +798,18 @@ export class RunnableBinding<
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void | Promise<void>;
-    onEnd?: (run: Run) => void | Promise<void>;
-    onError?: (run: Run) => void | Promise<void>;
+    onStart?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onEnd?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onError?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
   }): Runnable<RunInput, RunOutput, CallOptions> {
     //
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
@@ -798,9 +817,10 @@ export class RunnableBinding<
       kwargs: this.kwargs,
       config: this.config,
       configFactories: [
-        () => ({
+        (config) => ({
           callbacks: [
             new RootListenersTracer({
+              config,
               onStart,
               onEnd,
               onError,
@@ -895,9 +915,18 @@ export class RunnableEach<
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void | Promise<void>;
-    onEnd?: (run: Run) => void | Promise<void>;
-    onError?: (run: Run) => void | Promise<void>;
+    onStart?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onEnd?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
+    onError?: {
+      (run: Run): void | Promise<void>;
+      (run: Run, config: RunnableConfig): void | Promise<void>;
+    };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): Runnable<any, any, CallOptions> {
     return new RunnableEach<RunInputItem, RunOutputItem, CallOptions>({
