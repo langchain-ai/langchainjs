@@ -128,7 +128,7 @@ export class XataVectorSearch<
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return records?.map((record) => [
+    return records?.map((record: any) => [
       new Document({
         pageContent: record.content,
         metadata: Object.fromEntries(
