@@ -183,7 +183,7 @@ export class JiraAPIWrapper extends Serializable {
       const error = await resp.text();
       return `Received ${error}. Make sure the correct tool is being used and try again.`;
     }
-    const issues = resp.json();
+    const issues = await resp.json();
     const parsed_issues = this._parse_issues(issues);
     const parsed_issues_str = `Found ${parsed_issues.length} issues:\n ${parsed_issues}`;
 
@@ -240,13 +240,13 @@ export class JiraAPIWrapper extends Serializable {
 
     const queryParams = new URLSearchParams(params.queryParams);
     let resp: Response = new Response();
-    if (params.httpverb === 'GET' || params.httpverb === 'HEAD') {
+    if (params.httpverb === "GET" || params.httpverb === "HEAD") {
       resp = await this.caller.call(
         fetch,
         `${this.host}${params.endpoint}${queryParams}`,
         {
           method: params.httpverb,
-          headers
+          headers,
         }
       );
     } else {
