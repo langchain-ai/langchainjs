@@ -32,3 +32,37 @@ export abstract class BaseListChatMessageHistory extends Serializable {
     return this.addMessage(new AIMessage(message));
   }
 }
+
+export class FakeChatMessageHistory extends BaseChatMessageHistory {
+  lc_namespace = ["langchain", "core", "message", "fake"];
+
+  messages: Array<BaseMessage> = [];
+
+  constructor() {
+    super();
+  }
+
+  public getMessages(): Promise<BaseMessage[]> {
+    return Promise.resolve(this.messages);
+  }
+
+  public addMessage(message: BaseMessage): Promise<void> {
+    this.messages.push(message);
+    return Promise.resolve();
+  }
+
+  public addUserMessage(message: string): Promise<void> {
+    this.messages.push(new HumanMessage(message));
+    return Promise.resolve();
+  }
+
+  public addAIChatMessage(message: string): Promise<void> {
+    this.messages.push(new AIMessage(message));
+    return Promise.resolve();
+  }
+
+  public clear(): Promise<void> {
+    this.messages = [];
+    return Promise.resolve();
+  }
+}
