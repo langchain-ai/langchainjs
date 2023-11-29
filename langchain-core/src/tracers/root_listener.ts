@@ -6,20 +6,20 @@ export class RootListenersTracer extends BaseTracer {
   /** The Run's ID. Type UUID */
   rootId?: string;
 
-  argOnStart?: (run: Run) => void;
+  argOnStart?: (run: Run) => void | Promise<void>;
 
-  argOnEnd?: (run: Run) => void;
+  argOnEnd?: (run: Run) => void | Promise<void>;
 
-  argOnError?: (run: Run) => void;
+  argOnError?: (run: Run) => void | Promise<void>;
 
   constructor({
     onStart,
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void;
-    onEnd?: (run: Run) => void;
-    onError?: (run: Run) => void;
+    onStart?: (run: Run) => void | Promise<void>;
+    onEnd?: (run: Run) => void | Promise<void>;
+    onError?: (run: Run) => void | Promise<void>;
   }) {
     super();
     this.argOnStart = onStart;
@@ -36,7 +36,7 @@ export class RootListenersTracer extends BaseTracer {
     return Promise.resolve();
   }
 
-  onRunCreate(run: Run) {
+  async onRunCreate(run: Run) {
     if (this.rootId) {
       return;
     }
@@ -44,20 +44,20 @@ export class RootListenersTracer extends BaseTracer {
     this.rootId = run.id;
 
     if (this.argOnStart) {
-      this.argOnStart(run);
+      await this.argOnStart(run);
     }
   }
 
-  onRunUpdate(run: Run) {
+  async onRunUpdate(run: Run) {
     if (run.id !== this.rootId) {
       return;
     }
     if (!run.error) {
       if (this.argOnEnd) {
-        this.argOnEnd(run);
+        await this.argOnEnd(run);
       }
     } else if (this.argOnError) {
-      this.argOnError(run);
+      await this.argOnError(run);
     }
   }
 }

@@ -572,9 +572,9 @@ export abstract class Runnable<
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void;
-    onEnd?: (run: Run) => void;
-    onError?: (run: Run) => void;
+    onStart?: (run: Run) => void | Promise<void>;
+    onEnd?: (run: Run) => void | Promise<void>;
+    onError?: (run: Run) => void | Promise<void>;
   }): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
@@ -628,7 +628,9 @@ export class RunnableBinding<
 
   protected kwargs?: Partial<CallOptions>;
 
-  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
+  configFactories?: Array<
+    (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
+  >;
 
   constructor(fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>) {
     super(fields);
@@ -639,12 +641,16 @@ export class RunnableBinding<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _mergeConfig(options?: Record<string, any>): Partial<CallOptions> {
+  async _mergeConfig(
+    options?: Record<string, any>
+  ): Promise<Partial<CallOptions>> {
     const config = mergeConfigs(this.config, options);
     return mergeConfigs(
       config,
       ...(this.configFactories
-        ? this.configFactories.map((f) => f(config))
+        ? await Promise.all(
+            this.configFactories.map(async (f) => await f(config))
+          )
         : [])
     );
   }
@@ -686,7 +692,7 @@ export class RunnableBinding<
   ): Promise<RunOutput> {
     return this.bound.invoke(
       input,
-      this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig({ ...options, ...this.kwargs })
     );
   }
 
@@ -714,13 +720,16 @@ export class RunnableBinding<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const mergedOptions = Array.isArray(options)
-      ? options.map((individualOption) =>
-          this._mergeConfig({
-            ...individualOption,
-            ...this.kwargs,
-          })
+      ? await Promise.all(
+          options.map(
+            async (individualOption) =>
+              await this._mergeConfig({
+                ...individualOption,
+                ...this.kwargs,
+              })
+          )
         )
-      : this._mergeConfig({ ...options, ...this.kwargs });
+      : await this._mergeConfig({ ...options, ...this.kwargs });
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
@@ -730,7 +739,7 @@ export class RunnableBinding<
   ) {
     yield* this.bound._streamIterator(
       input,
-      this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig({ ...options, ...this.kwargs })
     );
   }
 
@@ -740,7 +749,7 @@ export class RunnableBinding<
   ): Promise<IterableReadableStream<RunOutput>> {
     return this.bound.stream(
       input,
-      this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig({ ...options, ...this.kwargs })
     );
   }
 
@@ -751,7 +760,7 @@ export class RunnableBinding<
   ): AsyncGenerator<RunOutput> {
     yield* this.bound.transform(
       generator,
-      this._mergeConfig({ ...options, ...this.kwargs })
+      await this._mergeConfig({ ...options, ...this.kwargs })
     );
   }
 
@@ -779,9 +788,9 @@ export class RunnableBinding<
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void;
-    onEnd?: (run: Run) => void;
-    onError?: (run: Run) => void;
+    onStart?: (run: Run) => void | Promise<void>;
+    onEnd?: (run: Run) => void | Promise<void>;
+    onError?: (run: Run) => void | Promise<void>;
   }): Runnable<RunInput, RunOutput, CallOptions> {
     //
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
@@ -886,9 +895,9 @@ export class RunnableEach<
     onEnd,
     onError,
   }: {
-    onStart?: (run: Run) => void;
-    onEnd?: (run: Run) => void;
-    onError?: (run: Run) => void;
+    onStart?: (run: Run) => void | Promise<void>;
+    onEnd?: (run: Run) => void | Promise<void>;
+    onError?: (run: Run) => void | Promise<void>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): Runnable<any, any, CallOptions> {
     return new RunnableEach<RunInputItem, RunOutputItem, CallOptions>({
