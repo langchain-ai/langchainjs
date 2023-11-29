@@ -34,6 +34,16 @@ export interface ZepRetrieverConfig extends BaseRetrieverInput {
 /**
  * Class for retrieving information from a Zep long-term memory store.
  * Extends the BaseRetriever class.
+ * @example
+ * ```typescript
+ * const retriever = new ZepRetriever({
+ *   url: "http:
+ *   sessionId: "session_exampleUUID",
+ *   topK: 3,
+ * });
+ * const query = "Can I drive red cars in France?";
+ * const docs = await retriever.getRelevantDocuments(query);
+ * ```
  */
 export class ZepRetriever extends BaseRetriever {
   static lc_name() {

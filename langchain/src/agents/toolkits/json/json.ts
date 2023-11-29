@@ -14,6 +14,14 @@ import { AgentExecutor } from "../../executor.js";
 /**
  * Represents a toolkit for working with JSON data. It initializes the
  * JSON tools based on the provided JSON specification.
+ * @example
+ * ```typescript
+ * const toolkit = new JsonToolkit(new JsonSpec());
+ * const executor = createJsonAgent(model, toolkit);
+ * const result = await executor.invoke({
+ *   input: 'What are the required parameters in the request body to the /completions endpoint?'
+ * });
+ * ```
  */
 export class JsonToolkit extends Toolkit {
   tools: Tool[];

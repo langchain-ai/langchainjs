@@ -28,6 +28,36 @@ export type GenerativeAgentConfig = {
  * Implementation of a generative agent that can learn and form new memories over
  * time. It extends the BaseChain class, which is a generic
  * sequence of calls to components, including other chains.
+ * @example
+ * ```typescript
+ * const tommie: GenerativeAgent = new GenerativeAgent(
+ *   new OpenAI({ temperature: 0.9, maxTokens: 1500 }),
+ *   new GenerativeAgentMemory(
+ *     new ChatOpenAI(),
+ *     new TimeWeightedVectorStoreRetriever({
+ *       vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
+ *       otherScoreKeys: ["importance"],
+ *       k: 15,
+ *     }),
+ *     { reflectionThreshold: 8 },
+ *   ),
+ *   {
+ *     name: "Tommie",
+ *     age: 25,
+ *     traits: "anxious, likes design, talkative",
+ *     status: "looking for a job",
+ *   },
+ * );
+ *
+ * await tommie.addMemory(
+ *   "Tommie remembers his dog, Bruno, from when he was a kid",
+ *   new Date(),
+ * );
+ * const summary = await tommie.getSummary({ forceRefresh: true });
+ * const response = await tommie.generateDialogueResponse(
+ *   "USER says Hello Tommie, how are you today?",
+ * );
+ * ```
  */
 export class GenerativeAgent extends BaseChain {
   static lc_name() {

@@ -23,6 +23,18 @@ export interface GoogleVertexAITextInput
  * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
+ * @example
+ * ```typescript
+ * const model = new GoogleVertexAI({
+ *   temperature: 0.7,
+ * });
+ * const stream = await model.stream(
+ *   "What would be a good company name for a company that makes colorful socks?",
+ * );
+ * for await (const chunk of stream) {
+ *   console.log(chunk);
+ * }
+ * ```
  */
 export class GoogleVertexAI extends BaseGoogleVertexAI<GoogleAuthOptions> {
   static lc_name() {

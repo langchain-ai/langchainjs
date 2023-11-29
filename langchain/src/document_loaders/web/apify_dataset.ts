@@ -15,11 +15,17 @@ import { getEnvironmentVariable } from "../../util/env.js";
 /**
  * A type that represents a function that takes a single object (an Apify
  * dataset item) and converts it to an instance of the Document class.
+ *
+ * Change function signature to only be asynchronous for simplicity in v0.1.0
+ * https://github.com/langchain-ai/langchainjs/pull/3262
  */
 export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
   (
     item: Record<string | number, unknown>
-  ) => Document<Metadata> | Promise<Document<Metadata>>;
+  ) =>
+    | Document<Metadata>
+    | Array<Document<Metadata>>
+    | Promise<Document<Metadata> | Array<Document<Metadata>>>;
 
 export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
   extends AsyncCallerParams {
@@ -31,6 +37,27 @@ export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader that loads
  * documents from an Apify dataset.
+ * @example
+ * ```typescript
+ * const loader = new ApifyDatasetLoader("your-dataset-id", {
+ *   datasetMappingFunction: (item) =>
+ *     new Document({
+ *       pageContent: item.text || "",
+ *       metadata: { source: item.url },
+ *     }),
+ *   clientOptions: {
+ *     token: "your-apify-token",
+ *   },
+ * });
+ *
+ * const docs = await loader.load();
+ *
+ * const chain = new RetrievalQAChain();
+ * const res = await chain.invoke({ query: "What is LangChain?" });
+ *
+ * console.log(res.text);
+ * console.log(res.sourceDocuments.map((d) => d.metadata.source));
+ * ```
  */
 export class ApifyDatasetLoader<Metadata extends Record<string, any>>
   extends BaseDocumentLoader
@@ -66,15 +93,17 @@ export class ApifyDatasetLoader<Metadata extends Record<string, any>>
    * @returns An array of Document instances.
    */
   async load(): Promise<Document<Metadata>[]> {
-    const datasetItems = (
-      await this.apifyClient.dataset(this.datasetId).listItems({ clean: true })
-    ).items;
+    const dataset = await this.apifyClient
+      .dataset(this.datasetId)
+      .listItems({ clean: true });
 
-    return await Promise.all(
-      datasetItems.map((item) =>
+    const documentList = await Promise.all(
+      dataset.items.map((item) =>
         this.caller.call(async () => this.datasetMappingFunction(item))
       )
     );
+
+    return documentList.flat();
   }
 
   /**

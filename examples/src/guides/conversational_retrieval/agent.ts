@@ -36,7 +36,7 @@ const executor = await createConversationalRetrievalAgent(model, [tool], {
   verbose: true,
 });
 
-const result = await executor.call({
+const result = await executor.invoke({
   input: "Hi, I'm Bob!",
 });
 
@@ -49,7 +49,7 @@ console.log(result);
   }
 */
 
-const result2 = await executor.call({
+const result2 = await executor.invoke({
   input: "What's my name?",
 });
 
@@ -59,7 +59,7 @@ console.log(result2);
   { output: 'Your name is Bob.', intermediateSteps: [] }
 */
 
-const result3 = await executor.call({
+const result3 = await executor.invoke({
   input:
     "What did the president say about Ketanji Brown Jackson in the most recent state of the union?",
 });
@@ -75,7 +75,7 @@ console.log(result3);
   }
 */
 
-const result4 = await executor.call({
+const result4 = await executor.invoke({
   input: "How long ago did he nominate her?",
 });
 
