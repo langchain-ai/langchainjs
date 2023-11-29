@@ -178,8 +178,10 @@ export class JiraAPIWrapper extends Serializable {
         headers,
       }
     );
+
     if (!resp.ok) {
-      throw new Error(await resp.text());
+      const error = await resp.text();
+      return "Received error " + error + ". Is the correct tool being used?";
     }
     const issues = resp.json();
     const parsed_issues = this._parse_issues(issues);
@@ -198,8 +200,10 @@ export class JiraAPIWrapper extends Serializable {
         headers,
       }
     );
+
     if (!resp.ok) {
-      throw new Error(await resp.text());
+      const error = await resp.text();
+      return "Received error " + error + ". Is the correct tool being used?";
     }
     const projects: any = resp.json();
 
@@ -221,8 +225,10 @@ export class JiraAPIWrapper extends Serializable {
         body: this._create_issue_header(params),
       }
     );
+
     if (!resp.ok) {
-      throw new Error(await resp.text());
+      const error = await resp.text();
+      return "Received error " + error + ". Is the correct tool being used?";
     }
 
     return await resp.text();
@@ -233,17 +239,31 @@ export class JiraAPIWrapper extends Serializable {
     const headers = this._getHeaders();
 
     const queryParams = new URLSearchParams(params.queryParams);
-    const resp = await this.caller.call(
-      fetch,
-      `${this.host}${params.endpoint}${queryParams}`,
-      {
-        method: params.httpverb,
-        headers,
-        body: JSON.stringify(params.bodyParams),
-      }
-    );
+    let resp: Response = new Response();
+    if (params.httpverb === 'GET' || params.httpverb === 'HEAD') {
+      resp = await this.caller.call(
+        fetch,
+        `${this.host}${params.endpoint}${queryParams}`,
+        {
+          method: params.httpverb,
+          headers
+        }
+      );
+    } else {
+      resp = await this.caller.call(
+        fetch,
+        `${this.host}${params.endpoint}${queryParams}`,
+        {
+          method: params.httpverb,
+          headers,
+          body: JSON.stringify(params.bodyParams),
+        }
+      );
+    }
+
     if (!resp.ok) {
-      throw new Error(await resp.text());
+      const error = await resp.text();
+      return "Received error " + error + ". Is the correct tool being used?";
     }
 
     return await resp.text();

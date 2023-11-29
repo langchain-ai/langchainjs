@@ -25,7 +25,7 @@ export const run = async () => {
   );
   console.log("Loaded agent.");
 
-  const input = `Delete the issue in project YS with id 221.`;
+  const input = `Make a new issue in project PW to remind me to make more fried rice.`;
 
   console.log(`Executing with input "${input}"...`);
 
