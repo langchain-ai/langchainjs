@@ -47,4 +47,5 @@ export {
   formatToOpenAIFunction,
   formatToOpenAITool,
 } from "./convert_to_openai.js";
-export { OutlookIntegration } from "./outlook/outlookIntegration.js";
+// export { OutlookIntegration } from "./outlook/outlookIntegration.js";
+export { OutlookSendMailTool, OutlookReadMailTool } from "./outlook/index.js";
