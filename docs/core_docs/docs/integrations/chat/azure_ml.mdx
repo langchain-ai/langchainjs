@@ -1,11 +1,11 @@
-# Azure Machine Learning
+# Azure Machine Learning Chat
 
 You can deploy models on Azure with the endpointUrl, apiKey, and deploymentName
-when creating the AzureMLModel to call upon later. Must import a ContentFormatter
-or create your own using the ContentFormatter interface.
+when creating the AzureMLChatParams to call upon later. Must import a ContentFormatter
+or create your own using the ChatContentFormatter interface.
 
 ```typescript
-import { AzureMLModel, LlamaContentFormatter } from "langchain/llms/azure_ml";
+import { AzureMLChatParams, LlamaContentFormatter } from "langchain/chat_models/azure_ml";
 
 const model = new AzureMLModel({
     endpointUrl: "YOUR_ENDPOINT_URL", 
@@ -14,6 +14,6 @@ const model = new AzureMLModel({
     contentFormatter: new LlamaContentFormatter()
 });
 
-const res = model.call("Foo");
+const res = model.call(["Foo"]);
 console.log({ res });
 ```

@@ -38,7 +38,6 @@ export const optionalImportEntrypoints = [
   "langchain/llms/llama_cpp",
   "langchain/llms/writer",
   "langchain/llms/portkey",
-  "langchain/llms/azure_ml",
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/cassandra",
