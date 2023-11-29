@@ -69,6 +69,12 @@ export interface JiraAPIWrapperParams extends AsyncCallerParams {
   apiToken?: string;
 }
 
+/**
+ * A wrapper class for Jira's API. Provides methods that make use
+ * of the Jira API to carry out tasks such as querying and creating,
+ * issues, retrieving projects, and anything else that can be done
+ * with the Jira API.
+ */
 export class JiraAPIWrapper extends Serializable {
   host: string;
 
@@ -194,6 +200,11 @@ export class JiraAPIWrapper extends Serializable {
     }`;
   }
 
+  /**
+   * Performs a JQL query with the specified query to search through issues.
+   * @param query The JQL query that needs to be run.
+   * @returns A string specifying the number of issues found and the issues found.
+   */
   async jqlQuery(query: string): Promise<string> {
     const headers = this._getHeaders();
     const queryParams = new URLSearchParams({ jql: query });
@@ -217,6 +228,10 @@ export class JiraAPIWrapper extends Serializable {
     return parsed_issues_str;
   }
 
+  /**
+   * Retrieves the user's projects.
+   * @returns A string specifying the number of projects found and the projects found.
+   */
   async getProjects(): Promise<string> {
     const headers = this._getHeaders();
     const resp = await this.caller.call(
@@ -242,6 +257,11 @@ export class JiraAPIWrapper extends Serializable {
     return parsed_projects_str;
   }
 
+  /**
+   * Creates an issue with the specified query.
+   * @param query The details of the issue.
+   * @returns A string of the response from the creation of an issue.
+   */
   async createIssue(query: string): Promise<string> {
     const params = JSON.parse(query);
     const headers = this._getHeaders();
@@ -263,6 +283,11 @@ export class JiraAPIWrapper extends Serializable {
     return await resp.text();
   }
 
+  /**
+   * Performs any other Jira API call.
+   * @param query The query of the corresponding Jira API call, if applicable.
+   * @returns A string of the response of whichever Jira API call was made.
+   */
   async other(query: string): Promise<string> {
     const params: JiraAPICall = JSON.parse(query);
     const headers = this._getHeaders();
@@ -298,6 +323,11 @@ export class JiraAPIWrapper extends Serializable {
     return await resp.text();
   }
 
+  /**
+   * Executes an action that is identified by mode.
+   * @param mode The string representation of one of four actions.
+   * @param query The query for applicable actions.
+   */
   async run(mode: string, query: string) {
     switch (mode) {
       case "jql":
