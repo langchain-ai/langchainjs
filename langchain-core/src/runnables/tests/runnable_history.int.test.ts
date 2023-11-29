@@ -7,12 +7,19 @@ import {
   FakeChatMessageHistory,
 } from "../../chat_history.js";
 
-function getGetSessionHistory(): (sessionId: string) => BaseChatMessageHistory {
+async function getGetSessionHistory(): Promise<
+  (sessionId: string) => Promise<BaseChatMessageHistory>
+> {
   const chatHistoryStore: { [key: string]: BaseChatMessageHistory } = {};
 
-  function getSessionHistory(sessionId: string): BaseChatMessageHistory {
+  async function getSessionHistory(
+    sessionId: string
+  ): Promise<BaseChatMessageHistory> {
     if (!(sessionId in chatHistoryStore)) {
+      console.log("not in store");
       chatHistoryStore[sessionId] = new FakeChatMessageHistory();
+    } else {
+      console.log("in store", await chatHistoryStore[sessionId].getMessages());
     }
     return chatHistoryStore[sessionId];
   }
@@ -22,21 +29,26 @@ function getGetSessionHistory(): (sessionId: string) => BaseChatMessageHistory {
 
 test("Runnable with message history", async () => {
   const runnable = new RunnableLambda({
-    func: (messages: HumanMessage[]) =>
-      `you said: ${messages
+    func: (messages: HumanMessage[]) => {
+      console.log("runnin", messages);
+      const messagesArr: HumanMessage[] = !Array.isArray(messages)
+        ? Object.values(messages)
+        : messages;
+      return `you said: ${messagesArr
         .filter((m) => isBaseMessage(m))
         .map((m) => m.content)
-        .join("\n")}`,
+        .join("\n")}`;
+    },
   });
-  const getSessionHistory = getGetSessionHistory();
+  const getMessageHistory = await getGetSessionHistory();
   const withHistory = new RunnableWithMessageHistory({
     runnable,
     bound: runnable,
     kwargs: {},
     config: {},
-    getMessageHistory: getSessionHistory,
+    getMessageHistory,
   });
-  const config: RunnableConfig = { configurable: { session_id: "1" } };
+  const config: RunnableConfig = { configurable: { sessionId: "1" } };
   let output = await withHistory.invoke([new HumanMessage("hello")], config);
   expect(output).toBe("you said: hello");
   output = await withHistory.invoke([new HumanMessage("good bye")], config);

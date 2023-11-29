@@ -1,3 +1,4 @@
+import { BaseCallbackConfig } from "../callbacks/manager.js";
 import { BaseChatMessageHistory } from "../chat_history.js";
 import {
   AIMessage,
@@ -12,31 +13,29 @@ import {
   RunnableBindingArgs,
   RunnableLambda,
 } from "./base.js";
-import { RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...args: Array<any>
-) => BaseChatMessageHistory;
+) => Promise<BaseChatMessageHistory>;
 
 export class RunnableWithMessageHistory<
   RunInput,
-  RunOutput,
-  CallOptions extends RunnableConfig
-> extends RunnableBinding<RunInput, RunOutput, CallOptions> {
+  RunOutput
+> extends RunnableBinding<RunInput, RunOutput, BaseCallbackConfig> {
   runnable: Runnable<RunInput, RunOutput>;
 
-  inputMessagesKey = "input";
+  inputMessagesKey?: string;
 
-  outputMessagesKey = "output";
+  outputMessagesKey?: string;
 
-  historyMessagesKey = "history";
+  historyMessagesKey?: string;
 
   getMessageHistory: GetSessionHistoryCallable;
 
   constructor(
-    fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions> & {
+    fields: RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig> & {
       runnable: Runnable<RunInput, RunOutput>;
       getMessageHistory: GetSessionHistoryCallable;
       inputMessagesKey?: string;
@@ -47,31 +46,30 @@ export class RunnableWithMessageHistory<
     super(fields);
     this.runnable = fields.runnable;
     this.getMessageHistory = fields.getMessageHistory;
-    this.inputMessagesKey = fields.inputMessagesKey ?? this.inputMessagesKey;
-    this.outputMessagesKey = fields.outputMessagesKey ?? this.outputMessagesKey;
-    this.historyMessagesKey =
-      fields.historyMessagesKey ?? this.historyMessagesKey;
+    this.inputMessagesKey = fields.inputMessagesKey;
+    this.outputMessagesKey = fields.outputMessagesKey;
+    this.historyMessagesKey = fields.historyMessagesKey;
 
     let historyChain: Runnable = new RunnableLambda({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      func: (input: any) => (config: CallOptions) =>
-        this._enterHistory(input, config),
-    }).withConfig({ runName: "load_history" });
+      func: (input: any) => {
+        console.log("HISTORY CHAIN CALLED", input);
+        return this._enterHistory(input, {});
+      },
+    }).withConfig({ runName: "loadHistory" });
 
-    const messages_key =
-      (fields.historyMessagesKey ?? this.historyMessagesKey) ||
-      (fields.inputMessagesKey ?? this.inputMessagesKey);
-    if (messages_key) {
+    const messagesKey = fields.historyMessagesKey || fields.inputMessagesKey;
+    if (messagesKey) {
       historyChain = RunnablePassthrough.assign({
-        [messages_key]: historyChain,
-      }).withConfig({ runName: "insert_history" });
+        [messagesKey]: historyChain,
+      }).withConfig({ runName: "insertHistory" });
     }
 
-    // const bound = historyChain
-    //   .pipe(fields.runnable)
-    //   .withConfig({ runName: "RunnableWithMessageHistory" })
+    const bound = historyChain
+      .pipe(fields.runnable)
+      .withConfig({ runName: "RunnableWithMessageHistory" });
 
-    // this.bound = bound;
+    this.bound = bound;
   }
 
   _getInputMessages(
@@ -96,7 +94,7 @@ export class RunnableWithMessageHistory<
       !isBaseMessage(outputValue) &&
       typeof outputValue !== "string"
     ) {
-      newOutputValue = outputValue[this.outputMessagesKey];
+      newOutputValue = outputValue[this.outputMessagesKey ?? "output"];
     }
 
     if (typeof newOutputValue === "string") {
@@ -116,26 +114,33 @@ export class RunnableWithMessageHistory<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _enterHistory(input: any, config: CallOptions): Array<BaseMessage> {
+  _enterHistory(input: any, config: BaseCallbackConfig): Array<BaseMessage> {
+    console.log("Running _enterHistory");
     const history = config.configurable?.messageHistory;
 
+    // @TODO I think this is broken
     if (this.historyMessagesKey) {
-      // todo: this is def not right brace!
       return history.messages;
     }
 
-    const inputVal = this.inputMessagesKey
-      ? input[this.inputMessagesKey]
-      : input;
-    return [...history.messages, ...this._getInputMessages(inputVal)];
+    const inputVal =
+      input ||
+      (this.inputMessagesKey ? input[this.inputMessagesKey] : undefined);
+    const historyMessages = history ? history.messages : [];
+    const returnType = [
+      ...historyMessages,
+      ...this._getInputMessages(inputVal),
+    ];
+    console.log("returning", returnType);
+    return returnType;
   }
 
-  _exitHistory(run: Run, config: CallOptions): void {
+  async _exitHistory(run: Run, config: BaseCallbackConfig): Promise<void> {
     const history = config.configurable?.messageHistory;
 
     // Get input messages
     const { inputs } = run;
-    const inputValue = inputs[this.inputMessagesKey];
+    const inputValue = inputs[this.inputMessagesKey ?? "input"];
     const inputMessages = this._getInputMessages(inputValue);
     // Get output messages
     const outputValue = run.outputs;
@@ -150,17 +155,17 @@ export class RunnableWithMessageHistory<
     }
     const outputMessages = this._getOutputMessages(outputValue);
 
-    for (const message of [...inputMessages, ...outputMessages]) {
-      history.addMessage(message);
+    for await (const message of [...inputMessages, ...outputMessages]) {
+      await history.addMessage(message);
     }
   }
 
-  _mergeConfigs(...configs: Array<CallOptions | undefined>) {
+  _mergeConfig(...configs: Array<BaseCallbackConfig | undefined>) {
     const config = super._mergeConfig(...configs);
     // Extract sessionId
     if (!config.configurable || !config.configurable.sessionId) {
       const exampleInput = {
-        [this.inputMessagesKey]: "foo",
+        [this.inputMessagesKey ?? "input"]: "foo",
       };
       const exampleConfig = { configurable: { sessionId: "123" } };
       throw new Error(
