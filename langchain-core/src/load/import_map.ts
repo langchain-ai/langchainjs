@@ -27,7 +27,6 @@ export * as tracers__base from "../tracers/base.js";
 export * as tracers__console from "../tracers/console.js";
 export * as tracers__initialize from "../tracers/initialize.js";
 export * as tracers__log_stream from "../tracers/log_stream.js";
-export * as tracers__root_listener from "../tracers/root_listener.js";
 export * as tracers__run_collector from "../tracers/run_collector.js";
 export * as tracers__tracer_langchain_v1 from "../tracers/tracer_langchain_v1.js";
 export * as tracers__tracer_langchain from "../tracers/tracer_langchain.js";
