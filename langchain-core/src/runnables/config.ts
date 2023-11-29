@@ -22,7 +22,6 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
 ): Partial<CallOptions> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const copy: Record<string, any> = { ...config };
-  const base: RunnableConfig = {};
   if (options) {
     for (const key of Object.keys(options)) {
       if (key === "metadata") {
@@ -30,36 +29,36 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
       } else if (key === "tags") {
         copy[key] = (copy[key] ?? []).concat(options[key] ?? []);
       } else if (key === "callbacks") {
-        const baseCallbacks = base.callbacks;
+        const baseCallbacks = copy.callbacks;
         const theseCallbacks = options.callbacks ?? config.callbacks;
         // callbacks can be either undefined, Array<handler> or manager
         // so merging two callbacks values has 6 cases
         if (Array.isArray(theseCallbacks)) {
           if (!baseCallbacks) {
-            base.callbacks = theseCallbacks;
+            copy.callbacks = theseCallbacks;
           } else if (Array.isArray(baseCallbacks)) {
-            base.callbacks = baseCallbacks.concat(theseCallbacks);
+            copy.callbacks = baseCallbacks.concat(theseCallbacks);
           } else {
             // baseCallbacks is a manager
             const manager = baseCallbacks.copy();
             for (const callback of theseCallbacks) {
               manager.addHandler(callback, true);
             }
-            base.callbacks = manager;
+            copy.callbacks = manager;
           }
         } else if (theseCallbacks) {
           // theseCallbacks is a manager
           if (!baseCallbacks) {
-            base.callbacks = theseCallbacks;
+            copy.callbacks = theseCallbacks;
           } else if (Array.isArray(baseCallbacks)) {
             const manager = theseCallbacks.copy();
             for (const callback of baseCallbacks) {
               manager.addHandler(callback, true);
             }
-            base.callbacks = manager;
+            copy.callbacks = manager;
           } else {
             // baseCallbacks is also a manager
-            base.callbacks = new CallbackManager(theseCallbacks.parentRunId, {
+            copy.callbacks = new CallbackManager(theseCallbacks.parentRunId, {
               handlers: baseCallbacks.handlers.concat(theseCallbacks.handlers),
               inheritableHandlers: baseCallbacks.inheritableHandlers.concat(
                 theseCallbacks.inheritableHandlers
