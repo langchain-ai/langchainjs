@@ -3,9 +3,10 @@ import {
   FewShotChatMessagePromptTemplate,
   FewShotPromptTemplate,
 } from "../few_shot.js";
-import { ChatPromptTemplate, LengthBasedExampleSelector } from "../index.js";
+import { ChatPromptTemplate } from "../index.js";
 import { PromptTemplate } from "../prompt.js";
-import { AIMessage, HumanMessage } from "../../schema/index.js";
+import { LengthBasedExampleSelector } from "../../example_selectors/length_based.js";
+import { AIMessage, HumanMessage } from "../../messages/index.js";
 
 describe("FewShotPromptTemplate", () => {
   test("Test using partial", async () => {

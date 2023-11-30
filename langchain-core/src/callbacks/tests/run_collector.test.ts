@@ -5,12 +5,10 @@ import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
-
-import { BaseLLM } from "../../llms/base.js";
-import { LLMResult } from "../../schema/index.js";
-
-import { RunCollectorCallbackHandler } from "../handlers/run_collector.js";
-import { StringOutputParser } from "../../schema/output_parser.js";
+import { BaseLLM } from "../../language_models/llms.js";
+import { StringOutputParser } from "../../output_parsers/string.js";
+import type { LLMResult } from "../../outputs.js";
+import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;

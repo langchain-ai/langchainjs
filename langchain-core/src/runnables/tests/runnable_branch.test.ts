@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { test } from "@jest/globals";
-import { RunnableBranch } from "../runnable/branch.js";
+import { RunnableBranch } from "../branch.js";
 
 test("RunnableBranch invoke", async () => {
   const condition = (x: number) => x > 0;

@@ -1,8 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test } from "@jest/globals";
-import { StringOutputParser } from "../output_parser.js";
-
+import { StringOutputParser } from "../../output_parsers/string.js";
 import { FakeChatModel, FakeStreamingLLM } from "./lib.js";
 
 test("Bind kwargs to a runnable", async () => {
