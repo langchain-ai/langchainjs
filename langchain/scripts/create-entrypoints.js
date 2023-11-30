@@ -440,6 +440,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/youtube",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
+  "document_loaders/fs/chatgpt",
   "document_loaders/fs/text",
   "document_loaders/fs/json",
   "document_loaders/fs/srt",
