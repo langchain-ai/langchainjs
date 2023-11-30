@@ -1,5 +1,5 @@
 import { expect, describe } from "@jest/globals";
-import { GooglePlacesAPI } from "../google_place.js";
+import { GooglePlacesAPI } from "../google_places.js";
 
 describe("GooglePlacesAPI", () => {
   it("should be setup with correct parameters", async () => {
