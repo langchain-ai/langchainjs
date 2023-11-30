@@ -202,6 +202,9 @@
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/gradient_ai.cjs",
+    "llms/gradient_ai.js",
+    "llms/gradient_ai.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -857,6 +860,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
+    "@gradientai/nodejs-sdk": "^1.2.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
@@ -1000,6 +1004,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@gradientai/nodejs-sdk": "^1.2.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/storage-blob": "^12.15.0",
@@ -1114,6 +1119,9 @@
       "optional": true
     },
     "@aws-sdk/client-sagemaker-runtime": {
+      "optional": true
+    },
+    "@gradientai/nodejs-sdk": {
       "optional": true
     },
     "@aws-sdk/client-sfn": {
@@ -1753,6 +1761,11 @@
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/gradient_ai": {
+      "types": "./llms/gradient_ai.d.ts",
+      "import": "./llms/gradient_ai.js",
+      "require": "./llms/gradient_ai.cjs"
     },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",
