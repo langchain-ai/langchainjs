@@ -1,5 +1,6 @@
 import { gmail_v1 } from "googleapis";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
+import { SEARCH_DESCRIPTION } from "./descriptions.js";
 
 export interface SearchSchema {
   query: string;
@@ -10,8 +11,7 @@ export interface SearchSchema {
 export class GmailSearch extends GmailBaseTool {
   name = "search_gmail";
 
-  description =
-    "Use this tool to search for email messages or threads. The input must be a valid Gmail query. The output is a JSON list of the requested resource.";
+  description = SEARCH_DESCRIPTION;
 
   constructor(fields?: GmailBaseToolParams) {
     super(fields);
