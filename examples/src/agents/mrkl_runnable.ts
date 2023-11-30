@@ -57,7 +57,9 @@ $JSON_BLOB
 Observation: the result of the action
 ... (this Thought/Action/Observation can repeat N times)
 Thought: I now know the final answer
-Final Answer: the final answer to the original input question`;
+Final Answer: the final answer to the original input question
+
+Action part must be always wrapped in 3 backticks.`;
 const SUFFIX = `Begin! Reminder to always use the exact characters \`Final Answer\` when responding.
 Thoughts: {agent_scratchpad}`;
 const DEFAULT_HUMAN_MESSAGE_TEMPLATE = "Question: {input}";
@@ -90,7 +92,8 @@ const runnableAgent = RunnableSequence.from([
       formatLogToString(i.steps),
   },
   prompt,
-  model,
+  // Important, otherwise the answer is only hallucinated
+  model.bind({ stop: ["\nObservation"] }),
   outputParser,
 ]);
 
@@ -109,7 +112,7 @@ console.log("Loaded agent executor");
 
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 console.log(`Calling agent with prompt: ${input}`);
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 console.log(result);
 /**
 Loaded agent executor

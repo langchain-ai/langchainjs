@@ -21,3 +21,7 @@ export {
   type ParsedToolCall,
   JsonOutputToolsParser,
 } from "../output_parsers/openai_tools.js";
+export {
+  HttpResponseOutputParser,
+  type HttpResponseOutputParserInput,
+} from "./http_response.js";

@@ -17,6 +17,29 @@ export interface BufferWindowMemoryInput extends BaseChatMemoryInput {
  * BaseChatMemory class and implements the BufferWindowMemoryInput
  * interface. This class is stateful and stores messages in a buffer. When
  * called in a chain, it returns all of the messages it has stored.
+ * @example
+ * ```typescript
+ * const prompt =
+ *   PromptTemplate.fromTemplate(`The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+ * Current conversation:
+ * {chat_history}
+ * Human: {input}
+ * AI:`);
+ *
+ * const chain = new LLMChain({
+ *   llm: new ChatOpenAI({ temperature: 0.9 }),
+ *   prompt,
+ *   memory: new BufferWindowMemory({ memoryKey: "chat_history", k: 1 }),
+ * });
+ *
+ * // Example of initiating a conversation with the AI
+ * const res1 = await chain.call({ input: "Hi! I'm Jim." });
+ * console.log({ res1 });
+ *
+ * // Example of following up with another question
+ * const res2 = await chain.call({ input: "What's my name?" });
+ * console.log({ res2 });
+ * ```
  */
 export class BufferWindowMemory
   extends BaseChatMemory

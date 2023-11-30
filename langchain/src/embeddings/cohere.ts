@@ -14,22 +14,20 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
    * limited by the Cohere API to a maximum of 96.
    */
   batchSize?: number;
-
-  /**
-   * Specifies the type of input you're giving to the model.
-   * Not required for older versions of the embedding models (i.e. anything lower than v3),
-   * but is required for more recent versions (i.e. anything bigger than v2).
-   *
-   * * `search_document` - Use this when you encode documents for embeddings that you store in a vector database for search use-cases.
-   * * `search_query` - Use this when you query your vector DB to find relevant documents.
-   * * `classification` - Use this when you use the embeddings as an input to a text classifier.
-   * * `clustering` - Use this when you want to cluster the embeddings.
-   */
-  inputType?: string;
 }
 
 /**
  * A class for generating embeddings using the Cohere API.
+ * @example
+ * ```typescript
+ * // Embed a query using the CohereEmbeddings class
+ * const model = new ChatOpenAI();
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?",
+ * );
+ * console.log({ res });
+ *
+ * ```
  */
 export class CohereEmbeddings
   extends Embeddings
@@ -39,11 +37,9 @@ export class CohereEmbeddings
 
   batchSize = 48;
 
-  inputType: string | undefined;
-
   private apiKey: string;
 
-  private client: import("cohere-ai").CohereClient;
+  private client: typeof import("cohere-ai");
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -68,7 +64,6 @@ export class CohereEmbeddings
 
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
-    this.inputType = fieldsWithDefaults?.inputType;
     this.apiKey = apiKey;
   }
 
@@ -86,7 +81,6 @@ export class CohereEmbeddings
       this.embeddingWithRetry({
         model: this.modelName,
         texts: batch,
-        inputType: this.inputType,
       })
     );
 
@@ -96,9 +90,9 @@ export class CohereEmbeddings
 
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
-      const { embeddings: batchResponse } = batchResponses[i];
+      const { body: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse[j]);
+        embeddings.push(batchResponse.embeddings[j]);
       }
     }
 
@@ -113,11 +107,11 @@ export class CohereEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     await this.maybeInitClient();
 
-    const { embeddings } = await this.embeddingWithRetry({
+    const { body } = await this.embeddingWithRetry({
       model: this.modelName,
       texts: [text],
     });
-    return embeddings[0];
+    return body.embeddings[0];
   }
 
   /**
@@ -138,21 +132,20 @@ export class CohereEmbeddings
    */
   private async maybeInitClient() {
     if (!this.client) {
-      const { CohereClient } = await CohereEmbeddings.imports();
+      const { cohere } = await CohereEmbeddings.imports();
 
-      this.client = new CohereClient({
-        token: this.apiKey,
-      });
+      this.client = cohere;
+      this.client.init(this.apiKey);
     }
   }
 
   /** @ignore */
   static async imports(): Promise<{
-    CohereClient: typeof import("cohere-ai").CohereClient;
+    cohere: typeof import("cohere-ai");
   }> {
     try {
-      const { CohereClient } = await import("cohere-ai");
-      return { CohereClient };
+      const { default: cohere } = await import("cohere-ai");
+      return { cohere };
     } catch (e) {
       throw new Error(
         "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"

@@ -43,3 +43,13 @@ import OllamaFunctionsExtraction from "@examples/models/chat/ollama_functions/ex
 <CodeBlock language="typescript">{OllamaFunctionsExtraction}</CodeBlock>
 
 You can see a LangSmith trace of what this looks like here: https://smith.langchain.com/public/31457ea4-71ca-4e29-a1e0-aa80e6828883/r
+
+## Customization
+
+Behind the scenes, this uses Ollama's JSON mode to constrain output to JSON, then passes tools schemas as JSON schema into the prompt.
+
+Because different models have different strengths, it may be helpful to pass in your own system prompt. Here's an example:
+
+import OllamaFunctionsCustomPrompt from "@examples/models/chat/ollama_functions/custom_prompt.ts";
+
+<CodeBlock language="typescript">{OllamaFunctionsCustomPrompt}</CodeBlock>

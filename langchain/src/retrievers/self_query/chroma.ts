@@ -7,6 +7,21 @@ import { BasicTranslator } from "./base.js";
  * BasicTranslator class and translates internal query language elements
  * to valid filters. The class defines a subset of allowed logical
  * operators and comparators that can be used in the translation process.
+ * @example
+ * ```typescript
+ * const chromaTranslator = new ChromaTranslator();
+ * const selfQueryRetriever = new SelfQueryRetriever({
+ *   llm: new ChatOpenAI(),
+ *   vectorStore: new Chroma(),
+ *   documentContents: "Brief summary of a movie",
+ *   attributeInfo: [],
+ *   structuredQueryTranslator: chromaTranslator,
+ * });
+ *
+ * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ *   "Which movies are directed by Greta Gerwig?",
+ * );
+ * ```
  */
 export class ChromaTranslator<T extends Chroma> extends BasicTranslator<T> {
   constructor() {

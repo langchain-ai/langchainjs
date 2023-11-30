@@ -31,11 +31,29 @@ export interface HFInput {
 
   /** API key to use. */
   apiKey?: string;
+
+  /**
+   * Credentials to use for the request. If this is a string, it will be passed straight on. If it's a boolean, true will be "include" and false will not send credentials at all.
+   */
+  includeCredentials?: string | boolean;
 }
 
 /**
  * Class implementing the Large Language Model (LLM) interface using the
  * Hugging Face Inference API for text generation.
+ * @example
+ * ```typescript
+ * const model = new HuggingFaceInference({
+ *   model: "gpt2",
+ *   temperature: 0.7,
+ *   maxTokens: 50,
+ * });
+ *
+ * const res = await model.call(
+ *   "Question: What would be a good company name for a company that makes colorful socks?\nAnswer:"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class HuggingFaceInference extends LLM implements HFInput {
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -60,6 +78,8 @@ export class HuggingFaceInference extends LLM implements HFInput {
 
   endpointUrl: string | undefined = undefined;
 
+  includeCredentials: string | boolean | undefined = undefined;
+
   constructor(fields?: Partial<HFInput> & BaseLLMParams) {
     super(fields ?? {});
 
@@ -72,6 +92,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     this.endpointUrl = fields?.endpointUrl;
+    this.includeCredentials = fields?.includeCredentials;
 
     if (!this.apiKey) {
       throw new Error(
@@ -91,8 +112,12 @@ export class HuggingFaceInference extends LLM implements HFInput {
   ): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = this.endpointUrl
-      ? new HfInference(this.apiKey).endpoint(this.endpointUrl)
-      : new HfInference(this.apiKey);
+      ? new HfInference(this.apiKey, {
+          includeCredentials: this.includeCredentials,
+        }).endpoint(this.endpointUrl)
+      : new HfInference(this.apiKey, {
+          includeCredentials: this.includeCredentials,
+        });
 
     const res = await this.caller.callWithOptions(
       { signal: options.signal },

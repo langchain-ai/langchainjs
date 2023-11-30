@@ -2,7 +2,6 @@ import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { loadChain } from "../load.js";
 import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { Document } from "../../document.js";
 import {
@@ -55,18 +54,5 @@ test("Test RefineDocumentsChain with QA chain", async () => {
     input_documents: docs,
     question: "Where did harrison go to college",
   });
-  console.log({ res });
-});
-
-test("Load chain from hub", async () => {
-  const chain = await loadChain(
-    "lc://chains/question_answering/stuff/chain.json"
-  );
-  const docs = [
-    new Document({ pageContent: "foo" }),
-    new Document({ pageContent: "bar" }),
-    new Document({ pageContent: "baz" }),
-  ];
-  const res = await chain.call({ input_documents: docs, question: "what up" });
   console.log({ res });
 });
