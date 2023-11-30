@@ -6,7 +6,7 @@ import * as process from 'process';
 
 
 
-import { google, Auth } from 'googleapis';
+import { google, Auth, drive_v3 } from 'googleapis';
 import { authenticate } from '@google-cloud/local-auth';
 
 
@@ -20,7 +20,7 @@ const SCOPES = [
     "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/spreadsheets.read"
+    "https://www.googleapis.com/auth/spreadsheets.readonly"
 ];
 
 
@@ -34,7 +34,7 @@ export interface GoogleDriveLoaderParams {
     recursive?: boolean;
     fileTypes?: string[] | null;
     loadTrashedFiles?: boolean;
-    fileLoaderCls?: any;
+    fileLoaderCls?: ((data: Blob) => Document[] )| null;
     fileLoaderKwargs?: { [key: string]: any };
   }
 
@@ -247,17 +247,64 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         return [];
     }
 
-    async _loadFileFromId(id: string): Promise<Document[]> {
-        // Implement loading file logic
-        return [];
+    async _loadFileFromId(id: string,  auth: Auth.OAuth2Client): Promise<Document[]> {
+        const service = google.drive({ version: 'v3', auth });
+        const fileMetaData = await service.files.get({
+            fileId: id,
+            supportsAllDrives: true,
+            fields: 'id, name, mimeType, size, modifiedTime, name', // Add any other desired fields
+        });
+        const fileBinaryData = await service.files.get({
+            fileId: id,
+            alt: "media"
+        })
+        if (this.fileLoaderCls){
+            const docs :Document[] = this.fileLoaderCls(fileBinaryData.data)
+        for (const doc of docs) {
+            doc.metadata.title = fileMetaData.data?.name;
+            doc.metadata.source = `https://drive.google.com/file/d/${fileMetaData.data?.id}}/view`;
+            doc.metadata.when = fileMetaData.data?.modifiedTime
+        }
+        return docs;
+        } else {
+            // can't convert the file
+            const metadata = {
+                source: `https://docs.google.com/document/d/${id}/edit`,
+                title: `${fileMetaData.data?.name}`,
+                when: `${fileMetaData.data?.modifiedTime}`,
+            }
+            const pageContent = ""
+            return [new Document({pageContent,metadata})];
+        }
       }
 
-    async _loadDocumentFromId(id: string): Promise<Document> {
+    async _loadDocumentFromId(id: string,  auth: Auth.OAuth2Client): Promise<Document> {
         // Implement loading document logic
-        return {} as Document;
+        const service = google.drive({ version: 'v3', auth });
+        const fileMetaData = await service.files.get({
+            fileId: id,
+            supportsAllDrives: true,
+            fields: 'modifiedTime,name',
+          });
+        const fileText = await service.files.export({
+            fileId: id,
+            mimeType: 'text/plain',
+          });
+          if (fileText && fileText.data && typeof fileText.data === 'string'){
+            const metadata = {
+                source: `https://docs.google.com/document/d/${id}/edit`,
+                title: `${fileMetaData.data?.name}`,
+                when: `${fileMetaData.data?.modifiedTime}`,
+            }
+            const pageContent = fileText.data
+            return new Document({pageContent,metadata});
+          }
+          else {
+            throw new Error('Error fetching Google Docs content, bad response')
+          }
       }
     
-    async _loadFilesFromIds(fileIds: string[] | null): Promise<Document[]> {
+    async _loadFilesFromIds(fileIds: string[] | null, auth: Auth.OAuth2Client): Promise<Document[]> {
         if (!fileIds || fileIds.length === 0) {
           throw new Error("fileIds must be set");
         }
@@ -265,13 +312,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         const loadedFiles: Document[] = [];
     
         for (const fileId of fileIds) {
-          loadedFiles.push(...await this._loadFileFromId(fileId));
+          loadedFiles.push(...await this._loadFileFromId(fileId,auth));
         }
     
         return loadedFiles;
       }
 
-    async _loadDocumentsFromIds(documentIds: string[] | null): Promise<Document[]> {
+    async _loadDocumentsFromIds(documentIds: string[] | null, auth: Auth.OAuth2Client): Promise<Document[]> {
         if (!documentIds || documentIds.length === 0) {
           throw new Error("documentIds must be set");
         }
@@ -279,7 +326,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         const loadedDocuments: Document[] = [];
     
         for (const docId of documentIds) {
-          loadedDocuments.push(await this._loadDocumentFromId(docId));
+          loadedDocuments.push(await this._loadDocumentFromId(docId,auth));
         }
     
         return loadedDocuments;
@@ -294,7 +341,8 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     public async load(): Promise<Document[]> {
         // load sheetbyid just doing this to test the auth/load functionality
         const auth = await this.authorize();
-        return this._loadSheetFromId('1MMqQmmF1X74P-RRdjH-Z2yPcaU8IdRjhoDFU7swR5L8', auth);
+
+        return this._loadSheetFromId('1OuEAjS-Z2uQStPpGkklXk7LnZpnKhhifgzdTj2Hp_9U', auth);
 
         // uncomment this for the actual code/implementations
 
