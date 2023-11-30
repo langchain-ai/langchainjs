@@ -9,7 +9,7 @@ export const run = async () => {
       temperature: 0,
     },
   });
-  const res = await model.predict(
+  const res = await model.invoke(
     "What would be a good company name for a company that makes colorful socks?"
   );
 
