@@ -7,8 +7,8 @@ export class OutlookSendMailTool extends OutlookBase {
 
   description = SEND_MAIL_TOOL_DESCRIPTION;
 
-  constructor(authFlow: AuthFlowBase) {
-    super(authFlow);
+  constructor(authFlow?: AuthFlowBase, choice?: string) {
+    super(authFlow, choice);
   }
 
   async _call(message: string) {
@@ -26,11 +26,11 @@ export class OutlookSendMailTool extends OutlookBase {
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
         if (!Array.isArray(to) || !to.every((item: string) => emailRegex.test(item))) {
-          return 'To must be an array of strings';
+          return 'TO must be an array of valid email in strings';
         }
     
         if (cc && (!Array.isArray(cc) || !cc.every((item: string) => emailRegex.test(item)))) {
-          return 'CC must be an array of strings';
+          return 'CC must be an array of valid email in strings';
         }
         // create new message
         newMessage = JSON.stringify({

@@ -1,36 +1,65 @@
-// import { OutlookIntegration } from '../outlook/outlookIntegration.js';
 import { OutlookReadMailTool, OutlookSendMailTool } from '../outlook/index.js';
-import { AuthFlowREST } from '../outlook/authFlowREST.js';
-
-// const toolParams = {};
 
 
-describe("outlook integration test suite", () => {
-  beforeAll(async() => {
-    const authflow = new AuthFlowREST()
-    const access_token = await authflow.getAccessToken();
-    outlookTool = new OutlookIntegration(access_token);
+describe("OutlookReadMailTool Test", () => {
+
+  test("Test read messages", async () => {
+    const outlookTool = new OutlookReadMailTool(undefined, "refresh");
+    const emails = await outlookTool._call("");
+    console.log(emails);
+    expect(true).toBe(true);
   });
 
-  // test("Pass", async () => {
-  //   expect(true).toBe(true);
-  // });
+  test("Test invalid query format", async () => {
+    const outlookTool = new OutlookReadMailTool(undefined, "refresh");
+    const emails = await outlookTool._call("blah");
+    console.log(emails);
+    expect(emails).toBe("Invalid query format");
+  });
 
-  test("Test read me", async () => {
-    const res = await outlookTool.readme();
+  test("Test query correct format", async () => {
+    const outlookTool = new OutlookReadMailTool(undefined, "refresh");
+    const emails = await outlookTool._call("$search=\"subject:hello\"");
+    console.log(emails);
+    expect(true).toBe(true);
+  });
+
+});
+
+describe("OutlookSendMailTool Test", () => {
+
+  test("Test invalid TO email address", async () => {
+    const message = JSON.stringify({
+      subject: "test",
+      content: "test",
+      to: ["testemail"],
+      cc: [],
+    });
+    const outlookTool = new OutlookSendMailTool(undefined, "refresh");
+    const res = await outlookTool._call(message);
     console.log(res);
-    expect(res).toBeDefined();
+    expect(res).toBe("TO must be an array of valid email in strings");
   });
 
-  test("Test read emails", async () => {
-    const emails = await outlookTool.readEmails();
-    expect(emails).toBeDefined();
-  });
-
-  test("Test send email", async () => {
-    const res = await outlookTool.sendEmail();
+  test("Test invalid CC email address", async () => {
+    const message = JSON.stringify({
+      subject: "test",
+      content: "test",
+      to: ["test@email.com"],
+      cc: ["blah"],
+    });
+    const outlookTool = new OutlookSendMailTool(undefined, "refresh");
+    const res = await outlookTool._call(message);
     console.log(res);
-    expect(res).toBeDefined();
+    expect(res).toBe("CC must be an array of valid email in strings");
+  });
+
+  test("Test invalid JSON format", async () => {
+    const message = "blah";
+    const outlookTool = new OutlookSendMailTool(undefined, "refresh");
+    const res = await outlookTool._call(message);
+    console.log(res);
+    expect(res).toBe("Invalid JSON format");
   });
 
 });

@@ -19,9 +19,9 @@ export class AuthFlowREST extends AuthFlowBase {
 
     constructor(clientId?: string, clientSecret?: string, redirectUri?: string) {
         if (!clientId || !clientSecret || !redirectUri) {
-            clientId = getEnvironmentVariable('CLIENT_ID');
-            clientSecret = getEnvironmentVariable('CLIENT_SECRET');
-            redirectUri = getEnvironmentVariable('REDIRECT_URI');
+            clientId = getEnvironmentVariable('OUTLOOK_CLIENT_ID');
+            clientSecret = getEnvironmentVariable('OUTLOOK_CLIENT_SECRET');
+            redirectUri = getEnvironmentVariable('OUTLOOK_REDIRECT_URI');
         }
         if (!clientId || !clientSecret || !redirectUri) {
             throw new Error('Missing clientId, clientSecret or redirectUri.');

@@ -12,19 +12,23 @@ export class OutlookReadMailTool extends OutlookBase {
 
   description = READ_MAIL_TOOL_DESCRIPTION;
 
-  constructor(authFlow: AuthFlowBase) {
-    super(authFlow);
+  constructor(authFlow?: AuthFlowBase, choice?: string) {
+    super(authFlow, choice);
   }
 
   async _call(query: string) {
-    console.log("query: ", query);
     try {
-        await this.getAuth();
+      await this.getAuth();
     } catch (error) {
       return `Failed to get access token: ${error}`;
     }
+    // validate query
+    const queryRegex = /^\$search="(?:body|cc|from|received|recipients|sent|subject|to)(?::[^"]*)?"$/;
+    if (query && !queryRegex.test(query)) {
+      return 'Invalid query format';
+    }
     // fetch emails from me/messages
-    const response = await fetch("https://graph.microsoft.com/v1.0/me/messages?$select=sender,subject,body", {
+    const response = await fetch(`https://graph.microsoft.com/v1.0/me/messages?${query}&$top=5`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.accessToken}`,
