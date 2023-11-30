@@ -7,7 +7,7 @@ const model = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
 
 const stream = await llamaCpp.stream([
   new SystemMessage(
-	"You are a pirate, responses must be very verbose and in pirate dialect."
+    "You are a pirate, responses must be very verbose and in pirate dialect."
   ),
   new HumanMessage("Tell me about Llamas?"),
 ]);
