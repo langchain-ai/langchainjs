@@ -650,8 +650,8 @@ export class RunnableBinding<
     this.configFactories = fields.configFactories;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async _mergeConfig(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     options?: Record<string, any>
   ): Promise<Partial<CallOptions>> {
     const config = mergeConfigs(this.config, options);
