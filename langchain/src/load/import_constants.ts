@@ -10,6 +10,7 @@ export const optionalImportEntrypoints = [
   "langchain/tools/sql",
   "langchain/tools/webbrowser",
   "langchain/tools/google_calendar",
+  "langchain/tools/gmail",
   "langchain/chains/load",
   "langchain/chains/query_constructor",
   "langchain/chains/query_constructor/ir",

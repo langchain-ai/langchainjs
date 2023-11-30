@@ -67,12 +67,12 @@ tools/sql.d.ts
 tools/webbrowser.cjs
 tools/webbrowser.js
 tools/webbrowser.d.ts
-tools/gmail.cjs
-tools/gmail.js
-tools/gmail.d.ts
 tools/google_calendar.cjs
 tools/google_calendar.js
 tools/google_calendar.d.ts
+tools/gmail.cjs
+tools/gmail.js
+tools/gmail.d.ts
 chains.cjs
 chains.js
 chains.d.ts
