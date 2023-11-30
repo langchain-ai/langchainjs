@@ -15,9 +15,14 @@ import { BaseDocumentLoader } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
 
+const SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/spreadsheets.read"
+];
 
-
-const SCOPES = ["https://www.googleapis.com/auth/drive.readonly"];
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credential_path.json');
 
 
