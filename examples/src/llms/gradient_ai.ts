@@ -1,8 +1,8 @@
-import { GradientAI } from "langchain/llms/gradient_ai";
+import { GradientLLM } from "langchain/llms/gradient_ai";
 
 export const run = async () => {
   // Note that modelParameters are optional
-  const model = new GradientAI({
+  const model = new GradientLLM({
     modelSlug: "llama2-7b-chat",
     inferenceParameters: {
       maxGeneratedTokenCount: 20,

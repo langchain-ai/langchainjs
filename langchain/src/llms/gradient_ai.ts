@@ -3,10 +3,10 @@ import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
 /**
- * The GradientxAIParams interface defines the input parameters for
- * the GradientxAI class.
+ * The GradientLLMParams interface defines the input parameters for
+ * the GradientLLM class.
  */
-export interface GradientAIParams extends BaseLLMParams {
+export interface GradientLLMParams extends BaseLLMParams {
   /**
    * Gradient AI Access Token.
    * Provide Access Token if you do not wish to automatically pull from env.
@@ -28,13 +28,12 @@ export interface GradientAIParams extends BaseLLMParams {
 }
 
 /**
- * The GradientAI class is used to interact with Gradient AI inference Endpoint models.
+ * The GradientLLM class is used to interact with Gradient AI inference Endpoint models.
  * This requires your Gradient AI Access Token which is autoloaded if not specified.
  */
-
-export class GradientAI extends LLM<BaseLLMCallOptions> {
+export class GradientLLM extends LLM<BaseLLMCallOptions> {
   static lc_name() {
-    return "GradientAI";
+    return "GradientLLM";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
@@ -56,7 +55,7 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   baseModel: any;
 
-  constructor(fields: GradientAIParams) {
+  constructor(fields: GradientLLMParams) {
     super(fields);
 
     this.modelSlug = fields?.modelSlug ?? this.modelSlug;
@@ -93,7 +92,7 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
   ): Promise<string> {
     await this.setBaseModel();
 
-    // GradientAI does not export the CompleteResponse type. Once it does, we can use it here.
+    // GradientLLM does not export the CompleteResponse type. Once it does, we can use it here.
     interface CompleteResponse {
       finishReason: string;
       generatedOutput: string;
