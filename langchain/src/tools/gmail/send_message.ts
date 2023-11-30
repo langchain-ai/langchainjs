@@ -1,20 +1,16 @@
 import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
-const SendMessageSchema = z.object({
-  message: z.string(),
-  to: z.array(z.string()),
-  subject: z.string(),
-  cc: z.array(z.string()).optional(),
-  bcc: z.array(z.string()).optional(),
-});
-
-export type SendMessageSchema = z.infer<typeof SendMessageSchema>;
-
 export class GmailSendMessage extends GmailBaseTool {
   name = "gmail_send_message";
 
-  schema = SendMessageSchema;
+  schema = z.object({
+    message: z.string(),
+    to: z.array(z.string()),
+    subject: z.string(),
+    cc: z.array(z.string()).optional(),
+    bcc: z.array(z.string()).optional(),
+  });
 
   description = "Send a message using Gmail";
 
@@ -28,7 +24,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: z.infer<typeof SendMessageSchema>): string {
+  }: z.infer<typeof this.schema>): string {
     const emailLines: string[] = [];
 
     // Format the recipient(s)
@@ -54,7 +50,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: z.output<typeof SendMessageSchema>): Promise<string> {
+  }: z.output<typeof this.schema>): Promise<string> {
     const rawMessage = this.createEmailMessage({
       message,
       to,
@@ -76,4 +72,12 @@ export class GmailSendMessage extends GmailBaseTool {
       throw new Error(`An error occurred while sending the message: ${error}`);
     }
   }
+}
+
+export type SendMessageSchema = {
+  message: string;
+  to: string[];
+  subject: string;
+  cc?: string[];
+  bcc?: string[];
 }

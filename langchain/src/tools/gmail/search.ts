@@ -2,18 +2,14 @@ import { gmail_v1 } from "googleapis";
 import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
-const SearchSchema = z.object({
-  query: z.string(),
-  maxResults: z.number().optional(),
-  resource: z.enum(["messages", "threads"]).optional(),
-});
-
-export type SearchSchema = z.infer<typeof SearchSchema>;
-
 export class GmailSearch extends GmailBaseTool {
   name = "search_gmail";
 
-  schema = SearchSchema;
+  schema = z.object({
+    query: z.string(),
+    maxResults: z.number().optional(),
+    resource: z.enum(["messages", "threads"]).optional(),
+  });
 
   description =
     "Use this tool to search for email messages or threads. The input must be a valid Gmail query. The output is a JSON list of the requested resource.";
@@ -22,7 +18,7 @@ export class GmailSearch extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(arg: z.output<typeof SearchSchema>) {
+  async _call(arg: z.output<typeof this.schema>) {
     const { query, maxResults = 10, resource = "messages" } = arg;
 
     const response = await this.gmail.users.messages.list({
@@ -130,4 +126,10 @@ export class GmailSearch extends GmailBaseTool {
     );
     return parsedThreads;
   }
+}
+
+export type SearchSchema = {
+  query: string;
+  maxResults?: number;
+  resource?: "messages" | "threads";
 }

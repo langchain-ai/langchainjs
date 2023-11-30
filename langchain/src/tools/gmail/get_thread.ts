@@ -1,16 +1,12 @@
 import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
-const GetThreadSchema = z.object({
-  threadId: z.string(),
-});
-
-export type GetThreadSchema = z.infer<typeof GetThreadSchema>;
-
 export class GmailGetThread extends GmailBaseTool {
   name = "gmail_get_thread";
 
-  schema = GetThreadSchema;
+  schema = z.object({
+    threadId: z.string(),
+  });
 
   description = "Get a thread from Gmail";
 
@@ -18,7 +14,7 @@ export class GmailGetThread extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(arg: z.output<typeof GetThreadSchema>) {
+  async _call(arg: z.output<typeof this.schema>) {
     const { threadId } = arg;
 
     const thread = await this.gmail.users.threads.get({
@@ -101,4 +97,8 @@ export class GmailGetThread extends GmailBaseTool {
       })
     )}`;
   }
+}
+
+export type GetThreadSchema = {
+  threadId: string;
 }
