@@ -202,6 +202,9 @@
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/watsonx_ai.cjs",
+    "llms/watsonx_ai.js",
+    "llms/watsonx_ai.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -1755,6 +1758,11 @@
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/watsonx_ai": {
+      "types": "./llms/watsonx_ai.d.ts",
+      "import": "./llms/watsonx_ai.js",
+      "require": "./llms/watsonx_ai.cjs"
     },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",
