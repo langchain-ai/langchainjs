@@ -106,7 +106,10 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
   async setBaseModel() {
     if (this.baseModel) return;
 
-    const gradient = new Gradient({});
+    const gradient = new Gradient({
+      accessToken: this.gradientAccessKey,
+      workspaceId: this.workspaceId,
+    });
     this.baseModel = await gradient.getBaseModel({
       baseModelSlug: this.modelSlug,
     });
