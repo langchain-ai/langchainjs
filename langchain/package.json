@@ -860,7 +860,6 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
-    "@gradientai/nodejs-sdk": "^1.2.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
@@ -876,6 +875,7 @@
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
+    "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@mozilla/readability": "^0.4.4",
@@ -1004,7 +1004,6 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
-    "@gradientai/nodejs-sdk": "^1.2.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/storage-blob": "^12.15.0",
@@ -1018,6 +1017,7 @@
     "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
+    "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
@@ -1121,9 +1121,6 @@
     "@aws-sdk/client-sagemaker-runtime": {
       "optional": true
     },
-    "@gradientai/nodejs-sdk": {
-      "optional": true
-    },
     "@aws-sdk/client-sfn": {
       "optional": true
     },
@@ -1161,6 +1158,9 @@
       "optional": true
     },
     "@google-cloud/storage": {
+      "optional": true
+    },
+    "@gradientai/nodejs-sdk": {
       "optional": true
     },
     "@huggingface/inference": {
