@@ -4,9 +4,7 @@ const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
 const model = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
 
-const stream = await model.stream([
-  ["human", "Tell me a short story about a happy Llama."],
-]);
+const stream = await model.stream("Tell me a short story about a happy Llama.");
 
 for await (const chunk of stream) {
   console.log(chunk.content);
