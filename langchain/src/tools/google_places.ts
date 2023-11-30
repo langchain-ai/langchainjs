@@ -31,13 +31,14 @@ export class GooglePlacesAPI extends Tool {
 
   constructor(fields?: GooglePlacesAPIParams) {
     super(...arguments);
-    this.apiKey =
+    const apiKey =
       fields?.apiKey ?? getEnvironmentVariable("GOOGLE_PLACES_API_KEY");
-    if (this.apiKey === undefined) {
+    if (apiKey === undefined) {
       throw new Error(
         `Google Places API key not set. You can set it as "GOOGLE_PLACES_API_KEY" in your environment variables.`
       );
     }
+    this.apiKey = apiKey;
   }
 
   async _call(input: string) {
@@ -64,7 +65,8 @@ export class GooglePlacesAPI extends Tool {
         const json = await res.json();
         message = json.error.message;
       } catch (e) {
-        message = "Unable to parse error message: Google did not return a JSON response."
+        message =
+          "Unable to parse error message: Google did not return a JSON response.";
       }
       throw new Error(
         `Got ${res.status}: ${res.statusText} error from Google Places API: ${message}`
