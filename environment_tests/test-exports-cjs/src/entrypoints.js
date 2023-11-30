@@ -13,6 +13,7 @@ const agents_openai_output_parser = require("langchain/agents/openai/output_pars
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const tools_render = require("langchain/tools/render");
+const tools_google_places = require("langchain/tools/google_places");
 const chains = require("langchain/chains");
 const chains_combine_documents_reduce = require("langchain/chains/combine_documents/reduce");
 const chains_openai_functions = require("langchain/chains/openai_functions");
