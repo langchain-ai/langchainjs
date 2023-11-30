@@ -826,7 +826,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:shareefmorayur/langchainjs.git"
+    "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
