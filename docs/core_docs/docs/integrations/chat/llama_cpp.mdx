@@ -47,8 +47,16 @@ import SystemExample from "@examples/models/chat/integration_llama_cpp_system.ts
 
 ### Chains
 
-Finally we can also use this module with chains, note that using more complex chains will require suitably powerful version of `llama2` such as the 70B version.
+This module can also be used with chains, note that using more complex chains will require suitably powerful version of `llama2` such as the 70B version.
 
 import ChainExample from "@examples/models/chat/integration_llama_cpp_chain.ts";
 
 <CodeBlock language="typescript">{ChainExample}</CodeBlock>
+
+### Streaming
+
+We can also stream with Llama CPP:
+
+import StreamExample from "@examples/models/chat/integration_llama_cpp_stream.ts";
+
+<CodeBlock language="typescript">{StreamExample}</CodeBlock>

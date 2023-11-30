@@ -217,6 +217,9 @@ prompts.d.ts
 prompts/load.cjs
 prompts/load.js
 prompts/load.d.ts
+vectorstores/clickhouse.cjs
+vectorstores/clickhouse.js
+vectorstores/clickhouse.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
@@ -457,6 +460,9 @@ document_loaders/fs/unstructured.d.ts
 document_loaders/fs/openai_whisper_audio.cjs
 document_loaders/fs/openai_whisper_audio.js
 document_loaders/fs/openai_whisper_audio.d.ts
+document_loaders/fs/pptx.cjs
+document_loaders/fs/pptx.js
+document_loaders/fs/pptx.d.ts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
@@ -790,6 +796,9 @@ experimental/hubs/makersuite/googlemakersuitehub.d.ts
 experimental/chains/violation_of_expectations.cjs
 experimental/chains/violation_of_expectations.js
 experimental/chains/violation_of_expectations.d.ts
+experimental/tools/pyinterpreter.cjs
+experimental/tools/pyinterpreter.js
+experimental/tools/pyinterpreter.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

@@ -90,6 +90,7 @@ const entrypoints = {
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
   // vectorstores
+  "vectorstores/clickhouse": "vectorstores/clickhouse",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/cassandra": "vectorstores/cassandra",
@@ -179,6 +180,7 @@ const entrypoints = {
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   "document_loaders/fs/openai_whisper_audio":
     "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/pptx": "document_loaders/fs/pptx",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/mozilla_readability":
@@ -313,6 +315,7 @@ const entrypoints = {
     "experimental/hubs/makersuite/googlemakersuitehub",
   "experimental/chains/violation_of_expectations":
     "experimental/chains/violation_of_expectations/index",
+  "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
   evaluation: "evaluation/index",
   // runnables
@@ -374,6 +377,7 @@ const requiresOptionalDependency = [
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/cassandra",
+  "vectorstores/clickhouse",
   "vectorstores/chroma",
   "vectorstores/cloudflare_vectorize",
   "vectorstores/closevector/web",
@@ -440,6 +444,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
   "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/pptx",
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/bedrock",
@@ -498,6 +503,7 @@ const requiresOptionalDependency = [
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub",
+  "experimental/tools/pyinterpreter",
   "util/convex",
 ];
 
