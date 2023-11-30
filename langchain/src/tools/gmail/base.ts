@@ -13,7 +13,9 @@ export interface GmailBaseToolParams {
 
 export abstract class GmailBaseTool extends Tool {
   name = "Gmail";
+
   description = "A tool to send and view emails through Gmail";
+
   protected gmail: gmail_v1.Gmail;
 
   constructor(fields?: Partial<GmailBaseToolParams>) {
