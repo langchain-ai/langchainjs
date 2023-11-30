@@ -1,15 +1,10 @@
 import * as fs from 'fs';
-
-
-
 import { google, Auth, drive_v3 } from 'googleapis';
 import { authenticate } from '@google-cloud/local-auth';
 import { PDFLoader } from "../fs/pdf.js";
-
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
-
 
 const SCOPES = [
     "https://www.googleapis.com/auth/drive",
@@ -19,7 +14,9 @@ const SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets.readonly"
 ];
 
-
+/**
+ * GoogleDriveLoaderParams interface for specifying loader configuration options.
+ */
 export interface GoogleDriveLoaderParams {
     serviceAccountKey?: string;
     credentialsPath?: string;
@@ -34,8 +31,12 @@ export interface GoogleDriveLoaderParams {
     fileLoaderKwargs?: { [key: string]: any };
   }
 
+/**
+ * GoogleDriveLoader is responsible for loading documents from Google Drive.
+ * It extends BaseDocumentLoader.
+ */
 export class GoogleDriveLoader extends BaseDocumentLoader {
-
+    // Define class properties
     public serviceAccountKey: string;
 
     public credentialsPath: string;
@@ -57,7 +58,11 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     public fileLoaderCls: ((data: any) => Document[] )| null;
 
     public fileLoaderKwargs: { [key: string]: any };
-  
+
+    /**
+     * Creates an instance of GoogleDriveLoader.
+     * @param {GoogleDriveLoaderParams} params - Loader configuration options.
+     */
     constructor({
         serviceAccountKey = getEnvironmentVariable("GOOGLE_DRIVE_SERVICEACCOUNTKEY"),
         credentialsPath = getEnvironmentVariable("GOOGLE_DRIVE_CREDENTIALSPATH"),
@@ -83,9 +88,14 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         this.loadTrashedFiles = loadTrashedFiles;
         this.fileLoaderCls = fileLoaderCls;
         this.fileLoaderKwargs = fileLoaderKwargs;
-        // You can add any additional logic here if needed
       }
 
+    /**
+     * Validates input values to ensure they meet required criteria.
+     * @param {Record<string, any>} inputValues - Input values to validate.
+     * @returns {Record<string, any>} - Validated input values.
+     * @throws {Error} - Throws an error if validation fails.
+     */
    validateInputs(inputValues: Record<string, any>): Record<string, any> {
         const values = { ...inputValues };
 
@@ -127,6 +137,11 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         return values;
     }  
 
+    /**
+     * Validates the existence of credentialsPath.
+     * @param {string} credentialsPath - The path to credentials file.
+     * @throws {Error} - Throws an error if credentialsPath does not exist.
+     */
     validateCredentialsPath(credentialsPath: string): void {
         if (!fs.existsSync(credentialsPath)) {
             throw new Error(`credentials_path ${credentialsPath} does not exist`);
@@ -134,9 +149,8 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     }
     
     /**
-     * Reads previously authorized credentials from the save file.
-     *
-     * @return {Promise<Auth.OAuth2Client|null>}
+     * Loads saved credentials if they exist.
+     * @returns {Promise<Auth.OAuth2Client|null>} - An OAuth2Client instance or null if credentials do not exist.
      */
     async loadSavedCredentialsIfExist(): Promise<Auth.OAuth2Client | null> {
         try {
@@ -169,8 +183,8 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     }
     
     /**
-     * Load or request or authorization to call APIs.
-     *
+     * Authorizes the application to call Google APIs.
+     * @returns {Promise<Auth.OAuth2Client>} - An authenticated OAuth2Client instance.
      */
     async authorize(): Promise<Auth.OAuth2Client> {
         let client = await this.loadSavedCredentialsIfExist();
@@ -188,9 +202,10 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     }
     
     /**
-     * 
-     * @param {string} id The spreadsheet ID.
-     * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
+     * Loads a Google Sheets document from its ID.
+     * @param {string} id - The spreadsheet ID.
+     * @param {google.auth.OAuth2} auth - The authenticated Google OAuth client.
+     * @returns {Promise<Document[]>} - An array of Document instances.
      */
     async _loadSheetFromId(id: string, auth: Auth.OAuth2Client) {
         const sheetsService = google.sheets({version: 'v4', auth});
@@ -381,6 +396,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
 
     public async load(): Promise<Document[]> {
+        const auth = await this.authorize();
         // load sheetbyid just doing this to test the auth/load functionality
         const auth = await this.authorize();
         await this._loadDocumentsFromFolder('1Ae4Q9bDoHLbryrKrAtOvpxH9tGgqDRYO',auth,this.fileTypes)
