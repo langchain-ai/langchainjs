@@ -23,8 +23,6 @@ const SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets.read"
 ];
 
-const CREDENTIALS_PATH = path.join(process.cwd(), 'credential_path.json');
-
 
 export interface GoogleDriveLoaderParams {
     serviceAccountKey?: string;
@@ -162,7 +160,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
      * @return {Promise<void>}
      */
     async saveCredentials(client: Auth.OAuth2Client): Promise<void> {
-        const content = await fs.readFileSync(CREDENTIALS_PATH, 'utf8');
+        const content = await fs.readFileSync(this.credentialsPath, 'utf8');
         const keys = JSON.parse(content);
         const key = keys.installed || keys.web;
         const payload = JSON.stringify({
@@ -181,15 +179,17 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     async authorize(): Promise<Auth.OAuth2Client> {
         let client = await this.loadSavedCredentialsIfExist();
         if (client) {
+            console.log("loaded saved credentials");
             return client;
         }
         client = await authenticate({
             scopes: SCOPES,
-            keyfilePath: CREDENTIALS_PATH,
+            keyfilePath: this.credentialsPath,
         });
         if (client && client.credentials) {
             await this.saveCredentials(client);
         }
+        console.log("created auth client");
         return client as Auth.OAuth2Client;
     }
     
@@ -201,7 +201,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     async _loadSheetFromId(id: string, auth: Auth.OAuth2Client) {
         console.log("_loadSheetFromId");
         const sheetsService = google.sheets({version: 'v4', auth});
-        console.log("sheetsService", sheetsService);
         const spreadsheet = await sheetsService.spreadsheets.get({ spreadsheetId: id});
         const sheets = spreadsheet.data.sheets || [];
 
