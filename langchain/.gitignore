@@ -439,6 +439,9 @@ document_loaders/fs/directory.d.ts
 document_loaders/fs/buffer.cjs
 document_loaders/fs/buffer.js
 document_loaders/fs/buffer.d.ts
+document_loaders/fs/chatgpt.cjs
+document_loaders/fs/chatgpt.js
+document_loaders/fs/chatgpt.d.ts
 document_loaders/fs/text.cjs
 document_loaders/fs/text.js
 document_loaders/fs/text.d.ts
@@ -472,9 +475,6 @@ document_loaders/fs/openai_whisper_audio.d.ts
 document_loaders/fs/pptx.cjs
 document_loaders/fs/pptx.js
 document_loaders/fs/pptx.d.ts
-document_loaders/fs/chatgpt.cjs
-document_loaders/fs/chatgpt.js
-document_loaders/fs/chatgpt.d.ts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
