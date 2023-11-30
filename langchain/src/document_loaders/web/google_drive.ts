@@ -4,7 +4,7 @@ import * as fs from 'fs';
 
 import { google, Auth, drive_v3 } from 'googleapis';
 import { authenticate } from '@google-cloud/local-auth';
-
+import { PDFLoader } from "../fs/pdf.js";
 
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
@@ -30,7 +30,7 @@ export interface GoogleDriveLoaderParams {
     recursive?: boolean;
     fileTypes?: string[] | null;
     loadTrashedFiles?: boolean;
-    fileLoaderCls?: ((data: Blob) => Document[] )| null;
+    fileLoaderCls?: ((data: any) => Document[] )| null;
     fileLoaderKwargs?: { [key: string]: any };
   }
 
@@ -54,7 +54,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
     public loadTrashedFiles: boolean;
 
-    public fileLoaderCls: any;
+    public fileLoaderCls: ((data: any) => Document[] )| null;
 
     public fileLoaderKwargs: { [key: string]: any };
   
@@ -256,27 +256,35 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
             supportsAllDrives: true,
             fields: 'id, name, mimeType, size, modifiedTime, name', // Add any other desired fields
         });
-        const fileBinaryData = await service.files.get({
+
+        if (this.fileLoaderCls){
+                    const fileBinaryData = await service.files.get({
             fileId: id,
             alt: "media"
         })
-        if (this.fileLoaderCls){
             const docs :Document[] = this.fileLoaderCls(fileBinaryData.data)
-        for (const doc of docs) {
+            for (const doc of docs) {
             doc.metadata.title = fileMetaData.data?.name;
             doc.metadata.source = `https://drive.google.com/file/d/${fileMetaData.data?.id}}/view`;
             doc.metadata.when = fileMetaData.data?.modifiedTime
-        }
+            }
         return docs;
         } else {
-            // can't convert the file
-            const metadata = {
-                source: `https://docs.google.com/document/d/${id}/edit`,
-                title: `${fileMetaData.data?.name}`,
-                when: `${fileMetaData.data?.modifiedTime}`,
+            // file is a pdf
+            // load pdf using PDFLoader
+            const fileBinaryData = await service.files.get({
+                fileId: id,
+                alt: "media"
+            },{ responseType: 'blob' })
+            const data: Blob = fileBinaryData?.data as unknown as Blob;
+            const loader = new PDFLoader(data);
+            const docs = await loader.load();
+            for (const doc of docs) {
+                doc.metadata.title = fileMetaData.data?.name;
+                doc.metadata.source = `https://drive.google.com/file/d/${fileMetaData.data?.id}}/view`;
+                doc.metadata.when = fileMetaData.data?.modifiedTime
             }
-            const pageContent = ""
-            return [new Document({pageContent,metadata})];
+            return docs;
         }
       }
 
@@ -344,7 +352,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         // load sheetbyid just doing this to test the auth/load functionality
         const auth = await this.authorize();
 
-        return this._loadSheetFromId('1OuEAjS-Z2uQStPpGkklXk7LnZpnKhhifgzdTj2Hp_9U', auth);
+        return this._loadFileFromId('1SXQFoWBnhmwMSyIcdx7RubhIGQilSnsA', auth);
 
         // uncomment this for the actual code/implementations
 
