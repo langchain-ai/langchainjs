@@ -82,6 +82,7 @@
     "./langchain/src/llms/googlepalm.ts",
     "./langchain/src/llms/fireworks.ts",
     "./langchain/src/llms/sagemaker_endpoint.ts",
+    "./langchain/src/llms/watsonx_ai.ts",
     "./langchain/src/llms/bedrock/index.ts",
     "./langchain/src/llms/bedrock/web.ts",
     "./langchain/src/llms/llama_cpp.ts",
