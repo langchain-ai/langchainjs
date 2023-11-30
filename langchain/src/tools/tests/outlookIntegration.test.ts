@@ -1,6 +1,15 @@
-import { OutlookReadMailTool, OutlookSendMailTool } from "../outlook/index.js";
+import { AuthFlowToken, OutlookReadMailTool, OutlookSendMailTool } from "../outlook/index.js";
+
 
 describe("OutlookReadMailTool Test", () => {
+
+  test("Test invalid access token", async () => {
+    const accessToken = "blah";
+    const authFlow = new AuthFlowToken(accessToken);
+    const outlookTool = new OutlookReadMailTool(authFlow);
+    const emails = await outlookTool._call("");
+    expect(emails).toBe("Fetch mail error: 401");
+  });
 
   test("Test read messages", async () => {
     const outlookTool = new OutlookReadMailTool(undefined, "refresh");
