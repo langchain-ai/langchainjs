@@ -5,6 +5,7 @@ export interface DocumentInput<
   pageContent: string;
 
   metadata?: Metadata;
+  // Custom payload for vectorstores for an extra parameter to filter for
   customPayload?: object;
 }
 
