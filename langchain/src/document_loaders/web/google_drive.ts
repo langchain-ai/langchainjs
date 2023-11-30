@@ -36,6 +36,7 @@ export interface GoogleDriveLoaderParams extends AsyncCallerParams {
   }
 
 export class GoogleDriveLoader extends BaseDocumentLoader {
+
     public serviceAccountKey: string;
 
     public credentialsPath: string;
@@ -231,6 +232,66 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         }
         return documents;
 
+    }
+
+
+
+    private async _fetchFilesRecursive(service: any, folderId: string): Promise<any[]> {
+        // Implement recursive file fetching logic here
+        // You can use the Files: list API with 'q' parameter to get files in a folder
+        return [];
+    }
+
+    async _loadFileFromId(id: string): Promise<Document[]> {
+        // Implement loading file logic
+        return [];
+      }
+
+    async _loadDocumentFromId(id: string): Promise<Document> {
+        // Implement loading document logic
+        return {} as Document;
+      }
+    
+    async _loadFilesFromIds(fileIds: string[] | null): Promise<Document[]> {
+        if (!fileIds || fileIds.length === 0) {
+          throw new Error("fileIds must be set");
+        }
+    
+        const loadedFiles: Document[] = [];
+    
+        for (const fileId of fileIds) {
+          loadedFiles.push(...await this._loadFileFromId(fileId));
+        }
+    
+        return loadedFiles;
+      }
+
+    async _loadDocumentsFromIds(documentIds: string[] | null): Promise<Document[]> {
+        if (!documentIds || documentIds.length === 0) {
+          throw new Error("documentIds must be set");
+        }
+    
+        const loadedDocuments: Document[] = [];
+    
+        for (const docId of documentIds) {
+          loadedDocuments.push(await this._loadDocumentFromId(docId));
+        }
+    
+        return loadedDocuments;
+      }
+
+    async _loadDocumentsFromFolder(folderId: string, fileTypes: string[] | null):Promise<Document[]> {
+        throw new Error('Method not implemented.');
+    }
+
+
+
+    public async load(): Promise<Document[]> {
+        if (this.folderId){
+            return this._loadDocumentsFromFolder(this.folderId,this.fileTypes)
+        } else if (this.documentIds){
+            return this._loadDocumentsFromIds(this.documentIds)
+        } else return this._loadFilesFromIds(this.fileIds)
     }
   
 }
