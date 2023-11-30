@@ -5,8 +5,8 @@ export const run = async () => {
   const model = new GradientAI({
     modelSlug: "llama2-7b-chat",
     inferenceParameters: {
-        maxGeneratedTokenCount: 20,
-        temperature: 0,
+      maxGeneratedTokenCount: 20,
+      temperature: 0,
     },
   });
   const res = await model.predict(
