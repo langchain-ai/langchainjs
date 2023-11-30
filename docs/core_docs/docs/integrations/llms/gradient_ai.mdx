@@ -1,0 +1,37 @@
+---
+sidebar_class_name: node-only
+---
+
+# Gradient AI
+
+LangChain.js supports integration with Gradient AI. Check out [Gradient AI](https://docs.gradient.ai/docs) for a list of available models.
+
+## Setup
+
+You'll need to install the official Gradient Node SDK as a peer dependency:
+
+```bash npm2yarn
+npm i @gradientai/nodejs-sdk
+```
+
+You will need to set the following environment variables for using the Gradient AI API.
+
+1. `GRADIENT_ACCESS_TOKEN`
+2. `GRADIENT_WORKSPACE_ID`
+
+Alternatively, these can be set during the GradientAI Class instantiation as `gradientAccessKey` and `workspaceId` respectively.
+For example:
+
+```typescript
+const model = new GradientLLM({
+  gradientAccessKey: "My secret Access Token"
+  workspaceId: "My secret workspace id"
+});
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import GradientLLMExample from "@examples/llms/gradient_ai.ts";
+
+<CodeBlock language="typescript">{GradientLLMExample}</CodeBlock>
