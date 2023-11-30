@@ -9,7 +9,6 @@ import { authenticate } from '@google-cloud/local-auth';
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
-import { result } from 'lodash';
 
 
 const SCOPES = [
