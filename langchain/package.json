@@ -205,6 +205,9 @@
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/watsonx_ai.cjs",
+    "llms/watsonx_ai.js",
+    "llms/watsonx_ai.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -837,8 +840,10 @@
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint:fix": "yarn lint --fix",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
     "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
@@ -1761,6 +1766,11 @@
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/watsonx_ai": {
+      "types": "./llms/watsonx_ai.d.ts",
+      "import": "./llms/watsonx_ai.js",
+      "require": "./llms/watsonx_ai.cjs"
     },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",
