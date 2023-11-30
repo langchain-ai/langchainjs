@@ -1,7 +1,7 @@
 export abstract class AuthFlowBase {
   protected clientId: string;
 
-  protected accessToken: "";
+  protected accessToken = "";
 
   constructor(clientId: string) {
     this.clientId = clientId;

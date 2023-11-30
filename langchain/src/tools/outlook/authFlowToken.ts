@@ -86,7 +86,7 @@ export class AuthFlowRefresh extends AuthFlowBase {
     );
 
     if (!response.ok) {
-      throw new Error(`fetch token error! response: ${response}`);
+      throw new Error(`fetch token error! response: ${response.status}`);
     }
     // save new access token
     const json = (await response.json()) as AccessTokenResponse;

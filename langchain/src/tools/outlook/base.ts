@@ -11,7 +11,7 @@ export class OutlookBase extends Tool {
 
   protected authFlow: AuthFlowBase;
 
-  protected accessToken: "";
+  protected accessToken = "";
 
   constructor(authFlow?: AuthFlowBase, choice?: string) {
     super();

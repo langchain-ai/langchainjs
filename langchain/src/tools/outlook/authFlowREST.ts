@@ -18,7 +18,7 @@ export class AuthFlowREST extends AuthFlowBase {
 
   private pathname: string;
 
-  private refreshToken: "";
+  private refreshToken = "";
 
   constructor({ clientId, clientSecret, redirectUri }: { clientId?: string, clientSecret?: string, redirectUri?: string } = {}) {
     let id = clientId;
@@ -148,7 +148,7 @@ export class AuthFlowREST extends AuthFlowBase {
     );
 
     if (!response.ok) {
-      throw new Error(`fetch token error! response: ${response}`);
+      throw new Error(`fetch token error! response: ${response.status}`);
     }
     // save access token and refresh token
     const json = (await response.json()) as AccessTokenResponse;
@@ -179,7 +179,7 @@ export class AuthFlowREST extends AuthFlowBase {
     );
 
     if (!response.ok) {
-      throw new Error(`fetch token error! response: ${response}`);
+      throw new Error(`fetch token error! response: ${response.status}`);
     }
     // save new access token
     const json = (await response.json()) as AccessTokenResponse;
