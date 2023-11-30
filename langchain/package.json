@@ -82,6 +82,9 @@
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
+    "tools/gmail.cjs",
+    "tools/gmail.js",
+    "tools/gmail.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -1527,6 +1530,11 @@
       "types": "./tools/google_calendar.d.ts",
       "import": "./tools/google_calendar.js",
       "require": "./tools/google_calendar.cjs"
+    },
+    "./tools/gmail": {
+      "types": "./tools/gmail.d.ts",
+      "import": "./tools/gmail.js",
+      "require": "./tools/gmail.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",
