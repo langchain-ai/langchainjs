@@ -1,0 +1,27 @@
+# Gradient AI
+
+LangChain.js supports integration with Gradient AI. Checkout [Gradient AI](https://docs.gradient.ai/docs) for a list of available models.
+
+## Setup
+
+You will need to set the following environment variables for using the Gradient AI API.
+
+1. `GRADIENT_ACCESS_TOKEN`
+2. `GRADIENT_WORKSPACE_ID`
+
+Alternatively, these can be set during the GradientAI Class instantiation as `gradientAccessKey` and `workspaceId` respectively.
+For example:
+
+```typescript
+new GradientAI({
+    gradientAccessKey: "My secret Access Token"
+    workspaceId: "My secret workspace id"
+})
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import GradientAiExample from "@examples/llms/gradient_ai.ts";
+
+<CodeBlock language="typescript">{GradientAiExample}</CodeBlock>
