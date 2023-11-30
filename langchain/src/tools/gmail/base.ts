@@ -1,5 +1,5 @@
 import { gmail_v1, google } from "googleapis";
-import { Tool } from "../base.js";
+import { StructuredTool } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
 export interface GmailBaseToolParams {
@@ -11,7 +11,7 @@ export interface GmailBaseToolParams {
   scopes?: string[];
 }
 
-export abstract class GmailBaseTool extends Tool {
+export abstract class GmailBaseTool extends StructuredTool {
   name = "Gmail";
 
   description = "A tool to send and view emails through Gmail";

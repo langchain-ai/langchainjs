@@ -1,15 +1,20 @@
+import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
-export interface CreateDraftSchema {
-  message: string;
-  to: string[];
-  subject: string;
-  cc?: string[];
-  bcc?: string[];
-}
+const CreateDraftSchema = z.object({
+  message: z.string(),
+  to: z.array(z.string()),
+  subject: z.string(),
+  cc: z.array(z.string()).optional(),
+  bcc: z.array(z.string()).optional(),
+});
+
+export type CreateDraftSchema = z.infer<typeof CreateDraftSchema>;
 
 export class GmailCreateDraft extends GmailBaseTool {
   name = "create_gmail_draft";
+
+  schema = CreateDraftSchema;
 
   description =
     "Use this tool to create a draft email with the provided message fields.";
@@ -45,8 +50,8 @@ export class GmailCreateDraft extends GmailBaseTool {
     return draftMessage;
   }
 
-  async _call(args: CreateDraftSchema) {
-    const { message, to, subject, cc, bcc } = args;
+  async _call(arg: z.output<typeof CreateDraftSchema>) {
+    const { message, to, subject, cc, bcc } = arg;
     const create_message = this.prepareDraftMessage(
       message,
       to,

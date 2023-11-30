@@ -1,15 +1,20 @@
+import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 
-export interface SendMessageSchema {
-  message: string;
-  to: string | string[];
-  subject: string;
-  cc?: string | string[];
-  bcc?: string | string[];
-}
+const SendMessageSchema = z.object({
+  message: z.string(),
+  to: z.array(z.string()),
+  subject: z.string(),
+  cc: z.array(z.string()).optional(),
+  bcc: z.array(z.string()).optional(),
+});
+
+export type SendMessageSchema = z.infer<typeof SendMessageSchema>;
 
 export class GmailSendMessage extends GmailBaseTool {
   name = "gmail_send_message";
+
+  schema = SendMessageSchema;
 
   description = "Send a message using Gmail";
 
@@ -23,7 +28,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: SendMessageSchema): string {
+  }: z.infer<typeof SendMessageSchema>): string {
     const emailLines: string[] = [];
 
     // Format the recipient(s)
@@ -49,7 +54,7 @@ export class GmailSendMessage extends GmailBaseTool {
     subject,
     cc,
     bcc,
-  }: SendMessageSchema): Promise<string> {
+  }: z.output<typeof SendMessageSchema>): Promise<string> {
     const rawMessage = this.createEmailMessage({
       message,
       to,
