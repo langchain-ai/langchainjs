@@ -97,12 +97,12 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
     const baseModel = await gradient.getBaseModel({
       baseModelSlug: this.modelSlug,
     });
-    // const response = await this.caller.call(async () => {
-    const response = await baseModel.complete({
-      query: prompt,
-      ...this.inferenceParameters
-    })
-    // }) as any;
+    const response = await this.caller.call(async () => {
+       baseModel.complete({
+        query: prompt,
+        ...this.inferenceParameters
+      })
+    }) as any;
 
     return response.generatedOutput;
   }
