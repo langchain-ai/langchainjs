@@ -8,7 +8,7 @@ import { ChatGPTLoader } from "../fs/chatgpt.js";
 test("Test ChatGPT loader from blob to load all documents", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/example_conversations.json"
+    "./example_data/chatgpt/example_conversations.json"
   );
   const loader = new ChatGPTLoader(
     new Blob([await fs.readFile(filePath)], { type: "application/json" })
@@ -34,7 +34,7 @@ test("Test ChatGPT loader from blob to load all documents", async () => {
 test("Test ChatGPT loader from blob to only load 1 document", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/example_conversations.json"
+    "./example_data/chatgpt/example_conversations.json"
   );
   const loader = new ChatGPTLoader(
     new Blob([await fs.readFile(filePath)], { type: "application/json" }),
