@@ -6,7 +6,10 @@ import {
   BaseChatMessageHistory,
   FakeChatMessageHistory,
 } from "../../chat_history.js";
-
+/**
+ * @TODO Move this to `langchain` and replace real llm with fake.
+ * Only reason it's here is so I don't have to rebuild every time I make a change.
+ */
 async function getGetSessionHistory(): Promise<
   (sessionId: string) => Promise<BaseChatMessageHistory>
 > {
