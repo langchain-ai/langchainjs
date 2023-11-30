@@ -1,11 +1,13 @@
 export abstract class AuthFlowBase {
-    protected clientId: string;
-    protected accessToken: string = "";
+  protected clientId: string;
 
-    constructor(clientId: string) {
-        this.clientId = clientId;
-    }
+  protected accessToken: "";
 
-    public abstract getAccessToken(): Promise<string>;
-    public abstract refreshAccessToken(): Promise<string>;
-} 
+  constructor(clientId: string) {
+    this.clientId = clientId;
+  }
+
+  public abstract getAccessToken(): Promise<string>;
+
+  public abstract refreshAccessToken(): Promise<string>;
+}

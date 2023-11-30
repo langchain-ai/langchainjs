@@ -1,15 +1,17 @@
 import { Tool } from "../base.js";
-import { AuthFlowBase } from './authFlowBase.js';
-import { AuthFlowToken, AuthFlowRefresh } from './authFlowToken.js';
-import { AuthFlowREST } from './authFlowREST.js';
+import { AuthFlowBase } from "./authFlowBase.js";
+import { AuthFlowToken, AuthFlowRefresh } from "./authFlowToken.js";
+import { AuthFlowREST } from "./authFlowREST.js";
 
 export class OutlookBase extends Tool {
   name = "Outlook";
 
-  description = "A tool to send or read emails or do other features from Outlook.";
+  description =
+    "A tool to send or read emails or do other features from Outlook.";
 
   protected authFlow: AuthFlowBase;
-  protected accessToken: string = "";
+
+  protected accessToken: "";
 
   constructor(authFlow?: AuthFlowBase, choice?: string) {
     super();
