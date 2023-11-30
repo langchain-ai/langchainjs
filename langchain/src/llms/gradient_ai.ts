@@ -56,7 +56,8 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
     this.modelSlug = fields?.modelSlug ?? this.modelSlug;
     this.gradientAccessKey =
-      fields?.gradientAccessKey ?? getEnvironmentVariable("GRADIENT_ACCESS_TOKEN");
+      fields?.gradientAccessKey ??
+      getEnvironmentVariable("GRADIENT_ACCESS_TOKEN");
     this.workspaceId =
       fields?.workspaceId ?? getEnvironmentVariable("GRADIENT_WORKSPACE_ID");
 
@@ -82,13 +83,11 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
    */
   /** @ignore */
   async _call(
-    prompt: string,
+    _prompt: string,
     _options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const response = (await this.caller.call(async () =>
-      console.log('')
-    ));
-
+    const response = await this.caller.call(async () => console.log(""));
+    console.log(response);
 
     return "test";
   }
