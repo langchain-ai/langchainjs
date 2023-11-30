@@ -20,15 +20,24 @@ export abstract class GmailBaseTool extends Tool {
     super(...arguments);
 
     const credentials = fields?.credentials || {};
-    credentials.clientEmail = credentials.clientEmail || getEnvironmentVariable("GMAIL_CLIENT_EMAIL") || "";
-    credentials.privateKey = credentials.privateKey || getEnvironmentVariable("GMAIL_PRIVATE_KEY") || "";
-    credentials.keyfile = credentials.keyfile || getEnvironmentVariable("GMAIL_KEYFILE") || "";
+    credentials.clientEmail =
+      credentials.clientEmail ||
+      getEnvironmentVariable("GMAIL_CLIENT_EMAIL") ||
+      "";
+    credentials.privateKey =
+      credentials.privateKey ||
+      getEnvironmentVariable("GMAIL_PRIVATE_KEY") ||
+      "";
+    credentials.keyfile =
+      credentials.keyfile || getEnvironmentVariable("GMAIL_KEYFILE") || "";
 
     if (credentials.clientEmail === "") {
       throw new Error("Missing GMAIL_CLIENT_EMAIL to interact with Gmail");
     }
     if (credentials.privateKey === "" && credentials.keyfile === "") {
-      throw new Error("Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE to interact with Gmail");
+      throw new Error(
+        "Missing GMAIL_PRIVATE_KEY or GMAIL_KEYFILE to interact with Gmail"
+      );
     }
 
     const scopes = fields?.scopes || ["https://mail.google.com/"];
