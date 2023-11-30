@@ -61,9 +61,4 @@ export abstract class GmailBaseTool extends Tool {
     const auth = new google.auth.JWT(email, keyfile, key, scopes);
     return google.gmail({ version: "v1", auth });
   }
-
-  // async _call(input: any) {
-  //   console.log("Call function invoked with input:", input);
-  //   return input || "This is a call placeholder response";
-  // }
 }
