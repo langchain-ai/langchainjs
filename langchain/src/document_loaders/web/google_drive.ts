@@ -242,13 +242,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
     }
 
-
-    private async _fetchFilesRecursive(service: any, folderId: string): Promise<any[]> {
-        // Implement recursive file fetching logic here
-        // You can use the Files: list API with 'q' parameter to get files in a folder
-        return [];
-    }
-
     async _loadFileFromId(id: string,  auth: Auth.OAuth2Client): Promise<Document[]> {
         const service = google.drive({ version: 'v3', auth });
         const fileMetaData = await service.files.get({
@@ -342,17 +335,56 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         return loadedDocuments;
       }
 
-    async _loadDocumentsFromFolder(folderId: string, fileTypes: string[] | null):Promise<Document[]> {
-        throw new Error('Method not implemented.');
+    async _loadDocumentsFromFolder(folderId: string, auth: Auth.OAuth2Client, fileTypes: string[] | null,):Promise<Document[]> {
+        const service = google.drive({ version: 'v3',auth});
+        const files = await this.fetchFilesRecursive(service, folderId);
+        const filteredFiles = fileTypes ? files.filter((f) => fileTypes.includes(f.mimeType)) : files;
+        const returns: Document[] = [];
+        for (const file of filteredFiles) {
+          if (file?.trashed && !this.loadTrashedFiles) {
+            continue;
+          } else if (file.mimeType === 'application/vnd.google-apps.document') {
+            returns.push(await this._loadDocumentFromId(file.id,auth));
+          } else if (file.mimeType === 'application/vnd.google-apps.spreadsheet') {
+            returns.push(...await this._loadSheetFromId(file.id,auth));
+          } else if (file.mimeType === 'application/pdf' || this.fileLoaderCls !== null) {
+            returns.push(...await this._loadFileFromId(file.id,auth));
+          }
+        }
+        
+        return returns;
     }
 
+    private async fetchFilesRecursive(service: any, folderId: string): Promise<any[]> {
+        const results = await service.files.list({
+          q: `'${folderId}' in parents`,
+          pageSize: 1000,
+          includeItemsFromAllDrives: true,
+          supportsAllDrives: true,
+          fields: 'nextPageToken, files(id, name, mimeType, parents, trashed)',
+        });
+    
+        const files = results.data.files || [];
+        const returns: any[] = [];
+    
+        for (const file of files) {
+          if (file.mimeType === 'application/vnd.google-apps.folder') {
+            if (this.recursive)
+                returns.push(...await this.fetchFilesRecursive(service, file.id));
+          } else {
+            returns.push(file);
+          }
+        }
+    
+        return returns;
+      }
 
 
     public async load(): Promise<Document[]> {
         // load sheetbyid just doing this to test the auth/load functionality
         const auth = await this.authorize();
-
-        return this._loadFileFromId('1SXQFoWBnhmwMSyIcdx7RubhIGQilSnsA', auth);
+        await this._loadDocumentsFromFolder('1Ae4Q9bDoHLbryrKrAtOvpxH9tGgqDRYO',auth,this.fileTypes)
+        return this._loadFilesFromIds(['10blRw6Xwt15durwy3TxlVwH-te1dPxcC'], auth);
 
         // uncomment this for the actual code/implementations
 
