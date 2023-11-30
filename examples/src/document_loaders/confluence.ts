@@ -22,8 +22,7 @@ if (username && accessToken) {
   });
   const documents = await loader.load();
   console.log(documents);
-}
- else {
+} else {
   console.log(
     "You need either a username and access token, or a personal access token (PAT), to use this example."
   );
