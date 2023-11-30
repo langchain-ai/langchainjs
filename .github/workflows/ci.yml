@@ -9,9 +9,8 @@ on:
   pull_request:
     # Do not run this workflow if only docs changed.
     paths-ignore:
-      - 'docs/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "docs/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -39,6 +38,21 @@ jobs:
       - name: Check linting
         run: yarn run lint
 
+  examples-build:
+    name: Build examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable --mode=skip-build
+      - name: Check linting
+        run: yarn build --filter=examples
+
   test:
     name: Unit Tests
     strategy:
@@ -47,10 +61,10 @@ jobs:
         node-version: [18.x, 20.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
-          # - os: windows-latest
-          #   node-version: 20.x
-          # - os: macos-latest
-          #   node-version: 20.x
+        # - os: windows-latest
+        #   node-version: 20.x
+        # - os: macos-latest
+        #   node-version: 20.x
     runs-on: ${{ matrix.os }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -68,6 +82,5 @@ jobs:
         run: yarn run test:unit
 
   test-exports:
-    uses:
-      ./.github/workflows/test-exports.yml
+    uses: ./.github/workflows/test-exports.yml
     secrets: inherit
