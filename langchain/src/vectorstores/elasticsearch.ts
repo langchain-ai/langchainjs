@@ -38,6 +38,7 @@ export interface ElasticClientArgs {
 /**
  * Type representing a filter object in Elasticsearch.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ElasticFilter = object | { field: string; operator: string; value: any }[];
 
 /**
@@ -299,6 +300,7 @@ export class ElasticVectorSearch extends VectorStore {
 
   private buildMetadataTerms(
     filter?: ElasticFilter
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): { [operator: string]: { [field: string]: any } }[] {
     if (filter == null) return [];
     const result = [];
