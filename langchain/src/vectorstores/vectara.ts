@@ -5,6 +5,8 @@ import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
+import { BaseRetriever, BaseRetrieverInput } from "../../schema/retriever.js";
+import { CallbackManagerForRetrieverRun } from "../callbacks/index.js";
 
 /**
  * Interface for the arguments required to initialize a VectaraStore
@@ -41,9 +43,42 @@ export interface VectaraFile {
 }
 
 /**
- * Interface for the filter options used in Vectara API calls.
+ * Interface for the context configuration used in Vectara API calls.
  */
+export interface VectaraContextConfig {
+  // The amount of context before. Ignored if sentences_before is set.
+  charsBefore?: number;
+  // The amount of context after. Ignored if sentences_after is set.
+  charsAfter?: number;
+  // The amount of context before, in sentences.
+  sentencesBefore?: number;
+  // The amount of context after, in sentences.
+  sentencesAfter?: number;
+  // The tag that wraps the snippet at the start.
+  startTag?: string;
+  // The tag that wraps the snippet at the end.
+  endTag?: string;
+}
+
+export interface VectaraRerankingConfig {
+  // Which reranking model to use if reranking.  Currently, the only ID
+  // available is ID 272725717
+  rerankerId: number;
+}
+
+export interface VectaraSummary {
+  // The name of the summarizer+prompt combination to use for summarization.
+  summarizerPromptName: string;
+  // Maximum number of results to summarize.
+  maxSummarizedResults: number;
+  // ISO 639-1 or ISO 639-3 language code for the response, or "auto" to indicate that
+  // the auto-detected language of the incoming query should be used.
+  responseLang: string;
+}
+
 export interface VectaraFilter {
+  // The start position in the result set
+  start?: number;
   // Example of a vectara filter string can be: "doc.rating > 3.0 and part.lang = 'deu'"
   // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
   filter?: string;
@@ -51,19 +86,40 @@ export interface VectaraFilter {
   // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
   lambda?: number;
-  // The number of sentences before/after the matching segment to add to the context.
+  // See Vectara Search API docs for more details on the following options: https://docs.vectara.com/docs/api-reference/search-apis/search
   contextConfig?: VectaraContextConfig;
+  rerankingConfig?: VectaraRerankingConfig;
+  summary?: VectaraSummary[];
 }
 
-/**
- * Interface for the context configuration used in Vectara API calls.
- */
-export interface VectaraContextConfig {
-  // The number of sentences before the matching segment to add. Default is 2.
-  sentencesBefore?: number;
-  // The number of sentences after the matching segment to add. Default is 2.
-  sentencesAfter?: number;
+
+export interface VectaraSummaryRetrieverInput extends BaseRetrieverInput {
+  retriever: BaseRetriever;
 }
+
+export class VectaraSummaryRetriever extends BaseRetriever
+{
+  static lc_name() {
+    return "VectaraSummaryRetriever";
+  }
+  lc_namespace = ["langchain", "retrievers", "vectaraSummary"];
+
+  private retriever: BaseRetriever;
+
+  constructor(fields: VectaraSummaryRetrieverInput) {
+    super(fields);
+    this.retriever = fields.retriever;
+  }
+
+  async _getRelevantDocuments(
+    question: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
+    const documents = await this.retriever.getRelevantDocuments(question, runManager);
+    return documents;
+  }
+}
+
 
 /**
  * Class for interacting with the Vectara API. Extends the VectorStore
@@ -386,11 +442,10 @@ export class VectaraStore extends VectorStore {
       query: [
         {
           query,
+          start: filter?.start ?? 0,
           numResults: k,
-          contextConfig: {
-            sentencesAfter: filter?.contextConfig?.sentencesAfter ?? 2,
-            sentencesBefore: filter?.contextConfig?.sentencesBefore ?? 2,
-          },
+          contextConfig: filter?.contextConfig ?? {},
+          rerankingConfig: filter?.rerankingConfig ?? {},
           corpusKey: corpusKeys,
         },
       ],
@@ -446,6 +501,62 @@ export class VectaraStore extends VectorStore {
       ]
     );
     return documentsAndScores;
+  }
+
+  async similaritySearchWithSummary(
+    query: string,
+    k = 10,
+    filter: VectaraFilter | undefined = undefined
+  ): Promise<{
+    documents: [Document, number][];
+    summary: Record<string, unknown>[];
+  }> {
+    const headers = await this.getJsonHeader();
+    const data = {
+      query: [
+        {
+          query,
+          start: filter?.start ?? 0,
+          numResults: k,
+          corpusKey: [
+            {
+              customerId: this.customerId,
+              corpusId: this.corpusId,
+              metadataFilter: filter?.filter ?? "",
+              lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
+            },
+          ],
+          contextConfig: filter?.contextConfig ?? {},
+          rerankingConfig: filter?.rerankingConfig ?? {},
+          summary: filter?.summary ?? [],
+        },
+      ],
+    };
+
+    const response = await fetch(`https://${this.apiEndpoint}/v1/query`, {
+      method: "POST",
+      headers: headers?.headers,
+      body: JSON.stringify(data),
+    });
+    if (response.status !== 200) {
+      throw new Error(`Vectara API returned status code ${response.status}`);
+    }
+    const result = await response.json();
+    const { response: responses, summary } = result.responseSet[0];
+    const documentsAndScores = responses.map(
+      (response: {
+        text: string;
+        metadata: Record<string, unknown>;
+        score: number;
+      }) => [
+        new Document({
+          pageContent: response.text,
+          metadata: response.metadata,
+        }),
+        response.score,
+      ]
+    );
+    return { documents: documentsAndScores, summary };
   }
 
   /**
