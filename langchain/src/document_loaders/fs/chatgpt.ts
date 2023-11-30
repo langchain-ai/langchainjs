@@ -50,20 +50,20 @@ export class ChatGPTLoader extends TextLoader {
     try {
       data = JSON.parse(raw);
     } catch (e) {
-      console.error("Failed to parse JSON:", e);
-      return [];
+      console.error(e);
+      throw new Error("Failed to parse JSON");
     }
 
     const truncatedData = this.numLogs > 0 ? data.slice(0, this.numLogs) : data;
 
-    return truncatedData.map((d: ChatGPTLog) => {
+    return truncatedData.map((d: ChatGPTLog) =>
       Object.values(d.mapping)
         .filter(
           (msg, idx) => !(idx === 0 && msg.message.author.role === "system")
         )
         .map((msg) => concatenateRows(msg.message, d.title))
-        .join("");
-    });
+        .join("")
+    );
   }
 
   public async load(): Promise<Document[]> {
@@ -74,16 +74,16 @@ export class ChatGPTLoader extends TextLoader {
       try {
         text = await readFile(this.filePathOrBlob, "utf8");
       } catch (e) {
-        console.error("Failed to read file:", e);
-        return [];
+        console.error(e);
+        throw new Error("Failed to read file");
       }
       metadata = { source: this.filePathOrBlob };
     } else {
       try {
         text = await this.filePathOrBlob.text();
       } catch (e) {
-        console.error("Failed to read blob:", e);
-        return [];
+        console.error(e);
+        throw new Error("Failed to read blob");
       }
       metadata = { source: "blob", blobType: this.filePathOrBlob.type };
     }
