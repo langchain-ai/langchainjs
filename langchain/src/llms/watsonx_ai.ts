@@ -53,7 +53,7 @@ const endpointConstructor = (region: string, version: string) =>
 
 export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   static lc_name() {
-    return "watsonx_ai";
+    return "WatsonxAI";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
