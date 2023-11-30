@@ -66,10 +66,10 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   constructor({
     baseUrl,
     spaceKey,
-    username = undefined,
-    accessToken = undefined,
+    username,
+    accessToken,
     limit = 25,
-    personalAccessToken = undefined,
+    personalAccessToken,
   }: ConfluencePagesLoaderParams) {
     super();
     this.baseUrl = baseUrl;
