@@ -5,8 +5,6 @@ export interface DocumentInput<
   pageContent: string;
 
   metadata?: Metadata;
-  // Custom payload for vectorstores for an extra parameter to filter for
-  customPayload?: object;
 }
 
 /**
@@ -20,8 +18,6 @@ export class Document<
   pageContent: string;
 
   metadata: Metadata;
-
-  customPayload?: object | undefined;
 
   constructor(fields: DocumentInput<Metadata>) {
     this.pageContent = fields.pageContent

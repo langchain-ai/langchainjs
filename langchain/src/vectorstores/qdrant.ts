@@ -89,7 +89,7 @@ export class QdrantVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    customPayload?: object
+    customPayload?: object[]
   ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
@@ -111,7 +111,7 @@ export class QdrantVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    customPayload?: object
+    customPayload?: object[]
   ): Promise<void> {
     if (vectors.length === 0) {
       return;
@@ -125,7 +125,7 @@ export class QdrantVectorStore extends VectorStore {
       payload: {
         content: documents[idx].pageContent,
         metadata: documents[idx].metadata,
-        ...(documents[idx].customPayload ?? customPayload),
+        customPayload: customPayload?.[idx],
       },
     }));
 
@@ -223,7 +223,7 @@ export class QdrantVectorStore extends VectorStore {
     metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig: QdrantLibArgs,
-    customPayload?: object
+    customPayload?: object[]
   ): Promise<QdrantVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -231,11 +231,15 @@ export class QdrantVectorStore extends VectorStore {
       const newDoc = new Document({
         pageContent: texts[i],
         metadata,
-        customPayload,
       });
       docs.push(newDoc);
     }
-    return QdrantVectorStore.fromDocuments(docs, embeddings, dbConfig);
+    return QdrantVectorStore.fromDocuments(
+      docs,
+      embeddings,
+      dbConfig,
+      customPayload
+    );
   }
 
   /**
@@ -251,7 +255,7 @@ export class QdrantVectorStore extends VectorStore {
     docs: Document[],
     embeddings: Embeddings,
     dbConfig: QdrantLibArgs,
-    customPayload?: object
+    customPayload?: object[]
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs, customPayload);
