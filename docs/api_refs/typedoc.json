@@ -42,6 +42,7 @@
     "./langchain/src/tools/sql.ts",
     "./langchain/src/tools/webbrowser.ts",
     "./langchain/src/tools/google_calendar/index.ts",
+    "./langchain/src/tools/gmail/index.ts",
     "./langchain/src/chains/index.ts",
     "./langchain/src/chains/combine_documents/reduce.ts",
     "./langchain/src/chains/load.ts",
