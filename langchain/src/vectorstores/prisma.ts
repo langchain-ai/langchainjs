@@ -436,7 +436,7 @@ export class PrismaVectorStore<
                   )}`
                 );
               }
-              return this.Prisma.sql`${colRaw} ${opRaw} (${value.join(",")})`;
+              return this.Prisma.sql`${colRaw} ${opRaw} (${this.Prisma.join(value)})`;
             }
             case OpMap.isNull:
             case OpMap.isNotNull:
