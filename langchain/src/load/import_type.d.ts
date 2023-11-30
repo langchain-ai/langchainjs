@@ -94,6 +94,9 @@ export interface OptionalImportMap {
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
+  "langchain/llms/gradient_ai"?:
+    | typeof import("../llms/gradient_ai.js")
+    | Promise<typeof import("../llms/gradient_ai.js")>;
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
@@ -522,6 +525,8 @@ export interface SecretMap {
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
+  GRADIENT_ACCESS_TOKEN?: string;
+  GRADIENT_WORKSPACE_ID?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   IBM_CLOUD_API_KEY?: string;
   IFLYTEK_API_KEY?: string;
