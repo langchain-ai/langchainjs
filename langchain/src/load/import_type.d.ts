@@ -298,6 +298,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/buffer"?:
     | typeof import("../document_loaders/fs/buffer.js")
     | Promise<typeof import("../document_loaders/fs/buffer.js")>;
+  "langchain/document_loaders/fs/chatgpt"?:
+    | typeof import("../document_loaders/fs/chatgpt.js")
+    | Promise<typeof import("../document_loaders/fs/chatgpt.js")>;
   "langchain/document_loaders/fs/text"?:
     | typeof import("../document_loaders/fs/text.js")
     | Promise<typeof import("../document_loaders/fs/text.js")>;
