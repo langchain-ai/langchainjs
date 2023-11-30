@@ -60,7 +60,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   public readonly accessToken?: string;
 
   public readonly limit: number;
-  
+
   public readonly personalAccessToken?: string;
 
   constructor({
@@ -80,9 +80,9 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.personalAccessToken = personalAccessToken;
   }
 
-    /**
-    * Returns the authorization header for the request.
-    * @returns The authorization header as a string, or undefined if no credentials were provided.
+  /**
+   * Returns the authorization header for the request.
+   * @returns The authorization header as a string, or undefined if no credentials were provided.
    */
   private get authorizationHeader(): string | undefined {
     if (this.personalAccessToken) {
