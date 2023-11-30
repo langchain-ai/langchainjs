@@ -126,7 +126,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
         Accept: "application/json",
       };
 
-      const authHeader = this.authorizationHeader();
+      const authHeader = this.authorizationHeader;
       if (authHeader) {
         initialHeaders.Authorization = authHeader;
       }
