@@ -42,6 +42,7 @@ export {
   initializeAgentExecutor,
   initializeAgentExecutorWithOptions,
   type InitializeAgentExecutorOptions,
+  type InitializeAgentExecutorOptionsStructured,
 } from "./initialize.js";
 export {
   ZeroShotAgent,
