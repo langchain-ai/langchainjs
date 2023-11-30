@@ -1,6 +1,6 @@
+import { Gradient } from "@gradientai/nodejs-sdk";
 import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
-import { Gradient } from "@gradientai/nodejs-sdk";
 // import { BaseModel } from "@gradientai/nodejs-sdk/dist/cjs/model/baseModel";
 // import { CompleteResponse } from "@gradientai/nodejs-sdk/dist/cjs/model/returnTypes";
 
@@ -93,7 +93,7 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
   ): Promise<string> {
     await this.setBaseModel();
 
-    const response = (await this.caller.call(async () => 
+    const response = (await this.caller.call(async () =>
       this.baseModel.complete({
         query: prompt,
         ...this.inferenceParameters,
