@@ -1,21 +1,28 @@
-import { OutlookBase, OutlookCredentials } from "./base.js";
+import { OutlookBase } from "./base.js";
 import { SEND_MAIL_TOOL_DESCRIPTION } from "./descriptions.js";
+import { AuthFlowBase } from './authFlowBase.js';
 
 export class OutlookSendMailTool extends OutlookBase {
   name = "outlook_send_mail";
 
   description = SEND_MAIL_TOOL_DESCRIPTION;
 
-  constructor(fields: OutlookCredentials) {
-    super(fields);
+  constructor(authFlow: AuthFlowBase) {
+    super(authFlow);
   }
 
   async _call(message: string) {
-    const accessToken = await this.getAuth();
-    let newMessage;
     try {
-        const { subject, content, to, cc } = JSON.parse(message);
+      await this.getAuth();
+    } catch (error) {
+      return `Failed to get access token: ${error}`;
+    }
 
+    let newMessage: string;
+    try {
+        // parse message
+        const { subject, content, to, cc } = JSON.parse(message);
+        // validate message
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
         if (!Array.isArray(to) || !to.every((item: string) => emailRegex.test(item))) {
@@ -25,8 +32,8 @@ export class OutlookSendMailTool extends OutlookBase {
         if (cc && (!Array.isArray(cc) || !cc.every((item: string) => emailRegex.test(item)))) {
           return 'CC must be an array of strings';
         }
-
-        newMessage = {
+        // create new message
+        newMessage = JSON.stringify({
             message: {
                 subject: String(subject),
                 body: {
@@ -47,28 +54,24 @@ export class OutlookSendMailTool extends OutlookBase {
                 }),
               },
               saveToSentItems: "true",
-        };
+        });
     } catch (e) {
         return 'Invalid JSON format';
     }
-    try {
-        const response = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newMessage),
-        });
     
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-    
-        return 'Email sent';
-    } catch (error) {
-        return `Failed to send email: ${error}`;
+    const response = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: newMessage,
+    });
+
+    if (!response.ok) {
+      return `Send mail error: ${response.status}`;
     }
-    
+
+    return 'Email sent';
   }
 }

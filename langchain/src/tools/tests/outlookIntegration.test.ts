@@ -1,8 +1,9 @@
-import { OutlookIntegration } from '../outlook/outlookIntegration.js';
+// import { OutlookIntegration } from '../outlook/outlookIntegration.js';
+import { OutlookReadMailTool, OutlookSendMailTool } from '../outlook/index.js';
 import { AuthFlowREST } from '../outlook/authFlowREST.js';
 
 // const toolParams = {};
-let outlookTool: OutlookIntegration;
+
 
 describe("outlook integration test suite", () => {
   beforeAll(async() => {

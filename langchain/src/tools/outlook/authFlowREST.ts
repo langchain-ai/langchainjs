@@ -6,6 +6,7 @@ import { getEnvironmentVariable } from '../../util/env.js';
 
 interface AccessTokenResponse {
     access_token: string;
+    refresh_token: string;
 }
 
 export class AuthFlowREST extends AuthFlowBase {
@@ -14,6 +15,7 @@ export class AuthFlowREST extends AuthFlowBase {
     private redirectUri: string;
     private port: number;
     private pathname: string;
+    private refreshToken: string = "";
 
     constructor(clientId?: string, clientSecret?: string, redirectUri?: string) {
         if (!clientId || !clientSecret || !redirectUri) {
@@ -84,6 +86,7 @@ export class AuthFlowREST extends AuthFlowBase {
                         res.end('Authorization code received. You can close this window.');
     
                         server.close();
+                        console.log("Server closed");
                         resolve(authCode); // Resolve the Promise with the authorization code
                     } else {
                         res.writeHead(404);
@@ -104,51 +107,70 @@ export class AuthFlowREST extends AuthFlowBase {
         if (!this.clientId || !this.redirectUri) {
             throw new Error('Missing clientId or redirectUri.');
         }
-        try {
-            const server = await this.startServer();
-            this.openAuthUrl();
-            const code = await this.listenForCode(server);
-            return code;
-        } catch (err) {
-            console.error('Error during authentication:', err);
-            return '';
-        }
+
+        const server = await this.startServer();
+        this.openAuthUrl();
+        const code = await this.listenForCode(server);
+        return code;
     }
 
     // Function to get the token using the code and client credentials
     public async getAccessToken(): Promise<string> {
-        // check credentials
-        if (!this.clientId || !this.clientSecret || !this.redirectUri) {
-            throw new Error('Missing clientId, clientSecret or redirectUri.');
+        // fetch auth code from user login
+        const code = await this.getCode();
+        // fetch access token using auth code
+        const req_body =
+            `client_id=${encodeURIComponent(this.clientId)}&` +
+            `client_secret=${encodeURIComponent(this.clientSecret)}&` +
+            `scope=${encodeURIComponent('https://graph.microsoft.com/.default')}&` +
+            `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
+            `grant_type=authorization_code&` +
+            `code=${encodeURIComponent(code)}`;
+
+        const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: req_body
+        });
+
+        if (!response.ok) {
+            throw new Error(`fetch token error! response: ${response}`);
         }
-        try {
-            const code = await this.getCode();
-            const req_body =
-                `client_id=${encodeURIComponent(this.clientId)}&` +
-                `client_secret=${encodeURIComponent(this.clientSecret)}&` +
-                `scope=${encodeURIComponent('https://graph.microsoft.com/.default')}&` +
-                `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
-                `grant_type=authorization_code&` +
-                `code=${encodeURIComponent(code)}`;
-    
-            const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: req_body
-            });
-    
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-    
-            const json = await response.json() as AccessTokenResponse;
-            return json.access_token;
-        } catch (error) {
-            console.error('Error getting access token:', error);
-            return '';
-        }
+        // save access token and refresh token
+        const json = await response.json() as AccessTokenResponse;
+        this.accessToken = json.access_token;
+        this.refreshToken = json.refresh_token;
+        return this.accessToken;
     }
+
+    public async refreshAccessToken(): Promise<string> {
+        // fetch new access token using refresh token
+        const req_body =
+            `client_id=${encodeURIComponent(this.clientId)}&` +
+            `client_secret=${encodeURIComponent(this.clientSecret)}&` +
+            `scope=${encodeURIComponent('https://graph.microsoft.com/.default')}&` +
+            `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
+            `grant_type=refresh_token&` +
+            `refresh_token=${encodeURIComponent(this.refreshToken)}`;
+
+        const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: req_body
+        });
+
+        if (!response.ok) {
+            throw new Error(`fetch token error! response: ${response}`);
+        }
+        // save new access token
+        const json = await response.json() as AccessTokenResponse;
+        this.accessToken = json.access_token;
+        return this.accessToken;
+    }
+
 }
 
