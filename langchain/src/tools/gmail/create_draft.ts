@@ -1,4 +1,5 @@
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
+import { CREATE_DRAFT_DESCRIPTION } from "./descriptions.js";
 
 export interface CreateDraftSchema {
   message: string;
@@ -11,8 +12,7 @@ export interface CreateDraftSchema {
 export class GmailCreateDraft extends GmailBaseTool {
   name = "create_gmail_draft";
 
-  description =
-    "Use this tool to create a draft email with the provided message fields.";
+  description = CREATE_DRAFT_DESCRIPTION;
 
   constructor(fields?: GmailBaseToolParams) {
     super(fields);

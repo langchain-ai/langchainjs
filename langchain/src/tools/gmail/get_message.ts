@@ -1,4 +1,5 @@
 import { GmailBaseToolParams, GmailBaseTool } from "./base.js";
+import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";
 
 export interface GetMessageSchema {
   messageId: string;
@@ -7,7 +8,7 @@ export interface GetMessageSchema {
 export class GmailGetMessage extends GmailBaseTool {
   name = "gmail_get_message";
 
-  description = "Get a message from Gmail";
+  description = GET_MESSAGE_DESCRIPTION;
 
   constructor(fields?: GmailBaseToolParams) {
     super(fields);
