@@ -1,10 +1,13 @@
 import * as fs from 'fs';
 import * as http from 'http';
 import * as url from 'url';
-import * as getPort from 'get-port';
+import * as path from 'path';
+import * as process from 'process';
 
 
-import { GoogleAuth, OAuth2Client } from 'google-auth-library';
+
+import { google, Auth } from 'googleapis';
+import { authenticate } from '@google-cloud/local-auth';
 
 
 import { Document } from "../../document.js";
@@ -15,6 +18,7 @@ import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
 
 const SCOPES = ["https://www.googleapis.com/auth/drive.readonly"];
+const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 
 
 export interface GoogleDriveLoaderParams extends AsyncCallerParams {
@@ -128,115 +132,86 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
             throw new Error(`credentials_path ${credentialsPath} does not exist`);
         }
     }
-
-    public async loadCredentials() {
-        let creds = null;
-
-        if (fs.existsSync(this.serviceAccountKey)) {
-            const auth = new GoogleAuth({
-                keyFile: this.serviceAccountKey,
-                scopes: SCOPES,
-            });
-            return await auth.getClient();
+    
+    /**
+     * Reads previously authorized credentials from the save file.
+     *
+     * @return {Promise<Auth.OAuth2Client|null>}
+     */
+    async loadSavedCredentialsIfExist(): Promise<Auth.OAuth2Client | null> {
+        try {
+        const content = await fs.readFileSync(this.tokenPath, 'utf8');
+        const credentials = JSON.parse(content);
+        const client = google.auth.fromJSON(credentials);
+        return client as Auth.OAuth2Client;
+            } catch (err) {
+        return null;
         }
-
-
-        if (fs.existsSync(this.tokenPath)) {
-            const token = fs.readFileSync(this.tokenPath, 'utf8');
-            creds = new OAuth2Client();
-            creds.setCredentials(JSON.parse(token));
-        }
-
-        if (!creds || !creds.credentials) {
-            if (creds && this.isTokenValid(creds) && creds.credentials.refresh_token){
-                await creds.refreshAccessToken();
-            }
-        } else if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-            const auth = new GoogleAuth({
-                scopes: SCOPES
-            });
-            creds = await auth.getClient();
-        } else {
-            // Handle OAuth2 flow (this part is more complex in Node.js)
-            creds = await this.authenticate();
-
-        }
-
-        return creds;
     }
-
-    private isTokenValid(creds: OAuth2Client): boolean {
-        const now = new Date().getTime();
-        if (creds.credentials && creds.credentials.expiry_date) {
-            return now < creds.credentials.expiry_date;
-        }
-        return false;
-    }
-
-    private authenticate(): Promise<OAuth2Client> {
-        // Load client secrets from a local file
-        const credentials = JSON.parse(fs.readFileSync(this.credentialsPath, 'utf8'));
-        const { client_secret, client_id, redirect_uris } = credentials.installed;
-        const oAuth2Client = new OAuth2Client(client_id, client_secret, redirect_uris[0]);
     
-        return new Promise((resolve, reject) => {
-            const authUrl = oAuth2Client.generateAuthUrl({
-                access_type: 'offline',
-                scope: SCOPES,
-            });
-    
-            const server = http.createServer((req, res) => {
-                if (req.url?.includes('/oauth2callback')) {
-                    const qs = new url.URL(req.url, 'http://localhost:3000').searchParams;
-                    const code = qs.get('code');
-                    res.end('Authentication successful! Please return to the console.');
-                    server.close();
-    
-                    oAuth2Client.getToken(code as string)
-                        .then(({ tokens }) => {
-                            oAuth2Client.setCredentials(tokens);
-                            // Store the token to disk for later program executions
-                            fs.writeFileSync(this.tokenPath, JSON.stringify(tokens));
-                            resolve(oAuth2Client);
-                        })
-                        .catch(error => {
-                            reject(error);
-                        });
-                }
-            }).listen(3000, () => {
-                // open the browser to the authorize url to start the workflow
-                open(authUrl, {wait: false}).then(cp => cp.unref());
-            });
+    /**
+     * Serializes credentials to a file comptible with GoogleAUth.fromJSON.
+     *
+     * @param {Auth.OAuth2Client} client
+     * @return {Promise<void>}
+     */
+    async saveCredentials(client: Auth.OAuth2Client): Promise<void> {
+        const content = await fs.readFileSync(CREDENTIALS_PATH, 'utf8');
+        const keys = JSON.parse(content);
+        const key = keys.installed || keys.web;
+        const payload = JSON.stringify({
+        type: 'authorized_user',
+        client_id: key.client_id,
+        client_secret: key.client_secret,
+        refresh_token: client.credentials.refresh_token,
         });
+        await fs.writeFileSync(this.tokenPath, payload);
     }
     
-
-
+    /**
+     * Load or request or authorization to call APIs.
+     *
+     */
+    async authorize(): Promise<Auth.OAuth2Client> {
+        let client = await this.loadSavedCredentialsIfExist();
+        if (client) {
+            return client;
+        }
+        client = await authenticate({
+            scopes: SCOPES,
+            keyfilePath: CREDENTIALS_PATH,
+        });
+        if (client && client.credentials) {
+            await this.saveCredentials(client);
+        }
+        return client as Auth.OAuth2Client;
+    }
     
-
-    async _loadSheetFromId(id: string): Promise<Document[]> {
-        // Load a sheet and all tabs from an ID.
-
-        const creds = this._load_credentials(); 
-        const sheetsService = google.sheets({ version: 'v4', auth: creds });
-
-        const spreadsheet = await sheetsService.spreadsheets.get({ spreadsheetId: id });
+    /**
+     * 
+     * @param {string} id The spreadsheet ID.
+     * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
+     */
+    async _loadSheetFromId(id: string, auth: Auth.OAuth2Client) {
+        const sheetsService = google.sheets({version: 'v4', auth});
+        const spreadsheet = await sheetsService.spreadsheets.get({ spreadsheetId: id});
         const sheets = spreadsheet.data.sheets || [];
 
-        let documents: Document[] = [];
+        const documents: Document[] = [];
+        
         for (const sheet of sheets) {
-            const sheetName = sheet.properties.title;
-
+            const sheetName = sheet.properties?.title || '';
+            
             const result = await sheetsService.spreadsheets.values.get({
                 spreadsheetId: id,
                 range: sheetName,
             });
 
             const values = result.data.values || [];
-            if (values.length === 0) continue; // empty sheet
+            if (!values.length) continue; // empty sheet
 
             const header = values[0];
-            for (let i = 1; i < values.length; i++) {
+            for (let i = 1; i < values.length; i += 1) {
                 const row = values[i];
                 const metadata = {
                     source: `https://docs.google.com/spreadsheets/d/${id}/edit?gid=${sheet.properties?.sheetId}`,
@@ -244,17 +219,18 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
                     row: i,
                 };
 
-                let content: string[] = [];
-                for (let j = 0; j < row.length; j++) {
+                const content: string[] = [];
+                for (let j = 0; j < row.length; j += 1) {
                     const title = header[j]?.trim() || "";
                     content.push(`${title}: ${row[j]?.trim()}`);
                 }
 
                 const pageContent = content.join('\n');
-                documents.push(new Document({ pageContent: pageContent, metadata: metadata }));
+                documents.push(new Document({ pageContent, metadata }));
             }
         }
-
         return documents;
+
     }
+  
 }
