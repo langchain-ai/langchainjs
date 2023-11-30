@@ -1,8 +1,4 @@
 import * as fs from 'fs';
-import * as http from 'http';
-import * as url from 'url';
-import * as path from 'path';
-import * as process from 'process';
 
 
 
@@ -179,7 +175,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     async authorize(): Promise<Auth.OAuth2Client> {
         let client = await this.loadSavedCredentialsIfExist();
         if (client) {
-            console.log("loaded saved credentials");
             return client;
         }
         client = await authenticate({
@@ -189,7 +184,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         if (client && client.credentials) {
             await this.saveCredentials(client);
         }
-        console.log("created auth client");
         return client as Auth.OAuth2Client;
     }
     
@@ -199,43 +193,51 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
      * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
      */
     async _loadSheetFromId(id: string, auth: Auth.OAuth2Client) {
-        console.log("_loadSheetFromId");
         const sheetsService = google.sheets({version: 'v4', auth});
         const spreadsheet = await sheetsService.spreadsheets.get({ spreadsheetId: id});
         const sheets = spreadsheet.data.sheets || [];
-
-        const documents: Document[] = [];
         
+        const documents: Document[] = [];
+
         for (const sheet of sheets) {
-            const sheetName = sheet.properties?.title || '';
-            
-            const result = await sheetsService.spreadsheets.values.get({
-                spreadsheetId: id,
-                range: sheetName,
-            });
+            const sheetName = sheet.properties?.title;
+            const rowCount = sheet.properties?.gridProperties?.rowCount;
+            const columnCount = sheet.properties?.gridProperties?.columnCount;
+        
+            // Convert column count to letter (e.g., 1 -> A, 26 -> Z)
+            if (columnCount && rowCount) {
+                const endColumn = String.fromCharCode(64 + columnCount as number);
+                const endRow = rowCount;
+                const rangeVal = `${sheetName}!A1:${endColumn}${endRow}`;
 
-            const values = result.data.values || [];
-            if (!values.length) continue; // empty sheet
+                const valueRange = await sheetsService.spreadsheets.values.get({
+                    spreadsheetId: id,
+                    range: rangeVal,
+                });
 
-            const header = values[0];
-            for (let i = 1; i < values.length; i += 1) {
-                const row = values[i];
+                if (!valueRange.data.values) {
+                    console.log(`No data found for sheet: ${sheetName}`);
+                    continue; // Skip this sheet as it has no data
+                }
+                
+                // Convert the sheet data to a string format for pageContent
+                const pageContent = valueRange.data.values.map(row => row.join(', ')).join('\n');
+
+                // Create metadata for the document
                 const metadata = {
-                    source: `https://docs.google.com/spreadsheets/d/${id}/edit?gid=${sheet.properties?.sheetId}`,
-                    title: `${spreadsheet.data.properties?.title} - ${sheetName}`,
-                    row: i,
+                    sheetName,
+                    rowCount,
+                    columnCount
                 };
 
-                const content: string[] = [];
-                for (let j = 0; j < row.length; j += 1) {
-                    const title = header[j]?.trim() || "";
-                    content.push(`${title}: ${row[j]?.trim()}`);
-                }
+                // Create a new Document with the content and metadata
+                const document = new Document({ pageContent, metadata });
 
-                const pageContent = content.join('\n');
-                documents.push(new Document({ pageContent, metadata }));
+                // Add the document to the documents array
+                documents.push(document);
             }
         }
+        
         return documents;
 
     }
