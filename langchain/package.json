@@ -187,6 +187,9 @@
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
+    "llms/fireworks.cjs",
+    "llms/fireworks.js",
+    "llms/fireworks.d.ts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
@@ -196,15 +199,15 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
-    "llms/fireworks.cjs",
-    "llms/fireworks.js",
-    "llms/fireworks.d.ts",
-    "llms/sagemaker_endpoint.cjs",
-    "llms/sagemaker_endpoint.js",
-    "llms/sagemaker_endpoint.d.ts",
     "llms/gradient_ai.cjs",
     "llms/gradient_ai.js",
     "llms/gradient_ai.d.ts",
+    "llms/sagemaker_endpoint.cjs",
+    "llms/sagemaker_endpoint.js",
+    "llms/sagemaker_endpoint.d.ts",
+    "llms/watsonx_ai.cjs",
+    "llms/watsonx_ai.js",
+    "llms/watsonx_ai.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -1739,6 +1742,11 @@
       "import": "./llms/replicate.js",
       "require": "./llms/replicate.cjs"
     },
+    "./llms/fireworks": {
+      "types": "./llms/fireworks.d.ts",
+      "import": "./llms/fireworks.js",
+      "require": "./llms/fireworks.cjs"
+    },
     "./llms/googlevertexai": {
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
@@ -1754,20 +1762,20 @@
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
     },
-    "./llms/fireworks": {
-      "types": "./llms/fireworks.d.ts",
-      "import": "./llms/fireworks.js",
-      "require": "./llms/fireworks.cjs"
+    "./llms/gradient_ai": {
+      "types": "./llms/gradient_ai.d.ts",
+      "import": "./llms/gradient_ai.js",
+      "require": "./llms/gradient_ai.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
     },
-    "./llms/gradient_ai": {
-      "types": "./llms/gradient_ai.d.ts",
-      "import": "./llms/gradient_ai.js",
-      "require": "./llms/gradient_ai.cjs"
+    "./llms/watsonx_ai": {
+      "types": "./llms/watsonx_ai.d.ts",
+      "import": "./llms/watsonx_ai.js",
+      "require": "./llms/watsonx_ai.cjs"
     },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",

@@ -38,7 +38,7 @@ export interface ElasticClientArgs {
 /**
  * Type representing a filter object in Elasticsearch.
  */
-type ElasticFilter = object;
+type ElasticFilter = object | { field: string; operator: string; value: any }[];
 
 /**
  * Class for interacting with an Elasticsearch database. It extends the
@@ -151,7 +151,7 @@ export class ElasticVectorSearch extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: ElasticFilter | undefined
+    filter?: ElasticFilter
   ): Promise<[Document, number][]> {
     const result = await this.client.search({
       index: this.indexName,
@@ -299,11 +299,22 @@ export class ElasticVectorSearch extends VectorStore {
 
   private buildMetadataTerms(
     filter?: ElasticFilter
-  ): { term: Record<string, unknown> }[] {
+  ): { [operator: string]: { [field: string]: any } }[] {
     if (filter == null) return [];
     const result = [];
-    for (const [key, value] of Object.entries(filter)) {
-      result.push({ term: { [`metadata.${key}`]: value } });
+    const filters = Array.isArray(filter)
+      ? filter
+      : Object.entries(filter).map(([key, value]) => ({
+          operator: "term",
+          field: key,
+          value,
+        }));
+    for (const condition of filters) {
+      result.push({
+        [condition.operator]: {
+          [`metadata.${condition.field}`]: condition.value,
+        },
+      });
     }
     return result;
   }

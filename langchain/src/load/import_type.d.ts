@@ -94,12 +94,15 @@ export interface OptionalImportMap {
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
-  "langchain/llms/sagemaker_endpoint"?:
-    | typeof import("../llms/sagemaker_endpoint.js")
-    | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
   "langchain/llms/gradient_ai"?:
     | typeof import("../llms/gradient_ai.js")
     | Promise<typeof import("../llms/gradient_ai.js")>;
+  "langchain/llms/sagemaker_endpoint"?:
+    | typeof import("../llms/sagemaker_endpoint.js")
+    | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
+  "langchain/llms/watsonx_ai"?:
+    | typeof import("../llms/watsonx_ai.js")
+    | Promise<typeof import("../llms/watsonx_ai.js")>;
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock/index.js")
     | Promise<typeof import("../llms/bedrock/index.js")>;
@@ -525,6 +528,7 @@ export interface SecretMap {
   GRADIENT_ACCESS_TOKEN?: string;
   GRADIENT_WORKSPACE_ID?: string;
   HUGGINGFACEHUB_API_KEY?: string;
+  IBM_CLOUD_API_KEY?: string;
   IFLYTEK_API_KEY?: string;
   IFLYTEK_API_SECRET?: string;
   MILVUS_PASSWORD?: string;
@@ -552,6 +556,7 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WATSONX_PROJECT_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
   YC_API_KEY?: string;
