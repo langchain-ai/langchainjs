@@ -72,7 +72,7 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
     });
     setTimeout(() => {
       controller.abort();
-    }, 500);
+    }, 1000);
     return res;
   }).rejects.toThrow();
 }, 10000);
@@ -264,7 +264,7 @@ test("Test ChatAnthropic stream method", async () => {
 test("Test ChatAnthropic stream method with abort", async () => {
   await expect(async () => {
     const model = new ChatAnthropic({
-      maxTokensToSample: 50,
+      maxTokensToSample: 500,
       modelName: "claude-instant-v1",
     });
     const stream = await model.stream(

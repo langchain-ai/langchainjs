@@ -62,6 +62,30 @@ export function getPortkeySession(options: PortkeyOptions = {}) {
   return session;
 }
 
+/**
+ * @example
+ * ```typescript
+ * const model = new Portkey({
+ *   mode: "single",
+ *   llms: [
+ *     {
+ *       provider: "openai",
+ *       virtual_key: "open-ai-key-1234",
+ *       model: "text-davinci-003",
+ *       max_tokens: 2000,
+ *     },
+ *   ],
+ * });
+ *
+ * // Stream the output of the model and process it
+ * const res = await model.stream(
+ *   "Question: Write a story about a king\nAnswer:"
+ * );
+ * for await (const i of res) {
+ *   process.stdout.write(i);
+ * }
+ * ```
+ */
 export class Portkey extends BaseLLM {
   apiKey?: string = undefined;
 

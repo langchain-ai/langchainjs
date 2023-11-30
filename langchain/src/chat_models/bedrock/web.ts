@@ -19,7 +19,7 @@ import {
   ChatGenerationChunk,
   ChatMessage,
 } from "../../schema/index.js";
-import { SerializedFields } from "../../load/map_keys.js";
+import type { SerializedFields } from "../../load/map_keys.js";
 
 function convertOneMessageToText(
   message: BaseMessage,
@@ -85,6 +85,15 @@ export function convertMessagesToPrompt(
  * Services (AWS). It uses AWS credentials for authentication and can be
  * configured with various parameters such as the model to use, the AWS
  * region, and the maximum number of tokens to generate.
+ * @example
+ * ```typescript
+ * const model = new BedrockChat({
+ *   model: "anthropic.claude-v2",
+ *   region: "us-east-1",
+ * });
+ * const res = await model.invoke([{ content: "Tell me a joke" }]);
+ * console.log(res);
+ * ```
  */
 export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";
@@ -142,7 +151,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere", "meta"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
@@ -167,7 +176,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.fetchFn = fields?.fetchFn ?? fetch;
+    this.fetchFn = fields?.fetchFn ?? fetch.bind(globalThis);
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
@@ -300,7 +309,7 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
 
     const bedrockMethod =
-      provider === "anthropic" || provider === "cohere"
+      provider === "anthropic" || provider === "cohere" || provider === "meta"
         ? "invoke-with-response-stream"
         : "invoke";
 
@@ -318,7 +327,11 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
       );
     }
 
-    if (provider === "anthropic" || provider === "cohere") {
+    if (
+      provider === "anthropic" ||
+      provider === "cohere" ||
+      provider === "meta"
+    ) {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
@@ -366,11 +379,41 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _readChunks(reader: any) {
+    function _concatChunks(a: Uint8Array, b: Uint8Array) {
+      const newBuffer = new Uint8Array(a.length + b.length);
+      newBuffer.set(a);
+      newBuffer.set(b, a.length);
+      return newBuffer;
+    }
+
+    function getMessageLength(buffer: Uint8Array) {
+      if (buffer.byteLength === 0) return 0;
+      const view = new DataView(
+        buffer.buffer,
+        buffer.byteOffset,
+        buffer.byteLength
+      );
+
+      return view.getUint32(0, false);
+    }
+
     return {
       async *[Symbol.asyncIterator]() {
         let readResult = await reader.read();
+
+        let buffer: Uint8Array = new Uint8Array(0);
         while (!readResult.done) {
-          yield readResult.value;
+          const chunk: Uint8Array = readResult.value;
+
+          buffer = _concatChunks(buffer, chunk);
+          let messageLength = getMessageLength(buffer);
+
+          while (buffer.byteLength > 0 && buffer.byteLength >= messageLength) {
+            yield buffer.slice(0, messageLength);
+            buffer = buffer.slice(messageLength);
+            messageLength = getMessageLength(buffer);
+          }
+
           readResult = await reader.read();
         }
       },

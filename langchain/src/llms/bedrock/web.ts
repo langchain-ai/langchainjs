@@ -14,7 +14,7 @@ import { getEnvironmentVariable } from "../../util/env.js";
 import { LLM, BaseLLMParams } from "../base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import { GenerationChunk } from "../../schema/index.js";
-import { SerializedFields } from "../../load/map_keys.js";
+import type { SerializedFields } from "../../load/map_keys.js";
 
 /**
  * A type of Large Language Model (LLM) that interacts with the Bedrock
@@ -81,7 +81,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = ["ai21", "anthropic", "amazon", "cohere"];
+    const allowedModels = ["ai21", "anthropic", "amazon", "cohere", "meta"];
     if (!allowedModels.includes(this.model.split(".")[0])) {
       throw new Error(
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
@@ -106,7 +106,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.fetchFn = fields?.fetchFn ?? fetch;
+    this.fetchFn = fields?.fetchFn ?? fetch.bind(globalThis);
     this.endpointHost = fields?.endpointHost ?? fields?.endpointUrl;
     this.stopSequences = fields?.stopSequences;
     this.modelKwargs = fields?.modelKwargs;
@@ -238,7 +238,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
   ): AsyncGenerator<GenerationChunk> {
     const provider = this.model.split(".")[0];
     const bedrockMethod =
-      provider === "anthropic" || provider === "cohere"
+      provider === "anthropic" || provider === "cohere" || provider === "meta"
         ? "invoke-with-response-stream"
         : "invoke";
 
@@ -261,7 +261,11 @@ export class Bedrock extends LLM implements BaseBedrockInput {
       );
     }
 
-    if (provider === "anthropic" || provider === "cohere") {
+    if (
+      provider === "anthropic" ||
+      provider === "cohere" ||
+      provider === "meta"
+    ) {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       for await (const chunk of this._readChunks(reader)) {
@@ -309,11 +313,41 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _readChunks(reader: any) {
+    function _concatChunks(a: Uint8Array, b: Uint8Array) {
+      const newBuffer = new Uint8Array(a.length + b.length);
+      newBuffer.set(a);
+      newBuffer.set(b, a.length);
+      return newBuffer;
+    }
+
+    function getMessageLength(buffer: Uint8Array) {
+      if (buffer.byteLength === 0) return 0;
+      const view = new DataView(
+        buffer.buffer,
+        buffer.byteOffset,
+        buffer.byteLength
+      );
+
+      return view.getUint32(0, false);
+    }
+
     return {
       async *[Symbol.asyncIterator]() {
         let readResult = await reader.read();
+
+        let buffer: Uint8Array = new Uint8Array(0);
         while (!readResult.done) {
-          yield readResult.value;
+          const chunk: Uint8Array = readResult.value;
+
+          buffer = _concatChunks(buffer, chunk);
+          let messageLength = getMessageLength(buffer);
+
+          while (buffer.byteLength > 0 && buffer.byteLength >= messageLength) {
+            yield buffer.slice(0, messageLength);
+            buffer = buffer.slice(messageLength);
+            messageLength = getMessageLength(buffer);
+          }
+
           readResult = await reader.read();
         }
       },

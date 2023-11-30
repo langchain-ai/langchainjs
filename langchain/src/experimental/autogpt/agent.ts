@@ -35,6 +35,27 @@ export interface AutoGPTInput {
  * Class representing the AutoGPT concept with LangChain primitives. It is
  * designed to be used with a set of tools such as a search tool,
  * write-file tool, and a read-file tool.
+ * @example
+ * ```typescript
+ * const autogpt = AutoGPT.fromLLMAndTools(
+ *   new ChatOpenAI({ temperature: 0 }),
+ *   [
+ *     new ReadFileTool({ store: new InMemoryFileStore() }),
+ *     new WriteFileTool({ store: new InMemoryFileStore() }),
+ *     new SerpAPI("YOUR_SERPAPI_API_KEY", {
+ *       location: "San Francisco,California,United States",
+ *       hl: "en",
+ *       gl: "us",
+ *     }),
+ *   ],
+ *   {
+ *     memory: new MemoryVectorStore(new OpenAIEmbeddings()).asRetriever(),
+ *     aiName: "Tom",
+ *     aiRole: "Assistant",
+ *   },
+ * );
+ * const result = await autogpt.run(["write a weather report for SF today"]);
+ * ```
  */
 export class AutoGPT {
   aiName: string;

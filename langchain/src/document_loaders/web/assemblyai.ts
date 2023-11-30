@@ -79,6 +79,15 @@ abstract class CreateTranscriptLoader extends AssemblyAILoader {
 
 /**
  * Creates and loads the transcript as a document using AssemblyAI.
+ * @example
+ * ```typescript
+ * const loader = new AudioTranscriptLoader(
+ *   { audio_url: "https:
+ *   { apiKey: "ASSEMBLYAI_API_KEY" },
+ * );
+ * const docs = await loader.load();
+ * console.dir(docs, { depth: Infinity });
+ * ```
  */
 export class AudioTranscriptLoader extends CreateTranscriptLoader {
   /**
@@ -147,6 +156,21 @@ export class AudioTranscriptSentencesLoader extends CreateTranscriptLoader {
 
 /**
  * Creates a transcript and loads subtitles for the transcript as `srt` or `vtt` format.
+ * @example
+ * ```typescript
+ * const loader = new AudioSubtitleLoader(
+ *   {
+ *     audio_url: "https:
+ *   },
+ *   "srt",
+ *   {
+ *     apiKey: "<ASSEMBLYAI_API_KEY>",
+ *   },
+ * );
+ *
+ *
+ * const docs = await loader.load();
+ * ```
  */
 export class AudioSubtitleLoader extends CreateTranscriptLoader {
   /**

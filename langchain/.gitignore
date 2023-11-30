@@ -220,6 +220,9 @@ prompts.d.ts
 prompts/load.cjs
 prompts/load.js
 prompts/load.d.ts
+vectorstores/clickhouse.cjs
+vectorstores/clickhouse.js
+vectorstores/clickhouse.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
@@ -307,6 +310,9 @@ vectorstores/myscale.d.ts
 vectorstores/redis.cjs
 vectorstores/redis.js
 vectorstores/redis.d.ts
+vectorstores/rockset.cjs
+vectorstores/rockset.js
+vectorstores/rockset.d.ts
 vectorstores/typesense.cjs
 vectorstores/typesense.js
 vectorstores/typesense.d.ts
@@ -457,6 +463,9 @@ document_loaders/fs/unstructured.d.ts
 document_loaders/fs/openai_whisper_audio.cjs
 document_loaders/fs/openai_whisper_audio.js
 document_loaders/fs/openai_whisper_audio.d.ts
+document_loaders/fs/pptx.cjs
+document_loaders/fs/pptx.js
+document_loaders/fs/pptx.d.ts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
@@ -634,6 +643,9 @@ retrievers/self_query/supabase.d.ts
 retrievers/self_query/weaviate.cjs
 retrievers/self_query/weaviate.js
 retrievers/self_query/weaviate.d.ts
+retrievers/self_query/vectara.cjs
+retrievers/self_query/vectara.js
+retrievers/self_query/vectara.d.ts
 retrievers/vespa.cjs
 retrievers/vespa.js
 retrievers/vespa.d.ts
@@ -652,6 +664,9 @@ cache/redis.d.ts
 cache/ioredis.cjs
 cache/ioredis.js
 cache/ioredis.d.ts
+cache/file_system.cjs
+cache/file_system.js
+cache/file_system.d.ts
 cache/upstash_redis.cjs
 cache/upstash_redis.js
 cache/upstash_redis.d.ts
@@ -751,6 +766,9 @@ experimental/autogpt.d.ts
 experimental/openai_assistant.cjs
 experimental/openai_assistant.js
 experimental/openai_assistant.d.ts
+experimental/openai_files.cjs
+experimental/openai_files.js
+experimental/openai_files.d.ts
 experimental/babyagi.cjs
 experimental/babyagi.js
 experimental/babyagi.d.ts
@@ -769,6 +787,9 @@ experimental/chat_models/anthropic_functions.d.ts
 experimental/chat_models/bittensor.cjs
 experimental/chat_models/bittensor.js
 experimental/chat_models/bittensor.d.ts
+experimental/chat_models/ollama_functions.cjs
+experimental/chat_models/ollama_functions.js
+experimental/chat_models/ollama_functions.d.ts
 experimental/llms/bittensor.cjs
 experimental/llms/bittensor.js
 experimental/llms/bittensor.d.ts
@@ -778,9 +799,15 @@ experimental/hubs/makersuite/googlemakersuitehub.d.ts
 experimental/chains/violation_of_expectations.cjs
 experimental/chains/violation_of_expectations.js
 experimental/chains/violation_of_expectations.d.ts
+experimental/tools/pyinterpreter.cjs
+experimental/tools/pyinterpreter.js
+experimental/tools/pyinterpreter.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts
+runnables.cjs
+runnables.js
+runnables.d.ts
 runnables/remote.cjs
 runnables/remote.js
 runnables/remote.d.ts

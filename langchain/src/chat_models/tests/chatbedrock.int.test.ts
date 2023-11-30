@@ -2,85 +2,162 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { test, expect } from "@jest/globals";
-import { ChatBedrock } from "../bedrock/web.js";
+import { BedrockChat } from "../bedrock/web.js";
 import { HumanMessage } from "../../schema/index.js";
 
-test("Test Bedrock chat model: Claude-v2", async () => {
-  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
-  const model = "anthropic.claude-v2";
+// void testChatModel(
+//   "Test Bedrock chat model: Llama2 13B v1",
+//   "us-east-1",
+//   "meta.llama2-13b-chat-v1",
+//   "What is your name?"
+// );
+// void testChatStreamingModel(
+//   "Test Bedrock streaming chat model: Llama2 13B v1",
+//   "us-east-1",
+//   "meta.llama2-13b-chat-v1",
+//   "What is your name and something about yourself?"
+// );
 
-  const bedrock = new ChatBedrock({
-    maxTokens: 20,
-    region,
-    model,
-    maxRetries: 0,
-    credentials: {
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-    },
-  });
+void testChatModel(
+  "Test Bedrock chat model: Claude-v2",
+  "us-east-1",
+  "anthropic.claude-v2",
+  "What is your name?"
+);
+void testChatStreamingModel(
+  "Test Bedrock chat model streaming: Claude-v2",
+  "us-east-1",
+  "anthropic.claude-v2",
+  "What is your name and something about yourself?"
+);
 
-  const res = await bedrock.call([new HumanMessage("What is your name?")]);
-  console.log(res);
-});
+void testChatHandleLLMNewToken(
+  "Test Bedrock chat model HandleLLMNewToken: Claude-v2",
+  "us-east-1",
+  "anthropic.claude-v2",
+  "What is your name and something about yourself?"
+);
+// void testChatHandleLLMNewToken(
+//   "Test Bedrock chat model HandleLLMNewToken: Llama2 13B v1",
+//   "us-east-1",
+//   "meta.llama2-13b-chat-v1",
+//   "What is your name and something about yourself?"
+// );
 
-test("Test Bedrock chat model streaming: Claude-v2", async () => {
-  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
-  const model = "anthropic.claude-v2";
+/**
+ * Tests a BedrockChat model
+ * @param title The name of the test to run
+ * @param defaultRegion The AWS region to default back to if not set via environment
+ * @param model The model string to test
+ * @param message The prompt test to send to the LLM
+ */
+async function testChatModel(
+  title: string,
+  defaultRegion: string,
+  model: string,
+  message: string
+) {
+  test(title, async () => {
+    const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
 
-  const bedrock = new ChatBedrock({
-    maxTokens: 200,
-    region,
-    model,
-    maxRetries: 0,
-    credentials: {
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-    },
-  });
-
-  const stream = await bedrock.stream([
-    new HumanMessage({
-      content: "What is your name and something about yourself?",
-    }),
-  ]);
-  const chunks = [];
-  for await (const chunk of stream) {
-    console.log(chunk);
-    chunks.push(chunk);
-  }
-  expect(chunks.length).toBeGreaterThan(1);
-});
-
-test("Test Bedrock chat model handleLLMNewToken: Claude-v2", async () => {
-  const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
-  const model = "anthropic.claude-v2";
-  const tokens: string[] = [];
-
-  const bedrock = new ChatBedrock({
-    maxTokens: 200,
-    region,
-    model,
-    maxRetries: 0,
-    credentials: {
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
-      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-    },
-    streaming: true,
-    callbacks: [
-      {
-        handleLLMNewToken: (token) => {
-          tokens.push(token);
-        },
+    const bedrock = new BedrockChat({
+      maxTokens: 20,
+      region,
+      model,
+      maxRetries: 0,
+      credentials: {
+        secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+        sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
       },
-    ],
+    });
+
+    const res = await bedrock.call([new HumanMessage(message)]);
+    console.log(res);
   });
-  const stream = await bedrock.call([
-    new HumanMessage("What is your name and something about yourself?"),
-  ]);
-  expect(tokens.length).toBeGreaterThan(1);
-  expect(stream.content).toEqual(tokens.join(""));
-});
+}
+/**
+ * Tests a BedrockChat model with a streaming response
+ * @param title The name of the test to run
+ * @param defaultRegion The AWS region to default back to if not set via environment
+ * @param model The model string to test
+ * @param message The prompt test to send to the LLM
+ */
+async function testChatStreamingModel(
+  title: string,
+  defaultRegion: string,
+  model: string,
+  message: string
+) {
+  test(title, async () => {
+    const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
+
+    const bedrock = new BedrockChat({
+      maxTokens: 200,
+      region,
+      model,
+      maxRetries: 0,
+      credentials: {
+        secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+        sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+      },
+    });
+
+    const stream = await bedrock.stream([
+      new HumanMessage({
+        content: message,
+      }),
+    ]);
+    const chunks = [];
+    for await (const chunk of stream) {
+      console.log(chunk);
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(1);
+  });
+}
+/**
+ * Tests a BedrockChat model with a streaming response using a new token callback
+ * @param title The name of the test to run
+ * @param defaultRegion The AWS region to default back to if not set via environment
+ * @param model The model string to test
+ * @param message The prompt test to send to the LLM
+ */
+async function testChatHandleLLMNewToken(
+  title: string,
+  defaultRegion: string,
+  model: string,
+  message: string
+) {
+  test(title, async () => {
+    const region = process.env.BEDROCK_AWS_REGION ?? defaultRegion;
+    const tokens: string[] = [];
+
+    const bedrock = new BedrockChat({
+      maxTokens: 200,
+      region,
+      model,
+      maxRetries: 0,
+      credentials: {
+        secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+        sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+      },
+      streaming: true,
+      callbacks: [
+        {
+          handleLLMNewToken: (token) => {
+            tokens.push(token);
+          },
+        },
+      ],
+    });
+    const stream = await bedrock.call([new HumanMessage(message)]);
+    expect(tokens.length).toBeGreaterThan(1);
+    expect(stream.content).toEqual(tokens.join(""));
+  });
+}
 
 test.skip.each([
   "amazon.titan-text-express-v1",
@@ -90,7 +167,7 @@ test.skip.each([
 ])("Test Bedrock base chat model: %s", async (model) => {
   const region = process.env.BEDROCK_AWS_REGION ?? "us-east-1";
 
-  const bedrock = new ChatBedrock({
+  const bedrock = new BedrockChat({
     region,
     model,
     maxRetries: 0,
@@ -98,6 +175,7 @@ test.skip.each([
     credentials: {
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+      sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
     },
   });
 

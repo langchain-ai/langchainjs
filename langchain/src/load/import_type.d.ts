@@ -115,6 +115,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/clickhouse"?:
+    | typeof import("../vectorstores/clickhouse.js")
+    | Promise<typeof import("../vectorstores/clickhouse.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
@@ -193,6 +196,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/rockset"?:
+    | typeof import("../vectorstores/rockset.js")
+    | Promise<typeof import("../vectorstores/rockset.js")>;
   "langchain/vectorstores/typesense"?:
     | typeof import("../vectorstores/typesense.js")
     | Promise<typeof import("../vectorstores/typesense.js")>;
@@ -316,6 +322,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/openai_whisper_audio"?:
     | typeof import("../document_loaders/fs/openai_whisper_audio.js")
     | Promise<typeof import("../document_loaders/fs/openai_whisper_audio.js")>;
+  "langchain/document_loaders/fs/pptx"?:
+    | typeof import("../document_loaders/fs/pptx.js")
+    | Promise<typeof import("../document_loaders/fs/pptx.js")>;
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
@@ -388,6 +397,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/weaviate"?:
     | typeof import("../retrievers/self_query/weaviate.js")
     | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
+  "langchain/retrievers/self_query/vectara"?:
+    | typeof import("../retrievers/self_query/vectara.js")
+    | Promise<typeof import("../retrievers/self_query/vectara.js")>;
   "langchain/cache/cloudflare_kv"?:
     | typeof import("../cache/cloudflare_kv.js")
     | Promise<typeof import("../cache/cloudflare_kv.js")>;
@@ -400,6 +412,9 @@ export interface OptionalImportMap {
   "langchain/cache/ioredis"?:
     | typeof import("../cache/ioredis.js")
     | Promise<typeof import("../cache/ioredis.js")>;
+  "langchain/cache/file_system"?:
+    | typeof import("../cache/file_system.js")
+    | Promise<typeof import("../cache/file_system.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;
@@ -481,6 +496,9 @@ export interface OptionalImportMap {
   "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
     | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
     | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
+  "langchain/experimental/tools/pyinterpreter"?:
+    | typeof import("../experimental/tools/pyinterpreter.js")
+    | Promise<typeof import("../experimental/tools/pyinterpreter.js")>;
 }
 
 export interface SecretMap {
@@ -494,6 +512,7 @@ export interface SecretMap {
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
   BEDROCK_AWS_SECRET_ACCESS_KEY?: string;
+  CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   FIREWORKS_API_KEY?: string;

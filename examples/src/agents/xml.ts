@@ -13,7 +13,7 @@ console.log("Loaded agent.");
 
 const input = `What is the weather in Honolulu?`;
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 console.log(result);
 

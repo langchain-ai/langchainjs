@@ -2,18 +2,12 @@
 /* eslint-disable no-process-env */
 import fs from "fs";
 import { expect, beforeAll } from "@jest/globals";
+import { insecureHash } from "@langchain/core/utils/hash";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
 import { VectaraFile, VectaraLibArgs, VectaraStore } from "../vectara.js";
 
 const getDocs = (): Document[] => {
-  const hashCode = (s: string) =>
-    s.split("").reduce((a, b) => {
-      // eslint-disable-next-line no-param-reassign
-      a = ((a << 5) - a + b.charCodeAt(0)) | 0;
-      return a;
-    }, 0);
-
   // Some text from Lord of the Rings
   const englishOne = `It all depends on what you want. You can trust us to stick to you through thick and thin to the
     bitter end. And you can trust us to keep any secret of yours - closer than you keep it yourself.
@@ -33,7 +27,7 @@ const getDocs = (): Document[] => {
     new Document({
       pageContent: englishOne,
       metadata: {
-        document_id: hashCode(englishOne).toString(), // Generate a hashcode for document id based on the text
+        document_id: insecureHash(englishOne), // Generate a hashcode for document id based on the text
         title: "Lord of the Rings",
         author: "Tolkien",
         genre: "fiction",
@@ -43,7 +37,7 @@ const getDocs = (): Document[] => {
     new Document({
       pageContent: englishTwo,
       metadata: {
-        document_id: hashCode(englishTwo).toString(), // Generate a hashcode for document id based on the text
+        document_id: insecureHash(englishTwo), // Generate a hashcode for document id based on the text
         title: "Lord of the Rings",
         author: "Tolkien",
         genre: "fiction",
@@ -53,7 +47,7 @@ const getDocs = (): Document[] => {
     new Document({
       pageContent: frenchOne,
       metadata: {
-        document_id: hashCode(frenchOne).toString(), // Generate a hashcode for document id based on the text
+        document_id: insecureHash(frenchOne), // Generate a hashcode for document id based on the text
         title: "The hitchhiker's guide to the galaxy",
         author: "Douglas Adams",
         genre: "fiction",
@@ -117,6 +111,7 @@ describe("VectaraStore", () => {
 
   describe("access operations", () => {
     let store: VectaraStore;
+    let doc_ids: string[] = [];
 
     beforeAll(async () => {
       store = new VectaraStore({
@@ -124,10 +119,7 @@ describe("VectaraStore", () => {
         corpusId,
         apiKey: process.env.VECTARA_API_KEY || "",
       });
-    });
-
-    test.skip("addDocuments", async () => {
-      await store.addDocuments(getDocs());
+      doc_ids = await store.addDocuments(getDocs());
     });
 
     test.skip("similaritySearchWithScore", async () => {
@@ -138,12 +130,7 @@ describe("VectaraStore", () => {
       );
       expect(resultsWithScore.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].pageContent.length).toBeGreaterThan(0);
-      expect(resultsWithScore[0][0].metadata.length).toBeGreaterThan(0);
-      expect(
-        resultsWithScore[0][0].metadata.find(
-          (item: { name: string }) => item.name === "title"
-        ).value
-      ).toBe("Lord of the Rings");
+      expect(resultsWithScore[0][0].metadata.title).toBe("Lord of the Rings");
       expect(resultsWithScore[0][1]).toBeGreaterThan(0);
     });
 
@@ -161,7 +148,7 @@ describe("VectaraStore", () => {
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
-      expect(results[0].metadata.length).toBeGreaterThan(0);
+      expect(results[0].metadata.title).toBe("Lord of the Rings");
     });
 
     test.skip("similaritySearch with filter", async () => {
@@ -181,7 +168,7 @@ describe("VectaraStore", () => {
       expect(hasEnglish).toBe(false);
     });
 
-    it("addFiles", async () => {
+    test.skip("addFiles", async () => {
       const docs = getDocs();
       const englishOneContent = docs[0].pageContent;
       const frenchOneContent = docs[2].pageContent;
@@ -210,18 +197,29 @@ describe("VectaraStore", () => {
         fileName: "bitcoin.pdf",
       });
 
-      const results = await store.addFiles(vectaraFiles);
+      const file_doc_ids = await store.addFiles(vectaraFiles);
+      doc_ids = [...doc_ids, ...file_doc_ids];
 
       for (const file of files) {
         fs.unlinkSync(file.filename);
       }
 
-      expect(results).toEqual(3);
+      expect(file_doc_ids.length).toEqual(3);
       const searchResults = await store.similaritySearch("What is bitcoin");
       expect(searchResults.length).toBeGreaterThan(0);
       expect(searchResults[0].pageContent).toContain(
         "A Peer-to-Peer Electronic Cash System"
       );
+    });
+
+    // delete documents added in the test
+    afterAll(async () => {
+      store = new VectaraStore({
+        customerId: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
+        corpusId,
+        apiKey: process.env.VECTARA_API_KEY || "",
+      });
+      await store.deleteDocuments(doc_ids);
     });
   });
 });

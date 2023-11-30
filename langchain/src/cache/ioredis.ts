@@ -8,6 +8,19 @@ import {
 
 /**
  * Cache LLM results using Redis.
+ * @example
+ * ```typescript
+ * const model = new ChatOpenAI({
+ *   cache: new RedisCache(new Redis(), { ttl: 60 }),
+ * });
+ *
+ * // Invoke the model with a prompt
+ * const response = await model.invoke("Do something random!");
+ * console.log(response);
+ *
+ * // Remember to disconnect the Redis client when done
+ * await redisClient.disconnect();
+ * ```
  */
 export class RedisCache extends BaseCache {
   protected redisClient: Redis;

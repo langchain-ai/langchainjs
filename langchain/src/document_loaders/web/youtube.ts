@@ -30,6 +30,15 @@ interface VideoMetadata {
  * A document loader for loading data from YouTube videos. It uses the
  * youtube-transcript and youtubei.js libraries to fetch the transcript
  * and video metadata.
+ * @example
+ * ```typescript
+ * const loader = new YoutubeLoader(
+ *   "https:
+ *   "en",
+ *   true,
+ * );
+ * const docs = await loader.load();
+ * ```
  */
 export class YoutubeLoader extends BaseDocumentLoader {
   private videoId: string;
