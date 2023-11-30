@@ -48,7 +48,8 @@ export class RunnableWithMessageHistory<
   ) {
     let historyChain: Runnable = new RunnableLambda({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      func: (input: any) => this._enterHistory(input, {}),
+      func: (input: any, options?: Record<string, unknown>) =>
+        this._enterHistory(input, options ?? {}),
     }).withConfig({ runName: "loadHistory" });
 
     const messagesKey = fields.historyMessagesKey || fields.inputMessagesKey;
@@ -172,7 +173,7 @@ export class RunnableWithMessageHistory<
       };
       const exampleConfig = { configurable: { sessionId: "123" } };
       throw new Error(
-        `session_id is required. Pass it in as part of the config argument to .invoke() or .stream()\n` +
+        `sessionId is required. Pass it in as part of the config argument to .invoke() or .stream()\n` +
           `eg. chain.invoke(${JSON.stringify(exampleInput)}, ${JSON.stringify(
             exampleConfig
           )})`

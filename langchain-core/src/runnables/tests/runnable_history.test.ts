@@ -1,4 +1,4 @@
-import { HumanMessage, isBaseMessage } from "../../messages/index.js";
+import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import { RunnableLambda } from "../base.js";
 import { RunnableConfig } from "../config.js";
 import { RunnableWithMessageHistory } from "../history.js";
@@ -6,10 +6,7 @@ import {
   BaseChatMessageHistory,
   FakeChatMessageHistory,
 } from "../../chat_history.js";
-/**
- * @TODO Move this to `langchain` and replace real llm with fake.
- * Only reason it's here is so I don't have to rebuild every time I make a change.
- */
+
 async function getGetSessionHistory(): Promise<
   (sessionId: string) => Promise<BaseChatMessageHistory>
 > {
@@ -29,9 +26,9 @@ async function getGetSessionHistory(): Promise<
 
 test("Runnable with message history", async () => {
   const runnable = new RunnableLambda({
-    func: (messages: HumanMessage[]) =>
+    func: (messages: BaseMessage[]) =>
       `you said: ${messages
-        .filter((m) => isBaseMessage(m))
+        .filter((m) => m._getType() === "human")
         .map((m) => m.content)
         .join("\n")}`,
   });
