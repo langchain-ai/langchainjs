@@ -13,6 +13,7 @@ import {
   RunnableBindingArgs,
   RunnableLambda,
 } from "./base.js";
+import { RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
@@ -47,7 +48,6 @@ export class RunnableWithMessageHistory<
     }
   ) {
     let historyChain: Runnable = new RunnableLambda({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       func: (input: any, options?: Record<string, unknown>) =>
         this._enterHistory(input, options ?? {}),
     }).withConfig({ runName: "loadHistory" });
@@ -62,8 +62,8 @@ export class RunnableWithMessageHistory<
     const bound = historyChain
       .pipe(
         fields.runnable.withListeners({
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onEnd: (run, config) => this._exitHistory(run, config),
+          onEnd: (run: Run, config: RunnableConfig = {}) =>
+            this._exitHistory(run, config),
         })
       )
       .withConfig({ runName: "RunnableWithMessageHistory" });

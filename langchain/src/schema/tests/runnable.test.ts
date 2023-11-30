@@ -29,6 +29,7 @@ import {
   FakeSplitIntoListParser,
 } from "./lib.js";
 import { FakeListChatModel } from "../../chat_models/fake.js";
+import { Run } from "../../callbacks/index.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -264,10 +265,10 @@ test("Listeners work", async () => {
 
   await chain
     .withListeners({
-      onStart: (run) => {
+      onStart: (run: Run) => {
         mockStart(run);
       },
-      onEnd: (run) => {
+      onEnd: (run: Run) => {
         mockEnd(run);
       },
     })
@@ -295,14 +296,13 @@ test("Listeners work with async handlers", async () => {
 
   await chain
     .withListeners({
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onStart: async (run) => {
+      onStart: async (run: Run) => {
         const promise = new Promise((resolve) => setTimeout(resolve, 2000));
         await promise;
         mockStart(run);
       },
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onEnd: async (run) => {
+      onEnd: async (run: Run) => {
         const promise = new Promise((resolve) => setTimeout(resolve, 2000));
         await promise;
         mockEnd(run);
