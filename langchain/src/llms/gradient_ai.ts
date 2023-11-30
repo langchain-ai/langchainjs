@@ -51,8 +51,6 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
   inferenceParameters?: Record<string, unknown>;
 
-  baseModel: typeof Gradient.getBaseModel
-
   constructor(fields: GradientAIParams) {
     super(fields);
 
