@@ -1,0 +1,27 @@
+# WatsonX AI
+
+LangChain.js supports integration with IBM WatsonX AI. Checkout [WatsonX AI](https://www.ibm.com/products/watsonx-ai) for a list of available models.
+
+## Setup
+
+You will need to set the following environment variables for using the WatsonX AI API.
+
+1. `IBM_CLOUD_API_KEY` which can be generated via [IBM Cloud](https://cloud.ibm.com/iam/apikeys)
+2. `WATSONX_PROJECT_ID` which can be found in your [project's manage tab](https://dataplatform.cloud.ibm.com/projects/?context=wx)
+
+Alternatively, these can be set during the WatsonxAI Class instantiation as `ibmCloudApiKey` and `projectId` respectively.
+For example:
+
+```typescript
+const model = new WatsonxAI({
+  ibmCloudApiKey: "My secret IBM Cloud API Key"
+  projectId: "My secret WatsonX AI Project id"
+});
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import WatsonxAiExample from "@examples/llms/watsonx_ai.ts";
+
+<CodeBlock language="typescript">{WatsonxAiExample}</CodeBlock>
