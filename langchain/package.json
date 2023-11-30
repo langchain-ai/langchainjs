@@ -82,6 +82,9 @@
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
+    "tools/google_places.cjs",
+    "tools/google_places.js",
+    "tools/google_places.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -1566,6 +1569,11 @@
       "types": "./tools/google_calendar.d.ts",
       "import": "./tools/google_calendar.js",
       "require": "./tools/google_calendar.cjs"
+    },
+    "./tools/google_places": {
+      "types": "./tools/google_places.d.ts",
+      "import": "./tools/google_places.js",
+      "require": "./tools/google_places.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",
