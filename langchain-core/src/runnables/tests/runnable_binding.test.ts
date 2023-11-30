@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test } from "@jest/globals";
 import { StringOutputParser } from "../../output_parsers/string.js";
-import { FakeChatModel, FakeStreamingLLM } from "./lib.js";
+import { FakeChatModel, FakeStreamingLLM } from "../../utils/testing/lib.js";
 
 test("Bind kwargs to a runnable", async () => {
   const llm = new FakeChatModel({});

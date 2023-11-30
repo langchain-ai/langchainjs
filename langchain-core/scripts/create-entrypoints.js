@@ -47,6 +47,7 @@ const entrypoints = {
   "utils/stream": "utils/stream",
   "utils/tiktoken": "utils/tiktoken",
   "utils/types": "utils/types",
+  "utils/testing": "utils/testing/index",
   "vectorstores": "vectorstores",
 };
 

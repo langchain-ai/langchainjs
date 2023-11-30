@@ -274,6 +274,11 @@
       "import": "./utils/types.js",
       "require": "./utils/types.cjs"
     },
+    "./utils/testing": {
+      "types": "./utils/testing.d.ts",
+      "import": "./utils/testing.js",
+      "require": "./utils/testing.cjs"
+    },
     "./vectorstores": {
       "types": "./vectorstores.d.ts",
       "import": "./vectorstores.js",
@@ -400,6 +405,9 @@
     "utils/types.cjs",
     "utils/types.js",
     "utils/types.d.ts",
+    "utils/testing.cjs",
+    "utils/testing.js",
+    "utils/testing.d.ts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",

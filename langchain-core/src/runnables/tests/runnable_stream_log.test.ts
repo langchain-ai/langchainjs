@@ -11,7 +11,7 @@ import {
 import { Document } from "../../documents/document.js";
 import { RunLog } from "../../tracers/log_stream.js";
 import { RunnableSequence, RunnableMap } from "../base.js";
-import { FakeLLM, FakeChatModel, FakeRetriever } from "./lib.js";
+import { FakeLLM, FakeChatModel, FakeRetriever } from "../../utils/testing/lib.js";
 
 test("Runnable streamLog method", async () => {
   const promptTemplate = PromptTemplate.fromTemplate("{input}");

@@ -115,6 +115,9 @@ utils/tiktoken.d.ts
 utils/types.cjs
 utils/types.js
 utils/types.d.ts
+utils/testing.cjs
+utils/testing.js
+utils/testing.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts

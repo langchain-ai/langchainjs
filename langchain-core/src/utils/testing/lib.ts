@@ -9,7 +9,7 @@ import { BaseMessage, AIMessage } from "../../messages/index.js";
 import { BaseOutputParser } from "../../output_parsers/base.js";
 import { GenerationChunk, type ChatResult } from "../../outputs.js";
 import { BaseRetriever } from "../../retrievers.js";
-import { Runnable } from "../base.js";
+import { Runnable } from "../../runnables/base.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas

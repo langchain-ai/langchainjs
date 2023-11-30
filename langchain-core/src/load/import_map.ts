@@ -38,4 +38,5 @@ export * as utils__json_schema from "../utils/json_schema.js";
 export * as utils__stream from "../utils/stream.js";
 export * as utils__tiktoken from "../utils/tiktoken.js";
 export * as utils__types from "../utils/types.js";
+export * as utils__testing from "../utils/testing/index.js";
 export * as vectorstores from "../vectorstores.js";
