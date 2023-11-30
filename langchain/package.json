@@ -1378,6 +1378,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
+    "@google-cloud/local-auth": "^3.0.0",
     "@langchain/core": "^0.0.1",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
