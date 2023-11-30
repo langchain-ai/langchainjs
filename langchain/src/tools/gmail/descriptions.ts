@@ -78,7 +78,7 @@ Example Output:
 "Message sent. Message Id: unique_message_id_string"
 `;
 
-export const SEARCH_GMAIL_DESCRIPTION = `A tool for searching email messages or threads in Gmail using a specific query. It offers the flexibility to choose between messages and threads as the search resource.
+export const SEARCH_DESCRIPTION = `A tool for searching email messages or threads in Gmail using a specific query. It offers the flexibility to choose between messages and threads as the search resource.
 
 INPUT example:
 {
