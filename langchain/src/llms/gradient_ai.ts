@@ -1,5 +1,8 @@
 import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
+import { Gradient } from "@gradientai/nodejs-sdk";
+// import { BaseModel } from "@gradientai/nodejs-sdk/dist/cjs/model/baseModel";
+// import { CompleteResponse } from "@gradientai/nodejs-sdk/dist/cjs/model/returnTypes";
 
 /**
  * The GradientxAIParams interface defines the input parameters for
@@ -17,7 +20,7 @@ export interface GradientAIParams extends BaseLLMParams {
    */
   workspaceId?: string;
   /**
-   * Parameters accepted by the WatsonX AI Endpoint.
+   * Parameters accepted by the Gradient npm package.
    */
   inferenceParameters?: Record<string, unknown>;
   /**
@@ -31,7 +34,7 @@ export interface GradientAIParams extends BaseLLMParams {
  * This requires your Gradient AI Access Token which is autoloaded if not specified.
  */
 
-export class WatsonxAI extends LLM<BaseLLMCallOptions> {
+export class GradientAI extends LLM<BaseLLMCallOptions> {
   static lc_name() {
     return "GradientAI";
   }
@@ -50,6 +53,8 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   workspaceId?: string;
 
   inferenceParameters?: Record<string, unknown>;
+
+  baseModel: any
 
   constructor(fields: GradientAIParams) {
     super(fields);
@@ -70,6 +75,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
     if (!this.workspaceId) {
       throw new Error("Missing Gradient AI Workspace ID");
     }
+    this.setBaseModel();
   }
 
   _llmType() {
@@ -86,9 +92,22 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
     _prompt: string,
     _options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const response = await this.caller.call(async () => console.log(""));
-    console.log(response);
+    const response = await this.caller.call(async () => {
+      this.baseModel.complete({
+        query: prompt,
+        ...this.inferenceParameters
+      })
+    }) as any;
 
-    return "test";
+    return response.generatedOutput;
+  }
+
+  async setBaseModel() {
+    if (this.baseModel) return;
+
+    const gradient = new Gradient({});
+    this.baseModel = await gradient.getBaseModel({
+      baseModelSlug: this.modelSlug,
+    });
   }
 }
