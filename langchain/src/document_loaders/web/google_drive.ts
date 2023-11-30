@@ -235,7 +235,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     }
 
 
-
     private async _fetchFilesRecursive(service: any, folderId: string): Promise<any[]> {
         // Implement recursive file fetching logic here
         // You can use the Files: list API with 'q' parameter to get files in a folder
