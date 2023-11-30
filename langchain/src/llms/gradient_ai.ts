@@ -1,8 +1,6 @@
 import { Gradient } from "@gradientai/nodejs-sdk";
 import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
-// import { BaseModel } from "@gradientai/nodejs-sdk/dist/cjs/model/baseModel";
-// import { CompleteResponse } from "@gradientai/nodejs-sdk/dist/cjs/model/returnTypes";
 
 /**
  * The GradientxAIParams interface defines the input parameters for
@@ -54,6 +52,8 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
 
   inferenceParameters?: Record<string, unknown>;
 
+  // Gradient AI does not export the BaseModel type. Once it does, we can use it here.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   baseModel: any;
 
   constructor(fields: GradientAIParams) {
@@ -93,12 +93,18 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
   ): Promise<string> {
     await this.setBaseModel();
 
+    // GradientAI does not export the CompleteResponse type. Once it does, we can use it here.
+    interface CompleteResponse {
+      finishReason: string;
+      generatedOutput: string;
+    }
+
     const response = (await this.caller.call(async () =>
       this.baseModel.complete({
         query: prompt,
         ...this.inferenceParameters,
       })
-    )) as any;
+    )) as CompleteResponse;
 
     return response.generatedOutput;
   }
