@@ -34,7 +34,7 @@ export interface GradientAIParams extends BaseLLMParams {
 
 export class GradientAI extends LLM<BaseLLMCallOptions> {
   static lc_name() {
-    return "gradient_ai";
+    return "GradientAI";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
