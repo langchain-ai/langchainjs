@@ -396,19 +396,20 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
 
     public async load(): Promise<Document[]> {
-        const auth = await this.authorize();
         // load sheetbyid just doing this to test the auth/load functionality
         const auth = await this.authorize();
-        await this._loadDocumentsFromFolder('1Ae4Q9bDoHLbryrKrAtOvpxH9tGgqDRYO',auth,this.fileTypes)
-        return this._loadFilesFromIds(['10blRw6Xwt15durwy3TxlVwH-te1dPxcC'], auth);
-
-        // uncomment this for the actual code/implementations
-
-        // if (this.folderId){
-        //     return this._loadDocumentsFromFolder(this.folderId,this.fileTypes)
-        // } else if (this.documentIds){
-        //     return this._loadDocumentsFromIds(this.documentIds)
-        // } else return this._loadFilesFromIds(this.fileIds)
+        // validate Inputs here and throw appropirate error
+        
+        if (this.folderId){
+            return this._loadDocumentsFromFolder(this.folderId,auth,this.fileTypes)
+        } else if (this.documentIds){
+            return this._loadDocumentsFromIds(this.documentIds,auth)
+        } else if (this.fileIds){ 
+            return this._loadFilesFromIds(this.fileIds,auth)
+        }
+        else {
+            throw new Error("Google Drive Loader: no ids set");
+        }
     }
   
 }
