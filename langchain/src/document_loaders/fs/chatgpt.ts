@@ -40,7 +40,7 @@ function concatenateRows(message: ChatGPTMessage, title: string): string {
 export class ChatGPTLoader extends TextLoader {
   public numLogs: number;
 
-  constructor(filePathOrBlob: string | Blob, numLogs: number = 0) {
+  constructor(filePathOrBlob: string | Blob, numLogs = 0) {
     super(filePathOrBlob);
     this.numLogs = numLogs;
   }
@@ -57,7 +57,7 @@ export class ChatGPTLoader extends TextLoader {
     const truncatedData = this.numLogs > 0 ? data.slice(0, this.numLogs) : data;
 
     return truncatedData.map((d: ChatGPTLog) => {
-      return Object.values(d.mapping)
+      Object.values(d.mapping)
         .filter(
           (msg, idx) => !(idx === 0 && msg.message.author.role === "system")
         )
