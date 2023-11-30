@@ -6,7 +6,6 @@ import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { getEnvironmentVariable } from "../util/env.js";
-import { custom } from "zod";
 
 /**
  * Interface for the arguments that can be passed to the

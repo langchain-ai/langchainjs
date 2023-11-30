@@ -106,15 +106,13 @@ test("QdrantVectorStore adds vectors with custom payload in Document", async () 
   };
 
   // Add documents with custom payload
-  await qdrantVectorStore.addDocuments(
-    [
-      {
-        pageContent: "hello",
-        metadata: {},
-        customPayload: customPayload
-      },
-    ],
-  );
+  await qdrantVectorStore.addDocuments([
+    {
+      pageContent: "hello",
+      metadata: {},
+      customPayload,
+    },
+  ]);
 
   // Verify that the Qdrant client's upsert method was called with the correct arguments
   expect(client.upsert).toHaveBeenCalledTimes(1);
