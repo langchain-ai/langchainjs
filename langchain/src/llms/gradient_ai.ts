@@ -75,7 +75,6 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
     if (!this.workspaceId) {
       throw new Error("Missing Gradient AI Workspace ID");
     }
-    // this.setBaseModel();
   }
 
   _llmType() {
@@ -92,13 +91,10 @@ export class GradientAI extends LLM<BaseLLMCallOptions> {
     prompt: string,
     _options: this["ParsedCallOptions"]
   ): Promise<string> {
-    // await this.setBaseModel();
-    const gradient = new Gradient({});
-    const baseModel = await gradient.getBaseModel({
-      baseModelSlug: this.modelSlug,
-    });
+    await this.setBaseModel();
+
     const response = (await this.caller.call(async () => 
-      baseModel.complete({
+      this.baseModel.complete({
         query: prompt,
         ...this.inferenceParameters,
       })
