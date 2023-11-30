@@ -12,16 +12,16 @@ import { authenticate } from '@google-cloud/local-auth';
 
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
 
 
 const SCOPES = ["https://www.googleapis.com/auth/drive.readonly"];
-const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
+const CREDENTIALS_PATH = path.join(process.cwd(), 'credential_path.json');
 
 
-export interface GoogleDriveLoaderParams extends AsyncCallerParams {
+export interface GoogleDriveLoaderParams {
     serviceAccountKey?: string;
     credentialsPath?: string;
     tokenPath?: string;
@@ -60,9 +60,9 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     public fileLoaderKwargs: { [key: string]: any };
   
     constructor({
-        serviceAccountKey = join(process.env.HOME, '.credentials', 'keys.json'),
-        credentialsPath = join(process.env.HOME, '.credentials', 'credentials.json'),
-        tokenPath = join(process.env.HOME, '.credentials', 'token.json'),
+        serviceAccountKey = getEnvironmentVariable("GOOGLE_DRIVE_SERVICEACCOUNTKEY"),
+        credentialsPath = getEnvironmentVariable("GOOGLE_DRIVE_CREDENTIALSPATH"),
+        tokenPath = getEnvironmentVariable("GOOGLE_DRIVE_TOKENPATH"),
         folderId = null,
         documentIds = null,
         fileIds = null,
@@ -73,9 +73,9 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         fileLoaderKwargs = {},
       }: GoogleDriveLoaderParams = {}) {
         super();
-        this.serviceAccountKey = serviceAccountKey;
-        this.credentialsPath = credentialsPath;
-        this.tokenPath = tokenPath;
+        this.serviceAccountKey = serviceAccountKey as string;
+        this.credentialsPath = credentialsPath as string;
+        this.tokenPath = tokenPath as string;
         this.folderId = folderId;
         this.documentIds = documentIds;
         this.fileIds = fileIds;
@@ -194,7 +194,9 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
      * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
      */
     async _loadSheetFromId(id: string, auth: Auth.OAuth2Client) {
+        console.log("_loadSheetFromId");
         const sheetsService = google.sheets({version: 'v4', auth});
+        console.log("sheetsService", sheetsService);
         const spreadsheet = await sheetsService.spreadsheets.get({ spreadsheetId: id});
         const sheets = spreadsheet.data.sheets || [];
 
@@ -286,11 +288,17 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
 
     public async load(): Promise<Document[]> {
-        if (this.folderId){
-            return this._loadDocumentsFromFolder(this.folderId,this.fileTypes)
-        } else if (this.documentIds){
-            return this._loadDocumentsFromIds(this.documentIds)
-        } else return this._loadFilesFromIds(this.fileIds)
+        // load sheetbyid just doing this to test the auth/load functionality
+        const auth = await this.authorize();
+        return this._loadSheetFromId('1MMqQmmF1X74P-RRdjH-Z2yPcaU8IdRjhoDFU7swR5L8', auth);
+
+        // uncomment this for the actual code/implementations
+
+        // if (this.folderId){
+        //     return this._loadDocumentsFromFolder(this.folderId,this.fileTypes)
+        // } else if (this.documentIds){
+        //     return this._loadDocumentsFromIds(this.documentIds)
+        // } else return this._loadFilesFromIds(this.fileIds)
     }
   
 }

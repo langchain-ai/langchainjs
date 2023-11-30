@@ -283,6 +283,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/youtube"?:
     | typeof import("../document_loaders/web/youtube.js")
     | Promise<typeof import("../document_loaders/web/youtube.js")>;
+  "langchain/document_loaders/web/google_drive"?:
+    | typeof import("../document_loaders/web/google_drive.js")
+    | Promise<typeof import("../document_loaders/web/google_drive.js")>;
   "langchain/document_loaders/fs/directory"?:
     | typeof import("../document_loaders/fs/directory.js")
     | Promise<typeof import("../document_loaders/fs/directory.js")>;
@@ -503,6 +506,7 @@ export interface SecretMap {
   BAIDU_SECRET_KEY?: string;
   BEDROCK_AWS_ACCESS_KEY_ID?: string;
   BEDROCK_AWS_SECRET_ACCESS_KEY?: string;
+  CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
