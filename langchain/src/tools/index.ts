@@ -47,3 +47,7 @@ export {
   formatToOpenAIFunction,
   formatToOpenAITool,
 } from "./convert_to_openai.js";
+export {
+  GooglePlacesAPI,
+  type GooglePlacesAPIParams,
+} from "./google_places.js";
