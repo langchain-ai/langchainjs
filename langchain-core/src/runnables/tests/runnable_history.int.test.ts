@@ -16,10 +16,7 @@ async function getGetSessionHistory(): Promise<
     sessionId: string
   ): Promise<BaseChatMessageHistory> {
     if (!(sessionId in chatHistoryStore)) {
-      console.log("not in store");
       chatHistoryStore[sessionId] = new FakeChatMessageHistory();
-    } else {
-      console.log("in store", await chatHistoryStore[sessionId].getMessages());
     }
     return chatHistoryStore[sessionId];
   }
@@ -29,22 +26,16 @@ async function getGetSessionHistory(): Promise<
 
 test("Runnable with message history", async () => {
   const runnable = new RunnableLambda({
-    func: (messages: HumanMessage[]) => {
-      console.log("runnin", messages);
-      const messagesArr: HumanMessage[] = !Array.isArray(messages)
-        ? Object.values(messages)
-        : messages;
-      return `you said: ${messagesArr
+    func: (messages: HumanMessage[]) =>
+      `you said: ${messages
         .filter((m) => isBaseMessage(m))
         .map((m) => m.content)
-        .join("\n")}`;
-    },
+        .join("\n")}`,
   });
+
   const getMessageHistory = await getGetSessionHistory();
   const withHistory = new RunnableWithMessageHistory({
     runnable,
-    bound: runnable,
-    kwargs: {},
     config: {},
     getMessageHistory,
   });

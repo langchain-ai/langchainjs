@@ -35,7 +35,10 @@ export class RunnableWithMessageHistory<
   getMessageHistory: GetSessionHistoryCallable;
 
   constructor(
-    fields: RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig> & {
+    fields: Omit<
+      RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig>,
+      "bound"
+    > & {
       runnable: Runnable<RunInput, RunOutput>;
       getMessageHistory: GetSessionHistoryCallable;
       inputMessagesKey?: string;
@@ -43,19 +46,9 @@ export class RunnableWithMessageHistory<
       historyMessagesKey?: string;
     }
   ) {
-    super(fields);
-    this.runnable = fields.runnable;
-    this.getMessageHistory = fields.getMessageHistory;
-    this.inputMessagesKey = fields.inputMessagesKey;
-    this.outputMessagesKey = fields.outputMessagesKey;
-    this.historyMessagesKey = fields.historyMessagesKey;
-
     let historyChain: Runnable = new RunnableLambda({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      func: (input: any) => {
-        console.log("HISTORY CHAIN CALLED", input);
-        return this._enterHistory(input, {});
-      },
+      func: (input: any) => this._enterHistory(input, {}),
     }).withConfig({ runName: "loadHistory" });
 
     const messagesKey = fields.historyMessagesKey || fields.inputMessagesKey;
@@ -66,10 +59,23 @@ export class RunnableWithMessageHistory<
     }
 
     const bound = historyChain
-      .pipe(fields.runnable)
+      .pipe(
+        fields.runnable.withListeners({
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onEnd: (run, config) => this._exitHistory(run, config),
+        })
+      )
       .withConfig({ runName: "RunnableWithMessageHistory" });
 
-    this.bound = bound;
+    super({
+      ...fields,
+      bound,
+    });
+    this.runnable = fields.runnable;
+    this.getMessageHistory = fields.getMessageHistory;
+    this.inputMessagesKey = fields.inputMessagesKey;
+    this.outputMessagesKey = fields.outputMessagesKey;
+    this.historyMessagesKey = fields.historyMessagesKey;
   }
 
   _getInputMessages(
@@ -115,10 +121,8 @@ export class RunnableWithMessageHistory<
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _enterHistory(input: any, config: BaseCallbackConfig): Array<BaseMessage> {
-    console.log("Running _enterHistory");
-    const history = config.configurable?.messageHistory;
+    const history = config?.configurable?.messageHistory;
 
-    // @TODO I think this is broken
     if (this.historyMessagesKey) {
       return history.messages;
     }
@@ -131,7 +135,6 @@ export class RunnableWithMessageHistory<
       ...historyMessages,
       ...this._getInputMessages(inputVal),
     ];
-    console.log("returning", returnType);
     return returnType;
   }
 
@@ -160,8 +163,8 @@ export class RunnableWithMessageHistory<
     }
   }
 
-  _mergeConfig(...configs: Array<BaseCallbackConfig | undefined>) {
-    const config = super._mergeConfig(...configs);
+  async _mergeConfig(...configs: Array<BaseCallbackConfig | undefined>) {
+    const config = await super._mergeConfig(...configs);
     // Extract sessionId
     if (!config.configurable || !config.configurable.sessionId) {
       const exampleInput = {
@@ -177,7 +180,9 @@ export class RunnableWithMessageHistory<
     }
     // attach messageHistory
     const { sessionId } = config.configurable;
-    config.configurable.messageHistory = this.getMessageHistory(sessionId);
+    config.configurable.messageHistory = await this.getMessageHistory(
+      sessionId
+    );
     return config;
   }
 }
