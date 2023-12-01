@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { test } from "@jest/globals";
-import { z } from "zod";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -22,7 +21,6 @@ import {
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableMap, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
-import { ChatResult } from "../../outputs.js";
 import { OutputParserException } from "../../output_parsers/base.js";
 import { BaseMessage } from "../../messages/index.js";
 
