@@ -7997,7 +7997,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@npm:0.0.4":
+"@langchain/core@npm:~0.0.4":
   version: 0.0.4
   resolution: "@langchain/core@npm:0.0.4"
   dependencies:
@@ -22624,7 +22624,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": 0.0.4
+    "@langchain/core": ~0.0.4
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
