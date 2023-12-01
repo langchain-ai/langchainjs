@@ -277,7 +277,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         doc.metadata.source = `https://drive.google.com/file/d/${fileMetaData.data?.id}}/view`;
         doc.metadata.when = fileMetaData.data?.modifiedTime;
       }
-<<<<<<< HEAD
       return docs;
     } else {
       // file is a pdf
@@ -298,27 +297,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         doc.metadata.when = fileMetaData.data?.modifiedTime;
       }
       return docs;
-=======
-
-
-    public async load(): Promise<Document[]> {
-        // validate Inputs here and throw appropirate error  
-        this.validateInputs();
-
-        // get auth for google drive
-        const auth = await this.authorize();
-        
-        if (this.folderId){
-            return this._loadDocumentsFromFolder(this.folderId,auth,this.fileTypes)
-        } else if (this.documentIds){
-            return this._loadDocumentsFromIds(this.documentIds,auth)
-        } else if (this.fileIds){ 
-            return this._loadFilesFromIds(this.fileIds,auth)
-        }
-        else {
-            throw new Error("Google Drive Loader: no ids set");
-        }
->>>>>>> 6c5b4aee28c738dff532513d644ce1983ab6953e
     }
   }
 
