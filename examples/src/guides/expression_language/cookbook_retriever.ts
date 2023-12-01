@@ -26,7 +26,7 @@ Question: {question}`);
 
 const chain = RunnableSequence.from([
   {
-    context: retriever.pipe(formatDocumentsAsString),
+    context: retriever.pipe((docs) => formatDocumentsAsString(docs)),
     question: new RunnablePassthrough(),
   },
   prompt,
