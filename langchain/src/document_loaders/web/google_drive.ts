@@ -92,24 +92,20 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
     /**
      * Validates input values to ensure they meet required criteria.
-     * @param {Record<string, any>} inputValues - Input values to validate.
-     * @returns {Record<string, any>} - Validated input values.
      * @throws {Error} - Throws an error if validation fails.
      */
-   validateInputs(inputValues: Record<string, any>): Record<string, any> {
-        const values = { ...inputValues };
-
+   validateInputs() {
         // Check for mutual exclusivity and existence of folder_id, document_ids, and file_ids
-        if (values.folder_id && (values.document_ids || values.file_ids)) {
+        if (this.folderId && (this.documentIds || this.fileIds)) {
             throw new Error("Cannot specify both folder_id and document_ids nor folder_id and file_ids");
         }
     
-        if (!values.folder_id && !values.document_ids && !values.file_ids) {
+        if (!this.folderId && !this.documentIds && !this.fileIds) {
             throw new Error("Must specify either folder_id, document_ids, or file_ids");
         }
 
-        if (values.file_types) {
-            if (values.document_ids || values.file_ids) {
+        if (this.fileTypes) {
+            if (this.documentIds || this.fileIds) {
                 throw new Error("file_types can only be given when folder_id is given, not when document_ids or file_ids are given.");
             }
 
@@ -124,17 +120,15 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
             const shortNames = Object.keys(typeMapping).map(x => `'${x}'`).join(", ");
             const fullNames = Object.values(typeMapping).map(x => `'${x}'`).join(", ");
 
-            values.file_types.forEach((fileType: string) => {
+            this.fileTypes.forEach((fileType: string) => {
                 if (!allowedTypes.includes(fileType)) {
                     throw new Error(`Given file type ${fileType} is not supported. Supported values are: ${shortNames}; and their full-form names: ${fullNames}`);
                 }
             });
 
             // Replace short-form file types with full-form file types
-            values.file_types = values.file_types.map((fileType: string) => typeMapping[fileType] || fileType);
+            this.fileTypes = this.fileTypes.map((fileType: string) => typeMapping[fileType] || fileType);
         }
-
-        return values;
     }  
 
     /**
