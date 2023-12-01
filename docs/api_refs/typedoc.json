@@ -165,6 +165,7 @@
     "./langchain/src/document_loaders/web/youtube.ts",
     "./langchain/src/document_loaders/fs/directory.ts",
     "./langchain/src/document_loaders/fs/buffer.ts",
+    "./langchain/src/document_loaders/fs/chatgpt.ts",
     "./langchain/src/document_loaders/fs/text.ts",
     "./langchain/src/document_loaders/fs/json.ts",
     "./langchain/src/document_loaders/fs/srt.ts",
