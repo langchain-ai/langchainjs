@@ -101,4 +101,4 @@ export class GmailGetThread extends GmailBaseTool {
 
 export type GetThreadSchema = {
   threadId: string;
-}
+};

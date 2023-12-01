@@ -80,4 +80,4 @@ export type SendMessageSchema = {
   subject: string;
   cc?: string[];
   bcc?: string[];
-}
+};

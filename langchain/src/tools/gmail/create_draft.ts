@@ -71,4 +71,4 @@ export type CreateDraftSchema = {
   subject: string;
   cc?: string[];
   bcc?: string[];
-}
+};

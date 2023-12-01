@@ -132,4 +132,4 @@ export type SearchSchema = {
   query: string;
   maxResults?: number;
   resource?: "messages" | "threads";
-}
+};

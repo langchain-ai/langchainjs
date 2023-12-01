@@ -91,4 +91,4 @@ export class GmailGetMessage extends GmailBaseTool {
 
 export type GetMessageSchema = {
   messageId: string;
-}
+};
