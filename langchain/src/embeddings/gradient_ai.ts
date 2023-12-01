@@ -69,9 +69,11 @@ export class GradientEmbeddings
     const batches = chunkArray(mappedTexts, this.batchSize);
 
     const batchRequests = batches.map((batch) =>
-      this.model.generateEmbeddings({
-        inputs: batch,
-      })
+      this.caller.call(async () =>
+        this.model.generateEmbeddings({
+          inputs: batch,
+        })
+      )
     );
     const batchResponses = await Promise.all(batchRequests);
 
