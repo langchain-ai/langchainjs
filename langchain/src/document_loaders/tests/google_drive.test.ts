@@ -1,8 +1,8 @@
 import { test, jest, expect } from "@jest/globals";
 import { GoogleDriveLoader } from '../web/google_drive.js'
 import { Document } from "../../document.js";
-
-
+// https://drive.google.com/drive/u/0/folders/1Ae4Q9bDoHLbryrKrAtOvpxH9tGgqDRYO
+// download all files and copy the file id
 test("Google Drive Test: Folder", async () => {
     const loader = new GoogleDriveLoader();
     loader.recursive = true;
