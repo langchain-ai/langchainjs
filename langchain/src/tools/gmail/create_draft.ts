@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
+import { CREATE_DRAFT_DESCRIPTION } from "./descriptions.js";
 
 export class GmailCreateDraft extends GmailBaseTool {
   name = "create_gmail_draft";
@@ -12,8 +13,7 @@ export class GmailCreateDraft extends GmailBaseTool {
     bcc: z.array(z.string()).optional(),
   });
 
-  description =
-    "Use this tool to create a draft email with the provided message fields.";
+  description = CREATE_DRAFT_DESCRIPTION;
 
   constructor(fields?: GmailBaseToolParams) {
     super(fields);

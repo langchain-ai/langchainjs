@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
+import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";
 
 export class GmailSendMessage extends GmailBaseTool {
   name = "gmail_send_message";
@@ -12,7 +13,7 @@ export class GmailSendMessage extends GmailBaseTool {
     bcc: z.array(z.string()).optional(),
   });
 
-  description = "Send a message using Gmail";
+  description = GET_MESSAGE_DESCRIPTION;
 
   constructor(fields?: GmailBaseToolParams) {
     super(fields);

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
+import { GET_THREAD_DESCRIPTION } from "./descriptions.js";
 
 export class GmailGetThread extends GmailBaseTool {
   name = "gmail_get_thread";
@@ -8,7 +9,7 @@ export class GmailGetThread extends GmailBaseTool {
     threadId: z.string(),
   });
 
-  description = "Get a thread from Gmail";
+  description = GET_THREAD_DESCRIPTION;
 
   constructor(fields?: GmailBaseToolParams) {
     super(fields);

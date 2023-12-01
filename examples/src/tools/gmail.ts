@@ -1,5 +1,6 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { OpenAI } from "langchain/llms/openai";
+import { StructuredTool } from "langchain/tools";
 import {
   GmailCreateDraft,
   GmailGetMessage,
@@ -24,7 +25,7 @@ export async function run() {
   //   };
 
   // For custom parameters, uncomment the code above, replace the values with your own, and pass it to the tools below
-  const tools = [
+  const tools: StructuredTool[] = [
     new GmailCreateDraft(),
     new GmailGetMessage(),
     new GmailGetThread(),
@@ -33,7 +34,7 @@ export async function run() {
   ];
 
   const gmailAgent = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "zero-shot-react-description",
+    agentType: "structured-chat-zero-shot-react-description",
     verbose: true,
   });
 
