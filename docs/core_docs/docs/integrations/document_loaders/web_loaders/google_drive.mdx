@@ -1,0 +1,79 @@
+# Google document loader
+
+## Getting Credentials 
+
+https://developers.google.com/workspace/guides/get-started#5_steps_to_get_started
+Follow the 5 steps in the above guide to get the credentials to authenticate your app's end users or service accounts.
+
+Then, after getting the right credentials from google, add the file paths to the .env variables GOOGLE_DRIVE_CREDENTIALSPATH and GOOGLE_DRIVE_TOKENPATH
+
+## Setup Folder/files for testing
+https://drive.google.com/drive/u/0/folders/1Ae4Q9bDoHLbryrKrAtOvpxH9tGgqDRYO
+Duplicate the folder and its contents to your own drive.
+Copy the file and folder id's and replace them in the langchain\src\document_loaders\tests\google_drive.test.ts file.
+
+
+
+## Example Usage of `GoogleDriveLoader`
+
+#### 1. Loading Documents from a Google Drive Folder
+
+```
+import { GoogleDriveLoader } from 'langchain\src\document_loaders\web\google_drive.ts';
+
+async function loadFromFolder() {
+  const loader = new GoogleDriveLoader();
+  loader.recursive = true;
+  loader.folderId = "YourGoogleDriveFolderId"; // Replace with your folder ID
+  try {
+    const documents = await loader.load();
+    console.log(documents);
+  } catch (error) {
+    console.error("Error loading documents from folder:", error);
+  }
+}
+
+loadFromFolder();` 
+```
+
+In this example, documents from a specified Google Drive folder are loaded. The `recursive` property is set to `true` to include files from subfolders.
+
+#### 2. Loading Google Docs Documents by IDs
+
+```
+import { GoogleDriveLoader } from 'langchain\src\document_loaders\web\google_drive.ts';
+
+async function loadGoogleDocDocuments() {
+  const loader = new GoogleDriveLoader();
+  loader.documentIds = ['DocumentId1', 'DocumentId2']; // Replace with your document IDs
+  try {
+    const documents = await loader.load();
+    console.log(documents);
+  } catch (error) {
+    console.error("Error loading specific documents:", error);
+  }
+}
+
+loadGoogleDocDocuments();` 
+```
+This example loads specific documents from Google Drive using their IDs.
+
+#### 3. Loading Files by IDs
+
+```
+import { GoogleDriveLoader } from 'langchain\src\document_loaders\web\google_drive.ts';
+
+async function loadFiles() {
+  const loader = new GoogleDriveLoader();
+  loader.fileIds = ['FileId1', 'FileId2']; // Replace with your file IDs
+  try {
+    const documents = await loader.load();
+    console.log(documents);
+  } catch (error) {
+    console.error("Error loading files:", error);
+  }
+}
+
+loadFiles();` 
+```
+In this scenario, specific files are loaded from Google Drive by specifying their IDs.  (Not Google docs)
