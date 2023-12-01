@@ -9,12 +9,12 @@ import {
 } from "../chat.js";
 import { PromptTemplate } from "../prompt.js";
 import {
+  SystemMessage,
+  HumanMessage,
   AIMessage,
   ChatMessage,
-  HumanMessage,
-  SystemMessage,
   FunctionMessage,
-} from "../../schema/index.js";
+} from "../../messages/index.js";
 
 function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({

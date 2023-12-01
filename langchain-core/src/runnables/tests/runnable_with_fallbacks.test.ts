@@ -1,8 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test } from "@jest/globals";
-
-import { FakeLLM } from "./lib.js";
+import { FakeLLM } from "../../utils/testing/index.js";
 
 test("RunnableWithFallbacks", async () => {
   const llm = new FakeLLM({

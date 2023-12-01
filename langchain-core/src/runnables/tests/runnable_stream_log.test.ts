@@ -8,10 +8,14 @@ import {
   PromptTemplate,
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
-import { RunnableMap, RunnableSequence } from "../runnable/index.js";
-import { Document } from "../../document.js";
-import { RunLog } from "../../callbacks/handlers/log_stream.js";
-import { FakeLLM, FakeRetriever, FakeChatModel } from "./lib.js";
+import { Document } from "../../documents/document.js";
+import { RunLog } from "../../tracers/log_stream.js";
+import { RunnableSequence, RunnableMap } from "../base.js";
+import {
+  FakeLLM,
+  FakeChatModel,
+  FakeRetriever,
+} from "../../utils/testing/index.js";
 
 test("Runnable streamLog method", async () => {
   const promptTemplate = PromptTemplate.fromTemplate("{input}");

@@ -81,3 +81,38 @@ test.skip("Test chain with memory", async () => {
   const response3 = await chain.call({ input: "What is your name?" });
   console.log({ response3 });
 });
+
+test.skip("test streaming call", async () => {
+  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+
+  const stream = await llamaCpp.stream(
+    "Tell me a short story about a happy Llama."
+  );
+
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk.content);
+    console.log(chunk.content);
+  }
+
+  expect(chunks.length).toBeGreaterThan(1);
+});
+
+test.skip("test multi-mesage streaming call", async () => {
+  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+
+  const stream = await llamaCpp.stream([
+    new SystemMessage(
+      "You are a pirate, responses must be very verbose and in pirate dialect."
+    ),
+    new HumanMessage("Tell me about Llamas?"),
+  ]);
+
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk.content);
+    console.log(chunk.content);
+  }
+
+  expect(chunks.length).toBeGreaterThan(1);
+});

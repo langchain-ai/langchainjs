@@ -661,10 +661,12 @@ export function getBufferString(
       role = "System";
     } else if (m._getType() === "function") {
       role = "Function";
+    } else if (m._getType() === "tool") {
+      role = "Tool";
     } else if (m._getType() === "generic") {
       role = (m as ChatMessage).role;
     } else {
-      throw new Error(`Got unsupported message type: ${m}`);
+      throw new Error(`Got unsupported message type: ${m._getType()}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
     string_messages.push(`${role}: ${nameStr}${m.content}`);
