@@ -51,7 +51,6 @@
     "mongodb": "^5.2.0",
     "pg": "^8.11.0",
     "pickleparser": "^0.2.1",
-    "prisma": "^4.11.0",
     "redis": "^4.6.6",
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
