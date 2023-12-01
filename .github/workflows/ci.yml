@@ -50,7 +50,7 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
-      - name: Check linting
+      - name: Build examples
         run: yarn build --filter=examples
 
   test:
