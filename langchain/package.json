@@ -82,6 +82,9 @@
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
+    "tools/outlook.cjs",
+    "tools/outlook.js",
+    "tools/outlook.d.ts",
     "tools/google_places.cjs",
     "tools/google_places.js",
     "tools/google_places.d.ts",
@@ -1572,6 +1575,11 @@
       "types": "./tools/google_calendar.d.ts",
       "import": "./tools/google_calendar.js",
       "require": "./tools/google_calendar.cjs"
+    },
+    "./tools/outlook": {
+      "types": "./tools/outlook.d.ts",
+      "import": "./tools/outlook.js",
+      "require": "./tools/outlook.cjs"
     },
     "./tools/google_places": {
       "types": "./tools/google_places.d.ts",
