@@ -439,6 +439,9 @@ document_loaders/fs/directory.d.ts
 document_loaders/fs/buffer.cjs
 document_loaders/fs/buffer.js
 document_loaders/fs/buffer.d.ts
+document_loaders/fs/chatgpt.cjs
+document_loaders/fs/chatgpt.js
+document_loaders/fs/chatgpt.d.ts
 document_loaders/fs/text.cjs
 document_loaders/fs/text.js
 document_loaders/fs/text.d.ts
