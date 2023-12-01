@@ -573,18 +573,9 @@ export abstract class Runnable<
     onEnd,
     onError,
   }: {
-    onStart?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
-    onEnd?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
-    onError?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
+    onStart?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
+    onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
+    onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
   }): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
@@ -799,18 +790,9 @@ export class RunnableBinding<
     onEnd,
     onError,
   }: {
-    onStart?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
-    onEnd?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
-    onError?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
+    onStart?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
+    onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
+    onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
   }): Runnable<RunInput, RunOutput, CallOptions> {
     //
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
@@ -916,18 +898,9 @@ export class RunnableEach<
     onEnd,
     onError,
   }: {
-    onStart?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
-    onEnd?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
-    onError?: {
-      (run: Run): void | Promise<void>;
-      (run: Run, config: RunnableConfig): void | Promise<void>;
-    };
+    onStart?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
+    onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
+    onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): Runnable<any, any, CallOptions> {
     return new RunnableEach<RunInputItem, RunOutputItem, CallOptions>({
