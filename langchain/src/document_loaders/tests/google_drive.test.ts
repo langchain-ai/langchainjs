@@ -1,8 +1,13 @@
 import { test, jest, expect } from "@jest/globals";
 import { GoogleDriveLoader } from '../web/google_drive.js'
 import { Document } from "../../document.js";
+
+// this public folder is being used for main Loader tests
 // https://drive.google.com/drive/u/0/folders/1Ae4Q9bDoHLbryrKrAtOvpxH9tGgqDRYO
-// download all files and copy the file id
+// You can duplicate it to your own drive and change the ids accordingly
+// The drive folder should have 1 nested folder (test2), 2 files (pdfs), 1 sheet(google sheet), 2 documents (google docs)
+// 5 files altogether
+
 test("Google Drive Test: Folder", async () => {
     const loader = new GoogleDriveLoader();
     loader.recursive = true;

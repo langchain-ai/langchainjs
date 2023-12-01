@@ -461,7 +461,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
     const auth = await this.authorize();
     // validate Inputs here and throw appropirate error
-
+    this.validateInputs();
     if (this.folderId) {
       return this._loadDocumentsFromFolder(this.folderId, auth, this.fileTypes);
     } else if (this.documentIds) {
