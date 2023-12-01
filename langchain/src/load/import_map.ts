@@ -14,6 +14,7 @@ export * as agents__openai__output_parser from "../agents/openai/output_parser.j
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
 export * as tools__render from "../tools/render.js";
+export * as tools__google_places from "../tools/google_places.js";
 export * as chains from "../chains/index.js";
 export * as chains__combine_documents__reduce from "../chains/combine_documents/reduce.js";
 export * as chains__openai_functions from "../chains/openai_functions/index.js";
