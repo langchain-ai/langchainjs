@@ -8839,24 +8839,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/client@npm:4.11.0":
-  version: 4.11.0
-  resolution: "@prisma/client@npm:4.11.0"
+"@prisma/client@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "@prisma/client@npm:5.6.0"
   dependencies:
-    "@prisma/engines-version": 4.11.0-57.8fde8fef4033376662cad983758335009d522acb
+    "@prisma/engines-version": 5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee
   peerDependencies:
     prisma: "*"
   peerDependenciesMeta:
     prisma:
       optional: true
-  checksum: ca8d8f820caaf4a76b94674f88207d5bb14f57a9682d37d2f79c56378f259cd3b14b30a110ab59a97647fcf3c46f896e7a2d20ded2777e09b835d7accd70cf1d
+  checksum: 51abfba1c066ff6a79d5c6aad5eed6bdde6fbafa5a1d6e17f3aa2b0f8ed55541079b2526bc0372158953d1146c8dd9c6fbcd137cf7fb2ace1022b02cc55675ab
   languageName: node
   linkType: hard
 
-"@prisma/engines-version@npm:4.11.0-57.8fde8fef4033376662cad983758335009d522acb":
-  version: 4.11.0-57.8fde8fef4033376662cad983758335009d522acb
-  resolution: "@prisma/engines-version@npm:4.11.0-57.8fde8fef4033376662cad983758335009d522acb"
-  checksum: f040b93d09b21feaef193080eed22142fa26b3cf86d089ebb4286f5f45ed17a98e030a8bb55c0bec2892e15880a697f6754c6966b7795cf7ba4553f59fb387e7
+"@prisma/engines-version@npm:5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee":
+  version: 5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee
+  resolution: "@prisma/engines-version@npm:5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
+  checksum: 197f63539999e50e66577d70b3167d9bdb5810a66fde60ee3f69cd58cf47516a43221092ce82303ad3d9dde2f2700c7f76b4383093d33793fbfbb1b0a4f144ee
   languageName: node
   linkType: hard
 
@@ -18019,7 +18019,7 @@ __metadata:
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
-    "@prisma/client": 4.11.0
+    "@prisma/client": ^5.6.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@supabase/supabase-js": ^2.10.0

@@ -30,7 +30,7 @@
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
-    "@prisma/client": "4.11.0",
+    "@prisma/client": "^5.6.0",
     "@raycast/api": "^1.55.2",
     "@rockset/client": "^0.9.1",
     "@supabase/supabase-js": "^2.10.0",
