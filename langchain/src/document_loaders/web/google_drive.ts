@@ -8,7 +8,7 @@ import { getEnvironmentVariable } from "../../util/env.js";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/drive.readonly",
-  "https://www.googleapis.com/auth/spreadsheets.readonly"
+  "https://www.googleapis.com/auth/spreadsheets.readonly",
 ];
 
 /**
@@ -23,7 +23,7 @@ export interface GoogleDriveLoaderParams {
   recursive?: boolean;
   fileTypes?: string[] | null;
   loadTrashedFiles?: boolean;
-  fileLoaderCls?: ((data:drive_v3.Schema$File)=>Document[]) | null;
+  fileLoaderCls?: ((data: drive_v3.Schema$File) => Document[]) | null;
 }
 
 /**
@@ -49,7 +49,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
   public loadTrashedFiles: boolean;
 
-  public fileLoaderCls: ((data:drive_v3.Schema$File)=>Document[]) | null;
+  public fileLoaderCls: ((data: drive_v3.Schema$File) => Document[]) | null;
 
   /**
    * Creates an instance of GoogleDriveLoader.
@@ -64,7 +64,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     recursive = false,
     fileTypes = null,
     loadTrashedFiles = false,
-    fileLoaderCls = null
+    fileLoaderCls = null,
   }: GoogleDriveLoaderParams = {}) {
     super();
     this.credentialsPath = credentialsPath as string;
@@ -78,34 +78,40 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     this.fileLoaderCls = fileLoaderCls;
   }
 
-    /**
-     * Validates input values to ensure they meet required criteria.
-     * @throws {Error} - Throws an error if validation fails.
-     */
-   validateInputs() {
-        // Check for mutual exclusivity and existence of folder_id, document_ids, and file_ids
-        if (this.folderId && (this.documentIds || this.fileIds)) {
-            throw new Error("Cannot specify both folder_id and document_ids nor folder_id and file_ids");
-        }
-    
-        if (!this.folderId && !this.documentIds && !this.fileIds) {
-            throw new Error("Must specify either folder_id, document_ids, or file_ids");
-        }
+  /**
+   * Validates input values to ensure they meet required criteria.
+   * @throws {Error} - Throws an error if validation fails.
+   */
+  validateInputs() {
+    // Check for mutual exclusivity and existence of folder_id, document_ids, and file_ids
+    if (this.folderId && (this.documentIds || this.fileIds)) {
+      throw new Error(
+        "Cannot specify both folder_id and document_ids nor folder_id and file_ids"
+      );
+    }
 
-        if (this.fileTypes) {
-            if (this.documentIds || this.fileIds) {
-                throw new Error("file_types can only be given when folder_id is given, not when document_ids or file_ids are given.");
-            }
+    if (!this.folderId && !this.documentIds && !this.fileIds) {
+      throw new Error(
+        "Must specify either folder_id, document_ids, or file_ids"
+      );
+    }
+
+    if (this.fileTypes) {
+      if (this.documentIds || this.fileIds) {
+        throw new Error(
+          "file_types can only be given when folder_id is given, not when document_ids or file_ids are given."
+        );
+      }
 
       const typeMapping: { [key: string]: string } = {
         document: "application/vnd.google-apps.document",
         sheet: "application/vnd.google-apps.spreadsheet",
-        pdf: "application/pdf"
+        pdf: "application/pdf",
       };
 
       const allowedTypes = [
         ...Object.keys(typeMapping),
-        ...Object.values(typeMapping)
+        ...Object.values(typeMapping),
       ];
       const shortNames = Object.keys(typeMapping)
         .map((x) => `'${x}'`)
@@ -114,16 +120,20 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         .map((x) => `'${x}'`)
         .join(", ");
 
-            this.fileTypes.forEach((fileType: string) => {
-                if (!allowedTypes.includes(fileType)) {
-                    throw new Error(`Given file type ${fileType} is not supported. Supported values are: ${shortNames}; and their full-form names: ${fullNames}`);
-                }
-            });
-
-            // Replace short-form file types with full-form file types
-            this.fileTypes = this.fileTypes.map((fileType: string) => typeMapping[fileType] || fileType);
+      this.fileTypes.forEach((fileType: string) => {
+        if (!allowedTypes.includes(fileType)) {
+          throw new Error(
+            `Given file type ${fileType} is not supported. Supported values are: ${shortNames}; and their full-form names: ${fullNames}`
+          );
         }
-    }  
+      });
+
+      // Replace short-form file types with full-form file types
+      this.fileTypes = this.fileTypes.map(
+        (fileType: string) => typeMapping[fileType] || fileType
+      );
+    }
+  }
 
   /**
    * Validates the existence of credentialsPath.
@@ -165,7 +175,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
       type: "authorized_user",
       client_id: key.client_id,
       client_secret: key.client_secret,
-      refresh_token: client.credentials.refresh_token
+      refresh_token: client.credentials.refresh_token,
     });
     await fs.writeFileSync(this.tokenPath, payload);
   }
@@ -181,7 +191,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     }
     client = await authenticate({
       scopes: SCOPES,
-      keyfilePath: this.credentialsPath
+      keyfilePath: this.credentialsPath,
     });
     if (client && client.credentials) {
       await this.saveCredentials(client);
@@ -195,10 +205,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
    * @param {google.auth.OAuth2} auth - The authenticated Google OAuth client.
    * @returns {Promise<Document[]>} - An array of Document instances.
    */
-  async _loadSheetFromId(id: string, auth: Auth.OAuth2Client): Promise<Document[]> {
+  async _loadSheetFromId(
+    id: string,
+    auth: Auth.OAuth2Client
+  ): Promise<Document[]> {
     const sheetsService = google.sheets({ version: "v4", auth });
     const spreadsheet = await sheetsService.spreadsheets.get({
-      spreadsheetId: id
+      spreadsheetId: id,
     });
     const sheets = spreadsheet.data.sheets || [];
 
@@ -217,7 +230,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
         const valueRange = await sheetsService.spreadsheets.values.get({
           spreadsheetId: id,
-          range: rangeVal
+          range: rangeVal,
         });
 
         if (!valueRange.data.values) {
@@ -233,7 +246,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         const metadata = {
           sheetName,
           rowCount,
-          columnCount
+          columnCount,
         };
 
         // Create a new Document with the content and metadata
@@ -248,12 +261,12 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
   }
 
   /**
- * Loads a file from Google Drive by its ID and returns an array of documents.
- * defaults to pdf file if no fileLoaderCls is set
- * @param {string} id - The ID of the file to load.
- * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
- * @returns {Promise<Document[]>} - A Promise resolving to an array of documents.
- */
+   * Loads a file from Google Drive by its ID and returns an array of documents.
+   * defaults to pdf file if no fileLoaderCls is set
+   * @param {string} id - The ID of the file to load.
+   * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
+   * @returns {Promise<Document[]>} - A Promise resolving to an array of documents.
+   */
   async _loadFileFromId(
     id: string,
     auth: Auth.OAuth2Client
@@ -262,13 +275,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     const fileMetaData = await service.files.get({
       fileId: id,
       supportsAllDrives: true,
-      fields: "id, name, mimeType, size, modifiedTime, name" // Add any other desired fields
+      fields: "id, name, mimeType, size, modifiedTime, name", // Add any other desired fields
     });
 
     if (this.fileLoaderCls) {
       const fileBinaryData = await service.files.get({
         fileId: id,
-        alt: "media"
+        alt: "media",
       });
       const docs: Document[] = this.fileLoaderCls(fileBinaryData.data);
       for (const doc of docs) {
@@ -283,7 +296,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
       const fileBinaryData = await service.files.get(
         {
           fileId: id,
-          alt: "media"
+          alt: "media",
         },
         { responseType: "blob" }
       );
@@ -300,13 +313,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
   }
 
   /**
- * Loads a Google Docs document from Google Drive by its ID and returns a Document object.
- *
- * @param {string} id - The ID of the Google Docs document to load.
- * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
- * @returns {Promise<Document>} - A Promise resolving to a Document object representing the loaded document.
- * @throws {Error} - Throws an error if there is an issue fetching Google Docs content.
- */
+   * Loads a Google Docs document from Google Drive by its ID and returns a Document object.
+   *
+   * @param {string} id - The ID of the Google Docs document to load.
+   * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
+   * @returns {Promise<Document>} - A Promise resolving to a Document object representing the loaded document.
+   * @throws {Error} - Throws an error if there is an issue fetching Google Docs content.
+   */
   async _loadDocumentFromId(
     id: string,
     auth: Auth.OAuth2Client
@@ -316,17 +329,17 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     const fileMetaData = await service.files.get({
       fileId: id,
       supportsAllDrives: true,
-      fields: "modifiedTime,name"
+      fields: "modifiedTime,name",
     });
     const fileText = await service.files.export({
       fileId: id,
-      mimeType: "text/plain"
+      mimeType: "text/plain",
     });
     if (fileText && fileText.data && typeof fileText.data === "string") {
       const metadata = {
         source: `https://docs.google.com/document/d/${id}/edit`,
         title: `${fileMetaData.data?.name}`,
-        when: `${fileMetaData.data?.modifiedTime}`
+        when: `${fileMetaData.data?.modifiedTime}`,
       };
       const pageContent = fileText.data;
       return new Document({ pageContent, metadata });
@@ -336,13 +349,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
   }
 
   /**
- * Loads multiple files from Google Drive by their IDs and returns an array of Document objects.
- *
- * @param {string[] | null} fileIds - An array of file IDs to load.
- * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
- * @returns {Promise<Document[]>} - A Promise resolving to an array of Document objects representing the loaded files.
- * @throws {Error} - Throws an error if fileIds is null or empty.
- */
+   * Loads multiple files from Google Drive by their IDs and returns an array of Document objects.
+   *
+   * @param {string[] | null} fileIds - An array of file IDs to load.
+   * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
+   * @returns {Promise<Document[]>} - A Promise resolving to an array of Document objects representing the loaded files.
+   * @throws {Error} - Throws an error if fileIds is null or empty.
+   */
   async _loadFilesFromIds(
     fileIds: string[] | null,
     auth: Auth.OAuth2Client
@@ -361,13 +374,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
   }
 
   /**
- * Loads multiple Google Docs documents from Google Drive by their IDs and returns an array of Document objects.
- *
- * @param {string[] | null} documentIds - An array of document IDs to load.
- * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
- * @returns {Promise<Document[]>} - A Promise resolving to an array of Document objects representing the loaded documents.
- * @throws {Error} - Throws an error if documentIds is null or empty.
- */
+   * Loads multiple Google Docs documents from Google Drive by their IDs and returns an array of Document objects.
+   *
+   * @param {string[] | null} documentIds - An array of document IDs to load.
+   * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
+   * @returns {Promise<Document[]>} - A Promise resolving to an array of Document objects representing the loaded documents.
+   * @throws {Error} - Throws an error if documentIds is null or empty.
+   */
   async _loadDocumentsFromIds(
     documentIds: string[] | null,
     auth: Auth.OAuth2Client
@@ -386,13 +399,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
   }
 
   /**
- * Loads documents from a Google Drive folder by its ID and returns an array of Document objects.
- *
- * @param {string} folderId - The ID of the folder to load documents from.
- * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
- * @param {string[] | null} fileTypes - An array of file types to filter the loaded files (e.g., ['application/pdf']).
- * @returns {Promise<Document[]>} - A Promise resolving to an array of Document objects representing the loaded documents.
- */
+   * Loads documents from a Google Drive folder by its ID and returns an array of Document objects.
+   *
+   * @param {string} folderId - The ID of the folder to load documents from.
+   * @param {Auth.OAuth2Client} auth - The OAuth2Client for authentication.
+   * @param {string[] | null} fileTypes - An array of file types to filter the loaded files (e.g., ['application/pdf']).
+   * @returns {Promise<Document[]>} - A Promise resolving to an array of Document objects representing the loaded documents.
+   */
   async _loadDocumentsFromFolder(
     folderId: string,
     auth: Auth.OAuth2Client,
@@ -401,11 +414,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     const service = google.drive({ version: "v3", auth });
     const files = await this.fetchFilesRecursive(service, folderId);
     const filteredFiles = fileTypes
-      ? files.filter((f) => fileTypes.includes(f.mimeType ? f.mimeType : "invalid_mimeType"))
+      ? files.filter((f) =>
+          fileTypes.includes(f.mimeType ? f.mimeType : "invalid_mimeType")
+        )
       : files;
     const returns: Document[] = [];
     for (const file of filteredFiles) {
-      if (!file?.id){
+      if (!file?.id) {
         continue;
       }
       if (file?.trashed && !this.loadTrashedFiles) {
@@ -425,27 +440,27 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     return returns;
   }
 
-/**
- * Recursively fetches files from a Google Drive folder.
- * if this.recursive is false, don't recurse into folders
- * @param {drive_v3.Drive} service - The Google Drive service.
- * @param {string} folderId - The ID of the folder to fetch files from.
- * @returns {Promise<drive_v3.Schema$File[]>} - A Promise resolving to an array of files.
- * @throws {Error} - if file id is null or undefined
- */
+  /**
+   * Recursively fetches files from a Google Drive folder.
+   * if this.recursive is false, don't recurse into folders
+   * @param {drive_v3.Drive} service - The Google Drive service.
+   * @param {string} folderId - The ID of the folder to fetch files from.
+   * @returns {Promise<drive_v3.Schema$File[]>} - A Promise resolving to an array of files.
+   * @throws {Error} - if file id is null or undefined
+   */
   private async fetchFilesRecursive(
     service: drive_v3.Drive,
     folderId: string | null | undefined
   ): Promise<drive_v3.Schema$File[]> {
-    if (!folderId){
-      throw new Error("File id is invalid")
+    if (!folderId) {
+      throw new Error("File id is invalid");
     }
     const results = await service.files.list({
       q: `'${folderId}' in parents`,
       pageSize: 1000,
       includeItemsFromAllDrives: true,
       supportsAllDrives: true,
-      fields: "nextPageToken, files(id, name, mimeType, parents, trashed)"
+      fields: "nextPageToken, files(id, name, mimeType, parents, trashed)",
     });
 
     const files = results.data.files || [];

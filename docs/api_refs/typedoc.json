@@ -159,6 +159,7 @@
     "./langchain/src/document_loaders/web/serpapi.ts",
     "./langchain/src/document_loaders/web/sort_xyz_blockchain.ts",
     "./langchain/src/document_loaders/web/youtube.ts",
+    "./langchain/src/document_loaders/web/google_drive.ts",
     "./langchain/src/document_loaders/fs/directory.ts",
     "./langchain/src/document_loaders/fs/buffer.ts",
     "./langchain/src/document_loaders/fs/text.ts",

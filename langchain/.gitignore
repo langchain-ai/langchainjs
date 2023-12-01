@@ -421,6 +421,9 @@ document_loaders/web/sort_xyz_blockchain.d.ts
 document_loaders/web/youtube.cjs
 document_loaders/web/youtube.js
 document_loaders/web/youtube.d.ts
+document_loaders/web/google_drive.cjs
+document_loaders/web/google_drive.js
+document_loaders/web/google_drive.d.ts
 document_loaders/fs/directory.cjs
 document_loaders/fs/directory.js
 document_loaders/fs/directory.d.ts
