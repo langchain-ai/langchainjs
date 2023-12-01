@@ -36,6 +36,7 @@ const entrypoints = {
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   "tools/google_calendar": "tools/google_calendar/index",
+  "tools/outlook": "tools/outlook/index",
   "tools/google_places": "tools/google_places",
   // chains
   chains: "chains/index",

@@ -11646,6 +11646,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/openurl@npm:^1":
+  version: 1.0.3
+  resolution: "@types/openurl@npm:1.0.3"
+  dependencies:
+    "@types/node": "*"
+  checksum: a5454ca5cc08bc857231742aecd118e600cb7bd284ba72301bb46c4e55875b6ddc58ed32776b9d71843d1180aa7430cca7eb555a3f7b536aa4b54ebcdcc2a28b
+  languageName: node
+  linkType: hard
+
 "@types/pad-left@npm:2.1.1":
   version: 2.1.1
   resolution: "@types/pad-left@npm:2.1.1"
@@ -22637,6 +22646,7 @@ __metadata:
     "@types/jsdom": ^21.1.1
     "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
+    "@types/openurl": ^1
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
     "@types/pg-copy-streams": ^1.2.2
@@ -22707,6 +22717,8 @@ __metadata:
     officeparser: ^4.0.4
     openai: ^4.19.0
     openapi-types: ^12.1.3
+    openurl: ^1.1.1
+    p-queue: ^6.6.2
     p-retry: 4
     pdf-parse: 1.1.1
     peggy: ^3.0.2
@@ -25401,6 +25413,13 @@ __metadata:
   bin:
     opener: bin/opener-bin.js
   checksum: 33b620c0d53d5b883f2abc6687dd1c5fd394d270dbe33a6356f2d71e0a2ec85b100d5bac94694198ccf5c30d592da863b2292c5539009c715a9c80c697b4f6cc
+  languageName: node
+  linkType: hard
+
+"openurl@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "openurl@npm:1.1.1"
+  checksum: c90f2f065bc5950f1402aff67a3ce4b5fb0e4475cb07b5ff84247686f7436fbc5bc2d0e38bda4ebc9cf8aea866788424e07f25a68f7e97502d412527964351a9
   languageName: node
   linkType: hard
 
