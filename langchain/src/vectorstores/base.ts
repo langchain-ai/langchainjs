@@ -199,18 +199,6 @@ export abstract class VectorStore extends Serializable {
     );
   }
   
-  async similaritySearchWithSummary(
-    _query: string,
-    _k = 4,
-    _filter: this["FilterType"] | undefined = undefined
-  ): Promise<{
-    documents: [Document, number][];
-    summary: Record<string, unknown>[];
-  }> {
-    // Purposely not implemented so as to make it optional for subclasses
-    throw new Error("Not implemented.");
-  }
-
   /**
    * Return documents selected using the maximal marginal relevance.
    * Maximal marginal relevance optimizes for similarity to the query AND diversity

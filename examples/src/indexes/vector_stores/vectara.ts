@@ -1,4 +1,4 @@
-import { VectaraStore } from "langchain/vectorstores/vectara";
+import { VectaraStore, VectaraRetriever } from "langchain/vectorstores/vectara";
 import { Document } from "langchain/document";
 
 // Create the Vectara store.
@@ -61,22 +61,20 @@ console.log(JSON.stringify(resultsWithScore, null, 2));
  ]
 */
 
-const resultsWithSummary = await store.similaritySearchWithSummary(
+const retriever = new VectaraRetriever({vectara: store, topK: 3});
+const [documents, summary] = await retriever.getRelevantDocumentsAndSummary(
   "What were the women talking about?",
-  1,
   {
     lambda: 0.025,
-    summary: [
-      {
-        summarizerPromptName: "vectara-summary-ext-v1.2.0",
-        maxSummarizedResults: 3,
-        responseLang: "ita",
-      },
-    ],
+  },
+  {
+    enabled: true,
+    maxSummarizedResults: 3,
+    responseLang: "ita",
   }
 );
 
-console.log(JSON.stringify(resultsWithSummary, null, 2));
+console.log(JSON.stringify(summary, null, 2));
 /*
 {
  "documents": [

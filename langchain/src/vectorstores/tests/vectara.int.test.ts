@@ -5,7 +5,7 @@ import { expect, beforeAll } from "@jest/globals";
 import { insecureHash } from "langchain-core/utils/hash";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
-import { VectaraFile, VectaraLibArgs, VectaraStore } from "../vectara.js";
+import { VectaraFile, VectaraLibArgs, VectaraRetriever, VectaraStore, VectaraSummary } from "../vectara.js";
 
 const getDocs = (): Document[] => {
   // Some text from Lord of the Rings
@@ -189,14 +189,14 @@ describe("VectaraStore", () => {
       expect(results[0].metadata.length).toBeGreaterThan(0);
     });
 
-    test("similaritySearch with rerankingConfig", async () => {
+    test("similaritySearch with MMR", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
         {
           lambda: 0.025,
-          rerankingConfig: {
-            rerankerId: 272725717,
+          mmrConfig: {
+            diversityBias: 1.0,
           },
         }
       );
@@ -205,33 +205,27 @@ describe("VectaraStore", () => {
       expect(results[0].metadata.length).toBeGreaterThan(0);
     });
 
-    test("similaritySearch with generative summarization", async () => {
-      const results = await store.similaritySearchWithSummary(
+    test("RAG retrieval with generative summarization", async () => {
+      const retriever = new VectaraRetriever({vectara: store, topK: 3});
+      const summary: VectaraSummary = 
+        {
+          enabled: true,
+          summarizerPromptName: "vectara-summary-ext-v1.2.0",
+          maxSummarizedResults: 3,
+          responseLang: "ita",
+        };
+      const [documents, summaryText] = await retriever.getRelevantDocumentsAndSummary(
         "Was Gandalf dead?",
-        10, // Number of results needed
         {
           lambda: 0.025,
-          summary: [
-            {
-              summarizerPromptName: "vectara-summary-ext-v1.2.0",
-              maxSummarizedResults: 3,
-              responseLang: "ita",
-            },
-          ],
-        }
+        },
+        summary
       );
-      expect(results.documents.length).toBeGreaterThan(0);
-      expect(results.documents[0][0].pageContent.length).toBeGreaterThan(0);
-      expect(results.documents[0][0].metadata.length).toBeGreaterThan(0);
-      expect(results.documents[0][1]).toBeGreaterThan(0);
-      expect(results.summary.length).toBeGreaterThan(0);
-      expect(results.summary[0].lang).toBe("ita");
+      expect(documents.length).toBeGreaterThan(0);
+      expect(documents[0].pageContent.length).toBeGreaterThan(0);
+      expect(documents[0].metadata.length).toBeGreaterThan(0);
+      expect(summaryText.length).toBeGreaterThan(0);
     });
-
-
-
-    
-
     
     test.skip("addFiles", async () => {
       const docs = getDocs();

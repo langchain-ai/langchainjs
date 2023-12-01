@@ -5,8 +5,8 @@ import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
-import { BaseRetriever, BaseRetrieverInput } from "../../schema/retriever.js";
-import { CallbackManagerForRetrieverRun } from "../callbacks/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
+import { BaseCallbackConfig } from "../callbacks/manager.js";
 
 /**
  * Interface for the arguments required to initialize a VectaraStore
@@ -60,15 +60,17 @@ export interface VectaraContextConfig {
   endTag?: string;
 }
 
-export interface VectaraRerankingConfig {
-  // Which reranking model to use if reranking.  Currently, the only ID
-  // available is ID 272725717
-  rerankerId: number;
+export interface MMRConfig {
+  enabled?: boolean;
+  mmrTopK?: number;
+  diversityBias?: number;
 }
 
 export interface VectaraSummary {
+  // Whether to enable summarization.
+  enabled: boolean;
   // The name of the summarizer+prompt combination to use for summarization.
-  summarizerPromptName: string;
+  summarizerPromptName?: string;
   // Maximum number of results to summarize.
   maxSummarizedResults: number;
   // ISO 639-1 or ISO 639-3 language code for the response, or "auto" to indicate that
@@ -76,50 +78,84 @@ export interface VectaraSummary {
   responseLang: string;
 }
 
-export interface VectaraFilter {
+// VectaraFilter holds all the arguments for result retrieval by Vectara
+// It's not really a filter, but a collection of arguments for the Vectara API
+// However, it's been named "XXXFilter" in other places, so we keep the name here for consistency.
+export interface VectaraFilter extends BaseCallbackConfig {
   // The start position in the result set
   start?: number;
   // Example of a vectara filter string can be: "doc.rating > 3.0 and part.lang = 'deu'"
   // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
   filter?: string;
-  // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda,
+  // Improve retrieval accuracy using Hybrid search, by adjusting the value of lambda (0...1)
   // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
   lambda?: number;
   // See Vectara Search API docs for more details on the following options: https://docs.vectara.com/docs/api-reference/search-apis/search
   contextConfig?: VectaraContextConfig;
-  rerankingConfig?: VectaraRerankingConfig;
-  summary?: VectaraSummary[];
+  mmrConfig?: MMRConfig;
 }
 
+const DEFAULT_FILTER: VectaraFilter = {
+  start: 0,
+  filter: "",
+  lambda: 0.0,
+  contextConfig: {
+    sentencesBefore: 2,
+    sentencesAfter: 2,
+    startTag: "<b>",
+    endTag: "</b>",
+  },
+  mmrConfig: {
+    enabled: false,
+    mmrTopK: 0,
+    diversityBias: 0.0,
+  },
+};
 
-export interface VectaraSummaryRetrieverInput extends BaseRetrieverInput {
-  retriever: BaseRetriever;
+interface SummaryResult {
+  documents: Document[];
+  scores: number[];
+  summary: string;
 }
 
-export class VectaraSummaryRetriever extends BaseRetriever
+export interface VectaraRetrieverInput extends BaseRetrieverInput {
+  vectara: VectaraStore;
+  topK: number;
+}
+
+export class VectaraRetriever extends BaseRetriever
 {
   static lc_name() {
-    return "VectaraSummaryRetriever";
+    return "VectaraRetriever";
   }
-  lc_namespace = ["langchain", "retrievers", "vectaraSummary"];
+  lc_namespace = ["langchain", "retrievers", "vectaraRetriever"];
+  private vectara: VectaraStore;
+  private topK: number;
 
-  private retriever: BaseRetriever;
-
-  constructor(fields: VectaraSummaryRetrieverInput) {
+  constructor(fields: VectaraRetrieverInput) {
     super(fields);
-    this.retriever = fields.retriever;
+    this.vectara = fields.vectara;
+    this.topK = fields.topK ?? 10;
   }
 
-  async _getRelevantDocuments(
-    question: string,
-    runManager?: CallbackManagerForRetrieverRun
+  async getRelevantDocuments(
+    query: string,
+    config: VectaraFilter = DEFAULT_FILTER,
   ): Promise<Document[]> {
-    const documents = await this.retriever.getRelevantDocuments(question, runManager);
-    return documents;
+    const summaryResult = await this.vectara.vectara_query(query, this.topK, config);
+    return summaryResult.documents;
+  }
+
+  async getRelevantDocumentsAndSummary(
+    query: string,
+    config: VectaraFilter = DEFAULT_FILTER,
+    summary: VectaraSummary = { enabled: false, maxSummarizedResults: 0, responseLang: "eng" }
+  ): Promise<[Document[], string]> {
+    const summaryResult = await this.vectara.vectara_query(query, this.topK, config, summary);
+    return [summaryResult.documents, summaryResult.summary];
   }
 }
-
 
 /**
  * Class for interacting with the Vectara API. Extends the VectorStore
@@ -417,36 +453,38 @@ export class VectaraStore extends VectorStore {
   }
 
   /**
-   * Performs a similarity search and returns documents along with their
-   * scores.
+   * Performs a Vectara API call based on the arguments provided.
    * @param query The query string for the similarity search.
    * @param k Optional. The number of results to return. Default is 10.
    * @param filter Optional. A VectaraFilter object to refine the search results.
    * @returns A Promise that resolves to an array of tuples, each containing a Document and its score.
    */
-  async similaritySearchWithScore(
+  async vectara_query(
     query: string,
     k = 10,
-    filter: VectaraFilter | undefined = undefined
-  ): Promise<[Document, number][]> {
+    _filter: VectaraFilter,
+    _summary: VectaraSummary = { enabled: false, maxSummarizedResults: 0, responseLang: "eng" },
+  ): Promise<SummaryResult> {
     const headers = await this.getJsonHeader();
+    const { start, filter, lambda, contextConfig, mmrConfig } = _filter;
 
     const corpusKeys = this.corpusId.map((corpusId) => ({
       customerId: this.customerId,
       corpusId,
-      metadataFilter: filter?.filter ?? "",
-      lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
+      metadataFilter: filter,
+      lexicalInterpolationConfig: { lambda: lambda },
     }));
 
     const data = {
       query: [
         {
           query,
-          start: filter?.start ?? 0,
-          numResults: k,
-          contextConfig: filter?.contextConfig ?? {},
-          rerankingConfig: filter?.rerankingConfig ?? {},
+          start: start,
+          numResults: mmrConfig?.enabled ? mmrConfig.mmrTopK : k,
+          contextConfig: contextConfig,
+          ...(mmrConfig?.enabled ? { rerankingConfig: { rerankerId: 272725718, mmrConfig: { diversityBias: mmrConfig.diversityBias } } } : {}),
           corpusKey: corpusKeys,
+          ...(_summary?.enabled ? { summary: [_summary] } : {})
         },
       ],
     };
@@ -470,6 +508,7 @@ export class VectaraStore extends VectorStore {
     const result = await response.json();
     const responses = result.responseSet[0].response;
     const documents = result.responseSet[0].document;
+    const summaryText = result.responseSet[0].summary;
 
     for (let i = 0; i < responses.length; i += 1) {
       const responseMetadata = responses[i].metadata;
@@ -487,76 +526,49 @@ export class VectaraStore extends VectorStore {
       responses[i].metadata = combinedMetadata;
     }
 
-    const documentsAndScores = responses.map(
-      (response: {
-        text: string;
-        metadata: Record<string, unknown>;
-        score: number;
-      }) => [
-        new Document({
-          pageContent: response.text,
-          metadata: response.metadata,
-        }),
-        response.score,
-      ]
-    );
-    return documentsAndScores;
+    const res: SummaryResult = {
+      documents: responses.map(
+        (response: {
+          text: string;
+          metadata: Record<string, unknown>;
+          score: number;
+        }) => [
+          new Document({
+            pageContent: response.text,
+            metadata: response.metadata,
+          }),
+        ]
+      ),
+      scores: responses.map(
+        (response: {
+          text: string;
+          metadata: Record<string, unknown>;
+          score: number;
+        }) => response.score,
+      ),
+      summary: summaryText,
+    };
+    return res;
   }
 
-  async similaritySearchWithSummary(
+  /**
+   * Performs a similarity search and returns documents along with their
+   * scores.
+   * @param query The query string for the similarity search.
+   * @param k Optional. The number of results to return. Default is 10.
+   * @param filter Optional. A VectaraFilter object to refine the search results.
+   * @returns A Promise that resolves to an array of tuples, each containing a Document and its score.
+   */
+  async similaritySearchWithScore(
     query: string,
-    k = 10,
-    filter: VectaraFilter | undefined = undefined
-  ): Promise<{
-    documents: [Document, number][];
-    summary: Record<string, unknown>[];
-  }> {
-    const headers = await this.getJsonHeader();
-    const data = {
-      query: [
-        {
-          query,
-          start: filter?.start ?? 0,
-          numResults: k,
-          corpusKey: [
-            {
-              customerId: this.customerId,
-              corpusId: this.corpusId,
-              metadataFilter: filter?.filter ?? "",
-              lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
-            },
-          ],
-          contextConfig: filter?.contextConfig ?? {},
-          rerankingConfig: filter?.rerankingConfig ?? {},
-          summary: filter?.summary ?? [],
-        },
-      ],
-    };
-
-    const response = await fetch(`https://${this.apiEndpoint}/v1/query`, {
-      method: "POST",
-      headers: headers?.headers,
-      body: JSON.stringify(data),
+    k?: number,
+    filter?: VectaraFilter,
+  ): Promise<[Document, number][]> {
+    const summaryResult = await this.vectara_query(query, k || 10, filter || DEFAULT_FILTER);
+    const res = summaryResult.documents.map((document, index) => {
+      return [document, summaryResult.scores[index]] as [Document, number];
     });
-    if (response.status !== 200) {
-      throw new Error(`Vectara API returned status code ${response.status}`);
-    }
-    const result = await response.json();
-    const { response: responses, summary } = result.responseSet[0];
-    const documentsAndScores = responses.map(
-      (response: {
-        text: string;
-        metadata: Record<string, unknown>;
-        score: number;
-      }) => [
-        new Document({
-          pageContent: response.text,
-          metadata: response.metadata,
-        }),
-        response.score,
-      ]
-    );
-    return { documents: documentsAndScores, summary };
+    return res
   }
 
   /**
@@ -568,15 +580,15 @@ export class VectaraStore extends VectorStore {
    */
   async similaritySearch(
     query: string,
-    k = 10,
-    filter: VectaraFilter | undefined = undefined
+    k?: number,
+    filter?: VectaraFilter,
   ): Promise<Document[]> {
-    const resultWithScore = await this.similaritySearchWithScore(
+    const documents = await this.similaritySearchWithScore(
       query,
-      k,
-      filter
+      k || 10,
+      filter || DEFAULT_FILTER
     );
-    return resultWithScore.map((result) => result[0]);
+    return documents.map((result) => result[0]);
   }
 
   /**
