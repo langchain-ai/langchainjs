@@ -1,16 +1,17 @@
+import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { CREATE_DRAFT_DESCRIPTION } from "./descriptions.js";
 
-export interface CreateDraftSchema {
-  message: string;
-  to: string[];
-  subject: string;
-  cc?: string[];
-  bcc?: string[];
-}
-
 export class GmailCreateDraft extends GmailBaseTool {
   name = "create_gmail_draft";
+
+  schema = z.object({
+    message: z.string(),
+    to: z.array(z.string()),
+    subject: z.string(),
+    cc: z.array(z.string()).optional(),
+    bcc: z.array(z.string()).optional(),
+  });
 
   description = CREATE_DRAFT_DESCRIPTION;
 
@@ -45,8 +46,8 @@ export class GmailCreateDraft extends GmailBaseTool {
     return draftMessage;
   }
 
-  async _call(args: CreateDraftSchema) {
-    const { message, to, subject, cc, bcc } = args;
+  async _call(arg: z.output<typeof this.schema>) {
+    const { message, to, subject, cc, bcc } = arg;
     const create_message = this.prepareDraftMessage(
       message,
       to,
@@ -63,3 +64,11 @@ export class GmailCreateDraft extends GmailBaseTool {
     return `Draft created. Draft Id: ${response.data.id}`;
   }
 }
+
+export type CreateDraftSchema = {
+  message: string;
+  to: string[];
+  subject: string;
+  cc?: string[];
+  bcc?: string[];
+};

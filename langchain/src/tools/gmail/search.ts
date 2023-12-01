@@ -1,15 +1,16 @@
 import { gmail_v1 } from "googleapis";
+import { z } from "zod";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { SEARCH_DESCRIPTION } from "./descriptions.js";
 
-export interface SearchSchema {
-  query: string;
-  maxResults?: number;
-  resource?: "messages" | "threads";
-}
-
 export class GmailSearch extends GmailBaseTool {
   name = "search_gmail";
+
+  schema = z.object({
+    query: z.string(),
+    maxResults: z.number().optional(),
+    resource: z.enum(["messages", "threads"]).optional(),
+  });
 
   description = SEARCH_DESCRIPTION;
 
@@ -17,8 +18,8 @@ export class GmailSearch extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(args: SearchSchema) {
-    const { query, maxResults = 10, resource = "messages" } = args;
+  async _call(arg: z.output<typeof this.schema>) {
+    const { query, maxResults = 10, resource = "messages" } = arg;
 
     const response = await this.gmail.users.messages.list({
       userId: "me",
@@ -126,3 +127,9 @@ export class GmailSearch extends GmailBaseTool {
     return parsedThreads;
   }
 }
+
+export type SearchSchema = {
+  query: string;
+  maxResults?: number;
+  resource?: "messages" | "threads";
+};

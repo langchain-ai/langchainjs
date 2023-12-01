@@ -1,12 +1,13 @@
+import { z } from "zod";
 import { GmailBaseToolParams, GmailBaseTool } from "./base.js";
 import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";
 
-export interface GetMessageSchema {
-  messageId: string;
-}
-
 export class GmailGetMessage extends GmailBaseTool {
   name = "gmail_get_message";
+
+  schema = z.object({
+    messageId: z.string(),
+  });
 
   description = GET_MESSAGE_DESCRIPTION;
 
@@ -14,8 +15,8 @@ export class GmailGetMessage extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(args: GetMessageSchema) {
-    const { messageId } = args;
+  async _call(arg: z.output<typeof this.schema>) {
+    const { messageId } = arg;
 
     const message = await this.gmail.users.messages.get({
       userId: "me",
@@ -88,3 +89,7 @@ export class GmailGetMessage extends GmailBaseTool {
     })}`;
   }
 }
+
+export type GetMessageSchema = {
+  messageId: string;
+};
