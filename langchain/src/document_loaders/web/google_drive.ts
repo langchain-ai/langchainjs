@@ -23,7 +23,7 @@ export interface GoogleDriveLoaderParams {
   recursive?: boolean;
   fileTypes?: string[] | null;
   loadTrashedFiles?: boolean;
-  fileLoaderCls?: any | null;
+  fileLoaderCls?: ((data:drive_v3.Schema$File)=>Document[]) | null;
 }
 
 /**
@@ -49,7 +49,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
   public loadTrashedFiles: boolean;
 
-  public fileLoaderCls: any | null;
+  public fileLoaderCls: ((data:drive_v3.Schema$File)=>Document[]) | null;
 
   /**
    * Creates an instance of GoogleDriveLoader.
@@ -401,10 +401,13 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     const service = google.drive({ version: "v3", auth });
     const files = await this.fetchFilesRecursive(service, folderId);
     const filteredFiles = fileTypes
-      ? files.filter((f) => fileTypes.includes(f.mimeType))
+      ? files.filter((f) => fileTypes.includes(f.mimeType ? f.mimeType : "invalid_mimeType"))
       : files;
     const returns: Document[] = [];
     for (const file of filteredFiles) {
+      if (!file?.id){
+        continue;
+      }
       if (file?.trashed && !this.loadTrashedFiles) {
         continue;
       } else if (file.mimeType === "application/vnd.google-apps.document") {
@@ -428,11 +431,15 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
  * @param {drive_v3.Drive} service - The Google Drive service.
  * @param {string} folderId - The ID of the folder to fetch files from.
  * @returns {Promise<drive_v3.Schema$File[]>} - A Promise resolving to an array of files.
+ * @throws {Error} - if file id is null or undefined
  */
   private async fetchFilesRecursive(
-    service: any,
-    folderId: string
-  ): Promise<any[]> {
+    service: drive_v3.Drive,
+    folderId: string | null | undefined
+  ): Promise<drive_v3.Schema$File[]> {
+    if (!folderId){
+      throw new Error("File id is invalid")
+    }
     const results = await service.files.list({
       q: `'${folderId}' in parents`,
       pageSize: 1000,
@@ -442,12 +449,12 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     });
 
     const files = results.data.files || [];
-    const returns: any[] = [];
+    const returns: drive_v3.Schema$File[] = [];
 
     for (const file of files) {
       if (file.mimeType === "application/vnd.google-apps.folder") {
         if (this.recursive)
-          returns.push(...(await this.fetchFilesRecursive(service, file.id)));
+          returns.push(...(await this.fetchFilesRecursive(service, file?.id)));
       } else {
         returns.push(file);
       }
