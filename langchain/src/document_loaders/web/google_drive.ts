@@ -456,8 +456,14 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
     return returns;
   }
 
+  /**
+   * Asynchronously loads documents from Google Drive. It authorizes the user, validates inputs,
+   * and loads documents based on set identifiers (folderId, documentIds, fileIds).
+   * Throws an error if no identifiers are provided.
+   * @returns {Promise<Document[]>} A promise that resolves to an array of Document objects.
+   * @throws {Error} If no identifiers (folderId, documentIds, fileIds) are set, throws an error with the message.
+   */
   public async load(): Promise<Document[]> {
-
     const auth = await this.authorize();
     // validate Inputs here and throw appropirate error
     this.validateInputs();
