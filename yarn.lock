@@ -7997,7 +7997,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.3":
+"@langchain/core@npm:0.0.4":
+  version: 0.0.4
+  resolution: "@langchain/core@npm:0.0.4"
+  dependencies:
+    ansi-styles: ^5.0.0
+    camelcase: 6
+    decamelize: 1.2.0
+    js-tiktoken: ^1.0.7
+    langsmith: ^0.0.48
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+    zod: ^3.22.3
+  checksum: 5db3e3a7ab8806e934dcf974f6aa08dc2a945fb9264ae143271abe3ad2c1d7700c15e736bc7de0d144b0fb88b8adb4b3e1a563060aff5beacc4c8b3c39c3ed75
+  languageName: node
+  linkType: hard
+
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -22607,7 +22624,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.0.3
+    "@langchain/core": 0.0.4
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
