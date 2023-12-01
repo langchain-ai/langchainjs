@@ -221,7 +221,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         });
 
         if (!valueRange.data.values) {
-          console.log(`No data found for sheet: ${sheetName}`);
           continue; // Skip this sheet as it has no data
         }
 
