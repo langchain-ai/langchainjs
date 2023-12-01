@@ -47,7 +47,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
       - name: Build examples
