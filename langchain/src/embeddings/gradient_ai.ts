@@ -18,10 +18,6 @@ export interface GradientEmbeddingsParams extends EmbeddingsParams {
    * Provide workspace id if you do not wish to automatically pull from env.
    */
   workspaceId?: string;
-  /**
-   * Gradient AI Model Slug.
-   */
-  modelSlug?: string;
 }
 
 /**
