@@ -3,9 +3,7 @@
   "globalDependencies": ["**/.env"],
   "pipeline": {
     "@langchain/core#build": {},
-    "@langchain/langchain#build": {
-      "dependsOn": ["@langchain/core#build"]
-    },
+    "@langchain/langchain#build": {},
     "libs/langchain-anthropic#build": {
       "dependsOn": ["@langchain/core#build"]
     },
@@ -13,11 +11,7 @@
       "dependsOn": ["@langchain/core#build"]
     },
     "examples#build": {
-      "dependsOn": [
-        "langchain#build",
-        "@langchain/anthropic#build",
-        "@langchain/openai#build"
-      ]
+      "dependsOn": ["langchain#build"]
     },
     "build": {
       "dependsOn": ["@langchain/core#build", "^build"],
