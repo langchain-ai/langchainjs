@@ -1,7 +1,7 @@
 import { GradientLLM } from "langchain/llms/gradient_ai";
 
 export const run = async () => {
-  // Note that modelParameters are optional
+  // Note that inferenceParameters are optional
   const model = new GradientLLM({
     modelSlug: "llama2-7b-chat",
     inferenceParameters: {
