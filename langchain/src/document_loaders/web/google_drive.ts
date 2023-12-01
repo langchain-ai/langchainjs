@@ -390,9 +390,11 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
 
     public async load(): Promise<Document[]> {
-        // load sheetbyid just doing this to test the auth/load functionality
+        // validate Inputs here and throw appropirate error  
+        this.validateInputs();
+
+        // get auth for google drive
         const auth = await this.authorize();
-        // validate Inputs here and throw appropirate error
         
         if (this.folderId){
             return this._loadDocumentsFromFolder(this.folderId,auth,this.fileTypes)
