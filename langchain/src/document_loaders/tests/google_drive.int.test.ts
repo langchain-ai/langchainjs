@@ -1,4 +1,4 @@
-import { test, jest, expect } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { GoogleDriveLoader } from '../web/google_drive.js'
 import { Document } from "../../document.js";
 
