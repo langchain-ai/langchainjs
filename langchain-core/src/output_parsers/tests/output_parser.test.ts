@@ -1,9 +1,9 @@
 /* eslint-disable no-promise-executor-return */
 
 import { test } from "@jest/globals";
-import { LLM } from "../../llms/base.js";
-import { GenerationChunk } from "../index.js";
-import { BytesOutputParser } from "../output_parser.js";
+import { LLM } from "../../language_models/llms.js";
+import { BytesOutputParser } from "../bytes.js";
+import { GenerationChunk } from "../../outputs.js";
 
 class FakeStreamingLLM extends LLM {
   _llmType() {

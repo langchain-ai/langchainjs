@@ -7333,6 +7333,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gradientai/nodejs-sdk@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@gradientai/nodejs-sdk@npm:1.2.0"
+  dependencies:
+    axios: 0.21.4
+  checksum: c921d914a6570536b6f1f00b3dc615cd70e103ad14ea40d7b9fe88020810b5fd9c8c8695bdfb3d9263190a3c69a82b17505b5579d744cc79596d037958e2cfd7
+  languageName: node
+  linkType: hard
+
 "@graphql-typed-document-node/core@npm:^3.1.1":
   version: 3.2.0
   resolution: "@graphql-typed-document-node/core@npm:3.2.0"
@@ -7988,7 +7997,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.2":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.3":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -13488,7 +13497,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^0.21.1":
+"axios@npm:0.21.4, axios@npm:^0.21.1":
   version: 0.21.4
   resolution: "axios@npm:0.21.4"
   dependencies:
@@ -22595,9 +22604,10 @@ __metadata:
     "@gomomento/sdk-core": ^1.51.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
+    "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.0.2
+    "@langchain/core": ~0.0.3
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
@@ -22752,6 +22762,7 @@ __metadata:
     "@gomomento/sdk-web": ^1.51.1
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
+    "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
     "@notionhq/client": ^2.2.10
@@ -22872,6 +22883,8 @@ __metadata:
     "@google-ai/generativelanguage":
       optional: true
     "@google-cloud/storage":
+      optional: true
+    "@gradientai/nodejs-sdk":
       optional: true
     "@huggingface/inference":
       optional: true
