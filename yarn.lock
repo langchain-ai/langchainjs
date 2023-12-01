@@ -8839,7 +8839,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/client@npm:^4.11.0":
+"@prisma/client@npm:4.11.0":
   version: 4.11.0
   resolution: "@prisma/client@npm:4.11.0"
   dependencies:
@@ -18019,7 +18019,7 @@ __metadata:
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
-    "@prisma/client": ^4.11.0
+    "@prisma/client": 4.11.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@supabase/supabase-js": ^2.10.0
