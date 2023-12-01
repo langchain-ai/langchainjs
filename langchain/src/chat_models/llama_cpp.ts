@@ -11,7 +11,13 @@ import {
   createLlamaContext,
 } from "../util/llama_cpp.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import type { BaseMessage } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import {
+  BaseMessage,
+  ChatGenerationChunk,
+  AIMessageChunk,
+  ChatMessage,
+} from "../schema/index.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -145,6 +151,35 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     }
   }
 
+  async *_streamResponseChunks(
+    input: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const promptOptions = {
+      temperature: this?.temperature,
+      topK: this?.topK,
+      topP: this?.topP,
+    };
+
+    const prompt = this._buildPrompt(input);
+
+    const stream = await this.caller.call(async () =>
+      this._context.evaluate(this._context.encode(prompt), promptOptions)
+    );
+
+    for await (const chunk of stream) {
+      yield new ChatGenerationChunk({
+        text: this._context.decode([chunk]),
+        message: new AIMessageChunk({
+          content: this._context.decode([chunk]),
+        }),
+        generationInfo: {},
+      });
+      await runManager?.handleLLMNewToken(this._context.decode([chunk]) ?? "");
+    }
+  }
+
   // This constructs a new session if we need to adding in any sys messages or previous chats
   protected _buildSession(messages: BaseMessage[]): string {
     let prompt = "";
@@ -255,5 +290,32 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     }
 
     return result;
+  }
+
+  protected _buildPrompt(input: BaseMessage[]): string {
+    const prompt = input
+      .map((message) => {
+        let messageText;
+        if (message._getType() === "human") {
+          messageText = `[INST] ${message.content} [/INST]`;
+        } else if (message._getType() === "ai") {
+          messageText = message.content;
+        } else if (message._getType() === "system") {
+          messageText = `<<SYS>> ${message.content} <</SYS>>`;
+        } else if (ChatMessage.isInstance(message)) {
+          messageText = `\n\n${message.role[0].toUpperCase()}${message.role.slice(
+            1
+          )}: ${message.content}`;
+        } else {
+          console.warn(
+            `Unsupported message type passed to llama_cpp: "${message._getType()}"`
+          );
+          messageText = "";
+        }
+        return messageText;
+      })
+      .join("\n");
+
+    return prompt;
   }
 }

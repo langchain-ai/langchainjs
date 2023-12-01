@@ -1,7 +1,6 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { LLMChain } from "../llm_chain.js";
-import { loadChain } from "../load.js";
 import { APIChain, APIChainInput } from "../api/api_chain.js";
 import {
   API_URL_PROMPT_TEMPLATE,
@@ -58,15 +57,6 @@ test("Test APIChain fromLLMAndApiDocs", async () => {
   // This test doesn't work as well with earlier models
   const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
   const chain = APIChain.fromLLMAndAPIDocs(model, OPEN_METEO_DOCS);
-  const res = await chain.call({
-    question:
-      "What is the weather like right now in Munich, Germany in degrees Farenheit?",
-  });
-  console.log({ res });
-});
-
-test("Load APIChain from hub", async () => {
-  const chain = await loadChain("lc://chains/api/meteo/chain.json");
   const res = await chain.call({
     question:
       "What is the weather like right now in Munich, Germany in degrees Farenheit?",

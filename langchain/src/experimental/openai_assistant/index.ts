@@ -60,11 +60,13 @@ export class OpenAIAssistantRunnable<
     clientOptions,
     asAgent,
     pollIntervalMs,
+    fileIds,
   }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId"> & {
     model: string;
     name?: string;
     instructions?: string;
     tools?: OpenAIToolType | Array<StructuredTool>;
+    fileIds?: string[];
   }) {
     const formattedTools =
       tools?.map((tool) => {
@@ -80,6 +82,7 @@ export class OpenAIAssistantRunnable<
       instructions,
       tools: formattedTools,
       model,
+      file_ids: fileIds,
     });
 
     return new this({
@@ -141,6 +144,51 @@ export class OpenAIAssistantRunnable<
     }
 
     return this._getResponse(run.id, run.thread_id);
+  }
+
+  /**
+   * Delete an assistant.
+   *
+   * @link {https://platform.openai.com/docs/api-reference/assistants/deleteAssistant}
+   * @returns {Promise<AssistantDeleted>}
+   */
+  public async deleteAssistant() {
+    return await this.client.beta.assistants.del(this.assistantId);
+  }
+
+  /**
+   * Retrieves an assistant.
+   *
+   * @link {https://platform.openai.com/docs/api-reference/assistants/getAssistant}
+   * @returns {Promise<OpenAIClient.Beta.Assistants.Assistant>}
+   */
+  public async getAssistant() {
+    return await this.client.beta.assistants.retrieve(this.assistantId);
+  }
+
+  /**
+   * Modifies an assistant.
+   *
+   * @link {https://platform.openai.com/docs/api-reference/assistants/modifyAssistant}
+   * @returns {Promise<OpenAIClient.Beta.Assistants.Assistant>}
+   */
+  public async modifyAssistant<AsAgent extends boolean>({
+    model,
+    name,
+    instructions,
+    fileIds,
+  }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId" | "tools"> & {
+    model?: string;
+    name?: string;
+    instructions?: string;
+    fileIds?: string[];
+  }) {
+    return await this.client.beta.assistants.update(this.assistantId, {
+      name,
+      instructions,
+      model,
+      file_ids: fileIds,
+    });
   }
 
   private async _parseStepsInput(input: RunInput): Promise<RunInput> {

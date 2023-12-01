@@ -27,6 +27,7 @@ export function listExternals() {
     ...Object.keys(packageJson.peerDependencies),
     /node\:/,
     /js-tiktoken/,
+    /@langchain\/core/,
     "axios", // axios is a dependency of openai
     "convex",
     "convex/server",

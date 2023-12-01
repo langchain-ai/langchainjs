@@ -230,7 +230,7 @@ example to showcase how to use it. Most of our users find examples to be the
 most helpful kind of documentation.
 
 Examples can be added in the `examples/src` directory, e.g.
-`examples/src/path/to/example` and should export a `run` function. This
+`examples/src/path/to/example`. This
 example can then be invoked with `yarn example path/to/example` at the top
 level of the repo.
 
