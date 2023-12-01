@@ -1,4 +1,5 @@
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
+import { GET_THREAD_DESCRIPTION } from "./descriptions.js";
 
 export interface GetThreadSchema {
   threadId: string;
@@ -7,7 +8,7 @@ export interface GetThreadSchema {
 export class GmailGetThread extends GmailBaseTool {
   name = "gmail_get_thread";
 
-  description = "Get a thread from Gmail";
+  description = GET_THREAD_DESCRIPTION;
 
   constructor(fields?: GmailBaseToolParams) {
     super(fields);
