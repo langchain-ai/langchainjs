@@ -38,7 +38,7 @@ export class DiscordGetMessagesTool extends Tool {
 
   constructor(
     botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
-    messageLimit: number | undefined = 100
+    messageLimit: number | undefined = 10
   ) {
     super(...arguments);
 
@@ -110,7 +110,7 @@ export class DiscordGetGuildsTool extends Tool {
   }
 
   /** @ignore */
-  async _call(): Promise<string> {
+  async _call(_input: string): Promise<string> {
     await this.client.login(this.botToken);
 
     const guilds = await this.client.guilds.fetch();
@@ -209,8 +209,8 @@ export class DiscordSendMessagesTool extends Tool {
   });
 
   constructor(
-    channelId: string,
-    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
+    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
+    channelId: string | undefined = getEnvironmentVariable("DISCORD_CHANNEL_ID")
   ) {
     super(...arguments);
 
@@ -221,7 +221,9 @@ export class DiscordSendMessagesTool extends Tool {
     }
     this.botToken = botToken;
     if (!channelId) {
-      throw new Error("Discord channel not set.");
+      throw new Error(
+        "Discord channel not set. You can set it as DISCORD_CHANNEL_ID in your .env file."
+      );
     }
     this.channelId = channelId;
   }
@@ -284,8 +286,8 @@ export class DiscordChannelSearchTool extends Tool {
   });
 
   constructor(
-    channelId: string,
-    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
+    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
+    channelId: string | undefined = getEnvironmentVariable("DISCORD_CHANNEL_ID")
   ) {
     super(...arguments);
 
@@ -296,7 +298,9 @@ export class DiscordChannelSearchTool extends Tool {
     }
     this.botToken = botToken;
     if (!channelId) {
-      throw new Error("Discord channel not set.");
+      throw new Error(
+        "Discord channel not set. You can set it as DISCORD_CHANNEL_ID in your .env file."
+      );
     }
     this.channelId = channelId;
   }

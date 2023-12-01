@@ -8,10 +8,7 @@ export default async function run() {
     temperature: 0,
   });
 
-  const tools = [
-    new DiscordSendMessagesTool("1153400523718938780"),
-    new DadJokeAPI(),
-  ];
+  const tools = [new DiscordSendMessagesTool(), new DadJokeAPI()];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",

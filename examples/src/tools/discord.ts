@@ -14,11 +14,11 @@ export async function run() {
 
   // Get guilds/servers
   const getGuildsTool = new DiscordGetGuildsTool();
-  const guildResults = await getGuildsTool.call();
+  const guildResults = await getGuildsTool.call("");
   console.log(guildResults);
 
   // Search results in a given channel (case-insensitive)
-  const searchTool = new DiscordChannelSearchTool("1153400523718938780");
+  const searchTool = new DiscordChannelSearchTool();
   const searchResults = await searchTool.call("Test");
   console.log(searchResults);
 
@@ -28,7 +28,7 @@ export async function run() {
   console.log(channelResults);
 
   // Send a message
-  const sendMessageTool = new DiscordSendMessagesTool("1153400523718938780");
+  const sendMessageTool = new DiscordSendMessagesTool();
   const sendMessageResults = await sendMessageTool.call("test message");
   console.log(sendMessageResults);
 }

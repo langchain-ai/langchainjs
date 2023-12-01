@@ -20,7 +20,7 @@ test.skip("DiscordGetMessagesTool", async () => {
 test.skip("DiscordGetGuildsTool", async () => {
   const tool = new DiscordGetGuildsTool();
   try {
-    const result = await tool.call(undefined);
+    const result = await tool.call("");
     console.log(result);
   } catch (error) {
     console.error(error);
@@ -28,7 +28,7 @@ test.skip("DiscordGetGuildsTool", async () => {
 });
 
 test.skip("DiscordChannelSearchTool", async () => {
-  const tool = new DiscordChannelSearchTool("1153400523718938780");
+  const tool = new DiscordChannelSearchTool();
   try {
     const result = await tool.call("Test");
     console.log(result);
@@ -48,7 +48,7 @@ test.skip("DiscordGetTextChannelsTool", async () => {
 });
 
 test.skip("DiscordSendMessagesTool", async () => {
-  const tool = new DiscordSendMessagesTool("1153400523718938780");
+  const tool = new DiscordSendMessagesTool();
   try {
     const result = await tool.call("test message from new code");
     console.log(result);
