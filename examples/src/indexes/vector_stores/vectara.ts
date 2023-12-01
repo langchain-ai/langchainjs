@@ -37,28 +37,21 @@ const resultsWithScore = await store.similaritySearchWithScore(
 // Print the results.
 console.log(JSON.stringify(resultsWithScore, null, 2));
 /*
- [
-   [
-     {
-       "pageContent": "In the room the women come and go talking of Michelangelo",
-       "metadata": [
-         {
-           "name": "lang",
-           "value": "eng"
-         },
-         {
-           "name": "offset",
-           "value": "0"
-         },
-         {
-           "name": "len",
-           "value": "57"
-         }
-       ]
-     },
-     0.38169062
-   ]
- ]
+[
+  [
+    [
+      {
+        "pageContent": "In the room the women come and go talking of Michelangelo",
+        "metadata": {
+          "lang": "eng",
+          "offset": "0",
+          "len": "57",
+          "foo": "bar"
+        }
+      }
+    ],
+    0.69189274
+  ]
 */
 
 const retriever = new VectaraRetriever({vectara: store, topK: 3});
@@ -74,41 +67,38 @@ const [documents, summary] = await retriever.getRelevantDocumentsAndSummary(
   }
 );
 
-console.log(JSON.stringify(summary, null, 2));
+console.log(JSON.stringify(documents, null, 2));
 /*
-{
- "documents": [
+[
   [
     {
       "pageContent": "In the room the women come and go talking of Michelangelo",
-      "metadata": [
-        {
-          "name": "lang",
-          "value": "eng"
-        },
-        {
-          "name": "offset",
-          "value": "0"
-        },
-        {
-          "name": "len",
-          "value": "57"
-        }
-      ]
-    },
-    0.38169062
+      "metadata": {
+        "lang": "eng",
+        "offset": "0",
+        "len": "57",
+        "foo": "bar"
+      }
+    }
+  ],
+  [
+    {
+      "pageContent": "Do I dare to eat a peach?",
+      "metadata": {
+        "lang": "eng",
+        "offset": "0",
+        "len": "25",
+        "foo": "baz"
+      }
+    }
   ]
-],
-"summary": [
-  {
-     "text": "Nella stanza le donne vanno e vengono parlando di Michelangelo. Inoltre, sembra che stiano valutando se mangiare una pesca.",
-     "lang": "ita",
-     "prompt": "",
-     "status": [],
-     "futureId": 2
-  }
- ]
-}
+]
+*/
+
+console.log(JSON.stringify(summary, null, 2));
+/*
+"I risultati della ricerca non contenevano informazioni sufficienti per essere riassunti in una risposta utile alla tua domanda. 
+Ti prego di provare una ricerca diversa o di riformulare la tua domanda in modo diverso."
 */
 
 // Delete the documents.

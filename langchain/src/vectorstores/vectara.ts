@@ -129,8 +129,11 @@ export class VectaraRetriever extends BaseRetriever
   static lc_name() {
     return "VectaraRetriever";
   }
+
   lc_namespace = ["langchain", "retrievers", "vectaraRetriever"];
+  
   private vectara: VectaraStore;
+  
   private topK: number;
 
   constructor(fields: VectaraRetrieverInput) {
@@ -461,7 +464,7 @@ export class VectaraStore extends VectorStore {
    */
   async vectara_query(
     query: string,
-    k = 10,
+    k: number,
     _filter: VectaraFilter,
     _summary: VectaraSummary = { enabled: false, maxSummarizedResults: 0, responseLang: "eng" },
   ): Promise<SummaryResult> {
@@ -472,16 +475,16 @@ export class VectaraStore extends VectorStore {
       customerId: this.customerId,
       corpusId,
       metadataFilter: filter,
-      lexicalInterpolationConfig: { lambda: lambda },
+      lexicalInterpolationConfig: { lambda },
     }));
 
     const data = {
       query: [
         {
           query,
-          start: start,
+          start,
           numResults: mmrConfig?.enabled ? mmrConfig.mmrTopK : k,
-          contextConfig: contextConfig,
+          contextConfig,
           ...(mmrConfig?.enabled ? { rerankingConfig: { rerankerId: 272725718, mmrConfig: { diversityBias: mmrConfig.diversityBias } } } : {}),
           corpusKey: corpusKeys,
           ...(_summary?.enabled ? { summary: [_summary] } : {})
@@ -508,7 +511,6 @@ export class VectaraStore extends VectorStore {
     const result = await response.json();
     const responses = result.responseSet[0].response;
     const documents = result.responseSet[0].document;
-    const summaryText = result.responseSet[0].summary;
 
     for (let i = 0; i < responses.length; i += 1) {
       const responseMetadata = responses[i].metadata;
@@ -546,7 +548,7 @@ export class VectaraStore extends VectorStore {
           score: number;
         }) => response.score,
       ),
-      summary: summaryText,
+      summary: result.responseSet[0].summary[0]?.text ?? "",
     };
     return res;
   }
@@ -565,9 +567,7 @@ export class VectaraStore extends VectorStore {
     filter?: VectaraFilter,
   ): Promise<[Document, number][]> {
     const summaryResult = await this.vectara_query(query, k || 10, filter || DEFAULT_FILTER);
-    const res = summaryResult.documents.map((document, index) => {
-      return [document, summaryResult.scores[index]] as [Document, number];
-    });
+    const res = summaryResult.documents.map((document, index) => [document, summaryResult.scores[index]] as [Document, number])
     return res
   }
 
