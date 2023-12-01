@@ -64,7 +64,9 @@ export class GradientEmbeddings
   async embedDocuments(texts: string[]): Promise<number[][]> {
     await this.setModel();
 
-    const batches = chunkArray(texts, this.batchSize);
+    const mappedTexts = texts.map((text) => ({ input: text }));
+
+    const batches = chunkArray(mappedTexts, this.batchSize);
 
     const batchRequests = batches.map((batch) =>
       this.model.generateEmbeddings({
@@ -76,7 +78,7 @@ export class GradientEmbeddings
     const embeddings: number[][] = [];
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
-      const { data: batchResponse } = batchResponses[i];
+      const { embeddings: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
         embeddings.push(batchResponse[j].embedding);
       }
