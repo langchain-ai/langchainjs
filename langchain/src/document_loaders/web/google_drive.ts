@@ -221,7 +221,6 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
         });
 
         if (!valueRange.data.values) {
-          console.log(`No data found for sheet: ${sheetName}`);
           continue; // Skip this sheet as it has no data
         }
 
@@ -461,7 +460,7 @@ export class GoogleDriveLoader extends BaseDocumentLoader {
 
     const auth = await this.authorize();
     // validate Inputs here and throw appropirate error
-
+    this.validateInputs();
     if (this.folderId) {
       return this._loadDocumentsFromFolder(this.folderId, auth, this.fileTypes);
     } else if (this.documentIds) {
