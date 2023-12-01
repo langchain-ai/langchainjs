@@ -266,6 +266,11 @@
       "import": "./utils/stream.js",
       "require": "./utils/stream.cjs"
     },
+    "./utils/testing": {
+      "types": "./utils/testing.d.ts",
+      "import": "./utils/testing.js",
+      "require": "./utils/testing.cjs"
+    },
     "./utils/tiktoken": {
       "types": "./utils/tiktoken.d.ts",
       "import": "./utils/tiktoken.js",
@@ -275,11 +280,6 @@
       "types": "./utils/types.d.ts",
       "import": "./utils/types.js",
       "require": "./utils/types.cjs"
-    },
-    "./utils/testing": {
-      "types": "./utils/testing.d.ts",
-      "import": "./utils/testing.js",
-      "require": "./utils/testing.cjs"
     },
     "./vectorstores": {
       "types": "./vectorstores.d.ts",
@@ -401,15 +401,15 @@
     "utils/stream.cjs",
     "utils/stream.js",
     "utils/stream.d.ts",
+    "utils/testing.cjs",
+    "utils/testing.js",
+    "utils/testing.d.ts",
     "utils/tiktoken.cjs",
     "utils/tiktoken.js",
     "utils/tiktoken.d.ts",
     "utils/types.cjs",
     "utils/types.js",
     "utils/types.d.ts",
-    "utils/testing.cjs",
-    "utils/testing.js",
-    "utils/testing.d.ts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
