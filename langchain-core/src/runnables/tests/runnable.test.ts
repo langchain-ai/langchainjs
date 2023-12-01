@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { test } from "@jest/globals";
+import { z } from "zod";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -21,6 +22,9 @@ import {
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableMap, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
+import { ChatResult } from "../../outputs.js";
+import { OutputParserException } from "../../output_parsers/base.js";
+import { BaseMessage } from "../../messages/index.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -211,4 +215,44 @@ test("Runnable withConfig", async () => {
   expect(chunks.length).toEqual(1);
   expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
   expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
+});
+
+test("Create a runnable sequence and run it", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeChatModel({});
+  const parser = new StringOutputParser();
+  const text = `Jello world`;
+  const runnable = promptTemplate.pipe(llm).pipe(parser);
+  const result = await runnable.invoke({ input: text });
+  console.log(result);
+  expect(result).toEqual("Jello world");
+});
+
+test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeChatModel({});
+  const parser = (input: BaseMessage) => {
+    console.log(input);
+    try {
+      const parsedInput =
+        typeof input.content === "string"
+          ? JSON.parse(input.content)
+          : input.content;
+      if (
+        !("outputValue" in parsedInput) ||
+        parsedInput.outputValue !== "Hello sequence!"
+      ) {
+        throw new Error("Test failed!");
+      } else {
+        return input;
+      }
+    } catch (e) {
+      throw new OutputParserException("Invalid output");
+    }
+  };
+  const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
+  await expect(async () => {
+    const result = await runnable.invoke({ input: "Hello sequence!" });
+    console.log(result);
+  }).rejects.toThrow(OutputParserException);
 });
