@@ -17,11 +17,11 @@ const tools = [
   new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
   new Calculator(),
 ];
-
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "ai",
     `Answer the following questions as best you can. You have access to the following tools:
+
 {tools}
 
 Use the following format in your response:
@@ -35,10 +35,9 @@ Observation: the result of the action
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
-Here are the previous steps you've taken:
 {intermediateSteps}
 
-Think this through step by step. Begin!
+Begin!
 
 Question: {question}
 Thought:`,
@@ -50,7 +49,7 @@ const memory = new BufferMemory();
 const outputParser = ZeroShotAgent.getDefaultOutputParser();
 
 const input = {
-  question: `What is the word of the day on merriam webster, and what is the sum of the indices in the alphabet of the letters in the word?`,
+  question: `What is the word of the day on merriam webster`,
   tools,
 };
 
@@ -59,7 +58,7 @@ const runnable = RunnableSequence.from([
     toolNames: (i: { tools: Array<Tool>; question: string }) =>
       i.tools.map((t) => t.name).join(", "),
     tools: (i: { tools: Array<Tool>; question: string }) =>
-      i.tools.map((t) => `${t.name}: ${t.description}`).join(", "),
+      i.tools.map((t) => `${t.name}: ${t.description}`).join("\n"),
     question: (i: { tools: Array<Tool>; question: string }) => i.question,
     intermediateSteps: async (_: { tools: Array<Tool>; question: string }) => {
       const { history } = await memory.loadMemoryVariables({});
@@ -100,8 +99,15 @@ const result = await executor.stream(input);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const finalResponse: Array<any> = [];
 for await (const item of result) {
-  console.log("Stream item:", item);
+  console.log("Stream item:", {
+    ...item,
+  });
   await saveMemory(item);
   finalResponse.push(item);
 }
 console.log("Final response:", finalResponse);
+
+/**
+ * See the LangSmith trace for this agent example here:
+ * @link https://smith.langchain.com/public/7e63c2c3-c38f-408d-8656-adeff584d292/r
+ */
