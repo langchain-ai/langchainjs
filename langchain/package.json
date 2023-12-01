@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.198",
+  "version": "0.0.199",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -82,6 +82,9 @@
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
+    "tools/outlook.cjs",
+    "tools/outlook.js",
+    "tools/outlook.d.ts",
     "tools/google_places.cjs",
     "tools/google_places.js",
     "tools/google_places.d.ts",
@@ -451,6 +454,9 @@
     "document_loaders/fs/buffer.cjs",
     "document_loaders/fs/buffer.js",
     "document_loaders/fs/buffer.d.ts",
+    "document_loaders/fs/chatgpt.cjs",
+    "document_loaders/fs/chatgpt.js",
+    "document_loaders/fs/chatgpt.d.ts",
     "document_loaders/fs/text.cjs",
     "document_loaders/fs/text.js",
     "document_loaders/fs/text.d.ts",
@@ -484,9 +490,6 @@
     "document_loaders/fs/pptx.cjs",
     "document_loaders/fs/pptx.js",
     "document_loaders/fs/pptx.d.ts",
-    "document_loaders/fs/chatgpt.cjs",
-    "document_loaders/fs/chatgpt.js",
-    "document_loaders/fs/chatgpt.d.ts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",
@@ -1418,7 +1421,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/core": "~0.0.2",
+    "@langchain/core": "~0.0.3",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
@@ -1575,6 +1578,11 @@
       "types": "./tools/google_calendar.d.ts",
       "import": "./tools/google_calendar.js",
       "require": "./tools/google_calendar.cjs"
+    },
+    "./tools/outlook": {
+      "types": "./tools/outlook.d.ts",
+      "import": "./tools/outlook.js",
+      "require": "./tools/outlook.cjs"
     },
     "./tools/google_places": {
       "types": "./tools/google_places.d.ts",
@@ -2190,6 +2198,11 @@
       "types": "./document_loaders/fs/buffer.d.ts",
       "import": "./document_loaders/fs/buffer.js",
       "require": "./document_loaders/fs/buffer.cjs"
+    },
+    "./document_loaders/fs/chatgpt": {
+      "types": "./document_loaders/fs/chatgpt.d.ts",
+      "import": "./document_loaders/fs/chatgpt.js",
+      "require": "./document_loaders/fs/chatgpt.cjs"
     },
     "./document_loaders/fs/text": {
       "types": "./document_loaders/fs/text.d.ts",

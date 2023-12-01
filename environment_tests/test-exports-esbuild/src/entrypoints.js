@@ -13,6 +13,7 @@ import * as agents_openai_output_parser from "langchain/agents/openai/output_par
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
 import * as tools_render from "langchain/tools/render";
+import * as tools_outlook from "langchain/tools/outlook";
 import * as tools_google_places from "langchain/tools/google_places";
 import * as chains from "langchain/chains";
 import * as chains_combine_documents_reduce from "langchain/chains/combine_documents/reduce";

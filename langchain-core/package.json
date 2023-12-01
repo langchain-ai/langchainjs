@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -266,6 +266,11 @@
       "import": "./utils/stream.js",
       "require": "./utils/stream.cjs"
     },
+    "./utils/testing": {
+      "types": "./utils/testing.d.ts",
+      "import": "./utils/testing.js",
+      "require": "./utils/testing.cjs"
+    },
     "./utils/tiktoken": {
       "types": "./utils/tiktoken.d.ts",
       "import": "./utils/tiktoken.js",
@@ -396,6 +401,9 @@
     "utils/stream.cjs",
     "utils/stream.js",
     "utils/stream.d.ts",
+    "utils/testing.cjs",
+    "utils/testing.js",
+    "utils/testing.d.ts",
     "utils/tiktoken.cjs",
     "utils/tiktoken.js",
     "utils/tiktoken.d.ts",

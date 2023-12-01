@@ -109,6 +109,9 @@ utils/json_schema.d.ts
 utils/stream.cjs
 utils/stream.js
 utils/stream.d.ts
+utils/testing.cjs
+utils/testing.js
+utils/testing.d.ts
 utils/tiktoken.cjs
 utils/tiktoken.js
 utils/tiktoken.d.ts
