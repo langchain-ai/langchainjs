@@ -1,17 +1,13 @@
 import { test, expect } from "@jest/globals";
 import * as uuid from "uuid";
 import { CallbackManager } from "../manager.js";
-import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
-import {
-  AgentAction,
-  AgentFinish,
-  BaseMessage,
-  ChainValues,
-  HumanMessage,
-  LLMResult,
-} from "../../schema/index.js";
-import { Serialized } from "../../load/serializable.js";
-import { Document } from "../../document.js";
+import { BaseCallbackHandler, type BaseCallbackHandlerInput } from "../base.js";
+import type { Serialized } from "../../load/serializable.js";
+import { Document } from "../../documents/document.js";
+import type { ChainValues } from "../../utils/types.js";
+import type { AgentAction, AgentFinish } from "../../agents.js";
+import { BaseMessage, HumanMessage } from "../../messages/index.js";
+import type { LLMResult } from "../../outputs.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
