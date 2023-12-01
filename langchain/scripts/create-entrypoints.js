@@ -35,7 +35,6 @@ const entrypoints = {
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   "tools/google_calendar": "tools/google_calendar/index",
-  "tools/experimental/graphql": "tools/experimental/graphql",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
@@ -297,6 +296,7 @@ const entrypoints = {
     "experimental/hubs/makersuite/googlemakersuitehub",
   "experimental/chains/violation_of_expectations":
     "experimental/chains/violation_of_expectations/index",
+  "experimental/tools/graphql": "experimental/tools/graphql",
   // evaluation
   evaluation: "evaluation/index",
   // runnables

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StructuredTool } from "../base.js";
+import { StructuredTool } from "../../tools/base.js";
 
 export class GraphQLClientTool extends StructuredTool {
   static lc_name() {
@@ -16,10 +16,16 @@ export class GraphQLClientTool extends StructuredTool {
 
   schema = z.object({
     query: z.string(),
-    variables: z.object({}),
-  })
+    variables: z.object({}).optional(),
+  });
 
-  constructor({ endpoint, headers }: { endpoint: string, headers?: HeadersInit }) {
+  constructor({
+    endpoint,
+    headers,
+  }: {
+    endpoint: string;
+    headers?: HeadersInit;
+  }) {
     super();
 
     this._endpoint = endpoint;
