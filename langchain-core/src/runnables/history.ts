@@ -13,6 +13,7 @@ import {
   type RunnableBindingArgs,
   RunnableLambda,
 } from "./base.js";
+import { RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
