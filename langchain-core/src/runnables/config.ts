@@ -30,54 +30,59 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
         copy[key] = (copy[key] ?? []).concat(options[key] ?? []);
       } else if (key === "callbacks") {
         const baseCallbacks = copy.callbacks;
-        const theseCallbacks = options.callbacks ?? config.callbacks;
+        const providedCallbacks = options.callbacks ?? config.callbacks;
         // callbacks can be either undefined, Array<handler> or manager
         // so merging two callbacks values has 6 cases
-        if (Array.isArray(theseCallbacks)) {
+        if (Array.isArray(providedCallbacks)) {
           if (!baseCallbacks) {
-            copy.callbacks = theseCallbacks;
+            copy.callbacks = providedCallbacks;
           } else if (Array.isArray(baseCallbacks)) {
-            copy.callbacks = baseCallbacks.concat(theseCallbacks);
+            copy.callbacks = baseCallbacks.concat(providedCallbacks);
           } else {
             // baseCallbacks is a manager
             const manager = baseCallbacks.copy();
-            for (const callback of theseCallbacks) {
+            for (const callback of providedCallbacks) {
               manager.addHandler(callback, true);
             }
             copy.callbacks = manager;
           }
-        } else if (theseCallbacks) {
-          // theseCallbacks is a manager
+        } else if (providedCallbacks) {
+          // providedCallbacks is a manager
           if (!baseCallbacks) {
-            copy.callbacks = theseCallbacks;
+            copy.callbacks = providedCallbacks;
           } else if (Array.isArray(baseCallbacks)) {
-            const manager = theseCallbacks.copy();
+            const manager = providedCallbacks.copy();
             for (const callback of baseCallbacks) {
               manager.addHandler(callback, true);
             }
             copy.callbacks = manager;
           } else {
             // baseCallbacks is also a manager
-            copy.callbacks = new CallbackManager(theseCallbacks.parentRunId, {
-              handlers: baseCallbacks.handlers.concat(theseCallbacks.handlers),
-              inheritableHandlers: baseCallbacks.inheritableHandlers.concat(
-                theseCallbacks.inheritableHandlers
-              ),
-              tags: Array.from(
-                new Set(baseCallbacks.tags.concat(theseCallbacks.tags))
-              ),
-              inheritableTags: Array.from(
-                new Set(
-                  baseCallbacks.inheritableTags.concat(
-                    theseCallbacks.inheritableTags
+            copy.callbacks = new CallbackManager(
+              providedCallbacks.parentRunId,
+              {
+                handlers: baseCallbacks.handlers.concat(
+                  providedCallbacks.handlers
+                ),
+                inheritableHandlers: baseCallbacks.inheritableHandlers.concat(
+                  providedCallbacks.inheritableHandlers
+                ),
+                tags: Array.from(
+                  new Set(baseCallbacks.tags.concat(providedCallbacks.tags))
+                ),
+                inheritableTags: Array.from(
+                  new Set(
+                    baseCallbacks.inheritableTags.concat(
+                      providedCallbacks.inheritableTags
+                    )
                   )
-                )
-              ),
-              metadata: {
-                ...baseCallbacks.metadata,
-                ...theseCallbacks.metadata,
-              },
-            });
+                ),
+                metadata: {
+                  ...baseCallbacks.metadata,
+                  ...providedCallbacks.metadata,
+                },
+              }
+            );
           }
         }
       } else {

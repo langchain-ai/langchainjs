@@ -10,10 +10,10 @@ import { Run } from "../tracers/base.js";
 import {
   Runnable,
   RunnableBinding,
-  RunnableBindingArgs,
+  type RunnableBindingArgs,
   RunnableLambda,
 } from "./base.js";
-import { RunnableConfig } from "./config.js";
+import { type RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
@@ -52,7 +52,7 @@ export class RunnableWithMessageHistory<
         this._enterHistory(input, options ?? {}),
     }).withConfig({ runName: "loadHistory" });
 
-    const messagesKey = fields.historyMessagesKey || fields.inputMessagesKey;
+    const messagesKey = fields.historyMessagesKey ?? fields.inputMessagesKey;
     if (messagesKey) {
       historyChain = RunnablePassthrough.assign({
         [messagesKey]: historyChain,

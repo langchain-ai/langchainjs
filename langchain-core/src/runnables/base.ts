@@ -647,12 +647,14 @@ export class RunnableBinding<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     options?: Record<string, any>
   ): Promise<Partial<CallOptions>> {
-    const config = mergeConfigs(this.config, options);
-    return mergeConfigs(
+    const config = mergeConfigs<CallOptions>(this.config, options);
+    return mergeConfigs<CallOptions>(
       config,
       ...(this.configFactories
         ? await Promise.all(
-            this.configFactories.map(async (f) => await f(config))
+            this.configFactories.map(
+              async (factoryMethod) => await factoryMethod(config)
+            )
           )
         : [])
     );
