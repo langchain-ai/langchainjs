@@ -1,3 +1,7 @@
+---
+sidebar_class_name: node-only
+---
+
 # Gradient AI
 
 The `GradientEmbeddings` class uses the Gradient AI API to generate embeddings for a given text.
@@ -12,8 +16,10 @@ npm i @gradientai/nodejs-sdk
 
 You will need to set the following environment variables for using the Gradient AI API.
 
-1. `GRADIENT_ACCESS_TOKEN`
-2. `GRADIENT_WORKSPACE_ID`
+```
+export GRADIENT_ACCESS_TOKEN=<YOUR_ACCESS_TOKEN>
+export GRADIENT_WORKSPACE_ID=<YOUR_WORKSPACE_ID>
+```
 
 Alternatively, these can be set during the GradientAI Class instantiation as `gradientAccessKey` and `workspaceId` respectively.
 For example:
