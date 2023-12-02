@@ -116,3 +116,27 @@ test.skip("test multi-mesage streaming call", async () => {
 
   expect(chunks.length).toBeGreaterThan(1);
 });
+
+test.skip("test streaming call with different message type", async () => {
+  const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+
+  const stream = await llamaCpp.stream(
+    [
+      new SystemMessage(
+        "You are a pirate, responses must be in pirate dialect."
+      ),
+      new HumanMessage("My name is Nigel."),
+      new AIMessage("Arr Nigel, good t'meet you m'hearty!"),
+      new HumanMessage("What did I say my name was?"),
+    ],
+    { streamingModel: "general" }
+  );
+
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk.content);
+    console.log(chunk.content);
+  }
+
+  expect(chunks.length).toBeGreaterThan(1);
+});

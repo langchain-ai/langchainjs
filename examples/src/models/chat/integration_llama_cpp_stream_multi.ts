@@ -5,12 +5,15 @@ const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
 const model = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
 
-const stream = await llamaCpp.stream([
-  new SystemMessage(
-	"You are a pirate, responses must be very verbose and in pirate dialect."
-  ),
-  new HumanMessage("Tell me about Llamas?"),
-]);
+// Note: the 'streamingModel' option is not strictly necessary as
+//       the default is 'llama2', in this case it could be omitted.
+const stream = await llamaCpp.stream(
+  [
+    new SystemMessage("You are a pirate, responses must be very verbose and in pirate dialect."),
+    new HumanMessage("Tell me about Llamas?"),
+  ],
+  { streamingModel: "llama2" }
+);
 
 for await (const chunk of stream) {
   console.log(chunk.content);

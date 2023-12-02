@@ -30,8 +30,14 @@ export interface LlamaCppInputs
 export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
   /** The maximum number of tokens the response should contain. */
   maxTokens?: number;
-  /** A function called when matching the provided token array */
-  onToken?: (tokens: number[]) => void;
+  /** This lets the streaming method know which model we are using,
+   *  valid options are:
+   *  'llama2'	- A Llama2 model, this is the default.
+   *  'chatML'  - A ChatML model
+   *  'falcon'	- A Falcon model
+   *  'genral'  - Any other model, uses "### Human\n", "### Assistant\n" format
+   */
+  streamingModel?: string;
 }
 
 /**
@@ -63,6 +69,8 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   static inputs: LlamaCppInputs;
 
   maxTokens?: number;
+
+  streamingModel?: string;
 
   temperature?: number;
 
@@ -162,7 +170,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
       topP: this?.topP,
     };
 
-    const prompt = this._buildPrompt(input);
+    const prompt = this._buildPrompt(input, _options?.streamingModel);
 
     const stream = await this.caller.call(async () =>
       this._context.evaluate(this._context.encode(prompt), promptOptions)
@@ -292,16 +300,55 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     return result;
   }
 
-  protected _buildPrompt(input: BaseMessage[]): string {
+  protected _buildPrompt(input: BaseMessage[], model: string | undefined): string {
     const prompt = input
       .map((message) => {
         let messageText;
         if (message._getType() === "human") {
-          messageText = `[INST] ${message.content} [/INST]`;
+          switch (model) {
+            case "chatML":
+              messageText = `<|im_start|>user\n${message.content}<|im_end|>`;
+              break;
+            case "falcon":
+              messageText = `User: ${message.content}`;
+              break;
+            case "general":
+              messageText = `### Human\n${message.content}`;
+              break;
+            default:
+              messageText = `[INST] ${message.content} [/INST]`;
+              break;
+          }
         } else if (message._getType() === "ai") {
-          messageText = message.content;
+          switch (model) {
+            case "chatML":
+              messageText = `<|im_start|>assistant\n${message.content}<|im_end|>`;
+              break;
+            case "falcon":
+              messageText = `Assistant: ${message.content}`;
+              break;
+            case "general":
+              messageText = `### Assistant\n${message.content}`;
+              break;
+            default:
+              messageText = message.content;
+              break;
+          }
         } else if (message._getType() === "system") {
-          messageText = `<<SYS>> ${message.content} <</SYS>>`;
+          switch (model) {
+            case "chatML":
+              messageText = `<|im_start|>system\n${message.content}<|im_end|>`;
+              break;
+            case "falcon":
+              messageText = message.content;
+              break;
+            case "general":
+              messageText = message.content;
+              break;
+            default:
+              messageText = `<<SYS>> ${message.content} <</SYS>>`;
+              break;
+          }
         } else if (ChatMessage.isInstance(message)) {
           messageText = `\n\n${message.role[0].toUpperCase()}${message.role.slice(
             1
