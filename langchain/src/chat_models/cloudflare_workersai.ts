@@ -77,6 +77,12 @@ export class ChatCloudflareWorkersAI
     }
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      cloudflareApiToken: "CLOUDFLARE_API_TOKEN",
+    };
+  }
+
   _llmType() {
     return "cloudflare";
   }

@@ -1,4 +1,4 @@
-import type { OpenAIClient } from "@langchain/openai";
+import type { OpenAI as OpenAIClient } from "openai";
 import type { ChatOpenAICallOptions, OpenAIChatInput } from "./openai.js";
 import type { OpenAICoreRequestOptions } from "../types/openai-types.js";
 import type { BaseChatModelParams } from "./base.js";
