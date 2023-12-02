@@ -6,7 +6,7 @@ import { OpenAI } from "langchain/llms/openai";
 import { ConneryService } from "langchain/tools";
 
 /**
- * This example shows how to create an agent with Connery actions using the Connery Toolkit.
+ * This example shows how to create an agent with Connery actions using the Connery Actions Toolkit.
  *
  * Connery is an open-source plugin infrastructure for AI.
  * Source code: https://github.com/connery-io/connery-platform
@@ -17,7 +17,8 @@ import { ConneryService } from "langchain/tools";
  * 3. Install the "Gmail" plugin (https://github.com/connery-io/gmail) on the runner.
  * 4. Set environment variables CONNERY_RUNNER_URL and CONNERY_RUNNER_API_KEY in the ./examples/.env file of this repository.
  *
- * If you want to use only one particular Connery action in your agent, check out an example here: ./examples/src/tools/connery.ts
+ * If you want to use only one particular Connery action in your agent,
+ * check out an example here: ./examples/src/tools/connery.ts
  */
 
 const model = new OpenAI({ temperature: 0 });
