@@ -7,7 +7,5 @@ import { Document } from "../document.js";
  * @param documents
  * @returns A string of the documents page content, separated by newlines.
  */
-export const formatDocumentsAsString = (
-  documents: Document[],
-  separator = "\n\n"
-): string => documents.map((doc) => doc.pageContent).join(separator);
+export const formatDocumentsAsString = (documents: Document[]): string =>
+  documents.map((doc) => doc.pageContent).join("\n\n");
