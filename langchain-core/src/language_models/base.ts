@@ -331,7 +331,9 @@ export abstract class BaseLanguageModel<
           error
         );
       }
-    } else {
+    }
+
+    if (this._encoding) {
       try {
         numTokens = this._encoding.encode(content).length;
       } catch (error) {
