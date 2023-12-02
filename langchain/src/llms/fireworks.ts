@@ -1,4 +1,4 @@
-import type { OpenAIClient } from "@langchain/openai";
+import type { OpenAI as OpenAIClient } from "openai";
 
 import type { BaseLLMParams } from "./base.js";
 import type { OpenAICallOptions, OpenAIInput } from "./openai.js";

@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 
 import { expect, test } from "@jest/globals";
-import { HUMAN_PROMPT } from "@langchain/anthropic";
+import { HUMAN_PROMPT } from "@anthropic-ai/sdk";
 import { ChatMessage, HumanMessage } from "../../schema/index.js";
 import { ChatPromptValue } from "../../prompts/chat.js";
 import {
