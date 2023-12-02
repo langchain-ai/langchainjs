@@ -331,10 +331,15 @@ export abstract class BaseLanguageModel<
           error
         );
       }
-    }
-
-    if (this._encoding) {
-      numTokens = this._encoding.encode(content).length;
+    } else {
+      try {
+        numTokens = this._encoding.encode(content).length;
+      } catch (error) {
+        console.warn(
+          "Failed to calculate number of tokens, falling back to approximate count",
+          error
+        );
+      }
     }
 
     return numTokens;
