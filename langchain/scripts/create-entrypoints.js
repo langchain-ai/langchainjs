@@ -181,6 +181,7 @@ const entrypoints = {
   "document_loaders/fs/epub": "document_loaders/fs/epub",
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
+  "document_loaders/fs/obsidian": "document_loaders/fs/obsidian",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   "document_loaders/fs/openai_whisper_audio":
     "document_loaders/fs/openai_whisper_audio",

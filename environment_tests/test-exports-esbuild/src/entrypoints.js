@@ -46,6 +46,7 @@ import * as document_loaders_base from "langchain/document_loaders/base";
 import * as document_loaders_web_searchapi from "langchain/document_loaders/web/searchapi";
 import * as document_loaders_web_serpapi from "langchain/document_loaders/web/serpapi";
 import * as document_loaders_web_sort_xyz_blockchain from "langchain/document_loaders/web/sort_xyz_blockchain";
+import * as document_loaders_fs_obsidian from "langchain/document_loaders/fs/obsidian";
 import * as document_transformers_openai_functions from "langchain/document_transformers/openai_functions";
 import * as chat_models_base from "langchain/chat_models/base";
 import * as chat_models_openai from "langchain/chat_models/openai";
