@@ -47,8 +47,7 @@ export class RunnableWithMessageHistory<
     }
   ) {
     let historyChain: Runnable = new RunnableLambda({
-      func: (input: any, options?: Record<string, unknown>) =>
-        this._enterHistory(input, options ?? {}),
+      func: (input, options) => this._enterHistory(input, options ?? {}),
     }).withConfig({ runName: "loadHistory" });
 
     const messagesKey = fields.historyMessagesKey ?? fields.inputMessagesKey;
@@ -118,9 +117,12 @@ export class RunnableWithMessageHistory<
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _enterHistory(input: any, config: BaseCallbackConfig): Array<BaseMessage> {
-    const history = config?.configurable?.messageHistory;
+  _enterHistory(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    input: any,
+    kwargs?: { config?: RunnableConfig }
+  ): Array<BaseMessage> {
+    const history = kwargs?.config?.configurable?.messageHistory;
 
     if (this.historyMessagesKey) {
       return history.messages;

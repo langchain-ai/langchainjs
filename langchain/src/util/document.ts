@@ -9,5 +9,4 @@ import { Document } from "../document.js";
  */
 export const formatDocumentsAsString = (
   documents: Document[],
-  separator = "\n\n"
-): string => documents.map((doc) => doc.pageContent).join(separator);
+): string => documents.map((doc) => doc.pageContent).join("\n\n");

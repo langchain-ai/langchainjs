@@ -24,7 +24,9 @@ import { RootListenersTracer } from "../tracers/root_listener.js";
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: any
+  options?: Record<string, any> & {
+    config?: RunnableConfig;
+  }
 ) => RunOutput | Promise<RunOutput>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1502,7 +1504,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     config?: Partial<BaseCallbackConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
-    let output = await this.func(input, config);
+    let output = await this.func(input, { config });
     if (output && Runnable.isRunnable(output)) {
       output = await output.invoke(
         input,
