@@ -13,7 +13,6 @@ import {
   type RunnableBindingArgs,
   RunnableLambda,
 } from "./base.js";
-import { type RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
@@ -62,8 +61,7 @@ export class RunnableWithMessageHistory<
     const bound = historyChain
       .pipe(
         fields.runnable.withListeners({
-          onEnd: (run: Run, config: RunnableConfig = {}) =>
-            this._exitHistory(run, config),
+          onEnd: (run, config) => this._exitHistory(run, config ?? {}),
         })
       )
       .withConfig({ runName: "RunnableWithMessageHistory" });

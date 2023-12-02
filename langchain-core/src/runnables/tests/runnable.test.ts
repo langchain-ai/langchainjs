@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Run } from "langsmith";
+import { jest } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
 import { BaseMessage } from "../../messages/index.js";
 import { OutputParserException } from "../../output_parsers/base.js";

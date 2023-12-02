@@ -726,12 +726,11 @@ export class RunnableBinding<
   ): Promise<(RunOutput | Error)[]> {
     const mergedOptions = Array.isArray(options)
       ? await Promise.all(
-          options.map(
-            async (individualOption) =>
-              await this._mergeConfig({
-                ...individualOption,
-                ...this.kwargs,
-              })
+          options.map(async (individualOption) =>
+            this._mergeConfig({
+              ...individualOption,
+              ...this.kwargs,
+            })
           )
         )
       : await this._mergeConfig({ ...options, ...this.kwargs });
