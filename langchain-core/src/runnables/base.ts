@@ -655,7 +655,7 @@ export class RunnableBinding<
       ...(this.configFactories
         ? await Promise.all(
             this.configFactories.map(
-              async (factoryMethod) => await factoryMethod(config)
+              async (configFactory) => await configFactory(config)
             )
           )
         : [])
@@ -798,7 +798,6 @@ export class RunnableBinding<
     onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
     onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
   }): Runnable<RunInput, RunOutput, CallOptions> {
-    //
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
       bound: this.bound,
       kwargs: this.kwargs,
