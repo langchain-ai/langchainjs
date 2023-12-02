@@ -157,6 +157,9 @@
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
+    "embeddings/gradient_ai.cjs",
+    "embeddings/gradient_ai.js",
+    "embeddings/gradient_ai.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -1697,6 +1700,11 @@
       "types": "./embeddings/llama_cpp.d.ts",
       "import": "./embeddings/llama_cpp.js",
       "require": "./embeddings/llama_cpp.cjs"
+    },
+    "./embeddings/gradient_ai": {
+      "types": "./embeddings/gradient_ai.d.ts",
+      "import": "./embeddings/gradient_ai.js",
+      "require": "./embeddings/gradient_ai.cjs"
     },
     "./llms/load": {
       "types": "./llms/load.d.ts",

@@ -24,6 +24,7 @@ export const optionalImportEntrypoints = [
   "langchain/embeddings/googlevertexai",
   "langchain/embeddings/googlepalm",
   "langchain/embeddings/llama_cpp",
+  "langchain/embeddings/gradient_ai",
   "langchain/llms/load",
   "langchain/llms/cohere",
   "langchain/llms/hf",
