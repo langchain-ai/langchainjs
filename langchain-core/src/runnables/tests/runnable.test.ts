@@ -22,7 +22,7 @@ import {
   FakeRunnable,
   FakeListChatModel,
 } from "../../utils/testing/index.js";
-import { RunnableSequence, RunnableMap, RunnableLambda } from "../base.js";
+import { RunnableSequence, RunnableMap, RunnableLambda, Runnable, RunnableMapLike, _coerceToRunnable, RunnableFunc, RunnableLike } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { Document } from "../../documents/document.js";
 
@@ -80,16 +80,18 @@ test("Create a runnable sequence with a runnable map", async () => {
       `Context:\n{documents}\n\nQuestion:\n{question}`
     ),
   ]);
+
   const llm = new FakeChatModel({});
   const inputs = {
-    question: (input: string) => input,
+    question: ((input: string) => input),
     documents: RunnableSequence.from([
       new FakeRetriever(),
       (docs: Document[]) => JSON.stringify(docs),
     ]),
     extraField: new FakeLLM({}),
   };
-  const runnable = new RunnableMap({ steps: inputs })
+
+  const runnable = new RunnableMap<string>({ steps: inputs })
     .pipe(promptTemplate)
     .pipe(llm);
   const result = await runnable.invoke("Do you know the Muffin Man?");
