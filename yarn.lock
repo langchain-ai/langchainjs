@@ -13087,6 +13087,7 @@ __metadata:
     react-dom: ^18
     tailwindcss: ^3.3.0
     ts-morph: ^20.0.0
+    turbo: latest
     typescript: ^5
   languageName: unknown
   linkType: soft

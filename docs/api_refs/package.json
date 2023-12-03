@@ -6,7 +6,10 @@
     "dev": "next dev -p 3001",
     "typedoc": "npx typedoc --options typedoc.json",
     "build:scripts": "node ./scripts/generate-api-refs.js && node ./scripts/update-typedoc-css.js",
-    "build": "yarn run build:deps && yarn workspace langchain build && yarn build:scripts && next build",
+    "prebuild": "yarn turbo build --filter=langchain --filter=@langchain/openai --filter=@langchain/anthropic",
+    "build2": "yarn prebuild && yarn build:scripts && next build",
+    "build": "yarn turbo run build:next",
+    "build:next": "next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint"
   },
@@ -25,6 +28,7 @@
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
     "ts-morph": "^20.0.0",
+    "turbo": "latest",
     "typescript": "^5"
   }
 }
