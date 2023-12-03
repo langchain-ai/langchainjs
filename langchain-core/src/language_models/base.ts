@@ -334,7 +334,14 @@ export abstract class BaseLanguageModel<
     }
 
     if (this._encoding) {
-      numTokens = this._encoding.encode(content).length;
+      try {
+        numTokens = this._encoding.encode(content).length;
+      } catch (error) {
+        console.warn(
+          "Failed to calculate number of tokens, falling back to approximate count",
+          error
+        );
+      }
     }
 
     return numTokens;
