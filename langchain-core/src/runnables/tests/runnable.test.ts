@@ -22,7 +22,7 @@ import {
   FakeRunnable,
   FakeListChatModel,
 } from "../../utils/testing/index.js";
-import { RunnableSequence, RunnableMap, RunnableLambda, Runnable, RunnableMapLike, _coerceToRunnable, RunnableFunc, RunnableLike } from "../base.js";
+import { RunnableSequence, RunnableMap, RunnableLambda, _coerceToRunnable } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { Document } from "../../documents/document.js";
 
