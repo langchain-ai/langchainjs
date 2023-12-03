@@ -2,12 +2,13 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "pipeline": {
-    "prebuild": {
-      "dependsOn": ["@langchain/openai#build", "@langchain/anthropic#build", "langchain#build"]
-    },
     "build:scripts": {
       "outputs": ["public/**"],
-      "dependsOn": ["prebuild"]
+      "dependsOn": [
+        "@langchain/openai#build",
+        "@langchain/anthropic#build",
+        "langchain#build"
+      ]
     },
     "build:next": {
       "outputs": [".next/**", ".vercel/**"],
