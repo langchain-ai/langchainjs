@@ -3,11 +3,10 @@
   "extends": ["//"],
   "pipeline": {
     "rimraf:build": {
-      "outputs": ["build/**"],
       "dependsOn": ["@langchain/api_refs#build"]
     },
     "build:docusaurus": {
-      "outputs": [".docusaurus/**", "build"],
+      "outputs": [".docusaurus/**", "build/**"],
       "dependsOn": ["rimraf:build"]
     }
   }
