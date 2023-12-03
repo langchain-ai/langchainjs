@@ -1,10 +1,10 @@
 import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory, ChatMessageHistory } from "langchain/memory";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/runnables";
-import { AgentStep } from "langchain/schema";
+import { AgentStep, BaseChatMessageHistory } from "langchain/schema";
 import { Tool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { WebBrowser } from "langchain/tools/webbrowser";
@@ -44,7 +44,22 @@ Thought:`,
   ],
 ]);
 
-const memory = new BufferMemory();
+async function getChatSessionHistory(): Promise<
+  (sessionId: string) => Promise<ChatMessageHistory>
+> {
+  const chatHistoryStore: { [key: string]: ChatMessageHistory } = {};
+
+  async function getSessionHistory(
+    sessionId: string
+  ): Promise<ChatMessageHistory> {
+    if (!(sessionId in chatHistoryStore)) {
+      chatHistoryStore[sessionId] = new ChatMessageHistory();
+    }
+    return chatHistoryStore[sessionId];
+  }
+
+  return getSessionHistory;
+}
 
 const outputParser = ZeroShotAgent.getDefaultOutputParser();
 
@@ -69,6 +84,11 @@ const runnable = RunnableSequence.from([
   model,
   outputParser,
 ]);
+
+const runnableWithHistory = new RunnableWithMessageHistory({
+  config: {},
+  get
+});
 
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnable,

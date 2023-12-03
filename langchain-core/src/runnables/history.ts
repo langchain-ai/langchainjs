@@ -1,5 +1,8 @@
 import { BaseCallbackConfig } from "../callbacks/manager.js";
-import { BaseChatMessageHistory, BaseListChatMessageHistory } from "../chat_history.js";
+import {
+  BaseChatMessageHistory,
+  BaseListChatMessageHistory,
+} from "../chat_history.js";
 import {
   AIMessage,
   BaseMessage,
