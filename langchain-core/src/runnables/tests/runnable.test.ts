@@ -1,33 +1,30 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { z } from "zod";
-import { test } from "@jest/globals";
-import { createChatMessageChunkEncoderStream } from "../../chat_models/base.js";
+import { Run } from "langsmith";
+import { jest } from "@jest/globals";
+import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
+import { BaseMessage } from "../../messages/index.js";
+import { OutputParserException } from "../../output_parsers/base.js";
+import { StringOutputParser } from "../../output_parsers/string.js";
 import {
   ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  PromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
-import { StructuredOutputParser } from "../../output_parsers/structured.js";
-import {
-  RunnableMap,
-  RunnableSequence,
-  RouterRunnable,
-  RunnableLambda,
-} from "../runnable/index.js";
-import { Document } from "../../document.js";
-import { OutputParserException, StringOutputParser } from "../output_parser.js";
-
+  HumanMessagePromptTemplate,
+} from "../../prompts/chat.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   FakeLLM,
-  FakeRetriever,
   FakeChatModel,
-  FakeRunnable,
+  FakeRetriever,
   FakeStreamingLLM,
   FakeSplitIntoListParser,
-} from "./lib.js";
+  FakeRunnable,
+  FakeListChatModel,
+} from "../../utils/testing/index.js";
+import { RunnableSequence, RunnableMap, RunnableLambda } from "../base.js";
+import { RouterRunnable } from "../router.js";
+import { Document } from "../../documents/document.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -71,34 +68,6 @@ test("Pipe from one runnable to the next", async () => {
   const result = await runnable.invoke({ input: "Hello world!" });
   console.log(result);
   expect(result).toBe("Hello world!");
-});
-
-test("Create a runnable sequence and run it", async () => {
-  const promptTemplate = PromptTemplate.fromTemplate("{input}");
-  const llm = new FakeChatModel({});
-  const parser = StructuredOutputParser.fromZodSchema(
-    z.object({ outputValue: z.string().describe("A test value") })
-  );
-  const text = `\`\`\`
-{"outputValue": "testing"}
-\`\`\``;
-  const runnable = promptTemplate.pipe(llm).pipe(parser);
-  const result = await runnable.invoke({ input: text });
-  console.log(result);
-  expect(result).toEqual({ outputValue: "testing" });
-});
-
-test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
-  const promptTemplate = PromptTemplate.fromTemplate("{input}");
-  const llm = new FakeChatModel({});
-  const parser = StructuredOutputParser.fromZodSchema(
-    z.object({ outputValue: z.string().describe("A test value") })
-  );
-  const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
-  await expect(async () => {
-    const result = await runnable.invoke({ input: "Hello sequence!" });
-    console.log(result);
-  }).rejects.toThrow(OutputParserException);
 });
 
 test("Create a runnable sequence with a runnable map", async () => {
@@ -246,4 +215,111 @@ test("Runnable withConfig", async () => {
   expect(chunks.length).toEqual(1);
   expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
   expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
+});
+
+test("Listeners work", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
+    ["human", "{question}"],
+  ]);
+  const model = new FakeListChatModel({
+    responses: ["foo"],
+  });
+  const chain = prompt.pipe(model);
+
+  const mockStart = jest.fn();
+  const mockEnd = jest.fn();
+
+  await chain
+    .withListeners({
+      onStart: (run: Run) => {
+        mockStart(run);
+      },
+      onEnd: (run: Run) => {
+        mockEnd(run);
+      },
+    })
+    .invoke({ question: "What is the meaning of life?" });
+
+  expect(mockStart).toHaveBeenCalledTimes(1);
+  expect((mockStart.mock.calls[0][0] as { name: string }).name).toBe(
+    "RunnableSequence"
+  );
+  expect(mockEnd).toHaveBeenCalledTimes(1);
+});
+
+test("Listeners work with async handlers", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
+    ["human", "{question}"],
+  ]);
+  const model = new FakeListChatModel({
+    responses: ["foo"],
+  });
+  const chain = prompt.pipe(model);
+
+  const mockStart = jest.fn();
+  const mockEnd = jest.fn();
+
+  await chain
+    .withListeners({
+      onStart: async (run: Run) => {
+        const promise = new Promise((resolve) => setTimeout(resolve, 2000));
+        await promise;
+        mockStart(run);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onEnd: async (run: Run) => {
+        const promise = new Promise((resolve) => setTimeout(resolve, 2000));
+        await promise;
+        mockEnd(run);
+      },
+    })
+    .invoke({ question: "What is the meaning of life?" });
+
+  expect(mockStart).toHaveBeenCalledTimes(1);
+  expect((mockStart.mock.calls[0][0] as { name: string }).name).toBe(
+    "RunnableSequence"
+  );
+  expect(mockEnd).toHaveBeenCalledTimes(1);
+});
+
+test("Create a runnable sequence and run it", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeChatModel({});
+  const parser = new StringOutputParser();
+  const text = `Jello world`;
+  const runnable = promptTemplate.pipe(llm).pipe(parser);
+  const result = await runnable.invoke({ input: text });
+  console.log(result);
+  expect(result).toEqual("Jello world");
+});
+
+test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeChatModel({});
+  const parser = (input: BaseMessage) => {
+    console.log(input);
+    try {
+      const parsedInput =
+        typeof input.content === "string"
+          ? JSON.parse(input.content)
+          : input.content;
+      if (
+        !("outputValue" in parsedInput) ||
+        parsedInput.outputValue !== "Hello sequence!"
+      ) {
+        throw new Error("Test failed!");
+      } else {
+        return input;
+      }
+    } catch (e) {
+      throw new OutputParserException("Invalid output");
+    }
+  };
+  const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
+  await expect(async () => {
+    const result = await runnable.invoke({ input: "Hello sequence!" });
+    console.log(result);
+  }).rejects.toThrow(OutputParserException);
 });

@@ -70,6 +70,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/llama_cpp"?:
     | typeof import("../embeddings/llama_cpp.js")
     | Promise<typeof import("../embeddings/llama_cpp.js")>;
+  "langchain/embeddings/gradient_ai"?:
+    | typeof import("../embeddings/gradient_ai.js")
+    | Promise<typeof import("../embeddings/gradient_ai.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
