@@ -1,13 +1,11 @@
 {
-  "name": "api_refs",
+  "name": "@langchain/api_refs",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
     "typedoc": "npx typedoc --options typedoc.json",
     "build:scripts": "node ./scripts/generate-api-refs.js && node ./scripts/update-typedoc-css.js",
-    "prebuild": "yarn turbo build --filter=langchain --filter=@langchain/openai --filter=@langchain/anthropic",
-    "build2": "yarn prebuild && yarn build:scripts && next build",
     "build": "yarn turbo run build:next",
     "build:next": "next build",
     "start": "yarn build && next start -p 3001",

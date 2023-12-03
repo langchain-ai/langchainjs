@@ -34,8 +34,8 @@
     "publish:core": "bash langchain/scripts/release-branch.sh && turbo run --filter @langchain/core build lint test --concurrency 1 && yarn run test:exports:docker && yarn workspace @langchain/core run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
-    "docs": "yarn workspace core_docs start",
-    "docs:api_refs": "yarn workspace api_refs start"
+    "docs": "yarn workspace @langchain/core_docs start",
+    "docs:api_refs": "yarn workspace @langchain/api_refs start"
   },
   "author": "LangChain",
   "license": "MIT",

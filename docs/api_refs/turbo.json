@@ -3,7 +3,7 @@
   "extends": ["//"],
   "pipeline": {
     "prebuild": {
-      "outputs": []
+      "dependsOn": ["@langchain/openai#build", "@langchain/anthropic#build", "langchain#build"]
     },
     "build:scripts": {
       "outputs": ["public/**"],

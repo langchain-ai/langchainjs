@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "pipeline": {
+    "rimraf:build": {
+      "outputs": ["build/**"],
+      "dependsOn": ["@langchain/api_refs#build"]
+    },
+    "build:docusaurus": {
+      "outputs": [".docusaurus/**", "build"],
+      "dependsOn": ["rimraf:build"]
+    }
+  }
+}
