@@ -110,6 +110,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/fs/epub",
   "langchain/document_loaders/fs/csv",
   "langchain/document_loaders/fs/notion",
+  "langchain/document_loaders/fs/obsidian",
   "langchain/document_loaders/fs/unstructured",
   "langchain/document_loaders/fs/openai_whisper_audio",
   "langchain/document_loaders/fs/pptx",

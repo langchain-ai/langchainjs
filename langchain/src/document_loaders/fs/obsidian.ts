@@ -25,7 +25,7 @@ export interface ObsidianFileLoaderOptions {
  */
 class ObsidianFileLoader extends BaseDocumentLoader {
   private filePath: string;
-  
+
   private encoding: BufferEncoding;
 
   private collectMetadata: boolean;
@@ -36,11 +36,17 @@ class ObsidianFileLoader extends BaseDocumentLoader {
    * @param encoding The character encoding to use when reading the file. Defaults to 'utf-8'.
    * @param collectMetadata Determines whether metadata should be collected from the file. Defaults to true.
    */
-  constructor(filePath: string, { encoding = "utf-8", collectMetadata = true }: ObsidianFileLoaderOptions = {}) {
-    super()
+  constructor(
+    filePath: string,
+    {
+      encoding = "utf-8",
+      collectMetadata = true,
+    }: ObsidianFileLoaderOptions = {}
+  ) {
+    super();
     this.filePath = filePath;
     this.encoding = encoding;
-    this.collectMetadata = collectMetadata;  
+    this.collectMetadata = collectMetadata;
   }
 
   private static FRONT_MATTER_REGEX = /^---\n(.*?)\n---\n/s;
@@ -69,10 +75,10 @@ class ObsidianFileLoader extends BaseDocumentLoader {
       return frontMatter;
     } catch (e) {
       console.warn("Encountered non-yaml frontmatter");
-      return {}
+      return {};
     }
   }
-  
+
   /**
    * Removes YAML front matter from the given content string.
    * @param content The string content of the markdown file.
@@ -87,7 +93,7 @@ class ObsidianFileLoader extends BaseDocumentLoader {
   }
 
   private static TAG_REGEX = /(?:\s|^)#([a-zA-Z_][\w/-]*)/g;
-  
+
   /**
    * Parses Obsidian-style tags from the given content string.
    * @param content The string content of the markdown file.
@@ -110,7 +116,7 @@ class ObsidianFileLoader extends BaseDocumentLoader {
   private static DATAVIEW_LINE_REGEX = /^\s*(\w+)::\s*(.*)$/gm;
 
   private static DATAVIEW_INLINE_BRACKET_REGEX = /\[(\w+)::\s*(.*)\]/gm;
-  
+
   private static DATAVIEW_INLINE_PAREN_REGEX = /\((\w+)::\s*(.*)\)/gm;
 
   /**
@@ -118,7 +124,7 @@ class ObsidianFileLoader extends BaseDocumentLoader {
    * @param content The string content of the markdown file.
    * @returns A record object containing key-value pairs of dataview fields.
    */
-  private parseObsidianDataviewFields(content: string): Record<string, string>  {
+  private parseObsidianDataviewFields(content: string): Record<string, string> {
     if (!this.collectMetadata) {
       return {};
     }
@@ -153,9 +159,7 @@ class ObsidianFileLoader extends BaseDocumentLoader {
    * @param metadata The metadata object to convert.
    * @returns A record object containing key-value pairs of Langchain-compatible metadata.
    */
-  private toLangchainCompatibleMetadata(
-    metadata: Record<string, unknown>
-  ) {
+  private toLangchainCompatibleMetadata(metadata: Record<string, unknown>) {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(metadata)) {
       if (typeof value === "string" || typeof value === "number") {
@@ -167,16 +171,15 @@ class ObsidianFileLoader extends BaseDocumentLoader {
     return result;
   }
 
-
   /**
    * It loads the Obsidian file, parses it, and returns a `Document` instance.
    * @returns An array of `Document` instances to comply with the BaseDocumentLoader interface.
    */
   public async load(): Promise<Document[]> {
     const documents: Document[] = [];
-    
+
     const { basename, readFile, stat } = await ObsidianFileLoader.imports();
-    const fileName = basename(this.filePath)
+    const fileName = basename(this.filePath);
     const stats = await stat(this.filePath);
     let content = await readFile(this.filePath, this.encoding);
 
@@ -198,9 +201,9 @@ class ObsidianFileLoader extends BaseDocumentLoader {
     if (tags.size || frontMatter.tags) {
       metadata.tags = Array.from(
         new Set([...tags, ...(frontMatter.tags ?? [])])
-      ).join(",");    
+      ).join(",");
     }
-      
+
     documents.push(
       new Document({
         pageContent: content,
@@ -218,22 +221,22 @@ class ObsidianFileLoader extends BaseDocumentLoader {
    * indicating that the modules failed to load.
    * @returns A promise that resolves to an object containing the imported functions.
    */
-    static async imports(): Promise<{
-      basename: typeof BasenameT;
-      readFile: typeof ReadFileT;
-      stat: typeof StatT;
-    }> {
-      try {
-        const { basename } = await import("node:path");
-        const { readFile, stat } = await import("node:fs/promises");
-        return { basename, readFile, stat };
-      } catch (e) {
-        console.error(e);
-        throw new Error(
-          `Failed to load fs/promises. ObsidianFileLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
-        );
-      }
+  static async imports(): Promise<{
+    basename: typeof BasenameT;
+    readFile: typeof ReadFileT;
+    stat: typeof StatT;
+  }> {
+    try {
+      const { basename } = await import("node:path");
+      const { readFile, stat } = await import("node:fs/promises");
+      return { basename, readFile, stat };
+    } catch (e) {
+      console.error(e);
+      throw new Error(
+        `Failed to load fs/promises. ObsidianFileLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
+      );
     }
+  }
 }
 
 /**
@@ -242,7 +245,7 @@ class ObsidianFileLoader extends BaseDocumentLoader {
  * Obsidian tags, and Dataview fields.
  */
 export class ObsidianLoader extends DirectoryLoader {
-   /**
+  /**
    * Initializes a new instance of the ObsidianLoader class.
    * @param directoryPath The path to the directory containing Obsidian markdown files.
    * @param encoding The character encoding to use when reading files. Defaults to 'utf-8'.
@@ -256,7 +259,6 @@ export class ObsidianLoader extends DirectoryLoader {
       },
       true,
       UnknownHandling.Ignore
-    );    
+    );
   }
 }
-

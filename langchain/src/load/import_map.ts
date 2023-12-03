@@ -47,7 +47,6 @@ export * as document_loaders__base from "../document_loaders/base.js";
 export * as document_loaders__web__searchapi from "../document_loaders/web/searchapi.js";
 export * as document_loaders__web__serpapi from "../document_loaders/web/serpapi.js";
 export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";
-export * as document_loaders__fs__obsidian from "../document_loaders/fs/obsidian.js";
 export * as document_transformers__openai_functions from "../document_transformers/openai_functions.js";
 export * as chat_models__base from "../chat_models/base.js";
 export * as chat_models__openai from "../chat_models/openai.js";

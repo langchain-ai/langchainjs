@@ -46,7 +46,6 @@ export * from "langchain/document_loaders/base";
 export * from "langchain/document_loaders/web/searchapi";
 export * from "langchain/document_loaders/web/serpapi";
 export * from "langchain/document_loaders/web/sort_xyz_blockchain";
-export * from "langchain/document_loaders/fs/obsidian";
 export * from "langchain/document_transformers/openai_functions";
 export * from "langchain/chat_models/base";
 export * from "langchain/chat_models/openai";
