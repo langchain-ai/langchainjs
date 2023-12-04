@@ -16,6 +16,9 @@ agents/toolkits.d.ts
 agents/toolkits/aws_sfn.cjs
 agents/toolkits/aws_sfn.js
 agents/toolkits/aws_sfn.d.ts
+agents/toolkits/jira.cjs
+agents/toolkits/jira.js
+agents/toolkits/jira.d.ts
 agents/toolkits/sql.cjs
 agents/toolkits/sql.js
 agents/toolkits/sql.d.ts
@@ -61,6 +64,9 @@ tools/calculator.d.ts
 tools/render.cjs
 tools/render.js
 tools/render.d.ts
+tools/jira.cjs
+tools/jira.js
+tools/jira.d.ts
 tools/sql.cjs
 tools/sql.js
 tools/sql.d.ts

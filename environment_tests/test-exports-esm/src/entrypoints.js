@@ -2,6 +2,7 @@ import * as load from "langchain/load";
 import * as load_serializable from "langchain/load/serializable";
 import * as agents from "langchain/agents";
 import * as agents_toolkits from "langchain/agents/toolkits";
+import * as agents_toolkits_jira from "langchain/agents/toolkits/jira";
 import * as agents_format_scratchpad from "langchain/agents/format_scratchpad";
 import * as agents_format_scratchpad_openai_tools from "langchain/agents/format_scratchpad/openai_tools";
 import * as agents_format_scratchpad_log from "langchain/agents/format_scratchpad/log";
@@ -13,6 +14,7 @@ import * as agents_openai_output_parser from "langchain/agents/openai/output_par
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
 import * as tools_render from "langchain/tools/render";
+import * as tools_jira from "langchain/tools/jira";
 import * as chains from "langchain/chains";
 import * as chains_combine_documents_reduce from "langchain/chains/combine_documents/reduce";
 import * as chains_openai_functions from "langchain/chains/openai_functions";
