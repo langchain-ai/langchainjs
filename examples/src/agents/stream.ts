@@ -108,7 +108,7 @@ console.log("Loaded agent.");
 
 console.log(`Executing with question "${input.question}"...`);
 
-// Call `.stream()` with the inputs on the executor, then 
+// Call `.stream()` with the inputs on the executor, then
 // iterate over the steam and save each stream step to memory.
 const result = await executor.stream(input);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
