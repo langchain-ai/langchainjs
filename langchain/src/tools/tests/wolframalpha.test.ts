@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect } from "@jest/globals";
+import { jest, afterEach, beforeEach, describe, expect } from "@jest/globals";
 import { WolframAlphaTool } from "../wolframalpha.js";
 
 const MOCK_APP_ID = "[MOCK_APP_ID]";
@@ -6,7 +6,8 @@ const QUERY_1 = "What is 2 + 2?";
 const MOCK_ANSWER = "[MOCK_ANSWER]";
 
 describe("wolfram alpha test suite", () => {
-  let fetchMock: jest.SpyInstance;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fetchMock: any;
 
   beforeEach(() => {
     fetchMock = jest.spyOn(global, "fetch").mockImplementation(
