@@ -15,15 +15,13 @@ import { StringOutputParser } from "langchain/schema/output_parser";
 
 // Define your session history store.
 // This is where you will store your chat history, keyed by sessionId.
-async function getListSessionHistory(): Promise<
-  (sessionId: string) => Promise<BaseListChatMessageHistory>
-> {
+function getListSessionHistory(): (
+  sessionId: string
+) => BaseListChatMessageHistory {
   const chatHistoryStore: { [key: string]: BaseListChatMessageHistory } = {};
 
-  async function getSessionHistory(
-    sessionId: string
-  ): Promise<BaseListChatMessageHistory> {
-    if (!(sessionId in chatHistoryStore)) {
+  function getSessionHistory(sessionId: string): BaseListChatMessageHistory {
+    if (!chatHistoryStore[sessionId]) {
       chatHistoryStore[sessionId] = new ChatMessageHistory();
     }
     return chatHistoryStore[sessionId];
@@ -55,7 +53,7 @@ const runnable = RunnableSequence.from([
 const withHistory = new RunnableWithMessageHistory({
   runnable,
   config: {},
-  getMessageHistory: await getListSessionHistory(),
+  getMessageHistory: getListSessionHistory(),
 });
 
 // Create your `configurable` object. This is where you pass in the
