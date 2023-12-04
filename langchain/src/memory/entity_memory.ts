@@ -38,6 +38,35 @@ export interface EntityMemoryInput extends BaseChatMemoryInput {
  * Class for managing entity extraction and summarization to memory in
  * chatbot applications. Extends the BaseChatMemory class and implements
  * the EntityMemoryInput interface.
+ * @example
+ * ```typescript
+ * const memory = new EntityMemory({
+ *   llm: new ChatOpenAI({ temperature: 0 }),
+ *   chatHistoryKey: "history",
+ *   entitiesKey: "entities",
+ * });
+ * const model = new ChatOpenAI({ temperature: 0.9 });
+ * const chain = new LLMChain({
+ *   llm: model,
+ *   prompt: ENTITY_MEMORY_CONVERSATION_TEMPLATE,
+ *   memory,
+ * });
+ *
+ * const res1 = await chain.call({ input: "Hi! I'm Jim." });
+ * console.log({
+ *   res1,
+ *   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
+ * });
+ *
+ * const res2 = await chain.call({
+ *   input: "I work in construction. What about you?",
+ * });
+ * console.log({
+ *   res2,
+ *   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
+ * });
+ *
+ * ```
  */
 export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
   private entityExtractionChain: LLMChain;

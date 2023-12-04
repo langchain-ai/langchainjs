@@ -16,7 +16,9 @@ const executor = await initializeAgentExecutorWithOptions(tools, chat, {
   },
 });
 
-const result = await executor.run("What is the weather in New York?");
+const result = await executor.invoke({
+  input: "What is the weather in New York?",
+});
 console.log(result);
 
 // Arr matey, in New York, it be feelin' like 75 degrees, with a gentle breeze blowin' from the northwest at 3 knots. The air be 77% full o' water, and the clouds be coverin' 35% of the sky. There be no rain in sight, yarr!

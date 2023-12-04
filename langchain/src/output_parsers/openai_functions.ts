@@ -1,4 +1,8 @@
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import {
+  compare,
+  type Operation as JSONPatchOperation,
+} from "@langchain/core/utils/json_patch";
 
 import { ChatGeneration, Generation } from "../schema/index.js";
 import { Optional } from "../types/type-utils.js";
@@ -7,10 +11,6 @@ import {
   type BaseCumulativeTransformOutputParserInput,
   BaseLLMOutputParser,
 } from "../schema/output_parser.js";
-import {
-  compare,
-  type Operation as JSONPatchOperation,
-} from "../util/fast-json-patch/index.js";
 import { parsePartialJson } from "./json.js";
 
 /**

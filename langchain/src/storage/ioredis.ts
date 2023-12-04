@@ -6,6 +6,30 @@ import { BaseStore } from "../schema/storage.js";
  * Class that extends the BaseStore class to interact with a Redis
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
+ * @example
+ * ```typescript
+ * const store = new RedisByteStore({ client: new Redis({}) });
+ * await store.mset([
+ *   [
+ *     "message:id:0",
+ *     new TextEncoder().encode(JSON.stringify(new AIMessage("ai stuff..."))),
+ *   ],
+ *   [
+ *     "message:id:1",
+ *     new TextEncoder().encode(
+ *       JSON.stringify(new HumanMessage("human stuff...")),
+ *     ),
+ *   ],
+ * ]);
+ * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
+ * console.log(retrievedMessages.map((v) => new TextDecoder().decode(v)));
+ * const yieldedKeys = [];
+ * for await (const key of store.yieldKeys("message:id:")) {
+ *   yieldedKeys.push(key);
+ * }
+ * console.log(yieldedKeys);
+ * await store.mdelete(yieldedKeys);
+ * ```
  */
 export class RedisByteStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];

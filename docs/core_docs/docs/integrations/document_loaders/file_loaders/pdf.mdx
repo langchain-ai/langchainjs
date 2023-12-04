@@ -48,3 +48,25 @@ const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
   pdfjs: () => import("pdfjs-dist/legacy/build/pdf.js"),
 });
 ```
+
+## Eliminating extra spaces
+
+PDFs come in many varieties, which makes reading them a challenge. The loader parses individual text elements and joins them together with a space by default, but
+if you are seeing excessive spaces, this may not be the desired behavior. In that case, you can override the separator with an empty string like this:
+
+```typescript
+import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+
+const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
+  parsedItemSeparator: "",
+});
+
+const docs = await loader.load();
+```
+
+## Loading directories
+
+import CodeBlock from "@theme/CodeBlock";
+import MemoryExample from "@examples/document_loaders/pdf_directory.ts";
+
+<CodeBlock language="typescript">{MemoryExample}</CodeBlock>

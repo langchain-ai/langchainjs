@@ -18,6 +18,16 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
 
 /**
  * A class for generating embeddings using the Cohere API.
+ * @example
+ * ```typescript
+ * // Embed a query using the CohereEmbeddings class
+ * const model = new ChatOpenAI();
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?",
+ * );
+ * console.log({ res });
+ *
+ * ```
  */
 export class CohereEmbeddings
   extends Embeddings

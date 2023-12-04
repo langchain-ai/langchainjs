@@ -23,6 +23,23 @@ export interface GooglePaLMEmbeddingsParams extends EmbeddingsParams {
 /**
  * Class that extends the Embeddings class and provides methods for
  * generating embeddings using the Google Palm API.
+ * @example
+ * ```typescript
+ * const model = new GooglePaLMEmbeddings({
+ *   apiKey: "<YOUR API KEY>",
+ *   modelName: "models/embedding-gecko-001",
+ * });
+ *
+ * // Embed a single query
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?"
+ * );
+ * console.log({ res });
+ *
+ * // Embed multiple documents
+ * const documentRes = await model.embedDocuments(["Hello world", "Bye bye"]);
+ * console.log({ documentRes });
+ * ```
  */
 export class GooglePaLMEmbeddings
   extends Embeddings

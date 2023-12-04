@@ -7,6 +7,8 @@
   },
   "workspaces": [
     "langchain",
+    "langchain-core",
+    "libs/*",
     "examples",
     "docs/*"
   ],
@@ -17,23 +19,23 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
-    "build:api_refs": "cd ./docs/api_refs && yarn build:typedoc",
+    "build:deps": "yarn workspace @langchain/core build && yarn workspace @langchain/anthropic build && yarn workspace @langchain/openai build",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
     "lint:fix": "yarn lint -- --fix",
-    "test": "yarn test:unit && yarn workspace langchain build && yarn test:exports:docker",
+    "test": "yarn test:unit && yarn workspace @langchain/core build && yarn workspace langchain build && yarn test:exports:docker",
     "test:unit": "turbo run test --filter langchain",
     "test:int": "yarn run test:int:deps && turbo run test:integration ; yarn run test:int:deps:down",
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
     "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
     "test:exports:docker": "docker compose up --force-recreate",
     "publish": "bash langchain/scripts/release-branch.sh && turbo run --filter langchain build lint test --concurrency 1 && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
+    "publish:core": "bash langchain/scripts/release-branch.sh && turbo run --filter @langchain/core build lint test --concurrency 1 && yarn run test:exports:docker && yarn workspace @langchain/core run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace core_docs start",
-    "docs:api_refs": "yarn workspace api_refs start",
-    "postinstall": "husky install"
+    "docs:api_refs": "yarn workspace api_refs start"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -41,7 +43,6 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
     "dotenv": "^16.0.3",
-    "husky": "^8.0.0",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "typescript": "^5.0.0"

@@ -8,7 +8,7 @@
     "required-first",
     "alphabetical"
   ],
-  "tsconfig": "../../langchain/tsconfig.json",
+  "tsconfig": "./langchain/tsconfig.json",
   "readme": "none",
   "excludePrivate": true,
   "excludeInternal": true,

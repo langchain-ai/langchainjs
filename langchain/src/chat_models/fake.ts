@@ -22,6 +22,22 @@ export interface FakeChatInput extends BaseChatModelParams {
 /**
  * A fake Chat Model that returns a predefined list of responses. It can be used
  * for testing purposes.
+ * @example
+ * ```typescript
+ * const chat = new FakeListChatModel({
+ *   responses: ["I'll callback later.", "You 'console' them!"]
+ * });
+ *
+ * const firstMessage = new HumanMessage("You want to hear a JavaScript joke?");
+ * const secondMessage = new HumanMessage("How do you cheer up a JavaScript developer?");
+ *
+ * // Call the chat model with a message and log the response
+ * const firstResponse = await chat.call([firstMessage]);
+ * console.log({ firstResponse });
+ *
+ * const secondResponse = await chat.call([secondMessage]);
+ * console.log({ secondResponse });
+ * ```
  */
 export class FakeListChatModel extends BaseChatModel {
   static lc_name() {

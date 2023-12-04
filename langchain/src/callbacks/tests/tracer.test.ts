@@ -101,8 +101,8 @@ test("Test Chat Model Run", async () => {
           [
             {
               "id": [
-                "langchain",
-                "schema",
+                "langchain_core",
+                "messages",
                 "HumanMessage",
               ],
               "kwargs": {

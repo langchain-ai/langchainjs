@@ -3,12 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "typedoc": "npx typedoc --options typedoc.json && yarn update-css",
-    "build:typedoc": "bash ./generate_typedoc.sh",
-    "add-ignore-comments": "cd ../../langchain && node scripts/build-for-api-ref-docs.js",
-    "update-css": "node ./scripts/update-typedoc-css.js",
-    "build": "yarn build:typedoc && next build",
+    "dev": "next dev -p 3001",
+    "typedoc": "npx typedoc --options typedoc.json",
+    "build:scripts": "node ./scripts/generate-api-refs.js && node ./scripts/update-typedoc-css.js",
+    "build": "yarn run build:deps && yarn workspace langchain build && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint"
   },
@@ -26,6 +24,7 @@
     "eslint-config-next": "14.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
+    "ts-morph": "^20.0.0",
     "typescript": "^5"
   }
 }

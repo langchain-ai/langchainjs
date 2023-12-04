@@ -81,7 +81,7 @@ console.log("Loaded agent executor");
 
 const query = "What is the weather in New York?";
 console.log(`Calling agent executor with query: ${query}`);
-const result = await executor.call({
+const result = await executor.invoke({
   input: query,
 });
 console.log(result);

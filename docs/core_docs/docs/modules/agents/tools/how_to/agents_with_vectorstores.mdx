@@ -66,7 +66,7 @@ const input = `What did biden say about ketanji brown jackson is the state of th
 
 console.log(`Executing with input "${input}"...`);
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 console.log(`Got output ${result.output}`);
 ```

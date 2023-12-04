@@ -39,6 +39,35 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  * Class for conducting conversational question-answering tasks with a
  * retrieval component. Extends the BaseChain class and implements the
  * ConversationalRetrievalQAChainInput interface.
+ * @example
+ * ```typescript
+ * const model = new ChatAnthropic({});
+ *
+ * const text = fs.readFileSync("state_of_the_union.txt", "utf8");
+ *
+ * const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+ * const docs = await textSplitter.createDocuments([text]);
+ *
+ * const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+ *
+ * const chain = ConversationalRetrievalQAChain.fromLLM(
+ *   model,
+ *   vectorStore.asRetriever(),
+ * );
+ *
+ * const question = "What did the president say about Justice Breyer?";
+ *
+ * const res = await chain.call({ question, chat_history: "" });
+ * console.log(res);
+ *
+ * const chatHistory = `${question}\n${res.text}`;
+ * const followUpRes = await chain.call({
+ *   question: "Was that nice?",
+ *   chat_history: chatHistory,
+ * });
+ * console.log(followUpRes);
+ *
+ * ```
  */
 export class ConversationalRetrievalQAChain
   extends BaseChain

@@ -20,6 +20,30 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
  * A class that enables calls to the Ollama API to access large language
  * models in a chat-like fashion. It extends the SimpleChatModel class and
  * implements the OllamaInput interface.
+ * @example
+ * ```typescript
+ * const prompt = ChatPromptTemplate.fromMessages([
+ *   [
+ *     "system",
+ *     `You are an expert translator. Format all responses as JSON objects with two keys: "original" and "translated".`,
+ *   ],
+ *   ["human", `Translate "{input}" into {language}.`],
+ * ]);
+ *
+ * const model = new ChatOllama({
+ *   baseUrl: "http://api.example.com",
+ *   model: "llama2",
+ *   format: "json",
+ * });
+ *
+ * const chain = prompt.pipe(model);
+ *
+ * const result = await chain.invoke({
+ *   input: "I love programming",
+ *   language: "German",
+ * });
+ *
+ * ```
  */
 export class ChatOllama
   extends SimpleChatModel<OllamaCallOptions>

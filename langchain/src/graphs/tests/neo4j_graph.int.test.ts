@@ -33,16 +33,12 @@ describe.skip("Neo4j Graph Tests", () => {
     console.log(graph.getSchema());
 
     // expect(graph.getSchema()).toMatchInlineSnapshot(`
-    //   "
-    //         Node properties are the following:
-    //         [{"labels":"Actor","properties":[{"property":"name","type":"STRING"}]},{"labels":"Movie","properties":[{"property":"title","type":"STRING"}]}]
-
-    //         Relationship properties are the following:
-    //         [{"properties":[{"property":"roles","type":"LIST"}],"type":"ACTED_IN"}]
-
-    //         The relationships are the following:
-    //         ["(:Actor)-[:ACTED_IN]->(:Movie)"]
-    //       "
+    //   "Node properties are the following:
+    //   Actor {name: STRING}, Movie {title: STRING}
+    //   Relationship properties are the following:
+    //   ACTED_IN {roles: LIST}
+    //   The relationships are the following:
+    //   (:Actor)-[:ACTED_IN]->(:Movie)"
     // `);
   });
 

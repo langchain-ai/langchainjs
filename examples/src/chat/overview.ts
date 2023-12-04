@@ -137,9 +137,9 @@ export const run = async () => {
   // Create an executor, which calls to the agent until an answer is found
   const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
 
-  const responseG = await executor.run(
-    "How many people live in canada as of 2023?"
-  );
+  const responseG = await executor.invoke({
+    input: "How many people live in canada as of 2023?",
+  });
 
   console.log(responseG);
 };

@@ -14,6 +14,8 @@ import { SerpAPI } from "../../tools/serpapi.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 import { Calculator } from "../../tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { OpenAIAgent } from "../openai/index.js";
 
 test("Runnable variant", async () => {
   const tools = [new Calculator(), new SerpAPI()];
@@ -59,8 +61,44 @@ test("Runnable variant", async () => {
 
   const query = "What is the weather in New York?";
   console.log(`Calling agent executor with query: ${query}`);
-  const result = await executor.call({
+  const result = await executor.invoke({
     input: query,
   });
+  console.log(result);
+});
+
+test("Runnable variant works with executor", async () => {
+  // Prepare tools
+  const tools = [new Calculator(), new SerpAPI()];
+  const runnableModel = new ChatOpenAI({
+    modelName: "gpt-4",
+    temperature: 0,
+  }).bind({});
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["ai", "You are a helpful assistant"],
+    ["human", "{input}"],
+    new MessagesPlaceholder("agent_scratchpad"),
+  ]);
+
+  // Prepare agent chain
+  const llmChain = new LLMChain({
+    prompt,
+    llm: runnableModel,
+  });
+  const agent = new OpenAIAgent({
+    llmChain,
+    tools,
+  });
+
+  // Prepare and run executor
+  const executor = new AgentExecutor({
+    agent,
+    tools,
+  });
+  const result = await executor.invoke({
+    input: "What is the weather in New York?",
+  });
+
   console.log(result);
 });

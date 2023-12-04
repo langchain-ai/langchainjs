@@ -1,5 +1,14 @@
 import { Tool, ToolParams } from "./base.js";
 
+/**
+ * @example
+ * ```typescript
+ * const tool = new WolframAlphaTool({
+ *   appid: "YOUR_APP_ID",
+ * });
+ * const res = await tool.invoke("What is 2 * 2?");
+ * ```
+ */
 export class WolframAlphaTool extends Tool {
   appid: string;
 

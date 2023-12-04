@@ -137,3 +137,16 @@ npm install -S @cloudflare/workers-types
 import CloudflareExample from "@examples/cache/cloudflare_kv.ts";
 
 <CodeBlock language="typescript">{CloudflareExample}</CodeBlock>
+
+## Caching on the File System
+
+:::warning
+This cache is not recommended for production use. It is only intended for local development.
+:::
+
+LangChain provides a simple file system cache.
+By default the cache is stored a temporary directory, but you can specify a custom directory if you want.
+
+```typescript
+const cache = await LocalFileCache.create();
+```

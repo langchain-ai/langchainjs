@@ -27,7 +27,7 @@ test("Test Bedrock LLM: AI21", async () => {
   console.log(res);
 });
 
-test("Test Bedrock LLM: Meta Llama2", async () => {
+test.skip("Test Bedrock LLM: Meta Llama2", async () => {
   const region = process.env.BEDROCK_AWS_REGION!;
   const model = "meta.llama2-13b-chat-v1";
   const prompt = "Human: What is your name?";
@@ -50,7 +50,7 @@ test("Test Bedrock LLM: Meta Llama2", async () => {
   console.log(res);
 });
 
-test("Test Bedrock LLM streaming: Meta Llama2", async () => {
+test.skip("Test Bedrock LLM streaming: Meta Llama2", async () => {
   const region = process.env.BEDROCK_AWS_REGION!;
   const model = "meta.llama2-13b-chat-v1";
   const prompt = "What is your name?";

@@ -82,6 +82,22 @@ export type NotionAPILoaderOptions = {
 /**
  * A class that extends the BaseDocumentLoader class. It represents a
  * document loader for loading documents from Notion using the Notion API.
+ * @example
+ * ```typescript
+ * const pageLoader = new NotionAPILoader({
+ *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
+ *   id: "<PAGE_ID>",
+ *   type: "page",
+ * });
+ * const pageDocs = await pageLoader.loadAndSplit();
+ * const dbLoader = new NotionAPILoader({
+ *   clientOptions: { auth: "<NOTION_INTEGRATION_TOKEN>" },
+ *   id: "<DATABASE_ID>",
+ *   type: "database",
+ *   propertiesAsHeader: true,
+ * });
+ * const dbDocs = await dbLoader.load();
+ * ```
  */
 export class NotionAPILoader extends BaseDocumentLoader {
   private caller: AsyncCaller;

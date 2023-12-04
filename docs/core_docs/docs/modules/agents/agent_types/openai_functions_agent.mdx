@@ -87,7 +87,7 @@ Finally we can call the agent, and save the output after the response is returne
 ```typescript
 const query = "What is the weather in New York?";
 console.log(`Calling agent executor with query: ${query}`);
-const result = await executor.call({
+const result = await executor.invoke({
   input: query,
 });
 console.log(result);
@@ -109,7 +109,7 @@ await memory.saveContext(
 );
 
 const query2 = "Do I need a jacket?";
-const result2 = await executor.call({
+const result2 = await executor.invoke({
   input: query2,
 });
 console.log(result2);

@@ -34,6 +34,21 @@ export interface ConversationTokenBufferMemoryInput
  * Class that represents a conversation chat memory with a token buffer.
  * It extends the `BaseChatMemory` class and implements the
  * `ConversationTokenBufferMemoryInput` interface.
+ * @example
+ * ```typescript
+ * const memory = new ConversationTokenBufferMemory({
+ *   llm: new ChatOpenAI({}),
+ *   maxTokenLimit: 10,
+ * });
+ *
+ * // Save conversation context
+ * await memory.saveContext({ input: "hi" }, { output: "whats up" });
+ * await memory.saveContext({ input: "not much you" }, { output: "not much" });
+ *
+ * // Load memory variables
+ * const result = await memory.loadMemoryVariables({});
+ * console.log(result);
+ * ```
  */
 
 export class ConversationTokenBufferMemory

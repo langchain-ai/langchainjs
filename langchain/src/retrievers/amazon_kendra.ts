@@ -30,6 +30,22 @@ export interface AmazonKendraRetrieverArgs {
 /**
  * Class for interacting with Amazon Kendra, an intelligent search service
  * provided by AWS. Extends the BaseRetriever class.
+ * @example
+ * ```typescript
+ * const retriever = new AmazonKendraRetriever({
+ *   topK: 10,
+ *   indexId: "YOUR_INDEX_ID",
+ *   region: "us-east-2",
+ *   clientOptions: {
+ *     credentials: {
+ *       accessKeyId: "YOUR_ACCESS_KEY_ID",
+ *       secretAccessKey: "YOUR_SECRET_ACCESS_KEY",
+ *     },
+ *   },
+ * });
+ *
+ * const docs = await retriever.getRelevantDocuments("How are clouds formed?");
+ * ```
  */
 export class AmazonKendraRetriever extends BaseRetriever {
   static lc_name() {

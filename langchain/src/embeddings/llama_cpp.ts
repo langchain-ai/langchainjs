@@ -14,6 +14,22 @@ export interface LlamaCppEmbeddingsParams
   extends LlamaBaseCppInputs,
     EmbeddingsParams {}
 
+/**
+ * @example
+ * ```typescript
+ * // Initialize LlamaCppEmbeddings with the path to the model file
+ * const embeddings = new LlamaCppEmbeddings({
+ *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
+ * });
+ *
+ * // Embed a query string using the Llama embeddings
+ * const res = embeddings.embedQuery("Hello Llama!");
+ *
+ * // Output the resulting embeddings
+ * console.log(res);
+ *
+ * ```
+ */
 export class LlamaCppEmbeddings extends Embeddings {
   _model: LlamaModel;
 

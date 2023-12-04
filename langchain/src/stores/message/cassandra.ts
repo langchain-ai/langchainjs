@@ -19,6 +19,31 @@ export interface CassandraChatMessageHistoryOptions extends DseClientOptions {
  * Class for storing chat message history within Cassandra. It extends the
  * BaseListChatMessageHistory class and provides methods to get, add, and
  * clear messages.
+ * @example
+ * ```typescript
+ * const chatHistory = new CassandraChatMessageHistory({
+ *   cloud: {
+ *     secureConnectBundle: "<path to your secure bundle>",
+ *   },
+ *   credentials: {
+ *     username: "token",
+ *     password: "<your Cassandra access token>",
+ *   },
+ *   keyspace: "langchain",
+ *   table: "message_history",
+ *   sessionId: "<some unique session identifier>",
+ * });
+ *
+ * const chain = new ConversationChain({
+ *   llm: new ChatOpenAI(),
+ *   memory: chatHistory,
+ * });
+ *
+ * const response = await chain.invoke({
+ *   input: "What did I just say my name was?",
+ * });
+ * console.log({ response });
+ * ```
  */
 export class CassandraChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "cassandra"];

@@ -1,5 +1,6 @@
 import { Tool } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { Serializable } from "../load/serializable.js";
 
 export type JiraInwardIssue = {
@@ -96,7 +97,8 @@ export class JiraAPIWrapper extends Serializable {
     super(params);
     this.host = params.host;
     this.jiraEmail = params.email;
-    this.jiraApiToken = params.apiToken;
+    this.jiraApiToken =
+      params.apiToken ?? getEnvironmentVariable("JIRA_API_TOKEN");
     this.caller = new AsyncCaller(
       typeof params === "string" ? {} : params ?? {}
     );

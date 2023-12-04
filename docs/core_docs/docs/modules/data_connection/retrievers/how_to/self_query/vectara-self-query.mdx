@@ -1,0 +1,39 @@
+# Vectara Self Query Retriever
+
+This example shows how to use a self query retriever with a [Vectara](https://vectara.com/) vector store.
+
+If you haven't already set up Vectara, please [follow the instructions here](/docs/integrations/vectorstores/vectara.mdx).
+
+## Usage
+
+This example shows how to intialize a `SelfQueryRetriever` with a vector store:
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/vectara_self_query.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+You can also initialize the retriever with default search parameters that apply in
+addition to the generated query:
+
+```typescript
+const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+  llm,
+  vectorStore,
+  documentContents,
+  attributeInfo,
+  /**
+   * We need to use a translator that translates the queries into a
+   * filter format that the vector store can understand. LangChain provides one here.
+   */
+  structuredQueryTranslator: new VectaraTranslator()(),
+  searchParams: {
+    filter: {
+      filter: "( doc.genre = 'science fiction' ) and ( doc.rating > 8.5 )",
+    },
+    mergeFiltersOperator: "and",
+  },
+});
+```
+
+See the [official docs](https://docs.vectara.com/) for more on how to construct metadata filters.

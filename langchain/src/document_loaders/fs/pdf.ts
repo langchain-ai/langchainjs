@@ -5,19 +5,32 @@ import { formatDocumentsAsString } from "../../util/document.js";
 /**
  * A class that extends the `BufferLoader` class. It represents a document
  * loader that loads documents from PDF files.
+ * @example
+ * ```typescript
+ * const loader = new PDFLoader("path/to/bitcoin.pdf");
+ * const docs = await loader.load();
+ * console.log({ docs });
+ * ```
  */
 export class PDFLoader extends BufferLoader {
   private splitPages: boolean;
 
   private pdfjs: typeof PDFLoaderImports;
 
+  protected parsedItemSeparator: string;
+
   constructor(
     filePathOrBlob: string | Blob,
-    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+    {
+      splitPages = true,
+      pdfjs = PDFLoaderImports,
+      parsedItemSeparator = " ",
+    } = {}
   ) {
     super(filePathOrBlob);
     this.splitPages = splitPages;
     this.pdfjs = pdfjs;
+    this.parsedItemSeparator = parsedItemSeparator;
   }
 
   /**
@@ -76,7 +89,7 @@ export class PDFLoader extends BufferLoader {
         }
       }
 
-      const text = textItems.join(" ");
+      const text = textItems.join(this.parsedItemSeparator);
 
       documents.push(
         new Document({
