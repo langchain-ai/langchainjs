@@ -24,6 +24,18 @@ type GetSessionHistoryCallable = (
   ...args: Array<any>
 ) => Promise<BaseChatMessageHistory | BaseListChatMessageHistory>;
 
+export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
+  extends Omit<
+    RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig>,
+    "bound"
+  > {
+  runnable: Runnable<RunInput, RunOutput>;
+  getMessageHistory: GetSessionHistoryCallable;
+  inputMessagesKey?: string;
+  outputMessagesKey?: string;
+  historyMessagesKey?: string;
+}
+
 export class RunnableWithMessageHistory<
   RunInput,
   RunOutput
@@ -38,18 +50,7 @@ export class RunnableWithMessageHistory<
 
   getMessageHistory: GetSessionHistoryCallable;
 
-  constructor(
-    fields: Omit<
-      RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig>,
-      "bound"
-    > & {
-      runnable: Runnable<RunInput, RunOutput>;
-      getMessageHistory: GetSessionHistoryCallable;
-      inputMessagesKey?: string;
-      outputMessagesKey?: string;
-      historyMessagesKey?: string;
-    }
-  ) {
+  constructor(fields: RunnableWithMessageHistoryInputs<RunInput, RunOutput>) {
     let historyChain: Runnable = new RunnableLambda({
       func: (input, options) => this._enterHistory(input, options ?? {}),
     }).withConfig({ runName: "loadHistory" });

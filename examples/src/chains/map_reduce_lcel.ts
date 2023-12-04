@@ -62,10 +62,12 @@ const collapseChain = RunnableSequence.from([
 // Define a function to collapse a list of documents until the total number of tokens is within the limit
 const collapse = async (
   documents: Document[],
-  config?: BaseCallbackConfig,
+  options?: {
+    config?: BaseCallbackConfig;
+  },
   tokenMax = 4000
 ) => {
-  const editableConfig = config;
+  const editableConfig = options?.config;
   let docs = documents;
   let collapseCount = 1;
   while ((await getNumTokens(docs)) > tokenMax) {
