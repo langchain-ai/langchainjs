@@ -24,20 +24,7 @@
       "dependsOn": ["@langchain/core#build"]
     },
     "build": {
-      "dependsOn": ["@langchain/core#build", "^build"],
-      "outputs": [
-        "**/dist/**",
-        "**/dist-cjs/**",
-        "**/*.js",
-        "**/*.cjs",
-        "**/*.d.ts"
-      ],
-      "inputs": [
-        "**/src/**",
-        "**/scripts/**",
-        "**/package.json",
-        "**/tsconfig.json"
-      ]
+      "dependsOn": ["@langchain/core#build", "^build"]
     },
     "lint": {
       "outputs": []

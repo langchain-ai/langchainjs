@@ -2,16 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "pipeline": {
-    "clean": {
+    "build:extras": {
       "dependsOn": ["@langchain/openai#build", "@langchain/anthropic#build"],
       "outputs": ["dist", "package.json", "tsconfig.json"]
-    },
-    "build:envs": {
-      "dependsOn": ["clean"]
-    },
-    "build:scripts": {
-      "dependsOn": ["build:envs"],
-      "outputs": ["package.json", "tsconfig.json"]
     }
   }
 }
