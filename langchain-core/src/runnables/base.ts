@@ -24,9 +24,10 @@ import { RootListenersTracer } from "../tracers/root_listener.js";
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: Record<string, any> & {
-    config?: RunnableConfig;
-  }
+  options?:
+    | { config?: RunnableConfig }
+    | Record<string, any>
+    | (Record<string, any> & { config: RunnableConfig })
 ) => RunOutput | Promise<RunOutput>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
