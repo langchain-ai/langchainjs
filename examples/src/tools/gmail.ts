@@ -40,7 +40,7 @@ export async function run() {
 
   const createInput = `Create a gmail draft for me to edit of a letter from the perspective of a sentient parrot who is looking to collaborate on some research with her estranged friend, a cat. Under no circumstances may you send the message, however.`;
 
-  const createResult = await gmailAgent.call({ input: createInput });
+  const createResult = await gmailAgent.invoke({ input: createInput });
   //   Create Result {
   //     output: 'I have created a draft email for you to edit. The draft Id is r5681294731961864018.'
   //   }
