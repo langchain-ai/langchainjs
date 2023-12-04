@@ -13326,17 +13326,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.6.1":
-  version: 1.6.2
-  resolution: "axios@npm:1.6.2"
-  dependencies:
-    follow-redirects: ^1.15.0
-    form-data: ^4.0.0
-    proxy-from-env: ^1.1.0
-  checksum: 4a7429e2b784be0f2902ca2680964391eae7236faa3967715f30ea45464b98ae3f1c6f631303b13dfe721b17126b01f486c7644b9ef276bfc63112db9fd379f8
-  languageName: node
-  linkType: hard
-
 "axobject-query@npm:^3.1.1, axobject-query@npm:^3.2.1":
   version: 3.2.1
   resolution: "axobject-query@npm:3.2.1"
@@ -21704,17 +21693,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jira.js@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "jira.js@npm:3.0.1"
-  dependencies:
-    axios: ^1.6.1
-    form-data: ^4.0.0
-    tslib: ^2.6.2
-  checksum: 8454232d95818e460ba6b32511684ab906b511d024bf6c6cd02fee45237219f69063b4ac5acdb18d833062df756addca992dcdffbdce9900c5e657c6b81482f9
-  languageName: node
-  linkType: hard
-
 "jiti@npm:^1.18.2":
   version: 1.20.0
   resolution: "jiti@npm:1.20.0"
@@ -22430,6 +22408,7 @@ __metadata:
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     ioredis: ^5.3.2
+    jira.js: ^3.0.1
     jsdom: "*"
     llmonitor: ^0.5.9
     lodash: ^4.17.21
@@ -22674,7 +22653,6 @@ __metadata:
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3
     husky: ^8.0.0
-    jira.js: ^3.0.1
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest
@@ -29986,7 +29964,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.3, tslib@npm:^2.6.2":
+"tslib@npm:^2.0.3":
   version: 2.6.2
   resolution: "tslib@npm:2.6.2"
   checksum: 329ea56123005922f39642318e3d1f0f8265d1e7fcb92c633e0809521da75eeaca28d2cf96d7248229deb40e5c19adf408259f4b9640afd20d13aecc1430f3ad

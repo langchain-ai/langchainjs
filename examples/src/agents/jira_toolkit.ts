@@ -1,9 +1,7 @@
 import { OpenAI } from "langchain/llms/openai";
-import { JiraAPIWrapper } from "langchain/tools";
-import {
-  initializeAgentExecutorWithOptions,
-  JiraToolkit,
-} from "langchain/agents";
+import { JiraToolkit } from "langchain/agents/toolkits/jira";
+import { JiraAPIWrapper } from "langchain/tools/jira";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
@@ -30,7 +28,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 };

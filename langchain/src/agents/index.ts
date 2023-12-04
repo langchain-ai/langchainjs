@@ -14,7 +14,6 @@ export {
   VectorStoreRouterToolkit,
   VectorStoreToolkit,
   ZapierToolKit,
-  JiraToolkit,
   createJsonAgent,
   createOpenApiAgent,
   createVectorStoreAgent,
