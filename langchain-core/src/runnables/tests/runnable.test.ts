@@ -1,16 +1,18 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test } from "@jest/globals";
+import { Run } from "langsmith";
+import { jest } from "@jest/globals";
+import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
+import { BaseMessage } from "../../messages/index.js";
+import { OutputParserException } from "../../output_parsers/base.js";
+import { StringOutputParser } from "../../output_parsers/string.js";
 import {
   ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  PromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
-import { Document } from "../../documents/document.js";
-import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
-import { StringOutputParser } from "../../output_parsers/string.js";
+  HumanMessagePromptTemplate,
+} from "../../prompts/chat.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   FakeLLM,
   FakeChatModel,
@@ -18,11 +20,11 @@ import {
   FakeStreamingLLM,
   FakeSplitIntoListParser,
   FakeRunnable,
+  FakeListChatModel,
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableMap, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
-import { OutputParserException } from "../../output_parsers/base.js";
-import { BaseMessage } from "../../messages/index.js";
+import { Document } from "../../documents/document.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -213,6 +215,73 @@ test("Runnable withConfig", async () => {
   expect(chunks.length).toEqual(1);
   expect(chunks[0]?.tags).toEqual(["a-tag", "b-tag"]);
   expect(chunks[0]?.metadata).toEqual({ a: "updated", b: "c" });
+});
+
+test("Listeners work", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
+    ["human", "{question}"],
+  ]);
+  const model = new FakeListChatModel({
+    responses: ["foo"],
+  });
+  const chain = prompt.pipe(model);
+
+  const mockStart = jest.fn();
+  const mockEnd = jest.fn();
+
+  await chain
+    .withListeners({
+      onStart: (run: Run) => {
+        mockStart(run);
+      },
+      onEnd: (run: Run) => {
+        mockEnd(run);
+      },
+    })
+    .invoke({ question: "What is the meaning of life?" });
+
+  expect(mockStart).toHaveBeenCalledTimes(1);
+  expect((mockStart.mock.calls[0][0] as { name: string }).name).toBe(
+    "RunnableSequence"
+  );
+  expect(mockEnd).toHaveBeenCalledTimes(1);
+});
+
+test("Listeners work with async handlers", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate("You are a nice assistant."),
+    ["human", "{question}"],
+  ]);
+  const model = new FakeListChatModel({
+    responses: ["foo"],
+  });
+  const chain = prompt.pipe(model);
+
+  const mockStart = jest.fn();
+  const mockEnd = jest.fn();
+
+  await chain
+    .withListeners({
+      onStart: async (run: Run) => {
+        const promise = new Promise((resolve) => setTimeout(resolve, 2000));
+        await promise;
+        mockStart(run);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onEnd: async (run: Run) => {
+        const promise = new Promise((resolve) => setTimeout(resolve, 2000));
+        await promise;
+        mockEnd(run);
+      },
+    })
+    .invoke({ question: "What is the meaning of life?" });
+
+  expect(mockStart).toHaveBeenCalledTimes(1);
+  expect((mockStart.mock.calls[0][0] as { name: string }).name).toBe(
+    "RunnableSequence"
+  );
+  expect(mockEnd).toHaveBeenCalledTimes(1);
 });
 
 test("Create a runnable sequence and run it", async () => {

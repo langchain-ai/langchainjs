@@ -5,6 +5,10 @@ import {
   BaseCallbackConfig,
   CallbackManagerForLLMRun,
 } from "../../callbacks/manager.js";
+import {
+  BaseChatMessageHistory,
+  BaseListChatMessageHistory,
+} from "../../chat_history.js";
 import { Document } from "../../documents/document.js";
 import {
   BaseChatModel,
@@ -15,6 +19,7 @@ import {
   BaseMessage,
   AIMessage,
   AIMessageChunk,
+  HumanMessage,
 } from "../../messages/index.js";
 import { BaseOutputParser } from "../../output_parsers/base.js";
 import {
@@ -286,5 +291,49 @@ export class FakeListChatModel extends BaseChatModel {
     } else {
       this.i = 0;
     }
+  }
+}
+
+export class FakeChatMessageHistory extends BaseChatMessageHistory {
+  lc_namespace = ["langchain_core", "message", "fake"];
+
+  messages: Array<BaseMessage> = [];
+
+  constructor() {
+    super();
+  }
+
+  async getMessages(): Promise<BaseMessage[]> {
+    return this.messages;
+  }
+
+  async addMessage(message: BaseMessage): Promise<void> {
+    this.messages.push(message);
+  }
+
+  async addUserMessage(message: string): Promise<void> {
+    this.messages.push(new HumanMessage(message));
+  }
+
+  async addAIChatMessage(message: string): Promise<void> {
+    this.messages.push(new AIMessage(message));
+  }
+
+  async clear(): Promise<void> {
+    this.messages = [];
+  }
+}
+
+export class FakeListChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain_core", "message", "fake"];
+
+  messages: Array<BaseMessage> = [];
+
+  constructor() {
+    super();
+  }
+
+  public async addMessage(message: BaseMessage): Promise<void> {
+    this.messages.push(message);
   }
 }

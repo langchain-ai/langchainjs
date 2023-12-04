@@ -68,6 +68,7 @@
     "./langchain/src/embeddings/minimax.ts",
     "./langchain/src/embeddings/voyage.ts",
     "./langchain/src/embeddings/llama_cpp.ts",
+    "./langchain/src/embeddings/gradient_ai.ts",
     "./langchain/src/llms/load.ts",
     "./langchain/src/llms/base.ts",
     "./langchain/src/llms/openai.ts",

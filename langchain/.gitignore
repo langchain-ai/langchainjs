@@ -148,6 +148,9 @@ embeddings/voyage.d.ts
 embeddings/llama_cpp.cjs
 embeddings/llama_cpp.js
 embeddings/llama_cpp.d.ts
+embeddings/gradient_ai.cjs
+embeddings/gradient_ai.js
+embeddings/gradient_ai.d.ts
 llms/load.cjs
 llms/load.js
 llms/load.d.ts

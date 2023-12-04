@@ -64,6 +64,7 @@ const entrypoints = {
   "embeddings/minimax": "embeddings/minimax",
   "embeddings/voyage": "embeddings/voyage",
   "embeddings/llama_cpp": "embeddings/llama_cpp",
+  "embeddings/gradient_ai": "embeddings/gradient_ai",
   // llms
   "llms/load": "llms/load",
   "llms/base": "llms/base",
@@ -365,6 +366,7 @@ const requiresOptionalDependency = [
   "embeddings/hf",
   "embeddings/hf_transformers",
   "embeddings/llama_cpp",
+  "embeddings/gradient_ai",
   "llms/load",
   "llms/cohere",
   "llms/googlevertexai",

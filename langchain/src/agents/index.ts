@@ -2,6 +2,8 @@ export {
   Agent,
   type AgentArgs,
   BaseSingleActionAgent,
+  BaseMultiActionAgent,
+  RunnableAgent,
   LLMSingleActionAgent,
   type LLMSingleActionAgentInput,
   type OutputParserArgs,
