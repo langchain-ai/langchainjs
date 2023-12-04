@@ -68,10 +68,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
   describe("Masking with Dynamic Identifiers", () => {
     let maskingParser: MaskingParser;
     let piiMaskingTransformer: RegexMaskingTransformer;
-    const emailMask = (match: string) =>
-      `[email-${Math.random().toString(16).slice(2)}]`;
-    const phoneMask = (match: string) =>
-      `[phone-${Math.random().toString(16).slice(2)}]`;
+    const emailMask = () => `[email-${Math.random().toString(16).slice(2)}]`;
+    const phoneMask = () => `[phone-${Math.random().toString(16).slice(2)}]`;
 
     beforeEach(() => {
       piiMaskingTransformer = new RegexMaskingTransformer({
@@ -178,7 +176,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       // This is just for demonstration purposes and not a secure hashing method.
       return input
         .split("")
-        .map((char) => "*")
+        .map(() => "*")
         .join("");
     };
     it("should mask email and phone using custom hash function", async () => {
