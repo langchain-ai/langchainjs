@@ -12,17 +12,15 @@ export type InstallAppArgs = {
   appPath: string;
 };
 
-export async function createApp({
-  appPath,
-}: InstallAppArgs): Promise<void> {
+export async function createApp({ appPath }: InstallAppArgs): Promise<void> {
   const root = path.resolve(appPath);
 
   if (!(await isWriteable(path.dirname(root)))) {
     console.error(
-      "The application path is not writable, please check folder permissions and try again.",
+      "The application path is not writable, please check folder permissions and try again."
     );
     console.error(
-      "It is likely you do not have write permissions for this folder.",
+      "It is likely you do not have write permissions for this folder."
     );
     process.exit(1);
   }
@@ -47,8 +45,6 @@ export async function createApp({
 
   console.log(`${green("Success!")} Created ${appName} at ${appPath}`);
   console.log();
-  console.log(
-    `Run "cd ${appPath} to see your new integration.`,
-  );
+  console.log(`Run "cd ${appPath} to see your new integration.`);
   console.log();
 }

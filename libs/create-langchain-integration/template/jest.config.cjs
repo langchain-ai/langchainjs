@@ -7,7 +7,7 @@ module.exports = {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   transform: {
-    '^.+\\.tsx?$': ['@swc/jest'],
+    "^.+\\.tsx?$": ["@swc/jest"],
   },
   transformIgnorePatterns: [
     "/node_modules/",

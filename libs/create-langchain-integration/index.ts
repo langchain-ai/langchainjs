@@ -81,7 +81,7 @@ async function run(): Promise<void> {
         `  ${cyan(program.name())} ${green("<project-directory>")}\n` +
         "For example:\n" +
         `  ${cyan(program.name())} ${green("my-langchain-integration")}\n\n` +
-        `Run ${cyan(`${program.name()} --help`)} to see all options.`,
+        `Run ${cyan(`${program.name()} --help`)} to see all options.`
     );
     process.exit(1);
   }
@@ -93,8 +93,8 @@ async function run(): Promise<void> {
   if (!valid) {
     console.error(
       `Could not create a project called ${red(
-        `"${projectName}"`,
-      )} because of npm naming restrictions:`,
+        `"${projectName}"`
+      )} because of npm naming restrictions:`
     );
 
     problems!.forEach((p) => console.error(`    ${red(bold("*"))} ${p}`));
@@ -112,7 +112,7 @@ async function run(): Promise<void> {
     process.exit(1);
   }
 
-  const preferences = (conf.get("preferences") || {});
+  const preferences = conf.get("preferences") || {};
 
   await createApp({
     appPath: resolvedProjectPath,
@@ -130,15 +130,17 @@ async function notifyUpdate(): Promise<void> {
         packageManager === "yarn"
           ? "yarn global add create-langchain-integration@latest"
           : packageManager === "pnpm"
-            ? "pnpm add -g create-langchain-integration@latest"
-            : "npm i -g create-langchain-integration@latest";
+          ? "pnpm add -g create-langchain-integration@latest"
+          : "npm i -g create-langchain-integration@latest";
 
       console.log(
-        yellow(bold("A new version of `create-langchain-integration` is available!")) +
+        yellow(
+          bold("A new version of `create-langchain-integration` is available!")
+        ) +
           "\n" +
           "You can update by running: " +
           cyan(updateMessage) +
-          "\n",
+          "\n"
       );
     }
     process.exit();
@@ -157,7 +159,7 @@ run()
     } else {
       console.log(
         red("Unexpected error. Please report it as a bug:") + "\n",
-        reason,
+        reason
       );
     }
     console.log();

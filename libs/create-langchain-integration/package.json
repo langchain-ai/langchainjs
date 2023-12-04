@@ -1,6 +1,6 @@
 {
   "name": "create-langchain-integration",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/langchain-ai/langchainjs",
@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "ncc build ./index.ts -w -o dist/",
     "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
-    "lint": "eslint . --ignore-pattern dist"
+    "format": "prettier --write \"./\"",
+    "format:check": "prettier --check \"./\""
   },
   "devDependencies": {
     "@types/prompts": "^2",
@@ -21,6 +22,7 @@
     "dotenv": "^16.3.1",
     "fast-glob": "^3.3.2",
     "picocolors": "^1.0.0",
+    "prettier": "^2.8.3",
     "prompts": "^2.4.2",
     "typescript": "<5.2.0",
     "update-check": "^1.5.4",

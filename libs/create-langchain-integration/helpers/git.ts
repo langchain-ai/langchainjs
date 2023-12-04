@@ -43,9 +43,12 @@ export function tryGitInit(root: string): boolean {
     }
 
     execSync("git add -A", { stdio: "ignore" });
-    execSync('git commit -m "Initial commit from create-langchain-integration"', {
-      stdio: "ignore",
-    });
+    execSync(
+      'git commit -m "Initial commit from create-langchain-integration"',
+      {
+        stdio: "ignore",
+      }
+    );
     return true;
   } catch (e) {
     if (didInit) {

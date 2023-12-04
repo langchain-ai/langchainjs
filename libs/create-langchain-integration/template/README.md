@@ -4,7 +4,7 @@ Template repo for [LangChain.js](https://github.com/langchain-ai/langchainjs) in
 
 ## Usage
 
-Source code lives in the `src/` directory. 
+Source code lives in the `src/` directory.
 
 By default, there is a single entrypoint under `langchain_integration/src/index.ts` that you should re-export all relevant classes and functions from.
 If you want to add more entrypoints, add them in `langchain_integration/scripts/create-entrypoints.js`.
@@ -13,7 +13,7 @@ To build your source code, run the following commands:
 
 ```bash
 $ yarn build
-``` 
+```
 
 The build process will automatically create build artifacts for both ESM and CJS.
 
