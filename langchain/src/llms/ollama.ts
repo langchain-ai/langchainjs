@@ -11,6 +11,25 @@ import type { StringWithAutocomplete } from "../util/types.js";
 /**
  * Class that represents the Ollama language model. It extends the base
  * LLM class and implements the OllamaInput interface.
+ * @example
+ * ```typescript
+ * const ollama = new Ollama({
+ *   baseUrl: "http://api.example.com",
+ *   model: "llama2",
+ * });
+ *
+ * // Streaming translation from English to German
+ * const stream = await ollama.stream(
+ *   `Translate "I love programming" into German.`
+ * );
+ *
+ * const chunks = [];
+ * for await (const chunk of stream) {
+ *   chunks.push(chunk);
+ * }
+ *
+ * console.log(chunks.join(""));
+ * ```
  */
 export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
   static lc_name() {

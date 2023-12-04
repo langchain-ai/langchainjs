@@ -25,6 +25,27 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
 /**
  * Class representing a chain for performing question-answering tasks with
  * a retrieval component.
+ * @example
+ * ```typescript
+ * // Initialize the OpenAI model and the remote retriever with the specified configuration
+ * const model = new ChatOpenAI({});
+ * const retriever = new RemoteLangChainRetriever({
+ *   url: "http://example.com/api",
+ *   auth: { bearer: "foo" },
+ *   inputKey: "message",
+ *   responseKey: "response",
+ * });
+ *
+ * // Create a RetrievalQAChain using the model and retriever
+ * const chain = RetrievalQAChain.fromLLM(model, retriever);
+ *
+ * // Execute the chain with a query and log the result
+ * const res = await chain.call({
+ *   query: "What did the president say about Justice Breyer?",
+ * });
+ * console.log({ res });
+ *
+ * ```
  */
 export class RetrievalQAChain
   extends BaseChain

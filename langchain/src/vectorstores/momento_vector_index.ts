@@ -8,11 +8,13 @@ import {
   VectorUpsertItemBatch,
   VectorDeleteItemBatch,
   VectorSearch,
+  VectorSearchAndFetchVectors,
 } from "@gomomento/sdk-core";
 import * as uuid from "uuid";
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 export interface DocumentProps {
   ids: string[];
@@ -278,6 +280,59 @@ export class MomentoVectorIndex extends VectorStore {
         hit.score,
       ]);
     } else if (response instanceof VectorSearch.Error) {
+      throw new Error(response.toString());
+    } else {
+      throw new Error(`Unknown response type: ${response.toString()}`);
+    }
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK - Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {this["FilterType"]} options.filter - Optional filter
+   * @param _callbacks
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+    const response = await this.client.searchAndFetchVectors(
+      this.indexName,
+      queryEmbedding,
+      { topK: options.fetchK ?? 20, metadataFields: ALL_VECTOR_METADATA }
+    );
+
+    if (response instanceof VectorSearchAndFetchVectors.Success) {
+      const hits = response.hits();
+
+      // Gather the embeddings of the search results
+      const embeddingList = hits.map((hit) => hit.vector);
+
+      // Gather the ids of the most relevant results when applying MMR
+      const mmrIndexes = maximalMarginalRelevance(
+        queryEmbedding,
+        embeddingList,
+        options.lambda,
+        options.k
+      );
+
+      const finalResult = mmrIndexes.map((index) => {
+        const hit = hits[index];
+        const { [this.textField]: pageContent, ...metadata } = hit.metadata;
+        return new Document({ metadata, pageContent: pageContent as string });
+      });
+      return finalResult;
+    } else if (response instanceof VectorSearchAndFetchVectors.Error) {
       throw new Error(response.toString());
     } else {
       throw new Error(`Unknown response type: ${response.toString()}`);

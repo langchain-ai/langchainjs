@@ -11,7 +11,13 @@ import {
   createLlamaContext,
 } from "../util/llama_cpp.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import type { BaseMessage } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import {
+  BaseMessage,
+  ChatGenerationChunk,
+  AIMessageChunk,
+  ChatMessage,
+} from "../schema/index.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -33,6 +39,23 @@ export interface LlamaCppCallOptions extends BaseLanguageModelCallOptions {
  *  This can be installed using `npm install -S node-llama-cpp` and the minimum
  *  version supported in version 2.0.0.
  *  This also requires that have a locally built version of Llama2 installed.
+ * @example
+ * ```typescript
+ * // Initialize the ChatLlamaCpp model with the path to the model binary file.
+ * const model = new ChatLlamaCpp({
+ *   modelPath: "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin",
+ *   temperature: 0.5,
+ * });
+ *
+ * // Call the model with a message and await the response.
+ * const response = await model.call([
+ *   new HumanMessage({ content: "My name is John." }),
+ * ]);
+ *
+ * // Log the response to the console.
+ * console.log({ response });
+ *
+ * ```
  */
 export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   declare CallOptions: LlamaCppCallOptions;
@@ -93,7 +116,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-    _options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     let prompt = "";
 
@@ -114,6 +137,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
     try {
       const promptOptions = {
+        onToken: options.onToken,
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
         topK: this?.topK,
@@ -125,6 +149,35 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
       return completion;
     } catch (e) {
       throw new Error("Error getting prompt completion.");
+    }
+  }
+
+  async *_streamResponseChunks(
+    input: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const promptOptions = {
+      temperature: this?.temperature,
+      topK: this?.topK,
+      topP: this?.topP,
+    };
+
+    const prompt = this._buildPrompt(input);
+
+    const stream = await this.caller.call(async () =>
+      this._context.evaluate(this._context.encode(prompt), promptOptions)
+    );
+
+    for await (const chunk of stream) {
+      yield new ChatGenerationChunk({
+        text: this._context.decode([chunk]),
+        message: new AIMessageChunk({
+          content: this._context.decode([chunk]),
+        }),
+        generationInfo: {},
+      });
+      await runManager?.handleLLMNewToken(this._context.decode([chunk]) ?? "");
     }
   }
 
@@ -238,5 +291,32 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
     }
 
     return result;
+  }
+
+  protected _buildPrompt(input: BaseMessage[]): string {
+    const prompt = input
+      .map((message) => {
+        let messageText;
+        if (message._getType() === "human") {
+          messageText = `[INST] ${message.content} [/INST]`;
+        } else if (message._getType() === "ai") {
+          messageText = message.content;
+        } else if (message._getType() === "system") {
+          messageText = `<<SYS>> ${message.content} <</SYS>>`;
+        } else if (ChatMessage.isInstance(message)) {
+          messageText = `\n\n${message.role[0].toUpperCase()}${message.role.slice(
+            1
+          )}: ${message.content}`;
+        } else {
+          console.warn(
+            `Unsupported message type passed to llama_cpp: "${message._getType()}"`
+          );
+          messageText = "";
+        }
+        return messageText;
+      })
+      .join("\n");
+
+    return prompt;
   }
 }

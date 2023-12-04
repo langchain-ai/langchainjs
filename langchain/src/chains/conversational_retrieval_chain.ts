@@ -32,6 +32,7 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   returnSourceDocuments?: boolean;
+  returnGeneratedQuestion?: boolean;
   inputKey?: string;
 }
 
@@ -39,6 +40,35 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  * Class for conducting conversational question-answering tasks with a
  * retrieval component. Extends the BaseChain class and implements the
  * ConversationalRetrievalQAChainInput interface.
+ * @example
+ * ```typescript
+ * const model = new ChatAnthropic({});
+ *
+ * const text = fs.readFileSync("state_of_the_union.txt", "utf8");
+ *
+ * const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+ * const docs = await textSplitter.createDocuments([text]);
+ *
+ * const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+ *
+ * const chain = ConversationalRetrievalQAChain.fromLLM(
+ *   model,
+ *   vectorStore.asRetriever(),
+ * );
+ *
+ * const question = "What did the president say about Justice Breyer?";
+ *
+ * const res = await chain.call({ question, chat_history: "" });
+ * console.log(res);
+ *
+ * const chatHistory = `${question}\n${res.text}`;
+ * const followUpRes = await chain.call({
+ *   question: "Was that nice?",
+ *   chat_history: chatHistory,
+ * });
+ * console.log(followUpRes);
+ *
+ * ```
  */
 export class ConversationalRetrievalQAChain
   extends BaseChain
@@ -70,6 +100,8 @@ export class ConversationalRetrievalQAChain
 
   returnSourceDocuments = false;
 
+  returnGeneratedQuestion = false;
+
   constructor(fields: ConversationalRetrievalQAChainInput) {
     super(fields);
     this.retriever = fields.retriever;
@@ -78,6 +110,8 @@ export class ConversationalRetrievalQAChain
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
+    this.returnGeneratedQuestion =
+      fields.returnGeneratedQuestion ?? this.returnGeneratedQuestion;
   }
 
   /**
@@ -167,14 +201,20 @@ export class ConversationalRetrievalQAChain
       input_documents: docs,
       chat_history: chatHistory,
     };
-    const result = await this.combineDocumentsChain.call(
+    let result = await this.combineDocumentsChain.call(
       inputs,
       runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
-      return {
+      result = {
         ...result,
         sourceDocuments: docs,
+      };
+    }
+    if (this.returnGeneratedQuestion) {
+      result = {
+        ...result,
+        generatedQuestion: newQuestion,
       };
     }
     return result;

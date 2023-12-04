@@ -153,6 +153,26 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
  *
  * @augments BaseLLM
  * @augments BaiduERNIEInput
+ * @example
+ * ```typescript
+ * const ernieTurbo = new ChatBaiduWenxin({
+ *   baiduApiKey: "YOUR-API-KEY",
+ *   baiduSecretKey: "YOUR-SECRET-KEY",
+ * });
+ *
+ * const ernie = new ChatBaiduWenxin({
+ *   modelName: "ERNIE-Bot",
+ *   temperature: 1,
+ *   baiduApiKey: "YOUR-API-KEY",
+ *   baiduSecretKey: "YOUR-SECRET-KEY",
+ * });
+ *
+ * const messages = [new HumanMessage("Hello")];
+ *
+ * let res = await ernieTurbo.call(messages);
+ *
+ * res = await ernie.call(messages);
+ * ```
  */
 export class ChatBaiduWenxin
   extends BaseChatModel

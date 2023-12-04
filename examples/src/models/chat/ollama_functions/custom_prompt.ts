@@ -1,11 +1,9 @@
 import { OllamaFunctions } from "langchain/experimental/chat_models/ollama_functions";
 import { HumanMessage } from "langchain/schema";
-import { PromptTemplate } from "langchain/prompts";
 
 // Custom system prompt to format tools. You must encourage the model
 // to wrap output in a JSON object with "tool" and "tool_input" properties.
-const toolSystemPrompt =
-  PromptTemplate.fromTemplate(`You have access to the following tools:
+const toolSystemPromptTemplate = `You have access to the following tools:
 
 {tools}
 
@@ -13,12 +11,12 @@ To use a tool, respond with a JSON object with the following structure:
 {{
   "tool": <name of the called tool>,
   "tool_input": <parameters for the tool matching the above JSON schema>
-}}`);
+}}`;
 
 const model = new OllamaFunctions({
   temperature: 0.1,
   model: "mistral",
-  toolSystemPrompt,
+  toolSystemPromptTemplate,
 }).bind({
   functions: [
     {

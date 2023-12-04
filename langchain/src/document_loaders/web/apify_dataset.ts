@@ -37,6 +37,27 @@ export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader that loads
  * documents from an Apify dataset.
+ * @example
+ * ```typescript
+ * const loader = new ApifyDatasetLoader("your-dataset-id", {
+ *   datasetMappingFunction: (item) =>
+ *     new Document({
+ *       pageContent: item.text || "",
+ *       metadata: { source: item.url },
+ *     }),
+ *   clientOptions: {
+ *     token: "your-apify-token",
+ *   },
+ * });
+ *
+ * const docs = await loader.load();
+ *
+ * const chain = new RetrievalQAChain();
+ * const res = await chain.invoke({ query: "What is LangChain?" });
+ *
+ * console.log(res.text);
+ * console.log(res.sourceDocuments.map((d) => d.metadata.source));
+ * ```
  */
 export class ApifyDatasetLoader<Metadata extends Record<string, any>>
   extends BaseDocumentLoader

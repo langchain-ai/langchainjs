@@ -21,6 +21,30 @@ export interface BufferMemoryInput extends BaseChatMemoryInput {
  * two different chains. If you deploy your LangChain app on a serverless
  * environment, do not store memory instances in a variable, as your
  * hosting provider may reset it by the next time the function is called.
+ * @example
+ * ```typescript
+ * // Initialize the memory to store chat history and set up the language model with a specific temperature.
+ * const memory = new BufferMemory({ memoryKey: "chat_history" });
+ * const model = new ChatOpenAI({ temperature: 0.9 });
+ *
+ * // Create a prompt template for a friendly conversation between a human and an AI.
+ * const prompt =
+ *   PromptTemplate.fromTemplate(`The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+ *
+ * Current conversation:
+ * {chat_history}
+ * Human: {input}
+ * AI:`);
+ *
+ * // Set up the chain with the language model, prompt, and memory.
+ * const chain = new LLMChain({ llm: model, prompt, memory });
+ *
+ * // Example usage of the chain to continue the conversation.
+ * // The `call` method sends the input to the model and returns the AI's response.
+ * const res = await chain.call({ input: "Hi! I'm Jim." });
+ * console.log({ res });
+ *
+ * ```
  */
 export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
   humanPrefix = "Human";

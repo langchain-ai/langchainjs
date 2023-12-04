@@ -30,6 +30,27 @@ export type ParentDocumentRetrieverFields = MultiVectorRetrieverInput & {
  *
  * This strikes a balance between better targeted retrieval with small documents
  * and the more context-rich larger documents.
+ * @example
+ * ```typescript
+ * const retriever = new ParentDocumentRetriever({
+ *   vectorstore: new MemoryVectorStore(new OpenAIEmbeddings()),
+ *   docstore: new InMemoryStore(),
+ *   parentSplitter: new RecursiveCharacterTextSplitter({
+ *     chunkOverlap: 0,
+ *     chunkSize: 500,
+ *   }),
+ *   childSplitter: new RecursiveCharacterTextSplitter({
+ *     chunkOverlap: 0,
+ *     chunkSize: 50,
+ *   }),
+ *   childK: 20,
+ *   parentK: 5,
+ * });
+ *
+ * const parentDocuments = await getDocuments();
+ * await retriever.addDocuments(parentDocuments);
+ * const retrievedDocs = await retriever.getRelevantDocuments("justice breyer");
+ * ```
  */
 export class ParentDocumentRetriever extends MultiVectorRetriever {
   static lc_name() {

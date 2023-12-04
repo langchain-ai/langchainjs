@@ -5,6 +5,12 @@ import { Tool } from "./base.js";
 /**
  * The Calculator class is a tool used to evaluate mathematical
  * expressions. It extends the base Tool class.
+ * @example
+ * ```typescript
+ * const calculator = new Calculator();
+ * const sum = calculator.add(99, 99);
+ * console.log("The sum of 99 and 99 is:", sum);
+ * ```
  */
 export class Calculator extends Tool {
   static lc_name() {

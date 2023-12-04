@@ -65,7 +65,19 @@ export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
   parserKey?: string;
 }
 
-// Export class
+/**
+ * @example
+ * ```typescript
+ * const retriever = new MultiQueryRetriever.fromLLM({
+ *   llm: new ChatAnthropic({}),
+ *   retriever: new MemoryVectorStore().asRetriever(),
+ *   verbose: true,
+ * });
+ * const retrievedDocs = await retriever.getRelevantDocuments(
+ *   "What are mitochondria made of?",
+ * );
+ * ```
+ */
 export class MultiQueryRetriever extends BaseRetriever {
   static lc_name() {
     return "MultiQueryRetriever";

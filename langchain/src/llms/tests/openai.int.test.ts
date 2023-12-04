@@ -276,7 +276,7 @@ test("Test OpenAI stream method", async () => {
 test("Test OpenAI stream method with abort", async () => {
   await expect(async () => {
     const model = new OpenAI({
-      maxTokens: 50,
+      maxTokens: 250,
       modelName: "gpt-3.5-turbo-instruct",
     });
     const stream = await model.stream(

@@ -35,6 +35,27 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 /**
  * Agent for the MRKL chain.
  * @augments Agent
+ * @example
+ * ```typescript
+ *
+ * const agent = new ZeroShotAgent({
+ *   llmChain: new LLMChain({
+ *     llm: new ChatOpenAI({ temperature: 0 }),
+ *     prompt: ZeroShotAgent.createPrompt([new SerpAPI(), new Calculator()], {
+ *       prefix: `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`,
+ *       suffix: `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"
+ * Question: {input}
+ * {agent_scratchpad}`,
+ *       inputVariables: ["input", "agent_scratchpad"],
+ *     }),
+ *   }),
+ *   allowedTools: ["search", "calculator"],
+ * });
+ *
+ * const result = await agent.invoke({
+ *   input: `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`,
+ * });
+ * ```
  */
 export class ZeroShotAgent extends Agent {
   static lc_name() {

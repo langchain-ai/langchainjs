@@ -54,6 +54,20 @@ export type WeaviateStructuredQueryResult = {
  * A class that translates or converts data into a format that can be used
  * with Weaviate, a vector search engine. It extends the `BaseTranslator`
  * class and provides specific implementation for Weaviate.
+ * @example
+ * ```typescript
+ * const selfQueryRetriever = new SelfQueryRetriever({
+ *   llm: new ChatOpenAI(),
+ *   vectorStore: new WeaviateStore(),
+ *   documentContents: "Brief summary of a movie",
+ *   attributeInfo: [],
+ *   structuredQueryTranslator: new WeaviateTranslator(),
+ * });
+ *
+ * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ *   "Which movies are rated higher than 8.5?",
+ * );
+ * ```
  */
 export class WeaviateTranslator<
   T extends WeaviateStore

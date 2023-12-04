@@ -13,6 +13,14 @@ class WebSocketStream extends BaseWebSocketStream {
   }
 }
 
+/**
+ * @example
+ * ```typescript
+ * const model = new ChatIflytekXinghuo();
+ * const response = await model.call([new HumanMessage("Nice to meet you!")]);
+ * console.log(response);
+ * ```
+ */
 export class ChatIflytekXinghuo extends BaseChatIflytekXinghuo {
   async openWebSocketStream<WebSocketStream>(
     options: WebSocketStreamOptions

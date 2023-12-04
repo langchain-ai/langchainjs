@@ -136,4 +136,39 @@ describe.skip("MomentoVectorIndex", () => {
       ]);
     });
   });
+
+  it("re-ranks when using max marginal relevance search", async () => {
+    await withVectorStore(async (vectorStore: MomentoVectorIndex) => {
+      const pepperoniPizza = "pepperoni pizza";
+      const cheesePizza = "cheese pizza";
+      const hotDog = "hot dog";
+
+      await vectorStore.addDocuments([
+        { pageContent: pepperoniPizza, metadata: {} },
+        { pageContent: cheesePizza, metadata: {} },
+        { pageContent: hotDog, metadata: {} },
+      ]);
+
+      await sleep();
+
+      const searchResults = await vectorStore.similaritySearch("pizza", 2);
+      expect(searchResults).toEqual([
+        new Document({ metadata: {}, pageContent: pepperoniPizza }),
+        new Document({ metadata: {}, pageContent: cheesePizza }),
+      ]);
+
+      const searchResults2 = await vectorStore.maxMarginalRelevanceSearch(
+        "pizza",
+        {
+          k: 2,
+          fetchK: 3,
+          lambda: 0.5,
+        }
+      );
+      expect(searchResults2).toEqual([
+        new Document({ metadata: {}, pageContent: pepperoniPizza }),
+        new Document({ metadata: {}, pageContent: hotDog }),
+      ]);
+    });
+  });
 });

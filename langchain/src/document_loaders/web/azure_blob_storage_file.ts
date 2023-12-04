@@ -32,6 +32,17 @@ interface AzureBlobStorageFileLoaderConfig {
  * Class representing a document loader that loads a specific file from
  * Azure Blob Storage. It extends the BaseDocumentLoader class and
  * implements the DocumentLoader interface.
+ * @example
+ * ```typescript
+ * const loader = new AzureBlobStorageFileLoader({
+ *   azureConfig: {
+ *     connectionString: "{connectionString}",
+ *     container: "{containerName}",
+ *     blobName: "{blobName}",
+ *   },
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
   private readonly connectionString: string;

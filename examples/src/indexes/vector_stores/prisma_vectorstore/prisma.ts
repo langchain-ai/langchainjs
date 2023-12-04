@@ -57,15 +57,4 @@ export const run = async () => {
   // Use the default filter a.k.a {"content": "default"}
   const resultTwo = await vectorStore.similaritySearch("Hello world", 1);
   console.log(resultTwo);
-
-  // Override the local filter
-  const resultThree = await vectorStore.similaritySearchWithScore(
-    "Hello world",
-    1,
-    {
-      content: { equals: "different_content" },
-      customForeignKey: { in: ["<id1>", "<id2>", "<id3>"] },
-    }
-  );
-  console.log(resultThree);
 };

@@ -98,6 +98,30 @@ export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
  * Class that provides a concrete implementation of the conversation
  * memory. It includes methods for loading memory variables, saving
  * context, and clearing the memory.
+ * @example
+ * ```typescript
+ * const memory = new ConversationSummaryMemory({
+ *   memoryKey: "chat_history",
+ *   llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+ * });
+ *
+ * const model = new ChatOpenAI();
+ * const prompt =
+ *   PromptTemplate.fromTemplate(`The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+ *
+ * Current conversation:
+ * {chat_history}
+ * Human: {input}
+ * AI:`);
+ * const chain = new LLMChain({ llm: model, prompt, memory });
+ *
+ * const res1 = await chain.call({ input: "Hi! I'm Jim." });
+ * console.log({ res1, memory: await memory.loadMemoryVariables({}) });
+ *
+ * const res2 = await chain.call({ input: "What's my name?" });
+ * console.log({ res2, memory: await memory.loadMemoryVariables({}) });
+ *
+ * ```
  */
 export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
   buffer = "";

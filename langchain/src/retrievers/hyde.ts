@@ -39,6 +39,25 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  * extends the VectorStoreRetriever class and uses a BaseLanguageModel to
  * generate a hypothetical answer to the query, which is then used to
  * retrieve relevant documents.
+ * @example
+ * ```typescript
+ * const retriever = new HydeRetriever({
+ *   vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
+ *   llm: new ChatOpenAI(),
+ *   k: 1,
+ * });
+ * await vectorStore.addDocuments(
+ *   [
+ *     "My name is John.",
+ *     "My name is Bob.",
+ *     "My favourite food is pizza.",
+ *     "My favourite food is pasta.",
+ *   ].map((pageContent) => new Document({ pageContent })),
+ * );
+ * const results = await retriever.getRelevantDocuments(
+ *   "What is my favourite food?",
+ * );
+ * ```
  */
 export class HydeRetriever<
   V extends VectorStore = VectorStore

@@ -20,6 +20,21 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
  * Class responsible for retrieving data from Vespa. It extends the
  * `RemoteRetriever` class and includes methods for creating the JSON body
  * for a query and processing the JSON response from Vespa.
+ * @example
+ * ```typescript
+ * const retriever = new VespaRetriever({
+ *   url: "https:
+ *   auth: false,
+ *   query_body: {
+ *     yql: "select content from paragraph where userQuery()",
+ *     hits: 5,
+ *     ranking: "documentation",
+ *     locale: "en-us",
+ *   },
+ *   content_field: "content",
+ * });
+ * const result = await retriever.getRelevantDocuments("what is vespa?");
+ * ```
  */
 export class VespaRetriever extends RemoteRetriever {
   static lc_name() {

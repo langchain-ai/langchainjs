@@ -152,7 +152,7 @@ Below are links to guides with advice and tips for specific types of integration
 - [Vector stores](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/integrations/VECTOR_STORES.md) (e.g. Pinecone)
 - [Persistent message stores](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/integrations/MESSAGE_STORES.md) (used to persistently store and load raw chat histories, e.g. Redis)
 - [Document loaders](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/integrations/DOCUMENT_LOADERS.md) (used to load documents for later storage into vector stores, e.g. Apify)
-- Embeddings (TODO) (e.g. Cohere)
+- [Embeddings](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/integrations/EMBEDDINGS.md) (used to create embeddings of text documents or strings e.g. Cohere)
 - [Tools](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/integrations/TOOLS.md) (used for agents, e.g. the SERP API tool)
 
 This is a living document, so please make a pull request if we're missing anything useful!

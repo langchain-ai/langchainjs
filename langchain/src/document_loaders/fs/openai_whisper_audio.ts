@@ -5,6 +5,16 @@ import { BufferLoader } from "./buffer.js";
 
 const MODEL_NAME = "whisper-1";
 
+/**
+ * @example
+ * ```typescript
+ * const loader = new OpenAIWhisperAudio(
+ *   "./src/document_loaders/example_data/test.mp3",
+ * );
+ * const docs = await loader.load();
+ * console.log(docs);
+ * ```
+ */
 export class OpenAIWhisperAudio extends BufferLoader {
   private readonly openAIClient: OpenAIClient;
 

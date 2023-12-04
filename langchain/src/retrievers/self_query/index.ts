@@ -36,6 +36,19 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
  * Class for question answering over an index. It retrieves relevant
  * documents based on a query. It extends the BaseRetriever class and
  * implements the SelfQueryRetrieverArgs interface.
+ * @example
+ * ```typescript
+ * const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+ *   llm: new ChatOpenAI(),
+ *   vectorStore: await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings()),
+ *   documentContents: "Brief summary of a movie",
+ *   attributeInfo: attributeInfo,
+ *   structuredQueryTranslator: new FunctionalTranslator(),
+ * });
+ * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ *   "Which movies are directed by Greta Gerwig?",
+ * );
+ * ```
  */
 export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever
