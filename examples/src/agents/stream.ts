@@ -1,10 +1,10 @@
 import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
+import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { BufferMemory, ChatMessageHistory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/runnables";
-import { AgentStep, BaseChatMessageHistory } from "langchain/schema";
 import { Tool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { WebBrowser } from "langchain/tools/webbrowser";
@@ -35,6 +35,7 @@ Observation: the result of the action
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
+History:
 {intermediateSteps}
 
 Begin!
@@ -44,22 +45,7 @@ Thought:`,
   ],
 ]);
 
-async function getChatSessionHistory(): Promise<
-  (sessionId: string) => Promise<ChatMessageHistory>
-> {
-  const chatHistoryStore: { [key: string]: ChatMessageHistory } = {};
-
-  async function getSessionHistory(
-    sessionId: string
-  ): Promise<ChatMessageHistory> {
-    if (!(sessionId in chatHistoryStore)) {
-      chatHistoryStore[sessionId] = new ChatMessageHistory();
-    }
-    return chatHistoryStore[sessionId];
-  }
-
-  return getSessionHistory;
-}
+const memory = new BufferMemory({});
 
 const outputParser = ZeroShotAgent.getDefaultOutputParser();
 
@@ -85,11 +71,6 @@ const runnable = RunnableSequence.from([
   outputParser,
 ]);
 
-const runnableWithHistory = new RunnableWithMessageHistory({
-  config: {},
-  get
-});
-
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnable,
   tools,
@@ -101,12 +82,7 @@ const saveMemory = async (output: any) => {
   await memory.saveContext(
     { human: "none" },
     {
-      history: intermediateSteps
-        .map(
-          (step: AgentStep) =>
-            `Tool used: ${step.action.tool}\nTool log: ${step.action.tool}\nObservation: ${step.observation}`
-        )
-        .join("\n"),
+      history: formatLogToString(intermediateSteps),
     }
   );
 };
@@ -129,5 +105,5 @@ console.log("Final response:", finalResponse);
 
 /**
  * See the LangSmith trace for this agent example here:
- * @link https://smith.langchain.com/public/7e63c2c3-c38f-408d-8656-adeff584d292/r
+ * @link https://smith.langchain.com/public/08978fa7-bb99-427b-850e-35773cae1453/r
  */
