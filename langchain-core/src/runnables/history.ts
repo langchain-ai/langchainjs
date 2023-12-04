@@ -1,5 +1,8 @@
 import { BaseCallbackConfig } from "../callbacks/manager.js";
-import { BaseChatMessageHistory } from "../chat_history.js";
+import {
+  BaseChatMessageHistory,
+  BaseListChatMessageHistory,
+} from "../chat_history.js";
 import {
   AIMessage,
   BaseMessage,
@@ -19,7 +22,19 @@ import { RunnablePassthrough } from "./passthrough.js";
 type GetSessionHistoryCallable = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...args: Array<any>
-) => Promise<BaseChatMessageHistory>;
+) => Promise<BaseChatMessageHistory | BaseListChatMessageHistory>;
+
+export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
+  extends Omit<
+    RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig>,
+    "bound"
+  > {
+  runnable: Runnable<RunInput, RunOutput>;
+  getMessageHistory: GetSessionHistoryCallable;
+  inputMessagesKey?: string;
+  outputMessagesKey?: string;
+  historyMessagesKey?: string;
+}
 
 export class RunnableWithMessageHistory<
   RunInput,
@@ -35,18 +50,7 @@ export class RunnableWithMessageHistory<
 
   getMessageHistory: GetSessionHistoryCallable;
 
-  constructor(
-    fields: Omit<
-      RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig>,
-      "bound"
-    > & {
-      runnable: Runnable<RunInput, RunOutput>;
-      getMessageHistory: GetSessionHistoryCallable;
-      inputMessagesKey?: string;
-      outputMessagesKey?: string;
-      historyMessagesKey?: string;
-    }
-  ) {
+  constructor(fields: RunnableWithMessageHistoryInputs<RunInput, RunOutput>) {
     let historyChain: Runnable = new RunnableLambda({
       func: (input, options) => this._enterHistory(input, options ?? {}),
     }).withConfig({ runName: "loadHistory" });
