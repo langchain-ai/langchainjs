@@ -4,11 +4,7 @@
   "pipeline": {
     "build:scripts": {
       "outputs": ["public/**"],
-      "dependsOn": [
-        "@langchain/openai#build",
-        "@langchain/anthropic#build",
-        "langchain#build"
-      ]
+      "dependsOn": ["langchain#build"]
     },
     "build:next": {
       "outputs": [".next/**", ".vercel/**"],
