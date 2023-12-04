@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
-import { HumanMessage } from "../../messages/index.js";
+import { HumanMessage } from "../index.js";
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
