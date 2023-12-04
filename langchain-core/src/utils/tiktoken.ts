@@ -10,9 +10,7 @@ const cache: Record<string, Promise<Tiktoken>> = {};
 
 const caller = /* #__PURE__ */ new AsyncCaller({});
 
-export async function getEncoding(
-  encoding: TiktokenEncoding,
-) {
+export async function getEncoding(encoding: TiktokenEncoding) {
   if (!(encoding in cache)) {
     cache[encoding] = caller
       .fetch(`https://tiktoken.pages.dev/js/${encoding}.json`)
@@ -27,8 +25,6 @@ export async function getEncoding(
   return await cache[encoding];
 }
 
-export async function encodingForModel(
-  model: TiktokenModel,
-) {
+export async function encodingForModel(model: TiktokenModel) {
   return getEncoding(getEncodingNameForModel(model));
 }
