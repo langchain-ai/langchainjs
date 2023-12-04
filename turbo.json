@@ -25,6 +25,7 @@
     },
     "build": {
       "dependsOn": [
+        "@langchain/core#build",
         "^build"
       ],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
