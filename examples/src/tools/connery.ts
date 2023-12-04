@@ -1,4 +1,4 @@
-import { ConneryService } from "langchain/tools";
+import { ConneryService } from "langchain/tools/connery";
 
 /**
  * This example shows how to create a tool for one specific Connery action and call it.

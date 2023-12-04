@@ -1,9 +1,7 @@
-import {
-  ConneryToolkit,
-  initializeAgentExecutorWithOptions,
-} from "langchain/agents";
 import { OpenAI } from "langchain/llms/openai";
-import { ConneryService } from "langchain/tools";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { ConneryToolkit } from "langchain/agents/toolkits/connery";
+import { ConneryService } from "langchain/tools/connery";
 
 /**
  * This example shows how to create an agent with Connery actions using the Connery Actions Toolkit.
@@ -43,3 +41,17 @@ const input =
   "Make a short summary of the webpage http://www.paulgraham.com/vb.html in three sentences and send it to test@example.com. Include the link to the webpage into the body of the email.";
 const result = await executor.invoke({ input });
 console.log(result.output);
+
+/**
+ * As a result, you should receive an email similar to this:
+ *
+ * Subject: Summary of "Life is Short"
+ * Body: Here is a summary of the webpage "Life is Short" by Paul Graham:
+ * The author reflects on the shortness of life and how having children has made them realize
+ * the limited time they have. They argue that life is too short for unnecessary things,
+ * or "bullshit," and that one should prioritize avoiding it.
+ * They also discuss the importance of actively seeking out things that matter and not waiting to do them.
+ * The author suggests pruning unnecessary things, savoring the time one has, and not waiting to do what truly matters.
+ * They also discuss the effect of how one lives on the length of their life and the importance of being conscious of time.
+ * Link to webpage: http://www.paulgraham.com/vb.html
+ */

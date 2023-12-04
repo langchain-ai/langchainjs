@@ -1,5 +1,4 @@
 export { JsonToolkit, createJsonAgent } from "./json/json.js";
-export { ConneryToolkit } from "./connery/connery.js";
 export {
   RequestsToolkit,
   OpenApiToolkit,

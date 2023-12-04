@@ -9,7 +9,6 @@ export {
   type OutputParserArgs,
 } from "./agent.js";
 export {
-  ConneryToolkit,
   JsonToolkit,
   OpenApiToolkit,
   RequestsToolkit,

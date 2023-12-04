@@ -2,7 +2,6 @@ export { SerpAPI, type SerpAPIParameters } from "./serpapi.js";
 export { DadJokeAPI } from "./dadjokeapi.js";
 export { BingSerpAPI } from "./bingserpapi.js";
 export { Tool, type ToolParams, StructuredTool } from "./base.js";
-export { ConneryService } from "./connery.js";
 export {
   DynamicTool,
   type DynamicToolInput,
