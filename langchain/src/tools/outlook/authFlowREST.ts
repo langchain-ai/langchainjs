@@ -20,7 +20,11 @@ export class AuthFlowREST extends AuthFlowBase {
 
   private refreshToken = "";
 
-  constructor({ clientId, clientSecret, redirectUri }: { clientId?: string, clientSecret?: string, redirectUri?: string } = {}) {
+  constructor({
+    clientId,
+    clientSecret,
+    redirectUri,
+  }: { clientId?: string; clientSecret?: string; redirectUri?: string } = {}) {
     let id = clientId;
     let secret = clientSecret;
     let uri = redirectUri;

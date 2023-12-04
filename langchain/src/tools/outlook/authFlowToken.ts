@@ -32,7 +32,7 @@ export class AuthFlowToken extends AuthFlowBase {
 // if you have the refresh token and other credentials
 export class AuthFlowRefresh extends AuthFlowBase {
   private clientSecret: string;
-  
+
   private redirectUri: string;
 
   private refreshToken: string;

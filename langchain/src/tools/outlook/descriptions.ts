@@ -37,4 +37,3 @@ If on default: $search="<property>"
 On specified property: $search="<property>:<value>"
 Example: $search="sent:07/23/2018"
 `;
-
