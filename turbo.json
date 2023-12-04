@@ -23,28 +23,10 @@
     "libs/langchain-openai#build": {
       "dependsOn": ["@langchain/core#build"]
     },
-    "build:langchain": {
-      "dependsOn": [
-        "@langchain/core#build",
-        "@langchain/anthropic#build",
-        "@langchain/openai#build"
-      ],
-      "outputs": [
-        "langchain/dist/**",
-        "langchain/dist-cjs/**",
-        "langchain/*.js",
-        "langchain/*.cjs",
-        "langchain/*.d.ts"
-      ],
-      "inputs": [
-        "langchain/src/**",
-        "langchain/scripts/**",
-        "langchain/package.json",
-        "langchain/tsconfig.json"
-      ]
-    },
     "build": {
-      "dependsOn": ["build:langchain", "^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },

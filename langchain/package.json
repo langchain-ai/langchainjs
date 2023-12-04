@@ -844,7 +844,7 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn turbo run build:scripts",
     "build:envs": "yarn build:esm && yarn build:cjs",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
@@ -1000,6 +1000,7 @@
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
+    "turbo": "latest",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",

@@ -18,7 +18,7 @@
   },
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "build": "turbo run build:langchain --filter=\"!test-exports-*\" --concurrency 1",
+    "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
     "build:langchain": "yarn turbo run build --filter=langchain",
     "build:deps": "yarn build --filter=@langchain/openai --filter=@langchain/anthropic --filter=@langchain/core",
     "format": "turbo run format",
