@@ -3,13 +3,15 @@
   "extends": ["//"],
   "pipeline": {
     "clean": {
-      "dependsOn": ["@langchain/core#build"]
+      "dependsOn": ["@langchain/openai#build", "@langchain/anthropic#build"],
+      "outputs": ["dist", "package.json", "tsconfig.json"]
     },
     "build:envs": {
       "dependsOn": ["clean"]
     },
     "build:scripts": {
-      "dependsOn": ["build:envs"]
+      "dependsOn": ["build:envs"],
+      "outputs": ["package.json", "tsconfig.json"]
     }
   }
 }
