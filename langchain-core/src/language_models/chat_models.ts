@@ -2,17 +2,17 @@ import {
   AIMessage,
   BaseMessage,
   BaseMessageChunk,
-  BaseMessageLike,
+  type BaseMessageLike,
   HumanMessage,
   coerceMessageLikeToMessage,
 } from "../messages/index.js";
 import { BasePromptValue } from "../prompt_values.js";
 import {
-  LLMResult,
+  type LLMResult,
   RUN_KEY,
-  ChatGeneration,
+  type ChatGeneration,
   ChatGenerationChunk,
-  ChatResult,
+  type ChatResult,
 } from "../outputs.js";
 import {
   BaseLanguageModel,

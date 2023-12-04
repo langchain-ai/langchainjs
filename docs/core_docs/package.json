@@ -1,11 +1,13 @@
 {
-  "name": "core_docs",
+  "name": "@langchain/core_docs",
   "version": "0.0.0",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "yarn build:typedoc && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
-    "build": "yarn build:typedoc && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "rimraf:build": "rimraf ./build",
+    "build:docusaurus": "NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build": "yarn turbo run build:docusaurus",
     "build:typedoc": "cd ../api_refs && yarn build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
@@ -47,6 +49,7 @@
     "prettier": "^2.7.1",
     "rimraf": "^5.0.1",
     "swc-loader": "^0.2.3",
+    "turbo": "latest",
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next"
   },

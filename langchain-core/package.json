@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -37,7 +37,7 @@
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
-    "js-tiktoken": "^1.0.7",
+    "js-tiktoken": "^1.0.8",
     "langsmith": "^0.0.48",
     "p-queue": "^6.6.2",
     "p-retry": "4",
