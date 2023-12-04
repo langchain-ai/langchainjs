@@ -89,9 +89,7 @@ test("Create a runnable sequence with a runnable map", async () => {
     ]),
     extraField: new FakeLLM({}),
   });
-  const runnable = inputs
-    .pipe(promptTemplate)
-    .pipe(llm);
+  const runnable = inputs.pipe(promptTemplate).pipe(llm);
   const result = await runnable.invoke("Do you know the Muffin Man?");
   console.log(result);
   expect(result.content).toEqual(

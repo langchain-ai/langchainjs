@@ -33,8 +33,8 @@ export type RunnableFunc<RunInput, RunOutput> = (
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableMapLike<RunInput, RunOutput extends Record<string, any>> = {
-  [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>
-} 
+  [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
@@ -1411,10 +1411,10 @@ export class RunnableSequence<
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class RunnableMap<RunInput, RunOutput extends Record<string, any> = Record<string, any>> extends Runnable<
+export class RunnableMap<
   RunInput,
-  RunOutput
-> {
+  RunOutput extends Record<string, any> = Record<string, any>
+> extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RunnableMap";
   }
@@ -1438,7 +1438,10 @@ export class RunnableMap<RunInput, RunOutput extends Record<string, any> = Recor
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static from<RunInput, RunOutput extends Record<string, any> = Record<string, any>>(
+  static from<
+    RunInput,
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
     steps: RunnableMapLike<RunInput, RunOutput>
   ): RunnableMap<RunInput, RunOutput> {
     return new RunnableMap<RunInput, RunOutput>({ steps });
