@@ -1,0 +1,31 @@
+{
+  "name": "create-langchain-integration",
+  "version": "0.0.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/langchain-ai/langchainjs",
+    "directory": "libs/create-langchain-integration"
+  },
+  "bin": "./dist/index.js",
+  "scripts": {
+    "dev": "ncc build ./index.ts -w -o dist/",
+    "build": "ncc build ./index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
+    "format": "prettier --write \"./\"",
+    "format:check": "prettier --check \"./\""
+  },
+  "devDependencies": {
+    "@types/prompts": "^2",
+    "@types/validate-npm-package-name": "3.0.0",
+    "@vercel/ncc": "^0.34.0",
+    "commander": "^2.20.0",
+    "conf": "^10.2.0",
+    "dotenv": "^16.3.1",
+    "fast-glob": "^3.3.2",
+    "picocolors": "^1.0.0",
+    "prettier": "^2.8.3",
+    "prompts": "^2.4.2",
+    "typescript": "<5.2.0",
+    "update-check": "^1.5.4",
+    "validate-npm-package-name": "^5.0.0"
+  }
+}
