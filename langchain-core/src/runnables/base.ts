@@ -31,11 +31,15 @@ export type RunnableFunc<RunInput, RunOutput> = (
     | (Record<string, any> & { config: RunnableConfig })
 ) => RunOutput | Promise<RunOutput>;
 
+export type RunnableMapLike<RunInput, RunOutput extends Record<string, any>> = {
+  [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>
+} 
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
   | Runnable<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
-  | { [key: string]: RunnableLike<RunInput, RunOutput> };
+  | RunnableMapLike<RunInput, Record<string, any> & RunOutput>;
 
 export type RunnableBatchOptions = {
   maxConcurrency?: number;
@@ -1404,10 +1408,9 @@ export class RunnableSequence<
  * const result = await mapChain.invoke({ topic: "bear" });
  * ```
  */
-export class RunnableMap<RunInput> extends Runnable<
+export class RunnableMap<RunInput, RunOutput extends Record<string, any> = Record<string, any>> extends Runnable<
   RunInput,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Record<string, any>
+  RunOutput
 > {
   static lc_name() {
     return "RunnableMap";
@@ -1423,7 +1426,7 @@ export class RunnableMap<RunInput> extends Runnable<
     return Object.keys(this.steps);
   }
 
-  constructor(fields: { steps: Record<string, RunnableLike<RunInput>> }) {
+  constructor(fields: { steps: RunnableMapLike<RunInput, RunOutput> }) {
     super(fields);
     this.steps = {};
     for (const [key, value] of Object.entries(fields.steps)) {
@@ -1431,15 +1434,17 @@ export class RunnableMap<RunInput> extends Runnable<
     }
   }
 
-  static from<RunInput>(steps: Record<string, RunnableLike<RunInput>>) {
-    return new RunnableMap<RunInput>({ steps });
+  static from<RunInput, RunOutput extends Record<string, any> = Record<string, any>>(
+    steps: RunnableMapLike<RunInput, RunOutput>
+  ): RunnableMap<RunInput, RunOutput> {
+    return new RunnableMap<RunInput, RunOutput>({ steps });
   }
 
   async invoke(
     input: RunInput,
     options?: Partial<BaseCallbackConfig>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<Record<string, any>> {
+  ): Promise<RunOutput> {
     const callbackManager_ = await getCallbackMangerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -1468,7 +1473,7 @@ export class RunnableMap<RunInput> extends Runnable<
       throw e;
     }
     await runManager?.handleChainEnd(output);
-    return output;
+    return output as RunOutput;
   }
 }
 
@@ -1701,7 +1706,7 @@ export function _coerceToRunnable<RunInput, RunOutput>(
     for (const [key, value] of Object.entries(coerceable)) {
       runnables[key] = _coerceToRunnable(value);
     }
-    return new RunnableMap<RunInput>({
+    return new RunnableMap({
       steps: runnables,
     }) as unknown as Runnable<RunInput, Exclude<RunOutput, Error>>;
   } else {
