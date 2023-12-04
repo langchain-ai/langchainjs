@@ -7997,27 +7997,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/api_refs@workspace:docs/api_refs":
-  version: 0.0.0-use.local
-  resolution: "@langchain/api_refs@workspace:docs/api_refs"
-  dependencies:
-    "@types/node": ^20
-    "@types/react": ^18
-    "@types/react-dom": ^18
-    autoprefixer: ^10.0.1
-    eslint: ^8
-    eslint-config-next: 14.0.1
-    next: 14.0.1
-    postcss: ^8
-    react: ^18
-    react-dom: ^18
-    tailwindcss: ^3.3.0
-    ts-morph: ^20.0.0
-    turbo: latest
-    typescript: ^5
-  languageName: unknown
-  linkType: soft
-
 "@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.6":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
@@ -8048,41 +8027,6 @@ __metadata:
     typescript: ^5.0.0
     uuid: ^9.0.0
     zod: ^3.22.3
-  languageName: unknown
-  linkType: soft
-
-"@langchain/core_docs@workspace:docs/core_docs":
-  version: 0.0.0-use.local
-  resolution: "@langchain/core_docs@workspace:docs/core_docs"
-  dependencies:
-    "@babel/eslint-parser": ^7.18.2
-    "@docusaurus/core": 2.4.1
-    "@docusaurus/preset-classic": 2.4.1
-    "@docusaurus/remark-plugin-npm2yarn": ^2.4.1
-    "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.160
-    "@swc/core": ^1.3.62
-    clsx: ^1.2.1
-    docusaurus-plugin-typedoc: 1.0.0-next.5
-    eslint: ^8.19.0
-    eslint-config-airbnb: ^19.0.4
-    eslint-config-prettier: ^8.5.0
-    eslint-plugin-header: ^3.1.1
-    eslint-plugin-import: ^2.26.0
-    eslint-plugin-jsx-a11y: ^6.6.0
-    eslint-plugin-react: ^7.30.1
-    eslint-plugin-react-hooks: ^4.6.0
-    json-loader: ^0.5.7
-    prettier: ^2.7.1
-    process: ^0.11.10
-    react: ^17.0.2
-    react-dom: ^17.0.2
-    rimraf: ^5.0.1
-    swc-loader: ^0.2.3
-    turbo: latest
-    typedoc: ^0.24.4
-    typedoc-plugin-markdown: next
-    webpack: ^5.75.0
   languageName: unknown
   linkType: soft
 
@@ -13155,6 +13099,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"api_refs@workspace:docs/api_refs":
+  version: 0.0.0-use.local
+  resolution: "api_refs@workspace:docs/api_refs"
+  dependencies:
+    "@types/node": ^20
+    "@types/react": ^18
+    "@types/react-dom": ^18
+    autoprefixer: ^10.0.1
+    eslint: ^8
+    eslint-config-next: 14.0.1
+    next: 14.0.1
+    postcss: ^8
+    react: ^18
+    react-dom: ^18
+    tailwindcss: ^3.3.0
+    ts-morph: ^20.0.0
+    typescript: ^5
+  languageName: unknown
+  linkType: soft
+
 "apify-client@npm:^2.7.1":
   version: 2.7.1
   resolution: "apify-client@npm:2.7.1"
@@ -15510,6 +15474,40 @@ __metadata:
   checksum: 9de8597363a8e9b9952491ebe18167e3b36e7707569eed0ebf14f8bba773611376466ae34575bca8cfe3c767890c859c74056084738f09d4e4a6f902b2ad7d99
   languageName: node
   linkType: hard
+
+"core_docs@workspace:docs/core_docs":
+  version: 0.0.0-use.local
+  resolution: "core_docs@workspace:docs/core_docs"
+  dependencies:
+    "@babel/eslint-parser": ^7.18.2
+    "@docusaurus/core": 2.4.1
+    "@docusaurus/preset-classic": 2.4.1
+    "@docusaurus/remark-plugin-npm2yarn": ^2.4.1
+    "@mdx-js/react": ^1.6.22
+    "@mendable/search": ^0.0.160
+    "@swc/core": ^1.3.62
+    clsx: ^1.2.1
+    docusaurus-plugin-typedoc: 1.0.0-next.5
+    eslint: ^8.19.0
+    eslint-config-airbnb: ^19.0.4
+    eslint-config-prettier: ^8.5.0
+    eslint-plugin-header: ^3.1.1
+    eslint-plugin-import: ^2.26.0
+    eslint-plugin-jsx-a11y: ^6.6.0
+    eslint-plugin-react: ^7.30.1
+    eslint-plugin-react-hooks: ^4.6.0
+    json-loader: ^0.5.7
+    prettier: ^2.7.1
+    process: ^0.11.10
+    react: ^17.0.2
+    react-dom: ^17.0.2
+    rimraf: ^5.0.1
+    swc-loader: ^0.2.3
+    typedoc: ^0.24.4
+    typedoc-plugin-markdown: next
+    webpack: ^5.75.0
+  languageName: unknown
+  linkType: soft
 
 "cosmiconfig@npm:8.0.0":
   version: 8.0.0

@@ -1,16 +1,11 @@
 import { AIMessage, BaseMessage, getBufferString } from "../messages/index.js";
 import { BasePromptValue } from "../prompt_values.js";
+import { LLMResult, RUN_KEY, Generation, GenerationChunk } from "../outputs.js";
 import {
-  type LLMResult,
-  RUN_KEY,
-  type Generation,
-  GenerationChunk,
-} from "../outputs.js";
-import {
-  type BaseCallbackConfig,
+  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForLLMRun,
-  type Callbacks,
+  Callbacks,
 } from "../callbacks/manager.js";
 import {
   BaseLanguageModel,
@@ -18,7 +13,7 @@ import {
   type BaseLanguageModelInput,
   type BaseLanguageModelParams,
 } from "./base.js";
-import type { RunnableConfig } from "../runnables/config.js";
+import { RunnableConfig } from "../runnables/config.js";
 
 export type SerializedLLM = {
   _model: string;
