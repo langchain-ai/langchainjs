@@ -31,9 +31,9 @@ export class WolframAlphaTool extends Tool {
   }
 
   async _call(query: string): Promise<string> {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${this.appid}&input=${
-      encodeURIComponent(query)
-    }`;
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${
+      this.appid
+    }&input=${encodeURIComponent(query)}`;
     const res = await fetch(url);
 
     return res.text();

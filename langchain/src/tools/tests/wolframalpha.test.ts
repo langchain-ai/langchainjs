@@ -1,20 +1,20 @@
-import {afterEach, beforeEach, describe, expect} from "@jest/globals";
-import {WolframAlphaTool} from "../wolframalpha.js";
+import { afterEach, beforeEach, describe, expect } from "@jest/globals";
+import { WolframAlphaTool } from "../wolframalpha.js";
 
-const MOCK_APP_ID = '[MOCK_APP_ID]';
-const QUERY_1 = 'What is 2 + 2?';
-const MOCK_ANSWER = '[MOCK_ANSWER]';
+const MOCK_APP_ID = "[MOCK_APP_ID]";
+const QUERY_1 = "What is 2 + 2?";
+const MOCK_ANSWER = "[MOCK_ANSWER]";
 
 describe("wolfram alpha test suite", () => {
-
   let fetchMock: jest.SpyInstance;
 
   beforeEach(() => {
-    fetchMock = jest.spyOn(global, "fetch").mockImplementation(() => {
-      return Promise.resolve({
-        text: () => Promise.resolve(MOCK_ANSWER),
-      } as Response);
-    });
+    fetchMock = jest.spyOn(global, "fetch").mockImplementation(
+      async () =>
+        ({
+          text: () => Promise.resolve(MOCK_ANSWER),
+        } as Response)
+    );
   });
 
   afterEach(() => {
