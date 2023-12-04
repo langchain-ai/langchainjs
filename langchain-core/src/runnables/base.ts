@@ -31,6 +31,7 @@ export type RunnableFunc<RunInput, RunOutput> = (
     | (Record<string, any> & { config: RunnableConfig })
 ) => RunOutput | Promise<RunOutput>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableMapLike<RunInput, RunOutput extends Record<string, any>> = {
   [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>
 } 
@@ -39,6 +40,7 @@ export type RunnableMapLike<RunInput, RunOutput extends Record<string, any>> = {
 export type RunnableLike<RunInput = any, RunOutput = any> =
   | Runnable<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | RunnableMapLike<RunInput, Record<string, any> & RunOutput>;
 
 export type RunnableBatchOptions = {
@@ -1408,6 +1410,7 @@ export class RunnableSequence<
  * const result = await mapChain.invoke({ topic: "bear" });
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class RunnableMap<RunInput, RunOutput extends Record<string, any> = Record<string, any>> extends Runnable<
   RunInput,
   RunOutput
@@ -1434,6 +1437,7 @@ export class RunnableMap<RunInput, RunOutput extends Record<string, any> = Recor
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static from<RunInput, RunOutput extends Record<string, any> = Record<string, any>>(
     steps: RunnableMapLike<RunInput, RunOutput>
   ): RunnableMap<RunInput, RunOutput> {
