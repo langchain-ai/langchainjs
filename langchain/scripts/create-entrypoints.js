@@ -17,7 +17,8 @@ const entrypoints = {
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
-  "agents/format_scratchpad/openai_tools": "agents/format_scratchpad/openai_tools",
+  "agents/format_scratchpad/openai_tools":
+    "agents/format_scratchpad/openai_tools",
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/format_scratchpad/log_to_message":
@@ -319,6 +320,7 @@ const entrypoints = {
     "experimental/hubs/makersuite/googlemakersuitehub",
   "experimental/chains/violation_of_expectations":
     "experimental/chains/violation_of_expectations/index",
+  "experimental/masking": "experimental/masking/index",
   "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
   evaluation: "evaluation/index",
