@@ -22,7 +22,7 @@ import {
   FakeRunnable,
   FakeListChatModel,
 } from "../../utils/testing/index.js";
-import { RunnableSequence, RunnableMap, RunnableLambda, _coerceToRunnable } from "../base.js";
+import { RunnableSequence, RunnableMap, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { Document } from "../../documents/document.js";
 
@@ -80,17 +80,15 @@ test("Create a runnable sequence with a runnable map", async () => {
       `Context:\n{documents}\n\nQuestion:\n{question}`
     ),
   ]);
-
   const llm = new FakeChatModel({});
   const inputs = RunnableMap.from({
-    question: ((input: string) => input),
+    question: (input: string) => input,
     documents: RunnableSequence.from([
       new FakeRetriever(),
       (docs: Document[]) => JSON.stringify(docs),
     ]),
     extraField: new FakeLLM({}),
   });
-
   const runnable = inputs
     .pipe(promptTemplate)
     .pipe(llm);
