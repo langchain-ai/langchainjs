@@ -48,7 +48,7 @@ export async function run() {
 
   const viewInput = `Could you search in my drafts for the latest email?`;
 
-  const viewResult = await gmailAgent.call({ input: viewInput });
+  const viewResult = await gmailAgent.invoke({ input: viewInput });
   //   View Result {
   //     output: "The latest email in your drafts is from hopefulparrot@gmail.com with the subject 'Collaboration Opportunity'. The body of the email reads: 'Dear [Friend], I hope this letter finds you well. I am writing to you in the hopes of rekindling our friendship and to discuss the possibility of collaborating on some research together. I know that we have had our differences in the past, but I believe that we can put them aside and work together for the greater good. I look forward to hearing from you. Sincerely, [Parrot]'"
   //   }
