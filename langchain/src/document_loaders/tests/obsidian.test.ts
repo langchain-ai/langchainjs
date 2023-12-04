@@ -135,7 +135,7 @@ test("Test float metadata is loaded correctly", () => {
     return;
   }
 
-  expect(doc.metadata["aFloat"]).toBe(13.12345);
+  expect(doc.metadata.aFloat).toBe(13.12345);
 });
 
 test("Test int metadata is loaded correctly", () => {
@@ -148,7 +148,7 @@ test("Test int metadata is loaded correctly", () => {
     return;
   }
 
-  expect(doc.metadata["anInt"]).toBe(15);
+  expect(doc.metadata.anInt).toBe(15);
 });
 
 test("Test string metadata is loaded correctly", () => {
@@ -161,7 +161,7 @@ test("Test string metadata is loaded correctly", () => {
     return;
   }
 
-  expect(doc.metadata["aString"]).toBe("string value");
+  expect(doc.metadata.aString).toBe("string value");
 });
 
 test("Test array metadata is loaded as a string", () => {
@@ -174,7 +174,7 @@ test("Test array metadata is loaded as a string", () => {
     return;
   }
 
-  expect(doc.metadata["anArray"]).toBe('["one","two","three"]');
+  expect(doc.metadata.anArray).toBe('["one","two","three"]');
 });
 
 test("Test dict metadata is stored as a string", () => {
@@ -187,5 +187,5 @@ test("Test dict metadata is stored as a string", () => {
     return;
   }
 
-  expect(doc.metadata["aDict"]).toBe('{"dictId1":"58417","dictId2":1500}');
+  expect(doc.metadata.aDict).toBe('{"dictId1":"58417","dictId2":1500}');
 });
