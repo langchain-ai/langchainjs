@@ -63,7 +63,7 @@ const collapseChain = RunnableSequence.from([
 const collapse = async (
   documents: Document[],
   options?: {
-    config?: BaseCallbackConfig
+    config?: BaseCallbackConfig;
   },
   tokenMax = 4000
 ) => {
@@ -103,7 +103,7 @@ const mapReduceChain = RunnableSequence.from([
   ])
     .withConfig({ runName: "Summarize (return doc)" })
     .map(),
-    collapse,
+  collapse,
   reduceChain,
 ]).withConfig({ runName: "Map reduce" });
 
