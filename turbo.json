@@ -2,21 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env"],
   "pipeline": {
-    "@langchain/core#build": {
-      "outputs": [
-        "langchain-core/dist/**",
-        "langchain-core/dist-cjs/**",
-        "langchain-core/*.js",
-        "langchain-core/*.cjs",
-        "langchain-core/*.d.ts"
-      ],
-      "inputs": [
-        "langchain-core/src/**",
-        "langchain-core/scripts/**",
-        "langchain-core/package.json",
-        "langchain-core/tsconfig.json"
-      ]
-    },
+    "@langchain/core#build": {},
     "libs/langchain-anthropic#build": {
       "dependsOn": ["@langchain/core#build"]
     },
