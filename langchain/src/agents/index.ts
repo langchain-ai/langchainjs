@@ -2,6 +2,8 @@ export {
   Agent,
   type AgentArgs,
   BaseSingleActionAgent,
+  BaseMultiActionAgent,
+  RunnableAgent,
   LLMSingleActionAgent,
   type LLMSingleActionAgentInput,
   type OutputParserArgs,
@@ -42,6 +44,7 @@ export {
   initializeAgentExecutor,
   initializeAgentExecutorWithOptions,
   type InitializeAgentExecutorOptions,
+  type InitializeAgentExecutorOptionsStructured,
 } from "./initialize.js";
 export {
   ZeroShotAgent,

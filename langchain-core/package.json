@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.0.2",
+  "version": "0.0.8",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -13,14 +13,17 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn turbo run build:scripts",
+    "build:envs": "yarn build:esm && yarn build:cjs",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint:fix": "yarn lint --fix",
-    "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
@@ -35,7 +38,7 @@
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
-    "js-tiktoken": "^1.0.7",
+    "js-tiktoken": "^1.0.8",
     "langsmith": "^0.0.48",
     "p-queue": "^6.6.2",
     "p-retry": "4",
@@ -59,6 +62,7 @@
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
+    "turbo": "latest",
     "typescript": "^5.0.0"
   },
   "publishConfig": {
@@ -264,6 +268,11 @@
       "import": "./utils/stream.js",
       "require": "./utils/stream.cjs"
     },
+    "./utils/testing": {
+      "types": "./utils/testing.d.ts",
+      "import": "./utils/testing.js",
+      "require": "./utils/testing.cjs"
+    },
     "./utils/tiktoken": {
       "types": "./utils/tiktoken.d.ts",
       "import": "./utils/tiktoken.js",
@@ -394,6 +403,9 @@
     "utils/stream.cjs",
     "utils/stream.js",
     "utils/stream.d.ts",
+    "utils/testing.cjs",
+    "utils/testing.js",
+    "utils/testing.d.ts",
     "utils/tiktoken.cjs",
     "utils/tiktoken.js",
     "utils/tiktoken.d.ts",

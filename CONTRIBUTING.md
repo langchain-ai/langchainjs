@@ -114,6 +114,14 @@ To get started, you will need to install the dependencies for the project. To do
 yarn
 ```
 
+Then, you will need to switch directories into `langchain-core` and build core by running:
+
+```bash
+cd ../langchain-core
+yarn
+yarn build
+```
+
 ### Linting
 
 We use [eslint](https://eslint.org/) to enforce standard lint rules.
@@ -230,7 +238,7 @@ example to showcase how to use it. Most of our users find examples to be the
 most helpful kind of documentation.
 
 Examples can be added in the `examples/src` directory, e.g.
-`examples/src/path/to/example` and should export a `run` function. This
+`examples/src/path/to/example`. This
 example can then be invoked with `yarn example path/to/example` at the top
 level of the repo.
 
