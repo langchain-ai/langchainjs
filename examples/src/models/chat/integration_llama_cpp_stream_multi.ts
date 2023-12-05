@@ -3,7 +3,7 @@ import { SystemMessage, HumanMessage } from "langchain/schema";
 
 const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
 
-const model = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+const llamaCpp = new ChatLlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
 
 const stream = await llamaCpp.stream([
   new SystemMessage(

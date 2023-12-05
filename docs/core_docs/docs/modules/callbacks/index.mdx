@@ -63,7 +63,11 @@ import StreamingExample from "@examples/models/llm/llm_streaming.ts";
 
 ### Multiple handlers
 
-We offer a method on the `CallbackManager` class that allows you to create a one-off handler. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
+We offer a method on the `CallbackManager` class that allows you to create a one-off handler. This is useful if eg. you need to create a handler that you will use only for a single request.
+
+:::tip
+Agents now have built in streaming support! Click [here](/docs/modules/agents/how_to/streaming) for more details.
+:::
 
 This is a more complete example that passes a `CallbackManager` to a ChatModel, and LLMChain, a Tool, and an Agent.
 

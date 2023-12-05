@@ -25,6 +25,10 @@ export interface GradientLLMParams extends BaseLLMParams {
    * Gradient AI Model Slug.
    */
   modelSlug?: string;
+  /**
+   * Gradient Adapter ID for custom fine tuned models.
+   */
+  adapterId?: string;
 }
 
 /**
@@ -45,6 +49,8 @@ export class GradientLLM extends LLM<BaseLLMCallOptions> {
 
   modelSlug = "llama2-7b-chat";
 
+  adapterId?: string;
+
   gradientAccessKey?: string;
 
   workspaceId?: string;
@@ -53,12 +59,13 @@ export class GradientLLM extends LLM<BaseLLMCallOptions> {
 
   // Gradient AI does not export the BaseModel type. Once it does, we can use it here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  baseModel: any;
+  model: any;
 
   constructor(fields: GradientLLMParams) {
     super(fields);
 
     this.modelSlug = fields?.modelSlug ?? this.modelSlug;
+    this.adapterId = fields?.adapterId;
     this.gradientAccessKey =
       fields?.gradientAccessKey ??
       getEnvironmentVariable("GRADIENT_ACCESS_TOKEN");
@@ -90,7 +97,7 @@ export class GradientLLM extends LLM<BaseLLMCallOptions> {
     prompt: string,
     _options: this["ParsedCallOptions"]
   ): Promise<string> {
-    await this.setBaseModel();
+    await this.setModel();
 
     // GradientLLM does not export the CompleteResponse type. Once it does, we can use it here.
     interface CompleteResponse {
@@ -99,7 +106,7 @@ export class GradientLLM extends LLM<BaseLLMCallOptions> {
     }
 
     const response = (await this.caller.call(async () =>
-      this.baseModel.complete({
+      this.model.complete({
         query: prompt,
         ...this.inferenceParameters,
       })
@@ -108,15 +115,22 @@ export class GradientLLM extends LLM<BaseLLMCallOptions> {
     return response.generatedOutput;
   }
 
-  async setBaseModel() {
-    if (this.baseModel) return;
+  async setModel() {
+    if (this.model) return;
 
     const gradient = new Gradient({
       accessToken: this.gradientAccessKey,
       workspaceId: this.workspaceId,
     });
-    this.baseModel = await gradient.getBaseModel({
-      baseModelSlug: this.modelSlug,
-    });
+
+    if (this.adapterId) {
+      this.model = await gradient.getModelAdapter({
+        modelAdapterId: this.adapterId,
+      });
+    } else {
+      this.model = await gradient.getBaseModel({
+        baseModelSlug: this.modelSlug,
+      });
+    }
   }
 }
