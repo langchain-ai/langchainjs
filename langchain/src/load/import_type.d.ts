@@ -7,6 +7,9 @@ export interface OptionalImportMap {
   "langchain/agents/toolkits/aws_sfn"?:
     | typeof import("../agents/toolkits/aws_sfn.js")
     | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;
+  "langchain/agents/toolkits/jira"?:
+    | typeof import("../agents/toolkits/jira/index.js")
+    | Promise<typeof import("../agents/toolkits/jira/index.js")>;
   "langchain/agents/toolkits/sql"?:
     | typeof import("../agents/toolkits/sql/index.js")
     | Promise<typeof import("../agents/toolkits/sql/index.js")>;
@@ -19,6 +22,9 @@ export interface OptionalImportMap {
   "langchain/tools/calculator"?:
     | typeof import("../tools/calculator.js")
     | Promise<typeof import("../tools/calculator.js")>;
+  "langchain/tools/jira"?:
+    | typeof import("../tools/jira.js")
+    | Promise<typeof import("../tools/jira.js")>;
   "langchain/tools/sql"?:
     | typeof import("../tools/sql.js")
     | Promise<typeof import("../tools/sql.js")>;

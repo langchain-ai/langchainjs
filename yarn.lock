@@ -22853,7 +22853,6 @@ __metadata:
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     ioredis: ^5.3.2
-    jira.js: ^3.0.1
     jsdom: "*"
     llmonitor: ^0.5.9
     lodash: ^4.17.21
