@@ -5,24 +5,6 @@ import {
   RunnableConfig,
   RunnableWithMessageHistory,
 } from "langchain/runnables";
-import { BaseListChatMessageHistory } from "langchain/schema";
-
-// Define your session history store.
-// This is where you will store your chat history, keyed by sessionId.
-function getListSessionHistory(): (
-  sessionId: string
-) => BaseListChatMessageHistory {
-  const chatHistoryStore: { [key: string]: BaseListChatMessageHistory } = {};
-
-  function getSessionHistory(sessionId: string): BaseListChatMessageHistory {
-    if (!chatHistoryStore[sessionId]) {
-      chatHistoryStore[sessionId] = new ChatMessageHistory();
-    }
-    return chatHistoryStore[sessionId];
-  }
-
-  return getSessionHistory;
-}
 
 // Instantiate your model and prompt.
 const model = new ChatOpenAI({});
@@ -35,11 +17,16 @@ const prompt = ChatPromptTemplate.fromMessages([
 // Create a simple runnable which just chains the prompt to the model.
 const runnable = prompt.pipe(model);
 
+// Define your session history store.
+// This is where you will store your chat history.
+const messageHistory = new ChatMessageHistory();
+
 // Create your `RunnableWithMessageHistory` object, passing in the
 // runnable created above.
 const withHistory = new RunnableWithMessageHistory({
   runnable,
-  getMessageHistory: getListSessionHistory(),
+  // Optionally, you can use a function which tracks history by session ID.
+  getMessageHistory: (_sessionId: string) => messageHistory,
   inputMessagesKey: "input",
   // This shows the runnable where to insert the history.
   // We set to "history" here because of our MessagesPlaceholder above.
@@ -60,7 +47,7 @@ console.log("output 1:", output);
 /**
 output 1: AIMessage {
   lc_namespace: [ 'langchain_core', 'messages' ],
-  content: 'Hello Archibald! How can I assist you today?',
+  content: 'Hello, Archibald! How can I assist you today?',
   additional_kwargs: { function_call: undefined, tool_calls: undefined }
 }
  */
@@ -70,13 +57,13 @@ console.log("output 2:", output);
 /**
 output 2: AIMessage {
   lc_namespace: [ 'langchain_core', 'messages' ],
-  content: 'Your name is Archibald, as you mentioned in your previous message.',
+  content: 'Your name is Archibald, as you mentioned earlier. Is there anything specific you would like assistance with, Archibald?',
   additional_kwargs: { function_call: undefined, tool_calls: undefined }
 }
  */
 
 /**
  * You can see the LangSmith traces here:
- * output 1 @link https://smith.langchain.com/public/4e5f85b1-2cdf-48e9-9323-8730cee53d87/r
- * output 2 @link https://smith.langchain.com/public/a2042103-f622-4199-8a2b-c88a3cb3f219/r
+ * output 1 @link https://smith.langchain.com/public/686f061e-bef4-4b0d-a4fa-04c107b6db98/r
+ * output 2 @link https://smith.langchain.com/public/c30ba77b-c2f4-440d-a54b-f368ced6467a/r
  */
