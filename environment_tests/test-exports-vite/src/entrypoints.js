@@ -15,7 +15,6 @@ export * from "langchain/base_language";
 export * from "langchain/tools";
 export * from "langchain/tools/connery";
 export * from "langchain/tools/render";
-export * from "langchain/tools/outlook";
 export * from "langchain/tools/google_places";
 export * from "langchain/chains";
 export * from "langchain/chains/combine_documents/reduce";

@@ -1,6 +1,6 @@
 import * as http from "http";
 import * as url from "url";
-import * as openurl from "openurl";
+import open from "open";
 import { AuthFlowBase } from "./authFlowBase.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
@@ -65,7 +65,9 @@ export class AuthFlowREST extends AuthFlowBase {
       `&scope=${scope}`,
       `&state=${state}`,
     ].join("");
-    openurl.open(url);
+    open(url).catch((error) => {
+      console.error("Error opening URL: ", error);
+    });
     return url;
   }
 
