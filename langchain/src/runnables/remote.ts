@@ -4,7 +4,12 @@ import {
   BaseCallbackConfig,
   CallbackManagerForChainRun,
 } from "../callbacks/manager.js";
-import { getBytes, getLines, getMessages } from "../util/event-source-parse.js";
+import {
+  convertEventStreamToIterableReadableDataStream,
+  getBytes,
+  getLines,
+  getMessages,
+} from "../util/event-source-parse.js";
 import { Document } from "../document.js";
 import {
   AIMessage,
@@ -23,7 +28,11 @@ import {
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
 import { IterableReadableStream } from "../util/stream.js";
-import { LogStreamCallbackHandlerInput, RunLogPatch } from "../callbacks/handlers/log_stream.js";
+import {
+  LogStreamCallbackHandler,
+  LogStreamCallbackHandlerInput,
+  RunLogPatch,
+} from "../callbacks/handlers/log_stream.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
@@ -331,49 +340,72 @@ export class RemoteRunnable<
     input: RunInput,
     options?: Partial<CallOptions>,
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): Promise<IterableReadableStream<RunOutput>> {
+  ): AsyncGenerator<RunLogPatch> {
     const [config, kwargs] =
       this._separateRunnableConfigFromCallOptions(options);
+    const stream = new LogStreamCallbackHandler({
+      ...streamOptions,
+      autoClose: false,
+    });
+    const { callbacks } = config;
+    if (callbacks === undefined) {
+      config.callbacks = [stream];
+    } else if (Array.isArray(callbacks)) {
+      config.callbacks = callbacks.concat([stream]);
+    } else {
+      const copiedCallbacks = callbacks.copy();
+      copiedCallbacks.inheritableHandlers.push(stream);
+      config.callbacks = copiedCallbacks;
+    }
+    const getExtraOptionsFromInput = () => {
+      const optionKeys = [
+        "diff",
+        "include_names",
+        "include_types",
+        "include_tags",
+        "exclude_names",
+        "exclude_types",
+        "exclude_tags",
+      ];
+      const extraOptions: Record<string, unknown> = {};
+      for (const key of optionKeys) {
+        const keyAsKeyof = key as keyof RunInput;
+        if (input[keyAsKeyof] !== undefined) {
+          extraOptions[key] = input[keyAsKeyof];
+        }
+      }
+      return extraOptions;
+    };
     const response = await this.post<{
       input: RunInput;
       config?: RunnableConfig;
       kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+      diff?: boolean;
+      include_names?: Array<string>;
+      include_types?: Array<string>;
+      include_tags?: Array<string>;
+      exclude_names?: Array<string>;
+      exclude_types?: Array<string>;
+      exclude_tags?: Array<string>;
     }>("/stream_log", {
       input,
       config,
       kwargs,
+      ...getExtraOptionsFromInput(),
     });
-    if (!response.ok) {
-      const json = await response.json();
-      const error = new Error(
-        `RemoteRunnable call failed with status code ${response.status}: ${json.message}`
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any).response = response;
-      throw error;
-    }
     const { body } = response;
     if (!body) {
       throw new Error(
         "Could not begin remote stream. Please check the given URL and try again."
       );
     }
-    const stream = new ReadableStream({
-      async start(controller) {
-        const enqueueLine = getMessages((msg) => {
-          if (msg.data) controller.enqueue(deserialize(msg.data));
-        });
-        const onLine = (
-          line: Uint8Array,
-          fieldLength: number,
-          flush?: boolean
-        ) => {
-          enqueueLine(line, fieldLength, flush);
-          if (flush) controller.close();
-        };
-        await getBytes(body, getLines(onLine));
-      },
-    });
-    return IterableReadableStream.fromReadableStream(stream);
+    const runnableStream = convertEventStreamToIterableReadableDataStream(body);
+    try {
+      for await (const log of runnableStream) {
+        yield log;
+      }
+    } finally {
+      await runnableStream;
+    }
   }
 }
