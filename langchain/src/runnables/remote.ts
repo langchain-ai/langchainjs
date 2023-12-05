@@ -396,7 +396,7 @@ export class RemoteRunnable<
     const { body } = response;
     if (!body) {
       throw new Error(
-        "Could not begin remote stream. Please check the given URL and try again."
+        "Could not begin remote stream log. Please check the given URL and try again."
       );
     }
     const runnableStream = convertEventStreamToIterableReadableDataStream(body);
