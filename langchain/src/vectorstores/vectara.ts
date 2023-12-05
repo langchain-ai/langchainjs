@@ -135,13 +135,7 @@ export interface VectaraRetrieverInput {
   verbose?: boolean;
 }
 
-interface VectaraRetrieverOutput {
-  documents: Document[];
-  summary: string;
-}
-
-
-export class VectaraRetriever extends Runnable<string, VectaraRetrieverOutput> {
+export class VectaraRetriever extends Runnable<string, Document[]> {
   static lc_name() {
     return "VectaraRetriever";
   }
@@ -173,7 +167,7 @@ export class VectaraRetriever extends Runnable<string, VectaraRetrieverOutput> {
     this.summaryConfig = fields.summaryConfig ?? { enabled: false, maxSummarizedResults: 0, responseLang: "eng" };
   }
 
-  async invoke(input: string, options?: RunnableConfig): Promise<VectaraRetrieverOutput> {
+  async invoke(input: string, options?: RunnableConfig): Promise<Document[]> {
     return this.getRelevantDocuments(input, options);
   }
 
@@ -182,7 +176,7 @@ export class VectaraRetriever extends Runnable<string, VectaraRetrieverOutput> {
     query: string,
     config: VectaraFilter = DEFAULT_FILTER,
     summary = false,
-  ): Promise<VectaraRetrieverOutput> {  
+  ): Promise<Document[]> {  
     const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,
@@ -203,19 +197,21 @@ export class VectaraRetriever extends Runnable<string, VectaraRetrieverOutput> {
       parsedConfig.runName
     );
     try {
-      const result: VectaraRetrieverOutput = { documents: [], summary: "" };
-      if (summary) {
-        this.summaryConfig.enabled = true;
-        const summaryResult = await this.vectara.vectara_query(query, this.topK, config, this.summaryConfig);
-        result.summary = summaryResult.summary;
-        result.documents = summaryResult.documents;
-      }
-      else {
-        const summaryResult = await this.vectara.vectara_query(query, this.topK, config);
-        result.documents = summaryResult.documents
-      }
-      await runManager?.handleRetrieverEnd(result.documents);
-      return result;
+      return this.vectara.vectara_query(query, this.topK, config, summary ? this.summaryConfig : undefined)
+          .then(summaryResult => {
+              const docs = summaryResult.documents;
+              if (summary) {
+                  this.summaryConfig.enabled = true;
+                  docs.push(new Document({ pageContent: summaryResult.summary, metadata: { 'summary': true } }));
+              }
+              runManager?.handleRetrieverEnd(docs).then(() => { }).catch(error => { throw error; })
+              return docs;
+          })
+          .catch(error => {
+              // Handle any errors here
+              console.error("Error during query:", error);
+              throw error;
+          });      
     } catch (error) {
       await runManager?.handleRetrieverError(error);
       throw error;
@@ -598,12 +594,11 @@ export class VectaraStore extends VectorStore {
           text: string;
           metadata: Record<string, unknown>;
           score: number;
-        }) => [
+        }) => 
           new Document({
             pageContent: response.text,
             metadata: response.metadata,
           }),
-        ]
       ),
       scores: responses.map(
         (response: {

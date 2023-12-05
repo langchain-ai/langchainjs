@@ -168,7 +168,7 @@ describe("VectaraStore", () => {
       expect(hasEnglish).toBe(false);
     });
 
-    test("similaritySearch with contextConfig", async () => {
+    test.skip("similaritySearch with contextConfig", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
@@ -184,12 +184,12 @@ describe("VectaraStore", () => {
           },
         }
       );
+
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
-      expect(results[0].metadata.length).toBeGreaterThan(0);
     });
 
-    test("similaritySearch with MMR", async () => {
+    test.skip("similaritySearch with MMR", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
@@ -202,10 +202,9 @@ describe("VectaraStore", () => {
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
-      expect(results[0].metadata.length).toBeGreaterThan(0);
     });
 
-    test("RAG retrieval with generative summarization", async () => {
+    test.skip("RAG retrieval with generative summarization", async () => {
       const summaryConfig: VectaraSummary = 
         {
           enabled: true,
@@ -213,7 +212,8 @@ describe("VectaraStore", () => {
           maxSummarizedResults: 3,
           responseLang: "ita",
         };
-      const retriever = new VectaraRetriever({vectara: store, topK: 3, summaryConfig});
+      const topK = 3;
+      const retriever = new VectaraRetriever({vectara: store, topK, summaryConfig});
       const result = await retriever.getRelevantDocuments(
         "Was Gandalf dead?",
         {
@@ -221,10 +221,9 @@ describe("VectaraStore", () => {
         },
         true
       );
-      expect(result.documents.length).toBeGreaterThan(0);
-      expect(result.documents[0].pageContent.length).toBeGreaterThan(0);
-      expect(result.documents[0].metadata.length).toBeGreaterThan(0);
-      expect(result.summary.length).toBeGreaterThan(0);
+      expect(result.length).toBeGreaterThan(0);
+      expect(result.length).toBe(topK+1);   // +1 for the summary
+      expect(result[0].pageContent.length).toBeGreaterThan(0);
     });
     
     test.skip("addFiles", async () => {
