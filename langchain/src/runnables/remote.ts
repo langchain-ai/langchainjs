@@ -400,12 +400,8 @@ export class RemoteRunnable<
       );
     }
     const runnableStream = convertEventStreamToIterableReadableDataStream(body);
-    try {
-      for await (const log of runnableStream) {
-        yield log;
-      }
-    } finally {
-      await runnableStream;
+    for await (const log of runnableStream) {
+      yield log;
     }
   }
 }
