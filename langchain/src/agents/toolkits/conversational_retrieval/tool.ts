@@ -19,7 +19,7 @@ export function createRetrieverTool(
       input,
       runManager?.getChild("retriever")
     );
-    return formatDocumentsAsString(docs, "\n");
+    return formatDocumentsAsString(docs);
   };
   const schema = z.object({
     input: z

@@ -15,7 +15,7 @@ import {
   FakeLLM,
   FakeChatModel,
   FakeRetriever,
-} from "../../utils/testing/lib.js";
+} from "../../utils/testing/index.js";
 
 test("Runnable streamLog method", async () => {
   const promptTemplate = PromptTemplate.fromTemplate("{input}");

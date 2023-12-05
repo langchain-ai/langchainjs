@@ -72,10 +72,11 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     prompt: string,
-    _options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"]
   ): Promise<string> {
     try {
       const promptOptions = {
+        onToken: options?.onToken,
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
         topK: this?.topK,
