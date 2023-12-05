@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.198",
+  "version": "0.0.200",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -88,6 +88,9 @@
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
+    "tools/google_places.cjs",
+    "tools/google_places.js",
+    "tools/google_places.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -160,6 +163,9 @@
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
+    "embeddings/gradient_ai.cjs",
+    "embeddings/gradient_ai.js",
+    "embeddings/gradient_ai.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -193,6 +199,9 @@
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
+    "llms/fireworks.cjs",
+    "llms/fireworks.js",
+    "llms/fireworks.d.ts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
@@ -202,12 +211,15 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
-    "llms/fireworks.cjs",
-    "llms/fireworks.js",
-    "llms/fireworks.d.ts",
+    "llms/gradient_ai.cjs",
+    "llms/gradient_ai.js",
+    "llms/gradient_ai.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/watsonx_ai.cjs",
+    "llms/watsonx_ai.js",
+    "llms/watsonx_ai.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -448,6 +460,9 @@
     "document_loaders/fs/buffer.cjs",
     "document_loaders/fs/buffer.js",
     "document_loaders/fs/buffer.d.ts",
+    "document_loaders/fs/chatgpt.cjs",
+    "document_loaders/fs/chatgpt.js",
+    "document_loaders/fs/chatgpt.d.ts",
     "document_loaders/fs/text.cjs",
     "document_loaders/fs/text.js",
     "document_loaders/fs/text.d.ts",
@@ -840,8 +855,10 @@
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint:fix": "yarn lint --fix",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
     "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
@@ -878,6 +895,7 @@
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
+    "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@mozilla/readability": "^0.4.4",
@@ -1019,6 +1037,7 @@
     "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
+    "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
@@ -1159,6 +1178,9 @@
       "optional": true
     },
     "@google-cloud/storage": {
+      "optional": true
+    },
+    "@gradientai/nodejs-sdk": {
       "optional": true
     },
     "@huggingface/inference": {
@@ -1404,7 +1426,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/core": "~0.0.2",
+    "@langchain/core": "~0.0.6",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
@@ -1570,6 +1592,11 @@
       "import": "./tools/google_calendar.js",
       "require": "./tools/google_calendar.cjs"
     },
+    "./tools/google_places": {
+      "types": "./tools/google_places.d.ts",
+      "import": "./tools/google_places.js",
+      "require": "./tools/google_places.cjs"
+    },
     "./chains": {
       "types": "./chains.d.ts",
       "import": "./chains.js",
@@ -1690,6 +1717,11 @@
       "import": "./embeddings/llama_cpp.js",
       "require": "./embeddings/llama_cpp.cjs"
     },
+    "./embeddings/gradient_ai": {
+      "types": "./embeddings/gradient_ai.d.ts",
+      "import": "./embeddings/gradient_ai.js",
+      "require": "./embeddings/gradient_ai.cjs"
+    },
     "./llms/load": {
       "types": "./llms/load.d.ts",
       "import": "./llms/load.js",
@@ -1745,6 +1777,11 @@
       "import": "./llms/replicate.js",
       "require": "./llms/replicate.cjs"
     },
+    "./llms/fireworks": {
+      "types": "./llms/fireworks.d.ts",
+      "import": "./llms/fireworks.js",
+      "require": "./llms/fireworks.cjs"
+    },
     "./llms/googlevertexai": {
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
@@ -1760,15 +1797,20 @@
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
     },
-    "./llms/fireworks": {
-      "types": "./llms/fireworks.d.ts",
-      "import": "./llms/fireworks.js",
-      "require": "./llms/fireworks.cjs"
+    "./llms/gradient_ai": {
+      "types": "./llms/gradient_ai.d.ts",
+      "import": "./llms/gradient_ai.js",
+      "require": "./llms/gradient_ai.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/watsonx_ai": {
+      "types": "./llms/watsonx_ai.d.ts",
+      "import": "./llms/watsonx_ai.js",
+      "require": "./llms/watsonx_ai.cjs"
     },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",
@@ -2169,6 +2211,11 @@
       "types": "./document_loaders/fs/buffer.d.ts",
       "import": "./document_loaders/fs/buffer.js",
       "require": "./document_loaders/fs/buffer.cjs"
+    },
+    "./document_loaders/fs/chatgpt": {
+      "types": "./document_loaders/fs/chatgpt.d.ts",
+      "import": "./document_loaders/fs/chatgpt.js",
+      "require": "./document_loaders/fs/chatgpt.cjs"
     },
     "./document_loaders/fs/text": {
       "types": "./document_loaders/fs/text.d.ts",

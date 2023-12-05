@@ -15,6 +15,7 @@ export * from "langchain/base_language";
 export * from "langchain/tools";
 export * from "langchain/tools/render";
 export * from "langchain/tools/jira";
+export * from "langchain/tools/google_places";
 export * from "langchain/chains";
 export * from "langchain/chains/combine_documents/reduce";
 export * from "langchain/chains/openai_functions";

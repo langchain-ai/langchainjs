@@ -19,13 +19,13 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
-    "build:deps": "yarn workspace @langchain/core build && yarn workspace @langchain/anthropic build && yarn workspace @langchain/openai build",
+    "build:deps": "yarn build --filter=@langchain/openai --filter=@langchain/anthropic --filter=@langchain/core",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
     "lint:fix": "yarn lint -- --fix",
-    "test": "yarn test:unit && yarn workspace @langchain/core build && yarn workspace langchain build && yarn test:exports:docker",
-    "test:unit": "turbo run test --filter langchain",
+    "test": "yarn test:unit && yarn build --filter=langchain && yarn test:exports:docker",
+    "test:unit": "turbo run test --filter @langchain/core --filter langchain",
     "test:int": "yarn run test:int:deps && turbo run test:integration ; yarn run test:int:deps:down",
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
     "test:int:deps:down": "docker compose -f test-int-deps-docker-compose.yml down",
@@ -34,8 +34,8 @@
     "publish:core": "bash langchain/scripts/release-branch.sh && turbo run --filter @langchain/core build lint test --concurrency 1 && yarn run test:exports:docker && yarn workspace @langchain/core run release && echo '🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
-    "docs": "yarn workspace core_docs start",
-    "docs:api_refs": "yarn workspace api_refs start"
+    "docs": "yarn workspace @langchain/core_docs start",
+    "docs:api_refs": "yarn workspace @langchain/api_refs start"
   },
   "author": "LangChain",
   "license": "MIT",

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
-import { AgentAction, AgentFinish } from "../agents.js";
+import type { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types.js";
-import { LLMResult } from "../outputs.js";
+import type { LLMResult } from "../outputs.js";
 import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
@@ -61,6 +61,13 @@ export interface BaseCallbackConfig {
    * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
    */
   callbacks?: Callbacks;
+
+  /**
+   * Runtime values for attributes previously made configurable on this Runnable,
+   * or sub-Runnables.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  configurable?: Record<string, any>;
 }
 
 export function parseCallbackConfigArg(
@@ -484,9 +491,9 @@ export class CallbackManager
   extends BaseCallbackManager
   implements BaseCallbackManagerMethods
 {
-  handlers: BaseCallbackHandler[];
+  handlers: BaseCallbackHandler[] = [];
 
-  inheritableHandlers: BaseCallbackHandler[];
+  inheritableHandlers: BaseCallbackHandler[] = [];
 
   tags: string[] = [];
 
@@ -500,10 +507,26 @@ export class CallbackManager
 
   private readonly _parentRunId?: string;
 
-  constructor(parentRunId?: string) {
+  constructor(
+    parentRunId?: string,
+    options?: {
+      handlers?: BaseCallbackHandler[];
+      inheritableHandlers?: BaseCallbackHandler[];
+      tags?: string[];
+      inheritableTags?: string[];
+      metadata?: Record<string, unknown>;
+      inheritableMetadata?: Record<string, unknown>;
+    }
+  ) {
     super();
-    this.handlers = [];
-    this.inheritableHandlers = [];
+    this.handlers = options?.handlers ?? this.handlers;
+    this.inheritableHandlers =
+      options?.inheritableHandlers ?? this.inheritableHandlers;
+    this.tags = options?.tags ?? this.tags;
+    this.inheritableTags = options?.inheritableTags ?? this.inheritableTags;
+    this.metadata = options?.metadata ?? this.metadata;
+    this.inheritableMetadata =
+      options?.inheritableMetadata ?? this.inheritableMetadata;
     this._parentRunId = parentRunId;
   }
 
