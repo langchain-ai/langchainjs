@@ -13,43 +13,38 @@ const trackTime = () => {
   let start: { startTime: number; question: string };
   let end: { endTime: number; answer: string };
 
-  const handleStartOrEnd = (run: Run, isStart: boolean) => {
-    if (isStart) {
-      start = {
-        startTime: run.start_time,
-        question: run.inputs.question,
-      };
-    } else if (run.end_time && run.outputs && !isStart) {
+  const handleStart = (run: Run) => {
+    start = {
+      startTime: run.start_time,
+      question: run.inputs.question,
+    };
+  };
+
+  const handleEnd = (run: Run) => {
+    if (run.end_time && run.outputs) {
       end = {
         endTime: run.end_time,
         answer: run.outputs.content,
       };
     }
 
-    if (!isStart) {
-      console.log("start", start);
-      console.log("end", end);
-      console.log(`total time: ${end.endTime - start.startTime}ms`);
-    }
+    console.log("start", start);
+    console.log("end", end);
+    console.log(`total time: ${end.endTime - start.startTime}ms`);
   };
 
-  return { handleStartOrEnd };
+  return { handleStart, handleEnd };
 };
 
-const { handleStartOrEnd } = trackTime();
+const { handleStart, handleEnd } = trackTime();
 
 await chain
   .withListeners({
     onStart: (run: Run) => {
-      try {
-        handleStartOrEnd(run, true);
-      } catch (e) {
-        console.error("Bruh");
-        throw e;
-      }
+      handleStart(run);
     },
     onEnd: (run: Run) => {
-      handleStartOrEnd(run, false);
+      handleEnd(run);
     },
   })
   .invoke({ question: "What is the meaning of life?" });
