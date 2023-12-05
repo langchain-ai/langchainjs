@@ -17,7 +17,8 @@ const entrypoints = {
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
-  "agents/format_scratchpad/openai_tools": "agents/format_scratchpad/openai_tools",
+  "agents/format_scratchpad/openai_tools":
+    "agents/format_scratchpad/openai_tools",
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/format_scratchpad/log_to_message":
@@ -35,6 +36,7 @@ const entrypoints = {
   "tools/render": "tools/render",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
+  "tools/gmail": "tools/gmail/index",
   "tools/google_calendar": "tools/google_calendar/index",
   "tools/google_places": "tools/google_places",
   // chains
@@ -324,7 +326,7 @@ const entrypoints = {
   // evaluation
   evaluation: "evaluation/index",
   // runnables
-  "runnables": "runnables/index",
+  runnables: "runnables/index",
   "runnables/remote": "runnables/remote",
 };
 
@@ -352,6 +354,7 @@ const requiresOptionalDependency = [
   "tools/sql",
   "tools/webbrowser",
   "tools/google_calendar",
+  "tools/gmail",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
