@@ -6,52 +6,22 @@ The experimental masking parser and transformer is an extendable module for mask
 
 A customer support system receives messages containing sensitive customer information. The system must parse these messages, mask any PII (like names, email addresses, and phone numbers), and log them for analysis while complying with privacy regulations. Before logging the transcript a summary is generated using an llm.
 
-## Example
+## Get started
+
+import CodeBlock from "@theme/CodeBlock";
+import ExampleBasic from "@examples/chains/llm_chain_stream.ts";
+import ExampleNext from "@examples/experimental/masking/next.ts";
+import ExampleKitchenSink from "@examples/experimental/masking/kitchen_sink.ts";
+
+### Basic Example
 
 Use the RegexMaskingTransformer to create a simple mask for email and phone.
 
-```typescript
-import {
-  MaskingParser,
-  RegexMaskingTransformer,
-} from "langchain/experimental/masking";
-
-// Define masking strategy
-const emailMask = () => `[email-${Math.random().toString(16).slice(2)}]`;
-const phoneMask = () => `[phone-${Math.random().toString(16).slice(2)}]`;
-
-// Configure pii transformer
-const piiMaskingTransformer = new RegexMaskingTransformer({
-  email: { regex: /\S+@\S+\.\S+/g, mask: emailMask },
-  phone: { regex: /\d{3}-\d{3}-\d{4}/g, mask: phoneMask },
-});
-
-maskingParser = new MaskingParser();
-maskingParser.addTransformer(piiMaskingTransformer);
-
-const input =
-  "Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com";
-const masked = await maskingParser.parse(message);
-
-console.log(masked);
-// Contact me at [email-a31e486e324f6] or [phone-da8fc1584f224]. Also reach me at [email-d5b6237633d95]
-
-const rehydrated = maskingParser.rehydrate(masked);
-console.log(rehydrated);
-// Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com
-```
+<CodeBlock language="typescript">{ExampleBasic}</CodeBlock>
 
 :::note
 If you plan on storing the masking state to rehydrate the original values asynchronously ensure you are following best security practices. In most cases you will want to define a custom hashing and salting strategy.
 :::
-
-## Get started
-
-import CodeBlock from "@theme/CodeBlock";
-import ExampleKitchenSink from "@examples/experimental/masking/kitchen_sink.ts";
-import ExampleNext from "@examples/experimental/masking/next.ts";
-import ExampleStream from "@examples/chains/llm_chain_stream.ts";
-import ExampleCancellation from "@examples/chains/llm_chain_cancellation.ts";
 
 ### Next.js stream
 
