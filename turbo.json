@@ -48,6 +48,9 @@
     "precommit": {},
     "start": {
       "cache": false
+    },
+    "clean": {
+      "dependsOn": ["^clean"]
     }
   }
 }
