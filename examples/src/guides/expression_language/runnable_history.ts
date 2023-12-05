@@ -1,17 +1,11 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ChatMessageHistory } from "langchain/memory";
-import { ChatPromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import {
   RunnableConfig,
-  RunnableSequence,
   RunnableWithMessageHistory,
 } from "langchain/runnables";
-import {
-  BaseListChatMessageHistory,
-  BaseMessage,
-  HumanMessage,
-} from "langchain/schema";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { BaseListChatMessageHistory } from "langchain/schema";
 
 // Define your session history store.
 // This is where you will store your chat history, keyed by sessionId.
@@ -33,56 +27,56 @@ function getListSessionHistory(): (
 // Instantiate your model and prompt.
 const model = new ChatOpenAI({});
 const prompt = ChatPromptTemplate.fromMessages([
-  ["ai", "You are a helpful assistant."],
-  ["human", "{question}"],
+  ["ai", "You are a helpful assistant"],
+  new MessagesPlaceholder("history"),
+  ["human", "{input}"],
 ]);
 
-// Create a simple runnable which passes a question to the AI.
-const runnable = RunnableSequence.from([
-  {
-    question: (messages: Array<BaseMessage>) =>
-      messages.map((m) => `${m._getType()}: ${m.content}`).join("\n"),
-  },
-  prompt,
-  model,
-  new StringOutputParser(),
-]);
+// Create a simple runnable which just chains the prompt to the model.
+const runnable = prompt.pipe(model);
 
 // Create your `RunnableWithMessageHistory` object, passing in the
 // runnable created above.
 const withHistory = new RunnableWithMessageHistory({
   runnable,
-  config: {},
   getMessageHistory: getListSessionHistory(),
+  inputMessagesKey: "input",
+  // This shows the runnable where to insert the history.
+  // We set to "history" here because of our MessagesPlaceholder above.
+  historyMessagesKey: "history",
 });
 
 // Create your `configurable` object. This is where you pass in the
 // `sessionId` which is used to identify chat sessions in your message store.
 const config: RunnableConfig = { configurable: { sessionId: "1" } };
 
-// Pass in your question as an instance of HumanMessage.
-// This is because in our runnable, we prefix each message
-// with the type.
+// Pass in your question, in this example we set the input key
+// to be "input" so we need to pass an object with an "input" key.
 let output = await withHistory.invoke(
-  [new HumanMessage("Hello there, I'm Archibald!")],
+  { input: "Hello there, I'm Archibald!" },
   config
 );
 console.log("output 1:", output);
 /**
- * output 1: AI: Hello Archibald! How can I assist you today?
+output 1: AIMessage {
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'Hello Archibald! How can I assist you today?',
+  additional_kwargs: { function_call: undefined, tool_calls: undefined }
+}
  */
 
-output = await withHistory.invoke(
-  [new HumanMessage("What's my name?")],
-  config
-);
+output = await withHistory.invoke({ input: "What's my name?" }, config);
 console.log("output 2:", output);
 /**
- * output 2: AI: Your name is Archibald, as you mentioned earlier. Is there anything else I can help you with?
+output 2: AIMessage {
+  lc_namespace: [ 'langchain_core', 'messages' ],
+  content: 'Your name is Archibald, as you mentioned in your previous message.',
+  additional_kwargs: { function_call: undefined, tool_calls: undefined }
+}
  */
 
 /**
  * You can see the LangSmith traces here:
- * output 1 @link https://smith.langchain.com/public/f8baefdb-4dd4-4e58-abb3-bbd91da2b543/r
- * output 2 @link https://smith.langchain.com/public/df49265e-b1db-4f43-a47d-f362310bd01f/r
+ * output 1 @link https://smith.langchain.com/public/4e5f85b1-2cdf-48e9-9323-8730cee53d87/r
+ * output 2 @link https://smith.langchain.com/public/a2042103-f622-4199-8a2b-c88a3cb3f219/r
  */
