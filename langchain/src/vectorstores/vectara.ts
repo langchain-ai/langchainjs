@@ -151,7 +151,7 @@ export class VectaraRetriever extends Runnable<string, Document[]> {
   verbose?: boolean;
 
   private vectara: VectaraStore;
-  
+
   private topK: number;
 
   private summaryConfig: VectaraSummary;
@@ -164,19 +164,22 @@ export class VectaraRetriever extends Runnable<string, Document[]> {
     this.verbose = fields?.verbose ?? false;
     this.vectara = fields.vectara;
     this.topK = fields.topK ?? 10;
-    this.summaryConfig = fields.summaryConfig ?? { enabled: false, maxSummarizedResults: 0, responseLang: "eng" };
+    this.summaryConfig = fields.summaryConfig ?? {
+      enabled: false,
+      maxSummarizedResults: 0,
+      responseLang: "eng",
+    };
   }
 
   async invoke(input: string, options?: RunnableConfig): Promise<Document[]> {
     return this.getRelevantDocuments(input, options);
   }
 
-  
   async getRelevantDocuments(
     query: string,
     config: VectaraFilter = DEFAULT_FILTER,
-    summary = false,
-  ): Promise<Document[]> {  
+    summary = false
+  ): Promise<Document[]> {
     const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,
@@ -197,28 +200,43 @@ export class VectaraRetriever extends Runnable<string, Document[]> {
       parsedConfig.runName
     );
     try {
-      return this.vectara.vectara_query(query, this.topK, config, summary ? this.summaryConfig : undefined)
-          .then(summaryResult => {
-              const docs = summaryResult.documents;
-              if (summary) {
-                  this.summaryConfig.enabled = true;
-                  docs.push(new Document({ pageContent: summaryResult.summary, metadata: { 'summary': true } }));
-              }
-              runManager?.handleRetrieverEnd(docs).then(() => { }).catch(error => { throw error; })
-              return docs;
-          })
-          .catch(error => {
-              // Handle any errors here
-              console.error("Error during query:", error);
+      return this.vectara
+        .vectara_query(
+          query,
+          this.topK,
+          config,
+          summary ? this.summaryConfig : undefined
+        )
+        .then((summaryResult) => {
+          const docs = summaryResult.documents;
+          if (summary) {
+            this.summaryConfig.enabled = true;
+            docs.push(
+              new Document({
+                pageContent: summaryResult.summary,
+                metadata: { summary: true },
+              })
+            );
+          }
+          runManager
+            ?.handleRetrieverEnd(docs)
+            .then(() => {})
+            .catch((error) => {
               throw error;
-          });      
+            });
+          return docs;
+        })
+        .catch((error) => {
+          // Handle any errors here
+          console.error("Error during query:", error);
+          throw error;
+        });
     } catch (error) {
       await runManager?.handleRetrieverError(error);
       throw error;
     }
   }
 }
-
 
 /**
  * Class for interacting with the Vectara API. Extends the VectorStore
@@ -526,7 +544,11 @@ export class VectaraStore extends VectorStore {
     query: string,
     k: number,
     _filter: VectaraFilter,
-    _summary: VectaraSummary = { enabled: false, maxSummarizedResults: 0, responseLang: "eng" },
+    _summary: VectaraSummary = {
+      enabled: false,
+      maxSummarizedResults: 0,
+      responseLang: "eng",
+    }
   ): Promise<SummaryResult> {
     const headers = await this.getJsonHeader();
     const { start, filter, lambda, contextConfig, mmrConfig } = _filter;
@@ -545,9 +567,16 @@ export class VectaraStore extends VectorStore {
           start,
           numResults: mmrConfig?.enabled ? mmrConfig.mmrTopK : k,
           contextConfig,
-          ...(mmrConfig?.enabled ? { rerankingConfig: { rerankerId: 272725718, mmrConfig: { diversityBias: mmrConfig.diversityBias } } } : {}),
+          ...(mmrConfig?.enabled
+            ? {
+                rerankingConfig: {
+                  rerankerId: 272725718,
+                  mmrConfig: { diversityBias: mmrConfig.diversityBias },
+                },
+              }
+            : {}),
           corpusKey: corpusKeys,
-          ...(_summary?.enabled ? { summary: [_summary] } : {})
+          ...(_summary?.enabled ? { summary: [_summary] } : {}),
         },
       ],
     };
@@ -594,18 +623,18 @@ export class VectaraStore extends VectorStore {
           text: string;
           metadata: Record<string, unknown>;
           score: number;
-        }) => 
+        }) =>
           new Document({
             pageContent: response.text,
             metadata: response.metadata,
-          }),
+          })
       ),
       scores: responses.map(
         (response: {
           text: string;
           metadata: Record<string, unknown>;
           score: number;
-        }) => response.score,
+        }) => response.score
       ),
       summary: result.responseSet[0].summary[0]?.text ?? "",
     };
@@ -623,11 +652,18 @@ export class VectaraStore extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k?: number,
-    filter?: VectaraFilter,
+    filter?: VectaraFilter
   ): Promise<[Document, number][]> {
-    const summaryResult = await this.vectara_query(query, k || 10, filter || DEFAULT_FILTER);
-    const res = summaryResult.documents.map((document, index) => [document, summaryResult.scores[index]] as [Document, number])
-    return res
+    const summaryResult = await this.vectara_query(
+      query,
+      k || 10,
+      filter || DEFAULT_FILTER
+    );
+    const res = summaryResult.documents.map(
+      (document, index) =>
+        [document, summaryResult.scores[index]] as [Document, number]
+    );
+    return res;
   }
 
   /**
@@ -640,7 +676,7 @@ export class VectaraStore extends VectorStore {
   async similaritySearch(
     query: string,
     k?: number,
-    filter?: VectaraFilter,
+    filter?: VectaraFilter
   ): Promise<Document[]> {
     const documents = await this.similaritySearchWithScore(
       query,

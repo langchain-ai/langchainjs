@@ -5,7 +5,13 @@ import { expect, beforeAll } from "@jest/globals";
 import { insecureHash } from "langchain-core/utils/hash";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
-import { VectaraFile, VectaraLibArgs, VectaraRetriever, VectaraStore, VectaraSummary } from "../vectara.js";
+import {
+  VectaraFile,
+  VectaraLibArgs,
+  VectaraRetriever,
+  VectaraStore,
+  VectaraSummary,
+} from "../vectara.js";
 
 const getDocs = (): Document[] => {
   // Some text from Lord of the Rings
@@ -205,15 +211,18 @@ describe("VectaraStore", () => {
     });
 
     test.skip("RAG retrieval with generative summarization", async () => {
-      const summaryConfig: VectaraSummary = 
-        {
-          enabled: true,
-          summarizerPromptName: "vectara-summary-ext-v1.2.0",
-          maxSummarizedResults: 3,
-          responseLang: "ita",
-        };
+      const summaryConfig: VectaraSummary = {
+        enabled: true,
+        summarizerPromptName: "vectara-summary-ext-v1.2.0",
+        maxSummarizedResults: 3,
+        responseLang: "ita",
+      };
       const topK = 3;
-      const retriever = new VectaraRetriever({vectara: store, topK, summaryConfig});
+      const retriever = new VectaraRetriever({
+        vectara: store,
+        topK,
+        summaryConfig,
+      });
       const result = await retriever.getRelevantDocuments(
         "Was Gandalf dead?",
         {
@@ -222,10 +231,10 @@ describe("VectaraStore", () => {
         true
       );
       expect(result.length).toBeGreaterThan(0);
-      expect(result.length).toBe(topK+1);   // +1 for the summary
+      expect(result.length).toBe(topK + 1); // +1 for the summary
       expect(result[0].pageContent.length).toBeGreaterThan(0);
     });
-    
+
     test.skip("addFiles", async () => {
       const docs = getDocs();
       const englishOneContent = docs[0].pageContent;

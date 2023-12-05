@@ -54,7 +54,7 @@ console.log(JSON.stringify(resultsWithScore, null, 2));
   ]
 */
 
-const retriever = new VectaraRetriever({vectara: store, topK: 3});
+const retriever = new VectaraRetriever({ vectara: store, topK: 3 });
 const [documents, summary] = await retriever.getRelevantDocumentsAndSummary(
   "What were the women talking about?",
   {

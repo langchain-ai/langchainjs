@@ -198,7 +198,7 @@ export abstract class VectorStore extends Serializable {
       filter
     );
   }
-  
+
   /**
    * Return documents selected using the maximal marginal relevance.
    * Maximal marginal relevance optimizes for similarity to the query AND diversity
