@@ -25,6 +25,9 @@ export interface OptionalImportMap {
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
+  "langchain/tools/gmail"?:
+    | typeof import("../tools/gmail/index.js")
+    | Promise<typeof import("../tools/gmail/index.js")>;
   "langchain/tools/google_calendar"?:
     | typeof import("../tools/google_calendar/index.js")
     | Promise<typeof import("../tools/google_calendar/index.js")>;
@@ -328,6 +331,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/notion"?:
     | typeof import("../document_loaders/fs/notion.js")
     | Promise<typeof import("../document_loaders/fs/notion.js")>;
+  "langchain/document_loaders/fs/obsidian"?:
+    | typeof import("../document_loaders/fs/obsidian.js")
+    | Promise<typeof import("../document_loaders/fs/obsidian.js")>;
   "langchain/document_loaders/fs/unstructured"?:
     | typeof import("../document_loaders/fs/unstructured.js")
     | Promise<typeof import("../document_loaders/fs/unstructured.js")>;
