@@ -50,6 +50,7 @@
       "cache": false
     },
     "clean": {
+      "outputs": ["**/dist/**", "**/dist-cjs/**", "**/.turbo/**"],
       "dependsOn": ["^clean"]
     }
   }

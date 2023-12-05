@@ -35,7 +35,8 @@
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace @langchain/core_docs start",
-    "docs:api_refs": "yarn workspace @langchain/api_refs start"
+    "docs:api_refs": "yarn workspace @langchain/api_refs start",
+    "clean": "yarn turbo run clean"
   },
   "author": "LangChain",
   "license": "MIT",
