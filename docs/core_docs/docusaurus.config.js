@@ -16,9 +16,6 @@ const config = {
   title: "🦜️🔗 Langchain",
   tagline: "LangChain JS Docs",
   favicon: "img/favicon.ico",
-  customFields: {
-    mendableAnonKey: process.env.MENDABLE_ANON_KEY,
-  },
   // Set the production url of your site here
   url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
@@ -267,6 +264,18 @@ const config = {
           },
         ],
         copyright: `Copyright © ${new Date().getFullYear()} LangChain, Inc.`,
+      },
+      algolia: {
+        // The application ID provided by Algolia
+        appId: "3EZV6U1TYC",
+
+        // Public API key: it is safe to commit it
+        // this is linked to erick@langchain.dev currently
+        apiKey: "180851bbb9ba0ef6be9214849d6efeaf",
+
+        indexName: "js-langchain",
+
+        contextualSearch: true,
       },
     }),
 

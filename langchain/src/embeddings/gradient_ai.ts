@@ -34,6 +34,7 @@ export class GradientEmbeddings
 
   batchSize = 128;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   model: any;
 
   constructor(fields: GradientEmbeddingsParams) {

@@ -27,13 +27,14 @@ type GetSessionHistoryCallable = (
 export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
   extends Omit<
     RunnableBindingArgs<RunInput, RunOutput, BaseCallbackConfig>,
-    "bound"
+    "bound" | "config"
   > {
   runnable: Runnable<RunInput, RunOutput>;
   getMessageHistory: GetSessionHistoryCallable;
   inputMessagesKey?: string;
   outputMessagesKey?: string;
   historyMessagesKey?: string;
+  config?: RunnableConfig;
 }
 
 export class RunnableWithMessageHistory<
@@ -70,8 +71,11 @@ export class RunnableWithMessageHistory<
       )
       .withConfig({ runName: "RunnableWithMessageHistory" });
 
+    const config = fields.config ?? {};
+
     super({
       ...fields,
+      config,
       bound,
     });
     this.runnable = fields.runnable;
