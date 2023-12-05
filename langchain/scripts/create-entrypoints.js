@@ -347,10 +347,12 @@ const deprecatedNodeOnly = [
 const requiresOptionalDependency = [
   "agents/load",
   "agents/toolkits/aws_sfn",
+  "agents/toolkits/jira",
   "agents/toolkits/sql",
   "tools/aws_lambda",
   "tools/aws_sfn",
   "tools/calculator",
+  "tools/jira",
   "tools/sql",
   "tools/webbrowser",
   "tools/google_calendar",
