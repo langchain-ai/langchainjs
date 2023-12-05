@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "pipeline": {
+    "build:scripts": {
+      "outputs": ["public/**"],
+      "dependsOn": ["langchain#build"]
+    },
+    "build:next": {
+      "outputs": [".next/**", ".vercel/**"],
+      "dependsOn": ["build:scripts"]
+    }
+  }
+}
