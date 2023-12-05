@@ -26,6 +26,7 @@ export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as embeddings__voyage from "../embeddings/voyage.js";
 export * as llms__base from "../llms/base.js";
 export * as llms__openai from "../llms/openai.js";
+export * as llms__azure_openai from "../llms/azure_openai.js";
 export * as llms__ai21 from "../llms/ai21.js";
 export * as llms__aleph_alpha from "../llms/aleph_alpha.js";
 export * as llms__cloudflare_workersai from "../llms/cloudflare_workersai.js";
