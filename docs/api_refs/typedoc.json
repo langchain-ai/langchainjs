@@ -24,7 +24,7 @@
     "./langchain/src/agents/load.ts",
     "./langchain/src/agents/toolkits/index.ts",
     "./langchain/src/agents/toolkits/aws_sfn.ts",
-    "./langchain/src/agents/toolkits/connery/connery.ts",
+    "./langchain/src/agents/toolkits/connery/index.ts",
     "./langchain/src/agents/toolkits/sql/index.ts",
     "./langchain/src/agents/format_scratchpad/openai_functions.ts",
     "./langchain/src/agents/format_scratchpad/openai_tools.ts",

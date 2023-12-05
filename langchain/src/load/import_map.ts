@@ -3,7 +3,7 @@
 export * as load__serializable from "../load/serializable.js";
 export * as agents from "../agents/index.js";
 export * as agents__toolkits from "../agents/toolkits/index.js";
-export * as agents__toolkits__connery from "../agents/toolkits/connery/connery.js";
+export * as agents__toolkits__connery from "../agents/toolkits/connery/index.js";
 export * as agents__format_scratchpad from "../agents/format_scratchpad/openai_functions.js";
 export * as agents__format_scratchpad__openai_tools from "../agents/format_scratchpad/openai_tools.js";
 export * as agents__format_scratchpad__log from "../agents/format_scratchpad/log.js";

@@ -38,7 +38,8 @@ const executor = await initializeAgentExecutorWithOptions(
  * 2. "Send email" from the "Gmail" plugin.
  */
 const input =
-  "Make a short summary of the webpage http://www.paulgraham.com/vb.html in three sentences and send it to test@example.com. Include the link to the webpage into the body of the email.";
+  "Make a short summary of the webpage http://www.paulgraham.com/vb.html in three sentences " +
+  "and send it to test@example.com. Include the link to the webpage into the body of the email.";
 const result = await executor.invoke({ input });
 console.log(result.output);
 

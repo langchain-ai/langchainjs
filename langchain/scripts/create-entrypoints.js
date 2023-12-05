@@ -15,7 +15,7 @@ const entrypoints = {
   "agents/load": "agents/load",
   "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
-  "agents/toolkits/connery": "agents/toolkits/connery/connery",
+  "agents/toolkits/connery": "agents/toolkits/connery/index",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
   "agents/format_scratchpad/openai_tools": "agents/format_scratchpad/openai_tools",
