@@ -23,6 +23,7 @@ import {
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
 import { IterableReadableStream } from "../util/stream.js";
+import { LogStreamCallbackHandlerInput, RunLogPatch } from "../callbacks/handlers/log_stream.js";
 
 type RemoteRunnableOptions = {
   timeout?: number;
@@ -288,6 +289,56 @@ export class RemoteRunnable<
       config?: RunnableConfig;
       kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
     }>("/stream", {
+      input,
+      config,
+      kwargs,
+    });
+    if (!response.ok) {
+      const json = await response.json();
+      const error = new Error(
+        `RemoteRunnable call failed with status code ${response.status}: ${json.message}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).response = response;
+      throw error;
+    }
+    const { body } = response;
+    if (!body) {
+      throw new Error(
+        "Could not begin remote stream. Please check the given URL and try again."
+      );
+    }
+    const stream = new ReadableStream({
+      async start(controller) {
+        const enqueueLine = getMessages((msg) => {
+          if (msg.data) controller.enqueue(deserialize(msg.data));
+        });
+        const onLine = (
+          line: Uint8Array,
+          fieldLength: number,
+          flush?: boolean
+        ) => {
+          enqueueLine(line, fieldLength, flush);
+          if (flush) controller.close();
+        };
+        await getBytes(body, getLines(onLine));
+      },
+    });
+    return IterableReadableStream.fromReadableStream(stream);
+  }
+
+  async *streamLog(
+    input: RunInput,
+    options?: Partial<CallOptions>,
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): Promise<IterableReadableStream<RunOutput>> {
+    const [config, kwargs] =
+      this._separateRunnableConfigFromCallOptions(options);
+    const response = await this.post<{
+      input: RunInput;
+      config?: RunnableConfig;
+      kwargs?: Omit<Partial<CallOptions>, keyof BaseCallbackConfig>;
+    }>("/stream_log", {
       input,
       config,
       kwargs,
