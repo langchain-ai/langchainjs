@@ -472,6 +472,9 @@ document_loaders/fs/csv.d.ts
 document_loaders/fs/notion.cjs
 document_loaders/fs/notion.js
 document_loaders/fs/notion.d.ts
+document_loaders/fs/obsidian.cjs
+document_loaders/fs/obsidian.js
+document_loaders/fs/obsidian.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts
