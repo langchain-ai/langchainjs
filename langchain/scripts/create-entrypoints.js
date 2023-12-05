@@ -359,6 +359,7 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "tools/google_calendar",
   "tools/gmail",
+  "tools/outlook",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",

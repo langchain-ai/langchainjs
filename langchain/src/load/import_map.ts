@@ -16,7 +16,6 @@ export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
 export * as tools__connery from "../tools/connery.js";
 export * as tools__render from "../tools/render.js";
-export * as tools__outlook from "../tools/outlook/index.js";
 export * as tools__google_places from "../tools/google_places.js";
 export * as chains from "../chains/index.js";
 export * as chains__combine_documents__reduce from "../chains/combine_documents/reduce.js";
