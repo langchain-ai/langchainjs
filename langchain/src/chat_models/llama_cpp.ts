@@ -116,7 +116,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   /** @ignore */
   async _call(
     messages: BaseMessage[],
-    _options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     let prompt = "";
 
@@ -137,6 +137,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
     try {
       const promptOptions = {
+        onToken: options.onToken,
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
         topK: this?.topK,

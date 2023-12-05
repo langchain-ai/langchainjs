@@ -1,0 +1,27 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Gmail Tool
+
+The Gmail Tool allows your agent to create and view messages from a linked email account.
+
+## Setup
+
+You will need to get an API key from [Google here](https://developers.google.com/gmail/api/guides)
+and [enable the new Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com).
+Then, set the environment variables for `GMAIL_CLIENT_EMAIL`, and either `GMAIL_PRIVATE_KEY`, or `GMAIL_KEYFILE`.
+
+To use the Gmail Tool you need to install the following official peer dependency:
+
+```bash npm2yarn
+npm install googleapis
+```
+
+## Usage
+
+import ToolExample from "@examples/tools/gmail.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
