@@ -12665,6 +12665,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xata.io/client@npm:^0.28.0":
+  version: 0.28.0
+  resolution: "@xata.io/client@npm:0.28.0"
+  peerDependencies:
+    typescript: ">=4.5"
+  checksum: 39dbf590c320ba49623f44ab1124fb084f08f2820d04bc1f7c20459304ac4008227964ce4e5d9bf1ab34828c7d3fa3afb50f3455a1f37a981238463ae4289036
+  languageName: node
+  linkType: hard
+
 "@xenova/transformers@npm:^2.5.4":
   version: 2.5.4
   resolution: "@xenova/transformers@npm:2.5.4"
@@ -22690,7 +22699,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
-    "@xata.io/client": ^0.25.1
+    "@xata.io/client": ^0.28.0
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     apify-client: ^2.7.1
@@ -22829,7 +22838,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@vercel/postgres": ^0.5.0
     "@writerai/writer-sdk": ^0.40.2
-    "@xata.io/client": ^0.25.1
+    "@xata.io/client": ^0.28.0
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
