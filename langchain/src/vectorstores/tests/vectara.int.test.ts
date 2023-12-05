@@ -206,25 +206,25 @@ describe("VectaraStore", () => {
     });
 
     test("RAG retrieval with generative summarization", async () => {
-      const retriever = new VectaraRetriever({vectara: store, topK: 3});
-      const summary: VectaraSummary = 
+      const summaryConfig: VectaraSummary = 
         {
           enabled: true,
           summarizerPromptName: "vectara-summary-ext-v1.2.0",
           maxSummarizedResults: 3,
           responseLang: "ita",
         };
-      const [documents, summaryText] = await retriever.getRelevantDocumentsAndSummary(
+      const retriever = new VectaraRetriever({vectara: store, topK: 3, summaryConfig});
+      const result = await retriever.getRelevantDocuments(
         "Was Gandalf dead?",
         {
           lambda: 0.025,
         },
-        summary
+        true
       );
-      expect(documents.length).toBeGreaterThan(0);
-      expect(documents[0].pageContent.length).toBeGreaterThan(0);
-      expect(documents[0].metadata.length).toBeGreaterThan(0);
-      expect(summaryText.length).toBeGreaterThan(0);
+      expect(result.documents.length).toBeGreaterThan(0);
+      expect(result.documents[0].pageContent.length).toBeGreaterThan(0);
+      expect(result.documents[0].metadata.length).toBeGreaterThan(0);
+      expect(result.summary.length).toBeGreaterThan(0);
     });
     
     test.skip("addFiles", async () => {

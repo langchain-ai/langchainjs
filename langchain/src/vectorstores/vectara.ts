@@ -5,8 +5,14 @@ import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
-import { BaseCallbackConfig } from "../callbacks/manager.js";
+import {
+  BaseCallbackConfig,
+  CallbackManager,
+  Callbacks,
+  parseCallbackConfigArg,
+} from "../callbacks/manager.js";
+import { Runnable } from "../schema/runnable/base.js";
+import { RunnableConfig } from "../schema/runnable/config.js";
 
 /**
  * Interface for the arguments required to initialize a VectaraStore
@@ -119,46 +125,104 @@ interface SummaryResult {
   summary: string;
 }
 
-export interface VectaraRetrieverInput extends BaseRetrieverInput {
+export interface VectaraRetrieverInput {
   vectara: VectaraStore;
   topK: number;
+  summaryConfig?: VectaraSummary;
+  callbacks?: Callbacks;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  verbose?: boolean;
 }
 
-export class VectaraRetriever extends BaseRetriever
-{
+interface VectaraRetrieverOutput {
+  documents: Document[];
+  summary: string;
+}
+
+
+export class VectaraRetriever extends Runnable<string, VectaraRetrieverOutput> {
   static lc_name() {
     return "VectaraRetriever";
   }
 
   lc_namespace = ["langchain", "retrievers", "vectaraRetriever"];
-  
+
+  callbacks?: Callbacks;
+
+  tags?: string[];
+
+  metadata?: Record<string, unknown>;
+
+  verbose?: boolean;
+
   private vectara: VectaraStore;
   
   private topK: number;
 
+  private summaryConfig: VectaraSummary;
+
   constructor(fields: VectaraRetrieverInput) {
     super(fields);
+    this.callbacks = fields?.callbacks;
+    this.tags = fields?.tags ?? [];
+    this.metadata = fields?.metadata ?? {};
+    this.verbose = fields?.verbose ?? false;
     this.vectara = fields.vectara;
     this.topK = fields.topK ?? 10;
+    this.summaryConfig = fields.summaryConfig ?? { enabled: false, maxSummarizedResults: 0, responseLang: "eng" };
   }
 
+  async invoke(input: string, options?: RunnableConfig): Promise<VectaraRetrieverOutput> {
+    return this.getRelevantDocuments(input, options);
+  }
+
+  
   async getRelevantDocuments(
     query: string,
     config: VectaraFilter = DEFAULT_FILTER,
-  ): Promise<Document[]> {
-    const summaryResult = await this.vectara.vectara_query(query, this.topK, config);
-    return summaryResult.documents;
-  }
-
-  async getRelevantDocumentsAndSummary(
-    query: string,
-    config: VectaraFilter = DEFAULT_FILTER,
-    summary: VectaraSummary = { enabled: false, maxSummarizedResults: 0, responseLang: "eng" }
-  ): Promise<[Document[], string]> {
-    const summaryResult = await this.vectara.vectara_query(query, this.topK, config, summary);
-    return [summaryResult.documents, summaryResult.summary];
+    summary = false,
+  ): Promise<VectaraRetrieverOutput> {  
+    const parsedConfig = parseCallbackConfigArg(config);
+    const callbackManager_ = await CallbackManager.configure(
+      parsedConfig.callbacks,
+      this.callbacks,
+      parsedConfig.tags,
+      this.tags,
+      parsedConfig.metadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    const runManager = await callbackManager_?.handleRetrieverStart(
+      this.toJSON(),
+      query,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      parsedConfig.runName
+    );
+    try {
+      const result: VectaraRetrieverOutput = { documents: [], summary: "" };
+      if (summary) {
+        this.summaryConfig.enabled = true;
+        const summaryResult = await this.vectara.vectara_query(query, this.topK, config, this.summaryConfig);
+        result.summary = summaryResult.summary;
+        result.documents = summaryResult.documents;
+      }
+      else {
+        const summaryResult = await this.vectara.vectara_query(query, this.topK, config);
+        result.documents = summaryResult.documents
+      }
+      await runManager?.handleRetrieverEnd(result.documents);
+      return result;
+    } catch (error) {
+      await runManager?.handleRetrieverError(error);
+      throw error;
+    }
   }
 }
+
 
 /**
  * Class for interacting with the Vectara API. Extends the VectorStore
