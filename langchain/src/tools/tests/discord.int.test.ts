@@ -7,50 +7,52 @@ import {
   DiscordGetTextChannelsTool,
 } from "../discord.js";
 
-test.skip("DiscordGetMessagesTool", async () => {
-  const tool = new DiscordGetMessagesTool();
+
+test("DiscordGetMessagesTool", async () => {
+  const tool = new DiscordGetMessagesTool({});
+
   try {
-    const result = await tool.call("1153400523718938780");
+    const result = await tool.invoke("1153400523718938780");
     console.log(result);
   } catch (error) {
     console.error(error);
   }
 });
 
-test.skip("DiscordGetGuildsTool", async () => {
-  const tool = new DiscordGetGuildsTool();
+test("DiscordGetGuildsTool", async () => {
+  const tool = new DiscordGetGuildsTool({});
   try {
-    const result = await tool.call("");
+    const result = await tool.invoke("");
     console.log(result);
   } catch (error) {
     console.error(error);
   }
 });
 
-test.skip("DiscordChannelSearchTool", async () => {
-  const tool = new DiscordChannelSearchTool();
+test("DiscordChannelSearchTool", async () => {
+  const tool = new DiscordChannelSearchTool({});
   try {
-    const result = await tool.call("Test");
+    const result = await tool.invoke("Test");
     console.log(result);
   } catch (error) {
     console.error(error);
   }
 });
 
-test.skip("DiscordGetTextChannelsTool", async () => {
-  const tool = new DiscordGetTextChannelsTool();
+test("DiscordGetTextChannelsTool", async () => {
+  const tool = new DiscordGetTextChannelsTool({});
   try {
-    const result = await tool.call("1153400523718938775");
+    const result = await tool.invoke("1153400523718938775");
     console.log(result);
   } catch (error) {
     console.error(error);
   }
 });
 
-test.skip("DiscordSendMessagesTool", async () => {
-  const tool = new DiscordSendMessagesTool();
+test("DiscordSendMessagesTool", async () => {
+  const tool = new DiscordSendMessagesTool({});
   try {
-    const result = await tool.call("test message from new code");
+    const result = await tool.invoke("test message from new code");
     console.log(result);
   } catch (err) {
     console.log(err);

@@ -9,14 +9,14 @@ test.skip("DiscordSendMessagesTool should tell a joke in the discord channel", a
     temperature: 0,
   });
 
-  const tools = [new DiscordSendMessagesTool(), new DadJokeAPI()];
+  const tools = [new DiscordSendMessagesTool({}), new DadJokeAPI()];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
     verbose: true,
   });
 
-  const res = await executor.call({
+  const res = await executor.invoke({
     input: `Tell a joke in the discord channel`,
   });
 
