@@ -114,6 +114,14 @@ To get started, you will need to install the dependencies for the project. To do
 yarn
 ```
 
+Then, you will need to switch directories into `langchain-core` and build core by running:
+
+```bash
+cd ../langchain-core
+yarn
+yarn build
+```
+
 ### Linting
 
 We use [eslint](https://eslint.org/) to enforce standard lint rules.
