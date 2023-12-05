@@ -62,11 +62,9 @@ export async function POST(req: Request) {
       input: guardedMessageContent,
     });
 
-    // npm i ai
-    // import { StreamingTextResponse } from "ai";
-    // return new StreamingTextResponse(stream);
-
-    return;
+    return new Response(stream, {
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 500 });
   }
