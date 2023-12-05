@@ -1,5 +1,8 @@
-import { VectaraStore, VectaraRetriever } from "langchain/vectorstores/vectara";
 import { Document } from "langchain/document";
+// import { VectaraStore } from "langchain/retrievers/vectara.js";
+// import { VectaraSummaryRetriever } from "langchain/retrievers/vectaraSummaryRetriever.js";
+import { VectaraStore } from "../../../../langchain/src/vectorstores/vectara.js";
+import { VectaraSummaryRetriever } from "../../../../langchain/src/retrievers/vectara.js";
 
 // Create the Vectara store.
 const store = new VectaraStore({
@@ -54,17 +57,13 @@ console.log(JSON.stringify(resultsWithScore, null, 2));
   ]
 */
 
-const retriever = new VectaraRetriever({ vectara: store, topK: 3 });
-const [documents, summary] = await retriever.getRelevantDocumentsAndSummary(
+const retriever = new VectaraSummaryRetriever({ vectara: store, topK: 3 });
+const [documents, summary] = await retriever.getRelevantDocuments(
   "What were the women talking about?",
   {
     lambda: 0.025,
   },
-  {
-    enabled: true,
-    maxSummarizedResults: 3,
-    responseLang: "ita",
-  }
+  true
 );
 
 console.log(JSON.stringify(documents, null, 2));

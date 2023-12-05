@@ -8,10 +8,10 @@ import { Document } from "../../document.js";
 import {
   VectaraFile,
   VectaraLibArgs,
-  VectaraRetriever,
   VectaraStore,
   VectaraSummary,
 } from "../vectara.js";
+import { VectaraSummaryRetriever } from "../../retrievers/vectara.js";
 
 const getDocs = (): Document[] => {
   // Some text from Lord of the Rings
@@ -218,7 +218,7 @@ describe("VectaraStore", () => {
         responseLang: "ita",
       };
       const topK = 3;
-      const retriever = new VectaraRetriever({
+      const retriever = new VectaraSummaryRetriever({
         vectara: store,
         topK,
         summaryConfig,

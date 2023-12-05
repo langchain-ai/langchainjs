@@ -1,18 +1,10 @@
 import * as uuid from "uuid";
-
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
-import {
-  BaseCallbackConfig,
-  CallbackManager,
-  Callbacks,
-  parseCallbackConfigArg,
-} from "../callbacks/manager.js";
-import { Runnable } from "../schema/runnable/base.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
+import { BaseCallbackConfig, Callbacks } from "../callbacks/manager.js";
 
 /**
  * Interface for the arguments required to initialize a VectaraStore
@@ -102,7 +94,7 @@ export interface VectaraFilter extends BaseCallbackConfig {
   mmrConfig?: MMRConfig;
 }
 
-const DEFAULT_FILTER: VectaraFilter = {
+export const DEFAULT_FILTER: VectaraFilter = {
   start: 0,
   filter: "",
   lambda: 0.0,
@@ -134,110 +126,6 @@ export interface VectaraRetrieverInput {
   metadata?: Record<string, unknown>;
   verbose?: boolean;
 }
-
-export class VectaraRetriever extends Runnable<string, Document[]> {
-  static lc_name() {
-    return "VectaraRetriever";
-  }
-
-  lc_namespace = ["langchain", "retrievers", "vectaraRetriever"];
-
-  callbacks?: Callbacks;
-
-  tags?: string[];
-
-  metadata?: Record<string, unknown>;
-
-  verbose?: boolean;
-
-  private vectara: VectaraStore;
-
-  private topK: number;
-
-  private summaryConfig: VectaraSummary;
-
-  constructor(fields: VectaraRetrieverInput) {
-    super(fields);
-    this.callbacks = fields?.callbacks;
-    this.tags = fields?.tags ?? [];
-    this.metadata = fields?.metadata ?? {};
-    this.verbose = fields?.verbose ?? false;
-    this.vectara = fields.vectara;
-    this.topK = fields.topK ?? 10;
-    this.summaryConfig = fields.summaryConfig ?? {
-      enabled: false,
-      maxSummarizedResults: 0,
-      responseLang: "eng",
-    };
-  }
-
-  async invoke(input: string, options?: RunnableConfig): Promise<Document[]> {
-    return this.getRelevantDocuments(input, options);
-  }
-
-  async getRelevantDocuments(
-    query: string,
-    config: VectaraFilter = DEFAULT_FILTER,
-    summary = false
-  ): Promise<Document[]> {
-    const parsedConfig = parseCallbackConfigArg(config);
-    const callbackManager_ = await CallbackManager.configure(
-      parsedConfig.callbacks,
-      this.callbacks,
-      parsedConfig.tags,
-      this.tags,
-      parsedConfig.metadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const runManager = await callbackManager_?.handleRetrieverStart(
-      this.toJSON(),
-      query,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      parsedConfig.runName
-    );
-    try {
-      return this.vectara
-        .vectara_query(
-          query,
-          this.topK,
-          config,
-          summary ? this.summaryConfig : undefined
-        )
-        .then((summaryResult) => {
-          const docs = summaryResult.documents;
-          if (summary) {
-            this.summaryConfig.enabled = true;
-            docs.push(
-              new Document({
-                pageContent: summaryResult.summary,
-                metadata: { summary: true },
-              })
-            );
-          }
-          runManager
-            ?.handleRetrieverEnd(docs)
-            .then(() => {})
-            .catch((error) => {
-              throw error;
-            });
-          return docs;
-        })
-        .catch((error) => {
-          // Handle any errors here
-          console.error("Error during query:", error);
-          throw error;
-        });
-    } catch (error) {
-      await runManager?.handleRetrieverError(error);
-      throw error;
-    }
-  }
-}
-
 /**
  * Class for interacting with the Vectara API. Extends the VectorStore
  * class.
@@ -540,7 +428,7 @@ export class VectaraStore extends VectorStore {
    * @param filter Optional. A VectaraFilter object to refine the search results.
    * @returns A Promise that resolves to an array of tuples, each containing a Document and its score.
    */
-  async vectara_query(
+  async vectaraQuery(
     query: string,
     k: number,
     _filter: VectaraFilter,
@@ -654,7 +542,7 @@ export class VectaraStore extends VectorStore {
     k?: number,
     filter?: VectaraFilter
   ): Promise<[Document, number][]> {
-    const summaryResult = await this.vectara_query(
+    const summaryResult = await this.vectaraQuery(
       query,
       k || 10,
       filter || DEFAULT_FILTER
