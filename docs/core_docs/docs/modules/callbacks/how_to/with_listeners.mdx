@@ -1,0 +1,19 @@
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/guides/expression_language/with_listeners.ts";
+
+# Listeners
+
+LangChain callbacks offer a method `withListeners` which allow you to add event listeners to the following events:
+
+- `onStart` - called when the chain starts
+- `onEnd` - called when the chain ends
+- `onError` - called when an error occurs
+
+These methods accept a callback function which will be called when the event occurs. The callback function can accept two arguments:
+
+- `input` - the input value, for example it would be `RunInput` if used with a Runnable.
+- `config` - an optional config object. This can contain metadata, callbacks or any other values passed in as a config object when the chain is started.
+
+Below is an example which demonstrates how to use the `withListeners` method:
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
