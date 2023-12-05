@@ -10,11 +10,10 @@ test("Invoke local langserve", async () => {
   });
   let totalByteSize = 0;
   for await (const chonky of result) {
-    // console.log("chonky", chonky);
     const jsonString = JSON.stringify(chonky);
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
-    // console.log("chonky", byteSize);
     totalByteSize += byteSize;
+    console.log(chonky);
   }
   console.log("totalByteSize", totalByteSize);
 });
