@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatMessageHistory } from "langchain/memory";
+import { ChatMessageHistory } from "langchain/stores/message/in_memory";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import {
   RunnableConfig,
