@@ -5,7 +5,7 @@ test("Invoke local langserve", async () => {
     url: `https://chat-langchain-backend.langchain.dev/chat`,
   });
   const result = remote.streamLog({
-    question: "who is joe byron?",
+    question: "What is this?",
     diff: true,
   });
   let totalByteSize = 0;

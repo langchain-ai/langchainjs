@@ -370,7 +370,7 @@ export class RemoteRunnable<
       const extraOptions: Record<string, unknown> = {};
       for (const key of optionKeys) {
         const keyAsKeyof = key as keyof RunInput;
-        if (input[keyAsKeyof] !== undefined) {
+        if (input[keyAsKeyof] !== undefined && input[keyAsKeyof] !== null) {
           extraOptions[key] = input[keyAsKeyof];
         }
       }

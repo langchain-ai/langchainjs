@@ -93,6 +93,7 @@ describe("RemoteRunnable", () => {
       }),
       "/a/stream": respToStream(aResp),
       "/b/stream": respToStream(bResp),
+      "/a/stream_log": respToStream(aResp),
     };
 
     const oldFetch = global.fetch;
@@ -159,5 +160,18 @@ describe("RemoteRunnable", () => {
     expect(accumulator?.content).toEqual(
       '"object1, object2, object3, object4, object5"'
     );
+  });
+
+  test("Stream log local langserve", async () => {
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
+    const stream = remote.streamLog({
+      question: "What are the 5 best apples?",
+    });
+    let chunkCount = 0;
+    for await (const chunk of stream) {
+      expect(chunk).toEqual('["a", "b", "c", "d"]');
+      chunkCount += 1;
+    }
+    expect(chunkCount).toBe(1);
   });
 });
