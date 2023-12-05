@@ -367,10 +367,18 @@ export class RemoteRunnable<
         "exclude_types",
         "exclude_tags",
       ];
-      const extraOptions: Record<string, unknown> = {};
+      const extraOptions: Record<string, unknown> = {
+        diff: true,
+      };
       for (const key of optionKeys) {
         const keyAsKeyof = key as keyof RunInput;
         if (input[keyAsKeyof] !== undefined && input[keyAsKeyof] !== null) {
+          // Do not allow diff=false.
+          if (keyAsKeyof === "diff" && input[keyAsKeyof] === false) {
+            throw new Error(
+              "Diff defaults to true and cannot be set to false for stream log."
+            );
+          }
           extraOptions[key] = input[keyAsKeyof];
         }
       }
