@@ -8045,6 +8045,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
+    turbo: latest
     typescript: ^5.0.0
     uuid: ^9.0.0
     zod: ^3.22.3
