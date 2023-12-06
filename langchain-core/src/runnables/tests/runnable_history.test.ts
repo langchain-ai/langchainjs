@@ -10,8 +10,10 @@ import {
   FakeChatMessageHistory,
   FakeLLM,
   FakeListChatMessageHistory,
+  FakeStreamingLLM,
 } from "../../utils/testing/index.js";
 import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
+import { StringOutputParser } from "../../output_parsers/string.js";
 
 // For `BaseChatMessageHistory`
 async function getGetSessionHistory(): Promise<
@@ -119,4 +121,28 @@ Human: hello
 AI: AI: You are a helpful assistant
 Human: hello
 Human: good bye`);
+});
+
+test("Runnable with message history should stream through", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["ai", "You are a helpful assistant"],
+    new MessagesPlaceholder("history"),
+    ["human", "{input}"],
+  ]);
+  const model = new FakeStreamingLLM({});
+  const chain = prompt.pipe(model);
+
+  const getListMessageHistory = await getListSessionHistory();
+  const withHistory = new RunnableWithMessageHistory({
+    runnable: chain,
+    config: {},
+    getMessageHistory: getListMessageHistory,
+    inputMessagesKey: "input",
+    historyMessagesKey: "history",
+  }).pipe(new StringOutputParser());
+  const config: RunnableConfig = { configurable: { sessionId: "1" } };
+  const stream = await withHistory.stream({ input: "hello" }, config);
+  for await (const chunk of stream) {
+    console.log("CHUNK", chunk);
+  }
 });

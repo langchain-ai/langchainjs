@@ -1269,58 +1269,22 @@ export class RunnableSequence<
       undefined,
       options?.runName
     );
-    let nextStepInput = input;
     const steps = [this.first, ...this.middle, this.last];
-    // Find the index of the last runnable in the sequence that doesn't have an overridden .transform() method
-    // and start streaming from there
-    const streamingStartStepIndex = Math.min(
-      steps.length - 1,
-      steps.length -
-        [...steps].reverse().findIndex((step) => {
-          const isDefaultImplementation =
-            step.transform === Runnable.prototype.transform;
-          const boundRunnableIsDefaultImplementation =
-            RunnableBinding.isRunnableBinding(step) &&
-            step.bound?.transform === Runnable.prototype.transform;
-          return (
-            isDefaultImplementation || boundRunnableIsDefaultImplementation
-          );
-        }) -
-        1
-    );
-
-    try {
-      const invokeSteps = steps.slice(0, streamingStartStepIndex);
-      for (let i = 0; i < invokeSteps.length; i += 1) {
-        const step = invokeSteps[i];
-        nextStepInput = await step.invoke(
-          nextStepInput,
-          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
-        );
-      }
-    } catch (e) {
-      await runManager?.handleChainError(e);
-      throw e;
-    }
     let concatSupported = true;
     let finalOutput;
+    async function* inputGenerator() {
+      yield input;
+    }
     try {
-      let finalGenerator = await steps[streamingStartStepIndex]._streamIterator(
-        nextStepInput,
-        this._patchConfig(
-          options,
-          runManager?.getChild(`seq:step:${streamingStartStepIndex + 1}`)
-        )
+      let finalGenerator = steps[0].transform(
+        inputGenerator(),
+        this._patchConfig(options, runManager?.getChild(`seq:step:0`))
       );
-      const finalSteps = steps.slice(streamingStartStepIndex + 1);
-      for (let i = 0; i < finalSteps.length; i += 1) {
-        const step = finalSteps[i];
+      for (let i = 1; i < steps.length; i += 1) {
+        const step = steps[i];
         finalGenerator = await step.transform(
           finalGenerator,
-          this._patchConfig(
-            options,
-            runManager?.getChild(`seq:step:${streamingStartStepIndex + i + 2}`)
-          )
+          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
         );
       }
       for await (const chunk of finalGenerator) {
