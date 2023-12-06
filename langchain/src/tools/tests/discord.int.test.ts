@@ -7,9 +7,8 @@ import {
   DiscordGetTextChannelsTool,
 } from "../discord.js";
 
-
-test("DiscordGetMessagesTool", async () => {
-  const tool = new DiscordGetMessagesTool({});
+test.skip("DiscordGetMessagesTool", async () => {
+  const tool = new DiscordGetMessagesTool();
 
   try {
     const result = await tool.invoke("1153400523718938780");
@@ -19,8 +18,8 @@ test("DiscordGetMessagesTool", async () => {
   }
 });
 
-test("DiscordGetGuildsTool", async () => {
-  const tool = new DiscordGetGuildsTool({});
+test.skip("DiscordGetGuildsTool", async () => {
+  const tool = new DiscordGetGuildsTool();
   try {
     const result = await tool.invoke("");
     console.log(result);
@@ -29,8 +28,8 @@ test("DiscordGetGuildsTool", async () => {
   }
 });
 
-test("DiscordChannelSearchTool", async () => {
-  const tool = new DiscordChannelSearchTool({});
+test.skip("DiscordChannelSearchTool", async () => {
+  const tool = new DiscordChannelSearchTool();
   try {
     const result = await tool.invoke("Test");
     console.log(result);
@@ -39,8 +38,8 @@ test("DiscordChannelSearchTool", async () => {
   }
 });
 
-test("DiscordGetTextChannelsTool", async () => {
-  const tool = new DiscordGetTextChannelsTool({});
+test.skip("DiscordGetTextChannelsTool", async () => {
+  const tool = new DiscordGetTextChannelsTool();
   try {
     const result = await tool.invoke("1153400523718938775");
     console.log(result);
@@ -49,8 +48,8 @@ test("DiscordGetTextChannelsTool", async () => {
   }
 });
 
-test("DiscordSendMessagesTool", async () => {
-  const tool = new DiscordSendMessagesTool({});
+test.skip("DiscordSendMessagesTool", async () => {
+  const tool = new DiscordSendMessagesTool();
   try {
     const result = await tool.invoke("test message from new code");
     console.log(result);
