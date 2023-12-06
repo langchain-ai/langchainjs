@@ -7993,7 +7993,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
-    typescript: ^5.0.0
+    typescript: ~5.1.6
   languageName: unknown
   linkType: soft
 
@@ -8025,7 +8025,7 @@ __metadata:
     release-it: ^15.10.1
     rimraf: ^5.0.1
     turbo: latest
-    typescript: ^5.0.0
+    typescript: ~5.1.6
     uuid: ^9.0.0
     zod: ^3.22.3
   languageName: unknown
@@ -8054,7 +8054,7 @@ __metadata:
     prettier: ^2.8.3
     release-it: ^15.10.1
     rimraf: ^5.0.1
-    typescript: ^5.0.0
+    typescript: ~5.1.6
     zod-to-json-schema: 3.20.3
   languageName: unknown
   linkType: soft
@@ -12656,15 +12656,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xata.io/client@npm:^0.25.1":
-  version: 0.25.1
-  resolution: "@xata.io/client@npm:0.25.1"
-  peerDependencies:
-    typescript: ">=4.5"
-  checksum: 041988667b19e84a4af27b8abb6c3ca79904df595a687e4a8cd19ce0c1e3d180781fb2e54ba55de2217893f76b05048cffa99d171034f9a4229d694904d43bcd
-  languageName: node
-  linkType: hard
-
 "@xata.io/client@npm:^0.28.0":
   version: 0.28.0
   resolution: "@xata.io/client@npm:0.28.0"
@@ -13112,7 +13103,7 @@ __metadata:
     react-dom: ^18
     tailwindcss: ^3.3.0
     ts-morph: ^20.0.0
-    typescript: ^5
+    typescript: ~5.1.6
   languageName: unknown
   linkType: soft
 
@@ -15586,7 +15577,7 @@ __metadata:
     picocolors: ^1.0.0
     prettier: ^2.8.3
     prompts: ^2.4.2
-    typescript: <5.2.0
+    typescript: ~5.1.6
     update-check: ^1.5.4
     validate-npm-package-name: ^5.0.0
   bin:
@@ -18109,7 +18100,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.51.0
     "@upstash/redis": ^1.20.6
     "@vercel/kv": ^0.2.3
-    "@xata.io/client": ^0.25.1
+    "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
     chromadb: ^1.5.3
@@ -18136,7 +18127,7 @@ __metadata:
     sqlite3: ^5.1.4
     tsx: ^3.12.3
     typeorm: ^0.3.12
-    typescript: ^5.0.0
+    typescript: ~5.1.6
     typesense: ^1.5.3
     uuid: ^9.0.0
     vectordb: ^0.1.4
@@ -22779,7 +22770,7 @@ __metadata:
     srt-parser-2: ^1.2.2
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
-    typescript: ^5.0.0
+    typescript: ~5.1.6
     typesense: ^1.5.3
     usearch: ^1.1.1
     uuid: ^9.0.0
@@ -23117,7 +23108,7 @@ __metadata:
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest
-    typescript: ^5.0.0
+    typescript: ~5.1.6
   languageName: unknown
   linkType: soft
 
@@ -30958,16 +30949,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:<5.2.0, typescript@npm:^5.1.6":
-  version: 5.1.6
-  resolution: "typescript@npm:5.1.6"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
-  languageName: node
-  linkType: hard
-
 "typescript@npm:^4.9.4":
   version: 4.9.5
   resolution: "typescript@npm:4.9.5"
@@ -30978,33 +30959,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5":
-  version: 5.2.2
-  resolution: "typescript@npm:5.2.2"
+"typescript@npm:^5.1.6":
+  version: 5.3.2
+  resolution: "typescript@npm:5.3.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 7912821dac4d962d315c36800fe387cdc0a6298dba7ec171b350b4a6e988b51d7b8f051317786db1094bd7431d526b648aba7da8236607febb26cf5b871d2d3c
+  checksum: d92534dda639eb825db013203404c1fabca8ac630564283c9e7dc9e64fd9c9346c2de95ecebdf3e6e8c1c32941bca1cfe0da37877611feb9daf8feeaea58d230
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.0.0":
-  version: 5.0.4
-  resolution: "typescript@npm:5.0.4"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 82b94da3f4604a8946da585f7d6c3025fff8410779e5bde2855ab130d05e4fd08938b9e593b6ebed165bda6ad9292b230984f10952cf82f0a0ca07bbeaa08172
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@<5.2.0#~builtin<compat/typescript>, typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>":
+"typescript@npm:~5.1.6":
   version: 5.1.6
-  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=1f5320"
+  resolution: "typescript@npm:5.1.6"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
+  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
   languageName: node
   linkType: hard
 
@@ -31018,23 +30989,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5#~builtin<compat/typescript>":
-  version: 5.2.2
-  resolution: "typescript@patch:typescript@npm%3A5.2.2#~builtin<compat/typescript>::version=5.2.2&hash=1f5320"
+"typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>":
+  version: 5.3.2
+  resolution: "typescript@patch:typescript@npm%3A5.3.2#~builtin<compat/typescript>::version=5.3.2&hash=1f5320"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 07106822b4305de3f22835cbba949a2b35451cad50888759b6818421290ff95d522b38ef7919e70fb381c5fe9c1c643d7dea22c8b31652a717ddbd57b7f4d554
+  checksum: c034461079fbfde3cb584ddee52afccb15b6e32a0ce186d0b2719968786f7ca73e1b07f71fac4163088790b16811c6ccf79680de190664ef66ff0ba9c1fe4a23
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.0.0#~builtin<compat/typescript>":
-  version: 5.0.4
-  resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=1f5320"
+"typescript@patch:typescript@~5.1.6#~builtin<compat/typescript>":
+  version: 5.1.6
+  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=1f5320"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 6a1fe9a77bb9c5176ead919cc4a1499ee63e46b4e05bf667079f11bf3a8f7887f135aa72460a4c3b016e6e6bb65a822cb8689a6d86cbfe92d22cc9f501f09213
+  checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
   languageName: node
   linkType: hard
 
