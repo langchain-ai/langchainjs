@@ -1278,7 +1278,7 @@ export class RunnableSequence<
     try {
       let finalGenerator = steps[0].transform(
         inputGenerator(),
-        this._patchConfig(options, runManager?.getChild(`seq:step:0`))
+        this._patchConfig(options, runManager?.getChild(`seq:step:1`))
       );
       for (let i = 1; i < steps.length; i += 1) {
         const step = steps[i];
