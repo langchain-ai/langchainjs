@@ -19,6 +19,9 @@ agents/toolkits/aws_sfn.d.ts
 agents/toolkits/jira.cjs
 agents/toolkits/jira.js
 agents/toolkits/jira.d.ts
+agents/toolkits/connery.cjs
+agents/toolkits/connery.js
+agents/toolkits/connery.d.ts
 agents/toolkits/sql.cjs
 agents/toolkits/sql.js
 agents/toolkits/sql.d.ts
@@ -61,6 +64,9 @@ tools/aws_sfn.d.ts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
+tools/connery.cjs
+tools/connery.js
+tools/connery.d.ts
 tools/render.cjs
 tools/render.js
 tools/render.d.ts
@@ -73,6 +79,9 @@ tools/sql.d.ts
 tools/webbrowser.cjs
 tools/webbrowser.js
 tools/webbrowser.d.ts
+tools/gmail.cjs
+tools/gmail.js
+tools/gmail.d.ts
 tools/google_calendar.cjs
 tools/google_calendar.js
 tools/google_calendar.d.ts
@@ -475,6 +484,9 @@ document_loaders/fs/csv.d.ts
 document_loaders/fs/notion.cjs
 document_loaders/fs/notion.js
 document_loaders/fs/notion.d.ts
+document_loaders/fs/obsidian.cjs
+document_loaders/fs/obsidian.js
+document_loaders/fs/obsidian.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts

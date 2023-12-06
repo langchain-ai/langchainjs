@@ -55,10 +55,10 @@ Then, update your prompt to include another `MessagesPlaceholder`. This time we'
 
 ```typescript
 const prompt = ChatPromptTemplate.fromMessages([
-  ["ai", "You are a helpful assistant"],
+  ["ai", "You are a helpful assistant."],
+  new MessagesPlaceholder("chat_history"),
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
-  new MessagesPlaceholder("chat_history"),
 ]);
 ```
 
@@ -77,9 +77,14 @@ const runnableAgent = RunnableSequence.from([
     },
   },
   prompt,
-  modelWithTools,
+  modelWithFunctions,
   new OpenAIFunctionsAgentOutputParser(),
 ]);
+
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+});
 ```
 
 Finally we can call the agent, and save the output after the response is returned.
@@ -122,8 +127,8 @@ console.log(result2);
 
 You may also inspect the LangSmith traces for both agent calls here:
 
-- [Question 1](https://smith.langchain.com/public/12f4022d-f02f-4b00-9122-8493afe5507d/r)
-- [Question 2](https://smith.langchain.com/public/2052d0d1-5640-44bc-9024-d443d46db2a4/r)
+- [Question 1](https://smith.langchain.com/public/c1136951-f3f0-4ff5-a862-8db5d6bc8d04/r)
+- [Question 2](https://smith.langchain.com/public/b536cdc0-9bc9-4bdf-9298-4d6d7f88556b/r)
 
 # With `initializeAgentExecutorWithOptions`
 
