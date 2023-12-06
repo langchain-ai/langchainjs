@@ -61,7 +61,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
   transform(
     message: string,
     state: Map<string, string>
-  ): [string, Map<string, string>] {
+  ): Promise<[string, Map<string, string>]> {
     if (typeof message !== "string") {
       throw new TypeError(
         "RegexMaskingTransformer.transform Error: The 'message' argument must be a string."
@@ -101,7 +101,9 @@ export class RegexMaskingTransformer extends MaskingTransformer {
     }
 
     // Return the fully masked message and the state map with all original values
-    return [processedMessage, originalValues];
+    // Wrap the synchronous return values in Promise.resolve() to maintain compatibility
+    // with the MaskingParser's expectation of a Promise return type.
+    return Promise.resolve([processedMessage, originalValues]);
   }
 
   /**
@@ -110,7 +112,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
    * @param state - The state map containing mappings of masked values to their original values.
    * @returns The rehydrated (original) message.
    */
-  rehydrate(message: string, state: Map<string, string>): string {
+  rehydrate(message: string, state: Map<string, string>): Promise<string> {
     if (typeof message !== "string") {
       throw new TypeError(
         "RegexMaskingTransformer.rehydrate Error: The 'message' argument must be a string."
@@ -124,15 +126,20 @@ export class RegexMaskingTransformer extends MaskingTransformer {
     }
 
     // Convert the state map to an array and use reduce to sequentially replace masked values with original values.
-    return Array.from(state).reduce((msg, [masked, original]) => {
-      // Escape special characters in the masked string to ensure it can be used in a regular expression safely.
-      // This is necessary because masked values might contain characters that have special meanings in regex.
-      const escapedMasked = masked.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const rehydratedMessage = Array.from(state).reduce(
+      (msg, [masked, original]) => {
+        // Escape special characters in the masked string to ensure it can be used in a regular expression safely.
+        // This is necessary because masked values might contain characters that have special meanings in regex.
+        const escapedMasked = masked.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-      // Replace all instances of the escaped masked value in the message with the original value.
-      // The 'g' flag in the RegExp ensures that all occurrences of the masked value are replaced.
-      return msg.replace(new RegExp(escapedMasked, "g"), original);
-    }, message);
+        // Replace all instances of the escaped masked value in the message with the original value.
+        // The 'g' flag in the RegExp ensures that all occurrences of the masked value are replaced.
+        return msg.replace(new RegExp(escapedMasked, "g"), original);
+      },
+      message
+    );
+
+    return Promise.resolve(rehydratedMessage);
   }
 
   /**
