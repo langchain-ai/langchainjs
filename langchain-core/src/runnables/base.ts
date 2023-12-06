@@ -31,7 +31,6 @@ export type RunnableFunc<RunInput, RunOutput> = (
     | (Record<string, any> & { config: RunnableConfig })
 ) => RunOutput | Promise<RunOutput>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableMapLike<RunInput, RunOutput> = {
   [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>;
 };
