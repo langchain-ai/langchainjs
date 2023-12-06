@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -63,7 +63,7 @@
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
     "turbo": "latest",
-    "typescript": "^5.0.0"
+    "typescript": "~5.1.6"
   },
   "publishConfig": {
     "access": "public"

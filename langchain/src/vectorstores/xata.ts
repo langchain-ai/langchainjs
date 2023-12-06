@@ -118,7 +118,7 @@ export class XataVectorSearch<
     k: number,
     filter?: XataFilter | undefined
   ): Promise<[Document, number][]> {
-    const records = await this.client.db[this.table].vectorSearch(
+    const { records } = await this.client.db[this.table].vectorSearch(
       "embedding",
       query,
       {
