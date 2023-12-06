@@ -8,7 +8,7 @@ export const run = async () => {
   const jira = new JiraAPIWrapper({
     host: "https://yourdomain.atlassian.net",
     email: "example@email.com",
-    apiToken: "<api_token>" // Optional parameter; will fall back to environment variable if unavailable.
+    apiToken: "<api_token>", // Optional parameter; will fall back to environment variable if unavailable.
   });
 
   const toolkit = await new JiraToolkit(jira);
