@@ -30,9 +30,9 @@ const withHistory = new RunnableWithMessageHistory({
 const output = await withHistory.invoke({
   input: "Hello there, I'm Archibald!",
 });
-console.log("output 1:", output);
+console.log("output:", output);
 /**
-output 1: AIMessage {
+output: AIMessage {
   lc_namespace: [ 'langchain_core', 'messages' ],
   content: 'Hello, Archibald! How can I assist you today?',
   additional_kwargs: { function_call: undefined, tool_calls: undefined }
@@ -41,6 +41,5 @@ output 1: AIMessage {
 
 /**
  * You can see the LangSmith traces here:
- * output 1 @link https://smith.langchain.com/public/686f061e-bef4-4b0d-a4fa-04c107b6db98/r
- * output 2 @link https://smith.langchain.com/public/c30ba77b-c2f4-440d-a54b-f368ced6467a/r
+ * output @link https://smith.langchain.com/public/ee264a77-b767-4b5a-8573-efcbebaa5c80/r
  */
