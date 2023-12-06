@@ -1412,7 +1412,6 @@ export class RunnableMap<
   async invoke(
     input: RunInput,
     options?: Partial<BaseCallbackConfig>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<RunOutput> {
     const callbackManager_ = await getCallbackMangerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
