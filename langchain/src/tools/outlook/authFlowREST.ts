@@ -1,6 +1,5 @@
 import * as http from "http";
 import * as url from "url";
-import open from "open";
 import { AuthFlowBase } from "./authFlowBase.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
@@ -9,6 +8,9 @@ interface AccessTokenResponse {
   refresh_token: string;
 }
 
+// this class uses your clientId, clientSecret and redirectUri
+// to get access token and refresh token, if you already have them,
+// you can use AuthFlowToken or AuthFlowRefresh instead
 export class AuthFlowREST extends AuthFlowBase {
   private clientSecret: string;
 
@@ -44,7 +46,7 @@ export class AuthFlowREST extends AuthFlowBase {
     this.pathname = parsedUrl.pathname || "";
   }
 
-  // Function to construct the OAuth URL
+  // Function to open or print the login url for user to login
   private openAuthUrl(): string {
     const loginEndpoint =
       "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
@@ -65,9 +67,9 @@ export class AuthFlowREST extends AuthFlowBase {
       `&scope=${scope}`,
       `&state=${state}`,
     ].join("");
-    open(url).catch((error) => {
-      console.error("Error opening URL: ", error);
-    });
+
+    console.log("Please open the following url to login:");
+    console.log(url);
     return url;
   }
 
@@ -90,6 +92,12 @@ export class AuthFlowREST extends AuthFlowBase {
   // Function to listen for the authorization code
   private async listenForCode(server: http.Server): Promise<string> {
     return new Promise((resolve, reject) => {
+      // Set timeout in case the user fails to login
+      const timeout = setTimeout(() => {
+        server.close();
+        reject(new Error("Timeout"));
+      }, 180000);
+
       server.on("request", (req, res) => {
         try {
           const reqUrl = url.parse(req.url || "", true);
@@ -100,6 +108,7 @@ export class AuthFlowREST extends AuthFlowBase {
             res.writeHead(200, { "Content-Type": "text/html" });
             res.end("Authorization code received. You can close this window.");
 
+            clearTimeout(timeout);
             server.close();
             console.log("Server closed");
             resolve(authCode); // Resolve the Promise with the authorization code
@@ -108,6 +117,7 @@ export class AuthFlowREST extends AuthFlowBase {
             res.end("404 Not Found");
           }
         } catch (err) {
+          clearTimeout(timeout);
           res.writeHead(500);
           res.end("Server error");
           reject(err);
@@ -116,7 +126,7 @@ export class AuthFlowREST extends AuthFlowBase {
     });
   }
 
-  // Main function to run the auth flow
+  // get authentication code from user login
   private async getCode(): Promise<string> {
     // check credentials
     if (!this.clientId || !this.redirectUri) {
