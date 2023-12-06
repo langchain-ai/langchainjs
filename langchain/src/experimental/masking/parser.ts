@@ -10,7 +10,7 @@ export class MaskingParser {
   private config: MaskingParserConfig;
 
   constructor(config: MaskingParserConfig = {}) {
-    this.transformers = config.transformers || [];
+    this.transformers = config.transformers ?? [];
     this.state = new Map<string, string>();
     this.config = config;
   }
