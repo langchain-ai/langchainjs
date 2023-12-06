@@ -40,7 +40,7 @@ describe("MaskingParser Integration Test", () => {
 
   it("should mask, store state, and rehydrate with altered order", async () => {
     const originalMessage = "Contact me at jane.doe@email.com or 555-123-4567.";
-    const maskedMessage = await parser.parse(originalMessage);
+    const maskedMessage = await parser.mask(originalMessage);
 
     // Serialize and store the state
     const serializedState = serializeState(parser.getState());

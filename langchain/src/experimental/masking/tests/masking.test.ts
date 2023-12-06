@@ -27,7 +27,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       const message = "Contact me at jane.doe@email.com or 555-123-4567.";
       const expectedMaskedMessage = "Contact me at [email] or [phone].";
 
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toBe(expectedMaskedMessage);
     });
@@ -37,7 +37,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       const expectedOriginalMessage =
         "Contact me at jane.doe@email.com or 555-123-4567.";
 
-      await maskingParser.parse(expectedOriginalMessage); // Masking original message
+      await maskingParser.mask(expectedOriginalMessage); // Masking original message
       const rehydratedMessage = await maskingParser.rehydrate(maskedMessage);
 
       expect(rehydratedMessage).toBe(expectedOriginalMessage);
@@ -58,7 +58,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       it("efficiently processes large data sets", async () => {
         const largeMessage = generateLargeMessage();
         const startTime = performance.now();
-        const maskedMessage = await maskingParser.parse(largeMessage);
+        const maskedMessage = await maskingParser.mask(largeMessage);
         const endTime = performance.now();
 
         const someAcceptableDuration = 5000; // Set this to a duration you consider acceptable, e.g., 5000 milliseconds (5 seconds)
@@ -88,7 +88,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("masks multiple occurrences of different PII with unique identifiers", async () => {
       const message =
         "Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toMatch(/\[email-[a-f0-9]+\]/g);
       expect(maskedMessage).toMatch(/\[phone-[a-f0-9]+\]/g);
@@ -103,7 +103,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("rehydrates dynamic masked data to its original form", async () => {
       const originalMessage =
         "Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com";
-      const maskedMessage = await maskingParser.parse(originalMessage);
+      const maskedMessage = await maskingParser.mask(originalMessage);
       const rehydratedMessage = await maskingParser.rehydrate(maskedMessage);
 
       expect(rehydratedMessage).toBe(originalMessage);
@@ -112,7 +112,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("masks identical PII with consistent dynamic identifiers", async () => {
       const message =
         "Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com and 555-123-4567";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toMatch(/\[email-[a-f0-9]+\]/g);
       expect(maskedMessage).toMatch(/\[phone-[a-f0-9]+\]/g);
@@ -151,7 +151,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
       const message =
         "My email is jane.doe@email.com and phone is 555-123-4567.";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toContain("[email]");
       expect(maskedMessage).toContain("[phone]");
@@ -202,7 +202,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       maskingParser.addTransformer(piiMaskingTransformer);
 
       const message = "Contact me at jane.doe@email.com or 555-123-4567.";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       // The lengths of the masked parts should be equal to the lengths of the original email and phone number.
       const expectedEmailMask =
@@ -233,7 +233,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
       const originalMessage =
         "Contact me at jane.doe@email.com or 555-123-4567.";
-      const maskedMessage = await maskingParser.parse(originalMessage);
+      const maskedMessage = await maskingParser.mask(originalMessage);
       const rehydratedMessage = await maskingParser.rehydrate(maskedMessage);
 
       expect(rehydratedMessage).toBe(originalMessage);
@@ -251,8 +251,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("throws an error when no transformers are added and parse is called", async () => {
       const message = "Some message";
-      await expect(maskingParser.parse(message)).rejects.toThrow(
-        "MaskingParser.parse Error: No transformers have been added. Please add at least one transformer before parsing."
+      await expect(maskingParser.mask(message)).rejects.toThrow(
+        "MaskingParser.mask Error: No transformers have been added. Please add at least one transformer before parsing."
       );
     });
 
@@ -266,7 +266,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("throws an error for invalid message type in parse", async () => {
       const invalidMessage: any = 123; // intentionally incorrect type
       maskingParser.addTransformer(piiMaskingTransformer); // Add a transformer
-      await expect(maskingParser.parse(invalidMessage)).rejects.toThrow(
+      await expect(maskingParser.mask(invalidMessage)).rejects.toThrow(
         "The 'message' argument must be a string."
       );
     });
@@ -329,7 +329,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       });
 
       const message = "Contact me at jane.doe@email.com";
-      await maskingParser.parse(message);
+      await maskingParser.mask(message);
 
       expect(onMaskingStart).toHaveBeenCalledWith(message);
       expect(onMaskingEnd).toHaveBeenCalled();
@@ -346,7 +346,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       });
 
       const message = "Contact me at jane.doe@email.com";
-      await maskingParser.parse(message);
+      await maskingParser.mask(message);
 
       expect(onMaskingStart).toHaveBeenCalledWith(message);
       expect(onMaskingEnd).toHaveBeenCalled();
@@ -368,7 +368,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       });
 
       const message = "Contact me at jane.doe@email.com";
-      await expect(maskingParser.parse(message)).rejects.toThrow(error);
+      await expect(maskingParser.mask(message)).rejects.toThrow(error);
 
       expect(onMaskingStart).toHaveBeenCalledWith(message);
       // onMaskingEnd should not be called because an error is thrown in onMaskingStart
@@ -387,7 +387,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       });
 
       const message = "Contact me at jane.doe@email.com";
-      await expect(maskingParser.parse(message)).rejects.toThrow(error);
+      await expect(maskingParser.mask(message)).rejects.toThrow(error);
 
       expect(onMaskingStart).toHaveBeenCalledWith(message);
       // onMaskingEnd should not be called because an error is thrown in onMaskingStart
@@ -405,7 +405,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
         onRehydratingEnd,
       });
 
-      const maskedMessage = await maskingParser.parse(
+      const maskedMessage = await maskingParser.mask(
         "Contact me at jane.doe@email.com"
       );
       await maskingParser.rehydrate(maskedMessage);
@@ -424,7 +424,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
         onRehydratingEnd,
       });
 
-      const maskedMessage = await maskingParser.parse(
+      const maskedMessage = await maskingParser.mask(
         "Contact me at jane.doe@email.com"
       );
       await maskingParser.rehydrate(maskedMessage);
@@ -448,7 +448,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
         onRehydratingEnd,
       });
 
-      const maskedMessage = await maskingParser.parse(
+      const maskedMessage = await maskingParser.mask(
         "Contact me at jane.doe@email.com"
       );
       await expect(maskingParser.rehydrate(maskedMessage)).rejects.toThrow(
@@ -471,7 +471,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
         onRehydratingEnd,
       });
 
-      const maskedMessage = await maskingParser.parse(
+      const maskedMessage = await maskingParser.mask(
         "Contact me at jane.doe@email.com"
       );
       await expect(maskingParser.rehydrate(maskedMessage)).rejects.toThrow(
@@ -520,7 +520,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("properly handles asynchronous transformations and state updates", async () => {
       const originalMessage =
         "This message contains sensitiveData that should be redacted.";
-      const transformedMessage = await maskingParser.parse(originalMessage);
+      const transformedMessage = await maskingParser.mask(originalMessage);
 
       // Check if the message is transformed correctly
       expect(transformedMessage).toBe(

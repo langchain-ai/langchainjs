@@ -41,7 +41,7 @@ export class MaskingParser {
    * @throws {TypeError} If the message is not a string.
    * @throws {Error} If no transformers are added.
    */
-  async parse(message: string): Promise<string> {
+  async mask(message: string): Promise<string> {
     // If onMaskingStart is a function, handle it accordingly
     if (this.config.onMaskingStart) {
       try {
@@ -58,13 +58,13 @@ export class MaskingParser {
     // as masking requires at least one transformer to apply its logic.
     if (this.transformers.length === 0) {
       throw new Error(
-        "MaskingParser.parse Error: No transformers have been added. Please add at least one transformer before parsing."
+        "MaskingParser.mask Error: No transformers have been added. Please add at least one transformer before parsing."
       );
     }
 
     if (typeof message !== "string") {
       throw new TypeError(
-        "MaskingParser.parse Error: The 'message' argument must be a string."
+        "MaskingParser.mask Error: The 'message' argument must be a string."
       );
     }
 
