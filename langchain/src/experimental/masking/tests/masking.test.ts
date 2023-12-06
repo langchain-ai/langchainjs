@@ -1,5 +1,9 @@
 //  yarn test:single src/experimental/masking/tests/masking.test.ts
-import { MaskingParser, RegexMaskingTransformer } from "../index.js";
+import {
+  MaskingParser,
+  RegexMaskingTransformer,
+  MaskingTransformer,
+} from "../index.js";
 import { jest } from "@jest/globals";
 
 describe("MaskingParser and PIIMaskingTransformer", () => {
@@ -23,7 +27,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       const message = "Contact me at jane.doe@email.com or 555-123-4567.";
       const expectedMaskedMessage = "Contact me at [email] or [phone].";
 
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toBe(expectedMaskedMessage);
     });
@@ -33,7 +37,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       const expectedOriginalMessage =
         "Contact me at jane.doe@email.com or 555-123-4567.";
 
-      await maskingParser.parse(expectedOriginalMessage); // Masking original message
+      await maskingParser.mask(expectedOriginalMessage); // Masking original message
       const rehydratedMessage = await maskingParser.rehydrate(maskedMessage);
 
       expect(rehydratedMessage).toBe(expectedOriginalMessage);
@@ -54,7 +58,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       it("efficiently processes large data sets", async () => {
         const largeMessage = generateLargeMessage();
         const startTime = performance.now();
-        const maskedMessage = await maskingParser.parse(largeMessage);
+        const maskedMessage = await maskingParser.mask(largeMessage);
         const endTime = performance.now();
 
         const someAcceptableDuration = 5000; // Set this to a duration you consider acceptable, e.g., 5000 milliseconds (5 seconds)
@@ -84,7 +88,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("masks multiple occurrences of different PII with unique identifiers", async () => {
       const message =
         "Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toMatch(/\[email-[a-f0-9]+\]/g);
       expect(maskedMessage).toMatch(/\[phone-[a-f0-9]+\]/g);
@@ -99,7 +103,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("rehydrates dynamic masked data to its original form", async () => {
       const originalMessage =
         "Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com";
-      const maskedMessage = await maskingParser.parse(originalMessage);
+      const maskedMessage = await maskingParser.mask(originalMessage);
       const rehydratedMessage = await maskingParser.rehydrate(maskedMessage);
 
       expect(rehydratedMessage).toBe(originalMessage);
@@ -108,7 +112,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("masks identical PII with consistent dynamic identifiers", async () => {
       const message =
         "Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com and 555-123-4567";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toMatch(/\[email-[a-f0-9]+\]/g);
       expect(maskedMessage).toMatch(/\[phone-[a-f0-9]+\]/g);
@@ -147,7 +151,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
       const message =
         "My email is jane.doe@email.com and phone is 555-123-4567.";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       expect(maskedMessage).toContain("[email]");
       expect(maskedMessage).toContain("[phone]");
@@ -198,7 +202,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       maskingParser.addTransformer(piiMaskingTransformer);
 
       const message = "Contact me at jane.doe@email.com or 555-123-4567.";
-      const maskedMessage = await maskingParser.parse(message);
+      const maskedMessage = await maskingParser.mask(message);
 
       // The lengths of the masked parts should be equal to the lengths of the original email and phone number.
       const expectedEmailMask =
@@ -229,7 +233,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
       const originalMessage =
         "Contact me at jane.doe@email.com or 555-123-4567.";
-      const maskedMessage = await maskingParser.parse(originalMessage);
+      const maskedMessage = await maskingParser.mask(originalMessage);
       const rehydratedMessage = await maskingParser.rehydrate(maskedMessage);
 
       expect(rehydratedMessage).toBe(originalMessage);
@@ -247,8 +251,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("throws an error when no transformers are added and parse is called", async () => {
       const message = "Some message";
-      await expect(maskingParser.parse(message)).rejects.toThrow(
-        "MaskingParser.parse Error: No transformers have been added. Please add at least one transformer before parsing."
+      await expect(maskingParser.mask(message)).rejects.toThrow(
+        "MaskingParser.mask Error: No transformers have been added. Please add at least one transformer before parsing."
       );
     });
 
@@ -262,7 +266,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     it("throws an error for invalid message type in parse", async () => {
       const invalidMessage: any = 123; // intentionally incorrect type
       maskingParser.addTransformer(piiMaskingTransformer); // Add a transformer
-      await expect(maskingParser.parse(invalidMessage)).rejects.toThrow(
+      await expect(maskingParser.mask(invalidMessage)).rejects.toThrow(
         "The 'message' argument must be a string."
       );
     });
@@ -313,9 +317,10 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       });
     });
 
-    it("calls onMaskingStart and onMaskingEnd hooks during parse", async () => {
-      const onMaskingStart = jest.fn();
-      const onMaskingEnd = jest.fn();
+    // Masking hooks
+    it("handles synchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
+      const onMaskingStart = jest.fn(); // Synchronous mock
+      const onMaskingEnd = jest.fn(); // Synchronous mock
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],
@@ -324,15 +329,75 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       });
 
       const message = "Contact me at jane.doe@email.com";
-      await maskingParser.parse(message);
+      await maskingParser.mask(message);
 
       expect(onMaskingStart).toHaveBeenCalledWith(message);
       expect(onMaskingEnd).toHaveBeenCalled();
     });
 
-    it("calls onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
-      const onRehydratingStart = jest.fn();
-      const onRehydratingEnd = jest.fn();
+    it("handles asynchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
+      const onMaskingStart = jest.fn(() => Promise.resolve()); // Correctly mocked as an async function
+      const onMaskingEnd = jest.fn(() => Promise.resolve()); // Correctly mocked as an async function
+
+      maskingParser = new MaskingParser({
+        transformers: [piiMaskingTransformer],
+        onMaskingStart,
+        onMaskingEnd,
+      });
+
+      const message = "Contact me at jane.doe@email.com";
+      await maskingParser.mask(message);
+
+      expect(onMaskingStart).toHaveBeenCalledWith(message);
+      expect(onMaskingEnd).toHaveBeenCalled();
+    });
+
+    it("handles errors in synchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
+      const error = new Error("Test Error");
+      const onMaskingStart = jest.fn(() => {
+        throw error;
+      }); // Synchronous mock that throws an error
+      const onMaskingEnd = jest.fn(() => {
+        throw error;
+      }); // Synchronous mock that throws an error
+
+      maskingParser = new MaskingParser({
+        transformers: [piiMaskingTransformer],
+        onMaskingStart,
+        onMaskingEnd,
+      });
+
+      const message = "Contact me at jane.doe@email.com";
+      await expect(maskingParser.mask(message)).rejects.toThrow(error);
+
+      expect(onMaskingStart).toHaveBeenCalledWith(message);
+      // onMaskingEnd should not be called because an error is thrown in onMaskingStart
+      expect(onMaskingEnd).not.toHaveBeenCalled();
+    });
+
+    it("handles errors in asynchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
+      const error = new Error("Test Error");
+      const onMaskingStart = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+      const onMaskingEnd = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+
+      maskingParser = new MaskingParser({
+        transformers: [piiMaskingTransformer],
+        onMaskingStart,
+        onMaskingEnd,
+      });
+
+      const message = "Contact me at jane.doe@email.com";
+      await expect(maskingParser.mask(message)).rejects.toThrow(error);
+
+      expect(onMaskingStart).toHaveBeenCalledWith(message);
+      // onMaskingEnd should not be called because an error is thrown in onMaskingStart
+      expect(onMaskingEnd).not.toHaveBeenCalled();
+    });
+
+    // Rehydration hooks
+    it("handles synchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
+      const onRehydratingStart = jest.fn(); // Synchronous mock
+      const onRehydratingEnd = jest.fn(); // Synchronous mock
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],
@@ -340,12 +405,132 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
         onRehydratingEnd,
       });
 
-      const message = "Contact me at [email]";
-      await maskingParser.parse(message); // necessary to populate the state
-      await maskingParser.rehydrate(message);
+      const maskedMessage = await maskingParser.mask(
+        "Contact me at jane.doe@email.com"
+      );
+      await maskingParser.rehydrate(maskedMessage);
 
-      expect(onRehydratingStart).toHaveBeenCalledWith(message);
+      expect(onRehydratingStart).toHaveBeenCalledWith(maskedMessage);
       expect(onRehydratingEnd).toHaveBeenCalled();
+    });
+
+    it("handles asynchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
+      const onRehydratingStart = jest.fn(() => Promise.resolve()); // Asynchronous mock
+      const onRehydratingEnd = jest.fn(() => Promise.resolve()); // Asynchronous mock
+
+      maskingParser = new MaskingParser({
+        transformers: [piiMaskingTransformer],
+        onRehydratingStart,
+        onRehydratingEnd,
+      });
+
+      const maskedMessage = await maskingParser.mask(
+        "Contact me at jane.doe@email.com"
+      );
+      await maskingParser.rehydrate(maskedMessage);
+
+      expect(onRehydratingStart).toHaveBeenCalledWith(maskedMessage);
+      expect(onRehydratingEnd).toHaveBeenCalled();
+    });
+
+    it("handles errors in synchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
+      const error = new Error("Test Error");
+      const onRehydratingStart = jest.fn(() => {
+        throw error;
+      }); // Synchronous mock that throws an error
+      const onRehydratingEnd = jest.fn(() => {
+        throw error;
+      }); // Synchronous mock that throws an error
+
+      maskingParser = new MaskingParser({
+        transformers: [piiMaskingTransformer],
+        onRehydratingStart,
+        onRehydratingEnd,
+      });
+
+      const maskedMessage = await maskingParser.mask(
+        "Contact me at jane.doe@email.com"
+      );
+      await expect(maskingParser.rehydrate(maskedMessage)).rejects.toThrow(
+        error
+      );
+
+      expect(onRehydratingStart).toHaveBeenCalledWith(maskedMessage);
+      // onRehydratingEnd should not be called because an error is thrown in onRehydratingStart
+      expect(onRehydratingEnd).not.toHaveBeenCalled();
+    });
+
+    it("handles errors in asynchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
+      const error = new Error("Test Error");
+      const onRehydratingStart = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+      const onRehydratingEnd = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+
+      maskingParser = new MaskingParser({
+        transformers: [piiMaskingTransformer],
+        onRehydratingStart,
+        onRehydratingEnd,
+      });
+
+      const maskedMessage = await maskingParser.mask(
+        "Contact me at jane.doe@email.com"
+      );
+      await expect(maskingParser.rehydrate(maskedMessage)).rejects.toThrow(
+        error
+      );
+
+      expect(onRehydratingStart).toHaveBeenCalledWith(maskedMessage);
+      // onRehydratingEnd should not be called because an error is thrown in onRehydratingStart
+      expect(onRehydratingEnd).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("MaskingParser with Asynchronous Transformers", () => {
+    let maskingParser: MaskingParser;
+    let asyncTransformer: MaskingTransformer;
+
+    beforeEach(() => {
+      // Mock an asynchronous transformer
+      asyncTransformer = {
+        async transform(message, state) {
+          // Simulate an asynchronous operation
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          // Return transformed message and updated state
+          const transformedMessage = message.replace(
+            /sensitiveData/g,
+            "[REDACTED]"
+          );
+          const newState = new Map(state).set(
+            "redacted",
+            "sensitive string :("
+          );
+          return [transformedMessage, newState];
+        },
+        // Mock or placeholder rehydrate method
+        rehydrate(message, state) {
+          return Promise.resolve(message);
+        },
+      };
+
+      maskingParser = new MaskingParser({
+        transformers: [asyncTransformer],
+        // Add other configurations if necessary
+      });
+    });
+
+    it("properly handles asynchronous transformations and state updates", async () => {
+      const originalMessage =
+        "This message contains sensitiveData that should be redacted.";
+      const transformedMessage = await maskingParser.mask(originalMessage);
+
+      // Check if the message is transformed correctly
+      expect(transformedMessage).toBe(
+        "This message contains [REDACTED] that should be redacted."
+      );
+
+      // Check if the state is updated correctly
+      expect(maskingParser.getState().get("redacted")).toBe(
+        "sensitive string :("
+      );
     });
   });
 });

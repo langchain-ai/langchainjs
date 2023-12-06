@@ -10,7 +10,7 @@ export class MaskingParser {
   private config: MaskingParserConfig;
 
   constructor(config: MaskingParserConfig = {}) {
-    this.transformers = config.transformers || [];
+    this.transformers = config.transformers ?? [];
     this.state = new Map<string, string>();
     this.config = config;
   }
@@ -41,20 +41,30 @@ export class MaskingParser {
    * @throws {TypeError} If the message is not a string.
    * @throws {Error} If no transformers are added.
    */
-  async parse(message: string): Promise<string> {
-    this.config.onMaskingStart?.(message);
+  async mask(message: string): Promise<string> {
+    // If onMaskingStart is a function, handle it accordingly
+    if (this.config.onMaskingStart) {
+      try {
+        const result = this.config.onMaskingStart(message) as any;
+        if (result && typeof result.then === "function") {
+          await result;
+        }
+      } catch (error) {
+        throw error; // Re-throw the error
+      }
+    }
 
     // Check if there are any transformers added to the parser. If not, throw an error
     // as masking requires at least one transformer to apply its logic.
     if (this.transformers.length === 0) {
       throw new Error(
-        "MaskingParser.parse Error: No transformers have been added. Please add at least one transformer before parsing."
+        "MaskingParser.mask Error: No transformers have been added. Please add at least one transformer before parsing."
       );
     }
 
     if (typeof message !== "string") {
       throw new TypeError(
-        "MaskingParser.parse Error: The 'message' argument must be a string."
+        "MaskingParser.mask Error: The 'message' argument must be a string."
       );
     }
 
@@ -62,19 +72,31 @@ export class MaskingParser {
     // It starts as the original message and gets transformed by each transformer.
     let processedMessage = message;
 
-    // Iterate through each transformer added to the parser.
-    this.transformers.forEach((transformer) => {
-      // Apply the transformer's transform method to the current state of the message.
-      // The transform method returns a tuple containing the updated message and state.
-      // The state is a map that tracks the original values of masked content.
-      // This state is essential for the rehydration process to restore the original message.
-      [processedMessage, this.state] = transformer.transform(
-        processedMessage,
-        this.state
-      );
-    });
+    // Iterate through each transformer and apply their transform method.
+    for (const transformer of this.transformers) {
+      // Transform the message and get the transformer's state changes, ensuring no direct mutation of the shared state.
+      const [transformedMessage, transformerState] =
+        await transformer.transform(processedMessage, new Map(this.state));
 
-    this.config.onMaskingEnd?.(processedMessage);
+      // Update the processed message for subsequent transformers.
+      processedMessage = transformedMessage;
+
+      // Merge state changes from the transformer into the parser's state.
+      // This accumulates all transformations' effects on the state.
+      transformerState.forEach((value, key) => this.state.set(key, value));
+    }
+
+    // Handle onMaskingEnd callback
+    if (this.config.onMaskingEnd) {
+      try {
+        const result = this.config.onMaskingEnd(processedMessage) as any; // Type assertion
+        if (result && typeof result.then === "function") {
+          await result;
+        }
+      } catch (error) {
+        throw error; // Re-throw the error
+      }
+    }
     // Return the fully masked message after all transformers have been applied.
     return processedMessage;
   }
@@ -94,7 +116,14 @@ export class MaskingParser {
     message: string,
     state?: Map<string, string>
   ): Promise<string> {
-    this.config.onRehydratingStart?.(message);
+    // Handle onRehydratingStart callback
+    if (this.config.onRehydratingStart) {
+      try {
+        await this.config.onRehydratingStart(message);
+      } catch (error) {
+        throw error; // Re-throw the error
+      }
+    }
 
     if (typeof message !== "string") {
       throw new TypeError(
@@ -109,6 +138,7 @@ export class MaskingParser {
       );
     }
 
+    // eslint-disable-next-line no-instanceof/no-instanceof
     if (state && !(state instanceof Map)) {
       throw new TypeError(
         "MaskingParser.rehydrate Error: The 'state' argument, if provided, must be an instance of Map."
@@ -119,20 +149,23 @@ export class MaskingParser {
     // Initialize the rehydratedMessage with the input masked message.
     // This variable will undergo rehydration by each transformer in reverse order.
     let rehydratedMessage = message;
-    this.transformers
-      .slice()
-      .reverse()
-      .forEach((transformer) => {
-        // Apply the transformer's rehydrate method to the current state of the message.
-        // The rehydrate method uses the stored state (this.state) to map masked values
-        // back to their original values, effectively undoing the masking transformation.
-        rehydratedMessage = transformer.rehydrate(
-          rehydratedMessage,
-          rehydrationState
-        );
-      });
+    // Use a reverse for...of loop to accommodate asynchronous rehydrate methods
+    const reversedTransformers = this.transformers.slice().reverse();
+    for (const transformer of reversedTransformers) {
+      // Check if the result is a Promise and use await, otherwise use it directly
+      const result = transformer.rehydrate(rehydratedMessage, rehydrationState);
+      rehydratedMessage = result instanceof Promise ? await result : result;
+    }
 
-    this.config.onRehydratingEnd?.(rehydratedMessage);
+    // Handle onRehydratingEnd callback
+    if (this.config.onRehydratingEnd) {
+      try {
+        await this.config.onRehydratingEnd(rehydratedMessage);
+      } catch (error) {
+        throw error; // Re-throw the error
+      }
+    }
+
     // Return the fully rehydrated message after all transformers have been applied.
     return rehydratedMessage;
   }
