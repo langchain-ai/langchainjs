@@ -344,48 +344,50 @@ export abstract class BaseLLM<
       }),
     );
 
-    // Ignore results with a null value. These are just absent from the cache.
-    const cachedResults = results.filter(
-      (result) =>
-        (result.status === "fulfilled" && result.value != null) ||
-        result.status === "rejected",
-    ) as PromiseSettledResult<Generation[]>[];
+    // Map run managers to the results before filtering out null results
+    // Null results are just absent from the cache.
+    const cachedResults = results
+      .map((result, index) => ({ result, runManager: runManagers?.[index] }))
+      .filter(
+        ({ result }) =>
+          (result.status === "fulfilled" && result.value != null) ||
+          result.status === "rejected",
+      );
 
-    // handle results
+    // Handle results and call run managers
     const generations: Generation[][] = [];
     await Promise.all(
-      cachedResults.map(async (pResult, i) => {
-        if (pResult.status === "fulfilled") {
-          const result = pResult.value;
+      cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
+        if (promiseResult.status === "fulfilled") {
+          const result = promiseResult.value as Generation[];
           generations[i] = result;
-          return runManagers?.[i]?.handleLLMEnd({
+          return runManager?.handleLLMEnd({
             generations: [result],
           });
         } else {
           // status === "rejected"
-          await runManagers?.[i]?.handleLLMError(pResult.reason);
-          return Promise.reject(pResult.reason);
+          await runManager?.handleLLMError(promiseResult.reason);
+          return Promise.reject(promiseResult.reason);
         }
       }),
     );
 
-    // create combined output
-    const output: LLMResult = {
+    const output = {
       generations,
+      missingPromptIndices
     };
-    const runIds = runManagers?.map((manager) => manager.runId) || undefined;
+
     // This defines RUN_KEY as a non-enumerable property on the output object
     // so that it is not serialized when the output is stringified, and so that
     // it isnt included when listing the keys of the output object.
     Object.defineProperty(output, RUN_KEY, {
-      value: runIds ? { runIds } : undefined,
+      value: runManagers
+        ? { runIds: runManagers?.map((manager) => manager.runId) }
+        : undefined,
       configurable: true,
     });
 
-    return {
-      ...output,
-      missingPromptIndices,
-    };
+    return output;
   }
 
   /**
