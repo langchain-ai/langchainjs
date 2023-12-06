@@ -17,7 +17,7 @@ test.skip("DiscordSendMessagesTool should tell a joke in the discord channel", a
   });
 
   const res = await executor.invoke({
-    input: `Tell 2 jokes in the discord channel`,
+    input: `Tell a joke in the discord channel`,
   });
 
   console.log(res.output);
