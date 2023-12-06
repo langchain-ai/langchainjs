@@ -22782,7 +22782,6 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ^5.0.0
     typesense: ^1.5.3
-    url: ^0.11.3
     usearch: ^1.1.1
     uuid: ^9.0.0
     vectordb: ^0.1.4
@@ -31590,7 +31589,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"url@npm:^0.11.0, url@npm:^0.11.3":
+"url@npm:^0.11.0":
   version: 0.11.3
   resolution: "url@npm:0.11.3"
   dependencies:
