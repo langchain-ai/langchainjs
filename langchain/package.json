@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.199",
+  "version": "0.0.201",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -28,6 +28,9 @@
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
+    "agents/toolkits/connery.cjs",
+    "agents/toolkits/connery.js",
+    "agents/toolkits/connery.d.ts",
     "agents/toolkits/sql.cjs",
     "agents/toolkits/sql.js",
     "agents/toolkits/sql.d.ts",
@@ -70,6 +73,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/connery.cjs",
+    "tools/connery.js",
+    "tools/connery.d.ts",
     "tools/render.cjs",
     "tools/render.js",
     "tools/render.d.ts",
@@ -79,6 +85,9 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/gmail.cjs",
+    "tools/gmail.js",
+    "tools/gmail.d.ts",
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
@@ -157,6 +166,9 @@
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
+    "embeddings/gradient_ai.cjs",
+    "embeddings/gradient_ai.js",
+    "embeddings/gradient_ai.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -478,6 +490,9 @@
     "document_loaders/fs/notion.cjs",
     "document_loaders/fs/notion.js",
     "document_loaders/fs/notion.d.ts",
+    "document_loaders/fs/obsidian.cjs",
+    "document_loaders/fs/obsidian.js",
+    "document_loaders/fs/obsidian.d.ts",
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
@@ -851,7 +866,7 @@
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
-    "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
@@ -1417,7 +1432,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/core": "~0.0.3",
+    "@langchain/core": "~0.0.8",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
@@ -1482,6 +1497,11 @@
       "types": "./agents/toolkits/aws_sfn.d.ts",
       "import": "./agents/toolkits/aws_sfn.js",
       "require": "./agents/toolkits/aws_sfn.cjs"
+    },
+    "./agents/toolkits/connery": {
+      "types": "./agents/toolkits/connery.d.ts",
+      "import": "./agents/toolkits/connery.js",
+      "require": "./agents/toolkits/connery.cjs"
     },
     "./agents/toolkits/sql": {
       "types": "./agents/toolkits/sql.d.ts",
@@ -1553,6 +1573,11 @@
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
     },
+    "./tools/connery": {
+      "types": "./tools/connery.d.ts",
+      "import": "./tools/connery.js",
+      "require": "./tools/connery.cjs"
+    },
     "./tools/render": {
       "types": "./tools/render.d.ts",
       "import": "./tools/render.js",
@@ -1567,6 +1592,11 @@
       "types": "./tools/webbrowser.d.ts",
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
+    },
+    "./tools/gmail": {
+      "types": "./tools/gmail.d.ts",
+      "import": "./tools/gmail.js",
+      "require": "./tools/gmail.cjs"
     },
     "./tools/google_calendar": {
       "types": "./tools/google_calendar.d.ts",
@@ -1697,6 +1727,11 @@
       "types": "./embeddings/llama_cpp.d.ts",
       "import": "./embeddings/llama_cpp.js",
       "require": "./embeddings/llama_cpp.cjs"
+    },
+    "./embeddings/gradient_ai": {
+      "types": "./embeddings/gradient_ai.d.ts",
+      "import": "./embeddings/gradient_ai.js",
+      "require": "./embeddings/gradient_ai.cjs"
     },
     "./llms/load": {
       "types": "./llms/load.d.ts",
@@ -2232,6 +2267,11 @@
       "types": "./document_loaders/fs/notion.d.ts",
       "import": "./document_loaders/fs/notion.js",
       "require": "./document_loaders/fs/notion.cjs"
+    },
+    "./document_loaders/fs/obsidian": {
+      "types": "./document_loaders/fs/obsidian.d.ts",
+      "import": "./document_loaders/fs/obsidian.js",
+      "require": "./document_loaders/fs/obsidian.cjs"
     },
     "./document_loaders/fs/unstructured": {
       "types": "./document_loaders/fs/unstructured.d.ts",
