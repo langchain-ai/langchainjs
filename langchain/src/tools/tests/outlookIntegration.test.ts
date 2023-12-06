@@ -9,7 +9,7 @@ describe("OutlookReadMailTool Test", () => {
     const accessToken = "blah";
     const authFlow = new AuthFlowToken(accessToken);
     const outlookTool = new OutlookReadMailTool(authFlow);
-    const emails = await outlookTool._call("");
+    const emails = await outlookTool.call("");
     expect(emails).toBe("Fetch mail error: 401");
   });
 
