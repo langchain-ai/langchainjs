@@ -40,7 +40,6 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 export type RunnableLike<RunInput = any, RunOutput = any> =
   | Runnable<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | RunnableMapLike<RunInput, RunOutput>
 
 export type RunnableBatchOptions = {
