@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.201",
+  "version": "0.0.202",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -1016,7 +1016,7 @@
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "^5.0.0",
+    "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
@@ -1440,7 +1440,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/core": "~0.0.8",
+    "@langchain/core": "~0.0.9",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
