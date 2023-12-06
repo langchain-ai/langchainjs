@@ -11,10 +11,6 @@ export const SEND_MAIL_TOOL_DESCRIPTION = `
   Ensure that the JSON object is correctly formatted and includes all four specified keys.
 `;
 
-// This is an example of a valid JSON object: \
-// {\"subject\":\"Example Subject\",\"content\":\"Example Content\",\"to\":[\"team@example.com\"],\"cc\":[]}\
-// ";
-
 export const READ_MAIL_TOOL_DESCRIPTION = `A tool for reading emails.
 You can search messages based on a value in specific message properties.
 The results of the search are sorted by the date and time that the message was sent.
