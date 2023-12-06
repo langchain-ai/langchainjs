@@ -1,12 +1,14 @@
 import { MaskingTransformer } from "./transformer.js";
-import { MaskingParserConfig } from "./types.js";
+import type { MaskingParserConfig } from "./types.js";
 
 /**
  * MaskingParser class for handling the masking and rehydrating of messages.
  */
 export class MaskingParser {
   private transformers: MaskingTransformer[];
+
   private state: Map<string, string>;
+
   private config: MaskingParserConfig;
 
   constructor(config: MaskingParserConfig = {}) {
@@ -44,14 +46,7 @@ export class MaskingParser {
   async mask(message: string): Promise<string> {
     // If onMaskingStart is a function, handle it accordingly
     if (this.config.onMaskingStart) {
-      try {
-        const result = this.config.onMaskingStart(message) as any;
-        if (result && typeof result.then === "function") {
-          await result;
-        }
-      } catch (error) {
-        throw error; // Re-throw the error
-      }
+      await this.config.onMaskingStart(message);
     }
 
     // Check if there are any transformers added to the parser. If not, throw an error
@@ -88,14 +83,7 @@ export class MaskingParser {
 
     // Handle onMaskingEnd callback
     if (this.config.onMaskingEnd) {
-      try {
-        const result = this.config.onMaskingEnd(processedMessage) as any; // Type assertion
-        if (result && typeof result.then === "function") {
-          await result;
-        }
-      } catch (error) {
-        throw error; // Re-throw the error
-      }
+      await this.config.onMaskingEnd(processedMessage);
     }
     // Return the fully masked message after all transformers have been applied.
     return processedMessage;
@@ -118,11 +106,7 @@ export class MaskingParser {
   ): Promise<string> {
     // Handle onRehydratingStart callback
     if (this.config.onRehydratingStart) {
-      try {
-        await this.config.onRehydratingStart(message);
-      } catch (error) {
-        throw error; // Re-throw the error
-      }
+      await this.config.onRehydratingStart(message);
     }
 
     if (typeof message !== "string") {
@@ -153,17 +137,15 @@ export class MaskingParser {
     const reversedTransformers = this.transformers.slice().reverse();
     for (const transformer of reversedTransformers) {
       // Check if the result is a Promise and use await, otherwise use it directly
-      const result = transformer.rehydrate(rehydratedMessage, rehydrationState);
-      rehydratedMessage = result instanceof Promise ? await result : result;
+      rehydratedMessage = await transformer.rehydrate(
+        rehydratedMessage,
+        rehydrationState
+      );
     }
 
     // Handle onRehydratingEnd callback
     if (this.config.onRehydratingEnd) {
-      try {
-        await this.config.onRehydratingEnd(rehydratedMessage);
-      } catch (error) {
-        throw error; // Re-throw the error
-      }
+      await this.config.onRehydratingEnd(rehydratedMessage);
     }
 
     // Return the fully rehydrated message after all transformers have been applied.

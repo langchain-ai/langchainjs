@@ -6,6 +6,7 @@ export abstract class MaskingTransformer {
     message: string,
     state?: Map<string, string>
   ): Promise<[string, Map<string, string>]>;
+
   abstract rehydrate(
     message: string,
     state: Map<string, string>

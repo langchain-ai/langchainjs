@@ -21,7 +21,9 @@ export type MaskingPattern = {
   mask?: (match: string) => string;
 };
 
-export type HookFunction = (message: string) => void;
+export type HookFunction =
+  | ((message: string) => Promise<void>)
+  | ((message: string) => void);
 
 /**
  * Represents a function that can hash a string input.

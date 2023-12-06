@@ -1,4 +1,4 @@
-// yarn test:single src/experimental/masking/tests/mask-integration.test.ts
+// yarn test:single src/experimental/masking/tests/masking-extended.test.ts
 import { MaskingParser, RegexMaskingTransformer } from "../index.js";
 
 // Mock database for simulating state storage and retrieval

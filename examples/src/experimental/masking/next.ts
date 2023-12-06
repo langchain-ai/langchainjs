@@ -11,9 +11,7 @@ import { BytesOutputParser } from "langchain/schema/output_parser";
 export const runtime = "edge";
 
 // Function to format chat messages for consistency
-const formatMessage = (message: any) => {
-  return `${message.role}: ${message.content}`;
-};
+const formatMessage = (message: any) => `${message.role}: ${message.content}`;
 
 const CUSTOMER_SUPPORT = `You are a customer support summarizer agent. Always include masked PII in your response.
   Current conversation:
