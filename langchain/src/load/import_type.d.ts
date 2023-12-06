@@ -25,6 +25,9 @@ export interface OptionalImportMap {
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
+  "langchain/tools/gmail"?:
+    | typeof import("../tools/gmail/index.js")
+    | Promise<typeof import("../tools/gmail/index.js")>;
   "langchain/tools/google_calendar"?:
     | typeof import("../tools/google_calendar/index.js")
     | Promise<typeof import("../tools/google_calendar/index.js")>;
@@ -70,6 +73,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/llama_cpp"?:
     | typeof import("../embeddings/llama_cpp.js")
     | Promise<typeof import("../embeddings/llama_cpp.js")>;
+  "langchain/embeddings/gradient_ai"?:
+    | typeof import("../embeddings/gradient_ai.js")
+    | Promise<typeof import("../embeddings/gradient_ai.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
@@ -94,9 +100,15 @@ export interface OptionalImportMap {
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
+  "langchain/llms/gradient_ai"?:
+    | typeof import("../llms/gradient_ai.js")
+    | Promise<typeof import("../llms/gradient_ai.js")>;
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
+  "langchain/llms/watsonx_ai"?:
+    | typeof import("../llms/watsonx_ai.js")
+    | Promise<typeof import("../llms/watsonx_ai.js")>;
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock/index.js")
     | Promise<typeof import("../llms/bedrock/index.js")>;
@@ -292,6 +304,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/buffer"?:
     | typeof import("../document_loaders/fs/buffer.js")
     | Promise<typeof import("../document_loaders/fs/buffer.js")>;
+  "langchain/document_loaders/fs/chatgpt"?:
+    | typeof import("../document_loaders/fs/chatgpt.js")
+    | Promise<typeof import("../document_loaders/fs/chatgpt.js")>;
   "langchain/document_loaders/fs/text"?:
     | typeof import("../document_loaders/fs/text.js")
     | Promise<typeof import("../document_loaders/fs/text.js")>;
@@ -316,6 +331,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/notion"?:
     | typeof import("../document_loaders/fs/notion.js")
     | Promise<typeof import("../document_loaders/fs/notion.js")>;
+  "langchain/document_loaders/fs/obsidian"?:
+    | typeof import("../document_loaders/fs/obsidian.js")
+    | Promise<typeof import("../document_loaders/fs/obsidian.js")>;
   "langchain/document_loaders/fs/unstructured"?:
     | typeof import("../document_loaders/fs/unstructured.js")
     | Promise<typeof import("../document_loaders/fs/unstructured.js")>;
@@ -518,8 +536,12 @@ export interface SecretMap {
   FIREWORKS_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
+  GOOGLE_PLACES_API_KEY?: string;
   GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
+  GRADIENT_ACCESS_TOKEN?: string;
+  GRADIENT_WORKSPACE_ID?: string;
   HUGGINGFACEHUB_API_KEY?: string;
+  IBM_CLOUD_API_KEY?: string;
   IFLYTEK_API_KEY?: string;
   IFLYTEK_API_SECRET?: string;
   MILVUS_PASSWORD?: string;
@@ -547,6 +569,7 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WATSONX_PROJECT_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
   YC_API_KEY?: string;

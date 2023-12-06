@@ -6,6 +6,11 @@ import { XataVectorSearch } from "../xata.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
+// Tests require a DB with a table called "docs" with:
+// * a column name content of type Text
+// * a column named embedding of type Vector
+// * a column named a of type Integer
+
 test.skip("XataVectorSearch integration", async () => {
   if (!process.env.XATA_API_KEY) {
     throw new Error("XATA_API_KEY not set");
