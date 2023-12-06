@@ -6,14 +6,16 @@ import Example from "@examples/guides/expression_language/runnable_history.ts";
 The `RunnableWithMessageHistory` let's us add message history to certain types of chains.
 
 Specifically, it can be used for any Runnable that takes as input one of
-* a list of `BaseMessage`
-* an object with a key that takes a list of `BaseMessage`
-* an object with a key that takes the latest message(s) as a string or list of `BaseMessage`, and a separate key that takes historical messages
+
+- a list of `BaseMessage`
+- an object with a key that takes a list of `BaseMessage`
+- an object with a key that takes the latest message(s) as a string or list of `BaseMessage`, and a separate key that takes historical messages
 
 And returns as output one of
-* a string that can be treated as the contents of an `AIMessage`
-* a list of `BaseMessage`
-* an object with a key that contains a list of `BaseMessage`
+
+- a string that can be treated as the contents of an `AIMessage`
+- a list of `BaseMessage`
+- an object with a key that contains a list of `BaseMessage`
 
 Let's take a look at some examples to see how it works.
 
