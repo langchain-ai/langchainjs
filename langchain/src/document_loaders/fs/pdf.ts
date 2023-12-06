@@ -24,7 +24,7 @@ export class PDFLoader extends BufferLoader {
     {
       splitPages = true,
       pdfjs = PDFLoaderImports,
-      parsedItemSeparator = " ",
+      parsedItemSeparator = "",
     } = {}
   ) {
     super(filePathOrBlob);

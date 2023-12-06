@@ -97,7 +97,7 @@ test("Pass custom structured output parsers", async () => {
   /** Create the runnable */
   const runnableAgent = RunnableSequence.from([
     {
-      input: (i: { input: string }) => i.input,
+      input: (i: { input: string; steps: Array<AgentStep> }) => i.input,
       agent_scratchpad: (i: { input: string; steps: Array<AgentStep> }) =>
         formatForOpenAIFunctions(i.steps),
     },
