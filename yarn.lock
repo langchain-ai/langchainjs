@@ -8018,7 +8018,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.8
-    langsmith: ^0.0.48
+    langsmith: ~0.0.48
     p-queue: ^6.6.2
     p-retry: 4
     prettier: ^2.8.3
@@ -23112,7 +23112,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.0.48, langsmith@npm:~0.0.48":
+"langsmith@npm:~0.0.48":
   version: 0.0.48
   resolution: "langsmith@npm:0.0.48"
   dependencies:
