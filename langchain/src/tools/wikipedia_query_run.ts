@@ -55,6 +55,14 @@ interface PageResult {
 /**
  * Class for interacting with and fetching data from the Wikipedia API. It
  * extends the Tool class.
+ * @example
+ * ```typescript
+ * const wikipediaQuery = new WikipediaQueryRun({
+ *   topKResults: 3,
+ *   maxDocContentLength: 4000,
+ * });
+ * const result = await wikipediaQuery.call("Langchain");
+ * ```
  */
 export class WikipediaQueryRun extends Tool {
   static lc_name() {

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "pipeline": {
+    "build:scripts": {
+      "outputs": [
+        "tsconfig.json",
+        "package.json",
+        "**/*.js",
+        "**/*.d.ts",
+        "**/*.cjs",
+        "dist-cjs/**"
+      ],
+      "dependsOn": ["build:envs"]
+    },
+    "build:envs": {
+      "dependsOn": ["clean"]
+    },
+    "clean": {
+      "outputs": [".turbo/**", "dist/**"]
+    }
+  }
+}

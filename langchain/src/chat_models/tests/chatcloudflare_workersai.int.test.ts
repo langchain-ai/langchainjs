@@ -25,6 +25,41 @@ describe("ChatCloudflareWorkersAI", () => {
     console.log(JSON.stringify(res, null, 2));
   });
 
+  test("generate with streaming true", async () => {
+    const chat = new ChatCloudflareWorkersAI({
+      streaming: true,
+    });
+    const message = new HumanMessage("What is 2 + 2?");
+    const tokens: string[] = [];
+    const res = await chat.generate([[message]], {
+      callbacks: [
+        {
+          handleLLMNewToken: (token) => {
+            tokens.push(token);
+          },
+        },
+      ],
+    });
+    expect(tokens.length).toBeGreaterThan(1);
+    expect(tokens.join("")).toEqual(res.generations[0][0].text);
+  });
+
+  test("stream", async () => {
+    const chat = new ChatCloudflareWorkersAI();
+    const message = new HumanMessage("What is 2 + 2?");
+    const stream = await chat.stream([message]);
+    const chunks = [];
+    for await (const chunk of stream) {
+      console.log(chunk.content);
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(1);
+    console.log(chunks.map((chunk) => chunk.content).join(""));
+    expect(
+      chunks.map((chunk) => chunk.content).join("").length
+    ).toBeGreaterThan(1);
+  });
+
   test("custom messages", async () => {
     const chat = new ChatCloudflareWorkersAI();
     const res = await chat.call([new ChatMessage("Hello!", "user")]);

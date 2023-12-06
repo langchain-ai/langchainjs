@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.175",
+  "version": "0.0.202",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -28,12 +28,18 @@
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
+    "agents/toolkits/connery.cjs",
+    "agents/toolkits/connery.js",
+    "agents/toolkits/connery.d.ts",
     "agents/toolkits/sql.cjs",
     "agents/toolkits/sql.js",
     "agents/toolkits/sql.d.ts",
     "agents/format_scratchpad.cjs",
     "agents/format_scratchpad.js",
     "agents/format_scratchpad.d.ts",
+    "agents/format_scratchpad/openai_tools.cjs",
+    "agents/format_scratchpad/openai_tools.js",
+    "agents/format_scratchpad/openai_tools.d.ts",
     "agents/format_scratchpad/log.cjs",
     "agents/format_scratchpad/log.js",
     "agents/format_scratchpad/log.d.ts",
@@ -67,6 +73,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/connery.cjs",
+    "tools/connery.js",
+    "tools/connery.d.ts",
     "tools/render.cjs",
     "tools/render.js",
     "tools/render.d.ts",
@@ -76,12 +85,21 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/gmail.cjs",
+    "tools/gmail.js",
+    "tools/gmail.d.ts",
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
+    "tools/google_places.cjs",
+    "tools/google_places.js",
+    "tools/google_places.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "chains/combine_documents/reduce.cjs",
+    "chains/combine_documents/reduce.js",
+    "chains/combine_documents/reduce.d.ts",
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
@@ -142,6 +160,15 @@
     "embeddings/minimax.cjs",
     "embeddings/minimax.js",
     "embeddings/minimax.d.ts",
+    "embeddings/voyage.cjs",
+    "embeddings/voyage.js",
+    "embeddings/voyage.d.ts",
+    "embeddings/llama_cpp.cjs",
+    "embeddings/llama_cpp.js",
+    "embeddings/llama_cpp.d.ts",
+    "embeddings/gradient_ai.cjs",
+    "embeddings/gradient_ai.js",
+    "embeddings/gradient_ai.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -175,6 +202,9 @@
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
+    "llms/fireworks.cjs",
+    "llms/fireworks.js",
+    "llms/fireworks.d.ts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
@@ -184,15 +214,21 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
-    "llms/fireworks.cjs",
-    "llms/fireworks.js",
-    "llms/fireworks.d.ts",
+    "llms/gradient_ai.cjs",
+    "llms/gradient_ai.js",
+    "llms/gradient_ai.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/watsonx_ai.cjs",
+    "llms/watsonx_ai.js",
+    "llms/watsonx_ai.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
+    "llms/bedrock/web.cjs",
+    "llms/bedrock/web.js",
+    "llms/bedrock/web.d.ts",
     "llms/llama_cpp.cjs",
     "llms/llama_cpp.js",
     "llms/llama_cpp.d.ts",
@@ -214,6 +250,9 @@
     "prompts/load.cjs",
     "prompts/load.js",
     "prompts/load.d.ts",
+    "vectorstores/clickhouse.cjs",
+    "vectorstores/clickhouse.js",
+    "vectorstores/clickhouse.d.ts",
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
@@ -301,6 +340,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/rockset.cjs",
+    "vectorstores/rockset.js",
+    "vectorstores/rockset.d.ts",
     "vectorstores/typesense.cjs",
     "vectorstores/typesense.js",
     "vectorstores/typesense.d.ts",
@@ -421,6 +463,9 @@
     "document_loaders/fs/buffer.cjs",
     "document_loaders/fs/buffer.js",
     "document_loaders/fs/buffer.d.ts",
+    "document_loaders/fs/chatgpt.cjs",
+    "document_loaders/fs/chatgpt.js",
+    "document_loaders/fs/chatgpt.d.ts",
     "document_loaders/fs/text.cjs",
     "document_loaders/fs/text.js",
     "document_loaders/fs/text.d.ts",
@@ -445,12 +490,18 @@
     "document_loaders/fs/notion.cjs",
     "document_loaders/fs/notion.js",
     "document_loaders/fs/notion.d.ts",
+    "document_loaders/fs/obsidian.cjs",
+    "document_loaders/fs/obsidian.js",
+    "document_loaders/fs/obsidian.d.ts",
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
     "document_loaders/fs/openai_whisper_audio.cjs",
     "document_loaders/fs/openai_whisper_audio.js",
     "document_loaders/fs/openai_whisper_audio.d.ts",
+    "document_loaders/fs/pptx.cjs",
+    "document_loaders/fs/pptx.js",
+    "document_loaders/fs/pptx.d.ts",
     "document_transformers/html_to_text.cjs",
     "document_transformers/html_to_text.js",
     "document_transformers/html_to_text.d.ts",
@@ -475,6 +526,9 @@
     "chat_models/bedrock.cjs",
     "chat_models/bedrock.js",
     "chat_models/bedrock.d.ts",
+    "chat_models/bedrock/web.cjs",
+    "chat_models/bedrock/web.js",
+    "chat_models/bedrock/web.d.ts",
     "chat_models/cloudflare_workersai.cjs",
     "chat_models/cloudflare_workersai.js",
     "chat_models/cloudflare_workersai.d.ts",
@@ -493,6 +547,12 @@
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
+    "chat_models/iflytek_xinghuo.cjs",
+    "chat_models/iflytek_xinghuo.js",
+    "chat_models/iflytek_xinghuo.d.ts",
+    "chat_models/iflytek_xinghuo/web.cjs",
+    "chat_models/iflytek_xinghuo/web.js",
+    "chat_models/iflytek_xinghuo/web.d.ts",
     "chat_models/ollama.cjs",
     "chat_models/ollama.js",
     "chat_models/ollama.d.ts",
@@ -517,6 +577,9 @@
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
+    "schema/prompt_template.cjs",
+    "schema/prompt_template.js",
+    "schema/prompt_template.d.ts",
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
@@ -616,6 +679,9 @@
     "retrievers/self_query/weaviate.cjs",
     "retrievers/self_query/weaviate.js",
     "retrievers/self_query/weaviate.d.ts",
+    "retrievers/self_query/vectara.cjs",
+    "retrievers/self_query/vectara.js",
+    "retrievers/self_query/vectara.d.ts",
     "retrievers/vespa.cjs",
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
@@ -634,6 +700,9 @@
     "cache/ioredis.cjs",
     "cache/ioredis.js",
     "cache/ioredis.d.ts",
+    "cache/file_system.cjs",
+    "cache/file_system.js",
+    "cache/file_system.d.ts",
     "cache/upstash_redis.cjs",
     "cache/upstash_redis.js",
     "cache/upstash_redis.d.ts",
@@ -649,6 +718,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/cassandra.cjs",
+    "stores/message/cassandra.js",
+    "stores/message/cassandra.d.ts",
     "stores/message/convex.cjs",
     "stores/message/convex.js",
     "stores/message/convex.d.ts",
@@ -727,6 +799,12 @@
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
+    "experimental/openai_assistant.cjs",
+    "experimental/openai_assistant.js",
+    "experimental/openai_assistant.d.ts",
+    "experimental/openai_files.cjs",
+    "experimental/openai_files.js",
+    "experimental/openai_files.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
@@ -745,6 +823,9 @@
     "experimental/chat_models/bittensor.cjs",
     "experimental/chat_models/bittensor.js",
     "experimental/chat_models/bittensor.d.ts",
+    "experimental/chat_models/ollama_functions.cjs",
+    "experimental/chat_models/ollama_functions.js",
+    "experimental/chat_models/ollama_functions.d.ts",
     "experimental/llms/bittensor.cjs",
     "experimental/llms/bittensor.js",
     "experimental/llms/bittensor.d.ts",
@@ -754,9 +835,15 @@
     "experimental/chains/violation_of_expectations.cjs",
     "experimental/chains/violation_of_expectations.js",
     "experimental/chains/violation_of_expectations.d.ts",
+    "experimental/tools/pyinterpreter.cjs",
+    "experimental/tools/pyinterpreter.js",
+    "experimental/tools/pyinterpreter.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "runnables.cjs",
+    "runnables.js",
+    "runnables.d.ts",
     "runnables/remote.cjs",
     "runnables/remote.js",
     "runnables/remote.d.ts",
@@ -769,14 +856,17 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint:fix": "yarn lint --fix",
+    "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
-    "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
@@ -800,18 +890,19 @@
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
-    "@clickhouse/client": "^0.0.14",
+    "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.8.0",
-    "@gomomento/sdk": "^1.44.1",
-    "@gomomento/sdk-core": "^1.44.1",
+    "@getzep/zep-js": "^0.9.0",
+    "@gomomento/sdk": "^1.51.1",
+    "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
-    "@huggingface/inference": "^1.5.1",
+    "@gradientai/nodejs-sdk": "^1.2.0",
+    "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
     "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.10",
@@ -820,6 +911,7 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -841,18 +933,18 @@
     "@types/jsdom": "^21.1.1",
     "@types/lodash": "^4",
     "@types/mozilla-readability": "^0.2.1",
-    "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
     "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
+    "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
-    "@xata.io/client": "^0.25.1",
+    "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.11",
     "apify-client": "^2.7.1",
@@ -874,6 +966,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.5.1",
@@ -889,7 +982,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
-    "llmonitor": "^0.5.8",
+    "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "mammoth": "^1.5.1",
     "ml-matrix": "^6.10.4",
@@ -898,6 +991,7 @@
     "neo4j-driver": "^5.12.0",
     "node-llama-cpp": "2.7.3",
     "notion-to-md": "^3.1.0",
+    "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -907,6 +1001,7 @@
     "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
+    "pyodide": "^0.24.1",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
     "replicate": "^0.18.0",
@@ -917,7 +1012,7 @@
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "^5.0.0",
+    "typescript": "~5.1.6",
     "typesense": "^1.5.3",
     "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
@@ -938,17 +1033,18 @@
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/storage-blob": "^12.15.0",
-    "@clickhouse/client": "^0.0.14",
+    "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.8.0",
-    "@gomomento/sdk": "^1.44.1",
-    "@gomomento/sdk-core": "^1.44.1",
-    "@gomomento/sdk-web": "^1.44.1",
+    "@getzep/zep-js": "^0.9.0",
+    "@gomomento/sdk": "^1.51.1",
+    "@gomomento/sdk-core": "^1.51.1",
+    "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
-    "@huggingface/inference": "^1.5.1",
+    "@gradientai/nodejs-sdk": "^1.2.0",
+    "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
     "@opensearch-project/opensearch": "*",
@@ -956,6 +1052,7 @@
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "^0.9.1",
     "@smithy/eventstream-codec": "^2.0.5",
     "@smithy/protocol-http": "^3.0.6",
     "@smithy/signature-v4": "^2.0.10",
@@ -969,7 +1066,7 @@
     "@vercel/kv": "^0.2.3",
     "@vercel/postgres": "^0.5.0",
     "@writerai/writer-sdk": "^0.40.2",
-    "@xata.io/client": "^0.25.1",
+    "@xata.io/client": "^0.28.0",
     "@xenova/transformers": "^2.5.4",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
@@ -995,7 +1092,7 @@
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "llmonitor": "^0.5.8",
+    "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
     "mammoth": "*",
     "mongodb": "^5.2.0",
@@ -1003,6 +1100,7 @@
     "neo4j-driver": "*",
     "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
+    "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -1011,6 +1109,7 @@
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
     "puppeteer": "^19.7.2",
+    "pyodide": "^0.24.1",
     "redis": "^4.6.4",
     "replicate": "^0.18.0",
     "sonix-speech-recognition": "^2.1.1",
@@ -1022,6 +1121,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
+    "ws": "^8.14.2",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
@@ -1086,6 +1186,9 @@
     "@google-cloud/storage": {
       "optional": true
     },
+    "@gradientai/nodejs-sdk": {
+      "optional": true
+    },
     "@huggingface/inference": {
       "optional": true
     },
@@ -1108,6 +1211,9 @@
       "optional": true
     },
     "@raycast/api": {
+      "optional": true
+    },
+    "@rockset/client": {
       "optional": true
     },
     "@smithy/eventstream-codec": {
@@ -1251,6 +1357,9 @@
     "notion-to-md": {
       "optional": true
     },
+    "officeparser": {
+      "optional": true
+    },
     "pdf-parse": {
       "optional": true
     },
@@ -1273,6 +1382,9 @@
       "optional": true
     },
     "puppeteer": {
+      "optional": true
+    },
+    "pyodide": {
       "optional": true
     },
     "redis": {
@@ -1308,6 +1420,9 @@
     "web-auth-library": {
       "optional": true
     },
+    "ws": {
+      "optional": true
+    },
     "youtube-transcript": {
       "optional": true
     },
@@ -1316,28 +1431,24 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.6.2",
-    "ansi-styles": "^5.0.0",
+    "@anthropic-ai/sdk": "^0.9.1",
+    "@langchain/core": "~0.0.9",
     "binary-extensions": "^2.2.0",
-    "camelcase": "6",
-    "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "langchainhub": "~0.0.6",
-    "langsmith": "~0.0.31",
+    "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
-    "object-hash": "^3.0.0",
-    "openai": "~4.4.0",
+    "openai": "^4.19.0",
     "openapi-types": "^12.1.3",
-    "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
     "zod": "^3.22.3",
-    "zod-to-json-schema": "^3.20.4"
+    "zod-to-json-schema": "3.20.3"
   },
   "publishConfig": {
     "access": "public"
@@ -1387,6 +1498,11 @@
       "import": "./agents/toolkits/aws_sfn.js",
       "require": "./agents/toolkits/aws_sfn.cjs"
     },
+    "./agents/toolkits/connery": {
+      "types": "./agents/toolkits/connery.d.ts",
+      "import": "./agents/toolkits/connery.js",
+      "require": "./agents/toolkits/connery.cjs"
+    },
     "./agents/toolkits/sql": {
       "types": "./agents/toolkits/sql.d.ts",
       "import": "./agents/toolkits/sql.js",
@@ -1396,6 +1512,11 @@
       "types": "./agents/format_scratchpad.d.ts",
       "import": "./agents/format_scratchpad.js",
       "require": "./agents/format_scratchpad.cjs"
+    },
+    "./agents/format_scratchpad/openai_tools": {
+      "types": "./agents/format_scratchpad/openai_tools.d.ts",
+      "import": "./agents/format_scratchpad/openai_tools.js",
+      "require": "./agents/format_scratchpad/openai_tools.cjs"
     },
     "./agents/format_scratchpad/log": {
       "types": "./agents/format_scratchpad/log.d.ts",
@@ -1452,6 +1573,11 @@
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
     },
+    "./tools/connery": {
+      "types": "./tools/connery.d.ts",
+      "import": "./tools/connery.js",
+      "require": "./tools/connery.cjs"
+    },
     "./tools/render": {
       "types": "./tools/render.d.ts",
       "import": "./tools/render.js",
@@ -1467,15 +1593,30 @@
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
     },
+    "./tools/gmail": {
+      "types": "./tools/gmail.d.ts",
+      "import": "./tools/gmail.js",
+      "require": "./tools/gmail.cjs"
+    },
     "./tools/google_calendar": {
       "types": "./tools/google_calendar.d.ts",
       "import": "./tools/google_calendar.js",
       "require": "./tools/google_calendar.cjs"
     },
+    "./tools/google_places": {
+      "types": "./tools/google_places.d.ts",
+      "import": "./tools/google_places.js",
+      "require": "./tools/google_places.cjs"
+    },
     "./chains": {
       "types": "./chains.d.ts",
       "import": "./chains.js",
       "require": "./chains.cjs"
+    },
+    "./chains/combine_documents/reduce": {
+      "types": "./chains/combine_documents/reduce.d.ts",
+      "import": "./chains/combine_documents/reduce.js",
+      "require": "./chains/combine_documents/reduce.cjs"
     },
     "./chains/load": {
       "types": "./chains/load.d.ts",
@@ -1577,6 +1718,21 @@
       "import": "./embeddings/minimax.js",
       "require": "./embeddings/minimax.cjs"
     },
+    "./embeddings/voyage": {
+      "types": "./embeddings/voyage.d.ts",
+      "import": "./embeddings/voyage.js",
+      "require": "./embeddings/voyage.cjs"
+    },
+    "./embeddings/llama_cpp": {
+      "types": "./embeddings/llama_cpp.d.ts",
+      "import": "./embeddings/llama_cpp.js",
+      "require": "./embeddings/llama_cpp.cjs"
+    },
+    "./embeddings/gradient_ai": {
+      "types": "./embeddings/gradient_ai.d.ts",
+      "import": "./embeddings/gradient_ai.js",
+      "require": "./embeddings/gradient_ai.cjs"
+    },
     "./llms/load": {
       "types": "./llms/load.d.ts",
       "import": "./llms/load.js",
@@ -1632,6 +1788,11 @@
       "import": "./llms/replicate.js",
       "require": "./llms/replicate.cjs"
     },
+    "./llms/fireworks": {
+      "types": "./llms/fireworks.d.ts",
+      "import": "./llms/fireworks.js",
+      "require": "./llms/fireworks.cjs"
+    },
     "./llms/googlevertexai": {
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
@@ -1647,20 +1808,30 @@
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
     },
-    "./llms/fireworks": {
-      "types": "./llms/fireworks.d.ts",
-      "import": "./llms/fireworks.js",
-      "require": "./llms/fireworks.cjs"
+    "./llms/gradient_ai": {
+      "types": "./llms/gradient_ai.d.ts",
+      "import": "./llms/gradient_ai.js",
+      "require": "./llms/gradient_ai.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
     },
+    "./llms/watsonx_ai": {
+      "types": "./llms/watsonx_ai.d.ts",
+      "import": "./llms/watsonx_ai.js",
+      "require": "./llms/watsonx_ai.cjs"
+    },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",
       "import": "./llms/bedrock.js",
       "require": "./llms/bedrock.cjs"
+    },
+    "./llms/bedrock/web": {
+      "types": "./llms/bedrock/web.d.ts",
+      "import": "./llms/bedrock/web.js",
+      "require": "./llms/bedrock/web.cjs"
     },
     "./llms/llama_cpp": {
       "types": "./llms/llama_cpp.d.ts",
@@ -1696,6 +1867,11 @@
       "types": "./prompts/load.d.ts",
       "import": "./prompts/load.js",
       "require": "./prompts/load.cjs"
+    },
+    "./vectorstores/clickhouse": {
+      "types": "./vectorstores/clickhouse.d.ts",
+      "import": "./vectorstores/clickhouse.js",
+      "require": "./vectorstores/clickhouse.cjs"
     },
     "./vectorstores/analyticdb": {
       "types": "./vectorstores/analyticdb.d.ts",
@@ -1841,6 +2017,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/rockset": {
+      "types": "./vectorstores/rockset.d.ts",
+      "import": "./vectorstores/rockset.js",
+      "require": "./vectorstores/rockset.cjs"
     },
     "./vectorstores/typesense": {
       "types": "./vectorstores/typesense.d.ts",
@@ -2042,6 +2223,11 @@
       "import": "./document_loaders/fs/buffer.js",
       "require": "./document_loaders/fs/buffer.cjs"
     },
+    "./document_loaders/fs/chatgpt": {
+      "types": "./document_loaders/fs/chatgpt.d.ts",
+      "import": "./document_loaders/fs/chatgpt.js",
+      "require": "./document_loaders/fs/chatgpt.cjs"
+    },
     "./document_loaders/fs/text": {
       "types": "./document_loaders/fs/text.d.ts",
       "import": "./document_loaders/fs/text.js",
@@ -2082,6 +2268,11 @@
       "import": "./document_loaders/fs/notion.js",
       "require": "./document_loaders/fs/notion.cjs"
     },
+    "./document_loaders/fs/obsidian": {
+      "types": "./document_loaders/fs/obsidian.d.ts",
+      "import": "./document_loaders/fs/obsidian.js",
+      "require": "./document_loaders/fs/obsidian.cjs"
+    },
     "./document_loaders/fs/unstructured": {
       "types": "./document_loaders/fs/unstructured.d.ts",
       "import": "./document_loaders/fs/unstructured.js",
@@ -2091,6 +2282,11 @@
       "types": "./document_loaders/fs/openai_whisper_audio.d.ts",
       "import": "./document_loaders/fs/openai_whisper_audio.js",
       "require": "./document_loaders/fs/openai_whisper_audio.cjs"
+    },
+    "./document_loaders/fs/pptx": {
+      "types": "./document_loaders/fs/pptx.d.ts",
+      "import": "./document_loaders/fs/pptx.js",
+      "require": "./document_loaders/fs/pptx.cjs"
     },
     "./document_transformers/html_to_text": {
       "types": "./document_transformers/html_to_text.d.ts",
@@ -2132,6 +2328,11 @@
       "import": "./chat_models/bedrock.js",
       "require": "./chat_models/bedrock.cjs"
     },
+    "./chat_models/bedrock/web": {
+      "types": "./chat_models/bedrock/web.d.ts",
+      "import": "./chat_models/bedrock/web.js",
+      "require": "./chat_models/bedrock/web.cjs"
+    },
     "./chat_models/cloudflare_workersai": {
       "types": "./chat_models/cloudflare_workersai.d.ts",
       "import": "./chat_models/cloudflare_workersai.js",
@@ -2161,6 +2362,16 @@
       "types": "./chat_models/baiduwenxin.d.ts",
       "import": "./chat_models/baiduwenxin.js",
       "require": "./chat_models/baiduwenxin.cjs"
+    },
+    "./chat_models/iflytek_xinghuo": {
+      "types": "./chat_models/iflytek_xinghuo.d.ts",
+      "import": "./chat_models/iflytek_xinghuo.js",
+      "require": "./chat_models/iflytek_xinghuo.cjs"
+    },
+    "./chat_models/iflytek_xinghuo/web": {
+      "types": "./chat_models/iflytek_xinghuo/web.d.ts",
+      "import": "./chat_models/iflytek_xinghuo/web.js",
+      "require": "./chat_models/iflytek_xinghuo/web.cjs"
     },
     "./chat_models/ollama": {
       "types": "./chat_models/ollama.d.ts",
@@ -2201,6 +2412,11 @@
       "types": "./schema/output_parser.d.ts",
       "import": "./schema/output_parser.js",
       "require": "./schema/output_parser.cjs"
+    },
+    "./schema/prompt_template": {
+      "types": "./schema/prompt_template.d.ts",
+      "import": "./schema/prompt_template.js",
+      "require": "./schema/prompt_template.cjs"
     },
     "./schema/query_constructor": {
       "types": "./schema/query_constructor.d.ts",
@@ -2367,6 +2583,11 @@
       "import": "./retrievers/self_query/weaviate.js",
       "require": "./retrievers/self_query/weaviate.cjs"
     },
+    "./retrievers/self_query/vectara": {
+      "types": "./retrievers/self_query/vectara.d.ts",
+      "import": "./retrievers/self_query/vectara.js",
+      "require": "./retrievers/self_query/vectara.cjs"
+    },
     "./retrievers/vespa": {
       "types": "./retrievers/vespa.d.ts",
       "import": "./retrievers/vespa.js",
@@ -2397,6 +2618,11 @@
       "import": "./cache/ioredis.js",
       "require": "./cache/ioredis.cjs"
     },
+    "./cache/file_system": {
+      "types": "./cache/file_system.d.ts",
+      "import": "./cache/file_system.js",
+      "require": "./cache/file_system.cjs"
+    },
     "./cache/upstash_redis": {
       "types": "./cache/upstash_redis.d.ts",
       "import": "./cache/upstash_redis.js",
@@ -2421,6 +2647,11 @@
       "types": "./stores/file/node.d.ts",
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
+    },
+    "./stores/message/cassandra": {
+      "types": "./stores/message/cassandra.d.ts",
+      "import": "./stores/message/cassandra.js",
+      "require": "./stores/message/cassandra.cjs"
     },
     "./stores/message/convex": {
       "types": "./stores/message/convex.d.ts",
@@ -2552,6 +2783,16 @@
       "import": "./experimental/autogpt.js",
       "require": "./experimental/autogpt.cjs"
     },
+    "./experimental/openai_assistant": {
+      "types": "./experimental/openai_assistant.d.ts",
+      "import": "./experimental/openai_assistant.js",
+      "require": "./experimental/openai_assistant.cjs"
+    },
+    "./experimental/openai_files": {
+      "types": "./experimental/openai_files.d.ts",
+      "import": "./experimental/openai_files.js",
+      "require": "./experimental/openai_files.cjs"
+    },
     "./experimental/babyagi": {
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
@@ -2582,6 +2823,11 @@
       "import": "./experimental/chat_models/bittensor.js",
       "require": "./experimental/chat_models/bittensor.cjs"
     },
+    "./experimental/chat_models/ollama_functions": {
+      "types": "./experimental/chat_models/ollama_functions.d.ts",
+      "import": "./experimental/chat_models/ollama_functions.js",
+      "require": "./experimental/chat_models/ollama_functions.cjs"
+    },
     "./experimental/llms/bittensor": {
       "types": "./experimental/llms/bittensor.d.ts",
       "import": "./experimental/llms/bittensor.js",
@@ -2597,10 +2843,20 @@
       "import": "./experimental/chains/violation_of_expectations.js",
       "require": "./experimental/chains/violation_of_expectations.cjs"
     },
+    "./experimental/tools/pyinterpreter": {
+      "types": "./experimental/tools/pyinterpreter.d.ts",
+      "import": "./experimental/tools/pyinterpreter.js",
+      "require": "./experimental/tools/pyinterpreter.cjs"
+    },
     "./evaluation": {
       "types": "./evaluation.d.ts",
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
+    },
+    "./runnables": {
+      "types": "./runnables.d.ts",
+      "import": "./runnables.js",
+      "require": "./runnables.cjs"
     },
     "./runnables/remote": {
       "types": "./runnables/remote.d.ts",

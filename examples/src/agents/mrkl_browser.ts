@@ -28,7 +28,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
   /*
   Entering new agent_executor chain...
   I need to find the word of the day on Merriam Webster and then search for it on Google

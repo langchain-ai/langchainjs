@@ -101,10 +101,17 @@ export class PortkeyChat extends BaseChatModel {
     options: this["ParsedCallOptions"],
     _?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const messagesList = messages.map((message) => ({
-      role: message._getType() as string,
-      content: message.content,
-    }));
+    const messagesList = messages.map((message) => {
+      if (typeof message.content !== "string") {
+        throw new Error(
+          "PortkeyChat does not support non-string message content."
+        );
+      }
+      return {
+        role: message._getType() as string,
+        content: message.content,
+      };
+    });
     const response = await this.session.portkey.chatCompletions.create({
       messages: messagesList,
       ...options,
@@ -133,10 +140,17 @@ export class PortkeyChat extends BaseChatModel {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesList = messages.map((message) => ({
-      role: message._getType() as string,
-      content: message.content,
-    }));
+    const messagesList = messages.map((message) => {
+      if (typeof message.content !== "string") {
+        throw new Error(
+          "PortkeyChat does not support non-string message content."
+        );
+      }
+      return {
+        role: message._getType() as string,
+        content: message.content,
+      };
+    });
     const response = await this.session.portkey.chatCompletions.create({
       messages: messagesList,
       ...options,

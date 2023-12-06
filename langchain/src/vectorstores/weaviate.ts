@@ -4,9 +4,10 @@ import type {
   WeaviateObject,
   WhereFilter,
 } from "weaviate-ts-client";
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 // Note this function is not generic, it is designed specifically for Weaviate
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
@@ -263,11 +264,35 @@ export class WeaviateStore extends VectorStore {
     k: number,
     filter?: WeaviateFilter
   ): Promise<[Document, number][]> {
+    const resultsWithEmbedding =
+      await this.similaritySearchVectorWithScoreAndEmbedding(query, k, filter);
+    return resultsWithEmbedding.map(([document, score, _embedding]) => [
+      document,
+      score,
+    ]);
+  }
+
+  /**
+   * Method to perform a similarity search on the stored vectors in the
+   * Weaviate index. It returns the top k most similar documents, their
+   * similarity scores and embedding vectors.
+   * @param query The query vector.
+   * @param k The number of most similar documents to return.
+   * @param filter Optional filter to apply to the search.
+   * @returns An array of tuples, where each tuple contains a document, its similarity score and its embedding vector.
+   */
+  async similaritySearchVectorWithScoreAndEmbedding(
+    query: number[],
+    k: number,
+    filter?: WeaviateFilter
+  ): Promise<[Document, number, number[]][]> {
     try {
-      let builder = await this.client.graphql
+      let builder = this.client.graphql
         .get()
         .withClassName(this.indexName)
-        .withFields(`${this.queryAttrs.join(" ")} _additional { distance }`)
+        .withFields(
+          `${this.queryAttrs.join(" ")} _additional { distance vector }`
+        )
         .withNearVector({
           vector: query,
           distance: filter?.distance,
@@ -284,7 +309,7 @@ export class WeaviateStore extends VectorStore {
 
       const result = await builder.do();
 
-      const documents: [Document, number][] = [];
+      const documents: [Document, number, number[]][] = [];
       for (const data of result.data.Get[this.indexName]) {
         const { [this.textKey]: text, _additional, ...rest }: ResultRow = data;
 
@@ -294,12 +319,55 @@ export class WeaviateStore extends VectorStore {
             metadata: rest,
           }),
           _additional.distance,
+          _additional.vector,
         ]);
       }
       return documents;
     } catch (e) {
       throw Error(`'Error in similaritySearch' ${e}`);
     }
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK - Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {this["FilterType"]} options.filter - Optional filter
+   * @param _callbacks
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  override async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    _callbacks?: undefined
+  ): Promise<Document[]> {
+    const { k, fetchK = 20, lambda = 0.5, filter } = options;
+    const queryEmbedding: number[] = await this.embeddings.embedQuery(query);
+    const allResults: [Document, number, number[]][] =
+      await this.similaritySearchVectorWithScoreAndEmbedding(
+        queryEmbedding,
+        fetchK,
+        filter
+      );
+    const embeddingList = allResults.map(
+      ([_doc, _score, embedding]) => embedding
+    );
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      lambda,
+      k
+    );
+    return mmrIndexes
+      .filter((idx) => idx !== -1)
+      .map((idx) => allResults[idx][0]);
   }
 
   /**

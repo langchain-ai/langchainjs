@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { BaseMessageChunk, HumanMessage } from "../../../schema/index.js";
 import { AnthropicFunctions } from "../anthropic_functions.js";
-import { ChatBedrock } from "../../../chat_models/bedrock.js";
+import { ChatBedrock } from "../../../chat_models/bedrock/web.js";
 
 test("Test AnthropicFunctions", async () => {
   const chat = new AnthropicFunctions({ modelName: "claude-2" });

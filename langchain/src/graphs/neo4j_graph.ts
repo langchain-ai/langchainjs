@@ -1,4 +1,4 @@
-import neo4j from "neo4j-driver";
+import neo4j, { Neo4jError } from "neo4j-driver";
 
 interface Neo4jGraphConfig {
   url: string;
@@ -6,6 +6,22 @@ interface Neo4jGraphConfig {
   password: string;
   database?: string;
 }
+
+interface StructuredSchema {
+  nodeProps: { [key: NodeType["labels"]]: NodeType["properties"] };
+  relProps: { [key: RelType["type"]]: RelType["properties"] };
+  relationships: PathType[];
+}
+
+type NodeType = {
+  labels: string;
+  properties: { property: string; type: string }[];
+};
+type RelType = {
+  type: string;
+  properties: { property: string; type: string }[];
+};
+type PathType = { start: string; type: string; end: string };
 
 /**
  * @security *Security note*: Make sure that the database connection uses credentials
@@ -27,6 +43,12 @@ export class Neo4jGraph {
   private database: string;
 
   private schema = "";
+
+  private structuredSchema: StructuredSchema = {
+    nodeProps: {},
+    relProps: {},
+    relationships: [],
+  };
 
   constructor({
     url,
@@ -58,7 +80,13 @@ export class Neo4jGraph {
       await graph.refreshSchema();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      throw new Error(`Error: ${error.message}`);
+      const message = [
+        "Could not use APOC procedures.",
+        "Please ensure the APOC plugin is installed in Neo4j and that",
+        "'apoc.meta.data()' is allowed in Neo4j configuration",
+      ].join("\n");
+
+      throw new Error(message);
     } finally {
       console.log("Schema refreshed successfully.");
     }
@@ -70,6 +98,10 @@ export class Neo4jGraph {
     return this.schema;
   }
 
+  getStructuredSchema() {
+    return this.structuredSchema;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async query(query: string, params: any = {}): Promise<any[] | undefined> {
     try {
@@ -77,8 +109,15 @@ export class Neo4jGraph {
         database: this.database,
       });
       return toObjects(result.records);
-    } catch (error) {
-      // ignore errors
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (
+        // eslint-disable-next-line
+        error instanceof Neo4jError &&
+        error.code === "Neo.ClientError.Procedure.ProcedureNotFound"
+      ) {
+        throw new Error("Procedure not found in Neo4j.");
+      }
     }
     return undefined;
   }
@@ -109,23 +148,63 @@ export class Neo4jGraph {
       YIELD label, other, elementType, type, property
       WHERE type = "RELATIONSHIP" AND elementType = "node"
       UNWIND other AS other_node
-      RETURN "(:" + label + ")-[:" + property + "]->(:" + toString(other_node) + ")" AS output
+      RETURN {start: label, type: property, end: toString(other_node)} AS output
     `;
 
-    const nodeProperties = await this.query(nodePropertiesQuery);
-    const relationshipsProperties = await this.query(relPropertiesQuery);
-    const relationships = await this.query(relQuery);
+    // Assuming query method is defined and returns a Promise
+    const nodeProperties: NodeType[] | undefined = (
+      await this.query(nodePropertiesQuery)
+    )?.map((el: { output: NodeType }) => el.output);
 
-    this.schema = `
-      Node properties are the following:
-      ${JSON.stringify(nodeProperties?.map((el) => el.output))}
+    const relationshipsProperties: RelType[] | undefined = (
+      await this.query(relPropertiesQuery)
+    )?.map((el: { output: RelType }) => el.output);
 
-      Relationship properties are the following:
-      ${JSON.stringify(relationshipsProperties?.map((el) => el.output))}
+    const relationships: PathType[] | undefined = (
+      await this.query(relQuery)
+    )?.map((el: { output: PathType }) => el.output);
 
-      The relationships are the following:
-      ${JSON.stringify(relationships?.map((el) => el.output))}
-    `;
+    // Structured schema similar to Python's dictionary comprehension
+    this.structuredSchema = {
+      nodeProps: Object.fromEntries(
+        nodeProperties?.map((el) => [el.labels, el.properties]) || []
+      ),
+      relProps: Object.fromEntries(
+        relationshipsProperties?.map((el) => [el.type, el.properties]) || []
+      ),
+      relationships: relationships || [],
+    };
+
+    // Format node properties
+    const formattedNodeProps = nodeProperties?.map((el) => {
+      const propsStr = el.properties
+        .map((prop) => `${prop.property}: ${prop.type}`)
+        .join(", ");
+      return `${el.labels} {${propsStr}}`;
+    });
+
+    // Format relationship properties
+    const formattedRelProps = relationshipsProperties?.map((el) => {
+      const propsStr = el.properties
+        .map((prop) => `${prop.property}: ${prop.type}`)
+        .join(", ");
+      return `${el.type} {${propsStr}}`;
+    });
+
+    // Format relationships
+    const formattedRels = relationships?.map(
+      (el) => `(:${el.start})-[:${el.type}]->(:${el.end})`
+    );
+
+    // Combine all formatted elements into a single string
+    this.schema = [
+      "Node properties are the following:",
+      formattedNodeProps?.join(", "),
+      "Relationship properties are the following:",
+      formattedRelProps?.join(", "),
+      "The relationships are the following:",
+      formattedRels?.join(", "),
+    ].join("\n");
   }
 
   async close() {

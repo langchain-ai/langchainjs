@@ -42,5 +42,5 @@ test("CombiningOutputParser", async () => {
 
   console.log(response);
 
-  console.log(await parser.parse(response.content));
+  console.log(await parser.parse(response.content as string));
 });

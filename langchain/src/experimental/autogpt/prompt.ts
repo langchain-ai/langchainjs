@@ -98,6 +98,12 @@ export class AutoGPTPrompt
     const timePrompt = new SystemMessage(
       `The current time and date is ${new Date().toLocaleString()}`
     );
+    if (
+      typeof basePrompt.content !== "string" ||
+      typeof timePrompt.content !== "string"
+    ) {
+      throw new Error("Non-string message content is not supported.");
+    }
     const usedTokens =
       (await this.tokenCounter(basePrompt.content)) +
       (await this.tokenCounter(timePrompt.content));
@@ -122,11 +128,17 @@ export class AutoGPTPrompt
       "\n"
     )}\n\n`;
     const memoryMessage = new SystemMessage(contentFormat);
+    if (typeof memoryMessage.content !== "string") {
+      throw new Error("Non-string message content is not supported.");
+    }
     const usedTokensWithMemory =
       (await usedTokens) + (await this.tokenCounter(memoryMessage.content));
     const historicalMessages: BaseMessage[] = [];
 
     for (const message of previousMessages.slice(-10).reverse()) {
+      if (typeof message.content !== "string") {
+        throw new Error("Non-string message content is not supported.");
+      }
       const messageTokens = await this.tokenCounter(message.content);
       if (usedTokensWithMemory + messageTokens > this.sendTokenLimit - 1000) {
         break;

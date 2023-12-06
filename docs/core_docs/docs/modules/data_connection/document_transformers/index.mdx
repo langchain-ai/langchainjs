@@ -1,0 +1,69 @@
+---
+sidebar_position: 1
+---
+
+# Document transformers
+
+:::info
+Head to [Integrations](/docs/integrations/document_transformers) for documentation on built-in integrations with document transformer providers.
+:::
+
+Once you've loaded documents, you'll often want to transform them to better suit your application. The simplest example
+is you may want to split a long document into smaller chunks that can fit into your model's context window. LangChain
+has a number of built-in document transformers that make it easy to split, combine, filter, and otherwise manipulate documents.
+
+## Text splitters
+
+When you want to deal with long pieces of text, it is necessary to split up that text into chunks.
+As simple as this sounds, there is a lot of potential complexity here. Ideally, you want to keep the semantically related pieces of text together. What "semantically related" means could depend on the type of text.
+This notebook showcases several ways to do that.
+
+At a high level, text splitters work as following:
+
+1. Split the text up into small, semantically meaningful chunks (often sentences).
+2. Start combining these small chunks into a larger chunk until you reach a certain size (as measured by some function).
+3. Once you reach that size, make that chunk its own piece of text and then start creating a new chunk of text with some overlap (to keep context between chunks).
+
+That means there are two different axes along which you can customize your text splitter:
+
+1. How the text is split
+2. How the chunk size is measured
+
+## Get started with text splitters
+
+The recommended TextSplitter is the `RecursiveCharacterTextSplitter`. This will split documents recursively by different characters - starting with `"\n\n"`, then `"\n"`, then `" "`. This is nice because it will try to keep all the semantically relevant content in the same place for as long as possible.
+
+Important parameters to know here are `chunkSize` and `chunkOverlap`. `chunkSize` controls the max size (in terms of number of characters) of the final documents. `chunkOverlap` specifies how much overlap there should be between chunks. This is often helpful to make sure that the text isn't split weirdly. In the example below we set these values to be small (for illustration purposes), but in practice they default to `1000` and `200` respectively.
+
+```typescript
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+
+const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
+This is a weird text to write, but gotta test the splittingggg some how.\n\n
+Bye!\n\n-H.`;
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 10,
+  chunkOverlap: 1,
+});
+
+const output = await splitter.createDocuments([text]);
+```
+
+You'll note that in the above example we are splitting a raw text string and getting back a list of documents. We can also split documents directly.
+
+```typescript
+import { Document } from "langchain/document";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+
+const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
+This is a weird text to write, but gotta test the splittingggg some how.\n\n
+Bye!\n\n-H.`;
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 10,
+  chunkOverlap: 1,
+});
+
+const docOutput = await splitter.splitDocuments([
+  new Document({ pageContent: text }),
+]);
+```

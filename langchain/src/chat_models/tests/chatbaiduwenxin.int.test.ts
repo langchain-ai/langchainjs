@@ -18,6 +18,7 @@ interface TestConfig {
   };
   system?: string;
   message?: string;
+  shouldThrow?: boolean;
 }
 
 const runTest = async ({
@@ -25,8 +26,9 @@ const runTest = async ({
   config,
   system = "",
   message = "Hello!",
+  shouldThrow = false,
 }: TestConfig) => {
-  const description = `Test ChatBaiduWenxin ${modelName} ${
+  const description = `Test ChatBaiduWenxin ${modelName || "default model"} ${
     config.description || ""
   }`.trim();
   let nrNewTokens = 0;
@@ -53,6 +55,11 @@ const runTest = async ({
       messages.push(new SystemMessage(system));
     }
     messages.push(new HumanMessage(message));
+
+    if (shouldThrow) {
+      await expect(chat.call(messages)).rejects.toThrow();
+      return;
+    }
 
     const res = await chat.call(messages);
     console.log({ res });
@@ -83,6 +90,23 @@ const testConfigs: TestConfig[] = [
       streaming: true,
     },
     message: "您好，请讲个长笑话",
+  },
+  {
+    modelName: "ERNIE-Bot",
+    config: {
+      description: "illegal input should throw an error",
+      temperature: 0,
+    },
+    shouldThrow: true,
+  },
+  {
+    modelName: "ERNIE-Bot",
+    config: {
+      description: "illegal input in streaming mode should throw an error",
+      streaming: true,
+      temperature: 0,
+    },
+    shouldThrow: true,
   },
   { modelName: "ERNIE-Bot-turbo", config: {} },
   {

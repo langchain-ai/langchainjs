@@ -12,6 +12,7 @@ import {
   AsyncCallerCallOptions,
 } from "../../../util/async_caller.js";
 import {
+  GoogleAbstractedClientOpsMethod,
   GoogleResponse,
   GoogleVertexAIConnectionParams,
 } from "../../../types/googlevertexai-types.js";
@@ -332,7 +333,7 @@ export class DriveFileReadConnection
     return `https://${this.endpoint}/drive/${this.apiVersion}/files/${this.fileId}?alt=media`;
   }
 
-  buildMethod(): string {
+  buildMethod(): GoogleAbstractedClientOpsMethod {
     return "GET";
   }
 

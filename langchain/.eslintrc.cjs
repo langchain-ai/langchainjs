@@ -11,10 +11,11 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "no-instanceof"],
+  plugins: ["@typescript-eslint", "no-instanceof", "eslint-plugin-jest"],
   ignorePatterns: [
     "src/util/@cfworker",
     "src/util/fast-json-patch",
+    "src/util/js-sha1",
     ".eslintrc.cjs",
     "scripts",
     "node_modules",
@@ -64,5 +65,6 @@ module.exports = {
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
+    'jest/no-focused-tests': 'error',
   },
 };

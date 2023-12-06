@@ -1,0 +1,76 @@
+---
+sidebar_position: 5
+---
+
+# Callbacks
+
+LangChain provides a callbacks system that allows you to hook into the various stages of your LLM application. This is useful for logging, monitoring, streaming, and other tasks.
+
+import CodeBlock from "@theme/CodeBlock";
+
+You can subscribe to these events by using the `callbacks` argument available throughout the API. This method accepts a list of handler objects, which are expected to implement [one or more of the methods described in the API docs](https://api.js.langchain.com/interfaces/callbacks.CallbackHandlerMethods.html).
+
+## How to use callbacks
+
+The `callbacks` argument is available on most objects throughout the API ([Chains](/docs/modules/chains/), [Language Models](/docs/modules/model_io/models/), [Tools](/docs/modules/agents/tools/), [Agents](/docs/modules/agents/), etc.) in two different places.
+
+### Constructor callbacks
+
+Defined in the constructor, eg. `new LLMChain({ callbacks: [handler] })`, which will be used for all calls made on that object, and will be scoped to that object only, eg. if you pass a handler to the `LLMChain` constructor, it will not be used by the Model attached to that chain.
+
+import ConstructorExample from "@examples/callbacks/docs_constructor_callbacks.ts";
+
+<CodeBlock language="typescript">{ConstructorExample}</CodeBlock>
+
+### Request callbacks
+
+Defined in the `call()`/`run()`/`apply()` methods used for issuing a request, eg. `chain.call({ input: '...' }, [handler])`, which will be used for that specific request only, and all sub-requests that it contains (eg. a call to an LLMChain triggers a call to a Model, which uses the same handler passed in the `call()` method).
+
+import RequestExample from "@examples/callbacks/docs_request_callbacks.ts";
+
+<CodeBlock language="typescript">{RequestExample}</CodeBlock>
+
+### Verbose mode
+
+The `verbose` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) as a constructor argument, eg. `new LLMChain({ verbose: true })`, and it is equivalent to passing a `ConsoleCallbackHandler` to the `callbacks` argument of that object and all child objects. This is useful for debugging, as it will log all events to the console. You can also enable verbose mode for the entire application by setting the environment variable `LANGCHAIN_VERBOSE=true`.
+
+import VerboseExample from "@examples/callbacks/docs_verbose.ts";
+
+<CodeBlock language="typescript">{VerboseExample}</CodeBlock>
+
+### When do you want to use each of these?
+
+- Constructor callbacks are most useful for use cases such as logging, monitoring, etc., which are _not specific to a single request_, but rather to the entire chain. For example, if you want to log all the requests made to an LLMChain, you would pass a handler to the constructor.
+- Request callbacks are most useful for use cases such as streaming, where you want to stream the output of a single request to a specific websocket connection, or other similar use cases. For example, if you want to stream the output of a single request to a websocket, you would pass a handler to the `call()` method
+
+## Usage examples
+
+### Built-in handlers
+
+LangChain provides a few built-in handlers that you can use to get started. These are available in the `langchain/callbacks` module. The most basic handler is the `ConsoleCallbackHandler`, which simply logs all events to the console. In the future we will add more default handlers to the library. Note that when the `verbose` flag on the object is set to `true`, the `ConsoleCallbackHandler` will be invoked even without being explicitly passed in.
+
+import ConsoleExample from "@examples/callbacks/console_handler.ts";
+
+<CodeBlock language="typescript">{ConsoleExample}</CodeBlock>
+
+### One-off handlers
+
+You can create a one-off handler inline by passing a plain object to the `callbacks` argument. This object should implement the [`CallbackHandlerMethods`](https://api.js.langchain.com/interfaces/callbacks.CallbackHandlerMethods.html) interface. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
+
+import StreamingExample from "@examples/models/llm/llm_streaming.ts";
+
+<CodeBlock language="typescript">{StreamingExample}</CodeBlock>
+
+### Multiple handlers
+
+We offer a method on the `CallbackManager` class that allows you to create a one-off handler. This is useful if eg. you need to create a handler that you will use only for a single request.
+
+:::tip
+Agents now have built in streaming support! Click [here](/docs/modules/agents/how_to/streaming) for more details.
+:::
+
+This is a more complete example that passes a `CallbackManager` to a ChatModel, and LLMChain, a Tool, and an Agent.
+
+import AgentExample from "@examples/agents/streaming.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>

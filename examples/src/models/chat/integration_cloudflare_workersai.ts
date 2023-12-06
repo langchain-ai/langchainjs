@@ -25,3 +25,32 @@ AIMessage {
   additional_kwargs: {}
 }
 */
+
+const stream = await model.stream([
+  ["system", "You are a helpful assistant that translates English to German."],
+  ["human", `Translate "I love programming".`],
+]);
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+
+/*
+  AIMessageChunk {
+    content: 'S',
+    additional_kwargs: {}
+  }
+  AIMessageChunk {
+    content: 'ure',
+    additional_kwargs: {}
+  }
+  AIMessageChunk {
+    content: '!',
+    additional_kwargs: {}
+  }
+  AIMessageChunk {
+    content: ' Here',
+    additional_kwargs: {}
+  }
+  ...
+*/

@@ -10,6 +10,9 @@
     "test": "tsc"
   },
   "dependencies": {
+    "@langchain/anthropic": "workspace:*",
+    "@langchain/core": "workspace:*",
+    "@langchain/openai": "workspace:*",
     "langchain": "workspace:*"
   },
   "devDependencies": {

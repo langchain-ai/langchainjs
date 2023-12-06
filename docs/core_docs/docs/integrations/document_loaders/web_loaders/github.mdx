@@ -1,0 +1,65 @@
+---
+sidebar_class_name: node-only
+hide_table_of_contents: true
+---
+
+# GitHub
+
+This example goes over how to load data from a GitHub repository.
+You can set the `GITHUB_ACCESS_TOKEN` environment variable to a GitHub access token to increase the rate limit and access private repositories.
+
+## Setup
+
+The GitHub loader requires the [ignore npm package](https://www.npmjs.com/package/ignore) as a peer dependency. Install it like this:
+
+```bash npm2yarn
+npm install ignore
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/github.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+The loader will ignore binary files like images.
+
+### Using .gitignore Syntax
+
+To ignore specific files, you can pass in an `ignorePaths` array into the constructor:
+
+import IgnoreExample from "@examples/document_loaders/github_ignore_paths.ts";
+
+<CodeBlock language="typescript">{IgnoreExample}</CodeBlock>
+
+### Using a Different GitHub Instance
+
+You may want to target a different GitHub instance than `github.com`, e.g. if you have a GitHub Enterprise instance for your company.
+For this you need two additional parameters:
+
+- `baseUrl` - the base URL of your GitHub instance, so the githubUrl matches `<baseUrl>/<owner>/<repo>/...`
+- `apiUrl` - the URL of the API endpoint of your GitHub instance
+
+import CustomInstanceExample from "@examples/document_loaders/github_custom_instance.ts";
+
+<CodeBlock language="typescript">{CustomInstanceExample}</CodeBlock>
+
+### Dealing with Submodules
+
+In case your repository has submodules, you have to decide if the loader should follow them or not. You can control this with the boolean `processSubmodules` parameter. By default, submodules are not processed.
+Note that processing submodules works only in conjunction with setting the `recursive` parameter to true.
+
+import SubmodulesExample from "@examples/document_loaders/github_submodules.ts";
+
+<CodeBlock language="typescript">{SubmodulesExample}</CodeBlock>
+
+Note, that the loader will not follow submodules which are located on another GitHub instance than the one of the current repository.
+
+### Stream large repository
+
+For situations where processing large repositories in a memory-efficient manner is required. You can use the `loadAsStream` method to asynchronously streams documents from the entire GitHub repository.
+
+import StreamExample from "@examples/document_loaders/github_stream.ts";
+
+<CodeBlock language="typescript">{StreamExample}</CodeBlock>

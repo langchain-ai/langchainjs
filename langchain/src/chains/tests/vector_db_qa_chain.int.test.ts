@@ -2,7 +2,6 @@ import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { loadChain } from "../load.js";
 import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { VectorDBQAChain } from "../vector_db_qa.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
@@ -60,17 +59,4 @@ test("Test VectorDBQAChain from LLM with a filter function", async () => {
     filter: (document: Document) => document.metadata.id === 3,
   });
   console.log({ res, sourceDocuments: res.sourceDocuments });
-});
-
-test("Load chain from hub", async () => {
-  const vectorStore = await HNSWLib.fromTexts(
-    ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
-    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
-    new OpenAIEmbeddings()
-  );
-  const chain = await loadChain("lc://chains/vector-db-qa/stuff/chain.json", {
-    vectorstore: vectorStore,
-  });
-  const res = await chain.call({ query: "what up" });
-  console.log({ res });
 });

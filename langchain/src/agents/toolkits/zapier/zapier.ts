@@ -5,6 +5,16 @@ import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
 /**
  * Represents a toolkit for working with Zapier actions. It extends the
  * Toolkit class and provides functionality for managing Zapier tools.
+ * @example
+ * ```typescript
+ * const toolkit = await ZapierToolKit.fromZapierNLAWrapper(
+ *   new ZapierNLAWrapper(),
+ * );
+ * const result = await toolkit.invoke({
+ *   input:
+ *     "Summarize the last email I received regarding Silicon Valley Bank. Send the summary to the #test-zapier Slack channel.",
+ * });
+ * ```
  */
 export class ZapierToolKit extends Toolkit {
   tools: Tool[] = [];

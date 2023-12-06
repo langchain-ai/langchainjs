@@ -32,7 +32,7 @@ const input =
   "What did biden say about Ketanji Brown Jackson is the state of the union address?";
 console.log(`Executing: ${input}`);
 
-const result = await agent.call({ input });
+const result = await agent.invoke({ input });
 console.log(`Got output ${result.output}`);
 console.log(
   `Got intermediate steps ${JSON.stringify(result.intermediateSteps, null, 2)}`

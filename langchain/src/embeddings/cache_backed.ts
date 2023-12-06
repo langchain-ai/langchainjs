@@ -1,4 +1,4 @@
-import hash from "object-hash";
+import { insecureHash } from "@langchain/core/utils/hash";
 
 import { BaseStore } from "../schema/storage.js";
 import { EncoderBackedStore } from "../storage/encoder_backed.js";
@@ -23,6 +23,43 @@ export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
  *
  * If need be, the interface can be extended to accept other implementations
  * of the value serializer and deserializer, as well as the key encoder.
+ * @example
+ * ```typescript
+ * const underlyingEmbeddings = new OpenAIEmbeddings();
+ *
+ * const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
+ *   underlyingEmbeddings,
+ *   new ConvexKVStore({ ctx }),
+ *   {
+ *     namespace: underlyingEmbeddings.modelName,
+ *   },
+ * );
+ *
+ * const loader = new TextLoader("./state_of_the_union.txt");
+ * const rawDocuments = await loader.load();
+ * const splitter = new RecursiveCharacterTextSplitter({
+ *   chunkSize: 1000,
+ *   chunkOverlap: 0,
+ * });
+ * const documents = await splitter.splitDocuments(rawDocuments);
+ *
+ * let time = Date.now();
+ * const vectorstore = await ConvexVectorStore.fromDocuments(
+ *   documents,
+ *   cacheBackedEmbeddings,
+ *   { ctx },
+ * );
+ * console.log(`Initial creation time: ${Date.now() - time}ms`);
+ *
+ * time = Date.now();
+ * const vectorstore2 = await ConvexVectorStore.fromDocuments(
+ *   documents,
+ *   cacheBackedEmbeddings,
+ *   { ctx },
+ * );
+ * console.log(`Cached creation time: ${Date.now() - time}ms`);
+ *
+ * ```
  */
 export class CacheBackedEmbeddings extends Embeddings {
   protected underlyingEmbeddings: Embeddings;
@@ -112,7 +149,7 @@ export class CacheBackedEmbeddings extends Embeddings {
       Uint8Array
     >({
       store: documentEmbeddingStore,
-      keyEncoder: (key) => (options?.namespace ?? "") + hash(key),
+      keyEncoder: (key) => (options?.namespace ?? "") + insecureHash(key),
       valueSerializer: (value) => encoder.encode(JSON.stringify(value)),
       valueDeserializer: (serializedValue) =>
         JSON.parse(decoder.decode(serializedValue)),

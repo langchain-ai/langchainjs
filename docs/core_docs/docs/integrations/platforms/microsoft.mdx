@@ -1,0 +1,103 @@
+# Microsoft
+
+All functionality related to `Microsoft Azure` and other `Microsoft` products.
+
+## LLM
+
+### Azure OpenAI
+
+> [Microsoft Azure](https://en.wikipedia.org/wiki/Microsoft_Azure), often referred to as `Azure` is a cloud computing platform run by `Microsoft`, which offers access, management, and development of applications and services through global data centers. It provides a range of capabilities, including software as a service (SaaS), platform as a service (PaaS), and infrastructure as a service (IaaS). `Microsoft Azure` supports many programming languages, tools, and frameworks, including Microsoft-specific and third-party software and systems.
+
+> [Azure OpenAI](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/) is an `Azure` service with powerful language models from `OpenAI` including the `GPT-3`, `Codex` and `Embeddings model` series for content generation, summarization, semantic search, and natural language to code translation.
+
+Set the environment variables to get access to the `Azure OpenAI` service.
+
+Inside an environment variables file (`.env`).
+
+```shell
+AZURE_OPENAI_API_KEY="YOUR-API-KEY"
+AZURE_OPENAI_API_VERSION="YOUR-BASE-URL"
+AZURE_OPENAI_API_INSTANCE_NAME="YOUR-INSTANCE-NAME"
+AZURE_OPENAI_API_DEPLOYMENT_NAME="YOUR-DEPLOYMENT-NAME"
+AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME="YOUR-EMBEDDINGS-NAME"
+```
+
+See a [usage example](/docs/integrations/llms/azure).
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
+
+## Text Embedding Models
+
+### Azure OpenAI
+
+See a [usage example](/docs/integrations/text_embedding/azure_openai)
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+```
+
+```typescript
+const embeddings = new OpenAIEmbeddings({
+  azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
+  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
+  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
+});
+```
+
+## Chat Models
+
+### Azure OpenAI
+
+See a [usage example](/docs/integrations/chat/azure)
+
+```typescript
+import { ChatOpenAI } from "langchain/chat_models/openai";
+```
+
+```typescript
+const model = new ChatOpenAI({
+  temperature: 0.9,
+  azureOpenAIApiKey: "SOME_SECRET_VALUE", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
+  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
+  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
+});
+```
+
+## Document loaders
+
+### Azure Blob Storage
+
+> [Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) is Microsoft's object storage solution for the cloud. Blob Storage is optimized for storing massive amounts of unstructured data. Unstructured data is data that doesn't adhere to a particular data model or definition, such as text or binary data.
+
+> [Azure Files](https://learn.microsoft.com/en-us/azure/storage/files/storage-files-introduction) offers fully managed
+> file shares in the cloud that are accessible via the industry standard Server Message Block (`SMB`) protocol,
+> Network File System (`NFS`) protocol, and `Azure Files REST API`. `Azure Files` are based on the `Azure Blob Storage`.
+
+`Azure Blob Storage` is designed for:
+
+- Serving images or documents directly to a browser.
+- Storing files for distributed access.
+- Streaming video and audio.
+- Writing to log files.
+- Storing data for backup and restore, disaster recovery, and archiving.
+- Storing data for analysis by an on-premises or Azure-hosted service.
+
+```bash npm2yarn
+npm install @azure/storage-blob
+```
+
+See a [usage example for the Azure Blob Storage](/docs/integrations/document_loaders/web_loaders/azure_blob_storage_container).
+
+```typescript
+import { AzureBlobStorageContainerLoader } from "langchain/document_loaders/web/azure_blob_storage_container";
+```
+
+See a [usage example for the Azure Files](/docs/integrations/document_loaders/web_loaders/azure_blob_storage_file).
+
+```typescript
+import { AzureBlobStorageFileLoader } from "langchain/document_loaders/web/azure_blob_storage_file";
+```

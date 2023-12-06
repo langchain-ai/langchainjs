@@ -179,7 +179,7 @@ console.log("Loaded agent.");
 
 const input = `What is a random number between 5 and 10 raised to the second power?`;
 console.log(`Executing with input "${input}"...`);
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 console.log(result);
 
 /*

@@ -25,6 +25,25 @@ export interface UpstashRedisStoreInput {
  * Class that extends the BaseStore class to interact with an Upstash Redis
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
+ * @example
+ * ```typescript
+ * const store = new UpstashRedisStore({
+ *   client: new Redis({
+ *     url: "your-upstash-redis-url",
+ *     token: "your-upstash-redis-token",
+ *   }),
+ * });
+ * await store.mset([
+ *   ["message:id:0", "encoded-ai-message"],
+ *   ["message:id:1", "encoded-human-message"],
+ * ]);
+ * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
+ * const yieldedKeys = [];
+ * for await (const key of store.yieldKeys("message:id")) {
+ *   yieldedKeys.push(key);
+ * }
+ * await store.mdelete(yieldedKeys);
+ * ```
  */
 export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];

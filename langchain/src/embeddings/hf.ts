@@ -1,4 +1,4 @@
-import { HfInference } from "@huggingface/inference";
+import { HfInference, HfInferenceEndpoint } from "@huggingface/inference";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
@@ -9,6 +9,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 export interface HuggingFaceInferenceEmbeddingsParams extends EmbeddingsParams {
   apiKey?: string;
   model?: string;
+  endpointUrl?: string;
 }
 
 /**
@@ -24,16 +25,20 @@ export class HuggingFaceInferenceEmbeddings
 
   model: string;
 
-  client: HfInference;
+  endpointUrl?: string;
+
+  client: HfInference | HfInferenceEndpoint;
 
   constructor(fields?: HuggingFaceInferenceEmbeddingsParams) {
     super(fields ?? {});
 
-    this.model =
-      fields?.model ?? "sentence-transformers/distilbert-base-nli-mean-tokens";
+    this.model = fields?.model ?? "BAAI/bge-base-en-v1.5";
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
-    this.client = new HfInference(this.apiKey);
+    this.endpointUrl = fields?.endpointUrl;
+    this.client = this.endpointUrl
+      ? new HfInference(this.apiKey).endpoint(this.endpointUrl)
+      : new HfInference(this.apiKey);
   }
 
   async _embed(texts: string[]): Promise<number[][]> {

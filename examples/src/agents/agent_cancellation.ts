@@ -24,7 +24,7 @@ setTimeout(() => {
 
 try {
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
-  const result = await executor.call({ input, signal: controller.signal });
+  const result = await executor.invoke({ input, signal: controller.signal });
 } catch (e) {
   console.log(e);
   /*

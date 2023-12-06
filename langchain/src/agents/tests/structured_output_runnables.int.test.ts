@@ -22,6 +22,9 @@ import { formatForOpenAIFunctions } from "../format_scratchpad/openai_functions.
 const structuredOutputParser = (
   output: AIMessage
 ): AgentAction | AgentFinish => {
+  if (typeof output.content !== "string") {
+    throw new Error("Cannot parse non-string output.");
+  }
   if (!("function_call" in output.additional_kwargs)) {
     return { returnValues: { output: output.content }, log: output.content };
   }
@@ -94,7 +97,7 @@ test("Pass custom structured output parsers", async () => {
   /** Create the runnable */
   const runnableAgent = RunnableSequence.from([
     {
-      input: (i: { input: string }) => i.input,
+      input: (i: { input: string; steps: Array<AgentStep> }) => i.input,
       agent_scratchpad: (i: { input: string; steps: Array<AgentStep> }) =>
         formatForOpenAIFunctions(i.steps),
     },

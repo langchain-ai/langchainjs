@@ -1,0 +1,143 @@
+---
+hide_table_of_contents: true
+sidebar_position: 0
+---
+
+# OpenAI functions
+
+Certain OpenAI models (like `gpt-3.5-turbo` and `gpt-4`) have been fine-tuned to detect when a function should be called and respond with the inputs that should be passed to the function.
+In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call those functions.
+The goal of the OpenAI Function APIs is to more reliably return valid and useful function calls than a generic text completion or chat API.
+
+The OpenAI Functions Agent is designed to work with these models.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/openai.ts";
+import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
+import RunnableExample from "@examples/agents/openai_runnable.ts";
+
+:::tip Compatibility
+Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
+:::
+
+# With LCEL
+
+In this example we'll use LCEL to construct a customizable agent that is given two tools: search and calculator.
+We'll then pull in a prompt template from the [LangChainHub](https://smith.langchain.com/hub) and pass that to our runnable agent.
+Lastly we'll use the default OpenAI functions output parser `OpenAIFunctionsAgentOutputParser`.
+This output parser contains a method `parseAIMessage` which when provided with a message, either returns an instance of `FunctionsAgentAction` if there is another action to be taken my the agent, or `AgentFinish` if the agent has completed its objective.
+
+<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+
+## Adding memory
+
+We can also use memory to save our previous agent input/outputs, and pass it through to each agent iteration.
+Using memory can help give the agent better context on past interactions, which can lead to more accurate responses beyond what the `agent_scratchpad` can do.
+
+Adding memory only requires a few changes to the above example.
+
+First, import and instantiate your memory class, in this example we'll use `BufferMemory`.
+
+```typescript
+import { BufferMemory } from "langchain/memory";
+```
+
+```typescript
+const memory = new BufferMemory({
+  memoryKey: "history", // The object key to store the memory under
+  inputKey: "question", // The object key for the input
+  outputKey: "answer", // The object key for the output
+  returnMessages: true,
+});
+```
+
+Then, update your prompt to include another `MessagesPlaceholder`. This time we'll be passing in the `chat_history` variable from memory.
+
+```typescript
+const prompt = ChatPromptTemplate.fromMessages([
+  ["ai", "You are a helpful assistant."],
+  new MessagesPlaceholder("chat_history"),
+  ["human", "{input}"],
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
+```
+
+Next, inside your `RunnableSequence` add a field for loading the `chat_history` from memory.
+
+```typescript
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: { input: string; steps: AgentStep[] }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
+      formatAgentSteps(i.steps),
+    // Load memory here
+    chat_history: async (_: { input: string; steps: AgentStep[] }) => {
+      const { history } = await memory.loadMemoryVariables({});
+      return history;
+    },
+  },
+  prompt,
+  modelWithFunctions,
+  new OpenAIFunctionsAgentOutputParser(),
+]);
+
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+});
+```
+
+Finally we can call the agent, and save the output after the response is returned.
+
+```typescript
+const query = "What is the weather in New York?";
+console.log(`Calling agent executor with query: ${query}`);
+const result = await executor.invoke({
+  input: query,
+});
+console.log(result);
+/*
+Calling agent executor with query: What is the weather in New York?
+{
+  output: 'The current weather in New York is sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 54% and the wind is blowing at 6 mph. There is 0% chance of precipitation.'
+}
+*/
+
+// Save the result and initial input to memory
+await memory.saveContext(
+  {
+    question: query,
+  },
+  {
+    answer: result.output,
+  }
+);
+
+const query2 = "Do I need a jacket?";
+const result2 = await executor.invoke({
+  input: query2,
+});
+console.log(result2);
+/*
+{
+  output: 'Based on the current weather in New York, you may not need a jacket. However, if you feel cold easily or will be outside for a long time, you might want to bring a light jacket just in case.'
+}
+ */
+```
+
+You may also inspect the LangSmith traces for both agent calls here:
+
+- [Question 1](https://smith.langchain.com/public/c1136951-f3f0-4ff5-a862-8db5d6bc8d04/r)
+- [Question 2](https://smith.langchain.com/public/b536cdc0-9bc9-4bdf-9298-4d6d7f88556b/r)
+
+# With `initializeAgentExecutorWithOptions`
+
+This agent also supports `StructuredTool`s with more complex input schemas.
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Prompt customization
+
+You can pass in a custom string to be used as the system message of the prompt as follows:
+
+<CodeBlock language="typescript">{CustomPromptExample}</CodeBlock>

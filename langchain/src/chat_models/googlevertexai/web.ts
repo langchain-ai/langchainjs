@@ -13,6 +13,15 @@ import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
  * functions where you do not have access to the file system. It supports passing
  * service account credentials directly as a "GOOGLE_VERTEX_AI_WEB_CREDENTIALS"
  * environment variable or directly as "authOptions.credentials".
+ * @example
+ * ```typescript
+ * const model = new ChatGoogleVertexAI({
+ *   temperature: 0.7,
+ * });
+ * const result = await model.invoke(
+ *   "How do I implement a binary search algorithm in Python?",
+ * );
+ * ```
  */
 export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOptions> {
   static lc_name() {
@@ -33,7 +42,15 @@ export class ChatGoogleVertexAI extends BaseChatGoogleVertexAI<WebGoogleAuthOpti
     this.connection = new GoogleVertexAILLMConnection(
       { ...fields, ...this },
       this.caller,
-      client
+      client,
+      false
+    );
+
+    this.streamedConnection = new GoogleVertexAILLMConnection(
+      { ...fields, ...this },
+      this.caller,
+      client,
+      true
     );
   }
 }

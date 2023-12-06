@@ -3,6 +3,7 @@ import { Embeddings, EmbeddingsParams } from "./base.js";
 import {
   GoogleVertexAIBasePrediction,
   GoogleVertexAIBaseLLMInput,
+  GoogleVertexAILLMPredictions,
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../util/async_caller.js";
@@ -59,6 +60,14 @@ interface GoogleVertexEmbeddingsResults extends GoogleVertexAIBasePrediction {
  * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
+ * @example
+ * ```typescript
+ * const model = new GoogleVertexAIEmbeddings();
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class GoogleVertexAIEmbeddings
   extends Embeddings
@@ -114,9 +123,9 @@ export class GoogleVertexAIEmbeddings
       responses
         ?.map(
           (response) =>
-            response.data?.predictions?.map(
-              (result) => result.embeddings.values
-            ) ?? []
+            (
+              response?.data as GoogleVertexAILLMPredictions<GoogleVertexEmbeddingsResults>
+            )?.predictions?.map((result) => result.embeddings.values) ?? []
         )
         .flat() ?? [];
     return result;

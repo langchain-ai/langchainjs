@@ -8,6 +8,7 @@ import {
   ChatGenerationChunk,
   ChatMessage,
 } from "../schema/index.js";
+import type { StringWithAutocomplete } from "../util/types.js";
 
 /**
  * An interface defining the options for an Ollama API call. It extends
@@ -19,6 +20,30 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
  * A class that enables calls to the Ollama API to access large language
  * models in a chat-like fashion. It extends the SimpleChatModel class and
  * implements the OllamaInput interface.
+ * @example
+ * ```typescript
+ * const prompt = ChatPromptTemplate.fromMessages([
+ *   [
+ *     "system",
+ *     `You are an expert translator. Format all responses as JSON objects with two keys: "original" and "translated".`,
+ *   ],
+ *   ["human", `Translate "{input}" into {language}.`],
+ * ]);
+ *
+ * const model = new ChatOllama({
+ *   baseUrl: "http://api.example.com",
+ *   model: "llama2",
+ *   format: "json",
+ * });
+ *
+ * const chain = prompt.pipe(model);
+ *
+ * const result = await chain.invoke({
+ *   input: "I love programming",
+ *   language: "German",
+ * });
+ *
+ * ```
  */
 export class ChatOllama
   extends SimpleChatModel<OllamaCallOptions>
@@ -94,6 +119,8 @@ export class ChatOllama
 
   vocabOnly?: boolean;
 
+  format?: StringWithAutocomplete<"json">;
+
   constructor(fields: OllamaInput & BaseChatModelParams) {
     super(fields);
     this.model = fields.model ?? this.model;
@@ -130,6 +157,7 @@ export class ChatOllama
     this.useMLock = fields.useMLock;
     this.useMMap = fields.useMMap;
     this.vocabOnly = fields.vocabOnly;
+    this.format = fields.format;
   }
 
   _llmType() {
@@ -145,6 +173,7 @@ export class ChatOllama
   invocationParams(options?: this["ParsedCallOptions"]) {
     return {
       model: this.model,
+      format: this.format,
       options: {
         embedding_only: this.embeddingOnly,
         f16_kv: this.f16KV,

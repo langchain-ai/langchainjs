@@ -147,6 +147,9 @@ export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCall
       runManager
     );
     const chatGenerationContent = chatResult.generations[0].message.content;
+    if (typeof chatGenerationContent !== "string") {
+      throw new Error("AnthropicFunctions does not support non-string output.");
+    }
 
     if (forced) {
       const parser = new XMLParser();

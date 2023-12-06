@@ -5,6 +5,7 @@
 // due to a packaging issue in the original.
 // MIT License
 import { type Readable } from "stream";
+import { IterableReadableStream } from "./stream.js";
 
 export const EventStreamContentType = "text/event-stream";
 
@@ -252,6 +253,28 @@ function newMessage(): EventSourceMessage {
     id: "",
     retry: undefined,
   };
+}
+
+export function convertEventStreamToIterableReadableDataStream(
+  stream: ReadableStream
+) {
+  const dataStream = new ReadableStream({
+    async start(controller) {
+      const enqueueLine = getMessages((msg) => {
+        if (msg.data) controller.enqueue(msg.data);
+      });
+      const onLine = (
+        line: Uint8Array,
+        fieldLength: number,
+        flush?: boolean
+      ) => {
+        enqueueLine(line, fieldLength, flush);
+        if (flush) controller.close();
+      };
+      await getBytes(stream, getLines(onLine));
+    },
+  });
+  return IterableReadableStream.fromReadableStream(dataStream);
 }
 
 function isEmpty(message: EventSourceMessage): boolean {

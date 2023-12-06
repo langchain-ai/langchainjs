@@ -27,7 +27,7 @@ const executor = await initializeAgentExecutorWithOptions(tools, model, {
 
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
-const result = await executor.call({ input });
+const result = await executor.invoke({ input });
 
 // Evaluate Trajectory
 

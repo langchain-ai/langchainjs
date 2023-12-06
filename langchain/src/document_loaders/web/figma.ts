@@ -43,6 +43,15 @@ export interface FigmaLoaderParams {
  * extends the BaseDocumentLoader and implements the FigmaLoaderParams
  * interface. The constructor takes a config object as a parameter, which
  * contains the access token, an array of node IDs, and the file key.
+ * @example
+ * ```typescript
+ * const loader = new FigmaFileLoader({
+ *   accessToken: "FIGMA_ACCESS_TOKEN",
+ *   nodeIds: ["id1", "id2", "id3"],
+ *   fileKey: "key",
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class FigmaFileLoader
   extends BaseDocumentLoader

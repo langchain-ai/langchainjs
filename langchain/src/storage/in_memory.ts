@@ -3,6 +3,21 @@ import { BaseStore } from "../schema/storage.js";
 /**
  * In-memory implementation of the BaseStore using a dictionary. Used for
  * storing key-value pairs in memory.
+ * @example
+ * ```typescript
+ * const store = new InMemoryStore<BaseMessage>();
+ * await store.mset(
+ *   Array.from({ length: 5 }).map((_, index) => [
+ *     `message:id:${index}`,
+ *     index % 2 === 0
+ *       ? new AIMessage("ai stuff...")
+ *       : new HumanMessage("human stuff..."),
+ *   ]),
+ * );
+ *
+ * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
+ * await store.mdelete(await store.yieldKeys("message:id:").toArray());
+ * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class InMemoryStore<T = any> extends BaseStore<string, T> {

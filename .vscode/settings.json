@@ -1,6 +1,7 @@
 {
   "eslint.workingDirectories": [
     "./langchain",
+    "./langchain-core",
     "./examples",
     "./docs",
     "./test-exports-vercel"
@@ -9,5 +10,10 @@
     "https://json.schemastore.org/github-workflow.json": "./.github/workflows/deploy.yml"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": ["Upstash"]
+  "cSpell.words": [
+    "Upstash"
+  ],
+  "cSpell.enableFiletypes": [
+    "mdx"
+  ]
 }

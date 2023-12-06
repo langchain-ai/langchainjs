@@ -1,0 +1,50 @@
+# Custom tools
+
+One option for creating a tool that runs custom code is to use a `DynamicTool`.
+
+The `DynamicTool` class takes as input a name, a description, and a function.
+Importantly, the name and the description will be used by the language model to determine when to call this function and with what parameters,
+so make sure to set these to some values the language model can reason about!
+
+The provided function is what will the agent will actually call. When an error occurs, the function should, when possible, return a string representing an error, rather than throwing an error.
+This allows the error to be passed to the LLM and the LLM can decide how to handle it. If an error is thrown, then execution of the agent will stop.
+
+See below for an example of defining and using `DynamicTool`s.
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { DynamicTool } from "langchain/tools";
+
+export const run = async () => {
+  const model = new OpenAI({ temperature: 0 });
+  const tools = [
+    new DynamicTool({
+      name: "FOO",
+      description:
+        "call this to get the value of foo. input should be an empty string.",
+      func: async () => "baz",
+    }),
+    new DynamicTool({
+      name: "BAR",
+      description:
+        "call this to get the value of bar. input should be an empty string.",
+      func: async () => "baz1",
+    }),
+  ];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+  });
+
+  console.log("Loaded agent.");
+
+  const input = `What is the value of foo?`;
+
+  console.log(`Executing with input "${input}"...`);
+
+  const result = await executor.invoke({ input });
+
+  console.log(`Got output ${result.output}`);
+};
+```

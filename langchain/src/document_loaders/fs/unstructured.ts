@@ -8,6 +8,7 @@ import {
 import { getEnv } from "../../util/env.js";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
+import type { StringWithAutocomplete } from "../../util/types.js";
 
 const UNSTRUCTURED_API_FILETYPES = [
   ".txt",
@@ -94,12 +95,6 @@ export type SkipInferTableTypes =
  * Set the chunking_strategy to chunk text into larger or smaller elements. Defaults to None with optional arg of by_title
  */
 type ChunkingStrategy = "None" | "by_title";
-
-/**
- * Represents a string value with autocomplete suggestions. It is used for
- * the `strategy` property in the UnstructuredLoaderOptions.
- */
-type StringWithAutocomplete<T> = T | (string & Record<never, never>);
 
 export type UnstructuredLoaderOptions = {
   apiKey?: string;
@@ -303,6 +298,13 @@ export class UnstructuredLoader extends BaseDocumentLoader {
  * using the UnstructuredLoader. It creates a UnstructuredLoader instance
  * for each supported file type and passes it to the DirectoryLoader
  * constructor.
+ * @example
+ * ```typescript
+ * const loader = new UnstructuredDirectoryLoader("path/to/directory", {
+ *   apiKey: "MY_API_KEY",
+ * });
+ * const docs = await loader.load();
+ * ```
  */
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(

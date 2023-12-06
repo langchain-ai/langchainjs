@@ -30,6 +30,23 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
 /**
  * Class that extends the Embeddings class and provides methods for
  * generating embeddings using the Bedrock API.
+ * @example
+ * ```typescript
+ * const embeddings = new BedrockEmbeddings({
+ *   region: "your-aws-region",
+ *   credentials: {
+ *     accessKeyId: "your-access-key-id",
+ *     secretAccessKey: "your-secret-access-key",
+ *   },
+ *   model: "amazon.titan-embed-text-v1",
+ * });
+ *
+ * // Embed a query and log the result
+ * const res = await embeddings.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?"
+ * );
+ * console.log({ res });
+ * ```
  */
 export class BedrockEmbeddings
   extends Embeddings

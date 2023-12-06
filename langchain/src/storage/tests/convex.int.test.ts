@@ -20,9 +20,8 @@ import { api } from "./convex/convex/_generated/api.js";
 // In `langchain` run `yarn test:single src/storage/tests/convex.int.test.ts`
 
 describe.skip("Convex storage", () => {
-  const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
-
   test("Convex set, get, delete", async () => {
+    const client = new ConvexHttpClient(process.env.CONVEX_URL as string);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore TypeScript fails here, but only during build
     await client.mutation(api.lib.reset);

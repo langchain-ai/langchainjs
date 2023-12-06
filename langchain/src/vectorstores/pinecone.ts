@@ -11,13 +11,14 @@ import {
 import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { AsyncCaller } from "../util/async_caller.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { maximalMarginalRelevance } from "../util/math.js";
+import { chunkArray } from "../util/chunk.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
-export interface PineconeLibArgs {
+export interface PineconeLibArgs extends AsyncCallerParams {
   pineconeIndex: PineconeIndex;
   textKey?: string;
   namespace?: string;
@@ -26,11 +27,12 @@ export interface PineconeLibArgs {
 
 /**
  * Type that defines the parameters for the delete operation in the
- * PineconeStore class. It includes ids, deleteAll flag, and namespace.
+ * PineconeStore class. It includes ids, filter, deleteAll flag, and namespace.
  */
 export type PineconeDeleteParams = {
   ids?: string[];
   deleteAll?: boolean;
+  filter?: object;
   namespace?: string;
 };
 
@@ -143,11 +145,14 @@ export class PineconeStore extends VectorStore {
 
     const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
     // Pinecone recommends a limit of 100 vectors per upsert request
-    const chunkSize = 50;
-    for (let i = 0; i < pineconeVectors.length; i += chunkSize) {
-      const chunk = pineconeVectors.slice(i, i + chunkSize);
-      await namespace.upsert(chunk);
-    }
+    const chunkSize = 100;
+    const chunkedVectors = chunkArray(pineconeVectors, chunkSize);
+    const batchRequests = chunkedVectors.map((chunk) =>
+      this.caller.call(async () => namespace.upsert(chunk))
+    );
+
+    await Promise.all(batchRequests);
+
     return documentIds;
   }
 
@@ -157,7 +162,7 @@ export class PineconeStore extends VectorStore {
    * @returns Promise that resolves when the delete operation is complete.
    */
   async delete(params: PineconeDeleteParams): Promise<void> {
-    const { deleteAll, ids } = params;
+    const { deleteAll, ids, filter } = params;
     const namespace = this.pineconeIndex.namespace(this.namespace ?? "");
 
     if (deleteAll) {
@@ -168,6 +173,8 @@ export class PineconeStore extends VectorStore {
         const batchIds = ids.slice(i, i + batchSize);
         await namespace.deleteMany(batchIds);
       }
+    } else if (filter) {
+      await namespace.deleteMany(filter);
     } else {
       throw new Error("Either ids or delete_all must be provided.");
     }

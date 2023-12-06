@@ -1,0 +1,11 @@
+# Voyage AI
+
+The `VoyageEmbeddings` class uses the Voyage AI REST API to generate embeddings for a given text.
+
+```typescript
+import { VoyageEmbeddings } from "langchain/embeddings/voyage";
+
+const embeddings = new VoyageEmbeddings({
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.VOYAGEAI_API_KEY
+});
+```

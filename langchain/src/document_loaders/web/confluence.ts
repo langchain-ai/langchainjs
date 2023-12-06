@@ -9,8 +9,9 @@ import { BaseDocumentLoader } from "../base.js";
 export interface ConfluencePagesLoaderParams {
   baseUrl: string;
   spaceKey: string;
-  username: string;
-  accessToken: string;
+  username?: string;
+  accessToken?: string;
+  personalAccessToken?: string;
   limit?: number;
 }
 
@@ -37,17 +38,30 @@ export interface ConfluenceAPIResponse {
 
 /**
  * Class representing a document loader for loading pages from Confluence.
+ * @example
+ * ```typescript
+ * const loader = new ConfluencePagesLoader({
+ *   baseUrl: "https:
+ *   spaceKey: "~EXAMPLE362906de5d343d49dcdbae5dEXAMPLE",
+ *   username: "your-username",
+ *   accessToken: "your-access-token",
+ * });
+ * const documents = await loader.load();
+ * console.log(documents);
+ * ```
  */
 export class ConfluencePagesLoader extends BaseDocumentLoader {
   public readonly baseUrl: string;
 
   public readonly spaceKey: string;
 
-  public readonly username: string;
+  public readonly username?: string;
 
-  public readonly accessToken: string;
+  public readonly accessToken?: string;
 
   public readonly limit: number;
+
+  public readonly personalAccessToken?: string;
 
   constructor({
     baseUrl,
@@ -55,6 +69,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     username,
     accessToken,
     limit = 25,
+    personalAccessToken,
   }: ConfluencePagesLoaderParams) {
     super();
     this.baseUrl = baseUrl;
@@ -62,6 +77,24 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.username = username;
     this.accessToken = accessToken;
     this.limit = limit;
+    this.personalAccessToken = personalAccessToken;
+  }
+
+  /**
+   * Returns the authorization header for the request.
+   * @returns The authorization header as a string, or undefined if no credentials were provided.
+   */
+  private get authorizationHeader(): string | undefined {
+    if (this.personalAccessToken) {
+      return `Bearer ${this.personalAccessToken}`;
+    } else if (this.username && this.accessToken) {
+      const authToken = Buffer.from(
+        `${this.username}:${this.accessToken}`
+      ).toString("base64");
+      return `Basic ${authToken}`;
+    }
+
+    return undefined;
   }
 
   /**
@@ -88,16 +121,18 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     url: string
   ): Promise<ConfluenceAPIResponse> {
     try {
-      const authToken = Buffer.from(
-        `${this.username}:${this.accessToken}`
-      ).toString("base64");
+      const initialHeaders: HeadersInit = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      const authHeader = this.authorizationHeader;
+      if (authHeader) {
+        initialHeaders.Authorization = authHeader;
+      }
 
       const response = await fetch(url, {
-        headers: {
-          Authorization: `Basic ${authToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+        headers: initialHeaders,
       });
 
       if (!response.ok) {

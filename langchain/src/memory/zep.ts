@@ -41,6 +41,40 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
  * and saving the chat history, and clearing the memory when needed. It
  * uses the ZepClient to interact with the Zep service for managing the
  * chat session's memory.
+ * @example
+ * ```typescript
+ * const sessionId = randomUUID();
+ * const zepURL = "http://your-zep-url";
+ *
+ * // Initialize ZepMemory with session ID, base URL, and API key
+ * const memory = new ZepMemory({
+ *   sessionId,
+ *   baseURL: zepURL,
+ *   apiKey: "change_this_key",
+ * });
+ *
+ * // Create a ChatOpenAI model instance with specific parameters
+ * const model = new ChatOpenAI({
+ *   modelName: "gpt-3.5-turbo",
+ *   temperature: 0,
+ * });
+ *
+ * // Create a ConversationChain with the model and memory
+ * const chain = new ConversationChain({ llm: model, memory });
+ *
+ * // Example of calling the chain with an input
+ * const res1 = await chain.call({ input: "Hi! I'm Jim." });
+ * console.log({ res1 });
+ *
+ * // Follow-up call to the chain to demonstrate memory usage
+ * const res2 = await chain.call({ input: "What did I just say my name was?" });
+ * console.log({ res2 });
+ *
+ * // Output the session ID and the current state of memory
+ * console.log("Session ID: ", sessionId);
+ * console.log("Memory: ", await memory.loadMemoryVariables({}));
+ *
+ * ```
  */
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   humanPrefix = "Human";

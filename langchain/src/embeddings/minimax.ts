@@ -76,6 +76,21 @@ export interface CreateMinimaxEmbeddingRequest {
 /**
  * Class for generating embeddings using the Minimax API. Extends the
  * Embeddings class and implements MinimaxEmbeddingsParams
+ * @example
+ * ```typescript
+ * const embeddings = new MinimaxEmbeddings();
+ *
+ * // Embed a single query
+ * const queryEmbedding = await embeddings.embedQuery("Hello world");
+ * console.log(queryEmbedding);
+ *
+ * // Embed multiple documents
+ * const documentsEmbedding = await embeddings.embedDocuments([
+ *   "Hello world",
+ *   "Bye bye",
+ * ]);
+ * console.log(documentsEmbedding);
+ * ```
  */
 export class MinimaxEmbeddings
   extends Embeddings

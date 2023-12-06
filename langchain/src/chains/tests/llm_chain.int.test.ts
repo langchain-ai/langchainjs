@@ -7,7 +7,6 @@ import {
   PromptTemplate,
 } from "../../prompts/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { loadChain } from "../load.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Test OpenAI", async () => {
@@ -111,12 +110,6 @@ test("Test apply", async () => {
   console.log({ res });
 });
 
-test("Load chain from hub", async () => {
-  const chain = await loadChain("lc://chains/hello-world/chain.json");
-  const res = await chain.call({ topic: "my favorite color" });
-  console.log({ res });
-});
-
 test("Test LLMChain with ChatOpenAI", async () => {
   const model = new ChatOpenAI({ temperature: 0.9 });
   const template = "What is a good name for a company that makes {product}?";
@@ -130,20 +123,19 @@ test("Test LLMChain with ChatOpenAI", async () => {
   console.log({ res });
 });
 
-test("Test deserialize", async () => {
-  const model = new ChatOpenAI();
-  const prompt = new PromptTemplate({
-    template: "Print {foo}",
-    inputVariables: ["foo"],
+test("Test passing a runnable to an LLMChain", async () => {
+  const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
+  const runnableModel = model.bind({
+    response_format: {
+      type: "json_object",
+    },
   });
-  const chain = new LLMChain({ prompt, llm: model });
-
-  const serialized = chain.serialize();
-  // console.log(serialized)
-  const chain2 = await LLMChain.deserialize({ ...serialized });
-
-  const res = await chain2.run("my favorite color");
-  console.log({ res });
-
-  // chain === chain2?
+  const prompt = PromptTemplate.fromTemplate(
+    "You are a bee --I mean a spelling bee. Respond with a JSON key of 'spelling':\nQuestion:{input}"
+  );
+  const chain = new LLMChain({ llm: runnableModel, prompt });
+  const response = await chain.invoke({ input: "How do you spell today?" });
+  expect(JSON.parse(response.text)).toMatchObject({
+    spelling: expect.any(String),
+  });
 });

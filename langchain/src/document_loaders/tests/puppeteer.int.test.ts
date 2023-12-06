@@ -30,3 +30,26 @@ test.skip("Test puppeteer web scraper loader with evaluate options", async () =>
   expect(result).toBeDefined();
   expect(result.length).toBe(1);
 }, 20_000);
+
+test.skip("Test puppeteer web scraper can screenshot page", async () => {
+  const loader = new PuppeteerWebBaseLoader("https://langchain.com/", {
+    launchOptions: {
+      headless: true,
+      ignoreDefaultArgs: ["--disable-extensions"],
+    },
+    gotoOptions: {
+      waitUntil: "domcontentloaded",
+    },
+  });
+  const screenshotDocument = await loader.screenshot();
+
+  expect(screenshotDocument.metadata.source).toBe("https://langchain.com/");
+  // verify screenshotDocument.pageContent is a base64 encoded string
+  expect(screenshotDocument.pageContent).toMatch(
+    /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
+  );
+  // Uncomment if you want to write the screenshot to a file
+  // await fs.writeFile("langchain.png", screenshotDocument.pageContent, {
+  //   encoding: "base64",
+  // });
+}, 20_000);

@@ -1,28 +1,65 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
+  ActorCallOptions,
   ApifyClient,
   ApifyClientOptions,
-  ActorCallOptions,
   TaskCallOptions,
 } from "apify-client";
 
-import { Document } from "../../document.js";
+import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+import { Document } from "../../document.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * A type that represents a function that takes a single object (an Apify
  * dataset item) and converts it to an instance of the Document class.
+ *
+ * Change function signature to only be asynchronous for simplicity in v0.1.0
+ * https://github.com/langchain-ai/langchainjs/pull/3262
  */
-export type ApifyDatasetMappingFunction = (
-  item: Record<string | number, unknown>
-) => Document;
+export type ApifyDatasetMappingFunction<Metadata extends Record<string, any>> =
+  (
+    item: Record<string | number, unknown>
+  ) =>
+    | Document<Metadata>
+    | Array<Document<Metadata>>
+    | Promise<Document<Metadata> | Array<Document<Metadata>>>;
+
+export interface ApifyDatasetLoaderConfig<Metadata extends Record<string, any>>
+  extends AsyncCallerParams {
+  datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
+  clientOptions?: ApifyClientOptions;
+}
 
 /**
  * A class that extends the BaseDocumentLoader and implements the
  * DocumentLoader interface. It represents a document loader that loads
  * documents from an Apify dataset.
+ * @example
+ * ```typescript
+ * const loader = new ApifyDatasetLoader("your-dataset-id", {
+ *   datasetMappingFunction: (item) =>
+ *     new Document({
+ *       pageContent: item.text || "",
+ *       metadata: { source: item.url },
+ *     }),
+ *   clientOptions: {
+ *     token: "your-apify-token",
+ *   },
+ * });
+ *
+ * const docs = await loader.load();
+ *
+ * const chain = new RetrievalQAChain();
+ * const res = await chain.invoke({ query: "What is LangChain?" });
+ *
+ * console.log(res.text);
+ * console.log(res.sourceDocuments.map((d) => d.metadata.source));
+ * ```
  */
-export class ApifyDatasetLoader
+export class ApifyDatasetLoader<Metadata extends Record<string, any>>
   extends BaseDocumentLoader
   implements DocumentLoader
 {
@@ -30,27 +67,19 @@ export class ApifyDatasetLoader
 
   protected datasetId: string;
 
-  protected datasetMappingFunction: (
-    item: Record<string | number, unknown>
-  ) => Document;
+  protected datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
 
-  constructor(
-    datasetId: string,
-    config: {
-      datasetMappingFunction: ApifyDatasetMappingFunction;
-      clientOptions?: ApifyClientOptions;
-    }
-  ) {
+  protected caller: AsyncCaller;
+
+  constructor(datasetId: string, config: ApifyDatasetLoaderConfig<Metadata>) {
     super();
-    const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
-      config.clientOptions
-    );
-    this.apifyClient = new ApifyClient({
-      ...config.clientOptions,
-      token: apifyApiToken,
-    });
+    const { clientOptions, datasetMappingFunction, ...asyncCallerParams } =
+      config;
+    const token = ApifyDatasetLoader._getApifyApiToken(clientOptions);
+    this.apifyClient = new ApifyClient({ ...clientOptions, token });
     this.datasetId = datasetId;
-    this.datasetMappingFunction = config.datasetMappingFunction;
+    this.datasetMappingFunction = datasetMappingFunction;
+    this.caller = new AsyncCaller(asyncCallerParams);
   }
 
   private static _getApifyApiToken(config?: { token?: string }) {
@@ -63,11 +92,18 @@ export class ApifyDatasetLoader
    * instances.
    * @returns An array of Document instances.
    */
-  async load(): Promise<Document[]> {
-    const datasetItems = (
-      await this.apifyClient.dataset(this.datasetId).listItems({ clean: true })
-    ).items;
-    return datasetItems.map(this.datasetMappingFunction);
+  async load(): Promise<Document<Metadata>[]> {
+    const dataset = await this.apifyClient
+      .dataset(this.datasetId)
+      .listItems({ clean: true });
+
+    const documentList = await Promise.all(
+      dataset.items.map((item) =>
+        this.caller.call(async () => this.datasetMappingFunction(item))
+      )
+    );
+
+    return documentList.flat();
   }
 
   /**
@@ -78,15 +114,15 @@ export class ApifyDatasetLoader
    * @param options.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
    * @returns An instance of `ApifyDatasetLoader` with the results from the Actor run.
    */
-  static async fromActorCall(
+  static async fromActorCall<Metadata extends Record<string, any>>(
     actorId: string,
     input: Record<string | number, unknown>,
     config: {
       callOptions?: ActorCallOptions;
       clientOptions?: ApifyClientOptions;
-      datasetMappingFunction: ApifyDatasetMappingFunction;
+      datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
     }
-  ): Promise<ApifyDatasetLoader> {
+  ): Promise<ApifyDatasetLoader<Metadata>> {
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
       config.clientOptions
     );
@@ -110,15 +146,15 @@ export class ApifyDatasetLoader
    * @param options.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
    * @returns An instance of `ApifyDatasetLoader` with the results from the task's run.
    */
-  static async fromActorTaskCall(
+  static async fromActorTaskCall<Metadata extends Record<string, any>>(
     taskId: string,
     input: Record<string | number, unknown>,
     config: {
       callOptions?: TaskCallOptions;
       clientOptions?: ApifyClientOptions;
-      datasetMappingFunction: ApifyDatasetMappingFunction;
+      datasetMappingFunction: ApifyDatasetMappingFunction<Metadata>;
     }
-  ): Promise<ApifyDatasetLoader> {
+  ): Promise<ApifyDatasetLoader<Metadata>> {
     const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
       config.clientOptions
     );

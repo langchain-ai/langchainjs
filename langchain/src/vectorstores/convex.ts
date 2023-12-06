@@ -43,12 +43,33 @@ export type ConvexVectorStoreConfig<
   >
 > = {
   readonly ctx: GenericActionCtx<DataModel>;
+  /**
+   * Defaults to "documents"
+   */
   readonly table?: TableName;
+  /**
+   * Defaults to "byEmbedding"
+   */
   readonly index?: IndexName;
+  /**
+   * Defaults to "text"
+   */
   readonly textField?: TextFieldName;
+  /**
+   * Defaults to "embedding"
+   */
   readonly embeddingField?: EmbeddingFieldName;
+  /**
+   * Defaults to "metadata"
+   */
   readonly metadataField?: MetadataFieldName;
+  /**
+   * Defaults to `internal.langchain.db.insert`
+   */
   readonly insert?: InsertMutation;
+  /**
+   * Defaults to `internal.langchain.db.get`
+   */
   readonly get?: GetQuery;
 };
 

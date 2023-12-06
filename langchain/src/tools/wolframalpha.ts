@@ -1,5 +1,14 @@
 import { Tool, ToolParams } from "./base.js";
 
+/**
+ * @example
+ * ```typescript
+ * const tool = new WolframAlphaTool({
+ *   appid: "YOUR_APP_ID",
+ * });
+ * const res = await tool.invoke("What is 2 * 2?");
+ * ```
+ */
 export class WolframAlphaTool extends Tool {
   appid: string;
 
@@ -22,7 +31,9 @@ export class WolframAlphaTool extends Tool {
   }
 
   async _call(query: string): Promise<string> {
-    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${this.appid}&input=${query}`;
+    const url = `https://www.wolframalpha.com/api/v1/llm-api?appid=${
+      this.appid
+    }&input=${encodeURIComponent(query)}`;
     const res = await fetch(url);
 
     return res.text();

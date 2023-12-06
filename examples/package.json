@@ -22,21 +22,22 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@clickhouse/client": "^0.0.14",
+    "@clickhouse/client": "^0.2.5",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.8.0",
-    "@gomomento/sdk": "^1.44.1",
+    "@getzep/zep-js": "^0.9.0",
+    "@gomomento/sdk": "^1.51.1",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",
     "@raycast/api": "^1.55.2",
+    "@rockset/client": "^0.9.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@upstash/redis": "^1.20.6",
     "@vercel/kv": "^0.2.3",
-    "@xata.io/client": "^0.25.1",
+    "@xata.io/client": "^0.28.0",
     "@zilliz/milvus2-sdk-node": "^2.2.7",
     "axios": "^0.26.0",
     "chromadb": "^1.5.3",
@@ -60,7 +61,7 @@
     "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.0.0",
     "zod": "^3.22.3",
-    "zod-to-json-schema": "^3.21.4"
+    "zod-to-json-schema": "3.20.3"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
@@ -77,6 +78,6 @@
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
-    "typescript": "^5.0.0"
+    "typescript": "~5.1.6"
   }
 }

@@ -23,3 +23,33 @@ console.log(response);
 4. "Programmieren ist mein Hobby" - This means "Programming is my hobby". This is a more casual way to express your love for programming in German.
 5. "Ich liebe es, Programme zu schreiben" - This means "I love writing programs". This is a more formal way to express your love for programming in German.
 */
+
+const stream = await model.stream(
+  `Translate "I love programming" into German.`
+);
+
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+
+/*
+  Here
+  are
+  a
+  few
+  options
+  :
+
+
+
+
+  1
+  .
+  "
+  I
+  ch
+  lie
+  be
+  Program
+  ...
+*/

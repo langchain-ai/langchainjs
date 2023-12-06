@@ -1,0 +1,20 @@
+# HTTP Response Output Parser
+
+import CodeBlock from "@theme/CodeBlock";
+import HttpResponse from "@examples/prompts/http_response_output_parser.ts";
+import EventStreamHttpResponse from "@examples/prompts/http_response_output_parser_event_stream.ts";
+import CustomOutputHttpResponse from "@examples/prompts/http_response_output_parser_custom.ts";
+
+The HTTP Response output parser allows you to stream LLM output in the proper format for a web [HTTP response](https://developer.mozilla.org/en-US/docs/Web/API/Response).
+
+By default this is equivalent to a [BytesOutputParser](/docs/modules/model_io/output_parsers/bytes):
+
+<CodeBlock language="typescript">{HttpResponse}</CodeBlock>
+
+You can also stream back chunks as an [event stream](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events):
+
+<CodeBlock language="typescript">{EventStreamHttpResponse}</CodeBlock>
+
+Or pass a custom output parser to internally parse chunks for e.g. streaming function outputs:
+
+<CodeBlock language="typescript">{CustomOutputHttpResponse}</CodeBlock>

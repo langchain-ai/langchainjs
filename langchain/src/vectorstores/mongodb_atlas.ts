@@ -122,7 +122,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const pipeline: MongoDBDocument[] = [
       {
         $vectorSearch: {
-          queryVector: query,
+          queryVector: MongoDBAtlasVectorSearch.fixArrayPrecision(query),
           index: this.indexName,
           path: this.embeddingKey,
           limit: k,
@@ -182,7 +182,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     };
 
     const resultDocs = await this.similaritySearchVectorWithScore(
-      queryEmbedding,
+      MongoDBAtlasVectorSearch.fixArrayPrecision(queryEmbedding),
       fetchK,
       includeEmbeddingsFilter
     );
@@ -254,5 +254,26 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
+  }
+
+  /**
+   * Static method to fix the precision of the array that ensures that
+   * every number in this array is always float when casted to other types.
+   * This is needed since MongoDB Atlas Vector Search does not cast integer
+   * inside vector search to float automatically.
+   * This method shall introduce a hint of error but should be safe to use
+   * since introduced error is very small, only applies to integer numbers
+   * returned by embeddings, and most embeddings shall not have precision
+   * as high as 15 decimal places.
+   * @param array Array of number to be fixed.
+   * @returns
+   */
+  static fixArrayPrecision(array: number[]) {
+    return array.map((value) => {
+      if (Number.isInteger(value)) {
+        return value + 0.000000000000001;
+      }
+      return value;
+    });
   }
 }

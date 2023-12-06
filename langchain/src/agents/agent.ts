@@ -125,52 +125,6 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
 }
 
 /**
- * Class representing a single action agent which accepts runnables.
- * Extends the BaseSingleActionAgent class and provides methods for
- * planning agent actions with runnables.
- */
-export class RunnableAgent<
-  RunInput extends ChainValues & {
-    agent_scratchpad?: string | BaseMessage[];
-    stop?: string[];
-  },
-  RunOutput extends AgentAction | AgentFinish
-> extends BaseSingleActionAgent {
-  protected lc_runnable = true;
-
-  lc_namespace = ["langchain", "agents", "runnable"];
-
-  runnable: Runnable<RunInput, RunOutput>;
-
-  stop?: string[];
-
-  get inputKeys(): string[] {
-    return [];
-  }
-
-  constructor(fields: RunnableAgentInput<RunInput, RunOutput>) {
-    super();
-    this.runnable = fields.runnable;
-    this.stop = fields.stop;
-  }
-
-  async plan(
-    steps: AgentStep[],
-    inputs: RunInput,
-    callbackManager?: CallbackManager
-  ): Promise<AgentAction | AgentFinish> {
-    const invokeInput = { ...inputs, steps };
-
-    const output = await this.runnable.invoke(invokeInput, {
-      callbacks: callbackManager,
-      runName: "RunnableAgent",
-    });
-
-    return output;
-  }
-}
-
-/**
  * Abstract base class for multi-action agents in LangChain. Extends the
  * BaseAgent class and provides additional functionality specific to
  * multi-action agents.
@@ -196,6 +150,57 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
+function isAgentAction(input: unknown): input is AgentAction {
+  return !Array.isArray(input) && (input as AgentAction)?.tool !== undefined;
+}
+
+/**
+ * Class representing a single action agent which accepts runnables.
+ * Extends the BaseSingleActionAgent class and provides methods for
+ * planning agent actions with runnables.
+ */
+export class RunnableAgent extends BaseMultiActionAgent {
+  protected lc_runnable = true;
+
+  lc_namespace = ["langchain", "agents", "runnable"];
+
+  runnable: Runnable<
+    ChainValues & { steps: AgentStep[] },
+    AgentAction[] | AgentAction | AgentFinish
+  >;
+
+  stop?: string[];
+
+  get inputKeys(): string[] {
+    return [];
+  }
+
+  constructor(fields: RunnableAgentInput) {
+    super();
+    this.runnable = fields.runnable;
+    this.stop = fields.stop;
+  }
+
+  async plan(
+    steps: AgentStep[],
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
+  ): Promise<AgentAction[] | AgentFinish> {
+    const invokeInput = { ...inputs, steps };
+
+    const output = await this.runnable.invoke(invokeInput, {
+      callbacks: callbackManager,
+      runName: "RunnableAgent",
+    });
+
+    if (isAgentAction(output)) {
+      return [output];
+    }
+
+    return output;
+  }
+}
+
 /**
  * Interface for input data for creating a LLMSingleActionAgent.
  */
@@ -209,6 +214,30 @@ export interface LLMSingleActionAgentInput {
  * Class representing a single action agent using a LLMChain in LangChain.
  * Extends the BaseSingleActionAgent class and provides methods for
  * planning agent actions based on LLMChain outputs.
+ * @example
+ * ```typescript
+ * const customPromptTemplate = new CustomPromptTemplate({
+ *   tools: [new Calculator()],
+ *   inputVariables: ["input", "agent_scratchpad"],
+ * });
+ * const customOutputParser = new CustomOutputParser();
+ * const agent = new LLMSingleActionAgent({
+ *   llmChain: new LLMChain({
+ *     prompt: customPromptTemplate,
+ *     llm: new ChatOpenAI({ temperature: 0 }),
+ *   }),
+ *   outputParser: customOutputParser,
+ *   stop: ["\nObservation"],
+ * });
+ * const executor = new AgentExecutor({
+ *   agent,
+ *   tools: [new Calculator()],
+ * });
+ * const result = await executor.invoke({
+ *   input:
+ *     "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
+ * });
+ * ```
  */
 export class LLMSingleActionAgent extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents"];

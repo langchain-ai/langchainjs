@@ -31,6 +31,16 @@ export interface FromLLMInput {
   returnDirect?: boolean;
 }
 
+/**
+ * @example
+ * ```typescript
+ * const chain = new GraphCypherQAChain({
+ *   llm: new ChatOpenAI({ temperature: 0 }),
+ *   graph: new Neo4jGraph(),
+ * });
+ * const res = await chain.run("Who played in Pulp Fiction?");
+ * ```
+ */
 export class GraphCypherQAChain extends BaseChain {
   private graph: Neo4jGraph;
 

@@ -1,0 +1,428 @@
+{
+  "redirects": [
+    {
+      "source": "/docs(/?)",
+      "destination": "/docs/get_started/introduction/"
+    },
+    {
+      "source": "/docs/getting-started/install(/?)",
+      "destination": "/docs/get_started/installation/"
+    },
+    {
+      "source": "/docs/getting-started/guide-llm(/?)",
+      "destination": "/docs/get_started/quickstart/"
+    },
+    {
+      "source": "/docs/getting-started/guide-chat(/?)",
+      "destination": "/docs/get_started/quickstart/"
+    },
+    {
+      "source": "/docs/modules/schema/:path*(/?)",
+      "destination": "/docs/get_started/quickstart/"
+    },
+    {
+      "source": "/docs/modules/models(/?)",
+      "destination": "/docs/modules/model_io/models/"
+    },
+    {
+      "source": "/docs/modules/models/chat(/?)",
+      "destination": "/docs/modules/model_io/models/chat/"
+    },
+    {
+      "source": "/docs/modules/models/chat/integrations(/?)",
+      "destination": "/docs/modules/model_io/models/chat/"
+    },
+    {
+      "source": "/docs/modules/models/chat/additional_functionality(/?)",
+      "destination": "/docs/modules/model_io/models/chat/"
+    },
+    {
+      "source": "/docs/modules/models/embeddings(/?)",
+      "destination": "/docs/modules/data_connection/text_embedding/"
+    },
+    {
+      "source": "/docs/modules/models/embeddings/integrations(/?)",
+      "destination": "/docs/modules/data_connection/text_embedding/"
+    },
+    {
+      "source": "/docs/modules/models/embeddings/additional_functionality(/?)",
+      "destination": "/docs/modules/data_connection/text_embedding/"
+    },
+    {
+      "source": "/docs/modules/models/llms(/?)",
+      "destination": "/docs/modules/model_io/models/llms/"
+    },
+    {
+      "source": "/docs/modules/models/llms/integrations(/?)",
+      "destination": "/docs/modules/model_io/models/llms/"
+    },
+    {
+      "source": "/docs/modules/models/llms/additional_functionality(/?)",
+      "destination": "/docs/modules/model_io/models/llms/"
+    },
+    {
+      "source": "/docs/modules/prompts(/?)",
+      "destination": "/docs/modules/model_io/prompts/"
+    },
+    {
+      "source": "/docs/modules/prompts/prompt_templates(/?)",
+      "destination": "/docs/modules/model_io/prompts/prompt_templates/"
+    },
+    {
+      "source": "/docs/modules/prompts/prompt_templates/prompt_composition(/?)",
+      "destination": "/docs/modules/model_io/prompts/prompt_templates/prompt_composition/"
+    },
+    {
+      "source": "/docs/modules/prompts/prompt_templates/additional_functionality(/?)",
+      "destination": "/docs/modules/model_io/prompts/prompt_templates/"
+    },
+    {
+      "source": "/docs/modules/prompts/output_parsers(/?)",
+      "destination": "/docs/modules/model_io/output_parsers/"
+    },
+    {
+      "source": "/docs/modules/prompts/example_selectors(/?)",
+      "destination": "/docs/modules/model_io/prompts/example_selectors/"
+    },
+    {
+      "source": "/docs/modules/indexes(/?)",
+      "destination": "/docs/modules/data_connection/"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders(/?)",
+      "destination": "/docs/modules/data_connection/document_loaders/"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples(/?)",
+      "destination": "/docs/modules/data_connection/document_loaders/"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/file_loaders/:path*(/?)",
+      "destination": "docs/modules/data_connection/document_loaders/integrations/file_loaders/:path*/"
+    },
+    {
+      "source": "/docs/modules/indexes/document_loaders/examples/web_loaders/:path*(/?)",
+      "destination": "/docs/modules/data_connection/document_loaders/integrations/web_loaders/:path*/"
+    },
+    {
+      "source": "/docs/modules/indexes/document_transformers(/?)",
+      "destination": "/docs/modules/data_connection/document_transformers/"
+    },
+    {
+      "source": "/docs/modules/indexes/text_splitters(/?)",
+      "destination": "/docs/modules/data_connection/document_transformers/"
+    },
+    {
+      "source": "/docs/modules/indexes/text_splitters/examples/:path*(/?)",
+      "destination": "/docs/modules/data_connection/document_transformers/text_splitters/:path*/"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores(/?)",
+      "destination": "/docs/modules/data_connection/vectorstores/"
+    },
+    {
+      "source": "/docs/modules/indexes/vector_stores/integrations/:path*(/?)",
+      "destination": "/docs/modules/data_connection/vectorstores/integrations/:path*/"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers(/?)",
+      "destination": "/docs/modules/data_connection/retrievers/"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers/self_query(/?)",
+      "destination": "/docs/modules/data_connection/retrievers/how_to/self_query/"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers/self_query/examples/:path*(/?)",
+      "destination": "/docs/modules/data_connection/retrievers/how_to/self_query/:path*/"
+    },
+    {
+      "source": "/docs/modules/indexes/retrievers/:path*(/?)",
+      "destination": "/docs/modules/data_connection/retrievers/integrations/:path*/"
+    },
+    {
+      "source": "/docs/modules/memory/examples/:path*(/?)",
+      "destination": "/docs/modules/memory/integrations/:path*/"
+    },
+    {
+      "source": "/docs/modules/chains/llm_chain(/?)",
+      "destination": "/docs/modules/chains/foundational/llm_chain/"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains(/?)",
+      "destination": "/docs/modules/chains/document/"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains/document_qa(/?)",
+      "destination": "/docs/modules/chains/document/"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains/retrieval_qa(/?)",
+      "destination": "docs/modules/chains/popular/vector_db_qa/"
+    },
+    {
+      "source": "/docs/modules/chains/index_related_chains/conversational_retrieval(/?)",
+      "destination": "/docs/modules/chains/popular/chat_vector_db/"
+    },
+    {
+      "source": "/docs/modules/chains/sequential_chain(/?)",
+      "destination": "/docs/modules/chains/foundational/sequential_chains/"
+    },
+    {
+      "source": "/docs/modules/chains/openai_functions(/?)",
+      "destination": "/docs/modules/chains/additional/openai_functions/"
+    },
+    {
+      "source": "/docs/modules/chains/openai_functions/extraction(/?)",
+      "destination": "/docs/modules/chains/additional/openai_functions/extraction/"
+    },
+    {
+      "source": "/docs/modules/chains/openai_functions/openapi(/?)",
+      "destination": "/docs/modules/chains/additional/openai_functions/openapi/"
+    },
+    {
+      "source": "/docs/modules/chains/openai_functions/structured_output(/?)",
+      "destination": "/docs/modules/chains/popular/structured_output/"
+    },
+    {
+      "source": "/docs/modules/chains/openai_functions/tagging(/?)",
+      "destination": "/docs/modules/chains/additional/openai_functions/tagging/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains(/?)",
+      "destination": "/docs/modules/chains/additional/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/analyze_document(/?)",
+      "destination": "/docs/modules/chains/additional/analyze_document/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/api_chain(/?)",
+      "destination": "/docs/modules/chains/popular/api/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/constitutional_chain(/?)",
+      "destination": "/docs/modules/chains/additional/constitutional_chain/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/moderation_chain(/?)",
+      "destination": "/docs/modules/chains/additional/moderation/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/multi_prompt_chain(/?)",
+      "destination": "/docs/modules/chains/additional/multi_prompt_router/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/multi_retrieval_qa_chain(/?)",
+      "destination": "/docs/modules/chains/additional/multi_retrieval_qa_router/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/sql(/?)",
+      "destination": "/docs/modules/chains/popular/sqlite/"
+    },
+    {
+      "source": "/docs/modules/chains/other_chains/summarization(/?)",
+      "destination": "/docs/modules/chains/popular/summarize/"
+    },
+    {
+      "source": "/docs/modules/chains/prompt_selectors(/?)",
+      "destination": "/docs/modules/model_io/prompts/prompt_selectors/"
+    },
+    {
+      "source": "/docs/modules/agents/agents(/?)",
+      "destination": "/docs/modules/agents/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action(/?)",
+      "destination": "/docs/modules/agents/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/llm_mrkl(/?)",
+      "destination": "/docs/modules/agents/agent_types/react/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/chat_mrkl(/?)",
+      "destination": "/docs/modules/agents/agent_types/react/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/conversational_agent(/?)",
+      "destination": "/docs/modules/agents/agent_types/chat_conversation_agent/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/structured_chat(/?)",
+      "destination": "/docs/modules/agents/agent_types/structured_chat/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/action/openai(/?)",
+      "destination": "/docs/modules/agents/agent_types/openai_functions_agent/"
+    },
+    {
+      "source": "docs/modules/agents/agents/plan_execute(/?)",
+      "destination": "/docs/modules/agents/agent_types/plan_and_execute/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/custom(/?)",
+      "destination": "/docs/modules/agents/how_to/custom_llm_agent/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/custom/custom_prompt_chat(/?)",
+      "destination": "/docs/modules/agents/how_to/custom_llm_chat_agent/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/custom/custom_agent_chat(/?)",
+      "destination": "/docs/modules/agents/how_to/custom_llm_chat_agent/"
+    },
+    {
+      "source": "/docs/modules/agents/agents/custom/custom_agent_llm(/?)",
+      "destination": "/docs/modules/agents/how_to/custom_llm_agent/"
+    },
+    {
+      "source": "/docs/modules/agents/executor(/?)",
+      "destination": "/docs/modules/agents/"
+    },
+    {
+      "source": "/docs/modules/agents/executor/getting-started(/?)",
+      "destination": "/docs/modules/agents/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/integrations(/?)",
+      "destination": "/docs/modules/agents/tools/integrations/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/agents_with_vectorstores(/?)",
+      "destination": "/docs/modules/agents/tools/how_to/agents_with_vectorstores/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/aiplugin-tool(/?)",
+      "destination": "/docs/modules/agents/tools/integrations/aiplugin-tool/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/dynamic(/?)",
+      "destination": "/docs/modules/agents/tools/how_to/dynamic/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/lambda_agent(/?)",
+      "destination": "/docs/modules/agents/tools/integrations/lambda_agent/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/webbrowser(/?)",
+      "destination": "/docs/modules/agents/tools/integrations/webbrowser/"
+    },
+    {
+      "source": "/docs/modules/agents/tools/zapier_agent(/?)",
+      "destination": "/docs/modules/agents/tools/integrations/zapier_agent/"
+    },
+    {
+      "source": "/docs/modules/agents/additional_functionality(/?)",
+      "destination": "/docs/modules/agents/"
+    },
+    {
+      "source": "/docs/production/callbacks(/?)",
+      "destination": "/docs/modules/callbacks/"
+    },
+    {
+      "source": "/docs/production/callbacks/create-handlers(/?)",
+      "destination": "/docs/modules/callbacks/how_to/create_handlers/"
+    },
+    {
+      "source": "/docs/production/callbacks/creating-subclasses(/?)",
+      "destination": "/docs/modules/callbacks/how_to/creating_subclasses/"
+    },
+    {
+      "source": "/docs/production/deployment(/?)",
+      "destination": "/docs/get_started/introduction/"
+    },
+    {
+      "source": "/docs/production/tracing(/?)",
+      "destination": "https://docs.smith.langchain.com/"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/integrations/parent-document-retriever",
+      "destination": "/docs/modules/data_connection/retrievers/how_to/parent-document-retriever"
+    },
+    {
+      "source": "/docs/modules/data_connection/caching_embeddings(/?)",
+      "destination": "/docs/modules/data_connection/text_embedding/caching_embeddings"
+    },
+    {
+      "source": "/docs/guides/expression_language/cookbook(/?)",
+      "destination": "/docs/expression_language/cookbook/"
+    },
+    {
+      "source": "/docs/guides/expression_language/interface(/?)",
+      "destination": "/docs/expression_language/interface/"
+    },
+    {
+      "source": "/docs/additional_resources/scrimba(/?)",
+      "destination": "/docs/additional_resources/tutorials/"
+    },
+    {
+      "source": "/docs/additional_resources/expression_language_cheatsheet(/?)",
+      "destination": "/docs/additional_resources/tutorials/"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms/integrations(/.*)?",
+      "destination": "/docs/integrations/llms$1"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat/integrations(/.*)?",
+      "destination": "/docs/integrations/chat$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_loaders/integrations(/.*)?",
+      "destination": "/docs/integrations/document_loaders$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/document_transformers/integrations(/.*)?",
+      "destination": "/docs/integrations/document_transformers$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/text_embedding/integrations(/.*)?",
+      "destination": "/docs/integrations/text_embedding$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/vectorstores/integrations(/.*)?",
+      "destination": "/docs/integrations/vectorstores$1"
+    },
+    {
+      "source": "/docs/modules/data_connection/retrievers/integrations(/.*)?",
+      "destination": "/docs/integrations/retrievers$1"
+    },
+    {
+      "source": "/docs/modules/memory/integrations(/.*)?",
+      "destination": "/docs/integrations/chat_memory$1"
+    },
+    {
+      "source": "/docs/modules/agents/tools/integrations(/.*)?",
+      "destination": "/docs/integrations/tools$1"
+    },
+    {
+      "source": "/docs/modules/agents/toolkits(/.*)?",
+      "destination": "/docs/integrations/toolkits$1"
+    },
+    {
+      "source": "/docs/api/:slug",
+      "destination": "https://api.js.langchain.com/modules/:slug.html"
+    },
+    {
+      "source": "/docs/api/:slug1/classes/:slug2",
+      "destination": "https://api.js.langchain.com/classes/:slug1.:slug2.html"
+    },
+    {
+      "source": "/docs/api/:slug1/functions/:slug2",
+      "destination": "https://api.js.langchain.com/functions/:slug1.:slug2.html"
+    },
+    {
+      "source": "/docs/api/:slug1/interfaces/:slug2",
+      "destination": "https://api.js.langchain.com/interfaces/:slug1.:slug2.html"
+    },
+    {
+      "source": "/docs/api/:slug1/types/:slug2",
+      "destination": "https://api.js.langchain.com/types/:slug1.:slug2.html"
+    },
+    {
+      "source": "/docs/api/:slug1/variables/:slug2",
+      "destination": "https://api.js.langchain.com/variables/:slug1.:slug2.html"
+    }
+  ]
+}

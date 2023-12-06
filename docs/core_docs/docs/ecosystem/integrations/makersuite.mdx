@@ -1,0 +1,123 @@
+# Google MakerSuite
+
+Google's [MakerSuite](https://makersuite.google.com/) is a web-based playground
+for creating and saving chat, text, and "data" prompts that work with the
+Google PaLM API and model. These prompts include the text, which may include
+"test input" that act as template parameters, and parameters for the model
+including the model name, temperature, etc.
+
+LangChain.js provides the `MakerSuiteHub` class which lets you pull this prompt
+from Google Drive, where they are saved. Once pulled, you can convert the prompt
+into a LangChain Template, an LLM Model, or a chain that combines the two. This
+hub class has a simple time-based in-memory cache of prompts, so it is not always
+accessing the prompt saved in Google Drive.
+
+Using MakerSuite in this way allows you to treat it as a simple Content Management
+System (CMS) of sorts or allows separation of tasks between prompt authors and
+other developers.
+
+## Setup
+
+You do not need any additional packages beyond those that are required for
+either the Google PaLM [text](/docs/integrations/llms/google_palm)
+or [chat](/docs/integrations/chat/google_palm) model:
+
+```bash npm2yarn
+npm install google-auth-library @google-ai/generativelanguage
+```
+
+## Credentials and Authorization
+
+You will need two sets of credentials:
+
+- An API Key to access the PaLM API.
+
+  Create this at [Google MakerSuite](https://makersuite.google.com/app/apikey).
+  Then set the key as `GOOGLE_PALM_API_KEY` environment variable.
+
+- Credentials for a service account that has been permitted access to the
+  Google Drive APIs.
+
+  These credentials may be used in one of three ways:
+
+  - You are logged into an account (using `gcloud auth application-default login`)
+    permitted to that project.
+  - You are running on a machine using a service account that is permitted
+    to the project.
+  - You have downloaded the credentials for a service account that is permitted
+    to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
+    variable to the path of this file.
+
+This service account should also be permitted to the MakerSuite folder in Google
+Drive or to the specific prompt file itself. Even if the prompt file is permitted
+for anyone to read - you will still need a service account that is permitted to
+access Google Drive.
+
+## The Prompt File ID
+
+The easiest way to get the ID of the prompt file is to open it in MakerSuite
+and examine the URL. The URL should look something like:
+
+```
+https://makersuite.google.com/app/prompts/1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm
+```
+
+The final portion of this, `1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm` is the ID.
+
+We will be using this in our examples below. This prompt contains a Template
+that is equivalent to:
+
+```
+What would be a good name for a company that makes {product}
+```
+
+With model parameters set that include:
+
+- Model name: Text Bison
+- Temperature: 0.7
+- Max outputs: 1
+- Standard safety settings
+
+## Use
+
+The most typical way to use the hub consists of two parts:
+
+1. Creating the `MakerSuiteHub` class once.
+2. Pulling the prompt, getting the chain, and providing values for the template
+   to get the result.
+
+```typescript
+// Create the hub class
+import { MakerSuiteHub } from "langchain/experimental/hubs/makersuite/googlemakersuitehub";
+const hub = new MakerSuiteHub();
+
+// Pull the prompt, get the chain, and invoke it with the template values
+const prompt = await hub.pull("1gxLasQIeQdwR4wxtV_nb93b_g9f0GaMm");
+const result = await prompt.toChain().invoke({ product: "socks" });
+console.log("text chain result", result);
+```
+
+### Configuring the hub
+
+Since the hub implements a basic in-memory time-based cache, you can configure
+how long until a prompt that is saved in the cache will be reloaded.
+
+This value defaults to 0, indicating it will always be loaded from Google Drive,
+or you can set it to the number of milliseconds it will be valid in the cache:
+
+```typescript
+const hub = new MakerSuiteHub({
+  cacheTimeout: 3600000, // One hour
+});
+```
+
+### Getting the Template or Model
+
+In some cases, you may need to get just the template or just the model
+that is represented by the prompt.
+
+```typescript
+const template = prompt.toTemplate();
+const textModel = prompt.toModel() as GooglePaLM;
+const chatModel = prompt.toModel() as ChatGooglePaLM;
+```

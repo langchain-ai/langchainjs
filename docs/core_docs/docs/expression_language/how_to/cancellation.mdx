@@ -1,0 +1,10 @@
+# Cancelling requests
+
+You can cancel a LCEL request by binding a `signal`.
+
+import CodeBlock from "@theme/CodeBlock";
+import CancellationExample from "@examples/guides/expression_language/how_to_cancellation.ts";
+
+<CodeBlock language="typescript">{CancellationExample}</CodeBlock>
+
+Note, this will only cancel the outgoing request if the underlying provider exposes that option. LangChain will cancel the underlying request if possible, otherwise it will cancel the processing of the response.
