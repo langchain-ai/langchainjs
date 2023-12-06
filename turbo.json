@@ -1,38 +1,18 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "**/.env"
-  ],
+  "globalDependencies": ["**/.env"],
   "pipeline": {
     "@langchain/core#build": {},
     "libs/langchain-anthropic#build": {
-      "dependsOn": [
-        "@langchain/core#build"
-      ]
+      "dependsOn": ["@langchain/core#build"]
     },
     "libs/langchain-openai#build": {
-      "dependsOn": [
-        "@langchain/core#build"
-      ]
+      "dependsOn": ["@langchain/core#build"]
     },
     "build": {
-      "dependsOn": [
-        "@langchain/core#build",
-        "^build"
-      ],
-      "outputs": [
-        "dist/**",
-        "dist-cjs/**",
-        "*.js",
-        "*.cjs",
-        "*.d.ts"
-      ],
-      "inputs": [
-        "src/**",
-        "scripts/**",
-        "package.json",
-        "tsconfig.json"
-      ]
+      "dependsOn": ["@langchain/core#build", "^build"],
+      "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
+      "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
     "lint": {
       "outputs": []
@@ -45,15 +25,11 @@
     },
     "test": {
       "outputs": [],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "test:integration": {
       "outputs": [],
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "precommit": {},
     "start": {
