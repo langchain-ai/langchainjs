@@ -32,7 +32,7 @@ export type RunnableFunc<RunInput, RunOutput> = (
 ) => RunOutput | Promise<RunOutput>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunnableMapLike<RunInput, RunOutput extends Record<string, any>> = {
+export type RunnableMapLike<RunInput, RunOutput> = {
   [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>;
 };
 
@@ -41,7 +41,7 @@ export type RunnableLike<RunInput = any, RunOutput = any> =
   | Runnable<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | RunnableMapLike<RunInput, Record<string, any> & RunOutput>;
+  | RunnableMapLike<RunInput, RunOutput>
 
 export type RunnableBatchOptions = {
   maxConcurrency?: number;
@@ -1711,7 +1711,7 @@ export function _coerceToRunnable<RunInput, RunOutput>(
   } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
     const runnables: Record<string, Runnable<RunInput>> = {};
     for (const [key, value] of Object.entries(coerceable)) {
-      runnables[key] = _coerceToRunnable(value);
+      runnables[key] = _coerceToRunnable(value as RunnableLike);
     }
     return new RunnableMap({
       steps: runnables,
