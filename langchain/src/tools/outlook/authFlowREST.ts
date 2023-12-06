@@ -31,9 +31,9 @@ export class AuthFlowREST extends AuthFlowBase {
     let secret = clientSecret;
     let uri = redirectUri;
     if (!id || !secret || !uri) {
-      id = getEnvironmentVariable("OUTLOOK_CLIENT_ID");
-      secret = getEnvironmentVariable("OUTLOOK_CLIENT_SECRET");
-      uri = getEnvironmentVariable("OUTLOOK_REDIRECT_URI");
+      id = id ?? getEnvironmentVariable("OUTLOOK_CLIENT_ID");
+      secret = secret ??  getEnvironmentVariable("OUTLOOK_CLIENT_SECRET");
+      uri = uri ?? getEnvironmentVariable("OUTLOOK_REDIRECT_URI");
     }
     if (!id || !secret || !uri) {
       throw new Error("Missing clientId, clientSecret or redirectUri.");
