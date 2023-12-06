@@ -1,5 +1,6 @@
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/guides/expression_language/runnable_history.ts";
+import ExampleConstructorConfig "@examples/guides/expression_language/runnable_history_constructor_config.ts";
 
 # Add message history (memory)
 
@@ -29,25 +30,4 @@ To do this, the only change you need to make is remove the second arg (or just t
 
 This is a simple example building on top of what we have above:
 
-```typescript
-const config: RunnableConfig = { configurable: { sessionId: "1" } };
-
-const withHistory = new RunnableWithMessageHistory({
-  runnable,
-  getMessageHistory: (_sessionId: string) => messageHistory,
-  inputMessagesKey: "input",
-  historyMessagesKey: "history",
-  // Passing config through here instead of through the invoke method
-  config,
-});
-
-let output = await withHistory.invoke({ input: "Hello there, I'm Archibald!" });
-console.log("output 1:", output);
-/**
-output 1: AIMessage {
-  lc_namespace: [ 'langchain_core', 'messages' ],
-  content: 'Hello, Archibald! How can I assist you today?',
-  additional_kwargs: { function_call: undefined, tool_calls: undefined }
-}
- */
-```
+<CodeBlock language="typescript">{ExampleConstructorConfig}</CodeBlock>
