@@ -83,3 +83,65 @@ export class ChatPromptValue extends BasePromptValue {
     return this.messages;
   }
 }
+
+export interface ImageURL {
+  /** Specifies the detail level of the image. */
+  detail?: "auto" | "low" | "high";
+
+  /** Either a URL of the image or the base64 encoded image data. */
+  url: string;
+}
+
+export interface ImagePromptValueFields {
+  imageUrl: ImageURL;
+}
+
+/**
+ * Class that represents an image prompt value. It extends the
+ * BasePromptValue and includes an ImageURL instance.
+ */
+export class ImagePromptValue extends BasePromptValue {
+  lc_namespace = ["langchain_core", "prompt_values"];
+
+  lc_serializable = true;
+
+  static lc_name() {
+    return "ImagePromptValue";
+  }
+
+  imageUrl: ImageURL;
+
+  constructor(imageUrl: ImageURL);
+
+  constructor(fields: ImagePromptValueFields);
+
+  constructor(fields: ImageURL | ImagePromptValueFields) {
+    if (!("imageUrl" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { imageUrl: fields };
+    }
+
+    super(fields);
+    this.imageUrl = fields.imageUrl;
+  }
+
+  toString() {
+    return this.imageUrl.url;
+  }
+
+  toChatMessages() {
+    return [
+      new HumanMessage({
+        content: [
+          {
+            type: "image_url",
+            image_url: {
+              detail: this.imageUrl.detail,
+              url: this.imageUrl.url,
+            },
+          },
+        ],
+      }),
+    ];
+  }
+}

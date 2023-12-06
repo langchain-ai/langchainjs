@@ -22,6 +22,7 @@ import {
   type TypedPromptInputValues,
 } from "./base.js";
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
+import { ImagePromptTemplate } from "./image.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -707,5 +708,119 @@ export class ChatPromptTemplate<
     )[]
   ): ChatPromptTemplate<RunInput> {
     return this.fromMessages(promptMessages);
+  }
+}
+
+class _StringImageMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  RunOutput extends BaseMessage[] = BaseMessage[]
+> extends BaseMessagePromptTemplate<RunInput> {
+  lc_namespace = ["langchain_core", "prompts", "chat"];
+
+  lc_serializable = true;
+
+  inputVariables: Array<Extract<keyof RunInput, string>>;
+
+  additionalOptions: Record<string, unknown> = {};
+
+  prompt:
+    | BaseStringPromptTemplate<
+        InputValues<Extract<keyof RunInput, string>>,
+        string
+      >
+    | Array<
+        | BaseStringPromptTemplate<
+            InputValues<Extract<keyof RunInput, string>>,
+            string
+          >
+        | ImagePromptTemplate<
+            InputValues<Extract<keyof RunInput, string>>,
+            string
+          >
+        | MessageStringPromptTemplateFields<
+            InputValues<Extract<keyof RunInput, string>>
+          >
+      >;
+
+  _messageClass: BaseMessage;
+
+  constructor(
+    prompt: BaseStringPromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>
+    >,
+    additionalOptions?: Record<string, unknown>
+  );
+
+  constructor(
+    fields: MessageStringPromptTemplateFields<
+      InputValues<Extract<keyof RunInput, string>>
+    >,
+    additionalOptions?: Record<string, unknown>
+  );
+
+  constructor(
+    fields: ImagePromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>,
+      string
+    >,
+    additionalOptions?: Record<string, unknown>
+  );
+
+  constructor(
+    fields:
+      | MessageStringPromptTemplateFields<
+          InputValues<Extract<keyof RunInput, string>>
+        >
+      | BaseStringPromptTemplate<
+          InputValues<Extract<keyof RunInput, string>>,
+          string
+        >
+      | ImagePromptTemplate<
+          InputValues<Extract<keyof RunInput, string>>,
+          string
+        >,
+    additionalOptions?: Record<string, unknown>
+  ) {
+    if (!("prompt" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { prompt: fields };
+    }
+    super(fields);
+    this.prompt = fields.prompt;
+    this.additionalOptions = additionalOptions ?? this.additionalOptions;
+  }
+
+  format(input: RunInput): BaseMessage {
+    if (this.prompt instanceof BaseStringPromptTemplate) {
+      const text = this.prompt.format(kwargs);
+      return new this._messageClass(
+        {
+          content: text,
+        },
+        this.additionalOptions
+      );
+    } else {
+      const content = [];
+      for (const prompt of this.prompt) {
+        const inputs = {};
+        for (const item of prompt.inputVariables) {
+          inputs[item] = kwargs[item];
+        }
+        if (prompt instanceof StringPromptTemplate) {
+          const formatted: string | ImageURL = prompt.format(inputs);
+          content.push({ type: "text", text: formatted });
+        } else if (prompt instanceof ImagePromptTemplate) {
+          const formatted = prompt.format(inputs);
+          content.push({ type: "image_url", image_url: formatted });
+        }
+      }
+      return new this._messageClass(
+        {
+          content,
+        },
+        this.additionalOptions
+      );
+    }
   }
 }
