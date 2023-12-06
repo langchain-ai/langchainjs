@@ -12656,15 +12656,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xata.io/client@npm:^0.25.1":
-  version: 0.25.1
-  resolution: "@xata.io/client@npm:0.25.1"
-  peerDependencies:
-    typescript: ">=4.5"
-  checksum: 041988667b19e84a4af27b8abb6c3ca79904df595a687e4a8cd19ce0c1e3d180781fb2e54ba55de2217893f76b05048cffa99d171034f9a4229d694904d43bcd
-  languageName: node
-  linkType: hard
-
 "@xata.io/client@npm:^0.28.0":
   version: 0.28.0
   resolution: "@xata.io/client@npm:0.28.0"
@@ -18109,7 +18100,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.51.0
     "@upstash/redis": ^1.20.6
     "@vercel/kv": ^0.2.3
-    "@xata.io/client": ^0.25.1
+    "@xata.io/client": ^0.28.0
     "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
     chromadb: ^1.5.3
