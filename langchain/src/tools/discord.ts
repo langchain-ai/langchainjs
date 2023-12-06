@@ -9,6 +9,33 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 /**
+ * Base tool parameters for the Discord tools
+ */
+interface DiscordToolParams {
+  botToken?: string;
+}
+
+/**
+ * Tool parameters for the DiscordGetMessagesTool
+ */
+interface DiscordGetMessagesToolParams extends DiscordToolParams {
+  messageLimit?: number;
+}
+
+/**
+ * Tool parameters for the DiscordSendMessageTool
+ */
+interface DiscordSendMessageToolParams extends DiscordToolParams {
+  channelId?: string;
+}
+
+/**
+ * Tool parameters for the DiscordChannelSearch
+ */
+interface DiscordChannelSearchParams extends DiscordToolParams {
+  channelId?: string;
+}
+/**
  * A tool for retrieving messages from a discord channel using a bot.
  * It extends the base Tool class and implements the _call method to
  * perform the retrieve operation. Requires an bot token which can be set
@@ -36,15 +63,17 @@ export class DiscordGetMessagesTool extends Tool {
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   });
 
-  constructor(
-    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
-    messageLimit: number | undefined = 10
-  ) {
-    super(...arguments);
+  constructor(fields: DiscordGetMessagesToolParams = {}) {
+    super();
+
+    const {
+      botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
+      messageLimit = 10,
+    } = fields;
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
       );
     }
 
@@ -96,14 +125,15 @@ export class DiscordGetGuildsTool extends Tool {
     intents: [GatewayIntentBits.Guilds],
   });
 
-  constructor(
-    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
-  ) {
-    super(...arguments);
+  constructor(fields: DiscordToolParams = {}) {
+    super();
+
+    const { botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN") } =
+      fields || {};
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
       );
     }
     this.botToken = botToken;
@@ -149,14 +179,15 @@ export class DiscordGetTextChannelsTool extends Tool {
     intents: [GatewayIntentBits.Guilds],
   });
 
-  constructor(
-    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN")
-  ) {
-    super(...arguments);
+  constructor(fields: DiscordToolParams = {}) {
+    super();
+
+    const { botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN") } =
+      fields || {};
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
       );
     }
     this.botToken = botToken;
@@ -186,7 +217,7 @@ export class DiscordGetTextChannelsTool extends Tool {
 /**
  * A tool for sending messages to a discord channel using a bot.
  * It extends the base Tool class and implements the _call method to
- * perform the retrieve operation. Requires a bot token which can be set
+ * perform the retrieve operation. Requires a bot token and channelId which can be set
  * in the environment variables. The _call method takes the message to be
  * sent as the input argument.
  */
@@ -208,23 +239,26 @@ export class DiscordSendMessagesTool extends Tool {
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   });
 
-  constructor(
-    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
-    channelId: string | undefined = getEnvironmentVariable("DISCORD_CHANNEL_ID")
-  ) {
-    super(...arguments);
+  constructor(fields: DiscordSendMessageToolParams = {}) {
+    super();
+
+    const {
+      botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
+      channelId = getEnvironmentVariable("DISCORD_CHANNEL_ID"),
+    } = fields;
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
+      );
+    }
+
+    if (!channelId) {
+      throw new Error(
+        "Discord API key not set. You can set it as DISCORD_CHANNEL_ID"
       );
     }
     this.botToken = botToken;
-    if (!channelId) {
-      throw new Error(
-        "Discord channel not set. You can set it as DISCORD_CHANNEL_ID in your .env file."
-      );
-    }
     this.channelId = channelId;
   }
 
@@ -285,23 +319,26 @@ export class DiscordChannelSearchTool extends Tool {
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   });
 
-  constructor(
-    botToken: string | undefined = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
-    channelId: string | undefined = getEnvironmentVariable("DISCORD_CHANNEL_ID")
-  ) {
-    super(...arguments);
+  constructor(fields: DiscordChannelSearchParams = {}) {
+    super();
+
+    const {
+      botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
+      channelId = getEnvironmentVariable("DISCORD_CHANNEL_ID"),
+    } = fields;
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN in your .env file."
+        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
+      );
+    }
+
+    if (!channelId) {
+      throw new Error(
+        "Discord API key not set. You can set it as DISCORD_CHANNEL_ID"
       );
     }
     this.botToken = botToken;
-    if (!channelId) {
-      throw new Error(
-        "Discord channel not set. You can set it as DISCORD_CHANNEL_ID in your .env file."
-      );
-    }
     this.channelId = channelId;
   }
 
@@ -334,7 +371,7 @@ export class DiscordChannelSearchTool extends Tool {
       return JSON.stringify(results);
     } catch (err) {
       await this.client.destroy();
-      return "Error sending message";
+      return "Error searching through channel.";
     }
   }
 }
