@@ -142,7 +142,9 @@ test("Runnable with message history should stream through", async () => {
   }).pipe(new StringOutputParser());
   const config: RunnableConfig = { configurable: { sessionId: "1" } };
   const stream = await withHistory.stream({ input: "hello" }, config);
+  const chunks = [];
   for await (const chunk of stream) {
-    console.log("CHUNK", chunk);
+    chunks.push(chunk);
   }
+  expect(chunks.length).toBeGreaterThan(1);
 });
