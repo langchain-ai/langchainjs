@@ -6,7 +6,7 @@ import {
 // A simple hash function for demonstration purposes
 function simpleHash(input: string): string {
   let hash = 0;
-  for (let i = 0; i < input.length; i++) {
+  for (let i = 0; i < input.length; i += 1) {
     const char = input.charCodeAt(i);
     hash = (hash << 5) - hash + char;
     hash |= 0; // Convert to 32bit integer

@@ -1,10 +1,12 @@
+/* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //  yarn test:single src/experimental/masking/tests/masking.test.ts
+import { jest } from "@jest/globals";
 import {
   MaskingParser,
   RegexMaskingTransformer,
   MaskingTransformer,
 } from "../index.js";
-import { jest } from "@jest/globals";
 
 describe("MaskingParser and PIIMaskingTransformer", () => {
   describe("Masking with Static Identifiers", () => {
@@ -45,7 +47,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     function generateLargeMessage() {
       let largeMessage = "";
-      for (let i = 0; i < 10000; i++) {
+      for (let i = 0; i < 10000; i += 1) {
         // Adjust the number for desired message size
         largeMessage += `User${i}: jane.doe${i}@email.com, 555-123-${i
           .toString()
@@ -175,14 +177,13 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       maskingParser.addTransformer(piiMaskingTransformer);
     });
 
-    const customHashFunction = (input: string) => {
-      // A simple hash function that creates a mock hash representation of the input.
-      // This is just for demonstration purposes and not a secure hashing method.
-      return input
+    // A simple hash function that creates a mock hash representation of the input.
+    // This is just for demonstration purposes and not a secure hashing method.
+    const customHashFunction = (input: string) =>
+      input
         .split("")
         .map(() => "*")
         .join("");
-    };
     it("should mask email and phone using custom hash function", async () => {
       const piiMaskingTransformer = new RegexMaskingTransformer(
         {
@@ -205,10 +206,12 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
       const maskedMessage = await maskingParser.mask(message);
 
       // The lengths of the masked parts should be equal to the lengths of the original email and phone number.
-      const expectedEmailMask =
-        "custom-email-" + "*".repeat("jane.doe@email.com".length);
-      const expectedPhoneMask =
-        "custom-phone-" + "*".repeat("555-123-4567".length);
+      const expectedEmailMask = `custom-email-${"*".repeat(
+        "jane.doe@email.com".length
+      )}`;
+      const expectedPhoneMask = `custom-phone-${"*".repeat(
+        "555-123-4567".length
+      )}`;
 
       expect(maskedMessage).toContain(expectedEmailMask);
       expect(maskedMessage).toContain(expectedPhoneMask);
@@ -280,28 +283,31 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
   });
 
   describe("Error Handling in PIIMaskingTransformer", () => {
-    it("throws an error for invalid message type in transform", () => {
+    it("throws an error for invalid message type in transform", async () => {
       const transformer = new RegexMaskingTransformer({});
       const invalidMessage: any = 123; // intentionally incorrect type
       const state = new Map<string, string>();
-      expect(() => transformer.transform(invalidMessage, state)).toThrow(
-        "The 'message' argument must be a string."
-      );
+      await expect(
+        transformer.transform(invalidMessage, state)
+      ).rejects.toThrow("The 'message' argument must be a string.");
     });
 
-    it("throws an error for invalid state type in transform", () => {
+    it("throws an error for invalid state type in transform", async () => {
       const transformer = new RegexMaskingTransformer({});
       const message = "Some message";
       const invalidState: any = {}; // intentionally incorrect type
-      expect(() => transformer.transform(message, invalidState)).toThrow(
-        "The 'state' argument must be an instance of Map."
-      );
+      await expect(
+        transformer.transform(message, invalidState)
+      ).rejects.toThrow("The 'state' argument must be an instance of Map.");
     });
 
     it("throws an error when initialized with invalid regex pattern", () => {
       expect(() => {
-        // @ts-expect-error
-        new RegexMaskingTransformer({ invalid: { regex: null } });
+        // @ts-expect-error Should throw with invalid regex
+        const transformer = new RegexMaskingTransformer({
+          invalid: { regex: null },
+        });
+        console.log(transformer);
       }).toThrow("Invalid pattern configuration.");
     });
   });
@@ -506,8 +512,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
           return [transformedMessage, newState];
         },
         // Mock or placeholder rehydrate method
-        rehydrate(message, state) {
-          return Promise.resolve(message);
+        async rehydrate(message, _state) {
+          return message;
         },
       };
 

@@ -1,10 +1,11 @@
 import { MaskingTransformer } from "./transformer.js";
-import { HashFunction, MaskingPattern } from "./types.js";
+import type { HashFunction, MaskingPattern } from "./types.js";
 /**
  * RegexMaskingTransformer class for masking and rehydrating messages with Regex.
  */
 export class RegexMaskingTransformer extends MaskingTransformer {
   private patterns: { [key: string]: MaskingPattern };
+
   private hashFunction: HashFunction;
 
   /**
@@ -38,13 +39,14 @@ export class RegexMaskingTransformer extends MaskingTransformer {
    * @param patterns - The patterns object to validate.
    */
   private validatePatterns(patterns: { [key: string]: MaskingPattern }) {
-    for (const key in patterns) {
+    for (const key of Object.keys(patterns)) {
       const pattern = patterns[key];
       // Checks that each pattern is an object and has a regex property that is an instance of RegExp.
       // Throws an error if these conditions are not met, indicating an invalid pattern configuration.
       if (
         !pattern ||
         typeof pattern !== "object" ||
+        // eslint-disable-next-line no-instanceof/no-instanceof
         !(pattern.regex instanceof RegExp)
       ) {
         throw new Error("Invalid pattern configuration.");
@@ -58,7 +60,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
    * @param state - The current state containing original values.
    * @returns A tuple of the masked message and the updated state.
    */
-  transform(
+  async transform(
     message: string,
     state: Map<string, string>
   ): Promise<[string, Map<string, string>]> {
@@ -68,6 +70,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
       );
     }
 
+    // eslint-disable-next-line no-instanceof/no-instanceof
     if (!(state instanceof Map)) {
       throw new TypeError(
         "RegexMaskingTransformer.transform Error: The 'state' argument must be an instance of Map."
@@ -78,10 +81,10 @@ export class RegexMaskingTransformer extends MaskingTransformer {
     let processedMessage = message;
 
     // Initialize original values map with the current state or a new map
-    let originalValues = state || new Map<string, string>();
+    const originalValues = state || new Map<string, string>();
 
     // Iterate over each pattern defined in the transformer
-    for (const key in this.patterns) {
+    for (const key of Object.keys(this.patterns)) {
       const pattern = this.patterns[key];
 
       // Apply the current pattern's regex to the message
@@ -103,7 +106,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
     // Return the fully masked message and the state map with all original values
     // Wrap the synchronous return values in Promise.resolve() to maintain compatibility
     // with the MaskingParser's expectation of a Promise return type.
-    return Promise.resolve([processedMessage, originalValues]);
+    return [processedMessage, originalValues];
   }
 
   /**
@@ -112,13 +115,17 @@ export class RegexMaskingTransformer extends MaskingTransformer {
    * @param state - The state map containing mappings of masked values to their original values.
    * @returns The rehydrated (original) message.
    */
-  rehydrate(message: string, state: Map<string, string>): Promise<string> {
+  async rehydrate(
+    message: string,
+    state: Map<string, string>
+  ): Promise<string> {
     if (typeof message !== "string") {
       throw new TypeError(
         "RegexMaskingTransformer.rehydrate Error: The 'message' argument must be a string."
       );
     }
 
+    // eslint-disable-next-line no-instanceof/no-instanceof
     if (!(state instanceof Map)) {
       throw new TypeError(
         "RegexMaskingTransformer.rehydrate Error: The 'state' argument must be an instance of Map."
@@ -139,7 +146,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
       message
     );
 
-    return Promise.resolve(rehydratedMessage);
+    return rehydratedMessage;
   }
 
   /**
@@ -150,7 +157,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
   private defaultHashFunction(input: string): string {
     let hash = 0;
     // Iterate over each character in the input string
-    for (let i = 0; i < input.length; i++) {
+    for (let i = 0; i < input.length; i += 1) {
       // Get ASCII value of the character
       const char = input.charCodeAt(i);
       // Combine the current hash with the new character and ensure it remains a 32-bit integer
