@@ -1,7 +1,7 @@
 import type { Voy as VoyOriginClient, SearchResult } from "voy-search";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 export type VoyClient = Omit<
   VoyOriginClient,

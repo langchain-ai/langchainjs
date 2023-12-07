@@ -1,17 +1,17 @@
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { 
+import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
 } from "@langchain/core/messages";
-import { 
-  ChatGeneration, 
+import {
+  ChatGeneration,
   ChatGenerationChunk,
   ChatResult,
-  LLMResult
+  LLMResult,
 } from "@langchain/core/outputs";
 
 import {
@@ -213,7 +213,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     GoogleVertexAIChatPrediction,
     AuthOptions
   >;
-  
+
   lc_namespace = ["langchain-community", "chat_models", this._llmType()];
 
   get lc_aliases(): Record<string, string> {

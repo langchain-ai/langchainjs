@@ -1,6 +1,12 @@
-import { BaseRetriever, type BaseRetrieverInput } from "@langchain/core/retrievers";
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
-import { AsyncCaller, AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 
 /**
  * Interface for the arguments required to create a new instance of

@@ -1,6 +1,9 @@
 import { Document } from "@langchain/core/documents";
 import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
-import { BaseRetriever, type BaseRetrieverInput } from "@langchain/core/retrievers";
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**

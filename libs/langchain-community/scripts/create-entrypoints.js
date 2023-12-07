@@ -206,7 +206,7 @@ const updateJsonFile = (relativePath, updateFunction) => {
 };
 
 const generateFiles = () => {
-  const files = [...Object.entries(entrypoints), ["index", "index"]].flatMap(
+  const files = [...Object.entries(entrypoints)].flatMap(
     ([key, value]) => {
       const nrOfDots = key.split("/").length - 1;
       const relativePath = "../".repeat(nrOfDots) || "./";

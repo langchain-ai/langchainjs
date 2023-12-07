@@ -1,6 +1,6 @@
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 import { Callbacks } from "@langchain/core/callbacks/manager";
 
 const IdColumnSymbol = Symbol("id");

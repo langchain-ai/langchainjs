@@ -12,9 +12,9 @@ class BingSerpAPI extends Tool {
   static lc_name() {
     return "BingSerpAPI";
   }
-  
+
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   /**

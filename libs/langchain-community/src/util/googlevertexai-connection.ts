@@ -1,5 +1,8 @@
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import { AsyncCaller, AsyncCallerCallOptions } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  AsyncCallerCallOptions,
+} from "@langchain/core/utils/async_caller";
 import { GenerationChunk } from "@langchain/core/outputs";
 import type {
   GoogleVertexAIBaseLLMInput,

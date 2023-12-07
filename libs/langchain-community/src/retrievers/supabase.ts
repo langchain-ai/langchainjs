@@ -1,7 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Embeddings } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
-import { BaseRetriever, type BaseRetrieverInput } from "@langchain/core/retrievers";
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
 import {
   CallbackManagerForRetrieverRun,
   Callbacks,

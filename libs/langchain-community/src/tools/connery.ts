@@ -1,4 +1,7 @@
-import { AsyncCaller, AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Tool } from "@langchain/core/tools";
 
@@ -66,7 +69,7 @@ type RunActionResult = {
  */
 export class ConneryAction extends Tool {
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   name: string;

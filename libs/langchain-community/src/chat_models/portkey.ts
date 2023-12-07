@@ -12,10 +12,10 @@ import {
   SystemMessage,
   SystemMessageChunk,
 } from "@langchain/core/messages";
-import { 
+import {
   ChatResult,
   ChatGeneration,
-  ChatGenerationChunk
+  ChatGenerationChunk,
 } from "@langchain/core/outputs";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
@@ -80,7 +80,7 @@ export class PortkeyChat extends BaseChatModel {
   llms?: [LLMOptions] | null = undefined;
 
   session: PortkeySession;
-  
+
   lc_namespace = ["langchain-community", "chat_models", this._llmType()];
 
   constructor(init?: Partial<PortkeyChat>) {

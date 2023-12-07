@@ -35,6 +35,7 @@
   "dependencies": {
     "@langchain/core": "~0.0.9",
     "@langchain/openai": "~0.0.1",
+    "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
     "zod": "^3.22.3"
   },
@@ -1429,9 +1430,6 @@
     "cache/upstash_redis.d.ts",
     "graphs/neo4j_graph.cjs",
     "graphs/neo4j_graph.js",
-    "graphs/neo4j_graph.d.ts",
-    "index.cjs",
-    "index.js",
-    "index.d.ts"
+    "graphs/neo4j_graph.d.ts"
   ]
 }

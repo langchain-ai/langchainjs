@@ -1,6 +1,9 @@
 import type { OpenAIClient } from "@langchain/openai";
 
-import { BaseChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  BaseChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import {
   AIMessage,
   BaseMessage,
@@ -328,7 +331,7 @@ export class ChatMinimax
   }
 
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "chat_models", this._llmType()];
 
   minimaxGroupId?: string;

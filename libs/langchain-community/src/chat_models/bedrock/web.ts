@@ -5,13 +5,11 @@ import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
 import { Sha256 } from "@aws-crypto/sha256-js";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { SimpleChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
-  BaseBedrockInput,
-  BedrockLLMInputOutputAdapter,
-  type CredentialType,
-} from "../../util/bedrock.js";
+  SimpleChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -20,6 +18,11 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 
+import {
+  BaseBedrockInput,
+  BedrockLLMInputOutputAdapter,
+  type CredentialType,
+} from "../../util/bedrock.js";
 import type { SerializedFields } from "../../load/map_keys.js";
 
 function convertOneMessageToText(

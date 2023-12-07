@@ -1,5 +1,9 @@
 import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
-import { LLM, type BaseLLMCallOptions, type BaseLLMParams } from "@langchain/core/language_models/llms";
+import {
+  LLM,
+  type BaseLLMCallOptions,
+  type BaseLLMParams,
+} from "@langchain/core/language_models/llms";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 
@@ -31,9 +35,9 @@ export interface LlamaCppCallOptions extends BaseLLMCallOptions {
  */
 export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "llms", this._llmType()];
-  
+
   declare CallOptions: LlamaCppCallOptions;
 
   static inputs: LlamaCppInputs;

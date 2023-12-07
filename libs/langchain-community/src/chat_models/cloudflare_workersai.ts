@@ -1,4 +1,7 @@
-import { SimpleChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  SimpleChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
   AIMessageChunk,

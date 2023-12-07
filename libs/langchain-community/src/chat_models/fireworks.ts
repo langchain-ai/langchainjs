@@ -1,8 +1,12 @@
 import type { BaseChatModelParams } from "@langchain/core/language_models/chat_models";
-import type { OpenAIClient, ChatOpenAICallOptions, OpenAIChatInput } from "@langchain/openai";
+import {
+  type OpenAIClient,
+  type ChatOpenAICallOptions,
+  type OpenAIChatInput,
+  type OpenAICoreRequestOptions,
+  ChatOpenAI,
+} from "@langchain/openai";
 
-import type { OpenAICoreRequestOptions } from "../types/openai-types.js";
-import { ChatOpenAI } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 type FireworksUnsupportedArgs =
@@ -52,7 +56,7 @@ export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
   }
 
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "chat_models", this._llmType()];
 
   fireworksApiKey?: string;

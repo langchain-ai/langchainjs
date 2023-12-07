@@ -10,7 +10,7 @@ import {
 
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**

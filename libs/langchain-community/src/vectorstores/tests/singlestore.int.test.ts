@@ -2,8 +2,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { test, expect } from "@jest/globals";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { SingleStoreVectorStore } from "../singlestore.js";
 import { Document } from "@langchain/core/documents";
+import { SingleStoreVectorStore } from "../singlestore.js";
 
 test.skip("SingleStoreVectorStore", async () => {
   expect(process.env.SINGLESTORE_HOST).toBeDefined();

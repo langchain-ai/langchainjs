@@ -1,5 +1,9 @@
 import { BaseLLM } from "@langchain/core/language_models/llms";
-import { Generation, GenerationChunk, LLMResult } from "@langchain/core/outputs";
+import {
+  Generation,
+  GenerationChunk,
+  LLMResult,
+} from "@langchain/core/outputs";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
@@ -56,7 +60,7 @@ export class BaseGoogleVertexAI<AuthOptions>
   implements GoogleVertexAIBaseLLMInput<AuthOptions>
 {
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "llms", this._llmType()];
 
   model = "text-bison";

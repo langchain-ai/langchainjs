@@ -3,7 +3,7 @@ import { ClickHouseClient, createClient } from "@clickhouse/client";
 import { format } from "mysql2";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 /**
  * Arguments for the ClickHouseStore class, which include the host, port,

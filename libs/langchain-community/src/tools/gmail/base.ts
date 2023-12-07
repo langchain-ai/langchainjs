@@ -45,9 +45,9 @@ export abstract class GmailBaseTool extends StructuredTool {
   name = "Gmail";
 
   description = "A tool to send and view emails through Gmail";
-  
+
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   protected gmail: gmail_v1.Gmail;

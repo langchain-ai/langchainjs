@@ -1,4 +1,7 @@
-import { SimpleChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  SimpleChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -55,7 +58,7 @@ export class ChatOllama
   }
 
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "chat_models", this._llmType()];
 
   model = "llama2";

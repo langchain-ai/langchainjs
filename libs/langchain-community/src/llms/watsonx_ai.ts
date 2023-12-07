@@ -1,4 +1,8 @@
-import { type BaseLLMCallOptions, type BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
+import {
+  type BaseLLMCallOptions,
+  type BaseLLMParams,
+  LLM,
+} from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
@@ -53,9 +57,9 @@ const endpointConstructor = (region: string, version: string) =>
 
 export class WatsonxAI extends LLM<BaseLLMCallOptions> {
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "llms", this._llmType()];
-  
+
   static lc_name() {
     return "WatsonxAI";
   }

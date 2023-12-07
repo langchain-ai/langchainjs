@@ -10,7 +10,7 @@ import { format } from "mysql2";
 import { createPool } from "mysql2/promise";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Metadata = Record<string, any>;

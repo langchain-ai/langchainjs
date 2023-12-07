@@ -6,8 +6,11 @@ import {
 } from "@cloudflare/workers-types";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
-import { AsyncCaller, type AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import { Document } from "@langchain/core/documents";
+import {
+  AsyncCaller,
+  type AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { chunkArray } from "../util/chunk.js";
 
 export interface VectorizeLibArgs extends AsyncCallerParams {

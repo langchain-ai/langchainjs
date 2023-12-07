@@ -1,4 +1,10 @@
-import { type OpenAIClient, type OpenAICallOptions, type OpenAIInput, type OpenAICoreRequestOptions, OpenAI } from "@langchain/openai";
+import {
+  type OpenAIClient,
+  type OpenAICallOptions,
+  type OpenAIInput,
+  type OpenAICoreRequestOptions,
+  OpenAI,
+} from "@langchain/openai";
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -39,7 +45,7 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
   }
 
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "llms", this._llmType()];
 
   fireworksApiKey?: string;

@@ -15,9 +15,9 @@ export class GooglePlacesAPI extends Tool {
   static lc_name() {
     return "GooglePlacesAPI";
   }
-  
+
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {

@@ -2,7 +2,7 @@ import neo4j from "neo4j-driver";
 import * as uuid from "uuid";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 export type SearchType = "vector" | "hybrid";
 

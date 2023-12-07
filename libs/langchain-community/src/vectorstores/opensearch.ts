@@ -2,7 +2,7 @@ import { Client, RequestParams, errors } from "@opensearch-project/opensearch";
 import * as uuid from "uuid";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 type OpenSearchEngine = "nmslib" | "hnsw";
 type OpenSearchSpaceType = "l2" | "cosinesimil" | "ip";

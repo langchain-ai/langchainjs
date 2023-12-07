@@ -1,7 +1,10 @@
 /* eslint-disable prefer-template */
 import { Client as CassandraClient, DseClientOptions } from "cassandra-driver";
 
-import { AsyncCaller, AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";

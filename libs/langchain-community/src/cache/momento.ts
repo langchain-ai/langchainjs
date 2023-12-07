@@ -6,10 +6,12 @@ import {
   InvalidArgumentError,
 } from "@gomomento/sdk-core";
 
-import { BaseCache,
+import {
+  BaseCache,
   deserializeStoredGeneration,
   getCacheKey,
-  serializeGeneration, } from "@langchain/core/caches";
+  serializeGeneration,
+} from "@langchain/core/caches";
 import { Generation } from "@langchain/core/outputs";
 
 import { ensureCacheExists } from "../util/momento.js";

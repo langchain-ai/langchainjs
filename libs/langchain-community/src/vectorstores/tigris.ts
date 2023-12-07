@@ -2,7 +2,7 @@ import * as uuid from "uuid";
 
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 /**
  * Type definition for the arguments required to initialize a

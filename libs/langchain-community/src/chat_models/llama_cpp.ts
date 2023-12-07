@@ -5,12 +5,10 @@ import {
   type ConversationInteraction,
 } from "node-llama-cpp";
 
-import { SimpleChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
 import {
-  LlamaBaseCppInputs,
-  createLlamaModel,
-  createLlamaContext,
-} from "../util/llama_cpp.js";
+  SimpleChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -19,6 +17,11 @@ import {
   ChatMessage,
 } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
+import {
+  LlamaBaseCppInputs,
+  createLlamaModel,
+  createLlamaContext,
+} from "../util/llama_cpp.js";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -80,7 +83,7 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
   _session: LlamaChatSession | null;
 
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "chat_models", this._llmType()];
 
   static lc_name() {

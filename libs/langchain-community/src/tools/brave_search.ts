@@ -19,9 +19,9 @@ export class BraveSearch extends Tool {
   static lc_name() {
     return "BraveSearch";
   }
-  
+
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   name = "brave-search";

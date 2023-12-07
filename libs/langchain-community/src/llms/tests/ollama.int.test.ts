@@ -1,10 +1,10 @@
 import { test } from "@jest/globals";
-import { Ollama } from "../ollama.js";
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
   BytesOutputParser,
   StringOutputParser,
 } from "@langchain/core/output_parsers";
+import { Ollama } from "../ollama.js";
 
 test.skip("test call", async () => {
   const ollama = new Ollama({});

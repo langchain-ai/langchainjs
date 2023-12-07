@@ -1,7 +1,7 @@
 import { Table } from "vectordb";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 /**
  * Defines the arguments for the LanceDB class constructor. It includes a

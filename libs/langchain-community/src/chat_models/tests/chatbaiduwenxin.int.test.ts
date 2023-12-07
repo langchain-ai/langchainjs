@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
-import { ChatBaiduWenxin } from "../baiduwenxin.js";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import { ChatBaiduWenxin } from "../baiduwenxin.js";
 
 interface TestConfig {
   modelName: string | undefined;

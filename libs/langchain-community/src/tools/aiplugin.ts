@@ -18,9 +18,9 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
   static lc_name() {
     return "AIPluginTool";
   }
-  
+
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   private _name: string;

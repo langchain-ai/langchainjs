@@ -6,7 +6,11 @@ import {
 } from "@aws-sdk/client-sagemaker-runtime";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
-import { type BaseLLMCallOptions, type BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
+import {
+  type BaseLLMCallOptions,
+  type BaseLLMParams,
+  LLM,
+} from "@langchain/core/language_models/llms";
 
 /**
  * A handler class to transform input from LLM to a format that SageMaker
@@ -107,9 +111,9 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
  */
 export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "llms", this._llmType()];
-  
+
   static lc_name() {
     return "SageMakerEndpoint";
   }

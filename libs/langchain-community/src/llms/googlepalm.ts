@@ -85,9 +85,9 @@ export interface GooglePaLMTextInput extends BaseLLMParams {
  */
 export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "llms", this._llmType()];
-  
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "GOOGLE_PALM_API_KEY",

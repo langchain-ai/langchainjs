@@ -70,7 +70,7 @@ export class WikipediaQueryRun extends Tool {
   }
 
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   name = "wikipedia-api";

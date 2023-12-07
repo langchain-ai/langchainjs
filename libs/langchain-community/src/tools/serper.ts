@@ -21,9 +21,9 @@ export class Serper extends Tool {
   static lc_name() {
     return "Serper";
   }
-  
+
   get lc_namespace() {
-    return ["langchain-community", "tools"]; 
+    return ["langchain-community", "tools"];
   }
 
   /**

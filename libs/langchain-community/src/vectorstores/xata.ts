@@ -1,7 +1,7 @@
 import { BaseClient } from "@xata.io/client";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 /**
  * Interface for the arguments required to create a XataClient. Includes

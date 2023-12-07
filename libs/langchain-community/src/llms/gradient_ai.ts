@@ -1,5 +1,9 @@
 import { Gradient } from "@gradientai/nodejs-sdk";
-import { type BaseLLMCallOptions, type BaseLLMParams, LLM } from "@langchain/core/language_models/llms";
+import {
+  type BaseLLMCallOptions,
+  type BaseLLMParams,
+  LLM,
+} from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
@@ -56,9 +60,9 @@ export class GradientLLM extends LLM<BaseLLMCallOptions> {
   workspaceId?: string;
 
   inferenceParameters?: Record<string, unknown>;
-  
+
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "llms", this._llmType()];
 
   // Gradient AI does not export the BaseModel type. Once it does, we can use it here.

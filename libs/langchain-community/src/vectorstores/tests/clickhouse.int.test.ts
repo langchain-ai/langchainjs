@@ -1,10 +1,10 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 
+import { Document } from "@langchain/core/documents";
 import { ClickHouseStore } from "../clickhouse.js";
 // Import OpenAIEmbeddings if you have a valid OpenAI API key
 import { HuggingFaceInferenceEmbeddings } from "../../embeddings/hf.js";
-import { Document } from "@langchain/core/documents";
 
 test.skip("ClickHouseStore.fromText", async () => {
   const vectorStore = await ClickHouseStore.fromTexts(

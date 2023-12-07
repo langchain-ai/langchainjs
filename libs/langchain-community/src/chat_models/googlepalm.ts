@@ -10,7 +10,10 @@ import {
 } from "@langchain/core/messages";
 import { ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { BaseChatModel, type BaseChatModelParams } from "@langchain/core/language_models/chat_models";
+import {
+  BaseChatModel,
+  type BaseChatModelParams,
+} from "@langchain/core/language_models/chat_models";
 
 export type BaseMessageExamplePair = {
   input: BaseMessage;
@@ -120,7 +123,7 @@ export class ChatGooglePaLM
   }
 
   lc_serializable = true;
-  
+
   lc_namespace = ["langchain-community", "chat_models", this._llmType()];
 
   get lc_secrets(): { [key: string]: string } | undefined {

@@ -7,7 +7,7 @@ import type {
 import { SchemaFieldTypes, VectorAlgorithms } from "redis";
 import { Embeddings } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Document } from "@langchain/core/documents"
+import { Document } from "@langchain/core/documents";
 
 // Adapated from internal redis types which aren't exported
 /**

@@ -1,6 +1,12 @@
-import { BaseRetriever, type BaseRetrieverInput } from "@langchain/core/retrievers";
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
 import { Document } from "@langchain/core/documents";
-import { AsyncCaller, type AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  type AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 
 export interface ChaindeskRetrieverArgs
   extends AsyncCallerParams,
