@@ -303,8 +303,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("throws an error when initialized with invalid regex pattern", () => {
       expect(() => {
-        // @ts-expect-error Should throw with invalid regex
         const transformer = new RegexMaskingTransformer({
+          // @ts-expect-error Should throw with invalid regex
           invalid: { regex: null },
         });
         console.log(transformer);
