@@ -8106,7 +8106,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     jsdom: ^22.1.0
-    langsmith: ^0.0.49
+    langsmith: ~0.0.48
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     mammoth: ^1.5.1
@@ -23571,21 +23571,6 @@ __metadata:
     typescript: ~5.1.6
   languageName: unknown
   linkType: soft
-
-"langsmith@npm:^0.0.49":
-  version: 0.0.49
-  resolution: "langsmith@npm:0.0.49"
-  dependencies:
-    "@types/uuid": ^9.0.1
-    commander: ^10.0.1
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  bin:
-    langsmith: dist/cli/main.cjs
-  checksum: 9976d9fe1e4d4ace5041af08d3271dff61d7a87fbd88523b52274817704d282c46a48187cc73af0f7e440dbe4db5da1d221966d1136a71cbfa6115e5159242a8
-  languageName: node
-  linkType: hard
 
 "langsmith@npm:~0.0.48":
   version: 0.0.48
