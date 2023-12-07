@@ -1,9 +1,10 @@
 import { Collection, Document as MongoDBDocument, ObjectId } from "mongodb";
+import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
-  BaseListChatMessageHistory
-} from "@langchain/core/chat_history";
-import { BaseMessage,   mapChatMessagesToStoredMessages,
-  mapStoredMessagesToChatMessages, } from "@langchain/core/messages";
+  BaseMessage,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "@langchain/core/messages";
 
 export interface MongoDBChatMessageHistoryInput {
   collection: Collection<MongoDBDocument>;

@@ -8,11 +8,13 @@ import {
   FieldValue,
 } from "firebase-admin/firestore";
 
+import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
-  BaseListChatMessageHistory
-} from "@langchain/core/chat_history";
-import { BaseMessage, StoredMessage,   mapChatMessagesToStoredMessages,
-  mapStoredMessagesToChatMessages, } from "@langchain/core/messages";
+  BaseMessage,
+  StoredMessage,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "@langchain/core/messages";
 
 /**
  * Interface for FirestoreDBChatMessageHistory. It includes the collection

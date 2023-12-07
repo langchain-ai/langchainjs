@@ -1,9 +1,11 @@
 import { Redis, type RedisConfigNodejs } from "@upstash/redis";
+import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
-  BaseListChatMessageHistory
-} from "@langchain/core/chat_history";
-import { BaseMessage, StoredMessage,   mapChatMessagesToStoredMessages,
-  mapStoredMessagesToChatMessages, } from "@langchain/core/messages";
+  BaseMessage,
+  StoredMessage,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "@langchain/core/messages";
 
 /**
  * Type definition for the input parameters required to initialize an

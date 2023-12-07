@@ -13,11 +13,12 @@ import {
   IndexNames,
   makeFunctionReference,
 } from "convex/server";
+import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
-  BaseListChatMessageHistory
-} from "@langchain/core/chat_history";
-import { BaseMessage,   mapChatMessagesToStoredMessages,
-  mapStoredMessagesToChatMessages, } from "@langchain/core/messages";
+  BaseMessage,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "@langchain/core/messages";
 
 /**
  * Type that defines the config required to initialize the

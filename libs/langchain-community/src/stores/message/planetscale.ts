@@ -3,11 +3,14 @@ import {
   Config as PlanetScaleConfig,
   Connection as PlanetScaleConnection,
 } from "@planetscale/database";
+import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
-  BaseListChatMessageHistory
-} from "@langchain/core/chat_history";
-import { BaseMessage, StoredMessage, StoredMessageData,   mapChatMessagesToStoredMessages,
-  mapStoredMessagesToChatMessages, } from "@langchain/core/messages";
+  BaseMessage,
+  StoredMessage,
+  StoredMessageData,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "@langchain/core/messages";
 
 /**
  * Type definition for the input parameters required when instantiating a

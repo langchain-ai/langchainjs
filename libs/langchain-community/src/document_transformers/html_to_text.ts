@@ -1,7 +1,8 @@
-import { htmlToText } from "html-to-text";
-import type { HtmlToTextOptions } from "html-to-text";
-import { Document } from "@langchain/core/documents";
-import { MappingDocumentTransformer } from "@langchain/core/documents";
+import { htmlToText, type HtmlToTextOptions } from "html-to-text";
+import {
+  MappingDocumentTransformer,
+  Document,
+} from "@langchain/core/documents";
 
 /**
  * A transformer that converts HTML content to plain text.

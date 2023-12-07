@@ -1,8 +1,10 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
-import { Options } from "mozilla-readability";
-import { Document } from "@langchain/core/documents";
-import { MappingDocumentTransformer } from "@langchain/core/documents";
+import type { Options } from "mozilla-readability";
+import {
+  MappingDocumentTransformer,
+  Document,
+} from "@langchain/core/documents";
 
 /**
  * A transformer that uses the Mozilla Readability library to extract the

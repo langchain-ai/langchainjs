@@ -8006,17 +8006,14 @@ __metadata:
     "@aws-sdk/client-dynamodb": ^3.310.0
     "@aws-sdk/client-kendra": ^3.352.0
     "@aws-sdk/client-lambda": ^3.310.0
-    "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.414.0
     "@aws-sdk/client-sfn": ^3.362.0
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
-    "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
     "@elastic/elasticsearch": ^8.4.0
-    "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
@@ -8026,7 +8023,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.0.9
+    "@langchain/core": ~0.0.11-rc.1
     "@langchain/openai": ~0.0.1
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
@@ -8049,15 +8046,11 @@ __metadata:
     "@tensorflow/tfjs-converter": ^3.6.0
     "@tensorflow/tfjs-core": ^3.6.0
     "@tsconfig/recommended": ^1.0.2
-    "@types/d3-dsv": ^2
-    "@types/decamelize": ^1.2.0
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
-    "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
     "@types/lodash": ^4
     "@types/mozilla-readability": ^0.2.1
-    "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
     "@types/pg-copy-streams": ^1.2.2
     "@types/uuid": ^9
@@ -8071,11 +8064,8 @@ __metadata:
     "@xata.io/client": ^0.28.0
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
-    apify-client: ^2.7.1
-    assemblyai: ^2.0.2
     axios: ^0.26.0
     cassandra-driver: ^4.7.2
-    cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
     closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
@@ -8085,7 +8075,6 @@ __metadata:
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
-    epub2: ^3.0.1
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
@@ -8096,6 +8085,7 @@ __metadata:
     faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
+    flat: ^5.0.2
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     graphql: ^16.6.0
@@ -8110,31 +8100,21 @@ __metadata:
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     mammoth: ^1.5.1
-    ml-matrix: ^6.10.4
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     neo4j-driver: ^5.12.0
     node-llama-cpp: 2.7.3
-    notion-to-md: ^3.1.0
-    officeparser: ^4.0.4
-    pdf-parse: 1.1.1
-    peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.2.1
-    playwright: ^1.32.1
     portkey-ai: ^0.1.11
     prettier: ^2.8.3
-    puppeteer: ^19.7.2
     pyodide: ^0.24.1
     redis: ^4.6.6
     release-it: ^15.10.1
     replicate: ^0.18.0
-    rimraf: ^5.0.1
     rollup: ^3.19.1
-    sonix-speech-recognition: ^2.1.1
     sqlite3: ^5.1.4
-    srt-parser-2: ^1.2.2
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
     typescript: ~5.1.6
@@ -8145,8 +8125,6 @@ __metadata:
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
-    youtube-transcript: ^1.0.6
-    youtubei.js: ^5.8.0
     zod: ^3.22.3
   peerDependencies:
     "@aws-crypto/sha256-js": ^5.0.0
@@ -8154,11 +8132,9 @@ __metadata:
     "@aws-sdk/client-dynamodb": ^3.310.0
     "@aws-sdk/client-kendra": ^3.352.0
     "@aws-sdk/client-lambda": ^3.310.0
-    "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@aws-sdk/client-sfn": ^3.310.0
     "@aws-sdk/credential-provider-node": ^3.388.0
-    "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
@@ -8195,11 +8171,8 @@ __metadata:
     "@xata.io/client": ^0.28.0
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
-    apify-client: ^2.7.1
-    assemblyai: ^2.0.2
     axios: "*"
     cassandra-driver: ^4.7.2
-    cheerio: ^1.0.0-rc.12
     chromadb: "*"
     closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
@@ -8207,7 +8180,6 @@ __metadata:
     cohere-ai: ">=6.0.0"
     convex: ^1.3.1
     d3-dsv: ^2.0.0
-    epub2: ^3.0.1
     faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
@@ -8225,21 +8197,13 @@ __metadata:
     mysql2: ^3.3.3
     neo4j-driver: "*"
     node-llama-cpp: "*"
-    notion-to-md: ^3.1.0
-    officeparser: ^4.0.4
-    pdf-parse: 1.1.1
-    peggy: ^3.0.2
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.2.1
-    playwright: ^1.32.1
     portkey-ai: ^0.1.11
-    puppeteer: ^19.7.2
     pyodide: ^0.24.1
     redis: ^4.6.4
     replicate: ^0.18.0
-    sonix-speech-recognition: ^2.1.1
-    srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
     typesense: ^1.5.3
     usearch: ^1.1.1
@@ -8248,8 +8212,6 @@ __metadata:
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
     ws: ^8.14.2
-    youtube-transcript: ^1.0.6
-    youtubei.js: ^5.8.0
   peerDependenciesMeta:
     "@aws-crypto/sha256-js":
       optional: true
@@ -8261,15 +8223,11 @@ __metadata:
       optional: true
     "@aws-sdk/client-lambda":
       optional: true
-    "@aws-sdk/client-s3":
-      optional: true
     "@aws-sdk/client-sagemaker-runtime":
       optional: true
     "@aws-sdk/client-sfn":
       optional: true
     "@aws-sdk/credential-provider-node":
-      optional: true
-    "@azure/storage-blob":
       optional: true
     "@clickhouse/client":
       optional: true
@@ -8343,15 +8301,9 @@ __metadata:
       optional: true
     "@zilliz/milvus2-sdk-node":
       optional: true
-    apify-client:
-      optional: true
-    assemblyai:
-      optional: true
     axios:
       optional: true
     cassandra-driver:
-      optional: true
-    cheerio:
       optional: true
     chromadb:
       optional: true
@@ -8366,8 +8318,6 @@ __metadata:
     convex:
       optional: true
     d3-dsv:
-      optional: true
-    epub2:
       optional: true
     faiss-node:
       optional: true
@@ -8403,35 +8353,19 @@ __metadata:
       optional: true
     node-llama-cpp:
       optional: true
-    notion-to-md:
-      optional: true
-    officeparser:
-      optional: true
-    pdf-parse:
-      optional: true
-    peggy:
-      optional: true
     pg:
       optional: true
     pg-copy-streams:
       optional: true
     pickleparser:
       optional: true
-    playwright:
-      optional: true
     portkey-ai:
-      optional: true
-    puppeteer:
       optional: true
     pyodide:
       optional: true
     redis:
       optional: true
     replicate:
-      optional: true
-    sonix-speech-recognition:
-      optional: true
-    srt-parser-2:
       optional: true
     typeorm:
       optional: true
@@ -8449,14 +8383,10 @@ __metadata:
       optional: true
     ws:
       optional: true
-    youtube-transcript:
-      optional: true
-    youtubei.js:
-      optional: true
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.10, @langchain/core@~0.0.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.11-rc.1":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8478,6 +8408,8 @@ __metadata:
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.8
     langsmith: ~0.0.48
+    ml-distance: ^4.0.0
+    ml-matrix: ^6.10.4
     p-queue: ^6.6.2
     p-retry: 4
     prettier: ^2.8.3
@@ -23109,7 +23041,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@langchain/community": ~0.0.0
-    "@langchain/core": ~0.0.10
+    "@langchain/core": ~0.0.11-rc.1
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
@@ -23133,7 +23065,6 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
     "@types/decamelize": ^1.2.0
-    "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
@@ -23180,7 +23111,6 @@ __metadata:
     faiss-node: ^0.5.1
     fast-xml-parser: ^4.2.7
     firebase-admin: ^11.9.0
-    flat: ^5.0.2
     google-auth-library: ^8.9.0
     googleapis: ^126.0.1
     graphql: ^16.6.0
@@ -23200,7 +23130,6 @@ __metadata:
     lodash: ^4.17.21
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
-    ml-matrix: ^6.10.4
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     neo4j-driver: ^5.12.0

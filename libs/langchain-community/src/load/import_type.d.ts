@@ -94,6 +94,12 @@ export interface OptionalImportMap {
   "@langchain/community/vectorstores/clickhouse"?:
     | typeof import("../vectorstores/clickhouse.js")
     | Promise<typeof import("../vectorstores/clickhouse.js")>;
+  "@langchain/community/vectorstores/closevector/node"?:
+    | typeof import("../vectorstores/closevector/node.js")
+    | Promise<typeof import("../vectorstores/closevector/node.js")>;
+  "@langchain/community/vectorstores/closevector/web"?:
+    | typeof import("../vectorstores/closevector/web.js")
+    | Promise<typeof import("../vectorstores/closevector/web.js")>;
   "@langchain/community/vectorstores/cloudflare_vectorize"?:
     | typeof import("../vectorstores/cloudflare_vectorize.js")
     | Promise<typeof import("../vectorstores/cloudflare_vectorize.js")>;
@@ -103,12 +109,27 @@ export interface OptionalImportMap {
   "@langchain/community/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
+  "@langchain/community/vectorstores/faiss"?:
+    | typeof import("../vectorstores/faiss.js")
+    | Promise<typeof import("../vectorstores/faiss.js")>;
+  "@langchain/community/vectorstores/googlevertexai"?:
+    | typeof import("../vectorstores/googlevertexai.js")
+    | Promise<typeof import("../vectorstores/googlevertexai.js")>;
+  "@langchain/community/vectorstores/hnswlib"?:
+    | typeof import("../vectorstores/hnswlib.js")
+    | Promise<typeof import("../vectorstores/hnswlib.js")>;
   "@langchain/community/vectorstores/lancedb"?:
     | typeof import("../vectorstores/lancedb.js")
     | Promise<typeof import("../vectorstores/lancedb.js")>;
   "@langchain/community/vectorstores/milvus"?:
     | typeof import("../vectorstores/milvus.js")
     | Promise<typeof import("../vectorstores/milvus.js")>;
+  "@langchain/community/vectorstores/momento_vector_index"?:
+    | typeof import("../vectorstores/momento_vector_index.js")
+    | Promise<typeof import("../vectorstores/momento_vector_index.js")>;
+  "@langchain/community/vectorstores/mongodb_atlas"?:
+    | typeof import("../vectorstores/mongodb_atlas.js")
+    | Promise<typeof import("../vectorstores/mongodb_atlas.js")>;
   "@langchain/community/vectorstores/myscale"?:
     | typeof import("../vectorstores/myscale.js")
     | Promise<typeof import("../vectorstores/myscale.js")>;
@@ -118,6 +139,12 @@ export interface OptionalImportMap {
   "@langchain/community/vectorstores/opensearch"?:
     | typeof import("../vectorstores/opensearch.js")
     | Promise<typeof import("../vectorstores/opensearch.js")>;
+  "@langchain/community/vectorstores/pgvector"?:
+    | typeof import("../vectorstores/pgvector.js")
+    | Promise<typeof import("../vectorstores/pgvector.js")>;
+  "@langchain/community/vectorstores/pinecone"?:
+    | typeof import("../vectorstores/pinecone.js")
+    | Promise<typeof import("../vectorstores/pinecone.js")>;
   "@langchain/community/vectorstores/qdrant"?:
     | typeof import("../vectorstores/qdrant.js")
     | Promise<typeof import("../vectorstores/qdrant.js")>;
@@ -130,6 +157,9 @@ export interface OptionalImportMap {
   "@langchain/community/vectorstores/singlestore"?:
     | typeof import("../vectorstores/singlestore.js")
     | Promise<typeof import("../vectorstores/singlestore.js")>;
+  "@langchain/community/vectorstores/supabase"?:
+    | typeof import("../vectorstores/supabase.js")
+    | Promise<typeof import("../vectorstores/supabase.js")>;
   "@langchain/community/vectorstores/tigris"?:
     | typeof import("../vectorstores/tigris.js")
     | Promise<typeof import("../vectorstores/tigris.js")>;
@@ -139,12 +169,24 @@ export interface OptionalImportMap {
   "@langchain/community/vectorstores/typesense"?:
     | typeof import("../vectorstores/typesense.js")
     | Promise<typeof import("../vectorstores/typesense.js")>;
+  "@langchain/community/vectorstores/usearch"?:
+    | typeof import("../vectorstores/usearch.js")
+    | Promise<typeof import("../vectorstores/usearch.js")>;
   "@langchain/community/vectorstores/vercel_postgres"?:
     | typeof import("../vectorstores/vercel_postgres.js")
     | Promise<typeof import("../vectorstores/vercel_postgres.js")>;
   "@langchain/community/vectorstores/voy"?:
     | typeof import("../vectorstores/voy.js")
     | Promise<typeof import("../vectorstores/voy.js")>;
+  "@langchain/community/vectorstores/weaviate"?:
+    | typeof import("../vectorstores/weaviate.js")
+    | Promise<typeof import("../vectorstores/weaviate.js")>;
+  "@langchain/community/vectorstores/xata"?:
+    | typeof import("../vectorstores/xata.js")
+    | Promise<typeof import("../vectorstores/xata.js")>;
+  "@langchain/community/vectorstores/zep"?:
+    | typeof import("../vectorstores/zep.js")
+    | Promise<typeof import("../vectorstores/zep.js")>;
   "@langchain/community/chat_models/bedrock"?:
     | typeof import("../chat_models/bedrock/index.js")
     | Promise<typeof import("../chat_models/bedrock/index.js")>;

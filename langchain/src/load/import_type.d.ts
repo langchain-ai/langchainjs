@@ -524,17 +524,9 @@ export interface SecretMap {
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AZURE_OPENAI_API_KEY?: string;
-  MILVUS_PASSWORD?: string;
-  MILVUS_SSL?: string;
-  MILVUS_USERNAME?: string;
   OPENAI_API_KEY?: string;
   OPENAI_ORGANIZATION?: string;
   PROMPTLAYER_API_KEY?: string;
-  QDRANT_API_KEY?: string;
-  QDRANT_URL?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
-  VECTARA_API_KEY?: string;
-  VECTARA_CORPUS_ID?: string;
-  VECTARA_CUSTOMER_ID?: string;
   ZAPIER_NLA_API_KEY?: string;
 }
