@@ -3,16 +3,44 @@ import { AuthFlowBase } from "./authFlowBase.js";
 import { AuthFlowToken, AuthFlowRefresh } from "./authFlowToken.js";
 import { AuthFlowREST } from "./authFlowREST.js";
 
+/**
+ * Tool for interacting with Outlook, allowing actions such as sending or reading emails.
+ * @extends Tool
+ */
 export class OutlookBase extends Tool {
+  /**
+   * The name of the Outlook tool.
+   * @type {string}
+   */
   name = "Outlook";
 
+  /**
+   * Description of the Outlook tool.
+   * @type {string}
+   */
   description =
     "A tool to send or read emails or do other features from Outlook.";
 
+  /**
+   * The authentication flow used for obtaining access tokens.
+   * @type {AuthFlowBase}
+   * @protected
+   */
   protected authFlow: AuthFlowBase;
 
+  /**
+   * The access token obtained after successful authentication.
+   * @type {string}
+   * @protected
+   */
   protected accessToken = "";
 
+  /**
+   * Constructs an instance of the OutlookBase tool.
+   * @param {AuthFlowBase} authFlow - The authentication flow to use.
+   * @param {string} choice - The choice of authentication flow (token, refresh, rest).
+   * @throws {Error} Throws an error if an incorrect choice of built-in authFlow is provided.
+   */
   constructor(authFlow?: AuthFlowBase, choice?: string) {
     super();
     if (authFlow) {
@@ -30,6 +58,11 @@ export class OutlookBase extends Tool {
     }
   }
 
+  /**
+   * Retrieves and returns the authentication token.
+   * If the token is not available, it first attempts to refresh the token, and if that fails, it obtains a new token.
+   * @returns {Promise<string>} A promise that resolves to the authentication token.
+   */
   async getAuth() {
     if (!this.accessToken) {
       this.accessToken = await this.authFlow.getAccessToken();
@@ -43,6 +76,12 @@ export class OutlookBase extends Tool {
     return this.accessToken;
   }
 
+  /**
+   * Placeholder method for making calls related to Outlook.
+   * @param {string} input - The input for the Outlook call.
+   * @returns {Promise<string>} A promise that resolves to the result of the Outlook call.
+   * @protected
+   */
   async _call(input: string) {
     return input;
   }

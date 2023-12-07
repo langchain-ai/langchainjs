@@ -2,16 +2,38 @@ import { OutlookBase } from "./base.js";
 import { SEND_MAIL_TOOL_DESCRIPTION } from "./descriptions.js";
 import { AuthFlowBase } from "./authFlowBase.js";
 
+/**
+ * Class representing an Outlook send mail tool.
+ * @extends OutlookBase
+ */
 export class OutlookSendMailTool extends OutlookBase {
+  /**
+   * The name of the send mail tool.
+   * @type {string}
+   */
   name = "outlook_send_mail";
 
+  /**
+   * The description of the send mail tool.
+   * @type {string}
+   */
   description = SEND_MAIL_TOOL_DESCRIPTION;
 
+  /**
+   * Creates an instance of OutlookSendMailTool.
+   * @param {AuthFlowBase} [authFlow] - The authentication flow instance.
+   * @param {string} [choice] - The choice string.
+   */
   constructor(authFlow?: AuthFlowBase, choice?: string) {
     super(authFlow, choice);
   }
 
-  async _call(message: string) {
+  /**
+   * Sends an email using the Outlook API.
+   * @param {string} message - The JSON string representing the email message.
+   * @returns {Promise<string>} A promise that resolves with the result of the email sending process.
+   */
+  async _call(message: string): Promise<string> {
     try {
       await this.getAuth();
     } catch (error) {
