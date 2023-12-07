@@ -70,3 +70,20 @@ For our next example, we want to run a retrieval-augmented generation chain to a
 [LangSmith trace](https://smith.langchain.com/public/f0205e20-c46f-47cd-a3a4-6a95451f8a25/r)
 
 :::
+
+In this chain we add some extra logic around retrieving context from a vector store.
+
+We first instantiated our model, vector store and output parser. Then we defined out prompt, which takes in two input variables:
+
+- `context` -> this is a string which is returned from our vector store based on a semantic search from the input.
+- `question` -> this is the question we want to ask.
+
+Next we created a `setupAndRetriever` runnable. This has two components:
+
+- `context` -> this is a `RunnableLambda` which takes the input from the `.invoke()` call, makes a request to our vector store, and returns the first result.
+- `question` -> this uses a `RunnablePassthrough` which simply passes whatever the input was through, and in our case it returns it to the key in the object we defined.
+
+Both of these are wrapped inside a `RunnableMap`. This is a special type of runnable that takes an object of runnables and executes them all in parallel.
+It then returns an object with the same keys as the input object, but with the values replaced with the output of the runnables.
+
+Finally, we pass the output of the `setupAndRetriever` to our `prompt` and then to our `model` and `outputParser` as before.
