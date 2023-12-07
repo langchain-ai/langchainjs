@@ -102,6 +102,7 @@ export * from "langchain/experimental/plan_and_execute";
 export * from "langchain/experimental/chat_models/bittensor";
 export * from "langchain/experimental/chat_models/ollama_functions";
 export * from "langchain/experimental/chains/violation_of_expectations";
+export * from "langchain/experimental/masking";
 export * from "langchain/evaluation";
 export * from "langchain/runnables";
 export * from "langchain/runnables/remote";
