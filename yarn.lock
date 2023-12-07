@@ -8027,7 +8027,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.0.9
-    "@langchain/openai": "workspace:^"
+    "@langchain/openai": ~0.0.1
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
@@ -8453,7 +8453,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.9":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.10, @langchain/core@~0.0.9":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8487,7 +8487,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.1":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -23106,7 +23106,7 @@ __metadata:
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
-    "@langchain/core": ~0.0.9
+    "@langchain/core": ~0.0.10
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
