@@ -1120,6 +1120,96 @@
       "import": "./utils/event_source_parse.js",
       "require": "./utils/event_source_parse.cjs"
     },
+    "./document_transformers/html_to_text": {
+      "types": "./document_transformers/html_to_text.d.ts",
+      "import": "./document_transformers/html_to_text.js",
+      "require": "./document_transformers/html_to_text.cjs"
+    },
+    "./document_transformers/mozilla_readability": {
+      "types": "./document_transformers/mozilla_readability.d.ts",
+      "import": "./document_transformers/mozilla_readability.js",
+      "require": "./document_transformers/mozilla_readability.cjs"
+    },
+    "./storage/convex": {
+      "types": "./storage/convex.d.ts",
+      "import": "./storage/convex.js",
+      "require": "./storage/convex.cjs"
+    },
+    "./storage/ioredis": {
+      "types": "./storage/ioredis.d.ts",
+      "import": "./storage/ioredis.js",
+      "require": "./storage/ioredis.cjs"
+    },
+    "./storage/upstash_redis": {
+      "types": "./storage/upstash_redis.d.ts",
+      "import": "./storage/upstash_redis.js",
+      "require": "./storage/upstash_redis.cjs"
+    },
+    "./storage/vercel_kv": {
+      "types": "./storage/vercel_kv.d.ts",
+      "import": "./storage/vercel_kv.js",
+      "require": "./storage/vercel_kv.cjs"
+    },
+    "./stores/message/cassandra": {
+      "types": "./stores/message/cassandra.d.ts",
+      "import": "./stores/message/cassandra.js",
+      "require": "./stores/message/cassandra.cjs"
+    },
+    "./stores/message/cloudflare_d1": {
+      "types": "./stores/message/cloudflare_d1.d.ts",
+      "import": "./stores/message/cloudflare_d1.js",
+      "require": "./stores/message/cloudflare_d1.cjs"
+    },
+    "./stores/message/convex": {
+      "types": "./stores/message/convex.d.ts",
+      "import": "./stores/message/convex.js",
+      "require": "./stores/message/convex.cjs"
+    },
+    "./stores/message/dynamodb": {
+      "types": "./stores/message/dynamodb.d.ts",
+      "import": "./stores/message/dynamodb.js",
+      "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/firestore": {
+      "types": "./stores/message/firestore.d.ts",
+      "import": "./stores/message/firestore.js",
+      "require": "./stores/message/firestore.cjs"
+    },
+    "./stores/message/ioredis": {
+      "types": "./stores/message/ioredis.d.ts",
+      "import": "./stores/message/ioredis.js",
+      "require": "./stores/message/ioredis.cjs"
+    },
+    "./stores/message/momento": {
+      "types": "./stores/message/momento.d.ts",
+      "import": "./stores/message/momento.js",
+      "require": "./stores/message/momento.cjs"
+    },
+    "./stores/message/mongodb": {
+      "types": "./stores/message/mongodb.d.ts",
+      "import": "./stores/message/mongodb.js",
+      "require": "./stores/message/mongodb.cjs"
+    },
+    "./stores/message/planetscale": {
+      "types": "./stores/message/planetscale.d.ts",
+      "import": "./stores/message/planetscale.js",
+      "require": "./stores/message/planetscale.cjs"
+    },
+    "./stores/message/redis": {
+      "types": "./stores/message/redis.d.ts",
+      "import": "./stores/message/redis.js",
+      "require": "./stores/message/redis.cjs"
+    },
+    "./stores/message/upstash_redis": {
+      "types": "./stores/message/upstash_redis.d.ts",
+      "import": "./stores/message/upstash_redis.js",
+      "require": "./stores/message/upstash_redis.cjs"
+    },
+    "./stores/message/xata": {
+      "types": "./stores/message/xata.d.ts",
+      "import": "./stores/message/xata.js",
+      "require": "./stores/message/xata.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -1438,6 +1528,60 @@
     "graphs/neo4j_graph.d.ts",
     "utils/event_source_parse.cjs",
     "utils/event_source_parse.js",
-    "utils/event_source_parse.d.ts"
+    "utils/event_source_parse.d.ts",
+    "document_transformers/html_to_text.cjs",
+    "document_transformers/html_to_text.js",
+    "document_transformers/html_to_text.d.ts",
+    "document_transformers/mozilla_readability.cjs",
+    "document_transformers/mozilla_readability.js",
+    "document_transformers/mozilla_readability.d.ts",
+    "storage/convex.cjs",
+    "storage/convex.js",
+    "storage/convex.d.ts",
+    "storage/ioredis.cjs",
+    "storage/ioredis.js",
+    "storage/ioredis.d.ts",
+    "storage/upstash_redis.cjs",
+    "storage/upstash_redis.js",
+    "storage/upstash_redis.d.ts",
+    "storage/vercel_kv.cjs",
+    "storage/vercel_kv.js",
+    "storage/vercel_kv.d.ts",
+    "stores/message/cassandra.cjs",
+    "stores/message/cassandra.js",
+    "stores/message/cassandra.d.ts",
+    "stores/message/cloudflare_d1.cjs",
+    "stores/message/cloudflare_d1.js",
+    "stores/message/cloudflare_d1.d.ts",
+    "stores/message/convex.cjs",
+    "stores/message/convex.js",
+    "stores/message/convex.d.ts",
+    "stores/message/dynamodb.cjs",
+    "stores/message/dynamodb.js",
+    "stores/message/dynamodb.d.ts",
+    "stores/message/firestore.cjs",
+    "stores/message/firestore.js",
+    "stores/message/firestore.d.ts",
+    "stores/message/ioredis.cjs",
+    "stores/message/ioredis.js",
+    "stores/message/ioredis.d.ts",
+    "stores/message/momento.cjs",
+    "stores/message/momento.js",
+    "stores/message/momento.d.ts",
+    "stores/message/mongodb.cjs",
+    "stores/message/mongodb.js",
+    "stores/message/mongodb.d.ts",
+    "stores/message/planetscale.cjs",
+    "stores/message/planetscale.js",
+    "stores/message/planetscale.d.ts",
+    "stores/message/redis.cjs",
+    "stores/message/redis.js",
+    "stores/message/redis.d.ts",
+    "stores/message/upstash_redis.cjs",
+    "stores/message/upstash_redis.js",
+    "stores/message/upstash_redis.d.ts",
+    "stores/message/xata.cjs",
+    "stores/message/xata.js",
+    "stores/message/xata.d.ts"
   ]
 }

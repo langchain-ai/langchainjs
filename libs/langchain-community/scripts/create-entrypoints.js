@@ -121,6 +121,28 @@ const entrypoints = {
   // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
   "utils/event_source_parse": "utils/event_source_parse",
+  // document transformers
+  "document_transformers/html_to_text": "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability":
+    "document_transformers/mozilla_readability",
+  // storage
+  "storage/convex": "storage/convex",
+  "storage/ioredis": "storage/ioredis",
+  "storage/upstash_redis": "storage/upstash_redis",
+  "storage/vercel_kv": "storage/vercel_kv",
+  // stores
+  "stores/message/cassandra": "stores/message/cassandra",
+  "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
+  "stores/message/convex": "stores/message/convex",
+  "stores/message/dynamodb": "stores/message/dynamodb",
+  "stores/message/firestore": "stores/message/firestore",
+  "stores/message/ioredis": "stores/message/ioredis",
+  "stores/message/momento": "stores/message/momento",
+  "stores/message/mongodb": "stores/message/mongodb",
+  "stores/message/planetscale": "stores/message/planetscale",
+  "stores/message/redis": "stores/message/redis",
+  "stores/message/upstash_redis": "stores/message/upstash_redis",
+  "stores/message/xata": "stores/message/xata",
 };
 
 // Entrypoints in this list will
@@ -198,6 +220,27 @@ const requiresOptionalDependency = [
   "cache/momento",
   "cache/upstash_redis",
   "graphs/neo4j_graph",
+  // document_transformers
+  "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability",
+  // storage
+  "storage/convex",
+  "storage/ioredis",
+  "storage/upstash_redis",
+  "storage/vercel_kv",
+  // stores
+  "stores/message/cassandra",
+  "stores/message/cloudflare_d1",
+  "stores/message/convex",
+  "stores/message/dynamodb",
+  "stores/message/firestore",
+  "stores/message/ioredis",
+  "stores/message/momento",
+  "stores/message/mongodb",
+  "stores/message/planetscale",
+  "stores/message/redis",
+  "stores/message/upstash_redis",
+  "stores/message/xata",
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {

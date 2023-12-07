@@ -190,10 +190,65 @@ export interface OptionalImportMap {
   "@langchain/community/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;
+  "@langchain/community/document_transformers/html_to_text"?:
+    | typeof import("../document_transformers/html_to_text.js")
+    | Promise<typeof import("../document_transformers/html_to_text.js")>;
+  "@langchain/community/document_transformers/mozilla_readability"?:
+    | typeof import("../document_transformers/mozilla_readability.js")
+    | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
+  "@langchain/community/storage/convex"?:
+    | typeof import("../storage/convex.js")
+    | Promise<typeof import("../storage/convex.js")>;
+  "@langchain/community/storage/ioredis"?:
+    | typeof import("../storage/ioredis.js")
+    | Promise<typeof import("../storage/ioredis.js")>;
+  "@langchain/community/storage/upstash_redis"?:
+    | typeof import("../storage/upstash_redis.js")
+    | Promise<typeof import("../storage/upstash_redis.js")>;
+  "@langchain/community/storage/vercel_kv"?:
+    | typeof import("../storage/vercel_kv.js")
+    | Promise<typeof import("../storage/vercel_kv.js")>;
+  "@langchain/community/stores/message/cassandra"?:
+    | typeof import("../stores/message/cassandra.js")
+    | Promise<typeof import("../stores/message/cassandra.js")>;
+  "@langchain/community/stores/message/cloudflare_d1"?:
+    | typeof import("../stores/message/cloudflare_d1.js")
+    | Promise<typeof import("../stores/message/cloudflare_d1.js")>;
+  "@langchain/community/stores/message/convex"?:
+    | typeof import("../stores/message/convex.js")
+    | Promise<typeof import("../stores/message/convex.js")>;
+  "@langchain/community/stores/message/dynamodb"?:
+    | typeof import("../stores/message/dynamodb.js")
+    | Promise<typeof import("../stores/message/dynamodb.js")>;
+  "@langchain/community/stores/message/firestore"?:
+    | typeof import("../stores/message/firestore.js")
+    | Promise<typeof import("../stores/message/firestore.js")>;
+  "@langchain/community/stores/message/ioredis"?:
+    | typeof import("../stores/message/ioredis.js")
+    | Promise<typeof import("../stores/message/ioredis.js")>;
+  "@langchain/community/stores/message/momento"?:
+    | typeof import("../stores/message/momento.js")
+    | Promise<typeof import("../stores/message/momento.js")>;
+  "@langchain/community/stores/message/mongodb"?:
+    | typeof import("../stores/message/mongodb.js")
+    | Promise<typeof import("../stores/message/mongodb.js")>;
+  "@langchain/community/stores/message/planetscale"?:
+    | typeof import("../stores/message/planetscale.js")
+    | Promise<typeof import("../stores/message/planetscale.js")>;
+  "@langchain/community/stores/message/redis"?:
+    | typeof import("../stores/message/redis.js")
+    | Promise<typeof import("../stores/message/redis.js")>;
+  "@langchain/community/stores/message/upstash_redis"?:
+    | typeof import("../stores/message/upstash_redis.js")
+    | Promise<typeof import("../stores/message/upstash_redis.js")>;
+  "@langchain/community/stores/message/xata"?:
+    | typeof import("../stores/message/xata.js")
+    | Promise<typeof import("../stores/message/xata.js")>;
 }
 
 export interface SecretMap {
   AWS_ACCESS_KEY_ID?: string;
+  AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
   BAIDU_API_KEY?: string;
@@ -219,10 +274,19 @@ export interface SecretMap {
   MILVUS_USERNAME?: string;
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
+  PLANETSCALE_DATABASE_URL?: string;
+  PLANETSCALE_HOST?: string;
+  PLANETSCALE_PASSWORD?: string;
+  PLANETSCALE_USERNAME?: string;
   QDRANT_API_KEY?: string;
   QDRANT_URL?: string;
+  REDIS_PASSWORD?: string;
+  REDIS_URL?: string;
+  REDIS_USERNAME?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  UPSTASH_REDIS_REST_TOKEN?: string;
+  UPSTASH_REDIS_REST_URL?: string;
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;

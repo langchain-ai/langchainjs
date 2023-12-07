@@ -522,28 +522,17 @@ export interface OptionalImportMap {
 export interface SecretMap {
   ANTHROPIC_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
-  AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
-  AWS_SESSION_TOKEN?: string;
   AZURE_OPENAI_API_KEY?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
   OPENAI_API_KEY?: string;
   OPENAI_ORGANIZATION?: string;
-  PLANETSCALE_DATABASE_URL?: string;
-  PLANETSCALE_HOST?: string;
-  PLANETSCALE_PASSWORD?: string;
-  PLANETSCALE_USERNAME?: string;
   PROMPTLAYER_API_KEY?: string;
   QDRANT_API_KEY?: string;
   QDRANT_URL?: string;
-  REDIS_PASSWORD?: string;
-  REDIS_URL?: string;
-  REDIS_USERNAME?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
-  UPSTASH_REDIS_REST_TOKEN?: string;
-  UPSTASH_REDIS_REST_URL?: string;
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;

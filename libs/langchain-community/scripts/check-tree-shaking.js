@@ -33,6 +33,8 @@ export function listExternals() {
     "@rockset/client/dist/codegen/api.js",
     "mysql2/promise",
     "web-auth-library/google",
+    "firebase-admin/app",
+    "firebase-admin/firestore",
   ];
 }
 
