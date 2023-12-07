@@ -63,8 +63,5 @@ export const optionalImportEntrypoints = [
   "@langchain/community/retrievers/metal",
   "@langchain/community/retrievers/supabase",
   "@langchain/community/retrievers/zep",
-  "@langchain/community/cache/cloudflare_kv",
-  "@langchain/community/cache/momento",
-  "@langchain/community/cache/upstash_redis",
   "@langchain/community/graphs/neo4j_graph",
 ];

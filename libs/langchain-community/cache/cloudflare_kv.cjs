@@ -1,0 +1,1 @@
+module.exports = require('../dist/cache/cloudflare_kv.cjs');

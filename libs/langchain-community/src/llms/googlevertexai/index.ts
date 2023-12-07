@@ -1,8 +1,8 @@
 import { GoogleAuthOptions } from "google-auth-library";
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../../utils/googlevertexai-connection.js";
 import { GoogleVertexAIBaseLLMInput } from "../../types/googlevertexai-types.js";
 import { BaseGoogleVertexAI } from "./common.js";
-import { GAuthClient } from "../../util/googlevertexai-gauth.js";
+import { GAuthClient } from "../../utils/googlevertexai-gauth.js";
 
 /**
  * Interface representing the input to the Google Vertex AI model.

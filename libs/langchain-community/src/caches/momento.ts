@@ -14,7 +14,7 @@ import {
 } from "@langchain/core/caches";
 import { Generation } from "@langchain/core/outputs";
 
-import { ensureCacheExists } from "../util/momento.js";
+import { ensureCacheExists } from "../utils/momento.js";
 
 /**
  * The settings to instantiate the Momento standard cache.

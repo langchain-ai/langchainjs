@@ -115,9 +115,9 @@ const entrypoints = {
   "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/zep": "retrievers/zep",
   // cache
-  "cache/cloudflare_kv": "cache/cloudflare_kv",
-  "cache/momento": "cache/momento",
-  "cache/upstash_redis": "cache/upstash_redis",
+  "caches/cloudflare_kv": "caches/cloudflare_kv",
+  "caches/momento": "caches/momento",
+  "caches/upstash_redis": "caches/upstash_redis",
   // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
 };

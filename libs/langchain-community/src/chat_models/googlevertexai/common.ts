@@ -17,7 +17,7 @@ import {
 import {
   GoogleVertexAILLMConnection,
   GoogleVertexAIStream,
-} from "../../util/googlevertexai-connection.js";
+} from "../../utils/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,

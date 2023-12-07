@@ -1,7 +1,7 @@
 import { GoogleAuthOptions } from "google-auth-library";
 import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
-import { GAuthClient } from "../../util/googlevertexai-gauth.js";
+import { GoogleVertexAILLMConnection } from "../../utils/googlevertexai-connection.js";
+import { GAuthClient } from "../../utils/googlevertexai-gauth.js";
 
 /**
  * Enables calls to the Google Cloud's Vertex AI API to access

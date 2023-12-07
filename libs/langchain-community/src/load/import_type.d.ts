@@ -187,15 +187,6 @@ export interface OptionalImportMap {
   "@langchain/community/retrievers/zep"?:
     | typeof import("../retrievers/zep.js")
     | Promise<typeof import("../retrievers/zep.js")>;
-  "@langchain/community/cache/cloudflare_kv"?:
-    | typeof import("../cache/cloudflare_kv.js")
-    | Promise<typeof import("../cache/cloudflare_kv.js")>;
-  "@langchain/community/cache/momento"?:
-    | typeof import("../cache/momento.js")
-    | Promise<typeof import("../cache/momento.js")>;
-  "@langchain/community/cache/upstash_redis"?:
-    | typeof import("../cache/upstash_redis.js")
-    | Promise<typeof import("../cache/upstash_redis.js")>;
   "@langchain/community/graphs/neo4j_graph"?:
     | typeof import("../graphs/neo4j_graph.js")
     | Promise<typeof import("../graphs/neo4j_graph.js")>;

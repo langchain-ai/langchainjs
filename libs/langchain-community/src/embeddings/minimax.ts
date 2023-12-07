@@ -1,6 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
-import { chunkArray } from "../util/chunk.js";
+import { chunkArray } from "../utils/chunk.js";
 import { ConfigurationParameters } from "../chat_models/minimax.js";
 
 /**

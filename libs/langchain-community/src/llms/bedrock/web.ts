@@ -14,7 +14,7 @@ import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
-} from "../../util/bedrock.js";
+} from "../../utils/bedrock.js";
 import type { SerializedFields } from "../../load/map_keys.js";
 
 /**

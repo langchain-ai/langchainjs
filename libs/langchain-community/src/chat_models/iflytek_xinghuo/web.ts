@@ -2,7 +2,7 @@ import { BaseChatIflytekXinghuo } from "./common.js";
 import {
   WebSocketStreamOptions,
   BaseWebSocketStream,
-} from "../../util/iflytek_websocket_stream.js";
+} from "../../utils/iflytek_websocket_stream.js";
 
 class WebSocketStream extends BaseWebSocketStream<string> {
   openWebSocket(url: string, options: WebSocketStreamOptions): WebSocket {

@@ -13,7 +13,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 import type { CloudflareWorkersAIInput } from "../llms/cloudflare_workersai.js";
-import { convertEventStreamToIterableReadableDataStream } from "../util/event-source-parse.js";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event-source-parse.js";
 
 /**
  * An interface defining the options for a Cloudflare Workers AI call. It extends

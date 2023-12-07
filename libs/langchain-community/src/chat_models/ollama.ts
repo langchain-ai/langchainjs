@@ -12,7 +12,7 @@ import {
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 
-import { createOllamaStream, OllamaInput } from "../util/ollama.js";
+import { createOllamaStream, OllamaInput } from "../utils/ollama.js";
 
 /**
  * An interface defining the options for an Ollama API call. It extends

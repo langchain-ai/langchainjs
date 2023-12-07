@@ -6,8 +6,8 @@ import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAILLMPredictions,
 } from "../types/googlevertexai-types.js";
-import { GoogleVertexAILLMConnection } from "../util/googlevertexai-connection.js";
-import { chunkArray } from "../util/chunk.js";
+import { GoogleVertexAILLMConnection } from "../utils/googlevertexai-connection.js";
+import { chunkArray } from "../utils/chunk.js";
 
 /**
  * Defines the parameters required to initialize a

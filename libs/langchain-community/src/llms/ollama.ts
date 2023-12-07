@@ -7,7 +7,7 @@ import {
   createOllamaStream,
   OllamaInput,
   OllamaCallOptions,
-} from "../util/ollama.js";
+} from "../utils/ollama.js";
 
 /**
  * Class that represents the Ollama language model. It extends the base

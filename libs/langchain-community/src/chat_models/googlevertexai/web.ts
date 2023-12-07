@@ -1,8 +1,8 @@
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
+import { GoogleVertexAILLMConnection } from "../../utils/googlevertexai-connection.js";
 import {
   WebGoogleAuthOptions,
   WebGoogleAuth,
-} from "../../util/googlevertexai-webauth.js";
+} from "../../utils/googlevertexai-webauth.js";
 import { BaseChatGoogleVertexAI, GoogleVertexAIChatInput } from "./common.js";
 
 /**

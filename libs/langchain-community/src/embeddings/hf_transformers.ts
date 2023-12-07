@@ -1,6 +1,6 @@
 import { Pipeline, pipeline } from "@xenova/transformers";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-import { chunkArray } from "../util/chunk.js";
+import { chunkArray } from "../utils/chunk.js";
 
 export interface HuggingFaceTransformersEmbeddingsParams
   extends EmbeddingsParams {

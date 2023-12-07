@@ -1,8 +1,8 @@
 import {
   WebGoogleAuth,
   WebGoogleAuthOptions,
-} from "../../util/googlevertexai-webauth.js";
-import { GoogleVertexAILLMConnection } from "../../util/googlevertexai-connection.js";
+} from "../../utils/googlevertexai-webauth.js";
+import { GoogleVertexAILLMConnection } from "../../utils/googlevertexai-connection.js";
 import { GoogleVertexAIBaseLLMInput } from "../../types/googlevertexai-types.js";
 import { BaseGoogleVertexAI } from "./common.js";
 
