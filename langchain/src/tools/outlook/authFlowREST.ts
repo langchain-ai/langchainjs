@@ -50,7 +50,7 @@ export class AuthFlowREST extends AuthFlowBase {
   private openAuthUrl(): string {
     const loginEndpoint =
       "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-    const { clientId } = this; // client ID regestered in Azure
+    const clientId = this.clientId; // client ID regestered in Azure
     const response_type = "code";
     const response_mode = "query";
     const redirectUri = encodeURIComponent(this.redirectUri); // redirect URI regestered in Azure
@@ -144,13 +144,16 @@ export class AuthFlowREST extends AuthFlowBase {
     // fetch auth code from user login
     const code = await this.getCode();
     // fetch access token using auth code
-    const req_body =
-      `client_id=${encodeURIComponent(this.clientId)}&` +
-      `client_secret=${encodeURIComponent(this.clientSecret)}&` +
-      `scope=${encodeURIComponent("https://graph.microsoft.com/.default")}&` +
-      `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
-      `grant_type=authorization_code&` +
-      `code=${encodeURIComponent(code)}`;
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      scope: "https://graph.microsoft.com/.default",
+      redirect_uri: this.redirectUri,
+      grant_type: "authorization_code",
+      code: code,
+    });
+    
+    const req_body = params.toString();
 
     const response = await fetch(
       "https://login.microsoftonline.com/common/oauth2/v2.0/token",
@@ -175,13 +178,17 @@ export class AuthFlowREST extends AuthFlowBase {
 
   public async refreshAccessToken(): Promise<string> {
     // fetch new access token using refresh token
-    const req_body =
-      `client_id=${encodeURIComponent(this.clientId)}&` +
-      `client_secret=${encodeURIComponent(this.clientSecret)}&` +
-      `scope=${encodeURIComponent("https://graph.microsoft.com/.default")}&` +
-      `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
-      `grant_type=refresh_token&` +
-      `refresh_token=${encodeURIComponent(this.refreshToken)}`;
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      scope: "https://graph.microsoft.com/.default",
+      redirect_uri: this.redirectUri,
+      grant_type: "refresh_token",
+      refresh_token: this.refreshToken,
+    });
+    
+    const req_body = params.toString();
+    
 
     const response = await fetch(
       "https://login.microsoftonline.com/common/oauth2/v2.0/token",

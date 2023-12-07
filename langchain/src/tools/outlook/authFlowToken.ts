@@ -48,10 +48,10 @@ export class AuthFlowRefresh extends AuthFlowBase {
     let uri = redirectUri;
     let token = refreshToken;
     if (!id || !secret || !uri || !token) {
-      id = getEnvironmentVariable("OUTLOOK_CLIENT_ID");
-      secret = getEnvironmentVariable("OUTLOOK_CLIENT_SECRET");
-      uri = getEnvironmentVariable("OUTLOOK_REDIRECT_URI");
-      token = getEnvironmentVariable("OUTLOOK_REFRESH_TOKEN");
+      id = id ?? getEnvironmentVariable("OUTLOOK_CLIENT_ID");
+      secret = secret ?? getEnvironmentVariable("OUTLOOK_CLIENT_SECRET");
+      uri = uri ?? getEnvironmentVariable("OUTLOOK_REDIRECT_URI");
+      token = token ?? getEnvironmentVariable("OUTLOOK_REFRESH_TOKEN");
     }
     if (!id || !secret || !uri || !token) {
       throw new Error(
@@ -66,13 +66,16 @@ export class AuthFlowRefresh extends AuthFlowBase {
 
   public async refreshAccessToken(): Promise<string> {
     // fetch new access token using refresh token
-    const req_body =
-      `client_id=${encodeURIComponent(this.clientId)}&` +
-      `client_secret=${encodeURIComponent(this.clientSecret)}&` +
-      `scope=${encodeURIComponent("https://graph.microsoft.com/.default")}&` +
-      `redirect_uri=${encodeURIComponent(this.redirectUri)}&` +
-      `grant_type=refresh_token&` +
-      `refresh_token=${encodeURIComponent(this.refreshToken)}`;
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      scope: "https://graph.microsoft.com/.default",
+      redirect_uri: this.redirectUri,
+      grant_type: "refresh_token",
+      refresh_token: this.refreshToken,
+    });
+    
+    const req_body = params.toString();
 
     const response = await fetch(
       "https://login.microsoftonline.com/common/oauth2/v2.0/token",
