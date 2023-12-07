@@ -25,6 +25,6 @@ const masked = await maskingParser.mask(input);
 console.log(masked);
 // Contact me at [email-a31e486e324f6] or [phone-da8fc1584f224]. Also reach me at [email-d5b6237633d95]
 
-const rehydrated = maskingParser.rehydrate(masked);
+const rehydrated = await maskingParser.rehydrate(masked);
 console.log(rehydrated);
 // Contact me at jane.doe@email.com or 555-123-4567. Also reach me at john.smith@email.com
