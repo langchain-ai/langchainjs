@@ -120,6 +120,7 @@ const entrypoints = {
   "caches/upstash_redis": "caches/upstash_redis",
   // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
+  "utils/event_source_parse": "utils/event_source_parse",
 };
 
 // Entrypoints in this list will

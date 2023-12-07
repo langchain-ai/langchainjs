@@ -3,7 +3,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 
-import { convertEventStreamToIterableReadableDataStream } from "../utils/event-source-parse.js";
+import { convertEventStreamToIterableReadableDataStream } from "../utils/event_source_parse.js";
 
 /**
  * Interface for CloudflareWorkersAI input parameters.
