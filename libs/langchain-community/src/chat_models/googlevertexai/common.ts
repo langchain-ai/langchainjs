@@ -214,7 +214,7 @@ export class BaseChatGoogleVertexAI<AuthOptions>
     AuthOptions
   >;
 
-  lc_namespace = ["langchain-community", "chat_models", this._llmType()];
+  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
 
   get lc_aliases(): Record<string, string> {
     return {

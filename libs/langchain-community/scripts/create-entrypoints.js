@@ -345,7 +345,7 @@ ${[...identifySecrets()]
 
 const importConstants = [
   "langchain-community",
-  (k) => `  "@langchain/community/${k}"`,
+  (k) => `  "langchain_community/${k}"`,
   "src/load/import_constants.ts",
 ];
 

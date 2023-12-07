@@ -69,7 +69,7 @@ export class Writer extends LLM implements WriterInput {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   apiKey: string;
 

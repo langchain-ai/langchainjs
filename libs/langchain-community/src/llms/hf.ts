@@ -58,7 +58,7 @@ export interface HFInput {
 export class HuggingFaceInference extends LLM implements HFInput {
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {

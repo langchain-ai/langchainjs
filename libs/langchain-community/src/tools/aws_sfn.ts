@@ -43,7 +43,7 @@ export class StartExecutionAWSSfnTool extends Tool {
   public description: string;
 
   get lc_namespace() {
-    return ["langchain-community", "tools"];
+    return ["langchain_community", "tools"];
   }
 
   constructor({

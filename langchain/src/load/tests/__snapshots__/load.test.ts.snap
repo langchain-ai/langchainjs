@@ -283,7 +283,7 @@ exports[`serialize + deserialize llm with optional deps 1`] = `
 "lc: 1
 type: constructor
 id:
-  - langchain
+  - langchain_community
   - llms
   - cohere
   - Cohere

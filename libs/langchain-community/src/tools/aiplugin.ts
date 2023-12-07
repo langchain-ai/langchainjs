@@ -20,7 +20,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
   }
 
   get lc_namespace() {
-    return ["langchain-community", "tools"];
+    return ["langchain_community", "tools"];
   }
 
   private _name: string;

@@ -41,7 +41,7 @@ export class CloudflareWorkersAI
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   constructor(fields?: CloudflareWorkersAIInput & BaseLLMParams) {
     super(fields ?? {});

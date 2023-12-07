@@ -112,7 +112,7 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
 export class SageMakerEndpoint extends LLM<BaseLLMCallOptions> {
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   static lc_name() {
     return "SageMakerEndpoint";

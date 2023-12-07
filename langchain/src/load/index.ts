@@ -7,7 +7,8 @@ export async function load<T>(
   text: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   secretsMap: Record<string, any> = {},
-  optionalImportsMap: OptionalImportMap = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  optionalImportsMap: OptionalImportMap & Record<string, any> = {}
 ): Promise<T> {
   return coreLoad(text, {
     secretsMap,

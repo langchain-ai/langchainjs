@@ -14,7 +14,7 @@ class BingSerpAPI extends Tool {
   }
 
   get lc_namespace() {
-    return ["langchain-community", "tools"];
+    return ["langchain_community", "tools"];
   }
 
   /**

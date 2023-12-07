@@ -39,7 +39,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   model = "llama2";
 

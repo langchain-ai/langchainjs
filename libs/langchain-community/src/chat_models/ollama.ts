@@ -59,7 +59,7 @@ export class ChatOllama
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "chat_models", this._llmType()];
+  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
 
   model = "llama2";
 

@@ -187,7 +187,7 @@ export abstract class BaseChatIflytekXinghuo
     return ["stop", "signal", "options"];
   }
 
-  lc_namespace = ["langchain-community", "chat_models", this._llmType()];
+  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {

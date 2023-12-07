@@ -21,7 +21,7 @@ const wait = (ms: number) =>
 export class RaycastAI extends LLM implements RaycastAIInput {
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   /**
    * The model to use for generating text.

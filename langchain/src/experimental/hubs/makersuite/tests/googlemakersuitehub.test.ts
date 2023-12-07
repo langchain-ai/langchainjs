@@ -51,7 +51,11 @@ describe("Google Maker Suite Hub", () => {
       const prompt = new MakerSuitePrompt(textFile);
       const model = prompt.toModel();
       // console.log(model.lc_namespace);
-      expect(model.lc_namespace).toEqual(["langchain", "llms", "googlepalm"]);
+      expect(model.lc_namespace).toEqual([
+        "langchain_community",
+        "llms",
+        "googlepalm",
+      ]);
     });
 
     test("data type", () => {
@@ -77,7 +81,11 @@ describe("Google Maker Suite Hub", () => {
     test("data model", () => {
       const prompt = new MakerSuitePrompt(dataFile);
       const model = prompt.toModel();
-      expect(model.lc_namespace).toEqual(["langchain", "llms", "googlepalm"]);
+      expect(model.lc_namespace).toEqual([
+        "langchain_community",
+        "llms",
+        "googlepalm",
+      ]);
     });
 
     test("chat type", () => {
@@ -89,7 +97,7 @@ describe("Google Maker Suite Hub", () => {
       const prompt = new MakerSuitePrompt(chatFile);
       const model = prompt.toModel();
       expect(model.lc_namespace).toEqual([
-        "langchain",
+        "langchain_community",
         "chat_models",
         "googlepalm",
       ]);

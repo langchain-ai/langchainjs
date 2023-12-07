@@ -36,7 +36,7 @@ export interface LlamaCppCallOptions extends BaseLLMCallOptions {
 export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   declare CallOptions: LlamaCppCallOptions;
 

@@ -7997,7 +7997,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community":
+"@langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.0":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -23108,7 +23108,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/community": "workspace:*"
+    "@langchain/community": ~0.0.0
     "@langchain/core": ~0.0.10
     "@mozilla/readability": ^0.4.4
     "@notionhq/client": ^2.2.10

@@ -61,7 +61,7 @@ export class BaseGoogleVertexAI<AuthOptions>
 {
   lc_serializable = true;
 
-  lc_namespace = ["langchain-community", "llms", this._llmType()];
+  lc_namespace = ["langchain_community", "llms", this._llmType()];
 
   model = "text-bison";
 
