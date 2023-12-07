@@ -1,18 +1,18 @@
 import { expect, test } from "@jest/globals";
-import { ChatMinimax } from "../minimax.js";
 import {
   ChatMessage,
   HumanMessage,
-  LLMResult,
   SystemMessage,
-} from "../../schema/index.js";
-import { CallbackManager } from "../../callbacks/index.js";
+} from "@langchain/core/messages";
+import { LLMResult } from "@langchain/core/outputs";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   PromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
+import { ChatMinimax } from "../minimax.js";
 
 test.skip("Test ChatMinimax", async () => {
   const chat = new ChatMinimax({

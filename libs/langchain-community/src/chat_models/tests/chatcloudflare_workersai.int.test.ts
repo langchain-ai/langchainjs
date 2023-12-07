@@ -1,14 +1,14 @@
 import { describe, test } from "@jest/globals";
-import { ChatMessage, HumanMessage } from "../../schema/index.js";
+import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
   PromptTemplate,
   ChatPromptTemplate,
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatCloudflareWorkersAI } from "../cloudflare_workersai.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 describe("ChatCloudflareWorkersAI", () => {
   test("call", async () => {

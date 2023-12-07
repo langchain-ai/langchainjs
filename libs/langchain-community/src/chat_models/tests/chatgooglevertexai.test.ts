@@ -4,7 +4,7 @@ import {
   SystemMessage,
   HumanMessage,
   AIMessage,
-} from "../../schema/index.js";
+} from "@langchain/core/messages";
 import { ChatExample, ChatGoogleVertexAI } from "../googlevertexai/index.js";
 
 test("Google messages", async () => {

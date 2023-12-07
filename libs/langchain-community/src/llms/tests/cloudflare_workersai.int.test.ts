@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { CloudflareWorkersAI } from "../cloudflare_workersai.js";
-import { getEnvironmentVariable } from "../../util/env.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 test("Test CloudflareWorkersAI", async () => {
   const model = new CloudflareWorkersAI({});

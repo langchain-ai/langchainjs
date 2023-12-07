@@ -1,0 +1,8 @@
+{
+  "name": "langchain-convex-tests",
+  "version": "0.0.1",
+  "type": "module",
+  "dependencies": {
+    "convex": "1.4.1"
+  }
+}

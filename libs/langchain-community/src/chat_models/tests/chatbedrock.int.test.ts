@@ -3,7 +3,7 @@
 
 import { test, expect } from "@jest/globals";
 import { BedrockChat } from "../bedrock/web.js";
-import { HumanMessage } from "../../schema/index.js";
+import { HumanMessage } from "@langchain/core/messages";
 
 // void testChatModel(
 //   "Test Bedrock chat model: Llama2 13B v1",

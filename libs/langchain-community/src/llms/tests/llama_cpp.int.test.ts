@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
-import { getEnvironmentVariable } from "../../util/env.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { LlamaCpp } from "../llama_cpp.js";
 
 const llamaPath = getEnvironmentVariable("LLAMA_PATH")!;

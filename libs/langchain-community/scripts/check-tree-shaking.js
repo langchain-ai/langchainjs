@@ -27,6 +27,12 @@ export function listExternals() {
     ...Object.keys(packageJson.peerDependencies ?? {}),
     /node\:/,
     /@langchain\/core\//,
+    "convex",
+    "convex/server",
+    "convex/values",
+    "@rockset/client/dist/codegen/api.js",
+    "mysql2/promise",
+    "web-auth-library/google",
   ];
 }
 

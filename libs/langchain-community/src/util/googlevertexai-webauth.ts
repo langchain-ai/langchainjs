@@ -3,7 +3,7 @@ import {
   getCredentials,
   Credentials,
 } from "web-auth-library/google";
-import { getEnvironmentVariable } from "./env.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import type {
   GoogleAbstractedClient,
   GoogleAbstractedClientOps,

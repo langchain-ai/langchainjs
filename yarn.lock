@@ -8139,12 +8139,14 @@ __metadata:
     typescript: ~5.1.6
     typesense: ^1.5.3
     usearch: ^1.1.1
+    uuid: ^9.0.0
     vectordb: ^0.1.4
     voy-search: 0.6.2
     weaviate-ts-client: ^1.4.0
     web-auth-library: ^1.0.3
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
+    zod: ^3.22.3
   peerDependencies:
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-bedrock-runtime": ^3.422.0

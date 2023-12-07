@@ -1,4 +1,4 @@
-import { HumanMessage } from "../../schema/index.js";
+import { HumanMessage } from "@langchain/core/messages";
 import { ChatIflytekXinghuo } from "../iflytek_xinghuo/index.js";
 
 test.skip("Iflytek Xinghuo Call", async () => {

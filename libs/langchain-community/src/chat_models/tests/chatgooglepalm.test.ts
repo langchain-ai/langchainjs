@@ -5,7 +5,7 @@ import {
   BaseMessage,
   HumanMessage,
   SystemMessage,
-} from "../../schema/index.js";
+} from "@langchain/core/messages";
 import { ChatGooglePaLM } from "../googlepalm.js";
 
 // Test class extending actual class to test private & protected methods

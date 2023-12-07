@@ -1,7 +1,7 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAIClient } from "@langchain/openai";
 
 import { TiktokenModel } from "js-tiktoken/lite";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages

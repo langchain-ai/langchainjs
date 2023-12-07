@@ -1,12 +1,12 @@
 import { describe, test } from "@jest/globals";
-import { ChatMessage, HumanMessage } from "../../schema/index.js";
+import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
   PromptTemplate,
   ChatPromptTemplate,
   AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
+} from "@langchain/core/prompts";
 import { ChatFireworks } from "../fireworks.js";
 
 describe("ChatFireworks", () => {
