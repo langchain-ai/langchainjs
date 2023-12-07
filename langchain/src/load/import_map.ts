@@ -60,6 +60,7 @@ export * as chat_models__ollama from "../chat_models/ollama.js";
 export * as chat_models__minimax from "../chat_models/minimax.js";
 export * as chat_models__yandex from "../chat_models/yandex.js";
 export * as chat_models__fake from "../chat_models/fake.js";
+export * as chat_models__watsonx_ai from "../chat_models/watsonx_ai.js";
 export * as schema from "../schema/index.js";
 export * as schema__document from "../schema/document.js";
 export * as schema__output_parser from "../schema/output_parser.js";

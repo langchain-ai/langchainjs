@@ -217,6 +217,7 @@ const entrypoints = {
   "chat_models/llama_cpp": "chat_models/llama_cpp",
   "chat_models/yandex": "chat_models/yandex",
   "chat_models/fake": "chat_models/fake",
+  "chat_models/watsonx_ai": "chat_models/watsonx_ai",
   // schema
   schema: "schema/index",
   "schema/document": "schema/document",

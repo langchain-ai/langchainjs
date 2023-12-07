@@ -556,6 +556,9 @@ chat_models/yandex.d.ts
 chat_models/fake.cjs
 chat_models/fake.js
 chat_models/fake.d.ts
+chat_models/watsonx_ai.cjs
+chat_models/watsonx_ai.js
+chat_models/watsonx_ai.d.ts
 schema.cjs
 schema.js
 schema.d.ts

@@ -204,6 +204,7 @@
     "./langchain/src/chat_models/llama_cpp.ts",
     "./langchain/src/chat_models/yandex.ts",
     "./langchain/src/chat_models/fake.ts",
+    "./langchain/src/chat_models/watsonx_ai.ts",
     "./langchain/src/schema/index.ts",
     "./langchain/src/schema/document.ts",
     "./langchain/src/schema/output_parser.ts",
