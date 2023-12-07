@@ -6,7 +6,8 @@ title: Get started
 import CodeBlock from "@theme/CodeBlock";
 import BasicExample from "@examples/guides/expression_language/get_started/basic.ts";
 import BasicPromptExample from "@examples/guides/expression_language/get_started/prompt.ts";
-import BasicModelExample from "@examples/guides/expression_language/get_started/model.ts";
+import BasicChatModelExample from "@examples/guides/expression_language/get_started/chat_model.ts";
+import BasicLLMModelExample from "@examples/guides/expression_language/get_started/llm_model.ts";
 import BasicOutputParserExample from "@examples/guides/expression_language/get_started/output_parser.ts";
 import BasicRagExample from "@examples/guides/expression_language/get_started/rag.ts";
 
@@ -49,9 +50,11 @@ It can work with either language model type because it defines logic both for pr
 
 The `PromptValue` is then passed to `model`. In this case our `model` is a `ChatModel`, meaning it will output a `BaseMessage`.
 
-<CodeBlock language="typescript">{BasicModelExample}</CodeBlock>
+<CodeBlock language="typescript">{BasicChatModelExample}</CodeBlock>
 
 If our model was an LLM, it would output a string.
+
+<CodeBlock language="typescript">{BasicLLMModelExample}</CodeBlock>
 
 ### 3. Output parser
 
@@ -73,15 +76,15 @@ For our next example, we want to run a retrieval-augmented generation chain to a
 
 In this chain we add some extra logic around retrieving context from a vector store.
 
-We first instantiated our model, vector store and output parser. Then we defined out prompt, which takes in two input variables:
+We first instantiated our model, vector store and output parser. Then we defined our prompt, which takes in two input variables:
 
 - `context` -> this is a string which is returned from our vector store based on a semantic search from the input.
 - `question` -> this is the question we want to ask.
 
-Next we created a `setupAndRetriever` runnable. This has two components:
+Next we created a `setupAndRetriever` runnable. This has two components which return the values required by our prompt:
 
 - `context` -> this is a `RunnableLambda` which takes the input from the `.invoke()` call, makes a request to our vector store, and returns the first result.
-- `question` -> this uses a `RunnablePassthrough` which simply passes whatever the input was through, and in our case it returns it to the key in the object we defined.
+- `question` -> this uses a `RunnablePassthrough` which simply passes whatever the input was through to the next step, and in our case it returns it to the key in the object we defined.
 
 Both of these are wrapped inside a `RunnableMap`. This is a special type of runnable that takes an object of runnables and executes them all in parallel.
 It then returns an object with the same keys as the input object, but with the values replaced with the output of the runnables.
