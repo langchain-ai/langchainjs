@@ -38,6 +38,7 @@ Here, the prompt is passed a `topic` and when invoked it returns a formatted str
 That string is then passed as the input to the LLM which returns a `BaseMessage` object. Finally, the output parser takes that `BaseMessage` object and returns the content of that object as a string.
 
 ### 1. Prompt
+
 `prompt` is a `BasePromptTemplate`, which means it takes in an object of template variables and produces a `PromptValue`.
 A `PromptValue` is a wrapper around a completed prompt that can be passed to either an `LLM` (which takes a string as input) or `ChatModel` (which takes a sequence of messages as input).
 It can work with either language model type because it defines logic both for producing BaseMessages and for producing a string.
@@ -57,7 +58,6 @@ If our model was an LLM, it would output a string.
 And lastly we pass our `model` output to the `outputParser`, which is a `BaseOutputParser` meaning it takes either a string or a `BaseMessage` as input. The `StringOutputParser` specifically simple converts any input into a string.
 
 <CodeBlock language="typescript">{BasicOutputParserExample}</CodeBlock>
-
 
 ## RAG Search Example
 
