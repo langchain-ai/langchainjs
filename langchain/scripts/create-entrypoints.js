@@ -72,6 +72,7 @@ const entrypoints = {
   "llms/load": "llms/load",
   "llms/base": "llms/base",
   "llms/openai": "llms/openai",
+  "llms/azure_openai": "llms/azure_openai",
   "llms/ai21": "llms/ai21",
   "llms/aleph_alpha": "llms/aleph_alpha",
   "llms/cloudflare_workersai": "llms/cloudflare_workersai",

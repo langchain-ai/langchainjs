@@ -74,6 +74,7 @@
     "./langchain/src/llms/load.ts",
     "./langchain/src/llms/base.ts",
     "./langchain/src/llms/openai.ts",
+    "./langchain/src/llms/azure_openai.ts",
     "./langchain/src/llms/ai21.ts",
     "./langchain/src/llms/aleph_alpha.ts",
     "./langchain/src/llms/cloudflare_workersai.ts",

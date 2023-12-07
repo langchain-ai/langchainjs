@@ -1,6 +1,12 @@
 import type { OpenAI as OpenAIClient } from "openai";
 
 import { TiktokenModel } from "js-tiktoken/lite";
+import {
+  FunctionDefinition,
+  FunctionCallPreset,
+  FunctionName,
+  AzureExtensionsOptions
+} from "@azure/openai";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
@@ -115,6 +121,12 @@ export interface LegacyOpenAIInput {
 export interface OpenAIChatInput extends OpenAIBaseInput {
   /** ChatGPT messages to pass as a prefix to the prompt */
   prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
+
+  functions?: FunctionDefinition[];
+
+  functionCall?: FunctionCallPreset | FunctionName;
+
+  azureExtensionOptions?: AzureExtensionsOptions;
 }
 
 export declare interface AzureOpenAIInput {
@@ -169,4 +181,10 @@ export declare interface AzureOpenAIInput {
    * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
    */
   azureOpenAIBasePath?: string;
+
+  azureOpenAIEndpoint?: string;
+
+  logprobs?: number;
+
+  echo?: boolean;
 }

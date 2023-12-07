@@ -4058,7 +4058,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/abort-controller@npm:^1.0.0":
+"@azure-rest/core-client@npm:^1.1.4":
+  version: 1.1.6
+  resolution: "@azure-rest/core-client@npm:1.1.6"
+  dependencies:
+    "@azure/abort-controller": ^1.1.0
+    "@azure/core-auth": ^1.3.0
+    "@azure/core-rest-pipeline": ^1.5.0
+    "@azure/core-tracing": ^1.0.1
+    "@azure/core-util": ^1.0.0
+    tslib: ^2.2.0
+  checksum: 726956175f27dbe56daae59850f40ff2db935e3e3e275acce5ea540e8d5fb4a3528c7042134e1f6f3160511ea7019a151fc172a168585b9f35e7d7b27e8a17ea
+  languageName: node
+  linkType: hard
+
+"@azure/abort-controller@npm:^1.0.0, @azure/abort-controller@npm:^1.1.0":
   version: 1.1.0
   resolution: "@azure/abort-controller@npm:1.1.0"
   dependencies:
@@ -4074,6 +4088,17 @@ __metadata:
     "@azure/abort-controller": ^1.0.0
     tslib: ^2.2.0
   checksum: 1c76c296fe911ad39fc780b033c25a92c41c5a15f011b816d42c13584f627a4dd153dfb4334900ec93eb5b006e14bdda37e8412a7697c5a9636a0abaccffad39
+  languageName: node
+  linkType: hard
+
+"@azure/core-auth@npm:^1.4.0":
+  version: 1.5.0
+  resolution: "@azure/core-auth@npm:1.5.0"
+  dependencies:
+    "@azure/abort-controller": ^1.0.0
+    "@azure/core-util": ^1.1.0
+    tslib: ^2.2.0
+  checksum: 11c5ba072902693435dc2930e2fdfe2ff34836f4c2d6c87c6ac0566d48dc49157ebf49f4478cd3784dc0c4d57b502d3a12d74ea29f416725204a6e1aa937ef78
   languageName: node
   linkType: hard
 
@@ -4111,12 +4136,50 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/core-lro@npm:^2.5.3":
+  version: 2.5.4
+  resolution: "@azure/core-lro@npm:2.5.4"
+  dependencies:
+    "@azure/abort-controller": ^1.0.0
+    "@azure/core-util": ^1.2.0
+    "@azure/logger": ^1.0.0
+    tslib: ^2.2.0
+  checksum: f048b99850e8497b557cf661c2f8a384ea1227de6ea0c0e1436653851c3932e28a05056a380f7c20ebc51e4c6d7bd15d7dfabc6ecca80eddb9dc3e3339df9519
+  languageName: node
+  linkType: hard
+
 "@azure/core-paging@npm:^1.1.1":
   version: 1.5.0
   resolution: "@azure/core-paging@npm:1.5.0"
   dependencies:
     tslib: ^2.2.0
   checksum: 156230f0fdf757a0353a2aac6d012d385ed88f8ab5bccf00eee27d8d75843e681674b2d10ed43309669f9cb93bf8d9d000232896593b6fcf399fa391442a59c5
+  languageName: node
+  linkType: hard
+
+"@azure/core-rest-pipeline@npm:^1.12.2, @azure/core-rest-pipeline@npm:^1.5.0":
+  version: 1.12.2
+  resolution: "@azure/core-rest-pipeline@npm:1.12.2"
+  dependencies:
+    "@azure/abort-controller": ^1.0.0
+    "@azure/core-auth": ^1.4.0
+    "@azure/core-tracing": ^1.0.1
+    "@azure/core-util": ^1.3.0
+    "@azure/logger": ^1.0.0
+    form-data: ^4.0.0
+    http-proxy-agent: ^5.0.0
+    https-proxy-agent: ^5.0.0
+    tslib: ^2.2.0
+  checksum: a774ab2e87ff56d7f3ef1844a814bbd76264ea1c33534081d38ce6df1098d803d0b13b15912f9053d0695ca2669b0dd104c8feec8dbf24df80a3608ea784fc9e
+  languageName: node
+  linkType: hard
+
+"@azure/core-sse@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@azure/core-sse@npm:1.0.0"
+  dependencies:
+    tslib: ^2.4.0
+  checksum: 7ae628a4608331e111c13be5e2d0a5c7367e579252f99b5efee902469afbae31f7e0880888e238c3fed8ab5813ceaaf786e39267c2cfcaeaeafce5f542fde54e
   languageName: node
   linkType: hard
 
@@ -4130,6 +4193,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/core-tracing@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@azure/core-tracing@npm:1.0.1"
+  dependencies:
+    tslib: ^2.2.0
+  checksum: ae4309f8ab0b52c37f699594d58ee095782649f538bd6a0ee03e3fea042f55df7ad95c2e6dec22f5b8c3907e4bcf98d6ca98faaf480d446b73d41bbc1519d891
+  languageName: node
+  linkType: hard
+
+"@azure/core-util@npm:^1.0.0, @azure/core-util@npm:^1.1.0, @azure/core-util@npm:^1.3.0":
+  version: 1.6.1
+  resolution: "@azure/core-util@npm:1.6.1"
+  dependencies:
+    "@azure/abort-controller": ^1.0.0
+    tslib: ^2.2.0
+  checksum: 1f8cd130993f161c98925070af863510cbcc79e0471864e4b16852afc2ee7413c9c7fabe72f20f3e521ee75c3cd7e3085661fdc8d5d0a643a6e1b1b7bf691ddd
+  languageName: node
+  linkType: hard
+
 "@azure/core-util@npm:^1.1.1, @azure/core-util@npm:^1.2.0":
   version: 1.3.2
   resolution: "@azure/core-util@npm:1.3.2"
@@ -4140,12 +4222,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/logger@npm:^1.0.0":
+"@azure/logger@npm:^1.0.0, @azure/logger@npm:^1.0.3":
   version: 1.0.4
   resolution: "@azure/logger@npm:1.0.4"
   dependencies:
     tslib: ^2.2.0
   checksum: 2c243d4c667bbc5cd3e60d4473d0f1169fcef2498a02138398af15547fe1b2870197bcb4c487327451488e4d71dee05244771d51328f03611e193b99fb9aa9af
+  languageName: node
+  linkType: hard
+
+"@azure/openai@npm:^1.0.0-beta.7":
+  version: 1.0.0-beta.7
+  resolution: "@azure/openai@npm:1.0.0-beta.7"
+  dependencies:
+    "@azure-rest/core-client": ^1.1.4
+    "@azure/core-auth": ^1.4.0
+    "@azure/core-lro": ^2.5.3
+    "@azure/core-rest-pipeline": ^1.12.2
+    "@azure/core-sse": ^1.0.0
+    "@azure/logger": ^1.0.3
+    form-data-encoder: ^3.0.0
+    formdata-node: ^5.0.0
+    tslib: ^2.4.0
+  checksum: b97c2c6b186b23d9e0998284172e352d1de717af9daf336164ddb34a8a74e74ee33f61b3e05bf9125dcf4f8c836b66e01537e8bd71b0779ed192be3ab23318d5
   languageName: node
   linkType: hard
 
@@ -18896,6 +18995,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"form-data-encoder@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "form-data-encoder@npm:3.0.1"
+  checksum: 05d9c558c906a9b9c975893e91c4b9ac5cf635c9707ff9ee2021febda1c584b704df3700164fd9529e33402be10b1f477193fc17399d43cd6ef664da5347785c
+  languageName: node
+  linkType: hard
+
 "form-data@npm:^3.0.0":
   version: 3.0.1
   resolution: "form-data@npm:3.0.1"
@@ -18925,6 +19031,16 @@ __metadata:
     node-domexception: 1.0.0
     web-streams-polyfill: 4.0.0-beta.3
   checksum: d91d4f667cfed74827fc281594102c0dabddd03c9f8b426fc97123eedbf73f5060ee43205d89284d6854e2fc5827e030cd352ef68b93beda8decc2d72128c576
+  languageName: node
+  linkType: hard
+
+"formdata-node@npm:^5.0.0":
+  version: 5.0.1
+  resolution: "formdata-node@npm:5.0.1"
+  dependencies:
+    node-domexception: 1.0.0
+    web-streams-polyfill: 4.0.0-beta.3
+  checksum: fc793643d358a93ebb4a8787938c1d1306b20d77d83085ef5b3b8895581eb2ea9f9d565c83314762ce348fe12f354d15d0f69616c5434b545f368e44ed8f3955
   languageName: node
   linkType: hard
 
@@ -22634,6 +22750,7 @@ __metadata:
     "@aws-sdk/client-sfn": ^3.362.0
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@aws-sdk/types": ^3.357.0
+    "@azure/openai": ^1.0.0-beta.7
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
