@@ -1,13 +1,27 @@
 import { AuthFlowBase } from "./authFlowBase.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
+/**
+ * Response structure for access token.
+ * @interface AccessTokenResponse
+ */
 interface AccessTokenResponse {
   access_token: string;
   refresh_token: string;
 }
 
-// if you have the token, and no need to refresh it, warning: token expires in 1 hour
+/**
+ * Authentication flow with a provided access token.
+ * If the token is not provided, it falls back to an environment variable.
+ * @class AuthFlowToken
+ * @extends AuthFlowBase
+ */
 export class AuthFlowToken extends AuthFlowBase {
+  /**
+   * Constructor for AuthFlowToken.
+   * @param {string} [accessToken] - Optional access token.
+   * @throws Will throw an error if access token is missing.
+   */
   constructor(accessToken?: string) {
     let token = accessToken;
     if (!token) {
@@ -20,23 +34,43 @@ export class AuthFlowToken extends AuthFlowBase {
     this.accessToken = token;
   }
 
+  /**
+   * Refreshes the access token.
+   * @async
+   * @returns {Promise<string>} - The refreshed access token.
+   */
   public async refreshAccessToken(): Promise<string> {
     return this.accessToken;
   }
 
+  /**
+   * Gets the access token.
+   * @async
+   * @returns {Promise<string>} - The access token.
+   */
   public async getAccessToken(): Promise<string> {
     return this.accessToken;
   }
 }
 
-// if you have the refresh token and other credentials
+/**
+ * Authentication flow with a refresh token and other credentials.
+ * @class AuthFlowRefresh
+ * @extends AuthFlowBase
+ */
 export class AuthFlowRefresh extends AuthFlowBase {
   private clientSecret: string;
-
   private redirectUri: string;
-
   private refreshToken: string;
 
+  /**
+   * Constructor for AuthFlowRefresh.
+   * @param {string} [clientId] - Optional client ID.
+   * @param {string} [clientSecret] - Optional client secret.
+   * @param {string} [redirectUri] - Optional redirect URI.
+   * @param {string} [refreshToken] - Optional refresh token.
+   * @throws Will throw an error if any required parameter is missing.
+   */
   constructor(
     clientId?: string,
     clientSecret?: string,
@@ -55,7 +89,7 @@ export class AuthFlowRefresh extends AuthFlowBase {
     }
     if (!id || !secret || !uri || !token) {
       throw new Error(
-        "Missing clientId, clientSecret, redirectUri or refreshToken."
+        "Missing clientId, clientSecret, redirectUri, or refreshToken."
       );
     }
     super(id);
@@ -64,8 +98,13 @@ export class AuthFlowRefresh extends AuthFlowBase {
     this.refreshToken = token;
   }
 
+  /**
+   * Refreshes the access token using the refresh token.
+   * @async
+   * @returns {Promise<string>} - The refreshed access token.
+   * @throws Will throw an error if the token fetch fails.
+   */
   public async refreshAccessToken(): Promise<string> {
-    // fetch new access token using refresh token
     const params = new URLSearchParams({
       client_id: this.clientId,
       client_secret: this.clientSecret,
@@ -74,7 +113,7 @@ export class AuthFlowRefresh extends AuthFlowBase {
       grant_type: "refresh_token",
       refresh_token: this.refreshToken,
     });
-    
+
     const req_body = params.toString();
 
     const response = await fetch(
@@ -89,15 +128,19 @@ export class AuthFlowRefresh extends AuthFlowBase {
     );
 
     if (!response.ok) {
-      throw new Error(`fetch token error! response: ${response.status}`);
+      throw new Error(`Fetch token error! Response: ${response.status}`);
     }
-    // save new access token
+
     const json = (await response.json()) as AccessTokenResponse;
     this.accessToken = json.access_token;
     return this.accessToken;
   }
 
-  // Function to get the token using the code and client credentials
+  /**
+   * Gets the access token by refreshing it.
+   * @async
+   * @returns {Promise<string>} - The access token.
+   */
   public async getAccessToken(): Promise<string> {
     const accessToken = await this.refreshAccessToken();
     this.accessToken = accessToken;

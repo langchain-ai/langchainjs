@@ -3,25 +3,59 @@ import * as url from "url";
 import { AuthFlowBase } from "./authFlowBase.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
+/**
+ * Represents the response structure for an access token.
+ * @interface
+ */
 interface AccessTokenResponse {
   access_token: string;
   refresh_token: string;
 }
 
-// this class uses your clientId, clientSecret and redirectUri
-// to get access token and refresh token, if you already have them,
-// you can use AuthFlowToken or AuthFlowRefresh instead
+/**
+ * Implements the RESTful authentication flow for Microsoft Graph API.
+ * Extends AuthFlowBase class.
+ * @class
+ */
 export class AuthFlowREST extends AuthFlowBase {
+  /**
+   * The client secret used for authentication.
+   * @private
+   */
   private clientSecret: string;
 
+  /**
+   * The redirect URI for the authentication flow.
+   * @private
+   */
   private redirectUri: string;
 
+  /**
+   * The port on which the local server is running for handling authentication.
+   * @private
+   */
   private port: number;
 
+  /**
+   * The pathname component of the redirect URI.
+   * @private
+   */
   private pathname: string;
 
+  /**
+   * The refresh token obtained during authentication.
+   * @private
+   */
   private refreshToken = "";
 
+  /**
+   * Creates an instance of AuthFlowREST.
+   * @constructor
+   * @param {Object} options - Configuration options for the authentication flow.
+   * @param {string} options.clientId - The client ID for authentication.
+   * @param {string} options.clientSecret - The client secret for authentication.
+   * @param {string} options.redirectUri - The redirect URI for authentication.
+   */
   constructor({
     clientId,
     clientSecret,
@@ -36,7 +70,7 @@ export class AuthFlowREST extends AuthFlowBase {
       uri = uri ?? getEnvironmentVariable("OUTLOOK_REDIRECT_URI");
     }
     if (!id || !secret || !uri) {
-      throw new Error("Missing clientId, clientSecret or redirectUri.");
+      throw new Error("Missing clientId, clientSecret, or redirectUri.");
     }
     super(id);
     this.clientSecret = secret;
@@ -46,14 +80,18 @@ export class AuthFlowREST extends AuthFlowBase {
     this.pathname = parsedUrl.pathname || "";
   }
 
-  // Function to open or print the login url for user to login
+  /**
+   * Opens the authentication URL and returns it.
+   * @private
+   * @returns {string} The authentication URL.
+   */
   private openAuthUrl(): string {
     const loginEndpoint =
       "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-    const clientId = this.clientId; // client ID regestered in Azure
+    const clientId = this.clientId; // client ID registered in Azure
     const response_type = "code";
     const response_mode = "query";
-    const redirectUri = encodeURIComponent(this.redirectUri); // redirect URI regestered in Azure
+    const redirectUri = encodeURIComponent(this.redirectUri); // redirect URI registered in Azure
     const scope = encodeURIComponent(
       "openid offline_access https://graph.microsoft.com/.default"
     );
@@ -68,12 +106,16 @@ export class AuthFlowREST extends AuthFlowBase {
       `&state=${state}`,
     ].join("");
 
-    console.log("Please open the following url to login:");
+    console.log("Please open the following URL to login:");
     console.log(url);
     return url;
   }
 
-  // Function to start the server
+  /**
+   * Starts a local server for handling the authorization code.
+   * @private
+   * @returns {Promise<http.Server>} A Promise resolving to the created server.
+   */
   private startServer(): Promise<http.Server> {
     return new Promise((resolve, reject) => {
       const server = http.createServer();
@@ -89,7 +131,12 @@ export class AuthFlowREST extends AuthFlowBase {
     });
   }
 
-  // Function to listen for the authorization code
+  /**
+   * Listens for the authorization code on the local server.
+   * @private
+   * @param {http.Server} server - The server instance.
+   * @returns {Promise<string>} A Promise resolving to the authorization code.
+   */
   private async listenForCode(server: http.Server): Promise<string> {
     return new Promise((resolve, reject) => {
       // Set timeout in case the user fails to login
@@ -126,7 +173,11 @@ export class AuthFlowREST extends AuthFlowBase {
     });
   }
 
-  // get authentication code from user login
+  /**
+   * Gets the authorization code from the user login.
+   * @private
+   * @returns {Promise<string>} A Promise resolving to the authorization code.
+   */
   private async getCode(): Promise<string> {
     // check credentials
     if (!this.clientId || !this.redirectUri) {
@@ -139,7 +190,11 @@ export class AuthFlowREST extends AuthFlowBase {
     return code;
   }
 
-  // Function to get the token using the code and client credentials
+  /**
+   * Gets the access token using the authorization code and client credentials.
+   * @public
+   * @returns {Promise<string>} A Promise resolving to the access token.
+   */
   public async getAccessToken(): Promise<string> {
     // fetch auth code from user login
     const code = await this.getCode();
@@ -152,7 +207,7 @@ export class AuthFlowREST extends AuthFlowBase {
       grant_type: "authorization_code",
       code: code,
     });
-    
+
     const req_body = params.toString();
 
     const response = await fetch(
@@ -167,7 +222,7 @@ export class AuthFlowREST extends AuthFlowBase {
     );
 
     if (!response.ok) {
-      throw new Error(`fetch token error! response: ${response.status}`);
+      throw new Error(`Fetch token error! Response: ${response.status}`);
     }
     // save access token and refresh token
     const json = (await response.json()) as AccessTokenResponse;
@@ -176,6 +231,11 @@ export class AuthFlowREST extends AuthFlowBase {
     return this.accessToken;
   }
 
+  /**
+   * Refreshes the access token using the refresh token.
+   * @public
+   * @returns {Promise<string>} A Promise resolving to the refreshed access token.
+   */
   public async refreshAccessToken(): Promise<string> {
     // fetch new access token using refresh token
     const params = new URLSearchParams({
@@ -186,9 +246,8 @@ export class AuthFlowREST extends AuthFlowBase {
       grant_type: "refresh_token",
       refresh_token: this.refreshToken,
     });
-    
+
     const req_body = params.toString();
-    
 
     const response = await fetch(
       "https://login.microsoftonline.com/common/oauth2/v2.0/token",
@@ -202,7 +261,7 @@ export class AuthFlowREST extends AuthFlowBase {
     );
 
     if (!response.ok) {
-      throw new Error(`fetch token error! response: ${response.status}`);
+      throw new Error(`Fetch token error! Response: ${response.status}`);
     }
     // save new access token
     const json = (await response.json()) as AccessTokenResponse;
