@@ -523,9 +523,7 @@ export interface SecretMap {
   ANTHROPIC_API_KEY?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRET_ACCESS_KEY?: string;
-  AZURE_OPENAI_API_KEY?: string;
   OPENAI_API_KEY?: string;
-  OPENAI_ORGANIZATION?: string;
   PROMPTLAYER_API_KEY?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   ZAPIER_NLA_API_KEY?: string;
