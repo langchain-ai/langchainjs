@@ -903,6 +903,7 @@
     "@tensorflow/tfjs-backend-cpu": "^3",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
+    "@types/decamelize": "^3.0.3",
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
