@@ -1,0 +1,25 @@
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/tools/connery.ts";
+
+# Connery Actions Tool
+
+Using this tool, you can integrate individual Connery actions into your LangChain agents and chains.
+
+## What is Connery?
+
+Connery is an open-source plugin infrastructure for AI.
+
+With Connery, you can easily create a custom plugin, which is essentially a set of actions, and use them in your LangChain agents and chains.
+Connery will handle the rest: runtime, authorization, secret management, access management, audit logs, and other vital features.
+Also, you can find a lot of ready-to-use plugins from our community.
+
+Learn more about Connery:
+
+- GitHub repository: https://github.com/connery-io/connery-platform
+- Documentation: https://docs.connery.io
+
+## Usage
+
+This example shows how to create a tool for one specific Connery action and call it.
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

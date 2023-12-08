@@ -87,7 +87,7 @@ test("Test traced chain with tags", async () => {
 
 test("Test Traced Agent with concurrency", async () => {
   process.env.LANGCHAIN_TRACING_V2 = "true";
-  const model = new OpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
@@ -98,7 +98,7 @@ test("Test Traced Agent with concurrency", async () => {
   ];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "zero-shot-react-description",
+    agentType: "openai-functions",
     verbose: true,
   });
 
@@ -130,7 +130,7 @@ test("Test Traced Agent with chat model", async () => {
   ];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "chat-zero-shot-react-description",
+    agentType: "openai-functions",
     verbose: true,
     metadata: { c: "d" },
   });
