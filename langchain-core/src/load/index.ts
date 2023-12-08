@@ -104,15 +104,25 @@ async function reviver(
       | (typeof finalImportMap)[keyof typeof finalImportMap]
       | OptionalImportMap[keyof OptionalImportMap]
       | null = null;
+
+    const optionalImportNamespaceAliases = [namespace.join("/")];
+    if (namespace[0] === "langchain_community") {
+      optionalImportNamespaceAliases.push(
+        ["langchain", ...namespace.slice(1)].join("/")
+      );
+    }
+    const matchingNamespaceAlias = optionalImportNamespaceAliases.find(
+      (alias) => alias in optionalImportsMap
+    );
     if (
       defaultOptionalImportEntrypoints
         .concat(optionalImportEntrypoints)
         .includes(namespace.join("/")) ||
-      namespace.join("/") in optionalImportsMap
+      matchingNamespaceAlias
     ) {
-      if (namespace.join("/") in optionalImportsMap) {
+      if (matchingNamespaceAlias !== undefined) {
         module = await optionalImportsMap[
-          namespace.join("/") as keyof typeof optionalImportsMap
+          matchingNamespaceAlias as keyof typeof optionalImportsMap
         ];
       } else {
         throw new Error(
@@ -126,6 +136,7 @@ async function reviver(
       if (
         namespace[0] === "langchain" ||
         namespace[0] === "langchain_core" ||
+        namespace[0] === "langchain_community" ||
         namespace[0] === "langchain_anthropic" ||
         namespace[0] === "langchain_openai"
       ) {

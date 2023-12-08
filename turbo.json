@@ -3,14 +3,17 @@
   "globalDependencies": ["**/.env"],
   "pipeline": {
     "@langchain/core#build": {},
-    "libs/langchain-anthropic#build": {
+    "@langchain/anthropic#build": {
       "dependsOn": ["@langchain/core#build"]
     },
-    "libs/langchain-openai#build": {
+    "@langchain/openai#build": {
       "dependsOn": ["@langchain/core#build"]
+    },
+    "@langchain/community#build": {
+      "dependsOn": ["@langchain/openai#build"]
     },
     "build": {
-      "dependsOn": ["@langchain/core#build", "^build"],
+      "dependsOn": ["@langchain/core#build", "@langchain/community#build",  "^build"],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },

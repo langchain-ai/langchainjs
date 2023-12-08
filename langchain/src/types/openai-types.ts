@@ -1,4 +1,4 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAIClient } from "@langchain/openai";
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
