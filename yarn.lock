@@ -11546,12 +11546,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/decamelize@npm:^3.0.3":
-  version: 3.0.3
-  resolution: "@types/decamelize@npm:3.0.3"
-  dependencies:
-    decamelize: "*"
-  checksum: a732187923218292bbe72f54fe49532e1e0ad2c121fe455ae598801e823455da9dfd91b333f29e39cb52c58a45e066c75b8ab64c8432aa22cbc83104ba2a81c0
+"@types/decamelize@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@types/decamelize@npm:1.2.0"
+  checksum: cff4e926bf771f8ad6423ab8c5119d6b8679c09aaf9f0b26a4a1dbcf324c0b1df183c2bfe688b90b6f880d8e864684a2806a22529b4ee404fd9160f9c123853d
   languageName: node
   linkType: hard
 
@@ -16373,13 +16371,6 @@ __metadata:
   dependencies:
     ms: ^2.1.1
   checksum: b3d8c5940799914d30314b7c3304a43305fd0715581a919dacb8b3176d024a782062368405b47491516d2091d6462d4d11f2f4974a405048094f8bfebfa3071c
-  languageName: node
-  linkType: hard
-
-"decamelize@npm:*":
-  version: 6.0.0
-  resolution: "decamelize@npm:6.0.0"
-  checksum: 0066bc30798ec11e01adf0c19ad975caef86545d4bb6f70cfb90b7eb8e3cbf7974cf774ac2e6ea2586e4e07b1f654bfecc4e772c42128a79a89f8584fc546753
   languageName: node
   linkType: hard
 
@@ -23049,7 +23040,7 @@ __metadata:
     "@tensorflow/tfjs-backend-cpu": ^3
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
-    "@types/decamelize": ^3.0.3
+    "@types/decamelize": ^1.2.0
     "@types/html-to-text": ^9
     "@types/js-yaml": ^4
     "@types/jsdom": ^21.1.1
