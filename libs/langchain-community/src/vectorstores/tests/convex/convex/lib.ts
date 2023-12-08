@@ -34,10 +34,7 @@ export const similaritySearch = action({
     query: v.string(),
   },
   handler: async (ctx, { query }) => {
-    const vectorStore = new ConvexVectorStore(
-      new FakeEmbeddings({}),
-      { ctx }
-    );
+    const vectorStore = new ConvexVectorStore(new FakeEmbeddings({}), { ctx });
 
     const result = await vectorStore.similaritySearch(query, 3);
     return result.map(({ metadata }) => metadata);

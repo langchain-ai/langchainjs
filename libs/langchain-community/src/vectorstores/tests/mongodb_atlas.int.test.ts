@@ -9,7 +9,6 @@ import { Document } from "@langchain/core/documents";
 
 import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
 
-
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.
  * Use "langchain.test" for the namespace and "default" for the index name.
