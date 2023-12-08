@@ -408,8 +408,31 @@ export class RemoteRunnable<
       );
     }
     const runnableStream = convertEventStreamToIterableReadableDataStream(body);
-    for await (const log of runnableStream) {
-      yield log;
+    async function consumeRunnableStream() {
+      try {
+        for await (const chunk of runnableStream) {
+          const patch = new RunLogPatch({
+            ops: [
+              {
+                op: "add",
+                path: "/streamed_output/-",
+                value: chunk,
+              },
+            ],
+          });
+          await stream.writer.write(patch);
+        }
+      } finally {
+        await stream.writer.close();
+      }
+    }
+    const runnableStreamPromise = consumeRunnableStream();
+    try {
+      for await (const log of stream) {
+        yield log;
+      }
+    } finally {
+      await runnableStreamPromise;
     }
   }
 }

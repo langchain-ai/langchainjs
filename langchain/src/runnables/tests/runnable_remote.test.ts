@@ -162,15 +162,17 @@ describe("RemoteRunnable", () => {
     );
   });
 
-  test("Stream log local langserve", async () => {
+  test.only("Stream log local langserve", async () => {
     const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
     const stream = remote.streamLog({
       question: "What are the 5 best apples?",
     });
     let chunkCount = 0;
     for await (const chunk of stream) {
-      expect(chunk).toEqual('["a", "b", "c", "d"]');
-      chunkCount += 1;
+      if ("value" in chunk.ops[0]) {
+        expect(chunk.ops[0].value).toEqual('["a", "b", "c", "d"]');
+        chunkCount += 1;
+      }
     }
     expect(chunkCount).toBe(1);
   });
