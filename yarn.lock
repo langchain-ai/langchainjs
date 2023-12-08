@@ -23016,7 +23016,6 @@ __metadata:
   resolution: "langchain@workspace:langchain"
   dependencies:
     "@anthropic-ai/sdk": ^0.9.1
-    "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.414.0
     "@aws-sdk/client-sfn": ^3.362.0
@@ -23170,7 +23169,6 @@ __metadata:
     zod: ^3.22.3
     zod-to-json-schema: 3.20.3
   peerDependencies:
-    "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@aws-sdk/client-sfn": ^3.310.0
@@ -23268,8 +23266,6 @@ __metadata:
     youtube-transcript: ^1.0.6
     youtubei.js: ^5.8.0
   peerDependenciesMeta:
-    "@aws-sdk/client-lambda":
-      optional: true
     "@aws-sdk/client-s3":
       optional: true
     "@aws-sdk/client-sagemaker-runtime":
