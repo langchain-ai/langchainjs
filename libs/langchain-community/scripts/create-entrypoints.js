@@ -9,6 +9,7 @@ import { identifySecrets } from "./identify-secrets.js";
 // Order is not important.
 const entrypoints = {
   load: "load/index",
+  // tools
   "load/serializable": "load/serializable",
   "tools/aiplugin": "tools/aiplugin",
   "tools/aws_sfn": "tools/aws_sfn",
@@ -27,6 +28,10 @@ const entrypoints = {
   "tools/serper": "tools/serper",
   "tools/wikipedia_query_run": "tools/wikipedia_query_run",
   "tools/wolframalpha": "tools/wolframalpha",
+  // toolkits
+  "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
+  "agents/toolkits/base": "agents/toolkits/base",
+  "agents/toolkits/connery": "agents/toolkits/connery/index",
   // embeddings
   "embeddings/bedrock": "embeddings/bedrock",
   "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",

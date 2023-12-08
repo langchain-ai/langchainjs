@@ -605,6 +605,21 @@
       "import": "./tools/wolframalpha.js",
       "require": "./tools/wolframalpha.cjs"
     },
+    "./agents/toolkits/aws_sfn": {
+      "types": "./agents/toolkits/aws_sfn.d.ts",
+      "import": "./agents/toolkits/aws_sfn.js",
+      "require": "./agents/toolkits/aws_sfn.cjs"
+    },
+    "./agents/toolkits/base": {
+      "types": "./agents/toolkits/base.d.ts",
+      "import": "./agents/toolkits/base.js",
+      "require": "./agents/toolkits/base.cjs"
+    },
+    "./agents/toolkits/connery": {
+      "types": "./agents/toolkits/connery.d.ts",
+      "import": "./agents/toolkits/connery.js",
+      "require": "./agents/toolkits/connery.cjs"
+    },
     "./embeddings/bedrock": {
       "types": "./embeddings/bedrock.d.ts",
       "import": "./embeddings/bedrock.js",
@@ -1286,6 +1301,15 @@
     "tools/wolframalpha.cjs",
     "tools/wolframalpha.js",
     "tools/wolframalpha.d.ts",
+    "agents/toolkits/aws_sfn.cjs",
+    "agents/toolkits/aws_sfn.js",
+    "agents/toolkits/aws_sfn.d.ts",
+    "agents/toolkits/base.cjs",
+    "agents/toolkits/base.js",
+    "agents/toolkits/base.d.ts",
+    "agents/toolkits/connery.cjs",
+    "agents/toolkits/connery.js",
+    "agents/toolkits/connery.d.ts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",
