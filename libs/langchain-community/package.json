@@ -525,6 +525,11 @@
       "import": "./tools/aiplugin.js",
       "require": "./tools/aiplugin.cjs"
     },
+    "./tools/aws_lambda": {
+      "types": "./tools/aws_lambda.d.ts",
+      "import": "./tools/aws_lambda.js",
+      "require": "./tools/aws_lambda.cjs"
+    },
     "./tools/aws_sfn": {
       "types": "./tools/aws_sfn.d.ts",
       "import": "./tools/aws_sfn.js",
@@ -549,6 +554,11 @@
       "types": "./tools/dadjokeapi.d.ts",
       "import": "./tools/dadjokeapi.js",
       "require": "./tools/dadjokeapi.cjs"
+    },
+    "./tools/dynamic": {
+      "types": "./tools/dynamic.d.ts",
+      "import": "./tools/dynamic.js",
+      "require": "./tools/dynamic.cjs"
     },
     "./tools/dataforseo_api_search": {
       "types": "./tools/dataforseo_api_search.d.ts",
@@ -1253,6 +1263,9 @@
     "tools/aiplugin.cjs",
     "tools/aiplugin.js",
     "tools/aiplugin.d.ts",
+    "tools/aws_lambda.cjs",
+    "tools/aws_lambda.js",
+    "tools/aws_lambda.d.ts",
     "tools/aws_sfn.cjs",
     "tools/aws_sfn.js",
     "tools/aws_sfn.d.ts",
@@ -1268,6 +1281,9 @@
     "tools/dadjokeapi.cjs",
     "tools/dadjokeapi.js",
     "tools/dadjokeapi.d.ts",
+    "tools/dynamic.cjs",
+    "tools/dynamic.js",
+    "tools/dynamic.d.ts",
     "tools/dataforseo_api_search.cjs",
     "tools/dataforseo_api_search.js",
     "tools/dataforseo_api_search.d.ts",

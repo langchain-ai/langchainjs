@@ -12,11 +12,13 @@ const entrypoints = {
   // tools
   "load/serializable": "load/serializable",
   "tools/aiplugin": "tools/aiplugin",
+  "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/bingserpapi": "tools/bingserpapi",
   "tools/brave_search": "tools/brave_search",
   "tools/connery": "tools/connery",
   "tools/dadjokeapi": "tools/dadjokeapi",
+  "tools/dynamic": "tools/dynamic",
   "tools/dataforseo_api_search": "tools/dataforseo_api_search",
   "tools/gmail": "tools/gmail/index",
   "tools/google_custom_search": "tools/google_custom_search",

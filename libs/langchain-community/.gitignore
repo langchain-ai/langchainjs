@@ -7,6 +7,9 @@ load/serializable.d.ts
 tools/aiplugin.cjs
 tools/aiplugin.js
 tools/aiplugin.d.ts
+tools/aws_lambda.cjs
+tools/aws_lambda.js
+tools/aws_lambda.d.ts
 tools/aws_sfn.cjs
 tools/aws_sfn.js
 tools/aws_sfn.d.ts
@@ -22,6 +25,9 @@ tools/connery.d.ts
 tools/dadjokeapi.cjs
 tools/dadjokeapi.js
 tools/dadjokeapi.d.ts
+tools/dynamic.cjs
+tools/dynamic.js
+tools/dynamic.d.ts
 tools/dataforseo_api_search.cjs
 tools/dataforseo_api_search.js
 tools/dataforseo_api_search.d.ts

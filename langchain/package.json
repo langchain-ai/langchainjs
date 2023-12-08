@@ -882,7 +882,6 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
     "@aws-sdk/client-sfn": "^3.362.0",
@@ -1020,7 +1019,6 @@
     "youtubei.js": "^5.8.0"
   },
   "peerDependencies": {
-    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
@@ -1119,9 +1117,6 @@
     "youtubei.js": "^5.8.0"
   },
   "peerDependenciesMeta": {
-    "@aws-sdk/client-lambda": {
-      "optional": true
-    },
     "@aws-sdk/client-s3": {
       "optional": true
     },
