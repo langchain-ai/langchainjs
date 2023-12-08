@@ -152,6 +152,7 @@ const entrypoints = {
   "stores/message/convex": "stores/message/convex",
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/firestore": "stores/message/firestore",
+  "stores/message/in_memory": "stores/message/in_memory",
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/momento": "stores/message/momento",
   "stores/message/mongodb": "stores/message/mongodb",
@@ -159,6 +160,10 @@ const entrypoints = {
   "stores/message/redis": "stores/message/redis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/xata": "stores/message/xata",
+  // memory
+  "memory/chat_memory": "memory/chat_memory",
+  "memory/motorhead_memory": "memory/motorhead_memory",
+  "memory/zep": "memory/zep"
 };
 
 // Entrypoints in this list will

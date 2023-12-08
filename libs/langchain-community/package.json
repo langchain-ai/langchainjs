@@ -840,11 +840,6 @@
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
     },
-    "./vectorstores/memory": {
-      "types": "./vectorstores/memory.d.ts",
-      "import": "./vectorstores/memory.js",
-      "require": "./vectorstores/memory.cjs"
-    },
     "./vectorstores/milvus": {
       "types": "./vectorstores/milvus.d.ts",
       "import": "./vectorstores/milvus.js",
@@ -1175,6 +1170,11 @@
       "import": "./stores/message/firestore.js",
       "require": "./stores/message/firestore.cjs"
     },
+    "./stores/message/in_memory": {
+      "types": "./stores/message/in_memory.d.ts",
+      "import": "./stores/message/in_memory.js",
+      "require": "./stores/message/in_memory.cjs"
+    },
     "./stores/message/ioredis": {
       "types": "./stores/message/ioredis.d.ts",
       "import": "./stores/message/ioredis.js",
@@ -1209,6 +1209,21 @@
       "types": "./stores/message/xata.d.ts",
       "import": "./stores/message/xata.js",
       "require": "./stores/message/xata.cjs"
+    },
+    "./memory/chat_memory": {
+      "types": "./memory/chat_memory.d.ts",
+      "import": "./memory/chat_memory.js",
+      "require": "./memory/chat_memory.cjs"
+    },
+    "./memory/motorhead_memory": {
+      "types": "./memory/motorhead_memory.d.ts",
+      "import": "./memory/motorhead_memory.js",
+      "require": "./memory/motorhead_memory.cjs"
+    },
+    "./memory/zep": {
+      "types": "./memory/zep.d.ts",
+      "import": "./memory/zep.js",
+      "require": "./memory/zep.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -1412,9 +1427,6 @@
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
-    "vectorstores/memory.cjs",
-    "vectorstores/memory.js",
-    "vectorstores/memory.d.ts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
@@ -1613,6 +1625,9 @@
     "stores/message/firestore.cjs",
     "stores/message/firestore.js",
     "stores/message/firestore.d.ts",
+    "stores/message/in_memory.cjs",
+    "stores/message/in_memory.js",
+    "stores/message/in_memory.d.ts",
     "stores/message/ioredis.cjs",
     "stores/message/ioredis.js",
     "stores/message/ioredis.d.ts",
@@ -1633,6 +1648,15 @@
     "stores/message/upstash_redis.d.ts",
     "stores/message/xata.cjs",
     "stores/message/xata.js",
-    "stores/message/xata.d.ts"
+    "stores/message/xata.d.ts",
+    "memory/chat_memory.cjs",
+    "memory/chat_memory.js",
+    "memory/chat_memory.d.ts",
+    "memory/motorhead_memory.cjs",
+    "memory/motorhead_memory.js",
+    "memory/motorhead_memory.d.ts",
+    "memory/zep.cjs",
+    "memory/zep.js",
+    "memory/zep.d.ts"
   ]
 }

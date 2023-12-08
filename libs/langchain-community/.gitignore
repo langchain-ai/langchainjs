@@ -196,9 +196,6 @@ vectorstores/hnswlib.d.ts
 vectorstores/lancedb.cjs
 vectorstores/lancedb.js
 vectorstores/lancedb.d.ts
-vectorstores/memory.cjs
-vectorstores/memory.js
-vectorstores/memory.d.ts
 vectorstores/milvus.cjs
 vectorstores/milvus.js
 vectorstores/milvus.d.ts
@@ -397,6 +394,9 @@ stores/message/dynamodb.d.ts
 stores/message/firestore.cjs
 stores/message/firestore.js
 stores/message/firestore.d.ts
+stores/message/in_memory.cjs
+stores/message/in_memory.js
+stores/message/in_memory.d.ts
 stores/message/ioredis.cjs
 stores/message/ioredis.js
 stores/message/ioredis.d.ts
@@ -418,3 +418,12 @@ stores/message/upstash_redis.d.ts
 stores/message/xata.cjs
 stores/message/xata.js
 stores/message/xata.d.ts
+memory/chat_memory.cjs
+memory/chat_memory.js
+memory/chat_memory.d.ts
+memory/motorhead_memory.cjs
+memory/motorhead_memory.js
+memory/motorhead_memory.d.ts
+memory/zep.cjs
+memory/zep.js
+memory/zep.d.ts
