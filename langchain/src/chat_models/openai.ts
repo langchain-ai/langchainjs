@@ -282,6 +282,8 @@ export class ChatOpenAI<
 
   openAIApiKey?: string;
 
+  openAIBaseUrl?: string;
+
   azureOpenAIApiVersion?: string;
 
   azureOpenAIApiKey?: string;
@@ -311,6 +313,11 @@ export class ChatOpenAI<
 
     this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+
+    this.openAIBaseUrl =
+      configuration?.baseURL ??
+      fields?.configuration?.baseURL ??
+      getEnvironmentVariable("OPENAI_BASE_URL");
 
     this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
@@ -372,7 +379,7 @@ export class ChatOpenAI<
     this.clientConfig = {
       apiKey: this.openAIApiKey,
       organization: this.organization,
-      baseURL: configuration?.basePath ?? fields?.configuration?.basePath,
+      baseURL: this.openAIBaseUrl,
       dangerouslyAllowBrowser: true,
       defaultHeaders:
         configuration?.baseOptions?.headers ??

@@ -96,6 +96,11 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
 
+    let baseURL =
+      configuration?.baseURL ??
+      fields?.configuration?.baseURL ??
+      getEnvironmentVariable("OPENAI_BASE_URL");
+
     const azureApiKey =
       fieldsWithDefaults?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
@@ -153,7 +158,7 @@ export class OpenAIEmbeddings
     this.clientConfig = {
       apiKey,
       organization: this.organization,
-      baseURL: configuration?.basePath,
+      baseURL,
       dangerouslyAllowBrowser: true,
       defaultHeaders: configuration?.baseOptions?.headers,
       defaultQuery: configuration?.baseOptions?.params,
