@@ -37,6 +37,7 @@
     "@langchain/openai": "~0.0.1",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
+    "ml-distance": "^4.0.0",
     "uuid": "^9.0.0",
     "zod": "^3.22.3"
   },
@@ -173,6 +174,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@elastic/elasticsearch": "^8.4.0",
+    "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
@@ -839,6 +841,11 @@
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
     },
+    "./vectorstores/memory": {
+      "types": "./vectorstores/memory.d.ts",
+      "import": "./vectorstores/memory.js",
+      "require": "./vectorstores/memory.cjs"
+    },
     "./vectorstores/milvus": {
       "types": "./vectorstores/milvus.d.ts",
       "import": "./vectorstores/milvus.js",
@@ -1401,6 +1408,9 @@
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
+    "vectorstores/memory.cjs",
+    "vectorstores/memory.js",
+    "vectorstores/memory.d.ts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",

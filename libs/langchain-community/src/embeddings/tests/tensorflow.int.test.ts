@@ -1,10 +1,11 @@
 import { test, expect } from "@jest/globals";
-import { HuggingFaceInferenceEmbeddings } from "../hf.js";
+import "@tensorflow/tfjs-backend-cpu";
+import { Document } from "@langchain/core/documents";
+import { TensorFlowEmbeddings } from "../tensorflow.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { Document } from "../../document.js";
 
-test("HuggingFaceInferenceEmbeddings", async () => {
-  const embeddings = new HuggingFaceInferenceEmbeddings();
+test("TensorflowEmbeddings", async () => {
+  const embeddings = new TensorFlowEmbeddings();
 
   const documents = [
     "Hello world!",
@@ -16,7 +17,7 @@ test("HuggingFaceInferenceEmbeddings", async () => {
   ];
 
   const queryEmbedding = await embeddings.embedQuery(documents[0]);
-  expect(queryEmbedding).toHaveLength(768);
+  expect(queryEmbedding).toHaveLength(512);
   expect(typeof queryEmbedding[0]).toBe("number");
 
   const store = new MemoryVectorStore(embeddings);

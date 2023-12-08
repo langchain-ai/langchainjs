@@ -77,6 +77,7 @@ const entrypoints = {
   "vectorstores/googlevertexai": "vectorstores/googlevertexai",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/lancedb": "vectorstores/lancedb",
+  "vectorstores/memory": "vectorstores/memory",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",

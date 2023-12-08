@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
-import { HuggingFaceTransformersEmbeddings } from "../hf_transformers.js";
+import { Document } from "@langchain/core/documents";
+import { HuggingFaceInferenceEmbeddings } from "../hf.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { Document } from "../../document.js";
 
-test("HuggingFaceTransformersEmbeddings", async () => {
-  const embeddings = new HuggingFaceTransformersEmbeddings();
+test("HuggingFaceInferenceEmbeddings", async () => {
+  const embeddings = new HuggingFaceInferenceEmbeddings();
 
   const documents = [
     "Hello world!",
@@ -16,7 +16,7 @@ test("HuggingFaceTransformersEmbeddings", async () => {
   ];
 
   const queryEmbedding = await embeddings.embedQuery(documents[0]);
-  expect(queryEmbedding).toHaveLength(384);
+  expect(queryEmbedding).toHaveLength(768);
   expect(typeof queryEmbedding[0]).toBe("number");
 
   const store = new MemoryVectorStore(embeddings);

@@ -196,6 +196,9 @@ vectorstores/hnswlib.d.ts
 vectorstores/lancedb.cjs
 vectorstores/lancedb.js
 vectorstores/lancedb.d.ts
+vectorstores/memory.cjs
+vectorstores/memory.js
+vectorstores/memory.d.ts
 vectorstores/milvus.cjs
 vectorstores/milvus.js
 vectorstores/milvus.d.ts
