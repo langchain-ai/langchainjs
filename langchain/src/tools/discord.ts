@@ -13,6 +13,7 @@ import { Tool } from "./base.js";
  */
 interface DiscordToolParams {
   botToken?: string;
+  client?: Client;
 }
 
 /**
@@ -51,31 +52,36 @@ export class DiscordGetMessagesTool extends Tool {
 
   name = "discord-get-messages";
 
-  description = `a discord tool. useful for reading messages from a discord channel. 
-    input should be the discord channel ID. the bot should have read 
-    permissions for the channel`;
+  description = `A discord tool. useful for reading messages from a discord channel. 
+  Input should be the discord channel ID. The bot should have read 
+  permissions for the channel.`;
 
   protected botToken: string;
 
   protected messageLimit: number;
 
-  client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
-  });
+  protected client: Client;
 
-  constructor(fields: DiscordGetMessagesToolParams = {}) {
+  constructor(fields?: DiscordGetMessagesToolParams) {
     super();
 
     const {
       botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
       messageLimit = 10,
-    } = fields;
+      client,
+    } = fields ?? {};
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
+        "Environment variable DISCORD_BOT_TOKEN missing, but is required for DiscordGetMessagesTool."
       );
     }
+
+    this.client =
+      client ??
+      new Client({
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+      });
 
     this.botToken = botToken;
     this.messageLimit = messageLimit;
@@ -83,24 +89,31 @@ export class DiscordGetMessagesTool extends Tool {
 
   /** @ignore */
   async _call(input: string): Promise<string> {
-    await this.client.login(this.botToken);
+    try {
+      await this.client.login(this.botToken);
 
-    const channel = (await this.client.channels.fetch(input)) as TextChannel;
+      const channel = (await this.client.channels.fetch(input)) as TextChannel;
 
-    if (!channel) {
-      return "Channel not found";
+      if (!channel) {
+        return "Channel not found.";
+      }
+
+      const messages = await channel.messages.fetch({
+        limit: this.messageLimit,
+      });
+      await this.client.destroy();
+      const results =
+        messages.map((message: Message) => ({
+          author: message.author.tag,
+          content: message.content,
+          timestamp: message.createdAt,
+        })) ?? [];
+
+      return JSON.stringify(results);
+    } catch (err) {
+      await this.client.destroy();
+      return "Error getting messages.";
     }
-
-    const messages = await channel.messages.fetch({ limit: this.messageLimit });
-    await this.client.destroy();
-    const results =
-      messages.map((message: Message) => ({
-        author: message.author.tag,
-        content: message.content,
-        timestamp: message.createdAt,
-      })) ?? [];
-
-    return JSON.stringify(results);
   }
 }
 
@@ -117,43 +130,52 @@ export class DiscordGetGuildsTool extends Tool {
 
   name = "discord-get-guilds";
 
-  description = `a discord tool. useful for getting a list of all servers/guilds the bot is a member of. no input required.`;
+  description = `A discord tool. Useful for getting a list of all servers/guilds the bot is a member of. No input required.`;
 
   protected botToken: string;
 
-  client = new Client({
-    intents: [GatewayIntentBits.Guilds],
-  });
+  protected client: Client;
 
-  constructor(fields: DiscordToolParams = {}) {
+  constructor(fields?: DiscordToolParams) {
     super();
 
-    const { botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN") } =
-      fields || {};
+    const { botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"), client } =
+      fields ?? {};
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
+        "Environment variable DISCORD_BOT_TOKEN missing, but is required for DiscordGetGuildsTool."
       );
     }
+    this.client =
+      client ??
+      new Client({
+        intents: [GatewayIntentBits.Guilds],
+      });
+
     this.botToken = botToken;
   }
 
   /** @ignore */
   async _call(_input: string): Promise<string> {
-    await this.client.login(this.botToken);
+    try {
+      await this.client.login(this.botToken);
 
-    const guilds = await this.client.guilds.fetch();
-    await this.client.destroy();
+      const guilds = await this.client.guilds.fetch();
+      await this.client.destroy();
 
-    const results =
-      guilds.map((guild) => ({
-        id: guild.id,
-        name: guild.name,
-        createdAt: guild.createdAt,
-      })) ?? [];
+      const results =
+        guilds.map((guild) => ({
+          id: guild.id,
+          name: guild.name,
+          createdAt: guild.createdAt,
+        })) ?? [];
 
-    return JSON.stringify(results);
+      return JSON.stringify(results);
+    } catch (err) {
+      await this.client.destroy();
+      return "Error getting guilds.";
+    }
   }
 }
 
@@ -171,46 +193,54 @@ export class DiscordGetTextChannelsTool extends Tool {
 
   name = "discord-get-text-channels";
 
-  description = `a discord tool. useful for getting a list of all text channels in a server/guild. input should be a discord server/guild ID`;
+  description = `A discord tool. Useful for getting a list of all text channels in a server/guild. Input should be a discord server/guild ID.`;
 
   protected botToken: string;
 
-  client = new Client({
-    intents: [GatewayIntentBits.Guilds],
-  });
+  protected client: Client;
 
-  constructor(fields: DiscordToolParams = {}) {
+  constructor(fields?: DiscordToolParams) {
     super();
 
-    const { botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN") } =
-      fields || {};
+    const { botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"), client } =
+      fields ?? {};
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
+        "Environment variable DISCORD_BOT_TOKEN missing, but is required for DiscordGetTextChannelsTool."
       );
     }
+    this.client =
+      client ??
+      new Client({
+        intents: [GatewayIntentBits.Guilds],
+      });
     this.botToken = botToken;
   }
 
   /** @ignore */
   async _call(input: string): Promise<string> {
-    await this.client.login(this.botToken);
+    try {
+      await this.client.login(this.botToken);
 
-    const guild = await this.client.guilds.fetch(input);
-    const channels = await guild.channels.fetch();
-    await this.client.destroy();
+      const guild = await this.client.guilds.fetch(input);
+      const channels = await guild.channels.fetch();
+      await this.client.destroy();
 
-    const results =
-      channels
-        .filter((channel) => channel?.type === ChannelType.GuildText)
-        .map((channel) => ({
-          id: channel?.id,
-          name: channel?.name,
-          createdAt: channel?.createdAt,
-        })) ?? [];
+      const results =
+        channels
+          .filter((channel) => channel?.type === ChannelType.GuildText)
+          .map((channel) => ({
+            id: channel?.id,
+            name: channel?.name,
+            createdAt: channel?.createdAt,
+          })) ?? [];
 
-    return JSON.stringify(results);
+      return JSON.stringify(results);
+    } catch (err) {
+      await this.client.destroy();
+      return "Error getting text channels.";
+    }
   }
 }
 
@@ -235,29 +265,35 @@ export class DiscordSendMessagesTool extends Tool {
 
   protected channelId: string;
 
-  client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
-  });
+  protected client: Client;
 
-  constructor(fields: DiscordSendMessageToolParams = {}) {
+  constructor(fields?: DiscordSendMessageToolParams) {
     super();
 
     const {
       botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
       channelId = getEnvironmentVariable("DISCORD_CHANNEL_ID"),
-    } = fields;
+      client,
+    } = fields ?? {};
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
+        "Environment variable DISCORD_BOT_TOKEN missing, but is required for DiscordSendMessagesTool."
       );
     }
 
     if (!channelId) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_CHANNEL_ID"
+        "Environment variable DISCORD_CHANNEL_ID missing, but is required for DiscordSendMessagesTool."
       );
     }
+
+    this.client =
+      client ??
+      new Client({
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+      });
+
     this.botToken = botToken;
     this.channelId = channelId;
   }
@@ -283,10 +319,10 @@ export class DiscordSendMessagesTool extends Tool {
 
       await this.client.destroy();
 
-      return "Message sent successfully";
+      return "Message sent successfully.";
     } catch (err) {
       await this.client.destroy();
-      return "Error sending message";
+      return "Error sending message.";
     }
   }
 }
@@ -307,37 +343,43 @@ export class DiscordChannelSearchTool extends Tool {
 
   name = "discord_channel_search_tool";
 
-  description = `a discord toolkit. useful for searching for messages 
-  within a discord channel. input should be the search term. the bot 
-  should have read permissions for the channel`;
+  description = `A discord toolkit. Useful for searching for messages 
+  within a discord channel. Input should be the search term. The bot 
+  should have read permissions for the channel.`;
 
   protected botToken: string;
 
   protected channelId: string;
 
-  client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
-  });
+  protected client: Client;
 
-  constructor(fields: DiscordChannelSearchParams = {}) {
+  constructor(fields?: DiscordChannelSearchParams) {
     super();
 
     const {
       botToken = getEnvironmentVariable("DISCORD_BOT_TOKEN"),
       channelId = getEnvironmentVariable("DISCORD_CHANNEL_ID"),
-    } = fields;
+      client,
+    } = fields ?? {};
 
     if (!botToken) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_BOT_TOKEN"
+        "Environment variable DISCORD_BOT_TOKEN missing, but is required for DiscordChannelSearchTool."
       );
     }
 
     if (!channelId) {
       throw new Error(
-        "Discord API key not set. You can set it as DISCORD_CHANNEL_ID"
+        "Environment variable DISCORD_CHANNEL_ID missing, but is required for DiscordChannelSearchTool."
       );
     }
+
+    this.client =
+      client ??
+      new Client({
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+      });
+
     this.botToken = botToken;
     this.channelId = channelId;
   }

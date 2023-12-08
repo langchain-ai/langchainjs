@@ -1,11 +1,11 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
 import { DiscordSendMessagesTool } from "../../tools/discord.js";
 import { DadJokeAPI } from "../../tools/dadjokeapi.js";
 
-test.skip("DiscordSendMessagesTool should tell a joke in the discord channel", async () => {
-  const model = new OpenAI({
+test("DiscordSendMessagesTool should tell a joke in the discord channel", async () => {
+  const model = new ChatOpenAI({
     temperature: 0,
   });
 
