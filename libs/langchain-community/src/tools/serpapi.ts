@@ -294,10 +294,6 @@ export class SerpAPI extends Tool {
     return "SerpAPI";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   toJSON() {
     return this.toJSONNotImplemented();
   }

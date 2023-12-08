@@ -81,8 +81,6 @@ export class PortkeyChat extends BaseChatModel {
 
   session: PortkeySession;
 
-  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
-
   constructor(init?: Partial<PortkeyChat>) {
     super(init ?? {});
     this.apiKey = init?.apiKey;

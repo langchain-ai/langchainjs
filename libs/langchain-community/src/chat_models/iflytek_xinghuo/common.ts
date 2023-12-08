@@ -187,8 +187,6 @@ export abstract class BaseChatIflytekXinghuo
     return ["stop", "signal", "options"];
   }
 
-  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
-
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       iflytekApiKey: "IFLYTEK_API_KEY",

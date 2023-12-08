@@ -101,10 +101,6 @@ export class DataForSeoAPISearch extends Tool {
     return "DataForSeoAPISearch";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   name = "dataforseo-api-wrapper";
 
   description =

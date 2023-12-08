@@ -84,8 +84,6 @@ export class ChatLlamaCpp extends SimpleChatModel<LlamaCppCallOptions> {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
-
   static lc_name() {
     return "ChatLlamaCpp";
   }

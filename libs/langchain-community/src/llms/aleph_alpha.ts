@@ -51,8 +51,6 @@ export interface AlephAlphaInput extends BaseLLMParams {
 export class AlephAlpha extends LLM implements AlephAlphaInput {
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   model = "luminous-base";
 
   maximum_tokens = 64;

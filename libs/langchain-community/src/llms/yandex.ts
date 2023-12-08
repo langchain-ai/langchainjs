@@ -35,8 +35,6 @@ export interface YandexGPTInputs extends BaseLLMParams {
 export class YandexGPT extends LLM implements YandexGPTInputs {
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   static lc_name() {
     return "Yandex GPT";
   }

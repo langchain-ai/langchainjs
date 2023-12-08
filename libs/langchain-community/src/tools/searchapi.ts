@@ -67,10 +67,6 @@ export class SearchApi extends Tool {
     return "SearchApi";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   /**
    * Converts the SearchApi instance to JSON. This method is not implemented
    * and will throw an error if called.

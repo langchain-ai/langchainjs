@@ -125,8 +125,6 @@ export class BedrockChat extends SimpleChatModel implements BaseBedrockInput {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
-
   get lc_aliases(): Record<string, string> {
     return {
       model: "model_id",

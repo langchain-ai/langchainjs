@@ -52,8 +52,6 @@ export class Bedrock extends LLM implements BaseBedrockInput {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   get lc_aliases(): Record<string, string> {
     return {
       model: "model_id",

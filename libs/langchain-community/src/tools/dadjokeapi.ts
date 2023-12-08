@@ -11,10 +11,6 @@ class DadJokeAPI extends Tool {
     return "DadJokeAPI";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   name = "dadjoke";
 
   description =

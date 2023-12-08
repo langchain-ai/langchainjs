@@ -55,8 +55,6 @@ export class Cohere extends LLM implements CohereInput {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   temperature = 0;
 
   maxTokens = 250;

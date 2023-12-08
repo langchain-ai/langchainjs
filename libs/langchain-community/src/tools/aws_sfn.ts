@@ -42,10 +42,6 @@ export class StartExecutionAWSSfnTool extends Tool {
 
   public description: string;
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   constructor({
     name,
     description,

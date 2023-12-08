@@ -97,8 +97,6 @@ export class Portkey extends BaseLLM {
 
   session: PortkeySession;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   constructor(init?: Partial<Portkey>) {
     super(init ?? {});
     this.apiKey = init?.apiKey;

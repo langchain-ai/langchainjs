@@ -52,7 +52,7 @@ describe("Google Maker Suite Hub", () => {
       const model = prompt.toModel();
       // console.log(model.lc_namespace);
       expect(model.lc_namespace).toEqual([
-        "langchain_community",
+        "langchain",
         "llms",
         "googlepalm",
       ]);
@@ -82,7 +82,7 @@ describe("Google Maker Suite Hub", () => {
       const prompt = new MakerSuitePrompt(dataFile);
       const model = prompt.toModel();
       expect(model.lc_namespace).toEqual([
-        "langchain_community",
+        "langchain",
         "llms",
         "googlepalm",
       ]);
@@ -97,7 +97,7 @@ describe("Google Maker Suite Hub", () => {
       const prompt = new MakerSuitePrompt(chatFile);
       const model = prompt.toModel();
       expect(model.lc_namespace).toEqual([
-        "langchain_community",
+        "langchain",
         "chat_models",
         "googlepalm",
       ]);

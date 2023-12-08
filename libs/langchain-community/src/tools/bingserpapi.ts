@@ -13,10 +13,6 @@ class BingSerpAPI extends Tool {
     return "BingSerpAPI";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   /**
    * Not implemented. Will throw an error if called.
    */

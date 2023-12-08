@@ -25,10 +25,6 @@ export class GoogleCustomSearch extends Tool {
     };
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   name = "google-custom-search";
 
   protected apiKey: string;

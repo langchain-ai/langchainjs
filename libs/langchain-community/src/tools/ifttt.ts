@@ -45,10 +45,6 @@ export class IFTTTWebhook extends Tool {
     return "IFTTTWebhook";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   private url: string;
 
   name: string;

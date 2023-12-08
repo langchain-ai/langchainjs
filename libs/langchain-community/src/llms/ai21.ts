@@ -40,8 +40,6 @@ export interface AI21Input extends BaseLLMParams {
 export class AI21 extends LLM implements AI21Input {
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   model = "j2-jumbo-instruct";
 
   temperature = 0.7;

@@ -22,10 +22,6 @@ export class Serper extends Tool {
     return "Serper";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   /**
    * Converts the Serper instance to JSON. This method is not implemented
    * and will throw an error if called.

@@ -68,10 +68,6 @@ type RunActionResult = {
  * @extends Tool
  */
 export class ConneryAction extends Tool {
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   name: string;
 
   description: string;

@@ -61,8 +61,6 @@ export class BaseGoogleVertexAI<AuthOptions>
 {
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   model = "text-bison";
 
   temperature = 0.7;

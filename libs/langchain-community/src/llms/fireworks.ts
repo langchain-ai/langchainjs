@@ -46,8 +46,6 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   fireworksApiKey?: string;
 
   constructor(

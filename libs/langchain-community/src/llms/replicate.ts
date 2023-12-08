@@ -51,8 +51,6 @@ export class Replicate extends LLM implements ReplicateInput {
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "llms", this._llmType()];
-
   model: ReplicateInput["model"];
 
   input: ReplicateInput["input"];

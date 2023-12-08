@@ -22,10 +22,6 @@ export class WolframAlphaTool extends Tool {
     this.appid = fields.appid;
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   static lc_name() {
     return "WolframAlphaTool";
   }

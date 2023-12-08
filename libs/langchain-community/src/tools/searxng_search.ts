@@ -116,10 +116,6 @@ export class SearxngSearch extends Tool {
     return "SearxngSearch";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   name = "searxng-search";
 
   description =

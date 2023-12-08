@@ -332,8 +332,6 @@ export class ChatMinimax
 
   lc_serializable = true;
 
-  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
-
   minimaxGroupId?: string;
 
   minimaxApiKey?: string;

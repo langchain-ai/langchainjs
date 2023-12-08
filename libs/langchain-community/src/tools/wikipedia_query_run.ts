@@ -69,10 +69,6 @@ export class WikipediaQueryRun extends Tool {
     return "WikipediaQueryRun";
   }
 
-  get lc_namespace() {
-    return ["langchain_community", "tools"];
-  }
-
   name = "wikipedia-api";
 
   description =

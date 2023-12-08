@@ -191,8 +191,6 @@ export class ChatBaiduWenxin
     };
   }
 
-  lc_namespace = ["langchain_community", "chat_models", this._llmType()];
-
   get lc_aliases(): { [key: string]: string } | undefined {
     return undefined;
   }
