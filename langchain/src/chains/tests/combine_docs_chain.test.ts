@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { jest, test, expect } from "@jest/globals";
 import { Document } from "../../document.js";
 import { BaseLLM } from "../../llms/base.js";
 import { loadQAMapReduceChain } from "../question_answering/load.js";
@@ -95,4 +95,29 @@ test("Test RefineDocumentsChain", async () => {
 
   const res = await chain.run(docs);
   console.log({ res });
+});
+
+test("Test RefineDocumentsChain with progress callback", async () => {
+  const model = new FakeLLM({});
+  const mockProgressEmitter = jest
+    .fn<(progress: number) => Promise<void>>()
+    .mockResolvedValue(undefined);
+
+  const chain = loadSummarizationChain(model, {
+    type: "refine",
+    progressEmitter: mockProgressEmitter,
+  });
+  const docs = [
+    new Document({ pageContent: "Zibon went to harvard" }),
+    new Document({ pageContent: "Sunnat went to princeton" }),
+    new Document({ pageContent: "Kiron went to MIT" }),
+    new Document({ pageContent: "Faysal went to NSU" }),
+  ];
+
+  expect(chain.inputKeys).toEqual(["input_documents"]);
+
+  await chain.run(docs);
+
+  expect(mockProgressEmitter).toHaveBeenCalled();
+  expect(mockProgressEmitter.mock.calls.length).toBeGreaterThan(0);
 });
