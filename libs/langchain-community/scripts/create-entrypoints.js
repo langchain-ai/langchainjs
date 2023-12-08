@@ -182,7 +182,9 @@ const deprecatedNodeOnly = [];
 // Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "tools/aws_sfn",
+  "tools/aws_lambda",
   "tools/gmail",
+  "agents/toolkits/aws_sfn",
   "callbacks/handlers/llmonitor",
   "embeddings/bedrock",
   "embeddings/cloudflare_workersai",
@@ -283,6 +285,9 @@ const requiresOptionalDependency = [
   "stores/message/redis",
   "stores/message/upstash_redis",
   "stores/message/xata",
+  // memory
+  "memory/motorhead_memory",
+  "memory/zep",
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {
