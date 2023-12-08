@@ -34,7 +34,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "~0.0.11-rc.1",
-    "@langchain/openai": "~0.0.1",
+    "@langchain/openai": "~0.0.2-rc.0",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
