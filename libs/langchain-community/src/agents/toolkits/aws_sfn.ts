@@ -1,3 +1,4 @@
+import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import {
   SfnConfig,
@@ -6,7 +7,6 @@ import {
   SendTaskSuccessAWSSfnTool,
 } from "../../tools/aws_sfn.js";
 import { Toolkit } from "./base.js";
-import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 
 /**
  * Interface for the arguments required to create an AWS Step Functions

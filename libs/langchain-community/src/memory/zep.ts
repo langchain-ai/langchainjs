@@ -6,8 +6,8 @@ import {
   getInputValue,
   getOutputValue,
 } from "@langchain/core/memory";
-import { getBufferString } from "@langchain/core/messages";
 import {
+  getBufferString,
   AIMessage,
   BaseMessage,
   ChatMessage,
