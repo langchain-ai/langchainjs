@@ -45,7 +45,7 @@
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
-    "typescript": "^5.0.0"
+    "typescript": "~5.1.6"
   },
   "dependencies": {
     "turbo": "latest"

@@ -17,7 +17,7 @@ npm install @xata.io/cli -g
 In the [Xata UI](https://app.xata.io) create a new database. You can name it whatever you want, but for this example we'll use `langchain`.
 Create a table, again you can name it anything, but we will use `vectors`. Add the following columns via the UI:
 
-- `content` of type "Long text". This is used to store the `Document.pageContent` values.
+- `content` of type "Text". This is used to store the `Document.pageContent` values.
 - `embedding` of type "Vector". Use the dimension used by the model you plan to use (1536 for OpenAI).
 - any other columns you want to use as metadata. They are populated from the `Document.metadata` object. For example, if in the `Document.metadata` object you have a `title` property, you can create a `title` column in the table and it will be populated.
 

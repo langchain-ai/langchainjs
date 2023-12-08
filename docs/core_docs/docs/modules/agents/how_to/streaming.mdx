@@ -1,0 +1,15 @@
+import CodeBlock from "@theme/CodeBlock";
+import StreamingExample from "@examples/agents/stream.ts";
+
+# Streaming
+
+Agents have the ability to stream iterations and actions back while they're still working.
+This can be very useful for any realtime application where you have users who need insights on the agent's progress while is has yet to finish.
+
+Setting up streaming with agents is very simple, even with existing agents. The only change required is switching your `executor.invoke({})` to be `executor.stream({})`.
+
+Below is a simple example of streaming with an agent.
+
+You can find the [LangSmith](https://smith.langchain.com/) trace for this example by clicking [here](https://smith.langchain.com/public/08978fa7-bb99-427b-850e-35773cae1453/r).
+
+<CodeBlock language="typescript">{StreamingExample}</CodeBlock>
