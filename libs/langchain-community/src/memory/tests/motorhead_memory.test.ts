@@ -1,6 +1,6 @@
 import { test, expect, jest } from "@jest/globals";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MotorheadMemory } from "../motorhead_memory.js";
-import { HumanMessage, AIMessage } from "../../schema/index.js";
 
 test("Test motörhead memory", async () => {
   global.fetch = jest.fn(() =>

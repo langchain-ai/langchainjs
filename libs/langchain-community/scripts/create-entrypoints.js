@@ -9,13 +9,16 @@ import { identifySecrets } from "./identify-secrets.js";
 // Order is not important.
 const entrypoints = {
   load: "load/index",
+  // tools
   "load/serializable": "load/serializable",
   "tools/aiplugin": "tools/aiplugin",
+  "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/bingserpapi": "tools/bingserpapi",
   "tools/brave_search": "tools/brave_search",
   "tools/connery": "tools/connery",
   "tools/dadjokeapi": "tools/dadjokeapi",
+  "tools/dynamic": "tools/dynamic",
   "tools/dataforseo_api_search": "tools/dataforseo_api_search",
   "tools/gmail": "tools/gmail/index",
   "tools/google_custom_search": "tools/google_custom_search",
@@ -27,6 +30,10 @@ const entrypoints = {
   "tools/serper": "tools/serper",
   "tools/wikipedia_query_run": "tools/wikipedia_query_run",
   "tools/wolframalpha": "tools/wolframalpha",
+  // toolkits
+  "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
+  "agents/toolkits/base": "agents/toolkits/base",
+  "agents/toolkits/connery": "agents/toolkits/connery/index",
   // embeddings
   "embeddings/bedrock": "embeddings/bedrock",
   "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",
@@ -77,7 +84,6 @@ const entrypoints = {
   "vectorstores/googlevertexai": "vectorstores/googlevertexai",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/lancedb": "vectorstores/lancedb",
-  "vectorstores/memory": "vectorstores/memory",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
@@ -130,6 +136,7 @@ const entrypoints = {
   "retrievers/zep": "retrievers/zep",
   // cache
   "caches/cloudflare_kv": "caches/cloudflare_kv",
+  "caches/ioredis": "caches/ioredis",
   "caches/momento": "caches/momento",
   "caches/upstash_redis": "caches/upstash_redis",
   // graphs
@@ -152,6 +159,7 @@ const entrypoints = {
   "stores/message/convex": "stores/message/convex",
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/firestore": "stores/message/firestore",
+  "stores/message/in_memory": "stores/message/in_memory",
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/momento": "stores/message/momento",
   "stores/message/mongodb": "stores/message/mongodb",
@@ -159,6 +167,10 @@ const entrypoints = {
   "stores/message/redis": "stores/message/redis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/xata": "stores/message/xata",
+  // memory
+  "memory/chat_memory": "memory/chat_memory",
+  "memory/motorhead_memory": "memory/motorhead_memory",
+  "memory/zep": "memory/zep"
 };
 
 // Entrypoints in this list will
