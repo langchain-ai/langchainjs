@@ -1,0 +1,34 @@
+# Masking
+
+The experimental masking parser and transformer is an extendable module for masking and rehydrating strings. One of the primary use cases for this module is to redact PII (Personal Identifiable Information) from a string before making a call to an llm.
+
+### Real world scenario
+
+A customer support system receives messages containing sensitive customer information. The system must parse these messages, mask any PII (like names, email addresses, and phone numbers), and log them for analysis while complying with privacy regulations. Before logging the transcript a summary is generated using an llm.
+
+## Get started
+
+import CodeBlock from "@theme/CodeBlock";
+import ExampleBasic from "@examples/experimental/masking/basic.ts";
+import ExampleNext from "@examples/experimental/masking/next.ts";
+import ExampleKitchenSink from "@examples/experimental/masking/kitchen_sink.ts";
+
+### Basic Example
+
+Use the RegexMaskingTransformer to create a simple mask for email and phone.
+
+<CodeBlock language="typescript">{ExampleBasic}</CodeBlock>
+
+:::note
+If you plan on storing the masking state to rehydrate the original values asynchronously ensure you are following best security practices. In most cases you will want to define a custom hashing and salting strategy.
+:::
+
+### Next.js stream
+
+Example nextjs chat endpoint leveraging the RegexMaskingTransformer. The current chat message and chat message history are masked every time the api is called with a chat payload.
+
+<CodeBlock language="typescript">{ExampleNext}</CodeBlock>
+
+### Kitchen sink
+
+<CodeBlock language="typescript">{ExampleKitchenSink}</CodeBlock>
