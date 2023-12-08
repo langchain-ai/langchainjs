@@ -10919,13 +10919,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swimburger/isomorphic-streams@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@swimburger/isomorphic-streams@npm:1.1.1"
-  checksum: a6210a8ef8a325b112d7e72e53ebb579098966e3686789e0c46419015c382d58568a89a84132e1696886a90f6a3b8951d9574f8850bbafad1fb77dff254238a4
-  languageName: node
-  linkType: hard
-
 "@szmarczak/http-timer@npm:^1.1.2":
   version: 1.1.2
   resolution: "@szmarczak/http-timer@npm:1.1.2"
@@ -13370,14 +13363,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyai@file:/Users/niels/DeepLearning/assemblyai/developer_tools/typescript::locator=langchain%40workspace%3Alangchain":
+"assemblyai@npm:^4.0.0":
   version: 4.0.0
-  resolution: "assemblyai@file:/Users/niels/DeepLearning/assemblyai/developer_tools/typescript#/Users/niels/DeepLearning/assemblyai/developer_tools/typescript::hash=97fd44&locator=langchain%40workspace%3Alangchain"
+  resolution: "assemblyai@npm:4.0.0"
   dependencies:
-    "@swimburger/isomorphic-streams": ^1.1.1
-    isomorphic-ws: ^5.0.0
     ws: ^8.13.0
-  checksum: 985dd998f4fcd9940d5e75e936b97d5288d7d5f6485993e6c7de9f85cc93470dd0e989a7cf7d99f5b83a8b51f9858a73898480997767363404be8560b007e866
+  checksum: 09a2b2ed4c7269b5ef64dbc81a7c83cdcdfff6ec68f9600c702a416f91858b67c76a047f17c3c86701f0157ea64e51a00e77a1beaf790e6212eacc4e4ae3bd44
   languageName: node
   linkType: hard
 
@@ -21384,15 +21375,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"isomorphic-ws@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "isomorphic-ws@npm:5.0.0"
-  peerDependencies:
-    ws: "*"
-  checksum: e20eb2aee09ba96247465fda40c6d22c1153394c0144fa34fe6609f341af4c8c564f60ea3ba762335a7a9c306809349f9b863c8beedf2beea09b299834ad5398
-  languageName: node
-  linkType: hard
-
 "issue-parser@npm:6.0.0":
   version: 6.0.0
   resolution: "issue-parser@npm:6.0.0"
@@ -22659,7 +22641,7 @@ __metadata:
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.11"
     apify-client: ^2.7.1
-    assemblyai: "file:/Users/niels/DeepLearning/assemblyai/developer_tools/typescript"
+    assemblyai: ^4.0.0
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     cassandra-driver: ^4.7.2
@@ -22795,7 +22777,7 @@ __metadata:
     "@xenova/transformers": ^2.5.4
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
-    assemblyai: "*"
+    assemblyai: ^4.0.0-beta.3
     axios: "*"
     cassandra-driver: ^4.7.2
     cheerio: ^1.0.0-rc.12
