@@ -77,7 +77,6 @@ const entrypoints = {
   "vectorstores/googlevertexai": "vectorstores/googlevertexai",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/lancedb": "vectorstores/lancedb",
-  "vectorstores/memory": "vectorstores/memory",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
@@ -130,6 +129,7 @@ const entrypoints = {
   "retrievers/zep": "retrievers/zep",
   // cache
   "caches/cloudflare_kv": "caches/cloudflare_kv",
+  "caches/ioredis": "caches/ioredis",
   "caches/momento": "caches/momento",
   "caches/upstash_redis": "caches/upstash_redis",
   // graphs

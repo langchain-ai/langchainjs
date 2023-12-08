@@ -38,6 +38,7 @@ export * as retrievers__chaindesk from "../retrievers/chaindesk.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";
 export * as retrievers__tavily_search_api from "../retrievers/tavily_search_api.js";
 export * as caches__cloudflare_kv from "../caches/cloudflare_kv.js";
+export * as caches__ioredis from "../caches/ioredis.js";
 export * as caches__momento from "../caches/momento.js";
 export * as caches__upstash_redis from "../caches/upstash_redis.js";
 export * as utils__event_source_parse from "../utils/event_source_parse.js";

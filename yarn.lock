@@ -8100,7 +8100,6 @@ __metadata:
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     mammoth: ^1.5.1
-    ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     neo4j-driver: ^5.12.0

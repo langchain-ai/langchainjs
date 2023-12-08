@@ -37,7 +37,6 @@
     "@langchain/openai": "~0.0.2-rc.0",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
-    "ml-distance": "^4.0.0",
     "uuid": "^9.0.0",
     "zod": "^3.22.3"
   },
@@ -1086,6 +1085,11 @@
       "import": "./caches/cloudflare_kv.js",
       "require": "./caches/cloudflare_kv.cjs"
     },
+    "./caches/ioredis": {
+      "types": "./caches/ioredis.d.ts",
+      "import": "./caches/ioredis.js",
+      "require": "./caches/ioredis.cjs"
+    },
     "./caches/momento": {
       "types": "./caches/momento.d.ts",
       "import": "./caches/momento.js",
@@ -1555,6 +1559,9 @@
     "caches/cloudflare_kv.cjs",
     "caches/cloudflare_kv.js",
     "caches/cloudflare_kv.d.ts",
+    "caches/ioredis.cjs",
+    "caches/ioredis.js",
+    "caches/ioredis.d.ts",
     "caches/momento.cjs",
     "caches/momento.js",
     "caches/momento.d.ts",

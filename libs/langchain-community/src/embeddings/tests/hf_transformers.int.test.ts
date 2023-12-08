@@ -1,12 +1,11 @@
 import { test, expect } from "@jest/globals";
-import { Document } from "@langchain/core/documents";
 import { HuggingFaceTransformersEmbeddings } from "../hf_transformers.js";
-import { MemoryVectorStore } from "../../vectorstores/memory.js";
+import { HNSWLib } from "../../vectorstores/hnswlib.js";
 
 test("HuggingFaceTransformersEmbeddings", async () => {
   const embeddings = new HuggingFaceTransformersEmbeddings();
 
-  const documents = [
+  const texts = [
     "Hello world!",
     "Hello bad world!",
     "Hello nice world!",
@@ -15,17 +14,13 @@ test("HuggingFaceTransformersEmbeddings", async () => {
     "1 + 1 = 3",
   ];
 
-  const queryEmbedding = await embeddings.embedQuery(documents[0]);
+  const queryEmbedding = await embeddings.embedQuery(texts[0]);
   expect(queryEmbedding).toHaveLength(384);
   expect(typeof queryEmbedding[0]).toBe("number");
 
-  const store = new MemoryVectorStore(embeddings);
+  const store = await HNSWLib.fromTexts(texts, {}, embeddings);
 
-  await store.addDocuments(
-    documents.map((pageContent) => new Document({ pageContent }))
-  );
-
-  expect(await store.similaritySearch(documents[4], 2)).toMatchInlineSnapshot(`
+  expect(await store.similaritySearch(texts[4], 2)).toMatchInlineSnapshot(`
     [
       Document {
         "metadata": {},

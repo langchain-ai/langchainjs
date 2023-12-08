@@ -1,13 +1,12 @@
 import { test, expect } from "@jest/globals";
 import "@tensorflow/tfjs-backend-cpu";
-import { Document } from "@langchain/core/documents";
 import { TensorFlowEmbeddings } from "../tensorflow.js";
-import { MemoryVectorStore } from "../../vectorstores/memory.js";
+import { HNSWLib } from "../../vectorstores/hnswlib.js";
 
 test("TensorflowEmbeddings", async () => {
   const embeddings = new TensorFlowEmbeddings();
 
-  const documents = [
+  const texts = [
     "Hello world!",
     "Hello bad world!",
     "Hello nice world!",
@@ -16,17 +15,13 @@ test("TensorflowEmbeddings", async () => {
     "1 + 1 = 3",
   ];
 
-  const queryEmbedding = await embeddings.embedQuery(documents[0]);
+  const queryEmbedding = await embeddings.embedQuery(texts[0]);
   expect(queryEmbedding).toHaveLength(512);
   expect(typeof queryEmbedding[0]).toBe("number");
 
-  const store = new MemoryVectorStore(embeddings);
+  const store = await HNSWLib.fromTexts(texts, {}, embeddings);
 
-  await store.addDocuments(
-    documents.map((pageContent) => new Document({ pageContent }))
-  );
-
-  expect(await store.similaritySearch(documents[4], 2)).toMatchInlineSnapshot(`
+  expect(await store.similaritySearch(texts[4], 2)).toMatchInlineSnapshot(`
     [
       Document {
         "metadata": {},

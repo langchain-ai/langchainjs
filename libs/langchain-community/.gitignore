@@ -343,6 +343,9 @@ retrievers/zep.d.ts
 caches/cloudflare_kv.cjs
 caches/cloudflare_kv.js
 caches/cloudflare_kv.d.ts
+caches/ioredis.cjs
+caches/ioredis.js
+caches/ioredis.d.ts
 caches/momento.cjs
 caches/momento.js
 caches/momento.d.ts
