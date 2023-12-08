@@ -169,10 +169,8 @@ describe("RemoteRunnable", () => {
     });
     let chunkCount = 0;
     for await (const chunk of stream) {
-      if ("value" in chunk.ops[0]) {
-        expect(chunk.ops[0].value).toEqual('["a", "b", "c", "d"]');
-        chunkCount += 1;
-      }
+      expect(chunk).toEqual('["a", "b", "c", "d"]');
+      chunkCount += 1;
     }
     expect(chunkCount).toBe(1);
   });
