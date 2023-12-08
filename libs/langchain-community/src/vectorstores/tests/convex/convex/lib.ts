@@ -1,8 +1,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { v } from "convex/values";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import { ConvexVectorStore } from "../../../convex.js";
 import { action, mutation } from "./_generated/server.js";
+import { FakeEmbeddings } from "../../../../utils/testing.js";
 
 export const reset = mutation({
   args: {},
@@ -18,11 +18,11 @@ export const ingest = action({
     texts: v.array(v.string()),
     metadatas: v.array(v.any()),
   },
-  handler: async (ctx, { openAIApiKey, texts, metadatas }) => {
+  handler: async (ctx, { texts, metadatas }) => {
     await ConvexVectorStore.fromTexts(
       texts,
       metadatas,
-      new OpenAIEmbeddings({ openAIApiKey }),
+      new FakeEmbeddings({}),
       { ctx }
     );
   },
@@ -33,9 +33,9 @@ export const similaritySearch = action({
     openAIApiKey: v.string(),
     query: v.string(),
   },
-  handler: async (ctx, { openAIApiKey, query }) => {
+  handler: async (ctx, { query }) => {
     const vectorStore = new ConvexVectorStore(
-      new OpenAIEmbeddings({ openAIApiKey }),
+      new FakeEmbeddings({}),
       { ctx }
     );
 

@@ -1,9 +1,10 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 
-import { MyScaleStore } from "../myscale.js";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+
+import { MyScaleStore } from "../myscale.js";
 
 test.skip("MyScaleStore.fromText", async () => {
   const vectorStore = await MyScaleStore.fromTexts(

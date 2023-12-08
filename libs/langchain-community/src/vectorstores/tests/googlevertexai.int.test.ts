@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeAll, expect, test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
+import { Embeddings } from "@langchain/core/embeddings";
 import { SyntheticEmbeddings } from "../../utils/testing.js";
 import { InMemoryDocstore } from "../../stores/doc/in_memory.js";
 import {
@@ -10,7 +11,6 @@ import {
   IdDocument,
   Restriction,
 } from "../googlevertexai.js";
-import { Embeddings } from "@langchain/core/embeddings";
 
 describe("Vertex AI matching", () => {
   let embeddings: Embeddings;

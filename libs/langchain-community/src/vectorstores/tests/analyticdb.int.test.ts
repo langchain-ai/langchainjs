@@ -2,9 +2,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { test } from "@jest/globals";
 
-import { AnalyticDBVectorStore } from "../analyticdb.js";
-import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
+import { AnalyticDBVectorStore } from "../analyticdb.js";
 
 const connectionOptions = {
   host: process.env.ANALYTICDB_HOST || "localhost",

@@ -4,10 +4,11 @@
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
 import { setTimeout } from "timers/promises";
-import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
-
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+
+import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
+
 
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.

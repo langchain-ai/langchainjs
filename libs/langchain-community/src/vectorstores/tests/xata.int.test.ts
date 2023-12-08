@@ -1,10 +1,10 @@
 /* eslint-disable no-process-env */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { BaseClient } from "@xata.io/client";
-
-import { XataVectorSearch } from "../xata.js";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+
+import { XataVectorSearch } from "../xata.js";
 
 // Tests require a DB with a table called "docs" with:
 // * a column name content of type Text
