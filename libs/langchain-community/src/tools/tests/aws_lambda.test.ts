@@ -1,7 +1,7 @@
 import { test, jest, expect } from "@jest/globals";
 import LambdaClient from "@aws-sdk/client-lambda";
 
-import { AWSLambda } from "../../tools/aws_lambda.js";
+import { AWSLambda } from "../aws_lambda.js";
 
 jest.mock("@aws-sdk/client-lambda", () => ({
   LambdaClient: jest.fn().mockImplementation(() => ({
