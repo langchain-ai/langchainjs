@@ -25,7 +25,7 @@ export class WebPDFLoader extends BaseDocumentLoader {
     {
       splitPages = true,
       pdfjs = PDFLoaderImports,
-      parsedItemSeparator = " ",
+      parsedItemSeparator = "",
     } = {}
   ) {
     super();
