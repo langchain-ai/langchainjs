@@ -143,14 +143,14 @@ describe("PGVectorStore", () => {
 
       const initialIds = result.rows.map((row) => row.id);
 
-      // Filter Matches 3rd document
+      // Filter Matches 1st document
       await pgvectorVectorStore.delete({ filter: { a: 1, b: 1 } });
 
       const result2 = await pgvectorVectorStore.pool.query(
         `SELECT id FROM "${tableName}"`
       );
 
-      // Only one row should be left
+      // Two rows should be left
       expect(result2.rowCount).toEqual(2);
 
       const idsAfterDelete = result2.rows.map((row) => row.id);
