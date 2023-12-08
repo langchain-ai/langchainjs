@@ -2,7 +2,7 @@
 import { test, expect, describe } from "@jest/globals";
 import { Client } from "cassandra-driver";
 import { CassandraChatMessageHistory } from "../message/cassandra.js";
-import { HumanMessage, AIMessage } from "../../schema/index.js";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
 const cassandraConfig = {
   cloud: {
