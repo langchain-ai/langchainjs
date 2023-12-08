@@ -162,7 +162,7 @@ describe("RemoteRunnable", () => {
     );
   });
 
-  test.only("Stream log local langserve", async () => {
+  test("Stream log local langserve", async () => {
     const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
     const stream = remote.streamLog({
       question: "What are the 5 best apples?",
