@@ -1,8 +1,8 @@
 /* eslint-disable no-process-env */
 import { test, expect, describe } from "@jest/globals";
 import { Client } from "cassandra-driver";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { CassandraChatMessageHistory } from "../message/cassandra.js";
-import { HumanMessage, AIMessage } from "../../schema/index.js";
 
 const cassandraConfig = {
   cloud: {
