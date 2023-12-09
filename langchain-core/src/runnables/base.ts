@@ -1372,9 +1372,9 @@ export class RunnableSequence<
  * const result = await mapChain.invoke({ topic: "bear" });
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class RunnableMap<
   RunInput,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
@@ -1399,9 +1399,9 @@ export class RunnableMap<
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static from<
     RunInput,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     steps: RunnableMapLike<RunInput, RunOutput>
@@ -1670,9 +1670,9 @@ export function _coerceToRunnable<RunInput, RunOutput>(
   } else if (Runnable.isRunnable(coerceable)) {
     return coerceable as Runnable<RunInput, Exclude<RunOutput, Error>>;
   } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
-    const runnables: Record<string, Runnable<RunInput>> = {};
+const runnables: Record<string, Runnable<RunInput>> = {};
     for (const [key, value] of Object.entries(coerceable)) {
-      runnables[key] = _coerceToRunnable(value as RunnableLike);
+    runnables[key] = _coerceToRunnable(value as RunnableLike);
     }
     return new RunnableMap({
       steps: runnables,
