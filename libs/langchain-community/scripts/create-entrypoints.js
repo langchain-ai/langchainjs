@@ -170,7 +170,8 @@ const entrypoints = {
   // memory
   "memory/chat_memory": "memory/chat_memory",
   "memory/motorhead_memory": "memory/motorhead_memory",
-  "memory/zep": "memory/zep"
+  "memory/zep": "memory/zep",
+  "util/convex": "utils/convex",
 };
 
 // Entrypoints in this list will
@@ -288,6 +289,7 @@ const requiresOptionalDependency = [
   // memory
   "memory/motorhead_memory",
   "memory/zep",
+  "util/convex",
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {

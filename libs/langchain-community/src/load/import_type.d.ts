@@ -298,6 +298,9 @@ export interface OptionalImportMap {
   "@langchain/community/memory/zep"?:
     | typeof import("../memory/zep.js")
     | Promise<typeof import("../memory/zep.js")>;
+  "@langchain/community/util/convex"?:
+    | typeof import("../utils/convex.js")
+    | Promise<typeof import("../utils/convex.js")>;
 }
 
 export interface SecretMap {
