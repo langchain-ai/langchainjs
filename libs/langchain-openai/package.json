@@ -37,6 +37,7 @@
     "@langchain/core": "~0.0.11-rc.1",
     "js-tiktoken": "^1.0.7",
     "openai": "^4.19.0",
+    "zod": "^3.22.3",
     "zod-to-json-schema": "3.20.3"
   },
   "devDependencies": {
