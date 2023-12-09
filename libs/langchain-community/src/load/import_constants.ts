@@ -100,4 +100,5 @@ export const optionalImportEntrypoints = [
   "langchain_community/stores/message/xata",
   "langchain_community/memory/motorhead_memory",
   "langchain_community/memory/zep",
+  "langchain_community/util/convex",
 ];

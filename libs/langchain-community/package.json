@@ -1200,6 +1200,11 @@
       "import": "./memory/zep.js",
       "require": "./memory/zep.cjs"
     },
+    "./util/convex": {
+      "types": "./util/convex.d.ts",
+      "import": "./util/convex.js",
+      "require": "./util/convex.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -1647,6 +1652,9 @@
     "memory/motorhead_memory.d.ts",
     "memory/zep.cjs",
     "memory/zep.js",
-    "memory/zep.d.ts"
+    "memory/zep.d.ts",
+    "util/convex.cjs",
+    "util/convex.js",
+    "util/convex.d.ts"
   ]
 }

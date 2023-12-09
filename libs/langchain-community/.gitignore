@@ -442,3 +442,6 @@ memory/motorhead_memory.d.ts
 memory/zep.cjs
 memory/zep.js
 memory/zep.d.ts
+util/convex.cjs
+util/convex.js
+util/convex.d.ts
