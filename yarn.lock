@@ -8014,6 +8014,7 @@ __metadata:
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
     "@elastic/elasticsearch": ^8.4.0
+    "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
@@ -8138,7 +8139,6 @@ __metadata:
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@elastic/elasticsearch": ^8.4.0
-    "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
@@ -8447,6 +8447,7 @@ __metadata:
     release-it: ^15.10.1
     rimraf: ^5.0.1
     typescript: ~5.1.6
+    zod: ^3.22.3
     zod-to-json-schema: 3.20.3
   languageName: unknown
   linkType: soft
