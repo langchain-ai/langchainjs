@@ -60,7 +60,9 @@ export class AuthFlowToken extends AuthFlowBase {
  */
 export class AuthFlowRefresh extends AuthFlowBase {
   private clientSecret: string;
+
   private redirectUri: string;
+
   private refreshToken: string;
 
   /**
@@ -114,7 +116,7 @@ export class AuthFlowRefresh extends AuthFlowBase {
       refresh_token: this.refreshToken,
     });
 
-    const req_body = params.toString();
+    const reqBody = params.toString();
 
     const response = await fetch(
       "https://login.microsoftonline.com/common/oauth2/v2.0/token",
@@ -123,7 +125,7 @@ export class AuthFlowRefresh extends AuthFlowBase {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: req_body,
+        body: reqBody,
       }
     );
 

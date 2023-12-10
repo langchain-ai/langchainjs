@@ -7,7 +7,7 @@ import { AuthFlowREST } from "./authFlowREST.js";
  * Tool for interacting with Outlook, allowing actions such as sending or reading emails.
  * @extends Tool
  */
-export class OutlookBase extends Tool {
+export abstract class OutlookBase extends Tool {
   /**
    * The name of the Outlook tool.
    * @type {string}
@@ -74,15 +74,5 @@ export class OutlookBase extends Tool {
       }
     }
     return this.accessToken;
-  }
-
-  /**
-   * Placeholder method for making calls related to Outlook.
-   * @param {string} input - The input for the Outlook call.
-   * @returns {Promise<string>} A promise that resolves to the result of the Outlook call.
-   * @protected
-   */
-  async _call(input: string) {
-    return input;
   }
 }

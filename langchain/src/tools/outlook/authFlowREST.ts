@@ -66,7 +66,7 @@ export class AuthFlowREST extends AuthFlowBase {
     let uri = redirectUri;
     if (!id || !secret || !uri) {
       id = id ?? getEnvironmentVariable("OUTLOOK_CLIENT_ID");
-      secret = secret ??  getEnvironmentVariable("OUTLOOK_CLIENT_SECRET");
+      secret = secret ?? getEnvironmentVariable("OUTLOOK_CLIENT_SECRET");
       uri = uri ?? getEnvironmentVariable("OUTLOOK_REDIRECT_URI");
     }
     if (!id || !secret || !uri) {
@@ -88,22 +88,19 @@ export class AuthFlowREST extends AuthFlowBase {
   private openAuthUrl(): string {
     const loginEndpoint =
       "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-    const clientId = this.clientId; // client ID registered in Azure
-    const response_type = "code";
-    const response_mode = "query";
+    const responseType = "code";
+    const responseMode = "query";
     const redirectUri = encodeURIComponent(this.redirectUri); // redirect URI registered in Azure
     const scope = encodeURIComponent(
       "openid offline_access https://graph.microsoft.com/.default"
     );
-    const state = "12345";
 
     const url = [
-      `${loginEndpoint}?client_id=${clientId}`,
-      `&response_type=${response_type}`,
-      `&response_mode=${response_mode}`,
+      `${loginEndpoint}?client_id=${this.clientId}`,
+      `&response_type=${responseType}`,
+      `&response_mode=${responseMode}`,
       `&redirect_uri=${redirectUri}`,
       `&scope=${scope}`,
-      `&state=${state}`,
     ].join("");
 
     console.log("Please open the following URL to login:");
@@ -205,7 +202,7 @@ export class AuthFlowREST extends AuthFlowBase {
       scope: "https://graph.microsoft.com/.default",
       redirect_uri: this.redirectUri,
       grant_type: "authorization_code",
-      code: code,
+      code,
     });
 
     const req_body = params.toString();
