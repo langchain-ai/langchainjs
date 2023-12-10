@@ -826,6 +826,9 @@ experimental/hubs/makersuite/googlemakersuitehub.d.ts
 experimental/chains/violation_of_expectations.cjs
 experimental/chains/violation_of_expectations.js
 experimental/chains/violation_of_expectations.d.ts
+experimental/masking.cjs
+experimental/masking.js
+experimental/masking.d.ts
 experimental/tools/pyinterpreter.cjs
 experimental/tools/pyinterpreter.js
 experimental/tools/pyinterpreter.d.ts
