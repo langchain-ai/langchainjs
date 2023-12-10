@@ -1679,15 +1679,3 @@ export function _coerceToRunnable<RunInput, RunOutput>(
     );
   }
 }
-
-const l = RunnableLambda.from((_n: number) => 3)
-
-const y = RunnableLambda.from((n: number) => {
-  if (n > 3) {
-    return "test"
-  }
-  return l
-})
-
-const x = l.pipe(y)
-x
