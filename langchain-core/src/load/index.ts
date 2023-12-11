@@ -6,7 +6,7 @@ import {
   get_lc_unique_name,
 } from "./serializable.js";
 import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from "./import_constants.js";
-import * as defaultImportMap from "./import_map.js";
+import * as coreImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
@@ -98,10 +98,11 @@ async function reviver(
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
-    const finalImportMap = { ...defaultImportMap, ...importMap };
+    const importMaps = { langchain_core: coreImportMap, langchain: importMap };
 
     let module:
-      | (typeof finalImportMap)[keyof typeof finalImportMap]
+      | (typeof importMaps)["langchain_core"][keyof (typeof importMaps)["langchain_core"]]
+      | (typeof importMaps)["langchain"][keyof (typeof importMaps)["langchain"]]
       | OptionalImportMap[keyof OptionalImportMap]
       | null = null;
 
@@ -132,14 +133,12 @@ async function reviver(
         );
       }
     } else {
-      // Currently, we only support langchain imports.
-      if (
-        namespace[0] === "langchain" ||
-        namespace[0] === "langchain_core" ||
-        namespace[0] === "langchain_community" ||
-        namespace[0] === "langchain_anthropic" ||
-        namespace[0] === "langchain_openai"
-      ) {
+      let finalImportMap:
+        | (typeof importMaps)["langchain"]
+        | (typeof importMaps)["langchain_core"];
+      // Currently, we only support langchain and langchain_core imports.
+      if (namespace[0] === "langchain" || namespace[0] === "langchain_core") {
+        finalImportMap = importMaps[namespace[0]];
         namespace.shift();
       } else {
         throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
