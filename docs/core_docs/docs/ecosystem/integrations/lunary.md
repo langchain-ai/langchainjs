@@ -125,7 +125,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { LunaryHandler } from "langchain/callbacks/handlers/lunary";
-import monitor from "lunary";
+import lunary from "lunary";
 
 const chat = new ChatOpenAI({
   modelName: "gpt-4",
@@ -147,7 +147,7 @@ async function TranslatorAgent(query) {
 
 // By wrapping the agent with wrapAgent, we automatically track all input, outputs and errors
 // And tools and logs will be tied to the correct agent
-const translate = monitor.wrapAgent(TranslatorAgent);
+const translate = lunary.wrapAgent(TranslatorAgent);
 
 // You can use .identify() on wrapped methods to track users
 const res = await translate("Good morning").identify("user123");
