@@ -1,25 +1,55 @@
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/agents/connery_mrkl.ts";
 
-# Connery Actions Toolkit
+# Connery Toolkit
 
-Using this toolkit, you can integrate Connery actions into your LangChain agents and chains.
+Using this toolkit, you can integrate Connery Actions into your LangChain agents and chains.
+
+:::note
+If you want to use only one particular Connery Action in your agent,
+check out the [Connery Action Tool](/docs/integrations/tools/connery) documentation.
+:::
 
 ## What is Connery?
 
 Connery is an open-source plugin infrastructure for AI.
 
-With Connery, you can easily create a custom plugin, which is essentially a set of actions, and use them in your LangChain agents and chains.
-Connery will handle the rest: runtime, authorization, secret management, access management, audit logs, and other vital features.
-Also, you can find a lot of ready-to-use plugins from our community.
+With Connery, you can easily create a custom plugin with a set of actions and seamlessly integrate them into your LangChain agents and chains. Connery will handle the rest: runtime, authorization, secret management, access management, audit logs, and other vital features.
+Additionally, Connery and our community offer a wide range of ready-to-use open-source plugins for your convenience.
 
 Learn more about Connery:
 
-- GitHub repository: https://github.com/connery-io/connery-platform
+- GitHub: https://github.com/connery-io/connery-platform
 - Documentation: https://docs.connery.io
 
-## Usage
+## Prerequisites
 
-This example shows how to create an agent with Connery actions using the Connery Actions Toolkit.
+To use Connery Actions in your LangChain agents, you need to do some preparation:
+
+1. Set up the Connery runner using the [Quickstart](https://docs.connery.io/docs/platform/quick-start/) guide.
+2. Install the [Summarization](https://github.com/connery-io/summarization-plugin) and [Gmail](https://github.com/connery-io/gmail) plugins on the runner.
+3. Set environment variables `CONNERY_RUNNER_URL` and `CONNERY_RUNNER_API_KEY` so that the toolkit can communicate with the Connery Runner.
+
+## Example
+
+In the example below, we create an agent that uses two Connery Actions to summarize a public webpage and send the summary by email:
+
+1. **Summarize public webpage** from the [Summarization](https://github.com/connery-io/summarization-plugin) plugin.
+2. **Send email** from the [Gmail](https://github.com/connery-io/gmail) plugin.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Execution result
+
+As a result of the execution, you will receive an email similar to the following:
+
+**Subject**: Summary of "Life is Short"
+
+**Body**: Here is a summary of the webpage "Life is Short" by Paul Graham:
+The author reflects on the shortness of life and how having children has made them realize
+the limited time they have. They argue that life is too short for unnecessary things,
+or "bullshit," and that one should prioritize avoiding it.
+They also discuss the importance of actively seeking out things that matter and not waiting to do them.
+The author suggests pruning unnecessary things, savoring the time one has, and not waiting to do what truly matters.
+They also discuss the effect of how one lives on the length of their life and the importance of being conscious of time.
+Link to webpage: http://www.paulgraham.com/vb.html
