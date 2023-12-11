@@ -2,10 +2,10 @@ import { RemoteRunnable } from "../remote.js";
 
 test("Invoke local langserve", async () => {
   const remote = new RemoteRunnable({
-    url: `https://chat-langchain-backend.langchain.dev/chat`
+    url: `https://chat-langchain-backend.langchain.dev/chat`,
   });
   const result = remote.streamLog({
-    question: "What is this?"
+    question: "What is this?",
   });
   let totalByteSize = 0;
   for await (const chunk of result) {

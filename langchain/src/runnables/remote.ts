@@ -2,13 +2,13 @@ import { Runnable, RunnableBatchOptions } from "../schema/runnable/index.js";
 import { RunnableConfig } from "../schema/runnable/config.js";
 import {
   BaseCallbackConfig,
-  CallbackManagerForChainRun
+  CallbackManagerForChainRun,
 } from "../callbacks/manager.js";
 import {
   convertEventStreamToIterableReadableDataStream,
   getBytes,
   getLines,
-  getMessages
+  getMessages,
 } from "../util/event-source-parse.js";
 import { Document } from "../document.js";
 import {
@@ -23,7 +23,7 @@ import {
   SystemMessage,
   SystemMessageChunk,
   ToolMessage,
-  ToolMessageChunk
+  ToolMessageChunk,
 } from "../schema/index.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
@@ -31,7 +31,7 @@ import { IterableReadableStream } from "../util/stream.js";
 import {
   LogStreamCallbackHandler,
   LogStreamCallbackHandlerInput,
-  RunLogPatch
+  RunLogPatch,
 } from "../callbacks/handlers/log_stream.js";
 
 type RemoteRunnableOptions = {
@@ -56,76 +56,76 @@ function revive(obj: any): any {
     if (isSuperset(keys, new Set(["page_content", "metadata"])))
       return new Document({
         pageContent: obj.page_content,
-        metadata: obj.metadata
+        metadata: obj.metadata,
       });
 
     if (isSuperset(keys, new Set(["content", "type", "is_chunk"]))) {
       if (!obj.is_chunk) {
         if (obj.type === "human") {
           return new HumanMessage({
-            content: obj.content
+            content: obj.content,
           });
         }
         if (obj.type === "system") {
           return new SystemMessage({
-            content: obj.content
+            content: obj.content,
           });
         }
         if (obj.type === "chat") {
           return new ChatMessage({
             content: obj.content,
-            role: obj.role
+            role: obj.role,
           });
         }
         if (obj.type === "function") {
           return new FunctionMessage({
             content: obj.content,
-            name: obj.name
+            name: obj.name,
           });
         }
         if (obj.type === "tool") {
           return new ToolMessage({
             content: obj.content,
-            tool_call_id: obj.tool_call_id
+            tool_call_id: obj.tool_call_id,
           });
         }
         if (obj.type === "ai") {
           return new AIMessage({
-            content: obj.content
+            content: obj.content,
           });
         }
       } else {
         if (obj.type === "human") {
           return new HumanMessageChunk({
-            content: obj.content
+            content: obj.content,
           });
         }
         if (obj.type === "system") {
           return new SystemMessageChunk({
-            content: obj.content
+            content: obj.content,
           });
         }
         if (obj.type === "chat") {
           return new ChatMessageChunk({
             content: obj.content,
-            role: obj.role
+            role: obj.role,
           });
         }
         if (obj.type === "function") {
           return new FunctionMessageChunk({
             content: obj.content,
-            name: obj.name
+            name: obj.name,
           });
         }
         if (obj.type === "tool") {
           return new ToolMessageChunk({
             content: obj.content,
-            tool_call_id: obj.tool_call_id
+            tool_call_id: obj.tool_call_id,
           });
         }
         if (obj.type === "ai") {
           return new AIMessageChunk({
-            content: obj.content
+            content: obj.content,
           });
         }
       }
@@ -136,13 +136,13 @@ function revive(obj: any): any {
     if (isSuperset(keys, new Set(["messages"]))) {
       return new ChatPromptValue({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        messages: obj.messages.map((msg: any) => revive(msg))
+        messages: obj.messages.map((msg: any) => revive(msg)),
       });
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const innerRevive: (key: string) => [string, any] = (key: string) => [
       key,
-      revive(obj[key])
+      revive(obj[key]),
     ];
     const rtn = Object.fromEntries(keysArr.map(innerRevive));
     return rtn;
@@ -185,9 +185,9 @@ export class RemoteRunnable<
       method: "POST",
       body: JSON.stringify(body),
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(this.options?.timeout ?? 5000)
+      signal: AbortSignal.timeout(this.options?.timeout ?? 5000),
     });
   }
 
@@ -204,7 +204,7 @@ export class RemoteRunnable<
     }>("/invoke", {
       input,
       config: removeCallbacks(config),
-      kwargs: kwargs ?? {}
+      kwargs: kwargs ?? {},
     });
     return revive((await response.json()).output) as RunOutput;
   }
@@ -225,7 +225,7 @@ export class RemoteRunnable<
       ([pc, pk], [c, k]) =>
         [
           [...pc, c],
-          [...pk, k]
+          [...pk, k],
         ] as [
           RunnableConfig[],
           Omit<Partial<CallOptions>, keyof BaseCallbackConfig>[]
@@ -244,7 +244,7 @@ export class RemoteRunnable<
       config: (configs ?? [])
         .map(removeCallbacks)
         .map((config) => ({ ...config, ...batchOptions })),
-      kwargs
+      kwargs,
     });
     const body = await response.json();
 
@@ -300,7 +300,7 @@ export class RemoteRunnable<
     }>("/stream", {
       input,
       config,
-      kwargs
+      kwargs,
     });
     if (!response.ok) {
       const json = await response.json();
@@ -331,7 +331,7 @@ export class RemoteRunnable<
           if (flush) controller.close();
         };
         await getBytes(body, getLines(onLine));
-      }
+      },
     });
     return IterableReadableStream.fromReadableStream(stream);
   }
@@ -345,7 +345,7 @@ export class RemoteRunnable<
       this._separateRunnableConfigFromCallOptions(options);
     const stream = new LogStreamCallbackHandler({
       ...streamOptions,
-      autoClose: false
+      autoClose: false,
     });
     const { callbacks } = config;
     if (callbacks === undefined) {
@@ -364,7 +364,7 @@ export class RemoteRunnable<
       include_tags: streamOptions?.includeTags,
       exclude_names: streamOptions?.excludeNames,
       exclude_types: streamOptions?.excludeTypes,
-      exclude_tags: streamOptions?.excludeTags
+      exclude_tags: streamOptions?.excludeTags,
     };
     const response = await this.post<{
       input: RunInput;
@@ -376,7 +376,7 @@ export class RemoteRunnable<
       config,
       kwargs,
       ...camelCaseStreamOptions,
-      diff: false
+      diff: false,
     });
     const { body } = response;
     if (!body) {
