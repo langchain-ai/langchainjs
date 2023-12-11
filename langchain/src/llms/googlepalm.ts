@@ -128,6 +128,10 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
       throw new Error("`topP` must be a positive integer");
     }
 
+    if (this.topP && this.topP > 1) {
+      throw new Error("Google PaLM `topP` must in the range of [0,1]");
+    }
+
     this.topK = fields?.topK ?? this.topK;
     if (this.topK && this.topK < 0) {
       throw new Error("`topK` must be a positive integer");

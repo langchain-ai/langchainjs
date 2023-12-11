@@ -42,6 +42,7 @@ const model = new AnthropicFunctions({
   },
 });
 
+// Use a JsonOutputFunctionsParser to get the parsed JSON response directly.
 const chain = await prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
 
 const response = await chain.invoke({

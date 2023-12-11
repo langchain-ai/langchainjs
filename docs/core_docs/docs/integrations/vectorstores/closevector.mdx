@@ -1,0 +1,51 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# CloseVector
+
+:::tip Compatibility
+available on both browser and Node.js
+:::
+
+[CloseVector](https://closevector.getmegaportal.com/) is a cross-platform vector database that can run in both the browser and Node.js. For example, you can create your index on Node.js and then load/query it on browser. For more information, please visit [CloseVector Docs](https://closevector-docs.getmegaportal.com/).
+
+## Setup
+
+### CloseVector Web
+
+```bash npm2yarn
+npm install -S closevector-web
+```
+
+### CloseVector Node
+
+```bash npm2yarn
+npm install -S closevector-node
+```
+
+## Usage
+
+### Create a new index from texts
+
+import ExampleTexts from "@examples/indexes/vector_stores/closevector.ts";
+
+<CodeBlock language="typescript">{ExampleTexts}</CodeBlock>
+
+### Create a new index from a loader
+
+import ExampleLoader from "@examples/indexes/vector_stores/closevector_fromdocs.ts";
+
+<CodeBlock language="typescript">{ExampleLoader}</CodeBlock>
+
+### Save an index to CloseVector CDN and load it again
+
+CloseVector supports saving/loading indexes to/from cloud. To use this feature, you need to create an account on [CloseVector](https://closevector.getmegaportal.com/). Please read [CloseVector Docs](https://closevector-docs.getmegaportal.com/) and generate your API key first by [loging in](https://closevector.getmegaportal.com/).
+
+import ExampleCloud from "@examples/indexes/vector_stores/closevector_saveload_fromcloud.ts";
+
+<CodeBlock language="typescript">{ExampleCloud}</CodeBlock>
+
+### Save an index to file and load it again
+
+import ExampleSave from "@examples/indexes/vector_stores/closevector_saveload.ts";
+
+<CodeBlock language="typescript">{ExampleSave}</CodeBlock>

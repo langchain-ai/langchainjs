@@ -1,0 +1,74 @@
+# AWS
+
+All functionality related to [Amazon AWS](https://aws.amazon.com/) platform
+
+## LLMs
+
+### Bedrock
+
+See a [usage example](/docs/integrations/llms/bedrock).
+
+```typescript
+import { Bedrock } from "langchain/llms/bedrock";
+```
+
+### SageMaker Endpoint
+
+> [Amazon SageMaker](https://aws.amazon.com/sagemaker/) is a system that can build, train, and deploy machine learning (ML) models with fully managed infrastructure, tools, and workflows.
+
+We use `SageMaker` to host our model and expose it as the `SageMaker Endpoint`.
+
+See a [usage example](/docs/integrations/llms/aws_sagemaker).
+
+```typescript
+import {
+  SagemakerEndpoint,
+  SageMakerLLMContentHandler,
+} from "langchain/llms/sagemaker_endpoint";
+```
+
+## Text Embedding Models
+
+### Bedrock
+
+See a [usage example](/docs/integrations/text_embedding/bedrock).
+
+```typescript
+import { BedrockEmbeddings } from "langchain/embeddings/bedrock";
+```
+
+## Document loaders
+
+### AWS S3 Directory and File
+
+> [Amazon Simple Storage Service (Amazon S3)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html) is an object storage service.
+> [AWS S3 Directory](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html) >[AWS S3 Buckets](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html)
+
+See a [usage example for S3FileLoader](/docs/integrations/document_loaders/web_loaders/s3).
+
+```bash npm2yarn
+npm install @aws-sdk/client-s3
+```
+
+```typescript
+import { S3Loader } from "langchain/document_loaders/web/s3";
+```
+
+## Memory
+
+### AWS DynamoDB
+
+> [AWS DynamoDB](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/dynamodb/index.html)
+> is a fully managed `NoSQL` database service that provides fast and predictable performance with seamless scalability.
+
+We have to configure the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+
+```bash npm2yarn
+npm install @aws-sdk/client-dynamodb
+```
+
+See a [usage example](/docs/integrations/chat_memory/dynamodb).
+
+```typescript
+import { DynamoDBChatMessageHistory } from "langchain/stores/message/dynamodb";
+```

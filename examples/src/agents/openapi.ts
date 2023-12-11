@@ -28,7 +28,7 @@ export const run = async () => {
   const input = `Make a POST request to openai /completions. The prompt should be 'tell me a joke.'`;
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
   console.log(`Got output ${result.output}`);
 
   console.log(

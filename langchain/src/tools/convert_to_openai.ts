@@ -18,3 +18,30 @@ export function formatToOpenAIFunction(
     parameters: zodToJsonSchema(tool.schema),
   };
 }
+
+export function formatToOpenAITool(
+  tool: StructuredTool
+): OpenAIClient.Chat.ChatCompletionTool {
+  const schema = zodToJsonSchema(tool.schema);
+  return {
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: schema,
+    },
+  };
+}
+
+export function formatToOpenAIAssistantTool(
+  tool: StructuredTool
+): OpenAIClient.Beta.AssistantCreateParams.AssistantToolsFunction {
+  return {
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: zodToJsonSchema(tool.schema),
+    },
+  };
+}

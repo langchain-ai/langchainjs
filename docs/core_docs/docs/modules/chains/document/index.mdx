@@ -1,0 +1,48 @@
+---
+sidebar_position: 2
+---
+
+# Documents
+
+These are the core chains for working with Documents. They are useful for summarizing documents, answering questions over documents, extracting information from documents, and more.
+
+These chains are all loaded in a similar way:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+import {
+  loadQAStuffChain,
+  loadQAMapReduceChain,
+  loadQARefineChain,
+} from "langchain/chains";
+import { Document } from "langchain/document";
+
+// This first example uses the `StuffDocumentsChain`.
+const llmA = new OpenAI({});
+const chainA = loadQAStuffChain(llmA);
+const docs = [
+  new Document({ pageContent: "Harrison went to Harvard." }),
+  new Document({ pageContent: "Ankush went to Princeton." }),
+];
+const resA = await chainA.call({
+  input_documents: docs,
+  question: "Where did Harrison go to college?",
+});
+console.log({ resA });
+// { resA: { text: ' Harrison went to Harvard.' } }
+
+// This second example uses the `MapReduceChain`.
+// Optionally limit the number of concurrent requests to the language model.
+const llmB = new OpenAI({ maxConcurrency: 10 });
+const chainB = loadQAMapReduceChain(llmB);
+const resB = await chainB.call({
+  input_documents: docs,
+  question: "Where did Harrison go to college?",
+});
+console.log({ resB });
+// { resB: { text: ' Harrison went to Harvard.' } }
+```
+
+import DocCardList from "@theme/DocCardList";
+
+<DocCardList />

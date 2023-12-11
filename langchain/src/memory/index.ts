@@ -1,5 +1,13 @@
 export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
-export { BaseMemory, getInputValue, getBufferString } from "./base.js";
+export {
+  BaseMemory,
+  getInputValue,
+  getOutputValue,
+  getBufferString,
+  type InputValues,
+  type OutputValues,
+  type MemoryVariables,
+} from "./base.js";
 export {
   ConversationSummaryMemory,
   type ConversationSummaryMemoryInput,
@@ -27,3 +35,7 @@ export {
   ConversationSummaryBufferMemory,
   type ConversationSummaryBufferMemoryInput,
 } from "./summary_buffer.js";
+export {
+  ConversationTokenBufferMemory,
+  type ConversationTokenBufferMemoryInput,
+} from "./buffer_token_memory.js";

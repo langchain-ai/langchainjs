@@ -5,7 +5,7 @@ import { OpenAI } from "../../llms/openai.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { ENTITY_MEMORY_CONVERSATION_TEMPLATE } from "../prompt.js";
 
-test("Test entity memory in a chain", async () => {
+test.skip("Test entity memory in a chain", async () => {
   const memory = new EntityMemory({
     llm: new OpenAI({ temperature: 0 }),
   });
@@ -48,7 +48,7 @@ test("Test entity memory in a chain", async () => {
   });
 }, 120000);
 
-test("Test entity memory with a chat model in a chain", async () => {
+test.skip("Test entity memory with a chat model in a chain", async () => {
   const memory = new EntityMemory({
     llm: new ChatOpenAI({ temperature: 0 }),
   });

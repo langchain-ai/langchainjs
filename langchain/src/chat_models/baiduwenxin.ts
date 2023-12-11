@@ -41,6 +41,7 @@ interface ChatCompletionRequest {
   temperature?: number;
   top_p?: number;
   penalty_score?: number;
+  system?: string;
 }
 
 /**
@@ -59,7 +60,7 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatBaiduWenxin class.
  */
 declare interface BaiduWenxinChatInput {
-  /** Model name to use
+  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
    * @default "ERNIE-Bot-turbo"
    */
   modelName: string;
@@ -131,7 +132,7 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
     case "human":
       return "user";
     case "system":
-      throw new Error("System messages not supported");
+      throw new Error("System messages should not be here");
     case "function":
       throw new Error("Function messages not supported");
     case "generic": {
@@ -152,6 +153,26 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
  *
  * @augments BaseLLM
  * @augments BaiduERNIEInput
+ * @example
+ * ```typescript
+ * const ernieTurbo = new ChatBaiduWenxin({
+ *   baiduApiKey: "YOUR-API-KEY",
+ *   baiduSecretKey: "YOUR-SECRET-KEY",
+ * });
+ *
+ * const ernie = new ChatBaiduWenxin({
+ *   modelName: "ERNIE-Bot",
+ *   temperature: 1,
+ *   baiduApiKey: "YOUR-API-KEY",
+ *   baiduSecretKey: "YOUR-SECRET-KEY",
+ * });
+ *
+ * const messages = [new HumanMessage("Hello")];
+ *
+ * let res = await ernieTurbo.call(messages);
+ *
+ * res = await ernie.call(messages);
+ * ```
  */
 export class ChatBaiduWenxin
   extends BaseChatModel
@@ -230,6 +251,9 @@ export class ChatBaiduWenxin
     } else if (this.modelName === "ERNIE-Bot-turbo") {
       this.apiUrl =
         "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
+    } else if (this.modelName === "ERNIE-Bot-4") {
+      this.apiUrl =
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro";
     } else {
       throw new Error(`Invalid model name: ${this.modelName}`);
     }
@@ -296,6 +320,16 @@ export class ChatBaiduWenxin
     const tokenUsage: TokenUsage = {};
 
     const params = this.invocationParams();
+
+    // Wenxin requires the system message to be put in the params, not messages array
+    const systemMessage = messages.find(
+      (message) => message._getType() === "system"
+    );
+    if (systemMessage) {
+      // eslint-disable-next-line no-param-reassign
+      messages = messages.filter((message) => message !== systemMessage);
+      params.system = systemMessage.text;
+    }
     const messagesMapped: WenxinMessage[] = messages.map((message) => ({
       role: messageToWenxinRole(message),
       content: message.text,
@@ -321,7 +355,7 @@ export class ChatBaiduWenxin
                   return;
                 }
                 rejected = true;
-                reject(data);
+                reject(new Error(data?.error_msg));
                 return;
               }
 
@@ -380,7 +414,12 @@ export class ChatBaiduWenxin
           },
           false,
           options?.signal
-        );
+        ).then((data) => {
+          if (data?.error_code) {
+            throw new Error(data?.error_msg);
+          }
+          return data;
+        });
 
     const {
       completion_tokens: completionTokens,
@@ -440,6 +479,20 @@ export class ChatBaiduWenxin
         return response.json();
       } else {
         if (response.body) {
+          // response will not be a stream if an error occurred
+          if (
+            !response.headers
+              .get("content-type")
+              ?.startsWith("text/event-stream")
+          ) {
+            onmessage?.(
+              new MessageEvent("message", {
+                data: await response.text(),
+              })
+            );
+            return;
+          }
+
           const reader = response.body.getReader();
 
           const decoder = new TextDecoder("utf-8");

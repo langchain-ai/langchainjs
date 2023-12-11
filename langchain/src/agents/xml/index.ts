@@ -12,10 +12,10 @@ import {
   HumanMessagePromptTemplate,
 } from "../../prompts/chat.js";
 import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
-import { OutputParserException } from "../../schema/output_parser.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import { XMLAgentOutputParser } from "./output_parser.js";
 
 /**
  * Interface for the input to the XMLAgent class.
@@ -23,28 +23,6 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 export interface XMLAgentInput {
   tools: Tool[];
   llmChain: LLMChain;
-}
-
-/**
- * Parses the output text from the agent and returns an AgentAction or
- * AgentFinish object.
- * @param text The output text from the agent.
- * @returns An AgentAction or AgentFinish object.
- */
-export async function parseOutput(
-  text: string
-): Promise<AgentAction | AgentFinish> {
-  if (text.includes("</tool>")) {
-    const [tool, toolInput] = text.split("</tool>");
-    const _tool = tool.split("<tool>")[1];
-    const _toolInput = toolInput.split("<tool_input>")[1];
-    return { tool: _tool, toolInput: _toolInput, log: text };
-  } else if (text.includes("<final_answer>")) {
-    const [, answer] = text.split("<final_answer>");
-    return { returnValues: { output: answer }, log: text };
-  } else {
-    throw new OutputParserException(`Could not parse LLM output: ${text}`);
-  }
 }
 
 /**
@@ -60,6 +38,8 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   tools: Tool[];
 
   llmChain: LLMChain;
+
+  outputParser: XMLAgentOutputParser = new XMLAgentOutputParser();
 
   _agentType() {
     return "xml" as const;
@@ -110,7 +90,7 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
       stop: ["</tool_input>", "</final_answer>"],
     };
     const response = await this.llmChain.call(_inputs, callbackManager);
-    return parseOutput(response[this.llmChain.outputKey]);
+    return this.outputParser.parse(response[this.llmChain.outputKey]);
   }
 
   /**

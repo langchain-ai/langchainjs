@@ -1,0 +1,47 @@
+# Conversation buffer memory
+
+This notebook shows how to use `BufferMemory`. This memory allows for storing of messages, then later formats the messages into a prompt input variable.
+
+We can first extract it as a string.
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+import { BufferMemory } from "langchain/memory";
+import { ConversationChain } from "langchain/chains";
+
+const model = new OpenAI({});
+const memory = new BufferMemory();
+const chain = new ConversationChain({ llm: model, memory: memory });
+const res1 = await chain.call({ input: "Hi! I'm Jim." });
+console.log({ res1 });
+```
+
+```shell
+{response: " Hi Jim! It's nice to meet you. My name is AI. What would you like to talk about?"}
+```
+
+```typescript
+const res2 = await chain.call({ input: "What's my name?" });
+console.log({ res2 });
+```
+
+```shell
+{response: ' You said your name is Jim. Is there anything else you would like to talk about?'}
+```
+
+You can also load messages into a `BufferMemory` instance by creating and passing in a `ChatHistory` object.
+This lets you easily pick up state from past conversations:
+
+```typescript
+import { BufferMemory, ChatMessageHistory } from "langchain/memory";
+import { HumanMessage, AIMessage } from "langchain/schema";
+
+const pastMessages = [
+  new HumanMessage("My name's Jonas"),
+  new AIMessage("Nice to meet you, Jonas!"),
+];
+
+const memory = new BufferMemory({
+  chatHistory: new ChatMessageHistory(pastMessages),
+});
+```

@@ -1,0 +1,10 @@
+import CodeBlock from "@theme/CodeBlock";
+import CancellationExample from "@examples/agents/agent_cancellation.ts";
+
+# Cancelling requests
+
+You can cancel a request by passing a `signal` option when you run the agent. For example:
+
+<CodeBlock language="typescript">{CancellationExample}</CodeBlock>
+
+Note, this will only cancel the outgoing request if the underlying provider exposes that option. LangChain will cancel the underlying request if possible, otherwise it will cancel the processing of the response.

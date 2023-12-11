@@ -21,14 +21,52 @@ export const run = async () => {
     sessionId: zepConfig.sessionId,
   });
 
-  // Generate chat messages
+  // Generate chat messages about traveling to France
   const chatMessages = [
-    { role: "AI", message: "Hello, I'm AI. How can I help you today?" },
-    { role: "User", message: "I'm looking for a new car." },
-    { role: "AI", message: "Great! What kind of car are you looking for?" },
-    { role: "User", message: "I'm looking for a red car." },
-    { role: "AI", message: "We have many red cars. Anything more specific?" },
-    { role: "User", message: "I'm looking for a red car with a sunroof." },
+    {
+      role: "AI",
+      message: "Bonjour! How can I assist you with your travel plans today?",
+    },
+    { role: "User", message: "I'm planning a trip to France." },
+    {
+      role: "AI",
+      message: "That sounds exciting! What cities are you planning to visit?",
+    },
+    { role: "User", message: "I'm thinking of visiting Paris and Nice." },
+    {
+      role: "AI",
+      message: "Great choices! Are you interested in any specific activities?",
+    },
+    { role: "User", message: "I would love to visit some vineyards." },
+    {
+      role: "AI",
+      message:
+        "France has some of the best vineyards in the world. I can help you find some.",
+    },
+    { role: "User", message: "That would be great!" },
+    { role: "AI", message: "Do you prefer red or white wine?" },
+    { role: "User", message: "I prefer red wine." },
+    {
+      role: "AI",
+      message:
+        "Perfect! I'll find some vineyards that are known for their red wines.",
+    },
+    { role: "User", message: "Thank you, that would be very helpful." },
+    {
+      role: "AI",
+      message:
+        "You're welcome! I'll also look up some French wine etiquette for you.",
+    },
+    {
+      role: "User",
+      message: "That sounds great. I can't wait to start my trip!",
+    },
+    {
+      role: "AI",
+      message:
+        "I'm sure you'll have a fantastic time. Do you have any other questions about your trip?",
+    },
+    { role: "User", message: "Not at the moment, thank you for your help!" },
   ];
 
   const zepClient = await memory.zepClientPromise;
@@ -54,11 +92,48 @@ export const run = async () => {
     await zepClient.memory.addMemory(zepConfig.sessionId, m);
   }
 
-  await sleep(2000);
+  // Wait for messages to be summarized, enriched, embedded and indexed.
+  await sleep(10000);
 
-  const query = "What type of car did the user ask for?";
-  const retriever = new ZepRetriever(zepConfig);
+  // Simple similarity search
+  const query = "Can I drive red cars in France?";
+  const retriever = new ZepRetriever({ ...zepConfig, topK: 3 });
   const docs = await retriever.getRelevantDocuments(query);
+  console.log("Simple similarity search");
+  console.log(JSON.stringify(docs, null, 2));
 
-  console.log(docs);
+  // mmr reranking search
+  const mmrRetriever = new ZepRetriever({
+    ...zepConfig,
+    topK: 3,
+    searchType: "mmr",
+    mmrLambda: 0.5,
+  });
+  const mmrDocs = await mmrRetriever.getRelevantDocuments(query);
+  console.log("MMR reranking search");
+  console.log(JSON.stringify(mmrDocs, null, 2));
+
+  // summary search with mmr reranking
+  const mmrSummaryRetriever = new ZepRetriever({
+    ...zepConfig,
+    topK: 3,
+    searchScope: "summary",
+    searchType: "mmr",
+    mmrLambda: 0.5,
+  });
+  const mmrSummaryDocs = await mmrSummaryRetriever.getRelevantDocuments(query);
+  console.log("Summary search with MMR reranking");
+  console.log(JSON.stringify(mmrSummaryDocs, null, 2));
+
+  // Filtered search
+  const filteredRetriever = new ZepRetriever({
+    ...zepConfig,
+    topK: 3,
+    filter: {
+      where: { jsonpath: '$.system.entities[*] ? (@.Label == "GPE")' },
+    },
+  });
+  const filteredDocs = await filteredRetriever.getRelevantDocuments(query);
+  console.log("Filtered search");
+  console.log(JSON.stringify(filteredDocs, null, 2));
 };

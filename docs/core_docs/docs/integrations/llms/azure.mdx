@@ -1,0 +1,42 @@
+# Azure OpenAI
+
+You can also use the `OpenAI` class to call OpenAI models hosted on Azure.
+
+For example, if your Azure instance is hosted under `https://{MY_INSTANCE_NAME}.openai.azure.com/openai/deployments/{DEPLOYMENT_NAME}`, you
+could initialize your instance like this:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+
+const model = new OpenAI({
+  temperature: 0.9,
+  azureOpenAIApiKey: "YOUR-API-KEY",
+  azureOpenAIApiVersion: "YOUR-API-VERSION",
+  azureOpenAIApiInstanceName: "{MY_INSTANCE_NAME}",
+  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
+});
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+console.log({ res });
+```
+
+If your instance is hosted under a domain other than the default `openai.azure.com`, you'll need to use the alternate `AZURE_OPENAI_BASE_PATH` environemnt variable.
+For example, here's how you would connect to the domain `https://westeurope.api.microsoft.com/openai/deployments/{DEPLOYMENT_NAME}`:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+
+const model = new OpenAI({
+  temperature: 0.9,
+  azureOpenAIApiKey: "YOUR-API-KEY",
+  azureOpenAIApiVersion: "YOUR-API-VERSION",
+  azureOpenAIApiDeploymentName: "{DEPLOYMENT_NAME}",
+  azureOpenAIBasePath:
+    "https://westeurope.api.microsoft.com/openai/deployments", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
+});
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+console.log({ res });
+```

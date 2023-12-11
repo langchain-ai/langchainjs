@@ -102,63 +102,51 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     k: number,
     filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
-    const knnBeta: MongoDBDocument = {
-      vector: query,
-      path: this.embeddingKey,
-      k,
-    };
-
-    let preFilter: MongoDBDocument | undefined;
-    let postFilterPipeline: MongoDBDocument[] | undefined;
-    let includeEmbeddings: boolean | undefined;
-    if (
+    const postFilterPipeline = filter?.postFilterPipeline ?? [];
+    const preFilter: MongoDBDocument | undefined =
       filter?.preFilter ||
       filter?.postFilterPipeline ||
       filter?.includeEmbeddings
-    ) {
-      preFilter = filter.preFilter;
-      postFilterPipeline = filter.postFilterPipeline;
-      includeEmbeddings = filter.includeEmbeddings || false;
-    } else preFilter = filter;
+        ? filter.preFilter
+        : filter;
+    const removeEmbeddingsPipeline = !filter?.includeEmbeddings
+      ? [
+          {
+            $project: {
+              [this.embeddingKey]: 0,
+            },
+          },
+        ]
+      : [];
 
-    if (preFilter) {
-      knnBeta.filter = preFilter;
-    }
     const pipeline: MongoDBDocument[] = [
       {
-        $search: {
+        $vectorSearch: {
+          queryVector: MongoDBAtlasVectorSearch.fixArrayPrecision(query),
           index: this.indexName,
-          knnBeta,
+          path: this.embeddingKey,
+          limit: k,
+          numCandidates: 10 * k,
+          ...(preFilter && { filter: preFilter }),
         },
       },
       {
         $set: {
-          score: { $meta: "searchScore" },
+          score: { $meta: "vectorSearchScore" },
         },
       },
+      ...removeEmbeddingsPipeline,
+      ...postFilterPipeline,
     ];
 
-    if (!includeEmbeddings) {
-      const removeEmbeddingsStage = {
-        $project: {
-          [this.embeddingKey]: 0,
-        },
-      };
-      pipeline.push(removeEmbeddingsStage);
-    }
+    const results = this.collection
+      .aggregate(pipeline)
+      .map<[Document, number]>((result) => {
+        const { score, [this.textKey]: text, ...metadata } = result;
+        return [new Document({ pageContent: text, metadata }), score];
+      });
 
-    if (postFilterPipeline) {
-      pipeline.push(...postFilterPipeline);
-    }
-    const results = this.collection.aggregate(pipeline);
-
-    const ret: [Document, number][] = [];
-    for await (const result of results) {
-      const { score, [this.textKey]: text, ...metadata } = result;
-      ret.push([new Document({ pageContent: text, metadata }), score]);
-    }
-
-    return ret;
+    return results.toArray();
   }
 
   /**
@@ -194,7 +182,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     };
 
     const resultDocs = await this.similaritySearchVectorWithScore(
-      queryEmbedding,
+      MongoDBAtlasVectorSearch.fixArrayPrecision(queryEmbedding),
       fetchK,
       includeEmbeddingsFilter
     );
@@ -266,5 +254,26 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
+  }
+
+  /**
+   * Static method to fix the precision of the array that ensures that
+   * every number in this array is always float when casted to other types.
+   * This is needed since MongoDB Atlas Vector Search does not cast integer
+   * inside vector search to float automatically.
+   * This method shall introduce a hint of error but should be safe to use
+   * since introduced error is very small, only applies to integer numbers
+   * returned by embeddings, and most embeddings shall not have precision
+   * as high as 15 decimal places.
+   * @param array Array of number to be fixed.
+   * @returns
+   */
+  static fixArrayPrecision(array: number[]) {
+    return array.map((value) => {
+      if (Number.isInteger(value)) {
+        return value + 0.000000000000001;
+      }
+      return value;
+    });
   }
 }

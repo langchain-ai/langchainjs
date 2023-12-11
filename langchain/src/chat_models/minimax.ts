@@ -271,6 +271,33 @@ export interface ChatMinimaxCallOptions extends BaseFunctionCallOptions {
  *
  * To use you should have the `MINIMAX_GROUP_ID` and `MINIMAX_API_KEY`
  * environment variable set.
+ * @example
+ * ```typescript
+ * // Define a chat prompt with a system message setting the context for translation
+ * const chatPrompt = ChatPromptTemplate.fromMessages([
+ *   SystemMessagePromptTemplate.fromTemplate(
+ *     "You are a helpful assistant that translates {input_language} to {output_language}.",
+ *   ),
+ *   HumanMessagePromptTemplate.fromTemplate("{text}"),
+ * ]);
+ *
+ * // Create a new LLMChain with the chat model and the defined prompt
+ * const chainB = new LLMChain({
+ *   prompt: chatPrompt,
+ *   llm: new ChatMinimax({ temperature: 0.01 }),
+ * });
+ *
+ * // Call the chain with the input language, output language, and the text to translate
+ * const resB = await chainB.call({
+ *   input_language: "English",
+ *   output_language: "Chinese",
+ *   text: "I love programming.",
+ * });
+ *
+ * // Log the result
+ * console.log({ resB });
+ *
+ * ```
  */
 export class ChatMinimax
   extends BaseChatModel<ChatMinimaxCallOptions>
@@ -484,6 +511,11 @@ export class ChatMinimax
       })
       ?.map((message) => {
         const sender_type = messageToMinimaxRole(message);
+        if (typeof message.content !== "string") {
+          throw new Error(
+            "ChatMinimax does not support non-string message content."
+          );
+        }
         return {
           sender_type,
           text: message.content,
@@ -719,6 +751,12 @@ export class ChatMinimax
         return;
       }
       const lastSystemMessage = systemMessages[systemMessages.length - 1];
+
+      if (typeof lastSystemMessage.content !== "string") {
+        throw new Error(
+          "ChatMinimax does not support non-string message content."
+        );
+      }
 
       //  setting the default botSetting.
       this.botSetting = [

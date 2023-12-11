@@ -8,8 +8,8 @@ import {
   RunnablePassthrough,
 } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { Document } from "langchain/document";
 import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 const loader = new CheerioWebBaseLoader(
   "https://lilianweng.github.io/posts/2023-06-23-agent/"
@@ -43,12 +43,9 @@ const model = new Ollama({
   model: "llama2",
 });
 
-const serializeDocs = (docs: Document[]) =>
-  docs.map((doc) => doc.pageContent).join("\n");
-
 const chain = RunnableSequence.from([
   {
-    context: retriever.pipe(serializeDocs),
+    context: retriever.pipe(formatDocumentsAsString),
     question: new RunnablePassthrough(),
   },
   prompt,

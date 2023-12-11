@@ -28,6 +28,7 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
     k?: number;
     filter?: T["FilterType"];
     mergeFiltersOperator?: "or" | "and" | "replace";
+    forceDefaultFilter?: boolean;
   };
 }
 
@@ -35,6 +36,19 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
  * Class for question answering over an index. It retrieves relevant
  * documents based on a query. It extends the BaseRetriever class and
  * implements the SelfQueryRetrieverArgs interface.
+ * @example
+ * ```typescript
+ * const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+ *   llm: new ChatOpenAI(),
+ *   vectorStore: await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings()),
+ *   documentContents: "Brief summary of a movie",
+ *   attributeInfo: attributeInfo,
+ *   structuredQueryTranslator: new FunctionalTranslator(),
+ * });
+ * const relevantDocuments = await selfQueryRetriever.getRelevantDocuments(
+ *   "Which movies are directed by Greta Gerwig?",
+ * );
+ * ```
  */
 export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever
@@ -62,7 +76,8 @@ export class SelfQueryRetriever<T extends VectorStore>
     k?: number;
     filter?: T["FilterType"];
     mergeFiltersOperator?: "or" | "and" | "replace";
-  } = { k: 4 };
+    forceDefaultFilter?: boolean;
+  } = { k: 4, forceDefaultFilter: false };
 
   constructor(options: SelfQueryRetrieverArgs<T>) {
     super(options);
@@ -94,7 +109,8 @@ export class SelfQueryRetriever<T extends VectorStore>
     const filter = this.structuredQueryTranslator.mergeFilters(
       this.searchParams?.filter,
       nextArg.filter,
-      this.searchParams?.mergeFiltersOperator
+      this.searchParams?.mergeFiltersOperator,
+      this.searchParams?.forceDefaultFilter
     );
 
     const generatedQuery = generatedStructuredQuery.query;

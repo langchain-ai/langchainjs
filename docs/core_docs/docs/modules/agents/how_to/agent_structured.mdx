@@ -1,0 +1,183 @@
+# Returning Structured Output
+
+Here is a simple example of an agent which uses `Runnables`, a retriever and a structured output parser to create an OpenAI functions agent that finds specific information in a large text document.
+
+The first step is to import necessary modules
+
+```typescript
+import { zodToJsonSchema } from "zod-to-json-schema";
+import fs from "fs";
+import { z } from "zod";
+import type {
+  AIMessage,
+  AgentAction,
+  AgentFinish,
+  AgentStep,
+} from "langchain/schema/index";
+import { RunnableSequence } from "langchain/schema/runnable/base";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "langchain/prompts/chat";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { createRetrieverTool } from "langchain/agents/toolkits/index";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { formatToOpenAIFunction } from "langchain/tools/convert_to_openai";
+import { AgentExecutor } from "langchain/agents/executor";
+import { formatForOpenAIFunctions } from "langchain/agents/format_scratchpad";
+```
+
+Next, we load the text document and embed it using the OpenAI embeddings model.
+
+```typescript
+// Read text file & embed documents
+const text = fs.readFileSync("examples/state_of_the_union.txt", "utf8");
+const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+let docs = await textSplitter.createDocuments([text]);
+// Add fake document source information to the metadata
+docs = docs.map((doc, i) => ({
+  ...doc,
+  metadata: {
+    page_chunk: i,
+  },
+}));
+// Initialize docs & create retriever
+const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+```
+
+Since we're going to want to retrieve the embeddings inside the agent, we need to instantiate the vector store as a retriever.
+We also need an LLM to preform the calls with.
+
+```typescript
+const retriever = vectorStore.asRetriever();
+const llm = new ChatOpenAI({});
+```
+
+In order to use our retriever with the LLM as an OpenAI function, we need to convert the retriever to a tool
+
+```typescript
+const retrieverTool = createRetrieverTool(retriever, {
+  name: "state-of-union-retriever",
+  description:
+    "Query a retriever to get information about state of the union address",
+});
+```
+
+Now we can define our prompt template. We'll use a simple `ChatPromptTemplate` with placeholders for the user's question, and the agent scratchpad (this will be very helpful in the future).
+
+```typescript
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  new MessagesPlaceholder("agent_scratchpad"),
+  ["user", "{input}"],
+]);
+```
+
+After that, we define our structured response schema using zod. This schema defines the structure of the final response from the agent.
+
+```typescript
+const responseSchema = z.object({
+  answer: z.string().describe("The final answer to respond to the user"),
+  sources: z
+    .array(z.string())
+    .describe(
+      "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information"
+    ),
+});
+```
+
+Once our response schema is defined, we can construct it as an OpenAI function to later be passed to the model.
+This is an important step regarding consistency as the model will always respond in this schema when it successfully completes a task
+
+```typescript
+const responseOpenAIFunction = {
+  name: "response",
+  description: "Return the response to the user",
+  parameters: zodToJsonSchema(responseSchema),
+};
+```
+
+Next, we can construct the custom structured output parser.
+
+```typescript
+const structuredOutputParser = (
+  output: AIMessage
+): AgentAction | AgentFinish => {
+  // If no function call is passed, return the output as an instance of `AgentFinish`
+  if (!("function_call" in output.additional_kwargs)) {
+    return { returnValues: { output: output.content }, log: output.content };
+  }
+  // Extract the function call name and arguments
+  const functionCall = output.additional_kwargs.function_call;
+  const name = functionCall?.name as string;
+  const inputs = functionCall?.arguments as string;
+  // Parse the arguments as JSON
+  const jsonInput = JSON.parse(inputs);
+  // If the function call name is `response` then we know it's used our final
+  // response function and can return an instance of `AgentFinish`
+  if (name === "response") {
+    return { returnValues: { ...jsonInput }, log: output.content };
+  }
+  // If none of the above are true, the agent is not yet finished and we return
+  // an instance of `AgentAction`
+  return {
+    tool: name,
+    toolInput: jsonInput,
+    log: output.content,
+  };
+};
+```
+
+After this, we can bind our two functions to the LLM, and create a runnable sequence which will be used as the agent.
+
+**Important** - note here we pass in `agent_scratchpad` as an input variable, which formats all the previous steps using the `formatForOpenAIFunctions` function.
+This is very important as it contains all the context history the model needs to preform accurate tasks. Without this, the model would have no context on the previous steps taken.
+The `formatForOpenAIFunctions` function returns the steps as an array of `BaseMessage`. This is necessary as the `MessagesPlaceholder` class expects this type as the input.
+
+```typescript
+const llmWithTools = llm.bind({
+  functions: [formatToOpenAIFunction(retrieverTool), responseOpenAIFunction],
+});
+/** Create the runnable */
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: { input: string }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: Array<AgentStep> }) =>
+      formatForOpenAIFunctions(i.steps),
+  },
+  prompt,
+  llmWithTools,
+  structuredOutputParser,
+]);
+```
+
+Finally, we can create an instance of `AgentExecutor` and run the agent.
+
+```typescript
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools: [retrieverTool],
+});
+/** Call invoke on the agent */
+const res = await executor.invoke({
+  input: "what did the president say about kentaji brown jackson",
+});
+console.log({
+  res,
+});
+```
+
+The output will look something like this
+
+```typescript
+{
+  res: {
+    answer: 'President mentioned that he nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. He described her as one of our nation’s top legal minds and stated that she will continue Justice Breyer’s legacy of excellence.',
+    sources: [
+      'And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence. A former top litigator in private practice. A former federal public defender. And from a family of public school educators and police officers. A consensus builder. Since she’s been nominated, she’s received a broad range of support—from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.'
+    ]
+  }
+}
+```

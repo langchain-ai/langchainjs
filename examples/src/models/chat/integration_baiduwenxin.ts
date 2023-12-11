@@ -9,8 +9,8 @@ const ernieTurbo = new ChatBaiduWenxin({
 
 // Use ERNIE-Bot
 const ernie = new ChatBaiduWenxin({
-  modelName: "ERNIE-Bot",
-  temperature: 1, // Only ERNIE-Bot supports temperature
+  modelName: "ERNIE-Bot", // Available models: ERNIE-Bot, ERNIE-Bot-turbo, ERNIE-Bot-4
+  temperature: 1,
   baiduApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.BAIDU_API_KEY
   baiduSecretKey: "YOUR-SECRET-KEY", // In Node.js defaults to process.env.BAIDU_SECRET_KEY
 });

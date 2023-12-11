@@ -4,8 +4,8 @@ This page contains some specific guidelines and examples for contributing integr
 
 Document loaders are classes that pull in text from a given source and load them into chunks called **documents** for later use in queryable vector stores. Some example sources include PDFs, websites, and Notion docs.
 
-**Make sure you read the [general guidelines page](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) first!**
+**Make sure you read the [general guidelines page](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) first!**
 
 ## Example PR
 
-You can take a look at this PR adding Apify Datasets as an example when creating your own document loader integrations: https://github.com/hwchase17/langchainjs/pull/1271
+You can take a look at this PR adding Apify Datasets as an example when creating your own document loader integrations: https://github.com/langchain-ai/langchainjs/pull/1271

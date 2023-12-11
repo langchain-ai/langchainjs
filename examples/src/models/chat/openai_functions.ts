@@ -25,10 +25,6 @@ const extractionFunctionSchema = {
   },
 };
 
-// Bind function arguments to the model.
-// All subsequent invoke calls will use the bound parameters.
-// "functions.parameters" must be formatted as JSON Schema
-// Omit "function_call" if you want the model to choose a function to call.
 const model = new ChatOpenAI({
   modelName: "gpt-4",
 }).bind({
@@ -39,34 +35,22 @@ const model = new ChatOpenAI({
 const result = await model.invoke([new HumanMessage("What a beautiful day!")]);
 
 console.log(result);
-
 /*
-  AIMessage {
-    content: '',
-    name: undefined,
-    additional_kwargs: {
-      function_call: {
-        name: 'extractor',
-        arguments: '{\n' +
-          '  "tone": "positive",\n' +
-          '  "word_count": 4,\n' +
-          '  "chat_response": "It certainly is a beautiful day!"\n' +
-          '}'
-      }
+AIMessage {
+  lc_serializable: true,
+  lc_kwargs: { content: '', additional_kwargs: { function_call: [Object] } },
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: '',
+  name: undefined,
+  additional_kwargs: {
+    function_call: {
+      name: 'extractor',
+      arguments: '{\n' +
+        '  "tone": "positive",\n' +
+        '  "word_count": 4,\n' +
+        `  "chat_response": "I'm glad you're enjoying the day! What makes it so beautiful for you?"\n` +
+        '}'
     }
   }
-*/
-
-// Alternatively, you can pass function call arguments as an additional argument as a one-off:
-/*
-const model = new ChatOpenAI({
-  modelName: "gpt-4",
-});
-
-const result = await model.call([
-  new HumanMessage("What a beautiful day!")
-], {
-  functions: [extractionFunctionSchema],
-  function_call: {name: "extractor"}
-});
+}
 */

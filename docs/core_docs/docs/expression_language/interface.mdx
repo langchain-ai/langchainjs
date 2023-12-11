@@ -1,0 +1,67 @@
+---
+sidebar_position: 0
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Interface
+
+In an effort to make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/schema_runnable.Runnable.html) protocol that most components implement.
+This is a standard interface with a few different methods, which make it easy to define custom chains as well as making it possible to invoke them in a standard way. The standard interface exposed includes:
+
+- `stream`: stream back chunks of the response
+- `invoke`: call the chain on an input
+- `batch`: call the chain on a list of inputs
+
+The **input type** varies by component :
+
+| Component      | Input Type                                          |
+| -------------- | --------------------------------------------------- |
+| Prompt         | Object                                              |
+| Retriever      | Single string                                       |
+| LLM, ChatModel | Single string, list of chat messages or PromptValue |
+| Tool           | Single string, or object, depending on the tool     |
+| OutputParser   | The output of an LLM or ChatModel                   |
+
+The **output type** also varies by component :
+
+| Component    | Output Type           |
+| ------------ | --------------------- |
+| LLM          | String                |
+| ChatModel    | ChatMessage           |
+| Prompt       | PromptValue           |
+| Retriever    | List of documents     |
+| Tool         | Depends on the tool   |
+| OutputParser | Depends on the parser |
+
+You can combine runnables (and runnable-like objects such as functions and objects whose values are all functions) into sequences in two ways:
+
+- Call the `.pipe` instance method, which takes another runnable-like as an argument
+- Use the `RunnableSequence.from([])` static method with an array of runnable-likes, which will run in sequence when invoked
+
+See below for examples of how this looks.
+
+## Stream
+
+import StreamExample from "@examples/guides/expression_language/interface_stream.ts";
+
+<CodeBlock language="typescript">{StreamExample}</CodeBlock>
+
+## Invoke
+
+import InvokeExample from "@examples/guides/expression_language/interface_invoke.ts";
+
+<CodeBlock language="typescript">{InvokeExample}</CodeBlock>
+
+## Batch
+
+import BatchExample from "@examples/guides/expression_language/interface_batch.ts";
+
+<CodeBlock language="typescript">{BatchExample}</CodeBlock>
+
+You can also pass a `batchOptions` argument to the call. There are options to set maximum concurrency
+and whether or not to return exceptions instead of throwing them (useful for gracefully handling failures!):
+
+import BatchExampleWithOptions from "@examples/guides/expression_language/interface_batch_with_options.ts";
+
+<CodeBlock language="typescript">{BatchExampleWithOptions}</CodeBlock>

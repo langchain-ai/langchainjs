@@ -1,0 +1,55 @@
+---
+sidebar_position: 2
+---
+
+# Conversational Retrieval QA
+
+:::info
+Looking for the older, non-LCEL version? Click [here](/docs/modules/chains/popular/chat_vector_db_legacy).
+:::
+
+A common requirement for retrieval-augmented generation chains is support for followup questions.
+Followup questions can contain references to past chat history (e.g. "What did Biden say about Justice Breyer", followed by "Was that nice?"), which make them ill-suited
+to direct retriever similarity search .
+
+To support followups, you can add an additional step prior to retrieval that combines the chat history (either explicitly passed in or retrieved from the provided memory) and the question into a standalone question.
+It then performs the standard retrieval steps of looking up relevant documents from the retriever and passing those documents and the question into a question answering chain to return a response.
+
+To create a conversational question-answering chain, you will need a retriever. In the below example, we will create one from a vector store, which can be created from embeddings.
+
+import CodeBlock from "@theme/CodeBlock";
+import ConvoRetrievalQAExample from "@examples/chains/conversational_qa.ts";
+
+<CodeBlock language="typescript">{ConvoRetrievalQAExample}</CodeBlock>
+
+Here's an explanation of each step in the `RunnableSequence.from()` call above:
+
+- The first input passed is an object containing a `question` key. This key is used as the main input for whatever question a user may ask.
+- The next key is `chatHistory`. This is a string of all previous chats (human & AI) concatenated together. This is used to help the model understand the context of the question.
+- The `context` key is used to fetch relevant documents from the loaded context (in this case the State Of The Union speech). It performs a call to the `getRelevantDocuments` method on the retriever, passing in the user's question as the query. We then pass it to our `formatDocumentsAsString` util which maps over all returned documents, joins them with newlines and returns a string.
+
+After getting and formatting all inputs we pipe them through the following operations:
+
+- `questionPrompt` - this is the prompt template which we pass to the model in the next step. Behind the scenes it's taking the inputs outlined above and formatting them into the proper spots outlined in our template.
+- The formatted prompt with context then gets passed to the LLM and a response is generated.
+- Finally, we pipe the result of the LLM call to an output parser which formats the response into a readable string.
+
+Using this `RunnableSequence` we can pass questions, and chat history to the model for informed conversational question answering.
+
+## Built-in Memory
+
+Here's a customization example using a faster LLM to generate questions and a slower, more comprehensive LLM for the final answer. It uses a built-in memory object and returns the referenced source documents.
+Because we have `returnSourceDocuments` set and are thus returning multiple values from the chain, we must set `inputKey` and `outputKey` on the memory instance
+to let it know which values to store.
+
+import ConvoQABuiltInExample from "@examples/chains/conversational_qa_built_in_memory.ts";
+
+<CodeBlock language="typescript">{ConvoQABuiltInExample}</CodeBlock>
+
+## Streaming
+
+You can also stream results from the chain. This is useful if you want to stream the output of the chain to a client, or if you want to stream the output of the chain to another chain.
+
+import ConvoQAStreamingExample from "@examples/chains/conversational_qa_streaming.ts";
+
+<CodeBlock language="typescript">{ConvoQAStreamingExample}</CodeBlock>

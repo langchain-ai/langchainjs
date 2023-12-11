@@ -1,0 +1,40 @@
+---
+sidebar_class_name: hidden
+---
+
+# Retrieval QA
+
+This example showcases question answering over an index.
+
+import RetrievalQAExample from "@examples/chains/retrieval_qa_legacy.ts";
+import RetrievalQAExampleCustom from "@examples/chains/retrieval_qa_custom_legacy.ts";
+import RetrievalQAExampleCustomPrompt from "@examples/chains/retrieval_qa_custom_prompt_legacy.ts";
+import CodeBlock from "@theme/CodeBlock";
+
+The `RetrievalQAChain` is a chain that combines a `Retriever` and a QA chain (described above). It is used to retrieve documents from a `Retriever` and then use a `QA` chain to answer a question based on the retrieved documents.
+
+## Usage
+
+In the below example, we are using a `VectorStore` as the `Retriever`. By default, the `StuffDocumentsChain` is used as the `QA` chain.
+
+<CodeBlock language="typescript">{RetrievalQAExample}</CodeBlock>
+
+## Custom `QA` chain
+
+In the below example, we are using a `VectorStore` as the `Retriever` and a `MapReduceDocumentsChain` as the `QA` chain.
+
+<CodeBlock language="typescript">{RetrievalQAExampleCustom}</CodeBlock>
+
+## Custom prompts
+
+You can pass in custom prompts to do question answering. These prompts are the same prompts as you can pass into the base question answering chains.
+
+<CodeBlock language="typescript">{RetrievalQAExampleCustomPrompt}</CodeBlock>
+
+import RetrievalQAExampleSources from "@examples/chains/retrieval_qa_sources_legacy.ts";
+
+## Return Source Documents
+
+Additionally, we can return the source documents used to answer the question by specifying an optional parameter when constructing the chain.
+
+<CodeBlock language="typescript">{RetrievalQAExampleSources}</CodeBlock>

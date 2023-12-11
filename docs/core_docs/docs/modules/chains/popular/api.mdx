@@ -1,0 +1,14 @@
+---
+sidebar_position: 0
+---
+
+# API chains
+
+APIChain enables using LLMs to interact with APIs to retrieve relevant information. Construct the chain by providing a question relevant to the provided API documentation.
+
+If your API requires authentication or other headers, you can pass the chain a `headers` property in the config object.
+
+import CodeBlock from "@theme/CodeBlock";
+import APIExample from "@examples/chains/api_chain.ts";
+
+<CodeBlock language="typescript">{APIExample}</CodeBlock>

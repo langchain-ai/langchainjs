@@ -91,7 +91,26 @@ interface SearxngSearchParams {
  * The input should be a search query, and the output is a JSON array of the query results.
  *
  * note: works best with *agentType*: `structured-chat-zero-shot-react-description`
- * https://github.com/searxng/searxng */
+ * https://github.com/searxng/searxng
+ * @example
+ * ```typescript
+ * const executor = AgentExecutor.fromAgentAndTools({
+ *   agent,
+ *   tools: [
+ *     new SearxngSearch({
+ *       params: {
+ *         format: "json",
+ *         engines: "google",
+ *       },
+ *       headers: {},
+ *     }),
+ *   ],
+ * });
+ * const result = await executor.invoke({
+ *   input: `What is Langchain? Describe in 50 words`,
+ * });
+ * ```
+ */
 export class SearxngSearch extends Tool {
   static lc_name() {
     return "SearxngSearch";

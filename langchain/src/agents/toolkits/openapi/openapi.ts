@@ -36,6 +36,24 @@ export class RequestsToolkit extends Toolkit {
  * exploring JSON data. It creates a JSON agent using the `JsonToolkit`
  * and the provided language model, and adds the JSON explorer tool to the
  * toolkit.
+ * @example
+ * ```typescript
+ * const toolkit = new OpenApiToolkit(
+ *   new JsonSpec({
+ *   }),
+ *   new ChatOpenAI({ temperature: 0 }),
+ *   {
+ *     "Content-Type": "application/json",
+ *     Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+ *   },
+ * );
+ *
+ * const result = await toolkit.invoke({
+ *   input:
+ *     "Make a POST request to openai /completions. The prompt should be 'tell me a joke.'",
+ * });
+ * console.log(`Got output ${result.output}`);
+ * ```
  */
 export class OpenApiToolkit extends RequestsToolkit {
   constructor(jsonSpec: JsonSpec, llm: BaseLanguageModel, headers?: Headers) {
@@ -65,6 +83,14 @@ export class OpenApiToolkit extends RequestsToolkit {
  * @param openApiToolkit The OpenAPI toolkit to use.
  * @param args Optional arguments for creating the prompt.
  * @returns An AgentExecutor for executing the agent with the tools.
+ *
+ * @security **Security Notice** This agent provides access to external APIs.
+ * Use with caution as this agent can make API calls with arbitrary headers.
+ * Exposing this agent to users could lead to security vulnerabilities. Consider
+ * limiting access to what endpoints it can hit, what actions can be taken, and
+ * more.
+ *
+ * @link See https://js.langchain.com/docs/security for more information.
  */
 export function createOpenApiAgent(
   llm: BaseLanguageModel,

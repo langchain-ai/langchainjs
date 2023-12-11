@@ -28,7 +28,13 @@ test("Test traced agent with openai functions", async () => {
     "What is the approximate result of 78 to the power of 5?",
     {
       callbacks: [new LLMonitorHandler({ verbose: true })],
-      metadata: { agentName: "SuperCalculator" },
+      metadata: {
+        agentName: "SuperCalculator",
+        userId: "test-user-id",
+        userProps: {
+          name: "Test User",
+        },
+      },
     }
   );
 

@@ -1,10 +1,11 @@
 import { XMLParser } from "fast-xml-parser";
 
-import { BaseChatModelParams } from "../../chat_models/base.js";
+import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import {
   AIMessage,
   BaseMessage,
+  ChatGenerationChunk,
   ChatResult,
   SystemMessage,
 } from "../../schema/index.js";
@@ -44,13 +45,44 @@ export interface ChatAnthropicFunctionsCallOptions
   tools?: StructuredTool[];
 }
 
-export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCallOptions> {
+export type AnthropicFunctionsInput = Partial<AnthropicInput> &
+  BaseChatModelParams & {
+    llm?: BaseChatModel;
+  };
+
+export class AnthropicFunctions extends BaseChatModel<ChatAnthropicFunctionsCallOptions> {
+  llm: BaseChatModel;
+
+  stopSequences?: string[];
+
+  lc_namespace = ["langchain", "experimental", "chat_models"];
+
   static lc_name(): string {
     return "AnthropicFunctions";
   }
 
-  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
+  constructor(fields?: AnthropicFunctionsInput) {
     super(fields ?? {});
+    this.llm = fields?.llm ?? new ChatAnthropic(fields);
+    this.stopSequences =
+      fields?.stopSequences ?? (this.llm as ChatAnthropic).stopSequences;
+  }
+
+  invocationParams() {
+    return this.llm.invocationParams();
+  }
+
+  /** @ignore */
+  _identifyingParams() {
+    return this.llm._identifyingParams();
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield* this.llm._streamResponseChunks(messages, options, runManager);
   }
 
   async _generate(
@@ -109,12 +141,16 @@ export class AnthropicFunctions extends ChatAnthropic<ChatAnthropicFunctionsCall
         `If "function_call" is provided, "functions" must also be.`
       );
     }
-    const chatResult = await super._generate(
+    const chatResult = await this.llm._generate(
       promptMessages,
       options,
       runManager
     );
     const chatGenerationContent = chatResult.generations[0].message.content;
+    if (typeof chatGenerationContent !== "string") {
+      throw new Error("AnthropicFunctions does not support non-string output.");
+    }
+
     if (forced) {
       const parser = new XMLParser();
       const result = parser.parse(`${chatGenerationContent}</tool_input>`);

@@ -58,6 +58,29 @@ const chatMemoryColumns: Schemas.Column[] = [
  * extends the BaseListChatMessageHistory class and provides methods to
  * get, add, and clear messages. It also ensures the existence of a table
  * where the chat messages are stored.
+ * @example
+ * ```typescript
+ * const chatHistory = new XataChatMessageHistory({
+ *   table: "messages",
+ *   sessionId: new Date().toISOString(),
+ *   client: new BaseClient({
+ *     databaseURL: process.env.XATA_DB_URL,
+ *     apiKey: process.env.XATA_API_KEY,
+ *     branch: "main",
+ *   }),
+ *   apiKey: process.env.XATA_API_KEY,
+ * });
+ *
+ * const chain = new ConversationChain({
+ *   llm: new ChatOpenAI(),
+ *   memory: new BufferMemory({ chatHistory }),
+ * });
+ *
+ * const response = await chain.invoke({
+ *   input: "What did I just say my name was?",
+ * });
+ * console.log({ response });
+ * ```
  */
 export class XataChatMessageHistory<
   XataClient extends BaseClient

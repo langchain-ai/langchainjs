@@ -1,0 +1,145 @@
+---
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+# OpenAI tool calling
+
+:::tip Compatibility
+Tool calling is new and only available on [OpenAI's latest models](https://platform.openai.com/docs/guides/function-calling).
+:::
+
+OpenAI's latest `gpt-3.5-turbo-1106` and `gpt-4-1106-preview` models have been fine-tuned to detect when one or more tools should be called to gather sufficient information
+to answer the initial query, and respond with the inputs that should be passed to those tools.
+
+While the goal of more reliably returning valid and useful function calls is the same as the functions agent, the ability to return multiple tools at once results in
+both fewer roundtrips for complex questions.
+
+The OpenAI Tools Agent is designed to work with these models.
+
+import CodeBlock from "@theme/CodeBlock";
+import RunnableExample from "@examples/agents/openai_tools_runnable.ts";
+
+# Usage
+
+In this example we'll use LCEL to construct a customizable agent with a mocked weather tool and a calculator.
+
+The basic flow is this:
+
+1. Define the tools the agent will be able to call. You can use [OpenAI's tool syntax](https://platform.openai.com/docs/guides/function-calling), or LangChain tool instances as shown below.
+2. Initialize our model and bind those tools as arguments.
+3. Define a function that formats any previous agent steps as messages. The agent will pass those back to OpenAI for the next agent iteration.
+4. Create a `RunnableSequence` that will act as the agent. We use a specialized output parser to extract any tool calls from the model's output.
+5. Initialize an `AgentExecutor` with the agent and the tools to execute the agent on a loop.
+6. Run the `AgentExecutor` and see the output.
+
+Here's how it looks:
+
+<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+
+You can check out this example trace for an inspectable view of the steps taken to answer the question: https://smith.langchain.com/public/2bbffb7d-4f9d-47ad-90be-09910e5b4b34/r
+
+## Adding memory
+
+We can also use memory to save our previous agent input/outputs, and pass it through to each agent iteration.
+Using memory can help give the agent better context on past interactions, which can lead to more accurate responses beyond what the `agent_scratchpad` can do.
+
+Adding memory only requires a few changes to the above example.
+
+First, import and instantiate your memory class, in this example we'll use `BufferMemory`.
+
+```typescript
+import { BufferMemory } from "langchain/memory";
+```
+
+```typescript
+const memory = new BufferMemory({
+  memoryKey: "history", // The object key to store the memory under
+  inputKey: "question", // The object key for the input
+  outputKey: "answer", // The object key for the output
+  returnMessages: true,
+});
+```
+
+Then, update your prompt to include another `MessagesPlaceholder`. This time we'll be passing in the `chat_history` variable from memory.
+
+```typescript
+const prompt = ChatPromptTemplate.fromMessages([
+  ["ai", "You are a helpful assistant."],
+  new MessagesPlaceholder("chat_history"),
+  ["human", "{input}"],
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
+```
+
+Next, inside your `RunnableSequence` add a field for loading the `chat_history` from memory.
+
+```typescript
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
+    agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) =>
+      formatToOpenAIToolMessages(i.steps),
+    // Load memory here
+    chat_history: async (_: { input: string; steps: ToolsAgentStep[] }) => {
+      const { history } = await memory.loadMemoryVariables({});
+      return history;
+    },
+  },
+  prompt,
+  modelWithTools,
+  new OpenAIToolsAgentOutputParser(),
+]).withConfig({ runName: "OpenAIToolsAgent" });
+```
+
+Finally we can call the agent, and save the output after the response is returned.
+
+```typescript
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+});
+
+const query =
+  "What is the sum of the current temperature in San Francisco, New York, and Tokyo?";
+
+console.log(`Calling agent executor with query: ${query}`);
+
+const result = await executor.invoke({
+  input: query,
+});
+
+console.log(result);
+
+/*
+  Calling agent executor with query: What is the weather in New York?
+  {
+    output: 'The current weather in New York is sunny with a temperature of 66 degrees Fahrenheit. The humidity is at 54% and the wind is blowing at 6 mph. There is 0% chance of precipitation.'
+  }
+*/
+
+// Save the result and initial input to memory
+await memory.saveContext(
+  {
+    question: query,
+  },
+  {
+    answer: result.output,
+  }
+);
+
+const query2 = "Do I need a jacket in New York?";
+
+const result2 = await executor.invoke({
+  input: query2,
+});
+console.log(result2);
+/*
+  {
+    output: 'The sum of the current temperatures in San Francisco, New York, and Tokyo is 104 degrees.'
+  }
+  {
+    output: "The current temperature in New York is 22°C. It's a bit chilly, so you may want to bring a jacket with you."
+  }
+*/
+```

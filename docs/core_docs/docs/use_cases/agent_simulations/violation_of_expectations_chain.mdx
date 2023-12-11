@@ -1,0 +1,67 @@
+# Violation of Expectations Chain
+
+This page demonstrates how to use the `ViolationOfExpectationsChain`. This chain extracts insights from chat conversations
+by comparing the differences between an LLM's prediction of the next message in a conversation and the user's mental state against the actual next message,
+and is intended to provide a form of reflection for long-term memory.
+
+The `ViolationOfExpectationsChain` was implemented using the results of a paper by [Plastic Labs](https://plasticlabs.ai/). Their paper, `Violation of Expectation via Metacognitive Prompting Reduces
+Theory of Mind Prediction Error in Large Language Models` can be found [here](https://arxiv.org/abs/2310.06983).
+
+## Usage
+
+The below example features a chat between a human and an AI, talking about a journal entry the user made.
+
+import CodeBlock from "@theme/CodeBlock";
+import ViolationOfExpectationsChainExample from "@examples/use_cases/advanced/violation_of_expectations_chain.ts";
+
+<CodeBlock language="typescript">
+  {ViolationOfExpectationsChainExample}
+</CodeBlock>
+
+## Explanation
+
+Now let's go over everything the chain is doing, step by step.
+
+Under the hood, the `ViolationOfExpectationsChain` performs four main steps:
+
+### Step 1. Predict the user's next message using only the chat history.
+
+The LLM is tasked with generating three key pieces of information:
+
+- Concise reasoning about the users internal mental state.
+- A prediction on how they will respond to the AI's most recent message.
+- A concise list of any additional insights that would be useful to improve prediction.
+  Once the LLM response is returned, we query our retriever with the insights, mapping over all.
+  From each result we extract the first retrieved document, and return it.
+  Then, all retrieved documents and generated insights are sorted to remove duplicates, and returned.
+
+### Step 2. Generate prediction violations.
+
+Using the results from step 1, we query the LLM to generate the following:
+
+- How exactly was the original prediction violated? Which parts were wrong? State the exact differences.
+- If there were errors with the prediction, what were they and why?
+  We pass the LLM our predicted response and generated (along with any retrieved) insights from step 1, and the actual response from the user.
+
+Once we have the difference between the predicted and actual response, we can move on to step 3.
+
+### Step 3. Regenerate the prediction.
+
+Using the original prediction, key insights and the differences between the actual response and our prediction, we can generate a new more accurate prediction.
+These predictions will help us in the next step to generate an insight that isn't just parts of the user's conversation verbatim.
+
+### Step 4. Generate an insight.
+
+Lastly, we prompt the LLM to generate one concise insight given the following context:
+
+- Ways in which our original prediction was violated.
+- Our generated revised prediction (step 3)
+- The actual response from the user.
+  Given these three data points, we prompt the LLM to return one fact relevant to the specific user response.
+  A key point here is giving it the ways in which our original prediction was violated. This list contains the exact differences --and often specific facts themselves-- between the predicted and actual response.
+
+We perform these steps on every human message, so if you have a conversation with 10 messages (5 human 5 AI), you'll get 5 insights.
+The list of messages are chunked by iterating over the entire chat history, stopping at an AI message and returning it, along with all messages that preceded it.
+
+Once our `.call({...})` method returns the array of insights, we can save them to our vector store.
+Later, we can retrieve them in future insight generations, or for other reasons like insightful context in a chat bot.

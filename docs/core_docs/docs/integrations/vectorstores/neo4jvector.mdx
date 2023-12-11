@@ -1,0 +1,66 @@
+# Neo4j Vector Index
+
+Neo4j is an open-source graph database with integrated support for vector similarity search.
+It supports:
+
+- approximate nearest neighbor search
+- Euclidean similarity and cosine similarity
+- Hybrid search combining vector and keyword searches
+
+## Setup
+
+To work with Neo4j Vector Index, you need to install the `neo4j-driver` package:
+
+```bash npm2yarn
+npm install neo4j-driver
+```
+
+### Setup a `Neo4j` self hosted instance with `docker-compose`
+
+`Neo4j` provides a prebuilt Docker image that can be used to quickly setup a self-hosted Neo4j database instance.
+Create a file below named `docker-compose.yml`:
+
+import CodeBlock from "@theme/CodeBlock";
+import DockerExample from "@examples/indexes/vector_stores/neo4j_vector/docker-compose.example.yml";
+
+<CodeBlock language="yml" name="docker-compose.yml">
+  {DockerExample}
+</CodeBlock>
+
+And then in the same directory, run `docker compose up` to start the container.
+
+You can find more information on how to setup `Neo4j` on their [website](https://neo4j.com/docs/operations-manual/current/installation/).
+
+## Usage
+
+import Example from "@examples/indexes/vector_stores/neo4j_vector/neo4j_vector.ts";
+
+One complete example of using `Neo4jVectorStore` is the following:
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Use retrievalQuery parameter to customize responses
+
+import RetrievalExample from "@examples/indexes/vector_stores/neo4j_vector/neo4j_vector_retrieval.ts";
+
+<CodeBlock language="typescript">{RetrievalExample}</CodeBlock>
+
+### Instantiate Neo4jVectorStore from existing graph
+
+import ExistingGraphExample from "@examples/indexes/vector_stores/neo4j_vector/neo4j_vector_existinggraph.ts";
+
+<CodeBlock language="typescript">{ExistingGraphExample}</CodeBlock>
+
+# Disclaimer ⚠️
+
+_Security note_: Make sure that the database connection uses credentials
+that are narrowly-scoped to only include necessary permissions.
+Failure to do so may result in data corruption or loss, since the calling
+code may attempt commands that would result in deletion, mutation
+of data if appropriately prompted or reading sensitive data if such
+data is present in the database.
+The best way to guard against such negative outcomes is to (as appropriate)
+limit the permissions granted to the credentials used with this tool.
+For example, creating read only users for the database is a good way to
+ensure that the calling code cannot mutate or delete data.
+See the [security page](/docs/security) for more information.

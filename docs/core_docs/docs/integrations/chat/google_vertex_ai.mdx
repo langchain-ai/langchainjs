@@ -1,0 +1,97 @@
+---
+sidebar_label: Google Vertex AI
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatGoogleVertexAI
+
+LangChain.js supports Google Vertex AI chat models as an integration.
+It supports two different methods of authentication based on whether you're running
+in a Node environment or a web environment.
+
+## Setup
+
+### Node
+
+To call Vertex AI models in Node, you'll need to install [Google's official auth client](https://www.npmjs.com/package/google-auth-library) as a peer dependency.
+
+You should make sure the Vertex AI API is
+enabled for the relevant project and that you've authenticated to
+Google Cloud using one of these methods:
+
+- You are logged into an account (using `gcloud auth application-default login`)
+  permitted to that project.
+- You are running on a machine using a service account that is permitted
+  to the project.
+- You have downloaded the credentials for a service account that is permitted
+  to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
+  variable to the path of this file.
+
+```bash npm2yarn
+npm install google-auth-library
+```
+
+### Web
+
+To call Vertex AI models in web environments (like Edge functions), you'll need to install
+the [`web-auth-library`](https://github.com/kriasoft/web-auth-library) pacakge as a peer dependency:
+
+```bash npm2yarn
+npm install web-auth-library
+```
+
+Then, you'll need to add your service account credentials directly as a `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` environment variable:
+
+```
+GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
+```
+
+You can also pass your credentials directly in code like this:
+
+```typescript
+import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai/web";
+
+const model = new ChatGoogleVertexAI({
+  authOptions: {
+    credentials: {"type":"service_account","project_id":"YOUR_PROJECT-12345",...},
+  },
+});
+```
+
+## Usage
+
+Several models are available and can be specified by the `model` attribute
+in the constructor. These include:
+
+- code-bison (default)
+- code-bison-32k
+
+The ChatGoogleVertexAI class works just like other chat-based LLMs,
+with a few exceptions:
+
+1. The first `SystemMessage` passed in is mapped to the "context" parameter that the PaLM model expects.
+   No other `SystemMessages` are allowed.
+2. After the first `SystemMessage`, there must be an odd number of messages, representing a conversation between a human and the model.
+3. Human messages must alternate with AI messages.
+
+import ChatGoogleVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
+
+<CodeBlock language="typescript">{ChatGoogleVertexAI}</CodeBlock>
+
+### Streaming
+
+ChatGoogleVertexAI also supports streaming in multiple chunks for faster responses:
+
+import ChatGoogleVertexAIStreaming from "@examples/models/chat/integration_googlevertexai-streaming.ts";
+
+<CodeBlock language="typescript">{ChatGoogleVertexAIStreaming}</CodeBlock>
+
+### Examples
+
+There is also an optional `examples` constructor parameter that can help the model understand what an appropriate response
+looks like.
+
+import ChatGoogleVertexAIExamples from "@examples/models/chat/integration_googlevertexai-examples.ts";
+
+<CodeBlock language="typescript">{ChatGoogleVertexAIExamples}</CodeBlock>

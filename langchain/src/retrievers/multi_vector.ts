@@ -1,4 +1,4 @@
-import { BaseStore } from "../schema/storage.js";
+import { BaseStoreInterface } from "../schema/storage.js";
 import { Document } from "../document.js";
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { VectorStore } from "../vectorstores/base.js";
@@ -8,7 +8,7 @@ import { VectorStore } from "../vectorstores/base.js";
  */
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
   vectorstore: VectorStore;
-  docstore: BaseStore<string, Document>;
+  docstore: BaseStoreInterface<string, Document>;
   idKey?: string;
   childK?: number;
   parentK?: number;
@@ -18,6 +18,19 @@ export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
  * A retriever that retrieves documents from a vector store and a document
  * store. It uses the vector store to find relevant documents based on a
  * query, and then retrieves the full documents from the document store.
+ * @example
+ * ```typescript
+ * const retriever = new MultiVectorRetriever({
+ *   vectorstore: new FaissStore(),
+ *   docstore: new InMemoryStore(),
+ *   idKey: "doc_id",
+ *   childK: 20,
+ *   parentK: 5,
+ * });
+ *
+ * const retrieverResult = await retriever.getRelevantDocuments("justice breyer");
+ * console.log(retrieverResult[0].pageContent.length);
+ * ```
  */
 export class MultiVectorRetriever extends BaseRetriever {
   static lc_name() {
@@ -28,7 +41,7 @@ export class MultiVectorRetriever extends BaseRetriever {
 
   public vectorstore: VectorStore;
 
-  public docstore: BaseStore<string, Document>;
+  public docstore: BaseStoreInterface<string, Document>;
 
   protected idKey: string;
 

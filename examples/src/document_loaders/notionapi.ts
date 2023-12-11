@@ -27,6 +27,7 @@ const dbLoader = new NotionAPILoader({
   callerOptions: {
     maxConcurrency: 64, // Default value
   },
+  propertiesAsHeader: true, // Prepends a front matter header of the page properties to the page contents
 });
 
 // A database row contents is likely to be less than 1000 characters so it's not split into multiple documents

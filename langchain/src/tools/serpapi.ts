@@ -71,8 +71,8 @@ export interface SerpAPIParameters extends BaseParameters {
    * Additional Google Place ID
    * Parameter that you might have to use to force the knowledge graph map view to
    * show up. You can find the lsig ID by using our [Local Pack
-   * API](https://serpapi.com/local-pack) or [Places Results
-   * API](https://serpapi.com/places-results).
+   * API](https://serpapi.com/local-pack) or [Local Places Results
+   * API](https://serpapi.com/local-results).
    * lsig ID is also available via a redirect Google uses within [Google My
    * Business](https://www.google.com/business/).
    */

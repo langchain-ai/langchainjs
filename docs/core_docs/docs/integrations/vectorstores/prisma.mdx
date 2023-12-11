@@ -1,0 +1,91 @@
+---
+sidebar_class_name: node-only
+---
+
+# Prisma
+
+For augmenting existing models in PostgreSQL database with vector search, Langchain supports using [Prisma](https://www.prisma.io/) together with PostgreSQL and [`pgvector`](https://github.com/pgvector/pgvector) Postgres extension.
+
+## Setup
+
+### Setup database instance with Supabase
+
+Refer to the [Prisma and Supabase integration guide](https://supabase.com/docs/guides/integrations/prisma) to setup a new database instance with Supabase and Prisma.
+
+### Install Prisma
+
+```bash npm2yarn
+npm install prisma
+```
+
+### Setup `pgvector` self hosted instance with `docker-compose`
+
+`pgvector` provides a prebuilt Docker image that can be used to quickly setup a self-hosted Postgres instance.
+
+```yaml
+services:
+  db:
+    image: ankane/pgvector
+    ports:
+      - 5432:5432
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=
+      - POSTGRES_USER=
+      - POSTGRES_DB=
+
+volumes:
+  db:
+```
+
+### Create a new schema
+
+Assuming you haven't created a schema yet, create a new model with a `vector` field of type `Unsupported("vector")`:
+
+```prisma
+model Document {
+  id      String                 @id @default(cuid())
+  content String
+  vector  Unsupported("vector")?
+}
+```
+
+Afterwards, create a new migration with `--create-only` to avoid running the migration directly.
+
+```bash npm2yarn
+npx prisma migrate dev --create-only
+```
+
+Add the following line to the newly created migration to enable `pgvector` extension if it hasn't been enabled yet:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Run the migration afterwards:
+
+```bash npm2yarn
+npx prisma migrate dev
+```
+
+## Usage
+
+:::warning
+Table names and column names (in fields such as `tableName`, `vectorColumnName`, `columns` and `filter`) are passed into SQL queries directly without parametrisation.
+These fields must be sanitized beforehand to avoid SQL injection.
+:::
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/indexes/vector_stores/prisma_vectorstore/prisma.ts";
+import Schema from "@examples/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+The following SQL operators are available as filters: `equals`, `in`, `isNull`, `isNotNull`, `like`, `lt`, `lte`, `gt`, `gte`, `not`.
+
+The samples above uses the following schema:
+
+<CodeBlock language="prisma">{Schema}</CodeBlock>
+
+You can remove `namespace` if you don't need it.

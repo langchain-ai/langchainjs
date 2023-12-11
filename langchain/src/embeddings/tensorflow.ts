@@ -13,6 +13,22 @@ export interface TensorFlowEmbeddingsParams extends EmbeddingsParams {}
  * Class that extends the Embeddings class and provides methods for
  * generating embeddings using the Universal Sentence Encoder model from
  * TensorFlow.js.
+ * @example
+ * ```typescript
+ * const embeddings = new TensorFlowEmbeddings();
+ * const store = new MemoryVectorStore(embeddings);
+ *
+ * const documents = [
+ *   "A document",
+ *   "Some other piece of text",
+ *   "One more",
+ *   "And another",
+ * ];
+ *
+ * await store.addDocuments(
+ *   documents.map((pageContent) => new Document({ pageContent }))
+ * );
+ * ```
  */
 export class TensorFlowEmbeddings extends Embeddings {
   constructor(fields?: TensorFlowEmbeddingsParams) {

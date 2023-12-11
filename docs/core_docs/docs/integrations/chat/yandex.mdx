@@ -1,0 +1,25 @@
+---
+sidebar_label: YandexGPT
+---
+
+# ChatYandexGPT
+
+LangChain.js supports calling [YandexGPT](https://cloud.yandex.com/en/services/yandexgpt) chat models.
+
+## Setup
+
+First, you should [create a service account](https://cloud.yandex.com/en/docs/iam/operations/sa/create) with the `ai.languageModels.user` role.
+
+Next, you have two authentication options:
+
+- [IAM token](https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa).
+  You can specify the token in a constructor parameter as `iam_token` or in an environment variable `YC_IAM_TOKEN`.
+- [API key](https://cloud.yandex.com/en/docs/iam/operations/api-key/create)
+  You can specify the key in a constructor parameter as `api_key` or in an environment variable `YC_API_KEY`.
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import YandexGPTChatExample from "@examples/models/chat/integration_yandex.ts";
+
+<CodeBlock language="typescript">{YandexGPTChatExample}</CodeBlock>

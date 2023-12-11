@@ -14,6 +14,9 @@ type Metadata = Record<string, unknown>;
 export interface PGVectorStoreArgs {
   postgresConnectionOptions: PoolConfig;
   tableName: string;
+  collectionTableName?: string;
+  collectionName?: string;
+  collectionMetadata?: Metadata | null;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
@@ -22,6 +25,12 @@ export interface PGVectorStoreArgs {
   };
   filter?: Metadata;
   verbose?: boolean;
+  /**
+   * The amount of documents to chunk by when
+   * adding vectors.
+   * @default 500
+   */
+  chunkSize?: number;
 }
 
 /**
@@ -34,6 +43,12 @@ export class PGVectorStore extends VectorStore {
   declare FilterType: Metadata;
 
   tableName: string;
+
+  collectionTableName?: string;
+
+  collectionName = "langchain";
+
+  collectionMetadata: Metadata | null;
 
   idColumnName: string;
 
@@ -51,6 +66,8 @@ export class PGVectorStore extends VectorStore {
 
   client?: PoolClient;
 
+  chunkSize = 500;
+
   _vectorstoreType(): string {
     return "pgvector";
   }
@@ -58,6 +75,9 @@ export class PGVectorStore extends VectorStore {
   private constructor(embeddings: Embeddings, config: PGVectorStoreArgs) {
     super(embeddings, config);
     this.tableName = config.tableName;
+    this.collectionTableName = config.collectionTableName;
+    this.collectionName = config.collectionName ?? "langchain";
+    this.collectionMetadata = config.collectionMetadata ?? null;
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
@@ -67,6 +87,7 @@ export class PGVectorStore extends VectorStore {
 
     const pool = new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
+    this.chunkSize = config.chunkSize ?? 500;
 
     this._verbose =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
@@ -90,6 +111,9 @@ export class PGVectorStore extends VectorStore {
 
     await postgresqlVectorStore._initializeClient();
     await postgresqlVectorStore.ensureTableInDatabase();
+    if (postgresqlVectorStore.collectionTableName) {
+      await postgresqlVectorStore.ensureCollectionTableInDatabase();
+    }
 
     return postgresqlVectorStore;
   }
@@ -115,14 +139,61 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
+   * Inserts a row for the collectionName provided at initialization if it does not
+   * exist and returns the collectionId.
+   *
+   * @returns The collectionId for the given collectionName.
+   */
+  async getOrCreateCollection(): Promise<string> {
+    const queryString = `
+      SELECT uuid from ${this.collectionTableName}
+      WHERE name = $1;
+    `;
+    const queryResult = await this.pool.query(queryString, [
+      this.collectionName,
+    ]);
+    let collectionId = queryResult.rows[0]?.uuid;
+
+    if (!collectionId) {
+      const insertString = `
+        INSERT INTO ${this.collectionTableName}(
+          uuid,
+          name,
+          cmetadata
+        )
+        VALUES (
+          uuid_generate_v4(),
+          $1,
+          $2
+        )
+        RETURNING uuid;
+      `;
+      const insertResult = await this.pool.query(insertString, [
+        this.collectionName,
+        this.collectionMetadata,
+      ]);
+      collectionId = insertResult.rows[0]?.uuid;
+    }
+
+    return collectionId;
+  }
+
+  /**
    * Generates the SQL placeholders for a specific row at the provided index.
    *
    * @param index - The index of the row for which placeholders need to be generated.
+   * @param numOfColumns - The number of columns we are inserting data into.
    * @returns The SQL placeholders for the row values.
    */
-  private generatePlaceholderForRowAt(index: number): string {
-    const base = index * 3;
-    return `($${base + 1}, $${base + 2}, $${base + 3})`;
+  private generatePlaceholderForRowAt(
+    index: number,
+    numOfColumns: number
+  ): string {
+    const placeholders = [];
+    for (let i = 0; i < numOfColumns; i += 1) {
+      placeholders.push(`$${index * numOfColumns + i + 1}`);
+    }
+    return `(${placeholders.join(", ")})`;
   }
 
   /**
@@ -132,19 +203,29 @@ export class PGVectorStore extends VectorStore {
    * @param chunkIndex - The starting index for generating query placeholders based on chunk positioning.
    * @returns The complete SQL INSERT INTO query string.
    */
-  private buildInsertQuery(
-    rows: (string | Record<string, unknown>)[][],
-    chunkIndex: number
-  ) {
+  private async buildInsertQuery(rows: (string | Record<string, unknown>)[][]) {
+    let collectionId;
+    if (this.collectionTableName) {
+      collectionId = await this.getOrCreateCollection();
+    }
+
+    const columns = [
+      this.contentColumnName,
+      this.vectorColumnName,
+      this.metadataColumnName,
+    ];
+
+    if (collectionId) {
+      columns.push("collection_id");
+    }
+
     const valuesPlaceholders = rows
-      .map((_, j) => this.generatePlaceholderForRowAt(chunkIndex + j))
+      .map((_, j) => this.generatePlaceholderForRowAt(j, columns.length))
       .join(", ");
 
     const text = `
       INSERT INTO ${this.tableName}(
-        ${this.contentColumnName},
-        ${this.vectorColumnName},
-        ${this.metadataColumnName}
+        ${columns}
       )
       VALUES ${valuesPlaceholders}
     `;
@@ -160,22 +241,31 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when the vectors have been added.
    */
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
-    const rows = vectors.map((embedding, idx) => {
+    const rows = [];
+    let collectionId;
+    if (this.collectionTableName) {
+      collectionId = await this.getOrCreateCollection();
+    }
+
+    for (let i = 0; i < vectors.length; i += 1) {
+      const values = [];
+      const embedding = vectors[i];
       const embeddingString = `[${embedding.join(",")}]`;
-      return [
-        documents[idx].pageContent,
+      values.push(
+        documents[i].pageContent,
         embeddingString,
-        documents[idx].metadata,
-      ];
-    });
+        documents[i].metadata
+      );
+      if (collectionId) {
+        values.push(collectionId);
+      }
+      rows.push(values);
+    }
 
-    const chunkSize = 500;
-
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize);
-      const insertQuery = this.buildInsertQuery(chunk, i);
+    for (let i = 0; i < rows.length; i += this.chunkSize) {
+      const chunk = rows.slice(i, i + this.chunkSize);
+      const insertQuery = await this.buildInsertQuery(chunk);
       const flatValues = chunk.flat();
-
       try {
         await this.pool.query(insertQuery, flatValues);
       } catch (e) {
@@ -202,17 +292,26 @@ export class PGVectorStore extends VectorStore {
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter = filter ?? "{}";
+    let collectionId;
+    if (this.collectionTableName) {
+      collectionId = await this.getOrCreateCollection();
+    }
+
+    const parameters = [embeddingString, _filter, k];
+    if (collectionId) {
+      parameters.push(collectionId);
+    }
 
     const queryString = `
       SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
       FROM ${this.tableName}
-      WHERE ${this.metadataColumnName} @> $2
+      WHERE ${this.metadataColumnName}::jsonb @> $2
+      ${collectionId ? "AND collection_id = $4" : ""}
       ORDER BY "_distance" ASC
-      LIMIT $3;`;
+      LIMIT $3;
+    `;
 
-    const documents = (
-      await this.pool.query(queryString, [embeddingString, _filter, k])
-    ).rows;
+    const documents = (await this.pool.query(queryString, parameters)).rows;
 
     const results = [] as [Document, number][];
     for (const doc of documents) {
@@ -245,6 +344,38 @@ export class PGVectorStore extends VectorStore {
         "${this.vectorColumnName}" vector
       );
     `);
+  }
+
+  /**
+   * Method to ensure the existence of the collection table in the database.
+   * It creates the table if it does not already exist.
+   *
+   * @returns Promise that resolves when the collection table has been ensured.
+   */
+  async ensureCollectionTableInDatabase(): Promise<void> {
+    try {
+      await this.pool.query(`
+        CREATE TABLE IF NOT EXISTS ${this.collectionTableName} (
+          uuid uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+          name character varying,
+          cmetadata jsonb
+        );
+
+        ALTER TABLE ${this.tableName}
+          ADD COLUMN collection_id uuid;
+
+        ALTER TABLE ${this.tableName}
+          ADD CONSTRAINT ${this.tableName}_collection_id_fkey
+          FOREIGN KEY (collection_id)
+          REFERENCES ${this.collectionTableName}(uuid)
+          ON DELETE CASCADE;
+      `);
+    } catch (e) {
+      if (!(e as Error).message.includes("already exists")) {
+        console.error(e);
+        throw new Error(`Error adding column: ${(e as Error).message}`);
+      }
+    }
   }
 
   /**
@@ -303,7 +434,7 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when all clients are closed and the pool is terminated.
    */
   async end(): Promise<void> {
-    await this.client?.release();
+    this.client?.release();
     return this.pool.end();
   }
 }

@@ -6,7 +6,6 @@ import {
 import { LLMChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import {
-  BasePromptTemplate,
   BaseStringPromptTemplate,
   SerializedBasePromptTemplate,
   renderTemplate,
@@ -143,7 +142,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 };

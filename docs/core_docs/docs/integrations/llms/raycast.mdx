@@ -1,0 +1,14 @@
+# RaycastAI
+
+> **Note:** This is a community-built integration and is not officially supported by Raycast.
+
+You can utilize the LangChain's RaycastAI class within the [Raycast Environment](https://developers.raycast.com/api-reference/ai) to enhance your Raycast extension with Langchain's capabilities.
+
+- The RaycastAI class is only available in the Raycast environment and only to [Raycast Pro](https://www.raycast.com/pro) users as of August 2023. You may check how to create an extension for Raycast [here](https://developers.raycast.com/).
+
+- There is a rate limit of approx 10 requests per minute for each Raycast Pro user. If you exceed this limit, you will receive an error. You can set your desired rpm limit by passing `rateLimitPerMinute` to the `RaycastAI` constructor as shown in the example, as this rate limit may change in the future.
+
+import CodeBlock from "@theme/CodeBlock";
+import RaycastAIExample from "@examples/models/llm/raycast.ts";
+
+<CodeBlock language="typescript">{RaycastAIExample}</CodeBlock>

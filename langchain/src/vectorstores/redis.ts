@@ -177,6 +177,9 @@ export class RedisVectorStore extends VectorStore {
     documents: Document[],
     { keys, batchSize = 1000 }: RedisAddOptions = {}
   ) {
+    if (!vectors.length || !vectors[0].length) {
+      throw new Error("No vectors provided");
+    }
     // check if the index exists and create it if it doesn't
     await this.createIndex(vectors[0].length);
 
@@ -326,7 +329,7 @@ export class RedisVectorStore extends VectorStore {
   /**
    * Method for creating an index in the RedisVectorStore. If the index
    * already exists, it does nothing.
-   * @param dimensions The dimensions of the index. Defaults to 1536.
+   * @param dimensions The dimensions of the index
    * @returns A promise that resolves when the index has been created.
    */
   async createIndex(dimensions = 1536): Promise<void> {

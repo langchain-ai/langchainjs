@@ -1,0 +1,25 @@
+---
+sidebar_position: 0
+---
+
+# Document loaders
+
+:::info
+Head to [Integrations](/docs/integrations/document_loaders) for documentation on built-in integrations with document loader providers.
+:::
+
+Use document loaders to load data from a source as `Document`'s. A `Document` is a piece of text
+and associated metadata. For example, there are document loaders for loading a simple `.txt` file, for loading the text
+contents of any web page, or even for loading a transcript of a YouTube video.
+
+Document loaders expose a "load" method for loading data as documents from a configured source. They optionally
+implement a "lazy load" as well for lazily loading data into memory.
+
+## Get started
+
+The simplest loader reads in a file as text and places it all into one Document.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/text.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

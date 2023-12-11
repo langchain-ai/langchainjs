@@ -1,4 +1,4 @@
-import { describe, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "../../schema/index.js";
 import {
   PromptTemplate,
@@ -128,5 +128,18 @@ describe("ChatGoogleVertexAI", () => {
     ]);
 
     console.log(JSON.stringify(responseA.generations, null, 1));
+  });
+
+  test("stream method", async () => {
+    const model = new ChatGoogleVertexAI();
+    const stream = await model.stream(
+      "What is the answer to life, the universe, and everything? Be verbose."
+    );
+    const chunks = [];
+    for await (const chunk of stream) {
+      console.log("chunk", chunk);
+      chunks.push(chunk);
+    }
+    expect(chunks.length).toBeGreaterThan(1);
   });
 });

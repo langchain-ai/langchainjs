@@ -1,0 +1,27 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# HuggingFace Transformers
+
+The `TransformerEmbeddings` class uses the [Transformers.js](https://huggingface.co/docs/transformers.js/index) package to generate embeddings for a given text.
+
+It runs locally and even works directly in the browser, allowing you to create web apps with built-in embeddings.
+
+## Setup
+
+You'll need to install the [@xenova/transformers](https://www.npmjs.com/package/@xenova/transformers) package as a peer dependency:
+
+```bash npm2yarn
+npm install @xenova/transformers
+```
+
+## Example
+
+Note that if you're using in a browser context, you'll likely want to put all inference-related code in a web worker to avoid
+blocking the main thread.
+
+See [this guide](https://huggingface.co/docs/transformers.js/tutorials/next) and the other resources in the Transformers.js docs for an idea of how to
+set up your project.
+
+import HFTransformersExample from "@examples/models/embeddings/hf_transformers.ts";
+
+<CodeBlock language="typescript">{HFTransformersExample}</CodeBlock>

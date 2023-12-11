@@ -1,0 +1,23 @@
+# ReAct
+
+This walkthrough showcases using an agent to implement the [ReAct](https://react-lm.github.io/) logic.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/mrkl.ts";
+import RunnableExample from "@examples/agents/mrkl_runnable.ts";
+
+# With LCEL
+
+<CodeBlock language="typescript">{RunnableExample}</CodeBlock>
+
+# With `initializeAgentExecutorWithOptions`
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Using chat models
+
+You can also create ReAct agents that use chat models instead of LLMs as the agent driver.
+
+import ChatExample from "@examples/agents/chat_mrkl.ts";
+
+<CodeBlock language="typescript">{ChatExample}</CodeBlock>

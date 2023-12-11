@@ -24,26 +24,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  format:
-    name: Check formatting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
-      - name: Check formatting
-        run: yarn run format:check
-
   lint:
     name: Check linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
@@ -59,7 +44,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [18.x, 19.x, 20.x]
+        node-version: [18.x, 20.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         # include:
           # - os: windows-latest
@@ -71,7 +56,7 @@ jobs:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -83,21 +68,6 @@ jobs:
         run: yarn run test:unit
 
   test-exports:
-    name: Environment Tests
-    runs-on: ubuntu-latest
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
-      - name: Test Exports
-        run: yarn run test:exports:docker
+    uses:
+      ./.github/workflows/test-exports.yml
+    secrets: inherit

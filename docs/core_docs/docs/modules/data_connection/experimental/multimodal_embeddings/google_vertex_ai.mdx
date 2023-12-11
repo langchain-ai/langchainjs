@@ -1,0 +1,61 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# Google Vertex AI
+
+:::info Experimental
+This API is new and may change in future LangChainJS versions.
+:::
+
+The `GoogleVertexAIMultimodalEmbeddings` class provides additional methods that are
+parallels to the `embedDocuments()` and `embedQuery()` methods:
+
+- `embedImage()` and `embedImageQuery()` take node `Buffer` objects that are expected to
+  contain an image.
+- `embedMedia()` and `embedMediaQuery()` take an object that contain a `text` string
+  field, an `image` Buffer field, or both and returns a similarly constructed object
+  containing the respective vectors.
+
+**Note:** The Google Vertex AI embeddings models have different vector sizes
+than OpenAI's standard model, so some vector stores may not handle them correctly.
+
+- The `textembedding-gecko` model in `GoogleVertexAIEmbeddings` provides 768 dimensions.
+- The `multimodalembedding@001` model in `GoogleVertexAIMultimodalEmbeddings` provides 1408 dimensions.
+
+## Setup
+
+The Vertex AI implementation is meant to be used in Node.js and not
+directly in a browser, since it requires a service account to use.
+
+Before running this code, you should make sure the Vertex AI API is
+enabled for the relevant project in your Google Cloud dashboard and that you've authenticated to
+Google Cloud using one of these methods:
+
+- You are logged into an account (using `gcloud auth application-default login`)
+  permitted to that project.
+- You are running on a machine using a service account that is permitted
+  to the project.
+- You have downloaded the credentials for a service account that is permitted
+  to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
+  variable to the path of this file.
+
+```bash npm2yarn
+npm install google-auth-library
+```
+
+## Usage
+
+Here's a basic example that shows how to embed image queries:
+
+import GoogleVertexAIMultimodalExample from "@examples/models/embeddings/googlevertexai_multimodal.ts";
+
+<CodeBlock language="typescript">{GoogleVertexAIMultimodalExample}</CodeBlock>
+
+## Advanced usage
+
+Here's a more advanced example that shows how to integrate these new embeddings with a LangChain vector store.
+
+import GoogleVertexAIMultimodalAdvancedExample from "@examples/models/embeddings/googlevertexai_multimodal_advanced.ts";
+
+<CodeBlock language="typescript">
+  {GoogleVertexAIMultimodalAdvancedExample}
+</CodeBlock>

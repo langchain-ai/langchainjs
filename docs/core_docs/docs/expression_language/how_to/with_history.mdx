@@ -1,0 +1,38 @@
+---
+sidebar_class_name: hidden
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/guides/expression_language/runnable_history.ts";
+import ExampleConstructorConfig from "@examples/guides/expression_language/runnable_history_constructor_config.ts";
+
+# Add message history (memory)
+
+The `RunnableWithMessageHistory` let's us add message history to certain types of chains.
+
+Specifically, it can be used for any Runnable that takes as input one of
+
+- a list of `BaseMessage`
+- an object with a key that takes a list of `BaseMessage`
+- an object with a key that takes the latest message(s) as a string or list of `BaseMessage`, and a separate key that takes historical messages
+
+And returns as output one of
+
+- a string that can be treated as the contents of an `AIMessage`
+- a list of `BaseMessage`
+- an object with a key that contains a list of `BaseMessage`
+
+Let's take a look at some examples to see how it works.
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Pass config through the constructor
+
+You don't always have to pass the `config` object through the `invoke` method. `RunnableWithMessageHistory` supports passing it through the constructor as well.
+
+To do this, the only change you need to make is remove the second arg (or just the `configurable` key from the second arg) from the `invoke` method, and add it in through the `config` key in the constructor.
+
+This is a simple example building on top of what we have above:
+
+<CodeBlock language="typescript">{ExampleConstructorConfig}</CodeBlock>

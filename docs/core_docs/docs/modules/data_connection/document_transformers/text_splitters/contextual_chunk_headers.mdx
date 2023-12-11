@@ -1,0 +1,14 @@
+# Contextual chunk headers
+
+Consider a scenario where you want to store a large, arbitrary collection of documents in a vector store and perform Q&A tasks on them.
+Simply splitting documents with overlapping text may not provide sufficient context for LLMs to determine if multiple chunks are referencing the same information, or how to resolve information from contradictory sources.
+
+Tagging each document with metadata is a solution if you know what to filter against, but you may not know ahead of time exactly what kind of queries your vector store will be expected to handle.
+Including additional contextual information directly in each chunk in the form of headers can help deal with arbitrary queries.
+
+Here's an example:
+
+import CodeBlock from "@theme/CodeBlock";
+import ChunkHeaderExample from "@examples/indexes/text_splitter_with_chunk_header.ts";
+
+<CodeBlock language="typescript">{ChunkHeaderExample}</CodeBlock>;

@@ -1,7 +1,10 @@
 import { OllamaInput, OllamaRequestParams } from "../util/ollama.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
-type CamelCasedRequestOptions = Omit<OllamaInput, "baseUrl" | "model">;
+type CamelCasedRequestOptions = Omit<
+  OllamaInput,
+  "baseUrl" | "model" | "format"
+>;
 
 /**
  * Interface for OllamaEmbeddings parameters. Extends EmbeddingsParams and
@@ -95,7 +98,17 @@ export class OllamaEmbeddings extends Embeddings {
   async _request(prompt: string): Promise<number[]> {
     const { model, baseUrl, requestOptions } = this;
 
-    const response = await fetch(`${baseUrl}/api/embeddings`, {
+    let formattedBaseUrl = baseUrl;
+    if (formattedBaseUrl.startsWith("http://localhost:")) {
+      // Node 18 has issues with resolving "localhost"
+      // See https://github.com/node-fetch/node-fetch/issues/1624
+      formattedBaseUrl = formattedBaseUrl.replace(
+        "http://localhost:",
+        "http://127.0.0.1:"
+      );
+    }
+
+    const response = await fetch(`${formattedBaseUrl}/api/embeddings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

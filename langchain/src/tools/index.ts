@@ -43,3 +43,7 @@ export {
 } from "./dataforseo_api_search.js";
 export { SearxngSearch } from "./searxng_search.js";
 export { SearchApi, type SearchApiParameters } from "./searchapi.js";
+export {
+  formatToOpenAIFunction,
+  formatToOpenAITool,
+} from "./convert_to_openai.js";

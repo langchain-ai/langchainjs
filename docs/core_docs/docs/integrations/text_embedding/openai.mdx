@@ -1,0 +1,31 @@
+# OpenAI
+
+The `OpenAIEmbeddings` class uses the OpenAI API to generate embeddings for a given text. By default it strips new line characters from the text, as recommended by OpenAI, but you can disable this by passing `stripNewLines: false` to the constructor.
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  batchSize: 512, // Default value if omitted is 512. Max is 2048
+});
+```
+
+If you're part of an organization, you can set `process.env.OPENAI_ORGANIZATION` to your OpenAI organization id, or pass it in as `organization` when
+initializing the model.
+
+## Custom URLs
+
+You can customize the base URL the SDK sends requests to by passing a `configuration` parameter like this:
+
+```typescript
+const model = new OpenAIEmbeddings({
+  configuration: {
+    baseURL: "https://your_custom_url.com",
+  },
+});
+```
+
+You can also pass other `ClientOptions` parameters accepted by the official SDK.
+
+If you are hosting on Azure OpenAI, see the [dedicated page instead](/docs/integrations/text_embedding/azure_openai).

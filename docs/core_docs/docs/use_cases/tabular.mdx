@@ -1,0 +1,25 @@
+---
+hide_table_of_contents: true
+sidebar_position: 3
+---
+
+# Tabular Question Answering
+
+Lots of data and information is stored in tabular data, whether it be csvs, excel sheets, or SQL tables.
+This page covers all resources available in LangChain for working with data in this format.
+
+## Chains
+
+If you are just getting started, and you have relatively small/simple tabular data, you should get started with chains.
+Chains are a sequence of predetermined steps, so they are good to get started with as they give you more control and let you
+understand what is happening better.
+
+- [SQL Database Chain](../modules/chains/popular/sqlite)
+
+## Agents
+
+Agents are more complex, and involve multiple queries to the LLM to understand what to do.
+The downside of agents are that you have less control. The upside is that they are more powerful,
+which allows you to use them on larger databases and more complex schemas.
+
+- [SQL Agent](/docs/integrations/toolkits/sql)

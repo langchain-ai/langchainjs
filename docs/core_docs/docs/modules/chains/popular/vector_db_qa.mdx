@@ -1,0 +1,44 @@
+---
+sidebar_position: 1
+---
+
+# Retrieval QA
+
+This example showcases question answering over an index.
+
+import RetrievalQARunnableExample from "@examples/chains/retrieval_qa.ts";
+import RetrievalQAExampleCustom from "@examples/chains/retrieval_qa_custom.ts";
+import CodeBlock from "@theme/CodeBlock";
+
+The following examples combing a `Retriever` (in this case a vector store) with a question answering chain to do question answering.
+
+:::info
+Looking for the older, non-LCEL version? Click [here](/docs/modules/chains/popular/vector_db_qa_legacy).
+:::
+
+## Usage
+
+In the below example, we are using a `VectorStore` as the `Retriever`, along with a `RunnableSequence` to do question answering.
+We create a `ChatPromptTemplate` which contains our base system prompt and an input variable for the `question`.
+
+<CodeBlock language="typescript">{RetrievalQARunnableExample}</CodeBlock>
+
+## Custom `QA` chain
+
+In the below example, we are using a `VectorStore` as the `Retriever` and implementing a similar flow to the `MapReduceDocumentsChain` chain.
+In this example we're querying relevant documents based on the query, and from those documents we use an LLM to parse out only the relevant information.
+Once all the relevant information is gathered we pass it once more to an LLM to generate the answer.
+
+In the example below we instantiate our `Retriever` and query the relevant documents based on the query. We then use those returned relevant documents to
+pass as context to the `loadQAMapReduceChain`. This function loads the `MapReduceDocumentsChain` and passes the relevant documents as context to the chain
+after mapping over all to reduce to just the necessary context.
+
+<CodeBlock language="typescript">{RetrievalQAExampleCustom}</CodeBlock>
+
+import RetrievalQARunnableExampleSources from "@examples/chains/retrieval_qa_sources.ts";
+
+## Return Source Documents
+
+Additionally, we can create a custom function which returns the documents used as context when querying the LLM.
+
+<CodeBlock language="typescript">{RetrievalQARunnableExampleSources}</CodeBlock>

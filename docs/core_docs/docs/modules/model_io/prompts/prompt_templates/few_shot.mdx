@@ -1,0 +1,294 @@
+# Few Shot Prompt Templates
+
+Few shot prompting is a prompting technique which provides the Large Language Model (LLM) with a list of examples, and then asks the LLM to generate some text following the lead of the examples provided.
+
+An example of this is the following:
+
+Say you want your LLM to respond in a specific format. You can few shot prompt the LLM with a list of question answer pairs so it knows what format to respond in.
+
+```txt
+Respond to the users question in the with the following format:
+
+Question: What is your name?
+Answer: My name is John.
+
+Question: What is your age?
+Answer: I am 25 years old.
+
+Question: What is your favorite color?
+Answer:
+```
+
+Here we left the last `Answer:` undefined so the LLM can fill it in. The LLM will then generate the following:
+
+```txt
+Answer: I don't have a favorite color; I don't have preferences.
+```
+
+### Use Case
+
+In the following example we're few shotting the LLM to rephrase questions into more general queries.
+
+We provide two sets of examples with specific questions, and rephrased general questions. The `FewShotChatMessagePromptTemplate` will use our examples and when `.format` is called, we'll see those examples formatted into a string we can pass to the LLM.
+
+```typescript
+import {
+  ChatPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examples = [
+  {
+    input: "Could the members of The Police perform lawful arrests?",
+    output: "what can the members of The Police do?",
+  },
+  {
+    input: "Jan Sindel's was born in what country?",
+    output: "what is Jan Sindel's personal history?",
+  },
+];
+const examplePrompt = ChatPromptTemplate.fromTemplate(`Human: {input}
+AI: {output}`);
+const fewShotPrompt = new FewShotChatMessagePromptTemplate({
+  examplePrompt,
+  examples,
+  inputVariables: [], // no input variables
+});
+```
+
+```typescript
+const formattedPrompt = await fewShotPrompt.format({});
+console.log(formattedPrompt);
+```
+
+```typescript
+[
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: 'Human: Could the members of The Police perform lawful arrests?\n' +
+      'AI: what can the members of The Police do?',
+    additional_kwargs: {}
+  },
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: "Human: Jan Sindel's was born in what country?\n" +
+      "AI: what is Jan Sindel's personal history?",
+    additional_kwargs: {}
+  }
+]
+```
+
+Then, if we use this with another question, the LLM will rephrase the question how we want.
+
+```typescript
+import { ChatOpenAI } from "langchain/chat_models/openai";
+```
+
+```typescript
+const model = new ChatOpenAI({});
+const examples = [
+  {
+    input: "Could the members of The Police perform lawful arrests?",
+    output: "what can the members of The Police do?",
+  },
+  {
+    input: "Jan Sindel's was born in what country?",
+    output: "what is Jan Sindel's personal history?",
+  },
+];
+const examplePrompt = ChatPromptTemplate.fromTemplate(`Human: {input}
+AI: {output}`);
+const fewShotPrompt = new FewShotChatMessagePromptTemplate({
+  prefix:
+    "Rephrase the users query to be more general, using the following examples",
+  suffix: "Human: {input}",
+  examplePrompt,
+  examples,
+  inputVariables: ["input"],
+});
+const formattedPrompt = await fewShotPrompt.format({
+  input: "What's France's main city?",
+});
+
+const response = await model.invoke(formattedPrompt);
+console.log(response);
+```
+
+```typescript
+AIMessage {
+  lc_namespace: [ 'langchain', 'schema' ],
+  content: 'What is the capital of France?',
+  additional_kwargs: { function_call: undefined }
+}
+```
+
+### Few Shotting With Functions
+
+You can also partial with a function. The use case for this is when you have a variable you know that you always want to fetch in a common way. A prime example of this is with date or time. Imagine you have a prompt which you always want to have the current date. You can't hard code it in the prompt, and passing it along with the other input variables can be tedious. In this case, it's very handy to be able to partial the prompt with a function that always returns the current date.
+
+```typescript
+const getCurrentDate = () => {
+  return new Date().toISOString();
+};
+
+const prompt = new FewShotChatMessagePromptTemplate({
+  template: "Tell me a {adjective} joke about the day {date}",
+  inputVariables: ["adjective", "date"],
+});
+
+const partialPrompt = await prompt.partial({
+  date: getCurrentDate,
+});
+
+const formattedPrompt = await partialPrompt.format({
+  adjective: "funny",
+});
+
+console.log(formattedPrompt);
+
+// Tell me a funny joke about the day 2023-07-13T00:54:59.287Z
+```
+
+### Few Shot vs Chat Few Shot
+
+The chat and non chat few shot prompt templates act in a similar way. The below example will demonstrate using chat and non chat, and the differences with their outputs.
+
+```typescript
+import {
+  FewShotPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examples = [
+  {
+    input: "Could the members of The Police perform lawful arrests?",
+    output: "what can the members of The Police do?",
+  },
+  {
+    input: "Jan Sindel's was born in what country?",
+    output: "what is Jan Sindel's personal history?",
+  },
+];
+const prompt = `Human: {input}
+AI: {output}`;
+const examplePromptTemplate = PromptTemplate.fromTemplate(prompt);
+const exampleChatPromptTemplate = ChatPromptTemplate.fromTemplate(prompt);
+const chatFewShotPrompt = new FewShotChatMessagePromptTemplate({
+  examplePrompt: exampleChatPromptTemplate,
+  examples,
+  inputVariables: [], // no input variables
+});
+const fewShotPrompt = new FewShotPromptTemplate({
+  examplePrompt: examplePromptTemplate,
+  examples,
+  inputVariables: [], // no input variables
+});
+```
+
+```typescript
+console.log("Chat Few Shot: ", await chatFewShotPrompt.formatMessages({}));
+/**
+Chat Few Shot:  [
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: 'Human: Could the members of The Police perform lawful arrests?\n' +
+      'AI: what can the members of The Police do?',
+    additional_kwargs: {}
+  },
+  HumanMessage {
+    lc_namespace: [ 'langchain', 'schema' ],
+    content: "Human: Jan Sindel's was born in what country?\n" +
+      "AI: what is Jan Sindel's personal history?",
+    additional_kwargs: {}
+  }
+]
+ */
+```
+
+```typescript
+console.log("Few Shot: ", await fewShotPrompt.formatPromptValue({}));
+/**
+Few Shot:
+
+Human: Could the members of The Police perform lawful arrests?
+AI: what can the members of The Police do?
+
+Human: Jan Sindel's was born in what country?
+AI: what is Jan Sindel's personal history?
+ */
+```
+
+Here we can see the main distinctions between `FewShotChatMessagePromptTemplate` and `FewShotPromptTemplate`: input and output values.
+
+`FewShotChatMessagePromptTemplate` works by taking in a list of `ChatPromptTemplate` for examples, and its output is a list of instances of `BaseMessage`.
+
+On the other hand, `FewShotPromptTemplate` works by taking in a `PromptTemplate` for examples, and its output is a string.
+
+## With Non Chat Models
+
+LangChain also provides a class for few shot prompt formatting for non chat models: `FewShotPromptTemplate`. The API is largely the same, but the output is formatted differently (chat messages vs strings).
+
+### Partials With Functions
+
+```typescript
+import {
+  ChatPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examplePrompt = PromptTemplate.fromTemplate("{foo}{bar}");
+const prompt = new FewShotPromptTemplate({
+  prefix: "{foo}{bar}",
+  examplePrompt,
+  inputVariables: ["foo", "bar"],
+});
+const partialPrompt = await prompt.partial({
+  foo: () => Promise.resolve("boo"),
+});
+const formatted = await partialPrompt.format({ bar: "baz" });
+console.log(formatted);
+```
+
+```txt
+boobaz\n
+```
+
+### With Functions and Example Selector
+
+```typescript
+import {
+  ChatPromptTemplate,
+  FewShotChatMessagePromptTemplate,
+} from "langchain/prompts";
+```
+
+```typescript
+const examplePrompt = PromptTemplate.fromTemplate("An example about {x}");
+const exampleSelector = await LengthBasedExampleSelector.fromExamples(
+  [{ x: "foo" }, { x: "bar" }],
+  { examplePrompt, maxLength: 200 }
+);
+const prompt = new FewShotPromptTemplate({
+  prefix: "{foo}{bar}",
+  exampleSelector,
+  examplePrompt,
+  inputVariables: ["foo", "bar"],
+});
+const partialPrompt = await prompt.partial({
+  foo: () => Promise.resolve("boo"),
+});
+const formatted = await partialPrompt.format({ bar: "baz" });
+console.log(formatted);
+```
+
+```txt
+boobaz
+An example about foo
+An example about bar
+```

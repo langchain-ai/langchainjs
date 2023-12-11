@@ -1,0 +1,64 @@
+---
+sidebar_class_name: node-only
+---
+
+# Convex
+
+LangChain.js supports [Convex](https://convex.dev/) as a [vector store](https://docs.convex.dev/vector-search), and supports the standard similarity search.
+
+## Setup
+
+### Create project
+
+Get a working [Convex](https://docs.convex.dev/) project set up, for example by using:
+
+```bash
+npm create convex@latest
+```
+
+### Add database accessors
+
+Add query and mutation helpers to `convex/langchain/db.ts`:
+
+```ts title="convex/langchain/db.ts"
+export * from "langchain/util/convex";
+```
+
+### Configure your schema
+
+Set up your schema (for vector indexing):
+
+```ts title="convex/schema.ts"
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  documents: defineTable({
+    embedding: v.array(v.number()),
+    text: v.string(),
+    metadata: v.any(),
+  }).vectorIndex("byEmbedding", {
+    vectorField: "embedding",
+    dimensions: 1536,
+  }),
+});
+```
+
+## Usage
+
+### Ingestion
+
+import CodeBlock from "@theme/CodeBlock";
+import Ingestion from "@examples/indexes/vector_stores/convex/fromTexts.ts";
+
+<CodeBlock language="typescript" title="convex/myActions.ts">
+  {Ingestion}
+</CodeBlock>
+
+### Search
+
+import Search from "@examples/indexes/vector_stores/convex/search.ts";
+
+<CodeBlock language="typescript" title="convex/myActions.ts">
+  {Search}
+</CodeBlock>

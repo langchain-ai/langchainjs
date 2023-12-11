@@ -7,7 +7,6 @@ import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   BaseChatPromptTemplate,
-  BasePromptTemplate,
   SerializedBasePromptTemplate,
   renderTemplate,
 } from "langchain/prompts";
@@ -50,7 +49,7 @@ class CustomPromptTemplate extends BaseChatPromptTemplate {
   }
 
   _getPromptType(): string {
-    throw new Error("Not implemented");
+    return "chat";
   }
 
   async formatMessages(values: InputValues): Promise<BaseMessage[]> {
@@ -146,7 +145,7 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.invoke({ input });
 
   console.log(`Got output ${result.output}`);
 };

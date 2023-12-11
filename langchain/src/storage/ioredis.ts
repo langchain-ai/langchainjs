@@ -6,9 +6,33 @@ import { BaseStore } from "../schema/storage.js";
  * Class that extends the BaseStore class to interact with a Redis
  * database. It provides methods for getting, setting, and deleting data,
  * as well as yielding keys from the database.
+ * @example
+ * ```typescript
+ * const store = new RedisByteStore({ client: new Redis({}) });
+ * await store.mset([
+ *   [
+ *     "message:id:0",
+ *     new TextEncoder().encode(JSON.stringify(new AIMessage("ai stuff..."))),
+ *   ],
+ *   [
+ *     "message:id:1",
+ *     new TextEncoder().encode(
+ *       JSON.stringify(new HumanMessage("human stuff...")),
+ *     ),
+ *   ],
+ * ]);
+ * const retrievedMessages = await store.mget(["message:id:0", "message:id:1"]);
+ * console.log(retrievedMessages.map((v) => new TextDecoder().decode(v)));
+ * const yieldedKeys = [];
+ * for await (const key of store.yieldKeys("message:id:")) {
+ *   yieldedKeys.push(key);
+ * }
+ * console.log(yieldedKeys);
+ * await store.mdelete(yieldedKeys);
+ * ```
  */
 export class RedisByteStore extends BaseStore<string, Uint8Array> {
-  lc_namespace = ["langchain", "storage", "ioredis"];
+  lc_namespace = ["langchain", "storage"];
 
   protected client: Redis;
 
@@ -56,11 +80,11 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
   async mget(keys: string[]) {
     const prefixedKeys = keys.map(this._getPrefixedKey.bind(this));
     const retrievedValues = await this.client.mgetBuffer(prefixedKeys);
-    return retrievedValues.map((key) => {
-      if (!key) {
+    return retrievedValues.map((value) => {
+      if (!value) {
         return undefined;
       } else {
-        return key;
+        return value;
       }
     });
   }
@@ -104,7 +128,8 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
   async *yieldKeys(prefix?: string): AsyncGenerator<string> {
     let pattern;
     if (prefix) {
-      pattern = this._getPrefixedKey(prefix);
+      const wildcardPrefix = prefix.endsWith("*") ? prefix : `${prefix}*`;
+      pattern = this._getPrefixedKey(wildcardPrefix);
     } else {
       pattern = this._getPrefixedKey("*");
     }

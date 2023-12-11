@@ -40,6 +40,16 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
  * Class for generating embeddings using the OpenAI API. Extends the
  * Embeddings class and implements OpenAIEmbeddingsParams and
  * AzureOpenAIInput.
+ * @example
+ * ```typescript
+ * // Embed a query using OpenAIEmbeddings to generate embeddings for a given text
+ * const model = new OpenAIEmbeddings();
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?",
+ * );
+ * console.log({ res });
+ *
+ * ```
  */
 export class OpenAIEmbeddings
   extends Embeddings
@@ -63,6 +73,8 @@ export class OpenAIEmbeddings
 
   azureOpenAIBasePath?: string;
 
+  organization?: string;
+
   private client: OpenAIClient;
 
   private clientConfig: ClientOptions;
@@ -72,6 +84,7 @@ export class OpenAIEmbeddings
       Partial<AzureOpenAIInput> & {
         verbose?: boolean;
         openAIApiKey?: string;
+        configuration?: ClientOptions;
       },
     configuration?: ClientOptions & LegacyOpenAIInput
   ) {
@@ -108,6 +121,10 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
+    this.organization =
+      fieldsWithDefaults?.configuration?.organization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION");
+
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize =
       fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
@@ -135,11 +152,13 @@ export class OpenAIEmbeddings
 
     this.clientConfig = {
       apiKey,
+      organization: this.organization,
       baseURL: configuration?.basePath,
       dangerouslyAllowBrowser: true,
       defaultHeaders: configuration?.baseOptions?.headers,
       defaultQuery: configuration?.baseOptions?.params,
       ...configuration,
+      ...fields?.configuration,
     };
   }
 

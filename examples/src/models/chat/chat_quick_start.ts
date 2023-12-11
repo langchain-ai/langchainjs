@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage } from "langchain/schema";
 
-const chat = new ChatOpenAI();
+const chat = new ChatOpenAI({});
 // Pass in a list of messages to `call` to start a conversation. In this simple example, we only pass in one message.
 const response = await chat.call([
   new HumanMessage(

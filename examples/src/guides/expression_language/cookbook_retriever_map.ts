@@ -4,7 +4,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { Document } from "langchain/document";
+import { formatDocumentsAsString } from "langchain/util/document";
 
 const model = new ChatOpenAI({});
 
@@ -28,9 +28,6 @@ type LanguageChainInput = {
   language: string;
 };
 
-const serializeDocs = (docs: Document[]) =>
-  docs.map((doc) => doc.pageContent).join("\n");
-
 const languageChain = RunnableSequence.from([
   {
     // Every property in the map receives the same input,
@@ -39,7 +36,7 @@ const languageChain = RunnableSequence.from([
     context: RunnableSequence.from([
       (input: LanguageChainInput) => input.question,
       retriever,
-      serializeDocs,
+      formatDocumentsAsString,
     ]),
     question: (input: LanguageChainInput) => input.question,
     language: (input: LanguageChainInput) => input.language,

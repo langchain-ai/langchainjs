@@ -1,0 +1,128 @@
+# Agents
+
+You can pass a Runnable into an agent.
+
+Building an agent from a runnable usually involves a few things:
+
+1. Data processing for the intermediate steps (`agent_scratchpad`). These need to represented in a way that the language model can recognize them. This should be pretty tightly coupled to the instructions in the prompt. For this reason, in the below example with an XML agent, we use the built in util `formatXml` to format the steps as XML.
+
+2. The prompt itself. Below, this is the default XML agent prompt, which includes variables for the tool list and user question. It also contains examples of inputs and outputs for the agent to learn from.
+
+3. The model, complete with stop tokens if needed (in our case, needed).
+
+4. The output parser - should be in sync with how the prompt specifies things to be formatted. In our case, we'll continue with the theme of XML and use the default `XMLAgentOutputParser`
+
+```typescript
+import { AgentExecutor } from "langchain/agents";
+import { formatXml } from "langchain/agents/format_scratchpad/xml";
+import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { ChatPromptTemplate } from "langchain/prompts";
+import { AgentStep } from "langchain/schema";
+import { RunnableSequence } from "langchain/schema/runnable";
+import { Tool, ToolParams } from "langchain/tools";
+import { renderTextDescription } from "langchain/tools/render";
+```
+
+```typescript
+// Define the model with stop tokens.
+const model = new ChatAnthropic({ temperature: 0 }).bind({
+  stop: ["</tool_input>", "</final_answer>"],
+});
+```
+
+For this example we'll define a custom tool for simplicity. You may use our built in tools, or define tools yourself, following the format you see below.
+
+```typescript
+class SearchTool extends Tool {
+  static lc_name() {
+    return "SearchTool";
+  }
+
+  name = "search-tool";
+
+  description = "This tool preforms a search about things and whatnot.";
+
+  constructor(config?: ToolParams) {
+    super(config);
+  }
+
+  async _call(_: string) {
+    return "32 degrees";
+  }
+}
+
+const tools = [new SearchTool()];
+```
+
+```typescript
+const template = `You are a helpful assistant. Help the user answer any questions.
+
+You have access to the following tools:
+
+{tools}
+
+In order to use a tool, you can use <tool></tool> and <tool_input></tool_input> tags. \
+You will then get back a response in the form <observation></observation>
+For example, if you have a tool called 'search' that could run a google search, in order to search for the weather in SF you would respond:
+
+<tool>search</tool><tool_input>weather in SF</tool_input>
+<observation>64 degrees</observation>
+
+When you are done, respond with a final answer between <final_answer></final_answer>. For example:
+
+<final_answer>The weather in SF is 64 degrees</final_answer>
+
+Begin!
+
+Question: {input}`;
+```
+
+```typescript
+const prompt = ChatPromptTemplate.fromMessages([
+  ["human", template],
+  ["ai", "{agent_scratchpad}"],
+]);
+
+const outputParser = new XMLAgentOutputParser();
+```
+
+```typescript
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i: { input: string; tools: Tool[]; steps: AgentStep[] }) => i.input,
+    tools: (i: { input: string; tools: Tool[]; steps: AgentStep[] }) =>
+      renderTextDescription(i.tools),
+    agent_scratchpad: (i: {
+      input: string;
+      tools: Tool[];
+      steps: AgentStep[];
+    }) => formatXml(i.steps),
+  },
+  prompt,
+  model,
+  outputParser,
+]);
+```
+
+```typescript
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+});
+```
+
+```typescript
+console.log("Loaded executor");
+
+const input = "What is the weather in SF?";
+console.log(`Calling executor with input: ${input}`);
+const response = await executor.invoke({ input, tools });
+console.log(response);
+```
+
+```txt
+Loaded executor
+Calling executor with input: What is the weather in SF?
+{ output: 'The weather in SF is 32 degrees' }
+```

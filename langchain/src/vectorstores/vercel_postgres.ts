@@ -9,7 +9,7 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
-type Metadata = Record<string, unknown>;
+type Metadata = Record<string, string | number | Record<"in", string[]>>;
 
 /**
  * Interface that defines the arguments required to create a
@@ -247,19 +247,43 @@ export class VercelPostgres extends VectorStore {
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
-    const _filter = filter ?? "{}";
+    const _filter: this["FilterType"] = filter ?? {};
+    const whereClauses = [];
+    const values = [embeddingString, k];
+    let paramCount = values.length;
+
+    for (const [key, value] of Object.entries(_filter)) {
+      if (typeof value === "object" && value !== null) {
+        const currentParamCount = paramCount;
+        const placeholders = value.in
+          .map((_, index) => `$${currentParamCount + index + 1}`)
+          .join(",");
+        whereClauses.push(
+          `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+        );
+        values.push(...value.in);
+        paramCount += value.in.length;
+      } else {
+        paramCount += 1;
+        whereClauses.push(
+          `${this.metadataColumnName}->>'${key}' = $${paramCount}`
+        );
+        values.push(value);
+      }
+    }
+
+    const whereClause = whereClauses.length
+      ? `WHERE ${whereClauses.join(" AND ")}`
+      : "";
 
     const queryString = `
-      SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
-      FROM ${this.tableName}
-      WHERE ${this.metadataColumnName} @> $2
-      ORDER BY "_distance" ASC
-      LIMIT $3;`;
+            SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
+            FROM ${this.tableName}
+            ${whereClause}
+            ORDER BY "_distance" ASC
+            LIMIT $2;`;
 
-    const documents = (
-      await this.client.query(queryString, [embeddingString, _filter, k])
-    ).rows;
-
+    const documents = (await this.client.query(queryString, values)).rows;
     const results = [] as [Document, number][];
     for (const doc of documents) {
       if (doc._distance != null && doc[this.contentColumnName] != null) {

@@ -1,0 +1,70 @@
+# Momento Vector Index (MVI)
+
+[MVI](https://gomomento.com): the most productive, easiest to use, serverless vector index for your data. To get started with MVI, simply sign up for an account. There's no need to handle infrastructure, manage servers, or be concerned about scaling. MVI is a service that scales automatically to meet your needs. Whether in Node.js, browser, or edge, Momento has you covered.
+
+To sign up and access MVI, visit the [Momento Console](https://console.gomomento.com).
+
+## Setup
+
+1. Sign up for an API key in the [Momento Console](https://console.gomomento.com/).
+2. Install the SDK for your environment.
+
+   2.1. For **Node.js**:
+
+   ```bash npm2yarn
+   npm install @gomomento/sdk
+   ```
+
+   2.2. For **browser or edge environments**:
+
+   ```bash npm2yarn
+   npm install @gomomento/sdk-web
+   ```
+
+3. Setup Env variables for Momento before running the code
+
+   3.1 OpenAI
+
+   ```bash
+   export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+   ```
+
+   3.2 Momento
+
+   ```bash
+   export MOMENTO_API_KEY=YOUR_MOMENTO_API_KEY_HERE # https://console.gomomento.com
+   ```
+
+import CodeBlock from "@theme/CodeBlock";
+
+## Usage
+
+### Index documents using `fromTexts` and search
+
+This example demonstrates using the `fromTexts` method to instantiate the vector store and index documents.
+If the index does not exist, then it will be created. If the index already exists, then the documents will be
+added to the existing index.
+
+The `ids` are optional; if you omit them, then Momento will generate UUIDs for you.
+
+import TextsExample from "@examples/indexes/vector_stores/momento_vector_index/fromTexts.ts";
+
+<CodeBlock language="typescript">{TextsExample}</CodeBlock>
+
+### Index documents using `fromDocuments` and search
+
+Similar to the above, this example demonstrates using the `fromDocuments` method to instantiate the vector store and index documents.
+If the index does not exist, then it will be created. If the index already exists, then the documents will be
+added to the existing index.
+
+Using `fromDocuments` allows you to seamlessly chain the various document loaders with indexing.
+
+import DocsExample from "@examples/indexes/vector_stores/momento_vector_index/fromDocs.ts";
+
+<CodeBlock language="typescript">{DocsExample}</CodeBlock>
+
+### Search from an existing collection
+
+import ExistingExample from "@examples/indexes/vector_stores/momento_vector_index/fromExisting.ts";
+
+<CodeBlock language="typescript">{ExistingExample}</CodeBlock>

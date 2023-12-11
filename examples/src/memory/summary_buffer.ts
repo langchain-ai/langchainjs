@@ -11,7 +11,7 @@ import {
 
 // summary buffer memory
 const memory = new ConversationSummaryBufferMemory({
-  llm: new OpenAI({ modelName: "text-davinci-003", temperature: 0 }),
+  llm: new OpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
   maxTokenLimit: 10,
 });
 

@@ -1,6 +1,5 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 
-import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
   AIMessage,
@@ -12,13 +11,13 @@ import {
   ChatMessageChunk,
   ChatResult,
   FunctionMessageChunk,
-  HumanMessage,
   HumanMessageChunk,
-  SystemMessage,
   SystemMessageChunk,
+  ToolMessage,
+  ToolMessageChunk,
 } from "../schema/index.js";
 import { StructuredTool } from "../tools/base.js";
-import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
+import { formatToOpenAITool } from "../tools/convert_to_openai.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -33,6 +32,10 @@ import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import { BaseFunctionCallOptions } from "../base_language/index.js";
 import { NewTokenIndices } from "../callbacks/base.js";
 import { wrapOpenAIClientError } from "../util/openai.js";
+import {
+  FunctionDef,
+  formatFunctionDefinitions,
+} from "../util/openai-format-fndef.js";
 
 export type { AzureOpenAIInput, OpenAICallOptions, OpenAIChatInput };
 
@@ -47,14 +50,20 @@ interface OpenAILLMOutput {
 }
 
 // TODO import from SDK when available
-type OpenAIRoleEnum = "system" | "assistant" | "user" | "function";
+type OpenAIRoleEnum = "system" | "assistant" | "user" | "function" | "tool";
+
+type OpenAICompletionParam =
+  OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
+type OpenAIFnDef = OpenAIClient.Chat.ChatCompletionCreateParams.Function;
+type OpenAIFnCallOption = OpenAIClient.Chat.ChatCompletionFunctionCallOption;
 
 function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
     message.role !== "system" &&
     message.role !== "assistant" &&
     message.role !== "user" &&
-    message.role !== "function"
+    message.role !== "function" &&
+    message.role !== "tool"
   ) {
     console.warn(`Unknown message role: ${message.role}`);
   }
@@ -73,6 +82,8 @@ function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
       return "user";
     case "function":
       return "function";
+    case "tool":
+      return "tool";
     case "generic": {
       if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
@@ -87,14 +98,11 @@ function openAIResponseToChatMessage(
   message: OpenAIClient.Chat.Completions.ChatCompletionMessage
 ): BaseMessage {
   switch (message.role) {
-    case "user":
-      return new HumanMessage(message.content || "");
     case "assistant":
       return new AIMessage(message.content || "", {
         function_call: message.function_call,
+        tool_calls: message.tool_calls,
       });
-    case "system":
-      return new SystemMessage(message.content || "");
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
@@ -112,6 +120,10 @@ function _convertDeltaToMessageChunk(
     additional_kwargs = {
       function_call: delta.function_call,
     };
+  } else if (delta.tool_calls) {
+    additional_kwargs = {
+      tool_calls: delta.tool_calls,
+    };
   } else {
     additional_kwargs = {};
   }
@@ -127,16 +139,40 @@ function _convertDeltaToMessageChunk(
       additional_kwargs,
       name: delta.name,
     });
+  } else if (role === "tool") {
+    return new ToolMessageChunk({
+      content,
+      additional_kwargs,
+      tool_call_id: delta.tool_call_id,
+    });
   } else {
     return new ChatMessageChunk({ content, role });
   }
 }
 
+function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
+  // TODO: Function messages do not support array content, fix cast
+  return messages.map(
+    (message) =>
+      ({
+        role: messageToOpenAIRole(message),
+        content: message.content,
+        name: message.name,
+        function_call: message.additional_kwargs.function_call,
+        tool_calls: message.additional_kwargs.tool_calls,
+        tool_call_id: (message as ToolMessage).tool_call_id,
+      } as OpenAICompletionParam)
+  );
+}
+
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredTool[];
+  tools?: StructuredTool[] | OpenAIClient.ChatCompletionTool[];
+  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
   promptIndex?: number;
+  response_format?: { type: "json_object" };
+  seed?: number;
 }
 
 /**
@@ -157,6 +193,21 @@ export interface ChatOpenAICallOptions
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
+ * @example
+ * ```typescript
+ * // Create a new instance of ChatOpenAI with specific temperature and model name settings
+ * const model = new ChatOpenAI({
+ *   temperature: 0.9,
+ *   modelName: "ft:gpt-3.5-turbo-0613:{ORG_NAME}::{MODEL_ID}",
+ * });
+ *
+ * // Invoke the model with a message and await the response
+ * const message = await model.invoke("Hi there!");
+ *
+ * // Log the response to the console
+ * console.log(message);
+ *
+ * ```
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
@@ -175,7 +226,10 @@ export class ChatOpenAI<
       "function_call",
       "functions",
       "tools",
+      "tool_choice",
       "promptIndex",
+      "response_format",
+      "seed",
     ];
   }
 
@@ -337,7 +391,20 @@ export class ChatOpenAI<
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
-    return {
+    function isStructuredToolArray(
+      tools?: unknown[]
+    ): tools is StructuredTool[] {
+      return (
+        tools !== undefined &&
+        tools.every((tool) =>
+          Array.isArray((tool as StructuredTool).lc_namespace)
+        )
+      );
+    }
+    const params: Omit<
+      OpenAIClient.Chat.ChatCompletionCreateParams,
+      "messages"
+    > = {
       model: this.modelName,
       temperature: this.temperature,
       top_p: this.topP,
@@ -349,14 +416,17 @@ export class ChatOpenAI<
       stop: options?.stop ?? this.stop,
       user: this.user,
       stream: this.streaming,
-      functions:
-        options?.functions ??
-        (options?.tools
-          ? options?.tools.map(formatToOpenAIFunction)
-          : undefined),
+      functions: options?.functions,
       function_call: options?.function_call,
+      tools: isStructuredToolArray(options?.tools)
+        ? options?.tools.map(formatToOpenAITool)
+        : options?.tools,
+      tool_choice: options?.tool_choice,
+      response_format: options?.response_format,
+      seed: options?.seed,
       ...this.modelKwargs,
     };
+    return params;
   }
 
   /** @ignore */
@@ -378,14 +448,8 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
-      messages.map((message) => ({
-        role: messageToOpenAIRole(message),
-        content: message.content,
-        name: message.name,
-        function_call: message.additional_kwargs
-          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-      }));
+    const messagesMapped: OpenAICompletionParam[] =
+      convertMessagesToOpenAIParams(messages);
     const params = {
       ...this.invocationParams(options),
       messages: messagesMapped,
@@ -400,12 +464,21 @@ export class ChatOpenAI<
       }
 
       const { delta } = choice;
+      if (!delta) {
+        continue;
+      }
       const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
         completion: choice.index ?? 0,
       };
+      if (typeof chunk.content !== "string") {
+        console.log(
+          "[WARNING]: Received non-string content from OpenAI. This is currently not supported."
+        );
+        continue;
+      }
       const generationChunk = new ChatGenerationChunk({
         message: chunk,
         text: chunk.content,
@@ -429,6 +502,7 @@ export class ChatOpenAI<
 
   /**
    * Get the identifying parameters for the model
+   *
    */
   identifyingParams() {
     return this._identifyingParams();
@@ -442,21 +516,11 @@ export class ChatOpenAI<
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     const params = this.invocationParams(options);
-    const messagesMapped: OpenAIClient.Chat.ChatCompletionMessageParam[] =
-      messages.map((message) => ({
-        role: messageToOpenAIRole(message),
-        content: message.content,
-        name: message.name,
-        function_call: message.additional_kwargs
-          .function_call as OpenAIClient.Chat.ChatCompletionMessage.FunctionCall,
-      }));
+    const messagesMapped: OpenAICompletionParam[] =
+      convertMessagesToOpenAIParams(messages);
 
     if (params.stream) {
-      const stream = await this._streamResponseChunks(
-        messages,
-        options,
-        runManager
-      );
+      const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
         const index =
@@ -470,7 +534,25 @@ export class ChatOpenAI<
       const generations = Object.entries(finalChunks)
         .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
         .map(([_, value]) => value);
-      return { generations };
+
+      const { functions, function_call } = this.invocationParams(options);
+
+      // OpenAI does not support token usage report under stream mode,
+      // fallback to estimation.
+
+      const promptTokenUsage = await this.getEstimatedTokenCountFromPrompt(
+        messages,
+        functions,
+        function_call
+      );
+      const completionTokenUsage = await this.getNumTokensFromGenerations(
+        generations
+      );
+
+      tokenUsage.promptTokens = promptTokenUsage;
+      tokenUsage.completionTokens = completionTokenUsage;
+      tokenUsage.totalTokens = promptTokenUsage + completionTokenUsage;
+      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     } else {
       const data = await this.completionWithRetry(
         {
@@ -523,19 +605,76 @@ export class ChatOpenAI<
     }
   }
 
-  async getNumTokensFromMessages(messages: BaseMessage[]): Promise<{
-    totalCount: number;
-    countPerMessage: number[];
-  }> {
+  /**
+   * Estimate the number of tokens a prompt will use.
+   * Modified from: https://github.com/hmarr/openai-chat-tokens/blob/main/src/index.ts
+   */
+  private async getEstimatedTokenCountFromPrompt(
+    messages: BaseMessage[],
+    functions?: OpenAIFnDef[],
+    function_call?: "none" | "auto" | OpenAIFnCallOption
+  ): Promise<number> {
+    // It appears that if functions are present, the first system message is padded with a trailing newline. This
+    // was inferred by trying lots of combinations of messages and functions and seeing what the token counts were.
+
+    let tokens = (await this.getNumTokensFromMessages(messages)).totalCount;
+
+    // If there are functions, add the function definitions as they count towards token usage
+    if (functions && function_call !== "auto") {
+      const promptDefinitions = formatFunctionDefinitions(
+        functions as unknown as FunctionDef[]
+      );
+      tokens += await this.getNumTokens(promptDefinitions);
+      tokens += 9; // Add nine per completion
+    }
+
+    // If there's a system message _and_ functions are present, subtract four tokens. I assume this is because
+    // functions typically add a system message, but reuse the first one if it's already there. This offsets
+    // the extra 9 tokens added by the function definitions.
+    if (functions && messages.find((m) => m._getType() === "system")) {
+      tokens -= 4;
+    }
+
+    // If function_call is 'none', add one token.
+    // If it's a FunctionCall object, add 4 + the number of tokens in the function name.
+    // If it's undefined or 'auto', don't add anything.
+    if (function_call === "none") {
+      tokens += 1;
+    } else if (typeof function_call === "object") {
+      tokens += (await this.getNumTokens(function_call.name)) + 4;
+    }
+
+    return tokens;
+  }
+
+  /**
+   * Estimate the number of tokens an array of generations have used.
+   */
+  private async getNumTokensFromGenerations(generations: ChatGeneration[]) {
+    const generationUsages = await Promise.all(
+      generations.map(async (generation) => {
+        if (generation.message.additional_kwargs?.function_call) {
+          return (await this.getNumTokensFromMessages([generation.message]))
+            .countPerMessage[0];
+        } else {
+          return await this.getNumTokens(generation.message.content);
+        }
+      })
+    );
+
+    return generationUsages.reduce((a, b) => a + b, 0);
+  }
+
+  async getNumTokensFromMessages(messages: BaseMessage[]) {
     let totalCount = 0;
     let tokensPerMessage = 0;
     let tokensPerName = 0;
 
     // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
-    if (getModelNameForTiktoken(this.modelName) === "gpt-3.5-turbo") {
+    if (this.modelName === "gpt-3.5-turbo-0301") {
       tokensPerMessage = 4;
       tokensPerName = -1;
-    } else if (getModelNameForTiktoken(this.modelName).startsWith("gpt-4")) {
+    } else {
       tokensPerMessage = 3;
       tokensPerName = 1;
     }
@@ -548,7 +687,31 @@ export class ChatOpenAI<
           message.name !== undefined
             ? tokensPerName + (await this.getNumTokens(message.name))
             : 0;
-        const count = textCount + tokensPerMessage + roleCount + nameCount;
+        let count = textCount + tokensPerMessage + roleCount + nameCount;
+
+        // From: https://github.com/hmarr/openai-chat-tokens/blob/main/src/index.ts messageTokenEstimate
+        const openAIMessage = message;
+        if (openAIMessage._getType() === "function") {
+          count -= 2;
+        }
+        if (openAIMessage.additional_kwargs?.function_call) {
+          count += 3;
+        }
+        if (openAIMessage?.additional_kwargs.function_call?.name) {
+          count += await this.getNumTokens(
+            openAIMessage.additional_kwargs.function_call?.name
+          );
+        }
+        if (openAIMessage.additional_kwargs.function_call?.arguments) {
+          count += await this.getNumTokens(
+            // Remove newlines and spaces
+            JSON.stringify(
+              JSON.parse(
+                openAIMessage.additional_kwargs.function_call?.arguments
+              )
+            )
+          );
+        }
 
         totalCount += count;
         return count;
@@ -723,7 +886,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _convertMessageToDict = (message: BaseMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let messageDict: OpenAIClient.Chat.ChatCompletionMessageParam;
+      let messageDict: any;
 
       if (message._getType() === "human") {
         messageDict = { role: "user", content: message.content };
@@ -739,7 +902,8 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
             | "system"
             | "assistant"
             | "user"
-            | "function",
+            | "function"
+            | "tool",
           content: message.content,
         };
       } else {

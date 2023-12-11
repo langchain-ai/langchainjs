@@ -15,7 +15,18 @@ const entrypoints = {
   "agents/load": "agents/load",
   "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
+  "agents/toolkits/connery": "agents/toolkits/connery/index",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
+  "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
+  "agents/format_scratchpad/openai_tools":
+    "agents/format_scratchpad/openai_tools",
+  "agents/format_scratchpad/log": "agents/format_scratchpad/log",
+  "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
+  "agents/format_scratchpad/log_to_message":
+    "agents/format_scratchpad/log_to_message",
+  "agents/react/output_parser": "agents/react/output_parser",
+  "agents/xml/output_parser": "agents/xml/output_parser",
+  "agents/openai/output_parser": "agents/openai/output_parser",
   // base language
   base_language: "base_language/index",
   // tools
@@ -23,11 +34,16 @@ const entrypoints = {
   "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
+  "tools/connery": "tools/connery",
+  "tools/render": "tools/render",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
+  "tools/gmail": "tools/gmail/index",
   "tools/google_calendar": "tools/google_calendar/index",
+  "tools/google_places": "tools/google_places",
   // chains
   chains: "chains/index",
+  "chains/combine_documents/reduce": "chains/combine_documents/reduce",
   "chains/load": "chains/load",
   "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
@@ -49,40 +65,56 @@ const entrypoints = {
   "embeddings/googlevertexai": "embeddings/googlevertexai",
   "embeddings/googlepalm": "embeddings/googlepalm",
   "embeddings/minimax": "embeddings/minimax",
+  "embeddings/voyage": "embeddings/voyage",
+  "embeddings/llama_cpp": "embeddings/llama_cpp",
+  "embeddings/gradient_ai": "embeddings/gradient_ai",
   // llms
   "llms/load": "llms/load",
   "llms/base": "llms/base",
   "llms/openai": "llms/openai",
   "llms/ai21": "llms/ai21",
   "llms/aleph_alpha": "llms/aleph_alpha",
+  "llms/cloudflare_workersai": "llms/cloudflare_workersai",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/raycast": "llms/raycast",
   "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
+  "llms/fireworks": "llms/fireworks",
   "llms/googlevertexai": "llms/googlevertexai/index",
   "llms/googlevertexai/web": "llms/googlevertexai/web",
   "llms/googlepalm": "llms/googlepalm",
-  "llms/fireworks": "llms/fireworks",
+  "llms/gradient_ai": "llms/gradient_ai",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
-  "llms/bedrock": "llms/bedrock",
+  "llms/watsonx_ai": "llms/watsonx_ai",
+  "llms/bedrock": "llms/bedrock/index",
+  "llms/bedrock/web": "llms/bedrock/web",
   "llms/llama_cpp": "llms/llama_cpp",
   "llms/writer": "llms/writer",
+  "llms/portkey": "llms/portkey",
+  "llms/yandex": "llms/yandex",
+  "llms/fake": "llms/fake",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
   // vectorstores
+  "vectorstores/clickhouse": "vectorstores/clickhouse",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/cassandra": "vectorstores/cassandra",
+  "vectorstores/convex": "vectorstores/convex",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/cloudflare_vectorize": "vectorstores/cloudflare_vectorize",
+  "vectorstores/closevector/web": "vectorstores/closevector/web",
+  "vectorstores/closevector/node": "vectorstores/closevector/node",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/googlevertexai": "vectorstores/googlevertexai",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
   "vectorstores/lancedb": "vectorstores/lancedb",
+  "vectorstores/momento_vector_index": "vectorstores/momento_vector_index",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -91,10 +123,12 @@ const entrypoints = {
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/pgvector": "vectorstores/pgvector",
   "vectorstores/milvus": "vectorstores/milvus",
+  "vectorstores/neo4j_vector": "vectorstores/neo4j_vector",
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/rockset": "vectorstores/rockset",
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
@@ -143,6 +177,7 @@ const entrypoints = {
   "document_loaders/web/youtube": "document_loaders/web/youtube",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
+  "document_loaders/fs/chatgpt": "document_loaders/fs/chatgpt",
   "document_loaders/fs/text": "document_loaders/fs/text",
   "document_loaders/fs/json": "document_loaders/fs/json",
   "document_loaders/fs/srt": "document_loaders/fs/srt",
@@ -151,9 +186,11 @@ const entrypoints = {
   "document_loaders/fs/epub": "document_loaders/fs/epub",
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
+  "document_loaders/fs/obsidian": "document_loaders/fs/obsidian",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   "document_loaders/fs/openai_whisper_audio":
     "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/pptx": "document_loaders/fs/pptx",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/mozilla_readability":
@@ -163,19 +200,28 @@ const entrypoints = {
   // chat_models
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
+  "chat_models/portkey": "chat_models/portkey",
   "chat_models/anthropic": "chat_models/anthropic",
-  "chat_models/bedrock": "chat_models/bedrock",
+  "chat_models/bedrock": "chat_models/bedrock/index",
+  "chat_models/bedrock/web": "chat_models/bedrock/web",
+  "chat_models/cloudflare_workersai": "chat_models/cloudflare_workersai",
   "chat_models/googlevertexai": "chat_models/googlevertexai/index",
   "chat_models/googlevertexai/web": "chat_models/googlevertexai/web",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/fireworks": "chat_models/fireworks",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
+  "chat_models/iflytek_xinghuo": "chat_models/iflytek_xinghuo/index",
+  "chat_models/iflytek_xinghuo/web": "chat_models/iflytek_xinghuo/web",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
+  "chat_models/llama_cpp": "chat_models/llama_cpp",
+  "chat_models/yandex": "chat_models/yandex",
+  "chat_models/fake": "chat_models/fake",
   // schema
   schema: "schema/index",
   "schema/document": "schema/document",
   "schema/output_parser": "schema/output_parser",
+  "schema/prompt_template": "schema/prompt_template",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
   "schema/runnable": "schema/runnable/index",
@@ -215,6 +261,7 @@ const entrypoints = {
   "retrievers/self_query/pinecone": "retrievers/self_query/pinecone",
   "retrievers/self_query/supabase": "retrievers/self_query/supabase",
   "retrievers/self_query/weaviate": "retrievers/self_query/weaviate",
+  "retrievers/self_query/vectara": "retrievers/self_query/vectara",
   "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
@@ -222,12 +269,15 @@ const entrypoints = {
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
   "cache/ioredis": "cache/ioredis",
+  "cache/file_system": "cache/file_system",
   "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
   "stores/doc/gcs": "stores/doc/gcs",
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/cassandra": "stores/message/cassandra",
+  "stores/message/convex": "stores/message/convex",
   "stores/message/cloudflare_d1": "stores/message/cloudflare_d1",
   "stores/message/in_memory": "stores/message/in_memory",
   "stores/message/dynamodb": "stores/message/dynamodb",
@@ -240,15 +290,26 @@ const entrypoints = {
   "stores/message/planetscale": "stores/message/planetscale",
   "stores/message/xata": "stores/message/xata",
   // storage
+  "storage/convex": "storage/convex",
+  "storage/encoder_backed": "storage/encoder_backed",
   "storage/in_memory": "storage/in_memory",
   "storage/ioredis": "storage/ioredis",
+  "storage/vercel_kv": "storage/vercel_kv",
+  "storage/upstash_redis": "storage/upstash_redis",
+  "storage/file_system": "storage/file_system",
+  // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub
   hub: "hub",
   // utilities
+  "util/convex": "util/convex",
+  "util/document": "util/document",
   "util/math": "util/math",
+  "util/time": "util/time",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
+  "experimental/openai_assistant": "experimental/openai_assistant/index",
+  "experimental/openai_files": "experimental/openai_files/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
@@ -256,14 +317,21 @@ const entrypoints = {
     "experimental/multimodal_embeddings/googlevertexai",
   "experimental/chat_models/anthropic_functions":
     "experimental/chat_models/anthropic_functions",
-  "experimental/chat_models/bittensor":
-    "experimental/chat_models/bittensor",
-  "experimental/llms/bittensor":
-    "experimental/llms/bittensor",
+  "experimental/chat_models/bittensor": "experimental/chat_models/bittensor",
+  "experimental/chat_models/ollama_functions":
+    "experimental/chat_models/ollama_functions",
+  "experimental/llms/bittensor": "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub":
     "experimental/hubs/makersuite/googlemakersuitehub",
+  "experimental/chains/violation_of_expectations":
+    "experimental/chains/violation_of_expectations/index",
+  "experimental/masking": "experimental/masking/index",
+  "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
   evaluation: "evaluation/index",
+  // runnables
+  runnables: "runnables/index",
+  "runnables/remote": "runnables/remote",
 };
 
 // Entrypoints in this list will
@@ -290,6 +358,7 @@ const requiresOptionalDependency = [
   "tools/sql",
   "tools/webbrowser",
   "tools/google_calendar",
+  "tools/gmail",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
@@ -302,22 +371,33 @@ const requiresOptionalDependency = [
   "embeddings/tensorflow",
   "embeddings/hf",
   "embeddings/hf_transformers",
+  "embeddings/llama_cpp",
+  "embeddings/gradient_ai",
   "llms/load",
   "llms/cohere",
   "llms/googlevertexai",
   "llms/googlevertexai/web",
   "llms/googlepalm",
+  "llms/gradient_ai",
   "llms/hf",
   "llms/raycast",
   "llms/replicate",
   "llms/sagemaker_endpoint",
+  "llms/watsonx_ai",
   "llms/bedrock",
+  "llms/bedrock/web",
   "llms/llama_cpp",
   "llms/writer",
+  "llms/portkey",
   "prompts/load",
   "vectorstores/analyticdb",
+  "vectorstores/cassandra",
+  "vectorstores/clickhouse",
   "vectorstores/chroma",
   "vectorstores/cloudflare_vectorize",
+  "vectorstores/closevector/web",
+  "vectorstores/closevector/node",
+  "vectorstores/convex",
   "vectorstores/googlevertexai",
   "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
@@ -325,6 +405,7 @@ const requiresOptionalDependency = [
   "vectorstores/weaviate",
   "vectorstores/lancedb",
   "vectorstores/mongo",
+  "vectorstores/momento_vector_index",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",
   "vectorstores/qdrant",
@@ -334,7 +415,9 @@ const requiresOptionalDependency = [
   "vectorstores/typeorm",
   "vectorstores/milvus",
   "vectorstores/myscale",
+  "vectorstores/neo4j_vector",
   "vectorstores/redis",
+  "vectorstores/rockset",
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
@@ -366,6 +449,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/youtube",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
+  "document_loaders/fs/chatgpt",
   "document_loaders/fs/text",
   "document_loaders/fs/json",
   "document_loaders/fs/srt",
@@ -374,14 +458,21 @@ const requiresOptionalDependency = [
   "document_loaders/fs/epub",
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
+  "document_loaders/fs/obsidian",
   "document_loaders/fs/unstructured",
   "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/pptx",
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/bedrock",
+  "chat_models/bedrock/web",
   "chat_models/googlevertexai",
   "chat_models/googlevertexai/web",
   "chat_models/googlepalm",
+  "chat_models/llama_cpp",
+  "chat_models/portkey",
+  "chat_models/iflytek_xinghuo",
+  "chat_models/iflytek_xinghuo/web",
   "sql_db",
   "retrievers/amazon_kendra",
   "retrievers/supabase",
@@ -393,6 +484,7 @@ const requiresOptionalDependency = [
   "retrievers/self_query/pinecone",
   "retrievers/self_query/supabase",
   "retrievers/self_query/weaviate",
+  "retrievers/self_query/vectara",
   "output_parsers/expression",
   "chains/query_constructor",
   "chains/query_constructor/ir",
@@ -400,10 +492,13 @@ const requiresOptionalDependency = [
   "cache/momento",
   "cache/redis",
   "cache/ioredis",
+  "cache/file_system",
   "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/cloudflare_d1",
+  "stores/message/cassandra",
+  "stores/message/convex",
   "stores/message/dynamodb",
   "stores/message/firestore",
   "stores/message/momento",
@@ -413,7 +508,11 @@ const requiresOptionalDependency = [
   "stores/message/upstash_redis",
   "stores/message/planetscale",
   "stores/message/xata",
+  "storage/convex",
+  "storage/file_system",
   "storage/ioredis",
+  "storage/vercel_kv",
+  "storage/upstash_redis",
   "graphs/neo4j_graph",
   // Prevent export due to circular dependency with "load" entrypoint
   "hub",
@@ -421,6 +520,8 @@ const requiresOptionalDependency = [
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub",
+  "experimental/tools/pyinterpreter",
+  "util/convex",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
@@ -472,15 +573,12 @@ const generateFiles = () => {
 };
 
 const updateConfig = () => {
-  // Update tsconfig.json `typedocOptions.entryPoints` field
-  updateJsonFile("./tsconfig.json", (json) => ({
+  // Update typedoc.json entryPoints field
+  updateJsonFile("../docs/api_refs/typedoc.json", (json) => ({
     ...json,
-    typedocOptions: {
-      ...json.typedocOptions,
-      entryPoints: [...Object.keys(entrypoints)]
-        .filter((key) => !deprecatedNodeOnly.includes(key))
-        .map((key) => `src/${entrypoints[key]}.ts`),
-    },
+    entryPoints: [...Object.keys(entrypoints)]
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .map((key) => `./langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();
@@ -569,7 +667,7 @@ const generateImportMap = () => {
   fs.writeFileSync(
     `../${pkg}/${importMapPath}`,
     "// Auto-generated by `scripts/create-entrypoints.js`. Do not edit manually.\n\n" +
-      contents
+    contents
   );
 };
 
@@ -591,17 +689,17 @@ const generateImportTypes = () => {
 
 export interface OptionalImportMap {
 ${Object.keys(entrypoints)
-  .filter((key) => !deprecatedNodeOnly.includes(key))
-  .filter((key) => requiresOptionalDependency.includes(key))
-  .map((key) => importStatement(key, entrypoints[key]))
-  .join("\n")}
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .filter((key) => requiresOptionalDependency.includes(key))
+      .map((key) => importStatement(key, entrypoints[key]))
+      .join("\n")}
 }
 
 export interface SecretMap {
 ${[...identifySecrets()]
-  .sort()
-  .map((secret) => `  ${secret}?: string;`)
-  .join("\n")}
+      .sort()
+      .map((secret) => `  ${secret}?: string;`)
+      .join("\n")}
 }
 `
   );
@@ -626,7 +724,7 @@ const generateImportConstants = () => {
   fs.writeFileSync(
     `../${pkg}/${importConstantsPath}`,
     "// Auto-generated by `scripts/create-entrypoints.js`. Do not edit manually.\n\nexport const optionalImportEntrypoints = [\n" +
-      contents
+    contents
   );
 };
 

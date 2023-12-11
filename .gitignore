@@ -5,6 +5,7 @@ lib/
 .turbo
 .eslintcache
 .env
+.env.local
 yarn-error.log
 docs/_dist/
 
@@ -33,3 +34,11 @@ Chinook_Sqlite.sql
 firebase-debug.log
 firestore-debug.log
 tmp/
+
+**/convex/.gitignore
+**/convex/tsconfig.json
+
+langchain/api_refs_docs_build/dist/**/*
+
+.docusaurus/
+docs/build/

@@ -33,6 +33,25 @@ export interface FirestoreDBChatMessageHistory {
 /**
  * Class for managing chat message history using Google's Firestore as a
  * storage backend. Extends the BaseListChatMessageHistory class.
+ * @example
+ * ```typescript
+ * const chatHistory = new FirestoreChatMessageHistory({
+ *   collectionName: "langchain",
+ *   sessionId: "lc-example",
+ *   userId: "a@example.com",
+ *   config: { projectId: "your-project-id" },
+ * });
+ *
+ * const chain = new ConversationChain({
+ *   llm: new ChatOpenAI(),
+ *   memory: new BufferMemory({ chatHistory }),
+ * });
+ *
+ * const response = await chain.invoke({
+ *   input: "What did I just say my name was?",
+ * });
+ * console.log({ response });
+ * ```
  */
 export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "firestore"];

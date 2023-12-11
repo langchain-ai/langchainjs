@@ -6,7 +6,7 @@ import {
   ICacheClient,
   InvalidArgumentError,
   CollectionTtl,
-} from "@gomomento/sdk";
+} from "@gomomento/sdk-core";
 import {
   BaseMessage,
   BaseListChatMessageHistory,
@@ -51,6 +51,24 @@ export interface MomentoChatMessageHistoryProps {
  * A class that stores chat message history using Momento Cache. It
  * interacts with a Momento cache client to perform operations like
  * fetching, adding, and deleting messages.
+ * @example
+ * ```typescript
+ * const chatHistory = await MomentoChatMessageHistory.fromProps({
+ *   client: new CacheClient({
+ *     configuration: Configurations.Laptop.v1(),
+ *     credentialProvider: CredentialProvider.fromEnvironmentVariable({
+ *       environmentVariableName: "MOMENTO_API_KEY",
+ *     }),
+ *     defaultTtlSeconds: 60 * 60 * 24,
+ *   }),
+ *   cacheName: "langchain",
+ *   sessionId: new Date().toISOString(),
+ *   sessionTtl: 300,
+ * });
+ *
+ * const messages = await chatHistory.getMessages();
+ * console.log({ messages });
+ * ```
  */
 export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "momento"];

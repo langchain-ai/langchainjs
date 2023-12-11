@@ -8,7 +8,6 @@ import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
-const _LANGCHAIN_DEFAULT_EMBEDDING_DIM = 1536;
 const _LANGCHAIN_DEFAULT_COLLECTION_NAME = "langchain_document";
 
 /**
@@ -46,7 +45,7 @@ export class AnalyticDBVectorStore extends VectorStore {
 
   private pool: Pool;
 
-  private embeddingDimension: number;
+  private embeddingDimension?: number;
 
   private collectionName: string;
 
@@ -68,8 +67,7 @@ export class AnalyticDBVectorStore extends VectorStore {
       user: args.connectionOptions.user,
       password: args.connectionOptions.password,
     });
-    this.embeddingDimension =
-      args.embeddingDimension || _LANGCHAIN_DEFAULT_EMBEDDING_DIM;
+    this.embeddingDimension = args.embeddingDimension;
     this.collectionName =
       args.collectionName || _LANGCHAIN_DEFAULT_COLLECTION_NAME;
     this.preDeleteCollection = args.preDeleteCollection || false;
@@ -91,6 +89,11 @@ export class AnalyticDBVectorStore extends VectorStore {
    * @returns Promise that resolves when the table and index are created.
    */
   async createTableIfNotExists(): Promise<void> {
+    if (!this.embeddingDimension) {
+      this.embeddingDimension = (
+        await this.embeddings.embedQuery("test")
+      ).length;
+    }
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
@@ -185,6 +188,11 @@ export class AnalyticDBVectorStore extends VectorStore {
     }
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and documents must have the same length`);
+    }
+    if (!this.embeddingDimension) {
+      this.embeddingDimension = (
+        await this.embeddings.embedQuery("test")
+      ).length;
     }
     if (vectors[0].length !== this.embeddingDimension) {
       throw new Error(

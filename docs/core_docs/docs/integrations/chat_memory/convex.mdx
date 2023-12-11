@@ -1,0 +1,61 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Convex Chat Memory
+
+For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory` for [Convex](https://convex.dev/).
+
+## Setup
+
+### Create project
+
+Get a working [Convex](https://docs.convex.dev/) project set up, for example by using:
+
+```bash
+npm create convex@latest
+```
+
+### Add database accessors
+
+Add query and mutation helpers to `convex/langchain/db.ts`:
+
+```ts title="convex/langchain/db.ts"
+export * from "langchain/util/convex";
+```
+
+### Configure your schema
+
+Set up your schema (for indexing):
+
+```ts title="convex/schema.ts"
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  messages: defineTable({
+    sessionId: v.string(),
+    message: v.object({
+      type: v.string(),
+      data: v.object({
+        content: v.string(),
+        role: v.optional(v.string()),
+        name: v.optional(v.string()),
+        additional_kwargs: v.optional(v.any()),
+      }),
+    }),
+  }).index("bySessionId", ["sessionId"]),
+});
+```
+
+## Usage
+
+Each chat history session stored in Convex must have a unique session id.
+
+import Example from "@examples/memory/convex/convex.ts";
+
+<CodeBlock language="typescript" title="convex/myActions.ts">
+  {Example}
+</CodeBlock>

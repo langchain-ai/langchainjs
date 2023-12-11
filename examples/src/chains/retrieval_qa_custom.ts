@@ -1,9 +1,9 @@
 import { OpenAI } from "langchain/llms/openai";
-import { RetrievalQAChain, loadQAMapReduceChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
+import { loadQAMapReduceChain } from "langchain/chains";
 
 // Initialize the LLM to use to answer the question.
 const model = new OpenAI({});
@@ -11,22 +11,24 @@ const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
 const docs = await textSplitter.createDocuments([text]);
 
-// Create a vector store from the documents.
-const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+const query = "What did the president say about Justice Breyer?";
 
-// Create a chain that uses a map reduce chain and HNSWLib vector store.
-const chain = new RetrievalQAChain({
-  combineDocumentsChain: loadQAMapReduceChain(model),
-  retriever: vectorStore.asRetriever(),
+// Create a vector store retriever from the documents.
+const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
+const retriever = vectorStore.asRetriever();
+
+const relevantDocs = await retriever.getRelevantDocuments(query);
+
+const mapReduceChain = loadQAMapReduceChain(model);
+
+const result = await mapReduceChain.invoke({
+  question: query,
+  input_documents: relevantDocs,
 });
-const res = await chain.call({
-  query: "What did the president say about Justice Breyer?",
-});
-console.log({ res });
+
+console.log({ result });
 /*
 {
-  res: {
-    text: " The president said that Justice Breyer has dedicated his life to serve his country, and thanked him for his service. He also said that Judge Ketanji Brown Jackson will continue Justice Breyer's legacy of excellence, emphasizing the importance of protecting the rights of citizens, especially women, LGBTQ+ Americans, and access to healthcare. He also expressed his commitment to supporting the younger transgender Americans in America and ensuring they are able to reach their full potential, offering a Unity Agenda for the Nation to beat the opioid epidemic and increase funding for prevention, treatment, harm reduction, and recovery."
-  }
+  result: " The President thanked Justice Breyer for his service and acknowledged him as one of the nation's top legal minds whose legacy of excellence will be continued."
 }
 */

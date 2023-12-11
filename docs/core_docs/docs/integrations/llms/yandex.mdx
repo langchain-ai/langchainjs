@@ -1,0 +1,21 @@
+# YandexGPT
+
+LangChain.js supports calling [YandexGPT](https://cloud.yandex.com/en/services/yandexgpt) LLMs.
+
+## Setup
+
+First, you should [create service account](https://cloud.yandex.com/en/docs/iam/operations/sa/create) with the `ai.languageModels.user` role.
+
+Next, you have two authentication options:
+
+- [IAM token](https://cloud.yandex.com/en/docs/iam/operations/iam-token/create-for-sa).
+  You can specify the token in a constructor parameter `iam_token` or in an environment variable `YC_IAM_TOKEN`.
+- [API key](https://cloud.yandex.com/en/docs/iam/operations/api-key/create)
+  You can specify the key in a constructor parameter `api_key` or in an environment variable `YC_API_KEY`.
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import YandexGPTExample from "@examples/models/llm/yandex.ts";
+
+<CodeBlock language="typescript">{YandexGPTExample}</CodeBlock>

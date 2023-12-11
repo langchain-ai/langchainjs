@@ -84,6 +84,18 @@ export interface StructuredChatOutputParserArgs {
  * and `OutputFixingParser` classes. It extends the
  * `AgentActionOutputParser` class and allows for retrying the output
  * parsing using the `OutputFixingParser` if it is provided.
+ * @example
+ * ```typescript
+ * const outputParser = new StructuredChatOutputParserWithRetries.fromLLM(
+ *   new ChatOpenAI({ temperature: 0 }),
+ *   {
+ *     toolNames: ["calculator", "random-number-generator"],
+ *   },
+ * );
+ * const result = await outputParser.parse(
+ *  "What is a random number between 5 and 10 raised to the second power?"
+ * );
+ * ```
  */
 export class StructuredChatOutputParserWithRetries extends AgentActionOutputParser {
   lc_namespace = ["langchain", "agents", "structured_chat"];

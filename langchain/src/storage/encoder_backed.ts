@@ -1,4 +1,5 @@
 import { BaseStore } from "../schema/storage.js";
+import { Document } from "../document.js";
 
 /**
  * Class that provides a layer of abstraction over the base storage,
@@ -10,7 +11,7 @@ export class EncoderBackedStore<K, V, SerializedType = any> extends BaseStore<
   K,
   V
 > {
-  lc_namespace = ["langchain", "storage", "encoder_backed"];
+  lc_namespace = ["langchain", "storage"];
 
   store: BaseStore<string, SerializedType>;
 
@@ -81,4 +82,21 @@ export class EncoderBackedStore<K, V, SerializedType = any> extends BaseStore<
   async *yieldKeys(prefix?: string | undefined): AsyncGenerator<string | K> {
     yield* this.store.yieldKeys(prefix);
   }
+}
+
+export function createDocumentStoreFromByteStore(
+  store: BaseStore<string, Uint8Array>
+) {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  return new EncoderBackedStore({
+    store,
+    keyEncoder: (key: string) => key,
+    valueSerializer: (doc: Document) =>
+      encoder.encode(
+        JSON.stringify({ pageContent: doc.pageContent, metadata: doc.metadata })
+      ),
+    valueDeserializer: (bytes: Uint8Array) =>
+      new Document(JSON.parse(decoder.decode(bytes))),
+  });
 }

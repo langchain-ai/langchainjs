@@ -33,6 +33,26 @@ export interface SqlDatabaseChainInput extends ChainInputs {
  * Class that represents a SQL database chain in the LangChain framework.
  * It extends the BaseChain class and implements the functionality
  * specific to a SQL database chain.
+ *
+ * @security **Security Notice**
+ * This chain generates SQL queries for the given database.
+ * The SQLDatabase class provides a getTableInfo method that can be used
+ * to get column information as well as sample data from the table.
+ * To mitigate risk of leaking sensitive data, limit permissions
+ * to read and scope to the tables that are needed.
+ * Optionally, use the includesTables or ignoreTables class parameters
+ * to limit which tables can/cannot be accessed.
+ *
+ * @link See https://js.langchain.com/docs/security for more information.
+ * @example
+ * ```typescript
+ * const chain = new SqlDatabaseChain({
+ *   llm: new OpenAI({ temperature: 0 }),
+ *   database: new SqlDatabase({ ...config }),
+ * });
+ *
+ * const result = await chain.run("How many tracks are there?");
+ * ```
  */
 export class SqlDatabaseChain extends BaseChain {
   static lc_name() {

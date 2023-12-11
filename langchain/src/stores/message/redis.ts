@@ -28,6 +28,24 @@ export type RedisChatMessageHistoryInput = {
 /**
  * Class for storing chat message history using Redis. Extends the
  * `BaseListChatMessageHistory` class.
+ * @example
+ * ```typescript
+ * const chatHistory = new RedisChatMessageHistory({
+ *   sessionId: new Date().toISOString(),
+ *   sessionTTL: 300,
+ *   url: "redis:
+ * });
+ *
+ * const chain = new ConversationChain({
+ *   llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+ *   memory: { chatHistory },
+ * });
+ *
+ * const response = await chain.invoke({
+ *   input: "What did I just say my name was?",
+ * });
+ * console.log({ response });
+ * ```
  */
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "redis"];

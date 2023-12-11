@@ -29,9 +29,9 @@ export const run = async () => {
 
   // This will result in a lot of errors, because the shared Tracer is not concurrency-safe.
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }),
-    executor.call({ input }),
-    executor.call({ input }),
+    executor.invoke({ input }),
+    executor.invoke({ input }),
+    executor.invoke({ input }),
   ]);
 
   console.log(`Got output ${resultA.output} ${resultA.__run.runId}`);

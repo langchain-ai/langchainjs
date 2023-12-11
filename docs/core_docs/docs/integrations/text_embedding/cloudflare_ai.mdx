@@ -1,0 +1,43 @@
+---
+hide_table_of_contents: true
+---
+
+# Cloudflare Workers AI
+
+If you're deploying your project in a Cloudflare worker, you can use Cloudflare's [built-in Workers AI embeddings](https://developers.cloudflare.com/workers-ai/) with LangChain.js.
+
+## Setup
+
+First, [follow the official docs](https://developers.cloudflare.com/workers-ai/get-started/workers-wrangler/) to set up your worker.
+
+You'll also need to install the official Cloudflare AI SDK:
+
+```bash npm2yarn
+npm install @cloudflare/ai
+```
+
+## Usage
+
+Below is an example worker that uses Workers AI embeddings with a [Cloudflare Vectorize](/docs/integrations/vectorstores/cloudflare_vectorize) vectorstore.
+
+:::note
+If running locally, be sure to run wrangler as `npx wrangler dev --remote`!
+:::
+
+```toml
+name = "langchain-test"
+main = "worker.js"
+compatibility_date = "2023-09-22"
+
+[[vectorize]]
+binding = "VECTORIZE_INDEX"
+index_name = "langchain-test"
+
+[ai]
+binding = "AI"
+```
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/indexes/vector_stores/cloudflare_vectorize/example.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

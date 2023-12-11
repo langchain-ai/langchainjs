@@ -10,7 +10,7 @@ module.exports = {
     parser: "@typescript-eslint/parser",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint"],
+  plugins: ["@typescript-eslint", "unused-imports"],
   rules: {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
@@ -41,5 +41,6 @@ module.exports = {
     "no-useless-constructor": 0,
     "no-else-return": 0,
     semi: ["error", "always"],
+    "unused-imports/no-unused-imports": "error",
   },
 };

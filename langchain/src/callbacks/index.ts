@@ -28,6 +28,7 @@ export {
   CallbackManagerForToolRun,
   type CallbackManagerOptions,
   type Callbacks,
+  type BaseCallbackConfig,
   TraceGroup,
   traceAsGroup,
 } from "./manager.js";
