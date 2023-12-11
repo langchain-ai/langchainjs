@@ -79,6 +79,9 @@ embeddings/cloudflare_workersai.d.ts
 embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
+embeddings/googlegenerativeai.cjs
+embeddings/googlegenerativeai.js
+embeddings/googlegenerativeai.d.ts
 embeddings/googlepalm.cjs
 embeddings/googlepalm.js
 embeddings/googlepalm.d.ts
@@ -130,6 +133,9 @@ llms/cohere.d.ts
 llms/fireworks.cjs
 llms/fireworks.js
 llms/fireworks.d.ts
+llms/googlegenerativeai.cjs
+llms/googlegenerativeai.js
+llms/googlegenerativeai.d.ts
 llms/googlepalm.cjs
 llms/googlepalm.js
 llms/googlepalm.d.ts

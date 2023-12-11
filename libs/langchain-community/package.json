@@ -61,6 +61,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
+    "@google/generative-ai": "^0.1.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
@@ -171,6 +172,7 @@
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
+    "@google/generative-ai": "^0.1.0",
     "@gradientai/nodejs-sdk": "^1.2.0",
     "@huggingface/inference": "^2.6.4",
     "@mozilla/readability": "*",
@@ -279,6 +281,9 @@
       "optional": true
     },
     "@google-ai/generativelanguage": {
+      "optional": true
+    },
+    "@google/generative-ai": {
       "optional": true
     },
     "@gradientai/nodejs-sdk": {
@@ -601,6 +606,11 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
+    "./embeddings/googlegenerativeai": {
+      "types": "./embeddings/googlegenerativeai.d.ts",
+      "import": "./embeddings/googlegenerativeai.js",
+      "require": "./embeddings/googlegenerativeai.cjs"
+    },
     "./embeddings/googlepalm": {
       "types": "./embeddings/googlepalm.d.ts",
       "import": "./embeddings/googlepalm.js",
@@ -685,6 +695,11 @@
       "types": "./llms/fireworks.d.ts",
       "import": "./llms/fireworks.js",
       "require": "./llms/fireworks.cjs"
+    },
+    "./llms/googlegenerativeai": {
+      "types": "./llms/googlegenerativeai.d.ts",
+      "import": "./llms/googlegenerativeai.js",
+      "require": "./llms/googlegenerativeai.cjs"
     },
     "./llms/googlepalm": {
       "types": "./llms/googlepalm.d.ts",
@@ -1296,6 +1311,9 @@
     "embeddings/cohere.cjs",
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
+    "embeddings/googlegenerativeai.cjs",
+    "embeddings/googlegenerativeai.js",
+    "embeddings/googlegenerativeai.d.ts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
@@ -1347,6 +1365,9 @@
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
+    "llms/googlegenerativeai.cjs",
+    "llms/googlegenerativeai.js",
+    "llms/googlegenerativeai.d.ts",
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
