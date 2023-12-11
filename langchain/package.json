@@ -1427,6 +1427,9 @@
     },
     "youtubei.js": {
       "optional": true
+    },
+    "lunary": {
+      "optional": true
     }
   },
   "dependencies": {
