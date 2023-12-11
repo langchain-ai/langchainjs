@@ -9,7 +9,7 @@ import {
 } from "../../chains/index.js";
 
 import { PromptTemplate } from "../../prompts/prompt.js";
-import { LLMonitorHandler } from "../handlers/llmonitor.js";
+import { LunaryHandler } from "../handlers/lunary.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { HumanMessage, SystemMessage } from "../../schema/index.js";
 import { Calculator } from "../../tools/calculator.js";
@@ -27,7 +27,7 @@ test("Test traced agent with openai functions", async () => {
   const result = await executor.run(
     "What is the approximate result of 78 to the power of 5?",
     {
-      callbacks: [new LLMonitorHandler({ verbose: true })],
+      callbacks: [new LunaryHandler({ verbose: true })],
       metadata: {
         agentName: "SuperCalculator",
         userId: "test-user-id",
@@ -70,14 +70,14 @@ test("Test traced chain with tags", async () => {
     },
     {
       tags: ["test-for-tags"],
-      callbacks: [new LLMonitorHandler({ verbose: true })],
+      callbacks: [new LunaryHandler({ verbose: true })],
     }
   );
 });
 
 test("Test traced chat call with tags", async () => {
   const chat = new ChatOpenAI({
-    callbacks: [new LLMonitorHandler({ verbose: true })],
+    callbacks: [new LunaryHandler({ verbose: true })],
   });
 
   const response = await chat.call([

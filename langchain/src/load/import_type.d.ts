@@ -243,10 +243,14 @@ export interface OptionalImportMap {
     | Promise<typeof import("../document_loaders/web/assemblyai.js")>;
   "langchain/document_loaders/web/azure_blob_storage_container"?:
     | typeof import("../document_loaders/web/azure_blob_storage_container.js")
-    | Promise<typeof import("../document_loaders/web/azure_blob_storage_container.js")>;
+    | Promise<
+        typeof import("../document_loaders/web/azure_blob_storage_container.js")
+      >;
   "langchain/document_loaders/web/azure_blob_storage_file"?:
     | typeof import("../document_loaders/web/azure_blob_storage_file.js")
-    | Promise<typeof import("../document_loaders/web/azure_blob_storage_file.js")>;
+    | Promise<
+        typeof import("../document_loaders/web/azure_blob_storage_file.js")
+      >;
   "langchain/document_loaders/web/cheerio"?:
     | typeof import("../document_loaders/web/cheerio.js")
     | Promise<typeof import("../document_loaders/web/cheerio.js")>;
@@ -379,9 +383,9 @@ export interface OptionalImportMap {
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;
-  "langchain/callbacks/handlers/llmonitor"?:
-    | typeof import("../callbacks/handlers/llmonitor.js")
-    | Promise<typeof import("../callbacks/handlers/llmonitor.js")>;
+  "langchain/callbacks/handlers/lunary"?:
+    | typeof import("../callbacks/handlers/lunary.js")
+    | Promise<typeof import("../callbacks/handlers/lunary.js")>;
   "langchain/output_parsers/expression"?:
     | typeof import("../output_parsers/expression.js")
     | Promise<typeof import("../output_parsers/expression.js")>;
@@ -504,16 +508,22 @@ export interface OptionalImportMap {
     | Promise<typeof import("../util/convex.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
-    | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
+    | Promise<
+        typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
+      >;
   "langchain/experimental/chat_models/anthropic_functions"?:
     | typeof import("../experimental/chat_models/anthropic_functions.js")
-    | Promise<typeof import("../experimental/chat_models/anthropic_functions.js")>;
+    | Promise<
+        typeof import("../experimental/chat_models/anthropic_functions.js")
+      >;
   "langchain/experimental/llms/bittensor"?:
     | typeof import("../experimental/llms/bittensor.js")
     | Promise<typeof import("../experimental/llms/bittensor.js")>;
   "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
     | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
-    | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
+    | Promise<
+        typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
+      >;
   "langchain/experimental/tools/pyinterpreter"?:
     | typeof import("../experimental/tools/pyinterpreter.js")
     | Promise<typeof import("../experimental/tools/pyinterpreter.js")>;

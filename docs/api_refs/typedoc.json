@@ -214,7 +214,7 @@
     "./langchain/src/schema/storage.ts",
     "./langchain/src/sql_db.ts",
     "./langchain/src/callbacks/index.ts",
-    "./langchain/src/callbacks/handlers/llmonitor.ts",
+    "./langchain/src/callbacks/handlers/lunary.ts",
     "./langchain/src/output_parsers/index.ts",
     "./langchain/src/output_parsers/expression.ts",
     "./langchain/src/retrievers/amazon_kendra.ts",

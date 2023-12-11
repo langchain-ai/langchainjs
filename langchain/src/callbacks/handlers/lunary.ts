@@ -1,5 +1,5 @@
-import monitor from "llmonitor";
-import { LLMonitorOptions, ChatMessage, cJSON } from "llmonitor/types";
+import lunary from "lunary";
+import { LunaryOptions, ChatMessage, cJSON } from "lunary/types";
 
 import { BaseRun, RunUpdate as BaseRunUpdate, KVMap } from "langsmith/schemas";
 
@@ -15,7 +15,7 @@ import { Serialized } from "../../load/serializable.js";
 
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
-type Role = "user" | "ai" | "system" | "function" | "tool";
+type Role = "user" | "assistant" | "system" | "function" | "tool";
 
 // Langchain Helpers
 // Input can be either a single message, an array of message, or an array of array of messages (batch requests)
@@ -25,11 +25,11 @@ const parseRole = (id: string[]): Role => {
 
   if (roleHint.includes("Human")) return "user";
   if (roleHint.includes("System")) return "system";
-  if (roleHint.includes("AI")) return "ai";
+  if (roleHint.includes("AI")) return "assistant";
   if (roleHint.includes("Function")) return "function";
   if (roleHint.includes("Tool")) return "tool";
 
-  return "ai";
+  return "assistant";
 };
 
 type Message = BaseMessage | Generation | string;
@@ -46,7 +46,7 @@ const PARAMS_TO_CAPTURE = [
   "response_format",
 ];
 
-export const convertToLLMonitorMessages = (
+export const convertToLunaryMessages = (
   input: Message | Message[] | Message[][]
 ): OutputMessage | OutputMessage[] | OutputMessage[][] => {
   const parseMessage = (raw: Message): OutputMessage => {
@@ -62,11 +62,11 @@ export const convertToLLMonitorMessages = (
       const role = parseRole(message.id);
 
       const obj = message.kwargs;
-      const text = message.text ?? obj.content;
+      const content = message.text ?? obj.content;
 
       return {
         role,
-        text,
+        content,
         ...(obj.additional_kwargs ?? {}),
       };
     } catch (e) {
@@ -79,8 +79,8 @@ export const convertToLLMonitorMessages = (
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore Confuses the compiler
     return input.length === 1
-      ? convertToLLMonitorMessages(input[0])
-      : input.map(convertToLLMonitorMessages);
+      ? convertToLunaryMessages(input[0])
+      : input.map(convertToLunaryMessages);
   }
   return parseMessage(input);
 };
@@ -150,30 +150,30 @@ export interface RunUpdate extends BaseRunUpdate {
   events: BaseRun["events"];
 }
 
-export interface LLMonitorHandlerFields
+export interface LunaryHandlerFields
   extends BaseCallbackHandlerInput,
-    LLMonitorOptions {}
+    LunaryOptions {}
 
-export class LLMonitorHandler
+export class LunaryHandler
   extends BaseCallbackHandler
-  implements LLMonitorHandlerFields
+  implements LunaryHandlerFields
 {
-  name = "llmonitor_handler";
+  name = "lunary_handler";
 
-  monitor: typeof monitor;
+  lunary: typeof lunary;
 
-  constructor(fields: LLMonitorHandlerFields = {}) {
+  constructor(fields: LunaryHandlerFields = {}) {
     super(fields);
 
-    this.monitor = monitor;
+    this.lunary = lunary;
 
     if (fields) {
       const { appId, apiUrl, verbose } = fields;
 
-      this.monitor.init({
+      this.lunary.init({
         verbose,
-        appId: appId ?? getEnvironmentVariable("LLMONITOR_APP_ID"),
-        apiUrl: apiUrl ?? getEnvironmentVariable("LLMONITOR_API_URL"),
+        appId: appId ?? getEnvironmentVariable("LLlunary_APP_ID"),
+        apiUrl: apiUrl ?? getEnvironmentVariable("LLlunary_API_URL"),
       });
     }
   }
@@ -193,11 +193,11 @@ export class LLMonitorHandler
       metadata
     );
 
-    await this.monitor.trackEvent("llm", "start", {
+    await this.lunary.trackEvent("llm", "start", {
       runId,
       parentRunId,
       name,
-      input: convertToLLMonitorMessages(prompts),
+      input: convertToLunaryMessages(prompts),
       extra,
       userId,
       userProps,
@@ -221,11 +221,11 @@ export class LLMonitorHandler
       metadata
     );
 
-    await this.monitor.trackEvent("llm", "start", {
+    await this.lunary.trackEvent("llm", "start", {
       runId,
       parentRunId,
       name,
-      input: convertToLLMonitorMessages(messages),
+      input: convertToLunaryMessages(messages),
       extra,
       userId,
       userProps,
@@ -237,9 +237,9 @@ export class LLMonitorHandler
   async handleLLMEnd(output: LLMResult, runId: string): Promise<void> {
     const { generations, llmOutput } = output;
 
-    await this.monitor.trackEvent("llm", "end", {
+    await this.lunary.trackEvent("llm", "end", {
       runId,
-      output: convertToLLMonitorMessages(generations),
+      output: convertToLunaryMessages(generations),
       tokensUsage: {
         completion: llmOutput?.tokenUsage?.completionTokens,
         prompt: llmOutput?.tokenUsage?.promptTokens,
@@ -248,7 +248,7 @@ export class LLMonitorHandler
   }
 
   async handleLLMError(error: Error, runId: string): Promise<void> {
-    await this.monitor.trackEvent("llm", "error", {
+    await this.lunary.trackEvent("llm", "error", {
       runId,
       error,
     });
@@ -273,7 +273,7 @@ export class LLMonitorHandler
         ? "agent"
         : "chain";
 
-    await this.monitor.trackEvent(runType, "start", {
+    await this.lunary.trackEvent(runType, "start", {
       runId,
       parentRunId,
       name,
@@ -287,14 +287,14 @@ export class LLMonitorHandler
   }
 
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
-    await this.monitor.trackEvent("chain", "end", {
+    await this.lunary.trackEvent("chain", "end", {
       runId,
       output: parseOutput(outputs) as cJSON,
     });
   }
 
   async handleChainError(error: Error, runId: string): Promise<void> {
-    await this.monitor.trackEvent("chain", "error", {
+    await this.lunary.trackEvent("chain", "error", {
       runId,
       error,
     });
@@ -311,7 +311,7 @@ export class LLMonitorHandler
     const { toolName, userId, userProps, ...rest } = metadata || {};
     const name = toolName || tool.id.at(-1);
 
-    await this.monitor.trackEvent("tool", "start", {
+    await this.lunary.trackEvent("tool", "start", {
       runId,
       parentRunId,
       name,
@@ -325,14 +325,14 @@ export class LLMonitorHandler
   }
 
   async handleToolEnd(output: string, runId: string): Promise<void> {
-    await this.monitor.trackEvent("tool", "end", {
+    await this.lunary.trackEvent("tool", "end", {
       runId,
       output,
     });
   }
 
   async handleToolError(error: Error, runId: string): Promise<void> {
-    await this.monitor.trackEvent("tool", "error", {
+    await this.lunary.trackEvent("tool", "error", {
       runId,
       error,
     });
