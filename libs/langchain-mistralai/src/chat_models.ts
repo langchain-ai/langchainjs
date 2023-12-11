@@ -9,7 +9,9 @@ import {
 } from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import MistralClient, {
-  type ChatCompletionResult as MistralAIChatCompletionResult
+  type ChatCompletionResult as MistralAIChatCompletionResult,
+  type ChatCompletionOptions as MistralAIChatCompletionOptions,
+  type Message as MistralAIInputMessage
 } from "@mistralai/mistralai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -23,17 +25,13 @@ import {
   ChatResult
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 /** @TODO move to shared, exported file */
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
-}
-
-interface MistralAIInputMessage {
-  role: "user" | "agent";
-  content: string;
 }
 
 /**
@@ -88,9 +86,9 @@ export interface ChatMistralAIInput extends BaseChatModelParams {
   randomSeed?: number;
 }
 
-const convertMessagesToMistralMessages = (
+function convertMessagesToMistralMessages(
   messages: Array<BaseMessage>
-): Array<MistralAIInputMessage> => {
+): Array<MistralAIInputMessage> {
   const getRole = (role: MessageType) => {
     if (role === "function" || role === "tool") {
       throw new Error(
@@ -118,9 +116,9 @@ const convertMessagesToMistralMessages = (
     role: getRole(message._getType()),
     content: getContent(message.content)
   }));
-};
+}
 
-function openAIResponseToChatMessage(
+function mistralAIResponseToChatMessage(
   choice: MistralAIChatCompletionResult["choices"][0]
 ): BaseMessage {
   if ("delta" in choice && !("message" in choice)) {
@@ -170,9 +168,7 @@ export class ChatMistralAI<
 
   modelName = "mistral-tiny";
 
-  apiKey = getEnvironmentVariable("MISTRAL_API_KEY");
-
-  client: MistralClient;
+  client = new MistralClient();
 
   temperature = 0.7;
 
@@ -190,20 +186,23 @@ export class ChatMistralAI<
 
   constructor(fields?: ChatMistralAIInput) {
     super(fields ?? {});
-    this.apiKey = fields?.apiKey ?? this.apiKey;
-    if (!this.apiKey) {
+    const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
+    if (!apiKey) {
       throw new Error("API key missing for MistralAI, but it is required.");
     }
-    this.client = new MistralClient(this.apiKey, fields?.endpoint);
+    this.client = new MistralClient(apiKey, fields?.endpoint);
   }
 
-  // Replace
   _llmType() {
-    return "chat_integration";
+    return "ChatMistralAI";
   }
 
   /**
    * For some given input messages and options, return a string output.
+   * @param {Array<BaseMessage>} messages The messages to send to the model.
+   * @param {this["ParsedCallOptions"]} options The options to use when calling the model.
+   * @param {CallbackManagerForLLMRun | undefined} runManager Optional, the callback manager to use for this run.
+   * @returns {Promise<string>} The response from the model.
    */
   async _call(
     messages: BaseMessage[],
@@ -227,30 +226,51 @@ export class ChatMistralAI<
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams() {
+  invocationParams(): Omit<MistralAIChatCompletionOptions, "messages"> {
     const params = {
       model: this.modelName,
       temperature: this.temperature,
-      top_p: this.topP,
-      max_tokens: this.maxTokens,
-      safe_mode: this.safeMode,
-      random_seed: this.randomSeed
+      topP: this.topP,
+      maxTokens: this.maxTokens,
+      safeMode: this.safeMode,
+      randomSeed: this.randomSeed
     };
     return params;
   }
 
+  /**
+   * Calls the MistralAI API with retry logic in case of failures.
+   * @param {MistralAIChatCompletionOptions} input The input to send to the MistralAI API.
+   * @returns {Promise<MistralAIChatCompletionResult | AsyncGenerator<MistralAIChatCompletionResult>>} The response from the MistralAI API.
+   */
   async completionWithRetry(
-    messages: Array<MistralAIInputMessage>,
-    params: any
+    input: MistralAIChatCompletionOptions,
+    streaming: true
+  ): Promise<AsyncGenerator<MistralAIChatCompletionResult>>;
+
+  async completionWithRetry(
+    input: MistralAIChatCompletionOptions,
+    streaming: false
+  ): Promise<MistralAIChatCompletionResult>;
+
+  async completionWithRetry(
+    input: MistralAIChatCompletionOptions,
+    // Hack to satisfy TS return type
+    streaming: boolean = this.streaming
   ): Promise<
-    MistralAIChatCompletionResult | AsyncIterable<MistralAIChatCompletionResult>
+    | MistralAIChatCompletionResult
+    | AsyncGenerator<MistralAIChatCompletionResult>
   > {
     return this.caller.call(async () => {
       try {
-        const res = await this.client.chat({
-          ...params,
-          messages
-        });
+        let res:
+          | MistralAIChatCompletionResult
+          | AsyncGenerator<MistralAIChatCompletionResult>;
+        if (streaming) {
+          res = this.client.chatStream(input);
+        } else {
+          res = await this.client.chat(input);
+        }
         return res;
       } catch (e) {
         // wrap error like openai?
@@ -262,21 +282,39 @@ export class ChatMistralAI<
   /** @ignore */
   async _generate(
     messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
-
     const params = this.invocationParams();
     const mistralMessages = convertMessagesToMistralMessages(messages);
+    const input = {
+      ...params,
+      messages: mistralMessages
+    };
+
+    // Handle streaming
     if (this.streaming) {
-      // handle streaming
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      const finalChunks: Record<number, ChatGenerationChunk> = {};
+      for await (const chunk of stream) {
+        const index =
+          (chunk.generationInfo as NewTokenIndices)?.completion ?? 0;
+        if (finalChunks[index] === undefined) {
+          finalChunks[index] = chunk;
+        } else {
+          finalChunks[index] = finalChunks[index].concat(chunk);
+        }
+      }
+      const generations = Object.entries(finalChunks)
+        .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
+        .map(([_, value]) => value);
+
+      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const response = (await this.completionWithRetry(
-      mistralMessages,
-      params
-    )) as MistralAIChatCompletionResult;
+    // Not streaming, so we can just call the API once.
+    const response = await this.completionWithRetry(input, false);
 
     const {
       completion_tokens: completionTokens,
@@ -308,7 +346,7 @@ export class ChatMistralAI<
       const text = part.message?.[0]?.content ?? "";
       const generation: ChatGeneration = {
         text,
-        message: openAIResponseToChatMessage(part)
+        message: mistralAIResponseToChatMessage(part)
       };
       if (part.finish_reason) {
         generation.generationInfo = { finish_reason: part.finish_reason };
@@ -321,10 +359,6 @@ export class ChatMistralAI<
     };
   }
 
-  /**
-   * Implement to support streaming.
-   * Should yield chunks iteratively.
-   */
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -332,11 +366,12 @@ export class ChatMistralAI<
   ): AsyncGenerator<ChatGenerationChunk> {
     const mistralMessages = convertMessagesToMistralMessages(messages);
     const params = this.invocationParams();
+    const input = {
+      ...params,
+      messages: mistralMessages
+    };
 
-    const streamIterable = (await this.completionWithRetry(
-      mistralMessages,
-      params
-    )) as AsyncIterable<MistralAIChatCompletionResult>;
+    const streamIterable = await this.completionWithRetry(input, true);
     for await (const data of streamIterable) {
       const choice = data?.choices[0];
       if (!choice || !("delta" in choice)) {

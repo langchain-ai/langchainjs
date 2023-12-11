@@ -1,173 +1,91 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-import {
-  AzureOpenAIInput,
-  OpenAICoreRequestOptions,
-  LegacyOpenAIInput,
-} from "./types.js";
-import { chunkArray } from "./utils/chunk.js";
-import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/openai.js";
+import MistralClient, {
+  type EmbeddingsResult as MistralAIEmbeddingsResult
+} from "@mistralai/mistralai";
 
 /**
- * Interface for OpenAIEmbeddings parameters. Extends EmbeddingsParams and
- * defines additional parameters specific to the OpenAIEmbeddings class.
+ * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
+ * defines additional parameters specific to the MistralAIEmbeddings class.
  */
-export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
-  /** Model name to use */
-  modelName: string;
-
+export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
   /**
-   * Timeout to use when making requests to OpenAI.
+   * The API key to use.
+   * @default {process.env.MISTRAL_API_KEY}
    */
-  timeout?: number;
-
+  apiKey?: string;
   /**
-   * The maximum number of documents to embed in a single request. This is
-   * limited by the OpenAI API to a maximum of 2048.
+   * The name of the model to use.
+   * @default {"mistral-embed"}
+   */
+  modelName?: string;
+  /**
+   * The format of the output data.
+   * @default {"float"}
+   */
+  encodingFormat?: string;
+  /**
+   * Override the default endpoint.
+   */
+  endpoint?: string;
+  /**
+   * The maximum number of documents to embed in a single request.
+   * @default {512}
    */
   batchSize?: number;
-
   /**
-   * Whether to strip new lines from the input text. This is recommended by
-   * OpenAI, but may not be suitable for all use cases.
+   * Whether to strip new lines from the input text. This is recommended,
+   * but may not be suitable for all use cases.
+   * @default {true}
    */
   stripNewLines?: boolean;
 }
 
+export const chunkArray = <T>(arr: T[], chunkSize: number) =>
+  arr.reduce((chunks, elem, index) => {
+    const chunkIndex = Math.floor(index / chunkSize);
+    const chunk = chunks[chunkIndex] || [];
+    // eslint-disable-next-line no-param-reassign
+    chunks[chunkIndex] = chunk.concat([elem]);
+    return chunks;
+  }, [] as T[][]);
+
 /**
- * Class for generating embeddings using the OpenAI API. Extends the
- * Embeddings class and implements OpenAIEmbeddingsParams and
- * AzureOpenAIInput.
- * @example
- * ```typescript
- * // Embed a query using OpenAIEmbeddings to generate embeddings for a given text
- * const model = new OpenAIEmbeddings();
- * const res = await model.embedQuery(
- *   "What would be a good company name for a company that makes colorful socks?",
- * );
- * console.log({ res });
- *
- * ```
+ * Class for generating embeddings using the MistralAI API.
  */
-export class OpenAIEmbeddings
+export class MistralAIEmbeddings
   extends Embeddings
-  implements OpenAIEmbeddingsParams, AzureOpenAIInput
+  implements MistralAIEmbeddingsParams
 {
-  modelName = "text-embedding-ada-002";
+  client = new MistralClient();
+
+  modelName = "mistral-embed";
+
+  encodingFormat = "float";
 
   batchSize = 512;
 
   stripNewLines = true;
 
-  timeout?: number;
-
-  azureOpenAIApiVersion?: string;
-
-  azureOpenAIApiKey?: string;
-
-  azureOpenAIApiInstanceName?: string;
-
-  azureOpenAIApiDeploymentName?: string;
-
-  azureOpenAIBasePath?: string;
-
-  organization?: string;
-
-  private client: OpenAIClient;
-
-  private clientConfig: ClientOptions;
-
-  constructor(
-    fields?: Partial<OpenAIEmbeddingsParams> &
-      Partial<AzureOpenAIInput> & {
-        verbose?: boolean;
-        openAIApiKey?: string;
-        configuration?: ClientOptions;
-      },
-    configuration?: ClientOptions & LegacyOpenAIInput
-  ) {
-    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
-
-    super(fieldsWithDefaults);
-
-    let apiKey =
-      fieldsWithDefaults?.openAIApiKey ??
-      getEnvironmentVariable("OPENAI_API_KEY");
-
-    const azureApiKey =
-      fieldsWithDefaults?.azureOpenAIApiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    if (!azureApiKey && !apiKey) {
-      throw new Error("OpenAI or Azure OpenAI API key not found");
+  constructor(fields?: Partial<MistralAIEmbeddingsParams>) {
+    super(fields ?? {});
+    const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
+    if (!apiKey) {
+      throw new Error("API key missing for MistralAI, but it is required.");
     }
-
-    const azureApiInstanceName =
-      fieldsWithDefaults?.azureOpenAIApiInstanceName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
-
-    const azureApiDeploymentName =
-      (fieldsWithDefaults?.azureOpenAIApiEmbeddingsDeploymentName ||
-        fieldsWithDefaults?.azureOpenAIApiDeploymentName) ??
-      (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
-        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
-
-    const azureApiVersion =
-      fieldsWithDefaults?.azureOpenAIApiVersion ??
-      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
-
-    this.azureOpenAIBasePath =
-      fieldsWithDefaults?.azureOpenAIBasePath ??
-      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
-
-    this.organization =
-      fieldsWithDefaults?.configuration?.organization ??
-      getEnvironmentVariable("OPENAI_ORGANIZATION");
-
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
-    this.batchSize =
-      fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
-    this.stripNewLines =
-      fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
-    this.timeout = fieldsWithDefaults?.timeout;
-
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
-    if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
-        throw new Error("Azure OpenAI API instance name not found");
-      }
-      if (!this.azureOpenAIApiDeploymentName) {
-        throw new Error("Azure OpenAI API deployment name not found");
-      }
-      if (!this.azureOpenAIApiVersion) {
-        throw new Error("Azure OpenAI API version not found");
-      }
-      apiKey = apiKey ?? "";
-    }
-
-    this.clientConfig = {
-      apiKey,
-      organization: this.organization,
-      baseURL: configuration?.basePath,
-      dangerouslyAllowBrowser: true,
-      defaultHeaders: configuration?.baseOptions?.headers,
-      defaultQuery: configuration?.baseOptions?.params,
-      ...configuration,
-      ...fields?.configuration,
-    };
+    this.client = new MistralClient(apiKey, fields?.endpoint);
+    this.modelName = fields?.modelName ?? this.modelName;
+    this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
+    this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
   }
 
   /**
    * Method to generate embeddings for an array of documents. Splits the
-   * documents into batches and makes requests to the OpenAI API to generate
+   * documents into batches and makes requests to the MistralAI API to generate
    * embeddings.
-   * @param texts Array of documents to generate embeddings for.
-   * @returns Promise that resolves to a 2D array of embeddings for each document.
+   * @param {Array<string>} texts Array of documents to generate embeddings for.
+   * @returns {Promise<number[][]>} Promise that resolves to a 2D array of embeddings for each document.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const batches = chunkArray(
@@ -176,10 +94,7 @@ export class OpenAIEmbeddings
     );
 
     const batchRequests = batches.map((batch) =>
-      this.embeddingWithRetry({
-        model: this.modelName,
-        input: batch,
-      })
+      this.embeddingWithRetry(batch)
     );
     const batchResponses = await Promise.all(batchRequests);
 
@@ -197,72 +112,36 @@ export class OpenAIEmbeddings
   /**
    * Method to generate an embedding for a single document. Calls the
    * embeddingWithRetry method with the document as the input.
-   * @param text Document to generate an embedding for.
-   * @returns Promise that resolves to an embedding for the document.
+   * @param {string} text Document to generate an embedding for.
+   * @returns {Promise<number[]>} Promise that resolves to an embedding for the document.
    */
   async embedQuery(text: string): Promise<number[]> {
-    const { data } = await this.embeddingWithRetry({
-      model: this.modelName,
-      input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
-    });
+    const { data } = await this.embeddingWithRetry(
+      this.stripNewLines ? text.replace(/\n/g, " ") : text
+    );
     return data[0].embedding;
   }
 
   /**
-   * Private method to make a request to the OpenAI API to generate
+   * Private method to make a request to the MistralAI API to generate
    * embeddings. Handles the retry logic and returns the response from the
    * API.
-   * @param request Request to send to the OpenAI API.
-   * @returns Promise that resolves to the response from the API.
+   * @param {string | Array<string>} input Text to send to the MistralAI API.
+   * @returns {Promise<MistralAIEmbeddingsResult>} Promise that resolves to the response from the API.
    */
   private async embeddingWithRetry(
-    request: OpenAIClient.EmbeddingCreateParams
-  ) {
-    if (!this.client) {
-      const openAIEndpointConfig: OpenAIEndpointConfig = {
-        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
-        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
-        azureOpenAIApiKey: this.azureOpenAIApiKey,
-        azureOpenAIBasePath: this.azureOpenAIBasePath,
-        baseURL: this.clientConfig.baseURL,
-      };
-
-      const endpoint = getEndpoint(openAIEndpointConfig);
-
-      const params = {
-        ...this.clientConfig,
-        baseURL: endpoint,
-        timeout: this.timeout,
-        maxRetries: 0,
-      };
-
-      if (!params.baseURL) {
-        delete params.baseURL;
-      }
-
-      this.client = new OpenAIClient(params);
-    }
-    const requestOptions: OpenAICoreRequestOptions = {};
-    if (this.azureOpenAIApiKey) {
-      requestOptions.headers = {
-        "api-key": this.azureOpenAIApiKey,
-        ...requestOptions.headers,
-      };
-      requestOptions.query = {
-        "api-version": this.azureOpenAIApiVersion,
-        ...requestOptions.query,
-      };
-    }
+    input: string | Array<string>
+  ): Promise<MistralAIEmbeddingsResult> {
     return this.caller.call(async () => {
       try {
-        const res = await this.client.embeddings.create(
-          request,
-          requestOptions
-        );
+        const res = await this.client.embeddings({
+          model: this.modelName,
+          input: input
+        });
         return res;
       } catch (e) {
-        const error = wrapOpenAIClientError(e);
-        throw error;
+        // wrap error like openai?
+        throw e;
       }
     });
   }

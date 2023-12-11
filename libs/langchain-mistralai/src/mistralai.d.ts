@@ -29,30 +29,46 @@ declare module "@mistralai/mistralai" {
     };
   };
 
+  export interface Message {
+    role: "user" | "agent";
+    content: string;
+  }
+
+  export interface EmbeddingsResult {
+    id: string;
+    object: string;
+    data: Array<{
+      object: string;
+      embedding: number[];
+      index: number;
+    }>;
+    model: string;
+    usage: {
+      prompt_tokens: number;
+      total_tokens: number;
+    };
+  };
+
+  export interface ChatCompletionOptions {
+    model: string;
+    messages: Array<MistralAIInputMessage>;
+    temperature?: number;
+    maxTokens?: number;
+    topP?: number;
+    randomSeed?: number;
+    safeMode?: boolean;
+  };
+
   export default class MistralClient {
     constructor(apiKey?: string, endpoint?: string);
 
     listModels(): Promise<any>;
 
-    chat(options: {
-      model: string;
-      messages: Array<{ role: string; content: string }>;
-      temperature?: number;
-      maxTokens?: number;
-      topP?: number;
-      randomSeed?: number;
-      safeMode?: boolean;
-    }): Promise<any>;
+    chat(options: ChatCompletionOptions): Promise<any>;
 
-    chatStream(options: {
-      model: string;
-      messages: Array<{ role: string; content: string }>;
-      temperature?: number;
-      maxTokens?: number;
-      topP?: number;
-      randomSeed?: number;
-      safeMode?: boolean;
-    }): AsyncGenerator<any, void, unknown>;
+    chatStream(
+      options: ChatCompletionOptions
+    ): AsyncGenerator<any, void, unknown>;
 
     embeddings(options: {
       model: string;
