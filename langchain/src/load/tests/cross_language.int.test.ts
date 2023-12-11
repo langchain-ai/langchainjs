@@ -80,10 +80,12 @@ describe("Test cross language serialization of important modules", () => {
         kwargs: {},
       };
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = (await load(JSON.stringify(mockItem))) as any;
         expect(result.constructor.name).toEqual(
           idComponents[idComponents.length - 1]
         );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         expect(e.message).not.toContain("Invalid identifer: $");
       }

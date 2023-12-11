@@ -7997,7 +7997,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.1-rc.1":
+"@langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.2":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8023,8 +8023,8 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.0.11-rc.1
-    "@langchain/openai": ~0.0.2-rc.0
+    "@langchain/core": ~0.0.11
+    "@langchain/openai": ~0.0.2
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -8351,7 +8351,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.11-rc.1":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.0.11":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8387,12 +8387,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.2-rc.0":
+"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.2":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.0.11-rc.1
+    "@langchain/core": ~0.0.11
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -22994,9 +22994,9 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.1-rc.1
-    "@langchain/core": ~0.0.11-rc.1
-    "@langchain/openai": ~0.0.2-rc.0
+    "@langchain/community": ~0.0.2
+    "@langchain/core": ~0.0.11
+    "@langchain/openai": ~0.0.2
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
