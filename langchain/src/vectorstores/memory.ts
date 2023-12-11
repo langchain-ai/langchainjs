@@ -1,7 +1,7 @@
 import { similarity as ml_distance_similarity } from "ml-distance";
-import { VectorStore } from "./base.js";
-import { Embeddings } from "../embeddings/base.js";
-import { Document } from "../document.js";
+import { VectorStore } from "@langchain/core/vectorstores";
+import { Embeddings } from "@langchain/core/embeddings";
+import { Document } from "@langchain/core/documents";
 
 /**
  * Interface representing a vector in memory. It includes the content

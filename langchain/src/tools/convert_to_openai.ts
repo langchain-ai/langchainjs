@@ -1,5 +1,5 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAIClient } from "@langchain/openai";
 
 import { StructuredTool } from "./base.js";
 
