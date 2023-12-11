@@ -21,7 +21,7 @@ import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 
-export type FuncOutput<RunInput, RunOutput> =
+type FuncOutput<RunInput, RunOutput> =
   Runnable<RunInput, RunOutput> | Exclude<RunOutput, Runnable>
 
 export type RunnableFunc<RunInput, RunOutput> = (
