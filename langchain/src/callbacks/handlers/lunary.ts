@@ -172,8 +172,14 @@ export class LunaryHandler
 
       this.lunary.init({
         verbose,
-        appId: appId ?? getEnvironmentVariable("LLlunary_APP_ID"),
-        apiUrl: apiUrl ?? getEnvironmentVariable("LLlunary_API_URL"),
+        appId:
+          appId ??
+          getEnvironmentVariable("LUNARY_APP_ID") ??
+          getEnvironmentVariable("LLMONITOR_APP_ID"),
+        apiUrl:
+          apiUrl ??
+          getEnvironmentVariable("LUNARY_API_URL") ??
+          getEnvironmentVariable("LLMONITOR_API_URL"),
       });
     }
   }
