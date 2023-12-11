@@ -1461,8 +1461,8 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   static from<RunInput, RunOutput>(
     func: RunnableFunc<RunInput, RunOutput>
-  ) {
-    return new RunnableLambda<RunInput, RunOutput>({
+  ): RunnableLambda<RunInput, RunOutput> {
+    return new RunnableLambda({
       func,
     });
   }
@@ -1472,7 +1472,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     config?: Partial<BaseCallbackConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
-    let output = await this.func(input, { config })
+    const output = await this.func(input, { config });
     if (output && Runnable.isRunnable(output)) {
       return output.invoke(
         input,
