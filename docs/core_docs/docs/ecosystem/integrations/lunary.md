@@ -155,6 +155,10 @@ const res = await translate("Good morning").identify("user123");
 console.log(res);
 ```
 
+## Full documentation
+
+You can find the full documentation of the Lunary LangChain integration [here](https://lunary.ai/docs/langchain?utm_source=langchain&utm_medium=js&utm_campaign=docs).
+
 ## Support
 
 For any question or issue with integration you can reach out to the Lunary team via [email](mailto:vince@lunary.ai) or livechat on the website.
