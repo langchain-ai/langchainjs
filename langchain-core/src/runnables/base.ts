@@ -21,10 +21,8 @@ import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 
-export type RunnableOutput<RunInput, FuncOutput>  = 
-  FuncOutput extends Runnable<RunInput, infer RunOutput> 
-    ? RunOutput
-    : FuncOutput;
+export type FuncOutput<RunInput, RunOutput> =
+  Runnable<RunInput, RunOutput> | Exclude<RunOutput, Runnable>
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
@@ -34,7 +32,7 @@ export type RunnableFunc<RunInput, RunOutput> = (
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | (Record<string, any> & { config: RunnableConfig })
-) => RunOutput | Promise<RunOutput>;
+) => FuncOutput<RunInput, RunOutput> | Promise<FuncOutput<RunInput, RunOutput>>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
@@ -1444,9 +1442,9 @@ export class RunnableMap<RunInput> extends Runnable<
 /**
  * A runnable that runs a callable.
  */
-export class RunnableLambda<RunInput, FuncOutput> extends Runnable<
+export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
-  RunnableOutput<RunInput, FuncOutput>
+  RunOutput
 > {
   static lc_name() {
     return "RunnableLambda";
@@ -1454,17 +1452,17 @@ export class RunnableLambda<RunInput, FuncOutput> extends Runnable<
 
   lc_namespace = ["langchain_core", "runnables"];
 
-  protected func: RunnableFunc<RunInput, FuncOutput>;
+  protected func: RunnableFunc<RunInput, RunOutput>;
 
-  constructor(fields: { func: RunnableFunc<RunInput, FuncOutput> }) {
+  constructor(fields: { func: RunnableFunc<RunInput, RunOutput> }) {
     super(fields);
     this.func = fields.func;
   }
 
-  static from<RunInput, FuncOutput>(
-    func: RunnableFunc<RunInput, FuncOutput>
+  static from<RunInput, RunOutput>(
+    func: RunnableFunc<RunInput, RunOutput>
   ) {
-    return new RunnableLambda<RunInput, FuncOutput>({
+    return new RunnableLambda<RunInput, RunOutput>({
       func,
     });
   }
@@ -1476,18 +1474,18 @@ export class RunnableLambda<RunInput, FuncOutput> extends Runnable<
   ) {
     let output = await this.func(input, { config })
     if (output && Runnable.isRunnable(output)) {
-      output = await output.invoke(
+      return output.invoke(
         input,
         this._patchConfig(config, runManager?.getChild())
       );
     }
-    return output as RunnableOutput<RunInput, FuncOutput>;
+    return output;
   }
 
   async invoke(
     input: RunInput,
     options?: Partial<BaseCallbackConfig>
-  ): Promise<RunnableOutput<RunInput, FuncOutput>> {
+  ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, options);
   }
 }
