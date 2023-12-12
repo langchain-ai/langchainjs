@@ -1487,6 +1487,8 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   }
 }
 
+export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
+
 /**
  * A Runnable that can fallback to other Runnables if it fails.
  */

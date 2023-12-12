@@ -1,6 +1,9 @@
 {
   "name": "test-exports-esm",
   "version": "0.0.0",
+  "workspaces": [
+    "libs/*"
+  ],
   "private": true,
   "description": "Tests for the things exported by the langchain package",
   "main": "./index.mjs",
@@ -20,6 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
+    "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "d3-dsv": "2",

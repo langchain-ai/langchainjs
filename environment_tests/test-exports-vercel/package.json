@@ -1,6 +1,9 @@
 {
   "name": "test-exports-vercel",
   "version": "0.1.0",
+  "workspaces": [
+    "libs/*"
+  ],
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,6 +13,7 @@
   },
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
+    "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@types/node": "18.15.11",
