@@ -1085,9 +1085,6 @@
     "d3-dsv": {
       "optional": true
     },
-    "discord.js": {
-      "optional": true
-    },
     "epub2": {
       "optional": true
     },
