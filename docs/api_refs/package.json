@@ -6,8 +6,7 @@
     "dev": "next dev -p 3001",
     "typedoc": "npx typedoc --options typedoc.json",
     "build:scripts": "node ./scripts/generate-api-refs.js && node ./scripts/update-typedoc-css.js",
-    "build": "yarn run build:deps && yarn build:scripts && next build",
-    "build:deps": "yarn run turbo:command build --filter=langchain",
+    "build": "yarn workspace langchain build && yarn build:scripts && next build",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint"
   },
