@@ -213,16 +213,12 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     prompt: string,
     options?: this["ParsedCallOptions"]
   ): Promise<string> {
-    try {
-      const response: TogetherAIInferenceResult =
-        await this.completionWithRetry(prompt, options);
-      const outputText = response.output.choices[0].text;
-      return outputText ?? "";
-    } catch (e) {
-      // `completionWithRetry` will throw an error with the error response from Together AI.
-      // If it does throw, we want to re-throw verbatim.
-      throw e;
-    }
+    const response: TogetherAIInferenceResult = await this.completionWithRetry(
+      prompt,
+      options
+    );
+    const outputText = response.output.choices[0].text;
+    return outputText ?? "";
   }
 
   async *_streamResponseChunks(

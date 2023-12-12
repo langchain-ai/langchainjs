@@ -1,5 +1,5 @@
-import { TogetherAI } from "../togetherai.js";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { TogetherAI } from "../togetherai.js";
 
 test("TogetherAI can make a request to an LLM", async () => {
   const model = new TogetherAI({
