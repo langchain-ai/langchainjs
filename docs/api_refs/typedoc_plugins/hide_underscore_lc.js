@@ -55,7 +55,6 @@ function load(application) {
     reflection
   ) {
     const reflectionKind = reflection.kind;
-    // if (reflection.kindOf(ReflectionKind.Property)) {
     if (reflectionKindsToHide.includes(reflectionKind)) {
       if (
         reflection.name.startsWith("_") ||
