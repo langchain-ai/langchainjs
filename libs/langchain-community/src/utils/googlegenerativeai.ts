@@ -45,6 +45,8 @@ export function convertInput(
   if (typeof input === "string") {
     return [{ text: input }];
   }
+
+  // eslint-disable-next-line no-instanceof/no-instanceof
   if (input instanceof BasePromptValue) {
     return [{ text: input.toString() }];
   }
@@ -59,9 +61,11 @@ export function convertInput(
   if (typeof input[0] === "string") {
     return [{ text: input.toString() }];
   }
+  // eslint-disable-next-line no-instanceof/no-instanceof
   if (input[0] instanceof BasePromptValue) {
     return [{ text: input[0].toString() }];
   }
+  // eslint-disable-next-line no-instanceof/no-instanceof
   if (!(input[0] instanceof BaseMessage)) {
     throw new Error("Unsupported input");
   }

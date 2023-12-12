@@ -80,8 +80,10 @@ export class GoogleGenerativeAIEmbeddings
   modelName = "embedding-001";
 
   taskType?: TaskType;
+
   title?: string;
-  stripNewLines: boolean = true;
+
+  stripNewLines = true;
 
   private client: GenerativeModel | TextServiceClient;
 
@@ -146,11 +148,13 @@ export class GoogleGenerativeAIEmbeddings
       title: this.title,
     };
   }
+
   protected async _embedQueryContent(text: string): Promise<number[]> {
     const req = this._convertToContent(text);
     const res = await (this.client as GenerativeModel).embedContent(req);
     return res.embedding.values ?? [];
   }
+
   protected async _embedDocumentsContent(
     documents: string[]
   ): Promise<number[][]> {
@@ -180,17 +184,9 @@ export class GoogleGenerativeAIEmbeddings
    */
   embedQuery(document: string): Promise<number[]> {
     if (this._isEmbedContentModel) {
-      return this.caller.callWithOptions(
-        {},
-        this._embedQueryContent.bind(this),
-        document
-      );
+      return this.caller.call(this._embedQueryContent.bind(this), document);
     }
-    return this.caller.callWithOptions(
-      {},
-      this._embedQueryText.bind(this),
-      document
-    );
+    return this.caller.call(this._embedQueryText.bind(this), document);
   }
 
   /**
@@ -202,8 +198,7 @@ export class GoogleGenerativeAIEmbeddings
    */
   embedDocuments(documents: string[]): Promise<number[][]> {
     if (this._isEmbedContentModel) {
-      return this.caller.callWithOptions(
-        {},
+      return this.caller.call(
         this._embedDocumentsContent.bind(this),
         documents
       );

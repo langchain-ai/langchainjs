@@ -11,16 +11,15 @@ import { TextServiceClient, protos } from "@google-ai/generativelanguage";
 import { GoogleAuth } from "google-auth-library";
 
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-
-import { GenerationChunk } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
+import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+
 import {
   assertSafetySettings,
   convertInput,
 } from "../utils/googlegenerativeai.js";
-
-import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 
 export type { HarmCategory, HarmBlockThreshold, SafetySetting };
 /**
@@ -283,7 +282,7 @@ export class GoogleGenerativeAI
     if (this._isGenerateContentModel) {
       return super.invoke(input, options);
     }
-    let prompt = this._convertInputToGenerateContent(input);
+    const prompt = this._convertInputToGenerateContent(input);
     const res = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
@@ -355,7 +354,7 @@ export class GoogleGenerativeAI
         `Streaming is not supported for the model ${this.modelName}`
       );
     }
-    let prompt = this._convertInputToGenerateContent(input);
+    const prompt = this._convertInputToGenerateContent(input);
 
     const { stream } = await this.caller.callWithOptions(
       { signal: options.signal },
