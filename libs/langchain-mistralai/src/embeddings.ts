@@ -1,7 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import MistralClient, {
-  type EmbeddingsResult as MistralAIEmbeddingsResult
+  type EmbeddingsResult as MistralAIEmbeddingsResult,
 } from "@mistralai/mistralai";
 
 /**
@@ -133,16 +133,11 @@ export class MistralAIEmbeddings
     input: string | Array<string>
   ): Promise<MistralAIEmbeddingsResult> {
     return this.caller.call(async () => {
-      try {
-        const res = await this.client.embeddings({
-          model: this.modelName,
-          input: input
-        });
-        return res;
-      } catch (e) {
-        // wrap error like openai?
-        throw e;
-      }
+      const res = await this.client.embeddings({
+        model: this.modelName,
+        input,
+      });
+      return res;
     });
   }
 }

@@ -47,7 +47,7 @@ declare module "@mistralai/mistralai" {
       prompt_tokens: number;
       total_tokens: number;
     };
-  };
+  }
 
   export interface ChatCompletionOptions {
     model: string;
@@ -57,7 +57,7 @@ declare module "@mistralai/mistralai" {
     topP?: number;
     randomSeed?: number;
     safeMode?: boolean;
-  };
+  }
 
   export default class MistralClient {
     constructor(apiKey?: string, endpoint?: string);

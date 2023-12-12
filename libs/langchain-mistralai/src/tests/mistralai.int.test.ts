@@ -7,10 +7,10 @@ test("Test ChatMistralAI can invoke", async () => {
   const model = new ChatMistralAI();
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
-    ["human", "{input}"]
+    ["human", "{input}"],
   ]);
   const response = await prompt.pipe(model).invoke({
-    input: "Hello"
+    input: "Hello",
   });
   console.log("response", response);
   expect(response.content.length).toBeGreaterThan(1);
@@ -20,15 +20,15 @@ test("Test ChatMistralAI can stream", async () => {
   const model = new ChatMistralAI();
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
-    ["human", "{input}"]
+    ["human", "{input}"],
   ]);
   const response = await prompt.pipe(model).stream({
-    input: "Hello"
+    input: "Hello",
   });
   let itters = 0;
   for await (const item of response) {
     console.log(item);
-    itters++;
+    itters += 1;
   }
   console.log("response", response);
   expect(itters).toBeGreaterThan(1);
