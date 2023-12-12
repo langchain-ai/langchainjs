@@ -43,6 +43,9 @@ tools/google_places.d.ts
 tools/ifttt.cjs
 tools/ifttt.js
 tools/ifttt.d.ts
+tools/outlook.cjs
+tools/outlook.js
+tools/outlook.d.ts
 tools/searchapi.cjs
 tools/searchapi.js
 tools/searchapi.d.ts

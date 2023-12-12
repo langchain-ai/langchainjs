@@ -10,6 +10,9 @@ export interface OptionalImportMap {
   "@langchain/community/tools/gmail"?:
     | typeof import("../tools/gmail/index.js")
     | Promise<typeof import("../tools/gmail/index.js")>;
+  "@langchain/community/tools/outlook"?:
+    | typeof import("../tools/outlook/index.js")
+    | Promise<typeof import("../tools/outlook/index.js")>;
   "@langchain/community/agents/toolkits/aws_sfn"?:
     | typeof import("../agents/toolkits/aws_sfn.js")
     | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;

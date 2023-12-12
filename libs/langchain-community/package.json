@@ -541,6 +541,11 @@
       "import": "./tools/ifttt.js",
       "require": "./tools/ifttt.cjs"
     },
+    "./tools/outlook": {
+      "types": "./tools/outlook.d.ts",
+      "import": "./tools/outlook.js",
+      "require": "./tools/outlook.cjs"
+    },
     "./tools/searchapi": {
       "types": "./tools/searchapi.d.ts",
       "import": "./tools/searchapi.js",
@@ -1260,6 +1265,9 @@
     "tools/ifttt.cjs",
     "tools/ifttt.js",
     "tools/ifttt.d.ts",
+    "tools/outlook.cjs",
+    "tools/outlook.js",
+    "tools/outlook.d.ts",
     "tools/searchapi.cjs",
     "tools/searchapi.js",
     "tools/searchapi.d.ts",

@@ -1,4 +1,4 @@
-import { Tool } from "../base.js";
+import { Tool } from "@langchain/core/tools";
 import { AuthFlowBase } from "./authFlowBase.js";
 import { AuthFlowToken, AuthFlowRefresh } from "./authFlowToken.js";
 import { AuthFlowREST } from "./authFlowREST.js";

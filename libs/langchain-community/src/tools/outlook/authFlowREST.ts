@@ -1,7 +1,7 @@
-import * as http from "http";
-import * as url from "url";
+import * as http from "node:http";
+import * as url from "node:url";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AuthFlowBase } from "./authFlowBase.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * Represents the response structure for an access token.

@@ -79,9 +79,6 @@ tools/gmail.d.ts
 tools/google_calendar.cjs
 tools/google_calendar.js
 tools/google_calendar.d.ts
-tools/outlook.cjs
-tools/outlook.js
-tools/outlook.d.ts
 tools/google_places.cjs
 tools/google_places.js
 tools/google_places.d.ts

@@ -1,5 +1,5 @@
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { AuthFlowBase } from "./authFlowBase.js";
-import { getEnvironmentVariable } from "../../util/env.js";
 
 /**
  * Response structure for access token.
