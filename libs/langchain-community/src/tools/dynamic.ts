@@ -64,7 +64,7 @@ export class DynamicTool extends Tool {
     configArg?: RunnableConfig | Callbacks
   ): Promise<string> {
     const config = parseCallbackConfigArg(configArg);
-    if (config?.runName === undefined) {
+    if (config.runName === undefined) {
       config.runName = this.name;
     }
     return super.call(arg, config);
@@ -117,7 +117,7 @@ export class DynamicStructuredTool<
     tags?: string[]
   ): Promise<string> {
     const config = parseCallbackConfigArg(configArg);
-    if (config?.runName === undefined) {
+    if (config.runName === undefined) {
       config.runName = this.name;
     }
     return super.call(arg, config, tags);
