@@ -50,6 +50,9 @@
     "precommit": {},
     "start": {
       "cache": false
+    },
+    "build:vercel": {
+      "dependsOn": ["^build:vercel"]
     }
   }
 }
