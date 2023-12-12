@@ -14,9 +14,9 @@ test("QdrantVectorStore works", async () => {
 
   const embeddings = new FakeEmbeddings();
 
-  const store = new QdrantVectorStore(embeddings, { 
+  const store = new QdrantVectorStore(embeddings, {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client: client as any
+    client: client as any,
   });
 
   expect(store).toBeDefined();
