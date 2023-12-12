@@ -1,40 +1,70 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.load = void 0;
-var typedoc_1 = require("typedoc");
+const {
+  Application,
+  Converter,
+  Context,
+  ReflectionKind,
+  DeclarationReflection,
+} = require("typedoc");
+
+/**
+ * @param {Application} application 
+ * @returns {void}
+ */
 function load(application) {
-    var reflections = [];
-    application.converter.on(typedoc_1.Converter.EVENT_CREATE_DECLARATION, resolveReflection);
-    application.converter.on(typedoc_1.Converter.EVENT_RESOLVE_BEGIN, onBeginResolve);
-    var reflectionKindsToHide = [
-        typedoc_1.ReflectionKind.Property,
-        typedoc_1.ReflectionKind.Accessor,
-        typedoc_1.ReflectionKind.Variable,
-        typedoc_1.ReflectionKind.Method,
-        typedoc_1.ReflectionKind.Function,
-        typedoc_1.ReflectionKind.Class,
-        typedoc_1.ReflectionKind.Interface,
-        typedoc_1.ReflectionKind.Enum,
-        typedoc_1.ReflectionKind.TypeAlias,
-    ];
-    function onBeginResolve(context) {
-        reflections.forEach(function (reflection) {
-            var project = context.project;
-            console.log("deleting", reflection.name);
-            // Remove the property from documentation
-            project.removeReflection(reflection);
-        });
+  /**
+   * @type {Array<DeclarationReflection>}
+   */
+  let reflections = [];
+  application.converter.on(
+    Converter.EVENT_CREATE_DECLARATION,
+    resolveReflection
+  );
+  application.converter.on(Converter.EVENT_RESOLVE_BEGIN, onBeginResolve);
+
+  const reflectionKindsToHide = [
+    ReflectionKind.Property,
+    ReflectionKind.Accessor,
+    ReflectionKind.Variable,
+    ReflectionKind.Method,
+    ReflectionKind.Function,
+    ReflectionKind.Class,
+    ReflectionKind.Interface,
+    ReflectionKind.Enum,
+    ReflectionKind.TypeAlias,
+  ];
+
+  /**
+   * @param {Context} context 
+   * @returns {void}
+   */
+  function onBeginResolve(context) {
+    reflections.forEach((reflection) => {
+      const { project } = context;
+      // Remove the property from documentation
+      project.removeReflection(reflection);
+    });
+  }
+
+  /**
+   * @param {Context} _context 
+   * @param {DeclarationReflection} reflection 
+   * @returns {void}
+   */
+  function resolveReflection(
+    _context,
+    reflection
+  ) {
+    const reflectionKind = reflection.kind;
+    // if (reflection.kindOf(ReflectionKind.Property)) {
+    if (reflectionKindsToHide.includes(reflectionKind)) {
+      if (
+        reflection.name.startsWith("_") ||
+        reflection.name.startsWith("lc_")
+      ) {
+        reflections.push(reflection);
+      }
     }
-    function resolveReflection(context, reflection) {
-        var reflectionKind = reflection.kind;
-        // if (reflection.kindOf(ReflectionKind.Property)) {
-        if (reflectionKindsToHide.includes(reflectionKind)) {
-            if (reflection.name.startsWith("_") ||
-                reflection.name.startsWith("lc_")) {
-                reflections.push(reflection);
-                console.log("found lc or underscore", reflection.name);
-            }
-        }
-    }
+  }
 }
-exports.load = load;
+
+module.exports = { load };
