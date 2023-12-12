@@ -14,7 +14,7 @@ function load(application) {
   /**
    * @type {Array<DeclarationReflection>}
    */
-  let reflections = [];
+  let reflectionsToHide = [];
   
   application.converter.on(
     Converter.EVENT_CREATE_DECLARATION,
@@ -39,7 +39,7 @@ function load(application) {
    * @returns {void}
    */
   function onBeginResolve(context) {
-    reflections.forEach((reflection) => {
+    reflectionsToHide.forEach((reflection) => {
       const { project } = context;
       // Remove the property from documentation
       project.removeReflection(reflection);
@@ -61,7 +61,7 @@ function load(application) {
         reflection.name.startsWith("_") ||
         reflection.name.startsWith("lc_")
       ) {
-        reflections.push(reflection);
+        reflectionsToHide.push(reflection);
       }
     }
   }
