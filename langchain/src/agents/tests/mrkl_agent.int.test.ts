@@ -5,19 +5,19 @@ import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { DynamicTool } from "../../tools/dynamic.js";
 
-test.only("Run agent locally with GPT-3.5", async () => {
+test("Run agent locally with GPT-3.5", async () => {
   const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
   const tools = [
-    // new SerpAPI(undefined, {
-    //   location: "Austin,Texas,United States",
-    //   hl: "en",
-    //   gl: "us",
-    // }),
-    // new Calculator(),
+    new SerpAPI(undefined, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
     new DynamicTool({
-      name: "weather_getter",
-      description: "Some tool that gets the weather",
-      func: async () => "cloudy with a chance of rain",
+      name: "foo",
+      description: "Some other tool that does foo",
+      func: async () => "bar",
     }),
   ];
 
