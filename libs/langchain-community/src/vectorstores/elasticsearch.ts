@@ -266,16 +266,23 @@ export class ElasticVectorSearch extends VectorStore {
       mappings: {
         dynamic_templates: [
           {
-            // map all metadata properties to be keyword
-            "metadata.*": {
+            // map all metadata properties to be keyword except loc
+            metadata_except_loc: {
               match_mapping_type: "*",
+              match: "metadata.*",
+              unmatch: "metadata.loc",
               mapping: { type: "keyword" },
             },
           },
         ],
         properties: {
           text: { type: "text" },
-          metadata: { type: "object" },
+          metadata: {
+            type: "object",
+            properties: {
+              loc: { type: "object" }, // explicitly define loc as an object
+            },
+          },
           embedding: {
             type: "dense_vector",
             dims: dimension,
