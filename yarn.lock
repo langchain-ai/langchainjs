@@ -7997,7 +7997,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.3":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.2":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
