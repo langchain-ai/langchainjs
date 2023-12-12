@@ -30,7 +30,7 @@ declare module "@mistralai/mistralai" {
   };
 
   export interface Message {
-    role: "user" | "agent";
+    role: "user" | "assistant" | "system";
     content: string;
   }
 
@@ -51,7 +51,7 @@ declare module "@mistralai/mistralai" {
 
   export interface ChatCompletionOptions {
     model: string;
-    messages: Array<MistralAIInputMessage>;
+    messages: Array<Message>;
     temperature?: number;
     maxTokens?: number;
     topP?: number;

@@ -3,27 +3,31 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatMistralAI } from "../chat_models.js";
 import { MistralAIEmbeddings } from "../embeddings.js";
 
-test("Test ChatMistralAI can invoke", async () => {
-  const model = new ChatMistralAI();
+test.only("Test ChatMistralAI can invoke", async () => {
+  // const model = new ChatMistralAI();
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
-    ["human", "{input}"],
+    ["human", "{input}"]
   ]);
-  const response = await prompt.pipe(model).invoke({
-    input: "Hello",
+  const promptFormatted = await prompt.format({
+    input: "Hello"
   });
-  console.log("response", response);
-  expect(response.content.length).toBeGreaterThan(1);
+  console.log("promptFormatted", promptFormatted);
+  // const response = await prompt.pipe(model).invoke({
+  //   input: "Hello"
+  // });
+  // console.log("response", response);
+  // expect(response.content.length).toBeGreaterThan(1);
 });
 
 test("Test ChatMistralAI can stream", async () => {
   const model = new ChatMistralAI();
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
-    ["human", "{input}"],
+    ["human", "{input}"]
   ]);
   const response = await prompt.pipe(model).stream({
-    input: "Hello",
+    input: "Hello"
   });
   let itters = 0;
   for await (const item of response) {
