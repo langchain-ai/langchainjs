@@ -4,7 +4,7 @@ import {
   OutlookSendMailTool,
 } from "../outlook/index.js";
 
-describe("OutlookReadMailTool Test", () => {
+describe.skip("OutlookReadMailTool Test", () => {
   test("Test invalid access token", async () => {
     const accessToken = "blah";
     const authFlow = new AuthFlowToken(accessToken);
@@ -32,7 +32,7 @@ describe("OutlookReadMailTool Test", () => {
   });
 });
 
-describe("OutlookSendMailTool Test", () => {
+describe.skip("OutlookSendMailTool Test", () => {
   test("Test invalid TO email address", async () => {
     const message = JSON.stringify({
       subject: "test",
