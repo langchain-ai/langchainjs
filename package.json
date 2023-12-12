@@ -19,7 +19,7 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
-    "build:deps": "yarn workspace @langchain/core build && yarn workspace @langchain/anthropic build && yarn workspace @langchain/openai build",
+    "build:deps": "yarn workspace @langchain/core build && yarn workspace @langchain/anthropic build && yarn workspace @langchain/openai build && yarn workspace @langchain/community build",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
