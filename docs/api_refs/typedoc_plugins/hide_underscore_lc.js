@@ -15,6 +15,7 @@ function load(application) {
    * @type {Array<DeclarationReflection>}
    */
   let reflections = [];
+  
   application.converter.on(
     Converter.EVENT_CREATE_DECLARATION,
     resolveReflection
