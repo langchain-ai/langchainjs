@@ -11,6 +11,7 @@ export * as tools__dataforseo_api_search from "../tools/dataforseo_api_search.js
 export * as tools__google_custom_search from "../tools/google_custom_search.js";
 export * as tools__google_places from "../tools/google_places.js";
 export * as tools__ifttt from "../tools/ifttt.js";
+export * as tools__jira from "../tools/jira.js";
 export * as tools__searchapi from "../tools/searchapi.js";
 export * as tools__searxng_search from "../tools/searxng_search.js";
 export * as tools__serpapi from "../tools/serpapi.js";
@@ -19,6 +20,7 @@ export * as tools__wikipedia_query_run from "../tools/wikipedia_query_run.js";
 export * as tools__wolframalpha from "../tools/wolframalpha.js";
 export * as agents__toolkits__base from "../agents/toolkits/base.js";
 export * as agents__toolkits__connery from "../agents/toolkits/connery/index.js";
+export * as agents__toolkits__jira from "../agents/toolkits/jira/index.js";
 export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as embeddings__ollama from "../embeddings/ollama.js";
 export * as embeddings__voyage from "../embeddings/voyage.js";

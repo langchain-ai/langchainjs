@@ -28,9 +28,6 @@
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
-    "agents/toolkits/jira.cjs",
-    "agents/toolkits/jira.js",
-    "agents/toolkits/jira.d.ts",
     "agents/toolkits/connery.cjs",
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
@@ -82,9 +79,6 @@
     "tools/render.cjs",
     "tools/render.js",
     "tools/render.d.ts",
-    "tools/jira.cjs",
-    "tools/jira.js",
-    "tools/jira.d.ts",
     "tools/sql.cjs",
     "tools/sql.js",
     "tools/sql.d.ts",
@@ -1247,11 +1241,6 @@
       "import": "./agents/toolkits/aws_sfn.js",
       "require": "./agents/toolkits/aws_sfn.cjs"
     },
-    "./agents/toolkits/jira": {
-      "types": "./agents/toolkits/jira.d.ts",
-      "import": "./agents/toolkits/jira.js",
-      "require": "./agents/toolkits/jira.cjs"
-    },
     "./agents/toolkits/connery": {
       "types": "./agents/toolkits/connery.d.ts",
       "import": "./agents/toolkits/connery.js",
@@ -1336,11 +1325,6 @@
       "types": "./tools/render.d.ts",
       "import": "./tools/render.js",
       "require": "./tools/render.cjs"
-    },
-    "./tools/jira": {
-      "types": "./tools/jira.d.ts",
-      "import": "./tools/jira.js",
-      "require": "./tools/jira.cjs"
     },
     "./tools/sql": {
       "types": "./tools/sql.d.ts",

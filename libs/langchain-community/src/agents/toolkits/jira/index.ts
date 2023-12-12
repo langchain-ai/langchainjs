@@ -8,6 +8,13 @@ import {
 import { Toolkit } from "../base.js";
 import { JiraAction, JiraAPIWrapper } from "../../../tools/jira.js";
 
+export {
+  JIRA_CATCH_ALL_PROMPT,
+  JIRA_GET_ALL_PROJECTS_PROMPT,
+  JIRA_ISSUE_CREATE_PROMPT,
+  JIRA_JQL_PROMPT,
+};
+
 /**
  * Class that represents a toolkit for working with the Jira API. It
  * extends the BaseToolkit class and has a tools property that contains

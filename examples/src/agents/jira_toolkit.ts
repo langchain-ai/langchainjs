@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain/llms/openai";
-import { JiraToolkit } from "langchain/agents/toolkits/jira";
-import { JiraAPIWrapper } from "langchain/tools/jira";
+import { JiraToolkit } from "@langchain/community/agents/toolkits/jira";
+import { JiraAPIWrapper } from "@langchain/community/tools/jira";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 export const run = async () => {

@@ -541,6 +541,11 @@
       "import": "./tools/ifttt.js",
       "require": "./tools/ifttt.cjs"
     },
+    "./tools/jira": {
+      "types": "./tools/jira.d.ts",
+      "import": "./tools/jira.js",
+      "require": "./tools/jira.cjs"
+    },
     "./tools/searchapi": {
       "types": "./tools/searchapi.d.ts",
       "import": "./tools/searchapi.js",
@@ -585,6 +590,11 @@
       "types": "./agents/toolkits/connery.d.ts",
       "import": "./agents/toolkits/connery.js",
       "require": "./agents/toolkits/connery.cjs"
+    },
+    "./agents/toolkits/jira": {
+      "types": "./agents/toolkits/jira.d.ts",
+      "import": "./agents/toolkits/jira.js",
+      "require": "./agents/toolkits/jira.cjs"
     },
     "./embeddings/bedrock": {
       "types": "./embeddings/bedrock.d.ts",
@@ -1260,6 +1270,9 @@
     "tools/ifttt.cjs",
     "tools/ifttt.js",
     "tools/ifttt.d.ts",
+    "tools/jira.cjs",
+    "tools/jira.js",
+    "tools/jira.d.ts",
     "tools/searchapi.cjs",
     "tools/searchapi.js",
     "tools/searchapi.d.ts",
@@ -1287,6 +1300,9 @@
     "agents/toolkits/connery.cjs",
     "agents/toolkits/connery.js",
     "agents/toolkits/connery.d.ts",
+    "agents/toolkits/jira.cjs",
+    "agents/toolkits/jira.js",
+    "agents/toolkits/jira.d.ts",
     "embeddings/bedrock.cjs",
     "embeddings/bedrock.js",
     "embeddings/bedrock.d.ts",

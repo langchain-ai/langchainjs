@@ -24,6 +24,7 @@ const entrypoints = {
   "tools/google_custom_search": "tools/google_custom_search",
   "tools/google_places": "tools/google_places",
   "tools/ifttt": "tools/ifttt",
+  "tools/jira": "tools/jira",
   "tools/searchapi": "tools/searchapi",
   "tools/searxng_search": "tools/searxng_search",
   "tools/serpapi": "tools/serpapi",
@@ -34,6 +35,7 @@ const entrypoints = {
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/base": "agents/toolkits/base",
   "agents/toolkits/connery": "agents/toolkits/connery/index",
+  "agents/toolkits/jira": "agents/toolkits/jira/index",
   // embeddings
   "embeddings/bedrock": "embeddings/bedrock",
   "embeddings/cloudflare_workersai": "embeddings/cloudflare_workersai",

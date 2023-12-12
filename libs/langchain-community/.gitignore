@@ -43,6 +43,9 @@ tools/google_places.d.ts
 tools/ifttt.cjs
 tools/ifttt.js
 tools/ifttt.d.ts
+tools/jira.cjs
+tools/jira.js
+tools/jira.d.ts
 tools/searchapi.cjs
 tools/searchapi.js
 tools/searchapi.d.ts
@@ -70,6 +73,9 @@ agents/toolkits/base.d.ts
 agents/toolkits/connery.cjs
 agents/toolkits/connery.js
 agents/toolkits/connery.d.ts
+agents/toolkits/jira.cjs
+agents/toolkits/jira.js
+agents/toolkits/jira.d.ts
 embeddings/bedrock.cjs
 embeddings/bedrock.js
 embeddings/bedrock.d.ts
