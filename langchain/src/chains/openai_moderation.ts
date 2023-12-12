@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAIClient } from "@langchain/openai";
 import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";

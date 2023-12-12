@@ -1,12 +1,11 @@
 import { test, expect } from "@jest/globals";
-import "@tensorflow/tfjs-backend-cpu";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { VectorStoreRetrieverMemory } from "../vector_store.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { TensorFlowEmbeddings } from "../../embeddings/tensorflow.js";
 import { Document } from "../../document.js";
 
 test("Test vector store memory", async () => {
-  const vectorStore = new MemoryVectorStore(new TensorFlowEmbeddings());
+  const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
   const memory = new VectorStoreRetrieverMemory({
     vectorStoreRetriever: vectorStore.asRetriever(),
   });
@@ -20,7 +19,7 @@ test("Test vector store memory", async () => {
 });
 
 test("Test vector store memory return docs", async () => {
-  const vectorStore = new MemoryVectorStore(new TensorFlowEmbeddings());
+  const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
   const memory = new VectorStoreRetrieverMemory({
     vectorStoreRetriever: vectorStore.asRetriever(),
     returnDocs: true,
