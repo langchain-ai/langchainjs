@@ -7,7 +7,6 @@ export const optionalImportEntrypoints = [
   "langchain/tools/aws_lambda",
   "langchain/tools/aws_sfn",
   "langchain/tools/calculator",
-  "langchain/tools/discord",
   "langchain/tools/sql",
   "langchain/tools/webbrowser",
   "langchain/tools/gmail",

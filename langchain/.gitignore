@@ -61,9 +61,6 @@ tools/aws_sfn.d.ts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
-tools/discord.cjs
-tools/discord.js
-tools/discord.d.ts
 tools/connery.cjs
 tools/connery.js
 tools/connery.d.ts

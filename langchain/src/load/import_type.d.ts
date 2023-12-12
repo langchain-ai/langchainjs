@@ -19,9 +19,6 @@ export interface OptionalImportMap {
   "langchain/tools/calculator"?:
     | typeof import("../tools/calculator.js")
     | Promise<typeof import("../tools/calculator.js")>;
-  "langchain/tools/discord"?:
-    | typeof import("../tools/discord.js")
-    | Promise<typeof import("../tools/discord.js")>;
   "langchain/tools/sql"?:
     | typeof import("../tools/sql.js")
     | Promise<typeof import("../tools/sql.js")>;

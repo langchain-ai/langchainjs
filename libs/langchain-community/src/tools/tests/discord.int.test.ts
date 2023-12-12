@@ -7,7 +7,7 @@ import {
   DiscordGetTextChannelsTool,
 } from "../discord.js";
 
-test("DiscordGetMessagesTool", async () => {
+test.skip("DiscordGetMessagesTool", async () => {
   const tool = new DiscordGetMessagesTool();
 
   try {
@@ -21,7 +21,7 @@ test("DiscordGetMessagesTool", async () => {
   }
 });
 
-test("DiscordGetGuildsTool", async () => {
+test.skip("DiscordGetGuildsTool", async () => {
   const tool = new DiscordGetGuildsTool();
   try {
     const result = await tool.invoke("");
@@ -33,7 +33,7 @@ test("DiscordGetGuildsTool", async () => {
   }
 });
 
-test("DiscordChannelSearchTool", async () => {
+test.skip("DiscordChannelSearchTool", async () => {
   const tool = new DiscordChannelSearchTool();
   try {
     const result = await tool.invoke("Test");
@@ -45,7 +45,7 @@ test("DiscordChannelSearchTool", async () => {
   }
 });
 
-test("DiscordGetTextChannelsTool", async () => {
+test.skip("DiscordGetTextChannelsTool", async () => {
   const tool = new DiscordGetTextChannelsTool();
   try {
     const result = await tool.invoke("1153400523718938775");
@@ -57,7 +57,7 @@ test("DiscordGetTextChannelsTool", async () => {
   }
 });
 
-test("DiscordSendMessagesTool", async () => {
+test.skip("DiscordSendMessagesTool", async () => {
   const tool = new DiscordSendMessagesTool();
   try {
     const result = await tool.invoke("test message from new code");

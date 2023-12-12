@@ -73,9 +73,6 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
-    "tools/discord.cjs",
-    "tools/discord.js",
-    "tools/discord.d.ts",
     "tools/connery.cjs",
     "tools/connery.js",
     "tools/connery.d.ts",
@@ -924,7 +921,6 @@
     "chromadb": "^1.5.3",
     "convex": "^1.3.1",
     "d3-dsv": "^2.0.0",
-    "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "epub2": "^3.0.1",
@@ -993,7 +989,6 @@
     "chromadb": "*",
     "convex": "^1.3.1",
     "d3-dsv": "^2.0.0",
-    "discord.js": "^14.14.1",
     "epub2": "^3.0.1",
     "fast-xml-parser": "^4.2.7",
     "google-auth-library": "^8.9.0",
@@ -1323,11 +1318,6 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
-    },
-    "./tools/discord": {
-      "types": "./tools/discord.d.ts",
-      "import": "./tools/discord.js",
-      "require": "./tools/discord.cjs"
     },
     "./tools/connery": {
       "types": "./tools/connery.d.ts",

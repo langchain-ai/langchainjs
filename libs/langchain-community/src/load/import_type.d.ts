@@ -7,6 +7,9 @@ export interface OptionalImportMap {
   "@langchain/community/tools/aws_sfn"?:
     | typeof import("../tools/aws_sfn.js")
     | Promise<typeof import("../tools/aws_sfn.js")>;
+  "@langchain/community/tools/discord"?:
+    | typeof import("../tools/discord.js")
+    | Promise<typeof import("../tools/discord.js")>;
   "@langchain/community/tools/gmail"?:
     | typeof import("../tools/gmail/index.js")
     | Promise<typeof import("../tools/gmail/index.js")>;

@@ -5,8 +5,8 @@ import {
   Message,
   ChannelType,
 } from "discord.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { Tool } from "./base.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { Tool } from "@langchain/core/tools";
 
 /**
  * Base tool parameters for the Discord tools

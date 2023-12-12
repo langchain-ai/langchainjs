@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { DiscordSendMessagesTool } from "langchain/tools/discord";
 import { DadJokeAPI } from "langchain/tools";
+import { DiscordSendMessagesTool } from "@langchain/community/tools/discord";
 
 const model = new ChatOpenAI({
   temperature: 0,
