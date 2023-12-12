@@ -1,6 +1,11 @@
 import { z } from "zod";
-import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
+import {
+  CallbackManagerForToolRun,
+  Callbacks,
+  parseCallbackConfigArg,
+} from "@langchain/core/callbacks/manager";
 import { StructuredTool, Tool, type ToolParams } from "@langchain/core/tools";
+import { RunnableConfig } from "@langchain/core/runnables";
 
 export interface BaseDynamicToolInput extends ToolParams {
   name: string;
@@ -54,6 +59,17 @@ export class DynamicTool extends Tool {
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
   }
 
+  async call(
+    arg: string | undefined | z.input<this["schema"]>,
+    configArg?: RunnableConfig | Callbacks
+  ): Promise<string> {
+    const config = parseCallbackConfigArg(configArg);
+    if (config?.runName === undefined) {
+      config.runName = this.name;
+    }
+    return super.call(arg, config);
+  }
+
   /** @ignore */
   async _call(
     input: string,
@@ -92,6 +108,19 @@ export class DynamicStructuredTool<
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
     this.schema = fields.schema;
+  }
+
+  async call(
+    arg: z.output<T>,
+    configArg?: RunnableConfig | Callbacks,
+    /** @deprecated */
+    tags?: string[]
+  ): Promise<string> {
+    const config = parseCallbackConfigArg(configArg);
+    if (config?.runName === undefined) {
+      config.runName = this.name;
+    }
+    return super.call(arg, config, tags);
   }
 
   protected _call(
