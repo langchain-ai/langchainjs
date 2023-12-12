@@ -109,6 +109,10 @@ export class GoogleGenerativeAI
   extends LLM
   implements GoogleGenerativeAITextInput
 {
+  static lc_name() {
+    return "googlegenerativeai";
+  }
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "GOOGLE_API_KEY",
