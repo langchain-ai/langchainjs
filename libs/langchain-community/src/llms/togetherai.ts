@@ -255,7 +255,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
         if (done) {
           break;
         }
-
+        // The response is a stringified JSON object, except for the first key 'data' which is not stringified.
         const stringifiedResponse = `{${new TextDecoder().decode(
           value
         )}}`.replace("data:", `"data":`);

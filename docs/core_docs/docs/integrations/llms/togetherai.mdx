@@ -1,0 +1,20 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# Together AI
+
+Here's an example of calling a Together AI model as an LLM:
+
+import TogetherAI from "@examples/models/llm/togetherai.ts";
+import TogetherAIStream from "@examples/models/llm/togetherai_stream.ts";
+
+<CodeBlock language="typescript">{TogetherAI}</CodeBlock>
+
+You can run other models through Together by changing the `modelName` parameter.
+
+You can find a full list of models on [Together's website](https://api.together.xyz/playground).
+
+### Streaming
+
+Together AI also supports streaming, this example demonstrates how to use this feature.
+
+<CodeBlock language="typescript">{TogetherAIStream}</CodeBlock>
