@@ -3,6 +3,7 @@
 export * as load__serializable from "../load/serializable.js";
 export * as agents from "../agents/index.js";
 export * as agents__toolkits from "../agents/toolkits/index.js";
+export * as agents__toolkits__connery from "../agents/toolkits/connery/index.js";
 export * as agents__format_scratchpad from "../agents/format_scratchpad/openai_functions.js";
 export * as agents__format_scratchpad__openai_tools from "../agents/format_scratchpad/openai_tools.js";
 export * as agents__format_scratchpad__log from "../agents/format_scratchpad/log.js";
@@ -13,7 +14,9 @@ export * as agents__xml__output_parser from "../agents/xml/output_parser.js";
 export * as agents__openai__output_parser from "../agents/openai/output_parser.js";
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
+export * as tools__connery from "../tools/connery.js";
 export * as tools__render from "../tools/render.js";
+export * as tools__google_places from "../tools/google_places.js";
 export * as chains from "../chains/index.js";
 export * as chains__combine_documents__reduce from "../chains/combine_documents/reduce.js";
 export * as chains__openai_functions from "../chains/openai_functions/index.js";
@@ -100,6 +103,7 @@ export * as experimental__plan_and_execute from "../experimental/plan_and_execut
 export * as experimental__chat_models__bittensor from "../experimental/chat_models/bittensor.js";
 export * as experimental__chat_models__ollama_functions from "../experimental/chat_models/ollama_functions.js";
 export * as experimental__chains__violation_of_expectations from "../experimental/chains/violation_of_expectations/index.js";
+export * as experimental__masking from "../experimental/masking/index.js";
 export * as evaluation from "../evaluation/index.js";
 export * as runnables from "../runnables/index.js";
 export * as runnables__remote from "../runnables/remote.js";

@@ -106,9 +106,15 @@ utils/json_patch.d.ts
 utils/json_schema.cjs
 utils/json_schema.js
 utils/json_schema.d.ts
+utils/math.cjs
+utils/math.js
+utils/math.d.ts
 utils/stream.cjs
 utils/stream.js
 utils/stream.d.ts
+utils/testing.cjs
+utils/testing.js
+utils/testing.d.ts
 utils/tiktoken.cjs
 utils/tiktoken.js
 utils/tiktoken.d.ts

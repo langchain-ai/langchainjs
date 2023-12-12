@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.198",
+  "version": "0.0.204",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -28,6 +28,9 @@
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
+    "agents/toolkits/connery.cjs",
+    "agents/toolkits/connery.js",
+    "agents/toolkits/connery.d.ts",
     "agents/toolkits/sql.cjs",
     "agents/toolkits/sql.js",
     "agents/toolkits/sql.d.ts",
@@ -70,6 +73,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/connery.cjs",
+    "tools/connery.js",
+    "tools/connery.d.ts",
     "tools/render.cjs",
     "tools/render.js",
     "tools/render.d.ts",
@@ -79,9 +85,15 @@
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
+    "tools/gmail.cjs",
+    "tools/gmail.js",
+    "tools/gmail.d.ts",
     "tools/google_calendar.cjs",
     "tools/google_calendar.js",
     "tools/google_calendar.d.ts",
+    "tools/google_places.cjs",
+    "tools/google_places.js",
+    "tools/google_places.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -154,6 +166,9 @@
     "embeddings/llama_cpp.cjs",
     "embeddings/llama_cpp.js",
     "embeddings/llama_cpp.d.ts",
+    "embeddings/gradient_ai.cjs",
+    "embeddings/gradient_ai.js",
+    "embeddings/gradient_ai.d.ts",
     "llms/load.cjs",
     "llms/load.js",
     "llms/load.d.ts",
@@ -187,6 +202,9 @@
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
+    "llms/fireworks.cjs",
+    "llms/fireworks.js",
+    "llms/fireworks.d.ts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
@@ -196,12 +214,15 @@
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
-    "llms/fireworks.cjs",
-    "llms/fireworks.js",
-    "llms/fireworks.d.ts",
+    "llms/gradient_ai.cjs",
+    "llms/gradient_ai.js",
+    "llms/gradient_ai.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/watsonx_ai.cjs",
+    "llms/watsonx_ai.js",
+    "llms/watsonx_ai.d.ts",
     "llms/bedrock.cjs",
     "llms/bedrock.js",
     "llms/bedrock.d.ts",
@@ -442,6 +463,9 @@
     "document_loaders/fs/buffer.cjs",
     "document_loaders/fs/buffer.js",
     "document_loaders/fs/buffer.d.ts",
+    "document_loaders/fs/chatgpt.cjs",
+    "document_loaders/fs/chatgpt.js",
+    "document_loaders/fs/chatgpt.d.ts",
     "document_loaders/fs/text.cjs",
     "document_loaders/fs/text.js",
     "document_loaders/fs/text.d.ts",
@@ -466,6 +490,9 @@
     "document_loaders/fs/notion.cjs",
     "document_loaders/fs/notion.js",
     "document_loaders/fs/notion.d.ts",
+    "document_loaders/fs/obsidian.cjs",
+    "document_loaders/fs/obsidian.js",
+    "document_loaders/fs/obsidian.d.ts",
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
@@ -808,6 +835,9 @@
     "experimental/chains/violation_of_expectations.cjs",
     "experimental/chains/violation_of_expectations.js",
     "experimental/chains/violation_of_expectations.d.ts",
+    "experimental/masking.cjs",
+    "experimental/masking.js",
+    "experimental/masking.d.ts",
     "experimental/tools/pyinterpreter.cjs",
     "experimental/tools/pyinterpreter.js",
     "experimental/tools/pyinterpreter.d.ts",
@@ -829,104 +859,66 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn run build:deps && yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --concurrency=1",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint:fix": "yarn lint --fix",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
-    "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
+    "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:integration": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
-    "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
-    "@aws-sdk/client-dynamodb": "^3.310.0",
-    "@aws-sdk/client-kendra": "^3.352.0",
-    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.414.0",
     "@aws-sdk/client-sfn": "^3.362.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
-    "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
-    "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
-    "@huggingface/inference": "^2.6.4",
     "@jest/globals": "^29.5.0",
-    "@mozilla/readability": "^0.4.4",
     "@notionhq/client": "^2.2.10",
-    "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
-    "@planetscale/database": "^1.8.0",
-    "@qdrant/js-client-rest": "^1.2.0",
-    "@raycast/api": "^1.55.2",
-    "@rockset/client": "^0.9.1",
-    "@smithy/eventstream-codec": "^2.0.5",
-    "@smithy/protocol-http": "^3.0.6",
-    "@smithy/signature-v4": "^2.0.10",
-    "@smithy/util-utf8": "^2.0.0",
-    "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
-    "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
-    "@tensorflow/tfjs-backend-cpu": "^3",
-    "@tensorflow/tfjs-converter": "^3.6.0",
-    "@tensorflow/tfjs-core": "^3.6.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
     "@types/decamelize": "^1.2.0",
-    "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
-    "@types/lodash": "^4",
-    "@types/mozilla-readability": "^0.2.1",
     "@types/pdf-parse": "^1.1.1",
-    "@types/pg": "^8",
-    "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
-    "@upstash/redis": "^1.20.6",
     "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
-    "@writerai/writer-sdk": "^0.40.2",
-    "@xata.io/client": "^0.25.1",
-    "@xenova/transformers": "^2.5.4",
-    "@zilliz/milvus2-sdk-node": ">=2.2.11",
+    "@xata.io/client": "^0.28.0",
     "apify-client": "^2.7.1",
     "assemblyai": "^2.0.2",
     "axios": "^0.26.0",
-    "cassandra-driver": "^4.7.2",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
-    "closevector-common": "0.1.0-alpha.1",
-    "closevector-node": "0.1.0-alpha.10",
-    "closevector-web": "0.1.0-alpha.15",
-    "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -939,155 +931,87 @@
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.2.7",
-    "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
-    "graphql": "^16.6.0",
-    "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "jsdom": "^22.1.0",
-    "llmonitor": "^0.5.9",
-    "lodash": "^4.17.21",
     "mammoth": "^1.5.1",
-    "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
-    "mysql2": "^3.3.3",
-    "neo4j-driver": "^5.12.0",
     "node-llama-cpp": "2.7.3",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
-    "pg": "^8.11.0",
-    "pg-copy-streams": "^6.0.5",
-    "pickleparser": "^0.2.1",
     "playwright": "^1.32.1",
-    "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "pyodide": "^0.24.1",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.18.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
-    "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "^5.0.0",
-    "typesense": "^1.5.3",
-    "usearch": "^1.1.1",
+    "typescript": "~5.1.6",
     "vectordb": "^0.1.4",
-    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
     "youtube-transcript": "^1.0.6",
     "youtubei.js": "^5.8.0"
   },
   "peerDependencies": {
-    "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.422.0",
-    "@aws-sdk/client-dynamodb": "^3.310.0",
-    "@aws-sdk/client-kendra": "^3.352.0",
-    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@azure/storage-blob": "^12.15.0",
-    "@clickhouse/client": "^0.2.5",
-    "@cloudflare/ai": "^1.0.12",
-    "@elastic/elasticsearch": "^8.4.0",
-    "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
     "@gomomento/sdk-core": "^1.51.1",
     "@gomomento/sdk-web": "^1.51.1",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
-    "@huggingface/inference": "^2.6.4",
-    "@mozilla/readability": "*",
     "@notionhq/client": "^2.2.10",
-    "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "^1.1.0",
-    "@planetscale/database": "^1.8.0",
-    "@qdrant/js-client-rest": "^1.2.0",
-    "@raycast/api": "^1.55.2",
-    "@rockset/client": "^0.9.1",
-    "@smithy/eventstream-codec": "^2.0.5",
-    "@smithy/protocol-http": "^3.0.6",
-    "@smithy/signature-v4": "^2.0.10",
-    "@smithy/util-utf8": "^2.0.0",
-    "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
-    "@tensorflow-models/universal-sentence-encoder": "*",
-    "@tensorflow/tfjs-converter": "*",
-    "@tensorflow/tfjs-core": "*",
-    "@upstash/redis": "^1.20.6",
     "@vercel/kv": "^0.2.3",
-    "@vercel/postgres": "^0.5.0",
-    "@writerai/writer-sdk": "^0.40.2",
-    "@xata.io/client": "^0.25.1",
-    "@xenova/transformers": "^2.5.4",
-    "@zilliz/milvus2-sdk-node": ">=2.2.7",
+    "@xata.io/client": "^0.28.0",
     "apify-client": "^2.7.1",
     "assemblyai": "^2.0.2",
     "axios": "*",
-    "cassandra-driver": "^4.7.2",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "*",
-    "closevector-common": "0.1.0-alpha.1",
-    "closevector-node": "0.1.0-alpha.10",
-    "closevector-web": "0.1.0-alpha.16",
-    "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.2.7",
-    "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^126.0.1",
-    "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "ioredis": "^5.3.2",
     "jsdom": "*",
-    "llmonitor": "^0.5.9",
-    "lodash": "^4.17.21",
     "mammoth": "*",
     "mongodb": "^5.2.0",
-    "mysql2": "^3.3.3",
-    "neo4j-driver": "*",
     "node-llama-cpp": "*",
     "notion-to-md": "^3.1.0",
     "officeparser": "^4.0.4",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
-    "pg": "^8.11.0",
-    "pg-copy-streams": "^6.0.5",
-    "pickleparser": "^0.2.1",
     "playwright": "^1.32.1",
-    "portkey-ai": "^0.1.11",
     "puppeteer": "^19.7.2",
     "pyodide": "^0.24.1",
     "redis": "^4.6.4",
-    "replicate": "^0.18.0",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
-    "typesense": "^1.5.3",
-    "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
-    "voy-search": "0.6.2",
     "weaviate-ts-client": "^1.4.0",
     "web-auth-library": "^1.0.3",
     "ws": "^8.14.2",
@@ -1095,21 +1019,6 @@
     "youtubei.js": "^5.8.0"
   },
   "peerDependenciesMeta": {
-    "@aws-crypto/sha256-js": {
-      "optional": true
-    },
-    "@aws-sdk/client-bedrock-runtime": {
-      "optional": true
-    },
-    "@aws-sdk/client-dynamodb": {
-      "optional": true
-    },
-    "@aws-sdk/client-kendra": {
-      "optional": true
-    },
-    "@aws-sdk/client-lambda": {
-      "optional": true
-    },
     "@aws-sdk/client-s3": {
       "optional": true
     },
@@ -1123,21 +1032,6 @@
       "optional": true
     },
     "@azure/storage-blob": {
-      "optional": true
-    },
-    "@clickhouse/client": {
-      "optional": true
-    },
-    "@cloudflare/ai": {
-      "optional": true
-    },
-    "@elastic/elasticsearch": {
-      "optional": true
-    },
-    "@getmetal/metal-sdk": {
-      "optional": true
-    },
-    "@getzep/zep-js": {
       "optional": true
     },
     "@gomomento/sdk": {
@@ -1155,79 +1049,19 @@
     "@google-cloud/storage": {
       "optional": true
     },
-    "@huggingface/inference": {
-      "optional": true
-    },
-    "@mozilla/readability": {
-      "optional": true
-    },
     "@notionhq/client": {
-      "optional": true
-    },
-    "@opensearch-project/opensearch": {
       "optional": true
     },
     "@pinecone-database/pinecone": {
       "optional": true
     },
-    "@planetscale/database": {
-      "optional": true
-    },
-    "@qdrant/js-client-rest": {
-      "optional": true
-    },
-    "@raycast/api": {
-      "optional": true
-    },
-    "@rockset/client": {
-      "optional": true
-    },
-    "@smithy/eventstream-codec": {
-      "optional": true
-    },
-    "@smithy/protocol-http": {
-      "optional": true
-    },
-    "@smithy/signature-v4": {
-      "optional": true
-    },
-    "@smithy/util-utf8": {
-      "optional": true
-    },
-    "@supabase/postgrest-js": {
-      "optional": true
-    },
     "@supabase/supabase-js": {
-      "optional": true
-    },
-    "@tensorflow-models/universal-sentence-encoder": {
-      "optional": true
-    },
-    "@tensorflow/tfjs-converter": {
-      "optional": true
-    },
-    "@tensorflow/tfjs-core": {
-      "optional": true
-    },
-    "@upstash/redis": {
       "optional": true
     },
     "@vercel/kv": {
       "optional": true
     },
-    "@vercel/postgres": {
-      "optional": true
-    },
-    "@writerai/writer-sdk": {
-      "optional": true
-    },
     "@xata.io/client": {
-      "optional": true
-    },
-    "@xenova/transformers": {
-      "optional": true
-    },
-    "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
     "apify-client": {
@@ -1239,25 +1073,10 @@
     "axios": {
       "optional": true
     },
-    "cassandra-driver": {
-      "optional": true
-    },
     "cheerio": {
       "optional": true
     },
     "chromadb": {
-      "optional": true
-    },
-    "closevector-common": {
-      "optional": true
-    },
-    "closevector-node": {
-      "optional": true
-    },
-    "closevector-web": {
-      "optional": true
-    },
-    "cohere-ai": {
       "optional": true
     },
     "convex": {
@@ -1275,16 +1094,10 @@
     "fast-xml-parser": {
       "optional": true
     },
-    "firebase-admin": {
-      "optional": true
-    },
     "google-auth-library": {
       "optional": true
     },
     "googleapis": {
-      "optional": true
-    },
-    "hnswlib-node": {
       "optional": true
     },
     "html-to-text": {
@@ -1299,22 +1112,10 @@
     "jsdom": {
       "optional": true
     },
-    "llmonitor": {
-      "optional": true
-    },
-    "lodash": {
-      "optional": true
-    },
     "mammoth": {
       "optional": true
     },
     "mongodb": {
-      "optional": true
-    },
-    "mysql2": {
-      "optional": true
-    },
-    "neo4j-driver": {
       "optional": true
     },
     "node-llama-cpp": {
@@ -1332,19 +1133,7 @@
     "peggy": {
       "optional": true
     },
-    "pg": {
-      "optional": true
-    },
-    "pg-copy-streams": {
-      "optional": true
-    },
-    "pickleparser": {
-      "optional": true
-    },
     "playwright": {
-      "optional": true
-    },
-    "portkey-ai": {
       "optional": true
     },
     "puppeteer": {
@@ -1356,9 +1145,6 @@
     "redis": {
       "optional": true
     },
-    "replicate": {
-      "optional": true
-    },
     "sonix-speech-recognition": {
       "optional": true
     },
@@ -1368,16 +1154,7 @@
     "typeorm": {
       "optional": true
     },
-    "typesense": {
-      "optional": true
-    },
-    "usearch": {
-      "optional": true
-    },
     "vectordb": {
-      "optional": true
-    },
-    "voy-search": {
       "optional": true
     },
     "weaviate-ts-client": {
@@ -1398,17 +1175,17 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.9.1",
-    "@langchain/core": "~0.0.2",
+    "@langchain/community": "~0.0.2",
+    "@langchain/core": "~0.0.11",
+    "@langchain/openai": "~0.0.2",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
-    "flat": "^5.0.2",
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "langchainhub": "~0.0.6",
     "langsmith": "~0.0.48",
     "ml-distance": "^4.0.0",
-    "openai": "^4.19.0",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -1463,6 +1240,11 @@
       "types": "./agents/toolkits/aws_sfn.d.ts",
       "import": "./agents/toolkits/aws_sfn.js",
       "require": "./agents/toolkits/aws_sfn.cjs"
+    },
+    "./agents/toolkits/connery": {
+      "types": "./agents/toolkits/connery.d.ts",
+      "import": "./agents/toolkits/connery.js",
+      "require": "./agents/toolkits/connery.cjs"
     },
     "./agents/toolkits/sql": {
       "types": "./agents/toolkits/sql.d.ts",
@@ -1534,6 +1316,11 @@
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
     },
+    "./tools/connery": {
+      "types": "./tools/connery.d.ts",
+      "import": "./tools/connery.js",
+      "require": "./tools/connery.cjs"
+    },
     "./tools/render": {
       "types": "./tools/render.d.ts",
       "import": "./tools/render.js",
@@ -1549,10 +1336,20 @@
       "import": "./tools/webbrowser.js",
       "require": "./tools/webbrowser.cjs"
     },
+    "./tools/gmail": {
+      "types": "./tools/gmail.d.ts",
+      "import": "./tools/gmail.js",
+      "require": "./tools/gmail.cjs"
+    },
     "./tools/google_calendar": {
       "types": "./tools/google_calendar.d.ts",
       "import": "./tools/google_calendar.js",
       "require": "./tools/google_calendar.cjs"
+    },
+    "./tools/google_places": {
+      "types": "./tools/google_places.d.ts",
+      "import": "./tools/google_places.js",
+      "require": "./tools/google_places.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",
@@ -1674,6 +1471,11 @@
       "import": "./embeddings/llama_cpp.js",
       "require": "./embeddings/llama_cpp.cjs"
     },
+    "./embeddings/gradient_ai": {
+      "types": "./embeddings/gradient_ai.d.ts",
+      "import": "./embeddings/gradient_ai.js",
+      "require": "./embeddings/gradient_ai.cjs"
+    },
     "./llms/load": {
       "types": "./llms/load.d.ts",
       "import": "./llms/load.js",
@@ -1729,6 +1531,11 @@
       "import": "./llms/replicate.js",
       "require": "./llms/replicate.cjs"
     },
+    "./llms/fireworks": {
+      "types": "./llms/fireworks.d.ts",
+      "import": "./llms/fireworks.js",
+      "require": "./llms/fireworks.cjs"
+    },
     "./llms/googlevertexai": {
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
@@ -1744,15 +1551,20 @@
       "import": "./llms/googlepalm.js",
       "require": "./llms/googlepalm.cjs"
     },
-    "./llms/fireworks": {
-      "types": "./llms/fireworks.d.ts",
-      "import": "./llms/fireworks.js",
-      "require": "./llms/fireworks.cjs"
+    "./llms/gradient_ai": {
+      "types": "./llms/gradient_ai.d.ts",
+      "import": "./llms/gradient_ai.js",
+      "require": "./llms/gradient_ai.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/watsonx_ai": {
+      "types": "./llms/watsonx_ai.d.ts",
+      "import": "./llms/watsonx_ai.js",
+      "require": "./llms/watsonx_ai.cjs"
     },
     "./llms/bedrock": {
       "types": "./llms/bedrock.d.ts",
@@ -2154,6 +1966,11 @@
       "import": "./document_loaders/fs/buffer.js",
       "require": "./document_loaders/fs/buffer.cjs"
     },
+    "./document_loaders/fs/chatgpt": {
+      "types": "./document_loaders/fs/chatgpt.d.ts",
+      "import": "./document_loaders/fs/chatgpt.js",
+      "require": "./document_loaders/fs/chatgpt.cjs"
+    },
     "./document_loaders/fs/text": {
       "types": "./document_loaders/fs/text.d.ts",
       "import": "./document_loaders/fs/text.js",
@@ -2193,6 +2010,11 @@
       "types": "./document_loaders/fs/notion.d.ts",
       "import": "./document_loaders/fs/notion.js",
       "require": "./document_loaders/fs/notion.cjs"
+    },
+    "./document_loaders/fs/obsidian": {
+      "types": "./document_loaders/fs/obsidian.d.ts",
+      "import": "./document_loaders/fs/obsidian.js",
+      "require": "./document_loaders/fs/obsidian.cjs"
     },
     "./document_loaders/fs/unstructured": {
       "types": "./document_loaders/fs/unstructured.d.ts",
@@ -2763,6 +2585,11 @@
       "types": "./experimental/chains/violation_of_expectations.d.ts",
       "import": "./experimental/chains/violation_of_expectations.js",
       "require": "./experimental/chains/violation_of_expectations.cjs"
+    },
+    "./experimental/masking": {
+      "types": "./experimental/masking.d.ts",
+      "import": "./experimental/masking.js",
+      "require": "./experimental/masking.cjs"
     },
     "./experimental/tools/pyinterpreter": {
       "types": "./experimental/tools/pyinterpreter.d.ts",
