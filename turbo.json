@@ -13,7 +13,11 @@
       "dependsOn": ["@langchain/openai#build"]
     },
     "build": {
-      "dependsOn": ["@langchain/core#build", "@langchain/community#build",  "^build"],
+      "dependsOn": [
+        "@langchain/core#build",
+        "@langchain/community#build",
+        "^build"
+      ],
       "outputs": ["dist/**", "dist-cjs/**", "*.js", "*.cjs", "*.d.ts"],
       "inputs": ["src/**", "scripts/**", "package.json", "tsconfig.json"]
     },
