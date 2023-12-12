@@ -47,4 +47,3 @@ export {
   formatToOpenAIFunction,
   formatToOpenAITool,
 } from "./convert_to_openai.js";
-export { JiraAPIWrapper, JiraAction } from "./jira.js";

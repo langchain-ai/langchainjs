@@ -1,5 +1,8 @@
 import { Tool } from "@langchain/core/tools";
-import { AsyncCaller, AsyncCallerParams } from "@langchain/core/utils/async_caller";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 export type JiraInwardIssue = {
