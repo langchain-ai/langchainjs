@@ -2,7 +2,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   LLM,
   type BaseLLMCallOptions,
-  type BaseLLMParams
+  type BaseLLMParams,
 } from "@langchain/core/language_models/llms";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -163,7 +163,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     return {
       accept: "application/json",
       "content-type": "application/json",
-      Authorization: `Bearer ${this.apiKey}`
+      Authorization: `Bearer ${this.apiKey}`,
     };
   }
 
@@ -177,7 +177,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       repetition_penalty: this?.repetitionPenalty ?? options?.repetitionPenalty,
       logprobs: this?.logprobs ?? options?.logprobs,
       stream_tokens: this?.streaming,
-      safety_model: this?.safetyModel ?? options?.safetyModel
+      safety_model: this?.safetyModel ?? options?.safetyModel,
     };
     return body;
   }
@@ -190,9 +190,9 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       const fetchResponse = await fetch(this.inferenceUrl, {
         method: "POST",
         headers: {
-          ...this.constructHeaders()
+          ...this.constructHeaders(),
         },
-        body: JSON.stringify(this.constructBody(prompt, options))
+        body: JSON.stringify(this.constructBody(prompt, options)),
       });
       if (fetchResponse.status === 200) {
         return fetchResponse.json();
@@ -229,9 +229,9 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     const fetchResponse = await fetch(this.inferenceUrl, {
       method: "POST",
       headers: {
-        ...this.constructHeaders()
+        ...this.constructHeaders(),
       },
-      body: JSON.stringify(this.constructBody(prompt, options))
+      body: JSON.stringify(this.constructBody(prompt, options)),
     });
 
     if (fetchResponse.status !== 200) {
@@ -273,7 +273,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
         const parsedResponse = JSON.parse(stringifiedResponse);
         yield new GenerationChunk({
           text: parsedResponse.data.choices[0].text,
-          generationInfo: {}
+          generationInfo: {},
         });
         await runManager?.handleLLMNewToken(
           parsedResponse.data.choices[0].text
