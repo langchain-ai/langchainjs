@@ -1,11 +1,10 @@
-import type { OpenAI as OpenAIClient } from "openai";
+import type { OpenAIClient } from "@langchain/openai";
 import {
   BaseMessage,
   HumanMessage,
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { Document } from "../document.js";
 import { Serializable } from "../load/serializable.js";
 
 export {
@@ -128,12 +127,4 @@ export abstract class BaseEntityStore extends Serializable {
   abstract clear(): Promise<void>;
 }
 
-/**
- * Abstract class for a document store. All document stores should extend
- * this class.
- */
-export abstract class Docstore {
-  abstract search(search: string): Promise<Document>;
-
-  abstract add(texts: Record<string, Document>): Promise<void>;
-}
+export { Docstore } from "@langchain/community/stores/doc/base";
