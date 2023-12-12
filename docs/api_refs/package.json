@@ -7,7 +7,7 @@
     "typedoc": "npx typedoc --options typedoc.json",
     "build:scripts": "yarn typedoc && node ./scripts/update-typedoc-css.js",
     "build": "yarn run build:deps && yarn build:scripts && next build",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --filter=langchain --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --filter=langchain --concurrency=1 --force",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint"
   },
