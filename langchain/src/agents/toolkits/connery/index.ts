@@ -3,7 +3,7 @@ import { Toolkit } from "../base.js";
 import { ConneryService } from "../../../tools/connery.js";
 
 /**
- * A toolkit for working with Connery actions.
+ * A toolkit for working with Connery Actions.
  *
  * Connery is an open-source plugin infrastructure for AI.
  * Source code: https://github.com/connery-io/connery-platform

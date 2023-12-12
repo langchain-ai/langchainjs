@@ -1,25 +1,40 @@
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/tools/connery.ts";
 
-# Connery Actions Tool
+# Connery Action Tool
 
-Using this tool, you can integrate individual Connery actions into your LangChain agents and chains.
+Using this tool, you can integrate individual Connery Action into your LangChain agents and chains.
+
+:::note
+If you want to use several Connery Actions in your agent,
+check out the [Connery Toolkit](/docs/integrations/toolkits/connery) documentation.
+:::
 
 ## What is Connery?
 
 Connery is an open-source plugin infrastructure for AI.
 
-With Connery, you can easily create a custom plugin, which is essentially a set of actions, and use them in your LangChain agents and chains.
+With Connery, you can easily create a custom plugin with a set of actions and seamlessly integrate them into your LangChain agents and chains.
 Connery will handle the rest: runtime, authorization, secret management, access management, audit logs, and other vital features.
-Also, you can find a lot of ready-to-use plugins from our community.
+Additionally, Connery and our community offer a wide range of ready-to-use open-source plugins for your convenience.
 
 Learn more about Connery:
 
-- GitHub repository: https://github.com/connery-io/connery-platform
+- GitHub: https://github.com/connery-io/connery-platform
 - Documentation: https://docs.connery.io
 
-## Usage
+## Prerequisites
 
-This example shows how to create a tool for one specific Connery action and call it.
+To use Connery Actions in your LangChain agents, you need to do some preparation:
+
+1. Set up the Connery runner using the [Quickstart](https://docs.connery.io/docs/platform/quick-start/) guide.
+2. Install all the plugins with the actions you want to use in your agent.
+3. Set environment variables `CONNERY_RUNNER_URL` and `CONNERY_RUNNER_API_KEY` so the toolkit can communicate with the Connery Runner.
+
+## Example
+
+In the example below, we fetch action by its ID from the Connery Runner and then call it with the specified parameters.
+We use the ID of the **Send email** action from the [Gmail](https://github.com/connery-io/gmail) plugin.
+You can find action IDs in the Connery Runner.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
