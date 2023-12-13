@@ -203,24 +203,18 @@ export function mapGenerateContentResultToChatResult(
     };
   }
 
-  const [message] = response.candidates;
-  const text =
-    message.content.parts
-      .map((part) => part.text)
-      .filter(Boolean)
-      .flat(1)
-      .join(" ") ?? "";
+  const [candidate] = response.candidates;
+  const { content, ...generationInfo } = candidate;
+  const text = content.parts[0]?.text ?? "";
 
   const generation: ChatGeneration = {
     text,
     message: new AIMessage({
       content: text,
-      name: message.content === null ? undefined : message.content.role,
-      additional_kwargs: {
-        citationSources: message.citationMetadata?.citationSources,
-        filters: response.promptFeedback,
-      },
+      name: content === null ? undefined : content.role,
+      additional_kwargs: {},
     }),
+    generationInfo,
   };
 
   return {
@@ -240,9 +234,11 @@ export function convertResponseContentToChatGenerationChunk(
 
   return new ChatGenerationChunk({
     text,
-    message: new AIMessageChunk(text),
-    generationInfo: {
-      ...generationInfo,
-    },
+    message: new AIMessageChunk({
+      content: text,
+      name: content === null ? undefined : content.role,
+      additional_kwargs: {},
+    }),
+    generationInfo,
   });
 }

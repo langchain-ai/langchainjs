@@ -36,18 +36,28 @@ console.log(res);
 
 /*
   AIMessage {
-    content: '1. Sock-It-To-Me\n' +
-      '2. Happy Soles\n' +
-      '3. Toe-tally Colorful\n' +
-      '4. Sock-O-Rama\n' +
-      '5. Rainbow Feet\n' +
-      '6. Colorful Soles\n' +
-      '7. Hue-Man Socks\n' +
-      '8. Sock Appeal\n' +
-      '9. Sole-ly Colorful\n' +
-      '10. Sock-cessful Stepping',
+    content: '1. Rainbow Soles\n' +
+      '2. Toe-tally Colorful\n' +
+      '3. Bright Sock Creations\n' +
+      '4. Hue Knew Socks\n' +
+      '5. The Happy Sock Factory\n' +
+      '6. Color Pop Hosiery\n' +
+      '7. Sock It to Me!\n' +
+      '8. Mismatched Masterpieces\n' +
+      '9. Threads of Joy\n' +
+      '10. Funky Feet Emporium\n' +
+      '11. Colorful Threads\n' +
+      '12. Sole Mates\n' +
+      '13. Colorful Soles\n' +
+      '14. Sock Appeal\n' +
+      '15. Happy Feet Unlimited\n' +
+      '16. The Sock Stop\n' +
+      '17. The Sock Drawer\n' +
+      '18. Sole-diers\n' +
+      '19. Footloose Footwear\n' +
+      '20. Step into Color',
     name: 'model',
-    additional_kwargs: { citationSources: undefined, filters: { safetyRatings: [Array] } }
+    additional_kwargs: {}
   }
 */
 
@@ -84,8 +94,28 @@ console.log(res2);
 
 /*
   AIMessage {
-    content: ' The image shows a hot dog in a bun. The hot dog is grilled and has grill marks on it. The bun is toasted and has a light golden brown color. The hot dog is in the center of the bun.',
+    content: ' The image shows a hot dog in a bun. The hot dog is grilled and has a dark brown color. The bun is toasted and has a light brown color. The hot dog is in the center of the bun.',
     name: 'model',
-    additional_kwargs: { citationSources: undefined, filters: { safetyRatings: [Array] } }
+    additional_kwargs: {}
+  }
+*/
+
+// Multi-modal streaming
+const res3 = await vision.stream(input2);
+
+for await (const chunk of res3) {
+  console.log(chunk);
+}
+
+/*
+  AIMessageChunk {
+    content: ' The image shows a hot dog in a bun. The hot dog is grilled and has grill marks on it. The bun is toasted and has a light golden',
+    name: 'model',
+    additional_kwargs: {}
+  }
+  AIMessageChunk {
+    content: ' brown color. The hot dog is in the center of the bun.',
+    name: 'model',
+    additional_kwargs: {}
   }
 */

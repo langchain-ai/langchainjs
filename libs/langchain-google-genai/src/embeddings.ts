@@ -4,8 +4,6 @@ import {
   TaskType,
   EmbedContentRequest,
 } from "@google/generative-ai";
-import { TextServiceClient } from "@google-ai/generativelanguage";
-
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 
@@ -84,7 +82,7 @@ export class GoogleGenerativeAIEmbeddings
 
   stripNewLines = true;
 
-  private client: GenerativeModel | TextServiceClient;
+  private client: GenerativeModel;
 
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
     super(fields ?? {});
@@ -140,16 +138,6 @@ export class GoogleGenerativeAIEmbeddings
     };
     const res = await (this.client as GenerativeModel).batchEmbedContents(req);
     return res.embeddings.map((e) => e.values || []) ?? [];
-  }
-
-  protected async _embedQueryText(text: string): Promise<number[]> {
-    // replace newlines, which can negatively affect performance.
-    const cleanedText = text.replace(/\n/g, " ");
-    const res = await (this.client as TextServiceClient).embedText({
-      model: this.modelName,
-      text: cleanedText,
-    });
-    return res[0].embedding?.value ?? [];
   }
 
   /**
