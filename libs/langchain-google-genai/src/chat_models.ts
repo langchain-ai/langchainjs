@@ -1,33 +1,24 @@
 import {
   GenerativeModel,
   GoogleGenerativeAI as GenerativeAI,
-  EnhancedGenerateContentResponse,
   HarmBlockThreshold,
-  Content,
   HarmCategory,
-  Part,
   SafetySetting,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import {
-  AIMessage,
-  AIMessageChunk,
-  BaseMessage,
-  ChatMessage,
-  MessageContent,
-  isBaseMessage,
-} from "@langchain/core/messages";
-import {
-  ChatGenerationChunk,
-  ChatGeneration,
-  ChatResult,
-} from "@langchain/core/outputs";
+import { BaseMessage } from "@langchain/core/messages";
+import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import { assertSafetySettings } from "./utils.js";
+import {
+  assertSafetySettings,
+  convertBaseMessagesToContent,
+  convertResponseContentToChatGenerationChunk,
+  mapGenerateContentResultToChatResult,
+} from "./utils.js";
 
 export { HarmCategory, HarmBlockThreshold, type SafetySetting };
 
@@ -112,199 +103,6 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
    * Google API key to use
    */
   apiKey?: string;
-}
-
-function getMessageAuthor(message: BaseMessage) {
-  const type = message._getType();
-  if (ChatMessage.isInstance(message)) {
-    return message.role;
-  }
-  return message.name ?? type;
-}
-
-/**
- * Maps a message type to a Google Generative AI chat author.
- * @param message The message to map.
- * @param model The model to use for mapping.
- * @returns The message type mapped to a Google Generative AI chat author.
- */
-export function convertAuthorToRole(author: string) {
-  switch (author) {
-    /**
-     *  Note: Gemini currently is not supporting system messages
-     *  we will convert them to human messages and merge with following
-     * */
-    case "ai":
-      return "model";
-    case "system":
-    case "human":
-      return "user";
-    default:
-      throw new Error(`Unknown / unsupported author: ${author}`);
-  }
-}
-
-export function convertMessageContentToParts(
-  content: MessageContent,
-  isMultimodalModel: boolean
-): Part[] {
-  if (typeof content === "string") {
-    return [{ text: content }];
-  }
-
-  return content.map((c) => {
-    if (c.type === "text") {
-      return {
-        text: c.text,
-      };
-    }
-
-    if (c.type === "image_url") {
-      if (!isMultimodalModel) {
-        throw new Error(`This model does not support images`);
-      }
-      if (typeof c.image_url !== "string") {
-        throw new Error("Please provide image as base64 encoded data URL");
-      }
-      const [dm, data] = c.image_url.split(",");
-      if (!dm.startsWith("data:")) {
-        throw new Error("Please provide image as base64 encoded data URL");
-      }
-
-      const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
-      if (encoding !== "base64") {
-        throw new Error("Please provide image as base64 encoded data URL");
-      }
-
-      return {
-        inlineData: {
-          data,
-          mimeType,
-        },
-      };
-    }
-    throw new Error(`Unknown content type ${(c as { type: string }).type}`);
-  });
-}
-
-export function convertBaseMessagesToContent(
-  messages: BaseMessage[],
-  isMultimodalModel: boolean
-) {
-  return messages.reduce<{
-    content: Content[];
-    mergeWithPreviousContent: boolean;
-  }>(
-    (acc, message, index) => {
-      if (!isBaseMessage(message)) {
-        throw new Error("Unsupported message input");
-      }
-      const author = getMessageAuthor(message);
-      if (author === "system" && index !== 0) {
-        throw new Error("System message should be the first one");
-      }
-      const role = convertAuthorToRole(author);
-
-      const prevContent = acc.content[acc.content.length];
-      if (
-        !acc.mergeWithPreviousContent &&
-        prevContent &&
-        prevContent.role === role
-      ) {
-        throw new Error(
-          "Google Generative AI requires alternate messages between authors"
-        );
-      }
-
-      const parts = convertMessageContentToParts(
-        message.content,
-        isMultimodalModel
-      );
-
-      if (acc.mergeWithPreviousContent) {
-        const prevContent = acc.content[acc.content.length - 1];
-        if (!prevContent) {
-          throw new Error(
-            "There was a problem parsing your system message. Please try a prompt without one."
-          );
-        }
-        prevContent.parts.push(...parts);
-
-        return {
-          mergeWithPreviousContent: false,
-          content: acc.content,
-        };
-      }
-      const content: Content = {
-        role,
-        parts,
-      };
-      return {
-        mergeWithPreviousContent: author === "system",
-        content: [...acc.content, content],
-      };
-    },
-    { content: [], mergeWithPreviousContent: false }
-  ).content;
-}
-
-export function mapGenerateContentResultToChatResult(
-  response: EnhancedGenerateContentResponse
-): ChatResult {
-  // if rejected or error, return empty generations with reason in filters
-  if (
-    !response.candidates ||
-    response.candidates.length === 0 ||
-    !response.candidates[0]
-  ) {
-    return {
-      generations: [],
-      llmOutput: {
-        filters: response.promptFeedback,
-      },
-    };
-  }
-
-  const [message] = response.candidates;
-  const text =
-    message.content.parts
-      .map((part) => part.text)
-      .filter(Boolean)
-      .flat(1)
-      .join(" ") ?? "";
-
-  const generation: ChatGeneration = {
-    text,
-    message: new AIMessage({
-      content: text,
-      name: message.content === null ? undefined : message.content.role,
-      additional_kwargs: {
-        citationSources: message.citationMetadata?.citationSources,
-        filters: response.promptFeedback,
-      },
-    }),
-  };
-
-  return {
-    generations: [generation],
-  };
-}
-
-export function getPalmContextInstruction(
-  messages: BaseMessage[]
-): string | undefined {
-  // get the first message and checks if it's a system 'system' messages
-  const systemMessage =
-    messages.length > 0 && getMessageAuthor(messages[0]) === "system"
-      ? messages[0]
-      : undefined;
-  if (
-    systemMessage?.content !== undefined &&
-    typeof systemMessage.content !== "string"
-  ) {
-    throw new Error("Non-string system message content is not supported.");
-  }
-  return systemMessage?.content;
 }
 
 /**
@@ -512,21 +310,12 @@ export class ChatGoogleGenerativeAI
     );
 
     for await (const response of stream) {
-      if (!response.candidates || response.candidates.length === 0) {
+      const chunk = convertResponseContentToChatGenerationChunk(response);
+      if (!chunk) {
         continue;
       }
 
-      const [candidate] = response.candidates;
-      const { content, ...generationInfo } = candidate;
-      const text = content.parts[0]?.text ?? "";
-
-      yield new ChatGenerationChunk({
-        text,
-        message: new AIMessageChunk(text),
-        generationInfo: {
-          ...generationInfo,
-        },
-      });
+      yield chunk;
     }
   }
 }
