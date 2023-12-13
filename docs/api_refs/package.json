@@ -11,7 +11,7 @@
     "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --filter=langchain --concurrency=1",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint",
-    "clean": "rm -rf .next .turbo public/**"
+    "clean": "rm -rf .next .turbo public/ && mkdir public"
   },
   "dependencies": {
     "next": "14.0.1",
