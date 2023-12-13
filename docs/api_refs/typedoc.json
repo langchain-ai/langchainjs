@@ -194,6 +194,7 @@
     "./langchain/src/chat_models/bedrock/index.ts",
     "./langchain/src/chat_models/bedrock/web.ts",
     "./langchain/src/chat_models/cloudflare_workersai.ts",
+    "./langchain/src/chat_models/googlegenerativeai.ts",
     "./langchain/src/chat_models/googlevertexai/index.ts",
     "./langchain/src/chat_models/googlevertexai/web.ts",
     "./langchain/src/chat_models/googlepalm.ts",

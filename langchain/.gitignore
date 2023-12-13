@@ -526,6 +526,9 @@ chat_models/bedrock/web.d.ts
 chat_models/cloudflare_workersai.cjs
 chat_models/cloudflare_workersai.js
 chat_models/cloudflare_workersai.d.ts
+chat_models/googlegenerativeai.cjs
+chat_models/googlegenerativeai.js
+chat_models/googlegenerativeai.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts

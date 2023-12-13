@@ -304,6 +304,9 @@ chat_models/cloudflare_workersai.d.ts
 chat_models/fireworks.cjs
 chat_models/fireworks.js
 chat_models/fireworks.d.ts
+chat_models/googlegenerativeai.cjs
+chat_models/googlegenerativeai.js
+chat_models/googlegenerativeai.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts

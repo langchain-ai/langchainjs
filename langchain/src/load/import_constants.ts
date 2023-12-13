@@ -122,6 +122,7 @@ export const optionalImportEntrypoints = [
   "langchain/chat_models/portkey",
   "langchain/chat_models/bedrock",
   "langchain/chat_models/bedrock/web",
+  "langchain/chat_models/googlegenerativeai",
   "langchain/chat_models/googlevertexai",
   "langchain/chat_models/googlevertexai/web",
   "langchain/chat_models/googlepalm",

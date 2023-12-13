@@ -96,7 +96,7 @@ export interface GoogleGenerativeAITextInput extends BaseLLMParams {
     | protos.google.ai.generativelanguage.v1beta2.ISafetySetting[];
 
   /**
-   * Google Palm API key to use
+   * Google API key to use
    */
   apiKey?: string;
 }
@@ -273,26 +273,6 @@ export class GoogleGenerativeAI
       .flat(1)
       .join(" ");
     return text ?? "";
-  }
-
-  async invoke(
-    input: BaseLanguageModelInput,
-    options?: this["ParsedCallOptions"]
-  ) {
-    if (this._isGenerateContentModel) {
-      return super.invoke(input, options);
-    }
-    const prompt = this._convertInputToGenerateContent(input);
-    const res = await this.caller.callWithOptions(
-      { signal: options?.signal },
-      async () => {
-        const output = await (this.client as GenerativeModel).generateContent(
-          prompt
-        );
-        return output;
-      }
-    );
-    return this._generateContentResponseToText(res.response);
   }
 
   protected async _generateText(

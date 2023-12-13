@@ -69,6 +69,7 @@ export const optionalImportEntrypoints = [
   "langchain_community/vectorstores/zep",
   "langchain_community/chat_models/bedrock",
   "langchain_community/chat_models/bedrock/web",
+  "langchain_community/chat_models/googlegenerativeai",
   "langchain_community/chat_models/googlevertexai",
   "langchain_community/chat_models/googlevertexai/web",
   "langchain_community/chat_models/googlepalm",

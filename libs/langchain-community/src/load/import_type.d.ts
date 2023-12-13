@@ -205,6 +205,9 @@ export interface OptionalImportMap {
   "@langchain/community/chat_models/bedrock/web"?:
     | typeof import("../chat_models/bedrock/web.js")
     | Promise<typeof import("../chat_models/bedrock/web.js")>;
+  "@langchain/community/chat_models/googlegenerativeai"?:
+    | typeof import("../chat_models/googlegenerativeai.js")
+    | Promise<typeof import("../chat_models/googlegenerativeai.js")>;
   "@langchain/community/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai/index.js")
     | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
