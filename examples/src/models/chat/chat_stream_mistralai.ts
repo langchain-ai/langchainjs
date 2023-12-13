@@ -7,11 +7,11 @@ const model = new ChatMistralAI({
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a helpful assistant"],
-  ["human", "{input}"]
+  ["human", "{input}"],
 ]);
 const chain = prompt.pipe(model);
 const response = await chain.stream({
-  input: "Hello"
+  input: "Hello",
 });
 for await (const item of response) {
   console.log(item);
