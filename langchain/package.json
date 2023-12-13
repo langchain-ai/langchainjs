@@ -151,9 +151,6 @@
     "embeddings/hf_transformers.cjs",
     "embeddings/hf_transformers.js",
     "embeddings/hf_transformers.d.ts",
-    "embeddings/googlegenerativeai.cjs",
-    "embeddings/googlegenerativeai.js",
-    "embeddings/googlegenerativeai.d.ts",
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
@@ -208,9 +205,6 @@
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
-    "llms/googlegenerativeai.cjs",
-    "llms/googlegenerativeai.js",
-    "llms/googlegenerativeai.d.ts",
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
@@ -538,9 +532,6 @@
     "chat_models/cloudflare_workersai.cjs",
     "chat_models/cloudflare_workersai.js",
     "chat_models/cloudflare_workersai.d.ts",
-    "chat_models/googlegenerativeai.cjs",
-    "chat_models/googlegenerativeai.js",
-    "chat_models/googlegenerativeai.d.ts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
@@ -1455,11 +1446,6 @@
       "import": "./embeddings/hf_transformers.js",
       "require": "./embeddings/hf_transformers.cjs"
     },
-    "./embeddings/googlegenerativeai": {
-      "types": "./embeddings/googlegenerativeai.d.ts",
-      "import": "./embeddings/googlegenerativeai.js",
-      "require": "./embeddings/googlegenerativeai.cjs"
-    },
     "./embeddings/googlevertexai": {
       "types": "./embeddings/googlevertexai.d.ts",
       "import": "./embeddings/googlevertexai.js",
@@ -1549,11 +1535,6 @@
       "types": "./llms/fireworks.d.ts",
       "import": "./llms/fireworks.js",
       "require": "./llms/fireworks.cjs"
-    },
-    "./llms/googlegenerativeai": {
-      "types": "./llms/googlegenerativeai.d.ts",
-      "import": "./llms/googlegenerativeai.js",
-      "require": "./llms/googlegenerativeai.cjs"
     },
     "./llms/googlevertexai": {
       "types": "./llms/googlevertexai.d.ts",
@@ -2099,11 +2080,6 @@
       "types": "./chat_models/cloudflare_workersai.d.ts",
       "import": "./chat_models/cloudflare_workersai.js",
       "require": "./chat_models/cloudflare_workersai.cjs"
-    },
-    "./chat_models/googlegenerativeai": {
-      "types": "./chat_models/googlegenerativeai.d.ts",
-      "import": "./chat_models/googlegenerativeai.js",
-      "require": "./chat_models/googlegenerativeai.cjs"
     },
     "./chat_models/googlevertexai": {
       "types": "./chat_models/googlevertexai.d.ts",

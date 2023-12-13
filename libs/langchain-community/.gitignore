@@ -82,9 +82,6 @@ embeddings/cloudflare_workersai.d.ts
 embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
-embeddings/googlegenerativeai.cjs
-embeddings/googlegenerativeai.js
-embeddings/googlegenerativeai.d.ts
 embeddings/googlepalm.cjs
 embeddings/googlepalm.js
 embeddings/googlepalm.d.ts
@@ -136,9 +133,6 @@ llms/cohere.d.ts
 llms/fireworks.cjs
 llms/fireworks.js
 llms/fireworks.d.ts
-llms/googlegenerativeai.cjs
-llms/googlegenerativeai.js
-llms/googlegenerativeai.d.ts
 llms/googlepalm.cjs
 llms/googlepalm.js
 llms/googlepalm.d.ts
@@ -307,9 +301,6 @@ chat_models/cloudflare_workersai.d.ts
 chat_models/fireworks.cjs
 chat_models/fireworks.js
 chat_models/fireworks.d.ts
-chat_models/googlegenerativeai.cjs
-chat_models/googlegenerativeai.js
-chat_models/googlegenerativeai.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts

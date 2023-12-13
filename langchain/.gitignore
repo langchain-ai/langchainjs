@@ -139,9 +139,6 @@ embeddings/hf.d.ts
 embeddings/hf_transformers.cjs
 embeddings/hf_transformers.js
 embeddings/hf_transformers.d.ts
-embeddings/googlegenerativeai.cjs
-embeddings/googlegenerativeai.js
-embeddings/googlegenerativeai.d.ts
 embeddings/googlevertexai.cjs
 embeddings/googlevertexai.js
 embeddings/googlevertexai.d.ts
@@ -196,9 +193,6 @@ llms/replicate.d.ts
 llms/fireworks.cjs
 llms/fireworks.js
 llms/fireworks.d.ts
-llms/googlegenerativeai.cjs
-llms/googlegenerativeai.js
-llms/googlegenerativeai.d.ts
 llms/googlevertexai.cjs
 llms/googlevertexai.js
 llms/googlevertexai.d.ts
@@ -526,9 +520,6 @@ chat_models/bedrock/web.d.ts
 chat_models/cloudflare_workersai.cjs
 chat_models/cloudflare_workersai.js
 chat_models/cloudflare_workersai.d.ts
-chat_models/googlegenerativeai.cjs
-chat_models/googlegenerativeai.js
-chat_models/googlegenerativeai.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts

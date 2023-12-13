@@ -616,11 +616,6 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
-    "./embeddings/googlegenerativeai": {
-      "types": "./embeddings/googlegenerativeai.d.ts",
-      "import": "./embeddings/googlegenerativeai.js",
-      "require": "./embeddings/googlegenerativeai.cjs"
-    },
     "./embeddings/googlepalm": {
       "types": "./embeddings/googlepalm.d.ts",
       "import": "./embeddings/googlepalm.js",
@@ -705,11 +700,6 @@
       "types": "./llms/fireworks.d.ts",
       "import": "./llms/fireworks.js",
       "require": "./llms/fireworks.cjs"
-    },
-    "./llms/googlegenerativeai": {
-      "types": "./llms/googlegenerativeai.d.ts",
-      "import": "./llms/googlegenerativeai.js",
-      "require": "./llms/googlegenerativeai.cjs"
     },
     "./llms/googlepalm": {
       "types": "./llms/googlepalm.d.ts",
@@ -990,11 +980,6 @@
       "types": "./chat_models/fireworks.d.ts",
       "import": "./chat_models/fireworks.js",
       "require": "./chat_models/fireworks.cjs"
-    },
-    "./chat_models/googlegenerativeai": {
-      "types": "./chat_models/googlegenerativeai.d.ts",
-      "import": "./chat_models/googlegenerativeai.js",
-      "require": "./chat_models/googlegenerativeai.cjs"
     },
     "./chat_models/googlevertexai": {
       "types": "./chat_models/googlevertexai.d.ts",
@@ -1329,9 +1314,6 @@
     "embeddings/cohere.cjs",
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
-    "embeddings/googlegenerativeai.cjs",
-    "embeddings/googlegenerativeai.js",
-    "embeddings/googlegenerativeai.d.ts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
@@ -1383,9 +1365,6 @@
     "llms/fireworks.cjs",
     "llms/fireworks.js",
     "llms/fireworks.d.ts",
-    "llms/googlegenerativeai.cjs",
-    "llms/googlegenerativeai.js",
-    "llms/googlegenerativeai.d.ts",
     "llms/googlepalm.cjs",
     "llms/googlepalm.js",
     "llms/googlepalm.d.ts",
@@ -1554,9 +1533,6 @@
     "chat_models/fireworks.cjs",
     "chat_models/fireworks.js",
     "chat_models/fireworks.d.ts",
-    "chat_models/googlegenerativeai.cjs",
-    "chat_models/googlegenerativeai.js",
-    "chat_models/googlegenerativeai.d.ts",
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
