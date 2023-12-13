@@ -247,29 +247,12 @@ export class ChatGoogleGenerativeAI
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult> {
-    return this._generateContent(messages, options, runManager);
-  }
-
-  async *_streamResponseChunks(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
-    const stream = this._generateContentStream(messages, options, runManager);
-
-    for await (const chunk of stream) {
-      yield chunk;
-    }
-  }
-
-  protected async _generateContent(
-    input: BaseMessage[],
-    options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const prompt = convertBaseMessagesToContent(input, this._isMultimodalModel);
+    const prompt = convertBaseMessagesToContent(
+      messages,
+      this._isMultimodalModel
+    );
     const res = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
@@ -293,12 +276,15 @@ export class ChatGoogleGenerativeAI
     return mapGenerateContentResultToChatResult(res.response);
   }
 
-  protected async *_generateContentStream(
-    input: BaseMessage[],
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const prompt = convertBaseMessagesToContent(input, this._isMultimodalModel);
+    const prompt = convertBaseMessagesToContent(
+      messages,
+      this._isMultimodalModel
+    );
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {

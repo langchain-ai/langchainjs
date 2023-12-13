@@ -126,7 +126,7 @@ export class GoogleGenerativeAIEmbeddings
 
   protected async _embedQueryContent(text: string): Promise<number[]> {
     const req = this._convertToContent(text);
-    const res = await (this.client as GenerativeModel).embedContent(req);
+    const res = await this.client.embedContent(req);
     return res.embedding.values ?? [];
   }
 
@@ -136,7 +136,7 @@ export class GoogleGenerativeAIEmbeddings
     const req = {
       requests: documents.map((doc) => this._convertToContent(doc)),
     };
-    const res = await (this.client as GenerativeModel).batchEmbedContents(req);
+    const res = await this.client.batchEmbedContents(req);
     return res.embeddings.map((e) => e.values || []) ?? [];
   }
 
