@@ -1,6 +1,8 @@
 import {
   GenerativeModel,
   GoogleGenerativeAI as GenerativeAI,
+} from "@google/generative-ai";
+import type {
   HarmBlockThreshold,
   HarmCategory,
   SafetySetting,
@@ -14,7 +16,6 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
-  assertSafetySettings,
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
   mapGenerateContentResultToChatResult,
@@ -215,11 +216,12 @@ export class ChatGoogleGenerativeAI
 
     this.safetySettings = fields?.safetySettings ?? this.safetySettings;
     if (this.safetySettings && this.safetySettings.length > 0) {
-      assertSafetySettings(
-        this.safetySettings as SafetySetting[],
-        HarmCategory,
-        HarmBlockThreshold
-      );
+      const safetySettingsSet = new Set(safetySettings.map((s) => s.category));
+      if (safetySettingsSet.size !== safetySettings.length) {
+        throw new Error(
+          "The categories in `safetySettings` array must be unique"
+        );
+      }
     }
 
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel({

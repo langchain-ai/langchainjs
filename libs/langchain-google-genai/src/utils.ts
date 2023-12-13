@@ -17,41 +17,6 @@ import {
   ChatResult,
 } from "@langchain/core/outputs";
 
-export function assertSafetySettings<
-  S extends {
-    category?: string | number | null;
-    threshold?: string | number | null;
-  }[],
-  C extends Record<string, string | number>,
-  T extends Record<string, string | number>
->(safetySettings: S, validCategories: C, validThresholds: T) {
-  const safetySettingsSet = new Set(safetySettings.map((s) => s.category));
-  if (safetySettingsSet.size !== safetySettings.length) {
-    throw new Error("The categories in `safetySettings` array must be unique");
-  }
-
-  for (const safetySetting of safetySettings || []) {
-    if (
-      safetySetting.category &&
-      !Object.values(validCategories).includes(safetySetting.category)
-    ) {
-      const keys = Object.keys(validCategories).join("|");
-      throw new Error(
-        `Incompatible Safety Harm Category. Valid values are: HarmCategory[${keys}]`
-      );
-    }
-    if (
-      safetySetting.threshold &&
-      !Object.values(validThresholds).includes(safetySetting.threshold)
-    ) {
-      const keys = Object.keys(validThresholds).join("|");
-      throw new Error(
-        `Incompatible Harm Block Threshold. Valid values are: HarmBlockThreshold[${keys}]`
-      );
-    }
-  }
-}
-
 export function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
   if (ChatMessage.isInstance(message)) {
