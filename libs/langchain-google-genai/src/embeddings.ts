@@ -5,7 +5,6 @@ import {
   EmbedContentRequest,
 } from "@google/generative-ai";
 import { TextServiceClient } from "@google-ai/generativelanguage";
-import { GoogleAuth } from "google-auth-library";
 
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
@@ -87,34 +86,16 @@ export class GoogleGenerativeAIEmbeddings
 
   private client: GenerativeModel | TextServiceClient;
 
-  get _isEmbedContentModel() {
-    if (/^embedding-\d+$/.test(this.modelName)) {
-      return true;
-    }
-    return false;
-  }
-
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
     super(fields ?? {});
 
     this.modelName =
       fields?.modelName?.replace(/^models\//, "") ?? this.modelName;
 
-    const isEmbedContentModel = this._isEmbedContentModel;
-
     this.taskType = fields?.taskType ?? this.taskType;
-    if (this.taskType && !isEmbedContentModel) {
-      throw new Error(
-        "Task type is only supported for models with `embedContent` method"
-      );
-    }
 
     this.title = fields?.title ?? this.title;
-    if (this.title && !isEmbedContentModel) {
-      throw new Error(
-        "Title is only supported for models with `embedContent` method"
-      );
-    }
+
     if (this.title && this.taskType !== TaskType.RETRIEVAL_DOCUMENT) {
       throw new Error(
         "title can only be sepcified with TaskType.RETRIEVAL_DOCUMENT"
@@ -131,13 +112,9 @@ export class GoogleGenerativeAIEmbeddings
       );
     }
 
-    this.client = isEmbedContentModel
-      ? new GoogleGenerativeAI(this.apiKey).getGenerativeModel({
-          model: this.modelName,
-        })
-      : new TextServiceClient({
-          authClient: new GoogleAuth().fromAPIKey(this.apiKey),
-        });
+    this.client = new GoogleGenerativeAI(this.apiKey).getGenerativeModel({
+      model: this.modelName,
+    });
   }
 
   private _convertToContent(text: string): EmbedContentRequest {
@@ -183,10 +160,7 @@ export class GoogleGenerativeAIEmbeddings
    * @returns Promise that resolves to an embedding for the input document.
    */
   embedQuery(document: string): Promise<number[]> {
-    if (this._isEmbedContentModel) {
-      return this.caller.call(this._embedQueryContent.bind(this), document);
-    }
-    return this.caller.call(this._embedQueryText.bind(this), document);
+    return this.caller.call(this._embedQueryContent.bind(this), document);
   }
 
   /**
@@ -197,14 +171,6 @@ export class GoogleGenerativeAIEmbeddings
    * @returns Promise that resolves to a 2D array of embeddings for each input document.
    */
   embedDocuments(documents: string[]): Promise<number[][]> {
-    if (this._isEmbedContentModel) {
-      return this.caller.call(
-        this._embedDocumentsContent.bind(this),
-        documents
-      );
-    }
-    return Promise.all(
-      documents.map((document) => this._embedQueryText(document))
-    );
+    return this.caller.call(this._embedDocumentsContent.bind(this), documents);
   }
 }

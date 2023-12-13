@@ -1,8 +1,6 @@
 import {
   GenerativeModel,
   GoogleGenerativeAI as GenerativeAI,
-} from "@google/generative-ai";
-import type {
   EnhancedGenerateContentResponse,
   HarmBlockThreshold,
   Content,
@@ -10,9 +8,6 @@ import type {
   Part,
   SafetySetting,
 } from "@google/generative-ai";
-import { DiscussServiceClient } from "@google-ai/generativelanguage";
-import type { protos } from "@google-ai/generativelanguage";
-import { GoogleAuth } from "google-auth-library";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
@@ -32,8 +27,9 @@ import {
   BaseChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import { assertSafetySettings } from "./utils.js";
 
-export type { HarmCategory, HarmBlockThreshold, SafetySetting };
+export { HarmCategory, HarmBlockThreshold, type SafetySetting };
 
 export type BaseMessageExamplePair = {
   input: BaseMessage;
@@ -95,13 +91,6 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
   topK?: number;
 
   /**
-   * Note: examples are not supported for Gemini models
-   */
-  examples?:
-    | protos.google.ai.generativelanguage.v1beta2.IExample[]
-    | BaseMessageExamplePair[];
-
-  /**
    * The set of character sequences (up to 5) that will stop output generation.
    * If specified, the API will stop at the first appearance of a stop
    * sequence.
@@ -117,9 +106,7 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
    * is no `SafetySetting` for a given `SafetyCategory` provided in the list, the API will use
    * the default safety setting for that category.
    */
-  safetySettings?:
-    | SafetySetting[]
-    | protos.google.ai.generativelanguage.v1beta2.ISafetySetting[];
+  safetySettings?: SafetySetting[];
 
   /**
    * Google API key to use
@@ -286,7 +273,7 @@ export function mapGenerateContentResultToChatResult(
       .join(" ") ?? "";
 
   const generation: ChatGeneration = {
-    text: text,
+    text,
     message: new AIMessage({
       content: text,
       name: message.content === null ? undefined : message.content.role,
@@ -317,79 +304,6 @@ export function getPalmContextInstruction(
     throw new Error("Non-string system message content is not supported.");
   }
   return systemMessage?.content;
-}
-
-export function mapBaseMessagesToPalmMessages(
-  messages: BaseMessage[]
-): protos.google.ai.generativelanguage.v1beta2.IMessage[] {
-  // remove all 'system' messages
-  const nonSystemMessages = messages.filter(
-    (m) => getMessageAuthor(m) !== "system"
-  );
-
-  // requires alternate human & ai messages. Throw error if two messages are consecutive
-  nonSystemMessages.forEach((msg, index) => {
-    if (index < 1) return;
-    if (
-      getMessageAuthor(msg) === getMessageAuthor(nonSystemMessages[index - 1])
-    ) {
-      throw new Error(
-        `Google PaLM requires alternate messages between authors`
-      );
-    }
-  });
-
-  return nonSystemMessages.map((m) => {
-    if (typeof m.content !== "string") {
-      throw new Error(
-        "ChatGooglePaLM does not support non-string message content."
-      );
-    }
-    return {
-      author: getMessageAuthor(m),
-      content: m.content,
-      citationMetadata: {
-        citationSources: m.additional_kwargs.citationSources as
-          | protos.google.ai.generativelanguage.v1beta2.ICitationSource[]
-          | undefined,
-      },
-    };
-  });
-}
-
-export function mapPalmMessagesToChatResult(
-  msgRes: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse
-): ChatResult {
-  // if rejected or error, return empty generations with reason in filters
-  if (
-    !msgRes.candidates ||
-    msgRes.candidates.length === 0 ||
-    !msgRes.candidates[0]
-  ) {
-    return {
-      generations: [],
-      llmOutput: {
-        filters: msgRes.filters,
-      },
-    };
-  }
-
-  const message = msgRes.candidates[0];
-  return {
-    generations: [
-      {
-        text: message.content ?? "",
-        message: new AIMessage({
-          content: message.content ?? "",
-          name: message.author === null ? undefined : message.author,
-          additional_kwargs: {
-            citationSources: message.citationMetadata?.citationSources,
-            filters: msgRes.filters, // content filters applied
-          },
-        }),
-      },
-    ],
-  };
 }
 
 /**
@@ -447,27 +361,16 @@ export class ChatGoogleGenerativeAI
 
   topK?: number; // default value chosen based on model
 
-  examples: protos.google.ai.generativelanguage.v1beta2.IExample[] = [];
-
   stopSequences: string[] = [];
 
-  safetySettings?:
-    | SafetySetting[]
-    | protos.google.ai.generativelanguage.v1beta2.ISafetySetting[];
+  safetySettings?: SafetySetting[];
 
   apiKey?: string;
 
-  private client: GenerativeModel | DiscussServiceClient;
-
-  get _isGenerateContentModel() {
-    if (/^gemini/.test(this.modelName)) {
-      return true;
-    }
-    return false;
-  }
+  private client: GenerativeModel;
 
   get _isMultimodalModel() {
-    return this._isGenerateContentModel && this.modelName.includes("vision");
+    return this.modelName.includes("vision");
   }
 
   constructor(fields?: GoogleGenerativeAIChatInput) {
@@ -476,12 +379,8 @@ export class ChatGoogleGenerativeAI
     this.modelName =
       fields?.modelName?.replace(/^models\//, "") ?? this.modelName;
 
-    const isGenerateContentModel = this._isGenerateContentModel;
-
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
-    if (this.maxOutputTokens && !isGenerateContentModel) {
-      throw new Error("`maxOutputTokens` only supported for Gemini models");
-    }
+
     if (this.maxOutputTokens && this.maxOutputTokens < 0) {
       throw new Error("`maxOutputTokens` must be a positive integer");
     }
@@ -496,66 +395,46 @@ export class ChatGoogleGenerativeAI
       throw new Error("`topP` must be a positive integer");
     }
 
+    if (this.topP && this.topP > 1) {
+      throw new Error("`topP` must be below 1.");
+    }
+
     this.topK = fields?.topK ?? this.topK;
     if (this.topK && this.topK < 0) {
       throw new Error("`topK` must be a positive integer");
     }
 
-    if (fields?.examples && fields.examples.length > 0) {
-      if (!isGenerateContentModel) {
-        throw new Error("`examples` is not supported for Gemini models");
-      }
-    }
-    this.examples =
-      fields?.examples?.map((example) => {
-        if (
-          (isBaseMessage(example.input) &&
-            typeof example.input.content !== "string") ||
-          (isBaseMessage(example.output) &&
-            typeof example.output.content !== "string")
-        ) {
-          throw new Error(
-            "GooglePaLM example messages may only have string content."
-          );
-        }
-        return {
-          input: {
-            ...example.input,
-            content: example.input?.content as string,
-          },
-          output: {
-            ...example.output,
-            content: example.output?.content as string,
-          },
-        };
-      }) ?? this.examples;
-
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google GenerativeAI " +
-          "in the environmentb variable GOOGLE_API_KEY " +
+          "in the environment variable GOOGLE_API_KEY " +
           "or in the `apiKey` field of the " +
           "ChatGoogleGenerativeAI constructor"
       );
     }
 
-    this.client = isGenerateContentModel
-      ? new GenerativeAI(this.apiKey).getGenerativeModel({
-          model: this.modelName,
-          safetySettings: this.safetySettings as SafetySetting[],
-          generationConfig: {
-            candidateCount: 1,
-            stopSequences: this.stopSequences,
-            maxOutputTokens: this.maxOutputTokens,
-            temperature: this.temperature,
-            topP: this.topP,
-            topK: this.topK,
-          },
-        })
-      : new DiscussServiceClient({
-          authClient: new GoogleAuth().fromAPIKey(this.apiKey),
-        });
+    this.safetySettings = fields?.safetySettings ?? this.safetySettings;
+    if (this.safetySettings && this.safetySettings.length > 0) {
+      assertSafetySettings(
+        this.safetySettings as SafetySetting[],
+        HarmCategory,
+        HarmBlockThreshold
+      );
+    }
+
+    this.client = new GenerativeAI(this.apiKey).getGenerativeModel({
+      model: this.modelName,
+      safetySettings: this.safetySettings as SafetySetting[],
+      generationConfig: {
+        candidateCount: 1,
+        stopSequences: this.stopSequences,
+        maxOutputTokens: this.maxOutputTokens,
+        temperature: this.temperature,
+        topP: this.topP,
+        topK: this.topK,
+      },
+    });
   }
 
   _combineLLMOutput() {
@@ -571,10 +450,7 @@ export class ChatGoogleGenerativeAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    if (this._isGenerateContentModel) {
-      return this._generateContent(messages, options, runManager);
-    }
-    return this._generateMessage(messages, options, runManager);
+    return this._generateContent(messages, options, runManager);
   }
 
   async *_streamResponseChunks(
@@ -582,9 +458,7 @@ export class ChatGoogleGenerativeAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const stream = this._isGenerateContentModel
-      ? this._generateContentStream(messages, options, runManager)
-      : this._generateMessageStream(messages, options, runManager);
+    const stream = this._generateContentStream(messages, options, runManager);
 
     for await (const chunk of stream) {
       yield chunk;
@@ -600,10 +474,19 @@ export class ChatGoogleGenerativeAI
     const res = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const client = this.client as GenerativeModel;
-        const output = await client.generateContent({
-          contents: prompt,
-        });
+        let output;
+        try {
+          output = await this.client.generateContent({
+            contents: prompt,
+          });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          // TODO: Improve error handling
+          if (e.message?.includes("400 Bad Request")) {
+            e.status = 400;
+          }
+          throw e;
+        }
         return output;
       }
     );
@@ -620,8 +503,7 @@ export class ChatGoogleGenerativeAI
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
-        const client = this.client as GenerativeModel;
-        const { stream } = await client.generateContentStream({
+        const { stream } = await this.client.generateContentStream({
           contents: prompt,
         });
         return stream;
@@ -645,61 +527,5 @@ export class ChatGoogleGenerativeAI
         },
       });
     }
-  }
-
-  protected async _generateMessage(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult> {
-    const palmMessages = mapBaseMessagesToPalmMessages(messages);
-    const context = getPalmContextInstruction(messages);
-    const examples = this.examples;
-    const result = await this.caller.callWithOptions(
-      { signal: options.signal },
-      async () => {
-        const client = this.client as DiscussServiceClient;
-        const [response] = await client.generateMessage({
-          candidateCount: 1,
-          model: this.modelName,
-          temperature: this.temperature,
-          topK: this.topK,
-          topP: this.topP,
-          prompt: {
-            context,
-            examples,
-            messages: palmMessages,
-          },
-        });
-        return response;
-      }
-    );
-    const chatResult = mapPalmMessagesToChatResult(result);
-    return chatResult;
-  }
-
-  protected async *_generateMessageStream(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
-    const result = await this._generateMessage(messages, options, runManager);
-    const [output] = result.generations;
-
-    const chunk = output
-      ? new ChatGenerationChunk({
-          text: output.text,
-          message: output.message.toChunk(),
-          generationInfo: { finishReason: "stop" },
-        })
-      : new ChatGenerationChunk({
-          text: "",
-          message: new AIMessageChunk(""),
-          generationInfo: {
-            reason: result.llmOutput?.filters?.reason ?? "stop",
-          },
-        });
-
-    yield chunk;
   }
 }
