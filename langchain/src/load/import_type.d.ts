@@ -521,10 +521,8 @@ export interface OptionalImportMap {
 
 export interface SecretMap {
   ANTHROPIC_API_KEY?: string;
-  IBM_CLOUD_API_KEY?: string;
   OPENAI_API_KEY?: string;
   PROMPTLAYER_API_KEY?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
-  WATSONX_PROJECT_ID?: string;
   ZAPIER_NLA_API_KEY?: string;
 }
