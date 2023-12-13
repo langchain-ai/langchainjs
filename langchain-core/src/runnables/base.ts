@@ -1373,7 +1373,8 @@ export class RunnableSequence<
  * ```
  */
 export class RunnableMap<
-  RunInput,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>
 > extends Runnable<RunInput, RunOutput> {

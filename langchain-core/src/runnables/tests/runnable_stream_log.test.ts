@@ -50,19 +50,21 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),
   ];
+  const steps = {
+    question: (input: string) => input,
+    documents: RunnableSequence.from([
+      new FakeRetriever({
+        output: retrieverOutputDocs,
+      }),
+      (docs: Document[]) => JSON.stringify(docs),
+    ]).withConfig({ runName: "CUSTOM_NAME" }),
+    extraField: new FakeLLM({
+      response: "testing",
+    }).withConfig({ tags: ["only_one"] }),
+  };
+
   const inputs = new RunnableMap({
-    steps: {
-      question: (input: string) => input,
-      documents: RunnableSequence.from([
-        new FakeRetriever({
-          output: retrieverOutputDocs,
-        }),
-        (docs: Document[]) => JSON.stringify(docs),
-      ]).withConfig({ runName: "CUSTOM_NAME" }),
-      extraField: new FakeLLM({
-        response: "testing",
-      }).withConfig({ tags: ["only_one"] }),
-    },
+    steps,
   });
   const runnable = inputs.pipe(promptTemplate).pipe(llm);
   const stream = await runnable.streamLog(
