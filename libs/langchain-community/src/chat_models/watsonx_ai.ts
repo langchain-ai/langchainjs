@@ -1,5 +1,8 @@
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import { type BaseChatModelParams, SimpleChatModel } from "@langchain/core/language_models/chat_models";
+import {
+  type BaseChatModelParams,
+  SimpleChatModel,
+} from "@langchain/core/language_models/chat_models";
 import {
   AIMessageChunk,
   BaseMessage,

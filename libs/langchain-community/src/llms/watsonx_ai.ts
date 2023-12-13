@@ -1,7 +1,10 @@
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { type BaseLLMCallOptions, LLM } from "@langchain/core/language_models/llms";
+import {
+  type BaseLLMCallOptions,
+  LLM,
+} from "@langchain/core/language_models/llms";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { WatsonApiClient } from "../utils/watsonx-client.js";
 import type {
