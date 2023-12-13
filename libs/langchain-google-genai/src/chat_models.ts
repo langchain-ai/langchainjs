@@ -196,7 +196,6 @@ export function convertBaseMessagesToContent(
     mergeWithPreviousContent: boolean;
   }>(
     (acc, message, index) => {
-      // eslint-disable-next-line no-instanceof/no-instanceof
       if (!isBaseMessage(message)) {
         throw new Error("Unsupported message input");
       }
@@ -223,9 +222,11 @@ export function convertBaseMessagesToContent(
       );
 
       if (acc.mergeWithPreviousContent) {
-        const prevContent = acc.content[acc.content.length];
+        const prevContent = acc.content[acc.content.length - 1];
         if (!prevContent) {
-          throw new Error("indexing error");
+          throw new Error(
+            "There was a problem parsing your system message. Please try a prompt without one."
+          );
         }
         prevContent.parts.push(...parts);
 

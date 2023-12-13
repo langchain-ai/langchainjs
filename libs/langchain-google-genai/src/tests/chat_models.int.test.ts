@@ -21,6 +21,18 @@ test("Test Google AI generation", async () => {
   expect(res).toBeTruthy();
 });
 
+test("Test Google AI generation with a system message", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  const res = await model.generate([
+    [
+      ["system", `You are an amazing translator.`],
+      ["human", `Translate "I love programming" into Korean.`],
+    ],
+  ]);
+  console.log(JSON.stringify(res, null, 2));
+  expect(res).toBeTruthy();
+});
+
 test("Test Google AI multimodal generation", async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
