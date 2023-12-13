@@ -59,6 +59,7 @@ import * as chat_models_ollama from "langchain/chat_models/ollama";
 import * as chat_models_minimax from "langchain/chat_models/minimax";
 import * as chat_models_yandex from "langchain/chat_models/yandex";
 import * as chat_models_fake from "langchain/chat_models/fake";
+import * as chat_models_watsonx_ai from "langchain/chat_models/watsonx_ai";
 import * as schema from "langchain/schema";
 import * as schema_document from "langchain/schema/document";
 import * as schema_output_parser from "langchain/schema/output_parser";
@@ -102,6 +103,7 @@ import * as experimental_plan_and_execute from "langchain/experimental/plan_and_
 import * as experimental_chat_models_bittensor from "langchain/experimental/chat_models/bittensor";
 import * as experimental_chat_models_ollama_functions from "langchain/experimental/chat_models/ollama_functions";
 import * as experimental_chains_violation_of_expectations from "langchain/experimental/chains/violation_of_expectations";
+import * as experimental_masking from "langchain/experimental/masking";
 import * as evaluation from "langchain/evaluation";
 import * as runnables from "langchain/runnables";
 import * as runnables_remote from "langchain/runnables/remote";

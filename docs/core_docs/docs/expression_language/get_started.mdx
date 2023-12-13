@@ -1,0 +1,92 @@
+---
+sidebar_position: 0
+title: Get started
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import BasicExample from "@examples/guides/expression_language/get_started/basic.ts";
+import BasicPromptExample from "@examples/guides/expression_language/get_started/prompt.ts";
+import BasicChatModelExample from "@examples/guides/expression_language/get_started/chat_model.ts";
+import BasicLLMModelExample from "@examples/guides/expression_language/get_started/llm_model.ts";
+import BasicOutputParserExample from "@examples/guides/expression_language/get_started/output_parser.ts";
+import BasicRagExample from "@examples/guides/expression_language/get_started/rag.ts";
+
+# Get started
+
+LCEL makes it easy to build complex chains from basic components, and supports out of the box functionality such as streaming, parallelism, and logging.
+
+## Basic example: prompt + model + output parser
+
+The most basic and common use case is chaining a prompt template and a model together. To see how this works, let's create a chain that takes a topic and generates a joke:
+
+<CodeBlock language="typescript">{BasicExample}</CodeBlock>
+
+:::tip
+
+[LangSmith trace](https://smith.langchain.com/public/dcac6d79-5254-4889-a974-4b3abaf605b4/r)
+
+:::
+
+Notice in this line we're chaining our prompt, LLM model and output parser together:
+
+```typescript
+const chain = prompt.pipe(model).pipe(outputParser);
+```
+
+The `.pipe()` method allows for chaining together any number of runnables. It will pass the output of one through to the input of the next.
+
+Here, the prompt is passed a `topic` and when invoked it returns a formatted string with the `{topic}` input variable replaced with the string we passed to the invoke call.
+That string is then passed as the input to the LLM which returns a `BaseMessage` object. Finally, the output parser takes that `BaseMessage` object and returns the content of that object as a string.
+
+### 1. Prompt
+
+`prompt` is a `BasePromptTemplate`, which means it takes in an object of template variables and produces a `PromptValue`.
+A `PromptValue` is a wrapper around a completed prompt that can be passed to either an `LLM` (which takes a string as input) or `ChatModel` (which takes a sequence of messages as input).
+It can work with either language model type because it defines logic both for producing BaseMessages and for producing a string.
+
+<CodeBlock language="typescript">{BasicPromptExample}</CodeBlock>
+
+### 2. Model
+
+The `PromptValue` is then passed to `model`. In this case our `model` is a `ChatModel`, meaning it will output a `BaseMessage`.
+
+<CodeBlock language="typescript">{BasicChatModelExample}</CodeBlock>
+
+If our model was an LLM, it would output a string.
+
+<CodeBlock language="typescript">{BasicLLMModelExample}</CodeBlock>
+
+### 3. Output parser
+
+And lastly we pass our `model` output to the `outputParser`, which is a `BaseOutputParser` meaning it takes either a string or a `BaseMessage` as input. The `StringOutputParser` specifically simple converts any input into a string.
+
+<CodeBlock language="typescript">{BasicOutputParserExample}</CodeBlock>
+
+## RAG Search Example
+
+For our next example, we want to run a retrieval-augmented generation chain to add some context when responding to questions.
+
+<CodeBlock language="typescript">{BasicRagExample}</CodeBlock>
+
+:::tip
+
+[LangSmith trace](https://smith.langchain.com/public/f0205e20-c46f-47cd-a3a4-6a95451f8a25/r)
+
+:::
+
+In this chain we add some extra logic around retrieving context from a vector store.
+
+We first instantiated our model, vector store and output parser. Then we defined our prompt, which takes in two input variables:
+
+- `context` -> this is a string which is returned from our vector store based on a semantic search from the input.
+- `question` -> this is the question we want to ask.
+
+Next we created a `setupAndRetriever` runnable. This has two components which return the values required by our prompt:
+
+- `context` -> this is a `RunnableLambda` which takes the input from the `.invoke()` call, makes a request to our vector store, and returns the first result.
+- `question` -> this uses a `RunnablePassthrough` which simply passes whatever the input was through to the next step, and in our case it returns it to the key in the object we defined.
+
+Both of these are wrapped inside a `RunnableMap`. This is a special type of runnable that takes an object of runnables and executes them all in parallel.
+It then returns an object with the same keys as the input object, but with the values replaced with the output of the runnables.
+
+Finally, we pass the output of the `setupAndRetriever` to our `prompt` and then to our `model` and `outputParser` as before.
