@@ -16,7 +16,7 @@ import MistralClient, {
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
-  SimpleChatModel
+  BaseChatModel
 } from "@langchain/core/language_models/chat_models";
 
 import {
@@ -157,7 +157,7 @@ function _convertDeltaToMessageChunk(delta: {
 export class ChatMistralAI<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
   >
-  extends SimpleChatModel<CallOptions>
+  extends BaseChatModel<CallOptions>
   implements ChatMistralAIInput
 {
   // Used for tracing, replace with the same name as your class
@@ -256,7 +256,7 @@ export class ChatMistralAI<
 
   async completionWithRetry(
     input: MistralAIChatCompletionOptions,
-    streaming: boolean,
+    streaming: boolean
   ): Promise<
     | MistralAIChatCompletionResult
     | AsyncGenerator<MistralAIChatCompletionResult>
