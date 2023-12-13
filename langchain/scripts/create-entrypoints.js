@@ -578,7 +578,7 @@ const updateConfig = () => {
     ...json,
     entryPoints: [...Object.keys(entrypoints)]
       .filter((key) => !deprecatedNodeOnly.includes(key))
-      .map((key) => `./langchain/src/${entrypoints[key]}.ts`),
+      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();

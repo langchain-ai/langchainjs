@@ -150,7 +150,7 @@ export abstract class Tool extends StructuredTool {
    */
   call(
     arg: string | undefined | z.input<this["schema"]>,
-    callbacks?: Callbacks
+    callbacks?: Callbacks | RunnableConfig
   ): Promise<string> {
     return super.call(
       typeof arg === "string" || !arg ? { input: arg } : arg,
