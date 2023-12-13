@@ -16,10 +16,7 @@ import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { GenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
-import {
-  assertSafetySettings,
-  convertInput,
-} from "./utils.js";
+import { assertSafetySettings, convertInput } from "./utils.js";
 
 export type { HarmCategory, HarmBlockThreshold, SafetySetting };
 /**
