@@ -23,6 +23,12 @@ In order to use the Mistral API you'll need an API key. You can sign up for a Mi
 
 ## Usage
 
+When sending chat messages to mistral, there are a few requirements to follow:
+
+- The first message can _*not*_ be an assistant (ai) message.
+- Messages _*must*_ alternate between user and assistant (ai) messages.
+- Messages can _*not*_ end with an assistant (ai) or system message.
+
 import ChatMistralAIExample from "@examples/models/chat/chat_mistralai.ts";
 
 <CodeBlock language="typescript">{ChatMistralAIExample}</CodeBlock>

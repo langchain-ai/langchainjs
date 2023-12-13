@@ -6,7 +6,7 @@ const model = new ChatMistralAI({
   modelName: "mistral-small"
 });
 const prompt = ChatPromptTemplate.fromMessages([
-  ["ai", "You are a helpful assistant"],
+  ["system", "You are a helpful assistant"],
   ["human", "{input}"]
 ]);
 const chain = prompt.pipe(model);

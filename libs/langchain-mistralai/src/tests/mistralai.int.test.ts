@@ -36,7 +36,7 @@ test("Test ChatMistralAI can stream", async () => {
   expect(itters).toBeGreaterThan(1);
 });
 
-test.only("Test MistralAIEmbeddings can embed query", async () => {
+test("Test MistralAIEmbeddings can embed query", async () => {
   const model = new MistralAIEmbeddings();
   // "Hello world" in French 🤓
   const text = "Bonjour le monde";
@@ -45,7 +45,7 @@ test.only("Test MistralAIEmbeddings can embed query", async () => {
   expect(embeddings.length).toBe(1024);
 });
 
-test.only("Test MistralAIEmbeddings can embed documents", async () => {
+test("Test MistralAIEmbeddings can embed documents", async () => {
   const model = new MistralAIEmbeddings();
   // "Hello world" in French 🤓
   const text = "Bonjour le monde";
