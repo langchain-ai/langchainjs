@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
-import { ChatGoogleGenerativeAI } from "../chat_models.js";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 test("Google AI - `temperature` must be in range [0.0,1.0]", async () => {
   expect(
