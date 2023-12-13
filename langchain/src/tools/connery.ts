@@ -79,7 +79,7 @@ export class ConneryAction extends Tool {
     super();
 
     this.name = this._action.id;
-    this.description = this.getDescription();
+    this.description = this.getActionDescription();
   }
 
   /**
@@ -93,9 +93,9 @@ export class ConneryAction extends Tool {
 
   /**
    * Returns the description of the Connery action.
-   * @returns A string containing the description of the Connery action together with the instructions on how to use it.
+   * @returns A string containing the description of the Connery Action together with the instructions on how to use it.
    */
-  protected getDescription(): string {
+  protected getActionDescription(): string {
     const { title, description } = this._action;
     const inputParameters = this.prepareJsonForTemplate(
       this._action.inputParameters
