@@ -31,11 +31,15 @@ export type RunnableFunc<RunInput, RunOutput> = (
     | (Record<string, any> & { config: RunnableConfig })
 ) => RunOutput | Promise<RunOutput>;
 
+export type RunnableMapLike<RunInput, RunOutput> = {
+  [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
   | Runnable<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
-  | { [key: string]: RunnableLike<RunInput, RunOutput> };
+  | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableBatchOptions = {
   maxConcurrency?: number;
@@ -1269,58 +1273,22 @@ export class RunnableSequence<
       undefined,
       options?.runName
     );
-    let nextStepInput = input;
     const steps = [this.first, ...this.middle, this.last];
-    // Find the index of the last runnable in the sequence that doesn't have an overridden .transform() method
-    // and start streaming from there
-    const streamingStartStepIndex = Math.min(
-      steps.length - 1,
-      steps.length -
-        [...steps].reverse().findIndex((step) => {
-          const isDefaultImplementation =
-            step.transform === Runnable.prototype.transform;
-          const boundRunnableIsDefaultImplementation =
-            RunnableBinding.isRunnableBinding(step) &&
-            step.bound?.transform === Runnable.prototype.transform;
-          return (
-            isDefaultImplementation || boundRunnableIsDefaultImplementation
-          );
-        }) -
-        1
-    );
-
-    try {
-      const invokeSteps = steps.slice(0, streamingStartStepIndex);
-      for (let i = 0; i < invokeSteps.length; i += 1) {
-        const step = invokeSteps[i];
-        nextStepInput = await step.invoke(
-          nextStepInput,
-          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
-        );
-      }
-    } catch (e) {
-      await runManager?.handleChainError(e);
-      throw e;
-    }
     let concatSupported = true;
     let finalOutput;
+    async function* inputGenerator() {
+      yield input;
+    }
     try {
-      let finalGenerator = await steps[streamingStartStepIndex]._streamIterator(
-        nextStepInput,
-        this._patchConfig(
-          options,
-          runManager?.getChild(`seq:step:${streamingStartStepIndex + 1}`)
-        )
+      let finalGenerator = steps[0].transform(
+        inputGenerator(),
+        this._patchConfig(options, runManager?.getChild(`seq:step:1`))
       );
-      const finalSteps = steps.slice(streamingStartStepIndex + 1);
-      for (let i = 0; i < finalSteps.length; i += 1) {
-        const step = finalSteps[i];
+      for (let i = 1; i < steps.length; i += 1) {
+        const step = steps[i];
         finalGenerator = await step.transform(
           finalGenerator,
-          this._patchConfig(
-            options,
-            runManager?.getChild(`seq:step:${streamingStartStepIndex + i + 2}`)
-          )
+          this._patchConfig(options, runManager?.getChild(`seq:step:${i + 1}`))
         );
       }
       for await (const chunk of finalGenerator) {
@@ -1404,11 +1372,12 @@ export class RunnableSequence<
  * const result = await mapChain.invoke({ topic: "bear" });
  * ```
  */
-export class RunnableMap<RunInput> extends Runnable<
-  RunInput,
+export class RunnableMap<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Record<string, any>
-> {
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>
+> extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RunnableMap";
   }
@@ -1423,7 +1392,7 @@ export class RunnableMap<RunInput> extends Runnable<
     return Object.keys(this.steps);
   }
 
-  constructor(fields: { steps: Record<string, RunnableLike<RunInput>> }) {
+  constructor(fields: { steps: RunnableMapLike<RunInput, RunOutput> }) {
     super(fields);
     this.steps = {};
     for (const [key, value] of Object.entries(fields.steps)) {
@@ -1431,15 +1400,20 @@ export class RunnableMap<RunInput> extends Runnable<
     }
   }
 
-  static from<RunInput>(steps: Record<string, RunnableLike<RunInput>>) {
-    return new RunnableMap<RunInput>({ steps });
+  static from<
+    RunInput,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    steps: RunnableMapLike<RunInput, RunOutput>
+  ): RunnableMap<RunInput, RunOutput> {
+    return new RunnableMap<RunInput, RunOutput>({ steps });
   }
 
   async invoke(
     input: RunInput,
     options?: Partial<BaseCallbackConfig>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<Record<string, any>> {
+  ): Promise<RunOutput> {
     const callbackManager_ = await getCallbackMangerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
@@ -1468,7 +1442,7 @@ export class RunnableMap<RunInput> extends Runnable<
       throw e;
     }
     await runManager?.handleChainEnd(output);
-    return output;
+    return output as RunOutput;
   }
 }
 
@@ -1522,6 +1496,8 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
     return this._callWithConfig(this._invoke, input, options);
   }
 }
+
+export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
 
 /**
  * A Runnable that can fallback to other Runnables if it fails.
@@ -1699,9 +1675,9 @@ export function _coerceToRunnable<RunInput, RunOutput>(
   } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
     const runnables: Record<string, Runnable<RunInput>> = {};
     for (const [key, value] of Object.entries(coerceable)) {
-      runnables[key] = _coerceToRunnable(value);
+      runnables[key] = _coerceToRunnable(value as RunnableLike);
     }
-    return new RunnableMap<RunInput>({
+    return new RunnableMap({
       steps: runnables,
     }) as unknown as Runnable<RunInput, Exclude<RunOutput, Error>>;
   } else {
