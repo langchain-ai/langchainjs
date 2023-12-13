@@ -8152,7 +8152,7 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
-    "@google/generative-ai": ^0.1.0
+    "@google-ai/generativelanguage": ^0.2.1
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
@@ -8268,7 +8268,7 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
-    "@google/generative-ai": ^0.1.0
+    "@google-ai/generativelanguage": ^0.2.1
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@mozilla/readability": "*"
@@ -8361,7 +8361,7 @@ __metadata:
       optional: true
     "@gomomento/sdk-core":
       optional: true
-    "@google/generative-ai":
+    "@google-ai/generativelanguage":
       optional: true
     "@gradientai/nodejs-sdk":
       optional: true
