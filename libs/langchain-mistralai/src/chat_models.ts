@@ -5,29 +5,28 @@ import {
   AIMessage,
   HumanMessage,
   HumanMessageChunk,
-  AIMessageChunk,
+  AIMessageChunk
 } from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import MistralClient, {
   type ChatCompletionResult as MistralAIChatCompletionResult,
   type ChatCompletionOptions as MistralAIChatCompletionOptions,
-  type Message as MistralAIInputMessage,
+  type Message as MistralAIInputMessage
 } from "@mistralai/mistralai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
-  SimpleChatModel,
+  SimpleChatModel
 } from "@langchain/core/language_models/chat_models";
 
 import {
   ChatGeneration,
   ChatGenerationChunk,
-  ChatResult,
+  ChatResult
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
-/** @TODO move to shared, exported file */
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
@@ -90,17 +89,18 @@ function convertMessagesToMistralMessages(
   messages: Array<BaseMessage>
 ): Array<MistralAIInputMessage> {
   const getRole = (role: MessageType) => {
-    if (role === "human") {
-      return "user";
+    switch (role) {
+      case "human":
+        return "user";
+      case "ai":
+        return "assistant";
+      case "system":
+        return "system";
+      default:
+        throw new Error(`Unknown message type: ${role}`);
     }
-    if (role === "ai") {
-      return "assistant";
-    }
-    if (role === "system") {
-      return "system";
-    }
-    throw new Error(`ChatMistralAI does not support message type: ${role}`);
   };
+
   const getContent = (content: MessageContent): string => {
     if (typeof content === "string") {
       return content;
@@ -113,9 +113,10 @@ function convertMessagesToMistralMessages(
       )}`
     );
   };
+
   return messages.map((message) => ({
     role: getRole(message._getType()),
-    content: getContent(message.content),
+    content: getContent(message.content)
   }));
 }
 
@@ -128,6 +129,7 @@ function mistralAIResponseToChatMessage(
   if (!("message" in choice) || !choice.message) {
     throw new Error("No message found in the choice.");
   }
+
   const { message } = choice;
   switch (message.role) {
     case "assistant":
@@ -185,13 +187,15 @@ export class ChatMistralAI<
     super(fields ?? {});
     const apiKey = fields?.apiKey ?? getEnvironmentVariable("MISTRAL_API_KEY");
     if (!apiKey) {
-      throw new Error("API key missing for MistralAI, but it is required.");
+      throw new Error(
+        "API key MISTRAL_API_KEY is missing for MistralAI, but it is required."
+      );
     }
     this.client = new MistralClient(apiKey, fields?.endpoint);
   }
 
   _llmType() {
-    return "ChatMistralAI";
+    return "chat_mistral_ai";
   }
 
   /**
@@ -230,7 +234,7 @@ export class ChatMistralAI<
       topP: this.topP,
       maxTokens: this.maxTokens,
       safeMode: this.safeMode,
-      randomSeed: this.randomSeed,
+      randomSeed: this.randomSeed
     };
     return params;
   }
@@ -282,15 +286,8 @@ export class ChatMistralAI<
     const mistralMessages = convertMessagesToMistralMessages(messages);
     const input = {
       ...params,
-      messages: mistralMessages,
+      messages: mistralMessages
     };
-    if (mistralMessages[0] && mistralMessages[0].role === "assistant") {
-      throw new Error(
-        "MistralAI does not support starting chat conversations with an AI message."
-      );
-    } else if (!mistralMessages[0]) {
-      console.log("Bruh?", messages, mistralMessages);
-    }
 
     // Handle streaming
     if (this.streaming) {
@@ -318,7 +315,7 @@ export class ChatMistralAI<
     const {
       completion_tokens: completionTokens,
       prompt_tokens: promptTokens,
-      total_tokens: totalTokens,
+      total_tokens: totalTokens
     } = response?.usage ?? {};
 
     if (completionTokens) {
@@ -345,7 +342,7 @@ export class ChatMistralAI<
       const text = part.message?.content ?? "";
       const generation: ChatGeneration = {
         text,
-        message: mistralAIResponseToChatMessage(part),
+        message: mistralAIResponseToChatMessage(part)
       };
       if (part.finish_reason) {
         generation.generationInfo = { finish_reason: part.finish_reason };
@@ -354,7 +351,7 @@ export class ChatMistralAI<
     }
     return {
       generations,
-      llmOutput: { tokenUsage },
+      llmOutput: { tokenUsage }
     };
   }
 
@@ -367,7 +364,7 @@ export class ChatMistralAI<
     const params = this.invocationParams();
     const input = {
       ...params,
-      messages: mistralMessages,
+      messages: mistralMessages
     };
 
     const streamIterable = await this.completionWithRetry(input, true);
@@ -383,12 +380,12 @@ export class ChatMistralAI<
       }
       const newTokenIndices = {
         prompt: 0,
-        completion: choice.index ?? 0,
+        completion: choice.index ?? 0
       };
       const generationChunk = new ChatGenerationChunk({
         message: _convertDeltaToMessageChunk(delta),
         text: delta.content ?? "",
-        generationInfo: newTokenIndices,
+        generationInfo: newTokenIndices
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
