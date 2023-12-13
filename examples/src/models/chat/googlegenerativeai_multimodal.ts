@@ -1,21 +1,11 @@
 import fs from "fs";
-import {
-  ChatGoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} from "@langchain/google-genai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 
 // Multi-modal
 const vision = new ChatGoogleGenerativeAI({
   modelName: "gemini-pro-vision",
   maxOutputTokens: 2048,
-  safetySettings: [
-    {
-      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    },
-  ],
 });
 const image = fs.readFileSync("./hotdog.jpg").toString("base64");
 const input2 = [

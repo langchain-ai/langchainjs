@@ -27,13 +27,8 @@ import GoogleGenerativeAI from "@examples/models/chat/googlegenerativeai.ts";
 ## Multimodal support
 
 To provide an image, pass a human message with a `content` field set to an array of content objects. Each content object
-where each dict contains either an image value (type of image_url) or a text (type of text) value. The value of image_url can be any of the following:
-
-- A public image URL
-- An accessible gcs file (e.g., “gcs://path/to/file.png”)
-- A local file path
-- A base64 encoded image (e.g., data:image/png;base64,abcd124)
-- A PIL image
+where each dict contains either an image value (type of image_url) or a text (type of text) value. The value of image_url must be a base64
+encoded image (e.g., data:image/png;base64,abcd124):
 
 import GoogleGenerativeAIMultimodal from "@examples/models/chat/googlegenerativeai_multimodal.ts";
 
