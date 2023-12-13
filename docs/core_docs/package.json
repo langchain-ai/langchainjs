@@ -5,10 +5,10 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "yarn build:typedoc && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
-    "build": "yarn build:typedoc && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
-    "build:vercel": "yarn build:typedoc:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build": "yarn clean && yarn build:typedoc && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build:vercel": "yarn clean && yarn build:typedoc:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:typedoc": "yarn run turbo:command build --filter=api_refs",
-    "build:typedoc:vercel": "yarn run turbo:command build:vercel --filter=api_refs",
+    "build:typedoc:vercel": "yarn workspace api_refs build:vercel",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -19,7 +19,8 @@
     "lint:fix": "yarn lint --fix",
     "precommit": "lint-staged",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
-    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\""
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
+    "clean": "rm -rf .docusaurus/ .turbo/ .build/"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
