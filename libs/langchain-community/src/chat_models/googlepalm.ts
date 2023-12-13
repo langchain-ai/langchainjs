@@ -89,7 +89,7 @@ function getMessageAuthor(message: BaseMessage) {
 
 /**
  * A class that wraps the Google Palm chat model.
- * @deprecated use the @langchain/google-genai package instead
+ *
  * @example
  * ```typescript
  * const model = new ChatGooglePaLM({

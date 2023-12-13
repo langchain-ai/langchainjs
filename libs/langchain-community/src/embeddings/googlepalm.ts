@@ -24,8 +24,6 @@ export interface GooglePaLMEmbeddingsParams extends EmbeddingsParams {
  * Class that extends the Embeddings class and provides methods for
  * generating embeddings using the Google Palm API.
  *
- * @deprecated use the @langchain/google-genai package instead
- *
  * @example
  * ```typescript
  * const model = new GooglePaLMEmbeddings({
