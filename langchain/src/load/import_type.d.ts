@@ -64,6 +64,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/hf_transformers"?:
     | typeof import("../embeddings/hf_transformers.js")
     | Promise<typeof import("../embeddings/hf_transformers.js")>;
+  "langchain/embeddings/googlegenerativeai"?:
+    | typeof import("../embeddings/googlegenerativeai.js")
+    | Promise<typeof import("../embeddings/googlegenerativeai.js")>;
   "langchain/embeddings/googlevertexai"?:
     | typeof import("../embeddings/googlevertexai.js")
     | Promise<typeof import("../embeddings/googlevertexai.js")>;
@@ -91,6 +94,9 @@ export interface OptionalImportMap {
   "langchain/llms/replicate"?:
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
+  "langchain/llms/googlegenerativeai"?:
+    | typeof import("../llms/googlegenerativeai.js")
+    | Promise<typeof import("../llms/googlegenerativeai.js")>;
   "langchain/llms/googlevertexai"?:
     | typeof import("../llms/googlevertexai/index.js")
     | Promise<typeof import("../llms/googlevertexai/index.js")>;
@@ -358,6 +364,9 @@ export interface OptionalImportMap {
   "langchain/chat_models/bedrock/web"?:
     | typeof import("../chat_models/bedrock/web.js")
     | Promise<typeof import("../chat_models/bedrock/web.js")>;
+  "langchain/chat_models/googlegenerativeai"?:
+    | typeof import("../chat_models/googlegenerativeai.js")
+    | Promise<typeof import("../chat_models/googlegenerativeai.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai/index.js")
     | Promise<typeof import("../chat_models/googlevertexai/index.js")>;

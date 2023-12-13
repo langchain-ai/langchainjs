@@ -8316,6 +8316,8 @@ __metadata:
       optional: true
     "@google-ai/generativelanguage":
       optional: true
+    "@google/generative-ai":
+      optional: true
     "@gradientai/nodejs-sdk":
       optional: true
     "@huggingface/inference":

@@ -25,6 +25,9 @@ export interface OptionalImportMap {
   "@langchain/community/embeddings/cohere"?:
     | typeof import("../embeddings/cohere.js")
     | Promise<typeof import("../embeddings/cohere.js")>;
+  "@langchain/community/embeddings/googlegenerativeai"?:
+    | typeof import("../embeddings/googlegenerativeai.js")
+    | Promise<typeof import("../embeddings/googlegenerativeai.js")>;
   "@langchain/community/embeddings/googlepalm"?:
     | typeof import("../embeddings/googlepalm.js")
     | Promise<typeof import("../embeddings/googlepalm.js")>;
@@ -55,6 +58,9 @@ export interface OptionalImportMap {
   "@langchain/community/llms/cohere"?:
     | typeof import("../llms/cohere.js")
     | Promise<typeof import("../llms/cohere.js")>;
+  "@langchain/community/llms/googlegenerativeai"?:
+    | typeof import("../llms/googlegenerativeai.js")
+    | Promise<typeof import("../llms/googlegenerativeai.js")>;
   "@langchain/community/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
@@ -202,6 +208,9 @@ export interface OptionalImportMap {
   "@langchain/community/chat_models/bedrock/web"?:
     | typeof import("../chat_models/bedrock/web.js")
     | Promise<typeof import("../chat_models/bedrock/web.js")>;
+  "@langchain/community/chat_models/googlegenerativeai"?:
+    | typeof import("../chat_models/googlegenerativeai.js")
+    | Promise<typeof import("../chat_models/googlegenerativeai.js")>;
   "@langchain/community/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai/index.js")
     | Promise<typeof import("../chat_models/googlevertexai/index.js")>;
