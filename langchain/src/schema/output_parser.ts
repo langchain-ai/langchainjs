@@ -1,1 +1,1 @@
-export * from "langchain-core/output_parsers";
+export * from "@langchain/core/output_parsers";

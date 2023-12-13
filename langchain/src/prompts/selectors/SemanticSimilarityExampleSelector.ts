@@ -1,1 +1,1 @@
-export * from "langchain-core/example_selectors";
+export * from "@langchain/core/example_selectors";

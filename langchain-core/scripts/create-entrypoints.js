@@ -14,8 +14,7 @@ const entrypoints = {
   "callbacks/manager": "callbacks/manager",
   "callbacks/promises": "callbacks/promises",
   "chat_history": "chat_history",
-  "documents": "documents",
-  "document_transformers": "document_transformers",
+  "documents": "documents/index",
   "embeddings": "embeddings",
   "example_selectors": "example_selectors/index",
   "language_models/base": "language_models/base",
@@ -32,6 +31,7 @@ const entrypoints = {
   "runnables": "runnables/index",
   "retrievers": "retrievers",
   "stores": "stores",
+  "tools": "tools",
   "tracers/base": "tracers/base",
   "tracers/console": "tracers/console",
   "tracers/initialize": "tracers/initialize",
@@ -44,7 +44,9 @@ const entrypoints = {
   "utils/hash": "utils/hash",
   "utils/json_patch": "utils/json_patch",
   "utils/json_schema": "utils/json_schema",
+  "utils/math": "utils/math",
   "utils/stream": "utils/stream",
+  "utils/testing": "utils/testing/index",
   "utils/tiktoken": "utils/tiktoken",
   "utils/types": "utils/types",
   "vectorstores": "vectorstores",
@@ -166,7 +168,7 @@ const generateImportMap = () => {
 const importTypes = [
   "langchain-core",
   (k, p) =>
-    `  "langchain-core/${k}"?:
+    `  "@langchain/core/${k}"?:
     | typeof import("../${p}.js")
     | Promise<typeof import("../${p}.js")>;`,
   "src/load/import_type.d.ts",

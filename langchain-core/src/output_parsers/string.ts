@@ -23,7 +23,7 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
     return "StrOutputParser";
   }
 
-  lc_namespace = ["langchain", "schema", "output_parser"];
+  lc_namespace = ["langchain_core", "output_parsers", "string"];
 
   lc_serializable = true;
 

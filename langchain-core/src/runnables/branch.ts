@@ -62,7 +62,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     return "RunnableBranch";
   }
 
-  lc_namespace = ["langchain", "runnable", "branch"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   lc_serializable = true;
 

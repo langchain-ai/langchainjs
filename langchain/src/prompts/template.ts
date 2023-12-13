@@ -7,4 +7,4 @@ export {
   renderTemplate,
   parseTemplate,
   checkValidTemplate,
-} from "langchain-core/prompts";
+} from "@langchain/core/prompts";

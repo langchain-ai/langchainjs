@@ -1,7 +1,7 @@
 {
-  "name": "langchain-core",
-  "version": "0.0.2",
-  "description": "Typescript bindings for langchain",
+  "name": "@langchain/core",
+  "version": "0.1.0",
+  "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -13,14 +13,16 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:scripts",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn run build:scripts",
     "build:esm": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
     "build:cjs": "NODE_OPTIONS=--max-old-space-size=4096 tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "build:scripts": "node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint:fix": "yarn lint --fix",
-    "clean": "rimraf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint src",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
+    "clean": "rimraf .turbo/ dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
@@ -35,11 +37,13 @@
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
-    "js-tiktoken": "^1.0.7",
-    "langsmith": "^0.0.48",
+    "js-tiktoken": "^1.0.8",
+    "langsmith": "~0.0.48",
+    "ml-distance": "^4.0.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "zod": "^3.22.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -50,14 +54,17 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
+    "ml-matrix": "^6.10.4",
     "prettier": "^2.8.3",
     "release-it": "^15.10.1",
     "rimraf": "^5.0.1",
-    "typescript": "^5.0.0"
+    "turbo": "latest",
+    "typescript": "~5.1.6"
   },
   "publishConfig": {
     "access": "public"
@@ -111,11 +118,6 @@
       "types": "./documents.d.ts",
       "import": "./documents.js",
       "require": "./documents.cjs"
-    },
-    "./document_transformers": {
-      "types": "./document_transformers.d.ts",
-      "import": "./document_transformers.js",
-      "require": "./document_transformers.cjs"
     },
     "./embeddings": {
       "types": "./embeddings.d.ts",
@@ -197,6 +199,11 @@
       "import": "./stores.js",
       "require": "./stores.cjs"
     },
+    "./tools": {
+      "types": "./tools.d.ts",
+      "import": "./tools.js",
+      "require": "./tools.cjs"
+    },
     "./tracers/base": {
       "types": "./tracers/base.d.ts",
       "import": "./tracers/base.js",
@@ -257,10 +264,20 @@
       "import": "./utils/json_schema.js",
       "require": "./utils/json_schema.cjs"
     },
+    "./utils/math": {
+      "types": "./utils/math.d.ts",
+      "import": "./utils/math.js",
+      "require": "./utils/math.cjs"
+    },
     "./utils/stream": {
       "types": "./utils/stream.d.ts",
       "import": "./utils/stream.js",
       "require": "./utils/stream.cjs"
+    },
+    "./utils/testing": {
+      "types": "./utils/testing.d.ts",
+      "import": "./utils/testing.js",
+      "require": "./utils/testing.cjs"
     },
     "./utils/tiktoken": {
       "types": "./utils/tiktoken.d.ts",
@@ -302,9 +319,6 @@
     "documents.cjs",
     "documents.js",
     "documents.d.ts",
-    "document_transformers.cjs",
-    "document_transformers.js",
-    "document_transformers.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -353,6 +367,9 @@
     "stores.cjs",
     "stores.js",
     "stores.d.ts",
+    "tools.cjs",
+    "tools.js",
+    "tools.d.ts",
     "tracers/base.cjs",
     "tracers/base.js",
     "tracers/base.d.ts",
@@ -389,9 +406,15 @@
     "utils/json_schema.cjs",
     "utils/json_schema.js",
     "utils/json_schema.d.ts",
+    "utils/math.cjs",
+    "utils/math.js",
+    "utils/math.d.ts",
     "utils/stream.cjs",
     "utils/stream.js",
     "utils/stream.d.ts",
+    "utils/testing.cjs",
+    "utils/testing.js",
+    "utils/testing.d.ts",
     "utils/tiktoken.cjs",
     "utils/tiktoken.js",
     "utils/tiktoken.d.ts",

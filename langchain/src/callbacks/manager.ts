@@ -1,1 +1,1 @@
-export * from "langchain-core/callbacks/manager";
+export * from "@langchain/core/callbacks/manager";

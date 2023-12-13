@@ -131,7 +131,7 @@ export abstract class BaseMessage
   extends Serializable
   implements BaseMessageFields
 {
-  lc_namespace = ["langchain", "schema"];
+  lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
 
@@ -661,10 +661,12 @@ export function getBufferString(
       role = "System";
     } else if (m._getType() === "function") {
       role = "Function";
+    } else if (m._getType() === "tool") {
+      role = "Tool";
     } else if (m._getType() === "generic") {
       role = (m as ChatMessage).role;
     } else {
-      throw new Error(`Got unsupported message type: ${m}`);
+      throw new Error(`Got unsupported message type: ${m._getType()}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
     string_messages.push(`${role}: ${nameStr}${m.content}`);
@@ -731,4 +733,30 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
     default:
       throw new Error(`Got unexpected type: ${storedMessage.type}`);
   }
+}
+
+/**
+ * Transforms an array of `StoredMessage` instances into an array of
+ * `BaseMessage` instances. It uses the `mapV1MessageToStoredMessage`
+ * function to ensure all messages are in the `StoredMessage` format, then
+ * creates new instances of the appropriate `BaseMessage` subclass based
+ * on the type of each message. This function is used to prepare stored
+ * messages for use in a chat context.
+ */
+export function mapStoredMessagesToChatMessages(
+  messages: StoredMessage[]
+): BaseMessage[] {
+  return messages.map(mapStoredMessageToChatMessage);
+}
+
+/**
+ * Transforms an array of `BaseMessage` instances into an array of
+ * `StoredMessage` instances. It does this by calling the `toDict` method
+ * on each `BaseMessage`, which returns a `StoredMessage`. This function
+ * is used to prepare chat messages for storage.
+ */
+export function mapChatMessagesToStoredMessages(
+  messages: BaseMessage[]
+): StoredMessage[] {
+  return messages.map((message) => message.toDict());
 }

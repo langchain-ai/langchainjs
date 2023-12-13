@@ -25,6 +25,9 @@ export interface OptionalImportMap {
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
+  "langchain/tools/gmail"?:
+    | typeof import("../tools/gmail/index.js")
+    | Promise<typeof import("../tools/gmail/index.js")>;
   "langchain/tools/google_calendar"?:
     | typeof import("../tools/google_calendar/index.js")
     | Promise<typeof import("../tools/google_calendar/index.js")>;
@@ -70,6 +73,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/llama_cpp"?:
     | typeof import("../embeddings/llama_cpp.js")
     | Promise<typeof import("../embeddings/llama_cpp.js")>;
+  "langchain/embeddings/gradient_ai"?:
+    | typeof import("../embeddings/gradient_ai.js")
+    | Promise<typeof import("../embeddings/gradient_ai.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
@@ -94,9 +100,15 @@ export interface OptionalImportMap {
   "langchain/llms/googlepalm"?:
     | typeof import("../llms/googlepalm.js")
     | Promise<typeof import("../llms/googlepalm.js")>;
+  "langchain/llms/gradient_ai"?:
+    | typeof import("../llms/gradient_ai.js")
+    | Promise<typeof import("../llms/gradient_ai.js")>;
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
+  "langchain/llms/watsonx_ai"?:
+    | typeof import("../llms/watsonx_ai.js")
+    | Promise<typeof import("../llms/watsonx_ai.js")>;
   "langchain/llms/bedrock"?:
     | typeof import("../llms/bedrock/index.js")
     | Promise<typeof import("../llms/bedrock/index.js")>;
@@ -115,6 +127,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/clickhouse"?:
+    | typeof import("../vectorstores/clickhouse.js")
+    | Promise<typeof import("../vectorstores/clickhouse.js")>;
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
@@ -289,6 +304,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/buffer"?:
     | typeof import("../document_loaders/fs/buffer.js")
     | Promise<typeof import("../document_loaders/fs/buffer.js")>;
+  "langchain/document_loaders/fs/chatgpt"?:
+    | typeof import("../document_loaders/fs/chatgpt.js")
+    | Promise<typeof import("../document_loaders/fs/chatgpt.js")>;
   "langchain/document_loaders/fs/text"?:
     | typeof import("../document_loaders/fs/text.js")
     | Promise<typeof import("../document_loaders/fs/text.js")>;
@@ -313,12 +331,18 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/notion"?:
     | typeof import("../document_loaders/fs/notion.js")
     | Promise<typeof import("../document_loaders/fs/notion.js")>;
+  "langchain/document_loaders/fs/obsidian"?:
+    | typeof import("../document_loaders/fs/obsidian.js")
+    | Promise<typeof import("../document_loaders/fs/obsidian.js")>;
   "langchain/document_loaders/fs/unstructured"?:
     | typeof import("../document_loaders/fs/unstructured.js")
     | Promise<typeof import("../document_loaders/fs/unstructured.js")>;
   "langchain/document_loaders/fs/openai_whisper_audio"?:
     | typeof import("../document_loaders/fs/openai_whisper_audio.js")
     | Promise<typeof import("../document_loaders/fs/openai_whisper_audio.js")>;
+  "langchain/document_loaders/fs/pptx"?:
+    | typeof import("../document_loaders/fs/pptx.js")
+    | Promise<typeof import("../document_loaders/fs/pptx.js")>;
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
@@ -373,6 +397,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
+  "langchain/retrievers/vectara_summary"?:
+    | typeof import("../retrievers/vectara_summary.js")
+    | Promise<typeof import("../retrievers/vectara_summary.js")>;
   "langchain/retrievers/self_query"?:
     | typeof import("../retrievers/self_query/index.js")
     | Promise<typeof import("../retrievers/self_query/index.js")>;
@@ -490,58 +517,15 @@ export interface OptionalImportMap {
   "langchain/experimental/hubs/makersuite/googlemakersuitehub"?:
     | typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")
     | Promise<typeof import("../experimental/hubs/makersuite/googlemakersuitehub.js")>;
+  "langchain/experimental/tools/pyinterpreter"?:
+    | typeof import("../experimental/tools/pyinterpreter.js")
+    | Promise<typeof import("../experimental/tools/pyinterpreter.js")>;
 }
 
 export interface SecretMap {
   ANTHROPIC_API_KEY?: string;
-  AWS_ACCESS_KEY_ID?: string;
-  AWS_SECRETE_ACCESS_KEY?: string;
-  AWS_SECRET_ACCESS_KEY?: string;
-  AWS_SESSION_TOKEN?: string;
-  AZURE_OPENAI_API_KEY?: string;
-  BAIDU_API_KEY?: string;
-  BAIDU_SECRET_KEY?: string;
-  BEDROCK_AWS_ACCESS_KEY_ID?: string;
-  BEDROCK_AWS_SECRET_ACCESS_KEY?: string;
-  COHERE_API_KEY?: string;
-  DATABERRY_API_KEY?: string;
-  FIREWORKS_API_KEY?: string;
-  GOOGLE_API_KEY?: string;
-  GOOGLE_PALM_API_KEY?: string;
-  GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
-  HUGGINGFACEHUB_API_KEY?: string;
-  IFLYTEK_API_KEY?: string;
-  IFLYTEK_API_SECRET?: string;
-  MILVUS_PASSWORD?: string;
-  MILVUS_SSL?: string;
-  MILVUS_USERNAME?: string;
-  MINIMAX_API_KEY?: string;
-  MINIMAX_GROUP_ID?: string;
   OPENAI_API_KEY?: string;
-  OPENAI_ORGANIZATION?: string;
-  PLANETSCALE_DATABASE_URL?: string;
-  PLANETSCALE_HOST?: string;
-  PLANETSCALE_PASSWORD?: string;
-  PLANETSCALE_USERNAME?: string;
   PROMPTLAYER_API_KEY?: string;
-  QDRANT_API_KEY?: string;
-  QDRANT_URL?: string;
-  REDIS_PASSWORD?: string;
-  REDIS_URL?: string;
-  REDIS_USERNAME?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
-  REPLICATE_API_TOKEN?: string;
-  SEARXNG_API_BASE?: string;
-  UPSTASH_REDIS_REST_TOKEN?: string;
-  UPSTASH_REDIS_REST_URL?: string;
-  VECTARA_API_KEY?: string;
-  VECTARA_CORPUS_ID?: string;
-  VECTARA_CUSTOMER_ID?: string;
-  WRITER_API_KEY?: string;
-  WRITER_ORG_ID?: string;
-  YC_API_KEY?: string;
-  YC_IAM_TOKEN?: string;
   ZAPIER_NLA_API_KEY?: string;
-  ZEP_API_KEY?: string;
-  ZEP_API_URL?: string;
 }

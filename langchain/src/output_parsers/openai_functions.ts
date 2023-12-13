@@ -2,7 +2,7 @@ import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js"
 import {
   compare,
   type Operation as JSONPatchOperation,
-} from "langchain-core/utils/json_patch";
+} from "@langchain/core/utils/json_patch";
 
 import { ChatGeneration, Generation } from "../schema/index.js";
 import { Optional } from "../types/type-utils.js";

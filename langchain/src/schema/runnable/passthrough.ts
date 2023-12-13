@@ -1,1 +1,1 @@
-export { RunnableAssign, RunnablePassthrough } from "langchain-core/runnables";
+export { RunnableAssign, RunnablePassthrough } from "@langchain/core/runnables";

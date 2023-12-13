@@ -1,1 +1,1 @@
-export { type RouterInput, RouterRunnable } from "langchain-core/runnables";
+export { type RouterInput, RouterRunnable } from "@langchain/core/runnables";

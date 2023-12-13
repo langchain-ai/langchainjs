@@ -2,6 +2,9 @@ version: "3"
 services:
   test-exports-esbuild:
     image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
@@ -11,9 +14,15 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
+      - ./libs/langchain-community:/langchain-community
+      - ./libs/langchain-anthropic:/langchain-anthropic
+      - ./libs/langchain-openai:/langchain-openai
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
     image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
@@ -23,9 +32,15 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
+      - ./libs/langchain-community:/langchain-community
+      - ./libs/langchain-anthropic:/langchain-anthropic
+      - ./libs/langchain-openai:/langchain-openai
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cjs:
     image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
@@ -35,9 +50,15 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
+      - ./libs/langchain-community:/langchain-community
+      - ./libs/langchain-anthropic:/langchain-anthropic
+      - ./libs/langchain-openai:/langchain-openai
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
     image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
@@ -47,9 +68,15 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
+      - ./libs/langchain-community:/langchain-community
+      - ./libs/langchain-anthropic:/langchain-anthropic
+      - ./libs/langchain-openai:/langchain-openai
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vercel:
     image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
@@ -59,9 +86,15 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
+      - ./libs/langchain-community:/langchain-community
+      - ./libs/langchain-anthropic:/langchain-anthropic
+      - ./libs/langchain-openai:/langchain-openai
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vite:
     image: node:18
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
@@ -71,6 +104,9 @@ services:
       - ./environment_tests/scripts:/scripts
       - ./langchain:/langchain
       - ./langchain-core:/langchain-core
+      - ./libs/langchain-community:/langchain-community
+      - ./libs/langchain-anthropic:/langchain-anthropic
+      - ./libs/langchain-openai:/langchain-openai
     command: bash /scripts/docker-ci-entrypoint.sh
   # test-exports-bun:
   #   image: oven/bun
@@ -79,7 +115,9 @@ services:
   #     - ./environment_tests/test-exports-bun:/package
   #     - ./environment_tests/scripts:/scripts
   #     - ./langchain:/langchain-workspace
-  #     - ./langchain-core:/langchain-core-workspace
+  #     - ./langchain-core:/langchain-core
+  #     - ./libs/langchain-community:/langchain-community-workspace
+  #     - ./libs/langchain-anthropic:/langchain-anthropic-workspace
   #   command: bash /scripts/docker-bun-ci-entrypoint.sh
   success:
     image: alpine:3.14

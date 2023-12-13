@@ -1,1 +1,1 @@
-export * from "langchain-core/tracers/tracer_langchain";
+export * from "@langchain/core/tracers/tracer_langchain";

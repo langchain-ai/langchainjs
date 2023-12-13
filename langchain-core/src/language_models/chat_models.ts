@@ -88,6 +88,7 @@ export abstract class BaseChatModel<
     keyof RunnableConfig & "timeout"
   >;
 
+  // Only ever instantiated in main LangChain
   lc_namespace = ["langchain", "chat_models", this._llmType()];
 
   constructor(fields: BaseChatModelParams) {

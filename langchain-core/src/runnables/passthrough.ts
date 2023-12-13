@@ -11,7 +11,7 @@ export class RunnableAssign<
   RunOutput extends Record<string, any> = any,
   CallOptions extends RunnableConfig = RunnableConfig
 > extends Runnable<RunInput, RunOutput> {
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   mapper: RunnableMap<RunInput>;
 
@@ -67,7 +67,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     return "RunnablePassthrough";
   }
 
-  lc_namespace = ["langchain", "schema", "runnable"];
+  lc_namespace = ["langchain_core", "runnables"];
 
   lc_serializable = true;
 

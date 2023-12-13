@@ -1,4 +1,4 @@
 export {
   getCallbackMangerForConfig,
   RunnableConfig,
-} from "langchain-core/runnables";
+} from "@langchain/core/runnables";

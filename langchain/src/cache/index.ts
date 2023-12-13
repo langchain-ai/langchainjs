@@ -1,1 +1,1 @@
-export { InMemoryCache } from "langchain-core/caches";
+export { InMemoryCache } from "@langchain/core/caches";

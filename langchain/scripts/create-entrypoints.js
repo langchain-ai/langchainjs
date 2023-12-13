@@ -15,9 +15,11 @@ const entrypoints = {
   "agents/load": "agents/load",
   "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
+  "agents/toolkits/connery": "agents/toolkits/connery/index",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   "agents/format_scratchpad": "agents/format_scratchpad/openai_functions",
-  "agents/format_scratchpad/openai_tools": "agents/format_scratchpad/openai_tools",
+  "agents/format_scratchpad/openai_tools":
+    "agents/format_scratchpad/openai_tools",
   "agents/format_scratchpad/log": "agents/format_scratchpad/log",
   "agents/format_scratchpad/xml": "agents/format_scratchpad/xml",
   "agents/format_scratchpad/log_to_message":
@@ -32,10 +34,13 @@ const entrypoints = {
   "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
+  "tools/connery": "tools/connery",
   "tools/render": "tools/render",
   "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
+  "tools/gmail": "tools/gmail/index",
   "tools/google_calendar": "tools/google_calendar/index",
+  "tools/google_places": "tools/google_places",
   // chains
   chains: "chains/index",
   "chains/combine_documents/reduce": "chains/combine_documents/reduce",
@@ -62,6 +67,7 @@ const entrypoints = {
   "embeddings/minimax": "embeddings/minimax",
   "embeddings/voyage": "embeddings/voyage",
   "embeddings/llama_cpp": "embeddings/llama_cpp",
+  "embeddings/gradient_ai": "embeddings/gradient_ai",
   // llms
   "llms/load": "llms/load",
   "llms/base": "llms/base",
@@ -74,11 +80,13 @@ const entrypoints = {
   "llms/raycast": "llms/raycast",
   "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
+  "llms/fireworks": "llms/fireworks",
   "llms/googlevertexai": "llms/googlevertexai/index",
   "llms/googlevertexai/web": "llms/googlevertexai/web",
   "llms/googlepalm": "llms/googlepalm",
-  "llms/fireworks": "llms/fireworks",
+  "llms/gradient_ai": "llms/gradient_ai",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
+  "llms/watsonx_ai": "llms/watsonx_ai",
   "llms/bedrock": "llms/bedrock/index",
   "llms/bedrock/web": "llms/bedrock/web",
   "llms/llama_cpp": "llms/llama_cpp",
@@ -90,6 +98,7 @@ const entrypoints = {
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
   // vectorstores
+  "vectorstores/clickhouse": "vectorstores/clickhouse",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/cassandra": "vectorstores/cassandra",
@@ -168,6 +177,7 @@ const entrypoints = {
   "document_loaders/web/youtube": "document_loaders/web/youtube",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
+  "document_loaders/fs/chatgpt": "document_loaders/fs/chatgpt",
   "document_loaders/fs/text": "document_loaders/fs/text",
   "document_loaders/fs/json": "document_loaders/fs/json",
   "document_loaders/fs/srt": "document_loaders/fs/srt",
@@ -176,9 +186,11 @@ const entrypoints = {
   "document_loaders/fs/epub": "document_loaders/fs/epub",
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
+  "document_loaders/fs/obsidian": "document_loaders/fs/obsidian",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   "document_loaders/fs/openai_whisper_audio":
     "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/pptx": "document_loaders/fs/pptx",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/mozilla_readability":
@@ -235,6 +247,7 @@ const entrypoints = {
   "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
+  "retrievers/vectara_summary": "retrievers/vectara_summary",
   "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
@@ -313,10 +326,12 @@ const entrypoints = {
     "experimental/hubs/makersuite/googlemakersuitehub",
   "experimental/chains/violation_of_expectations":
     "experimental/chains/violation_of_expectations/index",
+  "experimental/masking": "experimental/masking/index",
+  "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
   evaluation: "evaluation/index",
   // runnables
-  "runnables": "runnables/index",
+  runnables: "runnables/index",
   "runnables/remote": "runnables/remote",
 };
 
@@ -344,6 +359,7 @@ const requiresOptionalDependency = [
   "tools/sql",
   "tools/webbrowser",
   "tools/google_calendar",
+  "tools/gmail",
   "callbacks/handlers/llmonitor",
   "chains/load",
   "chains/sql_db",
@@ -357,15 +373,18 @@ const requiresOptionalDependency = [
   "embeddings/hf",
   "embeddings/hf_transformers",
   "embeddings/llama_cpp",
+  "embeddings/gradient_ai",
   "llms/load",
   "llms/cohere",
   "llms/googlevertexai",
   "llms/googlevertexai/web",
   "llms/googlepalm",
+  "llms/gradient_ai",
   "llms/hf",
   "llms/raycast",
   "llms/replicate",
   "llms/sagemaker_endpoint",
+  "llms/watsonx_ai",
   "llms/bedrock",
   "llms/bedrock/web",
   "llms/llama_cpp",
@@ -374,6 +393,7 @@ const requiresOptionalDependency = [
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/cassandra",
+  "vectorstores/clickhouse",
   "vectorstores/chroma",
   "vectorstores/cloudflare_vectorize",
   "vectorstores/closevector/web",
@@ -430,6 +450,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/youtube",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
+  "document_loaders/fs/chatgpt",
   "document_loaders/fs/text",
   "document_loaders/fs/json",
   "document_loaders/fs/srt",
@@ -438,8 +459,10 @@ const requiresOptionalDependency = [
   "document_loaders/fs/epub",
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
+  "document_loaders/fs/obsidian",
   "document_loaders/fs/unstructured",
   "document_loaders/fs/openai_whisper_audio",
+  "document_loaders/fs/pptx",
   "document_transformers/html_to_text",
   "document_transformers/mozilla_readability",
   "chat_models/bedrock",
@@ -456,6 +479,7 @@ const requiresOptionalDependency = [
   "retrievers/supabase",
   "retrievers/zep",
   "retrievers/metal",
+  "retrievers/vectara_summary",
   "retrievers/self_query",
   "retrievers/self_query/chroma",
   "retrievers/self_query/functional",
@@ -498,6 +522,7 @@ const requiresOptionalDependency = [
   "experimental/chat_models/anthropic_functions",
   "experimental/llms/bittensor",
   "experimental/hubs/makersuite/googlemakersuitehub",
+  "experimental/tools/pyinterpreter",
   "util/convex",
 ];
 
@@ -555,7 +580,7 @@ const updateConfig = () => {
     ...json,
     entryPoints: [...Object.keys(entrypoints)]
       .filter((key) => !deprecatedNodeOnly.includes(key))
-      .map((key) => `./langchain/src/${entrypoints[key]}.ts`),
+      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();
@@ -644,7 +669,7 @@ const generateImportMap = () => {
   fs.writeFileSync(
     `../${pkg}/${importMapPath}`,
     "// Auto-generated by `scripts/create-entrypoints.js`. Do not edit manually.\n\n" +
-      contents
+    contents
   );
 };
 
@@ -666,17 +691,17 @@ const generateImportTypes = () => {
 
 export interface OptionalImportMap {
 ${Object.keys(entrypoints)
-  .filter((key) => !deprecatedNodeOnly.includes(key))
-  .filter((key) => requiresOptionalDependency.includes(key))
-  .map((key) => importStatement(key, entrypoints[key]))
-  .join("\n")}
+      .filter((key) => !deprecatedNodeOnly.includes(key))
+      .filter((key) => requiresOptionalDependency.includes(key))
+      .map((key) => importStatement(key, entrypoints[key]))
+      .join("\n")}
 }
 
 export interface SecretMap {
 ${[...identifySecrets()]
-  .sort()
-  .map((secret) => `  ${secret}?: string;`)
-  .join("\n")}
+      .sort()
+      .map((secret) => `  ${secret}?: string;`)
+      .join("\n")}
 }
 `
   );
@@ -701,7 +726,7 @@ const generateImportConstants = () => {
   fs.writeFileSync(
     `../${pkg}/${importConstantsPath}`,
     "// Auto-generated by `scripts/create-entrypoints.js`. Do not edit manually.\n\nexport const optionalImportEntrypoints = [\n" +
-      contents
+    contents
   );
 };
 

@@ -1,4 +1,4 @@
-import { ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { OpenAIClient, type ClientOptions } from "@langchain/openai";
 import { Serializable } from "../../load/serializable.js";
 
 export type OpenAIFilesInput = {

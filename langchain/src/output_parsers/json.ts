@@ -2,6 +2,11 @@
 // MIT License
 
 export function parsePartialJson(s: string) {
+  // If the input is undefined, return null to indicate failure.
+  if (typeof s === "undefined") {
+    return null;
+  }
+
   // Attempt to parse the string as-is.
   try {
     return JSON.parse(s);

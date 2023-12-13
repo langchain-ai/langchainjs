@@ -1,1 +1,1 @@
-export * from "langchain-core/runnables";
+export * from "@langchain/core/runnables";

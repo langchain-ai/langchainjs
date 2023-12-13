@@ -1,1 +1,1 @@
-export * from "langchain-core/embeddings";
+export * from "@langchain/core/embeddings";

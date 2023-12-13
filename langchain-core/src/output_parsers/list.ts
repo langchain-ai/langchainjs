@@ -15,7 +15,7 @@ export class CommaSeparatedListOutputParser extends ListOutputParser {
     return "CommaSeparatedListOutputParser";
   }
 
-  lc_namespace = ["langchain", "output_parsers", "list"];
+  lc_namespace = ["langchain_core", "output_parsers", "list"];
 
   lc_serializable = true;
 
@@ -51,7 +51,7 @@ export class CommaSeparatedListOutputParser extends ListOutputParser {
  * @augments ListOutputParser
  */
 export class CustomListOutputParser extends ListOutputParser {
-  lc_namespace = ["langchain", "output_parsers", "list"];
+  lc_namespace = ["langchain_core", "output_parsers", "list"];
 
   private length: number | undefined;
 
