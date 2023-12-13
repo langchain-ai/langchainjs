@@ -77,6 +77,10 @@ async function webpackLoader(content, map, meta) {
           0,
           -1
         )}.${imported}.html`;
+        if (moduleName === "chat_models_openai" && imported === "ChatOpenAI" && category === "classes") {
+          console.log("componentsPath", componentPath);
+          console.log("docsPath", docsPath);
+        }
         const newDocsPath = getDocsPath(componentPathWithSchema);
         if (fs.existsSync(docsPath)) {
           modulePath = componentPath;
