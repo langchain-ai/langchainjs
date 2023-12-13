@@ -16,8 +16,8 @@ import type {
 } from "../types/watsonx-types.js";
 import { WatsonApiClient } from "../utils/watsonx-client.js";
 
-export class WatsonChatModel extends SimpleChatModel {
-  private readonly watsonApiClient!: WatsonApiClient;
+export class WatsonxAIChat extends SimpleChatModel {
+  private readonly watsonApiClient: WatsonApiClient;
 
   readonly modelId!: string;
 
@@ -145,7 +145,7 @@ export class WatsonChatModel extends SimpleChatModel {
   }
 
   _llmType(): string {
-    return "watsonx_ai_chat";
+    return "watsonx_ai";
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {

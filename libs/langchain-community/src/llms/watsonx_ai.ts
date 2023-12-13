@@ -38,7 +38,7 @@ export class WatsonxAI extends LLM<BaseLLMCallOptions> {
 
   modelParameters?: WatsonModelParameters;
 
-  private readonly watsonApiClient!: WatsonApiClient;
+  private readonly watsonApiClient: WatsonApiClient;
 
   constructor(fields: WatsonxAIParams) {
     super(fields);

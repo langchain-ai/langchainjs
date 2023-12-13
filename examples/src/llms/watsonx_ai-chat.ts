@@ -1,6 +1,6 @@
-import { WatsonChatModel } from "langchain/chat_models/watsonx_ai";
+import { WatsonxAIChat } from "langchain/chat_models/watsonx_ai";
 
-const model = new WatsonChatModel({
+const model = new WatsonxAIChat({
   clientConfig: {
     region: "eu-de",
   },
