@@ -1,0 +1,30 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Discord Tool
+
+The Discord Tool gives your agent the ability to search, read, and write messages to discord channels.
+It is useful for when you need to interact with a discord channel.
+
+## Setup
+
+To use the Discord Tool you need to install the following official peer depencency:
+
+```bash npm2yarn
+npm install discord.js
+```
+
+## Usage, standalone
+
+import ToolExample from "@examples/tools/discord.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
+
+## Usage, in an Agent
+
+import AgentExample from "@examples/agents/discord.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>
