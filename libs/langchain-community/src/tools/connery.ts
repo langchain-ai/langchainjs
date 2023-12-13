@@ -81,8 +81,8 @@ export class ConneryAction extends Tool {
   constructor(protected _action: Action, protected _service: ConneryService) {
     super();
 
-    this.name = this._action.title;
-    this.description = this.getDescription();
+    this.name = this._action.id;
+    this.description = this.getActionDescription();
   }
 
   /**
@@ -96,9 +96,9 @@ export class ConneryAction extends Tool {
 
   /**
    * Returns the description of the Connery action.
-   * @returns A string containing the description of the Connery action together with the instructions on how to use it.
+   * @returns A string containing the description of the Connery Action together with the instructions on how to use it.
    */
-  protected getDescription(): string {
+  protected getActionDescription(): string {
     const { title, description } = this._action;
     const inputParameters = this.prepareJsonForTemplate(
       this._action.inputParameters
@@ -182,7 +182,7 @@ export class ConneryAction extends Tool {
 }
 
 /**
- * A service for working with Connery actions.
+ * A service for working with Connery Actions.
  *
  * Connery is an open-source plugin infrastructure for AI.
  * Source code: https://github.com/connery-io/connery-platform
@@ -220,7 +220,7 @@ export class ConneryService {
   }
 
   /**
-   * Returns the list of Connery actions wrapped as a LangChain Tool objects.
+   * Returns the list of Connery Actions wrapped as a LangChain Tool objects.
    * @returns A promise that resolves to an array of ConneryAction objects.
    */
   async listActions(): Promise<ConneryAction[]> {
