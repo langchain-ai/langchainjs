@@ -3,6 +3,7 @@
 export const optionalImportEntrypoints = [
   "langchain_community/tools/aws_lambda",
   "langchain_community/tools/aws_sfn",
+  "langchain_community/tools/discord",
   "langchain_community/tools/gmail",
   "langchain_community/agents/toolkits/aws_sfn",
   "langchain_community/embeddings/bedrock",

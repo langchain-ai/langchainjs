@@ -25,6 +25,9 @@ tools/connery.d.ts
 tools/dadjokeapi.cjs
 tools/dadjokeapi.js
 tools/dadjokeapi.d.ts
+tools/discord.cjs
+tools/discord.js
+tools/discord.d.ts
 tools/dynamic.cjs
 tools/dynamic.js
 tools/dynamic.d.ts

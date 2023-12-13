@@ -20,6 +20,7 @@
   "scripts": {
     "build": "turbo run build --filter=\"!test-exports-*\" --concurrency 1",
     "build:deps": "yarn workspace @langchain/core build && yarn workspace @langchain/anthropic build && yarn workspace @langchain/openai build && yarn workspace @langchain/mistralai build && yarn workspace @langchain/community build",
+    "turbo:command": "turbo",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "lint": "turbo run lint --concurrency 1",
