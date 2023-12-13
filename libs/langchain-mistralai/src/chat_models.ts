@@ -195,7 +195,7 @@ export class ChatMistralAI<
   }
 
   _llmType() {
-    return "chat_mistral_ai";
+    return "mistral_ai";
   }
 
   /**
@@ -256,8 +256,7 @@ export class ChatMistralAI<
 
   async completionWithRetry(
     input: MistralAIChatCompletionOptions,
-    // Hack to satisfy TS return type
-    streaming: boolean = this.streaming
+    streaming: boolean,
   ): Promise<
     | MistralAIChatCompletionResult
     | AsyncGenerator<MistralAIChatCompletionResult>
