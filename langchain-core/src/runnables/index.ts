@@ -10,6 +10,7 @@ export {
   RunnableRetry,
   RunnableSequence,
   RunnableMap,
+  RunnableParallel,
   RunnableLambda,
   RunnableWithFallbacks,
   _coerceToRunnable,

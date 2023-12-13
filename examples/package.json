@@ -27,6 +27,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.9.0",
     "@gomomento/sdk": "^1.51.1",
+    "@langchain/community": "workspace:*",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",
@@ -37,7 +38,7 @@
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@upstash/redis": "^1.20.6",
     "@vercel/kv": "^0.2.3",
-    "@xata.io/client": "^0.25.1",
+    "@xata.io/client": "^0.28.0",
     "@zilliz/milvus2-sdk-node": "^2.2.7",
     "axios": "^0.26.0",
     "chromadb": "^1.5.3",
@@ -78,6 +79,6 @@
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
-    "typescript": "^5.0.0"
+    "typescript": "~5.1.6"
   }
 }

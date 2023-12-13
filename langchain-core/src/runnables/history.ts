@@ -22,7 +22,10 @@ import { RunnablePassthrough } from "./passthrough.js";
 type GetSessionHistoryCallable = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...args: Array<any>
-) => Promise<BaseChatMessageHistory | BaseListChatMessageHistory>;
+) =>
+  | Promise<BaseChatMessageHistory | BaseListChatMessageHistory>
+  | BaseChatMessageHistory
+  | BaseListChatMessageHistory;
 
 export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
   extends Omit<

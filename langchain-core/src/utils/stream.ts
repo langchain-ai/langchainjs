@@ -28,9 +28,12 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
 
   async return() {
     this.ensureReader();
-    const cancelPromise = this.reader.cancel(); // cancel first, but don't await yet
-    this.reader.releaseLock(); // release lock first
-    await cancelPromise; // now await it
+    // If wrapped in a Node stream, cancel is already called.
+    if (this.locked) {
+      const cancelPromise = this.reader.cancel(); // cancel first, but don't await yet
+      this.reader.releaseLock(); // release lock first
+      await cancelPromise; // now await it
+    }
     return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore final chunk value anyway
   }
 
