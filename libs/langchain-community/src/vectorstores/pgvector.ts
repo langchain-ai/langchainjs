@@ -252,8 +252,8 @@ export class PGVectorStore extends VectorStore {
       const embedding = vectors[i];
       const embeddingString = `[${embedding.join(",")}]`;
       values.push(
-        documents[i].pageContent,
-        embeddingString,
+        documents[i].pageContent.replace(/\0/g, ""),
+        embeddingString.replace(/\0/g, ""),
         documents[i].metadata
       );
       if (collectionId) {

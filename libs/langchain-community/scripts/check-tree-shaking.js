@@ -31,6 +31,7 @@ export function listExternals() {
     "convex/server",
     "convex/values",
     "@rockset/client/dist/codegen/api.js",
+    "discord.js",
     "mysql2/promise",
     "web-auth-library/google",
     "firebase-admin/app",
