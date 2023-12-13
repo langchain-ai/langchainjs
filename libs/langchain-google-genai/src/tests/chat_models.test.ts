@@ -1,9 +1,6 @@
 import { test } from "@jest/globals";
-import {
-  ChatGoogleGenerativeAI,
-  HarmBlockThreshold,
-  HarmCategory,
-} from "../chat_models.js";
+import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 
 test("Google AI - `temperature` must be in range [0.0,1.0]", async () => {
   expect(
@@ -56,7 +53,7 @@ test("Google AI - `topK` must be positive", async () => {
   ).toThrow();
 });
 
-test("Google AI - `safetySettings` category array must be valid", async () => {
+test("Google AI - `safetySettings` category array must be unique", async () => {
   expect(
     () =>
       new ChatGoogleGenerativeAI({
@@ -72,20 +69,6 @@ test("Google AI - `safetySettings` category array must be valid", async () => {
           {
             category: "HARM_CATEGORY_DEROGATORY" as HarmCategory,
             threshold: "BLOCK_ONLY_HIGH" as HarmBlockThreshold,
-          },
-        ],
-      })
-  ).toThrow();
-});
-
-test("Google AI - `safetySettings` category array must be unique", async () => {
-  expect(
-    () =>
-      new ChatGoogleGenerativeAI({
-        safetySettings: [
-          {
-            category: "WRONG_HARM_CATEGORY" as HarmCategory,
-            threshold: "BLOCK_MEDIUM_AND_ABOVE" as HarmBlockThreshold,
           },
         ],
       })

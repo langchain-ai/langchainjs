@@ -1,13 +1,7 @@
-import {
-  GoogleGenerativeAI,
-  GenerativeModel,
-  TaskType,
-  EmbedContentRequest,
-} from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import type { TaskType, EmbedContentRequest } from "@google/generative-ai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
-
-export { TaskType };
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -94,7 +88,7 @@ export class GoogleGenerativeAIEmbeddings
 
     this.title = fields?.title ?? this.title;
 
-    if (this.title && this.taskType !== TaskType.RETRIEVAL_DOCUMENT) {
+    if (this.title && this.taskType !== "RETRIEVAL_DOCUMENT") {
       throw new Error(
         "title can only be sepcified with TaskType.RETRIEVAL_DOCUMENT"
       );
