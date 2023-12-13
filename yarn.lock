@@ -8448,6 +8448,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/core@npm:~0.0.7":
+  version: 0.0.11
+  resolution: "@langchain/core@npm:0.0.11"
+  dependencies:
+    ansi-styles: ^5.0.0
+    camelcase: 6
+    decamelize: 1.2.0
+    js-tiktoken: ^1.0.8
+    langsmith: ~0.0.48
+    ml-distance: ^4.0.0
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
+    zod: ^3.22.3
+  checksum: 064912733591dabd62eaf4fa958253e1427bc3e279ce4fedb1c32b2eff05c38aab844d09ac6f0796c2d254016c1ed30c9eeae64e47d1afe2a51045f6bc052b9d
+  languageName: node
+  linkType: hard
+
 "@langchain/core@workspace:langchain-core, @langchain/core@~0.1.0, @langchain/core@~0.1.1":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
@@ -8513,7 +8531,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.2":
+"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.5":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
@@ -18912,8 +18930,8 @@ __metadata:
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
-    "@langchain/mistralai": "workspace:*"
     "@langchain/community": "workspace:*"
+    "@langchain/mistralai": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
