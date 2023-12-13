@@ -18,6 +18,7 @@ const entrypoints = {
   "tools/brave_search": "tools/brave_search",
   "tools/connery": "tools/connery",
   "tools/dadjokeapi": "tools/dadjokeapi",
+  "tools/discord": "tools/discord",
   "tools/dynamic": "tools/dynamic",
   "tools/dataforseo_api_search": "tools/dataforseo_api_search",
   "tools/gmail": "tools/gmail/index",
@@ -185,6 +186,7 @@ const deprecatedNodeOnly = [];
 const requiresOptionalDependency = [
   "tools/aws_sfn",
   "tools/aws_lambda",
+  "tools/discord",
   "tools/gmail",
   "agents/toolkits/aws_sfn",
   "callbacks/handlers/llmonitor",
