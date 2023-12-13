@@ -1,6 +1,9 @@
 {
   "name": "test-exports-cf",
   "version": "0.0.0",
+  "workspaces": [
+    "libs/*"
+  ],
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
     "typescript": "^5.0.3",
@@ -9,6 +12,7 @@
   },
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
+    "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*"

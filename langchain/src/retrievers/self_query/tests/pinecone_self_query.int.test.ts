@@ -28,7 +28,7 @@ describe("Pinecone self query", () => {
       }),
       new Document({
         pageContent:
-          "Leo DiCaprio gets lost in a dream within a dream within a dream within a ...",
+          "Leo DiCaprio gets lost in a dream wi thin a dream within a dream within a ...",
         metadata: {
           year: 2010,
           director: "Christopher Nolan",
