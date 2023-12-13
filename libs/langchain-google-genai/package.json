@@ -34,8 +34,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.1.0",
     "@google-ai/generativelanguage": "^2.0.0",
+    "@google/generative-ai": "^0.1.0",
     "@langchain/core": "~0.1.1",
     "google-auth-library": "^8.9.0"
   },

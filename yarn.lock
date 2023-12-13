@@ -7330,21 +7330,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@google-ai/generativelanguage@npm:*":
-  version: 2.0.0
-  resolution: "@google-ai/generativelanguage@npm:2.0.0"
-  dependencies:
-    google-gax: ^4.0.3
-  checksum: b6201001cabd517e5931d4d41c9ce28f3cb17406a999c358a9389ba99010039511ce6cec6abb5b27bc96552067c2e83d2f9b922f7b68081932e9296da4750c97
-  languageName: node
-  linkType: hard
-
 "@google-ai/generativelanguage@npm:^0.2.1":
   version: 0.2.1
   resolution: "@google-ai/generativelanguage@npm:0.2.1"
   dependencies:
     google-gax: ^3.5.8
   checksum: 202add662fcd149b861e7991a6ab2ca0c057372a1c80f52fcaccf95625885996c182fc2fdc8458915559a49c8354c3af967a58c766049706e8a42fee93fb4f43
+  languageName: node
+  linkType: hard
+
+"@google-ai/generativelanguage@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@google-ai/generativelanguage@npm:2.0.0"
+  dependencies:
+    google-gax: ^4.0.3
+  checksum: b6201001cabd517e5931d4d41c9ce28f3cb17406a999c358a9389ba99010039511ce6cec6abb5b27bc96552067c2e83d2f9b922f7b68081932e9296da4750c97
   languageName: node
   linkType: hard
 
@@ -8152,7 +8152,6 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
-    "@google-ai/generativelanguage": ^0.2.1
     "@google/generative-ai": ^0.1.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
@@ -8269,7 +8268,6 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
-    "@google-ai/generativelanguage": ^0.2.1
     "@google/generative-ai": ^0.1.0
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
@@ -8362,8 +8360,6 @@ __metadata:
     "@gomomento/sdk":
       optional: true
     "@gomomento/sdk-core":
-      optional: true
-    "@google-ai/generativelanguage":
       optional: true
     "@google/generative-ai":
       optional: true
@@ -8532,7 +8528,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/google-genai@workspace:libs/langchain-google-genai"
   dependencies:
-    "@google-ai/generativelanguage": "*"
+    "@google-ai/generativelanguage": ^2.0.0
     "@google/generative-ai": ^0.1.0
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
