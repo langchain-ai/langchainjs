@@ -27,7 +27,8 @@ mkdir -p ./.yarn
 cp -r ../root/.yarn/!(berry|cache) ./.yarn
 cp ../root/yarn.lock ../root/.yarnrc.yml .
 
-yarn install --no-immutable
+yarn plugin import workspace-tools
+yarn workspaces focus --production
 
 # Check the build command completes successfully
 yarn build
