@@ -10,21 +10,18 @@ import { StringOutputParser } from "../../output_parsers/string.js";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
 } from "../../prompts/chat.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   FakeLLM,
   FakeChatModel,
-  FakeRetriever,
   FakeStreamingLLM,
   FakeSplitIntoListParser,
   FakeRunnable,
   FakeListChatModel,
 } from "../../utils/testing/index.js";
-import { RunnableSequence, RunnableMap, RunnableLambda } from "../base.js";
+import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
-import { Document } from "../../documents/document.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -68,33 +65,6 @@ test("Pipe from one runnable to the next", async () => {
   const result = await runnable.invoke({ input: "Hello world!" });
   console.log(result);
   expect(result).toBe("Hello world!");
-});
-
-test("Create a runnable sequence with a runnable map", async () => {
-  const promptTemplate = ChatPromptTemplate.fromMessages<{
-    documents: string;
-    question: string;
-  }>([
-    SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
-    HumanMessagePromptTemplate.fromTemplate(
-      `Context:\n{documents}\n\nQuestion:\n{question}`
-    ),
-  ]);
-  const llm = new FakeChatModel({});
-  const inputs = RunnableMap.from({
-    question: (input: string) => input,
-    documents: RunnableSequence.from([
-      new FakeRetriever(),
-      (docs: Document[]) => JSON.stringify(docs),
-    ]),
-    extraField: new FakeLLM({}),
-  });
-  const runnable = inputs.pipe(promptTemplate).pipe(llm);
-  const result = await runnable.invoke("Do you know the Muffin Man?");
-  console.log(result);
-  expect(result.content).toEqual(
-    `You are a nice assistant.\nContext:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
-  );
 });
 
 test("Stream the entire way through", async () => {

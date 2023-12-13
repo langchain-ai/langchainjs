@@ -50,7 +50,7 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),
   ];
-  const steps = {
+  const inputs = {
     question: (input: string) => input,
     documents: RunnableSequence.from([
       new FakeRetriever({
@@ -63,10 +63,11 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
     }).withConfig({ tags: ["only_one"] }),
   };
 
-  const inputs = new RunnableMap({
-    steps,
-  });
-  const runnable = inputs.pipe(promptTemplate).pipe(llm);
+  const runnable = new RunnableMap({
+    steps: inputs,
+  })
+    .pipe(promptTemplate)
+    .pipe(llm);
   const stream = await runnable.streamLog(
     "Do you know the Muffin Man?",
     {},
