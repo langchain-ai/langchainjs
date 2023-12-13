@@ -125,14 +125,10 @@ function mistralAIResponseToChatMessage(
   if ("delta" in choice && !("message" in choice)) {
     return new AIMessage(choice.delta?.content ?? "");
   }
-  if (
-    !("message" in choice) ||
-    !choice.message ||
-    choice.message.length === 0
-  ) {
+  if (!("message" in choice) || !choice.message) {
     throw new Error("No message found in the choice.");
   }
-  const message = choice.message[0];
+  const { message } = choice;
   switch (message.role) {
     case "assistant":
       return new AIMessage(message.content ?? "");
@@ -288,6 +284,13 @@ export class ChatMistralAI<
       ...params,
       messages: mistralMessages
     };
+    if (mistralMessages[0] && mistralMessages[0].role === "assistant") {
+      throw new Error(
+        "MistralAI does not support starting chat conversations with an AI message."
+      );
+    } else if (!mistralMessages[0]) {
+      console.log("Bruh?", messages, mistralMessages);
+    }
 
     // Handle streaming
     if (this.streaming) {
@@ -339,7 +342,7 @@ export class ChatMistralAI<
       if (!("message" in part)) {
         throw new Error("No message found in the choice.");
       }
-      const text = part.message?.[0]?.content ?? "";
+      const text = part.message?.content ?? "";
       const generation: ChatGeneration = {
         text,
         message: mistralAIResponseToChatMessage(part)

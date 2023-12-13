@@ -8,10 +8,10 @@ declare module "@mistralai/mistralai" {
     choices:
       | Array<{
           index: number;
-          message?: Array<{
+          message?: {
             role?: "user" | "assistant";
             content?: string;
-          }>;
+          };
           finish_reason: "stop" | "length" | "model_length";
         }>
       | Array<{
