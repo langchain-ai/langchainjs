@@ -21,8 +21,8 @@ import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
 
-type FuncOutput<RunInput, RunOutput> =
-  Runnable<RunInput, RunOutput> | Exclude<RunOutput, Runnable>
+export type Invocable<RunInput, RunOutput> =
+  Runnable<RunInput, RunOutput> | RunOutput
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
@@ -32,7 +32,7 @@ export type RunnableFunc<RunInput, RunOutput> = (
     | Record<string, any>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | (Record<string, any> & { config: RunnableConfig })
-) => FuncOutput<RunInput, RunOutput> | Promise<FuncOutput<RunInput, RunOutput>>;
+) => Invocable<RunInput, RunOutput> | Promise<Invocable<RunInput, RunOutput> >;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
