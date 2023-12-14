@@ -68,6 +68,7 @@ const entrypoints = {
   "llms/raycast": "llms/raycast",
   "llms/replicate": "llms/replicate",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
+  "llms/togetherai": "llms/togetherai",
   "llms/watsonx_ai": "llms/watsonx_ai",
   "llms/writer": "llms/writer",
   "llms/yandex": "llms/yandex",

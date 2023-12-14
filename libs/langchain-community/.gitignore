@@ -166,6 +166,9 @@ llms/replicate.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
+llms/togetherai.cjs
+llms/togetherai.js
+llms/togetherai.d.ts
 llms/watsonx_ai.cjs
 llms/watsonx_ai.js
 llms/watsonx_ai.d.ts
