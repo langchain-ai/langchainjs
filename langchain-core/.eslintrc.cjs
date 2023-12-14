@@ -51,6 +51,7 @@ module.exports = {
     "no-await-in-loop": 0,
     "no-bitwise": 0,
     "no-console": 0,
+    "no-empty-function": 0,
     "no-restricted-syntax": 0,
     "no-shadow": 0,
     "no-continue": 0,
