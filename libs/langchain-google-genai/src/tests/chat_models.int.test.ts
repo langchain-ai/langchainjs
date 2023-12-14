@@ -31,6 +31,8 @@ test("Test Google AI generation with a stop sequence", async () => {
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
   expect(res.additional_kwargs.finishReason).toBe("STOP");
+  expect(res.content).not.toContain("2")
+  expect(res.content).not.toContain("two")
 });
 
 test("Test Google AI generation with a system message", async () => {
