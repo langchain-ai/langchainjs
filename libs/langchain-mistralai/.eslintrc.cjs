@@ -11,11 +11,8 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "no-instanceof", "eslint-plugin-jest"],
+  plugins: ["@typescript-eslint", "no-instanceof"],
   ignorePatterns: [
-    "src/utils/@cfworker",
-    "src/utils/fast-json-patch",
-    "src/utils/js-sha1",
     ".eslintrc.cjs",
     "scripts",
     "node_modules",
@@ -51,7 +48,6 @@ module.exports = {
     "no-await-in-loop": 0,
     "no-bitwise": 0,
     "no-console": 0,
-    "no-empty-function": 0,
     "no-restricted-syntax": 0,
     "no-shadow": 0,
     "no-continue": 0,
@@ -66,6 +62,5 @@ module.exports = {
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
-    'jest/no-focused-tests': 'error',
   },
 };
