@@ -40,7 +40,7 @@ LangChain is written in TypeScript and can be used in:
 
 This framework consists of several parts.
 - **LangChain Libraries**: The Python and JavaScript libraries. Contains interfaces and integrations for a myriad of components, a basic run time for combining these components into chains and agents, and off-the-shelf implementations of chains and agents.
-- **[LangChain Templates](templates)**: (currently Python-only) A collection of easily deployable reference architectures for a wide variety of tasks.
+- **[LangChain Templates](https://github.com/langchain-ai/langchain/tree/master/templates)**: (currently Python-only) A collection of easily deployable reference architectures for a wide variety of tasks.
 - **[LangServe](https://github.com/langchain-ai/langserve)**: (currently Python-only) A library for deploying LangChain chains as a REST API.
 - **[LangSmith](https://smith.langchain.com)**: A developer platform that lets you debug, test, evaluate, and monitor chains built on any LLM framework and seamlessly integrates with LangChain.
 
