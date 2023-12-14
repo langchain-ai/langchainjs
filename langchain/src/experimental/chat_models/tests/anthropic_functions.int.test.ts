@@ -6,14 +6,14 @@ import { AnthropicFunctions } from "../anthropic_functions.js";
 import { ChatBedrock } from "../../../chat_models/bedrock/web.js";
 
 test("Test AnthropicFunctions", async () => {
-  const chat = new AnthropicFunctions({ modelName: "claude-2" });
+  const chat = new AnthropicFunctions({ modelName: "claude-2", maxRetries: 0 });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
   console.log(JSON.stringify(res));
 });
 
 test("Test AnthropicFunctions streaming", async () => {
-  const chat = new AnthropicFunctions({ modelName: "claude-2" });
+  const chat = new AnthropicFunctions({ modelName: "claude-2", maxRetries: 0 });
   const message = new HumanMessage("Hello!");
   const stream = await chat.stream([message]);
   const chunks: BaseMessageChunk[] = [];
@@ -28,6 +28,7 @@ test("Test AnthropicFunctions with functions", async () => {
   const chat = new AnthropicFunctions({
     modelName: "claude-2",
     temperature: 0.1,
+    maxRetries: 0,
   }).bind({
     functions: [
       {
@@ -59,6 +60,7 @@ test("Test AnthropicFunctions with a forced function call", async () => {
   const chat = new AnthropicFunctions({
     modelName: "claude-2",
     temperature: 0.1,
+    maxRetries: 0,
   }).bind({
     functions: [
       {
@@ -98,6 +100,7 @@ test("Test AnthropicFunctions with a Bedrock model", async () => {
     region: process.env.BEDROCK_AWS_REGION ?? "us-east-1",
     model: "anthropic.claude-v2",
     temperature: 0.1,
+    maxRetries: 0,
     credentials: {
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
@@ -105,6 +108,7 @@ test("Test AnthropicFunctions with a Bedrock model", async () => {
   });
   const model = new AnthropicFunctions({
     llm: chatBedrock,
+    maxRetries: 0,
   }).bind({
     functions: [
       {

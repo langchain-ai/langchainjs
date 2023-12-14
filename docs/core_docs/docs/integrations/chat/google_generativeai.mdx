@@ -1,0 +1,48 @@
+---
+sidebar_label: Google GoogleGenerativeAI
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatGoogleGenerativeAI
+
+You can access Google's `gemini` and `gemini-vision` models, as well as other
+generative models in LangChain through `ChatGoogleGenerativeAI` class in the
+`@langchain/google-genai` integration package.
+
+Get an API key here: https://ai.google.dev/tutorials/setup
+
+You'll first need to install the `@langchain/google-genai` package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/google-genai
+```
+
+## Usage
+
+import GoogleGenerativeAI from "@examples/models/chat/googlegenerativeai.ts";
+
+<CodeBlock language="typescript">{GoogleGenerativeAI}</CodeBlock>
+
+## Multimodal support
+
+To provide an image, pass a human message with a `content` field set to an array of content objects. Each content object
+where each dict contains either an image value (type of image_url) or a text (type of text) value. The value of image_url must be a base64
+encoded image (e.g., data:image/png;base64,abcd124):
+
+import GoogleGenerativeAIMultimodal from "@examples/models/chat/googlegenerativeai_multimodal.ts";
+
+<CodeBlock language="typescript">{GoogleGenerativeAIMultimodal}</CodeBlock>
+
+## Gemini Prompting FAQs
+
+As of the time this doc was written (2023/12/12), Gemini has some restrictions on the types and structure of prompts it accepts. Specifically:
+
+1. When providing multimodal (image) inputs, you are restricted to at most 1 message of "human" (user) type. You cannot pass multiple messages (though the single human message may have multiple content entries)
+2. System messages are not natively supported, and will be merged with the first human message if present.
+3. For regular chat conversations, messages must follow the human/ai/human/ai alternating pattern. You may not provide 2 AI or human messages in sequence.
+4. Message may be blocked if they violate the safety checks of the LLM. In this case, the model will return an empty response.
