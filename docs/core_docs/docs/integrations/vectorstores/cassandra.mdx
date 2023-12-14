@@ -96,7 +96,26 @@ vector store is first created, and specifed in the constructor parameter `vector
   ...
 ```
 
-## Non-Equality Filters
+## Indices
+
+With Version 5, Cassandra introduced Storage Attached Indexes, or SAIs. These allow `WHERE` filtering without specifying
+the partition key, and allow for additional operator types such as non-equalities. You can define these with the `indices`
+parameter, which accepts zero or more dictionaries each containing `name` and `value` entries.
+
+Indices are optional, though required if using filtered queries on non-partition columns.
+
+- The `name` entry is part of the object name; on a table named `test_table` an index with `name: "some_column"`
+  would be `idx_test_table_some_column`.
+- The `value` entry is the column on which the index is created, surrounded by `(` and `)`. With the above column
+  `some_column` it would be specified as `value: "(some_column)"`.
+- An optional `options` entry is a map passed to the `WITH OPTIONS =` clause of the `CREATE CUSTOM INDEX` statement.
+  The specific entries on this map are index type specific.
+
+```typescript
+  indices: [{ name: "some_column", value: "(some_column)" }],
+```
+
+## Advanced Filtering
 
 By default, filters are applied with an equality `=`. For those fields that have an `indices` entry, you may
 provide an `operator` with a string of a value supported by the index; in this case, you specify one or
@@ -113,6 +132,24 @@ or
   { userid: userid_variable },
   { name: "create_datetime", operator: ">", value: some_date_variable },
 ];
+```
+
+`value` can be a single value or an array. If it is not an array, or there is only one element in `value`,
+the resulting query will be along the lines of `${name} ${operator} ?` with `value` bound to the `?`.
+
+If there is more than one element in the `value` array, the number of unquoted `?` in `name` are counted
+and subtracted from the length of `value`, and this number of `?` is put on the right side of the operator;
+if there are more than one `?` then they will be encapsulated in `(` and `)`, e.g. `(?, ?, ?)`.
+
+This faciliates bind values on the left of the operator, which is useful for some functions; for example
+a geo-distance filter:
+
+```typescript
+{
+  name: "GEO_DISTANCE(coord, ?)",
+  operator: "<",
+  value: [new Float32Array([53.3730617,-6.3000515]), 10000],
+},
 ```
 
 ## Data Partitioning and Composite Keys
@@ -146,16 +183,14 @@ In the configuration document, further optional parameters are provided; their d
 
 ```typescript
   ...,
-  indices: [],
   maxConcurrency: 25,
   batchSize: 1,
   withClause: "",
   ...
 ```
 
-| Parameter        | Usage                                                                                                                                                                                                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `indices`        | Optional, but required if using filtered queries on non-partition columns. Each metadata column (e.g. `<metadata_filter_column>`) to be indexed should appear as an entry in a list, in the format `[{name: "<metadata_filter_column>", value: "(<metadata_filter_column>)"}]`. |
-| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                                                                         |
-| `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged.                                                    |
-| `withClause`     | Cassandra tables may be created with an optional `WITH` clause; this is generally not needed but provided for completeness.                                                                                                                                                     |
+| Parameter        | Usage                                                                                                                                                                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                      |
+| `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged. |
+| `withClause`     | Cassandra tables may be created with an optional `WITH` clause; this is generally not needed but provided for completeness.                                                                                                  |
