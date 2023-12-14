@@ -4,16 +4,16 @@ import { StringOutputParser } from "langchain/schema/output_parser";
 
 const model = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY,
-  modelName: "mistral-small"
+  modelName: "mistral-small",
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a helpful assistant"],
-  ["human", "{input}"]
+  ["human", "{input}"],
 ]);
 const outputParser = new StringOutputParser();
 const chain = prompt.pipe(model).pipe(outputParser);
 const response = await chain.stream({
-  input: "Hello"
+  input: "Hello",
 });
 for await (const item of response) {
   console.log("stream item:", item);

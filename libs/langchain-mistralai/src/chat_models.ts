@@ -5,24 +5,24 @@ import {
   AIMessage,
   HumanMessage,
   HumanMessageChunk,
-  AIMessageChunk
+  AIMessageChunk,
 } from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import MistralClient, {
   type ChatCompletionResult as MistralAIChatCompletionResult,
   type ChatCompletionOptions as MistralAIChatCompletionOptions,
-  type Message as MistralAIInputMessage
+  type Message as MistralAIInputMessage,
 } from "@mistralai/mistralai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
-  BaseChatModel
+  BaseChatModel,
 } from "@langchain/core/language_models/chat_models";
 
 import {
   ChatGeneration,
   ChatGenerationChunk,
-  ChatResult
+  ChatResult,
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
@@ -116,7 +116,7 @@ function convertMessagesToMistralMessages(
 
   return messages.map((message) => ({
     role: getRole(message._getType()),
-    content: getContent(message.content)
+    content: getContent(message.content),
   }));
 }
 
@@ -208,7 +208,7 @@ export class ChatMistralAI<
       topP: this.topP,
       maxTokens: this.maxTokens,
       safeMode: this.safeMode,
-      randomSeed: this.randomSeed
+      randomSeed: this.randomSeed,
     };
     return params;
   }
@@ -259,7 +259,7 @@ export class ChatMistralAI<
     const mistralMessages = convertMessagesToMistralMessages(messages);
     const input = {
       ...params,
-      messages: mistralMessages
+      messages: mistralMessages,
     };
 
     // Handle streaming
@@ -288,7 +288,7 @@ export class ChatMistralAI<
     const {
       completion_tokens: completionTokens,
       prompt_tokens: promptTokens,
-      total_tokens: totalTokens
+      total_tokens: totalTokens,
     } = response?.usage ?? {};
 
     if (completionTokens) {
@@ -315,7 +315,7 @@ export class ChatMistralAI<
       const text = part.message?.content ?? "";
       const generation: ChatGeneration = {
         text,
-        message: mistralAIResponseToChatMessage(part)
+        message: mistralAIResponseToChatMessage(part),
       };
       if (part.finish_reason) {
         generation.generationInfo = { finish_reason: part.finish_reason };
@@ -324,7 +324,7 @@ export class ChatMistralAI<
     }
     return {
       generations,
-      llmOutput: { tokenUsage }
+      llmOutput: { tokenUsage },
     };
   }
 
@@ -337,7 +337,7 @@ export class ChatMistralAI<
     const params = this.invocationParams();
     const input = {
       ...params,
-      messages: mistralMessages
+      messages: mistralMessages,
     };
 
     const streamIterable = await this.completionWithRetry(input, true);
@@ -353,12 +353,12 @@ export class ChatMistralAI<
       }
       const newTokenIndices = {
         prompt: 0,
-        completion: choice.index ?? 0
+        completion: choice.index ?? 0,
       };
       const generationChunk = new ChatGenerationChunk({
         message: _convertDeltaToMessageChunk(delta),
         text: delta.content ?? "",
-        generationInfo: newTokenIndices
+        generationInfo: newTokenIndices,
       });
       yield generationChunk;
       // eslint-disable-next-line no-void
