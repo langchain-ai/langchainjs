@@ -117,6 +117,7 @@ export class ImagePromptTemplate<
   async format<FormatOutput = ImageURL>(
     values: TypedPromptInputValues<RunInput>
   ): Promise<FormatOutput> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatted: Record<string, any> = {};
     for (const [key, value] of Object.entries(this.template)) {
       if (typeof value === "string") {

@@ -311,10 +311,12 @@ export class ChatMessagePromptTemplate<
 }
 
 interface _TextTemplateParam {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   text?: string | Record<string, any>;
 }
 
 interface _ImageTemplateParam {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   image_url?: string | Record<string, any>;
 }
 
@@ -488,6 +490,8 @@ class _StringImageMessagePromptTemplate<
         } else {
           throw new Error("Invalid image template");
         }
+        // mannnnn
+        prompt.push(imgTemplateObject);
       }
     }
     console.log("prompt", prompt);
@@ -508,6 +512,7 @@ class _StringImageMessagePromptTemplate<
     } else {
       const content: MessageContent = [];
       for (const prompt of this.prompt) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let inputs: Record<string, any> = {};
         if (!("inputVariables" in prompt)) {
           throw new Error(
