@@ -5,7 +5,7 @@ import {
   ChatMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-  MessagesPlaceholder,
+  MessagesPlaceholder
 } from "../chat.js";
 import { PromptTemplate } from "../prompt.js";
 import {
@@ -13,25 +13,25 @@ import {
   HumanMessage,
   AIMessage,
   ChatMessage,
-  FunctionMessage,
+  FunctionMessage
 } from "../../messages/index.js";
 
 function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
-    inputVariables: ["context"],
+    inputVariables: ["context"]
   });
   const userPrompt = new PromptTemplate({
     template: "Hello {foo}, I'm {bar}. Thanks for the {context}",
-    inputVariables: ["foo", "bar", "context"],
+    inputVariables: ["foo", "bar", "context"]
   });
   const aiPrompt = new PromptTemplate({
     template: "I'm an AI. I'm {foo}. I'm {bar}.",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
   const genericPrompt = new PromptTemplate({
     template: "I'm a generic message. I'm {foo}. I'm {bar}.",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
   // return new ChatPromptTemplate({
   //   promptMessages: [
@@ -50,7 +50,7 @@ function createChatPromptTemplate() {
     new SystemMessagePromptTemplate(systemPrompt),
     new HumanMessagePromptTemplate(userPrompt),
     new AIMessagePromptTemplate({ prompt: aiPrompt }),
-    new ChatMessagePromptTemplate(genericPrompt, "test"),
+    new ChatMessagePromptTemplate(genericPrompt, "test")
   ]);
 }
 
@@ -60,13 +60,15 @@ test("Test format", async () => {
     context: "This is a context",
     foo: "Foo",
     bar: "Bar",
-    unused: "extra",
+    unused: "extra"
   });
+  const toChatMsg = messages.toChatMessages();
+  console.log(toChatMsg);
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar. Thanks for the This is a context"),
     new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
-    new ChatMessage("I'm a generic message. I'm Foo. I'm Bar.", "test"),
+    new ChatMessage("I'm a generic message. I'm Foo. I'm Bar.", "test")
   ]);
 });
 
@@ -76,7 +78,7 @@ test("Test format with invalid input values", async () => {
     // @ts-expect-error TS compiler should flag missing input variables
     chatPrompt.formatPromptValue({
       context: "This is a context",
-      foo: "Foo",
+      foo: "Foo"
     })
   ).rejects.toThrow("Missing value for input variable `bar`");
 });
@@ -84,20 +86,20 @@ test("Test format with invalid input values", async () => {
 test("Test format with invalid input variables", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
-    inputVariables: ["context"],
+    inputVariables: ["context"]
   });
   const userPrompt = new PromptTemplate({
     template: "Hello {foo}, I'm {bar}",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
   expect(
     () =>
       new ChatPromptTemplate({
         promptMessages: [
           new SystemMessagePromptTemplate(systemPrompt),
-          new HumanMessagePromptTemplate(userPrompt),
+          new HumanMessagePromptTemplate(userPrompt)
         ],
-        inputVariables: ["context", "foo", "bar", "baz"],
+        inputVariables: ["context", "foo", "bar", "baz"]
       })
   ).toThrow(
     "Input variables `baz` are not used in any of the prompt messages."
@@ -108,9 +110,9 @@ test("Test format with invalid input variables", async () => {
       new ChatPromptTemplate({
         promptMessages: [
           new SystemMessagePromptTemplate(systemPrompt),
-          new HumanMessagePromptTemplate(userPrompt),
+          new HumanMessagePromptTemplate(userPrompt)
         ],
-        inputVariables: ["context", "foo"],
+        inputVariables: ["context", "foo"]
       })
   ).toThrow(
     "Input variables `bar` are used in prompt messages but not in the prompt template."
@@ -122,149 +124,149 @@ test("Test fromTemplate", async () => {
   expect(chatPrompt.inputVariables).toEqual(["foo", "bar"]);
   const messages = await chatPrompt.formatPromptValue({
     foo: "Foo",
-    bar: "Bar",
+    bar: "Bar"
   });
   expect(messages.toChatMessages()).toEqual([
-    new HumanMessage("Hello Foo, I'm Bar"),
+    new HumanMessage("Hello Foo, I'm Bar")
   ]);
 });
 
 test("Test fromMessages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
-    inputVariables: ["context"],
+    inputVariables: ["context"]
   });
   const userPrompt = new PromptTemplate({
     template: "Hello {foo}, I'm {bar}",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
   // TODO: Fix autocomplete for the fromMessages method
   const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
-    new HumanMessagePromptTemplate(userPrompt),
+    new HumanMessagePromptTemplate(userPrompt)
   ]);
   expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
   const messages = await chatPrompt.formatPromptValue({
     context: "This is a context",
     foo: "Foo",
-    bar: "Bar",
+    bar: "Bar"
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
-    new HumanMessage("Hello Foo, I'm Bar"),
+    new HumanMessage("Hello Foo, I'm Bar")
   ]);
 });
 
 test("Test fromMessages with a variety of ways to declare prompt messages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
-    inputVariables: ["context"],
+    inputVariables: ["context"]
   });
   // TODO: Fix autocomplete for the fromMessages method
   const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     "Hello {foo}, I'm {bar}",
     ["assistant", "Nice to meet you, {bar}!"],
-    ["human", "Thanks {foo}!!"],
+    ["human", "Thanks {foo}!!"]
   ]);
   const messages = await chatPrompt.formatPromptValue({
     context: "This is a context",
     foo: "Foo",
-    bar: "Bar",
+    bar: "Bar"
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar"),
     new AIMessage("Nice to meet you, Bar!"),
-    new HumanMessage("Thanks Foo!!"),
+    new HumanMessage("Thanks Foo!!")
   ]);
 });
 
 test("Test fromMessages with an extra input variable", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
-    inputVariables: ["context"],
+    inputVariables: ["context"]
   });
   const userPrompt = new PromptTemplate({
     template: "Hello {foo}, I'm {bar}",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
   // TODO: Fix autocomplete for the fromMessages method
   const chatPrompt = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
-    new HumanMessagePromptTemplate(userPrompt),
+    new HumanMessagePromptTemplate(userPrompt)
   ]);
   expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
   const messages = await chatPrompt.formatPromptValue({
     context: "This is a context",
     foo: "Foo",
     bar: "Bar",
-    unused: "No problemo!",
+    unused: "No problemo!"
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
-    new HumanMessage("Hello Foo, I'm Bar"),
+    new HumanMessage("Hello Foo, I'm Bar")
   ]);
 });
 
 test("Test fromMessages is composable", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
-    inputVariables: ["context"],
+    inputVariables: ["context"]
   });
   const userPrompt = new PromptTemplate({
     template: "Hello {foo}, I'm {bar}",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
   const chatPromptInner = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
-    new HumanMessagePromptTemplate(userPrompt),
+    new HumanMessagePromptTemplate(userPrompt)
   ]);
   const chatPrompt = ChatPromptTemplate.fromMessages([
     chatPromptInner,
-    AIMessagePromptTemplate.fromTemplate("I'm an AI. I'm {foo}. I'm {bar}."),
+    AIMessagePromptTemplate.fromTemplate("I'm an AI. I'm {foo}. I'm {bar}.")
   ]);
   expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
   const messages = await chatPrompt.formatPromptValue({
     context: "This is a context",
     foo: "Foo",
-    bar: "Bar",
+    bar: "Bar"
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar"),
-    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar.")
   ]);
 });
 
 test("Test fromMessages is composable with partial vars", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
-    inputVariables: ["context"],
+    inputVariables: ["context"]
   });
   const userPrompt = new PromptTemplate({
     template: "Hello {foo}, I'm {bar}",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
   const chatPromptInner = ChatPromptTemplate.fromMessages([
     new SystemMessagePromptTemplate(systemPrompt),
-    new HumanMessagePromptTemplate(userPrompt),
+    new HumanMessagePromptTemplate(userPrompt)
   ]);
   const chatPrompt = ChatPromptTemplate.fromMessages([
     await chatPromptInner.partial({
       context: "This is a context",
-      foo: "Foo",
+      foo: "Foo"
     }),
-    AIMessagePromptTemplate.fromTemplate("I'm an AI. I'm {foo}. I'm {bar}."),
+    AIMessagePromptTemplate.fromTemplate("I'm an AI. I'm {foo}. I'm {bar}.")
   ]);
   expect(chatPrompt.inputVariables).toEqual(["bar"]);
   const messages = await chatPrompt.formatPromptValue({
-    bar: "Bar",
+    bar: "Bar"
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar"),
-    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar.")
   ]);
 });
 
@@ -278,12 +280,12 @@ test("Test SimpleMessagePromptTemplate", async () => {
 test("Test using partial", async () => {
   const userPrompt = new PromptTemplate({
     template: "{foo}{bar}",
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
 
   const prompt = new ChatPromptTemplate({
     promptMessages: [new HumanMessagePromptTemplate(userPrompt)],
-    inputVariables: ["foo", "bar"],
+    inputVariables: ["foo", "bar"]
   });
 
   const partialPrompt = await prompt.partial({ foo: "foo" });
@@ -302,7 +304,7 @@ test("Test BaseMessage", async () => {
   const prompt = ChatPromptTemplate.fromMessages([
     new SystemMessage("You are a chatbot {mock_variable}"),
     AIMessagePromptTemplate.fromTemplate("{name} is my name."),
-    new FunctionMessage({ content: "{}", name: "get_weather" }),
+    new FunctionMessage({ content: "{}", name: "get_weather" })
   ]);
 
   const messages = await prompt.formatPromptValue({ name: "Bob" });
@@ -313,7 +315,7 @@ test("Test BaseMessage", async () => {
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("You are a chatbot {mock_variable}"),
     new AIMessage("Bob is my name."),
-    new FunctionMessage({ content: "{}", name: "get_weather" }),
+    new FunctionMessage({ content: "{}", name: "get_weather" })
   ]);
 });
 
@@ -321,14 +323,14 @@ test("Throws if trying to pass non BaseMessage inputs to MessagesPlaceholder", a
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "some string"],
     new MessagesPlaceholder("chatHistory"),
-    ["human", "{question}"],
+    ["human", "{question}"]
   ]);
   const value = "this is not a valid input type!";
 
   try {
     await prompt.formatMessages({
       chatHistory: value,
-      question: "What is the meaning of life?",
+      question: "What is the meaning of life?"
     });
   } catch (e) {
     // eslint-disable-next-line no-instanceof/no-instanceof
@@ -345,7 +347,7 @@ test("Does not throws if null or undefined is passed as input to MessagesPlaceho
     ["system", "some string"],
     new MessagesPlaceholder("chatHistory"),
     new MessagesPlaceholder("chatHistory2"),
-    ["human", "{question}"],
+    ["human", "{question}"]
   ]);
   const value1 = null;
   const value2 = undefined;
@@ -354,7 +356,7 @@ test("Does not throws if null or undefined is passed as input to MessagesPlaceho
     await prompt.formatMessages({
       chatHistory: value1,
       chatHistory2: value2,
-      question: "What is the meaning of life?",
+      question: "What is the meaning of life?"
     });
   } catch (e) {
     // eslint-disable-next-line no-instanceof/no-instanceof

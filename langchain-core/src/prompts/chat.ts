@@ -11,6 +11,7 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   isBaseMessage,
+  MessageContent
 } from "../messages/index.js";
 import { ChatPromptValue } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
@@ -19,10 +20,11 @@ import { BaseStringPromptTemplate } from "./string.js";
 import {
   BasePromptTemplate,
   type BasePromptTemplateInput,
-  type TypedPromptInputValues,
+  type TypedPromptInputValues
 } from "./base.js";
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
+import { parseFString } from "./template.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -308,6 +310,245 @@ export class ChatMessagePromptTemplate<
   }
 }
 
+interface _TextTemplateParam {
+  text?: string | Record<string, any>;
+}
+
+interface _ImageTemplateParam {
+  image_url?: string | Record<string, any>;
+}
+
+class _StringImageMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  RunOutput extends BaseMessage[] = BaseMessage[]
+> extends BaseMessagePromptTemplate<RunInput, RunOutput> {
+  lc_namespace = ["langchain_core", "prompts", "chat"];
+
+  lc_serializable = true;
+
+  inputVariables: Array<Extract<keyof RunInput, string>> = [];
+
+  additionalOptions: Record<string, unknown> = {};
+
+  prompt:
+    | BaseStringPromptTemplate<
+        InputValues<Extract<keyof RunInput, string>>,
+        string
+      >
+    | Array<
+        | BaseStringPromptTemplate<
+            InputValues<Extract<keyof RunInput, string>>,
+            string
+          >
+        | ImagePromptTemplate<
+            InputValues<Extract<keyof RunInput, string>>,
+            string
+          >
+        | MessageStringPromptTemplateFields<
+            InputValues<Extract<keyof RunInput, string>>
+          >
+      >;
+
+  _messageClass:
+    | typeof HumanMessage
+    | typeof AIMessage
+    | typeof SystemMessage
+    | typeof ChatMessage;
+
+  constructor(
+    prompt: BaseStringPromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>
+    >,
+    additionalOptions?: Record<string, unknown>
+  );
+
+  constructor(
+    fields: MessageStringPromptTemplateFields<
+      InputValues<Extract<keyof RunInput, string>>
+    >,
+    additionalOptions?: Record<string, unknown>
+  );
+
+  constructor(
+    fields: ImagePromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>,
+      string
+    >,
+    additionalOptions?: Record<string, unknown>
+  );
+
+  constructor(
+    fields:
+      | MessageStringPromptTemplateFields<
+          InputValues<Extract<keyof RunInput, string>>
+        >
+      | BaseStringPromptTemplate<
+          InputValues<Extract<keyof RunInput, string>>,
+          string
+        >
+      | ImagePromptTemplate<
+          InputValues<Extract<keyof RunInput, string>>,
+          string
+        >,
+    additionalOptions?: Record<string, unknown>
+  ) {
+    if (!("prompt" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { prompt: fields };
+    }
+    super(fields);
+    this.prompt = fields.prompt;
+    this.inputVariables = this.prompt.inputVariables;
+    this.additionalOptions = additionalOptions ?? this.additionalOptions;
+  }
+
+  getRoleFromMessageClass(name: string) {
+    switch (name) {
+      case "HumanMessage":
+        return "human";
+      case "AIMessage":
+        return "ai";
+      case "SystemMessage":
+        return "system";
+      case "ChatMessage":
+        return "chat";
+      default:
+        throw new Error("Invalid message class name");
+    }
+  }
+
+  static fromTemplate(
+    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam>
+  ) {
+    console.log("FROM TEMPLATE!");
+    if (typeof template === "string") {
+      return new this(PromptTemplate.fromTemplate(template));
+    }
+    const prompt: Array<PromptTemplate> = [];
+    for (const item of template) {
+      if (
+        typeof item === "string" ||
+        (typeof item === "object" && "text" in item)
+      ) {
+        let text = "";
+        if (typeof item === "string") {
+          text = item;
+        } else if (typeof item.text === "string") {
+          text = item.text ?? "";
+        } else {
+          // handle
+        }
+        prompt.push(PromptTemplate.fromTemplate(text));
+      } else if (typeof item === "object" && "image_url" in item) {
+        let imgTemplate = item.image_url ?? "";
+        let imgTemplateObject: ImagePromptTemplate;
+        let inputVariables: string[] = [];
+        if (typeof imgTemplate === "string") {
+          const parsedTemplate = parseFString(imgTemplate);
+          const variables = parsedTemplate.flatMap((item) =>
+            item.type === "variable" ? [item.name] : []
+          );
+
+          if (variables) {
+            if (variables.length > 1) {
+              throw new Error(
+                `Only one format variable allowed per image template.\nGot: ${variables}\nFrom: ${imgTemplate}`
+              );
+            }
+            inputVariables = [variables[0]];
+          } else {
+            inputVariables = [];
+          }
+
+          imgTemplate = { url: imgTemplate };
+          imgTemplateObject = new ImagePromptTemplate({
+            template: imgTemplate,
+            inputVariables
+          });
+          // extract all variables from `f-string` template
+          // if vars is true, and there are more than one, throw error
+          // else if vars is true, and only one var, convert imgTemplate to { url: imgTemplate }
+          // then return ImagePromptTemplate passing in input variables and imgTemplate
+          // append prompt to prompt array
+        } else if (typeof imgTemplate === "object") {
+          // handle
+          if ("url" in imgTemplate) {
+            const parsedTemplate = parseFString(imgTemplate.url);
+            inputVariables = parsedTemplate.flatMap((item) =>
+              item.type === "variable" ? [item.name] : []
+            );
+          } else {
+            inputVariables = [];
+          }
+          imgTemplateObject = new ImagePromptTemplate({
+            template: imgTemplate,
+            inputVariables: []
+          });
+        } else {
+          throw new Error("Invalid image template");
+        }
+      }
+    }
+    console.log("prompt", prompt);
+    return new this({ prompt });
+  }
+
+  async format(input: TypedPromptInputValues<RunInput>): Promise<BaseMessage> {
+    /** @TODO replace this */
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (this.prompt instanceof BaseStringPromptTemplate) {
+      const text = await this.prompt.format(input);
+
+      // ChatMessage contains role field, others don't.
+      return new this._messageClass({
+        content: text
+        // role: tempMessageClass._getType()
+      });
+    } else {
+      const content: MessageContent = [];
+      for (const prompt of this.prompt) {
+        let inputs: Record<string, any> = {};
+        if (!("inputVariables" in prompt)) {
+          throw new Error(
+            `Prompt ${prompt} does not have inputVariables defined.`
+          );
+        }
+        for (const item of prompt.inputVariables) {
+          if (!inputs) {
+            inputs = { [item]: input[item] };
+          }
+          inputs = { ...inputs, [item]: input[item] };
+        }
+        /** @TODO replace this */
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        if (prompt instanceof BaseStringPromptTemplate) {
+          const formatted = await prompt.format(
+            inputs as TypedPromptInputValues<RunInput>
+          );
+          content.push({ type: "text", text: formatted });
+          /** @TODO replace this */
+          // eslint-disable-next-line no-instanceof/no-instanceof
+        } else if (prompt instanceof ImagePromptTemplate) {
+          const formatted = await prompt.format(
+            inputs as TypedPromptInputValues<RunInput>
+          );
+          content.push({ type: "image_url", image_url: formatted });
+        }
+      }
+      // ChatMessage contains role field, others don't.
+      return new this._messageClass({
+        content
+        // role: tempMessageClass._getType()
+      });
+    }
+  }
+
+  async formatMessages(values: RunInput): Promise<RunOutput> {
+    return [await this.format(values)] as BaseMessage[] as RunOutput;
+  }
+}
+
 /**
  * Class that represents a human message prompt template. It extends the
  * BaseMessageStringPromptTemplate.
@@ -324,15 +565,18 @@ export class ChatMessagePromptTemplate<
  */
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+  RunInput extends InputValues = any,
+  RunOutput extends HumanMessage[] = HumanMessage[]
+> extends _StringImageMessagePromptTemplate<RunInput, RunOutput> {
+  _messageClass = HumanMessage;
+
   static lc_name() {
     return "HumanMessagePromptTemplate";
   }
 
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new HumanMessage(await this.prompt.format(values));
-  }
+  // async format(values: RunInput): Promise<BaseMessage> {
+  //   return new HumanMessage(await this.prompt.format(values));
+  // }
 
   static fromTemplate(template: string) {
     return new this(PromptTemplate.fromTemplate(template));
@@ -345,19 +589,22 @@ export class HumanMessagePromptTemplate<
  */
 export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+  RunInput extends InputValues = any,
+  RunOutput extends AIMessage[] = AIMessage[]
+> extends _StringImageMessagePromptTemplate<RunInput, RunOutput> {
+  _messageClass = AIMessage;
+
   static lc_name() {
     return "AIMessagePromptTemplate";
   }
 
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new AIMessage(await this.prompt.format(values));
-  }
+  // async format(values: RunInput): Promise<BaseMessage> {
+  //   return new AIMessage(await this.prompt.format(values));
+  // }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
-  }
+  // static fromTemplate(template: string) {
+  //   return new this(PromptTemplate.fromTemplate(template));
+  // }
 }
 
 /**
@@ -376,19 +623,22 @@ export class AIMessagePromptTemplate<
  */
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+  RunInput extends InputValues = any,
+  RunOutput extends SystemMessage[] = SystemMessage[]
+> extends _StringImageMessagePromptTemplate<RunInput, RunOutput> {
+  _messageClass = SystemMessage;
+
   static lc_name() {
     return "SystemMessagePromptTemplate";
   }
 
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new SystemMessage(await this.prompt.format(values));
-  }
+  // async format(values: RunInput): Promise<BaseMessage> {
+  //   return new SystemMessage(await this.prompt.format(values));
+  // }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
-  }
+  // static fromTemplate(template: string) {
+  //   return new this(PromptTemplate.fromTemplate(template));
+  // }
 }
 
 /**
@@ -485,7 +735,7 @@ export class ChatPromptTemplate<
 
   get lc_aliases() {
     return {
-      promptMessages: "messages",
+      promptMessages: "messages"
     };
   }
 
@@ -521,7 +771,7 @@ export class ChatPromptTemplate<
       if (difference.size > 0) {
         throw new Error(
           `Input variables \`${[
-            ...difference,
+            ...difference
           ]}\` are not used in any of the prompt messages.`
         );
       }
@@ -533,7 +783,7 @@ export class ChatPromptTemplate<
       if (otherDifference.size > 0) {
         throw new Error(
           `Input variables \`${[
-            ...otherDifference,
+            ...otherDifference
           ]}\` are used in prompt messages but not in the prompt template.`
         );
       }
@@ -590,6 +840,11 @@ export class ChatPromptTemplate<
           await this._parseImagePrompts(promptMessage, allValues)
         );
       } else {
+        console.log(
+          "promptMessage",
+          promptMessage,
+          promptMessage.inputVariables
+        );
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {
             if (!(inputVariable in allValues)) {
@@ -602,6 +857,7 @@ export class ChatPromptTemplate<
           },
           {} as InputValues
         );
+        console.log(inputValues);
         const message = await promptMessage.formatMessages(inputValues);
         resultMessages = resultMessages.concat(message);
       }
@@ -619,12 +875,12 @@ export class ChatPromptTemplate<
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
-      ...values,
+      ...values
     } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
-      partialVariables: newPartialVariables,
+      partialVariables: newPartialVariables
     };
     return new ChatPromptTemplate<
       InputValues<
@@ -695,7 +951,7 @@ export class ChatPromptTemplate<
     return new ChatPromptTemplate<RunInput>({
       inputVariables: [...inputVariables] as Extract<keyof RunInput, string>[],
       promptMessages: flattenedMessages,
-      partialVariables: flattenedPartialVariables,
+      partialVariables: flattenedPartialVariables
     });
   }
 
@@ -708,119 +964,5 @@ export class ChatPromptTemplate<
     )[]
   ): ChatPromptTemplate<RunInput> {
     return this.fromMessages(promptMessages);
-  }
-}
-
-class _StringImageMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends InputValues = any,
-  RunOutput extends BaseMessage[] = BaseMessage[]
-> extends BaseMessagePromptTemplate<RunInput> {
-  lc_namespace = ["langchain_core", "prompts", "chat"];
-
-  lc_serializable = true;
-
-  inputVariables: Array<Extract<keyof RunInput, string>>;
-
-  additionalOptions: Record<string, unknown> = {};
-
-  prompt:
-    | BaseStringPromptTemplate<
-        InputValues<Extract<keyof RunInput, string>>,
-        string
-      >
-    | Array<
-        | BaseStringPromptTemplate<
-            InputValues<Extract<keyof RunInput, string>>,
-            string
-          >
-        | ImagePromptTemplate<
-            InputValues<Extract<keyof RunInput, string>>,
-            string
-          >
-        | MessageStringPromptTemplateFields<
-            InputValues<Extract<keyof RunInput, string>>
-          >
-      >;
-
-  _messageClass: BaseMessage;
-
-  constructor(
-    prompt: BaseStringPromptTemplate<
-      InputValues<Extract<keyof RunInput, string>>
-    >,
-    additionalOptions?: Record<string, unknown>
-  );
-
-  constructor(
-    fields: MessageStringPromptTemplateFields<
-      InputValues<Extract<keyof RunInput, string>>
-    >,
-    additionalOptions?: Record<string, unknown>
-  );
-
-  constructor(
-    fields: ImagePromptTemplate<
-      InputValues<Extract<keyof RunInput, string>>,
-      string
-    >,
-    additionalOptions?: Record<string, unknown>
-  );
-
-  constructor(
-    fields:
-      | MessageStringPromptTemplateFields<
-          InputValues<Extract<keyof RunInput, string>>
-        >
-      | BaseStringPromptTemplate<
-          InputValues<Extract<keyof RunInput, string>>,
-          string
-        >
-      | ImagePromptTemplate<
-          InputValues<Extract<keyof RunInput, string>>,
-          string
-        >,
-    additionalOptions?: Record<string, unknown>
-  ) {
-    if (!("prompt" in fields)) {
-      // eslint-disable-next-line no-param-reassign
-      fields = { prompt: fields };
-    }
-    super(fields);
-    this.prompt = fields.prompt;
-    this.additionalOptions = additionalOptions ?? this.additionalOptions;
-  }
-
-  format(input: RunInput): BaseMessage {
-    if (this.prompt instanceof BaseStringPromptTemplate) {
-      const text = this.prompt.format(kwargs);
-      return new this._messageClass(
-        {
-          content: text,
-        },
-        this.additionalOptions
-      );
-    } else {
-      const content = [];
-      for (const prompt of this.prompt) {
-        const inputs = {};
-        for (const item of prompt.inputVariables) {
-          inputs[item] = kwargs[item];
-        }
-        if (prompt instanceof StringPromptTemplate) {
-          const formatted: string | ImageURL = prompt.format(inputs);
-          content.push({ type: "text", text: formatted });
-        } else if (prompt instanceof ImagePromptTemplate) {
-          const formatted = prompt.format(inputs);
-          content.push({ type: "image_url", image_url: formatted });
-        }
-      }
-      return new this._messageClass(
-        {
-          content,
-        },
-        this.additionalOptions
-      );
-    }
   }
 }
