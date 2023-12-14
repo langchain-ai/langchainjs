@@ -4,10 +4,6 @@ sidebar_position: 1
 
 # Installation
 
-:::info
-Updating from <0.0.52? See [this section](#updating-from-0052) for instructions.
-:::
-
 ## Supported Environments
 
 LangChain is written in TypeScript and can be used in:
@@ -108,45 +104,79 @@ LangChain can be used in the browser. In our CI we test bundling LangChain with 
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-## Updating from <0.0.52
+## Installing integration packages
 
-If you are updating from a version of LangChain prior to 0.0.52, you will need to update your imports to use the new path structure.
+LangChain supports packages that contain specific module integrations with third-party providers.
+They can be as specific as [`@langchain/google-genai`](/docs/integrations/platforms/google#chatgooglegenerativeai), which contains integrations just for Google AI Studio models,
+or as broad as [`@langchain/community`](https://www.npmjs.com/package/@langchain/community), which contains broader variety of community contributed integrations.
 
-For example, if you were previously doing
+These packages, as well as the main LangChain package, all depend on [`@langchain/core`](https://www.npmjs.com/package/@langchain/core), which contains the base abstractions
+that these integration packages extend.
 
-```typescript
-import { OpenAI } from "langchain/llms";
+To ensure that all integrations and their types interact with each other properly, it is important that they all use the same version of `@langchain/core`.
+The best way to guarantee this is to add a `"resolutions"` or `"overrides"` field like the following in your project's `package.json`. The name will depend on your package manager:
+
+If you are using `yarn`:
+
+```json title="yarn package.json"
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@langchain/google-genai": "^0.0.2",
+    "langchain": "0.0.207"
+  },
+  "resolutions": {
+    "@langchain/core": "0.1.1"
+  }
+}
 ```
 
-you will now need to do
+Or for `npm`:
 
-```typescript
-import { OpenAI } from "langchain/llms/openai";
+```json title="npm package.json"
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@langchain/google-genai": "^0.0.2",
+    "langchain": "0.0.207"
+  },
+  "overrides": {
+    "@langchain/core": "0.1.1"
+  }
+}
 ```
 
-This applies to all imports from the following 6 modules, which have been split into submodules for each integration. The combined modules are deprecated, do not work outside of Node.js, and will be removed in a future version.
+Or for `pnpm`:
 
-- If you were using `langchain/llms`, see [LLMs](/docs/modules/model_io/models/llms) for updated import paths.
-- If you were using `langchain/chat_models`, see [Chat Models](/docs/modules/model_io/models/chat) for updated import paths.
-- If you were using `langchain/embeddings`, see [Embeddings](/docs/modules/data_connection/text_embedding) for updated import paths.
-- If you were using `langchain/vectorstores`, see [Vector Stores](/docs/modules/data_connection/vectorstores) for updated import paths.
-- If you were using `langchain/document_loaders`, see [Document Loaders](/docs/modules/data_connection/document_loaders) for updated import paths.
-- If you were using `langchain/retrievers`, see [Retrievers](/docs/modules/data_connection/retrievers) for updated import paths.
-
-Other modules are not affected by this change, and you can continue to import them from the same path.
-
-Additionally, there are some breaking changes that were needed to support new environments:
-
-- `import { Calculator } from "langchain/tools";` now moved to
-  - `import { Calculator } from "langchain/tools/calculator";`
-- `import { loadLLM } from "langchain/llms";` now moved to
-  - `import { loadLLM } from "langchain/llms/load";`
-- `import { loadAgent } from "langchain/agents";` now moved to
-  - `import { loadAgent } from "langchain/agents/load";`
-- `import { loadPrompt } from "langchain/prompts";` now moved to
-  - `import { loadPrompt } from "langchain/prompts/load";`
-- `import { loadChain } from "langchain/chains";` now moved to
-  - `import { loadChain } from "langchain/chains/load";`
+```json title="pnpm package.json"
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@langchain/google-genai": "^0.0.2",
+    "langchain": "0.0.207"
+  },
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "0.1.1"
+    }
+  }
+}
+```
 
 ## Unsupported: Node.js 16
 
