@@ -44,6 +44,7 @@ export class AzureOpenAI extends OpenAI {
     super(newFields);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toJSON(): any {
     const json = super.toJSON() as unknown;
 
@@ -52,11 +53,11 @@ export class AzureOpenAI extends OpenAI {
     }
 
     if (isRecord(json) && isRecord(json.kwargs)) {
-      delete json.kwargs["azure_openai_base_path"];
-      delete json.kwargs["azure_openai_api_deployment_name"];
-      delete json.kwargs["azure_openai_api_key"];
-      delete json.kwargs["azure_openai_api_version"];
-      delete json.kwargs["azure_open_ai_base_path"];
+      delete json.kwargs.azure_openai_base_path;
+      delete json.kwargs.azure_openai_api_deployment_name;
+      delete json.kwargs.azure_openai_api_key;
+      delete json.kwargs.azure_openai_api_version;
+      delete json.kwargs.azure_open_ai_base_path;
     }
 
     return json;
