@@ -87,13 +87,6 @@ export interface GoogleGenerativeAIChatInput extends BaseChatModelParams {
   stopSequences?: string[];
 
   /**
-   * Same as variable N but for google.
-   * 
-   * Note: stopSequences is only supported for Gemini models
-   */
-  candidateCount?: string[];
-
-  /**
    * A list of unique `SafetySetting` instances for blocking unsafe content. The API will block
    * any prompts and responses that fail to meet the thresholds set by these settings. If there
    * is no `SafetySetting` for a given `SafetyCategory` provided in the list, the API will use
@@ -207,16 +200,10 @@ export class ChatGoogleGenerativeAI
       throw new Error("`topK` must be a positive integer");
     }
 
-    this.candidateCount = fields?.candidateCount ?? this.candidateCount;
-    if (this.candidateCount && this.candidateCount <= 0) {
-      throw new Error("`candidateCount` must be above 1.");
-    }
-
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
-    if(this.stopSequences && typeof this.stopSequences == "string")
+    if (this.stopSequences && typeof this.stopSequences == "string") {
       this.stopSequences = [this.stopSequences];
-
-
+    }
 
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
@@ -244,7 +231,7 @@ export class ChatGoogleGenerativeAI
       model: this.modelName,
       safetySettings: this.safetySettings as SafetySetting[],
       generationConfig: {
-        candidateCount: this.candidateCount,
+        candidateCount: 1,
         stopSequences: this.stopSequences,
         maxOutputTokens: this.maxOutputTokens,
         temperature: this.temperature,
