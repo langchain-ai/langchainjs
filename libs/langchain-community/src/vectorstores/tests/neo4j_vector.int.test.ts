@@ -496,8 +496,11 @@ test.skip("Test escape lucene characters", async () => {
     }
   );
 
-  const output = await neo4jVectorStore.similaritySearch("This is the end of the world!", 2);
-  console.log(output)
+  const output = await neo4jVectorStore.similaritySearch(
+    "This is the end of the world!",
+    2
+  );
+  console.log(output);
   const expectedResult = [
     new Document({
       pageContent: "This is the end of the world!",
