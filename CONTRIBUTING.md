@@ -17,13 +17,21 @@ If you are not sure what to work on, we have a few suggestions:
 
 ### New abstractions
 
-We aim to keep the same APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
+We aim to keep the same core APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
 
 ### Want to add a specific integration?
 
 LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/llms/openai.ts)), vector stores (e.g. [FAISS](https://github.com/ewfian/langchainjs/blob/main/langchain/src/vectorstores/faiss.ts)), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/stores/message/redis.ts)), and more.
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
+
+These should generally reside in the `libs/langchain-community` workspace and be imported as `@langchain/community/module/name`, but more in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](libs/langchain-google-genai) for an example.
+
+To make creating packages like this easier, we offer the [`create-langchain-integration`](libs/create-langchain-integration/) utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this:
+
+```bash
+$ npx create-langchain-integration
+```
 
 ### Want to add a feature that's already in Python?
 
@@ -48,7 +56,7 @@ If you are adding an issue, please try to keep it focused on a single modular bu
 If the two issues are related, or blocking, please link them rather than keep them as one single one.
 
 We will try to keep these issues as up to date as possible, though
-with the rapid rate of develop in this field some may get out of date.
+with the rapid rate of development in this field some may get out of date.
 If you notice this happening, please just let us know.
 
 ### 🙋 Getting Help
@@ -100,10 +108,16 @@ Next, try running the following common tasks:
 ## ✅ Common Tasks
 
 Our goal is to make it as easy as possible for you to contribute to this project.
-All of the below commands should be run from within the `langchain/` directory unless otherwise noted.
+All of the below commands should be run from within a workspace directory (e.g. `langchain`, `libs/langchain-community`) unless otherwise noted.
 
 ```bash
 cd langchain
+```
+
+Or, if you are working on a community integration:
+
+```bash
+cd libs/langchain-community
 ```
 
 ### Setup
@@ -164,7 +178,7 @@ yarn test
 
 #### Running a single test
 
-To run a single test, run:
+To run a single test, run the following from within a workspace:
 
 ```bash
 yarn test:single /path/to/yourtest.test.ts
@@ -177,7 +191,7 @@ This is useful for developing individual features.
 If you add support for a new external API, please add a new integration test.
 Integration tests should be called `*.int.test.ts`.
 
-Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` file
+Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` or `libs/langchain-community/.env` file
 like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/langchain/.env.example).
 
 We generally recommend only running integration tests with `yarn test:single`, but if you want to run all integration tests, run:
@@ -205,7 +219,7 @@ import { OpenAI } from "langchain/llms/openai";
 We call these subpaths "entrypoints". In general, you should create a new entrypoint if you are adding a new integration with a 3rd party library. If you're adding self-contained functionality without any external dependencies, you can add it to an existing entrypoint.
 
 In order to declare a new entrypoint that users can import from, you
-should edit the `langchain/scripts/create-entrypoints.js` script. To add an
+should edit the `langchain/scripts/create-entrypoints.js` or `libs/langchain-community/scripts/create-entrypoints.js` script. To add an
 entrypoint `tools` that imports from `tools/index.ts` you'd add
 the following to the `entrypoints` variable:
 
