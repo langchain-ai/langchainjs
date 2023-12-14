@@ -11,7 +11,7 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   isBaseMessage,
-  MessageContent
+  MessageContent,
 } from "../messages/index.js";
 import { ChatPromptValue } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
@@ -20,7 +20,7 @@ import { BaseStringPromptTemplate } from "./string.js";
 import {
   BasePromptTemplate,
   type BasePromptTemplateInput,
-  type TypedPromptInputValues
+  type TypedPromptInputValues,
 } from "./base.js";
 import { PromptTemplate, type ParamsFromFString } from "./prompt.js";
 import { ImagePromptTemplate } from "./image.js";
@@ -464,7 +464,7 @@ class _StringImageMessagePromptTemplate<
           imgTemplate = { url: imgTemplate };
           imgTemplateObject = new ImagePromptTemplate({
             template: imgTemplate,
-            inputVariables
+            inputVariables,
           });
           // extract all variables from `f-string` template
           // if vars is true, and there are more than one, throw error
@@ -483,7 +483,7 @@ class _StringImageMessagePromptTemplate<
           }
           imgTemplateObject = new ImagePromptTemplate({
             template: imgTemplate,
-            inputVariables: []
+            inputVariables: [],
           });
         } else {
           throw new Error("Invalid image template");
@@ -502,7 +502,7 @@ class _StringImageMessagePromptTemplate<
 
       // ChatMessage contains role field, others don't.
       return new this._messageClass({
-        content: text
+        content: text,
         // role: tempMessageClass._getType()
       });
     } else {
@@ -538,7 +538,7 @@ class _StringImageMessagePromptTemplate<
       }
       // ChatMessage contains role field, others don't.
       return new this._messageClass({
-        content
+        content,
         // role: tempMessageClass._getType()
       });
     }
@@ -735,7 +735,7 @@ export class ChatPromptTemplate<
 
   get lc_aliases() {
     return {
-      promptMessages: "messages"
+      promptMessages: "messages",
     };
   }
 
@@ -771,7 +771,7 @@ export class ChatPromptTemplate<
       if (difference.size > 0) {
         throw new Error(
           `Input variables \`${[
-            ...difference
+            ...difference,
           ]}\` are not used in any of the prompt messages.`
         );
       }
@@ -783,7 +783,7 @@ export class ChatPromptTemplate<
       if (otherDifference.size > 0) {
         throw new Error(
           `Input variables \`${[
-            ...otherDifference
+            ...otherDifference,
           ]}\` are used in prompt messages but not in the prompt template.`
         );
       }
@@ -875,12 +875,12 @@ export class ChatPromptTemplate<
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
-      ...values
+      ...values,
     } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
-      partialVariables: newPartialVariables
+      partialVariables: newPartialVariables,
     };
     return new ChatPromptTemplate<
       InputValues<
@@ -951,7 +951,7 @@ export class ChatPromptTemplate<
     return new ChatPromptTemplate<RunInput>({
       inputVariables: [...inputVariables] as Extract<keyof RunInput, string>[],
       promptMessages: flattenedMessages,
-      partialVariables: flattenedPartialVariables
+      partialVariables: flattenedPartialVariables,
     });
   }
 

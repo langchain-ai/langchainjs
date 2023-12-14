@@ -3,7 +3,7 @@ import type { InputValues, PartialValues } from "../utils/types.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
-  TypedPromptInputValues
+  TypedPromptInputValues,
 } from "./base.js";
 import { TemplateFormat } from "./template.js";
 
@@ -95,12 +95,12 @@ export class ImagePromptTemplate<
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
-      ...values
+      ...values,
     } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
-      partialVariables: newPartialVariables
+      partialVariables: newPartialVariables,
     };
     return new ImagePromptTemplate<
       InputValues<

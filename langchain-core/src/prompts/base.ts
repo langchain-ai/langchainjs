@@ -145,7 +145,9 @@ export abstract class BasePromptTemplate<
    * prompt.format({ foo: "bar" });
    * ```
    */
-  abstract format<FormatOutput = string>(values: TypedPromptInputValues<RunInput>): Promise<FormatOutput | string>;
+  abstract format<FormatOutput = string>(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<FormatOutput | string>;
 
   /**
    * Format the prompt given the input values and return a formatted prompt value.
