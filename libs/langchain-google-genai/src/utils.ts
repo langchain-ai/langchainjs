@@ -177,7 +177,7 @@ export function mapGenerateContentResultToChatResult(
     message: new AIMessage({
       content: text,
       name: content === null ? undefined : content.role,
-      additional_kwargs: {},
+      additional_kwargs: generationInfo,
     }),
     generationInfo,
   };
@@ -202,6 +202,8 @@ export function convertResponseContentToChatGenerationChunk(
     message: new AIMessageChunk({
       content: text,
       name: content === null ? undefined : content.role,
+      // Each chunk can have unique "generationInfo", and merging strategy is unclear,
+      // so leave blank for now.
       additional_kwargs: {},
     }),
     generationInfo,

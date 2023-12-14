@@ -157,8 +157,6 @@ export class ChatGoogleGenerativeAI
 
   stopSequences: string[] = [];
 
-  candidateCount: number = 1;
-
   safetySettings?: SafetySetting[];
 
   apiKey?: string;
@@ -201,9 +199,6 @@ export class ChatGoogleGenerativeAI
     }
 
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
-    if (this.stopSequences && typeof this.stopSequences == "string") {
-      this.stopSequences = [this.stopSequences];
-    }
 
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
