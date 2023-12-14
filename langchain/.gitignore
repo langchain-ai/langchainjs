@@ -586,6 +586,9 @@ sql_db.d.ts
 callbacks.cjs
 callbacks.js
 callbacks.d.ts
+callbacks/handlers/llmonitor.cjs
+callbacks/handlers/llmonitor.js
+callbacks/handlers/llmonitor.d.ts
 callbacks/handlers/lunary.cjs
 callbacks/handlers/lunary.js
 callbacks/handlers/lunary.d.ts

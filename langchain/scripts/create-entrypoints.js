@@ -230,6 +230,7 @@ const entrypoints = {
   sql_db: "sql_db",
   // callbacks
   callbacks: "callbacks/index",
+  "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
   "callbacks/handlers/lunary": "callbacks/handlers/lunary",
   // output_parsers
   output_parsers: "output_parsers/index",
@@ -359,6 +360,7 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "tools/google_calendar",
   "tools/gmail",
+  "callbacks/handlers/llmonitor",
   "callbacks/handlers/lunary",
   "chains/load",
   "chains/sql_db",
@@ -578,7 +580,7 @@ const updateConfig = () => {
     ...json,
     entryPoints: [...Object.keys(entrypoints)]
       .filter((key) => !deprecatedNodeOnly.includes(key))
-      .map((key) => `./langchain/src/${entrypoints[key]}.ts`),
+      .map((key) => `../../langchain/src/${entrypoints[key]}.ts`),
   }));
 
   const generatedFiles = generateFiles();

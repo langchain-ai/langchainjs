@@ -69,6 +69,7 @@ export * as schema__retriever from "../schema/retriever.js";
 export * as schema__runnable from "../schema/runnable/index.js";
 export * as schema__storage from "../schema/storage.js";
 export * as callbacks from "../callbacks/index.js";
+export * as callbacks__handlers__lunary from "../callbacks/handlers/lunary.js";
 export * as output_parsers from "../output_parsers/index.js";
 export * as retrievers__remote from "../retrievers/remote/index.js";
 export * as retrievers__chaindesk from "../retrievers/chaindesk.js";

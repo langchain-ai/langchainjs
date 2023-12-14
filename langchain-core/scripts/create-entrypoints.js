@@ -44,6 +44,7 @@ const entrypoints = {
   "utils/hash": "utils/hash",
   "utils/json_patch": "utils/json_patch",
   "utils/json_schema": "utils/json_schema",
+  "utils/math": "utils/math",
   "utils/stream": "utils/stream",
   "utils/testing": "utils/testing/index",
   "utils/tiktoken": "utils/tiktoken",
