@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build:deps && yarn workspace langchain build
+        run: yarn workspace langchain build
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build:deps && yarn workspace langchain build
+        run: yarn workspace langchain build
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -74,7 +74,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build:deps && yarn workspace langchain build
+        run: yarn workspace langchain build
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -94,7 +94,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build:deps && yarn workspace langchain build
+        run: yarn workspace langchain build
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -114,7 +114,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build:deps && yarn workspace langchain build
+        run: yarn workspace langchain build
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -134,7 +134,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build:deps && yarn workspace langchain build
+        run: yarn workspace langchain build
         shell: bash
         env:
           SKIP_API_DOCS: true
@@ -154,7 +154,7 @@ jobs:
   #     - name: Install dependencies
   #       run: yarn install --immutable
   #     - name: Build
-  #       run: yarn run build:deps && yarn workspace langchain build
+  #       run: yarn workspace langchain build
   #       shell: bash
   #       env:
   #         SKIP_API_DOCS: true

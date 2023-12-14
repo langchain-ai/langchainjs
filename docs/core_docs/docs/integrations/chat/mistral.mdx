@@ -1,0 +1,61 @@
+---
+sidebar_label: Mistral AI
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatMistralAI
+
+[Mistral AI](https://mistral.ai/) is a research organization and hosting platform for LLMs.
+They're most known for their family of 7B models ([`mistral7b` // `mistral-tiny`](https://mistral.ai/news/announcing-mistral-7b/), [`mixtral8x7b` // `mistral-small`](https://mistral.ai/news/mixtral-of-experts/)).
+
+The LangChain implementation of Mistral's models uses their hosted generation API, making it easier to access their models without needing to run them locally.
+
+## Models
+
+Mistral's API offers access to two of their models: `mistral7b` and `mixtral8x7b`. You can access these through the API by using their model names:
+
+- `mistral7b` -> `mistral-tiny`
+- `mixtral8x7b` -> `mistral-small`
+
+## Setup
+
+In order to use the Mistral API you'll need an API key. You can sign up for a Mistral account and create an API key [here](https://console.mistral.ai/).
+
+You'll first need to install the [`@langchain/mistralai`](https://www.npmjs.com/package/@langchain/mistralai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/mistralai
+```
+
+## Usage
+
+When sending chat messages to mistral, there are a few requirements to follow:
+
+- The first message can _*not*_ be an assistant (ai) message.
+- Messages _*must*_ alternate between user and assistant (ai) messages.
+- Messages can _*not*_ end with an assistant (ai) or system message.
+
+import ChatMistralAIExample from "@examples/models/chat/chat_mistralai.ts";
+
+<CodeBlock language="typescript">{ChatMistralAIExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/d69d0db9-f29e-45aa-a40d-b53f6273d7d0/r)
+:::
+
+### Streaming
+
+Mistral's API also supports streaming token responses. The example below demonstrates how to use this feature.
+
+import ChatStreamMistralAIExample from "@examples/models/chat/chat_stream_mistralai.ts";
+
+<CodeBlock language="typescript">{ChatStreamMistralAIExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/061d90f2-ac7e-44c5-8790-8b23299f9217/r)
+:::
