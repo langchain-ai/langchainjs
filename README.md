@@ -93,9 +93,8 @@ Agents involve an LLM making decisions about which Actions to take, taking that 
 Please see [here](https://js.langchain.com) for full documentation, which includes:
 
 - [Getting started](https://js.langchain.com/docs/get_started/introduction): installation, setting up the environment, simple examples
-- Overview of the [interfaces](https://js.langchain.com/docs/expression_language/), [modules](https://js.langchain.com/docs/modules/) and [integrations](https://js.langchain.com/docs/integrations/providers)
-- [Use case](https://js.langchain.com/docs/use_cases/qa_structured/sql) walkthroughs and best practice [guides](https://js.langchain.com/docs/guides/adapters/openai)
-- [LangSmith](https://js.langchain.com/docs/langsmith/)
+- Overview of the [interfaces](https://js.langchain.com/docs/expression_language/), [modules](https://js.langchain.com/docs/modules/) and [integrations](https://js.langchain.com/docs/integrations/platforms)
+- [Use case](https://js.langchain.com/docs/use_cases/) walkthroughs and best practice [guides](https://js.langchain.com/docs/guides/)
 - [Reference](https://api.js.langchain.com): full API docs
 
 ## 💁 Contributing
