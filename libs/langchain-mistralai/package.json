@@ -34,7 +34,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1",
+    "@langchain/core": "~0.1.0",
     "@mistralai/mistralai": "~0.0.7"
   },
   "devDependencies": {
