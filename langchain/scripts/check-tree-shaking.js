@@ -28,6 +28,7 @@ export function listExternals() {
     /node\:/,
     /js-tiktoken/,
     /@langchain\/core/,
+    /@langchain\/community/,
     "axios", // axios is a dependency of openai
     "convex",
     "convex/server",

@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient, toFile } from "openai";
+import { type ClientOptions, OpenAIClient, toFile } from "@langchain/openai";
 
 import { Document } from "../../document.js";
 import { BufferLoader } from "./buffer.js";

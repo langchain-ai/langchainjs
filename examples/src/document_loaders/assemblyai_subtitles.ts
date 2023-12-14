@@ -5,8 +5,8 @@ const audioUrl = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
 
 const loader = new AudioSubtitleLoader(
   {
-    audio_url: audioUrl,
-    // any other parameters as documented here: https://www.assemblyai.com/docs/API%20reference/transcript#create-a-transcript
+    audio: audioUrl,
+    // any other parameters as documented here: https://www.assemblyai.com/docs/api-reference/transcript#create-a-transcript
   },
   "srt", // srt or vtt
   {

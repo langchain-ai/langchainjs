@@ -1,0 +1,28 @@
+---
+sidebar_label: Mistral AI
+---
+
+# Mistral AI
+
+The `MistralAIEmbeddings` class uses the Mistral AI API to generate embeddings for a given text.
+
+## Setup
+
+In order to use the Mistral API you'll need an API key. You can sign up for a Mistral account and create an API key [here](https://console.mistral.ai/).
+
+You'll first need to install the [`@langchain/mistralai`](https://www.npmjs.com/package/@langchain/mistralai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/mistralai
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import MistralExample from "@examples/models/embeddings/mistral.ts";
+
+<CodeBlock language="typescript">{MistralExample}</CodeBlock>
