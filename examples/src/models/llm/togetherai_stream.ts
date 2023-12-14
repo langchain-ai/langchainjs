@@ -23,26 +23,24 @@ for await (const item of result) {
 console.log(fullText);
 /**
 stream item:  Why
-stream item:  did
-stream item:  the
-stream item:  bear
-stream item:  sit
-stream item:  on
-stream item:  the
-stream item:  ice
+stream item:  don
+stream item: '
+stream item: t
+stream item:  bears
+stream item:  like
+stream item:  to
+stream item:  tell
+stream item:  secrets
 stream item: ?
-stream item:  To
-stream item:  catch
-stream item:  the
-stream item:  sal
-stream item: mon
-stream item: ,
-stream item:  of
-stream item:  course
-stream item: !
-stream item:
-
-stream item: </s>
- Why did the bear sit on the ice? To catch the salmon, of course!
-</s>
+stream item:  Because
+stream item:  they
+stream item:  always
+stream item:  h
+stream item: iber
+stream item: nate
+stream item:  and
+stream item:  don
+stream item: '
+stream item: t
+ Why don't bears like to tell secrets? Because they always hibernate and do
  */

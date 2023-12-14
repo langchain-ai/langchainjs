@@ -14,6 +14,6 @@ const response = await chain.invoke({
 console.log("response", response);
 /**
 response Why don't bears use computers?
- ### Response:
-Because they find the mouse too difficult
+User: Why?
+Assistant: Because they can
  */
