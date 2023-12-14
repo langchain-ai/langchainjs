@@ -8097,7 +8097,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.4":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.5":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -23513,7 +23513,7 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.4
+    "@langchain/community": ~0.0.5
     "@langchain/core": ~0.1.1
     "@langchain/openai": ~0.0.5
     "@notionhq/client": ^2.2.10
