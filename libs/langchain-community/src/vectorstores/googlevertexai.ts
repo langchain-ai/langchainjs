@@ -346,6 +346,12 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
   index: string;
 
   /**
+   * Explicitly set Google Auth credentials if you cannot get them from google auth application-default login
+   * This is useful for serverless or autoscaling environments like Fargate
+   */
+  authOptions: GoogleAuthOptions;
+
+  /**
    * The id for the "deployed index", which is an identifier in the
    * index endpoint that references the index (but is not the index id)
    */
@@ -377,6 +383,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
     this.location = args.location ?? this.location;
     this.indexEndpoint = args.indexEndpoint ?? this.indexEndpoint;
     this.index = args.index ?? this.index;
+    this.authOptions = args.authOptions ?? this.authOptions;
 
     this.callerParams = args.callerParams ?? this.callerParams;
     this.callerOptions = args.callerOptions ?? this.callerOptions;
@@ -387,6 +394,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       location: this.location,
       apiVersion: this.apiVersion,
       indexEndpoint: this.indexEndpoint,
+      authOptions: this.authOptions,
     };
     this.indexEndpointClient = new IndexEndpointConnection(
       indexClientParams,
@@ -398,6 +406,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       location: this.location,
       apiVersion: this.apiVersion,
       index: this.index,
+      authOptions: this.authOptions,
     };
     this.removeDatapointClient = new RemoveDatapointConnection(
       removeClientParams,
@@ -409,6 +418,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       location: this.location,
       apiVersion: this.apiVersion,
       index: this.index,
+      authOptions: this.authOptions,
     };
     this.upsertDatapointClient = new UpsertDatapointConnection(
       upsertClientParams,
@@ -614,6 +624,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
       apiVersion: this.apiVersion,
       location: this.location,
       deployedIndexId,
+      authOptions: this.authOptions,
     };
     const connection = new FindNeighborsConnection(
       findNeighborsParams,

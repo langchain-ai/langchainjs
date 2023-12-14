@@ -41,4 +41,18 @@ console.log(results);
   [ Document { pageContent: 'Cat drinks milk', metadata: { a: 1 } } ]
 */
 
+await pgvectorStore.delete({
+  filter: {
+    a: 1,
+  },
+});
+
+const results2 = await pgvectorStore.similaritySearch("water", 1);
+
+console.log(results2);
+
+/*
+  [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]
+*/
+
 await pgvectorStore.end();
