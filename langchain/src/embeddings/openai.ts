@@ -60,7 +60,8 @@ export class OpenAIEmbeddings
 
   batchSize = 512;
 
-  stripNewLines = false;
+  // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
+  stripNewLines = true;
 
   timeout?: number;
 
