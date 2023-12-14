@@ -6,7 +6,7 @@ Functionality related to [Google Cloud Platform](https://cloud.google.com/)
 
 ### ChatGoogleGenerativeAI
 
-Access Gemini models such as `gemini-pro` and `gemini-pro-vision` through the `ChatGoogleGenerativeAI` class.
+Access Gemini models such as `gemini-pro` and `gemini-pro-vision` through the [`ChatGoogleGenerativeAI`](/docs/integrations/chat/google_generativeai) class.
 
 ```bash npm2yarn
 npm install @langchain/google-genai
@@ -19,6 +19,8 @@ export GOOGLE_API_KEY=your-api-key
 ```
 
 ```typescript
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+
 const model = new ChatGoogleGenerativeAI({
   modelName: "gemini-pro",
   maxOutputTokens: 2048,
