@@ -14163,13 +14163,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyai@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "assemblyai@npm:2.0.2"
+"assemblyai@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "assemblyai@npm:4.0.0"
   dependencies:
-    axios: ^1.4.0
     ws: ^8.13.0
-  checksum: 474195ee9706f20038d951d65bb5dba45b60a7e39503c7a1a93086c01cc7d07a3e82e74fca7c501b7f55e75438bfa30f281b1fedb82e0dd77d2bb9ca0642e151
+  checksum: 09a2b2ed4c7269b5ef64dbc81a7c83cdcdfff6ec68f9600c702a416f91858b67c76a047f17c3c86701f0157ea64e51a00e77a1beaf790e6212eacc4e4ae3bd44
   languageName: node
   linkType: hard
 
@@ -23466,7 +23465,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     apify-client: ^2.7.1
-    assemblyai: ^2.0.2
+    assemblyai: ^4.0.0
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     cheerio: ^1.0.0-rc.12
@@ -23547,7 +23546,7 @@ __metadata:
     "@vercel/kv": ^0.2.3
     "@xata.io/client": ^0.28.0
     apify-client: ^2.7.1
-    assemblyai: ^2.0.2
+    assemblyai: ^4.0.0
     axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: "*"
