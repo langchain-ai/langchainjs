@@ -144,9 +144,9 @@ As with all contributions, make sure you run `yarn lint` and `yarn format` so th
 
 ### Separate integration packages
 
-While most integrations should generally reside in the `libs/langchain-community` workspace and be imported as `@langchain/community/module/name`, more in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](libs/langchain-google-genai) for an example.
+While most integrations should generally reside in the `libs/langchain-community` workspace and be imported as `@langchain/community/module/name`, more in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-google-genai) for an example.
 
-To make creating packages like this easier, we offer the [`create-langchain-integration`](libs/create-langchain-integration/) utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this:
+To make creating packages like this easier, we offer the [`create-langchain-integration`](https://github.com/langchain-ai/langchainjs/blob/main/libs/create-langchain-integration/) utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this:
 
 ```bash
 $ npx create-langchain-integration

@@ -256,7 +256,7 @@ Examples can be added in the `examples/src` directory, e.g.
 example can then be invoked with `yarn example path/to/example` at the top
 level of the repo.
 
-To run examples that require an environment variable, you'll need to add a `.env` file under `examples/.env`
+To run examples that require an environment variable, you'll need to add a `.env` file under `examples/.env`.
 
 ### Build Documentation Locally
 
