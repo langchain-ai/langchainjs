@@ -21,6 +21,20 @@ test("Test Google AI generation", async () => {
   expect(res).toBeTruthy();
 });
 
+test("Test Google AI generation with a stop sequence", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    stopSequences: ["two", "2"],
+  });
+  const res = await model.invoke([
+    ["human", `What are the first three positive whole numbers?`],
+  ]);
+  console.log(JSON.stringify(res, null, 2));
+  expect(res).toBeTruthy();
+  expect(res.additional_kwargs.finishReason).toBe("STOP");
+  expect(res.content).not.toContain("2");
+  expect(res.content).not.toContain("two");
+});
+
 test("Test Google AI generation with a system message", async () => {
   const model = new ChatGoogleGenerativeAI({});
   const res = await model.generate([

@@ -198,6 +198,8 @@ export class ChatGoogleGenerativeAI
       throw new Error("`topK` must be a positive integer");
     }
 
+    this.stopSequences = fields?.stopSequences ?? this.stopSequences;
+
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
       throw new Error(
