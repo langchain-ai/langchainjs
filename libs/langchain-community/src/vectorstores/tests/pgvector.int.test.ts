@@ -87,4 +87,83 @@ describe("PGVectorStore", () => {
       throw e;
     }
   });
+
+  test("PGvector can delete document by id", async () => {
+    try {
+      const documents = [
+        { pageContent: "Lorem Ipsum", metadata: { a: 1 } },
+        { pageContent: "Lorem Ipsum", metadata: { a: 2 } },
+        { pageContent: "Lorem Ipsum", metadata: { a: 3 } },
+      ];
+      await pgvectorVectorStore.addDocuments(documents);
+
+      const result = await pgvectorVectorStore.pool.query(
+        `SELECT id FROM "${tableName}"`
+      );
+
+      const initialIds = result.rows.map((row) => row.id);
+      const firstIdToDelete = initialIds[0];
+      const secondIdToDelete = initialIds[1];
+      const idToKeep = initialIds[2];
+
+      await pgvectorVectorStore.delete({
+        ids: [firstIdToDelete, secondIdToDelete],
+      });
+
+      const result2 = await pgvectorVectorStore.pool.query(
+        `SELECT id FROM "${tableName}"`
+      );
+
+      // Only one row should be left
+      expect(result2.rowCount).toEqual(1);
+
+      // The deleted ids should not be in the result
+      const idsAfterDelete = result2.rows.map((row) => row.id);
+      expect(idsAfterDelete).not.toContain(firstIdToDelete);
+      expect(idsAfterDelete).not.toContain(secondIdToDelete);
+
+      expect(idsAfterDelete).toContain(idToKeep);
+    } catch (e) {
+      console.error("Error: ", e);
+      throw e;
+    }
+  });
+
+  test("PGvector can delete document by metadata", async () => {
+    try {
+      const documents = [
+        { pageContent: "Lorem Ipsum", metadata: { a: 1, b: 1 } },
+        { pageContent: "Lorem Ipsum", metadata: { a: 2, b: 1 } },
+        { pageContent: "Lorem Ipsum", metadata: { a: 1, c: 1 } },
+      ];
+      await pgvectorVectorStore.addDocuments(documents);
+      const result = await pgvectorVectorStore.pool.query(
+        `SELECT id FROM "${tableName}"`
+      );
+
+      const initialIds = result.rows.map((row) => row.id);
+
+      // Filter Matches 1st document
+      await pgvectorVectorStore.delete({ filter: { a: 1, b: 1 } });
+
+      const result2 = await pgvectorVectorStore.pool.query(
+        `SELECT id FROM "${tableName}"`
+      );
+
+      // Two rows should be left
+      expect(result2.rowCount).toEqual(2);
+
+      const idsAfterDelete = result2.rows.map((row) => row.id);
+
+      // The document with matching metadata should not be in the database
+      expect(idsAfterDelete).not.toContainEqual(initialIds[0]);
+
+      // All other documents should still be in database
+      expect(idsAfterDelete).toContainEqual(initialIds[1]);
+      expect(idsAfterDelete).toContainEqual(initialIds[2]);
+    } catch (e) {
+      console.error("Error: ", e);
+      throw e;
+    }
+  });
 });
