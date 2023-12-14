@@ -132,6 +132,7 @@
     "jsdom": "^22.1.0",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
+    "lunary": "^0.6.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "^5.12.0",
@@ -215,6 +216,7 @@
     "jsdom": "*",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
+    "lunary": "^0.6.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "*",
@@ -1031,6 +1033,11 @@
       "import": "./callbacks/handlers/llmonitor.js",
       "require": "./callbacks/handlers/llmonitor.cjs"
     },
+    "./callbacks/handlers/lunary": {
+      "types": "./callbacks/handlers/lunary.d.ts",
+      "import": "./callbacks/handlers/lunary.js",
+      "require": "./callbacks/handlers/lunary.cjs"
+    },
     "./retrievers/amazon_kendra": {
       "types": "./retrievers/amazon_kendra.d.ts",
       "import": "./retrievers/amazon_kendra.js",
@@ -1561,6 +1568,9 @@
     "callbacks/handlers/llmonitor.cjs",
     "callbacks/handlers/llmonitor.js",
     "callbacks/handlers/llmonitor.d.ts",
+    "callbacks/handlers/lunary.cjs",
+    "callbacks/handlers/lunary.js",
+    "callbacks/handlers/lunary.d.ts",
     "retrievers/amazon_kendra.cjs",
     "retrievers/amazon_kendra.js",
     "retrievers/amazon_kendra.d.ts",

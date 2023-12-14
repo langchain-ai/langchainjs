@@ -128,6 +128,7 @@ export const optionalImportEntrypoints = [
   "langchain/chat_models/llama_cpp",
   "langchain/sql_db",
   "langchain/callbacks/handlers/llmonitor",
+  "langchain/callbacks/handlers/lunary",
   "langchain/output_parsers/expression",
   "langchain/retrievers/amazon_kendra",
   "langchain/retrievers/supabase",

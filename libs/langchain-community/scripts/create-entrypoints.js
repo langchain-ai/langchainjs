@@ -127,6 +127,7 @@ const entrypoints = {
   "chat_models/yandex": "chat_models/yandex",
   // callbacks
   "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
+  "callbacks/handlers/lunary": "callbacks/handlers/lunary",
   // retrievers
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
   "retrievers/chaindesk": "retrievers/chaindesk",
@@ -189,6 +190,7 @@ const requiresOptionalDependency = [
   "tools/gmail",
   "agents/toolkits/aws_sfn",
   "callbacks/handlers/llmonitor",
+  "callbacks/handlers/lunary",
   "embeddings/bedrock",
   "embeddings/cloudflare_workersai",
   "embeddings/cohere",
