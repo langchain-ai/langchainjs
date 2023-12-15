@@ -320,6 +320,13 @@ interface _ImageTemplateParam {
   image_url?: string | Record<string, any>;
 }
 
+type MessageClass =
+  | typeof HumanMessage
+  | typeof AIMessage
+  | typeof SystemMessage;
+
+type ChatMessageClass = typeof ChatMessage;
+
 class _StringImageMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
@@ -352,15 +359,11 @@ class _StringImageMessagePromptTemplate<
           >
       >;
 
-  _messageClass:
-    | typeof HumanMessage
-    | typeof AIMessage
-    | typeof SystemMessage
-    | undefined;
+  protected messageClass?: MessageClass;
 
   // ChatMessage contains role field, others don't.
   // Because of this, we have a separate class property for ChatMessage.
-  _chatMessageClass: typeof ChatMessage | undefined;
+  protected chatMessageClass?: ChatMessageClass;
 
   constructor(
     fields: BaseStringPromptTemplate<
@@ -419,6 +422,20 @@ class _StringImageMessagePromptTemplate<
     this.additionalOptions = additionalOptions ?? this.additionalOptions;
   }
 
+  createMessage(content: MessageContent) {
+    if (this.messageClass) {
+      return new this.messageClass({ content });
+    } else if (this.chatMessageClass) {
+      // Assuming ChatMessage constructor also takes a content argument
+      return new this.chatMessageClass({
+        content,
+        role: this.getRoleFromMessageClass(this.chatMessageClass.name)
+      });
+    } else {
+      throw new Error("No message class defined");
+    }
+  }
+
   getRoleFromMessageClass(name: string) {
     switch (name) {
       case "HumanMessage":
@@ -454,8 +471,6 @@ class _StringImageMessagePromptTemplate<
           text = item;
         } else if (typeof item.text === "string") {
           text = item.text ?? "";
-        } else {
-          // handle
         }
         prompt.push(PromptTemplate.fromTemplate(text));
       } else if (typeof item === "object" && "image_url" in item) {
@@ -512,19 +527,7 @@ class _StringImageMessagePromptTemplate<
     if (this.prompt instanceof BaseStringPromptTemplate) {
       const text = await this.prompt.format(input);
 
-      if (this._chatMessageClass) {
-        // ChatMessage contains role field, others don't.
-        return new this._chatMessageClass({
-          content: text,
-          role: this.getRoleFromMessageClass(this._chatMessageClass.name)
-        });
-      } else if (this._messageClass) {
-        return new this._messageClass({
-          content: text
-        });
-      } else {
-        throw new Error("_messageClass and _chatMessageClass are undefined.");
-      }
+      return this.createMessage(text);
     } else {
       const content: MessageContent = [];
       for (const prompt of this.prompt) {
@@ -557,19 +560,7 @@ class _StringImageMessagePromptTemplate<
         }
       }
 
-      if (this._chatMessageClass) {
-        // ChatMessage contains role field, others don't.
-        return new this._chatMessageClass({
-          content,
-          role: this.getRoleFromMessageClass(this._chatMessageClass.name)
-        });
-      } else if (this._messageClass) {
-        return new this._messageClass({
-          content
-        });
-      } else {
-        throw new Error("_messageClass and _chatMessageClass are undefined.");
-      }
+      return this.createMessage(content);
     }
   }
 
@@ -596,7 +587,7 @@ export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends _StringImageMessagePromptTemplate<RunInput> {
-  _messageClass = HumanMessage;
+  messageClass = HumanMessage;
 
   static lc_name() {
     return "HumanMessagePromptTemplate";
@@ -611,7 +602,7 @@ export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends _StringImageMessagePromptTemplate<RunInput> {
-  _messageClass = AIMessage;
+  messageClass = AIMessage;
 
   static lc_name() {
     return "AIMessagePromptTemplate";
@@ -636,7 +627,7 @@ export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends _StringImageMessagePromptTemplate<RunInput> {
-  _messageClass = SystemMessage;
+  messageClass = SystemMessage;
 
   static lc_name() {
     return "SystemMessagePromptTemplate";
