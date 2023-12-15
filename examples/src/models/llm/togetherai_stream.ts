@@ -28,12 +28,15 @@ stream item:  here
 stream item: '
 stream item: s
 stream item:  a
+stream item:  light
+stream item: -
+stream item: heart
+stream item: ed
 stream item:  bear
 stream item:  joke
 stream item:  for
 stream item:  you
 stream item: :
-stream item:
 stream item:
 
 stream item:
@@ -62,7 +65,7 @@ stream item:  bear
 stream item:  feet
 stream item: !
 stream item: </s>
- Sure, here's a bear joke for you:
+ Sure, here's a light-hearted bear joke for you:
 
 Why do bears hate shoes so much?
 
