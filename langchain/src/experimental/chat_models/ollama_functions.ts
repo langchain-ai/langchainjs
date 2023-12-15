@@ -1,8 +1,7 @@
 import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
 import { AIMessage, BaseMessage, ChatResult } from "../../schema/index.js";
-import { ChatOllama } from "../../chat_models/ollama.js";
-import { OllamaInput } from "../../util/ollama.js";
+import { ChatOllama, type ChatOllamaInput } from "../../chat_models/ollama.js";
 import { BaseFunctionCallOptions } from "../../base_language/index.js";
 import { SystemMessagePromptTemplate } from "../../prompts/chat.js";
 
@@ -17,7 +16,7 @@ You must always select one of the above tools and respond with only a JSON objec
 export interface ChatOllamaFunctionsCallOptions
   extends BaseFunctionCallOptions {}
 
-export type OllamaFunctionsInput = Partial<OllamaInput> &
+export type OllamaFunctionsInput = Partial<ChatOllamaInput> &
   BaseChatModelParams & {
     llm?: ChatOllama;
     toolSystemPromptTemplate?: string;

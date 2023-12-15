@@ -25,6 +25,8 @@ import {
  */
 export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
 
+export interface ChatOllamaInput extends OllamaInput {}
+
 /**
  * A class that enables calls to the Ollama API to access large language
  * models in a chat-like fashion. It extends the SimpleChatModel class and
@@ -56,7 +58,7 @@ export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
  */
 export class ChatOllama
   extends SimpleChatModel<OllamaCallOptions>
-  implements OllamaInput
+  implements ChatOllamaInput
 {
   static lc_name() {
     return "ChatOllama";
