@@ -4,16 +4,17 @@
 import { BaseStringPromptTemplate } from "./string.js";
 import type {
   BasePromptTemplateInput,
-  TypedPromptInputValues,
+  TypedPromptInputValues
 } from "./base.js";
 import {
   checkValidTemplate,
   parseTemplate,
   renderTemplate,
-  type TemplateFormat,
+  type TemplateFormat
 } from "./template.js";
 import type { SerializedPromptTemplate } from "./serde.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
+import { MessageContent } from "../messages/index.js";
 
 /**
  * Inputs to create a {@link PromptTemplate}
@@ -28,7 +29,7 @@ export interface PromptTemplateInput<
   /**
    * The prompt template
    */
-  template: string;
+  template: MessageContent;
 
   /**
    * The format of the prompt template. Options are 'f-string'
@@ -107,7 +108,7 @@ export class PromptTemplate<
     return "PromptTemplate";
   }
 
-  template: string;
+  template: MessageContent;
 
   templateFormat: TemplateFormat = "f-string";
 
@@ -143,6 +144,9 @@ export class PromptTemplate<
    */
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
+    /**
+     * this.template can be an array, if it's an array it'll always fail.
+     */
     return renderTemplate(this.template, this.templateFormat, allValues);
   }
 
@@ -169,7 +173,7 @@ export class PromptTemplate<
     const template = [prefix, ...examples, suffix].join(exampleSeparator);
     return new PromptTemplate({
       inputVariables,
-      template,
+      template
     });
   }
 
@@ -191,11 +195,49 @@ export class PromptTemplate<
     > = {}
   ) {
     const names = new Set<string>();
-    parseTemplate(template, templateFormat).forEach((node) => {
-      if (node.type === "variable") {
-        names.add(node.name);
-      }
-    });
+    if (Array.isArray(template)) {
+      template.forEach((t) => {
+        if (!("type" in t)) {
+          throw new Error(`Unknown template format. Received ${t}`);
+        }
+
+        if (t.type === "text") {
+          parseTemplate(t.text, templateFormat).forEach((node) => {
+            if (node.type === "variable") {
+              names.add(node.name);
+            }
+          });
+        } else if (t.type === "image_url") {
+          if (typeof t.image_url === "string") {
+            parseTemplate(t.image_url, templateFormat).forEach((node) => {
+              if (node.type === "variable") {
+                names.add(node.name);
+              }
+            });
+          } else if (
+            "url" in t.image_url &&
+            typeof t.image_url.url === "string"
+          ) {
+            parseTemplate(t.image_url.url, templateFormat).forEach((node) => {
+              if (node.type === "variable") {
+                names.add(node.name);
+              }
+            });
+          } else {
+            throw new Error(`Unknown template format. Received ${t}`);
+          }
+        } else {
+          throw new Error(`Unknown template format. Received ${t}`);
+        }
+      });
+    } else {
+      parseTemplate(template, templateFormat).forEach((node) => {
+        if (node.type === "variable") {
+          names.add(node.name);
+        }
+      });
+    }
+
     return new PromptTemplate<
       // eslint-disable-next-line @typescript-eslint/ban-types
       RunInput extends Symbol ? ParamsFromFString<T> : RunInput
@@ -205,7 +247,7 @@ export class PromptTemplate<
       inputVariables: [...names] as any[],
       templateFormat,
       template,
-      ...rest,
+      ...rest
     });
   }
 
@@ -222,12 +264,12 @@ export class PromptTemplate<
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
-      ...values,
+      ...values
     } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
-      partialVariables: newPartialVariables,
+      partialVariables: newPartialVariables
     };
     return new PromptTemplate<
       InputValues<
@@ -246,7 +288,7 @@ export class PromptTemplate<
       _type: this._getPromptType(),
       input_variables: this.inputVariables,
       template: this.template,
-      template_format: this.templateFormat,
+      template_format: this.templateFormat
     };
   }
 
@@ -259,7 +301,7 @@ export class PromptTemplate<
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
       template: data.template,
-      templateFormat: data.template_format,
+      templateFormat: data.template_format
     });
     return res;
   }

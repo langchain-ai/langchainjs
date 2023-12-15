@@ -562,6 +562,7 @@ export class ChatMessage
 export type BaseMessageLike =
   | BaseMessage
   | [StringWithAutocomplete<MessageType | "user" | "assistant">, string]
+  | [StringWithAutocomplete<MessageType | "user" | "assistant">, MessageContent]
   | string;
 
 export function isBaseMessage(
