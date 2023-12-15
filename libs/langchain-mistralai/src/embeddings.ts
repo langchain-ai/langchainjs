@@ -74,7 +74,7 @@ export class MistralAIEmbeddings
       throw new Error("API key missing for MistralAI, but it is required.");
     }
     this.apiKey = apiKey;
-    this.endpoint = this.endpoint;
+    this.endpoint = fields?.endpoint;
     this.modelName = fields?.modelName ?? this.modelName;
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
