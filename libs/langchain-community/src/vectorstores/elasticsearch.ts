@@ -135,7 +135,13 @@ export class ElasticVectorSearch extends VectorStore {
         text: documents[idx].pageContent,
       },
     ]);
-    await this.client.bulk({ refresh: true, operations });
+    const results = await this.client.bulk({ refresh: true, operations });
+    if (results.errors) {
+      const reasons = results.items.map(
+        (result) => result.index?.error?.reason
+      );
+      throw new Error(`Failed to insert documents:\n${reasons.join("\n")}`);
+    }
     return documentIds;
   }
 
@@ -266,16 +272,23 @@ export class ElasticVectorSearch extends VectorStore {
       mappings: {
         dynamic_templates: [
           {
-            // map all metadata properties to be keyword
-            "metadata.*": {
+            // map all metadata properties to be keyword except loc
+            metadata_except_loc: {
               match_mapping_type: "*",
+              match: "metadata.*",
+              unmatch: "metadata.loc",
               mapping: { type: "keyword" },
             },
           },
         ],
         properties: {
           text: { type: "text" },
-          metadata: { type: "object" },
+          metadata: {
+            type: "object",
+            properties: {
+              loc: { type: "object" }, // explicitly define loc as an object
+            },
+          },
           embedding: {
             type: "dense_vector",
             dims: dimension,

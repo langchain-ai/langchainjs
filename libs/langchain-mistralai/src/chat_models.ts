@@ -8,7 +8,7 @@ import {
   AIMessageChunk,
 } from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import MistralClient, {
+import {
   type ChatCompletionResult as MistralAIChatCompletionResult,
   type ChatCompletionOptions as MistralAIChatCompletionOptions,
   type Message as MistralAIInputMessage,
@@ -167,7 +167,9 @@ export class ChatMistralAI<
 
   modelName = "mistral-small";
 
-  client = new MistralClient();
+  apiKey: string;
+
+  endpoint?: string;
 
   temperature = 0.7;
 
@@ -191,7 +193,9 @@ export class ChatMistralAI<
         "API key MISTRAL_API_KEY is missing for MistralAI, but it is required."
       );
     }
-    this.client = new MistralClient(apiKey, fields?.endpoint);
+    this.apiKey = apiKey;
+
+    // this.client = new MistralClient(apiKey, fields?.endpoint);
   }
 
   _llmType() {
@@ -235,14 +239,16 @@ export class ChatMistralAI<
     | MistralAIChatCompletionResult
     | AsyncGenerator<MistralAIChatCompletionResult>
   > {
+    const { MistralClient } = await this.imports();
+    const client = new MistralClient(this.apiKey, this.endpoint);
     return this.caller.call(async () => {
       let res:
         | MistralAIChatCompletionResult
         | AsyncGenerator<MistralAIChatCompletionResult>;
       if (streaming) {
-        res = this.client.chatStream(input);
+        res = client.chatStream(input);
       } else {
-        res = await this.client.chat(input);
+        res = await client.chat(input);
       }
       return res;
     });
@@ -379,5 +385,10 @@ export class ChatMistralAI<
   /** @ignore */
   _combineLLMOutput() {
     return [];
+  }
+
+  async imports() {
+    const { default: MistralClient } = await import("@mistralai/mistralai");
+    return { MistralClient };
   }
 }
