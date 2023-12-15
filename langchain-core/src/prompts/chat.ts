@@ -365,7 +365,7 @@ class _StringImageMessagePromptTemplate<
   constructor(
     fields: BaseStringPromptTemplate<
       InputValues<Extract<keyof RunInput, string>>
-    > & { prompt?: never },
+    >,
     additionalOptions?: Record<string, unknown>
   );
 
