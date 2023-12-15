@@ -366,7 +366,7 @@ test("Does not throws if null or undefined is passed as input to MessagesPlaceho
   }
 });
 
-test.only("Multi part chat prompt template", async () => {
+test("Multi part chat prompt template", async () => {
   const name = "Bob";
   const objectName = "chair";
   const template = ChatPromptTemplate.fromMessages([
@@ -381,7 +381,7 @@ test.only("Multi part chat prompt template", async () => {
       ]
     ]
   ]);
-  const messages = template.formatMessages({
+  const messages = await template.formatMessages({
     name,
     objectName
   });
@@ -398,7 +398,7 @@ test.only("Multi part chat prompt template", async () => {
   ]);
 });
 
-test.only("Multi part chat prompt template with image", async () => {
+test("Multi part chat prompt template with image", async () => {
   const name = "Bob";
   const objectName = "chair";
   const myImage = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA";
@@ -419,13 +419,14 @@ test.only("Multi part chat prompt template with image", async () => {
         {
           type: "image_url",
           image_url: {
-            url: "{myUrl}"
+            url: "{myUrl}",
+            detail: "high"
           }
         }
       ]
     ]
   ]);
-  const messages = template.formatMessages({
+  const messages = await template.formatMessages({
     name,
     objectName,
     myImage,
@@ -437,7 +438,9 @@ test.only("Multi part chat prompt template with image", async () => {
       content: [
         {
           type: "image_url",
-          image_url: `data:image/jpeg;base64,${myImage}`
+          image_url: {
+            url: `data:image/jpeg;base64,${myImage}`
+          }
         },
         {
           type: "text",
@@ -446,7 +449,8 @@ test.only("Multi part chat prompt template with image", async () => {
         {
           type: "image_url",
           image_url: {
-            url: `${myUrl}`
+            url: `${myUrl}`,
+            detail: "high"
           }
         }
       ]

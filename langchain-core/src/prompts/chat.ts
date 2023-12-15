@@ -401,7 +401,17 @@ class _StringImageMessagePromptTemplate<
     }
     super(fields);
     this.prompt = fields.prompt;
-    this.inputVariables = this.prompt.inputVariables;
+    if (Array.isArray(this.prompt)) {
+      let inputVariables: Extract<keyof RunInput, string>[] = [];
+      this.prompt.forEach((prompt) => {
+        if ("inputVariables" in prompt) {
+          inputVariables = inputVariables.concat(prompt.inputVariables);
+        }
+      });
+      this.inputVariables = inputVariables;
+    } else {
+      this.inputVariables = this.prompt.inputVariables;
+    }
     this.additionalOptions = additionalOptions ?? this.additionalOptions;
   }
 
@@ -493,7 +503,8 @@ class _StringImageMessagePromptTemplate<
         prompt.push(imgTemplateObject);
       }
     }
-    return new this({ prompt });
+    const toReturn = new this({ prompt });
+    return toReturn;
   }
 
   async format(input: TypedPromptInputValues<RunInput>): Promise<BaseMessage> {
@@ -502,7 +513,6 @@ class _StringImageMessagePromptTemplate<
       /**
        * ____________________FAILING TO FORMAT HERE____________________
        */
-      console.log("before", this.prompt);
       const text = await this.prompt.format(input);
 
       // ChatMessage contains role field, others don't.
@@ -570,17 +580,11 @@ class _StringImageMessagePromptTemplate<
 export class HumanMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+> extends _StringImageMessagePromptTemplate<RunInput> {
+  _messageClass = HumanMessage;
+
   static lc_name() {
     return "HumanMessagePromptTemplate";
-  }
-
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new HumanMessage(await this.prompt.format(values));
-  }
-
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 
@@ -591,17 +595,11 @@ export class HumanMessagePromptTemplate<
 export class AIMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+> extends _StringImageMessagePromptTemplate<RunInput> {
+  _messageClass = AIMessage;
+
   static lc_name() {
     return "AIMessagePromptTemplate";
-  }
-
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new AIMessage(await this.prompt.format(values));
-  }
-
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 
@@ -622,17 +620,11 @@ export class AIMessagePromptTemplate<
 export class SystemMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
-> extends BaseMessageStringPromptTemplate<RunInput> {
+> extends _StringImageMessagePromptTemplate<RunInput> {
+  _messageClass = SystemMessage;
+
   static lc_name() {
     return "SystemMessagePromptTemplate";
-  }
-
-  async format(values: RunInput): Promise<BaseMessage> {
-    return new SystemMessage(await this.prompt.format(values));
-  }
-
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 
@@ -682,11 +674,11 @@ function _coerceMessagePromptTemplateLike(
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   if (message._getType() === "human") {
-    return HumanMessagePromptTemplate.fromTemplate(message.content as string);
+    return HumanMessagePromptTemplate.fromTemplate(message.content);
   } else if (message._getType() === "ai") {
-    return AIMessagePromptTemplate.fromTemplate(message.content as string);
+    return AIMessagePromptTemplate.fromTemplate(message.content);
   } else if (message._getType() === "system") {
-    return SystemMessagePromptTemplate.fromTemplate(message.content as string);
+    return SystemMessagePromptTemplate.fromTemplate(message.content);
   } else if (ChatMessage.isInstance(message)) {
     return ChatMessagePromptTemplate.fromTemplate(
       message.content as string,
@@ -925,7 +917,6 @@ export class ChatPromptTemplate<
           : acc,
       Object.create(null) as PartialValues
     );
-
     const inputVariables = new Set<string>();
     for (const promptMessage of flattenedMessages) {
       // eslint-disable-next-line no-instanceof/no-instanceof
