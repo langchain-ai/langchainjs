@@ -1,4 +1,4 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAIClient } from "@langchain/openai";
 import { Runnable } from "../../schema/runnable/base.js";
 import { sleep } from "../../util/time.js";
 import type { RunnableConfig } from "../../schema/runnable/config.js";
@@ -135,8 +135,8 @@ export class OpenAIAssistantRunnable<
       // Submitting tool outputs to an existing run, outside the AgentExecutor
       // framework.
       run = await this.client.beta.threads.runs.submitToolOutputs(
-        input.runId,
         input.threadId,
+        input.runId,
         {
           tool_outputs: input.toolOutputs,
         }

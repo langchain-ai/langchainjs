@@ -2,7 +2,7 @@ import {
   AIMessage,
   BaseMessage,
   BaseMessageChunk,
-  BaseMessageLike,
+  type BaseMessageLike,
   HumanMessage,
   coerceMessageLikeToMessage,
 } from "../messages/index.js";
