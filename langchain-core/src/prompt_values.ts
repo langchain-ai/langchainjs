@@ -2,7 +2,7 @@ import { Serializable } from "./load/serializable.js";
 import {
   type BaseMessage,
   HumanMessage,
-  getBufferString
+  getBufferString,
 } from "./messages/index.js";
 
 /**
@@ -140,11 +140,11 @@ export class ImagePromptValue extends BasePromptValue {
             type: "image_url",
             image_url: {
               detail: this.imageUrl.detail,
-              url: this.imageUrl.url
-            }
-          }
-        ]
-      })
+              url: this.imageUrl.url,
+            },
+          },
+        ],
+      }),
     ];
   }
 }

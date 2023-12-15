@@ -4,13 +4,13 @@
 import { BaseStringPromptTemplate } from "./string.js";
 import type {
   BasePromptTemplateInput,
-  TypedPromptInputValues
+  TypedPromptInputValues,
 } from "./base.js";
 import {
   checkValidTemplate,
   parseTemplate,
   renderTemplate,
-  type TemplateFormat
+  type TemplateFormat,
 } from "./template.js";
 import type { SerializedPromptTemplate } from "./serde.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
@@ -170,7 +170,7 @@ export class PromptTemplate<
     const template = [prefix, ...examples, suffix].join(exampleSeparator);
     return new PromptTemplate({
       inputVariables,
-      template
+      template,
     });
   }
 
@@ -206,7 +206,7 @@ export class PromptTemplate<
       inputVariables: [...names] as any[],
       templateFormat,
       template,
-      ...rest
+      ...rest,
     });
   }
 
@@ -223,12 +223,12 @@ export class PromptTemplate<
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
-      ...values
+      ...values,
     } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
-      partialVariables: newPartialVariables
+      partialVariables: newPartialVariables,
     };
     return new PromptTemplate<
       InputValues<
@@ -247,7 +247,7 @@ export class PromptTemplate<
       _type: this._getPromptType(),
       input_variables: this.inputVariables,
       template: this.template,
-      template_format: this.templateFormat
+      template_format: this.templateFormat,
     };
   }
 
@@ -260,7 +260,7 @@ export class PromptTemplate<
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
       template: data.template,
-      templateFormat: data.template_format
+      templateFormat: data.template_format,
     });
     return res;
   }

@@ -50,7 +50,7 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
 
       nodes.push({
         type: "variable",
-        name: chars.slice(i + 1, j).join("")
+        name: chars.slice(i + 1, j).join(""),
       });
       i = j + 1;
     } else if (chars[i] === "}") {
@@ -91,11 +91,11 @@ type Interpolator = (template: string, values: InputValues) => string;
 type Parser = (template: string) => ParsedFStringNode[];
 
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
-  "f-string": interpolateFString
+  "f-string": interpolateFString,
 };
 
 export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
-  "f-string": parseFString
+  "f-string": parseFString,
 };
 
 export const renderTemplate = (
