@@ -4,7 +4,7 @@ import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 
 import {
-  createOllamaStream,
+  createOllamaGenerateStream,
   OllamaInput,
   OllamaCallOptions,
 } from "../utils/ollama.js";
@@ -194,7 +194,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const stream = await this.caller.call(async () =>
-      createOllamaStream(
+      createOllamaGenerateStream(
         this.baseUrl,
         { ...this.invocationParams(options), prompt },
         options

@@ -40,8 +40,8 @@ export interface OllamaInput {
 
 export interface OllamaRequestParams {
   model: string;
-  prompt: string;
   format?: StringWithAutocomplete<"json">;
+  images?: string[];
   options: {
     embedding_only?: boolean;
     f16_kv?: boolean;
@@ -76,10 +76,22 @@ export interface OllamaRequestParams {
   };
 }
 
+export type OllamaMessage = {
+  role: StringWithAutocomplete<"user" | "assistant" | "system">;
+  content: string;
+};
+
+export interface OllamaGenerateRequestParams extends OllamaRequestParams {
+  prompt: string;
+}
+
+export interface OllamaChatRequestParams extends OllamaRequestParams {
+  messages: OllamaMessage[];
+}
+
 export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
 
-export type OllamaGenerationChunk = {
-  response: string;
+export type BaseOllamaGenerationChunk = {
   model: string;
   created_at: string;
   done: boolean;
@@ -91,21 +103,29 @@ export type OllamaGenerationChunk = {
   eval_duration?: number;
 };
 
-export async function* createOllamaStream(
-  baseUrl: string,
+export type OllamaGenerationChunk = BaseOllamaGenerationChunk & {
+  response: string;
+};
+
+export type OllamaChatGenerationChunk = BaseOllamaGenerationChunk & {
+  message: OllamaMessage;
+};
+
+async function* createOllamaStream(
+  url: string,
   params: OllamaRequestParams,
   options: OllamaCallOptions
-): AsyncGenerator<OllamaGenerationChunk> {
-  let formattedBaseUrl = baseUrl;
-  if (formattedBaseUrl.startsWith("http://localhost:")) {
+) {
+  let formattedUrl = url;
+  if (formattedUrl.startsWith("http://localhost:")) {
     // Node 18 has issues with resolving "localhost"
     // See https://github.com/node-fetch/node-fetch/issues/1624
-    formattedBaseUrl = formattedBaseUrl.replace(
+    formattedUrl = formattedUrl.replace(
       "http://localhost:",
       "http://127.0.0.1:"
     );
   }
-  const response = await fetch(`${formattedBaseUrl}/api/generate`, {
+  const response = await fetch(formattedUrl, {
     method: "POST",
     body: JSON.stringify(params),
     headers: {
@@ -114,10 +134,19 @@ export async function* createOllamaStream(
     signal: options.signal,
   });
   if (!response.ok) {
-    const json = await response.json();
-    const error = new Error(
-      `Ollama call failed with status code ${response.status}: ${json.error}`
-    );
+    let error;
+    const responseText = await response.text();
+    try {
+      const json = JSON.parse(responseText);
+      error = new Error(
+        `Ollama call failed with status code ${response.status}: ${json.error}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      error = new Error(
+        `Ollama call failed with status code ${response.status}: ${responseText}`
+      );
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).response = response;
     throw error;
@@ -129,6 +158,7 @@ export async function* createOllamaStream(
   }
 
   const stream = IterableReadableStream.fromReadableStream(response.body);
+
   const decoder = new TextDecoder();
   let extra = "";
   for await (const chunk of stream) {
@@ -143,4 +173,20 @@ export async function* createOllamaStream(
       }
     }
   }
+}
+
+export async function* createOllamaGenerateStream(
+  baseUrl: string,
+  params: OllamaGenerateRequestParams,
+  options: OllamaCallOptions
+): AsyncGenerator<OllamaGenerationChunk> {
+  yield* createOllamaStream(`${baseUrl}/api/generate`, params, options);
+}
+
+export async function* createOllamaChatStream(
+  baseUrl: string,
+  params: OllamaChatRequestParams,
+  options: OllamaCallOptions
+): AsyncGenerator<OllamaChatGenerationChunk> {
+  yield* createOllamaStream(`${baseUrl}/api/chat`, params, options);
 }

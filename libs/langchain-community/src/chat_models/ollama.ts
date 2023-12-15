@@ -12,7 +12,12 @@ import {
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 
-import { createOllamaStream, OllamaInput } from "../utils/ollama.js";
+import {
+  createOllamaChatStream,
+  createOllamaGenerateStream,
+  type OllamaInput,
+  type OllamaMessage,
+} from "../utils/ollama.js";
 
 /**
  * An interface defining the options for an Ollama API call. It extends
@@ -217,20 +222,19 @@ export class ChatOllama
     return {};
   }
 
-  async *_streamResponseChunks(
+  /** @deprecated */
+  async *_streamResponseChunksLegacy(
     input: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const stream = await this.caller.call(async () =>
-      createOllamaStream(
-        this.baseUrl,
-        {
-          ...this.invocationParams(options),
-          prompt: this._formatMessagesAsPrompt(input),
-        },
-        options
-      )
+    const stream = createOllamaGenerateStream(
+      this.baseUrl,
+      {
+        ...this.invocationParams(options),
+        prompt: this._formatMessagesAsPrompt(input),
+      },
+      options
     );
     for await (const chunk of stream) {
       if (!chunk.done) {
@@ -257,6 +261,85 @@ export class ChatOllama
     }
   }
 
+  async *_streamResponseChunks(
+    input: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    try {
+      const stream = await this.caller.call(async () =>
+        createOllamaChatStream(
+          this.baseUrl,
+          {
+            ...this.invocationParams(options),
+            messages: this._convertMessagesToOllamaMessages(input),
+          },
+          options
+        )
+      );
+      for await (const chunk of stream) {
+        if (!chunk.done) {
+          yield new ChatGenerationChunk({
+            text: chunk.message.content,
+            message: new AIMessageChunk({ content: chunk.message.content }),
+          });
+          await runManager?.handleLLMNewToken(chunk.message.content ?? "");
+        } else {
+          yield new ChatGenerationChunk({
+            text: "",
+            message: new AIMessageChunk({ content: "" }),
+            generationInfo: {
+              model: chunk.model,
+              total_duration: chunk.total_duration,
+              load_duration: chunk.load_duration,
+              prompt_eval_count: chunk.prompt_eval_count,
+              prompt_eval_duration: chunk.prompt_eval_duration,
+              eval_count: chunk.eval_count,
+              eval_duration: chunk.eval_duration,
+            },
+          });
+        }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      if (e.response?.status === 404) {
+        console.warn(
+          "[WARNING]: It seems you are using a legacy version of Ollama. Please upgrade to a newer version for better chat support."
+        );
+        yield* this._streamResponseChunksLegacy(input, options, runManager);
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  protected _convertMessagesToOllamaMessages(
+    messages: BaseMessage[]
+  ): OllamaMessage[] {
+    return messages.map((message) => {
+      let role;
+      if (typeof message.content !== "string") {
+        throw new Error("Multimodal messages are not supported.");
+      }
+      if (message._getType() === "human") {
+        role = "user";
+      } else if (message._getType() === "ai") {
+        role = "assistant";
+      } else if (message._getType() === "system") {
+        role = "system";
+      } else {
+        throw new Error(
+          `Unsupported message type for Ollama: ${message._getType()}`
+        );
+      }
+      return {
+        role,
+        content: message.content,
+      };
+    });
+  }
+
+  /** @deprecated */
   protected _formatMessagesAsPrompt(messages: BaseMessage[]): string {
     const formattedMessages = messages
       .map((message) => {
