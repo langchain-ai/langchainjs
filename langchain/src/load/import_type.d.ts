@@ -382,9 +382,6 @@ export interface OptionalImportMap {
   "langchain/callbacks/handlers/llmonitor"?:
     | typeof import("../callbacks/handlers/llmonitor.js")
     | Promise<typeof import("../callbacks/handlers/llmonitor.js")>;
-  "langchain/callbacks/handlers/lunary"?:
-    | typeof import("../callbacks/handlers/lunary.js")
-    | Promise<typeof import("../callbacks/handlers/lunary.js")>;
   "langchain/output_parsers/expression"?:
     | typeof import("../output_parsers/expression.js")
     | Promise<typeof import("../output_parsers/expression.js")>;

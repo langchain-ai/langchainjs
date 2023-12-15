@@ -601,9 +601,6 @@
     "callbacks/handlers/llmonitor.cjs",
     "callbacks/handlers/llmonitor.js",
     "callbacks/handlers/llmonitor.d.ts",
-    "callbacks/handlers/lunary.cjs",
-    "callbacks/handlers/lunary.js",
-    "callbacks/handlers/lunary.d.ts",
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
@@ -2198,11 +2195,6 @@
       "types": "./callbacks/handlers/llmonitor.d.ts",
       "import": "./callbacks/handlers/llmonitor.js",
       "require": "./callbacks/handlers/llmonitor.cjs"
-    },
-    "./callbacks/handlers/lunary": {
-      "types": "./callbacks/handlers/lunary.d.ts",
-      "import": "./callbacks/handlers/lunary.js",
-      "require": "./callbacks/handlers/lunary.cjs"
     },
     "./output_parsers": {
       "types": "./output_parsers.d.ts",

@@ -155,7 +155,7 @@ export interface LLMonitorHandlerFields
 /**
  * @deprecated Please use LunaryHandler instead:
  * ```
- * import { LunaryHandler } from "langchain/callbacks/handlers/lunary";
+ * import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
  * ```
  */
 export class LLMonitorHandler

@@ -34,7 +34,7 @@ LUNARY_APP_ID="..."
 If you prefer not to use environment variables, you can set your app ID explictly like this:
 
 ```ts
-import { LunaryHandler } from "langchain/callbacks/handlers/lunary";
+import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
 
 const handler = new LunaryHandler({
   appId: "app ID",
@@ -48,7 +48,7 @@ You can now use the callback handler with LLM calls, chains and agents.
 ## Quick Start
 
 ```ts
-import { LunaryHandler } from "langchain/callbacks/handlers/lunary";
+import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
 
 const model = new ChatOpenAI({
   callbacks: [new LunaryHandler()],
@@ -60,7 +60,7 @@ const model = new ChatOpenAI({
 When tracing chains or agents, make sure to include the callback at the run level so that all sub LLM calls & chain runs are reported as well.
 
 ```ts
-import { LunaryHandler } from "langchain/callbacks/handlers/lunary";
+import { LunaryHandler } from "@langchain/lunary/callbacks/handlers/lunary";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Calculator } from "langchain/tools/calculator";
@@ -124,7 +124,7 @@ You can use the callback handler combined with the `lunary` module to track cust
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
-import { LunaryHandler } from "langchain/callbacks/handlers/lunary";
+import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
 import lunary from "lunary";
 
 const chat = new ChatOpenAI({

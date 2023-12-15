@@ -231,7 +231,6 @@ const entrypoints = {
   // callbacks
   callbacks: "callbacks/index",
   "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
-  "callbacks/handlers/lunary": "callbacks/handlers/lunary",
   // output_parsers
   output_parsers: "output_parsers/index",
   "output_parsers/expression": "output_parsers/expression",
@@ -361,7 +360,6 @@ const requiresOptionalDependency = [
   "tools/google_calendar",
   "tools/gmail",
   "callbacks/handlers/llmonitor",
-  "callbacks/handlers/lunary",
   "chains/load",
   "chains/sql_db",
   "chains/graph_qa/cypher",
