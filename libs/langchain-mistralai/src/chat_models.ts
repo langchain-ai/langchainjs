@@ -195,7 +195,7 @@ export class ChatMistralAI<
     }
     this.apiKey = apiKey;
     this.streaming = fields?.streaming ?? this.streaming;
-    this.endpoint = this.endpoint;
+    this.endpoint = fields?.endpoint;
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
