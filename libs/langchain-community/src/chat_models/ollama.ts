@@ -328,13 +328,13 @@ export class ChatOllama
         );
       }
       let content = "";
-      let images = [];
+      const images = [];
       if (typeof message.content === "string") {
         content = message.content;
       } else {
         for (const contentPart of message.content) {
           if (contentPart.type === "text") {
-            content = content + contentPart.text;
+            content = `${content}\n${contentPart.text}`;
           } else if (
             contentPart.type === "image_url" &&
             typeof contentPart.image_url === "string"
