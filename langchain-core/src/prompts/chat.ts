@@ -359,6 +359,8 @@ class _StringImageMessagePromptTemplate<
     | typeof SystemMessage
     | undefined;
 
+  // ChatMessage contains role field, others don't.
+  // Because of this, we have a separate class property for ChatMessage.
   _chatMessageClass: typeof ChatMessage | undefined;
 
   constructor(
@@ -480,13 +482,7 @@ class _StringImageMessagePromptTemplate<
             template: imgTemplate,
             inputVariables
           });
-          // extract all variables from `f-string` template
-          // if vars is true, and there are more than one, throw error
-          // else if vars is true, and only one var, convert imgTemplate to { url: imgTemplate }
-          // then return ImagePromptTemplate passing in input variables and imgTemplate
-          // append prompt to prompt array
         } else if (typeof imgTemplate === "object") {
-          // handle
           if ("url" in imgTemplate) {
             const parsedTemplate = parseFString(imgTemplate.url);
             inputVariables = parsedTemplate.flatMap((item) =>
@@ -502,7 +498,6 @@ class _StringImageMessagePromptTemplate<
         } else {
           throw new Error("Invalid image template");
         }
-        // mannnnn
         prompt.push(imgTemplateObject);
       }
     }
@@ -513,9 +508,6 @@ class _StringImageMessagePromptTemplate<
   async format(input: TypedPromptInputValues<RunInput>): Promise<BaseMessage> {
     // eslint-disable-next-line no-instanceof/no-instanceof
     if (this.prompt instanceof BaseStringPromptTemplate) {
-      /**
-       * ____________________FAILING TO FORMAT HERE____________________
-       */
       const text = await this.prompt.format(input);
 
       if (this._chatMessageClass) {
@@ -547,7 +539,6 @@ class _StringImageMessagePromptTemplate<
           }
           inputs = { ...inputs, [item]: input[item] };
         }
-        /** @TODO replace this */
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (prompt instanceof BaseStringPromptTemplate) {
           const formatted = await prompt.format(
@@ -572,7 +563,7 @@ class _StringImageMessagePromptTemplate<
         });
       } else if (this._messageClass) {
         return new this._messageClass({
-          content,
+          content
         });
       } else {
         throw new Error("_messageClass and _chatMessageClass are undefined.");
