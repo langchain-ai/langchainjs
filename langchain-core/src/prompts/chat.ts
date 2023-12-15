@@ -11,7 +11,8 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   isBaseMessage,
-  MessageContent
+  MessageContent,
+  ChatMessageFieldsWithRole
 } from "../messages/index.js";
 import { ChatPromptValue } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
@@ -356,7 +357,9 @@ class _StringImageMessagePromptTemplate<
     | typeof HumanMessage
     | typeof AIMessage
     | typeof SystemMessage
-    | typeof ChatMessage;
+    | undefined;
+
+  _chatMessageClass: typeof ChatMessage | undefined;
 
   constructor(
     prompt: BaseStringPromptTemplate<
@@ -515,10 +518,19 @@ class _StringImageMessagePromptTemplate<
        */
       const text = await this.prompt.format(input);
 
-      // ChatMessage contains role field, others don't.
-      return new this._messageClass({
-        content: text
-      });
+      if (this._chatMessageClass) {
+        // ChatMessage contains role field, others don't.
+        return new this._chatMessageClass({
+          content: text,
+          role: this.getRoleFromMessageClass(this._chatMessageClass.name)
+        });
+      } else if (this._messageClass) {
+        return new this._messageClass({
+          content: text
+        });
+      } else {
+        throw new Error("_messageClass and _chatMessageClass are undefined.");
+      }
     } else {
       const content: MessageContent = [];
       for (const prompt of this.prompt) {
@@ -551,10 +563,20 @@ class _StringImageMessagePromptTemplate<
           content.push({ type: "image_url", image_url: formatted });
         }
       }
-      // ChatMessage contains role field, others don't.
-      return new this._messageClass({
-        content
-      });
+
+      if (this._chatMessageClass) {
+        // ChatMessage contains role field, others don't.
+        return new this._chatMessageClass({
+          content,
+          role: this.getRoleFromMessageClass(this._chatMessageClass.name)
+        });
+      } else if (this._messageClass) {
+        return new this._messageClass({
+          content,
+        });
+      } else {
+        throw new Error("_messageClass and _chatMessageClass are undefined.");
+      }
     }
   }
 

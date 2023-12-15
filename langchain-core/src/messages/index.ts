@@ -536,6 +536,8 @@ export class ChatMessage
 
   role: string;
 
+  _chatMessageClass = ChatMessage;
+
   constructor(content: string, role: string);
 
   constructor(fields: ChatMessageFieldsWithRole);
