@@ -44,6 +44,15 @@ console.log(assistantResponse);
    */
 ```
 
+If you run into an apiKey error, you can try to pass it directly as clientOptions:
+
+```typescript
+const assistant = await OpenAIAssistantRunnable.createAssistant({
+  clientOptions: { apiKey: OPENAI_API_KEY },
+  model: "gpt-4-1106-preview",
+});
+```
+
 If you have an existing assistant, you can pass it directly into the constructor:
 
 ```typescript
@@ -282,6 +291,12 @@ const file = await openAIFiles.createFile({
     "purpose": "assistants",
   }
 */
+```
+
+If you run into an apiKey error, you can try to pass it directly as clientOptions:
+
+```typescript
+const openAIFiles = new OpenAIFiles(clientOptions: { apiKey: OPENAI_API_KEY });
 ```
 
 ## Use File in AI Assistant
