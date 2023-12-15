@@ -45,13 +45,13 @@ This framework consists of several parts.
 - **[LangSmith](https://smith.langchain.com)**: A developer platform that lets you debug, test, evaluate, and monitor chains built on any LLM framework and seamlessly integrates with LangChain.
 
 The LangChain libraries themselves are made up of several different packages.
-- **[`@langchain/core`](https://github.com/langchain-ai/langchainjs/tree/main/langchain-core)**: Base abstractions and LangChain Expression Language.
-- **[`@langchain/community`](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community)**: Third party integrations.
-- **[`langchain`](https://github.com/langchain-ai/langchainjs/tree/main/langchain)**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
+- **[`@langchain/core`](https://github.com/langchain-ai/langchainjs/blob/main/langchain-core)**: Base abstractions and LangChain Expression Language.
+- **[`@langchain/community`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community)**: Third party integrations.
+- **[`langchain`](https://github.com/langchain-ai/langchainjs/blob/main/langchain)**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
 
 Integrations may also be split into their own compatible packages.
 
-![LangChain Stack](https://github.com/langchain-ai/langchainjs/tree/main/docs/core_docs/static/img/langchain_stack.png)
+![LangChain Stack](https://github.com/langchain-ai/langchainjs/blob/main/docs/core_docs/static/img/langchain_stack.png)
 
 This library aims to assist in the development of those types of applications. Common examples of these applications include:
 
@@ -101,9 +101,9 @@ Please see [here](https://js.langchain.com) for full documentation, which includ
 
 As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
 
-For detailed information on how to contribute, see [here](https://github.com/langchain-ai/langchainjs/tree/main/CONTRIBUTING.md).
+For detailed information on how to contribute, see [here](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md).
 
-Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/langchainjs/tree/main/SECURITY.md).
+Please report any security issues or concerns following our [security guidelines](https://github.com/langchain-ai/langchainjs/blob/main/SECURITY.md).
 
 ## 🖇️ Relationship with Python LangChain
 
