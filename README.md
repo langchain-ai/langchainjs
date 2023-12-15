@@ -18,7 +18,7 @@ You can use npm, yarn, or pnpm to install LangChain.js
 `npm install -S langchain` or `yarn add langchain` or `pnpm add langchain`
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 ```
 
 ## 🌐 Supported Environments
