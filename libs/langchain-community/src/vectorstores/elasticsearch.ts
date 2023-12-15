@@ -137,7 +137,7 @@ export class ElasticVectorSearch extends VectorStore {
     ]);
     const results = await this.client.bulk({ refresh: true, operations });
     if (results.errors) {
-      let reasons = results.items.map((result) => result.index?.error?.reason);
+      const reasons = results.items.map((result) => result.index?.error?.reason);
       throw new Error(`Failed to insert documents:\n${reasons.join("\n")}`);
     }
     return documentIds;
