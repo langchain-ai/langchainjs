@@ -503,6 +503,7 @@ class _StringImageMessagePromptTemplate<
         prompt.push(imgTemplateObject);
       }
     }
+    // @ts-expect-error bruh moment
     return new this({ prompt, additionalOptions });
   }
 
