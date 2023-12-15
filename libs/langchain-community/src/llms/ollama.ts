@@ -9,6 +9,8 @@ import {
   OllamaCallOptions,
 } from "../utils/ollama.js";
 
+export { type OllamaInput };
+
 /**
  * Class that represents the Ollama language model. It extends the base
  * LLM class and implements the OllamaInput interface.
