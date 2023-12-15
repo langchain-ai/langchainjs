@@ -2,18 +2,24 @@ import { BaseOutputParser } from "../../schema/output_parser.js";
 import { AutoGPTAction } from "./schema.js";
 
 /**
- * Utility function used to preprocess a string to be parsed as JSON. It
- * replaces single backslashes with double backslashes, while leaving
+ * Utility function used to preprocess a string to be parsed as JSON.
+ * It replaces single backslashes with double backslashes, while leaving
  * already escaped ones intact.
+ * It also extracts the json code if it is inside a code block
  */
 export function preprocessJsonInput(inputStr: string): string {
-  // Replace single backslashes with double backslashes,
-  // while leaving already escaped ones intact
   const correctedStr = inputStr.replace(
     /(?<!\\)\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g,
     "\\\\"
   );
-  return correctedStr;
+  const match = correctedStr.match(
+    /```(.*)(\r\n|\r|\n)(?<code>[\w\W\n]+)(\r\n|\r|\n)```/
+  );
+  if (match?.groups?.code) {
+    return match.groups.code.trim();
+  } else {
+    return correctedStr;
+  }
 }
 
 /**
