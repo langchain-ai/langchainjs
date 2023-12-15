@@ -2,16 +2,16 @@ import { TogetherAI } from "@langchain/community/llms/togetherai";
 import { ChatPromptTemplate } from "langchain/prompts";
 
 const model = new TogetherAI({
-  modelName: "togethercomputer/StripedHyena-Nous-7B",
-  streaming: true,
+  modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  streaming: true
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant."],
   [
     "human",
     `Tell me a joke about bears.
-Assistant:`,
-  ],
+Assistant:`
+  ]
 ]);
 const chain = prompt.pipe(model);
 const result = await chain.stream({});
@@ -22,25 +22,49 @@ for await (const item of result) {
 }
 console.log(fullText);
 /**
-stream item:  Why
-stream item:  don
+stream item:  Sure
+stream item: ,
+stream item:  here
 stream item: '
-stream item: t
+stream item: s
+stream item:  a
+stream item:  bear
+stream item:  joke
+stream item:  for
+stream item:  you
+stream item: :
+stream item:
+stream item:
+
+stream item:
+
+stream item: Why
+stream item:  do
 stream item:  bears
+stream item:  hate
+stream item:  shoes
+stream item:  so
+stream item:  much
+stream item: ?
+stream item:
+
+stream item:
+
+stream item: Because
+stream item:  they
 stream item:  like
 stream item:  to
-stream item:  tell
-stream item:  secrets
-stream item: ?
-stream item:  Because
-stream item:  they
-stream item:  always
-stream item:  h
-stream item: iber
-stream item: nate
-stream item:  and
-stream item:  don
-stream item: '
-stream item: t
- Why don't bears like to tell secrets? Because they always hibernate and do
+stream item:  run
+stream item:  around
+stream item:  in
+stream item:  their
+stream item:  bear
+stream item:  feet
+stream item: !
+stream item: </s>
+ Sure, here's a bear joke for you:
+
+Why do bears hate shoes so much?
+
+Because they like to run around in their bear feet!</s>
  */
