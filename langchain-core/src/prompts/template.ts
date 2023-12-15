@@ -1,3 +1,4 @@
+import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types.js";
 
 /**
@@ -49,7 +50,7 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
 
       nodes.push({
         type: "variable",
-        name: chars.slice(i + 1, j).join(""),
+        name: chars.slice(i + 1, j).join("")
       });
       i = j + 1;
     } else if (chars[i] === "}") {
@@ -90,11 +91,11 @@ type Interpolator = (template: string, values: InputValues) => string;
 type Parser = (template: string) => ParsedFStringNode[];
 
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
-  "f-string": interpolateFString,
+  "f-string": interpolateFString
 };
 
 export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
-  "f-string": parseFString,
+  "f-string": parseFString
 };
 
 export const renderTemplate = (
@@ -109,7 +110,7 @@ export const parseTemplate = (
 ) => DEFAULT_PARSER_MAPPING[templateFormat](template);
 
 export const checkValidTemplate = (
-  template: string,
+  template: MessageContent,
   templateFormat: TemplateFormat,
   inputVariables: string[]
 ) => {
@@ -123,7 +124,29 @@ export const checkValidTemplate = (
       acc[v] = "foo";
       return acc;
     }, {} as Record<string, string>);
-    renderTemplate(template, templateFormat, dummyInputs);
+    if (Array.isArray(template)) {
+      template.forEach((message) => {
+        if (message.type === "text") {
+          renderTemplate(message.text, templateFormat, dummyInputs);
+        } else if (message.type === "image_url") {
+          if (typeof message.image_url === "string") {
+            renderTemplate(message.image_url, templateFormat, dummyInputs);
+          } else {
+            renderTemplate(message.image_url.url, templateFormat, dummyInputs);
+          }
+        } else {
+          throw new Error(
+            `Invalid message template received. ${JSON.stringify(
+              message,
+              null,
+              2
+            )}`
+          );
+        }
+      });
+    } else {
+      renderTemplate(template, templateFormat, dummyInputs);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     throw new Error(`Invalid prompt schema: ${e.message}`);
