@@ -3,15 +3,15 @@ import { ChatPromptTemplate } from "langchain/prompts";
 
 const model = new TogetherAI({
   modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-  streaming: true
+  streaming: true,
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant."],
   [
     "human",
     `Tell me a joke about bears.
-Assistant:`
-  ]
+Assistant:`,
+  ],
 ]);
 const chain = prompt.pipe(model);
 const result = await chain.stream({});
