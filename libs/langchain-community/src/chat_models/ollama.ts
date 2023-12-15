@@ -1,8 +1,8 @@
+import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
   SimpleChatModel,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
-import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessageChunk,
@@ -19,13 +19,9 @@ import {
   type OllamaMessage,
 } from "../utils/ollama.js";
 
-/**
- * An interface defining the options for an Ollama API call. It extends
- * the BaseLanguageModelCallOptions interface.
- */
-export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
-
 export interface ChatOllamaInput extends OllamaInput {}
+
+export interface ChatOllamaCallOptions extends BaseLanguageModelCallOptions {}
 
 /**
  * A class that enables calls to the Ollama API to access large language
@@ -57,7 +53,7 @@ export interface ChatOllamaInput extends OllamaInput {}
  * ```
  */
 export class ChatOllama
-  extends SimpleChatModel<OllamaCallOptions>
+  extends SimpleChatModel<ChatOllamaCallOptions>
   implements ChatOllamaInput
 {
   static lc_name() {
@@ -320,9 +316,6 @@ export class ChatOllama
   ): OllamaMessage[] {
     return messages.map((message) => {
       let role;
-      if (typeof message.content !== "string") {
-        throw new Error("Multimodal messages are not supported.");
-      }
       if (message._getType() === "human") {
         role = "user";
       } else if (message._getType() === "ai") {
@@ -334,9 +327,32 @@ export class ChatOllama
           `Unsupported message type for Ollama: ${message._getType()}`
         );
       }
+      let content = "";
+      let images = [];
+      if (typeof message.content === "string") {
+        content = message.content;
+      } else {
+        for (const contentPart of message.content) {
+          if (contentPart.type === "text") {
+            content = content + contentPart.text;
+          } else if (
+            contentPart.type === "image_url" &&
+            typeof contentPart.image_url === "string"
+          ) {
+            const imageUrlComponents = contentPart.image_url.split(",");
+            // Support both data:image/jpeg;base64,<image> format as well
+            images.push(imageUrlComponents[1] ?? imageUrlComponents[0]);
+          } else {
+            throw new Error(
+              `Unsupported message content type. Must either have type "text" or type "image_url" with a string "image_url" field.`
+            );
+          }
+        }
+      }
       return {
         role,
-        content: message.content,
+        content,
+        images,
       };
     });
   }

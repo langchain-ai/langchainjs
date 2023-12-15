@@ -1,4 +1,7 @@
 import { test } from "@jest/globals";
+import * as fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import * as path from "node:path";
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
   BytesOutputParser,
@@ -111,4 +114,18 @@ test.skip("JSON mode", async () => {
   });
   console.log(res);
   expect(JSON.parse(res).response).toBeDefined();
+});
+
+test.skip("Test Ollama with an image", async () => {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
+  const model = new Ollama({
+    model: "llava",
+    baseUrl: "http://127.0.0.1:11434",
+  }).bind({
+    images: [imageData.toString("base64")],
+  });
+  const res = await model.invoke("What's in this image?");
+  console.log({ res });
 });

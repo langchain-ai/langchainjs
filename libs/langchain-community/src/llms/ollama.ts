@@ -1,15 +1,16 @@
+import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 
-import {
-  createOllamaGenerateStream,
-  OllamaInput,
-  OllamaCallOptions,
-} from "../utils/ollama.js";
+import { createOllamaGenerateStream, OllamaInput } from "../utils/ollama.js";
 
 export { type OllamaInput };
+
+export interface OllamaCallOptions extends BaseLanguageModelCallOptions {
+  images?: string[];
+}
 
 /**
  * Class that represents the Ollama language model. It extends the base
@@ -155,6 +156,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
     return {
       model: this.model,
       format: this.format,
+      images: options?.images,
       options: {
         embedding_only: this.embeddingOnly,
         f16_kv: this.f16KV,

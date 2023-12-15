@@ -1,6 +1,6 @@
-import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
+import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
 export interface OllamaInput {
   embeddingOnly?: boolean;
@@ -79,6 +79,7 @@ export interface OllamaRequestParams {
 export type OllamaMessage = {
   role: StringWithAutocomplete<"user" | "assistant" | "system">;
   content: string;
+  images?: string[];
 };
 
 export interface OllamaGenerateRequestParams extends OllamaRequestParams {
@@ -88,8 +89,6 @@ export interface OllamaGenerateRequestParams extends OllamaRequestParams {
 export interface OllamaChatRequestParams extends OllamaRequestParams {
   messages: OllamaMessage[];
 }
-
-export interface OllamaCallOptions extends BaseLanguageModelCallOptions {}
 
 export type BaseOllamaGenerationChunk = {
   model: string;
@@ -114,7 +113,7 @@ export type OllamaChatGenerationChunk = BaseOllamaGenerationChunk & {
 async function* createOllamaStream(
   url: string,
   params: OllamaRequestParams,
-  options: OllamaCallOptions
+  options: BaseLanguageModelCallOptions
 ) {
   let formattedUrl = url;
   if (formattedUrl.startsWith("http://localhost:")) {
@@ -178,7 +177,7 @@ async function* createOllamaStream(
 export async function* createOllamaGenerateStream(
   baseUrl: string,
   params: OllamaGenerateRequestParams,
-  options: OllamaCallOptions
+  options: BaseLanguageModelCallOptions
 ): AsyncGenerator<OllamaGenerationChunk> {
   yield* createOllamaStream(`${baseUrl}/api/generate`, params, options);
 }
@@ -186,7 +185,7 @@ export async function* createOllamaGenerateStream(
 export async function* createOllamaChatStream(
   baseUrl: string,
   params: OllamaChatRequestParams,
-  options: OllamaCallOptions
+  options: BaseLanguageModelCallOptions
 ): AsyncGenerator<OllamaChatGenerationChunk> {
   yield* createOllamaStream(`${baseUrl}/api/chat`, params, options);
 }

@@ -1,4 +1,7 @@
 import { test } from "@jest/globals";
+import * as fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import * as path from "node:path";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
@@ -25,7 +28,7 @@ test.skip("test call with callback", async () => {
     {
       callbacks: [
         {
-          handleLLMNewToken(token) {
+          handleLLMNewToken(token: string) {
             tokens.push(token);
           },
         },
@@ -127,4 +130,29 @@ test.skip("JSON mode", async () => {
     input: `Translate "I love programming" into German.`,
   });
   expect(JSON.parse(res).response).toBeDefined();
+});
+
+test.skip("Test ChatOllama with an image", async () => {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
+  const chat = new ChatOllama({
+    model: "llava",
+    baseUrl: "http://127.0.0.1:11434",
+  });
+  const res = await chat.invoke([
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What is in this image?",
+        },
+        {
+          type: "image_url",
+          image_url: `data:image/jpeg;base64,${imageData.toString("base64")}`,
+        },
+      ],
+    }),
+  ]);
+  console.log({ res });
 });
