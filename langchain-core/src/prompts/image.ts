@@ -1,11 +1,12 @@
+import { MessageContent } from "../messages/index.js";
 import { ImagePromptValue, ImageURL } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
-  TypedPromptInputValues,
+  TypedPromptInputValues
 } from "./base.js";
-import { TemplateFormat } from "./template.js";
+import { TemplateFormat, checkValidTemplate } from "./template.js";
 
 /**
  * Inputs to create a {@link ImagePromptTemplate}
@@ -69,12 +70,11 @@ export class ImagePromptTemplate<
           Object.keys(this.partialVariables)
         );
       }
-      /** @TODO Fix this */
-      // checkValidTemplate(
-      //   this.template,
-      //   this.templateFormat,
-      //   totalInputVariables
-      // );
+      checkValidTemplate(
+        [{ type: "image_url", image_url: this.template }] as MessageContent,
+        this.templateFormat,
+        totalInputVariables
+      );
     }
   }
 
@@ -95,12 +95,12 @@ export class ImagePromptTemplate<
     ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
-      ...values,
+      ...values
     } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
-      partialVariables: newPartialVariables,
+      partialVariables: newPartialVariables
     };
     return new ImagePromptTemplate<
       InputValues<
