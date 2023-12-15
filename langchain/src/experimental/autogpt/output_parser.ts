@@ -8,16 +8,18 @@ import { AutoGPTAction } from "./schema.js";
  * It also extracts the json code if it is inside a code block
  */
 export function preprocessJsonInput(inputStr: string): string {
-    const correctedStr = inputStr.replace(
-        /(?<!\\)\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-        "\\\\"
-    );
-    const match = correctedStr.match(/```(.*)(\r\n|\r|\n)(?<code>[\w\W\n]+)(\r\n|\r|\n)```/)
-    if (match?.groups?.code) {
-        return match.groups.code.trim()
-    } else {
-        return correctedStr
-    }
+  const correctedStr = inputStr.replace(
+    /(?<!\\)\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g,
+    "\\\\"
+  );
+  const match = correctedStr.match(
+    /```(.*)(\r\n|\r|\n)(?<code>[\w\W\n]+)(\r\n|\r|\n)```/
+  );
+  if (match?.groups?.code) {
+    return match.groups.code.trim();
+  } else {
+    return correctedStr;
+  }
 }
 
 /**
