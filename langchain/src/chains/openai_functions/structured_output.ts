@@ -21,13 +21,14 @@ import { BaseFunctionCallOptions } from "../../base_language/index.js";
  * 'outputSchema' field representing the JSON schema for the expected
  * output.
  */
-export type StructuredOutputChainInput = Omit<
+export type StructuredOutputChainInput<T extends z.AnyZodObject = z.AnyZodObject> = Omit<
   LLMChainInput,
   "outputParser" | "llm"
 > & {
   outputSchema: JsonSchema7Type;
   prompt: BasePromptTemplate;
   llm?: BaseChatModel<BaseFunctionCallOptions>;
+  outputParser?: BaseLLMOutputParser<z.infer<T>>;
 };
 
 /**
@@ -81,6 +82,52 @@ export class FunctionCallStructuredOutputParser<
 }
 
 /**
+ * Class for parsing structured output using a Zod schema.
+ * Extends the BaseLLMOutputParser and uses a Zod schema for validation.
+ */
+export class ZodStructuredOutputParser<
+T extends z.AnyZodObject
+> extends BaseLLMOutputParser<z.infer<T>> {
+  lc_namespace = ["langchain", "chains", "zod_functions"];
+
+  protected functionOutputParser = new OutputFunctionsParser();
+
+  constructor(public zodSchema: T) {
+    super();
+  }
+
+  /**
+   * Parses and validates the result using the Zod schema.
+   * @param generations Array of ChatGeneration instances to be parsed.
+   * @returns The parsed result if it is valid according to the Zod schema.
+   */
+  async parseResult(generations: ChatGeneration[]) {
+    const initialResult = await this.functionOutputParser.parseResult(
+      generations
+    );
+    const parsedResult = JSON.parse(initialResult, (_, value) => {
+      if (value === null) {
+        return undefined;
+      }
+      return value;
+    });
+
+    try {
+      // Validate the result using Zod schema
+      const result = this.zodSchema.parse(parsedResult);
+      return result;
+    } catch (error) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
+          error
+        )}`,
+        initialResult
+      );
+    }
+  }
+}
+
+/**
  * Create a chain that returns output matching a JSON Schema.
  * @param input Object that includes all LLMChainInput fields except "outputParser"
  * as well as an additional required "outputSchema" JSON Schema object.
@@ -89,8 +136,9 @@ export class FunctionCallStructuredOutputParser<
 export function createStructuredOutputChain<
   T extends z.AnyZodObject = z.AnyZodObject
 >(input: StructuredOutputChainInput) {
-  const {
+    const {
     outputSchema,
+    outputParser = new FunctionCallStructuredOutputParser<T>(outputSchema),
     llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),
     outputKey = "output",
     llmKwargs = {},
@@ -113,7 +161,7 @@ export function createStructuredOutputChain<
       },
     },
     outputKey,
-    outputParser: new FunctionCallStructuredOutputParser<T>(outputSchema),
+    outputParser,
     ...rest,
   });
 }
