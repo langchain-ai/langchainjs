@@ -11,8 +11,7 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   isBaseMessage,
-  MessageContent,
-  ChatMessageFieldsWithRole
+  MessageContent
 } from "../messages/index.js";
 import { ChatPromptValue } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
@@ -364,9 +363,9 @@ class _StringImageMessagePromptTemplate<
   _chatMessageClass: typeof ChatMessage | undefined;
 
   constructor(
-    prompt: BaseStringPromptTemplate<
+    fields: BaseStringPromptTemplate<
       InputValues<Extract<keyof RunInput, string>>
-    >,
+    > & { prompt?: never },
     additionalOptions?: Record<string, unknown>
   );
 
@@ -441,7 +440,9 @@ class _StringImageMessagePromptTemplate<
     if (typeof template === "string") {
       return new this(PromptTemplate.fromTemplate(template));
     }
-    const prompt: Array<PromptTemplate<InputValues>> = [];
+    const prompt: Array<
+      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues>
+    > = [];
     for (const item of template) {
       if (
         typeof item === "string" ||
@@ -458,7 +459,7 @@ class _StringImageMessagePromptTemplate<
         prompt.push(PromptTemplate.fromTemplate(text));
       } else if (typeof item === "object" && "image_url" in item) {
         let imgTemplate = item.image_url ?? "";
-        let imgTemplateObject: ImagePromptTemplate;
+        let imgTemplateObject: ImagePromptTemplate<InputValues>;
         let inputVariables: string[] = [];
         if (typeof imgTemplate === "string") {
           const parsedTemplate = parseFString(imgTemplate);
@@ -478,7 +479,7 @@ class _StringImageMessagePromptTemplate<
           }
 
           imgTemplate = { url: imgTemplate };
-          imgTemplateObject = new ImagePromptTemplate({
+          imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables
           });
@@ -491,7 +492,7 @@ class _StringImageMessagePromptTemplate<
           } else {
             inputVariables = [];
           }
-          imgTemplateObject = new ImagePromptTemplate({
+          imgTemplateObject = new ImagePromptTemplate<InputValues>({
             template: imgTemplate,
             inputVariables
           });
@@ -501,8 +502,7 @@ class _StringImageMessagePromptTemplate<
         prompt.push(imgTemplateObject);
       }
     }
-    const toReturn = new this({ prompt });
-    return toReturn;
+    return new this({ prompt });
   }
 
   async format(input: TypedPromptInputValues<RunInput>): Promise<BaseMessage> {
