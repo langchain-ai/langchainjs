@@ -230,7 +230,7 @@ const entrypoints = {
 };
 ```
 
-If you're adding a new integration which requires installing a third party depencency, you must add the entrypoint to the `requiresOptionalDependency` object, also located inside `langchain/scripts/create-entrypoints.js` or `libs/langchain-community/scripts/create-entrypoints.js`.
+If you're adding a new integration which requires installing a third party depencency, you must add the entrypoint to the `requiresOptionalDependency` array, also located inside `langchain/scripts/create-entrypoints.js` or `libs/langchain-community/scripts/create-entrypoints.js`.
 
 ```typescript
 const requiresOptionalDependency = [
