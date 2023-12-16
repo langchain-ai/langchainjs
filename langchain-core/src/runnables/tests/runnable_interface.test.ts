@@ -43,7 +43,7 @@ interface RunnableInterfaceV0<RunInput, RunOutput, CallOptions = any> {
   ): Promise<IterableReadableStreamV0<RunOutput>>;
 }
 
-export class IterableReadableStreamV0<T> extends ReadableStream<T> {
+class IterableReadableStreamV0<T> extends ReadableStream<T> {
   public reader: ReadableStreamDefaultReader<T>;
 
   ensureReader() {
@@ -131,7 +131,7 @@ export class IterableReadableStreamV0<T> extends ReadableStream<T> {
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
  */
-export class AIMessageV0 {
+class AIMessageV0 {
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
@@ -152,7 +152,7 @@ export class AIMessageV0 {
   }
 }
 
-export class StringPromptValueV0 {
+class StringPromptValueV0 {
   lc_namespace = ["langchain_core", "prompt_values"];
 
   lc_serializable = true;
