@@ -1,4 +1,4 @@
-export async function encodeImage(imagePath: string): Promise<string> {
+async function encodeImage(imagePath: string): Promise<string> {
   const { readFile } = await import("node:fs/promises");
   const base64Image = await readFile(imagePath, { encoding: "base64" });
   return base64Image;
