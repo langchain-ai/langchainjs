@@ -1,6 +1,6 @@
 import {
   AIMessage,
-  BaseMessage,
+  type BaseMessage,
   BaseMessageChunk,
   type BaseMessageLike,
   HumanMessage,
@@ -10,10 +10,10 @@ import { BasePromptValue } from "../prompt_values.js";
 import {
   LLMResult,
   RUN_KEY,
-  ChatGeneration,
+  type ChatGeneration,
   ChatGenerationChunk,
-  ChatResult,
-  Generation,
+  type ChatResult,
+  type Generation,
 } from "../outputs.js";
 import {
   BaseLanguageModel,
@@ -23,11 +23,11 @@ import {
 } from "./base.js";
 import {
   CallbackManager,
-  CallbackManagerForLLMRun,
-  Callbacks,
+  type CallbackManagerForLLMRun,
+  type Callbacks,
 } from "../callbacks/manager.js";
-import { RunnableConfig } from "../runnables/config.js";
-import { BaseCache } from "../caches.js";
+import type { RunnableConfig } from "../runnables/config.js";
+import type { BaseCache } from "../caches.js";
 
 /**
  * Represents a serialized chat model.
