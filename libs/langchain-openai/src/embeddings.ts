@@ -31,7 +31,8 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
 
   /**
    * Whether to strip new lines from the input text. This is recommended by
-   * OpenAI, but may not be suitable for all use cases.
+   * OpenAI for older models, but may not be suitable for all use cases.
+   * See: https://github.com/openai/openai-python/issues/418#issuecomment-1525939500
    */
   stripNewLines?: boolean;
 }
@@ -59,6 +60,7 @@ export class OpenAIEmbeddings
 
   batchSize = 512;
 
+  // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
   stripNewLines = true;
 
   timeout?: number;

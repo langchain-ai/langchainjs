@@ -5,7 +5,7 @@ import { Neo4jVectorStore } from "../neo4j_vector.js";
 
 const OS_TOKEN_COUNT = 1536;
 
-const texts = ["foo", "bar", "baz"];
+const texts = ["foo", "bar", "baz", "This is the end of the world!"];
 
 class FakeEmbeddingsWithOsDimension extends FakeEmbeddings {
   async embedDocuments(documents: string[]): Promise<number[][]> {
@@ -468,4 +468,51 @@ test.skip("Test fromExistingGraph multiple properties hybrid", async () => {
   await dropVectorIndexes(neo4jVectorStore);
   await neo4jVectorStore.close();
   await existingGraph.close();
+});
+
+test.skip("Test escape lucene characters", async () => {
+  const url = process.env.NEO4J_URI as string;
+  const username = process.env.NEO4J_USERNAME as string;
+  const password = process.env.NEO4J_PASSWORD as string;
+
+  expect(url).toBeDefined();
+  expect(username).toBeDefined();
+  expect(password).toBeDefined();
+
+  const embeddings = new FakeEmbeddingsWithOsDimension();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadatas: any[] = [];
+
+  const neo4jVectorStore = await Neo4jVectorStore.fromTexts(
+    texts,
+    metadatas,
+    embeddings,
+    {
+      url,
+      username,
+      password,
+      preDeleteCollection: true,
+      searchType: "hybrid",
+    }
+  );
+
+  const output = await neo4jVectorStore.similaritySearch(
+    "This is the end of the world!",
+    2
+  );
+  console.log(output);
+  const expectedResult = [
+    new Document({
+      pageContent: "This is the end of the world!",
+      metadata: {},
+    }),
+    new Document({
+      pageContent: "baz",
+      metadata: {},
+    }),
+  ];
+
+  expect(output).toStrictEqual(expectedResult);
+  await dropVectorIndexes(neo4jVectorStore);
+  await neo4jVectorStore.close();
 });
