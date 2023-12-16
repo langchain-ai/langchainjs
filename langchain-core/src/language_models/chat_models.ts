@@ -380,6 +380,9 @@ export abstract class BaseChatModel<
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
           generations[i] = result;
+          if (result.length) {
+            await runManager?.handleLLMNewToken(result[0].text);
+          }
           return runManager?.handleLLMEnd({
             generations: [result],
           });
