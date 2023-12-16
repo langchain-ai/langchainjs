@@ -31,7 +31,7 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
-interface GenerateCachedParameters<
+interface LLMGenerateCachedParameters<
   T extends BaseLLM<CallOptions>,
   CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
 > {
@@ -300,7 +300,7 @@ export abstract class BaseLLM<
     llmStringKey,
     parsedOptions,
     handledOptions,
-  }: GenerateCachedParameters<typeof this>): Promise<
+  }: LLMGenerateCachedParameters<typeof this>): Promise<
     LLMResult & { missingPromptIndices: number[] }
   > {
     const callbackManager_ = await CallbackManager.configure(

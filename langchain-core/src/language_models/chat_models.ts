@@ -78,7 +78,7 @@ export function createChatMessageChunkEncoderStream() {
   });
 }
 
-interface GenerateCachedParameters<
+interface ChatModelGenerateCachedParameters<
   T extends BaseChatModel<CallOptions>,
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
 > {
@@ -312,7 +312,7 @@ export abstract class BaseChatModel<
     llmStringKey,
     parsedOptions,
     handledOptions,
-  }: GenerateCachedParameters<typeof this>): Promise<
+  }: ChatModelGenerateCachedParameters<typeof this>): Promise<
     LLMResult & { missingPromptIndices: number[] }
   > {
     const baseMessages = messages.map((messageList) =>
