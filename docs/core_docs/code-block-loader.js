@@ -41,7 +41,7 @@ async function webpackLoader(content, map, meta) {
       if (node.type === "ImportDeclaration") {
         const source = node.source.value;
 
-        if (!source.startsWith("langchain")) {
+        if (!source.startsWith("langchain") && !source.startsWith("@langchain")) {
           return;
         }
 
@@ -60,6 +60,48 @@ async function webpackLoader(content, map, meta) {
     const getDocsPath = (componentPath) =>
       path.resolve(__dirname, "..", "api_refs", "public", componentPath);
 
+    const getPackageModuleName = (moduleName, imported, category) => {
+      const prefix = `${category}/libs_langchain`;
+      const suffix = `.${imported}.html`;
+
+      if (moduleName.startsWith("community_")) {
+        return `${prefix}_community_src_${moduleName.replace("community_", "")}${suffix}`
+      } else if (moduleName.startsWith("community")) {
+        return `${prefix}_community_src${moduleName.replace("community", "")}${suffix}`
+      }
+
+      if (moduleName.startsWith("anthropic_")) {
+        return `${prefix}_anthropic_src_${moduleName.replace("anthropic_", "")}${suffix}`
+      } else if (moduleName.startsWith("anthropic")) {
+        return `${prefix}_anthropic_src${moduleName.replace("anthropic", "")}${suffix}`
+      }
+
+      if (moduleName.startsWith("google_genai_")) {
+        return `${prefix}_google_genai_src_${moduleName.replace("google_genai_", "")}${suffix}`
+      } else if (moduleName.startsWith("google_genai")) {
+        return `${prefix}_google_genai_src${moduleName.replace("google_genai", "")}${suffix}`
+      }
+
+      if (moduleName.startsWith("openai_")) {
+        return `${prefix}_openai_src_${moduleName.replace("openai_", "")}${suffix}`
+      } else if (moduleName.startsWith("openai")) {
+        return `${prefix}_openai_src${moduleName.replace("openai", "")}${suffix}`
+      }
+
+      if (moduleName.startsWith("mistralai_")) {
+        return `${prefix}_mistralai_src_${moduleName.replace("mistralai_", "")}${suffix}`
+      } else if (moduleName.startsWith("mistralai")) {
+        return `${prefix}_mistralai_src${moduleName.replace("mistralai", "")}${suffix}`
+      }
+
+      // @TODO - Find a better way to deal with core
+      if (moduleName.startsWith("core_")) {
+        return `${category}/langchain_src_schema${suffix}`
+      }
+
+      return null;
+    }
+
     /**
      * Somewhat of a hacky solution to finding the exact path of the docs file.
      * Maps over all categories in the API docs and if the file exists, returns the path.
@@ -70,18 +112,30 @@ async function webpackLoader(content, map, meta) {
     const findExactPath = (moduleName, imported) => {
       let modulePath;
       CATEGORIES.forEach((category) => {
-        const componentPath = `${category}/${moduleName}.${imported}.html`;
-        const docsPath = getDocsPath(componentPath);
+        // from langchain/src
+        const componentPathLangChain = `${category}/langchain_src_${moduleName}.${imported}.html`;
+        const docsPathLangChain = getDocsPath(componentPathLangChain);
+
+        // from libs/langchain-community/src
+        const componentPathPackage = getPackageModuleName(moduleName, imported, category);
+        const docsPathPackage = componentPathPackage ? getDocsPath(componentPathPackage) : null;
+        
         // The modules from `langchain-core` are named differently in the API docs.
-        const componentPathWithSchema = `${category}/schema_${moduleName.slice(
+        const componentPathWithSchema = `${category}/langchain_src_schema_${moduleName.slice(
           0,
           -1
         )}.${imported}.html`;
         const newDocsPath = getDocsPath(componentPathWithSchema);
-        if (fs.existsSync(docsPath)) {
-          modulePath = componentPath;
+
+        // Check with the package name split off.
+        // This is because some modules are re-exported from langchain
+        // but the import might be from the package itself.
+        if (fs.existsSync(docsPathLangChain)) {
+          modulePath = componentPathLangChain;
         } else if (fs.existsSync(newDocsPath)) {
           modulePath = componentPathWithSchema;
+        } else if (docsPathPackage && fs.existsSync(docsPathPackage)) {
+          modulePath = componentPathPackage;
         }
       });
       return modulePath;
@@ -89,7 +143,7 @@ async function webpackLoader(content, map, meta) {
 
     imports.forEach((imp) => {
       const { imported, source } = imp;
-      const moduleName = source.split("/").slice(1).join("_");
+      const moduleName = source.split("/").slice(1).join("_").replace("-", "_");
       const exactPath = findExactPath(moduleName, imported);
       if (exactPath) {
         imp.docs = BASE_URL + "/" + exactPath;
