@@ -19,7 +19,7 @@ export async function installTemplate({ appName, root }: any) {
 
   await copy(copySource, root, {
     parents: true,
-    cwd: templatePath
+    cwd: templatePath,
   });
 
   /**
