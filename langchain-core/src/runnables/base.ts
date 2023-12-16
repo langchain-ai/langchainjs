@@ -65,6 +65,11 @@ export interface RunnableInterface<
     input: RunInput,
     options?: Partial<CallOptions>
   ): Promise<IterableReadableStreamInterface<RunOutput>>;
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput>;
 }
 
 export type RunnableFunc<RunInput, RunOutput> = (

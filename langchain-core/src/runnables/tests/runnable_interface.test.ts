@@ -41,6 +41,11 @@ interface RunnableInterfaceV0<RunInput, RunOutput, CallOptions = any> {
     input: RunInput,
     options?: Partial<CallOptions>
   ): Promise<IterableReadableStreamV0<RunOutput>>;
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput>;
 }
 
 class IterableReadableStreamV0<T> extends ReadableStream<T> {
@@ -220,6 +225,14 @@ class RunnableV0
     _input: StringPromptValueV0,
     _options?: Partial<any> | undefined
   ): Promise<IterableReadableStreamV0<any>> {
+    throw new Error("Not implemented");
+  }
+
+  // eslint-disable-next-line require-yield
+  async *transform(
+    _generator: AsyncGenerator<StringPromptValueV0>,
+    _options: Partial<any>
+  ): AsyncGenerator<AIMessageV0> {
     throw new Error("Not implemented");
   }
 }
