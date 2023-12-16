@@ -144,7 +144,11 @@ export class PromptTemplate<
    */
   async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
-    return renderTemplate(this.template as string, this.templateFormat, allValues);
+    return renderTemplate(
+      this.template as string,
+      this.templateFormat,
+      allValues
+    );
   }
 
   /**
