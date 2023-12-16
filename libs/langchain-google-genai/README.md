@@ -34,6 +34,10 @@ const response = await mode.invoke(new HumanMessage("Hello world!"));
 
 Gemini vision model supports image inputs when providing a single chat message. Example:
 
+```bash npm2yarn
+npm install @langchain/core
+```
+
 ```typescript
 import fs from "fs";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";

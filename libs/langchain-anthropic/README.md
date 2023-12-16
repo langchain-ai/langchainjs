@@ -32,10 +32,10 @@ const response = await model.invoke(new HumanMessage("Hello world!"));
 ### Streaming
 
 ```typescript
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatAnthropic } from "@langchain/anthropic";
 
-const model = new ChatOpenAI({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const model = new ChatAnthropic({
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
   modelName: "claude-2",
 });
 const response = await model.stream(new HumanMessage("Hello world!"));
