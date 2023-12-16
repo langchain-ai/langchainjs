@@ -1,8 +1,10 @@
+export interface IterableReadableStreamInterface<T> extends ReadableStream<T>, AsyncGenerator<T> {}
+
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
  * Source: https://github.com/MattiasBuelens/web-streams-polyfill/pull/122#issuecomment-1627354490
  */
-export class IterableReadableStream<T> extends ReadableStream<T> {
+export class IterableReadableStream<T> extends ReadableStream<T> implements IterableReadableStreamInterface<T> {
   public reader: ReadableStreamDefaultReader<T>;
 
   ensureReader() {
@@ -35,6 +37,17 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
       await cancelPromise; // now await it
     }
     return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore final chunk value anyway
+  }
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async throw(e: any): Promise<IteratorResult<T>> {
+    this.ensureReader();
+    if (this.locked) {
+      const cancelPromise = this.reader.cancel(); // cancel first, but don't await yet
+      this.reader.releaseLock(); // release lock first
+      await cancelPromise; // now await it
+    }
+    throw e;
   }
 
   [Symbol.asyncIterator]() {
