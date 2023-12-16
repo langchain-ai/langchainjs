@@ -212,7 +212,7 @@ yarn build
 
 LangChain exposes multiple subpaths the user can import from, e.g.
 
-```ts
+```typescript
 import { OpenAI } from "langchain/llms/openai";
 ```
 
@@ -223,11 +223,20 @@ should edit the `langchain/scripts/create-entrypoints.js` or `libs/langchain-com
 entrypoint `tools` that imports from `tools/index.ts` you'd add
 the following to the `entrypoints` variable:
 
-```ts
+```typescript
 const entrypoints = {
   // ...
   tools: "tools/index",
 };
+```
+
+If you're adding a new integration which requires installing a third party depencency, you must add the entrypoint to the `requiresOptionalDependency` object, also located inside `langchain/scripts/create-entrypoints.js` or `libs/langchain-community/scripts/create-entrypoints.js`.
+
+```typescript
+const requiresOptionalDependency = [
+  // ...
+  "tools/index",
+];
 ```
 
 This will make sure the entrypoint is included in the published package,
