@@ -366,40 +366,9 @@ class _StringImageMessagePromptTemplate<
   protected chatMessageClass?: ChatMessageClass;
 
   constructor(
-    fields: BaseStringPromptTemplate<
-      InputValues<Extract<keyof RunInput, string>>
-    >,
-    additionalOptions?: Record<string, unknown>
-  );
-
-  constructor(
-    fields: MessageStringPromptTemplateFields<
-      InputValues<Extract<keyof RunInput, string>>
-    >,
-    additionalOptions?: Record<string, unknown>
-  );
-
-  constructor(
-    fields: ImagePromptTemplate<
-      InputValues<Extract<keyof RunInput, string>>,
-      string
-    >,
-    additionalOptions?: Record<string, unknown>
-  );
-
-  constructor(
-    fields:
-      | MessageStringPromptTemplateFields<
-          InputValues<Extract<keyof RunInput, string>>
-        >
-      | BaseStringPromptTemplate<
-          InputValues<Extract<keyof RunInput, string>>,
-          string
-        >
-      | ImagePromptTemplate<
-          InputValues<Extract<keyof RunInput, string>>,
-          string
-        >,
+    /** @TODO When we come up with a better way to type prompt templates, fix this */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fields: any,
     additionalOptions?: Record<string, unknown>
   ) {
     if (!("prompt" in fields)) {
@@ -518,7 +487,6 @@ class _StringImageMessagePromptTemplate<
         prompt.push(imgTemplateObject);
       }
     }
-    // @ts-expect-error todo fix
     return new this({ prompt, additionalOptions });
   }
 
