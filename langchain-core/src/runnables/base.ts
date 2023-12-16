@@ -11,9 +11,9 @@ import {
   RunLogPatch,
 } from "../tracers/log_stream.js";
 import { Serializable } from "../load/serializable.js";
-import { 
-  IterableReadableStream, 
-  type IterableReadableStreamInterface 
+import {
+  IterableReadableStream,
+  type IterableReadableStreamInterface,
 } from "../utils/stream.js";
 import {
   RunnableConfig,
@@ -27,15 +27,16 @@ import { RootListenersTracer } from "../tracers/root_listener.js";
 /**
  * Base interface implemented by all runnables.
  * Used for cross-compatibility between different versions of LangChain core.
- * 
+ *
  * Should not change on patch releases.
  */
-export interface RunnableInterface<RunInput, RunOutput, CallOptions extends RunnableConfig = RunnableConfig> {
-  invoke(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): Promise<RunOutput>;
-  
+export interface RunnableInterface<
+  RunInput,
+  RunOutput,
+  CallOptions extends RunnableConfig = RunnableConfig
+> {
+  invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
+
   batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
@@ -59,7 +60,7 @@ export interface RunnableInterface<RunInput, RunOutput, CallOptions extends Runn
     options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
-  
+
   stream(
     input: RunInput,
     options?: Partial<CallOptions>
@@ -107,12 +108,15 @@ function _coerceToDict(value: any, defaultKey: string) {
  * transformed.
  */
 export abstract class Runnable<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
-> extends Serializable implements RunnableInterface<RunInput, RunOutput, CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput = any,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Serializable
+  implements RunnableInterface<RunInput, RunOutput, CallOptions>
+{
   protected lc_runnable = true;
 
   abstract invoke(

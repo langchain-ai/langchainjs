@@ -11,10 +11,7 @@ type RunnableBatchOptionsV0 = {
 };
 
 interface RunnableInterfaceV0<RunInput, RunOutput, CallOptions = any> {
-  invoke(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): Promise<RunOutput>;
+  invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
 
   batch(
     inputs: RunInput[],
@@ -80,7 +77,7 @@ export class IterableReadableStreamV0<T> extends ReadableStream<T> {
     }
     return { done: true, value: undefined as T }; // This cast fixes TS typing, and convention is to ignore final chunk value anyway
   }
-  
+
   async throw(e: any): Promise<IteratorResult<T>> {
     throw e;
   }
@@ -148,36 +145,82 @@ export class AIMessageV0 {
   /** The type of the message. */
   _getType() {
     return "ai";
-  };
+  }
 
-  constructor(
-    content: string
-  ) {
+  constructor(content: string) {
     this.content = content;
   }
 }
 
-class RunnableV0 implements RunnableInterfaceV0<any, AIMessageV0> {
-  protected lc_runnable = true;
-  
-  async invoke(input: any, _options?: Partial<any> | undefined): Promise<AIMessageV0> {
-    return new AIMessageV0(input.toString());
-  }
-  
-  async batch(inputs: any[], options?: Partial<any> | Partial<any>[] | undefined, batchOptions?: (RunnableBatchOptionsV0 & { returnExceptions?: false | undefined; }) | undefined): Promise<any[]>;
-  async batch(inputs: any[], options?: Partial<any> | Partial<any>[] | undefined, batchOptions?: (RunnableBatchOptionsV0 & { returnExceptions: true; }) | undefined): Promise<any[]>;
-  async batch(inputs: any[], options?: Partial<any> | Partial<any>[] | undefined, batchOptions?: RunnableBatchOptionsV0 | undefined): Promise<any[]>;
-  async batch(inputs: any[], options?: Partial<any> | Partial<any>[] | undefined, batchOptions?: RunnableBatchOptionsV0 | undefined): Promise<any[]>;
-  async batch(inputs: unknown, _options?: unknown, _batchOptions?: unknown): Promise<any[]> {
-    return [inputs];
-  }
-  
-  async stream(input: any, _options?: Partial<any> | undefined): Promise<IterableReadableStreamV0<any>> {
-    return input;
+export class StringPromptValueV0 {
+  lc_namespace = ["langchain_core", "prompt_values"];
+
+  lc_serializable = true;
+
+  value: string;
+
+  constructor(value: string) {
+    this.value = value;
   }
 
-  async *transform(generator: AsyncGenerator<any, any, unknown>, _options: Partial<any>): AsyncGenerator<any, any, unknown> {
-    yield *generator;
+  toString() {
+    return this.value;
+  }
+}
+
+class RunnableV0
+  implements RunnableInterfaceV0<StringPromptValueV0, AIMessageV0>
+{
+  protected lc_runnable = true;
+
+  async invoke(
+    input: StringPromptValueV0,
+    _options?: Partial<any> | undefined
+  ): Promise<AIMessageV0> {
+    return new AIMessageV0(input.toString());
+  }
+
+  async batch(
+    inputs: StringPromptValueV0[],
+    options?: Partial<any> | Partial<any>[] | undefined,
+    batchOptions?:
+      | (RunnableBatchOptionsV0 & { returnExceptions?: false | undefined })
+      | undefined
+  ): Promise<AIMessageV0[]>;
+
+  async batch(
+    inputs: StringPromptValueV0[],
+    options?: Partial<any> | Partial<any>[] | undefined,
+    batchOptions?:
+      | (RunnableBatchOptionsV0 & { returnExceptions: true })
+      | undefined
+  ): Promise<AIMessageV0[]>;
+
+  async batch(
+    inputs: StringPromptValueV0[],
+    options?: Partial<any> | Partial<any>[] | undefined,
+    batchOptions?: RunnableBatchOptionsV0 | undefined
+  ): Promise<AIMessageV0[]>;
+
+  async batch(
+    inputs: StringPromptValueV0[],
+    options?: Partial<any> | Partial<any>[] | undefined,
+    batchOptions?: RunnableBatchOptionsV0 | undefined
+  ): Promise<AIMessageV0[]>;
+
+  async batch(
+    _inputs: unknown,
+    _options?: unknown,
+    _batchOptions?: unknown
+  ): Promise<AIMessageV0[]> {
+    return [];
+  }
+
+  async stream(
+    _input: StringPromptValueV0,
+    _options?: Partial<any> | undefined
+  ): Promise<IterableReadableStreamV0<any>> {
+    throw new Error("Not implemented");
   }
 }
 
@@ -195,11 +238,7 @@ test("Runnable sequence with a class that implements a runnable interface", asyn
   const promptTemplate = PromptTemplate.fromTemplate("{input}");
   const llm = new RunnableV0();
   const outputParser = new StringOutputParser();
-  const runnable = RunnableSequence.from([
-    promptTemplate,
-    llm,
-    outputParser,
-  ])
+  const runnable = RunnableSequence.from([promptTemplate, llm, outputParser]);
   const result = await runnable.invoke({ input: "Hello sequence!!" });
   console.log(result);
   expect(result).toBe("Hello sequence!!");
