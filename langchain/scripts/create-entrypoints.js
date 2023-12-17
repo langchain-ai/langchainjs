@@ -68,6 +68,7 @@ const entrypoints = {
   "llms/openai": "llms/openai",
   "llms/ai21": "llms/ai21",
   "llms/aleph_alpha": "llms/aleph_alpha",
+  "llms/azure_ml": "llms/azure_ml",
   "llms/cloudflare_workersai": "llms/cloudflare_workersai",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
@@ -203,6 +204,7 @@ const entrypoints = {
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/minimax": "chat_models/minimax",
   "chat_models/llama_cpp": "chat_models/llama_cpp",
+  "chat_models/azure_ml": "chat_models/azure_ml",
   "chat_models/yandex": "chat_models/yandex",
   "chat_models/fake": "chat_models/fake",
   // schema
