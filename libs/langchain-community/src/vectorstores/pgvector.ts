@@ -127,7 +127,7 @@ export class PGVectorStore extends VectorStore {
    * vectors, and adds them to the store.
    *
    * @param documents - Array of `Document` instances.
-   * @param ids - Optional array uuids to use for the documents.
+   * @param ids - Optional array of uuids for the documents.
    * @returns Promise that resolves when the documents have been added.
    */
   async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
@@ -245,7 +245,7 @@ export class PGVectorStore extends VectorStore {
    *
    * @param vectors - Array of vectors.
    * @param documents - Array of `Document` instances.
-   * @param ids - Optional array uuids to use for the documents.
+   * @param ids - Optional array of uuids for the documents.
    * @returns Promise that resolves when the vectors have been added.
    */
   async addVectors(
@@ -495,7 +495,7 @@ export class PGVectorStore extends VectorStore {
    * @param metadatas - Array of metadata objects or a single metadata object.
    * @param embeddings - Embeddings instance.
    * @param dbConfig - `PGVectorStoreArgs` instance.
-   * @param ids - Optional array uuids to use for the documents.
+   * @param ids - Optional array of uuids for the documents.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
   static async fromTexts(
@@ -525,7 +525,7 @@ export class PGVectorStore extends VectorStore {
    * @param docs - Array of `Document` instances.
    * @param embeddings - Embeddings instance.
    * @param dbConfig - `PGVectorStoreArgs` instance.
-   * @param ids - Optional array uuids to use for the documents.
+   * @param ids - Optional array of uuids for the documents.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
   static async fromDocuments(
