@@ -354,6 +354,7 @@ export interface SecretMap {
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
   YC_API_KEY?: string;
+  YC_FOLDER_ID?: string;
   YC_IAM_TOKEN?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;

@@ -6,16 +6,16 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { YandexGPTInputs } from "../llms/yandex.js";
 
-const apiUrl = "https://llm.api.cloud.yandex.net/llm/v1alpha/chat";
+const apiUrl =
+  "https://llm.api.cloud.yandex.net/foundationModels/v1/completion";
 
 interface ParsedMessage {
   role: string;
   text: string;
 }
 
-function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
+function _parseChatHistory(history: BaseMessage[]): ParsedMessage[] {
   const chatHistory: ParsedMessage[] = [];
-  let instruction = "";
 
   for (const message of history) {
     if (typeof message.content !== "string") {
@@ -29,12 +29,12 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
       } else if (message._getType() === "ai") {
         chatHistory.push({ role: "assistant", text: message.content });
       } else if (message._getType() === "system") {
-        instruction = message.content;
+        chatHistory.push({ role: "system", text: message.content });
       }
     }
   }
 
-  return [chatHistory, instruction];
+  return chatHistory;
 }
 
 /**
@@ -60,7 +60,13 @@ export class ChatYandexGPT extends BaseChatModel {
 
   maxTokens = 1700;
 
-  model = "general";
+  model = "yandexgpt-lite";
+
+  modelVersion = "latest";
+
+  modelURI?: string;
+
+  folderID?: string;
 
   constructor(fields?: YandexGPTInputs) {
     super(fields ?? {});
@@ -69,17 +75,32 @@ export class ChatYandexGPT extends BaseChatModel {
 
     const iamToken = fields?.iamToken ?? getEnvironmentVariable("YC_IAM_TOKEN");
 
+    const folderID = fields?.folderID ?? getEnvironmentVariable("YC_FOLDER_ID");
+
     if (apiKey === undefined && iamToken === undefined) {
       throw new Error(
         "Please set the YC_API_KEY or YC_IAM_TOKEN environment variable or pass it to the constructor as the apiKey or iamToken field."
       );
     }
 
+    this.modelURI = fields?.modelURI;
     this.apiKey = apiKey;
     this.iamToken = iamToken;
+    this.folderID = folderID;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.temperature = fields?.temperature ?? this.temperature;
     this.model = fields?.model ?? this.model;
+    this.modelVersion = fields?.modelVersion ?? this.modelVersion;
+
+    if (this.modelURI === undefined && folderID === undefined) {
+      throw new Error(
+        "Please set the YC_FOLDER_ID environment variable or pass Yandex GPT model URI to the constructor as the modelURI field."
+      );
+    }
+
+    if (!this.modelURI) {
+      this.modelURI = `gpt://${this.folderID}/${this.model}/${this.modelVersion}`;
+    }
   }
 
   _llmType() {
@@ -96,21 +117,27 @@ export class ChatYandexGPT extends BaseChatModel {
     options: this["ParsedCallOptions"],
     _?: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    const [messageHistory, instruction] = _parseChatHistory(messages);
-    const headers = { "Content-Type": "application/json", Authorization: "" };
+    const messageHistory = _parseChatHistory(messages);
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: "",
+      "x-folder-id": "",
+    };
     if (this.apiKey !== undefined) {
       headers.Authorization = `Api-Key ${this.apiKey}`;
+      if (this.folderID !== undefined) {
+        headers["x-folder-id"] = this.folderID;
+      }
     } else {
       headers.Authorization = `Bearer ${this.iamToken}`;
     }
     const bodyData = {
-      model: this.model,
-      generationOptions: {
+      modelUri: this.modelURI,
+      completionOptions: {
         temperature: this.temperature,
         maxTokens: this.maxTokens,
       },
       messages: messageHistory,
-      instructionText: instruction,
     };
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -125,8 +152,8 @@ export class ChatYandexGPT extends BaseChatModel {
     }
     const responseData = await response.json();
     const { result } = responseData;
-    const { text } = result.message;
-    const totalTokens = result.num_tokens;
+    const { text } = result.alternatives[0].message;
+    const { totalTokens } = result.usage;
     const generations: ChatGeneration[] = [
       { text, message: new AIMessage(text) },
     ];

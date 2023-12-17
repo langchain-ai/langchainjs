@@ -13,6 +13,10 @@ Next, you have two authentication options:
 - [API key](https://cloud.yandex.com/en/docs/iam/operations/api-key/create)
   You can specify the key in a constructor parameter `api_key` or in an environment variable `YC_API_KEY`.
 
+To specify the model you can use `model_uri` parameter, see [the documentation](https://cloud.yandex.com/en/docs/yandexgpt/concepts/models#yandexgpt-generation) for more details.
+
+By default, the latest version of `yandexgpt-lite` is used from the folder specified in the parameter `folder_id` or `YC_FOLDER_ID` environment variable.
+
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
