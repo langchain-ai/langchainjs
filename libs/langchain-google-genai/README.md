@@ -1,12 +1,40 @@
 # @langchain/google-genai
 
-This package contains the LangChainJS integrations for Gemini through their generative-ai SDK.
+This package contains the LangChain.js integrations for Gemini through their generative-ai SDK.
 
 ## Installation
 
 ```bash npm2yarn
 npm install @langchain/google-genai
 ```
+
+This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).
+If you are using this package with other LangChain packages, you should make sure that all of the packages depend on the same instance of @langchain/core.
+You can do so by adding appropriate field to your project's `package.json` like this:
+
+```json
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "dependencies": {
+    "@langchain/google-genai": "^0.0.0",
+    "langchain": "0.0.207"
+  },
+  "resolutions": {
+    "@langchain/core": "0.1.1"
+  },
+  "overrides": {
+    "@langchain/core": "0.1.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "0.1.1"
+    }
+  }
+}
+```
+
+The field you need depends on the package manager you're using, but we recommend adding a field for the common `yarn`, `npm`, and `pnpm` to maximize compatibility.
 
 ## Chat Models
 
