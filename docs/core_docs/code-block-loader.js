@@ -41,7 +41,10 @@ async function webpackLoader(content, map, meta) {
       if (node.type === "ImportDeclaration") {
         const source = node.source.value;
 
-        if (!source.startsWith("langchain") && !source.startsWith("@langchain")) {
+        if (
+          !source.startsWith("langchain") &&
+          !source.startsWith("@langchain")
+        ) {
           return;
         }
 
@@ -65,32 +68,47 @@ async function webpackLoader(content, map, meta) {
       const suffix = `.${imported}.html`;
 
       if (moduleName.startsWith("community")) {
-        return `${prefix}_community_src${moduleName.replace("community", "")}${suffix}`
+        return `${prefix}_community_src${moduleName.replace(
+          "community",
+          ""
+        )}${suffix}`;
       }
 
       if (moduleName.startsWith("anthropic")) {
-        return `${prefix}_anthropic_src${moduleName.replace("anthropic", "")}${suffix}`
+        return `${prefix}_anthropic_src${moduleName.replace(
+          "anthropic",
+          ""
+        )}${suffix}`;
       }
 
       if (moduleName.startsWith("google_genai")) {
-        return `${prefix}_google_genai_src${moduleName.replace("google_genai", "")}${suffix}`
+        return `${prefix}_google_genai_src${moduleName.replace(
+          "google_genai",
+          ""
+        )}${suffix}`;
       }
 
       if (moduleName.startsWith("openai")) {
-        return `${prefix}_openai_src${moduleName.replace("openai", "")}${suffix}`
+        return `${prefix}_openai_src${moduleName.replace(
+          "openai",
+          ""
+        )}${suffix}`;
       }
 
       if (moduleName.startsWith("mistralai")) {
-        return `${prefix}_mistralai_src${moduleName.replace("mistralai", "")}${suffix}`
+        return `${prefix}_mistralai_src${moduleName.replace(
+          "mistralai",
+          ""
+        )}${suffix}`;
       }
 
       // @TODO - Find a better way to deal with core
       if (moduleName.startsWith("core")) {
-        return `${category}/langchain_src_schema${suffix}`
+        return `${category}/langchain_src_schema${suffix}`;
       }
 
       return null;
-    }
+    };
 
     /**
      * Somewhat of a hacky solution to finding the exact path of the docs file.
@@ -106,10 +124,16 @@ async function webpackLoader(content, map, meta) {
         const componentPathLangChain = `${category}/langchain_src_${moduleName}.${imported}.html`;
         const docsPathLangChain = getDocsPath(componentPathLangChain);
 
-        // from libs/langchain-community/src
-        const componentPathPackage = getPackageModuleName(moduleName, imported, category);
-        const docsPathPackage = componentPathPackage ? getDocsPath(componentPathPackage) : null;
-        
+        // from packages
+        const componentPathPackage = getPackageModuleName(
+          moduleName,
+          imported,
+          category
+        );
+        const docsPathPackage = componentPathPackage
+          ? getDocsPath(componentPathPackage)
+          : null;
+
         // The modules from `langchain-core` are named differently in the API docs.
         const componentPathWithSchema = `${category}/langchain_src_schema_${moduleName.slice(
           0,
