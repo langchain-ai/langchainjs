@@ -6,7 +6,11 @@ export class AzureMLHttpClient {
   endpointApiKey: string;
   deploymentName?: string;
 
-  constructor(endpointUrl: string, endpointApiKey: string, deploymentName?: string) {
+  constructor(
+    endpointUrl: string,
+    endpointApiKey: string,
+    deploymentName?: string
+  ) {
     this.deploymentName = deploymentName;
     this.endpointApiKey = endpointApiKey;
     this.endpointUrl = endpointUrl;
@@ -18,29 +22,29 @@ export class AzureMLHttpClient {
    * @param requestPayload The request payload for the AzureML endpoint.
    * @returns A Promise that resolves to the response payload.
    */
-    async call(requestPayload: string): Promise<string> {
-      const response = await fetch(this.endpointUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.endpointApiKey}`,
-        },
-        body: requestPayload,
-      });
-      if (!response.ok) {
-          const error = new Error(
-            `Azure ML LLM call failed with status code ${response.status}`
-          );
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (error as any).response = response;
-          throw error;
-      }
-      return response.text();
+  async call(requestPayload: string): Promise<string> {
+    const response = await fetch(this.endpointUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.endpointApiKey}`,
+      },
+      body: requestPayload,
+    });
+    if (!response.ok) {
+      const error = new Error(
+        `Azure ML LLM call failed with status code ${response.status}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).response = response;
+      throw error;
     }
+    return response.text();
+  }
 }
 
 export interface ContentFormatter {
-    /**
+  /**
    * Formats the request payload for the AzureML endpoint. It takes a
    * prompt and a dictionary of model arguments as input and returns a
    * string representing the formatted request payload.
@@ -48,7 +52,10 @@ export interface ContentFormatter {
    * @param modelArgs A dictionary of model arguments.
    * @returns A string representing the formatted request payload.
    */
-  formatRequestPayload:(prompt:string, modelArgs:Record<string, unknown>) => string;
+  formatRequestPayload: (
+    prompt: string,
+    modelArgs: Record<string, unknown>
+  ) => string;
   /**
    * Formats the response payload from the AzureML endpoint. It takes a
    * response payload as input and returns a string representing the
@@ -60,57 +67,69 @@ export interface ContentFormatter {
 }
 
 export class GPT2ContentFormatter implements ContentFormatter {
-  formatRequestPayload(prompt: string, modelArgs: Record<string, unknown>): string {
+  formatRequestPayload(
+    prompt: string,
+    modelArgs: Record<string, unknown>
+  ): string {
     return JSON.stringify({
       inputs: {
         input_string: [prompt],
       },
       parameters: modelArgs,
     });
-  };
+  }
   formatResponsePayload(output: string): string {
-    return JSON.parse(output)[0]["0"]
-  };
+    return JSON.parse(output)[0]["0"];
+  }
 }
 
 export class HFContentFormatter implements ContentFormatter {
-  formatRequestPayload(prompt: string, modelArgs: Record<string, unknown>): string {
+  formatRequestPayload(
+    prompt: string,
+    modelArgs: Record<string, unknown>
+  ): string {
     return JSON.stringify({
       inputs: [prompt],
       parameters: modelArgs,
     });
-  };
+  }
   formatResponsePayload(output: string): string {
-    return JSON.parse(output)[0]["generated_text"]
-  };
+    return JSON.parse(output)[0]["generated_text"];
+  }
 }
 
 export class DollyContentFormatter implements ContentFormatter {
-  formatRequestPayload(prompt: string, modelArgs: Record<string, unknown>): string {
+  formatRequestPayload(
+    prompt: string,
+    modelArgs: Record<string, unknown>
+  ): string {
     return JSON.stringify({
       input_data: {
         input_string: [prompt],
       },
       parameters: modelArgs,
     });
-  };
+  }
   formatResponsePayload(output: string): string {
-    return JSON.parse(output)[0]
-  };
+    return JSON.parse(output)[0];
+  }
 }
 
 export class LlamaContentFormatter implements ContentFormatter {
-  formatRequestPayload(prompt: string, modelArgs: Record<string, unknown>): string {
+  formatRequestPayload(
+    prompt: string,
+    modelArgs: Record<string, unknown>
+  ): string {
     return JSON.stringify({
       input_data: {
         input_string: [prompt],
       },
       parameters: modelArgs,
     });
-  };
+  }
   formatResponsePayload(output: string): string {
-    return JSON.parse(output)[0]["0"]
-  };
+    return JSON.parse(output)[0]["0"];
+  }
 }
 
 export interface AzureMLParams extends BaseLLMParams {
@@ -126,12 +145,12 @@ export interface AzureMLParams extends BaseLLMParams {
  * and provides methods for calling the AzureML endpoint and formatting
  * the request and response payloads.
  */
-export class AzureMLModel extends LLM implements AzureMLParams {
+export class AzureMLOnlineEndpoint extends LLM implements AzureMLParams {
   _llmType() {
     return "azure_ml";
   }
   static lc_name() {
-    return "AzureMLModel";
+    return "AzureMLOnlineEndpoint";
   }
   static lc_description() {
     return "A class for interacting with AzureML models.";
@@ -151,7 +170,7 @@ export class AzureMLModel extends LLM implements AzureMLParams {
       },
       contentFormatter: {
         lc_description: "The formatter for AzureML API",
-      }
+      },
     };
   }
 
@@ -164,20 +183,26 @@ export class AzureMLModel extends LLM implements AzureMLParams {
 
   constructor(fields: AzureMLParams) {
     super(fields ?? {});
-    if (!fields?.endpointUrl && !getEnvironmentVariable('AZUREML_URL')) {
+    if (!fields?.endpointUrl && !getEnvironmentVariable("AZUREML_URL")) {
       throw new Error("No Azure ML Url found.");
     }
-    if (!fields?.endpointApiKey && !getEnvironmentVariable('AZUREML_API_KEY')) {
+    if (!fields?.endpointApiKey && !getEnvironmentVariable("AZUREML_API_KEY")) {
       throw new Error("No Azure ML ApiKey found.");
     }
     if (!fields?.contentFormatter) {
-      throw new Error("No Content Formatter provided.")
+      throw new Error("No Content Formatter provided.");
     }
 
-    this.endpointUrl = fields.endpointUrl || getEnvironmentVariable('AZUREML_URL')+'';
-    this.endpointApiKey = fields.endpointApiKey || getEnvironmentVariable('AZUREML_API_KEY')+'';
+    this.endpointUrl =
+      fields.endpointUrl || getEnvironmentVariable("AZUREML_URL") + "";
+    this.endpointApiKey =
+      fields.endpointApiKey || getEnvironmentVariable("AZUREML_API_KEY") + "";
     this.deploymentName = fields.deploymentName;
-    this.httpClient = new AzureMLHttpClient(this.endpointUrl, this.endpointApiKey, this.deploymentName);
+    this.httpClient = new AzureMLHttpClient(
+      this.endpointUrl,
+      this.endpointApiKey,
+      this.deploymentName
+    );
     this.contentFormatter = fields.contentFormatter;
     this.modelArgs = fields.modelArgs;
   }
@@ -193,7 +218,10 @@ export class AzureMLModel extends LLM implements AzureMLParams {
     prompt: string,
     modelArgs: Record<string, unknown>
   ): Promise<string> {
-    const requestPayload = this.contentFormatter.formatRequestPayload(prompt, modelArgs);
+    const requestPayload = this.contentFormatter.formatRequestPayload(
+      prompt,
+      modelArgs
+    );
     const responsePayload = await this.httpClient.call(requestPayload);
     return this.contentFormatter.formatResponsePayload(responsePayload);
   }
