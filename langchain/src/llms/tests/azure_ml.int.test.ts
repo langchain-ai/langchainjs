@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+/* import { test, expect } from "@jest/globals";
 import {
   AzureMLOnlineEndpoint,
   DollyContentFormatter,
@@ -6,6 +6,7 @@ import {
   HFContentFormatter,
   LlamaContentFormatter,
 } from "../azure_ml.js";
+*/
 
 /* LLama Test
 test("Test AzureML LLama Call", async () => {
