@@ -143,7 +143,10 @@ export class RunnableWithMessageHistory<
     const inputVal =
       input ||
       (this.inputMessagesKey ? input[this.inputMessagesKey] : undefined);
-    const historyMessages = history ? history.messages : [];
+    let historyMessages = [];
+    if (history) {
+      historyMessages = (history.getMessages) ? history.getMessages() : history.messages;
+    }
     const returnType = [
       ...historyMessages,
       ...this._getInputMessages(inputVal),
