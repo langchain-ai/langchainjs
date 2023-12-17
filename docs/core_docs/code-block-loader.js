@@ -64,38 +64,28 @@ async function webpackLoader(content, map, meta) {
       const prefix = `${category}/libs_langchain`;
       const suffix = `.${imported}.html`;
 
-      if (moduleName.startsWith("community_")) {
-        return `${prefix}_community_src_${moduleName.replace("community_", "")}${suffix}`
-      } else if (moduleName.startsWith("community")) {
+      if (moduleName.startsWith("community")) {
         return `${prefix}_community_src${moduleName.replace("community", "")}${suffix}`
       }
 
-      if (moduleName.startsWith("anthropic_")) {
-        return `${prefix}_anthropic_src_${moduleName.replace("anthropic_", "")}${suffix}`
-      } else if (moduleName.startsWith("anthropic")) {
+      if (moduleName.startsWith("anthropic")) {
         return `${prefix}_anthropic_src${moduleName.replace("anthropic", "")}${suffix}`
       }
 
-      if (moduleName.startsWith("google_genai_")) {
-        return `${prefix}_google_genai_src_${moduleName.replace("google_genai_", "")}${suffix}`
-      } else if (moduleName.startsWith("google_genai")) {
+      if (moduleName.startsWith("google_genai")) {
         return `${prefix}_google_genai_src${moduleName.replace("google_genai", "")}${suffix}`
       }
 
-      if (moduleName.startsWith("openai_")) {
-        return `${prefix}_openai_src_${moduleName.replace("openai_", "")}${suffix}`
-      } else if (moduleName.startsWith("openai")) {
+      if (moduleName.startsWith("openai")) {
         return `${prefix}_openai_src${moduleName.replace("openai", "")}${suffix}`
       }
 
-      if (moduleName.startsWith("mistralai_")) {
-        return `${prefix}_mistralai_src_${moduleName.replace("mistralai_", "")}${suffix}`
-      } else if (moduleName.startsWith("mistralai")) {
+      if (moduleName.startsWith("mistralai")) {
         return `${prefix}_mistralai_src${moduleName.replace("mistralai", "")}${suffix}`
       }
 
       // @TODO - Find a better way to deal with core
-      if (moduleName.startsWith("core_")) {
+      if (moduleName.startsWith("core")) {
         return `${category}/langchain_src_schema${suffix}`
       }
 
