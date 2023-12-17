@@ -5,7 +5,13 @@ import { expect, beforeAll } from "@jest/globals";
 import { insecureHash } from "@langchain/core/utils/hash";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "../../utils/testing.js";
-import { VectaraFile, VectaraLibArgs, VectaraStore } from "../vectara.js";
+import {
+  VectaraFile,
+  VectaraLibArgs,
+  VectaraStore,
+  VectaraSummary,
+} from "../vectara.js";
+import { VectaraSummaryRetriever } from "../../retrievers/vectara_summary.js";
 
 const getDocs = (): Document[] => {
   // Some text from Lord of the Rings
@@ -166,6 +172,64 @@ describe("VectaraStore", () => {
           result.metadata.lang === "eng"
       );
       expect(hasEnglish).toBe(false);
+    });
+
+    test.skip("similaritySearch with contextConfig", async () => {
+      const results = await store.similaritySearch(
+        "Was Gandalf dead?",
+        10, // Number of results needed
+        {
+          lambda: 0.025,
+          contextConfig: {
+            charsBefore: 30,
+            charsAfter: 30,
+            sentencesBefore: 3,
+            sentencesAfter: 3,
+            startTag: "<b>",
+            endTag: "</b>",
+          },
+        }
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].pageContent.length).toBeGreaterThan(0);
+    });
+
+    test.skip("similaritySearch with MMR", async () => {
+      const results = await store.similaritySearch(
+        "Was Gandalf dead?",
+        10, // Number of results needed
+        {
+          lambda: 0.025,
+          mmrConfig: {
+            diversityBias: 1.0,
+          },
+        }
+      );
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].pageContent.length).toBeGreaterThan(0);
+    });
+
+    test.skip("RAG retrieval with generative summarization", async () => {
+      const summaryConfig: VectaraSummary = {
+        enabled: true,
+        summarizerPromptName: "vectara-summary-ext-v1.2.0",
+        maxSummarizedResults: 3,
+        responseLang: "ita",
+      };
+      const topK = 3;
+      const retriever = new VectaraSummaryRetriever({
+        vectara: store,
+        topK,
+        summaryConfig,
+        filter: {
+          lambda: 0.025,
+        },
+      });
+      const result = await retriever.getRelevantDocuments("Was Gandalf dead?");
+      expect(result.length).toBeGreaterThan(0);
+      expect(result.length).toBe(topK + 1); // +1 for the summary
+      expect(result[0].pageContent.length).toBeGreaterThan(0);
     });
 
     test.skip("addFiles", async () => {
