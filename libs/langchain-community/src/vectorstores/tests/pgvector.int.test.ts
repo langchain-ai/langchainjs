@@ -88,6 +88,25 @@ describe("PGVectorStore", () => {
     }
   });
 
+  test("PGvector can save documents with ids", async () => {
+    const id1 = "d8e70e98-19ab-4438-9c14-4bb2bb21a1f9";
+    const id2 = "2bbb4b73-efec-4d5e-80ea-df94a4ed3aa3";
+
+    const documents = [
+      { pageContent: "Lorem Ipsum", metadata: { a: 1 } },
+      { pageContent: "Lorem Ipsum", metadata: { a: 2 } },
+    ];
+
+    await pgvectorVectorStore.addDocuments(documents, [id1, id2]);
+
+    const result = await pgvectorVectorStore.pool.query(
+      `SELECT id FROM "${tableName}" WHERE id = $1`,
+      [id1]
+    );
+
+    expect(result.rowCount).toEqual(1);
+  });
+
   test("PGvector can delete document by id", async () => {
     try {
       const documents = [
