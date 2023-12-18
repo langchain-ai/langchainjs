@@ -36,11 +36,11 @@ export async function POST(req: Request) {
     const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
     const currentMessageContent = messages[messages.length - 1].content; // Extract the content of the last message
     // Mask sensitive information in the current message
-    const guardedMessageContent = await maskingParser.parse(
+    const guardedMessageContent = await maskingParser.mask(
       currentMessageContent
     );
     // Mask sensitive information in the chat history
-    const guardedHistory = await maskingParser.parse(
+    const guardedHistory = await maskingParser.mask(
       formattedPreviousMessages.join("\n")
     );
 
@@ -64,6 +64,11 @@ export async function POST(req: Request) {
       headers: { "content-type": "text/plain; charset=utf-8" },
     });
   } catch (e: any) {
-    return Response.json({ error: e.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: {
+        "content-type": "application/json",
+      },
+    });
   }
 }

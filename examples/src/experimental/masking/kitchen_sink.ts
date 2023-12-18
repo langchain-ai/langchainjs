@@ -70,7 +70,7 @@ const message =
 
 // Mask and rehydrate the message
 maskingParser
-  .parse(message)
+  .mask(message)
   .then((maskedMessage: string) => {
     console.log(`Masked message: ${maskedMessage}`);
     return maskingParser.rehydrate(maskedMessage);
