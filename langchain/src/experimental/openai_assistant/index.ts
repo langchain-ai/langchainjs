@@ -135,8 +135,8 @@ export class OpenAIAssistantRunnable<
       // Submitting tool outputs to an existing run, outside the AgentExecutor
       // framework.
       run = await this.client.beta.threads.runs.submitToolOutputs(
-        input.runId,
         input.threadId,
+        input.runId,
         {
           tool_outputs: input.toolOutputs,
         }
