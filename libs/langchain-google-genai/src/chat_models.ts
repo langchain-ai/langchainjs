@@ -1,6 +1,6 @@
 import {
   GenerativeModel,
-  GoogleGenerativeAI as GenerativeAI
+  GoogleGenerativeAI as GenerativeAI,
 } from "@google/generative-ai";
 import type { SafetySetting } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -9,12 +9,12 @@ import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
-  type BaseChatModelParams
+  type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
-  mapGenerateContentResultToChatResult
+  mapGenerateContentResultToChatResult,
 } from "./utils.js";
 
 export type BaseMessageExamplePair = {
@@ -141,7 +141,7 @@ export class ChatGoogleGenerativeAI
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "GOOGLE_API_KEY"
+      apiKey: "GOOGLE_API_KEY",
     };
   }
 
@@ -231,8 +231,8 @@ export class ChatGoogleGenerativeAI
         maxOutputTokens: this.maxOutputTokens,
         temperature: this.temperature,
         topP: this.topP,
-        topK: this.topK
-      }
+        topK: this.topK,
+      },
     });
   }
 
@@ -259,7 +259,7 @@ export class ChatGoogleGenerativeAI
         let output;
         try {
           output = await this.client.generateContent({
-            contents: prompt
+            contents: prompt,
           });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
@@ -292,7 +292,7 @@ export class ChatGoogleGenerativeAI
       { signal: options?.signal },
       async () => {
         const { stream } = await this.client.generateContentStream({
-          contents: prompt
+          contents: prompt,
         });
         return stream;
       }
