@@ -112,6 +112,9 @@ embeddings/tensorflow.d.ts
 embeddings/voyage.cjs
 embeddings/voyage.js
 embeddings/voyage.d.ts
+embeddings/yandex.cjs
+embeddings/yandex.js
+embeddings/yandex.d.ts
 llms/ai21.cjs
 llms/ai21.js
 llms/ai21.d.ts

@@ -49,6 +49,7 @@ const entrypoints = {
   "embeddings/ollama": "embeddings/ollama",
   "embeddings/tensorflow": "embeddings/tensorflow",
   "embeddings/voyage": "embeddings/voyage",
+  "embeddings/yandex": "embeddings/yandex",
   // llms
   "llms/ai21": "llms/ai21",
   "llms/aleph_alpha": "llms/aleph_alpha",

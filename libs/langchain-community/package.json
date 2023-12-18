@@ -661,6 +661,11 @@
       "import": "./embeddings/voyage.js",
       "require": "./embeddings/voyage.cjs"
     },
+    "./embeddings/yandex": {
+      "types": "./embeddings/yandex.d.ts",
+      "import": "./embeddings/yandex.js",
+      "require": "./embeddings/yandex.cjs"
+    },
     "./llms/ai21": {
       "types": "./llms/ai21.d.ts",
       "import": "./llms/ai21.js",
@@ -1344,6 +1349,9 @@
     "embeddings/voyage.cjs",
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",
+    "embeddings/yandex.cjs",
+    "embeddings/yandex.js",
+    "embeddings/yandex.d.ts",
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
