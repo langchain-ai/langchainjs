@@ -15,7 +15,7 @@ test("Test Google AI", async () => {
 test("Test Google AI generation", async () => {
   const model = new ChatGoogleGenerativeAI({});
   const res = await model.generate([
-    [["human", `Translate "I love programming" into Korean.`]],
+    [["human", `Translate "I love programming" into Korean.`]]
   ]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
@@ -23,10 +23,10 @@ test("Test Google AI generation", async () => {
 
 test("Test Google AI generation with a stop sequence", async () => {
   const model = new ChatGoogleGenerativeAI({
-    stopSequences: ["two", "2"],
+    stopSequences: ["two", "2"]
   });
   const res = await model.invoke([
-    ["human", `What are the first three positive whole numbers?`],
+    ["human", `What are the first three positive whole numbers?`]
   ]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
@@ -40,8 +40,8 @@ test("Test Google AI generation with a system message", async () => {
   const res = await model.generate([
     [
       ["system", `You are an amazing translator.`],
-      ["human", `Translate "I love programming" into Korean.`],
-    ],
+      ["human", `Translate "I love programming" into Korean.`]
+    ]
   ]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
@@ -54,22 +54,62 @@ test("Test Google AI multimodal generation", async () => {
     await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"))
   ).toString("base64");
   const model = new ChatGoogleGenerativeAI({
-    modelName: "gemini-pro-vision",
+    modelName: "gemini-pro-vision"
   });
   const res = await model.invoke([
     new HumanMessage({
       content: [
         {
           type: "text",
-          text: "Describe the following image:",
+          text: "Describe the following image:"
         },
         {
           type: "image_url",
-          image_url: `data:image/png;base64,${imageData}`,
-        },
-      ],
-    }),
+          image_url: `data:image/png;base64,${imageData}`
+        }
+      ]
+    })
   ]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
+});
+
+test("Test Google AI handleLLMNewToken callback", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  let tokens = "";
+  const res = await model.call(
+    [new HumanMessage("what is 1 + 1?")],
+    undefined,
+    [
+      {
+        handleLLMNewToken(token: string) {
+          tokens += token;
+        }
+      }
+    ]
+  );
+  console.log({ tokens });
+  const responseContent = typeof res.content === "string" ? res.content : "";
+  expect(tokens).toBe(responseContent);
+});
+
+test("Test Google AI handleLLMNewToken callback with streaming", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  let tokens = "";
+  const res = await model.stream([new HumanMessage("what is 1 + 1?")], {
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          tokens += token;
+        }
+      }
+    ]
+  });
+  console.log({ tokens });
+  let responseContent = "";
+  for await (const streamItem of res) {
+    responseContent += streamItem.content;
+  }
+  console.log({ tokens });
+  expect(tokens).toBe(responseContent);
 });
