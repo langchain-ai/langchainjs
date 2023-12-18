@@ -34,7 +34,7 @@ const refinePrompt = new PromptTemplate({
 // Create the models and chain
 const embeddings = new OpenAIEmbeddings();
 
-const progressEmitter = async (progress: number) => {
+const onDocumentProcessed = async (progress: number) => {
   console.log("Progress: ", progress);
 };
 
@@ -42,7 +42,7 @@ const model = new OpenAI({ temperature: 0 });
 const chain = loadQARefineChain(model, {
   questionPrompt,
   refinePrompt,
-  progressEmitter, // Optional async progress checker
+  onDocumentProcessed, // Optional async progress checker
 });
 
 // Load the documents and create the vector store

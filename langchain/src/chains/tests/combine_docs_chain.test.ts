@@ -99,13 +99,13 @@ test("Test RefineDocumentsChain", async () => {
 
 test("Test RefineDocumentsChain with progress callback", async () => {
   const model = new FakeLLM({});
-  const mockProgressEmitter = jest
+  const mockonDocumentProcessed = jest
     .fn<(progress: number) => Promise<void>>()
     .mockResolvedValue(undefined);
 
   const chain = loadSummarizationChain(model, {
     type: "refine",
-    progressEmitter: mockProgressEmitter,
+    onDocumentProcessed: mockonDocumentProcessed,
   });
   const docs = [
     new Document({ pageContent: "Zibon went to harvard" }),
@@ -118,6 +118,6 @@ test("Test RefineDocumentsChain with progress callback", async () => {
 
   await chain.run(docs);
 
-  expect(mockProgressEmitter).toHaveBeenCalled();
-  expect(mockProgressEmitter.mock.calls.length).toBeGreaterThan(0);
+  expect(mockonDocumentProcessed).toHaveBeenCalled();
+  expect(mockonDocumentProcessed.mock.calls.length).toBeGreaterThan(0);
 });
