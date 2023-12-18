@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -34,8 +34,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1",
-    "@langchain/openai": "~0.0.5",
+    "@langchain/core": "~0.1.2",
+    "@langchain/openai": "~0.0.6",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
@@ -1066,6 +1066,11 @@
       "import": "./retrievers/tavily_search_api.js",
       "require": "./retrievers/tavily_search_api.cjs"
     },
+    "./retrievers/vectara_summary": {
+      "types": "./retrievers/vectara_summary.d.ts",
+      "import": "./retrievers/vectara_summary.js",
+      "require": "./retrievers/vectara_summary.cjs"
+    },
     "./retrievers/zep": {
       "types": "./retrievers/zep.d.ts",
       "import": "./retrievers/zep.js",
@@ -1587,6 +1592,9 @@
     "retrievers/tavily_search_api.cjs",
     "retrievers/tavily_search_api.js",
     "retrievers/tavily_search_api.d.ts",
+    "retrievers/vectara_summary.cjs",
+    "retrievers/vectara_summary.js",
+    "retrievers/vectara_summary.d.ts",
     "retrievers/zep.cjs",
     "retrievers/zep.js",
     "retrievers/zep.d.ts",

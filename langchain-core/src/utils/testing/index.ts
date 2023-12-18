@@ -14,7 +14,7 @@ import {
   BaseChatModel,
   BaseChatModelParams,
 } from "../../language_models/chat_models.js";
-import { LLM } from "../../language_models/llms.js";
+import { BaseLLMParams, LLM } from "../../language_models/llms.js";
 import {
   BaseMessage,
   AIMessage,
@@ -72,8 +72,10 @@ export class FakeLLM extends LLM {
 
   thrownErrorString?: string;
 
-  constructor(fields: { response?: string; thrownErrorString?: string }) {
-    super({});
+  constructor(
+    fields: { response?: string; thrownErrorString?: string } & BaseLLMParams
+  ) {
+    super(fields);
     this.response = fields.response;
     this.thrownErrorString = fields.thrownErrorString;
   }
@@ -82,11 +84,17 @@ export class FakeLLM extends LLM {
     return "fake";
   }
 
-  async _call(prompt: string): Promise<string> {
+  async _call(
+    prompt: string,
+    _options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
     if (this.thrownErrorString) {
       throw new Error(this.thrownErrorString);
     }
-    return this.response ?? prompt;
+    const response = this.response ?? prompt;
+    await runManager?.handleLLMNewToken(response);
+    return response;
   }
 }
 
@@ -118,7 +126,8 @@ export class FakeChatModel extends BaseChatModel {
 
   async _generate(
     messages: BaseMessage[],
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (options?.stop?.length) {
       return {
@@ -131,6 +140,7 @@ export class FakeChatModel extends BaseChatModel {
       };
     }
     const text = messages.map((m) => m.content).join("\n");
+    await runManager?.handleLLMNewToken(text);
     return {
       generations: [
         {

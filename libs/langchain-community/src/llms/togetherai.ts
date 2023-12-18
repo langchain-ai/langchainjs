@@ -92,6 +92,10 @@ export interface TogetherAIInputs extends BaseLLMParams {
    * Run an LLM-based input-output safeguard model on top of any model.
    */
   safetyModel?: string;
+  /**
+   * Limit the number of tokens generated.
+   */
+  maxTokens?: number;
 }
 
 export interface TogetherAICallOptions
@@ -105,6 +109,7 @@ export interface TogetherAICallOptions
       | "repetitionPenalty"
       | "logprobs"
       | "safetyModel"
+      | "maxTokens"
     > {}
 
 export class TogetherAI extends LLM<TogetherAICallOptions> {
@@ -127,6 +132,8 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
   repetitionPenalty = 1;
 
   logprobs?: number;
+
+  maxTokens?: number;
 
   safetyModel?: string;
 
@@ -154,6 +161,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     this.repetitionPenalty = inputs.repetitionPenalty ?? this.repetitionPenalty;
     this.logprobs = inputs.logprobs;
     this.safetyModel = inputs.safetyModel;
+    this.maxTokens = inputs.maxTokens;
   }
 
   _llmType() {
@@ -179,6 +187,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       logprobs: this?.logprobs ?? options?.logprobs,
       stream_tokens: this?.streaming,
       safety_model: this?.safetyModel ?? options?.safetyModel,
+      max_tokens: this?.maxTokens ?? options?.maxTokens,
     };
     return body;
   }
