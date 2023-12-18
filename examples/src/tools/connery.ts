@@ -33,8 +33,6 @@ const agent = await initializeAgentExecutorWithOptions([sendEmailAction], llm, {
   verbose: true,
 });
 const agentRunResult = await agent.invoke({
-  input:
-    `Send an email to ${recepientEmail} with the subject 'Test email' ` +
-    `and the body 'This is a test email sent by Connery using the OpenAI Functions agent.'`,
+  input: `Send an email to the ${recepientEmail} and say that I will be late for the meeting.`,
 });
 console.log(agentRunResult);
