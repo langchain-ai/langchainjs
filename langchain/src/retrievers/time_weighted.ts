@@ -1,6 +1,6 @@
+import { BaseRetriever, BaseRetrieverInput } from "@langchain/core/retrievers";
 import { VectorStore } from "../vectorstores/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
 /**

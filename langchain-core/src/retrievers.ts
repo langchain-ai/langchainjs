@@ -6,7 +6,7 @@ import {
   parseCallbackConfigArg,
 } from "./callbacks/manager.js";
 import { Document } from "./documents/document.js";
-import { Runnable } from "./runnables/base.js";
+import { Runnable, type RunnableInterface } from "./runnables/base.js";
 import { RunnableConfig } from "./runnables/config.js";
 
 /**
@@ -19,12 +19,23 @@ export interface BaseRetrieverInput {
   verbose?: boolean;
 }
 
+export interface BaseRetrieverInterface
+  extends RunnableInterface<string, Document[]> {
+  getRelevantDocuments(
+    query: string,
+    config?: Callbacks | BaseCallbackConfig
+  ): Promise<Document[]>;
+}
+
 /**
  * Abstract base class for a Document retrieval system. A retrieval system
  * is defined as something that can take string queries and return the
  * most 'relevant' Documents from some source.
  */
-export abstract class BaseRetriever extends Runnable<string, Document[]> {
+export abstract class BaseRetriever
+  extends Runnable<string, Document[]>
+  implements BaseRetrieverInterface
+{
   callbacks?: Callbacks;
 
   tags?: string[];

@@ -1,8 +1,8 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
 import { BaseChain, ChainInputs } from "./base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
-import { BaseRetriever } from "../schema/retriever.js";
 import {
   StuffQAChainParams,
   loadQAStuffChain,
@@ -16,7 +16,7 @@ export type LoadValues = Record<string, any>;
  * Interface for the input parameters of the RetrievalQAChain class.
  */
 export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
   combineDocumentsChain: BaseChain;
   inputKey?: string;
   returnSourceDocuments?: boolean;
@@ -67,7 +67,7 @@ export class RetrievalQAChain
     );
   }
 
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -134,7 +134,7 @@ export class RetrievalQAChain
    */
   static fromLLM(
     llm: BaseLanguageModelInterface,
-    retriever: BaseRetriever,
+    retriever: BaseRetrieverInterface,
     options?: Partial<
       Omit<
         RetrievalQAChainInput,

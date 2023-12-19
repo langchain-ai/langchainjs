@@ -1,3 +1,4 @@
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
 import { CallbackManagerForChainRun } from "../../../callbacks/manager.js";
 import { ChatOpenAI } from "../../../chat_models/openai.js";
 import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
@@ -8,7 +9,6 @@ import {
   isBaseMessage,
 } from "../../../schema/index.js";
 import { StringOutputParser } from "../../../schema/output_parser.js";
-import { BaseRetriever } from "../../../schema/retriever.js";
 import { BaseChain, ChainInputs } from "../../../chains/base.js";
 import {
   GetPredictionViolationsResponse,
@@ -32,7 +32,7 @@ export interface ViolationOfExpectationsChainInput extends ChainInputs {
    * The retriever to use for retrieving stored
    * thoughts and insights.
    */
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
   /**
    * The LLM to use
    */
@@ -67,7 +67,7 @@ export class ViolationOfExpectationsChain
     return [this.thoughtsKey];
   }
 
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
 
   llm: ChatOpenAI;
 
@@ -467,7 +467,7 @@ export class ViolationOfExpectationsChain
    */
   static fromLLM(
     llm: ChatOpenAI,
-    retriever: BaseRetriever,
+    retriever: BaseRetrieverInterface,
     options?: Partial<
       Omit<ViolationOfExpectationsChainInput, "llm" | "retriever">
     >

@@ -1,6 +1,10 @@
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+  type BaseRetrieverInterface,
+} from "@langchain/core/retrievers";
 import { BaseDocumentCompressor } from "./document_compressors/index.js";
 import { Document } from "../document.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
 /**
@@ -10,7 +14,7 @@ import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
  */
 export interface ContextualCompressionRetrieverArgs extends BaseRetrieverInput {
   baseCompressor: BaseDocumentCompressor;
-  baseRetriever: BaseRetriever;
+  baseRetriever: BaseRetrieverInterface;
 }
 
 /**
@@ -37,7 +41,7 @@ export class ContextualCompressionRetriever extends BaseRetriever {
 
   baseCompressor: BaseDocumentCompressor;
 
-  baseRetriever: BaseRetriever;
+  baseRetriever: BaseRetrieverInterface;
 
   constructor(fields: ContextualCompressionRetrieverArgs) {
     super(fields);
