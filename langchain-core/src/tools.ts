@@ -10,7 +10,7 @@ import {
   type BaseLangChainParams,
 } from "./language_models/base.js";
 import type { RunnableConfig } from "./runnables/config.js";
-import { RunnableInterface } from "./runnables/base.js";
+import type { RunnableInterface } from "./runnables/base.js";
 
 /**
  * Parameters for the Tool classes.

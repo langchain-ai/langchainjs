@@ -6,7 +6,7 @@ import {
   HumanMessage,
   coerceMessageLikeToMessage,
 } from "../messages/index.js";
-import { BasePromptValueInterface } from "../prompt_values.js";
+import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
   LLMResult,
   RUN_KEY,
