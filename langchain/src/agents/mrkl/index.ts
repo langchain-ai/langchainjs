@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
@@ -151,7 +151,7 @@ export class ZeroShotAgent extends Agent {
    * @returns A new instance of ZeroShotAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     tools: Tool[],
     args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
@@ -173,7 +173,10 @@ export class ZeroShotAgent extends Agent {
   }
 
   static async deserialize(
-    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedZeroShotAgent & {
+      llm?: BaseLanguageModelInterface;
+      tools?: Tool[];
+    }
   ): Promise<ZeroShotAgent> {
     const { llm, tools, ...rest } = data;
     return deserializeHelper(
@@ -181,7 +184,7 @@ export class ZeroShotAgent extends Agent {
       tools,
       rest,
       (
-        llm: BaseLanguageModel,
+        llm: BaseLanguageModelInterface,
         tools: Tool[],
         args: SerializedFromLLMAndTools
       ) =>

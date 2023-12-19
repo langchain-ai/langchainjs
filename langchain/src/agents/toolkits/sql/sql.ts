@@ -1,3 +1,4 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Tool } from "../../../tools/base.js";
 import {
   InfoSqlTool,
@@ -6,7 +7,6 @@ import {
   QuerySqlTool,
 } from "../../../tools/sql.js";
 import { Toolkit } from "../base.js";
-import { BaseLanguageModel } from "../../../base_language/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
 import { renderTemplate } from "../../../prompts/template.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
@@ -42,7 +42,7 @@ export class SqlToolkit extends Toolkit {
 
   dialect = "sqlite";
 
-  constructor(db: SqlDatabase, llm?: BaseLanguageModel) {
+  constructor(db: SqlDatabase, llm?: BaseLanguageModelInterface) {
     super();
     this.db = db;
     this.tools = [
@@ -55,7 +55,7 @@ export class SqlToolkit extends Toolkit {
 }
 
 export function createSqlAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: SqlToolkit,
   args?: SqlCreatePromptArgs
 ) {

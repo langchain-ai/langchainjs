@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "../base_language/index.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
@@ -374,7 +374,7 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   /** Construct an agent from an LLM and a list of tools */
   static fromLLMAndTools(
-    _llm: BaseLanguageModel,
+    _llm: BaseLanguageModelInterface,
     _tools: StructuredTool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _args?: AgentArgs
@@ -502,7 +502,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    * Load an agent from a json-like object describing it.
    */
   static async deserialize(
-    data: SerializedAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedAgent & { llm?: BaseLanguageModelInterface; tools?: Tool[] }
   ): Promise<Agent> {
     switch (data._type) {
       case "zero-shot-react-description": {

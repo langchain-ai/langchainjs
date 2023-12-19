@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import {
   CriteriaLike,
   CriteriaEvalChain,
@@ -21,7 +21,7 @@ import { TrajectoryEvalChain } from "./agents/index.js";
 import { BaseChatModel } from "../chat_models/base.js";
 
 export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
-  llm?: BaseLanguageModel;
+  llm?: BaseLanguageModelInterface;
 
   chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>;
   /**

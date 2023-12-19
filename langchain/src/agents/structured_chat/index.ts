@@ -1,7 +1,7 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
@@ -195,7 +195,7 @@ export class StructuredChatAgent extends Agent {
    * @returns A new instance of StructuredChatAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     tools: StructuredTool[],
     args?: StructuredChatCreatePromptArgs & AgentArgs
   ) {

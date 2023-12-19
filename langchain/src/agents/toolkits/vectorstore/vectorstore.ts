@@ -1,8 +1,8 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Tool } from "../../../tools/base.js";
 import { VectorStoreQATool } from "../../../tools/vectorstore.js";
 import { VectorStore } from "../../../vectorstores/base.js";
 import { Toolkit } from "../base.js";
-import { BaseLanguageModel } from "../../../base_language/index.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { VECTOR_PREFIX, VECTOR_ROUTER_PREFIX } from "./prompt.js";
 import { SUFFIX } from "../../mrkl/prompt.js";
@@ -43,9 +43,12 @@ export interface VectorStoreInfo {
 export class VectorStoreToolkit extends Toolkit {
   tools: Tool[];
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
-  constructor(vectorStoreInfo: VectorStoreInfo, llm: BaseLanguageModel) {
+  constructor(
+    vectorStoreInfo: VectorStoreInfo,
+    llm: BaseLanguageModelInterface
+  ) {
     super();
     const description = VectorStoreQATool.getDescription(
       vectorStoreInfo.name,
@@ -71,9 +74,12 @@ export class VectorStoreRouterToolkit extends Toolkit {
 
   vectorStoreInfos: VectorStoreInfo[];
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
-  constructor(vectorStoreInfos: VectorStoreInfo[], llm: BaseLanguageModel) {
+  constructor(
+    vectorStoreInfos: VectorStoreInfo[],
+    llm: BaseLanguageModelInterface
+  ) {
     super();
     this.llm = llm;
     this.vectorStoreInfos = vectorStoreInfos;
@@ -91,7 +97,7 @@ export class VectorStoreRouterToolkit extends Toolkit {
 }
 
 export function createVectorStoreAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: VectorStoreToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {
@@ -119,7 +125,7 @@ export function createVectorStoreAgent(
 }
 
 export function createVectorStoreRouterAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: VectorStoreRouterToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {

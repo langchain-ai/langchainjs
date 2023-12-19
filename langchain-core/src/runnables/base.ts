@@ -31,8 +31,10 @@ import { RootListenersTracer } from "../tracers/root_listener.js";
  * Should not change on patch releases.
  */
 export interface RunnableInterface<
-  RunInput,
-  RunOutput,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
   CallOptions extends RunnableConfig = RunnableConfig
 > {
   invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;

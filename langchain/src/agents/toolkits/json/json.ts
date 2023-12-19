@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Tool } from "../../../tools/base.js";
 import {
   JsonGetValueTool,
@@ -47,7 +47,7 @@ export class JsonToolkit extends Toolkit {
  * @returns An AgentExecutor for executing the created JSON agent with the tools.
  */
 export function createJsonAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: JsonToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {

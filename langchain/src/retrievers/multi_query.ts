@@ -1,10 +1,10 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../chains/llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import { Document } from "../document.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { CallbackManagerForRetrieverRun } from "../callbacks/index.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 
 interface LineList {
@@ -103,7 +103,7 @@ export class MultiQueryRetriever extends BaseRetriever {
 
   static fromLLM(
     fields: Omit<MultiQueryRetrieverInput, "llmChain"> & {
-      llm: BaseLanguageModel;
+      llm: BaseLanguageModelInterface;
       prompt?: BasePromptTemplate;
     }
   ): MultiQueryRetriever {

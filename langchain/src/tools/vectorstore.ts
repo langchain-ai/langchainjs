@@ -1,5 +1,5 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { VectorStore } from "../vectorstores/base.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { VectorDBQAChain } from "../chains/vector_db_qa.js";
 import { Tool } from "./base.js";
 
@@ -8,7 +8,7 @@ import { Tool } from "./base.js";
  */
 interface VectorStoreTool {
   vectorStore: VectorStore;
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 }
 
 /**
@@ -23,7 +23,7 @@ export class VectorStoreQATool extends Tool implements VectorStoreTool {
 
   vectorStore: VectorStore;
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   name: string;
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { MultiRouteChain, MultiRouteChainInput } from "./multi_route.js";
 import { BaseChain } from "../../chains/base.js";
 import { interpolateFString } from "../../prompts/template.js";
@@ -73,7 +73,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
    * @deprecated Use `fromRetrieversAndPrompts` instead
    */
   static fromRetrievers(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     retrieverNames: string[],
     retrieverDescriptions: string[],
     retrievers: BaseRetriever[],
@@ -108,7 +108,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
    * @returns A new instance of MultiRetrievalQAChain.
    */
   static fromLLMAndRetrievers(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     {
       retrieverNames,
       retrieverDescriptions,

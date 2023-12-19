@@ -20,7 +20,7 @@ import {
 } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
 import { encodingForModel } from "../utils/tiktoken.js";
-import { Runnable } from "../runnables/base.js";
+import { Runnable, type RunnableInterface } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
 
 // https://www.npmjs.com/package/js-tiktoken
@@ -239,6 +239,48 @@ export type BaseLanguageModelInput =
   | string
   | BaseMessageLike[];
 
+export interface BaseLanguageModelInterface<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
+> extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
+  CallOptions: CallOptions;
+
+  get callKeys(): string[];
+
+  generatePrompt(
+    promptValues: BasePromptValue[],
+    options?: string[] | CallOptions,
+    callbacks?: Callbacks
+  ): Promise<LLMResult>;
+
+  predict(
+    text: string,
+    options?: string[] | CallOptions,
+    callbacks?: Callbacks
+  ): Promise<string>;
+
+  predictMessages(
+    messages: BaseMessage[],
+    options?: string[] | CallOptions,
+    callbacks?: Callbacks
+  ): Promise<BaseMessage>;
+
+  _modelType(): string;
+
+  _llmType(): string;
+
+  getNumTokens(content: MessageContent): Promise<number>;
+
+  /**
+   * Get the identifying parameters of the LLM.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _identifyingParams(): Record<string, any>;
+
+  serialize(): SerializedLLM;
+}
+
 /**
  * Base class for language models.
  */
@@ -248,7 +290,9 @@ export abstract class BaseLanguageModel<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
   >
   extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
-  implements BaseLanguageModelParams
+  implements
+    BaseLanguageModelParams,
+    BaseLanguageModelInterface<RunOutput, CallOptions>
 {
   declare CallOptions: CallOptions;
 

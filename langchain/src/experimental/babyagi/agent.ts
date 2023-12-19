@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { BaseChain, ChainInputs } from "../../chains/base.js";
 import { SerializedBaseChain } from "../../chains/serde.js";
@@ -328,7 +328,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
   }: Optional<
     BabyAGIInputs,
     "executionChain" | "creationChain" | "prioritizationChain"
-  > & { llm: BaseLanguageModel }) {
+  > & { llm: BaseLanguageModelInterface }) {
     const creationChain = TaskCreationChain.fromLLM({
       llm,
       verbose,

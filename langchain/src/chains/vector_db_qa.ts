@@ -1,7 +1,7 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseChain, ChainInputs } from "./base.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { ChainValues } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
@@ -140,7 +140,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
    * @returns A new instance of VectorDBQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     vectorstore: VectorStore,
     options?: Partial<
       Omit<VectorDBQAChainInput, "combineDocumentsChain" | "vectorstore">

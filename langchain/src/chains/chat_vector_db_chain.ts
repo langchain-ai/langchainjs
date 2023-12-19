@@ -1,5 +1,5 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
@@ -180,7 +180,7 @@ export class ChatVectorDBQAChain
    * @returns New instance of ChatVectorDBQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     vectorstore: VectorStore,
     options: {
       inputKey?: string;

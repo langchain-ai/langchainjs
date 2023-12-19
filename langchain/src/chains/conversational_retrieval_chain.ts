@@ -1,5 +1,5 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import {
   ChainValues,
@@ -238,7 +238,7 @@ export class ConversationalRetrievalQAChain
   /**
    * Static method to create a new ConversationalRetrievalQAChain from a
    * BaseLanguageModel and a BaseRetriever.
-   * @param llm {@link BaseLanguageModel} instance used to generate a new question.
+   * @param llm {@link BaseLanguageModelInterface} instance used to generate a new question.
    * @param retriever {@link BaseRetriever} instance used to retrieve relevant documents.
    * @param options.returnSourceDocuments Whether to return source documents in the final output
    * @param options.questionGeneratorChainOptions Options to initialize the standalone question generation chain used as the first internal step
@@ -246,7 +246,7 @@ export class ConversationalRetrievalQAChain
    * @returns A new instance of ConversationalRetrievalQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     retriever: BaseRetriever,
     options: {
       outputKey?: string; // not used
@@ -256,7 +256,7 @@ export class ConversationalRetrievalQAChain
       /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
       questionGeneratorChainOptions?: {
-        llm?: BaseLanguageModel;
+        llm?: BaseLanguageModelInterface;
         template?: string;
       };
       qaChainOptions?: QAChainParams;

@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Tool } from "../../../tools/base.js";
 import { DynamicTool } from "../../../tools/dynamic.js";
 import { JsonSpec } from "../../../tools/json.js";
@@ -56,7 +56,11 @@ export class RequestsToolkit extends Toolkit {
  * ```
  */
 export class OpenApiToolkit extends RequestsToolkit {
-  constructor(jsonSpec: JsonSpec, llm: BaseLanguageModel, headers?: Headers) {
+  constructor(
+    jsonSpec: JsonSpec,
+    llm: BaseLanguageModelInterface,
+    headers?: Headers
+  ) {
     super(headers);
     const jsonAgent = createJsonAgent(llm, new JsonToolkit(jsonSpec));
     this.tools = [
@@ -93,7 +97,7 @@ export class OpenApiToolkit extends RequestsToolkit {
  * @link See https://js.langchain.com/docs/security for more information.
  */
 export function createOpenApiAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   openApiToolkit: OpenApiToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {

@@ -1,7 +1,7 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
 import { isNode } from "../util/env.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
@@ -152,7 +152,7 @@ type Headers = Record<string, any>;
  * callback manager, and a text splitter.
  */
 export interface WebBrowserArgs extends ToolParams {
-  model: BaseLanguageModel;
+  model: BaseLanguageModelInterface;
 
   embeddings: Embeddings;
 
@@ -189,7 +189,7 @@ export class WebBrowser extends Tool {
     return [...super.lc_namespace, "webbrowser"];
   }
 
-  private model: BaseLanguageModel;
+  private model: BaseLanguageModelInterface;
 
   private embeddings: Embeddings;
 

@@ -1,9 +1,10 @@
-import { BaseChain, ChainInputs } from "./base.js";
-import { BasePromptTemplate } from "../prompts/base.js";
 import {
   BaseLanguageModel,
+  BaseLanguageModelInterface,
   BaseLanguageModelInput,
-} from "../base_language/index.js";
+} from "@langchain/core/language_models/base";
+import { BaseChain, ChainInputs } from "./base.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import {
   ChainValues,
   Generation,
@@ -22,10 +23,10 @@ import {
   Callbacks,
 } from "../callbacks/manager.js";
 import { NoOpOutputParser } from "../output_parsers/noop.js";
-import { Runnable } from "../schema/runnable/base.js";
+import { Runnable, type RunnableInterface } from "../schema/runnable/base.js";
 
 type LLMType =
-  | BaseLanguageModel
+  | BaseLanguageModelInterface
   | Runnable<BaseLanguageModelInput, string>
   | Runnable<BaseLanguageModelInput, BaseMessage>;
 
@@ -51,10 +52,10 @@ export interface LLMChainInput<
 }
 
 function isBaseLanguageModel(llmLike: unknown): llmLike is BaseLanguageModel {
-  return typeof (llmLike as BaseLanguageModel)._llmType === "function";
+  return typeof (llmLike as BaseLanguageModelInterface)._llmType === "function";
 }
 
-function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
+function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
   if (isBaseLanguageModel(llmLike)) {
     return llmLike;
   } else if ("bound" in llmLike && Runnable.isRunnable(llmLike.bound)) {

@@ -1,3 +1,7 @@
+import type {
+  BaseLanguageModelInterface,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
@@ -22,10 +26,6 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
-import {
-  BaseLanguageModel,
-  BaseLanguageModelInput,
-} from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   FunctionsAgentAction,
@@ -151,7 +151,7 @@ export class OpenAIAgent extends Agent {
    * @returns An instance of OpenAIAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     tools: StructuredTool[],
     args?: OpenAIAgentCreatePromptArgs & Pick<AgentArgs, "callbacks">
   ) {

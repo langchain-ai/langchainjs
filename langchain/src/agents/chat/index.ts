@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   ChatPromptTemplate,
@@ -144,13 +144,13 @@ export class ChatAgent extends Agent {
   /**
    * Creates a ChatAgent instance using a language model, tools, and
    * optional arguments.
-   * @param llm BaseLanguageModel instance to use in the agent.
+   * @param llm BaseLanguageModelInterface instance to use in the agent.
    * @param tools Array of Tool instances to include in the agent.
    * @param args Optional arguments to customize the agent and prompt.
    * @returns ChatAgent instance
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     tools: Tool[],
     args?: ChatCreatePromptArgs & AgentArgs
   ) {

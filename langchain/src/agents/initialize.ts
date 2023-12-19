@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { CallbackManager } from "../callbacks/manager.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { StructuredTool, Tool } from "../tools/base.js";
@@ -25,7 +25,7 @@ type AgentType =
  */
 export const initializeAgentExecutor = async (
   tools: Tool[],
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   _agentType?: AgentType,
   _verbose?: boolean,
   _callbackManager?: CallbackManager
@@ -107,17 +107,17 @@ export type InitializeAgentExecutorOptionsStructured =
  */
 export async function initializeAgentExecutorWithOptions(
   tools: StructuredTool[],
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   options: InitializeAgentExecutorOptionsStructured
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
   tools: Tool[],
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   options?: InitializeAgentExecutorOptions
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
   tools: StructuredTool[] | Tool[],
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   options:
     | InitializeAgentExecutorOptions
     | InitializeAgentExecutorOptionsStructured = {

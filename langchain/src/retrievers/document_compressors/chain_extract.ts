@@ -1,7 +1,7 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Document } from "../../document.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { BaseOutputParser } from "../../schema/output_parser.js";
 import { BaseDocumentCompressor } from "./index.js";
 import { PROMPT_TEMPLATE } from "./chain_extract_prompt.js";
@@ -105,7 +105,7 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
    * @returns A new instance of LLMChainExtractor.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     prompt?: PromptTemplate,
     getInput?: (query: string, doc: Document) => Record<string, unknown>
   ): LLMChainExtractor {

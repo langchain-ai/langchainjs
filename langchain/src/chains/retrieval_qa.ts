@@ -1,5 +1,5 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseChain, ChainInputs } from "./base.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
 import { BaseRetriever } from "../schema/retriever.js";
@@ -133,7 +133,7 @@ export class RetrievalQAChain
    * @returns A new instance of RetrievalQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     retriever: BaseRetriever,
     options?: Partial<
       Omit<

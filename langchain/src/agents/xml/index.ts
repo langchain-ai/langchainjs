@@ -1,3 +1,4 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Tool } from "../../tools/base.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
@@ -14,7 +15,6 @@ import {
 import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
 
 /**
@@ -101,7 +101,7 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
    * @returns An instance of XMLAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     tools: Tool[],
     args?: XMLAgentInput & Pick<AgentArgs, "callbacks">
   ) {
