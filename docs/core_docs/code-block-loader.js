@@ -64,7 +64,7 @@ async function webpackLoader(content, map, meta) {
       path.resolve(__dirname, "..", "api_refs", "public", componentPath);
 
     const getPackageModuleName = (moduleName, imported, category) => {
-      const prefix = `${category}/libs_langchain`;
+      const prefix = `${category}/langchain`;
       const suffix = `.${imported}.html`;
 
       if (moduleName.startsWith("community")) {

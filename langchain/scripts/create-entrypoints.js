@@ -8,10 +8,10 @@ import { identifySecrets } from "./identify-secrets.js";
 // This is used to generate the `exports` field in package.json.
 // Order is not important.
 const entrypoints = {
-  "load": "load/index",
+  load: "load/index",
   "load/serializable": "load/serializable",
   // agents
-  "agents": "agents/index",
+  agents: "agents/index",
   "agents/load": "agents/load",
   "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
@@ -28,9 +28,9 @@ const entrypoints = {
   "agents/xml/output_parser": "agents/xml/output_parser",
   "agents/openai/output_parser": "agents/openai/output_parser",
   // base language
-  "base_language": "base_language/index",
+  base_language: "base_language/index",
   // tools
-  "tools": "tools/index",
+  tools: "tools/index",
   "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
@@ -42,7 +42,7 @@ const entrypoints = {
   "tools/google_calendar": "tools/google_calendar/index",
   "tools/google_places": "tools/google_places",
   // chains
-  "chains": "chains/index",
+  chains: "chains/index",
   "chains/combine_documents/reduce": "chains/combine_documents/reduce",
   "chains/load": "chains/load",
   "chains/openai_functions": "chains/openai_functions/index",
@@ -95,7 +95,7 @@ const entrypoints = {
   "llms/yandex": "llms/yandex",
   "llms/fake": "llms/fake",
   // prompts
-  "prompts": "prompts/index",
+  prompts: "prompts/index",
   "prompts/load": "prompts/load",
   // vectorstores
   "vectorstores/clickhouse": "vectorstores/clickhouse",
@@ -139,12 +139,12 @@ const entrypoints = {
   "vectorstores/xata": "vectorstores/xata",
   "vectorstores/zep": "vectorstores/zep",
   // text_splitter
-  "text_splitter": "text_splitter",
+  text_splitter: "text_splitter",
   // memory
-  "memory": "memory/index",
+  memory: "memory/index",
   "memory/zep": "memory/zep",
   // document
-  "document": "document",
+  document: "document",
   // document_loaders
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
@@ -218,7 +218,7 @@ const entrypoints = {
   "chat_models/yandex": "chat_models/yandex",
   "chat_models/fake": "chat_models/fake",
   // schema
-  "schema": "schema/index",
+  schema: "schema/index",
   "schema/document": "schema/document",
   "schema/output_parser": "schema/output_parser",
   "schema/prompt_template": "schema/prompt_template",
@@ -227,9 +227,9 @@ const entrypoints = {
   "schema/runnable": "schema/runnable/index",
   "schema/storage": "schema/storage",
   // sql_db
-  "sql_db": "sql_db",
+  sql_db: "sql_db",
   // callbacks
-  "callbacks": "callbacks/index",
+  callbacks: "callbacks/index",
   "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
   // output_parsers
   "output_parsers": "output_parsers/index",
@@ -264,7 +264,7 @@ const entrypoints = {
   "retrievers/self_query/vectara": "retrievers/self_query/vectara",
   "retrievers/vespa": "retrievers/vespa",
   // cache
-  "cache": "cache/index",
+  cache: "cache/index",
   "cache/cloudflare_kv": "cache/cloudflare_kv",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
@@ -300,7 +300,7 @@ const entrypoints = {
   // graphs
   "graphs/neo4j_graph": "graphs/neo4j_graph",
   // hub
-  "hub": "hub",
+  hub: "hub",
   // utilities
   "util/convex": "util/convex",
   "util/document": "util/document",
@@ -328,9 +328,9 @@ const entrypoints = {
   "experimental/masking": "experimental/masking/index",
   "experimental/tools/pyinterpreter": "experimental/tools/pyinterpreter",
   // evaluation
-  "evaluation": "evaluation/index",
+  evaluation: "evaluation/index",
   // runnables
-  "runnables": "runnables/index",
+  runnables: "runnables/index",
   "runnables/remote": "runnables/remote",
 };
 
