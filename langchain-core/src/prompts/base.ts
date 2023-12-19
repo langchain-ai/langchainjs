@@ -180,7 +180,9 @@ export abstract class BasePromptTemplate<
    */
   static async deserialize(
     data: SerializedBasePromptTemplate
-  ): Promise<BasePromptTemplate<InputValues, BasePromptValueInterface, string>> {
+  ): Promise<
+    BasePromptTemplate<InputValues, BasePromptValueInterface, string>
+  > {
     switch (data._type) {
       case "prompt": {
         const { PromptTemplate } = await import("./prompt.js");

@@ -5,11 +5,7 @@ import {
   getBufferString,
 } from "./messages/index.js";
 
-export interface BasePromptValueInterface {
-  lc_namespace: string[];
-
-  lc_serializable: boolean;
-  
+export interface BasePromptValueInterface extends Serializable {
   toString(): string;
 
   toChatMessages(): BaseMessage[];
@@ -17,7 +13,7 @@ export interface BasePromptValueInterface {
 
 export interface StringPromptValueInterface extends BasePromptValueInterface {
   value: string;
-};
+}
 
 export interface ChatPromptValueInterface extends BasePromptValueInterface {
   messages: BaseMessage[];
@@ -26,7 +22,10 @@ export interface ChatPromptValueInterface extends BasePromptValueInterface {
 /**
  * Base PromptValue class. All prompt values should extend this class.
  */
-export abstract class BasePromptValue extends Serializable implements BasePromptValueInterface {
+export abstract class BasePromptValue
+  extends Serializable
+  implements BasePromptValueInterface
+{
   abstract toString(): string;
 
   abstract toChatMessages(): BaseMessage[];
@@ -36,7 +35,10 @@ export abstract class BasePromptValue extends Serializable implements BasePrompt
  * Represents a prompt value as a string. It extends the BasePromptValue
  * class and overrides the toString and toChatMessages methods.
  */
-export class StringPromptValue extends BasePromptValue implements StringPromptValueInterface {
+export class StringPromptValue
+  extends BasePromptValue
+  implements StringPromptValueInterface
+{
   lc_namespace = ["langchain_core", "prompt_values"];
 
   lc_serializable = true;
@@ -68,7 +70,10 @@ export interface ChatPromptValueFields {
  * Class that represents a chat prompt value. It extends the
  * BasePromptValue and includes an array of BaseMessage instances.
  */
-export class ChatPromptValue extends BasePromptValue implements ChatPromptValueInterface {
+export class ChatPromptValue
+  extends BasePromptValue
+  implements ChatPromptValueInterface
+{
   lc_namespace = ["langchain_core", "prompt_values"];
 
   lc_serializable = true;
