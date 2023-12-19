@@ -3,14 +3,12 @@ import {
   BaseLanguageModelInterface,
   BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
+import type { ChainValues } from "@langchain/core/utils/types";
+import type { Generation } from "@langchain/core/outputs";
+import type { BaseMessage } from "@langchain/core/messages";
+import type { BasePromptValueInterface } from "@langchain/core/prompt_values";
 import { BaseChain, ChainInputs } from "./base.js";
 import { BasePromptTemplate } from "../prompts/base.js";
-import {
-  ChainValues,
-  Generation,
-  BasePromptValue,
-  BaseMessage,
-} from "../schema/index.js";
 import {
   BaseLLMOutputParser,
   BaseOutputParser,
@@ -153,7 +151,7 @@ export class LLMChain<
   /** @ignore */
   async _getFinalOutput(
     generations: Generation[],
-    promptValue: BasePromptValue,
+    promptValue: BasePromptValueInterface,
     runManager?: CallbackManagerForChainRun
   ): Promise<unknown> {
     let finalCompletion: unknown;

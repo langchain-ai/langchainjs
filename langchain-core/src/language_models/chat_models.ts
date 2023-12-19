@@ -6,7 +6,7 @@ import {
   HumanMessage,
   coerceMessageLikeToMessage,
 } from "../messages/index.js";
-import { BasePromptValue } from "../prompt_values.js";
+import { BasePromptValueInterface } from "../prompt_values.js";
 import {
   LLMResult,
   RUN_KEY,
@@ -514,7 +514,7 @@ export abstract class BaseChatModel<
    * @returns A Promise that resolves to an LLMResult.
    */
   async generatePrompt(
-    promptValues: BasePromptValue[],
+    promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
@@ -559,7 +559,7 @@ export abstract class BaseChatModel<
    * @returns A Promise that resolves to a BaseMessage.
    */
   async callPrompt(
-    promptValue: BasePromptValue,
+    promptValue: BasePromptValueInterface,
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {

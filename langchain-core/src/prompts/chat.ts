@@ -12,7 +12,7 @@ import {
   coerceMessageLikeToMessage,
   isBaseMessage,
 } from "../messages/index.js";
-import { ChatPromptValue } from "../prompt_values.js";
+import { type ChatPromptValueInterface, ChatPromptValue } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types.js";
 import { Runnable } from "../runnables/base.js";
 import { BaseStringPromptTemplate } from "./string.js";
@@ -225,7 +225,7 @@ export abstract class BaseChatPromptTemplate<
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> extends BasePromptTemplate<RunInput, ChatPromptValue, PartialVariableName> {
+> extends BasePromptTemplate<RunInput, ChatPromptValueInterface, PartialVariableName> {
   constructor(input: BasePromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
   }
@@ -240,7 +240,7 @@ export abstract class BaseChatPromptTemplate<
 
   async formatPromptValue(
     values: TypedPromptInputValues<RunInput>
-  ): Promise<ChatPromptValue> {
+  ): Promise<ChatPromptValueInterface> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
   }

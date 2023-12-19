@@ -2,7 +2,7 @@ import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
 import { type BaseCache, InMemoryCache } from "../caches.js";
 import {
-  type BasePromptValue,
+  type BasePromptValueInterface,
   StringPromptValue,
   ChatPromptValue,
 } from "../prompt_values.js";
@@ -235,7 +235,7 @@ export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
 }
 
 export type BaseLanguageModelInput =
-  | BasePromptValue
+  | BasePromptValueInterface
   | string
   | BaseMessageLike[];
 
@@ -249,7 +249,7 @@ export interface BaseLanguageModelInterface<
   get callKeys(): string[];
 
   generatePrompt(
-    promptValues: BasePromptValue[],
+    promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
@@ -331,7 +331,7 @@ export abstract class BaseLanguageModel<
   }
 
   abstract generatePrompt(
-    promptValues: BasePromptValue[],
+    promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
@@ -393,7 +393,7 @@ export abstract class BaseLanguageModel<
 
   protected static _convertInputToPromptValue(
     input: BaseLanguageModelInput
-  ): BasePromptValue {
+  ): BasePromptValueInterface {
     if (typeof input === "string") {
       return new StringPromptValue(input);
     } else if (Array.isArray(input)) {
