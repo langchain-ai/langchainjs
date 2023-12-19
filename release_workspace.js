@@ -88,8 +88,8 @@ function main() {
   // @TODO change to main before merging
   if (currentBranch === 'brace/better-releases') {
     console.log("success")
-    execSync('git checkout -B release');
-    execSync('git push -u origin release');
+    execSync('git checkout -B brace/release');
+    execSync('git push -u origin brace/release');
   } else {
     throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
   }
