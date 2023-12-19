@@ -95,11 +95,10 @@ function main() {
   }
 
   // run build, lint, tests
-  execSync(`turbo run --filter ${options.workspace} build lint test --concurrency 1`);
+  execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
   // run export tests
   execSync(`yarn run test:exports:docker`);
   // run `release-it` on workspace
-  // @TODO add options
   execSync(`cd ${matchingWorkspace.dir} && release-it --only-version --config .release-it.json`);
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
@@ -133,22 +132,27 @@ function main() {
       ...allWorkspacesWhichDevDependOn,
       ...allWorkspacesWhichPeerDependOn,
     ].map(({ packageJSON }) => packageJSON.name));
-    console.log(`Found ${[...allWhichDependOn]} workspaces which depend on ${options.workspace}.
+
+    if (allWhichDependOn.size !== 0) {
+      console.log(`Found ${[...allWhichDependOn]} workspaces which depend on ${options.workspace}.
 Workspaces:
 - ${[...allWhichDependOn].map((name) => name).join("\n- ")}
 `);
-    // Update packages which depend on the input workspace.
-    updateDependencies(allWorkspacesWhichDependOn, 'dependencies', options.workspace, newVersion);
-    updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', options.workspace, newVersion);
-    updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', options.workspace, newVersion);
+      // Update packages which depend on the input workspace.
+      updateDependencies(allWorkspacesWhichDependOn, 'dependencies', options.workspace, newVersion);
+      updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', options.workspace, newVersion);
+      updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', options.workspace, newVersion);
 
-    // Add all current changes, commit, push and log branch URL.
-    console.log("Adding and committing all changes.");
-    // execSync(`git add -A`);
-    // execSync(`git commit -m "all[minor]: bump deps on ${options.workspace} to ${newVersion}"`);
-    console.log("Pushing changes.");
-    // execSync(`git push -u origin ${newBranchName}`);
-    console.log(`🔗 Open https://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1.`)
+      // Add all current changes, commit, push and log branch URL.
+      console.log("Adding and committing all changes.");
+      // execSync(`git add -A`);
+      // execSync(`git commit -m "all[minor]: bump deps on ${options.workspace} to ${newVersion}"`);
+      console.log("Pushing changes.");
+      // execSync(`git push -u origin ${newBranchName}`);
+      console.log(`🔗 Open https://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1.`);
+    } else {
+      console.log(`No workspaces depend on ${options.workspace}.`);
+    }
   }
 }
 
