@@ -1,0 +1,24 @@
+---
+sidebar_label: Together AI
+---
+
+# Together AI
+
+The `TogetherAIEmbeddings` class uses the Together AI API to generate embeddings for a given text.
+
+## Setup
+
+In order to use the Together API you'll need an API key. You can sign up for a Together account and create an API key [here](https://www.api.together.ai/).
+
+You'll first need to install the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package:
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import TogetherExample from "@examples/models/embeddings/togetherai.ts";
+
+<CodeBlock language="typescript">{TogetherExample}</CodeBlock>

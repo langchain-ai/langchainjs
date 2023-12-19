@@ -656,6 +656,11 @@
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
     },
+    "./embeddings/togetherai": {
+      "types": "./embeddings/togetherai.d.ts",
+      "import": "./embeddings/togetherai.js",
+      "require": "./embeddings/togetherai.cjs"
+    },
     "./embeddings/voyage": {
       "types": "./embeddings/voyage.d.ts",
       "import": "./embeddings/voyage.js",
@@ -1346,6 +1351,9 @@
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
+    "embeddings/togetherai.cjs",
+    "embeddings/togetherai.js",
+    "embeddings/togetherai.d.ts",
     "embeddings/voyage.cjs",
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",
