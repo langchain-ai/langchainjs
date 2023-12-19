@@ -247,6 +247,7 @@ const entrypoints = {
   "retrievers/multi_query": "retrievers/multi_query",
   "retrievers/multi_vector": "retrievers/multi_vector",
   "retrievers/parent_document": "retrievers/parent_document",
+  "retrievers/vectara_summary": "retrievers/vectara_summary",
   "retrievers/tavily_search_api": "retrievers/tavily_search_api",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
@@ -478,6 +479,7 @@ const requiresOptionalDependency = [
   "retrievers/supabase",
   "retrievers/zep",
   "retrievers/metal",
+  "retrievers/vectara_summary",
   "retrievers/self_query",
   "retrievers/self_query/chroma",
   "retrievers/self_query/functional",

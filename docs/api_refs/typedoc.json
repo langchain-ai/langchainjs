@@ -233,6 +233,7 @@
     "../../langchain/src/retrievers/multi_query.ts",
     "../../langchain/src/retrievers/multi_vector.ts",
     "../../langchain/src/retrievers/parent_document.ts",
+    "../../langchain/src/retrievers/vectara_summary.ts",
     "../../langchain/src/retrievers/tavily_search_api.ts",
     "../../langchain/src/retrievers/time_weighted.ts",
     "../../langchain/src/retrievers/document_compressors/chain_extract.ts",
