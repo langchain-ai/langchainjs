@@ -1,4 +1,4 @@
-import type { BaseLanguageModelInterface } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
