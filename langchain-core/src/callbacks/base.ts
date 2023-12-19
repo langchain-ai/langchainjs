@@ -14,7 +14,7 @@ import {
   get_lc_unique_name,
 } from "../load/serializable.js";
 import type { SerializedFields } from "../load/map_keys.js";
-import { Document } from "../documents/document.js";
+import type { DocumentInterface } from "../documents/document.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -242,7 +242,7 @@ abstract class BaseCallbackHandlerMethodsClass {
   Promise<any> | any;
 
   handleRetrieverEnd?(
-    documents: Document[],
+    documents: DocumentInterface[],
     runId: string,
     parentRunId?: string,
     tags?: string[]

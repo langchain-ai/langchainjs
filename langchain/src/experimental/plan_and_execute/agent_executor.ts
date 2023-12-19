@@ -1,3 +1,4 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseChain, ChainInputs } from "../../chains/base.js";
 import {
   BasePlanner,
@@ -13,7 +14,6 @@ import {
   getPlannerChatPrompt,
 } from "./prompt.js";
 import { ChainValues } from "../../schema/index.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PlanOutputParser } from "./outputParser.js";
@@ -103,7 +103,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     llm,
     tools,
   }: {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     tools: Tool[] | DynamicStructuredTool[];
   }) {
     const plannerLlmChain = new LLMChain({
@@ -127,7 +127,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     tools,
     humanMessageTemplate = DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
   }: {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   }) {
@@ -172,7 +172,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     tools,
     humanMessageTemplate,
   }: {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     tools: Tool[] | DynamicStructuredTool[];
     humanMessageTemplate?: string;
   } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {

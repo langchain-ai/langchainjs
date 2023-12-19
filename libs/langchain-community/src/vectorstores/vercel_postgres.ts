@@ -4,7 +4,7 @@ import {
   type VercelPostgresPoolConfig,
   createPool,
 } from "@vercel/postgres";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -60,7 +60,10 @@ export class VercelPostgres extends VectorStore {
     return "vercel";
   }
 
-  private constructor(embeddings: Embeddings, config: VercelPostgresFields) {
+  private constructor(
+    embeddings: EmbeddingsInterface,
+    config: VercelPostgresFields
+  ) {
     super(embeddings, config);
     this.tableName = config.tableName ?? "langchain_vectors";
     this.filter = config.filter;
@@ -88,7 +91,7 @@ export class VercelPostgres extends VectorStore {
    * @returns A new instance of `VercelPostgres`.
    */
   static async initialize(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }
@@ -341,7 +344,7 @@ export class VercelPostgres extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }
@@ -370,7 +373,7 @@ export class VercelPostgres extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: Partial<VercelPostgresFields> & {
       postgresConnectionOptions?: VercelPostgresPoolConfig;
     }

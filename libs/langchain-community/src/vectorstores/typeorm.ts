@@ -1,6 +1,6 @@
 import { Metadata } from "@opensearch-project/opensearch/api/types.js";
 import { DataSource, DataSourceOptions, EntitySchema } from "typeorm";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -52,7 +52,10 @@ export class TypeORMVectorStore extends VectorStore {
     return "typeorm";
   }
 
-  private constructor(embeddings: Embeddings, fields: TypeORMVectorStoreArgs) {
+  private constructor(
+    embeddings: EmbeddingsInterface,
+    fields: TypeORMVectorStoreArgs
+  ) {
     super(embeddings, fields);
     this.tableName = fields.tableName || defaultDocumentTableName;
     this.filter = fields.filter;
@@ -98,7 +101,7 @@ export class TypeORMVectorStore extends VectorStore {
    * @returns A new instance of `TypeORMVectorStore`.
    */
   static async fromDataSource(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     fields: TypeORMVectorStoreArgs
   ): Promise<TypeORMVectorStore> {
     const postgresqlVectorStore = new TypeORMVectorStore(embeddings, fields);
@@ -240,7 +243,7 @@ export class TypeORMVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: TypeORMVectorStoreArgs
   ): Promise<TypeORMVectorStore> {
     const docs = [];
@@ -266,7 +269,7 @@ export class TypeORMVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: TypeORMVectorStoreArgs
   ): Promise<TypeORMVectorStore> {
     const instance = await TypeORMVectorStore.fromDataSource(
@@ -286,7 +289,7 @@ export class TypeORMVectorStore extends VectorStore {
    * @returns Promise that resolves with a new instance of `TypeORMVectorStore`.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: TypeORMVectorStoreArgs
   ): Promise<TypeORMVectorStore> {
     const instance = await TypeORMVectorStore.fromDataSource(

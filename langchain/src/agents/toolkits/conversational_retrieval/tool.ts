@@ -1,6 +1,6 @@
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
 import { z } from "zod";
 import { CallbackManagerForToolRun } from "../../../callbacks/manager.js";
-import { BaseRetriever } from "../../../schema/retriever.js";
 import {
   DynamicStructuredTool,
   DynamicStructuredToolInput,
@@ -8,7 +8,7 @@ import {
 import { formatDocumentsAsString } from "../../../util/document.js";
 
 export function createRetrieverTool(
-  retriever: BaseRetriever,
+  retriever: BaseRetrieverInterface,
   input: Omit<DynamicStructuredToolInput, "func" | "schema">
 ) {
   const func = async (

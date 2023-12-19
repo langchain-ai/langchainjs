@@ -8,7 +8,7 @@ import type {
 } from "mysql2/promise";
 import { format } from "mysql2";
 import { createPool } from "mysql2/promise";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -100,7 +100,10 @@ export class SingleStoreVectorStore extends VectorStore {
     return "singlestore";
   }
 
-  constructor(embeddings: Embeddings, config: SingleStoreVectorStoreConfig) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    config: SingleStoreVectorStoreConfig
+  ) {
     super(embeddings, config);
     this.connectionPool = createPool(withConnectAttributes(config));
     this.tableName = config.tableName ?? "embeddings";
@@ -261,7 +264,7 @@ export class SingleStoreVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: SingleStoreVectorStoreConfig
   ): Promise<SingleStoreVectorStore> {
     const docs = texts.map((text, idx) => {
@@ -284,7 +287,7 @@ export class SingleStoreVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: SingleStoreVectorStoreConfig
   ): Promise<SingleStoreVectorStore> {
     const instance = new this(embeddings, dbConfig);

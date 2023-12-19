@@ -1,8 +1,8 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { ChainValues } from "../../schema/index.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import { BaseChain, ChainInputs } from "../base.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
@@ -22,9 +22,9 @@ export interface GraphCypherQAChainInput extends ChainInputs {
 
 export interface FromLLMInput {
   graph: Neo4jGraph;
-  llm?: BaseLanguageModel;
-  cypherLLM?: BaseLanguageModel;
-  qaLLM?: BaseLanguageModel;
+  llm?: BaseLanguageModelInterface;
+  cypherLLM?: BaseLanguageModelInterface;
+  qaLLM?: BaseLanguageModelInterface;
   qaPrompt?: BasePromptTemplate;
   cypherPrompt?: BasePromptTemplate;
   returnIntermediateSteps?: boolean;
@@ -133,12 +133,12 @@ export class GraphCypherQAChain extends BaseChain {
     }
 
     const qaChain = new LLMChain({
-      llm: (qaLLM || llm) as BaseLanguageModel,
+      llm: (qaLLM || llm) as BaseLanguageModelInterface,
       prompt: qaPrompt,
     });
 
     const cypherGenerationChain = new LLMChain({
-      llm: (cypherLLM || llm) as BaseLanguageModel,
+      llm: (cypherLLM || llm) as BaseLanguageModelInterface,
       prompt: cypherPrompt,
     });
 

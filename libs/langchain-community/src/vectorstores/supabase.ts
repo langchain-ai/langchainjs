@@ -4,7 +4,7 @@ import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
 } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
@@ -66,7 +66,7 @@ export class SupabaseVectorStore extends VectorStore {
     return "supabase";
   }
 
-  constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: SupabaseLibArgs) {
     super(embeddings, args);
 
     this.client = args.client;
@@ -265,7 +265,7 @@ export class SupabaseVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const docs: Document[] = [];
@@ -289,7 +289,7 @@ export class SupabaseVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const instance = new this(embeddings, dbConfig);
@@ -304,7 +304,7 @@ export class SupabaseVectorStore extends VectorStore {
    * @returns A promise that resolves with a new SupabaseVectorStore instance when the instance has been created.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const instance = new this(embeddings, dbConfig);

@@ -1,4 +1,4 @@
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import { AsyncCaller, AsyncCallerCallOptions } from "./async_caller.js";
 import type {
   GoogleVertexAIBaseLLMInput,
