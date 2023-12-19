@@ -89,10 +89,7 @@ async function webpackLoader(content, map, meta) {
       }
 
       if (moduleName.startsWith("openai")) {
-        return `${prefix}_openai_${moduleName.replace(
-          "openai",
-          ""
-        )}${suffix}`;
+        return `${prefix}_openai_${moduleName.replace("openai", "")}${suffix}`;
       }
 
       if (moduleName.startsWith("mistralai")) {
