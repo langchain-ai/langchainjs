@@ -5,7 +5,7 @@ import {
   CloseVectorCredentials,
 } from "closevector-node";
 
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 
 import { CloseVector } from "./common.js";
@@ -36,7 +36,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
   declare FilterType: (doc: Document) => boolean;
 
   constructor(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: CloseVectorNodeArgs,
     credentials?: CloseVectorCredentials
   ) {
@@ -79,7 +79,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
   static async loadFromCloud(
     options: Omit<
       Parameters<(typeof CloseVectorHNSWNode)["loadFromCloud"]>[0] & {
-        embeddings: Embeddings;
+        embeddings: EmbeddingsInterface;
         credentials: CloseVectorCredentials;
       },
       "accessKey" | "secret"
@@ -111,7 +111,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
    */
   static async load(
     directory: string,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     credentials?: CloseVectorCredentials
   ) {
     const instance = await CloseVectorHNSWNode.load(directory, embeddings);
@@ -133,7 +133,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args?: Record<string, unknown>,
     credential?: CloseVectorCredentials
   ): Promise<CloseVectorNode> {
@@ -158,7 +158,7 @@ export class CloseVectorNode extends CloseVector<CloseVectorHNSWNode> {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args?: Record<string, unknown>,
     credentials?: CloseVectorCredentials
   ): Promise<CloseVectorNode> {

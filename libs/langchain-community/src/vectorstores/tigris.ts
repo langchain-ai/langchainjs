@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -25,7 +25,7 @@ export class TigrisVectorStore extends VectorStore {
     return "tigris";
   }
 
-  constructor(embeddings: Embeddings, args: TigrisLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: TigrisLibArgs) {
     super(embeddings, args);
 
     this.embeddings = embeddings;
@@ -127,7 +127,7 @@ export class TigrisVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: TigrisLibArgs
   ): Promise<TigrisVectorStore> {
     const docs: Document[] = [];
@@ -152,7 +152,7 @@ export class TigrisVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: TigrisLibArgs
   ): Promise<TigrisVectorStore> {
     const instance = new this(embeddings, dbConfig);
@@ -168,7 +168,7 @@ export class TigrisVectorStore extends VectorStore {
    * @returns A Promise that resolves to a new instance of TigrisVectorStore.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: TigrisLibArgs
   ): Promise<TigrisVectorStore> {
     const instance = new this(embeddings, dbConfig);

@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 import { ClickHouseClient, createClient } from "@clickhouse/client";
 
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -75,7 +75,7 @@ export class MyScaleStore extends VectorStore {
     return "myscale";
   }
 
-  constructor(embeddings: Embeddings, args: MyScaleLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: MyScaleLibArgs) {
     super(embeddings, args);
 
     this.indexType = args.indexType || "MSTG";
@@ -170,7 +170,7 @@ export class MyScaleStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object | object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: MyScaleLibArgs
   ): Promise<MyScaleStore> {
     const docs: Document[] = [];
@@ -194,7 +194,7 @@ export class MyScaleStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: MyScaleLibArgs
   ): Promise<MyScaleStore> {
     const instance = new this(embeddings, args);
@@ -210,7 +210,7 @@ export class MyScaleStore extends VectorStore {
    * @returns Promise that resolves with a new instance of MyScaleStore.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: MyScaleLibArgs
   ): Promise<MyScaleStore> {
     const instance = new this(embeddings, args);

@@ -3,8 +3,8 @@ import {
   type BaseRetrieverInput,
   type BaseRetrieverInterface,
 } from "@langchain/core/retrievers";
+import type { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentCompressor } from "./document_compressors/index.js";
-import { Document } from "../document.js";
 import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
 /**
@@ -53,7 +53,7 @@ export class ContextualCompressionRetriever extends BaseRetriever {
   async _getRelevantDocuments(
     query: string,
     runManager?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const docs = await this.baseRetriever.getRelevantDocuments(
       query,
       runManager?.getChild("base_retriever")

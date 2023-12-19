@@ -5,7 +5,7 @@ import {
   Callbacks,
   parseCallbackConfigArg,
 } from "./callbacks/manager.js";
-import { Document } from "./documents/document.js";
+import type { DocumentInterface } from "./documents/document.js";
 import { Runnable, type RunnableInterface } from "./runnables/base.js";
 import { RunnableConfig } from "./runnables/config.js";
 
@@ -20,11 +20,11 @@ export interface BaseRetrieverInput {
 }
 
 export interface BaseRetrieverInterface
-  extends RunnableInterface<string, Document[]> {
+  extends RunnableInterface<string, DocumentInterface[]> {
   getRelevantDocuments(
     query: string,
     config?: Callbacks | BaseCallbackConfig
-  ): Promise<Document[]>;
+  ): Promise<DocumentInterface[]>;
 }
 
 /**
@@ -33,7 +33,7 @@ export interface BaseRetrieverInterface
  * most 'relevant' Documents from some source.
  */
 export abstract class BaseRetriever
-  extends Runnable<string, Document[]>
+  extends Runnable<string, DocumentInterface[]>
   implements BaseRetrieverInterface
 {
   callbacks?: Callbacks;
@@ -60,11 +60,14 @@ export abstract class BaseRetriever
   _getRelevantDocuments(
     _query: string,
     _callbacks?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     throw new Error("Not implemented!");
   }
 
-  async invoke(input: string, options?: RunnableConfig): Promise<Document[]> {
+  async invoke(
+    input: string,
+    options?: RunnableConfig
+  ): Promise<DocumentInterface[]> {
     return this.getRelevantDocuments(input, options);
   }
 
@@ -81,7 +84,7 @@ export abstract class BaseRetriever
   async getRelevantDocuments(
     query: string,
     config?: Callbacks | BaseCallbackConfig
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,

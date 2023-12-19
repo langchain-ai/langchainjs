@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { Document } from "../../document.js";
+import { type DocumentInterface, Document } from "@langchain/core/documents";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { BaseOutputParser } from "../../schema/output_parser.js";
@@ -8,7 +8,7 @@ import { PROMPT_TEMPLATE } from "./chain_extract_prompt.js";
 
 function defaultGetInput(
   query: string,
-  doc: Document
+  doc: DocumentInterface
 ): Record<string, unknown> {
   return { question: query, context: doc.pageContent };
 }
@@ -52,7 +52,7 @@ function getDefaultChainPrompt(): PromptTemplate {
  */
 export interface LLMChainExtractorArgs {
   llmChain: LLMChain;
-  getInput: (query: string, doc: Document) => Record<string, unknown>;
+  getInput: (query: string, doc: DocumentInterface) => Record<string, unknown>;
 }
 
 /**
@@ -62,7 +62,7 @@ export interface LLMChainExtractorArgs {
 export class LLMChainExtractor extends BaseDocumentCompressor {
   llmChain: LLMChain;
 
-  getInput: (query: string, doc: Document) => Record<string, unknown> =
+  getInput: (query: string, doc: DocumentInterface) => Record<string, unknown> =
     defaultGetInput;
 
   constructor({ llmChain, getInput }: LLMChainExtractorArgs) {
@@ -78,9 +78,9 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
    * @returns A list of compressed documents.
    */
   async compressDocuments(
-    documents: Document[],
+    documents: DocumentInterface[],
     query: string
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const compressedDocs = await Promise.all(
       documents.map(async (doc) => {
         const input = this.getInput(query, doc);
@@ -107,7 +107,10 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
   static fromLLM(
     llm: BaseLanguageModelInterface,
     prompt?: PromptTemplate,
-    getInput?: (query: string, doc: Document) => Record<string, unknown>
+    getInput?: (
+      query: string,
+      doc: DocumentInterface
+    ) => Record<string, unknown>
   ): LLMChainExtractor {
     const _prompt = prompt || getDefaultChainPrompt();
     const _getInput = getInput || defaultGetInput;

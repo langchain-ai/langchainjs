@@ -2,7 +2,7 @@ import * as uuid from "uuid";
 import flatten from "flat";
 import { GoogleAuth, GoogleAuthOptions } from "google-auth-library";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document, DocumentInput } from "@langchain/core/documents";
 import {
   AsyncCaller,
@@ -369,7 +369,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
 
   upsertDatapointClient: UpsertDatapointConnection;
 
-  constructor(embeddings: Embeddings, args: MatchingEngineArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: MatchingEngineArgs) {
     super(embeddings, args);
 
     this.embeddings = embeddings;
@@ -725,7 +725,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MatchingEngineArgs
   ): Promise<VectorStore> {
     const docs: Document[] = texts.map(
@@ -739,7 +739,7 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
 
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MatchingEngineArgs
   ): Promise<VectorStore> {
     const ret = new MatchingEngine(embeddings, dbConfig);

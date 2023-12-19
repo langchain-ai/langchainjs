@@ -1,4 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { Document } from "@langchain/core/documents";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
 import { isNode } from "../util/env.js";
@@ -7,13 +9,11 @@ import {
   TextSplitter,
 } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { Document } from "../document.js";
 import { Tool, ToolParams } from "./base.js";
 import {
   CallbackManager,
   CallbackManagerForToolRun,
 } from "../callbacks/manager.js";
-import { Embeddings } from "../embeddings/base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { formatDocumentsAsString } from "../util/document.js";
 
@@ -154,7 +154,7 @@ type Headers = Record<string, any>;
 export interface WebBrowserArgs extends ToolParams {
   model: BaseLanguageModelInterface;
 
-  embeddings: Embeddings;
+  embeddings: EmbeddingsInterface;
 
   headers?: Headers;
 
@@ -191,7 +191,7 @@ export class WebBrowser extends Tool {
 
   private model: BaseLanguageModelInterface;
 
-  private embeddings: Embeddings;
+  private embeddings: EmbeddingsInterface;
 
   private headers: Headers;
 

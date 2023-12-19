@@ -109,13 +109,13 @@ abstract class BaseVectorStore implements VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: Record<string, any>
   ): Promise<VectorStore>;
 
   static fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: Record<string, any>
   ): Promise<VectorStore>;
 }

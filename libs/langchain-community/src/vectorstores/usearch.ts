@@ -1,6 +1,6 @@
 import usearch from "usearch";
 import * as uuid from "uuid";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { SaveableVectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
@@ -34,7 +34,7 @@ export class USearch extends SaveableVectorStore {
     return "usearch";
   }
 
-  constructor(embeddings: Embeddings, args: USearchArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: USearchArgs) {
     super(embeddings, args);
     this.args = args;
     this._index = args.index;
@@ -180,7 +180,7 @@ export class USearch extends SaveableVectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
     }
@@ -208,7 +208,7 @@ export class USearch extends SaveableVectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
     }
