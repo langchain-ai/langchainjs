@@ -1,7 +1,7 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { Tool } from "../../../tools/base.js";
 import { VectorStoreQATool } from "../../../tools/vectorstore.js";
-import { VectorStore } from "../../../vectorstores/base.js";
 import { Toolkit } from "../base.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { VECTOR_PREFIX, VECTOR_ROUTER_PREFIX } from "./prompt.js";
@@ -14,7 +14,7 @@ import { AgentExecutor } from "../../executor.js";
  * the vector store itself, its name, and description.
  */
 export interface VectorStoreInfo {
-  vectorStore: VectorStore;
+  vectorStore: VectorStoreInterface;
   name: string;
   description: string;
 }

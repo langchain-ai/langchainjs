@@ -1,6 +1,10 @@
 import type { EmbeddingsInterface } from "./embeddings.js";
 import type { DocumentInterface } from "./documents/document.js";
-import { BaseRetriever, type BaseRetrieverInput } from "./retrievers.js";
+import {
+  BaseRetriever,
+  BaseRetrieverInterface,
+  type BaseRetrieverInput,
+} from "./retrievers.js";
 import { Serializable } from "./load/serializable.js";
 import {
   CallbackManagerForRetrieverRun,
@@ -53,13 +57,27 @@ export type VectorStoreRetrieverInput<V extends VectorStoreInterface> =
         }
     );
 
+export interface VectorStoreRetrieverInterface<
+  V extends VectorStoreInterface = VectorStoreInterface
+> extends BaseRetrieverInterface {
+  vectorStore: V;
+
+  addDocuments(
+    documents: DocumentInterface[],
+    options?: AddDocumentOptions
+  ): Promise<string[] | void>;
+}
+
 /**
  * Class for performing document retrieval from a VectorStore. Can perform
  * similarity search or maximal marginal relevance search.
  */
 export class VectorStoreRetriever<
-  V extends VectorStoreInterface = VectorStoreInterface
-> extends BaseRetriever {
+    V extends VectorStoreInterface = VectorStoreInterface
+  >
+  extends BaseRetriever
+  implements VectorStoreRetrieverInterface
+{
   static lc_name() {
     return "VectorStoreRetriever";
   }
@@ -158,16 +176,16 @@ export interface VectorStoreInterface extends Serializable {
 
   similaritySearch(
     query: string,
-    k: number,
-    filter: this["FilterType"] | undefined,
-    callbacks: Callbacks | undefined
+    k?: number,
+    filter?: this["FilterType"],
+    callbacks?: Callbacks
   ): Promise<DocumentInterface[]>;
 
   similaritySearchWithScore(
     query: string,
-    k: number,
-    filter: this["FilterType"] | undefined,
-    callbacks: Callbacks | undefined
+    k?: number,
+    filter?: this["FilterType"],
+    callbacks?: Callbacks
   ): Promise<[DocumentInterface, number][]>;
 
   /**

@@ -1,8 +1,8 @@
 import type { Embeddings } from "../embeddings.js";
 import type {
-  VectorStore,
   VectorStoreInterface,
-  VectorStoreRetriever,
+  VectorStoreRetrieverInterface,
+  VectorStore,
 } from "../vectorstores.js";
 import type { Example } from "../prompts/base.js";
 import { Document } from "../documents/document.js";
@@ -30,7 +30,7 @@ export type SemanticSimilarityExampleSelectorInput<
       vectorStoreRetriever?: never;
     }
   | {
-      vectorStoreRetriever: VectorStoreRetriever<V>;
+      vectorStoreRetriever: VectorStoreRetrieverInterface<V>;
       exampleKeys?: string[];
       inputKeys?: string[];
       vectorStore?: never;
@@ -70,7 +70,7 @@ export type SemanticSimilarityExampleSelectorInput<
 export class SemanticSimilarityExampleSelector<
   V extends VectorStoreInterface = VectorStoreInterface
 > extends BaseExampleSelector {
-  vectorStoreRetriever: VectorStoreRetriever<V>;
+  vectorStoreRetriever: VectorStoreRetrieverInterface<V>;
 
   exampleKeys?: string[];
 

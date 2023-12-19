@@ -1,6 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { PromptTemplate } from "../prompts/prompt.js";
-import { VectorStore } from "../vectorstores/base.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
@@ -29,7 +29,7 @@ Helpful Answer:`;
  * Interface for the input parameters of the ChatVectorDBQAChain class.
  */
 export interface ChatVectorDBQAChainInput extends ChainInputs {
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   returnSourceDocuments?: boolean;
@@ -59,7 +59,7 @@ export class ChatVectorDBQAChain
     return [this.outputKey];
   }
 
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -181,7 +181,7 @@ export class ChatVectorDBQAChain
    */
   static fromLLM(
     llm: BaseLanguageModelInterface,
-    vectorstore: VectorStore,
+    vectorstore: VectorStoreInterface,
     options: {
       inputKey?: string;
       outputKey?: string;

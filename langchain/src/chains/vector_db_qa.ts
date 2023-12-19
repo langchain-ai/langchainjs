@@ -1,6 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { BaseChain, ChainInputs } from "./base.js";
-import { VectorStore } from "../vectorstores/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { ChainValues } from "../schema/index.js";
@@ -16,7 +16,7 @@ export type LoadValues = Record<string, any>;
  * `returnSourceDocuments`, `k`, and `inputKey`.
  */
 export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
   combineDocumentsChain: BaseChain;
   returnSourceDocuments?: boolean;
   k?: number;
@@ -48,7 +48,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     );
   }
 
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -141,7 +141,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
    */
   static fromLLM(
     llm: BaseLanguageModelInterface,
-    vectorstore: VectorStore,
+    vectorstore: VectorStoreInterface,
     options?: Partial<
       Omit<VectorDBQAChainInput, "combineDocumentsChain" | "vectorstore">
     >
