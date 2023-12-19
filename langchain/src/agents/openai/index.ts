@@ -2,6 +2,7 @@ import type {
   BaseLanguageModelInterface,
   BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
@@ -16,7 +17,6 @@ import {
   SystemMessage,
   BaseMessageChunk,
 } from "../../schema/index.js";
-import { StructuredTool } from "../../tools/base.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { PREFIX } from "./prompt.js";
@@ -73,7 +73,7 @@ export function _formatIntermediateSteps(
  * Interface for the input data required to create an OpenAIAgent.
  */
 export interface OpenAIAgentInput extends AgentInput {
-  tools: StructuredTool[];
+  tools: StructuredToolInterface[];
 }
 
 /**
@@ -113,7 +113,7 @@ export class OpenAIAgent extends Agent {
     return ["Observation:"];
   }
 
-  tools: StructuredTool[];
+  tools: StructuredToolInterface[];
 
   outputParser: OpenAIFunctionsAgentOutputParser =
     new OpenAIFunctionsAgentOutputParser();
@@ -131,7 +131,7 @@ export class OpenAIAgent extends Agent {
    * @returns A BasePromptTemplate object representing the created prompt.
    */
   static createPrompt(
-    _tools: StructuredTool[],
+    _tools: StructuredToolInterface[],
     fields?: OpenAIAgentCreatePromptArgs
   ): BasePromptTemplate {
     const { prefix = PREFIX } = fields || {};
@@ -152,7 +152,7 @@ export class OpenAIAgent extends Agent {
    */
   static fromLLMAndTools(
     llm: BaseLanguageModelInterface,
-    tools: StructuredTool[],
+    tools: StructuredToolInterface[],
     args?: OpenAIAgentCreatePromptArgs & Pick<AgentArgs, "callbacks">
   ) {
     OpenAIAgent.validateTools(tools);

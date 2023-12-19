@@ -37,6 +37,8 @@ export interface RunnableInterface<
   RunOutput = any,
   CallOptions extends RunnableConfig = RunnableConfig
 > {
+  lc_serializable: boolean;
+
   invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
 
   batch(

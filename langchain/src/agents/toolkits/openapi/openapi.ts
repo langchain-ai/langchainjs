@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { Tool } from "../../../tools/base.js";
+import type { ToolInterface } from "@langchain/core/tools";
 import { DynamicTool } from "../../../tools/dynamic.js";
 import { JsonSpec } from "../../../tools/json.js";
 import { AgentExecutor } from "../../executor.js";
@@ -23,7 +23,7 @@ import { createJsonAgent, JsonToolkit } from "../json/json.js";
  * request tools based on the provided headers.
  */
 export class RequestsToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   constructor(headers?: Headers) {
     super();

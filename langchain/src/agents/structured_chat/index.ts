@@ -1,6 +1,7 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
@@ -11,7 +12,6 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
-import { StructuredTool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
@@ -79,7 +79,7 @@ export class StructuredChatAgent extends Agent {
    * if any tool lacks a description.
    * @param tools Array of StructuredTool instances to validate.
    */
-  static validateTools(tools: StructuredTool[]) {
+  static validateTools(tools: StructuredToolInterface[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
       const msg =
@@ -130,7 +130,7 @@ export class StructuredChatAgent extends Agent {
    * @param tools Array of StructuredTool instances to create the schemas string from.
    * @returns A string representing the schemas of the provided tools.
    */
-  static createToolSchemasString(tools: StructuredTool[]) {
+  static createToolSchemasString(tools: StructuredToolInterface[]) {
     return tools
       .map(
         (tool) =>
@@ -152,7 +152,7 @@ export class StructuredChatAgent extends Agent {
    * @param args.memoryPrompts List of historical prompts from memory.
    */
   static createPrompt(
-    tools: StructuredTool[],
+    tools: StructuredToolInterface[],
     args?: StructuredChatCreatePromptArgs
   ) {
     const {
@@ -196,7 +196,7 @@ export class StructuredChatAgent extends Agent {
    */
   static fromLLMAndTools(
     llm: BaseLanguageModelInterface,
-    tools: StructuredTool[],
+    tools: StructuredToolInterface[],
     args?: StructuredChatCreatePromptArgs & AgentArgs
   ) {
     StructuredChatAgent.validateTools(tools);

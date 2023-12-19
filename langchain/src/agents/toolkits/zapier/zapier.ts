@@ -1,5 +1,5 @@
+import { ToolInterface } from "@langchain/core/tools";
 import { Toolkit } from "../base.js";
-import { Tool } from "../../../tools/base.js";
 import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
 
 /**
@@ -17,7 +17,7 @@ import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
  * ```
  */
 export class ZapierToolKit extends Toolkit {
-  tools: Tool[] = [];
+  tools: ToolInterface[] = [];
 
   /**
    * Creates a ZapierToolKit instance based on a ZapierNLAWrapper instance.

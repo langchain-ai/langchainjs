@@ -1,6 +1,6 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
-import { Tool } from "../../../tools/base.js";
+import { ToolInterface } from "@langchain/core/tools";
 import { VectorStoreQATool } from "../../../tools/vectorstore.js";
 import { Toolkit } from "../base.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
@@ -41,7 +41,7 @@ export interface VectorStoreInfo {
  * ```
  */
 export class VectorStoreToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   llm: BaseLanguageModelInterface;
 
@@ -70,7 +70,7 @@ export class VectorStoreToolkit extends Toolkit {
  * vector store information and language model.
  */
 export class VectorStoreRouterToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   vectorStoreInfos: VectorStoreInfo[];
 

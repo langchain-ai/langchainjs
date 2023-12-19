@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { Tool } from "../../../tools/base.js";
+import type { ToolInterface } from "@langchain/core/tools";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
@@ -24,7 +24,7 @@ import { AgentExecutor } from "../../executor.js";
  * ```
  */
 export class JsonToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   constructor(public jsonSpec: JsonSpec) {
     super();

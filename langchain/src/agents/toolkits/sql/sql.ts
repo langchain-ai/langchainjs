@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { Tool } from "../../../tools/base.js";
+import type { ToolInterface } from "@langchain/core/tools";
 import {
   InfoSqlTool,
   ListTablesSqlTool,
@@ -36,7 +36,7 @@ export interface SqlCreatePromptArgs extends ZeroShotCreatePromptArgs {
  * ```
  */
 export class SqlToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   db: SqlDatabase;
 

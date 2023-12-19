@@ -138,7 +138,7 @@ export class CacheBackedEmbeddings extends Embeddings {
    * @returns A new CacheBackedEmbeddings instance.
    */
   static fromBytesStore(
-    underlyingEmbeddings: Embeddings,
+    underlyingEmbeddings: EmbeddingsInterface,
     documentEmbeddingStore: BaseStore<string, Uint8Array>,
     options?: {
       namespace?: string;

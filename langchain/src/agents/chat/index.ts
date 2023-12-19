@@ -1,4 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { ToolInterface } from "@langchain/core/tools";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   ChatPromptTemplate,
@@ -6,7 +7,6 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
-import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
@@ -48,7 +48,7 @@ export class ChatAgent extends Agent {
 
   lc_namespace = ["langchain", "agents", "chat"];
 
-  declare ToolType: Tool;
+  declare ToolType: ToolInterface;
 
   constructor(input: ChatAgentInput) {
     const outputParser =
@@ -78,7 +78,7 @@ export class ChatAgent extends Agent {
    * @param tools Array of Tool instances to validate.
    * @returns void
    */
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: ToolInterface[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
       const msg =
@@ -121,7 +121,7 @@ export class ChatAgent extends Agent {
    * @param args.humanMessageTemplate - String to use directly as the human message template
    * @param args.formatInstructions - Formattable string to use as the instructions template
    */
-  static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
+  static createPrompt(tools: ToolInterface[], args?: ChatCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -151,7 +151,7 @@ export class ChatAgent extends Agent {
    */
   static fromLLMAndTools(
     llm: BaseLanguageModelInterface,
-    tools: Tool[],
+    tools: ToolInterface[],
     args?: ChatCreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);

@@ -1,8 +1,8 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { ToolInterface } from "@langchain/core/tools";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
-import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
@@ -64,7 +64,7 @@ export class ZeroShotAgent extends Agent {
 
   lc_namespace = ["langchain", "agents", "mrkl"];
 
-  declare ToolType: Tool;
+  declare ToolType: ToolInterface;
 
   constructor(input: ZeroShotAgentInput) {
     const outputParser =
@@ -98,7 +98,7 @@ export class ZeroShotAgent extends Agent {
    * does not have a description.
    * @param tools List of tools to validate.
    */
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: ToolInterface[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
       const msg =
@@ -117,7 +117,7 @@ export class ZeroShotAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    * @param args.inputVariables - List of input variables the final prompt will expect.
    */
-  static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
+  static createPrompt(tools: ToolInterface[], args?: ZeroShotCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -152,7 +152,7 @@ export class ZeroShotAgent extends Agent {
    */
   static fromLLMAndTools(
     llm: BaseLanguageModelInterface,
-    tools: Tool[],
+    tools: ToolInterface[],
     args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
@@ -175,7 +175,7 @@ export class ZeroShotAgent extends Agent {
   static async deserialize(
     data: SerializedZeroShotAgent & {
       llm?: BaseLanguageModelInterface;
-      tools?: Tool[];
+      tools?: ToolInterface[];
     }
   ): Promise<ZeroShotAgent> {
     const { llm, tools, ...rest } = data;
@@ -185,7 +185,7 @@ export class ZeroShotAgent extends Agent {
       rest,
       (
         llm: BaseLanguageModelInterface,
-        tools: Tool[],
+        tools: ToolInterface[],
         args: SerializedFromLLMAndTools
       ) =>
         ZeroShotAgent.fromLLMAndTools(llm, tools, {
