@@ -1,42 +1,31 @@
 import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
-import {
-  AIMessage,
-  BaseMessage,
-  ChatResult,
-  SystemMessage,
-} from "../../schema/index.js";
-import { ChatOllama } from "../../chat_models/ollama.js";
-import { OllamaInput } from "../../util/ollama.js";
+import { AIMessage, BaseMessage, ChatResult } from "../../schema/index.js";
+import { ChatOllama, type ChatOllamaInput } from "../../chat_models/ollama.js";
 import { BaseFunctionCallOptions } from "../../base_language/index.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import type { BasePromptTemplate } from "../../prompts/base.js";
+import { SystemMessagePromptTemplate } from "../../prompts/chat.js";
 
-const TOOL_SYSTEM_PROMPT =
-  /* #__PURE__ */
-  PromptTemplate.fromTemplate(`You have access to the following tools:
-
+const DEFAULT_TOOL_SYSTEM_TEMPLATE = `You have access to the following tools:
 {tools}
-
-To use a tool, respond with a JSON object with the following structure:
+You must always select one of the above tools and respond with only a JSON object matching the following schema:
 {{
-  "tool": <name of the called tool>,
-  "tool_input": <parameters for the tool matching the above JSON schema>
-}}`);
+  "tool": <name of the selected tool>,
+  "tool_input": <parameters for the selected tool, matching the tool's JSON schema>
+}}`;
 
 export interface ChatOllamaFunctionsCallOptions
   extends BaseFunctionCallOptions {}
 
-export type OllamaFunctionsInput = Partial<OllamaInput> &
+export type OllamaFunctionsInput = Partial<ChatOllamaInput> &
   BaseChatModelParams & {
     llm?: ChatOllama;
-    toolSystemPrompt?: BasePromptTemplate;
+    toolSystemPromptTemplate?: string;
   };
 
 export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOptions> {
   llm: ChatOllama;
 
-  toolSystemPrompt: BasePromptTemplate = TOOL_SYSTEM_PROMPT;
+  toolSystemPromptTemplate: string = DEFAULT_TOOL_SYSTEM_TEMPLATE;
 
   protected defaultResponseFunction = {
     name: "__conversational_response",
@@ -63,7 +52,8 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
   constructor(fields?: OllamaFunctionsInput) {
     super(fields ?? {});
     this.llm = fields?.llm ?? new ChatOllama({ ...fields, format: "json" });
-    this.toolSystemPrompt = fields?.toolSystemPrompt ?? this.toolSystemPrompt;
+    this.toolSystemPromptTemplate =
+      fields?.toolSystemPromptTemplate ?? this.toolSystemPromptTemplate;
   }
 
   invocationParams() {
@@ -93,10 +83,12 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
     } else if (functions.length === 0) {
       functions.push(this.defaultResponseFunction);
     }
-    const defaultContent = await this.toolSystemPrompt.format({
+    const systemPromptTemplate = SystemMessagePromptTemplate.fromTemplate(
+      this.toolSystemPromptTemplate
+    );
+    const systemMessage = await systemPromptTemplate.format({
       tools: JSON.stringify(functions, null, 2),
     });
-    const systemMessage = new SystemMessage({ content: defaultContent });
     const chatResult = await this.llm._generate(
       [systemMessage, ...messages],
       options,

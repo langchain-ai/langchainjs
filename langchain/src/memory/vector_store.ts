@@ -89,7 +89,7 @@ export class VectorStoreRetrieverMemory
     return {
       [this.memoryKey]: this.returnDocs
         ? results
-        : formatDocumentsAsString(results, "\n"),
+        : formatDocumentsAsString(results),
     };
   }
 

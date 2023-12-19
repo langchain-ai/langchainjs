@@ -29,3 +29,19 @@ test.skip("Test Llama_CPP", async () => {
     );
   }
 }, 100000);
+
+test.skip("Test Llama_CPP", async () => {
+  const model = new LlamaCpp({ modelPath: llamaPath, temperature: 0.7 });
+
+  const stream = await model.stream(
+    "Tell me a short story about a happy Llama."
+  );
+
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    process.stdout.write(chunks.join(""));
+  }
+
+  expect(chunks.length).toBeGreaterThan(1);
+});

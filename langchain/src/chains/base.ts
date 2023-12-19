@@ -83,6 +83,32 @@ export abstract class BaseChain<
     return this.call(input, config);
   }
 
+  private _validateOutputs(outputs: Record<string, unknown>): void {
+    const missingKeys = this.outputKeys.filter((k) => !(k in outputs));
+    if (missingKeys.length) {
+      throw new Error(
+        `Missing output keys: ${missingKeys.join(
+          ", "
+        )} from chain ${this._chainType()}`
+      );
+    }
+  }
+
+  async prepOutputs(
+    inputs: Record<string, unknown>,
+    outputs: Record<string, unknown>,
+    returnOnlyOutputs = false
+  ) {
+    this._validateOutputs(outputs);
+    if (this.memory) {
+      await this.memory.saveContext(inputs, outputs);
+    }
+    if (returnOnlyOutputs) {
+      return outputs;
+    }
+    return { ...inputs, ...outputs };
+  }
+
   /**
    * Run the core logic of this chain and return the output
    */

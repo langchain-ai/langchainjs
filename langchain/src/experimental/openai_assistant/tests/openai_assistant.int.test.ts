@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { z } from "zod";
-import { OpenAI as OpenAIClient } from "openai";
+import { OpenAIClient } from "@langchain/openai";
 import { AgentExecutor } from "../../../agents/executor.js";
 import { StructuredTool } from "../../../tools/base.js";
 import { OpenAIAssistantRunnable } from "../index.js";
@@ -91,6 +91,41 @@ test.skip("New OpenAIAssistantRunnable can be passed as an agent", async () => {
       output: "The weather in San Francisco, CA is currently 72°F and it's warm. In Tokyo, Japan, the temperature is 10°C and it's also warm."
     }
    */
+});
+
+test("OpenAIAssistantRunnable create and delete assistant", async () => {
+  const assistant = await OpenAIAssistantRunnable.createAssistant({
+    name: "Personal Assistant",
+    model: "gpt-4-1106-preview",
+  });
+  const deleteStatus = await assistant.deleteAssistant();
+  expect(deleteStatus).toEqual({
+    id: assistant.assistantId,
+    object: "assistant.deleted",
+    deleted: true,
+  });
+  console.log(deleteStatus);
+  /**
+    {
+      id: 'asst_jwkJPzFkIL2ei9Kn1SZzmR6Y',
+      object: 'assistant.deleted',
+      deleted: true
+    }
+   */
+});
+
+test("OpenAIAssistantRunnable create and modify assistant", async () => {
+  const assistant = await OpenAIAssistantRunnable.createAssistant({
+    name: "Personal Assistant",
+    model: "gpt-4-1106-preview",
+  });
+  const assistantResponse = await assistant.getAssistant();
+  expect(assistantResponse.name).toEqual("Personal Assistant");
+  const assistantResponseModified = await assistant.modifyAssistant({
+    name: "Personal Assistant 2",
+  });
+  expect(assistantResponseModified.name).toEqual("Personal Assistant 2");
+  expect(assistantResponseModified.model).toEqual("gpt-4-1106-preview");
 });
 
 test("OpenAIAssistantRunnable can be passed as an agent", async () => {

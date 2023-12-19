@@ -1,4 +1,4 @@
-import { SerializedFields } from "../load/map_keys.js";
+import type { SerializedFields } from "../load/map_keys.js";
 import {
   BaseOutputParser,
   OutputParserException,

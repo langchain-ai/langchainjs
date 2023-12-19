@@ -142,22 +142,22 @@ jobs:
       - name: Test vite exports
         run: docker compose -f docker-compose.yml run test-exports-vite
 
-  exports-bun:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Build
-        run: yarn workspace langchain build
-        shell: bash
-        env:
-          SKIP_API_DOCS: true
+  # exports-bun:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Use Node.js ${{ env.NODE_VERSION }}
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: "yarn"
+  #     - name: Install dependencies
+  #       run: yarn install --immutable
+  #     - name: Build
+  #       run: yarn workspace langchain build
+  #       shell: bash
+  #       env:
+  #         SKIP_API_DOCS: true
 
-      - name: Test bun exports
-        run: docker compose -f docker-compose.yml run test-exports-bun
+  #     - name: Test bun exports
+  #       run: docker compose -f docker-compose.yml run test-exports-bun

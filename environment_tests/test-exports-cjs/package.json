@@ -1,6 +1,9 @@
 {
   "name": "test-exports-cjs",
   "version": "0.0.0",
+  "workspaces": [
+    "libs/*"
+  ],
   "private": true,
   "description": "CJS Tests for the things exported by the langchain package",
   "main": "./index.mjs",
@@ -18,14 +21,18 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@langchain/anthropic": "workspace:*",
+    "@langchain/community": "workspace:*",
+    "@langchain/core": "workspace:*",
+    "@langchain/openai": "workspace:*",
+    "@tsconfig/recommended": "^1.0.2",
     "d3-dsv": "2",
     "hnswlib-node": "^1.4.2",
-    "langchain": "workspace:*"
+    "langchain": "workspace:*",
+    "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "@tsconfig/recommended": "^1.0.2",
     "@types/node": "^18.15.11",
-    "prettier": "^2.8.3",
-    "typescript": "^5.0.0"
+    "prettier": "^2.8.3"
   }
 }
