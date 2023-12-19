@@ -8,19 +8,10 @@ const path = require('path');
  * @returns {string} The new version
  */
 function bumpVersion(version) {
-  const prefixMatch = version.match(/^(~|\^|>=?|<=?|\*|latest|""|\|\|)/);
-  const prefix = prefixMatch ? prefixMatch[0] : '';
-  let cleanVersion = version.replace(prefix, '');
-  let parts = cleanVersion.split('.');
+  let parts = version.split('.');
   
-  if (parts.length === 1 && (cleanVersion === '*' || cleanVersion.toLowerCase() === 'latest')) {
-    // If the version is '*' or 'latest', we cannot bump it, so return as is.
-    return version;
-  } else {
-    // Assume semantic versioning if not '*' or 'latest'.
-    parts[parts.length - 1] = parseInt(parts[parts.length - 1], 10) + 1;
-    return prefix + parts.join('.');
-  }
+  parts[parts.length - 1] = parseInt(parts[parts.length - 1], 10) + 1;
+  return parts.join('.');
 }
 
 /**
@@ -30,10 +21,20 @@ function bumpVersion(version) {
  * @param {string} newVersion 
  */
 function updateDependencies(workspaces, dependencyType, workspaceName, newVersion) {
+  const versionPrefixes = ["~", "^", ">", "<", ">=", "<=", "||", "*"];
+  const skipVersions = ["latest", "workspace:*"];
+
   workspaces.forEach((workspace) => {
-    if (Object.keys(workspace.packageJSON[dependencyType] ?? {}).includes(workspaceName)) {
-      workspace.packageJSON[dependencyType][workspaceName] = newVersion;
-      fs.writeFileSync(path.join(workspace.dir, "package.json"), JSON.stringify(workspace.packageJSON, null, 2) + '\n');
+    const currentVersion = workspace.packageJSON[dependencyType]?.[workspaceName];
+    if (currentVersion) {
+      const prefix = versionPrefixes.find((p) => currentVersion.startsWith(p));
+      const shouldSkip = skipVersions.some((v) => currentVersion.includes(v));
+
+      if (!shouldSkip) {
+        const versionToUpdate = prefix ? `${prefix}${newVersion}` : newVersion;
+        workspace.packageJSON[dependencyType][workspaceName] = versionToUpdate;
+        fs.writeFileSync(path.join(workspace.dir, "package.json"), JSON.stringify(workspace.packageJSON, null, 2) + '\n');
+      }
     }
   });
 }
@@ -86,9 +87,11 @@ function main() {
 
   // checkout new "release" branch & push
   const currentBranch = execSync('git branch --show-current').toString().trim();
-  if (currentBranch === 'main') {
-    execSync('git checkout -B release');
-    execSync('git push -u origin release');
+  // @TODO change to main before merging
+  if (currentBranch === 'brace/better-releases') {
+    console.log("success")
+    // execSync('git checkout -B release');
+    // execSync('git push -u origin release');
   } else {
     throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
   }
@@ -106,6 +109,7 @@ function main() {
   // Bump other workspaces that depend on this one if `bump-deps` flag is set.
   // This will create a new branch, commit and push the changes and log the branch URL.
   if (options.bumpDeps) {
+    console.log(`Bumping other packages which depend on ${options.workspace}.`);
     console.log("Checking out main branch.");
     // execSync(`git checkout main`);
     console.log("Stashing any changes.");
