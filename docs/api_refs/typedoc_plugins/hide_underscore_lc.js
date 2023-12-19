@@ -64,6 +64,12 @@ function load(application) {
         reflectionsToHide.push(reflection);
       }
     }
+    if (reflection.name.includes("/src")) {
+      reflection.name = reflection.name.replace("/src", "")
+    }
+    if (reflection.name.startsWith("libs/")) {
+      reflection.name = reflection.name.replace("libs/", "")
+    }
   }
 }
 

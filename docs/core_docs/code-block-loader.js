@@ -68,35 +68,35 @@ async function webpackLoader(content, map, meta) {
       const suffix = `.${imported}.html`;
 
       if (moduleName.startsWith("community")) {
-        return `${prefix}_community_src${moduleName.replace(
+        return `${prefix}_community_${moduleName.replace(
           "community",
           ""
         )}${suffix}`;
       }
 
       if (moduleName.startsWith("anthropic")) {
-        return `${prefix}_anthropic_src${moduleName.replace(
+        return `${prefix}_anthropic_${moduleName.replace(
           "anthropic",
           ""
         )}${suffix}`;
       }
 
       if (moduleName.startsWith("google_genai")) {
-        return `${prefix}_google_genai_src${moduleName.replace(
+        return `${prefix}_google_genai_${moduleName.replace(
           "google_genai",
           ""
         )}${suffix}`;
       }
 
       if (moduleName.startsWith("openai")) {
-        return `${prefix}_openai_src${moduleName.replace(
+        return `${prefix}_openai_${moduleName.replace(
           "openai",
           ""
         )}${suffix}`;
       }
 
       if (moduleName.startsWith("mistralai")) {
-        return `${prefix}_mistralai_src${moduleName.replace(
+        return `${prefix}_mistralai_${moduleName.replace(
           "mistralai",
           ""
         )}${suffix}`;
@@ -104,7 +104,7 @@ async function webpackLoader(content, map, meta) {
 
       // @TODO - Find a better way to deal with core
       if (moduleName.startsWith("core")) {
-        return `${category}/langchain_src_schema${suffix}`;
+        return `${category}/langchain_schema${suffix}`;
       }
 
       return null;
@@ -121,7 +121,7 @@ async function webpackLoader(content, map, meta) {
       let modulePath;
       CATEGORIES.forEach((category) => {
         // from langchain/src
-        const componentPathLangChain = `${category}/langchain_src_${moduleName}.${imported}.html`;
+        const componentPathLangChain = `${category}/langchain_${moduleName}.${imported}.html`;
         const docsPathLangChain = getDocsPath(componentPathLangChain);
 
         // from packages
@@ -135,7 +135,7 @@ async function webpackLoader(content, map, meta) {
           : null;
 
         // The modules from `langchain-core` are named differently in the API docs.
-        const componentPathWithSchema = `${category}/langchain_src_schema_${moduleName.slice(
+        const componentPathWithSchema = `${category}/langchain_schema_${moduleName.slice(
           0,
           -1
         )}.${imported}.html`;
