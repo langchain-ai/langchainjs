@@ -23,7 +23,7 @@ function load(application) {
     const langChainPackageJson = readFileSync(PATH_TO_LANGCHAIN_PKG_JSON).toString();
     langchainVersion = JSON.parse(langChainPackageJson).version;
   } catch (e) {
-    throw new Error(`Error assigning version to typedoc: ${e}`)
+    throw new Error(`Error reading LangChain version for typedoc: ${e}`)
   }
 
   /**
