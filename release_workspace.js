@@ -52,13 +52,11 @@ function main() {
   const options = program.opts();
   console.log(options);
 
-  /**
-   * Find the workspace package.json
-   */
+  // Find the workspace package.json's.
   const possibleWorkspaceDirectories = ["./libs/*", "./langchain", "./langchain-core"];
   const allWorkspaces = possibleWorkspaceDirectories.flatMap((workspaceDirectory) => {
     if (workspaceDirectory.endsWith("*")) {
-      // list all folders inside directory, read their package.json and return the one with the correct name
+      // List all folders inside directory, require, and return the package.json.
       const allDirs = fs.readdirSync(path.join(process.cwd(), workspaceDirectory.replace("*", "")));
       const subDirs = allDirs.map((dir) => {
         return {
@@ -81,7 +79,7 @@ function main() {
     throw new Error(`Could not find workspace ${options.workspace}`);
   }
 
-  // Bump version by 1
+  // Bump version by 1 or use the version passed in.
   const newVersion = options.version ?? bumpVersion(matchingWorkspace.packageJSON.version);
   console.log(`Running "release-it". Bumping version of ${options.workspace} to ${newVersion}`);
 
@@ -90,23 +88,24 @@ function main() {
   // @TODO change to main before merging
   if (currentBranch === 'brace/better-releases') {
     console.log("success")
-    // execSync('git checkout -B release');
-    // execSync('git push -u origin release');
+    execSync('git checkout -B release');
+    execSync('git push -u origin release');
   } else {
     throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
   }
 
   // run build, lint, tests
-  // execSync(`turbo run --filter ${options.workspace} build lint test --concurrency 1`);
+  execSync(`turbo run --filter ${options.workspace} build lint test --concurrency 1`);
   // run export tests
-  // execSync(`yarn run test:exports:docker`);
+  execSync(`yarn run test:exports:docker`);
   // run `release-it` on workspace
   // @TODO add options
-  // execSync(`cd ${matchingWorkspace.dir} && release-it --only-version --config .release-it.json`);
+  execSync(`cd ${matchingWorkspace.dir} && release-it --only-version --config .release-it.json`);
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
 
-  // Bump other workspaces that depend on this one if `bump-deps` flag is set.
+  // If `bump-deps` flag is set, find all workspaces which depend on the input workspace.
+  // Then, update their package.json to use the new version of the input workspace.
   // This will create a new branch, commit and push the changes and log the branch URL.
   if (options.bumpDeps) {
     console.log(`Bumping other packages which depend on ${options.workspace}.`);
@@ -138,45 +137,11 @@ function main() {
 Workspaces:
 - ${[...allWhichDependOn].map((name) => name).join("\n- ")}
 `);
-
+    // Update packages which depend on the input workspace.
     updateDependencies(allWorkspacesWhichDependOn, 'dependencies', options.workspace, newVersion);
     updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', options.workspace, newVersion);
     updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', options.workspace, newVersion);
-//     const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) => {
-//       const dependencies = Object.keys(packageJSON.dependencies ?? {});
-//       if (dependencies.includes(options.workspace)) {
-//         return true;
-//       }
-//     });
-//     const allWorkspacesWhichDevDependOn = allWorkspaces.filter(({ packageJSON }) => {
-//       const devDependencies = Object.keys(packageJSON.devDependencies ?? {});
-//       if (devDependencies.includes(options.workspace)) {
-//         return true;
-//       }
-//     });
-//     console.log(`Found ${allWorkspacesWhichDependOn.length} workspaces which depend on ${options.workspace}.
-// Workspaces:
-// - ${allWorkspacesWhichDependOn.map(({ packageJSON }) => packageJSON.name).join("\n- ")}
-// `);
-//     // Update each workspace which depends on this one.
-//     allWorkspacesWhichDependOn.forEach((workspace) => {
-//       fs.writeFileSync(path.join(workspace.dir, "package.json"), `${JSON.stringify({
-//         ...workspace.packageJSON,
-//         dependencies: {
-//           ...workspace.packageJSON.dependencies,
-//           [options.workspace]: newVersion,
-//         },
-//       }, null, 2)}\n`);
-//     });
-//     allWorkspacesWhichDevDependOn.forEach((workspace) => {
-//       fs.writeFileSync(path.join(workspace.dir, "package.json"), `${JSON.stringify({
-//         ...workspace.packageJSON,
-//         devDependencies: {
-//           ...workspace.packageJSON.devDependencies,
-//           [options.workspace]: newVersion,
-//         },
-//       }, null, 2)}\n`);
-//     });
+
     // Add all current changes, commit, push and log branch URL.
     console.log("Adding and committing all changes.");
     // execSync(`git add -A`);
