@@ -1,4 +1,4 @@
-import { ChatMistralAI } from "@langchain/mistralai";
+import { ChatMistralAI } from "@basproul/mistralai";
 import { ChatPromptTemplate } from "langchain/prompts";
 
 const model = new ChatMistralAI({
