@@ -232,7 +232,7 @@ const entrypoints = {
   callbacks: "callbacks/index",
   "callbacks/handlers/llmonitor": "callbacks/handlers/llmonitor",
   // output_parsers
-  "output_parsers": "output_parsers/index",
+  output_parsers: "output_parsers/index",
   "output_parsers/expression": "output_parsers/expression",
   // retrievers
   "retrievers/amazon_kendra": "retrievers/amazon_kendra",
