@@ -20,6 +20,7 @@
   "includeVersion": true,
   "sourceLinkTemplate": "https://github.com/langchain-ai/langchainjs/blob/{gitRevision}/{path}#L{line}",
   "logLevel": "Error",
+  "name": "LangChain.JS",
   "entryPoints": [
     "../../langchain/src/load/index.ts",
     "../../langchain/src/load/serializable.ts",

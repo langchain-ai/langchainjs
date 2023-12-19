@@ -59,10 +59,7 @@ function load(application) {
     const { project } = context;
     if (project && langchainVersion) {
       project.packageVersion = langchainVersion;
-      project.packageName = "LangChain.JS";
     }
-    console.log(project);
-    console.log("pkgName", project.packageName);
   }
 
   /**
