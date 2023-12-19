@@ -94,6 +94,9 @@ tracers/tracer_langchain.d.ts
 utils/async_caller.cjs
 utils/async_caller.js
 utils/async_caller.d.ts
+utils/chunk_array.cjs
+utils/chunk_array.js
+utils/chunk_array.d.ts
 utils/env.cjs
 utils/env.js
 utils/env.d.ts
