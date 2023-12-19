@@ -37,7 +37,6 @@ const resultsWithScore = await store.similaritySearchWithScore(
 
 // Print the results.
 console.log(JSON.stringify(resultsWithScore, null, 2));
-console.log("\n\n\n");
 /*
 [
   [
