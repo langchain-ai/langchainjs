@@ -60,7 +60,7 @@ const model = new ChatOpenAI({
 When tracing chains or agents, make sure to include the callback at the run level so that all sub LLM calls & chain runs are reported as well.
 
 ```ts
-import { LunaryHandler } from "@langchain/lunary/callbacks/handlers/lunary";
+import { LunaryHandler } from "@langchain/community/callbacks/handlers/lunary";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Calculator } from "langchain/tools/calculator";
