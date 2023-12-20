@@ -68,14 +68,14 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 /**
  * @param {string} packageDirectory The directory to run yarn release in.
  * @param {string} newVersion The new version to bump to.
- * @param {boolean} passVersion Whether or not to pass the version to yarn release.
+ * @param {boolean} isNew Whether or not the package is new. This will pass the version to yarn release if false.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory, newVersion, passVersion) {
+async function runYarnRelease(packageDirectory, newVersion, isNew) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const argsWithVersion = ['release', `--release-version=${newVersion}`];
-    const args = passVersion ? argsWithVersion : ['release'];
+    const args = isNew ? ['release'] : argsWithVersion;
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
