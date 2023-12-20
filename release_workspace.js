@@ -134,7 +134,11 @@ Workspaces:
     updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', workspaceName, newVersion);
     updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', workspaceName, newVersion);
     console.log("Updated package.json's! Running yarn install.");
-    execSync(`yarn install`);
+    try {
+      execSync(`yarn install`);
+    } catch (_) {
+      console.log("Yarn install failed. Likely because NPM did not auto-publish the new version of the workspace. Continuing.")
+    }
 
     // Add all current changes, commit, push and log branch URL.
     console.log("Adding and committing all changes.");
