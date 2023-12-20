@@ -84,7 +84,7 @@ export class TogetherAIEmbeddings
   constructor(fields?: Partial<TogetherAIEmbeddingsParams>) {
     super(fields ?? {});
 
-    let apiKey =
+    const apiKey =
       fields?.apiKey ?? getEnvironmentVariable("TOGETHER_AI_API_KEY");
     if (!apiKey) {
       throw new Error("TOGETHER_AI_API_KEY not found.");
@@ -101,14 +101,14 @@ export class TogetherAIEmbeddings
     return {
       accept: "application/json",
       "content-type": "application/json",
-      Authorization: `Bearer ${this.apiKey}`
+      Authorization: `Bearer ${this.apiKey}`,
     };
   }
 
   private constructBody(input: string) {
     const body = {
       model: this?.modelName,
-      input
+      input,
     };
     return body;
   }
@@ -170,7 +170,7 @@ export class TogetherAIEmbeddings
       const fetchResponse = await fetch(this.embeddingsAPIUrl, {
         method: "POST",
         headers,
-        body
+        body,
       });
 
       if (fetchResponse.status === 200) {
