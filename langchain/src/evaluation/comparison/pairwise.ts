@@ -1,3 +1,4 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseLLMOutputParser } from "../../schema/output_parser.js";
 import {
   eqSet,
@@ -14,7 +15,6 @@ import {
   RUN_KEY,
 } from "../../schema/index.js";
 import { PROMPT, PROMPT_WITH_REFERENCES } from "./prompt.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { Callbacks } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
 import { BasePromptTemplate } from "../../prompts/index.js";
@@ -184,7 +184,7 @@ To use references, use the LabeledPairwiseStringEvalChain instead.`;
    * @param chainOptions Options to pass to the chain.
    */
   static async fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     criteria?: CriteriaLike,
     chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>
   ) {

@@ -5,7 +5,7 @@ import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 
 const _LANGCHAIN_DEFAULT_COLLECTION_NAME = "langchain_document";
@@ -57,7 +57,7 @@ export class AnalyticDBVectorStore extends VectorStore {
     return "analyticdb";
   }
 
-  constructor(embeddings: Embeddings, args: AnalyticDBArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: AnalyticDBArgs) {
     super(embeddings, args);
 
     this.pool = new pg.Pool({
@@ -339,7 +339,7 @@ export class AnalyticDBVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: AnalyticDBArgs
   ): Promise<AnalyticDBVectorStore> {
     const docs = [];
@@ -364,7 +364,7 @@ export class AnalyticDBVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: AnalyticDBArgs
   ): Promise<AnalyticDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
@@ -380,7 +380,7 @@ export class AnalyticDBVectorStore extends VectorStore {
    * @returns Promise that resolves to an instance of `AnalyticDBVectorStore`.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: AnalyticDBArgs
   ): Promise<AnalyticDBVectorStore> {
     const instance = new this(embeddings, dbConfig);

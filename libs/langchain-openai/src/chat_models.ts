@@ -18,7 +18,7 @@ import {
   ChatGenerationChunk,
   type ChatResult,
 } from "@langchain/core/outputs";
-import { StructuredTool } from "@langchain/core/tools";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
@@ -171,7 +171,7 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredTool[] | OpenAIClient.ChatCompletionTool[];
+  tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
   promptIndex?: number;
   response_format?: { type: "json_object" };
@@ -396,11 +396,11 @@ export class ChatOpenAI<
   ): Omit<OpenAIClient.Chat.ChatCompletionCreateParams, "messages"> {
     function isStructuredToolArray(
       tools?: unknown[]
-    ): tools is StructuredTool[] {
+    ): tools is StructuredToolInterface[] {
       return (
         tools !== undefined &&
         tools.every((tool) =>
-          Array.isArray((tool as StructuredTool).lc_namespace)
+          Array.isArray((tool as StructuredToolInterface).lc_namespace)
         )
       );
     }

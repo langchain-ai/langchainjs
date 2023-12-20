@@ -24,11 +24,11 @@ In the above code snippet, the fromLLM method of the `ConversationalRetrievalQAC
 
 ```typescript
 static fromLLM(
-  llm: BaseLanguageModel,
-  retriever: BaseRetriever,
+  llm: BaseLanguageModelInterface,
+  retriever: BaseRetrieverInterface,
   options?: {
     questionGeneratorChainOptions?: {
-      llm?: BaseLanguageModel;
+      llm?: BaseLanguageModelInterface;
       template?: string;
     };
     qaChainOptions?: QAChainParams;

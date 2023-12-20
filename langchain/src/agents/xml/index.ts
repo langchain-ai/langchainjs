@@ -1,4 +1,5 @@
-import { Tool } from "../../tools/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { ToolInterface } from "@langchain/core/tools";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   AgentStep,
@@ -14,14 +15,13 @@ import {
 import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
 
 /**
  * Interface for the input to the XMLAgent class.
  */
 export interface XMLAgentInput {
-  tools: Tool[];
+  tools: ToolInterface[];
   llmChain: LLMChain;
 }
 
@@ -35,7 +35,7 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
 
   lc_namespace = ["langchain", "agents", "xml"];
 
-  tools: Tool[];
+  tools: ToolInterface[];
 
   llmChain: LLMChain;
 
@@ -101,8 +101,8 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
    * @returns An instance of XMLAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
-    tools: Tool[],
+    llm: BaseLanguageModelInterface,
+    tools: ToolInterface[],
     args?: XMLAgentInput & Pick<AgentArgs, "callbacks">
   ) {
     const prompt = XMLAgent.createPrompt();

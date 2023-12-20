@@ -5,7 +5,7 @@ import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -85,7 +85,7 @@ export class CassandraStore extends VectorStore {
     return "cassandra";
   }
 
-  constructor(embeddings: Embeddings, args: CassandraLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: CassandraLibArgs) {
     super(embeddings, args);
 
     const {
@@ -231,7 +231,7 @@ export class CassandraStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object | object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const docs: Document[] = [];
@@ -257,7 +257,7 @@ export class CassandraStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const instance = new this(embeddings, args);
@@ -275,7 +275,7 @@ export class CassandraStore extends VectorStore {
    * @returns Promise that resolves with a new instance of CassandraStore.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const instance = new this(embeddings, args);

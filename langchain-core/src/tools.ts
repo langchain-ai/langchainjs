@@ -10,6 +10,7 @@ import {
   type BaseLangChainParams,
 } from "./language_models/base.js";
 import type { RunnableConfig } from "./runnables/config.js";
+import type { RunnableInterface } from "./runnables/base.js";
 
 /**
  * Parameters for the Tool classes.
@@ -28,6 +29,40 @@ export class ToolInputParsingException extends Error {
     super(message);
     this.output = output;
   }
+}
+
+export interface StructuredToolInterface<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+> extends RunnableInterface<
+    (z.output<T> extends string ? string : never) | z.input<T>,
+    string
+  > {
+  lc_namespace: string[];
+
+  schema: T | z.ZodEffects<T>;
+
+  /**
+   * Calls the tool with the provided argument, configuration, and tags. It
+   * parses the input according to the schema, handles any errors, and
+   * manages callbacks.
+   * @param arg The input argument for the tool.
+   * @param configArg Optional configuration or callbacks for the tool.
+   * @param tags Optional tags for the tool.
+   * @returns A Promise that resolves with a string.
+   */
+  call(
+    arg: (z.output<T> extends string ? string : never) | z.input<T>,
+    configArg?: Callbacks | RunnableConfig,
+    /** @deprecated */
+    tags?: string[]
+  ): Promise<string>;
+
+  name: string;
+
+  description: string;
+
+  returnDirect: boolean;
 }
 
 /**
@@ -127,6 +162,20 @@ export abstract class StructuredTool<
   abstract description: string;
 
   returnDirect = false;
+}
+
+export interface ToolInterface extends StructuredToolInterface {
+  /**
+   * Calls the tool with the provided argument and callbacks. It handles
+   * string inputs specifically.
+   * @param arg The input argument for the tool, which can be a string, undefined, or an input of the tool's schema.
+   * @param callbacks Optional callbacks for the tool.
+   * @returns A Promise that resolves with a string.
+   */
+  call(
+    arg: string | undefined | z.input<this["schema"]>,
+    callbacks?: Callbacks | RunnableConfig
+  ): Promise<string>;
 }
 
 /**

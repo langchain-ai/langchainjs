@@ -5,8 +5,8 @@ import {
   Callbacks,
   parseCallbackConfigArg,
 } from "./callbacks/manager.js";
-import { Document } from "./documents/document.js";
-import { Runnable } from "./runnables/base.js";
+import type { DocumentInterface } from "./documents/document.js";
+import { Runnable, type RunnableInterface } from "./runnables/base.js";
 import { RunnableConfig } from "./runnables/config.js";
 
 /**
@@ -19,12 +19,23 @@ export interface BaseRetrieverInput {
   verbose?: boolean;
 }
 
+export interface BaseRetrieverInterface
+  extends RunnableInterface<string, DocumentInterface[]> {
+  getRelevantDocuments(
+    query: string,
+    config?: Callbacks | BaseCallbackConfig
+  ): Promise<DocumentInterface[]>;
+}
+
 /**
  * Abstract base class for a Document retrieval system. A retrieval system
  * is defined as something that can take string queries and return the
  * most 'relevant' Documents from some source.
  */
-export abstract class BaseRetriever extends Runnable<string, Document[]> {
+export abstract class BaseRetriever
+  extends Runnable<string, DocumentInterface[]>
+  implements BaseRetrieverInterface
+{
   callbacks?: Callbacks;
 
   tags?: string[];
@@ -49,11 +60,14 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
   _getRelevantDocuments(
     _query: string,
     _callbacks?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     throw new Error("Not implemented!");
   }
 
-  async invoke(input: string, options?: RunnableConfig): Promise<Document[]> {
+  async invoke(
+    input: string,
+    options?: RunnableConfig
+  ): Promise<DocumentInterface[]> {
     return this.getRelevantDocuments(input, options);
   }
 
@@ -70,7 +84,7 @@ export abstract class BaseRetriever extends Runnable<string, Document[]> {
   async getRelevantDocuments(
     query: string,
     config?: Callbacks | BaseCallbackConfig
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,

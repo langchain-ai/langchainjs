@@ -1,4 +1,5 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { ToolInterface } from "@langchain/core/tools";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   ChatPromptTemplate,
@@ -13,7 +14,6 @@ import {
   BaseMessage,
   HumanMessage,
 } from "../../schema/index.js";
-import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
@@ -58,7 +58,7 @@ export class ChatConversationalAgent extends Agent {
 
   lc_namespace = ["langchain", "agents", "chat_convo"];
 
-  declare ToolType: Tool;
+  declare ToolType: ToolInterface;
 
   constructor(input: ChatConversationalAgentInput) {
     const outputParser =
@@ -82,7 +82,7 @@ export class ChatConversationalAgent extends Agent {
     return ["Observation:"];
   }
 
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: ToolInterface[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
       const msg =
@@ -148,7 +148,7 @@ export class ChatConversationalAgent extends Agent {
    * @param args.outputParser - Output parser to use for formatting.
    */
   static createPrompt(
-    tools: Tool[],
+    tools: ToolInterface[],
     args?: ChatConversationalCreatePromptArgs
   ) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
@@ -186,8 +186,8 @@ export class ChatConversationalAgent extends Agent {
    * @returns An instance of the ChatConversationalAgent class.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
-    tools: Tool[],
+    llm: BaseLanguageModelInterface,
+    tools: ToolInterface[],
     args?: ChatConversationalCreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);
