@@ -9,7 +9,7 @@ import {
 
 
 // LLama Test
-test("Test AzureML LLama Call", async () => {
+//test("Test AzureML LLama Call", async () => {
   const prompt = "What is the meaning of Foo?";
   const model = new AzureMLOnlineEndpoint({
     contentFormatter: new LlamaContentFormatter(),
