@@ -1,8 +1,7 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 import type { Schemas as QdrantSchemas } from "@qdrant/js-client-rest";
 import { v4 as uuid } from "uuid";
-
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -19,7 +18,14 @@ export interface QdrantLibArgs {
   apiKey?: string;
   collectionName?: string;
   collectionConfig?: QdrantSchemas["CreateCollection"];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  customPayload?: Record<string, any>[];
 }
+
+export type QdrantAddDocumentOptions = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  customPayload: Record<string, any>[];
+};
 
 /**
  * Type for the response returned by a search operation in the Qdrant
@@ -57,7 +63,7 @@ export class QdrantVectorStore extends VectorStore {
     return "qdrant";
   }
 
-  constructor(embeddings: Embeddings, args: QdrantLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: QdrantLibArgs) {
     super(embeddings, args);
 
     const url = args.url ?? getEnvironmentVariable("QDRANT_URL");
@@ -84,13 +90,18 @@ export class QdrantVectorStore extends VectorStore {
    * from the documents using the `Embeddings` instance and then adds the
    * vectors to the database.
    * @param documents Array of `Document` instances to be added to the Qdrant database.
+   * @param documentOptions Optional `QdrantAddDocumentOptions` which has a list of JSON objects for extra querying
    * @returns Promise that resolves when the documents have been added to the database.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    documentOptions?: QdrantAddDocumentOptions
+  ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      documentOptions
     );
   }
 
@@ -100,9 +111,14 @@ export class QdrantVectorStore extends VectorStore {
    * database.
    * @param vectors Array of vectors to be added to the Qdrant database.
    * @param documents Array of `Document` instances associated with the vectors.
+   * @param documentOptions Optional `QdrantAddDocumentOptions` which has a list of JSON objects for extra querying
    * @returns Promise that resolves when the vectors have been added to the database.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    documentOptions?: QdrantAddDocumentOptions
+  ): Promise<void> {
     if (vectors.length === 0) {
       return;
     }
@@ -115,6 +131,7 @@ export class QdrantVectorStore extends VectorStore {
       payload: {
         content: documents[idx].pageContent,
         metadata: documents[idx].metadata,
+        customPayload: documentOptions?.customPayload[idx],
       },
     }));
 
@@ -209,7 +226,7 @@ export class QdrantVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const docs = [];
@@ -234,11 +251,18 @@ export class QdrantVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
-    await instance.addDocuments(docs);
+    if (dbConfig.customPayload) {
+      const documentOptions = {
+        customPayload: dbConfig?.customPayload,
+      };
+      await instance.addDocuments(docs, documentOptions);
+    } else {
+      await instance.addDocuments(docs);
+    }
     return instance;
   }
 
@@ -250,7 +274,7 @@ export class QdrantVectorStore extends VectorStore {
    * @returns Promise that resolves with a new `QdrantVectorStore` instance.
    */
   static async fromExistingCollection(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);

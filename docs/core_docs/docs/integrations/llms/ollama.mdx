@@ -14,6 +14,15 @@ Follow [these instructions](https://github.com/jmorganca/ollama) to set up and r
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
-import OllamaExample from "@examples/llms/ollama.ts";
+import OllamaExample from "@examples/models/llm/ollama.ts";
 
 <CodeBlock language="typescript">{OllamaExample}</CodeBlock>
+
+## Multimodal models
+
+Ollama supports open source multimodal models like [LLaVA](https://ollama.ai/library/llava) in versions 0.1.15 and up.
+You can bind base64 encoded image data to multimodal-capable models to use as context like this:
+
+import OllamaMultimodalExample from "@examples/models/llm/ollama_multimodal.ts";
+
+<CodeBlock language="typescript">{OllamaMultimodalExample}</CodeBlock>

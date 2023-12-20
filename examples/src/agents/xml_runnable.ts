@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { AgentExecutor } from "langchain/agents";
 import { SerpAPI, Tool } from "langchain/tools";
 import {
@@ -16,11 +16,12 @@ import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_me
  * Define your chat model.
  * In this case we'll use Claude since it preforms well on XML related tasks
  */
-const model = new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).bind(
-  {
-    stop: ["</tool_input>", "</final_answer>"],
-  }
-);
+const model = new ChatAnthropic({
+  modelName: "claude-2.1",
+  temperature: 0,
+}).bind({
+  stop: ["</tool_input>", "</final_answer>"],
+});
 /** Define your list of tools. */
 const tools = [new SerpAPI()];
 

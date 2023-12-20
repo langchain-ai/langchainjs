@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.3",
+  "version": "0.0.8",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -34,8 +34,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.0",
-    "@langchain/openai": "~0.0.5",
+    "@langchain/core": "~0.1.3",
+    "@langchain/openai": "~0.0.7",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
@@ -109,6 +109,7 @@
     "closevector-web": "0.1.0-alpha.15",
     "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
+    "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "dpdm": "^3.12.0",
     "eslint": "^8.33.0",
@@ -203,6 +204,7 @@
     "closevector-web": "0.1.0-alpha.16",
     "cohere-ai": ">=6.0.0",
     "convex": "^1.3.1",
+    "discord.js": "^14.14.1",
     "faiss-node": "^0.5.1",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
@@ -377,6 +379,9 @@
     "convex": {
       "optional": true
     },
+    "discord.js": {
+      "optional": true
+    },
     "faiss-node": {
       "optional": true
     },
@@ -510,6 +515,11 @@
       "types": "./tools/dadjokeapi.d.ts",
       "import": "./tools/dadjokeapi.js",
       "require": "./tools/dadjokeapi.cjs"
+    },
+    "./tools/discord": {
+      "types": "./tools/discord.d.ts",
+      "import": "./tools/discord.js",
+      "require": "./tools/discord.cjs"
     },
     "./tools/dynamic": {
       "types": "./tools/dynamic.d.ts",
@@ -745,6 +755,11 @@
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/togetherai": {
+      "types": "./llms/togetherai.d.ts",
+      "import": "./llms/togetherai.js",
+      "require": "./llms/togetherai.cjs"
     },
     "./llms/watsonx_ai": {
       "types": "./llms/watsonx_ai.d.ts",
@@ -1056,6 +1071,11 @@
       "import": "./retrievers/tavily_search_api.js",
       "require": "./retrievers/tavily_search_api.cjs"
     },
+    "./retrievers/vectara_summary": {
+      "types": "./retrievers/vectara_summary.d.ts",
+      "import": "./retrievers/vectara_summary.js",
+      "require": "./retrievers/vectara_summary.cjs"
+    },
     "./retrievers/zep": {
       "types": "./retrievers/zep.d.ts",
       "import": "./retrievers/zep.js",
@@ -1247,6 +1267,9 @@
     "tools/dadjokeapi.cjs",
     "tools/dadjokeapi.js",
     "tools/dadjokeapi.d.ts",
+    "tools/discord.cjs",
+    "tools/discord.js",
+    "tools/discord.d.ts",
     "tools/dynamic.cjs",
     "tools/dynamic.js",
     "tools/dynamic.d.ts",
@@ -1388,6 +1411,9 @@
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/togetherai.cjs",
+    "llms/togetherai.js",
+    "llms/togetherai.d.ts",
     "llms/watsonx_ai.cjs",
     "llms/watsonx_ai.js",
     "llms/watsonx_ai.d.ts",
@@ -1574,6 +1600,9 @@
     "retrievers/tavily_search_api.cjs",
     "retrievers/tavily_search_api.js",
     "retrievers/tavily_search_api.d.ts",
+    "retrievers/vectara_summary.cjs",
+    "retrievers/vectara_summary.js",
+    "retrievers/vectara_summary.d.ts",
     "retrievers/zep.cjs",
     "retrievers/zep.js",
     "retrievers/zep.d.ts",

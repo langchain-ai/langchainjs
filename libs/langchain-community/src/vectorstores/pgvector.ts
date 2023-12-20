@@ -1,6 +1,6 @@
 import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -72,7 +72,10 @@ export class PGVectorStore extends VectorStore {
     return "pgvector";
   }
 
-  private constructor(embeddings: Embeddings, config: PGVectorStoreArgs) {
+  private constructor(
+    embeddings: EmbeddingsInterface,
+    config: PGVectorStoreArgs
+  ) {
     super(embeddings, config);
     this.tableName = config.tableName;
     this.collectionTableName = config.collectionTableName;
@@ -104,7 +107,7 @@ export class PGVectorStore extends VectorStore {
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const postgresqlVectorStore = new PGVectorStore(embeddings, config);
@@ -252,8 +255,8 @@ export class PGVectorStore extends VectorStore {
       const embedding = vectors[i];
       const embeddingString = `[${embedding.join(",")}]`;
       values.push(
-        documents[i].pageContent,
-        embeddingString,
+        documents[i].pageContent.replace(/\0/g, ""),
+        embeddingString.replace(/\0/g, ""),
         documents[i].metadata
       );
       if (collectionId) {
@@ -272,6 +275,92 @@ export class PGVectorStore extends VectorStore {
         console.error(e);
         throw new Error(`Error inserting: ${(e as Error).message}`);
       }
+    }
+  }
+
+  /**
+   * Method to delete documents from the vector store. It deletes the
+   * documents that match the provided ids.
+   *
+   * @param ids - Array of document ids.
+   * @returns Promise that resolves when the documents have been deleted.
+   */
+  private async deleteById(ids: string[]) {
+    let collectionId;
+    if (this.collectionTableName) {
+      collectionId = await this.getOrCreateCollection();
+    }
+
+    // Set parameters of dynamically generated query
+    const params = collectionId ? [ids, collectionId] : [ids];
+
+    const queryString = `
+      DELETE FROM ${this.tableName}
+      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
+      this.idColumnName
+    } = ANY($1::uuid[])
+    `;
+    await this.pool.query(queryString, params);
+  }
+
+  /**
+   * Method to delete documents from the vector store. It deletes the
+   * documents whose metadata contains the filter.
+   *
+   * @param filter - An object representing the Metadata filter.
+   * @returns Promise that resolves when the documents have been deleted.
+   */
+  private async deleteByFilter(filter: Metadata) {
+    let collectionId;
+    if (this.collectionTableName) {
+      collectionId = await this.getOrCreateCollection();
+    }
+
+    // Set parameters of dynamically generated query
+    const params = collectionId ? [filter, collectionId] : [filter];
+
+    const queryString = `
+      DELETE FROM ${this.tableName}
+      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
+      this.metadataColumnName
+    }::jsonb @> $1
+    `;
+    return await this.pool.query(queryString, params);
+  }
+
+  /**
+   * Method to delete documents from the vector store. It deletes the
+   * documents that match the provided ids or metadata filter. Matches ids
+   * exactly and metadata filter according to postgres jsonb containment. Ids and filter
+   * are mutually exclusive.
+   *
+   * @param params - Object containing either an array of ids or a metadata filter object.
+   * @returns Promise that resolves when the documents have been deleted.
+   * @throws Error if neither ids nor filter are provided, or if both are provided.
+   * @example <caption>Delete by ids</caption>
+   * await vectorStore.delete({ ids: ["id1", "id2"] });
+   * @example <caption>Delete by filter</caption>
+   * await vectorStore.delete({ filter: { a: 1, b: 2 } });
+   */
+  async delete(params: { ids?: string[]; filter?: Metadata }): Promise<void> {
+    const { ids, filter } = params;
+
+    if (!(ids || filter)) {
+      throw new Error(
+        "You must specify either ids or a filter when deleting documents."
+      );
+    }
+
+    if (ids && filter) {
+      throw new Error(
+        "You cannot specify both ids and a filter when deleting documents."
+      );
+    }
+
+    if (ids) {
+      await this.deleteById(ids);
+    } else if (filter) {
+      await this.deleteByFilter(filter);
     }
   }
 
@@ -392,7 +481,7 @@ export class PGVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const docs = [];
@@ -419,7 +508,7 @@ export class PGVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);

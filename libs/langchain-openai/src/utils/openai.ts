@@ -4,7 +4,7 @@ import {
   type OpenAI as OpenAIClient,
 } from "openai";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { StructuredTool } from "@langchain/core/tools";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapOpenAIClientError(e: any) {
@@ -28,7 +28,7 @@ export function wrapOpenAIClientError(e: any) {
  * schema, which is then used as the parameters for the OpenAI function.
  */
 export function formatToOpenAIFunction(
-  tool: StructuredTool
+  tool: StructuredToolInterface
 ): OpenAIClient.Chat.ChatCompletionCreateParams.Function {
   return {
     name: tool.name,
@@ -38,7 +38,7 @@ export function formatToOpenAIFunction(
 }
 
 export function formatToOpenAITool(
-  tool: StructuredTool
+  tool: StructuredToolInterface
 ): OpenAIClient.Chat.ChatCompletionTool {
   const schema = zodToJsonSchema(tool.schema);
   return {
@@ -52,7 +52,7 @@ export function formatToOpenAITool(
 }
 
 export function formatToOpenAIAssistantTool(
-  tool: StructuredTool
+  tool: StructuredToolInterface
 ): OpenAIClient.Beta.AssistantCreateParams.AssistantToolsFunction {
   return {
     type: "function",

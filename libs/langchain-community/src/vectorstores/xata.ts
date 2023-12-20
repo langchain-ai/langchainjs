@@ -1,5 +1,5 @@
 import { BaseClient } from "@xata.io/client";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -35,7 +35,10 @@ export class XataVectorSearch<
     return "xata";
   }
 
-  constructor(embeddings: Embeddings, args: XataClientArgs<XataClient>) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    args: XataClientArgs<XataClient>
+  ) {
     super(embeddings, args);
 
     this.client = args.client;

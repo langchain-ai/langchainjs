@@ -1,9 +1,12 @@
 import * as uuid from "uuid";
-
-import { Embeddings } from "@langchain/core/embeddings";
-import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  BaseCallbackConfig,
+  Callbacks,
+} from "@langchain/core/callbacks/manager";
 import { FakeEmbeddings } from "../utils/testing.js";
 
 /**
@@ -41,30 +44,91 @@ export interface VectaraFile {
 }
 
 /**
- * Interface for the filter options used in Vectara API calls.
- */
-export interface VectaraFilter {
-  // Example of a vectara filter string can be: "doc.rating > 3.0 and part.lang = 'deu'"
-  // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
-  filter?: string;
-  // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda,
-  // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
-  // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
-  lambda?: number;
-  // The number of sentences before/after the matching segment to add to the context.
-  contextConfig?: VectaraContextConfig;
-}
-
-/**
  * Interface for the context configuration used in Vectara API calls.
  */
 export interface VectaraContextConfig {
-  // The number of sentences before the matching segment to add. Default is 2.
+  // The amount of context before. Ignored if sentences_before is set.
+  charsBefore?: number;
+  // The amount of context after. Ignored if sentences_after is set.
+  charsAfter?: number;
+  // The amount of context before, in sentences.
   sentencesBefore?: number;
-  // The number of sentences after the matching segment to add. Default is 2.
+  // The amount of context after, in sentences.
   sentencesAfter?: number;
+  // The tag that wraps the snippet at the start.
+  startTag?: string;
+  // The tag that wraps the snippet at the end.
+  endTag?: string;
 }
 
+export interface MMRConfig {
+  enabled?: boolean;
+  mmrTopK?: number;
+  diversityBias?: number;
+}
+
+export interface VectaraSummary {
+  // Whether to enable summarization.
+  enabled: boolean;
+  // The name of the summarizer+prompt combination to use for summarization.
+  summarizerPromptName?: string;
+  // Maximum number of results to summarize.
+  maxSummarizedResults: number;
+  // ISO 639-1 or ISO 639-3 language code for the response, or "auto" to indicate that
+  // the auto-detected language of the incoming query should be used.
+  responseLang: string;
+}
+
+// VectaraFilter holds all the arguments for result retrieval by Vectara
+// It's not really a filter, but a collection of arguments for the Vectara API
+// However, it's been named "XXXFilter" in other places, so we keep the name here for consistency.
+export interface VectaraFilter extends BaseCallbackConfig {
+  // The start position in the result set
+  start?: number;
+  // Example of a vectara filter string can be: "doc.rating > 3.0 and part.lang = 'deu'"
+  // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
+  filter?: string;
+  // Improve retrieval accuracy using Hybrid search, by adjusting the value of lambda (0...1)
+  // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
+  // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
+  lambda?: number;
+  // See Vectara Search API docs for more details on the following options: https://docs.vectara.com/docs/api-reference/search-apis/search
+  contextConfig?: VectaraContextConfig;
+  mmrConfig?: MMRConfig;
+}
+
+export const DEFAULT_FILTER: VectaraFilter = {
+  start: 0,
+  filter: "",
+  lambda: 0.0,
+  contextConfig: {
+    sentencesBefore: 2,
+    sentencesAfter: 2,
+    startTag: "<b>",
+    endTag: "</b>",
+  },
+  mmrConfig: {
+    enabled: false,
+    mmrTopK: 0,
+    diversityBias: 0.0,
+  },
+};
+
+interface SummaryResult {
+  documents: Document[];
+  scores: number[];
+  summary: string;
+}
+
+export interface VectaraRetrieverInput {
+  vectara: VectaraStore;
+  topK: number;
+  summaryConfig?: VectaraSummary;
+  callbacks?: Callbacks;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  verbose?: boolean;
+}
 /**
  * Class for interacting with the Vectara API. Extends the VectorStore
  * class.
@@ -361,37 +425,50 @@ export class VectaraStore extends VectorStore {
   }
 
   /**
-   * Performs a similarity search and returns documents along with their
-   * scores.
+   * Performs a Vectara API call based on the arguments provided.
    * @param query The query string for the similarity search.
    * @param k Optional. The number of results to return. Default is 10.
    * @param filter Optional. A VectaraFilter object to refine the search results.
    * @returns A Promise that resolves to an array of tuples, each containing a Document and its score.
    */
-  async similaritySearchWithScore(
+  async vectaraQuery(
     query: string,
-    k = 10,
-    filter: VectaraFilter | undefined = undefined
-  ): Promise<[Document, number][]> {
+    k: number,
+    vectaraFilterObject: VectaraFilter,
+    summary: VectaraSummary = {
+      enabled: false,
+      maxSummarizedResults: 0,
+      responseLang: "eng",
+    }
+  ): Promise<SummaryResult> {
     const headers = await this.getJsonHeader();
+    const { start, filter, lambda, contextConfig, mmrConfig } =
+      vectaraFilterObject;
 
     const corpusKeys = this.corpusId.map((corpusId) => ({
       customerId: this.customerId,
       corpusId,
-      metadataFilter: filter?.filter ?? "",
-      lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
+      metadataFilter: filter,
+      lexicalInterpolationConfig: { lambda },
     }));
 
     const data = {
       query: [
         {
           query,
-          numResults: k,
-          contextConfig: {
-            sentencesAfter: filter?.contextConfig?.sentencesAfter ?? 2,
-            sentencesBefore: filter?.contextConfig?.sentencesBefore ?? 2,
-          },
+          start,
+          numResults: mmrConfig?.enabled ? mmrConfig.mmrTopK : k,
+          contextConfig,
+          ...(mmrConfig?.enabled
+            ? {
+                rerankingConfig: {
+                  rerankerId: 272725718,
+                  mmrConfig: { diversityBias: mmrConfig.diversityBias },
+                },
+              }
+            : {}),
           corpusKey: corpusKeys,
+          ...(summary?.enabled ? { summary: [summary] } : {}),
         },
       ],
     };
@@ -432,20 +509,53 @@ export class VectaraStore extends VectorStore {
       responses[i].metadata = combinedMetadata;
     }
 
-    const documentsAndScores = responses.map(
-      (response: {
-        text: string;
-        metadata: Record<string, unknown>;
-        score: number;
-      }) => [
-        new Document({
-          pageContent: response.text,
-          metadata: response.metadata,
-        }),
-        response.score,
-      ]
+    const res: SummaryResult = {
+      documents: responses.map(
+        (response: {
+          text: string;
+          metadata: Record<string, unknown>;
+          score: number;
+        }) =>
+          new Document({
+            pageContent: response.text,
+            metadata: response.metadata,
+          })
+      ),
+      scores: responses.map(
+        (response: {
+          text: string;
+          metadata: Record<string, unknown>;
+          score: number;
+        }) => response.score
+      ),
+      summary: result.responseSet[0].summary[0]?.text ?? "",
+    };
+    return res;
+  }
+
+  /**
+   * Performs a similarity search and returns documents along with their
+   * scores.
+   * @param query The query string for the similarity search.
+   * @param k Optional. The number of results to return. Default is 10.
+   * @param filter Optional. A VectaraFilter object to refine the search results.
+   * @returns A Promise that resolves to an array of tuples, each containing a Document and its score.
+   */
+  async similaritySearchWithScore(
+    query: string,
+    k?: number,
+    filter?: VectaraFilter
+  ): Promise<[Document, number][]> {
+    const summaryResult = await this.vectaraQuery(
+      query,
+      k || 10,
+      filter || DEFAULT_FILTER
     );
-    return documentsAndScores;
+    const res = summaryResult.documents.map(
+      (document, index) =>
+        [document, summaryResult.scores[index]] as [Document, number]
+    );
+    return res;
   }
 
   /**
@@ -457,15 +567,15 @@ export class VectaraStore extends VectorStore {
    */
   async similaritySearch(
     query: string,
-    k = 10,
-    filter: VectaraFilter | undefined = undefined
+    k?: number,
+    filter?: VectaraFilter
   ): Promise<Document[]> {
-    const resultWithScore = await this.similaritySearchWithScore(
+    const documents = await this.similaritySearchWithScore(
       query,
-      k,
-      filter
+      k || 10,
+      filter || DEFAULT_FILTER
     );
-    return resultWithScore.map((result) => result[0]);
+    return documents.map((result) => result[0]);
   }
 
   /**
@@ -497,7 +607,7 @@ export class VectaraStore extends VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object | object[],
-    _embeddings: Embeddings,
+    _embeddings: EmbeddingsInterface,
     args: VectaraLibArgs
   ): Promise<VectaraStore> {
     const docs: Document[] = [];
@@ -522,7 +632,7 @@ export class VectaraStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    _embeddings: Embeddings,
+    _embeddings: EmbeddingsInterface,
     args: VectaraLibArgs
   ): Promise<VectaraStore> {
     const instance = new this(args);

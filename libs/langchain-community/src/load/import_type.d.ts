@@ -7,6 +7,9 @@ export interface OptionalImportMap {
   "@langchain/community/tools/aws_sfn"?:
     | typeof import("../tools/aws_sfn.js")
     | Promise<typeof import("../tools/aws_sfn.js")>;
+  "@langchain/community/tools/discord"?:
+    | typeof import("../tools/discord.js")
+    | Promise<typeof import("../tools/discord.js")>;
   "@langchain/community/tools/gmail"?:
     | typeof import("../tools/gmail/index.js")
     | Promise<typeof import("../tools/gmail/index.js")>;
@@ -235,6 +238,9 @@ export interface OptionalImportMap {
   "@langchain/community/retrievers/supabase"?:
     | typeof import("../retrievers/supabase.js")
     | Promise<typeof import("../retrievers/supabase.js")>;
+  "@langchain/community/retrievers/vectara_summary"?:
+    | typeof import("../retrievers/vectara_summary.js")
+    | Promise<typeof import("../retrievers/vectara_summary.js")>;
   "@langchain/community/retrievers/zep"?:
     | typeof import("../retrievers/zep.js")
     | Promise<typeof import("../retrievers/zep.js")>;

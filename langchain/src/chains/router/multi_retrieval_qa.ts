@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
 import { MultiRouteChain, MultiRouteChainInput } from "./multi_route.js";
 import { BaseChain } from "../../chains/base.js";
 import { interpolateFString } from "../../prompts/template.js";
@@ -9,7 +10,6 @@ import {
   ConversationChain,
   DEFAULT_TEMPLATE,
 } from "../../chains/conversation.js";
-import { BaseRetriever } from "../../schema/retriever.js";
 import { STRUCTURED_MULTI_RETRIEVAL_ROUTER_TEMPLATE } from "./multi_retrieval_prompt.js";
 import { zipEntries } from "./utils.js";
 import {
@@ -24,7 +24,7 @@ import { RouterOutputParser } from "../../output_parsers/router.js";
  * default prompt, and default chain.
  */
 export type MultiRetrievalDefaults = {
-  defaultRetriever?: BaseRetriever;
+  defaultRetriever?: BaseRetrieverInterface;
   defaultPrompt?: PromptTemplate;
   defaultChain?: BaseChain;
 };
@@ -73,10 +73,10 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
    * @deprecated Use `fromRetrieversAndPrompts` instead
    */
   static fromRetrievers(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     retrieverNames: string[],
     retrieverDescriptions: string[],
-    retrievers: BaseRetriever[],
+    retrievers: BaseRetrieverInterface[],
     retrieverPrompts?: PromptTemplate[],
     defaults?: MultiRetrievalDefaults,
     options?: Omit<MultiRouteChainInput, "defaultChain">
@@ -100,7 +100,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
    * @param llm A BaseLanguageModel instance.
    * @param retrieverNames An array of retriever names.
    * @param retrieverDescriptions An array of retriever descriptions.
-   * @param retrievers An array of BaseRetriever instances.
+   * @param retrievers An array of BaseRetrieverInterface instances.
    * @param retrieverPrompts An optional array of PromptTemplate instances for the retrievers.
    * @param defaults An optional MultiRetrievalDefaults instance.
    * @param multiRetrievalChainOpts Additional optional parameters for the multi-retrieval chain.
@@ -108,7 +108,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
    * @returns A new instance of MultiRetrievalQAChain.
    */
   static fromLLMAndRetrievers(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     {
       retrieverNames,
       retrieverDescriptions,
@@ -120,7 +120,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     }: {
       retrieverNames: string[];
       retrieverDescriptions: string[];
-      retrievers: BaseRetriever[];
+      retrievers: BaseRetrieverInterface[];
       retrieverPrompts?: PromptTemplate[];
       defaults?: MultiRetrievalDefaults;
       multiRetrievalChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
@@ -178,7 +178,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     const routerChain = LLMRouterChain.fromLLM(llm, routerPrompt);
     const prompts = retrieverPrompts ?? retrievers.map(() => null);
     const destinationChains = zipEntries<
-      [string, BaseRetriever, PromptTemplate | null]
+      [string, BaseRetrieverInterface, PromptTemplate | null]
     >(retrieverNames, retrievers, prompts).reduce(
       (acc, [name, retriever, prompt]) => {
         const opt: Partial<RetrievalQAChainInput> & {

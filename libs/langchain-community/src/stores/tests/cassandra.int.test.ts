@@ -17,7 +17,13 @@ const cassandraConfig = {
 };
 const client = new Client(cassandraConfig);
 
-// yarn test:single /langchain/src/stores/tests/cassandra.int.test.ts
+// For internal testing:
+//   1. switch "describe.skip(" to "describe("
+//   2. Copy the SCB into the dev container (if using it)
+//   3. Export OPENAI_API_KEY, CASSANDRA_SCB, and CASSANDRA_TOKEN
+//   4. cd langchainjs/libs/langchain-community
+//   5. yarn test:single src/stores/tests/cassandra.int.test.ts
+// Once manual testing is complete, re-instate the ".skip"
 describe.skip("CassandraChatMessageHistory", () => {
   beforeAll(async () => {
     await client.execute("DROP TABLE IF EXISTS test.test_message_history;");

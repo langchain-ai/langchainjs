@@ -25,6 +25,9 @@ tools/connery.d.ts
 tools/dadjokeapi.cjs
 tools/dadjokeapi.js
 tools/dadjokeapi.d.ts
+tools/discord.cjs
+tools/discord.js
+tools/discord.d.ts
 tools/dynamic.cjs
 tools/dynamic.js
 tools/dynamic.d.ts
@@ -166,6 +169,9 @@ llms/replicate.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
+llms/togetherai.cjs
+llms/togetherai.js
+llms/togetherai.d.ts
 llms/watsonx_ai.cjs
 llms/watsonx_ai.js
 llms/watsonx_ai.d.ts
@@ -352,6 +358,9 @@ retrievers/supabase.d.ts
 retrievers/tavily_search_api.cjs
 retrievers/tavily_search_api.js
 retrievers/tavily_search_api.d.ts
+retrievers/vectara_summary.cjs
+retrievers/vectara_summary.js
+retrievers/vectara_summary.d.ts
 retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts

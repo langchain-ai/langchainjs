@@ -1,6 +1,6 @@
 import neo4j from "neo4j-driver";
 import * as uuid from "uuid";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -71,12 +71,12 @@ export class Neo4jVectorStore extends VectorStore {
     return "neo4jvector";
   }
 
-  constructor(embeddings: Embeddings, config: Neo4jVectorStoreArgs) {
+  constructor(embeddings: EmbeddingsInterface, config: Neo4jVectorStoreArgs) {
     super(embeddings, config);
   }
 
   static async initialize(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: Neo4jVectorStoreArgs
   ) {
     const store = new Neo4jVectorStore(embeddings, config);
@@ -162,7 +162,7 @@ export class Neo4jVectorStore extends VectorStore {
     texts: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: any,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
     const docs = [];
@@ -181,7 +181,7 @@ export class Neo4jVectorStore extends VectorStore {
 
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: Neo4jVectorStoreArgs
   ): Promise<Neo4jVectorStore> {
     const {
@@ -230,7 +230,7 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: Neo4jVectorStoreArgs
   ) {
     const { searchType = DEFAULT_SEARCH_TYPE, keywordIndexName = "keyword" } =
@@ -279,7 +279,7 @@ export class Neo4jVectorStore extends VectorStore {
   }
 
   static async fromExistingGraph(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: Neo4jVectorStoreArgs
   ) {
     const {
@@ -614,7 +614,7 @@ export class Neo4jVectorStore extends VectorStore {
       k: Number(k),
       embedding: vector,
       keyword_index: this.keywordIndexName,
-      query,
+      query: removeLuceneChars(query),
     };
     const results = await this.query(readQuery, parameters);
 
@@ -717,7 +717,10 @@ function getSearchIndexQuery(searchType: SearchType): string {
     hybrid: `
           CALL {
               CALL db.index.vector.queryNodes($index, $k, $embedding) YIELD node, score
-              RETURN node, score UNION
+              WITH collect({node:node, score:score}) AS nodes, max(score) AS max 
+              UNWIND nodes AS n 
+              // We use 0 as min
+              RETURN n.node AS node, (n.score / max) AS score UNION 
               CALL db.index.fulltext.queryNodes($keyword_index, $query, {limit: $k}) YIELD node, score
               WITH collect({node: node, score: score}) AS nodes, max(score) AS max
               UNWIND nodes AS n
@@ -728,4 +731,33 @@ function getSearchIndexQuery(searchType: SearchType): string {
   };
 
   return typeToQueryMap[searchType];
+}
+
+function removeLuceneChars(text: string): string {
+  // Remove Lucene special characters
+  const specialChars = [
+    "+",
+    "-",
+    "&",
+    "|",
+    "!",
+    "(",
+    ")",
+    "{",
+    "}",
+    "[",
+    "]",
+    "^",
+    '"',
+    "~",
+    "*",
+    "?",
+    ":",
+    "\\",
+  ];
+  let modifiedText = text;
+  for (const char of specialChars) {
+    modifiedText = modifiedText.split(char).join(" ");
+  }
+  return modifiedText.trim();
 }

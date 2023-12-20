@@ -1,7 +1,7 @@
 import type { IndexFlatL2 } from "faiss-node";
 import type { NameRegistry, Parser } from "pickleparser";
 import * as uuid from "uuid";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { SaveableVectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
@@ -42,7 +42,7 @@ export class FaissStore extends SaveableVectorStore {
     return this.docstore;
   }
 
-  constructor(embeddings: Embeddings, args: FaissLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: FaissLibArgs) {
     super(embeddings, args);
     this.args = args;
     this._index = args.index;
@@ -260,7 +260,7 @@ export class FaissStore extends SaveableVectorStore {
    * @param embeddings An Embeddings object.
    * @returns A Promise that resolves with a new FaissStore instance.
    */
-  static async load(directory: string, embeddings: Embeddings) {
+  static async load(directory: string, embeddings: EmbeddingsInterface) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const readStore = (directory: string) =>
@@ -281,7 +281,10 @@ export class FaissStore extends SaveableVectorStore {
     return new this(embeddings, { docstore, index, mapping });
   }
 
-  static async loadFromPython(directory: string, embeddings: Embeddings) {
+  static async loadFromPython(
+    directory: string,
+    embeddings: EmbeddingsInterface
+  ) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const { Parser, NameRegistry } = await this.importPickleparser();
@@ -363,7 +366,7 @@ export class FaissStore extends SaveableVectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
     }
@@ -390,7 +393,7 @@ export class FaissStore extends SaveableVectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
     }
@@ -413,7 +416,7 @@ export class FaissStore extends SaveableVectorStore {
    */
   static async fromIndex(
     targetIndex: FaissStore,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
     }

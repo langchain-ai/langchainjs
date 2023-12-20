@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import { Client, estypes } from "@elastic/elasticsearch";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 /**
@@ -67,7 +67,7 @@ export class ElasticVectorSearch extends VectorStore {
     return "elasticsearch";
   }
 
-  constructor(embeddings: Embeddings, args: ElasticClientArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: ElasticClientArgs) {
     super(embeddings, args);
 
     this.engine = args.vectorSearchOptions?.engine ?? "hnsw";
@@ -135,7 +135,13 @@ export class ElasticVectorSearch extends VectorStore {
         text: documents[idx].pageContent,
       },
     ]);
-    await this.client.bulk({ refresh: true, operations });
+    const results = await this.client.bulk({ refresh: true, operations });
+    if (results.errors) {
+      const reasons = results.items.map(
+        (result) => result.index?.error?.reason
+      );
+      throw new Error(`Failed to insert documents:\n${reasons.join("\n")}`);
+    }
     return documentIds;
   }
 
@@ -204,7 +210,7 @@ export class ElasticVectorSearch extends VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: ElasticClientArgs
   ): Promise<ElasticVectorSearch> {
     const documents = texts.map((text, idx) => {
@@ -226,7 +232,7 @@ export class ElasticVectorSearch extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: ElasticClientArgs
   ): Promise<ElasticVectorSearch> {
     const store = new ElasticVectorSearch(embeddings, dbConfig);
@@ -243,7 +249,7 @@ export class ElasticVectorSearch extends VectorStore {
    * @returns A promise that resolves with the created ElasticVectorSearch instance if the index exists, otherwise it throws an error.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: ElasticClientArgs
   ): Promise<ElasticVectorSearch> {
     const store = new ElasticVectorSearch(embeddings, dbConfig);
@@ -266,16 +272,23 @@ export class ElasticVectorSearch extends VectorStore {
       mappings: {
         dynamic_templates: [
           {
-            // map all metadata properties to be keyword
-            "metadata.*": {
+            // map all metadata properties to be keyword except loc
+            metadata_except_loc: {
               match_mapping_type: "*",
+              match: "metadata.*",
+              unmatch: "metadata.loc",
               mapping: { type: "keyword" },
             },
           },
         ],
         properties: {
           text: { type: "text" },
-          metadata: { type: "object" },
+          metadata: {
+            type: "object",
+            properties: {
+              loc: { type: "object" }, // explicitly define loc as an object
+            },
+          },
           embedding: {
             type: "dense_vector",
             dims: dimension,

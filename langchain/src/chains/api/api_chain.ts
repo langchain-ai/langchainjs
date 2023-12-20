@@ -1,7 +1,7 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseChain, ChainInputs } from "../base.js";
 import { SerializedAPIChain } from "../serde.js";
 import { LLMChain } from "../llm_chain.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { ChainValues } from "../../schema/index.js";
 import {
@@ -134,7 +134,7 @@ export class APIChain extends BaseChain implements APIChainInput {
    * @returns New APIChain instance.
    */
   static fromLLMAndAPIDocs(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     apiDocs: string,
     options: APIChainOptions &
       Omit<APIChainInput, "apiAnswerChain" | "apiRequestChain" | "apiDocs"> = {}

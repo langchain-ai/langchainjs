@@ -62,7 +62,10 @@ test("Runnable streamLog method with a more complicated sequence", async () => {
       response: "testing",
     }).withConfig({ tags: ["only_one"] }),
   };
-  const runnable = new RunnableMap({ steps: inputs })
+
+  const runnable = new RunnableMap({
+    steps: inputs,
+  })
     .pipe(promptTemplate)
     .pipe(llm);
   const stream = await runnable.streamLog(
