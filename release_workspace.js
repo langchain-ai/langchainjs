@@ -125,13 +125,21 @@ async function runYarnRelease(packageDirectory, newVersion, npm2FACode, tag) {
  * @param {string} workspaceName The name of the workspace to bump dependencies for.
  * @param {string} newVersion The new version to bump to.
  * @param {Array<{ dir: string, packageJSON: Record<string, any>}>} allWorkspaces
+ * @param {string | undefined} tag An optional tag to publish to.
  * @returns {void}
  */
-function bumpDeps(workspaceName, newVersion, allWorkspaces) {
+function bumpDeps(workspaceName, newVersion, allWorkspaces, tag) {
   console.log(`Bumping other packages which depend on ${workspaceName}.`);
   console.log("Checking out main branch.");
+
+  // Separate variable for the branch name, incase it includes a tag.
+  let versionString = newVersion;
+  if (tag) {
+    versionString = `${newVersion}-${tag}`;
+  }
+
   execSync(`git checkout main`);
-  const newBranchName = `bump-${workspaceName}-to-${newVersion}`;
+  const newBranchName = `bump-${workspaceName}-to-${versionString}`;
   console.log(`Checking out new branch: ${newBranchName}`);
   execSync(`git checkout -b ${newBranchName}`);
 
@@ -171,7 +179,7 @@ Workspaces:
     // Add all current changes, commit, push and log branch URL.
     console.log("Adding and committing all changes.");
     execSync(`git add -A`);
-    execSync(`git commit -m "all[minor]: bump deps on ${workspaceName} to ${newVersion}"`);
+    execSync(`git commit -m "all[minor]: bump deps on ${workspaceName} to ${versionString}"`);
     console.log("Pushing changes.");
     execSync(`git push -u origin ${newBranchName}`);
     console.log(`🔗 Open https://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1.`);
@@ -250,24 +258,15 @@ async function main() {
   // Bump version by 1 or use the version passed in.
   const newVersion = options.version ?? bumpVersion(matchingWorkspace.packageJSON.version);
 
-  // checkout new "release" branch & push
-  // checkoutReleaseBranch();
-  const currentBranch = execSync('git branch --show-current').toString().trim();
-  if (currentBranch === 'brace/better-releases') {
-    console.log("Checking out 'release' branch.")
-    execSync('git checkout -B release');
-    execSync('git push -u origin release');
-  } else {
-    throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
-  }
+  // Checkout new "release" branch & push
+  checkoutReleaseBranch();
 
-
-  // run build, lint, tests
+  // Run build, lint, tests
   console.log("Running build, lint, and tests.");
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
   console.log("Successfully ran build, lint, and tests.");
 
-  // run export tests.
+  // Run export tests.
   // LangChain must be built before running export tests.
   console.log("Building 'langchain' and running export tests.");
   execSync(`yarn run turbo:command build --filter=langchain`);
@@ -276,7 +275,7 @@ async function main() {
 
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
 
-  // run `release-it` on workspace
+  // Run `release-it` on workspace
   await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode, options.tag);
   
   // Log release branch URL
@@ -286,7 +285,7 @@ async function main() {
   // Then, update their package.json to use the new version of the input workspace.
   // This will create a new branch, commit and push the changes and log the branch URL.
   if (options.bumpDeps) {
-    bumpDeps(options.workspace, newVersion, allWorkspaces);
+    bumpDeps(options.workspace, newVersion, allWorkspaces, options.tag);
   }
 }
 
