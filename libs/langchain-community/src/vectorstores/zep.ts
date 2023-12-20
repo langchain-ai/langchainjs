@@ -9,7 +9,7 @@ import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
 } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { Callbacks } from "@langchain/core/callbacks/manager";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
@@ -67,7 +67,7 @@ export class ZepVectorStore extends VectorStore {
 
   private autoEmbed = false;
 
-  constructor(embeddings: Embeddings, args: IZepConfig) {
+  constructor(embeddings: EmbeddingsInterface, args: IZepConfig) {
     super(embeddings, args);
 
     this.embeddings = embeddings;
@@ -366,7 +366,7 @@ export class ZepVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     zepConfig: IZepConfig
   ): Promise<ZepVectorStore> {
     const docs: Document[] = [];
@@ -391,7 +391,7 @@ export class ZepVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     zepConfig: IZepConfig
   ): Promise<ZepVectorStore> {
     const instance = new this(embeddings, zepConfig);

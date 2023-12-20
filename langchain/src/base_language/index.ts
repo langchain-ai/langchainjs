@@ -6,6 +6,7 @@ export {
   type BaseLanguageModelCallOptions,
   type BaseFunctionCallOptions,
   type BaseLanguageModelInput,
+  type BaseLanguageModelInterface,
   BaseLanguageModel,
 } from "@langchain/core/language_models/base";
 

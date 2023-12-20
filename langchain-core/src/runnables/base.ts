@@ -11,7 +11,10 @@ import {
   RunLogPatch,
 } from "../tracers/log_stream.js";
 import { Serializable } from "../load/serializable.js";
-import { IterableReadableStream } from "../utils/stream.js";
+import {
+  IterableReadableStream,
+  type IterableReadableStreamInterface,
+} from "../utils/stream.js";
 import {
   RunnableConfig,
   getCallbackMangerForConfig,
@@ -20,6 +23,58 @@ import {
 import { AsyncCaller } from "../utils/async_caller.js";
 import { Run } from "../tracers/base.js";
 import { RootListenersTracer } from "../tracers/root_listener.js";
+
+/**
+ * Base interface implemented by all runnables.
+ * Used for cross-compatibility between different versions of LangChain core.
+ *
+ * Should not change on patch releases.
+ */
+export interface RunnableInterface<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends RunnableConfig = RunnableConfig
+> {
+  lc_serializable: boolean;
+
+  invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
+
+  batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
+  ): Promise<RunOutput[]>;
+
+  batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions & { returnExceptions: true }
+  ): Promise<(RunOutput | Error)[]>;
+
+  batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: RunnableBatchOptions
+  ): Promise<(RunOutput | Error)[]>;
+
+  stream(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<IterableReadableStreamInterface<RunOutput>>;
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput>;
+}
 
 export type RunnableFunc<RunInput, RunOutput> = (
   input: RunInput,
@@ -37,7 +92,8 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<RunInput = any, RunOutput = any> =
-  | Runnable<RunInput, RunOutput>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | RunnableInterface<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
   | RunnableMapLike<RunInput, RunOutput>;
 
@@ -61,12 +117,15 @@ function _coerceToDict(value: any, defaultKey: string) {
  * transformed.
  */
 export abstract class Runnable<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
-> extends Serializable {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput = any,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Serializable
+  implements RunnableInterface<RunInput, RunOutput, CallOptions>
+{
   protected lc_runnable = true;
 
   abstract invoke(

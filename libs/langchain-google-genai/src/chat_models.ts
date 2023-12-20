@@ -247,7 +247,7 @@ export class ChatGoogleGenerativeAI
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const prompt = convertBaseMessagesToContent(
       messages,
@@ -272,14 +272,17 @@ export class ChatGoogleGenerativeAI
         return output;
       }
     );
-
-    return mapGenerateContentResultToChatResult(res.response);
+    const generationResult = mapGenerateContentResultToChatResult(res.response);
+    await runManager?.handleLLMNewToken(
+      generationResult.generations[0].text ?? ""
+    );
+    return generationResult;
   }
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const prompt = convertBaseMessagesToContent(
       messages,
@@ -302,6 +305,7 @@ export class ChatGoogleGenerativeAI
       }
 
       yield chunk;
+      await runManager?.handleLLMNewToken(chunk.text ?? "");
     }
   }
 }

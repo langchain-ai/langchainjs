@@ -355,6 +355,9 @@ retrievers/supabase.d.ts
 retrievers/tavily_search_api.cjs
 retrievers/tavily_search_api.js
 retrievers/tavily_search_api.d.ts
+retrievers/vectara_summary.cjs
+retrievers/vectara_summary.js
+retrievers/vectara_summary.d.ts
 retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts

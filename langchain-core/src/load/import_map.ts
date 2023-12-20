@@ -31,6 +31,7 @@ export * as tracers__run_collector from "../tracers/run_collector.js";
 export * as tracers__tracer_langchain_v1 from "../tracers/tracer_langchain_v1.js";
 export * as tracers__tracer_langchain from "../tracers/tracer_langchain.js";
 export * as utils__async_caller from "../utils/async_caller.js";
+export * as utils__chunk_array from "../utils/chunk_array.js";
 export * as utils__env from "../utils/env.js";
 export * as utils__hash from "../utils/hash.js";
 export * as utils__json_patch from "../utils/json_patch.js";

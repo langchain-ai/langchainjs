@@ -5,7 +5,7 @@ import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -18,11 +18,12 @@ export interface Column {
 export interface Index {
   name: string;
   value: string;
+  options?: string;
 }
 
 export interface Filter {
   name: string;
-  value: unknown;
+  value: unknown | [unknown, ...unknown[]];
   operator?: string;
 }
 
@@ -72,7 +73,9 @@ export class CassandraStore extends VectorStore {
 
   private indices: Index[];
 
-  private isInitialized = false;
+  private initializationState = 0; // 0: Not Initialized, 1: In Progress, 2: Initialized
+
+  private initializationPromise: Promise<void> | null = null;
 
   asyncCaller: AsyncCaller;
 
@@ -82,7 +85,7 @@ export class CassandraStore extends VectorStore {
     return "cassandra";
   }
 
-  constructor(embeddings: Embeddings, args: CassandraLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: CassandraLibArgs) {
     super(embeddings, args);
 
     const {
@@ -119,6 +122,11 @@ export class CassandraStore extends VectorStore {
     this.withClause = withClause.trim().replace(/^with\s*/i, "");
     this.indices = indices;
     this.batchSize = batchSize >= 1 ? batchSize : 1;
+
+    // Start initialization but don't wait for it to complete here
+    this.initialize().catch((error) => {
+      console.error("Error during CassandraStore initialization:", error);
+    });
   }
 
   /**
@@ -131,11 +139,6 @@ export class CassandraStore extends VectorStore {
     if (vectors.length === 0) {
       return;
     }
-
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
-
     await this.insertAll(vectors, documents);
   }
 
@@ -163,9 +166,7 @@ export class CassandraStore extends VectorStore {
     k: number,
     filter?: WhereClause
   ): Promise<[Document, number][]> {
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
+    await this.initialize();
 
     // Ensure we have an array of Filter from the public interface
     const filters = this.asFilters(filter);
@@ -185,8 +186,13 @@ export class CassandraStore extends VectorStore {
     const vectorAsFloat32Array = new Float32Array(query);
     queryParams.push(vectorAsFloat32Array);
     if (filters) {
-      const values = (filters as Filter[]).map(({ value }) => value);
-      queryParams.push(...values);
+      filters.forEach(({ value }) => {
+        if (Array.isArray(value)) {
+          queryParams.push(...value);
+        } else {
+          queryParams.push(value);
+        }
+      });
     }
     queryParams.push(vectorAsFloat32Array);
     queryParams.push(k);
@@ -201,8 +207,6 @@ export class CassandraStore extends VectorStore {
       delete sanitizedRow.text;
       delete sanitizedRow.similarity_score;
 
-      // A null value in Cassandra evaluates to a deleted column
-      // as this is treated as a tombstone record for the cell.
       Object.keys(sanitizedRow).forEach((key) => {
         if (sanitizedRow[key] === null) {
           delete sanitizedRow[key];
@@ -227,7 +231,7 @@ export class CassandraStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object | object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const docs: Document[] = [];
@@ -253,10 +257,12 @@ export class CassandraStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const instance = new this(embeddings, args);
+    await instance.initialize();
+
     await instance.addDocuments(docs);
     return instance;
   }
@@ -269,7 +275,7 @@ export class CassandraStore extends VectorStore {
    * @returns Promise that resolves with a new instance of CassandraStore.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: CassandraLibArgs
   ): Promise<CassandraStore> {
     const instance = new this(embeddings, args);
@@ -283,6 +289,29 @@ export class CassandraStore extends VectorStore {
    * @returns Promise that resolves when the database has been initialized.
    */
   private async initialize(): Promise<void> {
+    if (this.initializationState === 2) {
+      // Already initialized
+      return Promise.resolve();
+    }
+
+    if (this.initializationState === 1 && this.initializationPromise) {
+      // Initialization in progress, wait for it to complete
+      return this.initializationPromise;
+    }
+
+    // Start the initialization process
+    this.initializationState = 1;
+    this.initializationPromise = new Promise((resolve, reject) => {
+      this.performInitialization().then(resolve).catch(reject);
+    });
+
+    return this.initializationPromise;
+  }
+
+  /**
+   * Method to perform the initialization tasks
+   */
+  private async performInitialization() {
     let cql = "";
     cql = `CREATE TABLE IF NOT EXISTS ${this.keyspace}.${this.table} (
       ${this.primaryKey.map((col) => `${col.name} ${col.type}`).join(", ")}
@@ -316,15 +345,30 @@ export class CassandraStore extends VectorStore {
     cql = `CREATE CUSTOM INDEX IF NOT EXISTS idx_vector_${this.table}
            ON ${this.keyspace}.${
       this.table
-    }(vector) USING 'StorageAttachedIndex' WITH OPTIONS = {'similarity_function': '${this.vectorType.toUpperCase()}'};`;
+    }(vector) USING 'StorageAttachedIndex' WITH OPTIONS = {'similarity_function': '${this.vectorType.toLowerCase()}'};`;
     await this.client.execute(cql);
 
-    for await (const { name, value } of this.indices) {
+    const formatOptions = (options: string | undefined): string => {
+      if (!options) {
+        return "";
+      }
+
+      let formattedOptions = options.trim();
+      if (!formattedOptions.toLowerCase().startsWith("with options =")) {
+        formattedOptions = "WITH OPTIONS = " + formattedOptions;
+      }
+
+      return formattedOptions;
+    };
+
+    for await (const { name, value, options } of this.indices) {
+      const optionsClause = formatOptions(options);
       cql = `CREATE CUSTOM INDEX IF NOT EXISTS idx_${this.table}_${name}
-             ON ${this.keyspace}.${this.table} ${value} USING 'StorageAttachedIndex';`;
+             ON ${this.keyspace}.${this.table} ${value} USING 'StorageAttachedIndex' ${optionsClause};`;
       await this.client.execute(cql);
     }
-    this.isInitialized = true;
+
+    this.initializationState = 2; // Mark as initialized
   }
 
   /**
@@ -426,9 +470,33 @@ export class CassandraStore extends VectorStore {
       return "";
     }
 
-    const whereConditions = filters.map(
-      ({ name, operator = "=" }) => `${name} ${operator} ?`
-    );
+    const whereConditions = filters.map(({ name, operator = "=", value }) => {
+      // If value is not an array or an array with only one element, use a single '?'
+      if (!Array.isArray(value) || value.length === 1) {
+        return `${name} ${operator} ?`;
+      }
+
+      // From this point, value is an array with multiple elements
+
+      // Count '?' placeholders in 'name', excluding those inside quotes
+      const quotesPattern = /'[^']*'|"[^"]*"/g; // Pattern to match quoted strings (both single and double quotes)
+      const modifiedName = name.replace(quotesPattern, ""); // Remove quoted strings from 'name'
+      const nameQuestionMarkCount = (modifiedName.match(/\?/g) || []).length; // Count '?' in the modified string
+
+      // Check if there are enough elements in the array for the right side of the operator
+      if (value.length - nameQuestionMarkCount < 1) {
+        throw new Error(
+          "Insufficient bind variables for the filter condition."
+        );
+      }
+
+      // Generate the placeholders for the right side of the operator
+      const rightPlaceholders = new Array(value.length - nameQuestionMarkCount)
+        .fill("?")
+        .join(", ");
+
+      return `${name} ${operator} ${rightPlaceholders}`;
+    });
 
     return `WHERE ${whereConditions.join(" AND ")}`;
   }
@@ -460,6 +528,8 @@ export class CassandraStore extends VectorStore {
     batchVectors: number[][],
     batchDocuments: Document[]
   ): Promise<void> {
+    await this.initialize();
+
     // Input validation: Check if the lengths of batchVectors and batchDocuments are the same
     if (batchVectors.length !== batchDocuments.length) {
       throw new Error(
@@ -532,9 +602,7 @@ export class CassandraStore extends VectorStore {
     }
 
     // Ensure the store is initialized before proceeding
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
+    await this.initialize();
 
     // Initialize an array to hold promises for each batch insert
     const insertPromises: Promise<void>[] = [];

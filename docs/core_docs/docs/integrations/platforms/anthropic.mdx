@@ -30,19 +30,9 @@ The `Anthropic` wrapper however is deprecated, as all functionality can be achie
 
 Anthropic models have several prompting best practices compared to OpenAI models.
 
-**No System Messages**
+**System Messages may only be the first message**
 
-Anthropic models are not trained on the concept of a "system message".
-This means that you should not include system messages in your prompts.
-
-**AI Messages Can Continue**
-
-A completion from Claude is a continuation of the last text in the string which allows you further control over Claude's output.
-For example, putting words in Claude's mouth in a prompt like this:
-
-`\n\nHuman: Tell me a joke about bears\n\nAssistant: What do you call a bear with no teeth?`
-
-This will return a completion like this `A gummy bear!` instead of a whole new assistant message with a different random bear joke.
+Anthropic models require any system messages to be the first one in your prompts.
 
 ## `ChatAnthropic`
 
@@ -50,7 +40,7 @@ This will return a completion like this `A gummy bear!` instead of a whole new a
 You can import this wrapper with the following code:
 
 ```typescript
-import { ChatAnthropic } from "langchain/chat_models";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 const model = new ChatAnthropic({});
 ```
 
@@ -70,44 +60,5 @@ You can then use this in a chain as follows:
 
 ```typescript
 const chain = prompt.pipe(model);
-chain.invoke({ topic: "bears" });
+await chain.invoke({ topic: "bears" });
 ```
-
-How is the prompt actually being formatted under the hood? We can see that by running the following code
-
-```typescript
-const promptValue = prompt.formatPrompt({ topic: "bears" });
-model.convertPrompt(promptValue);
-```
-
-This produces the following formatted string:
-
-```typescript
-"\n\nHuman: <admin>You are a helpful chatbot</admin>\n\nHuman: Tell me a joke about bears\n\nAssistant:";
-```
-
-We can see that under the hood LangChain is representing `SystemMessage`s with `Human: <admin>...</admin>`,
-and is appending an assistant message to the end IF the last message is NOT already an assistant message.
-
-If you decide instead to use a normal PromptTemplate (one that just works on a single string) let's take a look at
-what happens:
-
-```typescript
-import { PromptTemplate } from "langchain/prompts";
-
-const prompt = PromptTemplate.fromTemplate("Tell me a joke about {topic}");
-const promptValue = prompt.formatPrompt({ topic: "bears" });
-model.convertPrompt(promptValue);
-```
-
-This produces the following formatted string:
-
-```typescript
-"\n\nHuman: Tell me a joke about bears\n\nAssistant:";
-```
-
-We can see that it automatically adds the Human and Assistant tags.
-What is happening under the hood?
-First: the string gets converted to a single human message. This happens generically (because we are using a subclass of `ChatModel`).
-Then, similarly to the above example, an empty Assistant message is getting appended.
-This is Anthropic specific.

@@ -40,6 +40,7 @@ const entrypoints = {
   "tracers/tracer_langchain_v1": "tracers/tracer_langchain_v1",
   "tracers/tracer_langchain": "tracers/tracer_langchain",
   "utils/async_caller": "utils/async_caller",
+  "utils/chunk_array": "utils/chunk_array",
   "utils/env": "utils/env",
   "utils/hash": "utils/hash",
   "utils/json_patch": "utils/json_patch",
