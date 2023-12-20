@@ -76,7 +76,7 @@ export class AzureMLChatOnlineEndpoint
   implements AzureMLChatParams
 {
   static lc_name() {
-    return "AzureMLChat";
+    return "AzureMLChatOnlineEndpoint";
   }
   static lc_description() {
     return "A class for interacting with AzureML Chat models.";

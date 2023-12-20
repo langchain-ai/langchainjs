@@ -6,9 +6,9 @@ import {
   HFContentFormatter,
   LlamaContentFormatter,
 } from "../azure_ml.js";
-*/
 
-/* LLama Test
+
+// LLama Test
 test("Test AzureML LLama Call", async () => {
   const prompt = "What is the meaning of Foo?";
   const model = new AzureMLOnlineEndpoint({
@@ -20,9 +20,9 @@ test("Test AzureML LLama Call", async () => {
 
   console.log(res);
 });
-*/
 
-/* GPT2 Test
+
+// GPT2 Test
 test("Test AzureML GPT2 Call", async () => {
   const prompt = "What is the meaning of Foo?";
   const model = new AzureMLOnlineEndpoint({
@@ -34,9 +34,9 @@ test("Test AzureML GPT2 Call", async () => {
 
   console.log(res);
 });
-*/
 
-/* HF Test
+
+// HF Test
 test("Test AzureML HF Call", async () => {
   const prompt = "What is the meaning of Foo?";
   const model = new AzureMLOnlineEndpoint({
@@ -48,9 +48,9 @@ test("Test AzureML HF Call", async () => {
 
   console.log(res);
 });
-*/
 
-/* Dolly Test
+
+// Dolly Test
 test("Test AzureML Dolly Call", async () => {
   const prompt = "What is the meaning of Foo?";
   const model = new AzureMLOnlineEndpoint({
