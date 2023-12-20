@@ -158,7 +158,7 @@ async function main() {
 
   const options = program.opts();
   if (!options.workspace) {
-    throw new Error("Workspace name is required.");
+    throw new Error("--workspace is a required flag.");
   }
 
   // Find the workspace package.json's.
