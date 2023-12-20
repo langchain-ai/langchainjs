@@ -67,15 +67,12 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 
 /**
  * @param {string} packageDirectory The directory to run yarn release in.
- * @param {string} newVersion The new version to bump to.
- * @param {boolean} isNew Whether or not the package is new. This will pass the version to yarn release if false.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory, newVersion, isNew) {
+async function runYarnRelease(packageDirectory) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const argsWithVersion = ['release', `--release-version=${newVersion}`];
-    const args = isNew ? ['release'] : argsWithVersion;
+    const args = ['release'];
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
@@ -158,8 +155,7 @@ async function main() {
     .description("Release a new workspace version to NPM.")
     .option("--workspace <workspace>", "Workspace name, eg @langchain/core")
     .option("--version <version>", "Optionally override the version to bump to.")
-    .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.")
-    .option("--is-new", "Whether or not the package to publish has never been published before.");
+    .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.");
 
   program.parse();
 
@@ -199,9 +195,9 @@ async function main() {
 
 
   // run build, lint, tests
-  console.log("Running build, lint, and tests.")
+  console.log("Running build, lint, and tests.");
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
-  console.log("Successfully ran build, lint, and tests.")
+  console.log("Successfully ran build, lint, and tests.");
 
   // run export tests.
   // LangChain must be built before running export tests.
@@ -213,9 +209,7 @@ async function main() {
 
   // run `release-it` on workspace
   console.log("Starting 'release-it' flow.");
-  // Must explicitly state the version in the `release-it` flow if the
-  // package has never been published before.
-  await runYarnRelease(matchingWorkspace.dir, newVersion, options.isNew);
+  await runYarnRelease(matchingWorkspace.dir);
   
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
