@@ -2,6 +2,7 @@ const { execSync, exec } = require('child_process');
 const { Command } = require('commander');
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 /**
  * @param {string} version 
@@ -39,7 +40,30 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
   });
 }
 
-function main() {
+/**
+ * @param {string} packageDirectory The directory to run yarn release in.
+ * @returns 
+ */
+async function runYarnRelease(packageDirectory) {
+  return new Promise((resolve, reject) => {
+    const workingDirectory = path.join(process.cwd(), packageDirectory);
+    const yarnReleaseProcess = spawn('yarn', ['release'], { stdio: 'inherit', cwd: workingDirectory });
+
+    yarnReleaseProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(`Process exited with code ${code}`);
+      }
+    });
+
+    yarnReleaseProcess.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+async function main() {
   const program = new Command();
   program
     .description("Release a new workspace version to NPM.")
@@ -96,10 +120,16 @@ function main() {
 
   // run build, lint, tests
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
-  // run export tests
+  console.log("Successfully ran build, lint, and tests.")
+  // run export tests.
+  // LangChain must be built before running export tests.
+  execSync(`yarn run turbo:command build --filter=langchain`);
   execSync(`yarn run test:exports:docker`);
+  console.log("Successfully tested exports.")
   // run `release-it` on workspace
-  execSync(`cd ${matchingWorkspace.dir} && yarn release`);
+  // execSync(`cd ${matchingWorkspace.dir} && yarn release`);
+  await runYarnRelease(matchingWorkspace.dir);
+  
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
 
