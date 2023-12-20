@@ -22,7 +22,6 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@basproul/mistralai": "workspace:*",
     "@clickhouse/client": "^0.2.5",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -32,6 +31,7 @@
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/google-genai": "workspace:*",
+    "@langchain/mistralai": "workspace:*",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^1.1.0",
     "@planetscale/database": "^1.8.0",

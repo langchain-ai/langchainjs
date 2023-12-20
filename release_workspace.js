@@ -67,12 +67,13 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 
 /**
  * @param {string} packageDirectory The directory to run yarn release in.
+ * @param {string} newVersion The new version to bump to.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory) {
+async function runYarnRelease(packageDirectory, newVersion) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const args = ['release', "--", "0.0.9"];
+    const args = ['release', "--", newVersion];
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
@@ -174,18 +175,10 @@ async function main() {
 
   // Bump version by 1 or use the version passed in.
   const newVersion = options.version ?? bumpVersion(matchingWorkspace.packageJSON.version);
-  console.log(`Running "release-it". Bumping version of ${options.workspace} to ${newVersion}`);
 
   // checkout new "release" branch & push
   const currentBranch = execSync('git branch --show-current').toString().trim();
-  // if (currentBranch === 'main') {
-  //   console.log("Checking out 'release' branch.")
-  //   execSync('git checkout -B release');
-  //   execSync('git push -u origin release');
-  // } else {
-  //   throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
-  // }
-  if (currentBranch === 'brace/better-releases') {
+  if (currentBranch === 'main') {
     console.log("Checking out 'release' branch.")
     execSync('git checkout -B release');
     execSync('git push -u origin release');
@@ -203,13 +196,12 @@ async function main() {
   // LangChain must be built before running export tests.
   console.log("Building 'langchain' and running export tests.");
   execSync(`yarn run turbo:command build --filter=langchain`);
-  // todo uncomment after testing script works
-  // execSync(`yarn run test:exports:docker`);
+  execSync(`yarn run test:exports:docker`);
   console.log("Successfully built langchain, and tested exports.");
 
   // run `release-it` on workspace
-  console.log("Starting 'release-it' flow.");
-  await runYarnRelease(matchingWorkspace.dir);
+  console.log(`Running "release-it". Bumping version of ${options.workspace} to ${newVersion}`);
+  await runYarnRelease(matchingWorkspace.dir, newVersion);
   
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
