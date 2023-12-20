@@ -1,6 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-import { chunkArray } from "../utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 /**
  * Interface for TogetherAIEmbeddingsParams parameters. Extends EmbeddingsParams and
@@ -101,14 +101,14 @@ export class TogetherAIEmbeddings
     return {
       accept: "application/json",
       "content-type": "application/json",
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.apiKey}`
     };
   }
 
   private constructBody(input: string) {
     const body = {
       model: this?.modelName,
-      input,
+      input
     };
     return body;
   }
@@ -170,7 +170,7 @@ export class TogetherAIEmbeddings
       const fetchResponse = await fetch(this.embeddingsAPIUrl, {
         method: "POST",
         headers,
-        body,
+        body
       });
 
       if (fetchResponse.status === 200) {
