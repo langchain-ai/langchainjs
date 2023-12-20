@@ -6,7 +6,7 @@ import { GenerationChunk, type LLMResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseLLM,
-  type BaseLLMParams
+  type BaseLLMParams,
 } from "@langchain/core/language_models/llms";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type {
@@ -14,7 +14,7 @@ import type {
   OpenAICallOptions,
   OpenAICoreRequestOptions,
   OpenAIInput,
-  LegacyOpenAIInput
+  LegacyOpenAIInput,
 } from "./types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import { OpenAIChat, OpenAIChatCallOptions } from "./legacy.js";
@@ -24,7 +24,7 @@ export type {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
-  OpenAIChatCallOptions
+  OpenAIChatCallOptions,
 };
 
 export { OpenAIChat };
@@ -88,7 +88,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     return {
       openAIApiKey: "OPENAI_API_KEY",
       azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
-      organization: "OPENAI_ORGANIZATION"
+      organization: "OPENAI_ORGANIZATION",
     };
   }
 
@@ -99,7 +99,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       azureOpenAIApiVersion: "azure_openai_api_version",
       azureOpenAIApiKey: "azure_openai_api_key",
       azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
-      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name"
+      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
     };
   }
 
@@ -253,7 +253,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         configuration?.baseOptions?.params ??
         fields?.configuration?.baseOptions?.params,
       ...configuration,
-      ...fields?.configuration
+      ...fields?.configuration,
     };
   }
 
@@ -276,7 +276,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       stop: options?.stop ?? this.stop,
       user: this.user,
       stream: this.streaming,
-      ...this.modelKwargs
+      ...this.modelKwargs,
     };
   }
 
@@ -287,7 +287,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
-      ...this.clientConfig
+      ...this.clientConfig,
     };
   }
 
@@ -336,7 +336,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       params.max_tokens = await calculateMaxTokens({
         prompt: prompts[0],
         // Cast here to allow for other models that may not fit the union
-        modelName: this.modelName as TiktokenModel
+        modelName: this.modelName as TiktokenModel,
       });
     }
 
@@ -349,7 +349,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
               {
                 ...params,
                 stream: true,
-                prompt: subPrompts[i]
+                prompt: subPrompts[i],
               },
               options
             );
@@ -360,7 +360,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
                   id: message.id,
                   object: message.object,
                   created: message.created,
-                  model: message.model
+                  model: message.model,
                 };
               }
 
@@ -376,7 +376,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
                 }
                 void runManager?.handleLLMNewToken(part.text, {
                   prompt: Math.floor(part.index / this.n),
-                  completion: part.index % this.n
+                  completion: part.index % this.n,
                 });
               }
             }
@@ -389,11 +389,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
             {
               ...params,
               stream: false,
-              prompt: subPrompts[i]
+              prompt: subPrompts[i],
             },
             {
               signal: options.signal,
-              ...options.options
+              ...options.options,
             }
           );
 
@@ -401,13 +401,13 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       const {
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
-        total_tokens: totalTokens
+        total_tokens: totalTokens,
       } = data.usage
         ? data.usage
         : {
             completion_tokens: undefined,
             prompt_tokens: undefined,
-            total_tokens: undefined
+            total_tokens: undefined,
           };
 
       if (completionTokens) {
@@ -429,13 +429,13 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         text: choice.text ?? "",
         generationInfo: {
           finishReason: choice.finish_reason,
-          logprobs: choice.logprobs
-        }
+          logprobs: choice.logprobs,
+        },
       }))
     );
     return {
       generations,
-      llmOutput: { tokenUsage }
+      llmOutput: { tokenUsage },
     };
   }
 
@@ -448,7 +448,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     const params = {
       ...this.invocationParams(options),
       prompt: input,
-      stream: true as const
+      stream: true as const,
     };
     const stream = await this.completionWithRetry(params, options);
     for await (const data of stream) {
@@ -459,8 +459,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       const chunk = new GenerationChunk({
         text: choice.text,
         generationInfo: {
-          finishReason: choice.finish_reason
-        }
+          finishReason: choice.finish_reason,
+        },
       });
       yield chunk;
       // eslint-disable-next-line no-void
@@ -523,7 +523,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        baseURL: this.clientConfig.baseURL
+        baseURL: this.clientConfig.baseURL,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
@@ -532,7 +532,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-        maxRetries: 0
+        maxRetries: 0,
       };
 
       if (!params.baseURL) {
@@ -543,16 +543,16 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
     }
     const requestOptions = {
       ...this.clientConfig,
-      ...options
+      ...options,
     } as OpenAICoreRequestOptions;
     if (this.azureOpenAIApiKey) {
       requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...requestOptions.headers
+        ...requestOptions.headers,
       };
       requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...requestOptions.query
+        ...requestOptions.query,
       };
     }
     return requestOptions;

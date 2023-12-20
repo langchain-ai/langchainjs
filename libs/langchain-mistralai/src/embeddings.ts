@@ -130,7 +130,7 @@ export class MistralAIEmbeddings
       const client = new MistralClient(this.apiKey, this.endpoint);
       const res = await client.embeddings({
         model: this.modelName,
-        input
+        input,
       });
       return res;
     });
