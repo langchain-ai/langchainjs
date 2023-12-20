@@ -1,9 +1,9 @@
-const { execSync, exec } = require('child_process');
-const { Command } = require('commander');
-const fs = require('fs');
-const path = require('path');
-const { spawn } = require('child_process');
-const readline = require('readline');
+const { execSync, exec } = require("child_process");
+const { Command } = require("commander");
+const fs = require("fs");
+const path = require("path");
+const { spawn } = require("child_process");
+const readline = require("readline");
 
 /**
  * Finds all workspaces in the monorepo and returns an array of objects.
@@ -44,14 +44,14 @@ function getAllWorkspaces() {
  * @returns {string} The new version
  */
 function bumpVersion(version) {
-  let parts = version.split('');
+  let parts = version.split("");
   for (let i = parts.length - 1; i >= 0; i--) {
     if (!Number.isNaN(parts[i])) {
       parts[i] = parseInt(parts[i], 10) + 1;
       break;
     }
   }
-  return parts.join('');
+  return parts.join("");
 }
 
 /**
@@ -77,15 +77,16 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
       if (!shouldSkip) {
         const versionToUpdate = prefix ? `${prefix}${newVersion}` : newVersion;
         workspace.packageJSON[dependencyType][workspaceName] = versionToUpdate;
-        fs.writeFileSync(path.join(workspace.dir, "package.json"), JSON.stringify(workspace.packageJSON, null, 2) + '\n');
+        fs.writeFileSync(path.join(workspace.dir, "package.json"), JSON.stringify(workspace.packageJSON, null, 2) + "\n");
       }
     }
   });
 }
 
 /**
- * Runs `yarn release` in the input package directory, passing the new version
- * as an argument.
+ * Runs `release-it` with args in the input package directory,
+ * passing the new version as an argument, along with other
+ * release-it args.
  * 
  * @param {string} packageDirectory The directory to run yarn release in.
  * @param {string} newVersion The new version to bump to.
@@ -99,11 +100,11 @@ async function runYarnRelease(packageDirectory, newVersion, npm2FACode, tag) {
     const tagArg = tag ? `--npm.tag=${tag}` : "";
     const args = ["release-it", "--ci", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json", newVersion];
     
-    console.log(`Running command: 'yarn ${args.join(" ")}'`);
+    console.log(`Running command: "yarn ${args.join(" ")}"`);
 
-    const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
+    const yarnReleaseProcess = spawn("yarn", args, { stdio: "inherit", cwd: workingDirectory });
 
-    yarnReleaseProcess.on('close', (code) => {
+    yarnReleaseProcess.on("close", (code) => {
       if (code === 0) {
         resolve();
       } else {
@@ -111,14 +112,14 @@ async function runYarnRelease(packageDirectory, newVersion, npm2FACode, tag) {
       }
     });
 
-    yarnReleaseProcess.on('error', (err) => {
+    yarnReleaseProcess.on("error", (err) => {
       reject(err);
     });
   });
 }
 
 /**
- * Finds all package JSON's which contain the input workspace as a dependency.
+ * Finds all `package.json`'s which contain the input workspace as a dependency.
  * Then, updates the dependency to the new version, runs yarn install and
  * commits the changes.
  * 
@@ -161,15 +162,16 @@ function bumpDeps(workspaceName, newVersion, allWorkspaces, tag) {
   ].map(({ packageJSON }) => packageJSON.name));
 
   if (allWhichDependOn.size !== 0) {
-    console.log(`Found ${[...allWhichDependOn]} workspaces which depend on ${workspaceName}.
+    console.log(`Found ${[...allWhichDependOn].length} workspaces which depend on ${workspaceName}.
 Workspaces:
 - ${[...allWhichDependOn].map((name) => name).join("\n- ")}
 `);
     // Update packages which depend on the input workspace.
-    updateDependencies(allWorkspacesWhichDependOn, 'dependencies', workspaceName, newVersion);
-    updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', workspaceName, newVersion);
-    updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', workspaceName, newVersion);
+    updateDependencies(allWorkspacesWhichDependOn, "dependencies", workspaceName, newVersion);
+    updateDependencies(allWorkspacesWhichDevDependOn, "devDependencies", workspaceName, newVersion);
+    updateDependencies(allWorkspacesWhichPeerDependOn, "peerDependencies", workspaceName, newVersion);
     console.log("Updated package.json's! Running yarn install.");
+
     try {
       execSync(`yarn install`);
     } catch (_) {
@@ -196,11 +198,11 @@ Workspaces:
  * @throws {Error} If the current branch is not main.
  */
 function checkoutReleaseBranch() {
-  const currentBranch = execSync('git branch --show-current').toString().trim();
-  if (currentBranch === 'main') {
+  const currentBranch = execSync("git branch --show-current").toString().trim();
+  if (currentBranch === "main") {
     console.log("Checking out 'release' branch.")
-    execSync('git checkout -B release');
-    execSync('git push -u origin release');
+    execSync("git checkout -B release");
+    execSync("git push -u origin release");
   } else {
     throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
   }
@@ -287,6 +289,6 @@ async function main() {
   if (options.bumpDeps) {
     bumpDeps(options.workspace, newVersion, allWorkspaces, options.tag);
   }
-}
+};
 
-main()
+main();
