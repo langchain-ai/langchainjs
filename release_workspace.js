@@ -54,7 +54,7 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
     const currentVersion = workspace.packageJSON[dependencyType]?.[workspaceName];
     if (currentVersion) {
       const prefix = versionPrefixes.find((p) => currentVersion.startsWith(p));
-      const shouldSkip = skipVersions.some((v) => currentVersion.includes(v));
+      const shouldSkip = skipVersions.some((v) => currentVersion === v);
 
       if (!shouldSkip) {
         const versionToUpdate = prefix ? `${prefix}${newVersion}` : newVersion;
