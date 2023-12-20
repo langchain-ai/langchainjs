@@ -1,8 +1,8 @@
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { loadSummarizationChain } from "langchain/chains";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 
 // In this example, we use a separate LLM as the final summary LLM to meet our customized LLM requirements for different stages of the chain and to only stream the final results.
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");

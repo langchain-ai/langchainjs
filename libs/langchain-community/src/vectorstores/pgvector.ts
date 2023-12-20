@@ -1,6 +1,6 @@
 import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -72,7 +72,10 @@ export class PGVectorStore extends VectorStore {
     return "pgvector";
   }
 
-  private constructor(embeddings: Embeddings, config: PGVectorStoreArgs) {
+  private constructor(
+    embeddings: EmbeddingsInterface,
+    config: PGVectorStoreArgs
+  ) {
     super(embeddings, config);
     this.tableName = config.tableName;
     this.collectionTableName = config.collectionTableName;
@@ -104,7 +107,7 @@ export class PGVectorStore extends VectorStore {
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const postgresqlVectorStore = new PGVectorStore(embeddings, config);
@@ -478,7 +481,7 @@ export class PGVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const docs = [];
@@ -505,7 +508,7 @@ export class PGVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);

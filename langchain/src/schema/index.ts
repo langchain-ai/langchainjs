@@ -87,7 +87,6 @@ export {
 
 export { BasePromptValue } from "@langchain/core/prompt_values";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export {
   type InputValues,
   type PartialValues,

@@ -1,5 +1,5 @@
-import { Document } from "../../document.js";
-import { Embeddings } from "../../embeddings/base.js";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import type { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentCompressor } from "./index.js";
 import { cosineSimilarity } from "../../util/math.js";
 
@@ -7,7 +7,7 @@ import { cosineSimilarity } from "../../util/math.js";
  * Interface for the parameters of the `EmbeddingsFilter` class.
  */
 export interface EmbeddingsFilterParams {
-  embeddings: Embeddings;
+  embeddings: EmbeddingsInterface;
   similarityFn?: (x: number[][], y: number[][]) => number[][];
   similarityThreshold?: number;
   k?: number;
@@ -34,7 +34,7 @@ export class EmbeddingsFilter extends BaseDocumentCompressor {
   /**
    * Embeddings to use for embedding document contents and queries.
    */
-  embeddings: Embeddings;
+  embeddings: EmbeddingsInterface;
 
   /**
    * Similarity function for comparing documents.
@@ -65,9 +65,9 @@ export class EmbeddingsFilter extends BaseDocumentCompressor {
   }
 
   async compressDocuments(
-    documents: Document[],
+    documents: DocumentInterface[],
     query: string
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     const embeddedDocuments = await this.embeddings.embedDocuments(
       documents.map((doc) => doc.pageContent)
     );

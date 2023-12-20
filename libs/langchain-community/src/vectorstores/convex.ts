@@ -14,7 +14,7 @@ import {
   VectorIndexNames,
   makeFunctionReference,
 } from "convex/server";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -135,7 +135,7 @@ export class ConvexVectorStore<
   }
 
   constructor(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: ConvexVectorStoreConfig<
       DataModel,
       TableName,
@@ -284,7 +284,7 @@ export class ConvexVectorStore<
   >(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: ConvexVectorStoreConfig<
       DataModel,
       TableName,
@@ -346,7 +346,7 @@ export class ConvexVectorStore<
     >
   >(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: ConvexVectorStoreConfig<
       DataModel,
       TableName,

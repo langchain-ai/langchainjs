@@ -1,4 +1,4 @@
-import type { BaseLanguageModel } from "@langchain/core/language_models/base";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import {
   SfnConfig,
@@ -17,7 +17,7 @@ export interface AWSSfnToolkitArgs {
   description: string;
   stateMachineArn: string;
   asl?: string;
-  llm?: BaseLanguageModel;
+  llm?: BaseLanguageModelInterface;
 }
 
 /**

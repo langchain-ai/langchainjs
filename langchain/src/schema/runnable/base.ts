@@ -4,6 +4,7 @@ export {
   type RunnableBatchOptions,
   type RunnableRetryFailedAttemptHandler,
   Runnable,
+  type RunnableInterface,
   type RunnableBindingArgs,
   RunnableBinding,
   RunnableEach,

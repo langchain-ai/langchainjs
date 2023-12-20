@@ -8,7 +8,7 @@ import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
 } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
@@ -105,7 +105,7 @@ export class WeaviateStore extends VectorStore {
     return "weaviate";
   }
 
-  constructor(public embeddings: Embeddings, args: WeaviateLibArgs) {
+  constructor(public embeddings: EmbeddingsInterface, args: WeaviateLibArgs) {
     super(embeddings, args);
 
     this.client = args.client;
@@ -386,7 +386,7 @@ export class WeaviateStore extends VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object | object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: WeaviateLibArgs
   ): Promise<WeaviateStore> {
     const docs: Document[] = [];
@@ -411,7 +411,7 @@ export class WeaviateStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: WeaviateLibArgs
   ): Promise<WeaviateStore> {
     const instance = new this(embeddings, args);
@@ -427,7 +427,7 @@ export class WeaviateStore extends VectorStore {
    * @returns A new `WeaviateStore` instance.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: WeaviateLibArgs
   ): Promise<WeaviateStore> {
     return new this(embeddings, args);
