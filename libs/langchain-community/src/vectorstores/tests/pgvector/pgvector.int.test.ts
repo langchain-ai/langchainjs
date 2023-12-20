@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import type { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { PGVectorStore } from "../pgvector.js";
+import { PGVectorStore } from "../../pgvector.js";
 
 describe("PGVectorStore", () => {
   let pgvectorVectorStore: PGVectorStore;
@@ -12,7 +12,7 @@ describe("PGVectorStore", () => {
       postgresConnectionOptions: {
         type: "postgres",
         host: "127.0.0.1",
-        port: 5433,
+        port: 5432,
         user: "myuser",
         password: "ChangeMe",
         database: "api",
