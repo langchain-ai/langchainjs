@@ -3,6 +3,7 @@ const { Command } = require('commander');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const readline = require('readline');
 
 /**
  * Finds all workspaces in the monorepo and returns an array of objects.
@@ -88,12 +89,13 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
  * 
  * @param {string} packageDirectory The directory to run yarn release in.
  * @param {string} newVersion The new version to bump to.
+ * @param {string} npm2FACode The 2FA code for NPM.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory, newVersion) {
+async function runYarnRelease(packageDirectory, newVersion, npm2FACode) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const args = ['release', "--", newVersion];
+    const args = ['release', "--", newVersion, `--otp=${npm2FACode}`];
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
@@ -191,6 +193,28 @@ function checkoutReleaseBranch() {
   }
 }
 
+/**
+ * Prompts the user for input and returns the input. This is used
+ * for requesting an OTP from the user for NPM 2FA.
+ * 
+ * @param {string} question The question to log to the users terminal.
+ * @returns {Promise<string>} The user input.
+ */
+async function getUserInput(question) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise((resolve) => {
+    rl.question(question, (input) => {
+      rl.close();
+      resolve(input);
+    });
+  });
+}
+
+
 async function main() {
   const program = new Command();
   program
@@ -241,9 +265,11 @@ async function main() {
   // execSync(`yarn run test:exports:docker`);
   console.log("Successfully built langchain, and tested exports.");
 
+  const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code: ");
+
   // run `release-it` on workspace
   console.log(`Running "release-it". Bumping version of ${options.workspace} to ${newVersion}`);
-  await runYarnRelease(matchingWorkspace.dir, newVersion);
+  await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode);
   
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
