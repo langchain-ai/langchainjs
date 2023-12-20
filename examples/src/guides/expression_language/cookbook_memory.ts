@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { BufferMemory } from "langchain/memory";

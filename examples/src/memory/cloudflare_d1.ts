@@ -1,6 +1,6 @@
 import type { D1Database } from "@cloudflare/workers-types";
 
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { BufferMemory } from "langchain/memory";
 import { CloudflareD1MessageHistory } from "langchain/stores/message/cloudflare_d1";
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
