@@ -7,7 +7,7 @@ import {
   GoogleVertexAILLMPredictions,
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAILLMConnection } from "../utils/googlevertexai-connection.js";
-import { chunkArray } from "../utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 /**
  * Defines the parameters required to initialize a

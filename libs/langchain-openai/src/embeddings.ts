@@ -6,7 +6,7 @@ import {
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
 } from "./types.js";
-import { chunkArray } from "./utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 

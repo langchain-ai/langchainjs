@@ -16,7 +16,7 @@ import type {
   LegacyOpenAIInput,
 } from "./types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { chunkArray } from "./utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { OpenAIChat, OpenAIChatCallOptions } from "./legacy.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
