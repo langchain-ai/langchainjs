@@ -5,6 +5,7 @@
     "tokenRef": "GITHUB_TOKEN_RELEASE"
   },
   "npm": {
+    "publish": true,
     "versionArgs": [
       "--workspaces-update=false"
     ]
