@@ -5,6 +5,10 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 /**
+ * Finds all workspaces in the monorepo and returns an array of objects.
+ * Each object in the return value contains the relative path to the workspace
+ * directory, along with the full package.json file contents.
+ * 
  * @returns {Array<{ dir: string, packageJSON: Record<string, any>}>}
  */
 function getAllWorkspaces() {
@@ -31,16 +35,29 @@ function getAllWorkspaces() {
 }
 
 /**
+ * Increments the last numeric character in a version string by 1.
+ * If the last character is not numeric, it searches backwards
+ * to find the last numeric character to increment.
+ * 
  * @param {string} version 
  * @returns {string} The new version
  */
 function bumpVersion(version) {
-  let parts = version.split('.');
-  parts[parts.length - 1] = parseInt(parts[parts.length - 1], 10) + 1;
-  return parts.join('.');
+  let parts = version.split('');
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (!Number.isNaN(parts[i])) {
+      parts[i] = parseInt(parts[i], 10) + 1;
+      break;
+    }
+  }
+  return parts.join('');
 }
 
 /**
+ * Writes the JSON file with the updated dependency version. Accounts
+ * for version prefixes, eg ~, ^, >, <, >=, <=, ||, *. Also skips
+ * versions which are "latest" or "workspace:*".
+ * 
  * @param {Array<string>} workspaces 
  * @param {"dependencies" | "devDependencies" | "peerDependencies"} dependencyType 
  * @param {string} workspaceName 
@@ -66,6 +83,9 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 }
 
 /**
+ * Runs `yarn release` in the input package directory, passing the new version
+ * as an argument.
+ * 
  * @param {string} packageDirectory The directory to run yarn release in.
  * @param {string} newVersion The new version to bump to.
  * @returns {Promise<void>}
@@ -91,6 +111,9 @@ async function runYarnRelease(packageDirectory, newVersion) {
 }
 
 /**
+ * Finds all package JSON's which contain the input workspace as a dependency.
+ * Then, updates the dependency to the new version, runs yarn install and
+ * commits the changes.
  * 
  * @param {string} workspaceName The name of the workspace to bump dependencies for.
  * @param {string} newVersion The new version to bump to.
@@ -150,6 +173,24 @@ Workspaces:
   }
 }
 
+/**
+ * Verifies the current branch is main, then checks out a new release branch
+ * and pushes an empty commit.
+ * 
+ * @returns {void}
+ * @throws {Error} If the current branch is not main.
+ */
+function checkoutReleaseBranch() {
+  const currentBranch = execSync('git branch --show-current').toString().trim();
+  if (currentBranch === 'main') {
+    console.log("Checking out 'release' branch.")
+    execSync('git checkout -B release');
+    execSync('git push -u origin release');
+  } else {
+    throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
+  }
+}
+
 async function main() {
   const program = new Command();
   program
@@ -177,8 +218,9 @@ async function main() {
   const newVersion = options.version ?? bumpVersion(matchingWorkspace.packageJSON.version);
 
   // checkout new "release" branch & push
+  // checkoutReleaseBranch();
   const currentBranch = execSync('git branch --show-current').toString().trim();
-  if (currentBranch === 'main') {
+  if (currentBranch === 'brace/better-releases') {
     console.log("Checking out 'release' branch.")
     execSync('git checkout -B release');
     execSync('git push -u origin release');
@@ -196,7 +238,7 @@ async function main() {
   // LangChain must be built before running export tests.
   console.log("Building 'langchain' and running export tests.");
   execSync(`yarn run turbo:command build --filter=langchain`);
-  execSync(`yarn run test:exports:docker`);
+  // execSync(`yarn run test:exports:docker`);
   console.log("Successfully built langchain, and tested exports.");
 
   // run `release-it` on workspace

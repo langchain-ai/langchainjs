@@ -1,4 +1,4 @@
-import { MistralAIEmbeddings } from "@langchain/mistralai";
+import { MistralAIEmbeddings } from "@basproul/mistralai";
 
 /* Embed queries */
 const embeddings = new MistralAIEmbeddings({
