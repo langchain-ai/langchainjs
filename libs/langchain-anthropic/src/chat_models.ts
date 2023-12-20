@@ -199,7 +199,7 @@ export class ChatAnthropic<
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<
+  invocationParams(options?: this["ParsedCallOptions"]): Omit<
     AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
     "messages" | "anthropic-beta"
   > &
@@ -209,7 +209,7 @@ export class ChatAnthropic<
       temperature: this.temperature,
       top_k: this.topK,
       top_p: this.topP,
-      stop_sequences: this.stopSequences,
+      stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
       ...this.invocationKwargs,
@@ -239,7 +239,7 @@ export class ChatAnthropic<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const params = this.invocationParams();
+    const params = this.invocationParams(options);
     const stream = await this.createStreamWithRetry({
       ...params,
       ...this.formatMessagesForAnthropic(messages),
@@ -354,7 +354,7 @@ export class ChatAnthropic<
       );
     }
 
-    const params = this.invocationParams();
+    const params = this.invocationParams(options);
     if (params.stream) {
       let finalChunk: ChatGenerationChunk | undefined;
       const stream = await this._streamResponseChunks(
