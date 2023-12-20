@@ -67,12 +67,14 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 
 /**
  * @param {string} packageDirectory The directory to run yarn release in.
+ * @param {string} newVersion The new version to bump to.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory) {
+async function runYarnRelease(packageDirectory, newVersion) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const yarnReleaseProcess = spawn('yarn', ['release'], { stdio: 'inherit', cwd: workingDirectory });
+    const args = ['release', `--release-version=${newVersion}`];
+    const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
       if (code === 0) {
@@ -195,7 +197,7 @@ async function main() {
 
   // run `release-it` on workspace
   console.log("Starting 'release-it' flow.");
-  await runYarnRelease(matchingWorkspace.dir);
+  await runYarnRelease(matchingWorkspace.dir, newVersion);
   
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
