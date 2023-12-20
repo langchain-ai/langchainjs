@@ -95,9 +95,10 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 async function runYarnRelease(packageDirectory, newVersion, npm2FACode) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    // const args = ['release', "--", newVersion, `--otp=${npm2FACode}`];
-    const args = ["release-it", "--ci", `--otp=${npm2FACode}`, "--config", ".release-it.json", newVersion];
-    console.log(`Running 'release-it' with the following args: '${args.join(" ")}'`)
+    const args = ["release-it", "--ci", `--npm.otp=${npm2FACode}`, "--config", ".release-it.json", newVersion];
+    
+    console.log(`Running command: 'yarn ${args.join(" ")}'`);
+
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
