@@ -3,7 +3,11 @@ import fs from "fs/promises";
 import os from "os";
 
 import { copy } from "./copy";
-import { DEFAULT_ESLINTRC, DEFAULT_README, DEFAULT_RELEASE_IT } from "./default_file_contents";
+import {
+  DEFAULT_ESLINTRC,
+  DEFAULT_README,
+  DEFAULT_RELEASE_IT,
+} from "./default_file_contents";
 
 /**
  * Install a internal template to a given `root` directory.

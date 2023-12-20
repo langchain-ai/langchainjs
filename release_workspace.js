@@ -155,6 +155,9 @@ async function main() {
   program.parse();
 
   const options = program.opts();
+  if (!options.workspace) {
+    throw new Error("Workspace name is required.");
+  }
 
   // Find the workspace package.json's.
   const allWorkspaces = getAllWorkspaces();
