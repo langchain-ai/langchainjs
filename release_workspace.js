@@ -95,7 +95,7 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 async function runYarnRelease(packageDirectory, newVersion, npm2FACode) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const args = ["release-it", "--ci", `--npm.otp=${npm2FACode}`, "--config", ".release-it.json", newVersion];
+    const args = ["release-it", "--ci", `--npm.otp=${npm2FACode}`, "--config", ".release-it.json", "--", newVersion];
     
     console.log(`Running command: 'yarn ${args.join(" ")}'`);
 
@@ -268,7 +268,7 @@ async function main() {
   // execSync(`yarn run test:exports:docker`);
   console.log("Successfully built langchain, and tested exports.");
 
-  const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code: ");
+  const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
 
   // run `release-it` on workspace
   await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode);
