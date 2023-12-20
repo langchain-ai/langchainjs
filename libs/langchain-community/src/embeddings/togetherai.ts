@@ -15,9 +15,9 @@ export interface TogetherAIEmbeddingsParams extends EmbeddingsParams {
 
   /**
    * Model name to use
-   * @default {"TODO_WHAT_ARE_MODEL_NAMES"}
+   * @default {"togethercomputer/m2-bert-80M-8k-retrieval"}
    */
-  modelName: string;
+  modelName?: string;
 
   /**
    * Timeout to use when making requests to TogetherAI.
@@ -39,19 +39,37 @@ export interface TogetherAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
-/**˝
+/** @ignore */
+interface TogetherAIEmbeddingsResult {
+  object: string;
+  data: Array<{
+    object: "embedding";
+    embedding: number[];
+    index: number;
+  }>;
+  model: string;
+  request_id: string;
+}
+
+/**
  * Class for generating embeddings using the TogetherAI API. Extends the
  * Embeddings class and implements TogetherAIEmbeddingsParams.
  * @example
  * ```typescript
- * @TODO ADD EXAMPLE
+ * const embeddings = new TogetherAIEmbeddings({
+ *   apiKey: process.env.TOGETHER_AI_API_KEY, // Default value
+ *   model: "togethercomputer/m2-bert-80M-8k-retrieval", // Default value
+ * });
+ * const res = await embeddings.embedQuery(
+ *   "What would be a good company name a company that makes colorful socks?"
+ * );
  * ```
  */
 export class TogetherAIEmbeddings
   extends Embeddings
   implements TogetherAIEmbeddingsParams
 {
-  modelName = "TODO_WHAT_ARE_MODEL_NAMES";
+  modelName = "togethercomputer/m2-bert-80M-8k-retrieval";
 
   apiKey: string;
 
@@ -64,16 +82,19 @@ export class TogetherAIEmbeddings
   private embeddingsAPIUrl = "https://api.together.xyz/api/v1/embeddings";
 
   constructor(fields?: Partial<TogetherAIEmbeddingsParams>) {
-    const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
-
-    super(fieldsWithDefaults);
+    super(fields ?? {});
 
     let apiKey =
-      fieldsWithDefaults?.apiKey ??
-      getEnvironmentVariable("TOGETHER_AI_API_KEY");
+      fields?.apiKey ?? getEnvironmentVariable("TOGETHER_AI_API_KEY");
     if (!apiKey) {
       throw new Error("TOGETHER_AI_API_KEY not found.");
     }
+
+    this.apiKey = apiKey;
+    this.modelName = fields?.modelName ?? this.modelName;
+    this.timeout = fields?.timeout;
+    this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
   }
 
   private constructHeaders() {
@@ -105,27 +126,16 @@ export class TogetherAIEmbeddings
       this.batchSize
     );
 
-    // @TODO replace with type once found.
-    let batchResponses: any[] = [];
-    /**
-     * @TODO Figure out if this is true:
-     * TogetherAI doesn't support multiple inputs per API request
-     * so we need to make a request for each document in the batch.
-     */
+    let batchResponses: TogetherAIEmbeddingsResult[] = [];
     for await (const batch of batches) {
       const batchRequests = batch.map((item) => this.embeddingWithRetry(item));
       const response = await Promise.all(batchRequests);
       batchResponses = batchResponses.concat(response);
     }
 
-    const embeddings: number[][] = [];
-    for (let i = 0; i < batchResponses.length; i += 1) {
-      const batch = batches[i];
-      const { data: batchResponse } = batchResponses[i];
-      for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse[j].embedding);
-      }
-    }
+    const embeddings: number[][] = batchResponses.map(
+      (response) => response.data[0].embedding
+    );
     return embeddings;
   }
 
@@ -150,24 +160,25 @@ export class TogetherAIEmbeddings
    * @returns Promise that resolves to the response from the API.
    * @TODO Figure out return type and statically type it.
    */
-  private async embeddingWithRetry(input: string): Promise<any> {
+  private async embeddingWithRetry(
+    input: string
+  ): Promise<TogetherAIEmbeddingsResult> {
     const body = JSON.stringify(this.constructBody(input));
     const headers = this.constructHeaders();
 
     return this.caller.call(async () => {
-      const fetchResponse = await (
-        await fetch(this.embeddingsAPIUrl, {
-          method: "POST",
-          headers,
-          body
-        })
-      ).json();
+      const fetchResponse = await fetch(this.embeddingsAPIUrl, {
+        method: "POST",
+        headers,
+        body
+      });
+
       if (fetchResponse.status === 200) {
-        return fetchResponse;
+        return fetchResponse.json();
       }
       throw new Error(
         `Error getting prompt completion from Together AI. ${JSON.stringify(
-          fetchResponse,
+          await fetchResponse.json(),
           null,
           2
         )}`
