@@ -182,7 +182,7 @@ Workspaces:
     execSync(`git commit -m "all[minor]: bump deps on ${workspaceName} to ${versionString}"`);
     console.log("Pushing changes.");
     execSync(`git push -u origin ${newBranchName}`);
-    console.log(`🔗 Open https://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1.`);
+    console.log("🔗 Open %s and merge the release PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1\x1b[0m`);
   } else {
     console.log(`No workspaces depend on ${workspaceName}.`);
   }
@@ -270,7 +270,7 @@ async function main() {
   // LangChain must be built before running export tests.
   console.log("Building 'langchain' and running export tests.");
   execSync(`yarn run turbo:command build --filter=langchain`);
-  // execSync(`yarn run test:exports:docker`);
+  execSync(`yarn run test:exports:docker`);
   console.log("Successfully built langchain, and tested exports.");
 
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
@@ -279,7 +279,7 @@ async function main() {
   await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode, options.tag);
   
   // Log release branch URL
-  console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
+  console.log("\x1b[34m%s\x1b[0m", "🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.");
 
   // If `bump-deps` flag is set, find all workspaces which depend on the input workspace.
   // Then, update their package.json to use the new version of the input workspace.

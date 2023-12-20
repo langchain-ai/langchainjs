@@ -1,5 +1,5 @@
 {
-  "name": "@basproul/mistralai",
+  "name": "@langchain/mistralai",
   "version": "0.0.5",
   "description": "MistralAI integration for LangChain.js",
   "type": "module",

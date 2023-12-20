@@ -1,4 +1,4 @@
-import { ChatMistralAI } from "@basproul/mistralai";
+import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
 

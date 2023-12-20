@@ -892,7 +892,6 @@
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
-    "@basproul/mistralai": "workspace:*",
     "@cloudflare/workers-types": "^4.20230922.0",
     "@faker-js/faker": "^7.6.0",
     "@gomomento/sdk": "^1.51.1",
