@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { BaseEntityStore } from "../schema/index.js";
 
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
@@ -21,7 +21,7 @@ import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
  * Interface for the input parameters required by the EntityMemory class.
  */
 export interface EntityMemoryInput extends BaseChatMemoryInput {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   humanPrefix?: string;
   aiPrefix?: string;
   entityExtractionPrompt?: PromptTemplate;
@@ -81,7 +81,7 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
 
   chatHistoryKey = "history";
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   entitiesKey = "entities";
 

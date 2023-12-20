@@ -1,4 +1,4 @@
-import { Tool } from "@langchain/core/tools";
+import { ToolInterface } from "@langchain/core/tools";
 import { Toolkit } from "../base.js";
 import { ConneryService } from "../../../tools/connery.js";
 
@@ -12,7 +12,7 @@ import { ConneryService } from "../../../tools/connery.js";
  * @extends Toolkit
  */
 export class ConneryToolkit extends Toolkit {
-  tools: Tool[];
+  tools: ToolInterface[];
 
   /**
    * Creates a ConneryToolkit instance based on the provided ConneryService instance.

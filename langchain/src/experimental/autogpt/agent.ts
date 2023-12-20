@@ -1,6 +1,6 @@
+import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { BaseChatModel } from "../../chat_models/base.js";
-import { VectorStoreRetriever } from "../../vectorstores/base.js";
 import { Tool } from "../../tools/base.js";
 
 import { AutoGPTOutputParser } from "./output_parser.js";
@@ -25,7 +25,7 @@ import {
 export interface AutoGPTInput {
   aiName: string;
   aiRole: string;
-  memory: VectorStoreRetriever;
+  memory: VectorStoreRetrieverInterface;
   humanInTheLoop?: boolean;
   outputParser?: AutoGPTOutputParser;
   maxIterations?: number;
@@ -60,7 +60,7 @@ export interface AutoGPTInput {
 export class AutoGPT {
   aiName: string;
 
-  memory: VectorStoreRetriever;
+  memory: VectorStoreRetrieverInterface;
 
   fullMessageHistory: BaseMessage[];
 

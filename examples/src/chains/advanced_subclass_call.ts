@@ -1,16 +1,16 @@
 import { BasePromptTemplate, PromptTemplate } from "langchain/prompts";
-import { BaseLanguageModel } from "langchain/base_language";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { CallbackManagerForChainRun } from "langchain/callbacks";
 import { BaseChain, ChainInputs } from "langchain/chains";
 import { ChainValues } from "langchain/schema";
 
 export interface MyCustomChainInputs extends ChainInputs {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   promptTemplate: string;
 }
 
 export class MyCustomChain extends BaseChain implements MyCustomChainInputs {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   promptTemplate: string;
 

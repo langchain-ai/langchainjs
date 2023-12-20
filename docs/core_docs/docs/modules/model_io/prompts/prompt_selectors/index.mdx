@@ -11,7 +11,7 @@ The interface for prompt selectors is quite simple:
 
 ```typescript
 abstract class BasePromptSelector {
-  abstract getPrompt(llm: BaseLanguageModel): BasePromptTemplate;
+  abstract getPrompt(llm: BaseLanguageModelInterface): BasePromptTemplate;
 }
 ```
 
@@ -31,7 +31,7 @@ The example below shows how to use a prompt selector when loading a chain:
 
 ```typescript
 const loadQAStuffChain = (
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   params: StuffQAChainParams = {}
 ) => {
   const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm) } = params;

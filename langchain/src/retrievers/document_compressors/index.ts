@@ -1,4 +1,4 @@
-import { Document } from "../../document.js";
+import type { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentTransformer } from "../../schema/document.js";
 import { Callbacks } from "../../callbacks/manager.js";
 
@@ -16,10 +16,10 @@ export abstract class BaseDocumentCompressor {
    * @returns A Promise that resolves with an array of compressed `Document` objects.
    */
   abstract compressDocuments(
-    documents: Document[],
+    documents: DocumentInterface[],
     query: string,
     callbacks?: Callbacks
-  ): Promise<Document[]>;
+  ): Promise<DocumentInterface[]>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isBaseDocumentCompressor(x: any): x is BaseDocumentCompressor {
@@ -67,10 +67,10 @@ export class DocumentCompressorPipeline extends BaseDocumentCompressor {
   }
 
   async compressDocuments(
-    documents: Document[],
+    documents: DocumentInterface[],
     query: string,
     callbacks?: Callbacks
-  ): Promise<Document[]> {
+  ): Promise<DocumentInterface[]> {
     let transformedDocuments = documents;
     for (const transformer of this.transformers) {
       if (BaseDocumentCompressor.isBaseDocumentCompressor(transformer)) {

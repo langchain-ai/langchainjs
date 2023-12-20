@@ -1,6 +1,6 @@
 import { Runnable } from "../runnables/index.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BasePromptValue } from "../prompt_values.js";
+import type { BasePromptValueInterface } from "../prompt_values.js";
 import type { BaseMessage } from "../messages/index.js";
 import type { Callbacks } from "../callbacks/manager.js";
 import type { Generation, ChatGeneration } from "../outputs.js";
@@ -42,7 +42,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
    */
   parseResultWithPrompt(
     generations: Generation[] | ChatGeneration[],
-    _prompt: BasePromptValue,
+    _prompt: BasePromptValueInterface,
     callbacks?: Callbacks
   ): Promise<T> {
     return this.parseResult(generations, callbacks);
@@ -111,7 +111,7 @@ export abstract class BaseOutputParser<
 
   async parseWithPrompt(
     text: string,
-    _prompt: BasePromptValue,
+    _prompt: BasePromptValueInterface,
     callbacks?: Callbacks
   ): Promise<T> {
     return this.parse(text, callbacks);

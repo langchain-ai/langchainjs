@@ -12,7 +12,7 @@ import {
 } from "@gomomento/sdk-core";
 import * as uuid from "uuid";
 import { Document } from "@langchain/core/documents";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -76,7 +76,10 @@ export class MomentoVectorIndex extends VectorStore {
    * @param embeddings The embeddings instance to use to generate embeddings from documents.
    * @param args The arguments to use to configure the vector store.
    */
-  constructor(embeddings: Embeddings, args: MomentoVectorIndexLibArgs) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    args: MomentoVectorIndexLibArgs
+  ) {
     super(embeddings, args);
 
     this.embeddings = embeddings;
@@ -356,7 +359,7 @@ export class MomentoVectorIndex extends VectorStore {
   public static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MomentoVectorIndexLibArgs,
     documentProps?: DocumentProps
   ): Promise<MomentoVectorIndex> {
@@ -391,7 +394,7 @@ export class MomentoVectorIndex extends VectorStore {
    */
   public static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: MomentoVectorIndexLibArgs,
     documentProps?: DocumentProps
   ): Promise<MomentoVectorIndex> {

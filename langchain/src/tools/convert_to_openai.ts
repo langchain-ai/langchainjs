@@ -1,7 +1,6 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { OpenAIClient } from "@langchain/openai";
-
-import { StructuredTool } from "./base.js";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 
 /**
  * Formats a `StructuredTool` instance into a format that is compatible
@@ -10,7 +9,7 @@ import { StructuredTool } from "./base.js";
  * schema, which is then used as the parameters for the OpenAI function.
  */
 export function formatToOpenAIFunction(
-  tool: StructuredTool
+  tool: StructuredToolInterface
 ): OpenAIClient.Chat.ChatCompletionCreateParams.Function {
   return {
     name: tool.name,
@@ -20,7 +19,7 @@ export function formatToOpenAIFunction(
 }
 
 export function formatToOpenAITool(
-  tool: StructuredTool
+  tool: StructuredToolInterface
 ): OpenAIClient.Chat.ChatCompletionTool {
   const schema = zodToJsonSchema(tool.schema);
   return {
@@ -34,7 +33,7 @@ export function formatToOpenAITool(
 }
 
 export function formatToOpenAIAssistantTool(
-  tool: StructuredTool
+  tool: StructuredToolInterface
 ): OpenAIClient.Beta.AssistantCreateParams.AssistantToolsFunction {
   return {
     type: "function",
