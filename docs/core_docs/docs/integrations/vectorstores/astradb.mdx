@@ -1,0 +1,83 @@
+---
+sidebar_class_name: node-only
+---
+
+# Astra DB
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+DataStax [Astra DB](https://astra.datastax.com/register) is a serverless vector-capable database built on [Apache Cassandra](https://cassandra.apache.org/_/index.html) and made conveniently available through an easy-to-use JSON API.
+
+## Setup
+
+1. Create an [Astra DB account](https://astra.datastax.com/register).
+2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
+3. Grab your `API Endpoint` and `Token` from the Database Details.
+4. Create an OpenAI key.
+5. Set up the following env vars:
+
+```bash
+export ASTRA_DB_APPLICATION_TOKEN=YOUR_ASTRA_DB_APPLICATION_TOKEN_HERE
+export ASTRA_DB_ENDPOINT=YOUR_ASTRA_DB_ENDPOINT_HERE
+export ASTRA_DB_COLLECTION=YOUR_ASTRA_DB_COLLECTION_HERE
+export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+```
+Where `ASTRA_DB_COLLECTION` is the desired name of your collection
+
+6. Install the Astra TS Client
+
+```bash npm2yarn
+npm install @datastax/astra-db-ts
+```
+
+## Indexing docs
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { AstraDBVectorStore, AstraLibArgs } from "langchain/vectorstores/astradb";
+
+const astraConfig: AstraLibArgs = {
+  token: process.env.ASTRA_DB_APPLICATION_TOKEN as string,
+  endpoint: process.env.ASTRA_DB_ENDPOINT as string,
+  collection: process.env.ASTRA_DB_COLLECTION as string ?? 'langchain_test',
+  collectionOptions: {
+    vector: {
+      dimension: 1536,
+      metric: "cosine",
+    }
+  }
+};
+
+const vectorStore = await AstraDBVectorStore.fromTexts(
+      ["AstraDB is built on Apache Cassandra", "AstraDB is a NoSQL DB", "AstraDB supports vector search"],
+      [{ foo: "foo" }, { foo: "bar" }, { foo: "baz" }],
+      new OpenAIEmbeddings(),
+      astraConfig
+    );
+```
+
+## Querying docs
+
+```typescript
+const results = await vectorStore.similaritySearch("Cassandra", 1);
+```
+
+or filtered query:
+
+```typescript
+const results = await vectorStore.similaritySearch("A", 1, { foo: "bar" });
+```
+
+## Vector Types
+
+Astra DB supports `cosine` (the default), `dot_product`, and `euclidean` similarity search; this is defined when the
+vector store is first created as part of the `CreateCollectionOptions`:
+
+```typescript
+  vector: {
+      dimension: number;
+      metric?: "cosine" | "euclidean" | "dot_product";
+  };
+```
