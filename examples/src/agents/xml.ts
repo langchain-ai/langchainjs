@@ -1,8 +1,8 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 
-const model = new ChatAnthropic({ modelName: "claude-2", temperature: 0.1 });
+const model = new ChatAnthropic({ modelName: "claude-2.1", temperature: 0.1 });
 const tools = [new SerpAPI()];
 
 const executor = await initializeAgentExecutorWithOptions(tools, model, {

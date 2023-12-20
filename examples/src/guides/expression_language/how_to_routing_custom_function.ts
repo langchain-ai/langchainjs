@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { PromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
 import { RunnableSequence } from "langchain/schema/runnable";
@@ -15,7 +15,7 @@ Do not respond with more than one word.
 Classification:`);
 
 const model = new ChatAnthropic({
-  modelName: "claude-2",
+  modelName: "claude-2.1",
 });
 
 const classificationChain = RunnableSequence.from([
