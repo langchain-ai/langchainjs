@@ -74,6 +74,7 @@ const entrypoints = {
   "llms/yandex": "llms/yandex",
   // vectorstores
   "vectorstores/analyticdb": "vectorstores/analyticdb",
+  "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
   "vectorstores/cassandra": "vectorstores/cassandra",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/clickhouse": "vectorstores/clickhouse",

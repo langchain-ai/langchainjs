@@ -29,6 +29,7 @@ export * as llms__fireworks from "../llms/fireworks.js";
 export * as llms__ollama from "../llms/ollama.js";
 export * as llms__togetherai from "../llms/togetherai.js";
 export * as llms__yandex from "../llms/yandex.js";
+export * as vectorstores__azure_cosmosdb from "../vectorstores/azure_cosmosdb.js";
 export * as vectorstores__prisma from "../vectorstores/prisma.js";
 export * as vectorstores__vectara from "../vectorstores/vectara.js";
 export * as chat_models__baiduwenxin from "../chat_models/baiduwenxin.js";

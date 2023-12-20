@@ -100,6 +100,7 @@ const entrypoints = {
   // vectorstores
   "vectorstores/clickhouse": "vectorstores/clickhouse",
   "vectorstores/analyticdb": "vectorstores/analyticdb",
+  "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/cassandra": "vectorstores/cassandra",
   "vectorstores/convex": "vectorstores/convex",
@@ -392,6 +393,7 @@ const requiresOptionalDependency = [
   "llms/portkey",
   "prompts/load",
   "vectorstores/analyticdb",
+  "vectorstores/azure_cosmosdb",
   "vectorstores/cassandra",
   "vectorstores/clickhouse",
   "vectorstores/chroma",
