@@ -5,6 +5,32 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 /**
+ * @returns {Array<{ dir: string, packageJSON: Record<string, any>}>}
+ */
+function getAllWorkspaces() {
+  const possibleWorkspaceDirectories = ["./libs/*", "./langchain", "./langchain-core"];
+  const allWorkspaces = possibleWorkspaceDirectories.flatMap((workspaceDirectory) => {
+    if (workspaceDirectory.endsWith("*")) {
+      // List all folders inside directory, require, and return the package.json.
+      const allDirs = fs.readdirSync(path.join(process.cwd(), workspaceDirectory.replace("*", "")));
+      const subDirs = allDirs.map((dir) => {
+        return {
+          dir: `${workspaceDirectory.replace("*", "")}${dir}`,
+          packageJSON: require(path.join(process.cwd(), `${workspaceDirectory.replace("*", "")}${dir}`, "package.json"))
+        }
+      });
+      return subDirs;
+    }
+    const packageJSON = require(path.join(process.cwd(), workspaceDirectory, "package.json"));
+    return {
+      dir: workspaceDirectory,
+      packageJSON,
+    };
+  });
+  return allWorkspaces;
+}
+
+/**
  * @param {string} version 
  * @returns {string} The new version
  */
@@ -62,6 +88,62 @@ async function runYarnRelease(packageDirectory) {
   });
 }
 
+/**
+ * 
+ * @param {string} workspaceName The name of the workspace to bump dependencies for.
+ * @param {string} newVersion The new version to bump to.
+ * @param {Array<{ dir: string, packageJSON: Record<string, any>}>} allWorkspaces
+ * @returns {void}
+ */
+function bumpDeps(workspaceName, newVersion, allWorkspaces) {
+  console.log(`Bumping other packages which depend on ${workspaceName}.`);
+  console.log("Checking out main branch.");
+  execSync(`git checkout main`);
+  const newBranchName = `bump-${workspaceName}-to-${newVersion}`;
+  console.log(`Checking out new branch: ${newBranchName}`);
+  execSync(`git checkout -b ${newBranchName}`);
+
+  const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) => 
+    Object.keys(packageJSON.dependencies ?? {}).includes(workspaceName)
+  );
+  const allWorkspacesWhichDevDependOn = allWorkspaces.filter(({ packageJSON }) => 
+    Object.keys(packageJSON.devDependencies ?? {}).includes(workspaceName)
+  );
+  const allWorkspacesWhichPeerDependOn = allWorkspaces.filter(({ packageJSON }) =>
+    Object.keys(packageJSON.peerDependencies ?? {}).includes(workspaceName)
+  );
+
+  // For console log, get all workspaces which depend and filter out duplicates.
+  const allWhichDependOn = new Set([
+    ...allWorkspacesWhichDependOn,
+    ...allWorkspacesWhichDevDependOn,
+    ...allWorkspacesWhichPeerDependOn,
+  ].map(({ packageJSON }) => packageJSON.name));
+
+  if (allWhichDependOn.size !== 0) {
+    console.log(`Found ${[...allWhichDependOn]} workspaces which depend on ${workspaceName}.
+Workspaces:
+- ${[...allWhichDependOn].map((name) => name).join("\n- ")}
+`);
+    // Update packages which depend on the input workspace.
+    updateDependencies(allWorkspacesWhichDependOn, 'dependencies', workspaceName, newVersion);
+    updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', workspaceName, newVersion);
+    updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', workspaceName, newVersion);
+    console.log("Updated package.json's! Running yarn install.");
+    execSync(`yarn install`);
+
+    // Add all current changes, commit, push and log branch URL.
+    console.log("Adding and committing all changes.");
+    execSync(`git add -A`);
+    execSync(`git commit -m "all[minor]: bump deps on ${workspaceName} to ${newVersion}"`);
+    console.log("Pushing changes.");
+    execSync(`git push -u origin ${newBranchName}`);
+    console.log(`🔗 Open https://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1.`);
+  } else {
+    console.log(`No workspaces depend on ${workspaceName}.`);
+  }
+}
+
 async function main() {
   const program = new Command();
   program
@@ -73,29 +155,9 @@ async function main() {
   program.parse();
 
   const options = program.opts();
-  console.log(options);
 
   // Find the workspace package.json's.
-  const possibleWorkspaceDirectories = ["./libs/*", "./langchain", "./langchain-core"];
-  const allWorkspaces = possibleWorkspaceDirectories.flatMap((workspaceDirectory) => {
-    if (workspaceDirectory.endsWith("*")) {
-      // List all folders inside directory, require, and return the package.json.
-      const allDirs = fs.readdirSync(path.join(process.cwd(), workspaceDirectory.replace("*", "")));
-      const subDirs = allDirs.map((dir) => {
-        return {
-          dir: `${workspaceDirectory.replace("*", "")}${dir}`,
-          packageJSON: require(path.join(process.cwd(), `${workspaceDirectory.replace("*", "")}${dir}`, "package.json"))
-        }
-      });
-      return subDirs;
-    }
-    const packageJSON = require(path.join(process.cwd(), workspaceDirectory, "package.json"));
-    return {
-      dir: workspaceDirectory,
-      packageJSON,
-    };
-  });
-
+  const allWorkspaces = getAllWorkspaces();
   const matchingWorkspace = allWorkspaces.find(({ packageJSON }) => packageJSON.name === options.workspace);
   
   if (!matchingWorkspace) {
@@ -120,12 +182,14 @@ async function main() {
   console.log("Running build, lint, and tests.")
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
   console.log("Successfully ran build, lint, and tests.")
+
   // run export tests.
   // LangChain must be built before running export tests.
   console.log("Building 'langchain' and running export tests.");
   execSync(`yarn run turbo:command build --filter=langchain`);
   execSync(`yarn run test:exports:docker`);
   console.log("Successfully built langchain, and tested exports.");
+
   // run `release-it` on workspace
   console.log("Starting 'release-it' flow.");
   await runYarnRelease(matchingWorkspace.dir);
@@ -137,52 +201,7 @@ async function main() {
   // Then, update their package.json to use the new version of the input workspace.
   // This will create a new branch, commit and push the changes and log the branch URL.
   if (options.bumpDeps) {
-    console.log(`Bumping other packages which depend on ${options.workspace}.`);
-    console.log("Checking out main branch.");
-    execSync(`git checkout main`);
-    const newBranchName = `bump-${options.workspace}-to-${newVersion}`;
-    console.log(`Checking out new branch: ${newBranchName}`);
-    execSync(`git checkout -b ${newBranchName}`);
-
-    const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) => 
-      Object.keys(packageJSON.dependencies ?? {}).includes(options.workspace)
-    );
-    const allWorkspacesWhichDevDependOn = allWorkspaces.filter(({ packageJSON }) => 
-      Object.keys(packageJSON.devDependencies ?? {}).includes(options.workspace)
-    );
-    const allWorkspacesWhichPeerDependOn = allWorkspaces.filter(({ packageJSON }) =>
-      Object.keys(packageJSON.peerDependencies ?? {}).includes(options.workspace)
-    );
-
-    // For console log, get all workspaces which depend and filter out duplicates.
-    const allWhichDependOn = new Set([
-      ...allWorkspacesWhichDependOn,
-      ...allWorkspacesWhichDevDependOn,
-      ...allWorkspacesWhichPeerDependOn,
-    ].map(({ packageJSON }) => packageJSON.name));
-
-    if (allWhichDependOn.size !== 0) {
-      console.log(`Found ${[...allWhichDependOn]} workspaces which depend on ${options.workspace}.
-Workspaces:
-- ${[...allWhichDependOn].map((name) => name).join("\n- ")}
-`);
-      // Update packages which depend on the input workspace.
-      updateDependencies(allWorkspacesWhichDependOn, 'dependencies', options.workspace, newVersion);
-      updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', options.workspace, newVersion);
-      updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', options.workspace, newVersion);
-      console.log("Updated package.json's! Running yarn install.");
-      execSync(`yarn install`);
-
-      // Add all current changes, commit, push and log branch URL.
-      console.log("Adding and committing all changes.");
-      execSync(`git add -A`);
-      execSync(`git commit -m "all[minor]: bump deps on ${options.workspace} to ${newVersion}"`);
-      console.log("Pushing changes.");
-      execSync(`git push -u origin ${newBranchName}`);
-      console.log(`🔗 Open https://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1.`);
-    } else {
-      console.log(`No workspaces depend on ${options.workspace}.`);
-    }
+    bumpDeps(options.workspace, newVersion, allWorkspaces);
   }
 }
 
