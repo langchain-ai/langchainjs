@@ -73,7 +73,8 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 async function runYarnRelease(packageDirectory, newVersion) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const args = ['release', `--release-version=${newVersion}`];
+    // const args = ['release', `--release-version=${newVersion}`];
+    const args = ['release'];
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
