@@ -34,7 +34,7 @@ export interface YandexGPTEmbeddingsParams extends EmbeddingsParams {
 
 /**
  * Class for generating embeddings using the YandexGPT Foundation models API. Extends the
- * Embeddings class and implements GradientEmbeddingsParams and
+ * Embeddings class and implements YandexGPTEmbeddings
  */
 export class YandexGPTEmbeddings
   extends Embeddings
@@ -91,6 +91,27 @@ export class YandexGPTEmbeddings
    * @returns Promise that resolves to a 2D array of embeddings for each document.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
+    return this.embeddingWithRetry(texts);
+  }
+
+  /**
+   * Method to generate an embedding for a single document. Calls the
+   * embedDocuments method with the document as the input.
+   * @param text Document to generate an embedding for.
+   * @returns Promise that resolves to an embedding for the document.
+   */
+  async embedQuery(text: string): Promise<number[]> {
+    const data = await this.embedDocuments([text]);
+    return data[0];
+  }
+
+  /**
+   * Private method to make a request to the YandexGPT API to generate
+   * embeddings. Handles the retry logic and returns the embeddings from the API.
+   * @param {string | Array<string>} texts Array of documents to generate embeddings for.
+   * @returns {Promise<MistralAIEmbeddingsResult>} Promise that resolves to a 2D array of embeddings for each document.
+   */
+  private async embeddingWithRetry(texts: string[]): Promise<number[][]> {
     return this.caller.call(async () => {
       const headers = {
         "Content-Type": "application/json",
@@ -136,16 +157,5 @@ export class YandexGPTEmbeddings
 
       return embeddings;
     });
-  }
-
-  /**
-   * Method to generate an embedding for a single document. Calls the
-   * embedDocuments method with the document as the input.
-   * @param text Document to generate an embedding for.
-   * @returns Promise that resolves to an embedding for the document.
-   */
-  async embedQuery(text: string): Promise<number[]> {
-    const data = await this.embedDocuments([text]);
-    return data[0];
   }
 }
