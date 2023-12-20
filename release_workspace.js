@@ -90,12 +90,14 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
  * @param {string} packageDirectory The directory to run yarn release in.
  * @param {string} newVersion The new version to bump to.
  * @param {string} npm2FACode The 2FA code for NPM.
+ * @param {string | undefined} tag An optional tag to publish to.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory, newVersion, npm2FACode) {
+async function runYarnRelease(packageDirectory, newVersion, npm2FACode, tag) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const args = ["release-it", "--ci", `--npm.otp=${npm2FACode}`, "--config", ".release-it.json", newVersion];
+    const tagArg = tag ? `--npm.tag=${tag}` : "";
+    const args = ["release-it", "--ci", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json", newVersion];
     
     console.log(`Running command: 'yarn ${args.join(" ")}'`);
 
@@ -224,10 +226,14 @@ async function main() {
     .description("Release a new workspace version to NPM.")
     .option("--workspace <workspace>", "Workspace name, eg @langchain/core")
     .option("--version <version>", "Optionally override the version to bump to.")
-    .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.");
+    .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.")
+    .option("--tag <tag>", "Optionally specify a tag to publish to.");
 
   program.parse();
 
+  /**
+   * @type {{ workspace: string, version?: string, bumpDeps?: boolean, tag?: string }}
+   */
   const options = program.opts();
   if (!options.workspace) {
     throw new Error("--workspace is a required flag.");
@@ -271,7 +277,7 @@ async function main() {
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
 
   // run `release-it` on workspace
-  await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode);
+  await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode, options.tag);
   
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
