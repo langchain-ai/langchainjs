@@ -1,6 +1,6 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
-import { chunkArray } from "../utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 /**
  * Interface for TogetherAIEmbeddingsParams parameters. Extends EmbeddingsParams and
