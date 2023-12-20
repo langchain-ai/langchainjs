@@ -95,7 +95,9 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 async function runYarnRelease(packageDirectory, newVersion, npm2FACode) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    const args = ['release', "--", newVersion, `--otp=${npm2FACode}`];
+    // const args = ['release', "--", newVersion, `--otp=${npm2FACode}`];
+    const args = ["release-it", "--ci", `--otp=${npm2FACode}`, "--config", ".release-it.json", newVersion];
+    console.log(`Running 'release-it' with the following args: '${args.join(" ")}'`)
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
@@ -207,7 +209,7 @@ async function getUserInput(question) {
   });
 
   return new Promise((resolve) => {
-    rl.question(question, (input) => {
+    rl.question(`\x1b[30m\x1b[47m${question}\x1b[0m`, (input) => {
       rl.close();
       resolve(input);
     });
@@ -268,7 +270,6 @@ async function main() {
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code: ");
 
   // run `release-it` on workspace
-  console.log(`Running "release-it". Bumping version of ${options.workspace} to ${newVersion}`);
   await runYarnRelease(matchingWorkspace.dir, newVersion, npm2FACode);
   
   // Log release branch URL
