@@ -99,7 +99,7 @@ function main() {
   // run export tests
   execSync(`yarn run test:exports:docker`);
   // run `release-it` on workspace
-  execSync(`cd ${matchingWorkspace.dir} && release-it --only-version --config .release-it.json`);
+  execSync(`cd ${matchingWorkspace.dir} && yarn release`);
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
 
