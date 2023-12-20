@@ -22,7 +22,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@basproul/mistralai": "workspace:*",
+    "@langchain/mistralai": "workspace:*",
     "@clickhouse/client": "^0.2.5",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "^4.0.0",
