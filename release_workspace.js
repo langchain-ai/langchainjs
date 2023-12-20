@@ -10,7 +10,6 @@ const { spawn } = require('child_process');
  */
 function bumpVersion(version) {
   let parts = version.split('.');
-  
   parts[parts.length - 1] = parseInt(parts[parts.length - 1], 10) + 1;
   return parts.join('.');
 }
@@ -42,7 +41,7 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 
 /**
  * @param {string} packageDirectory The directory to run yarn release in.
- * @returns 
+ * @returns {Promise<void>}
  */
 async function runYarnRelease(packageDirectory) {
   return new Promise((resolve, reject) => {
@@ -109,25 +108,26 @@ async function main() {
 
   // checkout new "release" branch & push
   const currentBranch = execSync('git branch --show-current').toString().trim();
-  // @TODO change to main before merging
-  if (currentBranch === 'brace/better-releases') {
-    console.log("success")
-    execSync('git checkout -B brace/release');
-    execSync('git push -u origin brace/release');
+  if (currentBranch === 'main') {
+    console.log("Checking out 'release' branch.")
+    execSync('git checkout -B release');
+    execSync('git push -u origin release');
   } else {
     throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
   }
 
   // run build, lint, tests
+  console.log("Running build, lint, and tests.")
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
   console.log("Successfully ran build, lint, and tests.")
   // run export tests.
   // LangChain must be built before running export tests.
+  console.log("Building 'langchain' and running export tests.");
   execSync(`yarn run turbo:command build --filter=langchain`);
   execSync(`yarn run test:exports:docker`);
-  console.log("Successfully tested exports.")
+  console.log("Successfully built langchain, and tested exports.");
   // run `release-it` on workspace
-  // execSync(`cd ${matchingWorkspace.dir} && yarn release`);
+  console.log("Starting 'release-it' flow.");
   await runYarnRelease(matchingWorkspace.dir);
   
   // Log release branch URL
@@ -139,12 +139,10 @@ async function main() {
   if (options.bumpDeps) {
     console.log(`Bumping other packages which depend on ${options.workspace}.`);
     console.log("Checking out main branch.");
-    // execSync(`git checkout main`);
-    console.log("Stashing any changes.");
-    // execSync(`git stash`);
+    execSync(`git checkout main`);
     const newBranchName = `bump-${options.workspace}-to-${newVersion}`;
     console.log(`Checking out new branch: ${newBranchName}`);
-    // execSync(`git checkout -b ${newBranchName}`);
+    execSync(`git checkout -b ${newBranchName}`);
 
     const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) => 
       Object.keys(packageJSON.dependencies ?? {}).includes(options.workspace)
@@ -172,13 +170,15 @@ Workspaces:
       updateDependencies(allWorkspacesWhichDependOn, 'dependencies', options.workspace, newVersion);
       updateDependencies(allWorkspacesWhichDevDependOn, 'devDependencies', options.workspace, newVersion);
       updateDependencies(allWorkspacesWhichPeerDependOn, 'peerDependencies', options.workspace, newVersion);
+      console.log("Updated package.json's! Running yarn install.");
+      execSync(`yarn install`);
 
       // Add all current changes, commit, push and log branch URL.
       console.log("Adding and committing all changes.");
-      // execSync(`git add -A`);
-      // execSync(`git commit -m "all[minor]: bump deps on ${options.workspace} to ${newVersion}"`);
+      execSync(`git add -A`);
+      execSync(`git commit -m "all[minor]: bump deps on ${options.workspace} to ${newVersion}"`);
       console.log("Pushing changes.");
-      // execSync(`git push -u origin ${newBranchName}`);
+      execSync(`git push -u origin ${newBranchName}`);
       console.log(`🔗 Open https://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1.`);
     } else {
       console.log(`No workspaces depend on ${options.workspace}.`);
