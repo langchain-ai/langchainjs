@@ -68,13 +68,14 @@ function updateDependencies(workspaces, dependencyType, workspaceName, newVersio
 /**
  * @param {string} packageDirectory The directory to run yarn release in.
  * @param {string} newVersion The new version to bump to.
+ * @param {boolean} passVersion Whether or not to pass the version to yarn release.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory, newVersion) {
+async function runYarnRelease(packageDirectory, newVersion, isNew) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
-    // const args = ['release', `--release-version=${newVersion}`];
-    const args = ['release'];
+    const argsWithVersion = ['release', `--release-version=${newVersion}`];
+    const args = passVersion ? argsWithVersion : ['release'];
     const yarnReleaseProcess = spawn('yarn', args, { stdio: 'inherit', cwd: workingDirectory });
 
     yarnReleaseProcess.on('close', (code) => {
@@ -153,7 +154,8 @@ async function main() {
     .description("Release a new workspace version to NPM.")
     .option("--workspace <workspace>", "Workspace name, eg @langchain/core")
     .option("--version <version>", "Optionally override the version to bump to.")
-    .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.");
+    .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.")
+    .option("--is-new", "Whether or not the package to publish has never been published before.");
 
   program.parse();
 
@@ -207,7 +209,9 @@ async function main() {
 
   // run `release-it` on workspace
   console.log("Starting 'release-it' flow.");
-  await runYarnRelease(matchingWorkspace.dir, newVersion);
+  // Must explicitly state the version in the `release-it` flow if the
+  // package has never been published before.
+  await runYarnRelease(matchingWorkspace.dir, newVersion, options.isNew);
   
   // Log release branch URL
   console.log("🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.")
