@@ -199,7 +199,9 @@ export class ChatAnthropic<
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(options?: this["ParsedCallOptions"]): Omit<
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<
     AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
     "messages" | "anthropic-beta"
   > &
