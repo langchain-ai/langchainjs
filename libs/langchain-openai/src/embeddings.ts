@@ -1,12 +1,12 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import {
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
-  LegacyOpenAIInput,
+  LegacyOpenAIInput
 } from "./types.js";
-import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
@@ -160,7 +160,7 @@ export class OpenAIEmbeddings
       defaultHeaders: configuration?.baseOptions?.headers,
       defaultQuery: configuration?.baseOptions?.params,
       ...configuration,
-      ...fields?.configuration,
+      ...fields?.configuration
     };
   }
 
@@ -180,7 +180,7 @@ export class OpenAIEmbeddings
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
         model: this.modelName,
-        input: batch,
+        input: batch
       })
     );
     const batchResponses = await Promise.all(batchRequests);
@@ -205,7 +205,7 @@ export class OpenAIEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
+      input: this.stripNewLines ? text.replace(/\n/g, " ") : text
     });
     return data[0].embedding;
   }
@@ -226,7 +226,7 @@ export class OpenAIEmbeddings
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAIBasePath: this.azureOpenAIBasePath,
-        baseURL: this.clientConfig.baseURL,
+        baseURL: this.clientConfig.baseURL
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
@@ -235,7 +235,7 @@ export class OpenAIEmbeddings
         ...this.clientConfig,
         baseURL: endpoint,
         timeout: this.timeout,
-        maxRetries: 0,
+        maxRetries: 0
       };
 
       if (!params.baseURL) {
@@ -248,11 +248,11 @@ export class OpenAIEmbeddings
     if (this.azureOpenAIApiKey) {
       requestOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
-        ...requestOptions.headers,
+        ...requestOptions.headers
       };
       requestOptions.query = {
         "api-version": this.azureOpenAIApiVersion,
-        ...requestOptions.query,
+        ...requestOptions.query
       };
     }
     return this.caller.call(async () => {
