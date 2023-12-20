@@ -33,7 +33,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1"
+    "@langchain/core": "~0.1.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

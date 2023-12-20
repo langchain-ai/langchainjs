@@ -238,6 +238,9 @@ export interface OptionalImportMap {
   "@langchain/community/retrievers/supabase"?:
     | typeof import("../retrievers/supabase.js")
     | Promise<typeof import("../retrievers/supabase.js")>;
+  "@langchain/community/retrievers/vectara_summary"?:
+    | typeof import("../retrievers/vectara_summary.js")
+    | Promise<typeof import("../retrievers/vectara_summary.js")>;
   "@langchain/community/retrievers/zep"?:
     | typeof import("../retrievers/zep.js")
     | Promise<typeof import("../retrievers/zep.js")>;

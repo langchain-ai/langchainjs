@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -34,8 +34,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1",
-    "@langchain/openai": "~0.0.5",
+    "@langchain/core": "~0.1.2",
+    "@langchain/openai": "~0.0.6",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
@@ -753,6 +753,11 @@
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
     },
+    "./llms/togetherai": {
+      "types": "./llms/togetherai.d.ts",
+      "import": "./llms/togetherai.js",
+      "require": "./llms/togetherai.cjs"
+    },
     "./llms/watsonx_ai": {
       "types": "./llms/watsonx_ai.d.ts",
       "import": "./llms/watsonx_ai.js",
@@ -1067,6 +1072,11 @@
       "types": "./retrievers/tavily_search_api.d.ts",
       "import": "./retrievers/tavily_search_api.js",
       "require": "./retrievers/tavily_search_api.cjs"
+    },
+    "./retrievers/vectara_summary": {
+      "types": "./retrievers/vectara_summary.d.ts",
+      "import": "./retrievers/vectara_summary.js",
+      "require": "./retrievers/vectara_summary.cjs"
     },
     "./retrievers/zep": {
       "types": "./retrievers/zep.d.ts",
@@ -1400,6 +1410,9 @@
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/togetherai.cjs",
+    "llms/togetherai.js",
+    "llms/togetherai.d.ts",
     "llms/watsonx_ai.cjs",
     "llms/watsonx_ai.js",
     "llms/watsonx_ai.d.ts",
@@ -1589,6 +1602,9 @@
     "retrievers/tavily_search_api.cjs",
     "retrievers/tavily_search_api.js",
     "retrievers/tavily_search_api.d.ts",
+    "retrievers/vectara_summary.cjs",
+    "retrievers/vectara_summary.js",
+    "retrievers/vectara_summary.d.ts",
     "retrievers/zep.cjs",
     "retrievers/zep.js",
     "retrievers/zep.d.ts",

@@ -80,6 +80,7 @@ export const optionalImportEntrypoints = [
   "langchain_community/retrievers/amazon_kendra",
   "langchain_community/retrievers/metal",
   "langchain_community/retrievers/supabase",
+  "langchain_community/retrievers/vectara_summary",
   "langchain_community/retrievers/zep",
   "langchain_community/graphs/neo4j_graph",
   "langchain_community/document_transformers/html_to_text",
