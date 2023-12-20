@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { CohereEmbeddings } from "langchain/embeddings/cohere";
 import { MultiQueryRetriever } from "langchain/retrievers/multi_query";

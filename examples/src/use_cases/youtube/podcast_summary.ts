@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { loadSummarizationChain } from "langchain/chains";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
 import { PromptTemplate } from "langchain/prompts";

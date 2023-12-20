@@ -11,10 +11,10 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { ChatAnthropic } from "../chat_models.js";
+import { ChatAnthropicMessages } from "../chat_models.js";
 
-test("Test ChatAnthropic", async () => {
-  const chat = new ChatAnthropic({
+test("Test ChatAnthropicMessages", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
   });
@@ -23,8 +23,8 @@ test("Test ChatAnthropic", async () => {
   console.log({ res });
 });
 
-test("Test ChatAnthropic Generate", async () => {
-  const chat = new ChatAnthropic({
+test("Test ChatAnthropicMessages Generate", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
   });
@@ -40,8 +40,8 @@ test("Test ChatAnthropic Generate", async () => {
   console.log({ res });
 });
 
-test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
-  const chat = new ChatAnthropic({
+test("Test ChatAnthropicMessages Generate w/ ClientOptions", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
     clientOptions: {
@@ -62,8 +62,8 @@ test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   console.log({ res });
 });
 
-test("Test ChatAnthropic Generate with a signal in call options", async () => {
-  const chat = new ChatAnthropic({
+test("Test ChatAnthropicMessages Generate with a signal in call options", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
   });
@@ -82,8 +82,8 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
   }).rejects.toThrow();
 }, 10000);
 
-test("Test ChatAnthropic tokenUsage with a batch", async () => {
-  const model = new ChatAnthropic({
+test("Test ChatAnthropicMessages tokenUsage with a batch", async () => {
+  const model = new ChatAnthropicMessages({
     temperature: 0,
     maxRetries: 0,
     modelName: "claude-instant-1.2",
@@ -95,11 +95,11 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
   console.log({ res });
 });
 
-test("Test ChatAnthropic in streaming mode", async () => {
+test("Test ChatAnthropicMessages in streaming mode", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
 
-  const model = new ChatAnthropic({
+  const model = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
     streaming: true,
@@ -118,11 +118,11 @@ test("Test ChatAnthropic in streaming mode", async () => {
   expect(res.content).toBe(streamedCompletion);
 });
 
-test("Test ChatAnthropic in streaming mode with a signal", async () => {
+test("Test ChatAnthropicMessages in streaming mode with a signal", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
 
-  const model = new ChatAnthropic({
+  const model = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
     streaming: true,
@@ -150,8 +150,8 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
   console.log({ nrNewTokens, streamedCompletion });
 }, 5000);
 
-test("Test ChatAnthropic prompt value", async () => {
-  const chat = new ChatAnthropic({
+test("Test ChatAnthropicMessages prompt value", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
   });
@@ -166,8 +166,8 @@ test("Test ChatAnthropic prompt value", async () => {
   console.log({ res });
 });
 
-test("ChatAnthropic, docs, prompt templates", async () => {
-  const chat = new ChatAnthropic({
+test("ChatAnthropicMessages, docs, prompt templates", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
     temperature: 0,
@@ -193,8 +193,8 @@ test("ChatAnthropic, docs, prompt templates", async () => {
   console.log(responseA.generations);
 });
 
-test("ChatAnthropic, longer chain of messages", async () => {
-  const chat = new ChatAnthropic({
+test("ChatAnthropicMessages, longer chain of messages", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-1.3",
     maxRetries: 0,
     temperature: 0,
@@ -215,10 +215,10 @@ test("ChatAnthropic, longer chain of messages", async () => {
   console.log(responseA.generations);
 });
 
-test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () => {
+test("ChatAnthropicMessages, Anthropic apiUrl set manually via constructor", async () => {
   // Pass the default URL through (should use this, and work as normal)
   const anthropicApiUrl = "https://api.anthropic.com";
-  const chat = new ChatAnthropic({
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
     anthropicApiUrl,
@@ -228,8 +228,8 @@ test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () =>
   console.log({ res });
 });
 
-test("ChatAnthropic, Claude V2", async () => {
-  const chat = new ChatAnthropic({
+test("ChatAnthropicMessages, Claude V2", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-2.1",
     maxRetries: 0,
     temperature: 0,
@@ -250,8 +250,8 @@ test("ChatAnthropic, Claude V2", async () => {
   console.log(responseA.generations);
 });
 
-test("Test ChatAnthropic stream method", async () => {
-  const model = new ChatAnthropic({
+test("Test ChatAnthropicMessages stream method", async () => {
+  const model = new ChatAnthropicMessages({
     maxTokens: 50,
     maxRetries: 0,
     modelName: "claude-instant-1.2",
@@ -265,9 +265,9 @@ test("Test ChatAnthropic stream method", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test("Test ChatAnthropic stream method with abort", async () => {
+test("Test ChatAnthropicMessages stream method with abort", async () => {
   await expect(async () => {
-    const model = new ChatAnthropic({
+    const model = new ChatAnthropicMessages({
       maxTokens: 500,
       maxRetries: 0,
       modelName: "claude-instant-1.2",
@@ -284,8 +284,8 @@ test("Test ChatAnthropic stream method with abort", async () => {
   }).rejects.toThrow();
 });
 
-test("Test ChatAnthropic stream method with early break", async () => {
-  const model = new ChatAnthropic({
+test("Test ChatAnthropicMessages stream method with early break", async () => {
+  const model = new ChatAnthropicMessages({
     maxTokens: 50,
     maxRetries: 0,
     modelName: "claude-instant-1.2",
@@ -303,8 +303,8 @@ test("Test ChatAnthropic stream method with early break", async () => {
   }
 });
 
-test("Test ChatAnthropic headers passed through", async () => {
-  const chat = new ChatAnthropic({
+test("Test ChatAnthropicMessages headers passed through", async () => {
+  const chat = new ChatAnthropicMessages({
     modelName: "claude-instant-1.2",
     maxRetries: 0,
     anthropicApiKey: "NOT_REAL",

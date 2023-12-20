@@ -118,7 +118,7 @@ type Kwargs = Record<string, any>;
  * console.log(res);
  * ```
  */
-export class ChatAnthropic<
+export class ChatAnthropicMessages<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
   >
   extends BaseChatModel<CallOptions>
@@ -487,3 +487,5 @@ export class ChatAnthropic<
     return [];
   }
 }
+
+export class ChatAnthropic extends ChatAnthropicMessages {}
