@@ -175,13 +175,21 @@ async function main() {
 
   // checkout new "release" branch & push
   const currentBranch = execSync('git branch --show-current').toString().trim();
-  if (currentBranch === 'main') {
+  // if (currentBranch === 'main') {
+  //   console.log("Checking out 'release' branch.")
+  //   execSync('git checkout -B release');
+  //   execSync('git push -u origin release');
+  // } else {
+  //   throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
+  // }
+  if (currentBranch === 'brace/better-releases') {
     console.log("Checking out 'release' branch.")
     execSync('git checkout -B release');
     execSync('git push -u origin release');
   } else {
     throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
   }
+
 
   // run build, lint, tests
   console.log("Running build, lint, and tests.")

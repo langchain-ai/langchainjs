@@ -34,6 +34,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@basproul/mistralai": "0.0.4",
     "@langchain/core": "~0.1.2",
     "@langchain/openai": "~0.0.6",
     "flat": "^5.0.2",

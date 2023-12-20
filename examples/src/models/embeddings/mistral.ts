@@ -1,8 +1,8 @@
-import { MistralAIEmbeddings } from "@langchain/mistralai";
+import { MistralAIEmbeddings } from "@basproul/mistralai";
 
 /* Embed queries */
 const embeddings = new MistralAIEmbeddings({
-  apiKey: process.env.MISTRAL_API_KEY,
+  apiKey: process.env.MISTRAL_API_KEY
 });
 const res = await embeddings.embedQuery("Hello world");
 console.log(res);
