@@ -286,6 +286,9 @@ async function main() {
       allWorkspaces,
       options.tag
     );
+  } else {
+    const updatedWorkspaceVersion = require(path.join(process.cwd(), matchingWorkspace.dir, "package.json")).version;
+    console.log("updatedWorkspaceVersion", updatedWorkspaceVersion)
   }
 };
 
