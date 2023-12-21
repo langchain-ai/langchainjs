@@ -1,12 +1,12 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import {
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
   LegacyOpenAIInput,
 } from "./types.js";
-import { chunkArray } from "./utils/chunk.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
