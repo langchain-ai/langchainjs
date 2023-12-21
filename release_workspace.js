@@ -7,6 +7,7 @@ const readline = require("readline");
 const semver = require('semver')
 
 const INCREMENT_TYPES = ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
+const PRIMARY_PROJECTS = ["langchain", "@langchain/core", "@langchain/community"];
 
 /**
  * Finds all workspaces in the monorepo and returns an array of objects.
@@ -278,12 +279,29 @@ async function main() {
   execSync(`yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`);
   console.log("Successfully ran build, lint, and tests.");
 
-  // Run export tests.
-  // LangChain must be built before running export tests.
-  console.log("Building 'langchain' and running export tests.");
-  execSync(`yarn run turbo:command build --filter=langchain`);
-  execSync(`yarn run test:exports:docker`);
-  console.log("Successfully built langchain, and tested exports.");
+  // Only run export tests for primary projects.
+  if (PRIMARY_PROJECTS.includes(options.workspace.trim())) {
+    // Run export tests.
+    // LangChain must be built before running export tests.
+    console.log("Building 'langchain' and running export tests.");
+    execSync(`yarn run turbo:command build --filter=langchain`);
+    execSync(`yarn run test:exports:docker`);
+    console.log("Successfully built langchain, and tested exports.");
+  } else {
+    console.log("Skipping export tests for non primary project.");
+  }
+
+  const userConformation = (await getUserInput(`Confirm the following details:
+Project: ${options.workspace}
+Version: ${newVersion}
+Tag: ${options.tag ?? "latest"} (defaults to latest)
+Bump Dependencies: ${options.bumpDeps ?? "false"} (defaults to false)
+Is this correct? [y/n]:
+`)).trim().toLowerCase();
+  if (userConformation !== "y") {
+    console.warn("User did not confirm. Exiting.");
+    process.exit(1);
+  }
 
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
 
