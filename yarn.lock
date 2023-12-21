@@ -23640,7 +23640,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    mammoth: "*"
+    mammoth: ^1.6.0
     mongodb: ^5.2.0
     node-llama-cpp: "*"
     notion-to-md: ^3.1.0
