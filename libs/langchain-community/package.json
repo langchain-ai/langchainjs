@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -34,8 +34,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.2",
-    "@langchain/openai": "~0.0.6",
+    "@langchain/core": "~0.1.3",
+    "@langchain/openai": "~0.0.7",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
@@ -655,6 +655,11 @@
       "types": "./embeddings/tensorflow.d.ts",
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/togetherai": {
+      "types": "./embeddings/togetherai.d.ts",
+      "import": "./embeddings/togetherai.js",
+      "require": "./embeddings/togetherai.cjs"
     },
     "./embeddings/voyage": {
       "types": "./embeddings/voyage.d.ts",
@@ -1346,6 +1351,9 @@
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
+    "embeddings/togetherai.cjs",
+    "embeddings/togetherai.js",
+    "embeddings/togetherai.d.ts",
     "embeddings/voyage.cjs",
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",

@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import { BaseMessage, SystemMessage } from "../schema/index.js";
@@ -24,7 +24,7 @@ export interface ConversationSummaryMemoryInput
  */
 export interface BaseConversationSummaryMemoryInput
   extends BaseChatMemoryInput {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   memoryKey?: string;
   humanPrefix?: string;
   aiPrefix?: string;
@@ -44,7 +44,7 @@ export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
 
   aiPrefix = "AI";
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   prompt: BasePromptTemplate = SUMMARY_PROMPT;
 

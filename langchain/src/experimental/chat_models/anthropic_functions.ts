@@ -1,4 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 
 import { BaseChatModel, BaseChatModelParams } from "../../chat_models/base.js";
 import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
@@ -15,7 +16,6 @@ import {
   type AnthropicInput,
 } from "../../chat_models/anthropic.js";
 import { BaseFunctionCallOptions } from "../../base_language/index.js";
-import { StructuredTool } from "../../tools/base.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
 
@@ -42,7 +42,7 @@ for the weather in SF you would respond:
 
 export interface ChatAnthropicFunctionsCallOptions
   extends BaseFunctionCallOptions {
-  tools?: StructuredTool[];
+  tools?: StructuredToolInterface[];
 }
 
 export type AnthropicFunctionsInput = Partial<AnthropicInput> &

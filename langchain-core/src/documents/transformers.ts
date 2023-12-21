@@ -1,6 +1,6 @@
 import { Runnable } from "../runnables/base.js";
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
-import type { Document } from "./document.js";
+import type { DocumentInterface } from "./document.js";
 
 /**
  * Abstract base class for document transformation systems.
@@ -13,8 +13,8 @@ import type { Document } from "./document.js";
  * many smaller documents.
  */
 export abstract class BaseDocumentTransformer<
-  RunInput extends Document[] = Document[],
-  RunOutput extends Document[] = Document[]
+  RunInput extends DocumentInterface[] = DocumentInterface[],
+  RunOutput extends DocumentInterface[] = DocumentInterface[]
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain_core", "documents", "transformers"];
 
@@ -42,7 +42,9 @@ export abstract class BaseDocumentTransformer<
  * for each input document.
  */
 export abstract class MappingDocumentTransformer extends BaseDocumentTransformer {
-  async transformDocuments(documents: Document[]): Promise<Document[]> {
+  async transformDocuments(
+    documents: DocumentInterface[]
+  ): Promise<DocumentInterface[]> {
     const newDocuments = [];
     for (const document of documents) {
       const transformedDocument = await this._transformDocument(document);
@@ -51,5 +53,7 @@ export abstract class MappingDocumentTransformer extends BaseDocumentTransformer
     return newDocuments;
   }
 
-  abstract _transformDocument(document: Document): Promise<Document>;
+  abstract _transformDocument(
+    document: DocumentInterface
+  ): Promise<DocumentInterface>;
 }

@@ -4,14 +4,14 @@ import {
   VectorizeIndex,
   VectorizeVectorMetadata,
 } from "@cloudflare/workers-types";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import {
   AsyncCaller,
   type AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import { chunkArray } from "../utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 export interface VectorizeLibArgs extends AsyncCallerParams {
   index: VectorizeIndex;
@@ -43,7 +43,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     return "cloudflare_vectorize";
   }
 
-  constructor(embeddings: Embeddings, args: VectorizeLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: VectorizeLibArgs) {
     super(embeddings, args);
 
     this.embeddings = embeddings;
@@ -179,7 +179,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     metadatas:
       | Record<string, VectorizeVectorMetadata>[]
       | Record<string, VectorizeVectorMetadata>,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const docs: Document[] = [];
@@ -205,7 +205,7 @@ export class CloudflareVectorizeStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const instance = new this(embeddings, dbConfig);
@@ -221,7 +221,7 @@ export class CloudflareVectorizeStore extends VectorStore {
    * @returns Promise that resolves with a new instance of the CloudflareVectorizeStore class.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: VectorizeLibArgs
   ): Promise<CloudflareVectorizeStore> {
     const instance = new this(embeddings, dbConfig);

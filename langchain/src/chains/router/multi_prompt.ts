@@ -1,5 +1,5 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { z } from "zod";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { MultiRouteChain, MultiRouteChainInput } from "./multi_route.js";
 import { STRUCTURED_MULTI_PROMPT_ROUTER_TEMPLATE } from "./multi_prompt_prompt.js";
 import { BaseChain } from "../../chains/base.js";
@@ -40,7 +40,7 @@ export class MultiPromptChain extends MultiRouteChain {
    * @deprecated Use `fromLLMAndPrompts` instead
    */
   static fromPrompts(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     promptNames: string[],
     promptDescriptions: string[],
     promptTemplates: string[] | PromptTemplate[],
@@ -71,7 +71,7 @@ export class MultiPromptChain extends MultiRouteChain {
    * @returns An instance of MultiPromptChain.
    */
   static fromLLMAndPrompts(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     {
       promptNames,
       promptDescriptions,

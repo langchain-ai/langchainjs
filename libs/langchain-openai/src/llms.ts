@@ -8,6 +8,7 @@ import {
   BaseLLM,
   type BaseLLMParams,
 } from "@langchain/core/language_models/llms";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import type {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -16,7 +17,6 @@ import type {
   LegacyOpenAIInput,
 } from "./types.js";
 import { OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
-import { chunkArray } from "./utils/chunk.js";
 import { OpenAIChat, OpenAIChatCallOptions } from "./legacy.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
