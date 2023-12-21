@@ -41,7 +41,9 @@ export class LlamaContentFormatter implements ChatContentFormatter {
     messages: BaseMessage[],
     modelArgs: Record<string, unknown>
   ): string {
-    const msgs = messages.map((message) => this._convertMessageToRecord(message));
+    const msgs = messages.map((message) =>
+      this._convertMessageToRecord(message)
+    );
     return JSON.stringify({
       input_data: {
         input_string: msgs,
@@ -104,9 +106,9 @@ export class AzureMLChatOnlineEndpoint
     }
 
     this.endpointUrl =
-      fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")  }`;
+      fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")}`;
     this.endpointApiKey =
-      fields.endpointApiKey || `${getEnvironmentVariable("AZUREML_API_KEY")  }`;
+      fields.endpointApiKey || `${getEnvironmentVariable("AZUREML_API_KEY")}`;
     this.httpClient = new AzureMLHttpClient(
       this.endpointUrl,
       this.endpointApiKey

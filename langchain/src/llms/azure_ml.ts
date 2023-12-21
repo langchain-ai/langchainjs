@@ -208,9 +208,9 @@ export class AzureMLOnlineEndpoint extends LLM implements AzureMLParams {
     }
 
     this.endpointUrl =
-      fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")  }`;
+      fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")}`;
     this.endpointApiKey =
-      fields.endpointApiKey || `${getEnvironmentVariable("AZUREML_API_KEY")  }`;
+      fields.endpointApiKey || `${getEnvironmentVariable("AZUREML_API_KEY")}`;
     this.deploymentName = fields.deploymentName;
     this.httpClient = new AzureMLHttpClient(
       this.endpointUrl,
