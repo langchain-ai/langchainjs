@@ -7,6 +7,17 @@ const readline = require("readline");
 const semver = require('semver')
 
 const PRIMARY_PROJECTS = ["langchain", "@langchain/core", "@langchain/community"];
+const RELEASE_BRANCH = "release";
+
+/**
+ * Get the version of a workspace inside a directory.
+ * 
+ * @param {string} workspaceDirectory 
+ * @returns {string} The version of the workspace in the input directory.
+ */
+function getWorkspaceVersion(workspaceDirectory) {
+  return require(path.join(process.cwd(), workspaceDirectory, "package.json")).version;
+}
 
 /**
  * Finds all workspaces in the monorepo and returns an array of objects.
@@ -110,17 +121,28 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
  * @param {string} workspaceDirectory The path to the workspace directory.
  * @param {Array<{ dir: string, packageJSON: Record<string, any>}>} allWorkspaces
  * @param {string | undefined} tag An optional tag to publish to.
+ * @param {string} preReleaseVersion The version of the workspace before it was released.
  * @returns {void}
  */
-function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag) {
+function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag, preReleaseVersion) {
   // Read workspace file, get version (edited by release-it), and bump pkgs to that version.
-  const updatedWorkspaceVersion = require(path.join(process.cwd(), workspaceDirectory, "package.json")).version;
+  let updatedWorkspaceVersion = getWorkspaceVersion(workspaceDirectory);
   if (!semver.valid(updatedWorkspaceVersion)) {
     console.error("Invalid workspace version: ", updatedWorkspaceVersion);
     process.exit(1);
   }
 
-  console.log("__updatedWorkspaceVersion", updatedWorkspaceVersion, "updatedWorkspaceVersion__")
+  // If the updated version is not greater than the pre-release version,
+  // the branch is out of sync. Pull from github and check again.
+  if (!semver.gt(updatedWorkspaceVersion, preReleaseVersion)) {
+    console.log("Updated version is not greater than the pre-release version. Pulling from github and checking again.");
+    execSync(`git pull origin ${RELEASE_BRANCH}`);
+    updatedWorkspaceVersion = getWorkspaceVersion(workspaceDirectory);
+    if (!semver.gt(updatedWorkspaceVersion, preReleaseVersion)) {
+      console.warn(`Workspace version has not changed in repo. Version in repo: ${updatedWorkspaceVersion}. Exiting.`);
+      process.exit(0);
+    }
+  }
 
   console.log(`Bumping other packages which depend on ${workspaceName}.`);
   console.log("Checking out main branch.");
@@ -191,6 +213,7 @@ Workspaces:
  */
 function checkoutReleaseBranch() {
   const currentBranch = execSync("git branch --show-current").toString().trim();
+  // todo replace with RELEASE_BRANCH
   if (currentBranch === "brace/release-script-qol") {
     console.log("Checking out 'release' branch.")
     execSync("git checkout -B release");
@@ -270,6 +293,8 @@ async function main() {
 
   const npm2FACode = await getUserInput("Please enter your NPM 2FA authentication code:");
 
+  const preReleaseVersion = getWorkspaceVersion(matchingWorkspace.dir);
+
   // Run `release-it` on workspace
   await runYarnRelease(matchingWorkspace.dir, npm2FACode, options.tag);
   
@@ -284,11 +309,9 @@ async function main() {
       options.workspace,
       matchingWorkspace.dir,
       allWorkspaces,
-      options.tag
+      options.tag,
+      preReleaseVersion
     );
-  } else {
-    const updatedWorkspaceVersion = require(path.join(process.cwd(), matchingWorkspace.dir, "package.json")).version;
-    console.log("updatedWorkspaceVersion", updatedWorkspaceVersion)
   }
 };
 
