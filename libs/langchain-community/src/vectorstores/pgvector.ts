@@ -408,25 +408,55 @@ export class PGVectorStore extends VectorStore {
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
-    const _filter = filter ?? "{}";
+    const _filter: this["FilterType"] = filter ?? {};
+    
     let collectionId;
     if (this.collectionTableName) {
       collectionId = await this.getOrCreateCollection();
     }
 
-    const parameters = [embeddingString, _filter, k];
+    const parameters = [embeddingString, k];
+    const whereClauses = [];
+
     if (collectionId) {
       parameters.push(collectionId);
     }
 
+    let paramCount = parameters.length;
+    for (const [key, value] of Object.entries(_filter)) {
+      if (typeof value === "object" && value !== null) {
+        const _value: { [key: string]: any } = value as { [key: string]: any };
+        const currentParamCount = paramCount;
+        const placeholders = _value.in
+          .map((_: any, index: number) => `$${currentParamCount + index + 1}`)
+          .join(",");
+        whereClauses.push(
+          `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+        );
+        parameters.push(..._value.in);
+        paramCount += _value.in.length;
+      } else {
+        const _value:any = value ;
+        paramCount += 1;
+        whereClauses.push(
+          `${this.metadataColumnName}->>'${key}' = $${paramCount}`
+        );
+        parameters.push(_value);
+      }
+    }
+
+    const whereClause = whereClauses.length
+      ? `WHERE ${whereClauses.join(" AND ")}`
+      : "";
+
     const queryString = `
       SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
       FROM ${this.tableName}
-      WHERE ${this.metadataColumnName}::jsonb @> $2
-      ${collectionId ? "AND collection_id = $4" : ""}
+      ${whereClause}
+      ${collectionId ? "AND collection_id = $3" : ""}
       ORDER BY "_distance" ASC
-      LIMIT $3;
-    `;
+      LIMIT $2;
+      `;
 
     const documents = (await this.pool.query(queryString, parameters)).rows;
 
