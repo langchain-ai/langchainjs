@@ -16,7 +16,9 @@ const RELEASE_BRANCH = "release";
  * @returns {string} The version of the workspace in the input directory.
  */
 function getWorkspaceVersion(workspaceDirectory) {
-  return require(path.join(process.cwd(), workspaceDirectory, "package.json")).version;
+  const pkgJsonFile = fs.readFileSync(path.join(process.cwd(), workspaceDirectory, "package.json"));
+  const parsedJSONFile = JSON.parse(pkgJsonFile);
+  return parsedJSONFile.version;
 }
 
 /**
