@@ -43,6 +43,7 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
+    "@types/semver": "^7",
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
@@ -50,6 +51,7 @@
     "typescript": "~5.1.6"
   },
   "dependencies": {
+    "semver": "^7.5.4",
     "turbo": "latest"
   },
   "resolutions": {

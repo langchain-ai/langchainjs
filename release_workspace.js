@@ -1,9 +1,12 @@
-const { execSync, exec } = require("child_process");
+const { execSync } = require("child_process");
 const { Command } = require("commander");
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 const readline = require("readline");
+const semver = require('semver')
+
+const INCREMENT_TYPES = ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
 
 /**
  * Finds all workspaces in the monorepo and returns an array of objects.
@@ -40,18 +43,14 @@ function getAllWorkspaces() {
  * If the last character is not numeric, it searches backwards
  * to find the last numeric character to increment.
  * 
- * @param {string} version 
+ * @param {string} version
+ * @param {"major" | "premajor" | "minor" | "preminor" | "patch" | "prepatch" | "prerelease"} incType The type of increment to perform.
+ * @param {string | undefined} tag
  * @returns {string} The new version
  */
-function bumpVersion(version) {
-  let parts = version.split("");
-  for (let i = parts.length - 1; i >= 0; i--) {
-    if (!Number.isNaN(parts[i])) {
-      parts[i] = parseInt(parts[i], 10) + 1;
-      break;
-    }
-  }
-  return parts.join("");
+function bumpVersion(version, incType = "patch", tag) {
+  let newVersion = tag ? semver.inc(version, "prerelease", undefined, tag) : semver.inc(version, incType);
+  return newVersion;
 }
 
 /**
@@ -237,7 +236,8 @@ async function main() {
     .option("--workspace <workspace>", "Workspace name, eg @langchain/core")
     .option("--version <version>", "Optionally override the version to bump to.")
     .option("--bump-deps", "Whether or not to bump other workspaces that depend on this one.")
-    .option("--tag <tag>", "Optionally specify a tag to publish to.");
+    .option("--tag <tag>", "Optionally specify a tag to publish to.")
+    .option("--inc <inc>", "Optionally specify the type to increment by.");
 
   program.parse();
 
@@ -249,6 +249,16 @@ async function main() {
     throw new Error("--workspace is a required flag.");
   }
 
+  if (options.inc && !INCREMENT_TYPES.includes(options.inc)) {
+    throw new Error(`Invalid increment type. Must be one of: ${INCREMENT_TYPES.join(", ")}. Received: ${options.inc}`)
+  }
+
+  if (options.version) {
+    if (!semver.valid(options.version)) {
+      throw new Error(`Invalid version. Received: ${options.version}`);
+    }
+  }
+
   // Find the workspace package.json's.
   const allWorkspaces = getAllWorkspaces();
   const matchingWorkspace = allWorkspaces.find(({ packageJSON }) => packageJSON.name === options.workspace);
@@ -258,7 +268,7 @@ async function main() {
   }
 
   // Bump version by 1 or use the version passed in.
-  const newVersion = options.version ?? bumpVersion(matchingWorkspace.packageJSON.version);
+  const newVersion = options.version ?? bumpVersion(matchingWorkspace.packageJSON.version, options.inc, options.tag);
 
   // Checkout new "release" branch & push
   checkoutReleaseBranch();
