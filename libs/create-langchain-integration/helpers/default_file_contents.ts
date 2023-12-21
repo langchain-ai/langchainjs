@@ -68,7 +68,7 @@ export const DEFAULT_ESLINTRC = `module.exports = {
 
 export const DEFAULT_README = `# @langchain/<ADD_PACKAGE_NAME_HERE>
 
-This package contains the LangChainJS integrations for <ADD_NAME_HERE> through their SDK.
+This package contains the LangChain.js integrations for <ADD_NAME_HERE> through their SDK.
 
 ## Installation
 
