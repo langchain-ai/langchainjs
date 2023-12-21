@@ -41,9 +41,7 @@ export class LlamaContentFormatter implements ChatContentFormatter {
     messages: BaseMessage[],
     modelArgs: Record<string, unknown>
   ): string {
-    let msgs = messages.map((message) => {
-      this._convertMessageToRecord(message);
-    });
+    const msgs = messages.map((message) => this._convertMessageToRecord(message));
     return JSON.stringify({
       input_data: {
         input_string: msgs,
@@ -78,13 +76,19 @@ export class AzureMLChatOnlineEndpoint
   static lc_name() {
     return "AzureMLChatOnlineEndpoint";
   }
+
   static lc_description() {
     return "A class for interacting with AzureML Chat models.";
   }
+
   endpointUrl: string;
+
   endpointApiKey: string;
+
   modelArgs?: Record<string, unknown>;
+
   contentFormatter: ChatContentFormatter;
+
   httpClient: AzureMLHttpClient;
 
   constructor(fields: AzureMLChatParams) {
@@ -100,9 +104,9 @@ export class AzureMLChatOnlineEndpoint
     }
 
     this.endpointUrl =
-      fields.endpointUrl || getEnvironmentVariable("AZUREML_URL") + "";
+      fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")  }`;
     this.endpointApiKey =
-      fields.endpointApiKey || getEnvironmentVariable("AZUREML_API_KEY") + "";
+      fields.endpointApiKey || `${getEnvironmentVariable("AZUREML_API_KEY")  }`;
     this.httpClient = new AzureMLHttpClient(
       this.endpointUrl,
       this.endpointApiKey
@@ -110,6 +114,7 @@ export class AzureMLChatOnlineEndpoint
     this.contentFormatter = fields.contentFormatter;
     this.modelArgs = fields?.modelArgs;
   }
+
   get _identifying_params() {
     const modelKwargs = this.modelArgs || {};
     return {
@@ -120,10 +125,6 @@ export class AzureMLChatOnlineEndpoint
 
   _llmType() {
     return "azureml_chat";
-  }
-
-  _combineLLMOutput(): Record<string, any> | undefined {
-    return [];
   }
 
   async _call(
