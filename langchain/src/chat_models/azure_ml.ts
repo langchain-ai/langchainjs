@@ -103,9 +103,9 @@ export class AzureMLChatOnlineEndpoint
     }
 
     this.endpointUrl =
-      fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")}`;
+      fields.endpointUrl ?? `${getEnvironmentVariable("AZUREML_URL")}`;
     this.endpointApiKey =
-      fields.endpointApiKey || `${getEnvironmentVariable("AZUREML_API_KEY")}`;
+      fields.endpointApiKey ?? `${getEnvironmentVariable("AZUREML_API_KEY")}`;
     this.httpClient = new AzureMLHttpClient(
       this.endpointUrl,
       this.endpointApiKey
@@ -115,7 +115,7 @@ export class AzureMLChatOnlineEndpoint
   }
 
   get _identifying_params() {
-    const modelKwargs = this.modelArgs || {};
+    const modelKwargs = this.modelArgs ?? {};
     return {
       ...super._identifyingParams,
       modelKwargs,
