@@ -8,6 +8,7 @@ const semver = require('semver')
 
 const PRIMARY_PROJECTS = ["langchain", "@langchain/core", "@langchain/community"];
 const RELEASE_BRANCH = "release";
+const MAIN_BRANCH = "main";
 
 /**
  * Get the version of a workspace inside a directory.
@@ -147,7 +148,7 @@ function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag, preRele
   }
 
   console.log(`Bumping other packages which depend on ${workspaceName}.`);
-  console.log("Checking out main branch.");
+  console.log(`Checking out ${MAIN_BRANCH} branch.`);
 
   // Separate variable for the branch name, incase it includes a tag.
   let versionString = updatedWorkspaceVersion;
@@ -155,7 +156,7 @@ function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag, preRele
     versionString = `${updatedWorkspaceVersion}-${tag}`;
   }
 
-  execSync(`git checkout main`);
+  execSync(`git checkout ${MAIN_BRANCH}`);
   const newBranchName = `bump-${workspaceName}-to-${versionString}`;
   console.log(`Checking out new branch: ${newBranchName}`);
   execSync(`git checkout -b ${newBranchName}`);
@@ -191,7 +192,7 @@ Workspaces:
     try {
       execSync(`yarn install`);
     } catch (_) {
-      console.log("Yarn install failed. Likely because NPM did not auto-publish the new version of the workspace. Continuing.")
+      console.log("Yarn install failed. Likely because NPM has not finished publishing the new version. Continuing.")
     }
 
     // Add all current changes, commit, push and log branch URL.
@@ -200,7 +201,7 @@ Workspaces:
     execSync(`git commit -m "all[minor]: bump deps on ${workspaceName} to ${versionString}"`);
     console.log("Pushing changes.");
     execSync(`git push -u origin ${newBranchName}`);
-    console.log("🔗 Open %s and merge the release PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1\x1b[0m`);
+    console.log("🔗 Open %s and merge the bump-deps PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/${newBranchName}?expand=1\x1b[0m`);
   } else {
     console.log(`No workspaces depend on ${workspaceName}.`);
   }
@@ -215,13 +216,12 @@ Workspaces:
  */
 function checkoutReleaseBranch() {
   const currentBranch = execSync("git branch --show-current").toString().trim();
-  // todo replace with RELEASE_BRANCH
-  if (currentBranch === "brace/release-script-qol") {
-    console.log("Checking out 'release' branch.")
-    execSync("git checkout -B release");
-    execSync("git push -u origin release");
+  if (currentBranch === MAIN_BRANCH) {
+    console.log(`Checking out '${RELEASE_BRANCH}' branch.`);
+    execSync(`git checkout -B ${RELEASE_BRANCH}`);
+    execSync(`git push -u origin ${RELEASE_BRANCH}`);
   } else {
-    throw new Error(`Current branch is not main. Current branch: ${currentBranch}`);
+    throw new Error(`Current branch is not ${MAIN_BRANCH}. Current branch: ${currentBranch}`);
   }
 }
 
@@ -301,7 +301,7 @@ async function main() {
   await runYarnRelease(matchingWorkspace.dir, npm2FACode, options.tag);
   
   // Log release branch URL
-  console.log("\x1b[34m%s\x1b[0m", "🔗 Open https://github.com/langchain-ai/langchainjs/compare/release?expand=1 and merge the release PR.");
+  console.log("🔗 Open %s and merge the release PR.", `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/release?expand=1\x1b[0m`);
 
   // If `bump-deps` flag is set, find all workspaces which depend on the input workspace.
   // Then, update their package.json to use the new version of the input workspace.

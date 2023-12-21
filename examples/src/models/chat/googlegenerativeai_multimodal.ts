@@ -1,5 +1,5 @@
 import fs from "fs";
-import { ChatGoogleGenerativeAI } from "@basproul/google-genai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 
 // Multi-modal

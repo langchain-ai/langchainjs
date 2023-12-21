@@ -1,4 +1,4 @@
-import { GoogleGenerativeAIEmbeddings } from "@basproul/google-genai";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { TaskType } from "@google/generative-ai";
 
 /*

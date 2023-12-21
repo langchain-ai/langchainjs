@@ -1,4 +1,4 @@
-import { ChatGoogleGenerativeAI } from "@basproul/google-genai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 
 /*
