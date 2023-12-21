@@ -15,7 +15,7 @@ function respToStream(resp: string): ReadableStream<Uint8Array> {
         controller.enqueue(Buffer.from(`${chunk}\n`));
       }
       controller.close();
-    },
+    }
   });
 }
 
@@ -88,11 +88,11 @@ describe("RemoteRunnable", () => {
       "/a/batch": JSON.stringify({
         output: [
           ["a", "b", "c"],
-          ["d", "e", "f"],
-        ],
+          ["d", "e", "f"]
+        ]
       }),
       "/a/stream": respToStream(aResp),
-      "/b/stream": respToStream(bResp),
+      "/b/stream": respToStream(bResp)
     };
 
     const oldFetch = global.fetch;
@@ -118,7 +118,29 @@ describe("RemoteRunnable", () => {
     expect(fetch).toHaveBeenCalledWith(
       `${BASE_URL}/a/invoke`,
       expect.objectContaining({
-        body: '{"input":{"text":"string"},"config":{},"kwargs":{}}',
+        body: '{"input":{"text":"string"},"config":{},"kwargs":{}}'
+      })
+    );
+    expect(result).toEqual(["a", "b", "c"]);
+  });
+
+  test.only("Invoke local langserve passing a configurable object", async () => {
+    // mock fetch, expect /invoke
+    const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
+    const result = await remote.invoke(
+      { text: "string" },
+      {
+        configurable: {
+          destination: "destination",
+          integration_id: "integration_id",
+          user_id: "user_id"
+        }
+      }
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      `${BASE_URL}/a/invoke`,
+      expect.objectContaining({
+        body: '{"input":{"text":"string"},"config":{"configurable":{"destination":"destination","integration_id":"integration_id","user_id":"user_id"}},"kwargs":{}}'
       })
     );
     expect(result).toEqual(["a", "b", "c"]);
@@ -127,7 +149,7 @@ describe("RemoteRunnable", () => {
   test("Batch local langserve", async () => {
     const returnData = [
       ["a", "b", "c"],
-      ["d", "e", "f"],
+      ["d", "e", "f"]
     ];
     const remote = new RemoteRunnable({ url: `${BASE_URL}/a` });
     const result = await remote.batch([{ text: "1" }, { text: "2" }]);
