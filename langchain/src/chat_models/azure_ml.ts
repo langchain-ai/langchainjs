@@ -69,7 +69,7 @@ export interface AzureMLChatParams extends BaseChatModelParams {
 }
 
 /**
- * Class that represents the chat model. It extends the SimpleChatModel class and implements the AzureMLChatInput interface.
+ * Class that represents the chat model. It extends the SimpleChatModel class and implements the AzureMLChatParams interface.
  */
 export class AzureMLChatOnlineEndpoint
   extends SimpleChatModel
@@ -101,9 +101,6 @@ export class AzureMLChatOnlineEndpoint
     if (!fields?.endpointApiKey && !getEnvironmentVariable("AZUREML_API_KEY")) {
       throw new Error("No Azure ML ApiKey found.");
     }
-    if (!fields?.contentFormatter) {
-      throw new Error("No Content Formatter provided.");
-    }
 
     this.endpointUrl =
       fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")}`;
@@ -113,7 +110,7 @@ export class AzureMLChatOnlineEndpoint
       this.endpointUrl,
       this.endpointApiKey
     );
-    this.contentFormatter = fields.contentFormatter;
+    this.contentFormatter = fields.contentFormatter ? fields.contentFormatter : new LlamaContentFormatter();
     this.modelArgs = fields?.modelArgs;
   }
 
@@ -129,9 +126,8 @@ export class AzureMLChatOnlineEndpoint
     return "azureml_chat";
   }
 
-  /** @ignore */
   _combineLLMOutput() {
-    return [];
+    throw new Error("AzureMLChatOnlineEndpoint._combineLLMOutput called, but is not implemented.");
   }
 
   async _call(

@@ -10,7 +10,7 @@ test("Test AzureML LLama Call", async () => {
     contentFormatter: new LlamaContentFormatter(),
   });
 
-  const res = await chat.call([prompt]);
+  const res = await chat.invoke([prompt]);
   expect(typeof res).toBe("string");
 
   console.log(res);
