@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.11.0":
-  version: 0.11.0
-  resolution: "@anthropic-ai/sdk@npm:0.11.0"
+"@anthropic-ai/sdk@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@anthropic-ai/sdk@npm:0.12.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -224,7 +224,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: 1da699f528b4a2fecf8548040b7167b0799fceebff27dbf47afefe6b406461382540255b64959c30526b5b5a6945412fef46c7b903e12780e991c0c47a14deb9
+  checksum: f27d6c452a3343b49b777c7395b8595c74f1df3aa668cb0b40ce9c62df9170e5276780163d66e36c36cb81aea3be31256a2b45a143d70dd5687fadc6c9b51b49
   languageName: node
   linkType: hard
 
@@ -8075,7 +8075,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.11.0
+    "@anthropic-ai/sdk": ^0.12.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
