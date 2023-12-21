@@ -1,4 +1,7 @@
-import { BaseRetriever, BaseRetrieverInput } from "../../schema/retriever.js";
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
 import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { Document } from "../../document.js";
 

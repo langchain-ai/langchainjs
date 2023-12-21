@@ -1,10 +1,10 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { AgentActionOutputParser } from "../types.js";
 import {
   AGENT_ACTION_FORMAT_INSTRUCTIONS,
   FORMAT_INSTRUCTIONS,
 } from "./prompt.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { AgentAction, AgentFinish } from "../../schema/index.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 import { renderTemplate } from "../../prompts/index.js";
@@ -151,7 +151,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
    * @returns A new `StructuredChatOutputParserWithRetries` instance.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     options: Omit<StructuredChatOutputParserArgs, "outputFixingParser">
   ): StructuredChatOutputParserWithRetries {
     const baseParser =

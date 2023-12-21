@@ -65,10 +65,10 @@ Then, update your prompt to include another `MessagesPlaceholder`. This time we'
 
 ```typescript
 const prompt = ChatPromptTemplate.fromMessages([
-  ["ai", "You are a helpful assistant"],
+  ["ai", "You are a helpful assistant."],
+  new MessagesPlaceholder("chat_history"),
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
-  new MessagesPlaceholder("chat_history"),
 ]);
 ```
 

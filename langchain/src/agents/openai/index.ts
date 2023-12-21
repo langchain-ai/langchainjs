@@ -1,5 +1,10 @@
+import type {
+  BaseLanguageModelInterface,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManager } from "../../callbacks/manager.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   AIMessage,
@@ -10,8 +15,8 @@ import {
   FunctionMessage,
   ChainValues,
   SystemMessage,
+  BaseMessageChunk,
 } from "../../schema/index.js";
-import { StructuredTool } from "../../tools/base.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { PREFIX } from "./prompt.js";
@@ -21,13 +26,16 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   FunctionsAgentAction,
   OpenAIFunctionsAgentOutputParser,
 } from "./output_parser.js";
 import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
+import { Runnable } from "../../schema/runnable/base.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
 
 /**
  * Checks if the given action is a FunctionsAgentAction.
@@ -65,7 +73,7 @@ export function _formatIntermediateSteps(
  * Interface for the input data required to create an OpenAIAgent.
  */
 export interface OpenAIAgentInput extends AgentInput {
-  tools: StructuredTool[];
+  tools: StructuredToolInterface[];
 }
 
 /**
@@ -105,7 +113,7 @@ export class OpenAIAgent extends Agent {
     return ["Observation:"];
   }
 
-  tools: StructuredTool[];
+  tools: StructuredToolInterface[];
 
   outputParser: OpenAIFunctionsAgentOutputParser =
     new OpenAIFunctionsAgentOutputParser();
@@ -123,7 +131,7 @@ export class OpenAIAgent extends Agent {
    * @returns A BasePromptTemplate object representing the created prompt.
    */
   static createPrompt(
-    _tools: StructuredTool[],
+    _tools: StructuredToolInterface[],
     fields?: OpenAIAgentCreatePromptArgs
   ): BasePromptTemplate {
     const { prefix = PREFIX } = fields || {};
@@ -143,8 +151,8 @@ export class OpenAIAgent extends Agent {
    * @returns An instance of OpenAIAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
-    tools: StructuredTool[],
+    llm: BaseLanguageModelInterface,
+    tools: StructuredToolInterface[],
     args?: OpenAIAgentCreatePromptArgs & Pick<AgentArgs, "callbacks">
   ) {
     OpenAIAgent.validateTools(tools);
@@ -199,16 +207,24 @@ export class OpenAIAgent extends Agent {
     }
 
     // Split inputs between prompt and llm
-    const llm = this.llmChain.llm as ChatOpenAI;
+    const llm = this.llmChain.llm as
+      | ChatOpenAI
+      | Runnable<
+          BaseLanguageModelInput,
+          BaseMessageChunk,
+          ChatOpenAICallOptions
+        >;
+
     const valuesForPrompt = { ...newInputs };
-    const valuesForLLM: (typeof llm)["CallOptions"] = {
+    const valuesForLLM: CallOptionsIfAvailable<typeof llm> = {
       functions: this.tools.map(formatToOpenAIFunction),
     };
     const callKeys =
       "callKeys" in this.llmChain.llm ? this.llmChain.llm.callKeys : [];
     for (const key of callKeys) {
       if (key in inputs) {
-        valuesForLLM[key as keyof (typeof llm)["CallOptions"]] = inputs[key];
+        valuesForLLM[key as keyof CallOptionsIfAvailable<typeof llm>] =
+          inputs[key];
         delete valuesForPrompt[key];
       }
     }
@@ -216,11 +232,17 @@ export class OpenAIAgent extends Agent {
     const promptValue = await this.llmChain.prompt.formatPromptValue(
       valuesForPrompt
     );
-    const message = await llm.predictMessages(
-      promptValue.toChatMessages(),
-      valuesForLLM,
-      callbackManager
-    );
+
+    const message = await (
+      llm as Runnable<
+        BaseLanguageModelInput,
+        BaseMessageChunk,
+        ChatOpenAICallOptions
+      >
+    ).invoke(promptValue.toChatMessages(), {
+      ...valuesForLLM,
+      callbacks: callbackManager,
+    });
     return this.outputParser.parseAIMessage(message);
   }
 }

@@ -1,7 +1,10 @@
 {
   "name": "test-exports-vite",
-  "private": true,
   "version": "0.0.0",
+  "workspaces": [
+    "libs/*"
+  ],
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,9 +13,11 @@
     "test": "tsc"
   },
   "dependencies": {
-    "langchain": "workspace:*"
-  },
-  "devDependencies": {
+    "@langchain/anthropic": "workspace:*",
+    "@langchain/community": "workspace:*",
+    "@langchain/core": "workspace:*",
+    "@langchain/openai": "workspace:*",
+    "langchain": "workspace:*",
     "typescript": "^5.0.0",
     "vite": "^4.2.0"
   }

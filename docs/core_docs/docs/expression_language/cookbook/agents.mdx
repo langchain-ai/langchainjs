@@ -13,10 +13,10 @@ Building an agent from a runnable usually involves a few things:
 4. The output parser - should be in sync with how the prompt specifies things to be formatted. In our case, we'll continue with the theme of XML and use the default `XMLAgentOutputParser`
 
 ```typescript
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { AgentExecutor } from "langchain/agents";
 import { formatXml } from "langchain/agents/format_scratchpad/xml";
 import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { AgentStep } from "langchain/schema";
 import { RunnableSequence } from "langchain/schema/runnable";

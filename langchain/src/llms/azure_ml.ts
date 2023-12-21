@@ -3,7 +3,9 @@ import { getEnvironmentVariable } from "../util/env.js";
 
 export class AzureMLHttpClient {
   endpointUrl: string;
+
   endpointApiKey: string;
+
   deploymentName?: string;
 
   constructor(
@@ -78,6 +80,7 @@ export class GPT2ContentFormatter implements ContentFormatter {
       parameters: modelArgs,
     });
   }
+
   formatResponsePayload(output: string): string {
     return JSON.parse(output)[0]["0"];
   }
@@ -93,8 +96,9 @@ export class HFContentFormatter implements ContentFormatter {
       parameters: modelArgs,
     });
   }
+
   formatResponsePayload(output: string): string {
-    return JSON.parse(output)[0]["generated_text"];
+    return JSON.parse(output)[0].generated_text;
   }
 }
 
@@ -110,6 +114,7 @@ export class DollyContentFormatter implements ContentFormatter {
       parameters: modelArgs,
     });
   }
+
   formatResponsePayload(output: string): string {
     return JSON.parse(output)[0];
   }
@@ -127,6 +132,7 @@ export class LlamaContentFormatter implements ContentFormatter {
       parameters: modelArgs,
     });
   }
+
   formatResponsePayload(output: string): string {
     return JSON.parse(output)[0]["0"];
   }
@@ -149,12 +155,15 @@ export class AzureMLOnlineEndpoint extends LLM implements AzureMLParams {
   _llmType() {
     return "azure_ml";
   }
+
   static lc_name() {
     return "AzureMLOnlineEndpoint";
   }
+
   static lc_description() {
     return "A class for interacting with AzureML models.";
   }
+
   static lc_fields() {
     return {
       endpointUrl: {
@@ -175,10 +184,15 @@ export class AzureMLOnlineEndpoint extends LLM implements AzureMLParams {
   }
 
   endpointUrl: string;
+
   endpointApiKey: string;
+
   deploymentName?: string;
+
   contentFormatter: ContentFormatter;
+
   modelArgs?: Record<string, unknown>;
+
   httpClient: AzureMLHttpClient;
 
   constructor(fields: AzureMLParams) {
@@ -194,9 +208,9 @@ export class AzureMLOnlineEndpoint extends LLM implements AzureMLParams {
     }
 
     this.endpointUrl =
-      fields.endpointUrl || getEnvironmentVariable("AZUREML_URL") + "";
+      fields.endpointUrl || `${getEnvironmentVariable("AZUREML_URL")}`;
     this.endpointApiKey =
-      fields.endpointApiKey || getEnvironmentVariable("AZUREML_API_KEY") + "";
+      fields.endpointApiKey || `${getEnvironmentVariable("AZUREML_API_KEY")}`;
     this.deploymentName = fields.deploymentName;
     this.httpClient = new AzureMLHttpClient(
       this.endpointUrl,

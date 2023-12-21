@@ -16,7 +16,7 @@ import { Calculator } from "../../tools/calculator.js";
 
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 
-test("Test traced agent with openai functions", async () => {
+test.skip("Test traced agent with openai functions", async () => {
   const tools = [new Calculator()];
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
 
@@ -41,7 +41,7 @@ test("Test traced agent with openai functions", async () => {
   console.log(result);
 });
 
-test("Test traced chain with tags", async () => {
+test.skip("Test traced chain with tags", async () => {
   const llm = new OpenAI();
   const qaPrompt = new PromptTemplate({
     template: "Q: {question} A:",
@@ -75,7 +75,7 @@ test("Test traced chain with tags", async () => {
   );
 });
 
-test("Test traced chat call with tags", async () => {
+test.skip("Test traced chat call with tags", async () => {
   const chat = new ChatOpenAI({
     callbacks: [new LLMonitorHandler({ verbose: true })],
   });

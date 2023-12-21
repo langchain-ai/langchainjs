@@ -1,4 +1,4 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { ChainValues } from "../../schema/index.js";
 import { BaseChain, ChainInputs } from "../base.js";
@@ -140,7 +140,7 @@ export class ConstitutionalChain
    * @returns New instance of ConstitutionalChain
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     options: Omit<
       ConstitutionalChainInput,
       "critiqueChain" | "revisionChain"

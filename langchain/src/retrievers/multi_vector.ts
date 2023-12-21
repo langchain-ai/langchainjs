@@ -1,13 +1,16 @@
+import {
+  BaseRetriever,
+  type BaseRetrieverInput,
+} from "@langchain/core/retrievers";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { BaseStoreInterface } from "../schema/storage.js";
 import { Document } from "../document.js";
-import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
-import { VectorStore } from "../vectorstores/base.js";
 
 /**
  * Arguments for the MultiVectorRetriever class.
  */
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
   docstore: BaseStoreInterface<string, Document>;
   idKey?: string;
   childK?: number;
@@ -39,7 +42,7 @@ export class MultiVectorRetriever extends BaseRetriever {
 
   lc_namespace = ["langchain", "retrievers", "multi_vector"];
 
-  public vectorstore: VectorStore;
+  public vectorstore: VectorStoreInterface;
 
   public docstore: BaseStoreInterface<string, Document>;
 
