@@ -1,4 +1,4 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatGoogleGenerativeAI } from "@basproul/google-genai";
 import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 
 /*
@@ -17,17 +17,17 @@ const model = new ChatGoogleGenerativeAI({
   safetySettings: [
     {
       category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    },
-  ],
+      threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
+    }
+  ]
 });
 
 // Batch and stream are also supported
 const res = await model.invoke([
   [
     "human",
-    "What would be a good company name for a company that makes colorful socks?",
-  ],
+    "What would be a good company name for a company that makes colorful socks?"
+  ]
 ]);
 
 console.log(res);
