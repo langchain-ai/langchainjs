@@ -96,7 +96,7 @@ There are three parameters which can be passed to this script, one required and 
 
 This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
 
-Halfway through this script, you'll be prompted to enter an NPM OPT (typically from an authenticator app). This value is not stored anywhere and is only used to authenticate the NPM release.
+Halfway through this script, you'll be prompted to enter an NPM OTP (typically from an authenticator app). This value is not stored anywhere and is only used to authenticate the NPM release.
 
 Full example: `yarn release @langchain/core --version 2.0.0 --bump-deps --tag beta --inc major`. 
 
