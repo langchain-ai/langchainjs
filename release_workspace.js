@@ -114,7 +114,7 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
  */
 function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag) {
   // Read workspace file, get version (edited by release-it), and bump pkgs to that version.
-  const updatedWorkspaceVersion = require(path.join(workspaceDirectory, "package.json")).version;
+  const updatedWorkspaceVersion = require(path.join(process.cwd(), workspaceDirectory, "package.json")).version;
   if (!semver.valid(updatedWorkspaceVersion)) {
     console.error("Invalid workspace version: ", updatedWorkspaceVersion);
     process.exit(1);
