@@ -184,6 +184,9 @@
     "llms/aleph_alpha.cjs",
     "llms/aleph_alpha.js",
     "llms/aleph_alpha.d.ts",
+    "llms/azure_ml.cjs",
+    "llms/azure_ml.js",
+    "llms/azure_ml.d.ts",
     "llms/cloudflare_workersai.cjs",
     "llms/cloudflare_workersai.js",
     "llms/cloudflare_workersai.d.ts",
@@ -562,6 +565,9 @@
     "chat_models/llama_cpp.cjs",
     "chat_models/llama_cpp.js",
     "chat_models/llama_cpp.d.ts",
+    "chat_models/azure_ml.cjs",
+    "chat_models/azure_ml.js",
+    "chat_models/azure_ml.d.ts",
     "chat_models/yandex.cjs",
     "chat_models/yandex.js",
     "chat_models/yandex.d.ts",
@@ -1504,6 +1510,11 @@
       "import": "./llms/aleph_alpha.js",
       "require": "./llms/aleph_alpha.cjs"
     },
+    "./llms/azure_ml": {
+      "types": "./llms/azure_ml.d.ts",
+      "import": "./llms/azure_ml.js",
+      "require": "./llms/azure_ml.cjs"
+    },
     "./llms/cloudflare_workersai": {
       "types": "./llms/cloudflare_workersai.d.ts",
       "import": "./llms/cloudflare_workersai.js",
@@ -2133,6 +2144,11 @@
       "types": "./chat_models/llama_cpp.d.ts",
       "import": "./chat_models/llama_cpp.js",
       "require": "./chat_models/llama_cpp.cjs"
+    },
+    "./chat_models/azure_ml": {
+      "types": "./chat_models/azure_ml.d.ts",
+      "import": "./chat_models/azure_ml.js",
+      "require": "./chat_models/azure_ml.cjs"
     },
     "./chat_models/yandex": {
       "types": "./chat_models/yandex.d.ts",

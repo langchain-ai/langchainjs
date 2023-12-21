@@ -4,28 +4,13 @@ const {
   Context,
   ReflectionKind,
   DeclarationReflection,
-  RendererEvent,
 } = require("typedoc");
-const { readFileSync } = require("fs");
-
-const PATH_TO_LANGCHAIN_PKG_JSON = "../../langchain/package.json"
 
 /**
  * @param {Application} application 
  * @returns {void}
  */
 function load(application) {
-  /**
-   * @type {string}
-   */
-  let langchainVersion;
-  try {
-    const langChainPackageJson = readFileSync(PATH_TO_LANGCHAIN_PKG_JSON).toString();
-    langchainVersion = JSON.parse(langChainPackageJson).version;
-  } catch (e) {
-    throw new Error(`Error reading LangChain version for typedoc: ${e}`)
-  }
-
   /**
    * @type {Array<DeclarationReflection>}
    */
@@ -36,8 +21,6 @@ function load(application) {
     resolveReflection
   );
   application.converter.on(Converter.EVENT_RESOLVE_BEGIN, onBeginResolve);
-
-  application.renderer.on(RendererEvent.BEGIN, onBeginRenderEvent);
 
   const reflectionKindsToHide = [
     ReflectionKind.Property,
@@ -50,17 +33,6 @@ function load(application) {
     ReflectionKind.Enum,
     ReflectionKind.TypeAlias,
   ];
-
-  /**
-   * @param {Context} context 
-   * @returns {void}
-   */
-  function onBeginRenderEvent(context) {
-    const { project } = context;
-    if (project && langchainVersion) {
-      project.packageVersion = langchainVersion;
-    }
-  }
 
   /**
    * @param {Context} context 
@@ -91,12 +63,6 @@ function load(application) {
       ) {
         reflectionsToHide.push(reflection);
       }
-    }
-    if (reflection.name.includes("/src")) {
-      reflection.name = reflection.name.replace("/src", "")
-    }
-    if (reflection.name.startsWith("libs/")) {
-      reflection.name = reflection.name.replace("libs/", "")
     }
   }
 }

@@ -1,0 +1,22 @@
+# Azure Machine Learning
+
+You can deploy models on Azure with the endpointUrl, apiKey, and deploymentName
+when creating the AzureMLOnlineEndpoint to call upon later. You must import a ContentFormatter
+or create your own using the ContentFormatter interface.
+
+```typescript
+import {
+  AzureMLOnlineEndpoint,
+  LlamaContentFormatter,
+} from "langchain/llms/azure_ml";
+
+const model = new AzureMLOnlineEndpoint({
+  endpointUrl: "YOUR_ENDPOINT_URL",
+  endpointApiKey: "YOUR_ENDPOINT_API_KEY",
+  deploymentName: "YOUR_MODEL_DEPLOYMENT_NAME",
+  contentFormatter: new LlamaContentFormatter(),
+});
+
+const res = model.invoke("Foo");
+console.log({ res });
+```

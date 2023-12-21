@@ -68,7 +68,7 @@ export const DEFAULT_ESLINTRC = `module.exports = {
 
 export const DEFAULT_README = `# @langchain/<ADD_PACKAGE_NAME_HERE>
 
-This package contains the LangChain.js integrations for <ADD_NAME_HERE> through their SDK.
+This package contains the LangChainJS integrations for <ADD_NAME_HERE> through their SDK.
 
 ## Installation
 
@@ -164,18 +164,4 @@ yarn lint && yarn format
 ### Adding new entrypoints
 
 If you add a new file to be exported, either import & re-export from \`src/index.ts\`, or add it to \`scripts/create-entrypoints.js\` and run \`yarn build\` to generate the new entrypoint.
-`;
-
-export const DEFAULT_RELEASE_IT = `{
-  "github": {
-    "release": true,
-    "autoGenerate": true,
-    "tokenRef": "GITHUB_TOKEN_RELEASE"
-  },
-  "npm": {
-    "versionArgs": [
-      "--workspaces-update=false"
-    ]
-  }
-}
 `;
