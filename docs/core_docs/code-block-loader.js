@@ -67,44 +67,12 @@ async function webpackLoader(content, map, meta) {
       const prefix = `${category}/langchain`;
       const suffix = `.${imported}.html`;
 
-      if (moduleName.startsWith("community")) {
-        return `${prefix}_community_${moduleName.replace(
-          "community",
-          ""
-        )}${suffix}`;
-      }
-
-      if (moduleName.startsWith("anthropic")) {
-        return `${prefix}_anthropic_${moduleName.replace(
-          "anthropic",
-          ""
-        )}${suffix}`;
-      }
-
-      if (moduleName.startsWith("google_genai")) {
-        return `${prefix}_google_genai_${moduleName.replace(
-          "google_genai",
-          ""
-        )}${suffix}`;
-      }
-
-      if (moduleName.startsWith("openai")) {
-        return `${prefix}_openai_${moduleName.replace("openai", "")}${suffix}`;
-      }
-
-      if (moduleName.startsWith("mistralai")) {
-        return `${prefix}_mistralai_${moduleName.replace(
-          "mistralai",
-          ""
-        )}${suffix}`;
-      }
-
       // @TODO - Find a better way to deal with core
       if (moduleName.startsWith("core")) {
         return `${category}/langchain_schema${suffix}`;
       }
 
-      return null;
+      return `${prefix}_${moduleName}_${suffix}`;
     };
 
     /**
