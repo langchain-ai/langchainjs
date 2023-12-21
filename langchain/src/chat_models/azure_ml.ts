@@ -93,7 +93,7 @@ export class AzureMLChatOnlineEndpoint
 
   httpClient: AzureMLHttpClient;
 
-  constructor(fields: AzureMLChatParams) {
+  constructor(fields?: AzureMLChatParams) {
     super(fields ?? {});
     if (!fields?.endpointUrl && !getEnvironmentVariable("AZUREML_URL")) {
       throw new Error("No Azure ML Url found.");
@@ -103,14 +103,14 @@ export class AzureMLChatOnlineEndpoint
     }
 
     this.endpointUrl =
-      fields.endpointUrl ?? `${getEnvironmentVariable("AZUREML_URL")}`;
+      fields?.endpointUrl ?? `${getEnvironmentVariable("AZUREML_URL")}`;
     this.endpointApiKey =
-      fields.endpointApiKey ?? `${getEnvironmentVariable("AZUREML_API_KEY")}`;
+      fields?.endpointApiKey ?? `${getEnvironmentVariable("AZUREML_API_KEY")}`;
     this.httpClient = new AzureMLHttpClient(
       this.endpointUrl,
       this.endpointApiKey
     );
-    this.contentFormatter = fields.contentFormatter ? fields.contentFormatter : new LlamaContentFormatter();
+    this.contentFormatter = fields?.contentFormatter ? fields?.contentFormatter : new LlamaContentFormatter();
     this.modelArgs = fields?.modelArgs;
   }
 
