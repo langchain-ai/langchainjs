@@ -110,7 +110,9 @@ export class AzureMLChatOnlineEndpoint
       this.endpointUrl,
       this.endpointApiKey
     );
-    this.contentFormatter = fields?.contentFormatter ? fields?.contentFormatter : new LlamaContentFormatter();
+    this.contentFormatter = fields?.contentFormatter
+      ? fields?.contentFormatter
+      : new LlamaContentFormatter();
     this.modelArgs = fields?.modelArgs;
   }
 
@@ -127,7 +129,9 @@ export class AzureMLChatOnlineEndpoint
   }
 
   _combineLLMOutput() {
-    throw new Error("AzureMLChatOnlineEndpoint._combineLLMOutput called, but is not implemented.");
+    throw new Error(
+      "AzureMLChatOnlineEndpoint._combineLLMOutput called, but is not implemented."
+    );
   }
 
   async _call(
