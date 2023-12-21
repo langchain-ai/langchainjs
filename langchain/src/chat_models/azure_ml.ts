@@ -129,6 +129,11 @@ export class AzureMLChatOnlineEndpoint
     return "azureml_chat";
   }
 
+  /** @ignore */
+  _combineLLMOutput() {
+    return [];
+  }
+
   async _call(
     messages: BaseMessage[],
     modelArgs: Record<string, unknown>
