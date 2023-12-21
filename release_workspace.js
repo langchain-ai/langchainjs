@@ -81,7 +81,10 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const tagArg = tag ? `--npm.tag=${tag}` : "";
-    const args = ["release-it", "--only-version", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json"];
+    // By passing in the `--ci` and `--only-version` flags, release-it will
+    //  automatically say "yes" to all prompts, except the version prompt.
+    const args = ["release-it", "--ci", "--only-version", tagArg, "--config", ".release-it.json"];
+    // const args = ["release-it", "--ci", "--only-version", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json"];
     
     console.log(`Running command: "yarn ${args.join(" ")}"`);
 
