@@ -48,10 +48,10 @@
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
+    "semver": "^7.5.4",
     "typescript": "~5.1.6"
   },
   "dependencies": {
-    "semver": "^7.5.4",
     "turbo": "latest"
   },
   "resolutions": {
