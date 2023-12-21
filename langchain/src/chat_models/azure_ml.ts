@@ -128,10 +128,9 @@ export class AzureMLChatOnlineEndpoint
     return "azureml_chat";
   }
 
+  /** @ignore */
   _combineLLMOutput() {
-    throw new Error(
-      "AzureMLChatOnlineEndpoint._combineLLMOutput called, but is not implemented."
-    );
+    return [];
   }
 
   async _call(
