@@ -13,7 +13,7 @@ import { TaskType } from "@google/generative-ai";
 const embeddings = new GoogleGenerativeAIEmbeddings({
   modelName: "embedding-001", // 768 dimensions
   taskType: TaskType.RETRIEVAL_DOCUMENT,
-  title: "Document title"
+  title: "Document title",
 });
 
 const res = await embeddings.embedQuery("OK Google");

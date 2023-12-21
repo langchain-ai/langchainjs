@@ -5,7 +5,7 @@ import { HumanMessage } from "@langchain/core/messages";
 // Multi-modal
 const vision = new ChatGoogleGenerativeAI({
   modelName: "gemini-pro-vision",
-  maxOutputTokens: 2048
+  maxOutputTokens: 2048,
 });
 const image = fs.readFileSync("./hotdog.jpg").toString("base64");
 const input2 = [
@@ -13,14 +13,14 @@ const input2 = [
     content: [
       {
         type: "text",
-        text: "Describe the following image."
+        text: "Describe the following image.",
       },
       {
         type: "image_url",
-        image_url: `data:image/png;base64,${image}`
-      }
-    ]
-  })
+        image_url: `data:image/png;base64,${image}`,
+      },
+    ],
+  }),
 ];
 
 const res2 = await vision.invoke(input2);
