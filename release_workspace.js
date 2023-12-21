@@ -81,9 +81,7 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const tagArg = tag ? `--npm.tag=${tag}` : "";
-    // By passing in the `--ci` and `--only-version` flags, release-it will
-    //  automatically say "yes" to all prompts, except the version prompt.
-    const args = ["release-it", "--only-version", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json", "--ci"];
+    const args = ["release-it", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json"];
     
     console.log(`Running command: "yarn ${args.join(" ")}"`);
 
@@ -121,6 +119,8 @@ function bumpDeps(workspaceName, workspaceDirectory, allWorkspaces, tag) {
     console.error("Invalid workspace version: ", updatedWorkspaceVersion);
     process.exit(1);
   }
+
+  console.log("__updatedWorkspaceVersion", updatedWorkspaceVersion, "updatedWorkspaceVersion__")
 
   console.log(`Bumping other packages which depend on ${workspaceName}.`);
   console.log("Checking out main branch.");
