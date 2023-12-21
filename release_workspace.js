@@ -81,7 +81,7 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const tagArg = tag ? `--npm.tag=${tag}` : "";
-    const args = ["release-it", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json"];
+    const args = ["release-it", "--only-version", `--npm.otp=${npm2FACode}`, tagArg, "--config", ".release-it.json"];
     
     console.log(`Running command: "yarn ${args.join(" ")}"`);
 
