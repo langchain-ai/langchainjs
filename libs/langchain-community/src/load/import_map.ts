@@ -21,6 +21,7 @@ export * as agents__toolkits__base from "../agents/toolkits/base.js";
 export * as agents__toolkits__connery from "../agents/toolkits/connery/index.js";
 export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as embeddings__ollama from "../embeddings/ollama.js";
+export * as embeddings__togetherai from "../embeddings/togetherai.js";
 export * as embeddings__voyage from "../embeddings/voyage.js";
 export * as llms__ai21 from "../llms/ai21.js";
 export * as llms__aleph_alpha from "../llms/aleph_alpha.js";

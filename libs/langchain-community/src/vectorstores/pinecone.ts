@@ -19,7 +19,7 @@ import {
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import { chunkArray } from "../utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;

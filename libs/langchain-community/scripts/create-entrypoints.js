@@ -49,6 +49,7 @@ const entrypoints = {
   "embeddings/minimax": "embeddings/minimax",
   "embeddings/ollama": "embeddings/ollama",
   "embeddings/tensorflow": "embeddings/tensorflow",
+  "embeddings/togetherai": "embeddings/togetherai",
   "embeddings/voyage": "embeddings/voyage",
   // llms
   "llms/ai21": "llms/ai21",

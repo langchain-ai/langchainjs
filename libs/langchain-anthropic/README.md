@@ -49,7 +49,7 @@ export ANTHROPIC_API_KEY=your-api-key
 Then initialize
 
 ```typescript
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropicMessages } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
   anthropicApiKey: process.env.ANTHROPIC_API_KEY,
@@ -60,7 +60,7 @@ const response = await model.invoke(new HumanMessage("Hello world!"));
 ### Streaming
 
 ```typescript
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropicMessages } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
   anthropicApiKey: process.env.ANTHROPIC_API_KEY,
