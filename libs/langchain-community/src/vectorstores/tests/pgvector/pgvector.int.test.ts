@@ -97,7 +97,7 @@ describe("PGVectorStore", () => {
       { pageContent: "Lorem Ipsum", metadata: { a: 2 } },
     ];
 
-    await pgvectorVectorStore.addDocuments(documents, [id1, id2]);
+    await pgvectorVectorStore.addDocuments(documents, { ids: [id1, id2] });
 
     const result = await pgvectorVectorStore.pool.query(
       `SELECT id FROM "${tableName}" WHERE id = $1`,

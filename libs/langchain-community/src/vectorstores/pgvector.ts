@@ -31,6 +31,7 @@ export interface PGVectorStoreArgs {
    * @default 500
    */
   chunkSize?: number;
+  ids?: string[];
 }
 
 /**
@@ -130,16 +131,19 @@ export class PGVectorStore extends VectorStore {
    * vectors, and adds them to the store.
    *
    * @param documents - Array of `Document` instances.
-   * @param ids - Optional array of uuids for the documents.
+   * @param options - Optional arguments for adding documents
    * @returns Promise that resolves when the documents have been added.
    */
-  async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      ids
+      options
     );
   }
 
@@ -248,16 +252,18 @@ export class PGVectorStore extends VectorStore {
    *
    * @param vectors - Array of vectors.
    * @param documents - Array of `Document` instances.
-   * @param ids - Optional array of uuids for the documents.
+   * @param options - Optional arguments for adding documents
    * @returns Promise that resolves when the vectors have been added.
    */
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    ids?: string[]
+    options?: { ids?: string[] }
   ): Promise<void> {
+    const ids = options?.ids;
+
     // Either all documents have ids or none of them do to avoid confusion.
-    if (ids && ids.length !== vectors.length) {
+    if (ids !== undefined && ids.length !== vectors.length) {
       throw new Error(
         "The number of ids must match the number of vectors provided."
       );
@@ -498,15 +504,13 @@ export class PGVectorStore extends VectorStore {
    * @param metadatas - Array of metadata objects or a single metadata object.
    * @param embeddings - Embeddings instance.
    * @param dbConfig - `PGVectorStoreArgs` instance.
-   * @param ids - Optional array of uuids for the documents.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs,
-    ids?: string[]
+    dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -518,7 +522,7 @@ export class PGVectorStore extends VectorStore {
       docs.push(newDoc);
     }
 
-    return PGVectorStore.fromDocuments(docs, embeddings, dbConfig, ids);
+    return PGVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
@@ -528,17 +532,15 @@ export class PGVectorStore extends VectorStore {
    * @param docs - Array of `Document` instances.
    * @param embeddings - Embeddings instance.
    * @param dbConfig - `PGVectorStoreArgs` instance.
-   * @param ids - Optional array of uuids for the documents.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs,
-    ids?: string[]
+    dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
-    await instance.addDocuments(docs, ids);
+    await instance.addDocuments(docs, { ids: dbConfig.ids });
 
     return instance;
   }
