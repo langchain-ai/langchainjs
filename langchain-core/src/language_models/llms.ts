@@ -3,7 +3,7 @@ import {
   type BaseMessage,
   getBufferString,
 } from "../messages/index.js";
-import type { BasePromptValue } from "../prompt_values.js";
+import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
   type LLMResult,
   RUN_KEY,
@@ -192,7 +192,7 @@ export abstract class BaseLLM<
    * @returns An LLMResult based on the prompts.
    */
   async generatePrompt(
-    promptValues: BasePromptValue[],
+    promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {

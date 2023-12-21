@@ -1,7 +1,7 @@
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
 
 const prompt1 = PromptTemplate.fromTemplate(
   `What is the city {person} is from? Only respond with the name of the city.`

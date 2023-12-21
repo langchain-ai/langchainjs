@@ -1,5 +1,5 @@
-import { loadEvaluator } from "langchain/evaluation";
 import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { loadEvaluator } from "langchain/evaluation";
 
 const model = new ChatAnthropic({ temperature: 0 });
 

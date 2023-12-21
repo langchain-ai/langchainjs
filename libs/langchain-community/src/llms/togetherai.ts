@@ -23,6 +23,7 @@ interface TogetherAIInferenceResult {
     top_p: number;
     top_k: number;
     max_tokens: number;
+    stop: string[];
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subjobs: Array<any>;
@@ -96,6 +97,10 @@ export interface TogetherAIInputs extends BaseLLMParams {
    * Limit the number of tokens generated.
    */
   maxTokens?: number;
+  /**
+   * A list of tokens at which the generation should stop.
+   */
+  stop?: string[];
 }
 
 export interface TogetherAICallOptions
@@ -110,6 +115,7 @@ export interface TogetherAICallOptions
       | "logprobs"
       | "safetyModel"
       | "maxTokens"
+      | "stop"
     > {}
 
 export class TogetherAI extends LLM<TogetherAICallOptions> {
@@ -137,9 +143,11 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
 
   safetyModel?: string;
 
+  stop?: string[];
+
   private apiKey: string;
 
-  private inferenceUrl = "https://api.together.xyz/inference";
+  private inferenceAPIUrl = "https://api.together.xyz/inference";
 
   static lc_name() {
     return "TogetherAI";
@@ -162,6 +170,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     this.logprobs = inputs.logprobs;
     this.safetyModel = inputs.safetyModel;
     this.maxTokens = inputs.maxTokens;
+    this.stop = inputs.stop;
   }
 
   _llmType() {
@@ -188,6 +197,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       stream_tokens: this?.streaming,
       safety_model: this?.safetyModel ?? options?.safetyModel,
       max_tokens: this?.maxTokens ?? options?.maxTokens,
+      stop: this?.stop ?? options?.stop,
     };
     return body;
   }
@@ -197,7 +207,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     options?: this["ParsedCallOptions"]
   ) {
     return this.caller.call(async () => {
-      const fetchResponse = await fetch(this.inferenceUrl, {
+      const fetchResponse = await fetch(this.inferenceAPIUrl, {
         method: "POST",
         headers: {
           ...this.constructHeaders(),
@@ -236,7 +246,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    const fetchResponse = await fetch(this.inferenceUrl, {
+    const fetchResponse = await fetch(this.inferenceAPIUrl, {
       method: "POST",
       headers: {
         ...this.constructHeaders(),

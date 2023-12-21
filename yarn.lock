@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@anthropic-ai/sdk@npm:0.10.0"
+"@anthropic-ai/sdk@npm:^0.11.0":
+  version: 0.11.0
+  resolution: "@anthropic-ai/sdk@npm:0.11.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -224,7 +224,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: b7091a001c8dd51e4bf4985d05b64eed8b57015ff8211b70dbd47861c4289f8d3b8dc6dccbb71af125acd2d27483aa15cdbb1543790176fddb97d95c2f6d2471
+  checksum: 1da699f528b4a2fecf8548040b7167b0799fceebff27dbf47afefe6b406461382540255b64959c30526b5b5a6945412fef46c7b903e12780e991c0c47a14deb9
   languageName: node
   linkType: hard
 
@@ -8071,13 +8071,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.10.0
+    "@anthropic-ai/sdk": ^0.11.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8097,7 +8097,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.7":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.8":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8123,8 +8123,8 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
-    "@langchain/openai": ~0.0.6
+    "@langchain/core": ~0.1.3
+    "@langchain/openai": ~0.0.7
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -8455,7 +8455,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1.2":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1.3":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8498,7 +8498,7 @@ __metadata:
     "@google/generative-ai": ^0.1.0
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8516,6 +8516,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
+    release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
@@ -8527,7 +8528,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@mistralai/mistralai": ^0.0.7
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8545,18 +8546,19 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
+    release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.6":
+"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.7":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -12529,17 +12531,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/semver@npm:^7, @types/semver@npm:^7.5.0":
+  version: 7.5.6
+  resolution: "@types/semver@npm:7.5.6"
+  checksum: 563a0120ec0efcc326567db2ed920d5d98346f3638b6324ea6b50222b96f02a8add3c51a916b6897b51523aad8ac227d21d3dcf8913559f1bfc6c15b14d23037
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.3.12":
   version: 7.3.13
   resolution: "@types/semver@npm:7.3.13"
   checksum: 00c0724d54757c2f4bc60b5032fe91cda6410e48689633d5f35ece8a0a66445e3e57fa1d6e07eb780f792e82ac542948ec4d0b76eb3484297b79bd18b8cf1cb0
-  languageName: node
-  linkType: hard
-
-"@types/semver@npm:^7.5.0":
-  version: 7.5.6
-  resolution: "@types/semver@npm:7.5.6"
-  checksum: 563a0120ec0efcc326567db2ed920d5d98346f3638b6324ea6b50222b96f02a8add3c51a916b6897b51523aad8ac227d21d3dcf8913559f1bfc6c15b14d23037
   languageName: node
   linkType: hard
 
@@ -16018,6 +16020,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^11.1.0":
+  version: 11.1.0
+  resolution: "commander@npm:11.1.0"
+  checksum: fd1a8557c6b5b622c89ecdfde703242ab7db3b628ea5d1755784c79b8e7cb0d74d65b4a262289b533359cd58e1bfc0bf50245dfbcd2954682a6f367c828b79ef
+  languageName: node
+  linkType: hard
+
 "commander@npm:^4.0.0":
   version: 4.1.1
   resolution: "commander@npm:4.1.1"
@@ -18950,6 +18959,7 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.1.0
+    "@langchain/anthropic": "workspace:*"
     "@langchain/community": "workspace:*"
     "@langchain/core": "workspace:*"
     "@langchain/google-genai": "workspace:*"
@@ -23513,9 +23523,9 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.7
-    "@langchain/core": ~0.1.2
-    "@langchain/openai": ~0.0.6
+    "@langchain/community": ~0.0.8
+    "@langchain/core": ~0.1.3
+    "@langchain/openai": ~0.0.7
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
@@ -23769,9 +23779,12 @@ __metadata:
   dependencies:
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
+    "@types/semver": ^7
+    commander: ^11.1.0
     dotenv: ^16.0.3
     lint-staged: ^13.1.1
     prettier: ^2.8.3
+    semver: ^7.5.4
     turbo: latest
     typescript: ~5.1.6
   languageName: unknown

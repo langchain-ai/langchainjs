@@ -1,6 +1,6 @@
 import type { BaseChatModel } from "../language_models/chat_models.js";
 import type { BasePromptTemplate } from "../prompts/base.js";
-import type { BaseLanguageModel } from "../language_models/base.js";
+import type { BaseLanguageModelInterface } from "../language_models/base.js";
 import type { BaseLLM } from "../language_models/llms.js";
 import type { PartialValues } from "../utils/types.js";
 
@@ -20,7 +20,7 @@ export abstract class BasePromptSelector {
    * @param llm The language model for which to get a prompt.
    * @returns A prompt template.
    */
-  abstract getPrompt(llm: BaseLanguageModel): BasePromptTemplate;
+  abstract getPrompt(llm: BaseLanguageModelInterface): BasePromptTemplate;
 
   /**
    * Asynchronous version of `getPrompt` that also accepts an options object
@@ -30,7 +30,7 @@ export abstract class BasePromptSelector {
    * @returns A Promise that resolves to a prompt template.
    */
   async getPromptAsync(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     options?: BaseGetPromptAsyncOptions
   ): Promise<BasePromptTemplate> {
     const prompt = this.getPrompt(llm);
@@ -47,14 +47,17 @@ export class ConditionalPromptSelector extends BasePromptSelector {
   defaultPrompt: BasePromptTemplate;
 
   conditionals: Array<
-    [condition: (llm: BaseLanguageModel) => boolean, prompt: BasePromptTemplate]
+    [
+      condition: (llm: BaseLanguageModelInterface) => boolean,
+      prompt: BasePromptTemplate
+    ]
   >;
 
   constructor(
     default_prompt: BasePromptTemplate,
     conditionals: Array<
       [
-        condition: (llm: BaseLanguageModel) => boolean,
+        condition: (llm: BaseLanguageModelInterface) => boolean,
         prompt: BasePromptTemplate
       ]
     > = []
@@ -70,7 +73,7 @@ export class ConditionalPromptSelector extends BasePromptSelector {
    * @param llm The language model for which to get a prompt.
    * @returns A prompt template.
    */
-  getPrompt(llm: BaseLanguageModel): BasePromptTemplate {
+  getPrompt(llm: BaseLanguageModelInterface): BasePromptTemplate {
     for (const [condition, prompt] of this.conditionals) {
       if (condition(llm)) {
         return prompt;
@@ -84,7 +87,7 @@ export class ConditionalPromptSelector extends BasePromptSelector {
  * Type guard function that checks if a given language model is of type
  * `BaseLLM`.
  */
-export function isLLM(llm: BaseLanguageModel): llm is BaseLLM {
+export function isLLM(llm: BaseLanguageModelInterface): llm is BaseLLM {
   return llm._modelType() === "base_llm";
 }
 
@@ -92,6 +95,8 @@ export function isLLM(llm: BaseLanguageModel): llm is BaseLLM {
  * Type guard function that checks if a given language model is of type
  * `BaseChatModel`.
  */
-export function isChatModel(llm: BaseLanguageModel): llm is BaseChatModel {
+export function isChatModel(
+  llm: BaseLanguageModelInterface
+): llm is BaseChatModel {
   return llm._modelType() === "base_chat_model";
 }

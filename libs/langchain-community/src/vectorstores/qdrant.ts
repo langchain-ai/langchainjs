@@ -1,7 +1,7 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 import type { Schemas as QdrantSchemas } from "@qdrant/js-client-rest";
 import { v4 as uuid } from "uuid";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -63,7 +63,7 @@ export class QdrantVectorStore extends VectorStore {
     return "qdrant";
   }
 
-  constructor(embeddings: Embeddings, args: QdrantLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: QdrantLibArgs) {
     super(embeddings, args);
 
     const url = args.url ?? getEnvironmentVariable("QDRANT_URL");
@@ -226,7 +226,7 @@ export class QdrantVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const docs = [];
@@ -251,7 +251,7 @@ export class QdrantVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
@@ -274,7 +274,7 @@ export class QdrantVectorStore extends VectorStore {
    * @returns Promise that resolves with a new `QdrantVectorStore` instance.
    */
   static async fromExistingCollection(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);

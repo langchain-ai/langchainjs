@@ -1,3 +1,8 @@
+import type {
+  BaseLanguageModelInterface,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
@@ -12,7 +17,6 @@ import {
   SystemMessage,
   BaseMessageChunk,
 } from "../../schema/index.js";
-import { StructuredTool } from "../../tools/base.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { PREFIX } from "./prompt.js";
@@ -22,10 +26,6 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
-import {
-  BaseLanguageModel,
-  BaseLanguageModelInput,
-} from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   FunctionsAgentAction,
@@ -73,7 +73,7 @@ export function _formatIntermediateSteps(
  * Interface for the input data required to create an OpenAIAgent.
  */
 export interface OpenAIAgentInput extends AgentInput {
-  tools: StructuredTool[];
+  tools: StructuredToolInterface[];
 }
 
 /**
@@ -113,7 +113,7 @@ export class OpenAIAgent extends Agent {
     return ["Observation:"];
   }
 
-  tools: StructuredTool[];
+  tools: StructuredToolInterface[];
 
   outputParser: OpenAIFunctionsAgentOutputParser =
     new OpenAIFunctionsAgentOutputParser();
@@ -131,7 +131,7 @@ export class OpenAIAgent extends Agent {
    * @returns A BasePromptTemplate object representing the created prompt.
    */
   static createPrompt(
-    _tools: StructuredTool[],
+    _tools: StructuredToolInterface[],
     fields?: OpenAIAgentCreatePromptArgs
   ): BasePromptTemplate {
     const { prefix = PREFIX } = fields || {};
@@ -151,8 +151,8 @@ export class OpenAIAgent extends Agent {
    * @returns An instance of OpenAIAgent.
    */
   static fromLLMAndTools(
-    llm: BaseLanguageModel,
-    tools: StructuredTool[],
+    llm: BaseLanguageModelInterface,
+    tools: StructuredToolInterface[],
     args?: OpenAIAgentCreatePromptArgs & Pick<AgentArgs, "callbacks">
   ) {
     OpenAIAgent.validateTools(tools);

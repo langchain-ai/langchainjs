@@ -1,3 +1,4 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { BaseChain } from "../../chains/base.js";
@@ -8,7 +9,6 @@ import {
   CallbackManagerForChainRun,
   Callbacks,
 } from "../../callbacks/manager.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { ChainValues } from "../../schema/index.js";
 
 export type GenerativeAgentMemoryConfig = {
@@ -38,14 +38,14 @@ class GenerativeAgentMemoryChain extends BaseChain {
 
   memoryRetriever: TimeWeightedVectorStoreRetriever;
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   verbose = false;
 
   private aggregateImportance = 0.0;
 
   constructor(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     memoryRetriever: TimeWeightedVectorStoreRetriever,
     config: Omit<GenerativeAgentMemoryConfig, "maxTokensLimit">
   ) {
@@ -313,7 +313,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
  * ```
  */
 export class GenerativeAgentMemory extends BaseMemory {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   memoryRetriever: TimeWeightedVectorStoreRetriever;
 
@@ -340,7 +340,7 @@ export class GenerativeAgentMemory extends BaseMemory {
   memoryChain: GenerativeAgentMemoryChain;
 
   constructor(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     memoryRetriever: TimeWeightedVectorStoreRetriever,
     config?: GenerativeAgentMemoryConfig
   ) {

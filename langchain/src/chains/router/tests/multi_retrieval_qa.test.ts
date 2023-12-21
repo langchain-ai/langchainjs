@@ -1,8 +1,8 @@
 import { test, expect } from "@jest/globals";
+import { BaseRetriever } from "@langchain/core/retrievers";
 import { MultiRetrievalQAChain } from "../multi_retrieval_qa.js";
 import { BaseLLM } from "../../../llms/base.js";
 import { LLMResult } from "../../../schema/index.js";
-import { BaseRetriever } from "../../../schema/retriever.js";
 import { Document } from "../../../document.js";
 import { PromptTemplate } from "../../../prompts/prompt.js";
 

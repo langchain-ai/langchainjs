@@ -1,10 +1,4 @@
-import {
-  Anthropic,
-  AI_PROMPT,
-  HUMAN_PROMPT,
-  ClientOptions,
-} from "@anthropic-ai/sdk";
-import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
+import { Anthropic, type ClientOptions } from "@anthropic-ai/sdk";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -12,13 +6,8 @@ import {
   AIMessage,
   AIMessageChunk,
   type BaseMessage,
-  ChatMessage,
 } from "@langchain/core/messages";
-import {
-  type ChatGeneration,
-  ChatGenerationChunk,
-  type ChatResult,
-} from "@langchain/core/outputs";
+import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
@@ -26,50 +15,16 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
-export { AI_PROMPT, HUMAN_PROMPT };
-
-/**
- * Extracts the custom role of a generic chat message.
- * @param message The chat message from which to extract the custom role.
- * @returns The custom role of the chat message.
- */
-function extractGenericMessageCustomRole(message: ChatMessage) {
-  if (
-    message.role !== AI_PROMPT &&
-    message.role !== HUMAN_PROMPT &&
-    message.role !== ""
-  ) {
-    console.warn(`Unknown message role: ${message.role}`);
-  }
-
-  return message.role;
-}
-
-/**
- * Gets the Anthropic prompt from a base message.
- * @param message The base message from which to get the Anthropic prompt.
- * @returns The Anthropic prompt from the base message.
- */
-function getAnthropicPromptFromMessage(message: BaseMessage): string {
-  const type = message._getType();
-  switch (type) {
-    case "ai":
-      return AI_PROMPT;
-    case "human":
-      return HUMAN_PROMPT;
-    case "system":
-      return "";
-    case "generic": {
-      if (!ChatMessage.isInstance(message))
-        throw new Error("Invalid generic chat message");
-      return extractGenericMessageCustomRole(message);
-    }
-    default:
-      throw new Error(`Unknown message type: ${type}`);
-  }
-}
-
-export const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
+type AnthropicMessage = Anthropic.Beta.MessageParam;
+type AnthropicMessageCreateParams = Omit<
+  Anthropic.Beta.MessageCreateParamsNonStreaming,
+  "anthropic-beta"
+>;
+type AnthropicStreamingMessageCreateParams = Omit<
+  Anthropic.Beta.MessageCreateParamsStreaming,
+  "anthropic-beta"
+>;
+type AnthropicMessageStreamEvent = Anthropic.Beta.MessageStreamEvent;
 
 /**
  * Input to AnthropicChat class.
@@ -99,7 +54,13 @@ export interface AnthropicInput {
   topP?: number;
 
   /** A maximum number of tokens to generate before stopping. */
-  maxTokensToSample: number;
+  maxTokens?: number;
+
+  /**
+   * A maximum number of tokens to generate before stopping.
+   * @deprecated Use "maxTokens" instead.
+   */
+  maxTokensToSample?: number;
 
   /** A list of strings upon which to stop generating.
    * You probably want `["\n\nHuman:"]`, as that's the cue for
@@ -145,7 +106,7 @@ type Kwargs = Record<string, any>;
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://console.anthropic.com/docs/api/reference |
- * `anthropic.complete`} can be passed through {@link invocationKwargs},
+ * `anthropic.beta.messages`} can be passed through {@link invocationKwargs},
  * even if not explicitly available on this class.
  * @example
  * ```typescript
@@ -157,7 +118,7 @@ type Kwargs = Record<string, any>;
  * console.log(res);
  * ```
  */
-export class ChatAnthropic<
+export class ChatAnthropicMessages<
     CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
   >
   extends BaseChatModel<CallOptions>
@@ -191,9 +152,9 @@ export class ChatAnthropic<
 
   topP = -1;
 
-  maxTokensToSample = 2048;
+  maxTokens = 2048;
 
-  modelName = "claude-2";
+  modelName = "claude-2.1";
 
   invocationKwargs?: Kwargs;
 
@@ -227,8 +188,8 @@ export class ChatAnthropic<
     this.temperature = fields?.temperature ?? this.temperature;
     this.topK = fields?.topK ?? this.topK;
     this.topP = fields?.topP ?? this.topP;
-    this.maxTokensToSample =
-      fields?.maxTokensToSample ?? this.maxTokensToSample;
+    this.maxTokens =
+      fields?.maxTokensToSample ?? fields?.maxTokens ?? this.maxTokens;
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
@@ -240,18 +201,19 @@ export class ChatAnthropic<
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<CompletionCreateParams, "prompt"> & Kwargs {
+  ): Omit<
+    AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams,
+    "messages" | "anthropic-beta"
+  > &
+    Kwargs {
     return {
       model: this.modelName,
       temperature: this.temperature,
       top_k: this.topK,
       top_p: this.topP,
-      stop_sequences:
-        options?.stop?.concat(DEFAULT_STOP_SEQUENCES) ??
-        this.stopSequences ??
-        DEFAULT_STOP_SEQUENCES,
-      max_tokens_to_sample: this.maxTokensToSample,
+      stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
+      max_tokens: this.maxTokens,
       ...this.invocationKwargs,
     };
   }
@@ -282,34 +244,51 @@ export class ChatAnthropic<
     const params = this.invocationParams(options);
     const stream = await this.createStreamWithRetry({
       ...params,
-      prompt: this.formatMessagesAsPrompt(messages),
+      ...this.formatMessagesForAnthropic(messages),
+      stream: true,
     });
-    let modelSent = false;
-    let stopReasonSent = false;
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
         throw new Error("AbortError: User aborted the request.");
       }
-      const additional_kwargs: Record<string, unknown> = {};
-      if (data.model && !modelSent) {
-        additional_kwargs.model = data.model;
-        modelSent = true;
-      } else if (data.stop_reason && !stopReasonSent) {
-        additional_kwargs.stop_reason = data.stop_reason;
-        stopReasonSent = true;
-      }
-      const delta = data.completion ?? "";
-      yield new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          content: delta,
-          additional_kwargs,
-        }),
-        text: delta,
-      });
-      await runManager?.handleLLMNewToken(delta);
-      if (data.stop_reason) {
-        break;
+      if (data.type === "message_start") {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { content, ...additionalKwargs } = data.message;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filteredAdditionalKwargs: Record<string, any> = {};
+        for (const [key, value] of Object.entries(additionalKwargs)) {
+          if (value !== undefined && value !== null) {
+            filteredAdditionalKwargs[key] = value;
+          }
+        }
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: filteredAdditionalKwargs,
+          }),
+          text: "",
+        });
+      } else if (data.type === "message_delta") {
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            additional_kwargs: { ...data.delta },
+          }),
+          text: "",
+        });
+      } else if (data.type === "content_block_delta") {
+        const content = data.delta?.text;
+        if (content !== undefined) {
+          yield new ChatGenerationChunk({
+            message: new AIMessageChunk({
+              content,
+              additional_kwargs: {},
+            }),
+            text: content,
+          });
+          await runManager?.handleLLMNewToken(content);
+        }
       }
     }
   }
@@ -319,15 +298,50 @@ export class ChatAnthropic<
    * @param messages The base messages to format as a prompt.
    * @returns The formatted prompt.
    */
-  protected formatMessagesAsPrompt(messages: BaseMessage[]): string {
-    return (
-      messages
-        .map((message) => {
-          const messagePrompt = getAnthropicPromptFromMessage(message);
-          return `${messagePrompt} ${message.content}`;
-        })
-        .join("") + AI_PROMPT
-    );
+  protected formatMessagesForAnthropic(messages: BaseMessage[]): {
+    system?: string;
+    messages: AnthropicMessage[];
+  } {
+    let system;
+    if (messages.length > 0 && messages[0]._getType() === "system") {
+      if (typeof messages[0].content !== "string") {
+        throw new Error(
+          "Currently only string content messages are supported."
+        );
+      }
+      system = messages[0].content;
+    }
+    const conversationMessages =
+      system !== undefined ? messages.slice(1) : messages;
+    const formattedMessages = conversationMessages.map((message) => {
+      let role;
+      if (typeof message.content !== "string") {
+        throw new Error(
+          "Currently only string content messages are supported."
+        );
+      }
+      if (message._getType() === "human") {
+        role = "user" as const;
+      } else if (message._getType() === "ai") {
+        role = "assistant" as const;
+      } else if (message._getType() === "system") {
+        throw new Error(
+          "System messages are only permitted as the first passed message."
+        );
+      } else {
+        throw new Error(
+          `Message type "${message._getType()}" is not supported.`
+        );
+      }
+      return {
+        role,
+        content: message.content,
+      };
+    });
+    return {
+      messages: formattedMessages,
+      system,
+    };
   }
 
   /** @ignore */
@@ -343,46 +357,62 @@ export class ChatAnthropic<
     }
 
     const params = this.invocationParams(options);
-    let response;
     if (params.stream) {
-      response = {
-        completion: "",
-        model: "",
-        stop_reason: "",
-      };
+      let finalChunk: ChatGenerationChunk | undefined;
       const stream = await this._streamResponseChunks(
         messages,
         options,
         runManager
       );
       for await (const chunk of stream) {
-        response.completion += chunk.message.content;
-        response.model =
-          (chunk.message.additional_kwargs.model as string) ?? response.model;
-        response.stop_reason =
-          (chunk.message.additional_kwargs.stop_reason as string) ??
-          response.stop_reason;
+        if (finalChunk === undefined) {
+          finalChunk = chunk;
+        } else {
+          finalChunk = finalChunk.concat(chunk);
+        }
       }
+      if (finalChunk === undefined) {
+        throw new Error("No chunks returned from Anthropic API.");
+      }
+      return {
+        generations: [
+          {
+            text: finalChunk.text,
+            message: finalChunk.message,
+          },
+        ],
+      };
     } else {
-      response = await this.completionWithRetry(
+      const response = await this.completionWithRetry(
         {
           ...params,
-          prompt: this.formatMessagesAsPrompt(messages),
+          stream: false,
+          ...this.formatMessagesForAnthropic(messages),
         },
         { signal: options.signal }
       );
+
+      const { content, ...additionalKwargs } = response;
+
+      if (!Array.isArray(content) || content.length !== 1) {
+        console.log(content);
+        throw new Error(
+          "Received multiple content parts in Anthropic response. Only single part messages are currently supported."
+        );
+      }
+
+      return {
+        generations: [
+          {
+            text: content[0].text,
+            message: new AIMessage({
+              content: content[0].text,
+              additional_kwargs: additionalKwargs,
+            }),
+          },
+        ],
+      };
     }
-
-    const generations: ChatGeneration[] = (response.completion ?? "")
-      .split(AI_PROMPT)
-      .map((message) => ({
-        text: message,
-        message: new AIMessage(message),
-      }));
-
-    return {
-      generations,
-    };
   }
 
   /**
@@ -391,30 +421,37 @@ export class ChatAnthropic<
    * @returns A streaming request.
    */
   protected async createStreamWithRetry(
-    request: CompletionCreateParams & Kwargs
-  ): Promise<Stream<Anthropic.Completions.Completion>> {
+    request: AnthropicStreamingMessageCreateParams & Kwargs
+  ): Promise<Stream<AnthropicMessageStreamEvent>> {
     if (!this.streamingClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
       this.streamingClient = new Anthropic({
         ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
+        // Prefer LangChain built-in retries
         maxRetries: 0,
       });
     }
     const makeCompletionRequest = async () =>
-      this.streamingClient.completions.create(
-        { ...request, stream: true },
-        { headers: request.headers }
+      this.streamingClient.beta.messages.create(
+        // TODO: Fix typing once underlying SDK is fixed to not require unnecessary "anthropic-beta" param
+        {
+          ...request,
+          ...this.invocationKwargs,
+          stream: true,
+        } as AnthropicStreamingMessageCreateParams & {
+          "anthropic-beta": string;
+        }
       );
     return this.caller.call(makeCompletionRequest);
   }
 
   /** @ignore */
   protected async completionWithRetry(
-    request: CompletionCreateParams & Kwargs,
+    request: AnthropicMessageCreateParams & Kwargs,
     options: { signal?: AbortSignal }
-  ): Promise<Anthropic.Completions.Completion> {
+  ): Promise<Anthropic.Beta.Message> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
@@ -428,9 +465,12 @@ export class ChatAnthropic<
       });
     }
     const makeCompletionRequest = async () =>
-      this.batchClient.completions.create(
-        { ...request, stream: false },
-        { headers: request.headers }
+      this.batchClient.beta.messages.create(
+        // TODO: Fix typing once underlying SDK is fixed to not require unnecessary "anthropic-beta" param
+        {
+          ...request,
+          ...this.invocationKwargs,
+        } as AnthropicMessageCreateParams & { "anthropic-beta": string }
       );
     return this.caller.callWithOptions(
       { signal: options.signal },
@@ -447,3 +487,5 @@ export class ChatAnthropic<
     return [];
   }
 }
+
+export class ChatAnthropic extends ChatAnthropicMessages {}

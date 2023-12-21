@@ -1,4 +1,5 @@
 import { distance, similarity } from "ml-distance";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
   PairwiseStringEvaluator,
   PairwiseStringEvaluatorArgs,
@@ -12,7 +13,6 @@ import {
   Callbacks,
 } from "../../callbacks/index.js";
 import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { Embeddings } from "../../embeddings/base.js";
 
 /**
  *
@@ -37,7 +37,7 @@ export interface EmbeddingDistanceEvalChainInput {
   /**
    * The embedding objects to vectorize the outputs.
    */
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   /**
    * The distance metric to use
@@ -95,7 +95,7 @@ export class EmbeddingDistanceEvalChain
 
   outputKey = "score";
 
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   distanceMetric: EmbeddingDistanceType = "cosine";
 
@@ -158,7 +158,7 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   outputKey = "score";
 
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   distanceMetric: EmbeddingDistanceType = "cosine";
 
