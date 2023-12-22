@@ -1,7 +1,7 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import {
   AstraDBVectorStore,
-  AstraLibArgs
+  AstraLibArgs,
 } from "@langchain/community/vectorstores/astradb";
 
 const astraConfig: AstraLibArgs = {
@@ -11,16 +11,16 @@ const astraConfig: AstraLibArgs = {
   collectionOptions: {
     vector: {
       dimension: 1536,
-      metric: "cosine"
-    }
-  }
+      metric: "cosine",
+    },
+  },
 };
 
 const vectorStore = await AstraDBVectorStore.fromTexts(
   [
     "AstraDB is built on Apache Cassandra",
     "AstraDB is a NoSQL DB",
-    "AstraDB supports vector search"
+    "AstraDB supports vector search",
   ],
   [{ foo: "foo" }, { foo: "bar" }, { foo: "baz" }],
   new OpenAIEmbeddings(),
@@ -32,5 +32,5 @@ const results = await vectorStore.similaritySearch("Cassandra", 1);
 
 // or filtered query:
 const filteredQueryResults = await vectorStore.similaritySearch("A", 1, {
-  foo: "bar"
+  foo: "bar",
 });

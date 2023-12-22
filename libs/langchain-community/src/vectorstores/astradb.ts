@@ -9,7 +9,7 @@ import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import {
   MaxMarginalRelevanceSearchOptions,
-  VectorStore
+  VectorStore,
 } from "@langchain/core/vectorstores";
 
 export type CollectionFilter = Record<string, unknown>;
@@ -95,7 +95,7 @@ export class AstraDBVectorStore extends VectorStore {
       [this.idKey]: options?.[idx] ?? uuid.v4(),
       [this.contentKey]: documents[idx].pageContent,
       $vector: embedding,
-      ...documents[idx].metadata
+      ...documents[idx].metadata,
     }));
 
     await this.collection.insertMany(docs);
@@ -140,7 +140,7 @@ export class AstraDBVectorStore extends VectorStore {
     const cursor = await this.collection.find(filter ?? {}, {
       sort: { $vector: query },
       limit: k,
-      includeSimilarity: true
+      includeSimilarity: true,
     });
 
     const results: [Document, number][] = [];
@@ -156,7 +156,7 @@ export class AstraDBVectorStore extends VectorStore {
 
       const doc = new Document({
         pageContent: content as string,
-        metadata
+        metadata,
       });
 
       results.push([doc, similarity as number]);
@@ -192,7 +192,7 @@ export class AstraDBVectorStore extends VectorStore {
     const cursor = await this.collection.find(options.filter ?? {}, {
       sort: { $vector: queryEmbedding },
       limit: options.k,
-      includeSimilarity: true
+      includeSimilarity: true,
     });
 
     const results = (await cursor.toArray()) ?? [];
@@ -221,7 +221,7 @@ export class AstraDBVectorStore extends VectorStore {
 
       const doc: Document = {
         pageContent: content as string,
-        metadata
+        metadata,
       };
 
       docs.push(doc);
@@ -250,7 +250,7 @@ export class AstraDBVectorStore extends VectorStore {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const doc = new Document({
         pageContent: texts[i],
-        metadata
+        metadata,
       });
       docs.push(doc);
     }

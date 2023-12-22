@@ -17,7 +17,7 @@ DataStax [Astra DB](https://astra.datastax.com/register) is a serverless vector-
 1. Create an [Astra DB account](https://astra.datastax.com/register).
 2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
 3. Grab your `API Endpoint` and `Token` from the Database Details.
-5. Set up the following env vars:
+4. Set up the following env vars:
 
 ```bash
 export ASTRA_DB_APPLICATION_TOKEN=YOUR_ASTRA_DB_APPLICATION_TOKEN_HERE
@@ -25,6 +25,7 @@ export ASTRA_DB_ENDPOINT=YOUR_ASTRA_DB_ENDPOINT_HERE
 export ASTRA_DB_COLLECTION=YOUR_ASTRA_DB_COLLECTION_HERE
 export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
 ```
+
 Where `ASTRA_DB_COLLECTION` is the desired name of your collection
 
 6. Install the Astra TS Client & the LangChain community package
