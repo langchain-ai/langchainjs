@@ -47,9 +47,7 @@ export class MultiVectorRetriever extends BaseRetriever {
 
   public vectorstore: VectorStoreInterface;
 
-  public docstore?: BaseStoreInterface<string, Document>;
-
-  public byteStore?: BaseStore<string, Uint8Array>;
+  public docstore: BaseStoreInterface<string, Document>;
 
   protected idKey: string;
 
@@ -60,9 +58,11 @@ export class MultiVectorRetriever extends BaseRetriever {
   constructor(args: MultiVectorRetrieverInput) {
     super(args);
     this.vectorstore = args.vectorstore;
-    this.docstore = args.docstore;
-    this.byteStore = args.byteStore;
-    if (!this.docstore && !this.byteStore) {
+    if (args.byteStore) {
+      this.docstore = createDocumentStoreFromByteStore(args.byteStore);
+    } else if (args.docstore) {
+      this.docstore = args.docstore;
+    } else {
       throw new Error(
         "byteStore and docstore are undefined. Please provide at least one."
       );
@@ -80,15 +80,7 @@ export class MultiVectorRetriever extends BaseRetriever {
         ids.push(doc.metadata[this.idKey]);
       }
     }
-
-    let docs: Array<Document | undefined> = [];
-    if (this.byteStore) {
-      const docStore = createDocumentStoreFromByteStore(this.byteStore);
-      docs = await docStore.mget(ids);
-    } else if (this.docstore) {
-      docs = await this.docstore.mget(ids);
-    }
-
+    const docs = await this.docstore.mget(ids);
     return docs
       .filter((doc) => doc !== undefined)
       .slice(0, this.parentK) as Document[];

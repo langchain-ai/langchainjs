@@ -7,6 +7,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { Document } from "langchain/document";
+import { createDocumentStoreFromByteStore } from "langchain/storage/encoder_backed";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
@@ -42,9 +43,11 @@ const keyValuePairs: [string, Document][] = docs.map((doc, i) => [
   doc,
 ]);
 
-// The docstore to use to store the original chunks
-const docstore = new InMemoryStore();
-await docstore.mset(keyValuePairs);
+// The byteStore to use to store the original chunks
+const byteStore = new InMemoryStore<Uint8Array>();
+// Convert the byteStore to a docStore to use for retrieval
+const docStore = createDocumentStoreFromByteStore(byteStore);
+await docStore.mset(keyValuePairs);
 
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
@@ -54,7 +57,7 @@ const vectorstore = await FaissStore.fromDocuments(
 
 const retriever = new MultiVectorRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   idKey,
   // Optional `k` parameter to search for more child documents in VectorStore.
   // Note that this does not exactly correspond to the number of final (parent) documents
