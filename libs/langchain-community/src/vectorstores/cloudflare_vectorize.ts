@@ -11,7 +11,7 @@ import {
   AsyncCaller,
   type AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import { chunkArray } from "../utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 export interface VectorizeLibArgs extends AsyncCallerParams {
   index: VectorizeIndex;

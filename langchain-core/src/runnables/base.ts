@@ -311,12 +311,14 @@ export abstract class Runnable<
       tags: options.tags,
       metadata: options.metadata,
       runName: options.runName,
+      configurable: options.configurable,
     };
     const callOptions = { ...options };
     delete callOptions.callbacks;
     delete callOptions.tags;
     delete callOptions.metadata;
     delete callOptions.runName;
+    delete callOptions.configurable;
     return [runnableConfig, callOptions];
   }
 

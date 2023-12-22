@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -23,7 +23,6 @@
     "lint:fix": "yarn lint --fix",
     "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
-    "release": "release-it --only-version --config .release-it.json",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
@@ -655,6 +654,11 @@
       "types": "./embeddings/tensorflow.d.ts",
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/togetherai": {
+      "types": "./embeddings/togetherai.d.ts",
+      "import": "./embeddings/togetherai.js",
+      "require": "./embeddings/togetherai.cjs"
     },
     "./embeddings/voyage": {
       "types": "./embeddings/voyage.d.ts",
@@ -1351,6 +1355,9 @@
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
+    "embeddings/togetherai.cjs",
+    "embeddings/togetherai.js",
+    "embeddings/togetherai.d.ts",
     "embeddings/voyage.cjs",
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",

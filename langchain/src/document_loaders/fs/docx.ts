@@ -44,8 +44,7 @@ export class DocxLoader extends BufferLoader {
 
 async function DocxLoaderImports() {
   try {
-    const { default: mod } = await import("mammoth");
-    const { extractRawText } = mod;
+    const { extractRawText } = await import("mammoth");
     return { extractRawText };
   } catch (e) {
     console.error(e);

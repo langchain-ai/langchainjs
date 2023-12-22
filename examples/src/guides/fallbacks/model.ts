@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
 // Use a fake model name that will always throw an error

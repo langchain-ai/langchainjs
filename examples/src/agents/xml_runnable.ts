@@ -1,4 +1,4 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 import { AgentExecutor } from "langchain/agents";
 import { SerpAPI, Tool } from "langchain/tools";
 import {

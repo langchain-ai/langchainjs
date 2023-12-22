@@ -1,6 +1,7 @@
-import { test, expect } from "@jest/globals";
-import { ChatOpenAI } from "../openai.js";
-import { HumanMessage, ToolMessage } from "../../schema/index.js";
+import { test, expect, jest } from "@jest/globals";
+import { HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { InMemoryCache } from "@langchain/core/caches";
+import { ChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({
@@ -173,4 +174,35 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
   expect(chunks.length).toBeGreaterThan(1);
   console.log(finalChunk?.additional_kwargs.tool_calls);
   expect(finalChunk?.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
+});
+
+test("ChatOpenAI in JSON mode can cache generations", async () => {
+  const memoryCache = new InMemoryCache();
+  const lookupSpy = jest.spyOn(memoryCache, "lookup");
+  const updateSpy = jest.spyOn(memoryCache, "update");
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo-1106",
+    temperature: 1,
+    cache: memoryCache,
+  }).bind({
+    response_format: {
+      type: "json_object",
+    },
+  });
+  const message = new HumanMessage(
+    "Respond with a JSON object containing arbitrary fields."
+  );
+  const res = await chat.invoke([message]);
+  console.log(res);
+
+  const res2 = await chat.invoke([message]);
+  console.log(res2);
+
+  expect(res).toEqual(res2);
+
+  expect(lookupSpy).toHaveBeenCalledTimes(2);
+  expect(updateSpy).toHaveBeenCalledTimes(1);
+
+  lookupSpy.mockRestore();
+  updateSpy.mockRestore();
 });

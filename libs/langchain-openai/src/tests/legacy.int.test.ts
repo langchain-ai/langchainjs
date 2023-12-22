@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
-import { OpenAIChat } from "../openai-chat.js";
-import { CallbackManager } from "../../callbacks/index.js";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { OpenAIChat } from "../legacy.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
