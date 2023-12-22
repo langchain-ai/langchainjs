@@ -785,6 +785,11 @@
       "import": "./vectorstores/analyticdb.js",
       "require": "./vectorstores/analyticdb.cjs"
     },
+    "./vectorstores/astradb": {
+      "types": "./vectorstores/astradb.d.ts",
+      "import": "./vectorstores/astradb.js",
+      "require": "./vectorstores/astradb.cjs"
+    },
     "./vectorstores/cassandra": {
       "types": "./vectorstores/cassandra.d.ts",
       "import": "./vectorstores/cassandra.js",
@@ -1430,6 +1435,9 @@
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
+    "vectorstores/astradb.cjs",
+    "vectorstores/astradb.js",
+    "vectorstores/astradb.d.ts",
     "vectorstores/cassandra.cjs",
     "vectorstores/cassandra.js",
     "vectorstores/cassandra.d.ts",
