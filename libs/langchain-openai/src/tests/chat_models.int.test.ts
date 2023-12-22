@@ -1,23 +1,22 @@
 import { test, jest, expect } from "@jest/globals";
-import { ChatOpenAI } from "../openai.js";
 import {
   BaseMessage,
   ChatMessage,
-  ChatGeneration,
   HumanMessage,
-  LLMResult,
   SystemMessage,
-} from "../../schema/index.js";
-import { ChatPromptValue } from "../../prompts/chat.js";
+} from "@langchain/core/messages";
+import { ChatGeneration, LLMResult } from "@langchain/core/outputs";
+import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
   PromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-} from "../../prompts/index.js";
-import { CallbackManager } from "../../callbacks/index.js";
-import { NewTokenIndices } from "../../callbacks/base.js";
-import { InMemoryCache } from "../../cache/index.js";
+} from "@langchain/core/prompts";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { InMemoryCache } from "@langchain/core/caches";
+import { ChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -360,11 +359,14 @@ test("Test ChatOpenAI stream method", async () => {
 
 test("Test ChatOpenAI stream method with abort", async () => {
   await expect(async () => {
-    const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
+    const model = new ChatOpenAI({
+      maxTokens: 100,
+      modelName: "gpt-3.5-turbo",
+    });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose.",
       {
-        signal: AbortSignal.timeout(1000),
+        signal: AbortSignal.timeout(500),
       }
     );
     for await (const chunk of stream) {
