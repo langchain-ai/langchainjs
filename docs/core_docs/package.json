@@ -7,7 +7,7 @@
     "start": "yarn build:typedoc && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
     "build": "yarn clean && yarn build:typedoc && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:vercel": "yarn clean && yarn build:typedoc:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
-    "build:typedoc": "yarn run turbo:command build --filter=api_refs",
+    "build:typedoc": "yarn workspace api_refs build",
     "build:typedoc:vercel": "yarn workspace api_refs build:vercel",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",

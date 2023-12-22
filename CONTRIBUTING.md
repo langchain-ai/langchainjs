@@ -82,6 +82,22 @@ even patch releases may contain [non-backwards-compatible changes](https://semve
 If your contribution has made its way into a release, we will want to give you credit on Twitter (only if you want though)!
 If you have a Twitter account you would like us to mention, please let us know in the PR or in another manner.
 
+#### Integration releases
+
+You can invoke the release flow by calling `yarn release` from the package root.
+
+There are three parameters which can be passed to this script, one required and two optional.
+
+- __Required__: `--workspace <workspace name>`. eg: `--workspace @langchain/core` (always appended as the first flag when running `yarn release`)
+- __Optional__: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch.
+- __Optional__: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release.
+
+This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
+
+Halfway through this script, you'll be prompted to enter an NPM OTP (typically from an authenticator app). This value is not stored anywhere and is only used to authenticate the NPM release.
+
+Full example: `yarn release @langchain/core --bump-deps --tag beta`. 
+
 ### 🛠️ Tooling
 
 This project uses the following tools, which are worth getting familiar

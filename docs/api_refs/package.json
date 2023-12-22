@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "typedoc": "npx typedoc --options typedoc.json",
-    "build:scripts": "yarn typedoc && node ./scripts/update-typedoc-css.js",
+    "build:scripts": "node ./scripts/create-entrypoints.js && yarn typedoc && node ./scripts/update-typedoc-css.js",
     "build": "yarn clean && yarn run build:deps && yarn build:scripts && next build",
     "build:vercel": "yarn clean && yarn run build:deps --force && yarn build:scripts && next build",
-    "build:deps": "yarn run turbo:command build --filter=@langchain/core --filter=@langchain/anthropic --filter=@langchain/openai --filter=@langchain/community --filter=langchain --concurrency=1",
+    "build:deps": "yarn run turbo:command build --filter=!api_refs --filter=!core_docs --filter=!examples --filter=!create-langchain-integration --concurrency=1",
     "start": "yarn build && next start -p 3001",
     "lint": "next lint",
     "clean": "rm -rf .next .turbo public/ && mkdir public"

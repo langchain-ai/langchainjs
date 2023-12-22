@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.11.0":
-  version: 0.11.0
-  resolution: "@anthropic-ai/sdk@npm:0.11.0"
+"@anthropic-ai/sdk@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@anthropic-ai/sdk@npm:0.12.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -224,7 +224,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: 1da699f528b4a2fecf8548040b7167b0799fceebff27dbf47afefe6b406461382540255b64959c30526b5b5a6945412fef46c7b903e12780e991c0c47a14deb9
+  checksum: f27d6c452a3343b49b777c7395b8595c74f1df3aa668cb0b40ce9c62df9170e5276780163d66e36c36cb81aea3be31256a2b45a143d70dd5687fadc6c9b51b49
   languageName: node
   linkType: hard
 
@@ -8093,7 +8093,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.11.0
+    "@anthropic-ai/sdk": ^0.12.0
     "@jest/globals": ^29.5.0
     "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
@@ -8538,6 +8538,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
+    release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
@@ -8567,6 +8568,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
+    release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
@@ -12551,17 +12553,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/semver@npm:^7, @types/semver@npm:^7.5.0":
+  version: 7.5.6
+  resolution: "@types/semver@npm:7.5.6"
+  checksum: 563a0120ec0efcc326567db2ed920d5d98346f3638b6324ea6b50222b96f02a8add3c51a916b6897b51523aad8ac227d21d3dcf8913559f1bfc6c15b14d23037
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.3.12":
   version: 7.3.13
   resolution: "@types/semver@npm:7.3.13"
   checksum: 00c0724d54757c2f4bc60b5032fe91cda6410e48689633d5f35ece8a0a66445e3e57fa1d6e07eb780f792e82ac542948ec4d0b76eb3484297b79bd18b8cf1cb0
-  languageName: node
-  linkType: hard
-
-"@types/semver@npm:^7.5.0":
-  version: 7.5.6
-  resolution: "@types/semver@npm:7.5.6"
-  checksum: 563a0120ec0efcc326567db2ed920d5d98346f3638b6324ea6b50222b96f02a8add3c51a916b6897b51523aad8ac227d21d3dcf8913559f1bfc6c15b14d23037
   languageName: node
   linkType: hard
 
@@ -16044,6 +16046,13 @@ __metadata:
   version: 10.0.1
   resolution: "commander@npm:10.0.1"
   checksum: 436901d64a818295803c1996cd856621a74f30b9f9e28a588e726b2b1670665bccd7c1a77007ebf328729f0139838a88a19265858a0fa7a8728c4656796db948
+  languageName: node
+  linkType: hard
+
+"commander@npm:^11.1.0":
+  version: 11.1.0
+  resolution: "commander@npm:11.1.0"
+  checksum: fd1a8557c6b5b622c89ecdfde703242ab7db3b628ea5d1755784c79b8e7cb0d74d65b4a262289b533359cd58e1bfc0bf50245dfbcd2954682a6f367c828b79ef
   languageName: node
   linkType: hard
 
@@ -23660,7 +23669,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    mammoth: "*"
+    mammoth: ^1.6.0
     mongodb: ^5.2.0
     node-llama-cpp: "*"
     notion-to-md: ^3.1.0
@@ -23799,9 +23808,12 @@ __metadata:
   dependencies:
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
+    "@types/semver": ^7
+    commander: ^11.1.0
     dotenv: ^16.0.3
     lint-staged: ^13.1.1
     prettier: ^2.8.3
+    semver: ^7.5.4
     turbo: latest
     typescript: ~5.1.6
   languageName: unknown

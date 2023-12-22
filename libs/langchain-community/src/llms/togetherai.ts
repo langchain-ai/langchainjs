@@ -147,7 +147,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
 
   private apiKey: string;
 
-  private inferenceUrl = "https://api.together.xyz/inference";
+  private inferenceAPIUrl = "https://api.together.xyz/inference";
 
   static lc_name() {
     return "TogetherAI";
@@ -207,7 +207,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     options?: this["ParsedCallOptions"]
   ) {
     return this.caller.call(async () => {
-      const fetchResponse = await fetch(this.inferenceUrl, {
+      const fetchResponse = await fetch(this.inferenceAPIUrl, {
         method: "POST",
         headers: {
           ...this.constructHeaders(),
@@ -246,7 +246,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    const fetchResponse = await fetch(this.inferenceUrl, {
+    const fetchResponse = await fetch(this.inferenceAPIUrl, {
       method: "POST",
       headers: {
         ...this.constructHeaders(),
