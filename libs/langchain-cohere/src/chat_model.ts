@@ -166,7 +166,7 @@ export class ChatCohere<
     const cohereMessages = convertMessagesToCohereMessages(messages);
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
-    const message = cohereMessages[cohereMessages.length - 1].message;
+    const { message } = cohereMessages[cohereMessages.length - 1];
     const chat_history: Cohere.ChatMessage[] = [];
     if (cohereMessages.length > 1) {
       chat_history.concat(cohereMessages.slice(0, -1));
@@ -249,7 +249,7 @@ export class ChatCohere<
     const cohereMessages = convertMessagesToCohereMessages(messages);
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
-    const message = cohereMessages[cohereMessages.length - 1].message;
+    const { message } = cohereMessages[cohereMessages.length - 1];
     const chat_history: Cohere.ChatMessage[] = [];
     if (cohereMessages.length > 1) {
       chat_history.concat(cohereMessages.slice(0, -1));

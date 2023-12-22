@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
-import { ChatCohere } from "../chat_model.js";
 import { HumanMessage } from "@langchain/core/messages";
+import { ChatCohere } from "../chat_model.js";
 
 test.skip("ChatCohere can invoke", async () => {
   const model = new ChatCohere();
@@ -40,4 +40,4 @@ test.only("ChatCohere can stream", async () => {
     console.log(tokens);
   }
   expect(streamIters).toBeGreaterThan(1);
-})
+});
