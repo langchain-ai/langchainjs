@@ -220,6 +220,7 @@ const requiresOptionalDependency = [
   "llms/writer",
   "llms/portkey",
   "vectorstores/analyticdb",
+  "vectorstores/azure_cosmosdb",
   "vectorstores/cassandra",
   "vectorstores/chroma",
   "vectorstores/clickhouse",

@@ -8,8 +8,14 @@ Learn how to leverage the vector search capabilities of Azure Cosmos DB for Mong
 
 ## Setup
 
+You'll first need to install the `mongodb` SDK and the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
 ```bash npm2yarn
-npm install mongodb
+npm install mongodb @langchain/community
 ```
 
 You'll also need to have an Azure Cosmos DB for MongoDB vCore instance running. You can deploy a free version on Azure Portal without any cost, following [this guide](https://learn.microsoft.com/azure/cosmos-db/mongodb/vcore/quickstart-portal).

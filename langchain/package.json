@@ -256,9 +256,6 @@
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
-    "vectorstores/azure_cosmosdb.cjs",
-    "vectorstores/azure_cosmosdb.js",
-    "vectorstores/azure_cosmosdb.d.ts",
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
@@ -1626,11 +1623,6 @@
       "types": "./vectorstores/analyticdb.d.ts",
       "import": "./vectorstores/analyticdb.js",
       "require": "./vectorstores/analyticdb.cjs"
-    },
-    "./vectorstores/azure_cosmosdb": {
-      "types": "./vectorstores/azure_cosmosdb.d.ts",
-      "import": "./vectorstores/azure_cosmosdb.js",
-      "require": "./vectorstores/azure_cosmosdb.cjs"
     },
     "./vectorstores/base": {
       "types": "./vectorstores/base.d.ts",

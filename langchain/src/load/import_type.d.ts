@@ -133,9 +133,6 @@ export interface OptionalImportMap {
   "langchain/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
-  "langchain/vectorstores/azure_cosmosdb"?:
-    | typeof import("../vectorstores/azure_cosmosdb.js")
-    | Promise<typeof import("../vectorstores/azure_cosmosdb.js")>;
   "langchain/vectorstores/cassandra"?:
     | typeof import("../vectorstores/cassandra.js")
     | Promise<typeof import("../vectorstores/cassandra.js")>;

@@ -45,7 +45,6 @@ export const optionalImportEntrypoints = [
   "langchain/prompts/load",
   "langchain/vectorstores/clickhouse",
   "langchain/vectorstores/analyticdb",
-  "langchain/vectorstores/azure_cosmosdb",
   "langchain/vectorstores/cassandra",
   "langchain/vectorstores/convex",
   "langchain/vectorstores/elasticsearch",

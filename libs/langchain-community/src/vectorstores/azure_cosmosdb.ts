@@ -5,7 +5,7 @@ import {
   MongoClient,
   Db,
 } from "mongodb";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -78,7 +78,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
     return "azure_cosmosdb";
   }
 
-  constructor(embeddings: Embeddings, dbConfig: AzureCosmosDBConfig) {
+  constructor(embeddings: EmbeddingsInterface, dbConfig: AzureCosmosDBConfig) {
     super(embeddings, dbConfig);
 
     const connectionString =
@@ -371,7 +371,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: AzureCosmosDBConfig
   ): Promise<AzureCosmosDBVectorStore> {
     const docs: Document[] = [];
@@ -397,7 +397,7 @@ export class AzureCosmosDBVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: AzureCosmosDBConfig
   ): Promise<AzureCosmosDBVectorStore> {
     const instance = new this(embeddings, dbConfig);
