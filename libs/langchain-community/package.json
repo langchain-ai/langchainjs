@@ -785,6 +785,11 @@
       "import": "./vectorstores/analyticdb.js",
       "require": "./vectorstores/analyticdb.cjs"
     },
+    "./vectorstores/azure_cosmosdb": {
+      "types": "./vectorstores/azure_cosmosdb.d.ts",
+      "import": "./vectorstores/azure_cosmosdb.js",
+      "require": "./vectorstores/azure_cosmosdb.cjs"
+    },
     "./vectorstores/cassandra": {
       "types": "./vectorstores/cassandra.d.ts",
       "import": "./vectorstores/cassandra.js",
@@ -1433,6 +1438,9 @@
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
+    "vectorstores/azure_cosmosdb.cjs",
+    "vectorstores/azure_cosmosdb.js",
+    "vectorstores/azure_cosmosdb.d.ts",
     "vectorstores/cassandra.cjs",
     "vectorstores/cassandra.js",
     "vectorstores/cassandra.d.ts",

@@ -187,6 +187,9 @@ llms/yandex.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
+vectorstores/azure_cosmosdb.cjs
+vectorstores/azure_cosmosdb.js
+vectorstores/azure_cosmosdb.d.ts
 vectorstores/cassandra.cjs
 vectorstores/cassandra.js
 vectorstores/cassandra.d.ts
