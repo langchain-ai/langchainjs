@@ -86,7 +86,7 @@ export class CohereEmbeddings
       this.embeddingWithRetry({
         model: this.modelName,
         texts: batch,
-        inputType: this.inputType
+        inputType: this.inputType,
       })
     );
 
@@ -119,7 +119,7 @@ export class CohereEmbeddings
 
     const { embeddings } = await this.embeddingWithRetry({
       model: this.modelName,
-      texts: [text]
+      texts: [text],
     });
     if ("float" in embeddings && embeddings.float) {
       return embeddings.float[0];
@@ -157,7 +157,7 @@ export class CohereEmbeddings
       const { CohereClient } = await CohereEmbeddings.imports();
 
       this.client = new CohereClient({
-        token: this.apiKey
+        token: this.apiKey,
       });
     }
   }

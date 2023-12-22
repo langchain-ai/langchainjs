@@ -44,13 +44,13 @@ export class Cohere extends LLM implements CohereInput {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "COHERE_API_KEY"
+      apiKey: "COHERE_API_KEY",
     };
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
-      apiKey: "cohere_api_key"
+      apiKey: "cohere_api_key",
     };
   }
 
@@ -94,7 +94,7 @@ export class Cohere extends LLM implements CohereInput {
     const { CohereClient } = await Cohere.imports();
 
     const cohere = new CohereClient({
-      token: this.apiKey
+      token: this.apiKey,
     });
 
     // Hit the `generate` endpoint on the `large` model
@@ -106,7 +106,7 @@ export class Cohere extends LLM implements CohereInput {
         model: this.model,
         maxTokens: this.maxTokens,
         temperature: this.temperature,
-        endSequences: options.stop
+        endSequences: options.stop,
       }
     );
     try {

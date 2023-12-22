@@ -11,7 +11,7 @@ test.skip("test call", async () => {
 
 test.skip("test call with callback", async () => {
   const cohere = new Cohere({
-    model: "command-light"
+    model: "command-light",
   });
   const tokens: string[] = [];
   const result = await cohere.invoke(
@@ -21,9 +21,9 @@ test.skip("test call with callback", async () => {
         {
           handleLLMNewToken(token) {
             tokens.push(token);
-          }
-        }
-      ]
+          },
+        },
+      ],
     }
   );
   // Not streaming, so we should only get one token
@@ -33,13 +33,13 @@ test.skip("test call with callback", async () => {
 
 test("should abort the request", async () => {
   const cohere = new Cohere({
-    model: "command-light"
+    model: "command-light",
   });
   const controller = new AbortController();
 
   await expect(() => {
     const ret = cohere.invoke("Respond with an extremely verbose response", {
-      signal: controller.signal
+      signal: controller.signal,
     });
     controller.abort();
     return ret;
