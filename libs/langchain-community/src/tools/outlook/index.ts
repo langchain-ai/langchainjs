@@ -1,6 +1,6 @@
-export { OutlookSendMailTool } from "./sendMail.js";
-export { OutlookReadMailTool } from "./readMail.js";
+export { OutlookSendMailTool } from "./send_mail.js";
+export { OutlookReadMailTool } from "./read_mail.js";
 export { OutlookBase } from "./base.js";
-export { AuthFlowREST } from "./authFlowREST.js";
-export { AuthFlowToken, AuthFlowRefresh } from "./authFlowToken.js";
-export { AuthFlowBase } from "./authFlowBase.js";
+export { AuthFlowREST } from "./auth/rest.js";
+export { AuthFlowToken, AuthFlowRefresh } from "./auth/token.js";
+export { AuthFlowBase } from "./auth/base.js";

@@ -1,6 +1,6 @@
 import { OutlookBase } from "./base.js";
 import { SEND_MAIL_TOOL_DESCRIPTION } from "./descriptions.js";
-import { AuthFlowBase } from "./authFlowBase.js";
+import { AuthFlowBase } from "./auth/base.js";
 
 /**
  * Class representing an Outlook send mail tool.

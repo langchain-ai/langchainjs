@@ -1,7 +1,7 @@
 import { Tool } from "@langchain/core/tools";
-import { AuthFlowBase } from "./authFlowBase.js";
-import { AuthFlowToken, AuthFlowRefresh } from "./authFlowToken.js";
-import { AuthFlowREST } from "./authFlowREST.js";
+import { AuthFlowBase } from "./auth/base.js";
+import { AuthFlowToken, AuthFlowRefresh } from "./auth/token.js";
+import { AuthFlowREST } from "./auth/rest.js";
 
 /**
  * Tool for interacting with Outlook, allowing actions such as sending or reading emails.
