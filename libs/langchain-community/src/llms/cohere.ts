@@ -3,6 +3,7 @@ import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 
 /**
  * Interface for the input parameters specific to the Cohere model.
+ * @deprecated Use
  */
 export interface CohereInput extends BaseLLMParams {
   /** Sampling temperature to use */

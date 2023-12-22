@@ -28,7 +28,7 @@ test("ChatCohere can count tokens", async () => {
   );
 });
 
-test.only("ChatCohere can stream", async () => {
+test("ChatCohere can stream", async () => {
   const model = new ChatCohere();
   const stream = await model.stream([new HumanMessage("Hello world")]);
 

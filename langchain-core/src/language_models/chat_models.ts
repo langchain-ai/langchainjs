@@ -4,7 +4,7 @@ import {
   BaseMessageChunk,
   type BaseMessageLike,
   HumanMessage,
-  coerceMessageLikeToMessage
+  coerceMessageLikeToMessage,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -13,18 +13,18 @@ import {
   type ChatGeneration,
   ChatGenerationChunk,
   type ChatResult,
-  type Generation
+  type Generation,
 } from "../outputs.js";
 import {
   BaseLanguageModel,
   type BaseLanguageModelCallOptions,
   type BaseLanguageModelInput,
-  type BaseLanguageModelParams
+  type BaseLanguageModelParams,
 } from "./base.js";
 import {
   CallbackManager,
   type CallbackManagerForLLMRun,
-  type Callbacks
+  type Callbacks,
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches.js";
@@ -74,7 +74,7 @@ export function createChatMessageChunkEncoderStream() {
             : JSON.stringify(chunk.content)
         )
       );
-    }
+    },
   });
 }
 
@@ -180,7 +180,7 @@ export abstract class BaseChatModel<
       const extra = {
         options: callOptions,
         invocation_params: this?.invocationParams(callOptions),
-        batch_size: 1
+        batch_size: 1,
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
@@ -218,7 +218,7 @@ export abstract class BaseChatModel<
         (runManagers ?? []).map((runManager) =>
           runManager?.handleLLMEnd({
             // TODO: Remove cast after figuring out inheritance
-            generations: [[generationChunk as ChatGeneration]]
+            generations: [[generationChunk as ChatGeneration]],
           })
         )
       );
@@ -248,7 +248,7 @@ export abstract class BaseChatModel<
     const extra = {
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
-      batch_size: 1
+      batch_size: 1,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
@@ -281,7 +281,7 @@ export abstract class BaseChatModel<
           llmOutputs[i] = result.llmOutput;
           return runManagers?.[i]?.handleLLMEnd({
             generations: [result.generations],
-            llmOutput: result.llmOutput
+            llmOutput: result.llmOutput,
           });
         } else {
           // status === "rejected"
@@ -295,13 +295,13 @@ export abstract class BaseChatModel<
       generations,
       llmOutput: llmOutputs.length
         ? this._combineLLMOutput?.(...llmOutputs)
-        : undefined
+        : undefined,
     };
     Object.defineProperty(output, RUN_KEY, {
       value: runManagers
         ? { runIds: runManagers?.map((manager) => manager.runId) }
         : undefined,
-      configurable: true
+      configurable: true,
     });
     return output;
   }
@@ -311,7 +311,7 @@ export abstract class BaseChatModel<
     cache,
     llmStringKey,
     parsedOptions,
-    handledOptions
+    handledOptions,
   }: ChatModelGenerateCachedParameters<typeof this>): Promise<
     LLMResult & { missingPromptIndices: number[] }
   > {
@@ -333,7 +333,7 @@ export abstract class BaseChatModel<
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
       batch_size: 1,
-      cached: true
+      cached: true,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
@@ -384,7 +384,7 @@ export abstract class BaseChatModel<
             await runManager?.handleLLMNewToken(result[0].text);
           }
           return runManager?.handleLLMEnd({
-            generations: [result]
+            generations: [result],
           });
         } else {
           // status === "rejected"
@@ -396,7 +396,7 @@ export abstract class BaseChatModel<
 
     const output = {
       generations,
-      missingPromptIndices
+      missingPromptIndices,
     };
 
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -406,7 +406,7 @@ export abstract class BaseChatModel<
       value: runManagers
         ? { runIds: runManagers?.map((manager) => manager.runId) }
         : undefined,
-      configurable: true
+      configurable: true,
     });
 
     return output;
@@ -453,7 +453,7 @@ export abstract class BaseChatModel<
       cache,
       llmStringKey,
       parsedOptions: callOptions,
-      handledOptions: runnableConfig
+      handledOptions: runnableConfig,
     });
 
     let llmOutput = {};
@@ -502,7 +502,7 @@ export abstract class BaseChatModel<
     return {
       ...this.invocationParams(),
       _type: this._llmType(),
-      _model: this._modelType()
+      _model: this._modelType(),
     };
   }
 
@@ -632,9 +632,9 @@ export abstract class SimpleChatModel<
       generations: [
         {
           text: message.content,
-          message
-        }
-      ]
+          message,
+        },
+      ],
     };
   }
 }
