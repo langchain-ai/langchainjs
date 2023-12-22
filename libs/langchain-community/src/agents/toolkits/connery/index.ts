@@ -1,4 +1,4 @@
-import { ToolInterface } from "@langchain/core/tools";
+import { Tool, ToolInterface } from "@langchain/core/tools";
 import { Toolkit } from "../base.js";
 import { ConneryService } from "../../../tools/connery.js";
 
@@ -23,7 +23,7 @@ export class ConneryToolkit extends Toolkit {
     toolkit.tools = [];
 
     const actions = await conneryService.listActions();
-    toolkit.tools.push(...actions.map((action) => action as unknown as Tool)); // This is a hack to make TypeScript happy, as TypeScript doesn't know that ConneryAction (StructuredTool) extends Tool.
+    toolkit.tools.push(...(actions as unknown as Tool[])); // This is a hack to make TypeScript happy, as TypeScript doesn't know that ConneryAction (StructuredTool) extends Tool.
     return toolkit;
   }
 }
