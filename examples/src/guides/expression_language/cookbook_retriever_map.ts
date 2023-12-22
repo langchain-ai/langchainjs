@@ -1,6 +1,6 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 import { StringOutputParser } from "langchain/schema/output_parser";

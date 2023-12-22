@@ -58,7 +58,7 @@ Under the hood, this agent is using the OpenAIFunctionsAgent, so we need to use 
 
 ```typescript
 import { createConversationalRetrievalAgent } from "langchain/agents/toolkits";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   temperature: 0,
@@ -157,7 +157,7 @@ This memory also has `returnMessages` set to `true` by default.
 You can also load messages from prior conversations into this memory by initializing it with a pre-loaded chat history:
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { OpenAIAgentTokenBufferMemory } from "langchain/agents/toolkits";
 import { HumanMessage, AIMessage } from "langchain/schema";
 import { ChatMessageHistory } from "langchain/memory";

@@ -1,7 +1,7 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { PineconeTranslator } from "langchain/retrievers/self_query/pinecone";
 import { PineconeStore } from "langchain/vectorstores/pinecone";

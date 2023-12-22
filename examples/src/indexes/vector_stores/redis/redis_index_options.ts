@@ -1,6 +1,6 @@
 import { createClient } from "redis";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { RedisVectorStore } from "langchain/vectorstores/redis";
 
 const client = createClient({

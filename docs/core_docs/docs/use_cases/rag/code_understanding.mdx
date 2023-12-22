@@ -130,7 +130,7 @@ const retriever = vectorStore.asRetriever({
 We'll setup our model and memory system just as we'd do for any other chatbot application.
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 Pipe the `StringOutputParser` through since both chains which use this model will also need this output parser.

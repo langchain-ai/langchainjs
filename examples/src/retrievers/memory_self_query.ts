@@ -1,7 +1,7 @@
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { FunctionalTranslator } from "langchain/retrievers/self_query/functional";
 import { OpenAI } from "langchain/llms/openai";

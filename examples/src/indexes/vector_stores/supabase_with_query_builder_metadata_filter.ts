@@ -2,7 +2,7 @@ import {
   SupabaseFilterRPCCall,
   SupabaseVectorStore,
 } from "langchain/vectorstores/supabase";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { createClient } from "@supabase/supabase-js";
 
 // First, follow set-up instructions at

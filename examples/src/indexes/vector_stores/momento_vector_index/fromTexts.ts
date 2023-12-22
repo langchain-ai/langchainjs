@@ -5,7 +5,7 @@ import {
   VectorIndexConfigurations,
   CredentialProvider,
 } from "@gomomento/sdk";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { sleep } from "langchain/util/time";
 
 const vectorStore = await MomentoVectorIndex.fromTexts(

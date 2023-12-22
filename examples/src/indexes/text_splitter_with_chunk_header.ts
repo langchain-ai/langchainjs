@@ -1,7 +1,7 @@
 import { OpenAI } from "langchain/llms/openai";
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { CharacterTextSplitter } from "langchain/text_splitter";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 
 const splitter = new CharacterTextSplitter({

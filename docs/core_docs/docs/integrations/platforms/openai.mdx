@@ -16,12 +16,22 @@ All functionality related to OpenAI
 
 - Get an OpenAI api key and set it as an environment variable (`OPENAI_API_KEY`)
 
+You'll first need to install the [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ## LLM
 
 See a [usage example](/docs/integrations/llms/openai).
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 ```
 
 ## Chat model
@@ -29,7 +39,7 @@ import { OpenAI } from "langchain/llms/openai";
 See a [usage example](/docs/integrations/chat/openai).
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ## Text Embedding Model

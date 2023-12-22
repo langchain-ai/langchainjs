@@ -23,11 +23,21 @@ This should almost always be the final part of the prompt. This is a very import
 To ensure the prompt we create contains the appropriate instructions and input variables, we'll create a helper function which takes in a list of input variables, and returns the final formatted prompt.
 We will also do something similar with the output parser, ensuring our input prompts and outputs are always formatted the same way.
 
+You'll first need to install the [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 The first step is to import all the necessary modules.
 
 ```typescript
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 import {
   AgentAction,

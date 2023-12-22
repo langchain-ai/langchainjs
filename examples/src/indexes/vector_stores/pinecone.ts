@@ -1,5 +1,5 @@
 import { Pinecone } from "@pinecone-database/pinecone";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // To run this example, first [create a Pinecone index](https://app.pinecone.io/organizations)

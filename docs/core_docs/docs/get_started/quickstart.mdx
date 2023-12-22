@@ -82,9 +82,18 @@ LangChain provides a standard interface for both, but it's useful to understand 
 
 Let's see how to work with these different types of models and these different types of inputs. First, let's import an LLM and a ChatModel and call `predict`.
 
+You'll first need to install the [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI, OpenAI } from "@langchain/openai";
 
 const llm = new OpenAI({
   temperature: 0.9,
@@ -229,7 +238,7 @@ const result = await parser.parse("hi, bye");
 We can now combine all these into one chain. This chain will take input variables, pass those to a prompt template to create a prompt, pass the prompt to a language model, and then pass the output through an (optional) output parser. This is a convenient way to bundle up a modular piece of logic. Let's see it in action!
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { BaseOutputParser } from "langchain/schema/output_parser";
 

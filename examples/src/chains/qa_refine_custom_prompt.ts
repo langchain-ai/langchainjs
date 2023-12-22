@@ -2,7 +2,7 @@ import { loadQARefineChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 
 export const questionPromptTemplateString = `Context information is below.

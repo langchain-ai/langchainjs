@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationSummaryBufferMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 import {

@@ -1,6 +1,6 @@
 import { Client } from "@opensearch-project/opensearch";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { OpenSearchVectorStore } from "langchain/vectorstores/opensearch";
 import * as uuid from "uuid";
 

@@ -5,7 +5,7 @@ import {
   VectorIndexConfigurations,
   CredentialProvider,
 } from "@gomomento/sdk";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const vectorStore = new MomentoVectorIndex(new OpenAIEmbeddings(), {
   client: new PreviewVectorIndexClient({

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { StructuredOutputParser } from "langchain/output_parsers";
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { DynamicStructuredTool } from "langchain/tools";
 

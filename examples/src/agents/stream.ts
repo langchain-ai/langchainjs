@@ -1,7 +1,7 @@
 import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { ChatOpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { BufferMemory } from "langchain/memory";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/runnables";

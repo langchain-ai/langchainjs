@@ -1,6 +1,6 @@
 import { BabyAGI } from "langchain/experimental/babyagi";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";

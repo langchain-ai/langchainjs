@@ -53,8 +53,18 @@ const embeddings = new OpenAIEmbeddings({
 
 See a [usage example](/docs/integrations/chat/azure)
 
+You'll first need to install the [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ```typescript

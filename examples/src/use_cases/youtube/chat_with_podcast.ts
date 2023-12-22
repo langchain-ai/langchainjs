@@ -1,7 +1,7 @@
 import { RetrievalQAChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TokenTextSplitter } from "langchain/text_splitter";
 import { FaissStore } from "langchain/vectorstores/faiss";
 

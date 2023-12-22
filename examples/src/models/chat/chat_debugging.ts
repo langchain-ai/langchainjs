@@ -1,5 +1,5 @@
 import { HumanMessage, LLMResult } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Serialized } from "langchain/load/serializable";
 
 // We can pass in a list of CallbackHandlers to the LLM constructor to get callbacks for various events.

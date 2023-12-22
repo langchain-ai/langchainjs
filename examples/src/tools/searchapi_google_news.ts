@@ -1,5 +1,5 @@
 import { SearchApi } from "langchain/tools";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { AgentExecutor } from "langchain/agents";
 import { RunnableSequence } from "langchain/schema/runnable";

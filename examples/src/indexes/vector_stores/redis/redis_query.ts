@@ -1,6 +1,6 @@
 import { createClient } from "redis";
 import { OpenAI } from "langchain/llms/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { RedisVectorStore } from "langchain/vectorstores/redis";
 

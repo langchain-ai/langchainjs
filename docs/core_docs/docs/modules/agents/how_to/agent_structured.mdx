@@ -2,6 +2,16 @@
 
 Here is a simple example of an agent which uses `Runnables`, a retriever and a structured output parser to create an OpenAI functions agent that finds specific information in a large text document.
 
+You'll first need to install the [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 The first step is to import necessary modules
 
 ```typescript
@@ -19,7 +29,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "langchain/prompts/chat";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { createRetrieverTool } from "langchain/agents/toolkits/index";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";

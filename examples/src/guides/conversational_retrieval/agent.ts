@@ -1,12 +1,12 @@
 import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
   createRetrieverTool,
   createConversationalRetrievalAgent,
 } from "langchain/agents/toolkits";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const loader = new TextLoader("state_of_the_union.txt");
 const docs = await loader.load();

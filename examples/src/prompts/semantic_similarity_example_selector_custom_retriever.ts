@@ -2,14 +2,14 @@
 
 // Requires a vectorstore that supports maximal marginal relevance search
 import { Pinecone } from "@pinecone-database/pinecone";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 import {
   SemanticSimilarityExampleSelector,
   PromptTemplate,
   FewShotPromptTemplate,
 } from "langchain/prompts";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 const pinecone = new Pinecone();
 

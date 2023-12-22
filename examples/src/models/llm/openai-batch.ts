@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "langchain/schema";
 import process from "process";
 

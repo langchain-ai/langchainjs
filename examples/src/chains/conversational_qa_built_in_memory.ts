@@ -1,8 +1,8 @@
 import { Document } from "langchain/document";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";

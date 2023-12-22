@@ -4,8 +4,18 @@ Chains can be initialized with a Memory object, which will persist data across c
 
 ## Get started
 
+You'll first need to install the [`@langchain/openai`](https://www.npmjs.com/package/@langchain/openai) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 import { BufferMemory } from "langchain/memory";
 

@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "langchain/schema";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";

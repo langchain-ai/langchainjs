@@ -1,12 +1,12 @@
 import * as uuid from "uuid";
 
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { RunnableSequence } from "langchain/schema/runnable";
 
 import { MultiVectorRetriever } from "langchain/retrievers/multi_vector";
 import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";

@@ -2,7 +2,7 @@
 
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CacheBackedEmbeddings } from "langchain/embeddings/cache_backed";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { ConvexKVStore } from "langchain/storage/convex";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { ConvexVectorStore } from "langchain/vectorstores/convex";

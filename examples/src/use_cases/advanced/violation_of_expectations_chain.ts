@@ -1,6 +1,6 @@
 import { ViolationOfExpectationsChain } from "langchain/experimental/chains/violation_of_expectations";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { ChatOpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { AIMessage, HumanMessage } from "langchain/schema";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 
