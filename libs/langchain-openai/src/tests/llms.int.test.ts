@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
-import { LLMResult } from "../../schema/index.js";
-import { OpenAIChat } from "../openai-chat.js";
-import { OpenAI } from "../openai.js";
-import { StringPromptValue } from "../../prompts/index.js";
-import { CallbackManager } from "../../callbacks/index.js";
-import { NewTokenIndices } from "../../callbacks/base.js";
+import { LLMResult } from "@langchain/core/outputs";
+import { StringPromptValue } from "@langchain/core/prompt_values";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { NewTokenIndices } from "@langchain/core/callbacks/base";
+import { OpenAIChat } from "../legacy.js";
+import { OpenAI } from "../llms.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({

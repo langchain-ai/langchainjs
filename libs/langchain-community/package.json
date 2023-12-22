@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -790,6 +790,11 @@
       "import": "./vectorstores/astradb.js",
       "require": "./vectorstores/astradb.cjs"
     },
+    "./vectorstores/azure_cosmosdb": {
+      "types": "./vectorstores/azure_cosmosdb.d.ts",
+      "import": "./vectorstores/azure_cosmosdb.js",
+      "require": "./vectorstores/azure_cosmosdb.cjs"
+    },
     "./vectorstores/cassandra": {
       "types": "./vectorstores/cassandra.d.ts",
       "import": "./vectorstores/cassandra.js",
@@ -1438,6 +1443,9 @@
     "vectorstores/astradb.cjs",
     "vectorstores/astradb.js",
     "vectorstores/astradb.d.ts",
+    "vectorstores/azure_cosmosdb.cjs",
+    "vectorstores/azure_cosmosdb.js",
+    "vectorstores/azure_cosmosdb.d.ts",
     "vectorstores/cassandra.cjs",
     "vectorstores/cassandra.js",
     "vectorstores/cassandra.d.ts",
