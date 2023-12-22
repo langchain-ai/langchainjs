@@ -6006,6 +6006,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cloudflare/workers-types@npm:^4.20231218.0":
+  version: 4.20231218.0
+  resolution: "@cloudflare/workers-types@npm:4.20231218.0"
+  checksum: b7e50a76ee8e9d662227bbb74798b93b6102acc224f1071a9c99a9adb419ad0b3bdabf7561e7e1b4a320a6a4616badeecdfb1848fbdaada197c7b37d845b8774
+  languageName: node
+  linkType: hard
+
 "@colors/colors@npm:1.5.0":
   version: 1.5.0
   resolution: "@colors/colors@npm:1.5.0"
@@ -8112,7 +8119,7 @@ __metadata:
     "@aws-sdk/types": ^3.357.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
-    "@cloudflare/workers-types": ^4.20230922.0
+    "@cloudflare/workers-types": ^4.20231218.0
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0

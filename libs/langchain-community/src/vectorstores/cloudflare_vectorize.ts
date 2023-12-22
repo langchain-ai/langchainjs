@@ -3,6 +3,7 @@ import * as uuid from "uuid";
 import {
   VectorizeIndex,
   VectorizeVectorMetadata,
+  VectorizeVectorMetadataFilter,
 } from "@cloudflare/workers-types";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
@@ -31,6 +32,8 @@ export type VectorizeDeleteParams = {
  * interact with the Cloudflare Vectorize vector database.
  */
 export class CloudflareVectorizeStore extends VectorStore {
+  declare FilterType: VectorizeVectorMetadataFilter;
+
   textKey: string;
 
   namespace?: string;
@@ -141,11 +144,13 @@ export class CloudflareVectorizeStore extends VectorStore {
    */
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     const results = await this.index.query(query, {
-      returnVectors: true,
+      returnMetadata: true,
       topK: k,
+      filter,
     });
 
     const result: [Document, number][] = [];
@@ -153,7 +158,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     if (results.matches) {
       for (const res of results.matches) {
         const { [this.textKey]: pageContent, ...metadata } =
-          res.vector?.metadata ?? {};
+          res?.metadata ?? {};
         result.push([
           new Document({ metadata, pageContent: pageContent as string }),
           res.score,
