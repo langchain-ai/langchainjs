@@ -18,6 +18,16 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
 
 /**
  * A class for generating embeddings using the Cohere API.
+ * @example
+ * ```typescript
+ * // Embed a query using the CohereEmbeddings class
+ * const model = new ChatOpenAI();
+ * const res = await model.embedQuery(
+ *   "What would be a good company name for a company that makes colorful socks?",
+ * );
+ * console.log({ res });
+ *
+ * ```
  */
 export class CohereEmbeddings
   extends Embeddings
@@ -29,7 +39,7 @@ export class CohereEmbeddings
 
   private apiKey: string;
 
-  private client: import("cohere-ai").CohereClient;
+  private client: typeof import("cohere-ai");
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -80,13 +90,9 @@ export class CohereEmbeddings
 
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
-      const { embeddings: batchResponse } = batchResponses[i];
+      const { body: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        if ("float" in batchResponse && batchResponse.float) {
-          embeddings.push(batchResponse.float[j]);
-        } else if (Array.isArray(batchResponse)) {
-          embeddings.push(batchResponse[j as number]);
-        }
+        embeddings.push(batchResponse.embeddings[j]);
       }
     }
 
@@ -101,23 +107,11 @@ export class CohereEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     await this.maybeInitClient();
 
-    const { embeddings } = await this.embeddingWithRetry({
+    const { body } = await this.embeddingWithRetry({
       model: this.modelName,
       texts: [text],
     });
-    if ("float" in embeddings && embeddings.float) {
-      return embeddings.float[0];
-    } else if (Array.isArray(embeddings)) {
-      return embeddings[0];
-    } else {
-      throw new Error(
-        `Invalid response from Cohere API. Received: ${JSON.stringify(
-          embeddings,
-          null,
-          2
-        )}`
-      );
-    }
+    return body.embeddings[0];
   }
 
   /**
@@ -138,21 +132,20 @@ export class CohereEmbeddings
    */
   private async maybeInitClient() {
     if (!this.client) {
-      const { CohereClient } = await CohereEmbeddings.imports();
+      const { cohere } = await CohereEmbeddings.imports();
 
-      this.client = new CohereClient({
-        token: this.apiKey,
-      });
+      this.client = cohere;
+      this.client.init(this.apiKey);
     }
   }
 
   /** @ignore */
   static async imports(): Promise<{
-    CohereClient: typeof import("cohere-ai").CohereClient;
+    cohere: typeof import("cohere-ai");
   }> {
     try {
-      const { CohereClient } = await import("cohere-ai");
-      return { CohereClient };
+      const { default: cohere } = await import("cohere-ai");
+      return { cohere };
     } catch (e) {
       throw new Error(
         "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
