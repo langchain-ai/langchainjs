@@ -1,3 +1,8 @@
+/**
+ * @TODO Replace with re-export from @langchain/cohere once released.
+ * @QUESTION Should we? New functionality is added to the integration
+ * package, might be better to say use the new pkg if you want the updated version?
+ */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -18,16 +23,6 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
 
 /**
  * A class for generating embeddings using the Cohere API.
- * @example
- * ```typescript
- * // Embed a query using the CohereEmbeddings class
- * const model = new ChatOpenAI();
- * const res = await model.embedQuery(
- *   "What would be a good company name for a company that makes colorful socks?",
- * );
- * console.log({ res });
- *
- * ```
  */
 export class CohereEmbeddings
   extends Embeddings
@@ -39,7 +34,7 @@ export class CohereEmbeddings
 
   private apiKey: string;
 
-  private client: typeof import("cohere-ai");
+  private client: import("cohere-ai").CohereClient;
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -90,9 +85,13 @@ export class CohereEmbeddings
 
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
-      const { body: batchResponse } = batchResponses[i];
+      const { embeddings: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse.embeddings[j]);
+        if ("float" in batchResponse && batchResponse.float) {
+          embeddings.push(batchResponse.float[j]);
+        } else if (Array.isArray(batchResponse)) {
+          embeddings.push(batchResponse[j as number]);
+        }
       }
     }
 
@@ -107,11 +106,23 @@ export class CohereEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     await this.maybeInitClient();
 
-    const { body } = await this.embeddingWithRetry({
+    const { embeddings } = await this.embeddingWithRetry({
       model: this.modelName,
-      texts: [text],
+      texts: [text]
     });
-    return body.embeddings[0];
+    if ("float" in embeddings && embeddings.float) {
+      return embeddings.float[0];
+    } else if (Array.isArray(embeddings)) {
+      return embeddings[0];
+    } else {
+      throw new Error(
+        `Invalid response from Cohere API. Received: ${JSON.stringify(
+          embeddings,
+          null,
+          2
+        )}`
+      );
+    }
   }
 
   /**
@@ -132,20 +143,21 @@ export class CohereEmbeddings
    */
   private async maybeInitClient() {
     if (!this.client) {
-      const { cohere } = await CohereEmbeddings.imports();
+      const { CohereClient } = await CohereEmbeddings.imports();
 
-      this.client = cohere;
-      this.client.init(this.apiKey);
+      this.client = new CohereClient({
+        token: this.apiKey
+      });
     }
   }
 
   /** @ignore */
   static async imports(): Promise<{
-    cohere: typeof import("cohere-ai");
+    CohereClient: typeof import("cohere-ai").CohereClient;
   }> {
     try {
-      const { default: cohere } = await import("cohere-ai");
-      return { cohere };
+      const { CohereClient } = await import("cohere-ai");
+      return { CohereClient };
     } catch (e) {
       throw new Error(
         "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
