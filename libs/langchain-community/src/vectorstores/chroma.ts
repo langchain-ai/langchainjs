@@ -1,6 +1,10 @@
 import * as uuid from "uuid";
-import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
-import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
+import type {
+  ChromaClient as ChromaClientT,
+  Collection,
+  CollectionMetadata,
+  Where,
+} from "chromadb";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
