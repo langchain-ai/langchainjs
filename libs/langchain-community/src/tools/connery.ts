@@ -48,7 +48,7 @@ type Action = {
   pluginId: string;
 };
 
-type Input = Record<string, string>;
+type Input = Record<string, string | undefined>;
 
 type Output = Record<string, string>;
 
@@ -70,7 +70,7 @@ export class ConneryAction extends StructuredTool {
 
   description: string;
 
-  schema: z.ZodObject<Record<string, z.ZodString>>;
+  schema: z.ZodObject<Record<string, ZodString | ZodOptional<ZodString>>>;
 
   /**
    * Creates a ConneryAction instance based on the provided Connery Action.
@@ -101,8 +101,13 @@ export class ConneryAction extends StructuredTool {
    * Creates a Zod schema for the input object expected by the Connery action.
    * @returns A Zod schema for the input object expected by the Connery action.
    */
-  protected createInputSchema() {
-    const dynamicInputFields: Record<string, any> = {};
+  protected createInputSchema(): z.ZodObject<
+    Record<string, ZodString | ZodOptional<ZodString>>
+  > {
+    const dynamicInputFields: Record<
+      string,
+      ZodString | ZodOptional<ZodString>
+    > = {};
 
     this._action.inputParameters.forEach((param) => {
       const isRequired = param.validation?.required ?? false;
