@@ -89,12 +89,12 @@ export class Cohere extends LLM implements CohereInput {
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     const { CohereClient } = await Cohere.imports();
 
     const cohere = new CohereClient({
-      token: this.apiKey
+      token: this.apiKey,
     });
 
     // Hit the `generate` endpoint on the `large` model
@@ -106,7 +106,7 @@ export class Cohere extends LLM implements CohereInput {
         model: this.model,
         maxTokens: this.maxTokens,
         temperature: this.temperature,
-        endSequences: options.stop
+        endSequences: options.stop,
       }
     );
     try {

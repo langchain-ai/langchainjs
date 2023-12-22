@@ -1,8 +1,3 @@
-/**
- * @TODO Replace with re-export from @langchain/cohere once released.
- * @QUESTION Should we? New functionality is added to the integration
- * package, might be better to say use the new pkg if you want the updated version?
- */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -108,7 +103,7 @@ export class CohereEmbeddings
 
     const { embeddings } = await this.embeddingWithRetry({
       model: this.modelName,
-      texts: [text]
+      texts: [text],
     });
     if ("float" in embeddings && embeddings.float) {
       return embeddings.float[0];
@@ -146,7 +141,7 @@ export class CohereEmbeddings
       const { CohereClient } = await CohereEmbeddings.imports();
 
       this.client = new CohereClient({
-        token: this.apiKey
+        token: this.apiKey,
       });
     }
   }
