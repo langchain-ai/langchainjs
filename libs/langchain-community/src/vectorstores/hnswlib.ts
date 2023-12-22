@@ -2,7 +2,7 @@ import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
 } from "hnswlib-node";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { SaveableVectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
@@ -45,7 +45,7 @@ export class HNSWLib extends SaveableVectorStore {
     return "hnswlib";
   }
 
-  constructor(embeddings: Embeddings, args: HNSWLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: HNSWLibArgs) {
     super(embeddings, args);
     this._index = args.index;
     this.args = args;
@@ -260,7 +260,7 @@ export class HNSWLib extends SaveableVectorStore {
    * @param embeddings The embeddings to be used by the HNSWLib instance.
    * @returns A Promise that resolves to a new HNSWLib instance.
    */
-  static async load(directory: string, embeddings: Embeddings) {
+  static async load(directory: string, embeddings: EmbeddingsInterface) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
     const args = JSON.parse(
@@ -293,7 +293,7 @@ export class HNSWLib extends SaveableVectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
     }
@@ -321,7 +321,7 @@ export class HNSWLib extends SaveableVectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig?: {
       docstore?: SynchronousInMemoryDocstore;
     }

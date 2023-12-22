@@ -48,6 +48,7 @@ const entrypoints = {
   "embeddings/minimax": "embeddings/minimax",
   "embeddings/ollama": "embeddings/ollama",
   "embeddings/tensorflow": "embeddings/tensorflow",
+  "embeddings/togetherai": "embeddings/togetherai",
   "embeddings/voyage": "embeddings/voyage",
   // llms
   "llms/ai21": "llms/ai21",
@@ -135,6 +136,7 @@ const entrypoints = {
   "retrievers/metal": "retrievers/metal",
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/tavily_search_api": "retrievers/tavily_search_api",
+  "retrievers/vectara_summary": "retrievers/vectara_summary",
   "retrievers/zep": "retrievers/zep",
   // cache
   "caches/cloudflare_kv": "caches/cloudflare_kv",
@@ -261,9 +263,10 @@ const requiresOptionalDependency = [
   "chat_models/iflytek_xinghuo",
   "chat_models/iflytek_xinghuo/web",
   "retrievers/amazon_kendra",
-  "retrievers/supabase",
-  "retrievers/zep",
   "retrievers/metal",
+  "retrievers/supabase",
+  "retrievers/vectara_summary",
+  "retrievers/zep",
   "cache/cloudflare_kv",
   "cache/momento",
   "cache/upstash_redis",

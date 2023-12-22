@@ -12,14 +12,14 @@ import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
 } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
-import { chunkArray } from "../utils/chunk.js";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
@@ -63,7 +63,7 @@ export class PineconeStore extends VectorStore {
     return "pinecone";
   }
 
-  constructor(embeddings: Embeddings, args: PineconeLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: PineconeLibArgs) {
     super(embeddings, args);
 
     this.embeddings = embeddings;
@@ -301,7 +301,7 @@ export class PineconeStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig:
       | {
           pineconeIndex: PineconeIndex;
@@ -338,7 +338,7 @@ export class PineconeStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PineconeLibArgs
   ): Promise<PineconeStore> {
     const args = dbConfig;
@@ -357,7 +357,7 @@ export class PineconeStore extends VectorStore {
    * @returns Promise that resolves with a new instance of the PineconeStore class.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PineconeLibArgs
   ): Promise<PineconeStore> {
     const instance = new this(embeddings, dbConfig);

@@ -1,18 +1,19 @@
 import {
   AIMessage,
-  BaseMessage,
+  type BaseMessage,
   BaseMessageChunk,
   type BaseMessageLike,
   HumanMessage,
   coerceMessageLikeToMessage,
 } from "../messages/index.js";
-import { BasePromptValue } from "../prompt_values.js";
+import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
   LLMResult,
   RUN_KEY,
-  ChatGeneration,
+  type ChatGeneration,
   ChatGenerationChunk,
-  ChatResult,
+  type ChatResult,
+  type Generation,
 } from "../outputs.js";
 import {
   BaseLanguageModel,
@@ -22,10 +23,11 @@ import {
 } from "./base.js";
 import {
   CallbackManager,
-  CallbackManagerForLLMRun,
-  Callbacks,
+  type CallbackManagerForLLMRun,
+  type Callbacks,
 } from "../callbacks/manager.js";
-import { RunnableConfig } from "../runnables/config.js";
+import type { RunnableConfig } from "../runnables/config.js";
+import type { BaseCache } from "../caches.js";
 
 /**
  * Represents a serialized chat model.
@@ -74,6 +76,17 @@ export function createChatMessageChunkEncoderStream() {
       );
     },
   });
+}
+
+interface ChatModelGenerateCachedParameters<
+  T extends BaseChatModel<CallOptions>,
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
+> {
+  messages: BaseMessageLike[][];
+  cache: BaseCache<Generation[]>;
+  llmStringKey: string;
+  parsedOptions: T["ParsedCallOptions"];
+  handledOptions: RunnableConfig;
 }
 
 /**
@@ -293,6 +306,112 @@ export abstract class BaseChatModel<
     return output;
   }
 
+  async _generateCached({
+    messages,
+    cache,
+    llmStringKey,
+    parsedOptions,
+    handledOptions,
+  }: ChatModelGenerateCachedParameters<typeof this>): Promise<
+    LLMResult & { missingPromptIndices: number[] }
+  > {
+    const baseMessages = messages.map((messageList) =>
+      messageList.map(coerceMessageLikeToMessage)
+    );
+
+    // create callback manager and start run
+    const callbackManager_ = await CallbackManager.configure(
+      handledOptions.callbacks,
+      this.callbacks,
+      handledOptions.tags,
+      this.tags,
+      handledOptions.metadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    const extra = {
+      options: parsedOptions,
+      invocation_params: this?.invocationParams(parsedOptions),
+      batch_size: 1,
+      cached: true,
+    };
+    const runManagers = await callbackManager_?.handleChatModelStart(
+      this.toJSON(),
+      baseMessages,
+      undefined,
+      undefined,
+      extra,
+      undefined,
+      undefined,
+      handledOptions.runName
+    );
+
+    // generate results
+    const missingPromptIndices: number[] = [];
+    const results = await Promise.allSettled(
+      baseMessages.map(async (baseMessage, index) => {
+        // Join all content into one string for the prompt index
+        const prompt =
+          BaseChatModel._convertInputToPromptValue(baseMessage).toString();
+        const result = await cache.lookup(prompt, llmStringKey);
+
+        if (result == null) {
+          missingPromptIndices.push(index);
+        }
+
+        return result;
+      })
+    );
+
+    // Map run managers to the results before filtering out null results
+    // Null results are just absent from the cache.
+    const cachedResults = results
+      .map((result, index) => ({ result, runManager: runManagers?.[index] }))
+      .filter(
+        ({ result }) =>
+          (result.status === "fulfilled" && result.value != null) ||
+          result.status === "rejected"
+      );
+
+    // Handle results and call run managers
+    const generations: Generation[][] = [];
+    await Promise.all(
+      cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
+        if (promiseResult.status === "fulfilled") {
+          const result = promiseResult.value as Generation[];
+          generations[i] = result;
+          if (result.length) {
+            await runManager?.handleLLMNewToken(result[0].text);
+          }
+          return runManager?.handleLLMEnd({
+            generations: [result],
+          });
+        } else {
+          // status === "rejected"
+          await runManager?.handleLLMError(promiseResult.reason);
+          return Promise.reject(promiseResult.reason);
+        }
+      })
+    );
+
+    const output = {
+      generations,
+      missingPromptIndices,
+    };
+
+    // This defines RUN_KEY as a non-enumerable property on the output object
+    // so that it is not serialized when the output is stringified, and so that
+    // it isnt included when listing the keys of the output object.
+    Object.defineProperty(output, RUN_KEY, {
+      value: runManagers
+        ? { runIds: runManagers?.map((manager) => manager.runId) }
+        : undefined,
+      configurable: true,
+    });
+
+    return output;
+  }
+
   /**
    * Generates chat based on the input messages.
    * @param messages An array of arrays of BaseMessage instances.
@@ -329,20 +448,13 @@ export abstract class BaseChatModel<
     const llmStringKey =
       this._getSerializedCacheKeyParametersForCall(callOptions);
 
-    const missingPromptIndices: number[] = [];
-    const generations = await Promise.all(
-      baseMessages.map(async (baseMessage, index) => {
-        // Join all content into one string for the prompt index
-        const prompt =
-          BaseChatModel._convertInputToPromptValue(baseMessage).toString();
-        const result = await cache.lookup(prompt, llmStringKey);
-        if (!result) {
-          missingPromptIndices.push(index);
-        }
-
-        return result;
-      })
-    );
+    const { generations, missingPromptIndices } = await this._generateCached({
+      messages: baseMessages,
+      cache,
+      llmStringKey,
+      parsedOptions: callOptions,
+      handledOptions: runnableConfig,
+    });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
@@ -402,7 +514,7 @@ export abstract class BaseChatModel<
    * @returns A Promise that resolves to an LLMResult.
    */
   async generatePrompt(
-    promptValues: BasePromptValue[],
+    promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
@@ -447,7 +559,7 @@ export abstract class BaseChatModel<
    * @returns A Promise that resolves to a BaseMessage.
    */
   async callPrompt(
-    promptValue: BasePromptValue,
+    promptValue: BasePromptValueInterface,
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {

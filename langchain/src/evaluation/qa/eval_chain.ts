@@ -1,7 +1,7 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { QA_PROMPT } from "./prompt.js";
 import { LLMChain, LLMChainInput } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { ChainValues } from "../../schema/index.js";
 
 export interface EvaluateArgs {
@@ -19,7 +19,7 @@ export class QAEvalChain extends LLMChain {
   }
 
   static fromLlm(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     options: {
       prompt?: PromptTemplate;
       chainInput?: Omit<LLMChainInput, "llm">;

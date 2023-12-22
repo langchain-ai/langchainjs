@@ -1,3 +1,4 @@
+import type { VectorStoreRetrieverInterface } from "@langchain/core/vectorstores";
 import { BaseChatPromptTemplate } from "../../prompts/chat.js";
 import {
   BaseMessage,
@@ -5,7 +6,6 @@ import {
   PartialValues,
   SystemMessage,
 } from "../../schema/index.js";
-import { VectorStoreRetriever } from "../../vectorstores/base.js";
 import { ObjectTool } from "./schema.js";
 import { getPrompt } from "./prompt_generator.js";
 import { SerializedBasePromptTemplate } from "../../prompts/serde.js";
@@ -90,7 +90,7 @@ export class AutoGPTPrompt
     user_input,
   }: {
     goals: string[];
-    memory: VectorStoreRetriever;
+    memory: VectorStoreRetrieverInterface;
     messages: BaseMessage[];
     user_input: string;
   }) {

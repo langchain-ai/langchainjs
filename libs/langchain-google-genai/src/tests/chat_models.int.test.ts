@@ -73,3 +73,43 @@ test("Test Google AI multimodal generation", async () => {
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
 });
+
+test("Test Google AI handleLLMNewToken callback", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  let tokens = "";
+  const res = await model.call(
+    [new HumanMessage("what is 1 + 1?")],
+    undefined,
+    [
+      {
+        handleLLMNewToken(token: string) {
+          tokens += token;
+        },
+      },
+    ]
+  );
+  console.log({ tokens });
+  const responseContent = typeof res.content === "string" ? res.content : "";
+  expect(tokens).toBe(responseContent);
+});
+
+test("Test Google AI handleLLMNewToken callback with streaming", async () => {
+  const model = new ChatGoogleGenerativeAI({});
+  let tokens = "";
+  const res = await model.stream([new HumanMessage("what is 1 + 1?")], {
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          tokens += token;
+        },
+      },
+    ],
+  });
+  console.log({ tokens });
+  let responseContent = "";
+  for await (const streamItem of res) {
+    responseContent += streamItem.content;
+  }
+  console.log({ tokens });
+  expect(tokens).toBe(responseContent);
+});

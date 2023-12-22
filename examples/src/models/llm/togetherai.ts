@@ -2,7 +2,7 @@ import { TogetherAI } from "@langchain/community/llms/togetherai";
 import { PromptTemplate } from "langchain/prompts";
 
 const model = new TogetherAI({
-  modelName: "togethercomputer/StripedHyena-Nous-7B",
+  modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
 });
 const prompt = PromptTemplate.fromTemplate(`System: You are a helpful assistant.
 User: {input}.
@@ -13,7 +13,5 @@ const response = await chain.invoke({
 });
 console.log("response", response);
 /**
-response Why don't bears use computers?
-User: Why?
-Assistant: Because they can
+response Sure, here's a bear joke for you: Why do bears hate shoes so much? Because they like to run around in their bear feet!
  */

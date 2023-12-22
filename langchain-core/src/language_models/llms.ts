@@ -1,11 +1,20 @@
-import { AIMessage, BaseMessage, getBufferString } from "../messages/index.js";
-import { BasePromptValue } from "../prompt_values.js";
-import { LLMResult, RUN_KEY, Generation, GenerationChunk } from "../outputs.js";
 import {
-  BaseCallbackConfig,
+  AIMessage,
+  type BaseMessage,
+  getBufferString,
+} from "../messages/index.js";
+import type { BasePromptValueInterface } from "../prompt_values.js";
+import {
+  type LLMResult,
+  RUN_KEY,
+  type Generation,
+  GenerationChunk,
+} from "../outputs.js";
+import {
+  type BaseCallbackConfig,
   CallbackManager,
-  CallbackManagerForLLMRun,
-  Callbacks,
+  type CallbackManagerForLLMRun,
+  type Callbacks,
 } from "../callbacks/manager.js";
 import {
   BaseLanguageModel,
@@ -13,7 +22,8 @@ import {
   type BaseLanguageModelInput,
   type BaseLanguageModelParams,
 } from "./base.js";
-import { RunnableConfig } from "../runnables/config.js";
+import type { RunnableConfig } from "../runnables/config.js";
+import type { BaseCache } from "../caches.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -29,6 +39,17 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 }
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
+
+interface LLMGenerateCachedParameters<
+  T extends BaseLLM<CallOptions>,
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
+> {
+  prompts: string[];
+  cache: BaseCache<Generation[]>;
+  llmStringKey: string;
+  parsedOptions: T["ParsedCallOptions"];
+  handledOptions: RunnableConfig;
+}
 
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
@@ -171,7 +192,7 @@ export abstract class BaseLLM<
    * @returns An LLMResult based on the prompts.
    */
   async generatePrompt(
-    promptValues: BasePromptValue[],
+    promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
@@ -282,6 +303,102 @@ export abstract class BaseLLM<
     return output;
   }
 
+  async _generateCached({
+    prompts,
+    cache,
+    llmStringKey,
+    parsedOptions,
+    handledOptions,
+  }: LLMGenerateCachedParameters<typeof this>): Promise<
+    LLMResult & { missingPromptIndices: number[] }
+  > {
+    const callbackManager_ = await CallbackManager.configure(
+      handledOptions.callbacks,
+      this.callbacks,
+      handledOptions.tags,
+      this.tags,
+      handledOptions.metadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    const extra = {
+      options: parsedOptions,
+      invocation_params: this?.invocationParams(parsedOptions),
+      batch_size: prompts.length,
+      cached: true,
+    };
+    const runManagers = await callbackManager_?.handleLLMStart(
+      this.toJSON(),
+      prompts,
+      undefined,
+      undefined,
+      extra,
+      undefined,
+      undefined,
+      handledOptions?.runName
+    );
+
+    // generate results
+    const missingPromptIndices: number[] = [];
+    const results = await Promise.allSettled(
+      prompts.map(async (prompt, index) => {
+        const result = await cache.lookup(prompt, llmStringKey);
+        if (result == null) {
+          missingPromptIndices.push(index);
+        }
+        return result;
+      })
+    );
+
+    // Map run managers to the results before filtering out null results
+    // Null results are just absent from the cache.
+    const cachedResults = results
+      .map((result, index) => ({ result, runManager: runManagers?.[index] }))
+      .filter(
+        ({ result }) =>
+          (result.status === "fulfilled" && result.value != null) ||
+          result.status === "rejected"
+      );
+
+    // Handle results and call run managers
+    const generations: Generation[][] = [];
+    await Promise.all(
+      cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
+        if (promiseResult.status === "fulfilled") {
+          const result = promiseResult.value as Generation[];
+          generations[i] = result;
+          if (result.length) {
+            await runManager?.handleLLMNewToken(result[0].text);
+          }
+          return runManager?.handleLLMEnd({
+            generations: [result],
+          });
+        } else {
+          // status === "rejected"
+          await runManager?.handleLLMError(promiseResult.reason);
+          return Promise.reject(promiseResult.reason);
+        }
+      })
+    );
+
+    const output = {
+      generations,
+      missingPromptIndices,
+    };
+
+    // This defines RUN_KEY as a non-enumerable property on the output object
+    // so that it is not serialized when the output is stringified, and so that
+    // it isnt included when listing the keys of the output object.
+    Object.defineProperty(output, RUN_KEY, {
+      value: runManagers
+        ? { runIds: runManagers?.map((manager) => manager.runId) }
+        : undefined,
+      configurable: true,
+    });
+
+    return output;
+  }
+
   /**
    * Run the LLM on the given prompts and input, handling caching.
    */
@@ -312,16 +429,13 @@ export abstract class BaseLLM<
     const { cache } = this;
     const llmStringKey =
       this._getSerializedCacheKeyParametersForCall(callOptions);
-    const missingPromptIndices: number[] = [];
-    const generations = await Promise.all(
-      prompts.map(async (prompt, index) => {
-        const result = await cache.lookup(prompt, llmStringKey);
-        if (!result) {
-          missingPromptIndices.push(index);
-        }
-        return result;
-      })
-    );
+    const { generations, missingPromptIndices } = await this._generateCached({
+      prompts,
+      cache,
+      llmStringKey,
+      parsedOptions: callOptions,
+      handledOptions: runnableConfig,
+    });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {

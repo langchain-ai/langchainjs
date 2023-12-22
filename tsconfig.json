@@ -1,0 +1,42 @@
+{
+  "extends": "@tsconfig/recommended",
+  "compilerOptions": {
+    "target": "ES2021",
+    "lib": [
+      "ES2021",
+      "ES2022.Object",
+      "DOM"
+    ],
+    "module": "ES2020",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "declaration": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useDefineForClassFields": true,
+    "strictPropertyInitialization": false,
+    "allowJs": true,
+    "strict": true
+  },
+  "include": [
+    "langchain/src/**/*",
+    "libs/langchain-community/src/**/*",
+    "libs/langchain-anthropic/src/**/*",
+    "libs/langchain-google-genai/src/**/*",
+    "libs/langchain-openai/src/**/*",
+    "libs/langchain-mistralai/src/**/*",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "docs",
+    "langchain/dist/**/*",
+    "libs/langchain-community/dist/**/*",
+    "libs/langchain-anthropic/dist/**/*",
+    "libs/langchain-google-genai/dist/**/*",
+    "libs/langchain-openai/dist/**/*",
+    "libs/langchain-mistralai/dist/**/*",
+  ]
+}

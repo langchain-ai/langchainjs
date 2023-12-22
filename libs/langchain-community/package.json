@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -23,7 +23,6 @@
     "lint:fix": "yarn lint --fix",
     "clean": "rm -rf dist/ && NODE_OPTIONS=--max-old-space-size=4096 node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
-    "release": "release-it --only-version --config .release-it.json",
     "test": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "yarn run build:deps && NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
@@ -34,8 +33,8 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "~0.1.1",
-    "@langchain/openai": "~0.0.5",
+    "@langchain/core": "~0.1.3",
+    "@langchain/openai": "~0.0.7",
     "flat": "^5.0.2",
     "langsmith": "~0.0.48",
     "uuid": "^9.0.0",
@@ -656,6 +655,11 @@
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
     },
+    "./embeddings/togetherai": {
+      "types": "./embeddings/togetherai.d.ts",
+      "import": "./embeddings/togetherai.js",
+      "require": "./embeddings/togetherai.cjs"
+    },
     "./embeddings/voyage": {
       "types": "./embeddings/voyage.d.ts",
       "import": "./embeddings/voyage.js",
@@ -1066,6 +1070,11 @@
       "import": "./retrievers/tavily_search_api.js",
       "require": "./retrievers/tavily_search_api.cjs"
     },
+    "./retrievers/vectara_summary": {
+      "types": "./retrievers/vectara_summary.d.ts",
+      "import": "./retrievers/vectara_summary.js",
+      "require": "./retrievers/vectara_summary.cjs"
+    },
     "./retrievers/zep": {
       "types": "./retrievers/zep.d.ts",
       "import": "./retrievers/zep.js",
@@ -1341,6 +1350,9 @@
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
+    "embeddings/togetherai.cjs",
+    "embeddings/togetherai.js",
+    "embeddings/togetherai.d.ts",
     "embeddings/voyage.cjs",
     "embeddings/voyage.js",
     "embeddings/voyage.d.ts",
@@ -1587,6 +1599,9 @@
     "retrievers/tavily_search_api.cjs",
     "retrievers/tavily_search_api.js",
     "retrievers/tavily_search_api.d.ts",
+    "retrievers/vectara_summary.cjs",
+    "retrievers/vectara_summary.js",
+    "retrievers/vectara_summary.d.ts",
     "retrievers/zep.cjs",
     "retrievers/zep.js",
     "retrievers/zep.d.ts",
