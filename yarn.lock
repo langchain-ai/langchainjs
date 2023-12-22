@@ -8168,7 +8168,7 @@ __metadata:
     closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
     closevector-web: 0.1.0-alpha.15
-    cohere-ai: ^6.0.0
+    cohere-ai: ">=6.0.0"
     convex: ^1.3.1
     discord.js: ^14.14.1
     dotenv: ^16.0.3
@@ -8266,7 +8266,7 @@ __metadata:
     closevector-common: 0.1.0-alpha.1
     closevector-node: 0.1.0-alpha.10
     closevector-web: 0.1.0-alpha.16
-    cohere-ai: ^6.0.0
+    cohere-ai: ">=6.0.0"
     convex: ^1.3.1
     discord.js: ^14.14.1
     faiss-node: ^0.5.1
@@ -15843,7 +15843,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cohere-ai@npm:^6.0.0":
+"cohere-ai@npm:>=6.0.0":
   version: 6.2.2
   resolution: "cohere-ai@npm:6.2.2"
   checksum: 5a7ea2bb6f2a6b83de7ec90612a38f0b215bfc199b5fe749842c6e771a1b183681a3a0e351d75c22eb6d929ea45cf03b1cdf4ed3a907c401186e73c392749310
