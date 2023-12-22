@@ -1,6 +1,6 @@
 import {
   BaseRetriever,
-  type BaseRetrieverInput
+  type BaseRetrieverInput,
 } from "@langchain/core/retrievers";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
 import { BaseStore, BaseStoreInterface } from "../schema/storage.js";

@@ -2,13 +2,13 @@ import * as uuid from "uuid";
 
 import {
   type VectorStoreInterface,
-  type VectorStoreRetrieverInterface
+  type VectorStoreRetrieverInterface,
 } from "@langchain/core/vectorstores";
 import { Document } from "../document.js";
 import { TextSplitter } from "../text_splitter.js";
 import {
   MultiVectorRetriever,
-  type MultiVectorRetrieverInput
+  type MultiVectorRetrieverInput,
 } from "./multi_vector.js";
 import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
 
