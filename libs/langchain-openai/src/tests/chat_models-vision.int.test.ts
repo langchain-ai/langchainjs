@@ -1,9 +1,9 @@
 import { test } from "@jest/globals";
+import { HumanMessage } from "@langchain/core/messages";
 import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
-import { ChatOpenAI } from "../openai.js";
-import { HumanMessage } from "../../schema/index.js";
+import { ChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI with a file", async () => {
   const __filename = fileURLToPath(import.meta.url);
