@@ -82,6 +82,6 @@ jobs:
         with:
           node-version: 18.x
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: yarn install --immutable
       - name: Build examples
         run: yarn build --filter=examples
