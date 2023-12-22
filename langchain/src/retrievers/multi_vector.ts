@@ -1,17 +1,20 @@
 import {
   BaseRetriever,
-  type BaseRetrieverInput,
+  type BaseRetrieverInput
 } from "@langchain/core/retrievers";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
-import { BaseStoreInterface } from "../schema/storage.js";
+import { BaseStore, BaseStoreInterface } from "../schema/storage.js";
 import { Document } from "../document.js";
+import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
 
 /**
  * Arguments for the MultiVectorRetriever class.
  */
 export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
   vectorstore: VectorStoreInterface;
-  docstore: BaseStoreInterface<string, Document>;
+  /** @deprecated Prefer `baseStore`. */
+  docstore?: BaseStoreInterface<string, Document>;
+  byteStore?: BaseStore<string, Uint8Array>;
   idKey?: string;
   childK?: number;
   parentK?: number;
@@ -25,7 +28,7 @@ export interface MultiVectorRetrieverInput extends BaseRetrieverInput {
  * ```typescript
  * const retriever = new MultiVectorRetriever({
  *   vectorstore: new FaissStore(),
- *   docstore: new InMemoryStore(),
+ *   byteStore: new InMemoryStore<Unit8Array>(),
  *   idKey: "doc_id",
  *   childK: 20,
  *   parentK: 5,
@@ -44,7 +47,9 @@ export class MultiVectorRetriever extends BaseRetriever {
 
   public vectorstore: VectorStoreInterface;
 
-  public docstore: BaseStoreInterface<string, Document>;
+  public docstore?: BaseStoreInterface<string, Document>;
+
+  public byteStore?: BaseStore<string, Uint8Array>;
 
   protected idKey: string;
 
@@ -56,6 +61,12 @@ export class MultiVectorRetriever extends BaseRetriever {
     super(args);
     this.vectorstore = args.vectorstore;
     this.docstore = args.docstore;
+    this.byteStore = args.byteStore;
+    if (!this.docstore && !this.byteStore) {
+      throw new Error(
+        "byteStore and docstore are undefined. Please provide at least one."
+      );
+    }
     this.idKey = args.idKey ?? "doc_id";
     this.childK = args.childK;
     this.parentK = args.parentK;
@@ -69,7 +80,15 @@ export class MultiVectorRetriever extends BaseRetriever {
         ids.push(doc.metadata[this.idKey]);
       }
     }
-    const docs = await this.docstore.mget(ids);
+
+    let docs: Array<Document | undefined> = [];
+    if (this.byteStore) {
+      const docStore = createDocumentStoreFromByteStore(this.byteStore);
+      docs = await docStore.mget(ids);
+    } else if (this.docstore) {
+      docs = await this.docstore.mget(ids);
+    }
+
     return docs
       .filter((doc) => doc !== undefined)
       .slice(0, this.parentK) as Document[];
