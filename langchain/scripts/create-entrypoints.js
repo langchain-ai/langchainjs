@@ -333,6 +333,8 @@ const entrypoints = {
   // runnables
   runnables: "runnables/index",
   "runnables/remote": "runnables/remote",
+  // indexes
+  indexes: "indexes/index",
 };
 
 // Entrypoints in this list will
