@@ -1,0 +1,43 @@
+---
+sidebar_label: Cohere
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatCohere
+
+## Setup
+
+In order to use the Cohere API you'll need an API key. You can sign up for a Cohere account and create an API key [here](https://dashboard.cohere.com/welcome/register).
+
+You'll first need to install the [`@langchain/cohere`](https://www.npmjs.com/package/@langchain/cohere) package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/cohere
+```
+
+## Usage
+
+import BasicExample from "@examples/models/chat/chat_cohere.ts";
+
+<CodeBlock language="typescript">{BasicExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/69ccd2aa-b651-4f07-9223-ecc0b77e645e/r)
+:::
+
+### Streaming
+
+Cohere's API also supports streaming token responses. The example below demonstrates how to use this feature.
+
+import ChatStreamExample from "@examples/models/chat/chat_stream_cohere.ts";
+
+<CodeBlock language="typescript">{ChatStreamExample}</CodeBlock>
+
+:::info
+You can see a LangSmith trace of this example [here](https://smith.langchain.com/public/36ae0564-b096-4ec1-9318-1f82fe705fe8/r)
+:::

@@ -2,19 +2,19 @@ import {
   MessageType,
   type BaseMessage,
   MessageContent,
-  AIMessage,
+  AIMessage
 } from "@langchain/core/messages";
 import { type BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
-  BaseChatModel,
+  BaseChatModel
 } from "@langchain/core/language_models/chat_models";
 import {
   ChatGeneration,
   ChatGenerationChunk,
-  ChatResult,
+  ChatResult
 } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { CohereClient, Cohere } from "cohere-ai";
@@ -22,9 +22,9 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 /**
- * Input to chat model class.
+ * Input interface for ChatCohere
  */
-export interface CohereInput extends BaseChatModelParams {
+export interface ChatCohereInput extends BaseChatModelParams {
   /**
    * The API key to use.
    * @default {process.env.COHERE_API_KEY}
@@ -90,7 +90,7 @@ function convertMessagesToCohereMessages(
 
   return messages.map((message) => ({
     role: getRole(message._getType()),
-    message: getContent(message.content),
+    message: getContent(message.content)
   }));
 }
 
@@ -101,7 +101,7 @@ export class ChatCohere<
     CallOptions extends CohereChatCallOptions = CohereChatCallOptions
   >
   extends BaseChatModel<CallOptions>
-  implements CohereInput
+  implements ChatCohereInput
 {
   // Used for tracing, replace with the same name as your class
   static lc_name() {
@@ -118,7 +118,7 @@ export class ChatCohere<
 
   streaming = false;
 
-  constructor(fields?: CohereInput) {
+  constructor(fields?: ChatCohereInput) {
     super(fields ?? {});
 
     const token = fields?.apiKey ?? getEnvironmentVariable("COHERE_API_KEY");
@@ -127,7 +127,7 @@ export class ChatCohere<
     }
 
     this.client = new CohereClient({
-      token,
+      token
     });
     this.modelName = fields?.modelName ?? "command";
     this.temperature = fields?.temperature ?? this.temperature;
@@ -174,7 +174,7 @@ export class ChatCohere<
     const input = {
       ...params,
       message,
-      chat_history,
+      chat_history
     };
 
     // Handle streaming
@@ -204,7 +204,7 @@ export class ChatCohere<
       const {
         response_tokens: completionTokens,
         prompt_tokens: promptTokens,
-        total_tokens: totalTokens,
+        total_tokens: totalTokens
       } = response.token_count as Record<string, number>;
 
       if (completionTokens) {
@@ -229,14 +229,14 @@ export class ChatCohere<
         text: response.text,
         message: new AIMessage({
           content: response.text,
-          additional_kwargs: generationInfo,
+          additional_kwargs: generationInfo
         }),
-        generationInfo,
-      },
+        generationInfo
+      }
     ];
     return {
       generations,
-      llmOutput: { estimatedTokenUsage: tokenUsage },
+      llmOutput: { estimatedTokenUsage: tokenUsage }
     };
   }
 
@@ -257,7 +257,7 @@ export class ChatCohere<
     const input = {
       ...params,
       message,
-      chat_history,
+      chat_history
     };
 
     // All models have a built in `this.caller` property for retries
@@ -268,7 +268,7 @@ export class ChatCohere<
       if (chunk.eventType === "text-generation") {
         yield new ChatGenerationChunk({
           text: chunk.text,
-          message: new AIMessageChunk({ content: chunk.text }),
+          message: new AIMessageChunk({ content: chunk.text })
         });
         await runManager?.handleLLMNewToken(chunk.text);
       } else if (chunk.eventType !== "stream-end") {
@@ -279,26 +279,13 @@ export class ChatCohere<
           message: new AIMessageChunk({
             content: "",
             additional_kwargs: {
-              ...chunk,
-            },
+              ...chunk
+            }
           }),
           generationInfo: {
-            ...chunk,
-          },
+            ...chunk
+          }
         });
-      } else {
-        if ("text" in chunk.response) {
-          yield new ChatGenerationChunk({
-            text: chunk.response.text,
-            message: new AIMessageChunk({
-              content: chunk.response.text,
-            }),
-            generationInfo: {
-              ...chunk,
-            },
-          });
-        }
-        break;
       }
     }
   }
@@ -322,7 +309,7 @@ export class ChatCohere<
           acc.estimatedTokenUsage = {
             completionTokens,
             promptTokens,
-            totalTokens,
+            totalTokens
           };
         }
         return acc;
@@ -331,10 +318,24 @@ export class ChatCohere<
         estimatedTokenUsage: {
           completionTokens: 0,
           promptTokens: 0,
-          totalTokens: 0,
-        },
+          totalTokens: 0
+        }
       }
     );
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "COHERE_API_KEY",
+      api_key: "COHERE_API_KEY"
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "cohere_api_key",
+      api_key: "cohere_api_key"
+    };
   }
 }
 
