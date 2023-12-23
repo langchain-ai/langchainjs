@@ -49,9 +49,10 @@ Azure App Registration for Microsoft Outlook API Integration
 
 ## Setup
 
-Basically you only need the accessToken to use the Outlook Toolkit, but in expires in an hour.
+You only need an `accessToken` to use the Outlook Toolkit, but they expire after an hour.
 
-If you only have a valid accessToken, the following two ways creates a Outlook tool instance.  
+If you only have a valid `accessToken`, the following two ways can create an Outlook tool instance.  
+
 ```typescript
 const authFlow = new AuthFlowToken(accessToken);
 // if you have accessToken stored in .env
@@ -62,18 +63,22 @@ const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
 // you must have accessToken stored in .env
 const outlookReadMail = new OutlookReadMailTool(choice="token");
 ```
-But if you do not have a valid accessToken, the `AuthFlowREST` class obtains the accessToken for you. A temporary server will be opened on your `redirectUri` and you need to manually open the printed link to login on behalf of the user. For every `AuthFlowREST` instance, you only need to login once. 
 
-Credentials you need to provide:`clientId`, `clientSecret`, `redirectUri`
+If you do not have a valid accessToken, the `AuthFlowREST` class obtains the accessToken for you. A temporary server will be opened on your `redirectUri` and you need to manually open the printed link to login on behalf of the user. For every `AuthFlowREST` instance, you only need to login once. 
+
+You'll need to provide a `clientId`, `clientSecret`, and `redirectUri`.
 You can either pass them to the constructor or put them in the environment.
 ```typescript
 const authFlow = new AuthFlowREST();
 const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
 ```
+
 ```typescript
 const outlookReadMail = new OutlookReadMailTool(choice="rest");
 ```
+
 Usually when you obtain a accessToken you also get a refreshToken used to refresh expired accessToken. The `AuthFlowREST` class needs the following credentials: `clientId`, `clientSecret`, `redirectUri` and `refreshToken`. In this way you won't need to login, no server will be open.
+
 ```typescript
 const authFlow = new AuthFlowRefresh();
 const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
@@ -83,7 +88,9 @@ const outlookReadMail = new OutlookReadMailTool(choice="refresh");
 ```
 
 ## Usage
+
 This example shows how to read emails by using agent.
+
 ```typescript
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
@@ -109,6 +116,7 @@ createAndRunAgent();
 ```
 
 This example shows how to send emails by using agent.
+
 ```typescript
 import { ChatOpenAI } from 'langchain/chat_models/openai';
 import { initializeAgentExecutorWithOptions } from 'langchain/agents';
