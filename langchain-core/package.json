@@ -299,6 +299,11 @@
       "import": "./vectorstores.js",
       "require": "./vectorstores.cjs"
     },
+    "./recordmanagers": {
+      "types": "./recordmanagers.d.ts",
+      "import": "./recordmanagers.js",
+      "require": "./recordmanagers.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -432,6 +437,9 @@
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
+    "recordmanagers.cjs",
+    "recordmanagers.js",
+    "recordmanagers.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"

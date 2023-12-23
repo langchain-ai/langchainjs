@@ -127,6 +127,9 @@ utils/types.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
+recordmanagers.cjs
+recordmanagers.js
+recordmanagers.d.ts
 index.cjs
 index.js
 index.d.ts
