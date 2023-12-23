@@ -15,7 +15,6 @@ const updateJsonFile = (relativePath, updateFunction) => {
 function main() {
   const project = new Project();
   const workspaces = fs.readdirSync("../../libs/").filter((dir) => dir.startsWith("langchain-")).map((dir) => `../../libs/${dir}/scripts/create-entrypoints.js`);
-  console.log("workspaces", workspaces);
   const entrypointFiles = [
     "../../langchain/scripts/create-entrypoints.js",
     "../../langchain-core/scripts/create-entrypoints.js",
