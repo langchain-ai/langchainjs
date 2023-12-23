@@ -75,6 +75,7 @@ const entrypoints = {
   "llms/yandex": "llms/yandex",
   // vectorstores
   "vectorstores/analyticdb": "vectorstores/analyticdb",
+  "vectorstores/astradb": "vectorstores/astradb",
   "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
   "vectorstores/cassandra": "vectorstores/cassandra",
   "vectorstores/chroma": "vectorstores/chroma",
@@ -220,6 +221,7 @@ const requiresOptionalDependency = [
   "llms/writer",
   "llms/portkey",
   "vectorstores/analyticdb",
+  "vectorstores/astradb",
   "vectorstores/azure_cosmosdb",
   "vectorstores/cassandra",
   "vectorstores/chroma",
