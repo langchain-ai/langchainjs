@@ -14,15 +14,13 @@ import {
 
 import { Serialized } from "../../load/serializable.js";
 
-// import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
-
 type Role = "user" | "assistant" | "system" | "function" | "tool";
 
 // Langchain Helpers
 // Input can be either a single message, an array of message, or an array of array of messages (batch requests)
 
-const parseRole = (id: string[]): Role => {
-  const roleHint = id[id.length - 1];
+const parseRole = (ids: string[]): Role => {
+  const roleHint = ids[ids.length - 1];
 
   if (roleHint.includes("Human")) return "user";
   if (roleHint.includes("System")) return "system";
@@ -47,7 +45,7 @@ const PARAMS_TO_CAPTURE = [
   "response_format",
 ];
 
-export const convertToLunaryMessages = (
+const convertToLunaryMessages = (
   input: Message | Message[] | Message[][]
 ): OutputMessage | OutputMessage[] | OutputMessage[][] => {
   const parseMessage = (raw: Message): OutputMessage => {
