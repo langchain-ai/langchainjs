@@ -229,6 +229,15 @@ export class AuthFlowREST extends AuthFlowBase {
   }
 
   /**
+   * return the refresh token
+   * @public
+   * @returns {string} The refresh token.
+   */
+  public getRefreshToken(): string {
+    return this.refreshToken;
+  }
+
+  /**
    * Refreshes the access token using the refresh token.
    * @public
    * @returns {Promise<string>} A Promise resolving to the refreshed access token.

@@ -90,6 +90,8 @@ const authFlow = new AuthFlowREST();
 const authFlow = new AuthFlowREST(clientId, clientSecret, redirectUri);
 // Get accessToken
 const accessToken = await authFlow.getAccessToken();
+// After the above line, you can get the refreshToken
+const refreshToken = authFlow.getRefreshToken();
 // Refresh accessToken
 const accessToken = await authFlow.refreshAccessToken();
 ```
