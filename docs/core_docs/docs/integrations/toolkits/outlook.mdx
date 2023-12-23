@@ -2,19 +2,30 @@
 
 ## Overview
 
-Using this toolkit, you can integrate Microsoft Graph API functionalities into your applications to manage email interactions.
+Using this toolkit, you can integrate Microsoft Graph API functionalities into 
+your applications to manage email interactions.
 
 ## Learn Microsoft Graph
 
-Microsoft Graph is a RESTful web API that enables you to access Microsoft Cloud service resources. With Microsoft Graph, you can integrate various Microsoft services and data, including users' emails, calendar, contacts, and more, into your applications.
+Microsoft Graph is a RESTful web API that enables you to access Microsoft 
+Cloud service resources. With Microsoft Graph, you can integrate various 
+Microsoft services and data, including users' emails, calendar, contacts, 
+and more, into your applications.
 
-After you register your app and get authentication tokens for a user or service, you can make requests to the Microsoft Graph API.
+After you register your app and get authentication tokens for a user or service, 
+you can make requests to the Microsoft Graph API.
 
 How to get authentication tokens for a user:   
 https://learn.microsoft.com/en-us/graph/auth-v2-user
 
-## App register and set environment variables
-Azure App Registration for Microsoft Outlook API Integration
+## Set up
+
+An `accessToken` is needed to use the Outlook Toolkit.
+
+You need to first register an application in Azure Portal to obtain
+necessary credentials.
+
+### App register
 
 1. Register an Application:
    - Go to Azure Portal.
@@ -30,62 +41,93 @@ Azure App Registration for Microsoft Outlook API Integration
    - Add a Redirect URI and note down the Redirect URI.
 
 4. Permissions and Admin Consent:
-   - In API permissions, grant necessary permissions for Microsoft Graph API or Outlook API.
+   - In API permissions, grant necessary permissions for Microsoft Graph API or 
+   Outlook API.
    - Grant admin consent for the added permissions.
 
-6. Environment Variables:
-   - Set the following environment variables:
+At this point, you should have these three credentials:
+clientId, clientSecret, redirectUri
 
-     ```env
-     OUTLOOK_CLIENT_ID=your_client_id
-     OUTLOOK_CLIENT_SECRET=your_client_secret
-     OUTLOOK_REDIRECT_URI=your_redirect_uri
-     // for AuthFlowRefresh
+Set them as environment variables:
+
+  ```env
+  OUTLOOK_CLIENT_ID=your_client_id
+  OUTLOOK_CLIENT_SECRET=your_client_secret
+  OUTLOOK_REDIRECT_URI=your_redirect_uri
+  ```
+  **Keep these values secure and avoid exposing them in public repositories.**
+
+The following link from Microsoft is a good reference for the above steps:
+https://learn.microsoft.com/en-us/graph/auth-v2-user
+
+This video may also be helpful:
+https://www.youtube.com/watch?v=NAtiNpwnivI&t=309s
+
+
      OUTLOOK_ACCESS_TOKEN=your_access_token
      // for AuthFlowToken
      OUTLOOK_REFRESH_TOKEN=your_refresh_token
 
      ```
 
-   **Keep these values secure and avoid exposing them in public repositories.**
+### Get an accessToken
 
-## Setup
+Now you are able to use the above credentials to get an `accessToken`.
 
-You only need an `accessToken` to use the Outlook Toolkit, but they expire after an hour.
+The `AuthFlowREST` class implements the OAuth 2.0 authorization code flow.
+You can use the `getAccessToken()` which will open a temporary server on 
+your `redirectUri` and you need to manually open the printed link to login 
+on behalf of the user. For every `AuthFlowREST` instance, you only need to 
+login once. The next time you can run the `refreshAccessToken()` method, it will
+make use of the `refreshToken` obtained together with the first `accessToken`
+ to get a new `accessToken` without the need of the server and login.
 
-If you only have a valid `accessToken`, the following two ways can create an Outlook tool instance.  
+Having the above credentials, you can either pass them to the constructor 
+or put them in the environment.
+
+```typescript
+const authFlow = new AuthFlowREST();
+const authFlow = new AuthFlowREST(clientId, clientSecret, redirectUri);
+// Get accessToken
+const accessToken = await authFlow.getAccessToken();
+// Refresh accessToken
+const accessToken = await authFlow.refreshAccessToken();
+```
+
+### Provide accessToken to Outlook Toolkit
+
+The Outlook Toolkit needs `AuthFlow` abstarct class to provide accessToken.
+
+```typescript
+const authFlow = new AuthFlowREST();
+const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
+// or simply this when you have the credentials in .env
+const outlookReadMail = new OutlookReadMailTool(choice="rest");
+```
+
+### Other classes to provide accessToken
+
+If you only have a valid `accessToken` in your env:
 
 ```typescript
 const authFlow = new AuthFlowToken(accessToken);
 // if you have accessToken stored in .env
 const authFlow = new AuthFlowToken();
 const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
-```
-```typescript
-// you must have accessToken stored in .env
+// or simply this when you have accessToken in .env
 const outlookReadMail = new OutlookReadMailTool(choice="token");
 ```
 
-If you do not have a valid accessToken, the `AuthFlowREST` class obtains the accessToken for you. A temporary server will be opened on your `redirectUri` and you need to manually open the printed link to login on behalf of the user. For every `AuthFlowREST` instance, you only need to login once. 
-
-You'll need to provide a `clientId`, `clientSecret`, and `redirectUri`.
-You can either pass them to the constructor or put them in the environment.
-```typescript
-const authFlow = new AuthFlowREST();
-const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
-```
-
-```typescript
-const outlookReadMail = new OutlookReadMailTool(choice="rest");
-```
-
-Usually when you obtain a accessToken you also get a refreshToken used to refresh expired accessToken. The `AuthFlowREST` class needs the following credentials: `clientId`, `clientSecret`, `redirectUri` and `refreshToken`. In this way you won't need to login, no server will be open.
+Usually when you obtain a accessToken you also get a refreshToken 
+used to refresh expired accessToken. The `AuthFlowREST` class needs 
+the following credentials: `clientId`, `clientSecret`, `redirectUri` 
+and `refreshToken`. In this way you won't need to login, no server 
+will be open.
 
 ```typescript
 const authFlow = new AuthFlowRefresh();
 const outlookReadMail = new OutlookReadMailTool(authFlow=authFlow);
-```
-```typescript
+// or simply this when you have the credentials in .env
 const outlookReadMail = new OutlookReadMailTool(choice="refresh");
 ```
 
