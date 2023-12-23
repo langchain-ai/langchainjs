@@ -307,6 +307,9 @@ export interface OptionalImportMap {
   "@langchain/community/util/convex"?:
     | typeof import("../utils/convex.js")
     | Promise<typeof import("../utils/convex.js")>;
+  "@langchain/community/recordmanagers/potgres"?:
+    | typeof import("../indexes/potgres.js")
+    | Promise<typeof import("../indexes/potgres.js")>;
 }
 
 export interface SecretMap {
