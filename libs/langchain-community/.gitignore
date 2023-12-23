@@ -109,6 +109,9 @@ embeddings/ollama.d.ts
 embeddings/tensorflow.cjs
 embeddings/tensorflow.js
 embeddings/tensorflow.d.ts
+embeddings/togetherai.cjs
+embeddings/togetherai.js
+embeddings/togetherai.d.ts
 embeddings/voyage.cjs
 embeddings/voyage.js
 embeddings/voyage.d.ts
@@ -181,6 +184,12 @@ llms/yandex.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
+vectorstores/astradb.cjs
+vectorstores/astradb.js
+vectorstores/astradb.d.ts
+vectorstores/azure_cosmosdb.cjs
+vectorstores/azure_cosmosdb.js
+vectorstores/azure_cosmosdb.d.ts
 vectorstores/cassandra.cjs
 vectorstores/cassandra.js
 vectorstores/cassandra.d.ts

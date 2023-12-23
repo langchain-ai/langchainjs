@@ -211,9 +211,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@anthropic-ai/sdk@npm:0.10.0"
+"@anthropic-ai/sdk@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@anthropic-ai/sdk@npm:0.12.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -224,7 +224,7 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
     web-streams-polyfill: ^3.2.1
-  checksum: b7091a001c8dd51e4bf4985d05b64eed8b57015ff8211b70dbd47861c4289f8d3b8dc6dccbb71af125acd2d27483aa15cdbb1543790176fddb97d95c2f6d2471
+  checksum: f27d6c452a3343b49b777c7395b8595c74f1df3aa668cb0b40ce9c62df9170e5276780163d66e36c36cb81aea3be31256a2b45a143d70dd5687fadc6c9b51b49
   languageName: node
   linkType: hard
 
@@ -6013,6 +6013,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@colors/colors@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "@colors/colors@npm:1.6.0"
+  checksum: aa209963e0c3218e80a4a20553ba8c0fbb6fa13140540b4e5f97923790be06801fc90172c1114fc8b7e888b3d012b67298cde6b9e81521361becfaee400c662f
+  languageName: node
+  linkType: hard
+
 "@crawlee/types@npm:^3.3.0":
   version: 3.3.1
   resolution: "@crawlee/types@npm:3.3.1"
@@ -6030,6 +6037,17 @@ __metadata:
     enabled: 2.0.x
     kuler: ^2.0.0
   checksum: 4879600c55c8315a0fb85fbb19057bad1adc08f0a080a8cb4e2b63f723c379bfc4283b68123a2b078d367b327dd8df12fcb27464efe791addc0a48b9df6d79a1
+  languageName: node
+  linkType: hard
+
+"@datastax/astra-db-ts@npm:0.1.2":
+  version: 0.1.2
+  resolution: "@datastax/astra-db-ts@npm:0.1.2"
+  dependencies:
+    axios: ^1.4.0
+    bson: ^6.2.0
+    winston: ^3.7.2
+  checksum: 15be1b453d1712ae73962eec95ebd4ab904a17c6e318ba669211b2584ac1c565ba3de04f469015fcf5e1aa6113a304c9f43662a758c2ab345274374e4fe0e53b
   languageName: node
   linkType: hard
 
@@ -8071,13 +8089,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.10.0
+    "@anthropic-ai/sdk": ^0.12.0
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -8097,7 +8115,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.7":
+"@langchain/community@workspace:*, @langchain/community@workspace:libs/langchain-community, @langchain/community@~0.0.8":
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
@@ -8113,6 +8131,7 @@ __metadata:
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
+    "@datastax/astra-db-ts": 0.1.2
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
@@ -8123,8 +8142,8 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^2.6.4
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
-    "@langchain/openai": ~0.0.6
+    "@langchain/core": ~0.1.3
+    "@langchain/openai": ~0.0.7
     "@mozilla/readability": ^0.4.4
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
@@ -8231,6 +8250,7 @@ __metadata:
     "@aws-sdk/credential-provider-node": ^3.388.0
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": ^1.0.12
+    "@datastax/astra-db-ts": 0.1.2
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.9.0
@@ -8319,6 +8339,8 @@ __metadata:
     "@clickhouse/client":
       optional: true
     "@cloudflare/ai":
+      optional: true
+    "@datastax/astra-db-ts":
       optional: true
     "@elastic/elasticsearch":
       optional: true
@@ -8457,7 +8479,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1.2":
+"@langchain/core@workspace:*, @langchain/core@workspace:langchain-core, @langchain/core@~0.1.3":
   version: 0.0.0-use.local
   resolution: "@langchain/core@workspace:langchain-core"
   dependencies:
@@ -8500,7 +8522,7 @@ __metadata:
     "@google/generative-ai": ^0.1.0
     "@jest/globals": ^29.5.0
     "@langchain/community": "workspace:*"
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8518,6 +8540,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
+    release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
@@ -8529,7 +8552,7 @@ __metadata:
   resolution: "@langchain/mistralai@workspace:libs/langchain-mistralai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@mistralai/mistralai": ^0.0.7
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8547,18 +8570,19 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
+    release-it: ^15.10.1
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.6":
+"@langchain/openai@workspace:*, @langchain/openai@workspace:libs/langchain-openai, @langchain/openai@~0.0.7":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
     "@jest/globals": ^29.5.0
-    "@langchain/core": ~0.1.2
+    "@langchain/core": ~0.1.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.12.0
@@ -12531,17 +12555,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/semver@npm:^7, @types/semver@npm:^7.5.0":
+  version: 7.5.6
+  resolution: "@types/semver@npm:7.5.6"
+  checksum: 563a0120ec0efcc326567db2ed920d5d98346f3638b6324ea6b50222b96f02a8add3c51a916b6897b51523aad8ac227d21d3dcf8913559f1bfc6c15b14d23037
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.3.12":
   version: 7.3.13
   resolution: "@types/semver@npm:7.3.13"
   checksum: 00c0724d54757c2f4bc60b5032fe91cda6410e48689633d5f35ece8a0a66445e3e57fa1d6e07eb780f792e82ac542948ec4d0b76eb3484297b79bd18b8cf1cb0
-  languageName: node
-  linkType: hard
-
-"@types/semver@npm:^7.5.0":
-  version: 7.5.6
-  resolution: "@types/semver@npm:7.5.6"
-  checksum: 563a0120ec0efcc326567db2ed920d5d98346f3638b6324ea6b50222b96f02a8add3c51a916b6897b51523aad8ac227d21d3dcf8913559f1bfc6c15b14d23037
   languageName: node
   linkType: hard
 
@@ -14932,6 +14956,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bson@npm:^6.2.0":
+  version: 6.2.0
+  resolution: "bson@npm:6.2.0"
+  checksum: 950fccd2abd0ff5a1bd3637f4697631298f1538314994ab8c9e13f1c9851d0fd042b54fe8340e00151c2acee43917ea40e64b800ceeea811b00f2de3e900c77e
+  languageName: node
+  linkType: hard
+
 "btoa-lite@npm:^1.0.0":
   version: 1.0.0
   resolution: "btoa-lite@npm:1.0.0"
@@ -16017,6 +16048,13 @@ __metadata:
   version: 10.0.1
   resolution: "commander@npm:10.0.1"
   checksum: 436901d64a818295803c1996cd856621a74f30b9f9e28a588e726b2b1670665bccd7c1a77007ebf328729f0139838a88a19265858a0fa7a8728c4656796db948
+  languageName: node
+  linkType: hard
+
+"commander@npm:^11.1.0":
+  version: 11.1.0
+  resolution: "commander@npm:11.1.0"
+  checksum: fd1a8557c6b5b622c89ecdfde703242ab7db3b628ea5d1755784c79b8e7cb0d74d65b4a262289b533359cd58e1bfc0bf50245dfbcd2954682a6f367c828b79ef
   languageName: node
   linkType: hard
 
@@ -18952,10 +18990,12 @@ __metadata:
     "@getzep/zep-js": ^0.9.0
     "@gomomento/sdk": ^1.51.1
     "@google/generative-ai": ^0.1.0
+    "@langchain/anthropic": "workspace:*"
     "@langchain/community": "workspace:*"
     "@langchain/core": "workspace:*"
     "@langchain/google-genai": "workspace:*"
     "@langchain/mistralai": "workspace:*"
+    "@langchain/openai": "workspace:*"
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^1.1.0
     "@planetscale/database": ^1.8.0
@@ -23515,9 +23555,9 @@ __metadata:
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
     "@jest/globals": ^29.5.0
-    "@langchain/community": ~0.0.7
-    "@langchain/core": ~0.1.2
-    "@langchain/openai": ~0.0.6
+    "@langchain/community": ~0.0.8
+    "@langchain/core": ~0.1.3
+    "@langchain/openai": ~0.0.7
     "@notionhq/client": ^2.2.10
     "@pinecone-database/pinecone": ^1.1.0
     "@supabase/supabase-js": ^2.10.0
@@ -23632,7 +23672,7 @@ __metadata:
     ignore: ^5.2.0
     ioredis: ^5.3.2
     jsdom: "*"
-    mammoth: "*"
+    mammoth: ^1.6.0
     mongodb: ^5.2.0
     node-llama-cpp: "*"
     notion-to-md: ^3.1.0
@@ -23771,9 +23811,12 @@ __metadata:
   dependencies:
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
+    "@types/semver": ^7
+    commander: ^11.1.0
     dotenv: ^16.0.3
     lint-staged: ^13.1.1
     prettier: ^2.8.3
+    semver: ^7.5.4
     turbo: latest
     typescript: ~5.1.6
   languageName: unknown
@@ -33116,6 +33159,25 @@ __metadata:
     readable-stream: ^3.6.0
     triple-beam: ^1.3.0
   checksum: a56e5678a80b88a73e77ed998fc6e19d0db19c989a356b137ec236782f2bf58ae4511b11c29163f99391fa4dc12102c7bc5738dcb6543f28877fa2819adc3ee9
+  languageName: node
+  linkType: hard
+
+"winston@npm:^3.7.2":
+  version: 3.11.0
+  resolution: "winston@npm:3.11.0"
+  dependencies:
+    "@colors/colors": ^1.6.0
+    "@dabh/diagnostics": ^2.0.2
+    async: ^3.2.3
+    is-stream: ^2.0.0
+    logform: ^2.4.0
+    one-time: ^1.0.0
+    readable-stream: ^3.4.0
+    safe-stable-stringify: ^2.3.1
+    stack-trace: 0.0.x
+    triple-beam: ^1.3.0
+    winston-transport: ^4.5.0
+  checksum: ca4454070f7a71b19f53c8c1765c59a013dab220edb49161b2e81917751d3e9edc3382430e4fb050feda04fb8463290ecab7cbc9240ec8d3d3b32a121849bbb0
   languageName: node
   linkType: hard
 

@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import { Document } from "@langchain/core/documents";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { VectorStore } from "@langchain/core/vectorstores";
 import {
@@ -607,7 +607,7 @@ export class VectaraStore extends VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object | object[],
-    _embeddings: Embeddings,
+    _embeddings: EmbeddingsInterface,
     args: VectaraLibArgs
   ): Promise<VectaraStore> {
     const docs: Document[] = [];
@@ -632,7 +632,7 @@ export class VectaraStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    _embeddings: Embeddings,
+    _embeddings: EmbeddingsInterface,
     args: VectaraLibArgs
   ): Promise<VectaraStore> {
     const instance = new this(args);

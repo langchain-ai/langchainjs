@@ -1,4 +1,4 @@
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -17,7 +17,10 @@ export class VectorstoreIntegration extends VectorStore {
     return "vectorstore_integration";
   }
 
-  constructor(embeddings: Embeddings, params: VectorstoreIntegrationParams) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    params: VectorstoreIntegrationParams
+  ) {
     super(embeddings, params);
     this.embeddings = embeddings;
   }
@@ -70,7 +73,7 @@ export class VectorstoreIntegration extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: VectorstoreIntegrationParams
   ): Promise<VectorstoreIntegration> {
     const instance = new this(embeddings, dbConfig);

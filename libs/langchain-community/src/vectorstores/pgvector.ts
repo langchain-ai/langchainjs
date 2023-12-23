@@ -1,6 +1,6 @@
 import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
 import { VectorStore } from "@langchain/core/vectorstores";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -31,6 +31,7 @@ export interface PGVectorStoreArgs {
    * @default 500
    */
   chunkSize?: number;
+  ids?: string[];
 }
 
 /**
@@ -72,7 +73,10 @@ export class PGVectorStore extends VectorStore {
     return "pgvector";
   }
 
-  private constructor(embeddings: Embeddings, config: PGVectorStoreArgs) {
+  private constructor(
+    embeddings: EmbeddingsInterface,
+    config: PGVectorStoreArgs
+  ) {
     super(embeddings, config);
     this.tableName = config.tableName;
     this.collectionTableName = config.collectionTableName;
@@ -104,7 +108,7 @@ export class PGVectorStore extends VectorStore {
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     config: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const postgresqlVectorStore = new PGVectorStore(embeddings, config);
@@ -127,14 +131,19 @@ export class PGVectorStore extends VectorStore {
    * vectors, and adds them to the store.
    *
    * @param documents - Array of `Document` instances.
+   * @param options - Optional arguments for adding documents
    * @returns Promise that resolves when the documents have been added.
    */
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
@@ -219,13 +228,18 @@ export class PGVectorStore extends VectorStore {
       columns.push("collection_id");
     }
 
+    // Check if we have added ids to the rows.
+    if (rows.length !== 0 && columns.length === rows[0].length - 1) {
+      columns.push(this.idColumnName);
+    }
+
     const valuesPlaceholders = rows
       .map((_, j) => this.generatePlaceholderForRowAt(j, columns.length))
       .join(", ");
 
     const text = `
       INSERT INTO ${this.tableName}(
-        ${columns}
+        ${columns.map((column) => `"${column}"`).join(", ")}
       )
       VALUES ${valuesPlaceholders}
     `;
@@ -238,9 +252,23 @@ export class PGVectorStore extends VectorStore {
    *
    * @param vectors - Array of vectors.
    * @param documents - Array of `Document` instances.
+   * @param options - Optional arguments for adding documents
    * @returns Promise that resolves when the vectors have been added.
    */
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<void> {
+    const ids = options?.ids;
+
+    // Either all documents have ids or none of them do to avoid confusion.
+    if (ids !== undefined && ids.length !== vectors.length) {
+      throw new Error(
+        "The number of ids must match the number of vectors provided."
+      );
+    }
+
     const rows = [];
     let collectionId;
     if (this.collectionTableName) {
@@ -258,6 +286,9 @@ export class PGVectorStore extends VectorStore {
       );
       if (collectionId) {
         values.push(collectionId);
+      }
+      if (ids) {
+        values.push(ids[i]);
       }
       rows.push(values);
     }
@@ -478,7 +509,7 @@ export class PGVectorStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const docs = [];
@@ -505,11 +536,11 @@ export class PGVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
-    await instance.addDocuments(docs);
+    await instance.addDocuments(docs, { ids: dbConfig.ids });
 
     return instance;
   }

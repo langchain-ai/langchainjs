@@ -176,6 +176,8 @@ class StringPromptValueV0 {
 class RunnableV0
   implements RunnableInterfaceV0<StringPromptValueV0, AIMessageV0>
 {
+  lc_serializable = true;
+
   protected lc_runnable = true;
 
   async invoke(

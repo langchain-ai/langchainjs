@@ -1,8 +1,8 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import {
   type AWSSfnToolkitArgs,
   AWSSfnToolkit,
 } from "@langchain/community/agents/toolkits/aws_sfn";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { renderTemplate } from "../../prompts/template.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { ZeroShotAgent, ZeroShotCreatePromptArgs } from "../mrkl/index.js";
@@ -27,7 +27,7 @@ Thought: I should look at state machines within AWS Step Functions to see what a
 export interface AWSSfnCreatePromptArgs extends ZeroShotCreatePromptArgs {}
 
 export function createAWSSfnAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   toolkit: AWSSfnToolkit,
   args?: AWSSfnCreatePromptArgs
 ) {

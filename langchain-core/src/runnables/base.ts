@@ -31,10 +31,14 @@ import { RootListenersTracer } from "../tracers/root_listener.js";
  * Should not change on patch releases.
  */
 export interface RunnableInterface<
-  RunInput,
-  RunOutput,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
   CallOptions extends RunnableConfig = RunnableConfig
 > {
+  lc_serializable: boolean;
+
   invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
 
   batch(
@@ -307,12 +311,14 @@ export abstract class Runnable<
       tags: options.tags,
       metadata: options.metadata,
       runName: options.runName,
+      configurable: options.configurable,
     };
     const callOptions = { ...options };
     delete callOptions.callbacks;
     delete callOptions.tags;
     delete callOptions.metadata;
     delete callOptions.runName;
+    delete callOptions.configurable;
     return [runnableConfig, callOptions];
   }
 

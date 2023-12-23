@@ -5,7 +5,7 @@ import type {
   SearchOptions,
 } from "redis";
 import { SchemaFieldTypes, VectorAlgorithms } from "redis";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -125,7 +125,10 @@ export class RedisVectorStore extends VectorStore {
     return "redis";
   }
 
-  constructor(embeddings: Embeddings, _dbConfig: RedisVectorStoreConfig) {
+  constructor(
+    embeddings: EmbeddingsInterface,
+    _dbConfig: RedisVectorStoreConfig
+  ) {
     super(embeddings, _dbConfig);
 
     this.redisClient = _dbConfig.redisClient;
@@ -272,7 +275,7 @@ export class RedisVectorStore extends VectorStore {
   static fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: RedisVectorStoreConfig
   ): Promise<RedisVectorStore> {
     const docs: Document[] = [];
@@ -297,7 +300,7 @@ export class RedisVectorStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: RedisVectorStoreConfig
   ): Promise<RedisVectorStore> {
     const instance = new this(embeddings, dbConfig);

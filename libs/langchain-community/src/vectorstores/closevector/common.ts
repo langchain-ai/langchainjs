@@ -1,6 +1,6 @@
 import type { CloseVectorSaveableVectorStore } from "closevector-common";
 
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { SaveableVectorStore } from "@langchain/core/vectorstores";
 
@@ -38,7 +38,7 @@ export abstract class CloseVector<
   }
 
   constructor(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: {
       space: "l2" | "ip" | "cosine";
       numDimensions?: number;

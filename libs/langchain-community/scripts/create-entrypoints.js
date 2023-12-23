@@ -48,6 +48,7 @@ const entrypoints = {
   "embeddings/minimax": "embeddings/minimax",
   "embeddings/ollama": "embeddings/ollama",
   "embeddings/tensorflow": "embeddings/tensorflow",
+  "embeddings/togetherai": "embeddings/togetherai",
   "embeddings/voyage": "embeddings/voyage",
   // llms
   "llms/ai21": "llms/ai21",
@@ -74,6 +75,8 @@ const entrypoints = {
   "llms/yandex": "llms/yandex",
   // vectorstores
   "vectorstores/analyticdb": "vectorstores/analyticdb",
+  "vectorstores/astradb": "vectorstores/astradb",
+  "vectorstores/azure_cosmosdb": "vectorstores/azure_cosmosdb",
   "vectorstores/cassandra": "vectorstores/cassandra",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/clickhouse": "vectorstores/clickhouse",
@@ -220,6 +223,8 @@ const requiresOptionalDependency = [
   "llms/writer",
   "llms/portkey",
   "vectorstores/analyticdb",
+  "vectorstores/astradb",
+  "vectorstores/azure_cosmosdb",
   "vectorstores/cassandra",
   "vectorstores/chroma",
   "vectorstores/clickhouse",
