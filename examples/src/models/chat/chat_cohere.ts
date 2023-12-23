@@ -3,15 +3,15 @@ import { ChatPromptTemplate } from "langchain/prompts";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  modelName: "command" // Default
+  modelName: "command", // Default
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
-  ["human", "{input}"]
+  ["human", "{input}"],
 ]);
 const chain = prompt.pipe(model);
 const response = await chain.invoke({
-  input: "Hello there friend!"
+  input: "Hello there friend!",
 });
 console.log("response", response);
 /**
