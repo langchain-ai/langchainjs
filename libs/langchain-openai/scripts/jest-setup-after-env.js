@@ -1,3 +1,3 @@
-import { awaitAllCallbacks } from "../src/callbacks/promises.js";
+import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 
 afterAll(awaitAllCallbacks);

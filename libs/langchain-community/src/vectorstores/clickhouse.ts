@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 import { ClickHouseClient, createClient } from "@clickhouse/client";
 import { format } from "mysql2";
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -71,7 +71,7 @@ export class ClickHouseStore extends VectorStore {
     return "clickhouse";
   }
 
-  constructor(embeddings: Embeddings, args: ClickHouseLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: ClickHouseLibArgs) {
     super(embeddings, args);
 
     this.indexType = args.indexType || "annoy";
@@ -168,7 +168,7 @@ export class ClickHouseStore extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object | object[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: ClickHouseLibArgs
   ): Promise<ClickHouseStore> {
     const docs: Document[] = [];
@@ -192,7 +192,7 @@ export class ClickHouseStore extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: ClickHouseLibArgs
   ): Promise<ClickHouseStore> {
     const instance = new this(embeddings, args);
@@ -208,7 +208,7 @@ export class ClickHouseStore extends VectorStore {
    * @returns Promise that resolves with a new instance of ClickHouseStore.
    */
   static async fromExistingIndex(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     args: ClickHouseLibArgs
   ): Promise<ClickHouseStore> {
     const instance = new this(embeddings, args);

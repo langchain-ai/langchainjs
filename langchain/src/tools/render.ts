@@ -1,6 +1,6 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-import { StructuredTool } from "./base.js";
+import { StructuredToolInterface } from "@langchain/core/tools";
 
 /**
  * Render the tool name and description in plain text.
@@ -13,7 +13,9 @@ import { StructuredTool } from "./base.js";
  * @param tools
  * @returns a string of all tools and their descriptions
  */
-export function renderTextDescription(tools: StructuredTool[]): string {
+export function renderTextDescription(
+  tools: StructuredToolInterface[]
+): string {
   return tools.map((tool) => `${tool.name}: ${tool.description}`).join("\n");
 }
 
@@ -28,7 +30,9 @@ export function renderTextDescription(tools: StructuredTool[]): string {
  * @param tools
  * @returns a string of all tools, their descriptions and a stringified version of their schemas
  */
-export function renderTextDescriptionAndArgs(tools: StructuredTool[]): string {
+export function renderTextDescriptionAndArgs(
+  tools: StructuredToolInterface[]
+): string {
   return tools
     .map(
       (tool) =>

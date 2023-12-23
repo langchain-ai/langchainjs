@@ -21,7 +21,7 @@ import {
 } from "../tracers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
-import { Document } from "../documents/document.js";
+import type { DocumentInterface } from "../documents/document.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -153,7 +153,7 @@ export class CallbackManagerForRetrieverRun
     return manager;
   }
 
-  async handleRetrieverEnd(documents: Document[]): Promise<void> {
+  async handleRetrieverEnd(documents: DocumentInterface[]): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {

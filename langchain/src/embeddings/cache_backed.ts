@@ -1,16 +1,19 @@
 import { insecureHash } from "@langchain/core/utils/hash";
+import {
+  type EmbeddingsInterface,
+  Embeddings,
+} from "@langchain/core/embeddings";
 
 import { BaseStore } from "../schema/storage.js";
 import { EncoderBackedStore } from "../storage/encoder_backed.js";
 import { AsyncCallerParams } from "../util/async_caller.js";
-import { Embeddings } from "./base.js";
 
 /**
  * Interface for the fields required to initialize an instance of the
  * CacheBackedEmbeddings class.
  */
 export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
-  underlyingEmbeddings: Embeddings;
+  underlyingEmbeddings: EmbeddingsInterface;
   documentEmbeddingStore: BaseStore<string, number[]>;
 }
 
@@ -62,7 +65,7 @@ export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
  * ```
  */
 export class CacheBackedEmbeddings extends Embeddings {
-  protected underlyingEmbeddings: Embeddings;
+  protected underlyingEmbeddings: EmbeddingsInterface;
 
   protected documentEmbeddingStore: BaseStore<string, number[]>;
 
@@ -135,7 +138,7 @@ export class CacheBackedEmbeddings extends Embeddings {
    * @returns A new CacheBackedEmbeddings instance.
    */
   static fromBytesStore(
-    underlyingEmbeddings: Embeddings,
+    underlyingEmbeddings: EmbeddingsInterface,
     documentEmbeddingStore: BaseStore<string, Uint8Array>,
     options?: {
       namespace?: string;

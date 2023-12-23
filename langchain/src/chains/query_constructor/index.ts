@@ -1,3 +1,4 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { z } from "zod";
 import { QueryTransformer, TraverseType } from "./parser.js";
 import {
@@ -18,7 +19,6 @@ import {
 import { interpolateFString } from "../../prompts/template.js";
 import { LLMChain } from "../llm_chain.js";
 import { FewShotPromptTemplate } from "../../prompts/few_shot.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
 import { AttributeInfo } from "../../schema/query_constructor.js";
 
@@ -166,7 +166,7 @@ function _getPrompt(
  * A type that represents options for the query constructor chain.
  */
 export type QueryConstructorChainOptions = {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   documentContents: string;
   attributeInfo: AttributeInfo[];
   examples?: InputValues[];

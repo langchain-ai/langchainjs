@@ -35,16 +35,20 @@
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace core_docs start",
-    "docs:api_refs": "yarn workspace api_refs start"
+    "docs:api_refs": "yarn workspace api_refs start",
+    "release": "node release_workspace.js --workspace"
   },
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
+    "@types/semver": "^7",
+    "commander": "^11.1.0",
     "dotenv": "^16.0.3",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
+    "semver": "^7.5.4",
     "typescript": "~5.1.6"
   },
   "dependencies": {

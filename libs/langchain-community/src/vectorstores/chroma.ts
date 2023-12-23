@@ -2,7 +2,7 @@ import * as uuid from "uuid";
 import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
 import type { CollectionMetadata, Where } from "chromadb/dist/main/types.js";
 
-import { Embeddings } from "@langchain/core/embeddings";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 
@@ -67,7 +67,7 @@ export class Chroma extends VectorStore {
     return "chroma";
   }
 
-  constructor(embeddings: Embeddings, args: ChromaLibArgs) {
+  constructor(embeddings: EmbeddingsInterface, args: ChromaLibArgs) {
     super(embeddings, args);
     this.numDimensions = args.numDimensions;
     this.embeddings = embeddings;
@@ -286,7 +286,7 @@ export class Chroma extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: ChromaLibArgs
   ): Promise<Chroma> {
     const docs: Document[] = [];
@@ -311,7 +311,7 @@ export class Chroma extends VectorStore {
    */
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: ChromaLibArgs
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
@@ -327,7 +327,7 @@ export class Chroma extends VectorStore {
    * @returns A promise that resolves with a new `Chroma` instance.
    */
   static async fromExistingCollection(
-    embeddings: Embeddings,
+    embeddings: EmbeddingsInterface,
     dbConfig: ChromaLibArgs
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);

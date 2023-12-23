@@ -107,4 +107,30 @@ describe("ElasticVectorSearch", () => {
     const results = await store.similaritySearch("*", 11);
     expect(results).toHaveLength(11);
   });
+
+  test.skip("ElasticVectorSearch integration with text splitting metadata", async () => {
+    const createdAt = new Date().getTime();
+    const documents = [
+      new Document({
+        pageContent: "hello",
+        metadata: { a: createdAt, loc: { lines: { from: 1, to: 1 } } },
+      }),
+      new Document({
+        pageContent: "car",
+        metadata: { a: createdAt, loc: { lines: { from: 2, to: 2 } } },
+      }),
+    ];
+
+    await store.addDocuments(documents);
+
+    const results1 = await store.similaritySearch("hello!", 1);
+
+    expect(results1).toHaveLength(1);
+    expect(results1).toEqual([
+      new Document({
+        metadata: { a: createdAt, loc: { lines: { from: 1, to: 1 } } },
+        pageContent: "hello",
+      }),
+    ]);
+  });
 });

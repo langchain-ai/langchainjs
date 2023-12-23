@@ -109,6 +109,9 @@ embeddings/ollama.d.ts
 embeddings/tensorflow.cjs
 embeddings/tensorflow.js
 embeddings/tensorflow.d.ts
+embeddings/togetherai.cjs
+embeddings/togetherai.js
+embeddings/togetherai.d.ts
 embeddings/voyage.cjs
 embeddings/voyage.js
 embeddings/voyage.d.ts
@@ -166,6 +169,9 @@ llms/replicate.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
+llms/togetherai.cjs
+llms/togetherai.js
+llms/togetherai.d.ts
 llms/watsonx_ai.cjs
 llms/watsonx_ai.js
 llms/watsonx_ai.d.ts
@@ -178,6 +184,9 @@ llms/yandex.d.ts
 vectorstores/analyticdb.cjs
 vectorstores/analyticdb.js
 vectorstores/analyticdb.d.ts
+vectorstores/azure_cosmosdb.cjs
+vectorstores/azure_cosmosdb.js
+vectorstores/azure_cosmosdb.d.ts
 vectorstores/cassandra.cjs
 vectorstores/cassandra.js
 vectorstores/cassandra.d.ts
@@ -352,6 +361,9 @@ retrievers/supabase.d.ts
 retrievers/tavily_search_api.cjs
 retrievers/tavily_search_api.js
 retrievers/tavily_search_api.d.ts
+retrievers/vectara_summary.cjs
+retrievers/vectara_summary.js
+retrievers/vectara_summary.d.ts
 retrievers/zep.cjs
 retrievers/zep.js
 retrievers/zep.d.ts
