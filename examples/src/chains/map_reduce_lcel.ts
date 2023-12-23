@@ -1,7 +1,7 @@
 import { BaseCallbackConfig } from "langchain/callbacks";
 import {
   collapseDocs,
-  splitListOfDocs
+  splitListOfDocs,
 } from "langchain/chains/combine_documents/reduce";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Document } from "langchain/document";
@@ -10,7 +10,7 @@ import { StringOutputParser } from "langchain/schema/output_parser";
 import { formatDocument } from "langchain/schema/prompt_template";
 import {
   RunnablePassthrough,
-  RunnableSequence
+  RunnableSequence,
 } from "@langchain/core/runnables";
 
 // Initialize the OpenAI model
@@ -48,7 +48,7 @@ const mapChain = RunnableSequence.from([
   { context: async (i: Document) => formatDocument(i, documentPrompt) },
   summarizePrompt,
   model,
-  outputParser
+  outputParser,
 ]);
 
 // Define the collapse chain to format, collapse, and parse a list of documents
@@ -56,7 +56,7 @@ const collapseChain = RunnableSequence.from([
   { context: async (documents: Document[]) => formatDocs(documents) },
   collapsePrompt,
   model,
-  outputParser
+  outputParser,
 ]);
 
 // Define a function to collapse a list of documents until the total number of tokens is within the limit
@@ -88,7 +88,7 @@ const reduceChain = RunnableSequence.from([
   { context: formatDocs },
   combinePrompt,
   model,
-  outputParser
+  outputParser,
 ]).withConfig({ runName: "Reduce" });
 
 // Define the final map-reduce chain
@@ -98,13 +98,13 @@ const mapReduceChain = RunnableSequence.from([
     (input) =>
       new Document({
         pageContent: input.content,
-        metadata: input.doc.metadata
-      })
+        metadata: input.doc.metadata,
+      }),
   ])
     .withConfig({ runName: "Summarize (return doc)" })
     .map(),
   collapse,
-  reduceChain
+  reduceChain,
 ]).withConfig({ runName: "Map reduce" });
 
 // Define the text to be processed
@@ -140,8 +140,8 @@ const docs = text.split("\n\n").map(
     new Document({
       pageContent,
       metadata: {
-        source: "https://en.wikipedia.org/wiki/Nuclear_power_in_space"
-      }
+        source: "https://en.wikipedia.org/wiki/Nuclear_power_in_space",
+      },
     })
 );
 const result = await mapReduceChain.invoke(docs);
