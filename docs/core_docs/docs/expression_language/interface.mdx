@@ -9,9 +9,10 @@ import CodeBlock from "@theme/CodeBlock";
 In an effort to make it as easy as possible to create custom chains, we've implemented a ["Runnable"](https://api.js.langchain.com/classes/schema_runnable.Runnable.html) protocol that most components implement.
 This is a standard interface with a few different methods, which make it easy to define custom chains as well as making it possible to invoke them in a standard way. The standard interface exposed includes:
 
-- `stream`: stream back chunks of the response
-- `invoke`: call the chain on an input
-- `batch`: call the chain on a list of inputs
+- [`stream`](/docs/expression_language/interface#stream): stream back chunks of the response
+- [`invoke`](/docs/expression_language/interface#invoke): call the chain on an input
+- [`batch`](/docs/expression_language/interface#batch): call the chain on a list of inputs
+- [`streamLog`](/docs/expression_language/interface#stream-log): stream back intermediate steps as they happen, in addition to the final response
 
 The **input type** varies by component :
 
@@ -65,3 +66,18 @@ and whether or not to return exceptions instead of throwing them (useful for gra
 import BatchExampleWithOptions from "@examples/guides/expression_language/interface_batch_with_options.ts";
 
 <CodeBlock language="typescript">{BatchExampleWithOptions}</CodeBlock>
+
+## Stream log
+
+All runnables also have a method called `.streamLog()` which is used to stream all or part of the intermediate steps of your chain/sequence as they happen.
+
+This is useful to show progress to the user, to use intermediate results, or to debug your chain.
+You can stream all steps (default) or include/exclude steps by name, tags or metadata.
+
+This method yields [JSONPatch](https://jsonpatch.com/) ops that when applied in the same order as received build up the RunState.
+
+Here's an example with streaming intermediate documents from a retrieval chain:
+
+import StreamLogExample from "@examples/guides/expression_language/interface_stream_log.ts";
+
+<CodeBlock language="typescript">{StreamLogExample}</CodeBlock>
