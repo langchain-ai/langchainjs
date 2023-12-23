@@ -1,9 +1,14 @@
 import crypto from "crypto";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { v5 as uuidv5 } from "uuid";
+import {
+  RecordManagerInterface,
+  UUID_NAMESPACE,
+} from "@langchain/core/recordmanagers";
 import { BaseDocumentLoader } from "../document_loaders/base.js";
-import { RecordManagerInterface, UUID_NAMESPACE } from "./recordmanager.js";
 import { Document } from "../document.js";
+
+type Metadata = Record<string, unknown>;
 
 class HashedDocument extends Document {
   uid: string;
@@ -16,13 +21,9 @@ class HashedDocument extends Document {
 
   pageContent: string;
 
-  metadata: Record<string, any>;
+  metadata: Metadata;
 
-  constructor(
-    page_content: string,
-    metadata: Record<string, any>,
-    uid: string
-  ) {
+  constructor(page_content: string, metadata: Metadata, uid: string) {
     super({ pageContent: page_content, metadata });
     this.uid = uid;
     this.pageContent = page_content;
