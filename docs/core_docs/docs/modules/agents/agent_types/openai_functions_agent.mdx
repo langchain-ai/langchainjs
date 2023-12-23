@@ -140,7 +140,7 @@ For agents, the base LCEL `.stream()` method will stream back intermediate steps
 
 ## Advanced streaming
 
-To get as much streaming information as possible, you can use the `.streamLog()` method to stream back [JSON patch](https://jsonpatch.com/) chunks.
+To get as much streamed information as possible, you can use the `.streamLog()` method to stream back [JSON patch](https://jsonpatch.com/) chunks.
 You can parse the `path` property of a chunk to do things like return intermediate steps or stream back the final output early.
 
 Note that we set `streaming: true` on the `ChatOpenAI` class to ensure the OpenAI model always returns chunks in streaming mode even
