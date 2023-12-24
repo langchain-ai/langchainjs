@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
 import { ChatCohere } from "../chat_model.js";
 
-test.skip("ChatCohere can invoke", async () => {
+test("ChatCohere can invoke", async () => {
   const model = new ChatCohere();
   const response = await model.invoke([new HumanMessage("Hello world")]);
   console.log(response.additional_kwargs);
