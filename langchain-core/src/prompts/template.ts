@@ -1,10 +1,11 @@
+import Handlebars from "handlebars";
 import type { InputValues } from "../utils/types.js";
 
 /**
  * Type that specifies the format of a template. Only
  * "f-string" is supported currently.
  */
-export type TemplateFormat = "f-string";
+export type TemplateFormat = "f-string" | "handlebars";
 
 /**
  * Type that represents a node in a parsed format string. It can be either
@@ -64,6 +65,10 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
   return nodes;
 };
 
+export const parseHandlebars = (_template: string): ParsedFStringNode[] => {
+  throw new Error("Not implemented");
+};
+
 export const interpolateFString = (template: string, values: InputValues) =>
   parseFString(template).reduce((res, node) => {
     if (node.type === "variable") {
@@ -75,6 +80,14 @@ export const interpolateFString = (template: string, values: InputValues) =>
 
     return res + node.text;
   }, "");
+
+export const interpolateHandlebars = (
+  template: string,
+  values: InputValues
+) => {
+  const compiled = Handlebars.compile(template);
+  return compiled(values);
+};
 
 /**
  * Type that represents a function that takes a template string and a set
@@ -91,10 +104,12 @@ type Parser = (template: string) => ParsedFStringNode[];
 
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
   "f-string": interpolateFString,
+  handlebars: interpolateHandlebars,
 };
 
 export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
   "f-string": parseFString,
+  handlebars: parseHandlebars,
 };
 
 export const renderTemplate = (

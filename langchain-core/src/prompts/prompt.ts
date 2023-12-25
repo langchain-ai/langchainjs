@@ -31,7 +31,7 @@ export interface PromptTemplateInput<
   template: string;
 
   /**
-   * The format of the prompt template. Options are 'f-string'
+   * The format of the prompt template. Options are 'f-string' and handlebars
    *
    * @defaultValue 'f-string'
    */
