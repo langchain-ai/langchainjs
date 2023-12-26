@@ -4,7 +4,7 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 
 import { TurbopufferVectorStore } from "../turbopuffer.js";
 
-test("similaritySearchVectorWithScore should call RPC with the vectorstore filters", async () => {
+test("similaritySearchVectorWithScore", async () => {
   const embeddings = new OpenAIEmbeddings();
 
   const store = new TurbopufferVectorStore(embeddings, {
@@ -35,7 +35,7 @@ test("similaritySearchVectorWithScore should call RPC with the vectorstore filte
   ]);
 });
 
-test("similaritySearchVectorWithScore should call RPC with the passed filters", async () => {
+test("similaritySearchVectorWithScore with a passed filter", async () => {
   const embeddings = new OpenAIEmbeddings();
 
   const store = new TurbopufferVectorStore(embeddings, {
