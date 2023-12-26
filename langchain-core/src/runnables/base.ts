@@ -1520,7 +1520,10 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   lc_namespace = ["langchain_core", "runnables"];
 
-  protected func: RunnableFunc<RunInput, RunOutput>;
+  protected func: RunnableFunc<
+    RunInput,
+    RunOutput | Runnable<RunInput, RunOutput>
+  >;
 
   constructor(fields: { func: RunnableFunc<RunInput, RunOutput> }) {
     super(fields);
@@ -1528,8 +1531,8 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   }
 
   static from<RunInput, RunOutput>(
-    func: RunnableFunc<RunInput, RunOutput>
-  ): RunnableLambda<RunInput, RunOutput> {
+    func: RunnableFunc<RunInput, RunOutput | Runnable<RunInput, RunOutput>>
+  ): RunnableLambda<RunInput, RunOutput | Runnable<RunInput, RunOutput>> {
     return new RunnableLambda({
       func,
     });
