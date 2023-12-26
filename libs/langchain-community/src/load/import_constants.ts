@@ -33,6 +33,7 @@ export const optionalImportEntrypoints = [
   "langchain_community/llms/watsonx_ai",
   "langchain_community/llms/writer",
   "langchain_community/vectorstores/analyticdb",
+  "langchain_community/vectorstores/astradb",
   "langchain_community/vectorstores/azure_cosmosdb",
   "langchain_community/vectorstores/cassandra",
   "langchain_community/vectorstores/chroma",

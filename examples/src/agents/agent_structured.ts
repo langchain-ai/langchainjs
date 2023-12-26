@@ -1,10 +1,3 @@
-# Returning structured output
-
-Here is a simple example of an agent which uses LCEL, a web search tool (Tavily) and a structured output parser to create an OpenAI functions agent that returns source chunks.
-
-The first step is to import necessary modules
-
-```typescript
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
 import {
@@ -22,11 +15,7 @@ import { formatToOpenAIFunction, DynamicTool } from "langchain/tools";
 import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";
 
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
-```
 
-Next, we initialize an LLM and a search tool that wraps our web search retriever. We will later bind this as an OpenAI function:
-
-```typescript
 const llm = new ChatOpenAI({
   modelName: "gpt-4-1106-preview",
 });
@@ -40,11 +29,7 @@ const searchTool = new DynamicTool({
     return docs.map((doc) => doc.pageContent).join("\n-----\n");
   },
 });
-```
 
-Now we can define our prompt template. We'll use a simple `ChatPromptTemplate` with placeholders for the user's question, and the agent scratchpad.
-
-```typescript
 const prompt = ChatPromptTemplate.fromMessages([
   [
     "system",
@@ -53,11 +38,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["user", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
-```
 
-After that, we define our structured response schema using [Zod](https://zod.dev). This schema defines the structure of the final response from the agent.
-
-```typescript
 const responseSchema = z.object({
   answer: z.string().describe("The final answer to return to the user"),
   sources: z
@@ -66,24 +47,13 @@ const responseSchema = z.object({
       "List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information"
     ),
 });
-```
 
-Once our response schema is defined, we can construct it as an OpenAI function to later be passed to the model.
-This is an important step regarding consistency as the model will always respond in this schema when it successfully completes a task
-
-```typescript
 const responseOpenAIFunction = {
   name: "response",
   description: "Return the response to the user",
   parameters: zodToJsonSchema(responseSchema),
 };
-```
 
-Next, we construct a custom structured output parsing function that can detect when the model has called our final response function.
-This is similar to the method in the stock [JSONFunctionsOutputParser](https://api.js.langchain.com/classes/langchain_output_parsers.JsonOutputFunctionsParser.html),
-but with a change to directly return a response when the final response function is called.
-
-```typescript
 const structuredOutputParser = (
   message: AIMessage
 ): FunctionsAgentAction | AgentFinish => {
@@ -121,15 +91,7 @@ const structuredOutputParser = (
     };
   }
 };
-```
 
-After this, we can bind our two functions to the LLM, and create a runnable sequence which will be used as the agent.
-
-**Important** - note here we pass in `agent_scratchpad` as an input variable, which formats all the previous steps using the `formatForOpenAIFunctions` function.
-This is very important as it contains all the context history the model needs to preform accurate tasks. Without this, the model would have no context on the previous steps taken.
-The `formatForOpenAIFunctions` function returns the steps as an array of `BaseMessage`s. This is necessary as the `MessagesPlaceholder` class expects this type as the input.
-
-```typescript
 const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
   steps.flatMap(({ action, observation }) => {
     if ("messageLog" in action && action.messageLog !== undefined) {
@@ -156,11 +118,7 @@ const runnableAgent = RunnableSequence.from<{
   llmWithTools,
   structuredOutputParser,
 ]);
-```
 
-Finally, we can create an instance of `AgentExecutor` and run the agent.
-
-```typescript
 const executor = AgentExecutor.fromAgentAndTools({
   agent: runnableAgent,
   tools: [searchTool],
@@ -172,17 +130,14 @@ const res = await executor.invoke({
 console.log({
   res,
 });
-```
 
-The output will look something like this
-
-```typescript
-{
-  res: {
-    answer: 'The current weather in Honolulu is 71 \bF with light rain and broken clouds.',
-    sources: [
-      'Currently: 71 \bF. Light rain. Broken clouds. (Weather station: Honolulu International Airport, USA). See more current weather'
-    ]
+/*
+  {
+    res: {
+      answer: 'The current weather in Honolulu is 71 \bF with light rain and broken clouds.',
+      sources: [
+        'Currently: 71 \bF. Light rain. Broken clouds. (Weather station: Honolulu International Airport, USA). See more current weather'
+      ]
+    }
   }
-}
-```
+*/

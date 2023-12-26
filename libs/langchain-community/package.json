@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.0.9",
+  "version": "0.0.11",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -53,6 +53,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
+    "@datastax/astra-db-ts": "0.1.2",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -165,6 +166,7 @@
     "@aws-sdk/credential-provider-node": "^3.388.0",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "^1.0.12",
+    "@datastax/astra-db-ts": "0.1.2",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.9.0",
@@ -262,6 +264,9 @@
       "optional": true
     },
     "@cloudflare/ai": {
+      "optional": true
+    },
+    "@datastax/astra-db-ts": {
       "optional": true
     },
     "@elastic/elasticsearch": {
@@ -784,6 +789,11 @@
       "types": "./vectorstores/analyticdb.d.ts",
       "import": "./vectorstores/analyticdb.js",
       "require": "./vectorstores/analyticdb.cjs"
+    },
+    "./vectorstores/astradb": {
+      "types": "./vectorstores/astradb.d.ts",
+      "import": "./vectorstores/astradb.js",
+      "require": "./vectorstores/astradb.cjs"
     },
     "./vectorstores/azure_cosmosdb": {
       "types": "./vectorstores/azure_cosmosdb.d.ts",
@@ -1438,6 +1448,9 @@
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
+    "vectorstores/astradb.cjs",
+    "vectorstores/astradb.js",
+    "vectorstores/astradb.d.ts",
     "vectorstores/azure_cosmosdb.cjs",
     "vectorstores/azure_cosmosdb.js",
     "vectorstores/azure_cosmosdb.d.ts",

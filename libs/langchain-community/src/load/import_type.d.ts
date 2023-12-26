@@ -97,6 +97,9 @@ export interface OptionalImportMap {
   "@langchain/community/vectorstores/analyticdb"?:
     | typeof import("../vectorstores/analyticdb.js")
     | Promise<typeof import("../vectorstores/analyticdb.js")>;
+  "@langchain/community/vectorstores/astradb"?:
+    | typeof import("../vectorstores/astradb.js")
+    | Promise<typeof import("../vectorstores/astradb.js")>;
   "@langchain/community/vectorstores/azure_cosmosdb"?:
     | typeof import("../vectorstores/azure_cosmosdb.js")
     | Promise<typeof import("../vectorstores/azure_cosmosdb.js")>;
