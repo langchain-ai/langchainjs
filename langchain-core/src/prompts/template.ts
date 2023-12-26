@@ -80,7 +80,7 @@ export const parseHandlebars = (template: string): ParsedFStringNode[] => {
     }
   }
 
-  throw new Error("Not implemented");
+  return nodes;
 };
 
 export const interpolateFString = (template: string, values: InputValues) =>
