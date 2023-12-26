@@ -79,6 +79,11 @@ export const parseHandlebars = (template: string): ParsedFStringNode[] => {
       } else if (node.type === "MustacheStatement") {
         // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
         const name = node.path.parts[0];
+        // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
+        const original = node.path.original;
+        if (!original.startsWith("this.") && !original.startsWith("@")) {
+          nodes.push({ type: "variable", name });
+        }
         nodes.push({ type: "variable", name });
       } else if (node.type === "BlockStatement") {
         // @ts-expect-error - handlebars' hbs.AST.BlockStatement isn't exported
