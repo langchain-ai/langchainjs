@@ -11,7 +11,7 @@ import { formatDocument } from "langchain/schema/prompt_template";
 import {
   RunnablePassthrough,
   RunnableSequence,
-} from "langchain/schema/runnable";
+} from "@langchain/core/runnables";
 
 // Initialize the OpenAI model
 const model = new ChatOpenAI({});

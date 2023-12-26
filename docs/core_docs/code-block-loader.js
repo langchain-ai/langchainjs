@@ -67,6 +67,10 @@ async function webpackLoader(content, map, meta) {
       const prefix = `${category}/langchain`;
       const suffix = `.${imported}.html`;
 
+      if (suffix.includes("Runnable") && moduleName.startsWith("core")) {
+        return `${category}/langchain_schema_runnable${suffix}`;
+      }
+
       // @TODO - Find a better way to deal with core
       if (moduleName.startsWith("core")) {
         return `${category}/langchain_schema${suffix}`;
