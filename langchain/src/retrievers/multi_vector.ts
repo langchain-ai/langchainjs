@@ -1,8 +1,10 @@
 import {
   BaseRetriever,
-  type BaseRetrieverInput,
+  type BaseRetrieverInput
 } from "@langchain/core/retrievers";
 import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { DocumentInterface } from "@langchain/core/documents";
+import { v4 as uuidv4 } from "uuid";
 import { BaseStore, BaseStoreInterface } from "../schema/storage.js";
 import { Document } from "../document.js";
 import { createDocumentStoreFromByteStore } from "../storage/encoder_backed.js";
@@ -70,6 +72,30 @@ export class MultiVectorRetriever extends BaseRetriever {
     this.idKey = args.idKey ?? "doc_id";
     this.childK = args.childK;
     this.parentK = args.parentK;
+  }
+
+  /**
+   * Add documents to the byte store.
+   *
+   * @param {Array<DocumentInterface>} docs The docs to add to the byte store
+   * @param {{ ids: Array<string> | undefined } | undefined} config Optional config object for passing doc IDs through.
+   */
+  async addDocuments(
+    docs: DocumentInterface[],
+    config?: {
+      ids?: string[];
+    }
+  ): Promise<void> {
+    let ids: string[] = [];
+    if (!config?.ids) {
+      ids.concat(docs.map((_) => uuidv4()));
+    } else {
+      ids = config.ids;
+    }
+    const keyValuePairs = docs.map(
+      (doc, i) => [ids[i], doc] as [string, DocumentInterface]
+    );
+    await this.docstore.mset(keyValuePairs);
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {

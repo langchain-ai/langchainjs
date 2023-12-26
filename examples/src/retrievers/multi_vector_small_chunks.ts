@@ -6,15 +6,13 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { InMemoryStore } from "langchain/storage/in_memory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { Document } from "langchain/document";
-import { createDocumentStoreFromByteStore } from "langchain/storage/encoder_backed";
 
 const textLoader = new TextLoader("../examples/state_of_the_union.txt");
 const parentDocuments = await textLoader.load();
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 10000,
-  chunkOverlap: 20,
+  chunkOverlap: 20
 });
 
 const docs = await splitter.splitDocuments(parentDocuments);
@@ -24,7 +22,7 @@ const docIds = docs.map((_) => uuid.v4());
 
 const childSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 400,
-  chunkOverlap: 0,
+  chunkOverlap: 0
 });
 
 const subDocs = [];
@@ -38,16 +36,8 @@ for (let i = 0; i < docs.length; i += 1) {
   subDocs.push(...taggedChildDocs);
 }
 
-const keyValuePairs: [string, Document][] = docs.map((doc, i) => [
-  docIds[i],
-  doc,
-]);
-
 // The byteStore to use to store the original chunks
 const byteStore = new InMemoryStore<Uint8Array>();
-// Convert the byteStore to a docStore to use for retrieval
-const docStore = createDocumentStoreFromByteStore(byteStore);
-await docStore.mset(keyValuePairs);
 
 // The vectorstore to use to index the child chunks
 const vectorstore = await FaissStore.fromDocuments(
@@ -65,8 +55,11 @@ const retriever = new MultiVectorRetriever({
   childK: 20,
   // Optional `k` parameter to limit number of final, parent documents returned from this
   // retriever and sent to LLM. This is an upper-bound, and the final count may be lower than this.
-  parentK: 5,
+  parentK: 5
 });
+
+// Use the retriever to add the original chunks to the document store
+await retriever.addDocuments(docs, { ids: docIds });
 
 // Vectorstore alone retrieves the small chunks
 const vectorstoreResult = await retriever.vectorstore.similaritySearch(
