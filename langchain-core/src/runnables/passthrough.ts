@@ -3,23 +3,41 @@ import { IterableReadableStream, atee } from "../utils/stream.js";
 import { Runnable, RunnableMap, RunnableMapLike } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
+export interface RunnableAssignFields<RunInput> {
+  mapper: RunnableMap<RunInput>;
+}
+
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
  */
 export class RunnableAssign<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends Record<string, any> = Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>,
-  CallOptions extends RunnableConfig = RunnableConfig
-> extends Runnable<RunInput, RunOutput> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnableAssignFields<RunInput>
+{
+  static lc_name() {
+    return "RunnableAssign";
+  }
+
   lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
 
   mapper: RunnableMap<RunInput>;
 
-  constructor(mapper: RunnableMap<RunInput>) {
-    super();
-    this.mapper = mapper;
+  constructor(fields: RunnableMap<RunInput> | RunnableAssignFields<RunInput>) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (fields instanceof RunnableMap) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { mapper: fields };
+    }
+    super(fields);
+    this.mapper = fields.mapper;
   }
 
   async invoke(
@@ -95,23 +113,40 @@ export class RunnableAssign<
   }
 }
 
+export interface RunnablePickFields {
+  keys: string | string[];
+}
+
 /**
  * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
  */
 export class RunnablePick<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends Record<string, any> = Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> | any = Record<string, any> | any,
-  CallOptions extends RunnableConfig = RunnableConfig
-> extends Runnable<RunInput, RunOutput> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> | any = Record<string, any> | any,
+    CallOptions extends RunnableConfig = RunnableConfig
+  >
+  extends Runnable<RunInput, RunOutput>
+  implements RunnablePickFields
+{
+  static lc_name() {
+    return "RunnablePick";
+  }
+
   lc_namespace = ["langchain_core", "runnables"];
+
+  lc_serializable = true;
 
   keys: string | string[];
 
-  constructor(keys: string | string[]) {
-    super();
-    this.keys = keys;
+  constructor(fields: string | string[] | RunnablePickFields) {
+    if (typeof fields === "string" || Array.isArray(fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { keys: fields };
+    }
+    super(fields);
+    this.keys = fields.keys;
   }
 
   async _pick(input: RunInput): Promise<RunOutput> {
