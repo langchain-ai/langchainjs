@@ -1547,7 +1547,7 @@ export class RunnableMap<
 
   async stream(
     input: RunInput,
-    options?: Partial<RunnableConfig> | undefined
+    options?: Partial<RunnableConfig>
   ): Promise<IterableReadableStream<RunOutput>> {
     async function* generator() {
       yield input;
