@@ -15,6 +15,8 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/agents/openai.ts";
 import CustomPromptExample from "@examples/agents/openai_custom_prompt.ts";
 import RunnableExample from "@examples/agents/openai_runnable.ts";
+import RunnableStreamExample from "@examples/agents/openai_runnable_stream.ts";
+import RunnableStreamLogExample from "@examples/agents/openai_runnable_stream_log.ts";
 
 :::tip Compatibility
 Must be used with an [OpenAI Functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
@@ -130,9 +132,23 @@ You may also inspect the LangSmith traces for both agent calls here:
 - [Question 1](https://smith.langchain.com/public/c1136951-f3f0-4ff5-a862-8db5d6bc8d04/r)
 - [Question 2](https://smith.langchain.com/public/b536cdc0-9bc9-4bdf-9298-4d6d7f88556b/r)
 
-# With `initializeAgentExecutorWithOptions`
+## Streaming
 
-This agent also supports `StructuredTool`s with more complex input schemas.
+For agents, the base LCEL `.stream()` method will stream back intermediate steps as they are completed. Here's an example with the tools defined above:
+
+<CodeBlock language="typescript">{RunnableStreamExample}</CodeBlock>
+
+## Advanced streaming
+
+To get as much streamed information as possible, you can use the `.streamLog()` method to stream back [JSON patch](https://jsonpatch.com/) chunks.
+You can parse the `path` property of a chunk to do things like return intermediate steps or stream back the final output early.
+
+Note that we set `streaming: true` on the `ChatOpenAI` class to ensure the OpenAI model always returns chunks in streaming mode even
+when invoked with `.invoke` internally to get the most data as quickly as possible:
+
+<CodeBlock language="typescript">{RunnableStreamLogExample}</CodeBlock>
+
+# With `initializeAgentExecutorWithOptions` (Legacy)
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 

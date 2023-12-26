@@ -2,9 +2,8 @@ import {
   AzureCosmosDBVectorStore,
   AzureCosmosDBSimilarityType,
 } from "@langchain/community/vectorstores/azure_cosmosdb";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
