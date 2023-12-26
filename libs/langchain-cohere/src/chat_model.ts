@@ -96,6 +96,16 @@ function convertMessagesToCohereMessages(
 
 /**
  * Integration with ChatCohere
+ * @example
+ * ```typescript
+ * const model = new ChatCohere({
+ *   apiKey: process.env.COHERE_API_KEY, // Default
+ *   modelName: "command" // Default
+ * });
+ * const response = await model.invoke([
+ *   new HumanMessage("How tall are the largest pengiuns?")
+ * ]);
+ * ```
  */
 export class ChatCohere<
     CallOptions extends CohereChatCallOptions = CohereChatCallOptions

@@ -8,6 +8,34 @@ This package contains the LangChain.js integrations for Cohere through their SDK
 npm install @langchain/cohere
 ```
 
+This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).
+If you are using this package with other LangChain packages, you should make sure that all of the packages depend on the same instance of @langchain/core.
+You can do so by adding appropriate field to your project's `package.json` like this:
+
+```json
+{
+  "name": "your-project",
+  "version": "0.0.0",
+  "dependencies": {
+    "@langchain/cohere": "^0.0.1",
+    "langchain": "0.0.207"
+  },
+  "resolutions": {
+    "@langchain/core": "0.1.2"
+  },
+  "overrides": {
+    "@langchain/core": "0.1.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@langchain/core": "0.1.2"
+    }
+  }
+}
+```
+
+The field you need depends on the package manager you're using, but we recommend adding a field for the common `yarn`, `npm`, and `pnpm` to maximize compatibility.
+
 ## Chat Models
 
 This package contains the `ChatCohere` class, which is the recommended way to interface with the Cohere series of models.

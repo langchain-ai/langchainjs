@@ -45,12 +45,14 @@ export class Cohere extends LLM implements CohereInput {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "COHERE_API_KEY",
+      api_key: "COHERE_API_KEY",
     };
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
       apiKey: "cohere_api_key",
+      api_key: "cohere_api_key",
     };
   }
 
