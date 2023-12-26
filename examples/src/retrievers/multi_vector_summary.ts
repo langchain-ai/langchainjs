@@ -18,7 +18,7 @@ const parentDocuments = await textLoader.load();
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 10000,
-  chunkOverlap: 20
+  chunkOverlap: 20,
 });
 
 const docs = await splitter.splitDocuments(parentDocuments);
@@ -27,16 +27,16 @@ const chain = RunnableSequence.from([
   { content: (doc: Document) => doc.pageContent },
   PromptTemplate.fromTemplate(`Summarize the following document:\n\n{content}`),
   new ChatOpenAI({
-    maxRetries: 0
+    maxRetries: 0,
   }),
-  new StringOutputParser()
+  new StringOutputParser(),
 ]);
 
 const summaries = await chain.batch(
   docs,
   {},
   {
-    maxConcurrency: 5
+    maxConcurrency: 5,
   }
 );
 
@@ -46,8 +46,8 @@ const summaryDocs = summaries.map((summary, i) => {
   const summaryDoc = new Document({
     pageContent: summary,
     metadata: {
-      [idKey]: docIds[i]
-    }
+      [idKey]: docIds[i],
+    },
   });
   return summaryDoc;
 });
@@ -64,7 +64,7 @@ const vectorstore = await FaissStore.fromDocuments(
 const retriever = new MultiVectorRetriever({
   vectorstore,
   byteStore,
-  idKey
+  idKey,
 });
 
 // Use the retriever to add the original chunks to the document store

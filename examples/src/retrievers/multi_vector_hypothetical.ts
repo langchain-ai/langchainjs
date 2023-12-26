@@ -18,7 +18,7 @@ const parentDocuments = await textLoader.load();
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 10000,
-  chunkOverlap: 20
+  chunkOverlap: 20,
 });
 
 const docs = await splitter.splitDocuments(parentDocuments);
@@ -33,21 +33,21 @@ const functionsSchema = [
         questions: {
           type: "array",
           items: {
-            type: "string"
-          }
-        }
+            type: "string",
+          },
+        },
       },
-      required: ["questions"]
-    }
-  }
+      required: ["questions"],
+    },
+  },
 ];
 
 const functionCallingModel = new ChatOpenAI({
   maxRetries: 0,
-  modelName: "gpt-4"
+  modelName: "gpt-4",
 }).bind({
   functions: functionsSchema,
-  function_call: { name: "hypothetical_questions" }
+  function_call: { name: "hypothetical_questions" },
 });
 
 const chain = RunnableSequence.from([
@@ -56,14 +56,14 @@ const chain = RunnableSequence.from([
     `Generate a list of 3 hypothetical questions that the below document could be used to answer:\n\n{content}`
   ),
   functionCallingModel,
-  new JsonKeyOutputFunctionsParser<string[]>({ attrName: "questions" })
+  new JsonKeyOutputFunctionsParser<string[]>({ attrName: "questions" }),
 ]);
 
 const hypotheticalQuestions = await chain.batch(
   docs,
   {},
   {
-    maxConcurrency: 5
+    maxConcurrency: 5,
   }
 );
 
@@ -75,8 +75,8 @@ const hypotheticalQuestionDocs = hypotheticalQuestions
       const questionDocument = new Document({
         pageContent: question,
         metadata: {
-          [idKey]: docIds[i]
-        }
+          [idKey]: docIds[i],
+        },
       });
       return questionDocument;
     });
@@ -96,7 +96,7 @@ const vectorstore = await FaissStore.fromDocuments(
 const retriever = new MultiVectorRetriever({
   vectorstore,
   byteStore,
-  idKey
+  idKey,
 });
 
 // Use the retriever to add the original chunks to the document store

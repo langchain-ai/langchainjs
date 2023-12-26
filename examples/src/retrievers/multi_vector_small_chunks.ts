@@ -12,7 +12,7 @@ const parentDocuments = await textLoader.load();
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 10000,
-  chunkOverlap: 20
+  chunkOverlap: 20,
 });
 
 const docs = await splitter.splitDocuments(parentDocuments);
@@ -22,7 +22,7 @@ const docIds = docs.map((_) => uuid.v4());
 
 const childSplitter = new RecursiveCharacterTextSplitter({
   chunkSize: 400,
-  chunkOverlap: 0
+  chunkOverlap: 0,
 });
 
 const subDocs = [];
@@ -55,7 +55,7 @@ const retriever = new MultiVectorRetriever({
   childK: 20,
   // Optional `k` parameter to limit number of final, parent documents returned from this
   // retriever and sent to LLM. This is an upper-bound, and the final count may be lower than this.
-  parentK: 5
+  parentK: 5,
 });
 
 // Use the retriever to add the original chunks to the document store
