@@ -1535,9 +1535,9 @@ export class RunnableMap<
   }
 
   transform(
-    generator: AsyncGenerator<RunInput, any, unknown>,
+    generator: AsyncGenerator<RunInput>,
     options?: Partial<RunnableConfig>
-  ): AsyncGenerator<RunOutput, any, unknown> {
+  ): AsyncGenerator<RunOutput> {
     return this._transformStreamWithConfig(
       generator,
       this._transform.bind(this),

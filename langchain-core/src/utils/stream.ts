@@ -134,9 +134,10 @@ export function concat<
     return (first + second) as T;
   } else if (typeof first === "number" && typeof second === "number") {
     return (first + second) as T;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } else if (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     "concat" in (first as any) &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     typeof (first as any).concat === "function"
   ) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
