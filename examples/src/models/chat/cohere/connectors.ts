@@ -3,13 +3,13 @@ import { HumanMessage } from "langchain/schema";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  modelName: "command" // Default
+  modelName: "command", // Default
 });
 
 const response = await model.invoke(
   [new HumanMessage("How tall are the largest pengiuns?")],
   {
-    connectors: [{ id: "web-search" }]
+    connectors: [{ id: "web-search" }],
   }
 );
 console.log("response: ", JSON.stringify(response, null, 2));

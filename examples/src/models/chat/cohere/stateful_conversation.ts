@@ -3,7 +3,7 @@ import { HumanMessage } from "langchain/schema";
 
 const model = new ChatCohere({
   apiKey: process.env.COHERE_API_KEY, // Default
-  modelName: "command" // Default
+  modelName: "command", // Default
 });
 
 const conversationId = `demo_test_id-${Math.random()}`;
@@ -11,7 +11,7 @@ const conversationId = `demo_test_id-${Math.random()}`;
 const response = await model.invoke(
   [new HumanMessage("Tell me a joke about bears.")],
   {
-    conversationId
+    conversationId,
   }
 );
 console.log("response: ", response.content);
@@ -30,7 +30,7 @@ Just let me know if you have any other jokes or topics you'd like to hear about!
 const response2 = await model.invoke(
   [new HumanMessage("What was the subject of my last question?")],
   {
-    conversationId
+    conversationId,
   }
 );
 console.log("response2: ", response2.content);
