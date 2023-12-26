@@ -115,7 +115,7 @@ export const interpolateHandlebars = (
   template: string,
   values: InputValues
 ) => {
-  const compiled = Handlebars.compile(template);
+  const compiled = Handlebars.compile(template, { noEscape: true });
   return compiled(values);
 };
 
