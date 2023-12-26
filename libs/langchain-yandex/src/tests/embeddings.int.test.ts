@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { YandexGPTEmbeddings } from "../embeddings.js";
 
-test("Test GooglePalmEmbeddings.embedQuery", async () => {
+test("Test YandexGPTEmbeddings.embedQuery", async () => {
   const embeddings = new YandexGPTEmbeddings({
     maxRetries: 1,
   });
@@ -9,7 +9,7 @@ test("Test GooglePalmEmbeddings.embedQuery", async () => {
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test GooglePalmEmbeddings.embedDocuments", async () => {
+test("Test YandexGPTEmbeddings.embedDocuments", async () => {
   const embeddings = new YandexGPTEmbeddings({
     maxRetries: 1,
   });

@@ -38,7 +38,7 @@ function _parseChatHistory(history: BaseMessage[]): [ParsedMessage[], string] {
 }
 
 /**
- * @deprecated
+ * @deprecated Prefer @langchain/yandex
  * @example
  * ```typescript
  * const chat = new ChatYandexGPT({});
