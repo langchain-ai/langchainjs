@@ -68,15 +68,22 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
 export const parseHandlebars = (template: string): ParsedFStringNode[] => {
   const nodes: ParsedFStringNode[] = [];
   const parsed = Handlebars.parse(template);
-  for (const node of parsed.body) {
-    if (node.type === "ContentStatement") {
-      // @ts-expect-error - handlebars' hbs.AST.ContentStatement isn't exported
-      const text = node.value;
-      nodes.push({ type: "literal", text });
-    } else if (node.type === "MustacheStatement") {
-      // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
-      const name = node.path.parts[0];
-      nodes.push({ type: "variable", name });
+  const programs = [parsed];
+  while (programs.length) {
+    const program = programs.pop()!;
+    for (const node of program.body) {
+      if (node.type === "ContentStatement") {
+        // @ts-expect-error - handlebars' hbs.AST.ContentStatement isn't exported
+        const text = node.value;
+        nodes.push({ type: "literal", text });
+      } else if (node.type === "MustacheStatement") {
+        // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
+        const name = node.path.parts[0];
+        nodes.push({ type: "variable", name });
+      } else if (node.type === "BlockStatement") {
+        // @ts-expect-error - handlebars' hbs.AST.BlockStatement isn't exported
+        programs.push(node.program);
+      }
     }
   }
 
