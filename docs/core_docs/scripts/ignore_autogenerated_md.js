@@ -26,7 +26,7 @@ function main() {
   // rewrite the after
   const newGitignore =
     existing +
-    "\n# notebooks\n" +
+    "# notebooks\n" +
     pathToIPYNBFiles.map((file) => file.replace(".ipynb", ".md")).join("\n");
   fs.writeFileSync("./.gitignore", newGitignore);
 }
