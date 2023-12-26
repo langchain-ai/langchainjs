@@ -30,7 +30,7 @@ export interface TurbopufferQueryResult {
 
 export class TurbopufferVectorStore extends VectorStore {
   declare FilterType: TurbopufferFilterType;
-  
+
   get lc_secrets(): { [key: string]: string } {
     return {
       apiKey: "TURBOPUFFER_API_KEY",

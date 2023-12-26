@@ -1,6 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 import { TurbopufferVectorStore } from "../turbopuffer.js";
 
@@ -8,7 +9,7 @@ test("similaritySearchVectorWithScore", async () => {
   const embeddings = new OpenAIEmbeddings();
 
   const store = new TurbopufferVectorStore(embeddings, {
-    apiKey: process.env.TURBOPUFFER_API_KEY,
+    apiKey: getEnvironmentVariable("TURBOPUFFER_API_KEY"),
     namespace: "langchain-js-testing",
   });
 
@@ -39,7 +40,7 @@ test("similaritySearchVectorWithScore with a passed filter", async () => {
   const embeddings = new OpenAIEmbeddings();
 
   const store = new TurbopufferVectorStore(embeddings, {
-    apiKey: process.env.TURBOPUFFER_API_KEY,
+    apiKey: getEnvironmentVariable("TURBOPUFFER_API_KEY"),
     namespace: "langchain-js-testing",
   });
 
