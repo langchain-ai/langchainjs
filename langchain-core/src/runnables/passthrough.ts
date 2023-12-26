@@ -145,9 +145,9 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   }
 
   transform(
-    generator: AsyncGenerator<RunInput, any, unknown>,
+    generator: AsyncGenerator<RunInput>,
     options: Partial<RunnableConfig>
-  ): AsyncGenerator<RunInput, any, unknown> {
+  ): AsyncGenerator<RunInput> {
     return this._transformStreamWithConfig(
       generator,
       (input: AsyncGenerator<RunInput>) => input,
