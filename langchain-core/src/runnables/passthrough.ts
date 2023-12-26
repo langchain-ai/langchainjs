@@ -96,6 +96,78 @@ export class RunnableAssign<
 }
 
 /**
+ * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
+ */
+export class RunnablePick<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends Record<string, any> = Record<string, any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> | any = Record<string, any> | any,
+  CallOptions extends RunnableConfig = RunnableConfig
+> extends Runnable<RunInput, RunOutput> {
+  lc_namespace = ["langchain_core", "runnables"];
+
+  keys: string | string[];
+
+  constructor(keys: string | string[]) {
+    super();
+    this.keys = keys;
+  }
+
+  async _pick(input: RunInput): Promise<RunOutput> {
+    if (typeof this.keys === "string") {
+      return input[this.keys];
+    } else {
+      const picked = this.keys
+        .map((key) => [key, input[key]])
+        .filter((v) => v[1] !== undefined);
+      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+    }
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    return this._callWithConfig(this._pick.bind(this), input, options);
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>
+  ): AsyncGenerator<RunOutput> {
+    for await (const chunk of generator) {
+      const picked = await this._pick(chunk);
+      if (picked !== undefined) {
+        yield picked;
+      }
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
+  }
+}
+
+/**
  * A runnable to passthrough inputs unchanged or with additional keys.
  *
  * This runnable behaves almost like the identity function, except that it
@@ -190,5 +262,12 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     return new RunnableAssign(
       new RunnableMap<Record<string, unknown>>({ steps: mapping })
     );
+  }
+
+  /**
+   * A runnable that picks key-value pairs from the input.
+   */
+  static pick(keys: string | string[]): RunnablePick {
+    return new RunnablePick(keys);
   }
 }
