@@ -66,33 +66,37 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
 };
 
 export const parseHandlebars = (template: string): ParsedFStringNode[] => {
-  const nodes: ParsedFStringNode[] = [];
-  const parsed = Handlebars.parse(template);
-  const programs = [parsed];
-  while (programs.length) {
-    const program = programs.pop()!;
-    for (const node of program.body) {
-      if (node.type === "ContentStatement") {
-        // @ts-expect-error - handlebars' hbs.AST.ContentStatement isn't exported
-        const text = node.value;
-        nodes.push({ type: "literal", text });
-      } else if (node.type === "MustacheStatement") {
-        // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
-        const name = node.path.parts[0];
-        // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
-        const { original } = node.path as { original: string };
-        if (!original.startsWith("this.") && !original.startsWith("@")) {
-          nodes.push({ type: "variable", name });
-        }
-        nodes.push({ type: "variable", name });
-      } else if (node.type === "BlockStatement") {
-        // @ts-expect-error - handlebars' hbs.AST.BlockStatement isn't exported
-        programs.push(node.program);
+  const parsed: ParsedFStringNode[] = [];
+  const nodes: { type: string }[] = [...Handlebars.parse(template).body];
+  while (nodes.length) {
+    const node = nodes.pop()!;
+    if (node.type === "ContentStatement") {
+      // @ts-expect-error - handlebars' hbs.AST.ContentStatement isn't exported
+      const text = node.value;
+      parsed.push({ type: "literal", text });
+    } else if (node.type === "MustacheStatement") {
+      // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
+      const name: string = node.path.parts[0];
+      // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
+      const { original } = node.path as { original: string };
+      if (!!name && !original.startsWith("this.") && !original.startsWith("@")) {
+        parsed.push({ type: "variable", name });
       }
+    } else if (node.type === "PathExpression") {
+      // @ts-expect-error - handlebars' hbs.AST.PathExpression isn't exported
+      const name: string = node.parts[0];
+      // @ts-expect-error - handlebars' hbs.AST.PathExpression isn't exported
+      const original = node.original;
+      if (!!name && !original.startsWith("this.") && !original.startsWith("@")) {
+          parsed.push({ type: "variable", name });
+      }
+    } else if (node.type === "BlockStatement") {
+      // @ts-expect-error - handlebars' hbs.AST.BlockStatement isn't exported
+      nodes.push([...node.params, ...node.program.body]);
     }
   }
 
-  return nodes;
+  return parsed;
 };
 
 export const interpolateFString = (template: string, values: InputValues) =>
