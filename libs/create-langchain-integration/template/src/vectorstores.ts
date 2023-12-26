@@ -32,13 +32,13 @@ export class VectorstoreIntegration extends VectorStore {
    */
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "API_KEY_NAME"
+      apiKey: "API_KEY_NAME",
     };
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
-      apiKey: "API_KEY_NAME"
+      apiKey: "API_KEY_NAME",
     };
   }
 
