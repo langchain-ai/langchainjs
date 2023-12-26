@@ -80,7 +80,7 @@ export const parseHandlebars = (template: string): ParsedFStringNode[] => {
         // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
         const name = node.path.parts[0];
         // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
-        const original = node.path.original;
+        const { original } = node.path as { original: string };
         if (!original.startsWith("this.") && !original.startsWith("@")) {
           nodes.push({ type: "variable", name });
         }

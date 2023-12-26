@@ -66,7 +66,7 @@ test("OpenAIToolsAgent", async () => {
   ]).withConfig({ runName: "OpenAIToolsAgent" });
 
   const executor = AgentExecutor.fromAgentAndTools({
-    agent: runnableAgent,
+    agent: runnableAgent as any,
     tools,
     verbose: true,
   });

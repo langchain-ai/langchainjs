@@ -7,11 +7,11 @@ import {
   ChatGeneration,
   isBaseMessage,
 } from "../../schema/index.js";
+import { AgentActionOutputParser } from "../types.js";
 import {
-  AgentActionOutputParser,
-  AgentMultiActionOutputParser,
-} from "../types.js";
-import { OutputParserException } from "../../schema/output_parser.js";
+  BaseOutputParser,
+  OutputParserException,
+} from "../../schema/output_parser.js";
 
 /**
  * Type that represents an agent action with an optional message log.
@@ -125,7 +125,8 @@ export class OpenAIFunctionsAgentOutputParser extends AgentActionOutputParser {
 /**
  * Type that represents an agent action with an optional message log.
  */
-export type ToolsAgentAction = AgentAction & {
+export type ToolsAgentAction = Omit<AgentAction, "toolInput"> & {
+  toolInput: Record<string, any>;
   toolCallId: string;
   messageLog?: BaseMessage[];
 };
@@ -165,14 +166,16 @@ export type ToolsAgentStep = AgentStep & {
  *
  * ```
  */
-export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
+export class OpenAIToolsAgentOutputParser extends BaseOutputParser<
+  ToolsAgentAction[] | AgentFinish
+> {
   lc_namespace = ["langchain", "agents", "openai"];
 
   static lc_name() {
     return "OpenAIToolsAgentOutputParser";
   }
 
-  async parse(text: string): Promise<AgentAction[] | AgentFinish> {
+  async parse(text: string): Promise<ToolsAgentAction[] | AgentFinish> {
     throw new Error(
       `OpenAIFunctionsAgentOutputParser can only parse messages.\nPassed input: ${text}`
     );
