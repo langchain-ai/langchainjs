@@ -17,6 +17,7 @@ import {
   atee,
 } from "../utils/stream.js";
 import {
+  DEFAULT_RECURSION_LIMIT,
   RunnableConfig,
   getCallbackMangerForConfig,
   mergeConfigs,
@@ -1601,7 +1602,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
         this._patchConfig(
           config,
           runManager?.getChild(),
-          (config?.recursionLimit ?? 25) - 1
+          (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1
         )
       );
     }

@@ -3,6 +3,8 @@ import {
   CallbackManager,
 } from "../callbacks/manager.js";
 
+export const DEFAULT_RECURSION_LIMIT = 25;
+
 export interface RunnableConfig extends BaseCallbackConfig {
   /**
    * Runtime values for attributes previously made configurable on this Runnable,

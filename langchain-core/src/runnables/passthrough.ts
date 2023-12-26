@@ -40,7 +40,7 @@ export class RunnableAssign<
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<RunOutput> {
     // collect mapper keys
-    const mapper_keys = this.mapper.getStepsKeys();
+    const mapperKeys = this.mapper.getStepsKeys();
     // create two input gens, one for the mapper, one for the input
     const [forPassthrough, forMapper] = atee(generator, 2);
     // create mapper output gen
@@ -58,7 +58,7 @@ export class RunnableAssign<
         );
       }
       const filtered = Object.fromEntries(
-        Object.entries(chunk).filter(([key]) => !mapper_keys.includes(key))
+        Object.entries(chunk).filter(([key]) => !mapperKeys.includes(key))
       );
       if (Object.keys(filtered).length > 0) {
         yield filtered as unknown as RunOutput;
