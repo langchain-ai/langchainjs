@@ -34,18 +34,37 @@ export type MessageType =
   | "function"
   | "tool";
 
+export type MessageContentText =
+  {
+    type: "text";
+    text: string;
+  };
+
+export type MessageContentImageUrl =
+  {
+    type: "image_url";
+    image_url: string | { url: string; detail?: "auto" | "low" | "high" };
+  };
+
+export type MessageContentBlobUrl =
+  {
+    type: "blob_url";
+    blob_url: {
+      url: string;
+      content_type: string;
+    };
+  };
+
+export type MessageContentComplex =
+  (
+    | MessageContentText
+    | MessageContentImageUrl
+    | MessageContentBlobUrl
+  );
+
 export type MessageContent =
   | string
-  | (
-      | {
-          type: "text";
-          text: string;
-        }
-      | {
-          type: "image_url";
-          image_url: string | { url: string; detail?: "auto" | "low" | "high" };
-        }
-    )[];
+  | MessageContentComplex[];
 
 export interface FunctionCall {
   /**
@@ -134,11 +153,6 @@ export abstract class BaseMessage
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
-
-  get lc_aliases(): Record<string, string> {
-    // exclude snake case conversion to pascal case
-    return { additional_kwargs: "additional_kwargs" };
-  }
 
   /**
    * @deprecated
@@ -467,11 +481,6 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 export class ToolMessage extends BaseMessage {
   static lc_name() {
     return "ToolMessage";
-  }
-
-  get lc_aliases(): Record<string, string> {
-    // exclude snake case conversion to pascal case
-    return { tool_call_id: "tool_call_id" };
   }
 
   tool_call_id: string;
