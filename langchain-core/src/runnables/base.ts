@@ -3,7 +3,6 @@ import pRetry from "p-retry";
 import {
   CallbackManager,
   CallbackManagerForChainRun,
-  BaseCallbackConfig,
 } from "../callbacks/manager.js";
 import {
   LogStreamCallbackHandler,
@@ -51,12 +50,6 @@ export interface RunnableInterface<
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions: true }
-  ): Promise<(RunOutput | Error)[]>;
-
-  batch(
-    inputs: RunInput[],
-    options?: Partial<CallOptions> | Partial<CallOptions>[],
-    batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   batch(
@@ -433,15 +426,8 @@ export abstract class Runnable<
     let finalOutputSupported = true;
 
     const callbackManager_ = await getCallbackMangerForConfig(options);
-    let runManager: CallbackManagerForChainRun | undefined;
-    const serializedRepresentation = this.toJSON();
-    async function* wrapInputForTracing() {
-      for await (const chunk of inputGenerator) {
-        if (!runManager) {
-          // Start the run manager AFTER the iterator starts to preserve
-          // tracing order
-          runManager = await callbackManager_?.handleChainStart(
-            serializedRepresentation,
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
             { input: "" },
             undefined,
             options?.runType,
@@ -449,14 +435,15 @@ export abstract class Runnable<
             undefined,
             options?.runName
           );
-        }
+    async function* wrapInputForTracing() {
+      for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
           if (finalInput === undefined) {
             finalInput = chunk;
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalInput = (finalInput as any).concat(chunk);
+              finalInput = concat(finalInput, chunk as any);
             } catch {
               finalInput = undefined;
               finalInputSupported = false;
@@ -482,7 +469,7 @@ export abstract class Runnable<
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = (finalOutput as any).concat(chunk);
+              finalOutput = concat(finalOutput, chunk as any);
             } catch {
               finalOutput = undefined;
               finalOutputSupported = false;
@@ -507,7 +494,8 @@ export abstract class Runnable<
 
   _patchConfig(
     config: Partial<CallOptions> = {},
-    callbackManager: CallbackManager | undefined = undefined
+    callbackManager: CallbackManager | undefined = undefined,
+    recursionLimit: number | undefined = undefined
   ): Partial<CallOptions> {
     const newConfig = { ...config };
     if (callbackManager !== undefined) {
@@ -517,6 +505,9 @@ export abstract class Runnable<
        */
       delete newConfig.runName;
       return { ...newConfig, callbacks: callbackManager };
+    }
+    if (recursionLimit !== undefined) {
+      newConfig.recursionLimit = recursionLimit;
     }
     return newConfig;
   }
@@ -556,7 +547,7 @@ export abstract class Runnable<
         // Make a best effort to gather, for any type that supports concat.
         // This method should throw an error if gathering fails.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        finalChunk = (finalChunk as any).concat(chunk);
+        finalChunk = concat(finalChunk, chunk as any);
       }
     }
     yield* this._streamIterator(finalChunk, options);
@@ -670,7 +661,7 @@ export abstract class Runnable<
 export type RunnableBindingArgs<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
   kwargs?: Partial<CallOptions>;
@@ -684,7 +675,7 @@ export type RunnableBindingArgs<
 export class RunnableBinding<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableBinding";
@@ -892,7 +883,7 @@ export class RunnableBinding<
 export class RunnableEach<
   RunInputItem,
   RunOutputItem,
-  CallOptions extends BaseCallbackConfig
+  CallOptions extends RunnableConfig
 > extends Runnable<RunInputItem[], RunOutputItem[], CallOptions> {
   static lc_name() {
     return "RunnableEach";
@@ -1360,7 +1351,7 @@ export class RunnableSequence<
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = (finalOutput as any).concat(chunk);
+              finalOutput = concat(finalOutput, chunk as any);
             } catch (e) {
               finalOutput = undefined;
               concatSupported = false;
@@ -1473,7 +1464,7 @@ export class RunnableMap<
 
   async invoke(
     input: RunInput,
-    options?: Partial<BaseCallbackConfig>
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const callbackManager_ = await getCallbackMangerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
@@ -1537,14 +1528,21 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async _invoke(
     input: RunInput,
-    config?: Partial<BaseCallbackConfig>,
+    config?: Partial<RunnableConfig>,
     runManager?: CallbackManagerForChainRun
   ) {
     let output = await this.func(input, { config });
     if (output && Runnable.isRunnable(output)) {
+      if (config?.recursionLimit === 0) {
+        throw new Error("Recursion limit reached.");
+      }
       output = await output.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild())
+        this._patchConfig(
+          config,
+          runManager?.getChild(),
+          (config?.recursionLimit ?? 25) - 1
+        )
       );
     }
     return output;
@@ -1552,7 +1550,7 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<BaseCallbackConfig>
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, options);
   }
@@ -1597,7 +1595,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 
   async invoke(
     input: RunInput,
-    options?: Partial<BaseCallbackConfig>
+    options?: Partial<RunnableConfig>
   ): Promise<RunOutput> {
     const callbackManager_ = await CallbackManager.configure(
       options?.callbacks,
@@ -1639,25 +1637,25 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions?: false }
   ): Promise<RunOutput[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions & { returnExceptions: true }
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]>;
 
   async batch(
     inputs: RunInput[],
-    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    options?: Partial<RunnableConfig> | Partial<RunnableConfig>[],
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     if (batchOptions?.returnExceptions) {

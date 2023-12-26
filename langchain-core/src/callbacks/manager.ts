@@ -61,13 +61,6 @@ export interface BaseCallbackConfig {
    * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
    */
   callbacks?: Callbacks;
-
-  /**
-   * Runtime values for attributes previously made configurable on this Runnable,
-   * or sub-Runnables.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>;
 }
 
 export function parseCallbackConfigArg(
