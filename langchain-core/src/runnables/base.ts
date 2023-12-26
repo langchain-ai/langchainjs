@@ -12,7 +12,9 @@ import {
 import { Serializable } from "../load/serializable.js";
 import {
   IterableReadableStream,
+  concat,
   type IterableReadableStreamInterface,
+  atee,
 } from "../utils/stream.js";
 import {
   RunnableConfig,
@@ -428,13 +430,13 @@ export abstract class Runnable<
     const callbackManager_ = await getCallbackMangerForConfig(options);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-            { input: "" },
-            undefined,
-            options?.runType,
-            undefined,
-            undefined,
-            options?.runName
-          );
+      { input: "" },
+      undefined,
+      options?.runType,
+      undefined,
+      undefined,
+      options?.runName
+    );
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -1485,7 +1487,7 @@ export class RunnableMap<
         Object.entries(this.steps).map(async ([key, runnable]) => {
           output[key] = await runnable.invoke(
             input,
-            this._patchConfig(options, runManager?.getChild(key))
+            this._patchConfig(options, runManager?.getChild(`map:key:${key}`))
           );
         })
       );
@@ -1495,6 +1497,64 @@ export class RunnableMap<
     }
     await runManager?.handleChainEnd(output);
     return output as RunOutput;
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    // shallow copy steps to ignore changes while iterating
+    const steps = { ...this.steps };
+    // each step gets a copy of the input iterator
+    const inputCopies = atee(generator, Object.keys(steps).length);
+    // start the first iteration of each output iterator
+    const tasks = new Map(
+      Object.entries(steps).map(([key, runnable], i) => {
+        const gen = runnable.transform(
+          inputCopies[i],
+          this._patchConfig(options, runManager?.getChild(`map:key:${key}`))
+        );
+        return [key, gen.next().then((result) => ({ key, gen, result }))];
+      })
+    );
+    // yield chunks as they become available,
+    // starting new iterations as needed,
+    // until all iterators are done
+    while (tasks.size) {
+      const { key, result, gen } = await Promise.race(tasks.values());
+      tasks.delete(key);
+      if (!result.done) {
+        yield { [key]: result.value } as unknown as RunOutput;
+        tasks.set(
+          key,
+          gen.next().then((result) => ({ key, gen, result }))
+        );
+      }
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput, any, unknown>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput, any, unknown> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig> | undefined
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
   }
 }
 

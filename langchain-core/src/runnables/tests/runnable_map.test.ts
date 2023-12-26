@@ -7,10 +7,12 @@ import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "../../prompts/chat.js";
+import { concat } from "../../utils/stream.js";
 import {
   FakeLLM,
   FakeChatModel,
   FakeRetriever,
+  FakeStreamingLLM,
 } from "../../utils/testing/index.js";
 import { RunnableSequence, RunnableMap } from "../base.js";
 import { RunnablePassthrough } from "../passthrough.js";
@@ -102,4 +104,43 @@ test("Should not allow improper outputs from a map into the next item in a seque
   // @ts-expect-error TS compiler should flag mismatched output types
   const runnable = map.pipe(new FakeLLM({}));
   console.log(runnable);
+});
+
+test("Should stream chunks from each step as they are produced", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a nice assistant."],
+    "{question}",
+  ]);
+
+  const chat = new FakeChatModel({});
+
+  const llm = new FakeStreamingLLM({ sleep: 0 });
+
+  const chain = RunnableSequence.from([
+    prompt,
+    RunnableMap.from({
+      passthrough: new RunnablePassthrough(),
+      chat,
+      llm,
+    }),
+  ]);
+
+  const stream = await chain.stream({ question: "What is your name?" });
+
+  const chunks = [];
+
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+
+  expect(chunks.length).toBeGreaterThan(3);
+  expect(chunks.reduce(concat)).toEqual(
+    await chain.invoke({ question: "What is your name?" })
+  );
+
+  const chainWithSelect = chain.pipe((output) => output.llm);
+
+  expect(await chainWithSelect.invoke({ question: "What is your name?" }))
+    .toEqual(`System: You are a nice assistant.
+Human: What is your name?`);
 });
