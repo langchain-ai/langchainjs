@@ -26,19 +26,19 @@ export class VectorstoreIntegration extends VectorStore {
   }
 
   /**
-   * Replace with any secrets this chat model requires.
-   * See {@link ../langchain-cohere/src/chat_model.ts} for
+   * Replace with any secrets this class passes to `super`.
+   * See {@link ../../langchain-cohere/src/chat_model.ts} for
    * an example.
    */
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      API_KEY_NAME: "API_KEY_NAME",
+      apiKey: "API_KEY_NAME"
     };
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
-      API_KEY_NAME: "API_KEY_NAME",
+      apiKey: "API_KEY_NAME"
     };
   }
 
