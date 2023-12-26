@@ -65,7 +65,21 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
   return nodes;
 };
 
-export const parseHandlebars = (_template: string): ParsedFStringNode[] => {
+export const parseHandlebars = (template: string): ParsedFStringNode[] => {
+  const nodes: ParsedFStringNode[] = [];
+  const parsed = Handlebars.parse(template);
+  for (const node of parsed.body) {
+    if (node.type === "ContentStatement") {
+      // @ts-expect-error - handlebars' hbs.AST.ContentStatement isn't exported
+      const text = node.value;
+      nodes.push({ type: "literal", text });
+    } else if (node.type === "MustacheStatement") {
+      // @ts-expect-error - handlebars' hbs.AST.MustacheStatement isn't exported
+      const name = node.path.parts[0];
+      nodes.push({ type: "variable", name });
+    }
+  }
+
   throw new Error("Not implemented");
 };
 
