@@ -1,0 +1,25 @@
+{
+  "imports": {
+    "langchain": "npm:/file:../../../langchain",
+    "langchain/": "npm:/file:../../../langchain/",
+    "@langchain/core": "workspace:/langchain/core",
+    "@langchain/core/": "workspace:/langchain/core/",
+    "@langchain/openai": "workspace:/langchain/openai",
+    "@langchain/openai/": "workspace:/langchain/openai/",
+    "@langchain/mistralai": "workspace:/langchain/mistralai",
+    "@langchain/mistralai/": "workspace:/langchain/mistralai/",
+    "@langchain/anthropic": "workspace:/langchain/anthropic",
+    "@langchain/anthropic/": "workspace:/langchain/anthropic/",
+    "@langchain/cohere": "workspace:/langchain/cohere",
+    "@langchain/cohere/": "workspace:/langchain/cohere/",
+    "@langchain/google-genai": "workspace:/langchain/google-genai",
+    "@langchain/google-genai/": "workspace:/langchain/google-genai/",
+    "dotenv/config": "npm:/dotenv/config",
+    "ignore": "npm:/ignore",
+    "pdf-parse": "npm:/pdf-parse",
+    "ml-distance": "npm:/ml-distance",
+    "zod": "npm:/zod",
+    "fs": "https://deno.land/std/fs/mod.ts",
+    "path": "https://deno.land/std/path/mod.ts"
+  }
+}

@@ -56,6 +56,13 @@ const config = {
                 fullySpecified: false,
               },
             },
+            {
+              test: /\.ipynb$/,
+              loader: "raw-loader",
+              resolve: {
+                fullySpecified: false,
+              },
+            },
           ],
         },
       }),

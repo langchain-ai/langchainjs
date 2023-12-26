@@ -15,5 +15,6 @@
   ],
   "cSpell.enableFiletypes": [
     "mdx"
-  ]
+  ],
+  "deno.enablePaths": ["./cookbook/", "./docs/core_docs/docs/"]
 }
