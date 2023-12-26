@@ -98,3 +98,63 @@ export class IterableReadableStream<T>
     });
   }
 }
+
+export function atee<T>(
+  iter: AsyncGenerator<T>,
+  length = 2
+): AsyncGenerator<T>[] {
+  const buffers = Array.from(
+    { length },
+    () => [] as Array<IteratorResult<T> | IteratorReturnResult<T>>
+  );
+  return buffers.map(async function* makeIter(buffer) {
+    while (true) {
+      if (buffer.length === 0) {
+        const result = await iter.next();
+        for (const buffer of buffers) {
+          buffer.push(result);
+        }
+      } else if (buffer[0].done) {
+        return;
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        yield buffer.shift()!.value;
+      }
+    }
+  });
+}
+
+export function concat<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Array<any> | string | number | Record<string, any> | any
+>(first: T, second: T): T {
+  if (Array.isArray(first) && Array.isArray(second)) {
+    return first.concat(second) as T;
+  } else if (typeof first === "string" && typeof second === "string") {
+    return (first + second) as T;
+  } else if (typeof first === "number" && typeof second === "number") {
+    return (first + second) as T;
+  } else if (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    "concat" in (first as any) &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (first as any).concat === "function"
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (first as any).concat(second) as T;
+  } else if (typeof first === "object" && typeof second === "object") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chunk = { ...first } as Record<string, any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const [key, value] of Object.entries(second as Record<string, any>)) {
+      if (key in chunk) {
+        chunk[key] = concat(chunk[key], value);
+      } else {
+        chunk[key] = value;
+      }
+    }
+    return chunk as T;
+  } else {
+    throw new Error(`Cannot concat ${typeof first} and ${typeof second}`);
+  }
+}

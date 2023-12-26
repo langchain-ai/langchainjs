@@ -148,8 +148,6 @@ export class AstraDBVectorStore extends VectorStore {
     await cursor.forEach(async (row: Record<string, unknown>) => {
       const {
         $similarity: similarity,
-        $vector: _vector,
-        [this.idKey]: _id,
         [this.contentKey]: content,
         ...metadata
       } = row;
@@ -211,13 +209,7 @@ export class AstraDBVectorStore extends VectorStore {
 
     const docs: Document[] = [];
     topMmrMatches.forEach((match) => {
-      const {
-        $similarity: _similarity,
-        $vector: _vector,
-        [this.idKey]: _id,
-        [this.contentKey]: content,
-        ...metadata
-      } = match;
+      const { [this.contentKey]: content, ...metadata } = match;
 
       const doc: Document = {
         pageContent: content as string,
