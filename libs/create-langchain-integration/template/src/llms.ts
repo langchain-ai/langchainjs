@@ -43,13 +43,13 @@ export class LLMIntegration
    */
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      API_KEY_NAME: "API_KEY_NAME"
+      API_KEY_NAME: "API_KEY_NAME",
     };
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
-      API_KEY_NAME: "API_KEY_NAME"
+      API_KEY_NAME: "API_KEY_NAME",
     };
   }
 

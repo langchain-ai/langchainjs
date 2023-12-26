@@ -4,7 +4,7 @@ import { type BaseLanguageModelCallOptions } from "@langchain/core/language_mode
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
-  SimpleChatModel
+  SimpleChatModel,
 } from "@langchain/core/language_models/chat_models";
 
 // Uncomment if implementing streaming
@@ -44,13 +44,13 @@ export class ChatIntegration<
    */
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      API_KEY_NAME: "API_KEY_NAME"
+      API_KEY_NAME: "API_KEY_NAME",
     };
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
     return {
-      API_KEY_NAME: "API_KEY_NAME"
+      API_KEY_NAME: "API_KEY_NAME",
     };
   }
 
