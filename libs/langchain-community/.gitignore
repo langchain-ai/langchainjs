@@ -271,6 +271,9 @@ vectorstores/supabase.d.ts
 vectorstores/tigris.cjs
 vectorstores/tigris.js
 vectorstores/tigris.d.ts
+vectorstores/turbopuffer.cjs
+vectorstores/turbopuffer.js
+vectorstores/turbopuffer.d.ts
 vectorstores/typeorm.cjs
 vectorstores/typeorm.js
 vectorstores/typeorm.d.ts

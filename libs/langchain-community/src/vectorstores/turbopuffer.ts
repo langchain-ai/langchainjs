@@ -1,70 +1,81 @@
-import { Document } from "../document.js";
-import { Embeddings } from "../embeddings/base.js";
-import { getEnvironmentVariable } from "../util/env.js";
-import { VectorStore } from "./base.js";
+import { type DocumentInterface, Document } from "@langchain/core/documents";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { VectorStore } from "@langchain/core/vectorstores";
 
-interface TurbopufferIntegrationParams {
-  apiKey?: string;
-  namespace?: string;
-}
-
-interface TurbopufferHeaders {
+export interface TurbopufferHeaders {
   headers: {
     Authorization: string;
     "Content-Type": string;
   };
 }
 
-enum TurbopufferDistanceMetric {
-  Cosine = "cosine_distance",
-  Euclidean = "euclidean_squared",
+export type TurbopufferDistanceMetric = "cosine_distance" | "euclidean_squared";
+
+export type TurbopufferFilterType = Record<string, string>;
+
+export interface TurbopufferParams {
+  apiKey?: string;
+  namespace?: string;
+  distanceMetric?: TurbopufferDistanceMetric;
+  apiUrl?: string;
 }
 
-interface TurbopufferQueryResult {
+export interface TurbopufferQueryResult {
   dist: number;
   id: number;
   vector: number[];
-  attributes: Record<string, string>;
+  attributes: TurbopufferFilterType;
 }
 
 export class TurbopufferVectorStore extends VectorStore {
+  declare FilterType: TurbopufferFilterType;
+  
   get lc_secrets(): { [key: string]: string } {
     return {
-      apiKey: "Turbopuffer_API_KEY",
+      apiKey: "TURBOPUFFER_API_KEY",
     };
   }
 
   get lc_aliases(): { [key: string]: string } {
     return {
-      apiKey: "Turbopuffer_api_key",
+      apiKey: "TURBOPUFFER_API_KEY",
     };
   }
 
-  private apiKey: string;
-
-  private namespace: string;
-
-  private apiEndpoint = "https://api.Turbopuffer.com/v1/";
-
-  public _vectorstoreType(): string {
-    return "Turbopuffer";
+  // Handle minification for tracing
+  static lc_name(): string {
+    return "TurbopufferVectorStore";
   }
 
-  constructor(
-    embeddings: Embeddings,
-    args: {
-      apiKey?: string;
-      namespace?: string;
-    }
-  ) {
+  protected distanceMetric: TurbopufferDistanceMetric = "cosine_distance";
+
+  protected apiKey: string;
+
+  protected namespace = "default";
+
+  protected apiUrl = "https://api.turbopuffer.com/v1/";
+
+  public _vectorstoreType(): string {
+    return "turbopuffer";
+  }
+
+  constructor(embeddings: EmbeddingsInterface, args: TurbopufferParams) {
     super(embeddings, args);
 
-    const apiKey = args.apiKey ?? getEnvironmentVariable("Turbopuffer_API_KEY");
+    const apiKey = args.apiKey ?? getEnvironmentVariable("TURBOPUFFER_API_KEY");
     if (!apiKey) {
-      throw new Error("Turbopuffer api key is not provided.");
+      throw new Error(
+        [
+          "Turbopuffer API key not found.",
+          `Please pass it in as "apiKey" or set it as an environment variable called "TURBOPUFFER_API_KEY"`,
+        ].join("\n")
+      );
     }
     this.apiKey = apiKey;
-    this.namespace = args.namespace ?? "default";
+    this.namespace = args.namespace ?? this.namespace;
+    this.distanceMetric = args.distanceMetric ?? this.distanceMetric;
+    this.apiUrl = args.apiUrl ?? this.apiUrl;
   }
 
   getJsonHeader(): TurbopufferHeaders {
@@ -78,7 +89,7 @@ export class TurbopufferVectorStore extends VectorStore {
 
   async addVectors(
     vectors: number[][],
-    documents: Document<Record<string, unknown>>[],
+    documents: DocumentInterface[],
     options?: { ids?: number[] }
   ): Promise<void> {
     try {
@@ -111,7 +122,7 @@ export class TurbopufferVectorStore extends VectorStore {
         attributes,
       };
 
-      await fetch(`${this.apiEndpoint}/vectors/${this.namespace}`, {
+      await fetch(`${this.apiUrl}/vectors/${this.namespace}`, {
         method: "POST",
         headers: this.getJsonHeader().headers,
         body: JSON.stringify(data),
@@ -123,7 +134,7 @@ export class TurbopufferVectorStore extends VectorStore {
   }
 
   async addDocuments(
-    documents: Document<Record<string, unknown>>[],
+    documents: DocumentInterface[],
     options?: { ids?: number[] }
   ): Promise<void> {
     const vectors = await this.embeddings.embedDocuments(
@@ -136,23 +147,22 @@ export class TurbopufferVectorStore extends VectorStore {
   async queryVectors(
     query: number[],
     k: number,
-    distanceMetric: TurbopufferDistanceMetric,
     includeAttributes?: string[],
     includeVector?: boolean,
     // See https://Turbopuffer.com/docs/reference/query for more info
-    filters?: Record<string, string>
+    filter?: TurbopufferFilterType
   ): Promise<TurbopufferQueryResult[]> {
     const data = {
       query,
       k,
-      distanceMetric,
-      filters,
+      distanceMetric: this.distanceMetric,
+      filters: filter,
       includeAttributes,
       includeVector,
     };
 
     const response = await fetch(
-      `${this.apiEndpoint}/vectors/${this.namespace}/query`,
+      `${this.apiUrl}/vectors/${this.namespace}/query`,
       {
         method: "POST",
         headers: this.getJsonHeader().headers,
@@ -168,18 +178,17 @@ export class TurbopufferVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: Record<string, string>
-  ): Promise<[Document, number][]> {
+    filter?: this["FilterType"]
+  ): Promise<[DocumentInterface, number][]> {
     const search = await this.queryVectors(
       query,
       k,
-      TurbopufferDistanceMetric.Cosine,
       ["source", "pageContent"],
       false,
       filter
     );
 
-    const result: [Document, number][] = search.map((res) => [
+    const result: [DocumentInterface, number][] = search.map((res) => [
       new Document({
         pageContent: res.attributes.pageContent,
         metadata: {
@@ -193,9 +202,9 @@ export class TurbopufferVectorStore extends VectorStore {
   }
 
   static async fromDocuments(
-    docs: Document[],
-    embeddings: Embeddings,
-    dbConfig: TurbopufferIntegrationParams
+    docs: DocumentInterface[],
+    embeddings: EmbeddingsInterface,
+    dbConfig: TurbopufferParams
   ): Promise<TurbopufferVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);

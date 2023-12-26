@@ -355,6 +355,7 @@ export interface SecretMap {
   REDIS_USERNAME?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
   VECTARA_API_KEY?: string;
