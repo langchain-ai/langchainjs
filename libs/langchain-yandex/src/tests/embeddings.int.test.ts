@@ -13,10 +13,7 @@ test("Test GooglePalmEmbeddings.embedDocuments", async () => {
   const embeddings = new YandexGPTEmbeddings({
     maxRetries: 1,
   });
-  const res = await embeddings.embedDocuments([
-    "Hello world",
-    "Bye bye",
-  ]);
+  const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);
   res.forEach((r) => {
     expect(typeof r[0]).toBe("number");
