@@ -18,27 +18,38 @@ Next, you have two authentication options:
 - [API key](https://cloud.yandex.com/en/docs/iam/operations/api-key/create)
   You can specify the key in a constructor parameter as `api_key` or in an environment variable `YC_API_KEY`.
 
-## Chat Models
+## Chat Models and LLM Models
 
-This package contains the `ChatYandexGPT` class, which is the recommended way to interface with the YandexGPT series of models.
+This package contains the `ChatYandexGPT` and `YandexGPT` classes for working with the YandexGPT series of models.
 
 To specify the model you can use `model_uri` parameter, see [the documentation](https://cloud.yandex.com/en/docs/yandexgpt/concepts/models#yandexgpt-generation) for more details.
 
 By default, the latest version of `yandexgpt-lite` is used from the folder specified in the parameter `folder_id` or `YC_FOLDER_ID` environment variable.
 
-### Example
+### Examples
 
 ```typescript
 import { ChatYandexGPT } from "@langchain/yandex";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
-const model = new ChatYandexGPT();
+const chat = new ChatYandexGPT();
 const response = await chat.call([
-  new SystemMessage(
-    "You are a helpful assistant that translates English to French."
-  ),
-  new HumanMessage("I love programming."),
+    new SystemMessage(
+        "You are a helpful assistant that translates English to French."
+    ),
+    new HumanMessage("I love programming."),
 ]);
 console.log(response)
+```
+
+```typescript
+import { YandexGPT } from "@langchain/yandex";
+
+const model = new YandexGPT();
+
+const res = await model.call('Translate "I love programming" into French.');
+
+console.log({ res });
 ```
 
 ## Embeddings
@@ -53,7 +64,7 @@ By default, the latest version of `text-search-query` embeddings model is used f
 ### Example
 
 ```typescript
-import { <ADD_CLASS_NAME_HERE> } from "@langchain/yandex";
+import { YandexGPTEmbeddings } from "@langchain/yandex";
 
 const model = new YandexGPTEmbeddings({});
 

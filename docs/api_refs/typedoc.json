@@ -408,6 +408,7 @@
     "../../libs/langchain-community/src/llms/writer.ts",
     "../../libs/langchain-community/src/llms/yandex.ts",
     "../../libs/langchain-community/src/vectorstores/analyticdb.ts",
+    "../../libs/langchain-community/src/vectorstores/astradb.ts",
     "../../libs/langchain-community/src/vectorstores/azure_cosmosdb.ts",
     "../../libs/langchain-community/src/vectorstores/cassandra.ts",
     "../../libs/langchain-community/src/vectorstores/chroma.ts",
