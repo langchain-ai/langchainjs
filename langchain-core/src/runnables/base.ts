@@ -559,8 +559,7 @@ export abstract class Runnable<
       new RunnableAssign(
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         new RunnableMap<Record<string, unknown>>({ steps: mapping })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ) as any
+      ) as Runnable
     );
   }
 
