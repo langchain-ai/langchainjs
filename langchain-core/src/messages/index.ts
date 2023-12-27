@@ -154,6 +154,11 @@ export abstract class BaseMessage
 
   lc_serializable = true;
 
+  get lc_aliases(): Record<string, string> {
+    // exclude snake case conversion to pascal case
+    return { additional_kwargs: "additional_kwargs" };
+  }
+
   /**
    * @deprecated
    * Use {@link BaseMessage.content} instead.
@@ -481,6 +486,11 @@ export class FunctionMessageChunk extends BaseMessageChunk {
 export class ToolMessage extends BaseMessage {
   static lc_name() {
     return "ToolMessage";
+  }
+
+  get lc_aliases(): Record<string, string> {
+    // exclude snake case conversion to pascal case
+    return { tool_call_id: "tool_call_id" };
   }
 
   tool_call_id: string;
