@@ -41,6 +41,8 @@ export interface RunnableInterface<
 > {
   lc_serializable: boolean;
 
+  getName(suffix?: string): string;
+
   invoke(input: RunInput, options?: Partial<CallOptions>): Promise<RunOutput>;
 
   batch(
