@@ -71,13 +71,13 @@ export async function createRefineDocumentsChain(
   documentPrompt: BasePromptTemplate = DEFAULT_DOCUMENT_PROMPT
 ) {
   if (!initialPrompt.inputVariables.includes(DOCUMENTS_KEY)) {
-    throw new Error(`Initial prompt must include ${DOCUMENTS_KEY} variable`);
+    throw new Error(`Initial prompt must include a "${DOCUMENTS_KEY}" variable`);
   }
   if (!refinePrompt.inputVariables.includes(DOCUMENTS_KEY)) {
-    throw new Error(`Refine prompt must include ${DOCUMENTS_KEY} variable`);
+    throw new Error(`Refine prompt must include a "${DOCUMENTS_KEY}" variable`);
   }
   if (!refinePrompt.inputVariables.includes(OUTPUT_KEY)) {
-    throw new Error(`Refine prompt must include ${OUTPUT_KEY} variable`);
+    throw new Error(`Refine prompt must include a "${OUTPUT_KEY}" variable`);
   }
   // work on first document in the list, creating first intermediate output
   const initialStep = RunnablePassthrough.assign({
