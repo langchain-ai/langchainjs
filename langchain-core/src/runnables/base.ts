@@ -124,6 +124,15 @@ export abstract class Runnable<
 {
   protected lc_runnable = true;
 
+  name?: string;
+
+  getName(suffix?: string): string {
+    const name =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.name ?? (this.constructor as any).lc_name ?? this.constructor.name;
+    return suffix ? `${name}${suffix}` : name;
+  }
+
   abstract invoke(
     input: RunInput,
     options?: Partial<CallOptions>
@@ -337,7 +346,7 @@ export abstract class Runnable<
       options?.runType,
       undefined,
       undefined,
-      options?.runName
+      options?.runName ?? this.getName()
     );
     let output;
     try {
@@ -385,7 +394,7 @@ export abstract class Runnable<
           optionsList[i].runType,
           undefined,
           undefined,
-          optionsList[i].runName
+          optionsList[i].runName ?? this.getName()
         )
       )
     );
@@ -436,7 +445,7 @@ export abstract class Runnable<
       options?.runType,
       undefined,
       undefined,
-      options?.runName
+      options?.runName ?? this.getName()
     );
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
@@ -704,6 +713,10 @@ export class RunnableBinding<
     this.kwargs = fields.kwargs;
     this.config = fields.config;
     this.configFactories = fields.configFactories;
+  }
+
+  getName(suffix?: string | undefined): string {
+    return this.bound.getName(suffix);
   }
 
   async _mergeConfig(
@@ -1183,11 +1196,13 @@ export class RunnableSequence<
     middle?: Runnable[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     last: Runnable<any, RunOutput>;
+    name?: string;
   }) {
     super(fields);
     this.first = fields.first;
     this.middle = fields.middle ?? this.middle;
     this.last = fields.last;
+    this.name = fields.name;
   }
 
   get steps() {
@@ -1381,12 +1396,14 @@ export class RunnableSequence<
           ...coerceable.middle,
         ]),
         last: coerceable.last,
+        name: this.name ?? coerceable.name,
       });
     } else {
       return new RunnableSequence({
         first: this.first,
         middle: [...this.middle, this.last],
         last: _coerceToRunnable(coerceable),
+        name: this.name,
       });
     }
   }
@@ -1397,16 +1414,20 @@ export class RunnableSequence<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static from<RunInput = any, RunOutput = any>([first, ...runnables]: [
-    RunnableLike<RunInput>,
-    ...RunnableLike[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunnableLike<any, RunOutput>
-  ]) {
+  static from<RunInput = any, RunOutput = any>(
+    [first, ...runnables]: [
+      RunnableLike<RunInput>,
+      ...RunnableLike[],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      RunnableLike<any, RunOutput>
+    ],
+    name?: string
+  ) {
     return new RunnableSequence<RunInput, Exclude<RunOutput, Error>>({
       first: _coerceToRunnable(first),
       middle: runnables.slice(0, -1).map(_coerceToRunnable),
       last: _coerceToRunnable(runnables[runnables.length - 1]),
+      name,
     });
   }
 }
