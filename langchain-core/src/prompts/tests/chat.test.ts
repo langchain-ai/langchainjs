@@ -285,6 +285,17 @@ test("Test MessagesPlaceholder optional", async () => {
   expect(messages).toEqual([]);
 });
 
+test("Test MessagesPlaceholder optional in a chat prompt template", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([
+    new MessagesPlaceholder({
+      variableName: "foo",
+      optional: true,
+    }),
+  ]);
+  const messages = await prompt.formatMessages({});
+  expect(messages).toEqual([]);
+});
+
 test("Test MessagesPlaceholder not optional", async () => {
   const prompt = new MessagesPlaceholder({
     variableName: "foo",
