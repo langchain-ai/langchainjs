@@ -1,5 +1,5 @@
-import { BaseLLMParams, LLM } from "./base.js";
-import { getEnvironmentVariable } from "../util/env.js";
+import { BaseLLMParams, LLM } from "../../../../langchain/src/llms/base.js";
+import { getEnvironmentVariable } from "../../../../langchain/src/util/env.js";
 
 export class AzureMLHttpClient {
   endpointUrl: string;

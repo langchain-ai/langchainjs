@@ -53,6 +53,7 @@ const entrypoints = {
   // llms
   "llms/ai21": "llms/ai21",
   "llms/aleph_alpha": "llms/aleph_alpha",
+  "llms/azure_ml": "llms/azure_ml",
   "llms/bedrock": "llms/bedrock/index",
   "llms/bedrock/web": "llms/bedrock/web",
   "llms/cloudflare_workersai": "llms/cloudflare_workersai",
@@ -123,6 +124,7 @@ const entrypoints = {
   "chat_models/iflytek_xinghuo": "chat_models/iflytek_xinghuo/index",
   "chat_models/iflytek_xinghuo/web": "chat_models/iflytek_xinghuo/web",
   "chat_models/llama_cpp": "chat_models/llama_cpp",
+  "chat_models/azure_ml": "chat_models/azure_ml",
   "chat_models/minimax": "chat_models/minimax",
   "chat_models/ollama": "chat_models/ollama",
   "chat_models/portkey": "chat_models/portkey",
