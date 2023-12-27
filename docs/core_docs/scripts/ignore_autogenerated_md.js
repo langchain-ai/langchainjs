@@ -24,10 +24,9 @@ function main() {
   // split at the # notebook comment
   const [existing] = existingGitignore.split("# notebooks");
   // rewrite the after
-  const newGitignore =
-    `${existing 
-    }# notebooks\n${ 
-    pathToIPYNBFiles.map((file) => file.replace(".ipynb", ".md")).join("\n")}`;
+  const newGitignore = `${existing}# notebooks\n${pathToIPYNBFiles
+    .map((file) => file.replace(".ipynb", ".md"))
+    .join("\n")}`;
   fs.writeFileSync("./.gitignore", newGitignore);
 }
 main();
