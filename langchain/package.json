@@ -97,6 +97,9 @@
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "chains/combine_documents.cjs",
+    "chains/combine_documents.js",
+    "chains/combine_documents.d.ts",
     "chains/combine_documents/reduce.cjs",
     "chains/combine_documents/reduce.js",
     "chains/combine_documents/reduce.d.ts",
@@ -1358,6 +1361,11 @@
       "types": "./chains.d.ts",
       "import": "./chains.js",
       "require": "./chains.cjs"
+    },
+    "./chains/combine_documents": {
+      "types": "./chains/combine_documents.d.ts",
+      "import": "./chains/combine_documents.js",
+      "require": "./chains/combine_documents.cjs"
     },
     "./chains/combine_documents/reduce": {
       "types": "./chains/combine_documents/reduce.d.ts",
