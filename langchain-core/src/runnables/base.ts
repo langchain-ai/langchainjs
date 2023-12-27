@@ -544,8 +544,8 @@ export abstract class Runnable<
    * Pick keys from the dict output of this runnable. Returns a new runnable.
    */
   pick(keys: string | string[]): RunnableSequence {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define, @typescript-eslint/no-explicit-any
-    return this.pipe(new RunnablePick(keys) as any);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return this.pipe(new RunnablePick(keys) as Runnable);
   }
 
   /**
