@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# yum -y update
+yum -y update
 # yum install gcc bzip2-devel libffi-devel zlib-devel wget tar gzip -y
+yum install wget tar -y
 # amazon-linux-extras install python3.8 -y
 
 # install quarto
