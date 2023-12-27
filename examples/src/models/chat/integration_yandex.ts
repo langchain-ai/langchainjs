@@ -1,4 +1,4 @@
-import { ChatYandexGPT } from "langchain/chat_models/yandex";
+import { ChatYandexGPT } from "@langchain/community/chat_models/yandex";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
 const chat = new ChatYandexGPT();

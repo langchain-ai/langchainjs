@@ -1,4 +1,4 @@
-import { Typesense, TypesenseConfig } from "langchain/vectorstores/typesense";
+import { Typesense, TypesenseConfig } from "@langchain/community/vectorstores/typesense";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Client } from "typesense";
 import { Document } from "langchain/document";

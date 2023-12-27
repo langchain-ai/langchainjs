@@ -1,8 +1,6 @@
 import { OpenAI } from "langchain/llms/openai";
-import {
-  createAWSSfnAgent,
-  AWSSfnToolkit,
-} from "langchain/agents/toolkits/aws_sfn";
+import { AWSSfnToolkit } from "@langchain/community/agents/toolkits/aws_sfn";
+import { createAWSSfnAgent } from "langchain/agents/toolkits/aws_sfn";
 
 const _EXAMPLE_STATE_MACHINE_ASL = `
 {
@@ -32,7 +30,7 @@ export const run = async () => {
       "arn:aws:states:us-east-1:1234567890:stateMachine:my-state-machine", // Update with your state machine ARN accordingly
     region: "<your Sfn's region>",
     accessKeyId: "<your access key id>",
-    secretAccessKey: "<your secret access key>",
+    secretAccessKey: "<your secret access key>"
   });
   const executor = createAWSSfnAgent(model, toolkit);
 

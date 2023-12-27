@@ -1,5 +1,5 @@
 // If you want to import the browser version, use the following line instead:
-// import { CloseVectorWeb } from "langchain/vectorstores/closevector/web";
+// import { CloseVectorWeb } from "@langchain/community/vectorstores/closevector/web";
 import { CloseVectorNode } from "langchain/vectorstores/closevector/node";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 

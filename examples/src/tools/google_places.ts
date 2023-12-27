@@ -1,4 +1,4 @@
-import { GooglePlacesAPI } from "langchain/tools/google_places";
+import { GooglePlacesAPI } from "@langchain/community/tools/google_places";
 import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 

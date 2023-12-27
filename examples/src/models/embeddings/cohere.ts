@@ -1,4 +1,4 @@
-import { CohereEmbeddings } from "langchain/embeddings/cohere";
+import { CohereEmbeddings } from "@langchain/community/embeddings/cohere";
 
 /* Embed queries */
 const embeddings = new CohereEmbeddings({

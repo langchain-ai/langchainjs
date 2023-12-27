@@ -1,4 +1,4 @@
-import { Milvus } from "langchain/vectorstores/milvus";
+import { Milvus } from "@langchain/community/vectorstores/milvus";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {
