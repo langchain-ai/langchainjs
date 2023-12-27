@@ -129,7 +129,7 @@ export abstract class Runnable<
   getName(suffix?: string): string {
     const name =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.name ?? (this.constructor as any).lc_name ?? this.constructor.name;
+      this.name ?? (this.constructor as any).lc_name() ?? this.constructor.name;
     return suffix ? `${name}${suffix}` : name;
   }
 
