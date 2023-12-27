@@ -34,37 +34,30 @@ export type MessageType =
   | "function"
   | "tool";
 
-export type MessageContentText =
-  {
-    type: "text";
-    text: string;
-  };
+export type MessageContentText = {
+  type: "text";
+  text: string;
+};
 
-export type MessageContentImageUrl =
-  {
-    type: "image_url";
-    image_url: string | { url: string; detail?: "auto" | "low" | "high" };
-  };
+export type MessageContentImageUrl = {
+  type: "image_url";
+  image_url: string | { url: string; detail?: "auto" | "low" | "high" };
+};
 
-export type MessageContentBlobUrl =
-  {
-    type: "blob_url";
-    blob_url: {
-      url: string;
-      content_type: string;
-    };
+export type MessageContentBlobUrl = {
+  type: "blob_url";
+  blob_url: {
+    url: string;
+    content_type: string;
   };
+};
 
 export type MessageContentComplex =
-  (
-    | MessageContentText
-    | MessageContentImageUrl
-    | MessageContentBlobUrl
-  );
+  | MessageContentText
+  | MessageContentImageUrl
+  | MessageContentBlobUrl;
 
-export type MessageContent =
-  | string
-  | MessageContentComplex[];
+export type MessageContent = string | MessageContentComplex[];
 
 export interface FunctionCall {
   /**
