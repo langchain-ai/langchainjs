@@ -132,7 +132,7 @@
     "jsdom": "^22.1.0",
     "llmonitor": "^0.5.9",
     "lodash": "^4.17.21",
-    "lunary": "^0.6.4",
+    "lunary": "^0.6.11",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "neo4j-driver": "^5.12.0",
