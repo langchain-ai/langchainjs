@@ -1,5 +1,13 @@
-import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type {
+  BaseLanguageModel,
+  BaseLanguageModelInterface,
+} from "@langchain/core/language_models/base";
 import type { ToolInterface } from "@langchain/core/tools";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import type { BasePromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   AgentStep,
@@ -16,6 +24,8 @@ import { AgentArgs, BaseSingleActionAgent } from "../agent.js";
 import { AGENT_INSTRUCTIONS } from "./prompt.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { XMLAgentOutputParser } from "./output_parser.js";
+import { renderTextDescription } from "../../tools/render.js";
+import { formatXml } from "../format_scratchpad/xml.js";
 
 /**
  * Interface for the input to the XMLAgent class.
@@ -116,4 +126,44 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
       tools,
     });
   }
+}
+
+export type CreateXmlAgentParams = {
+  llm: BaseLanguageModelInterface;
+  tools: ToolInterface[];
+  prompt: BasePromptTemplate;
+};
+
+export async function createXmlAgent({
+  llm,
+  tools,
+  prompt,
+}: CreateXmlAgentParams) {
+  const missingVariables = ["tools", "agent_scratchpad"].filter((v) =>
+    prompt.inputVariables.includes(v)
+  );
+  if (missingVariables.length > 0) {
+    throw new Error(
+      `Provided prompt is missing required input variables: ${JSON.stringify(
+        missingVariables
+      )}`
+    );
+  }
+  const partialedPrompt = await prompt.partial({
+    tools: renderTextDescription(tools),
+  });
+  // TODO: Add .bind to core runnable interface.
+  const llmWithStop = (llm as BaseLanguageModel).bind({
+    stop: ["</tool_input>"],
+  });
+  const agent = RunnableSequence.from([
+    RunnablePassthrough.assign({
+      agent_scratchpad: (input: { steps: AgentStep[] }) =>
+        formatXml(input.steps),
+    }),
+    partialedPrompt,
+    llmWithStop,
+    new XMLAgentOutputParser(),
+  ]);
+  return agent;
 }
