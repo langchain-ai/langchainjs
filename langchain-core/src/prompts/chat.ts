@@ -477,6 +477,13 @@ function _coerceMessagePromptTemplateLike(
   }
 }
 
+function isMessagesPlaceholder(
+  x: BaseMessagePromptTemplate | BaseMessage
+): x is MessagesPlaceholder {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (x.constructor as any).lc_name() === "MessagesPlaceholder";
+}
+
 /**
  * Class that represents a chat prompt. It extends the
  * BaseChatPromptTemplate and uses an array of BaseMessagePromptTemplate
@@ -615,7 +622,11 @@ export class ChatPromptTemplate<
       } else {
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {
-            if (!(inputVariable in allValues)) {
+            console.log(isMessagesPlaceholder(promptMessage));
+            if (
+              !(inputVariable in allValues) &&
+              !(isMessagesPlaceholder(promptMessage) && promptMessage.optional)
+            ) {
               throw new Error(
                 `Missing value for input variable \`${inputVariable.toString()}\``
               );
