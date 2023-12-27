@@ -316,9 +316,9 @@ export class ConversationalRetrievalQAChain
 }
 
 /**
- * Params for the createChatRetrieverChain method.
+ * Params for the createChatHistoryRetriever method.
  */
-export type CreateChatRetrieverChainParams = {
+export type CreateChatHistoryRetrieverParams = {
   /**
    * Language model to use for generating a search term given chat history
    */
@@ -336,7 +336,7 @@ export type CreateChatRetrieverChainParams = {
  * If there is no `chat_history`, then the `input` is just passed directly to the
  * retriever. If there is `chat_history`, then the prompt and LLM will be used
  * to generate a search query. That search query is then passed to the retriever.
- * @param {CreateChatRetrieverChainParams} params
+ * @param {CreateChatHistoryRetrieverParams} params
  * @returns An LCEL Runnable. The runnable input must take in `input`, and if there
  * is chat history should take it in the form of `chat_history`.
  * The Runnable output is a list of Documents
@@ -345,11 +345,11 @@ export type CreateChatRetrieverChainParams = {
  * // TODO
  * ```
  */
-export function createChatRetrieverChain({
+export function createChatHistoryRetriever({
   llm,
   retriever,
   prompt,
-}: CreateChatRetrieverChainParams): RunnableInterface<
+}: CreateChatHistoryRetrieverParams): RunnableInterface<
   { input: string; chat_history: string | BaseMessage[] },
   DocumentInterface[]
 > {

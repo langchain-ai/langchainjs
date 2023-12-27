@@ -3,9 +3,9 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { FakeRetriever } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
 import { FakeListLLM } from "../../llms/fake.js";
-import { createChatRetrieverChain } from "../conversational_retrieval_chain.js";
+import { createChatHistoryRetriever } from "../conversational_retrieval_chain.js";
 
-test("createChatRetrieverChain", async () => {
+test("createChatHistoryRetriever", async () => {
   const answer = "I know the answer!";
   const questionGenPrompt = ChatPromptTemplate.fromTemplate(
     `hi! {input} {chat_history}`
@@ -18,7 +18,7 @@ test("createChatRetrieverChain", async () => {
   });
   const llm = new FakeListLLM({ responses: [answer] });
   const input = "What is the answer?";
-  const chain = createChatRetrieverChain({
+  const chain = createChatHistoryRetriever({
     llm,
     retriever,
     prompt: questionGenPrompt,
