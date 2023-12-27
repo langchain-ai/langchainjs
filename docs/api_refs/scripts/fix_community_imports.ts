@@ -79,11 +79,11 @@ function main() {
       if (filePathContents.includes(oldImport)) {
         console.log(`Replacing ${oldImport} with ${newImport}`);
         foundCount += 1;
-        // const newFileContents = filePathContents.replaceAll(
-        //   `from "${entrypoint}"`,
-        //   `from "@langchain/${entrypoint}"`
-        // );
-        // fs.writeFileSync(filePath, newFileContents, "utf-8");
+        const newFileContents = filePathContents.replaceAll(
+          oldImport,
+          newImport
+        );
+        fs.writeFileSync(filePath, newFileContents, "utf-8");
       }
     });
   });
