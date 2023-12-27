@@ -18,7 +18,7 @@ test("createRetrievalChain", async () => {
   const retriever = new FakeRetriever({
     output: fakeRetrievedDocs,
   });
-  const chain = createRetrievalChain({
+  const chain = await createRetrievalChain({
     retriever,
     combineDocsChain: questionGenPrompt.pipe(llm),
   });

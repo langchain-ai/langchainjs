@@ -18,10 +18,10 @@ test("createHistoryAwareRetriever", async () => {
   });
   const llm = new FakeListLLM({ responses: [answer] });
   const input = "What is the answer?";
-  const chain = createHistoryAwareRetriever({
+  const chain = await createHistoryAwareRetriever({
     llm,
     retriever,
-    prompt: questionGenPrompt,
+    rephrasePrompt: questionGenPrompt,
   });
   const output = await chain.invoke({ input, chat_history: [] });
   expect(output).toEqual(fakeRetrievedDocs);

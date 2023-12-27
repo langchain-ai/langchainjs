@@ -52,15 +52,32 @@ function isBaseRetriever(x: unknown): x is BaseRetrieverInterface {
  *     containing at least `context` and `answer` keys.
  * @example
  * ```typescript
- * // TODO
+ * // yarn add langchain @langchain/openai
+ *
+ * import { ChatOpenAI } from "@langchain/openai";
+ * import { pull } from "langchain/hub";
+ * import { createRetrievalChain } from "langchain/chains/retrieval";
+ * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+ *
+ * const retrievalQAChatPrompt = await pull("langchain-ai/retrieval-qa-chat");
+ * const llm = new ChatOpenAI({});
+ * const retriever = ...
+ * const combineDocsChain = await createStuffDocumentsChain(...);
+ * const retrievalChain = await createRetrievalChain({
+ *   retriever,
+ *   combineDocsChain,
+ * });
+ * const response = await chain.invoke({ input: "..." });
  * ```
  */
-export function createRetrievalChain({
+export async function createRetrievalChain({
   retriever,
   combineDocsChain,
-}: CreateRetrievalChainParams): RunnableInterface<
-  { input: string; chat_history?: BaseMessage[] | string },
-  { context: string; answer: string } & { [key: string]: unknown }
+}: CreateRetrievalChainParams): Promise<
+  RunnableInterface<
+    { input: string; chat_history?: BaseMessage[] | string },
+    { context: string; answer: string } & { [key: string]: unknown }
+  >
 > {
   let retrieveDocumentsChain: Runnable<{ input: string }, DocumentInterface[]>;
   if (isBaseRetriever(retriever)) {

@@ -14,15 +14,17 @@ import type { BaseMessage } from "../schema/index.js";
  */
 export type CreateHistoryAwareRetriever = {
   /**
-   * Language model to use for generating a search term given chat history
+   * Language model to use for generating a search term given chat history.
    */
   llm: LanguageModelLike;
   /**
    * RetrieverLike object that takes a string as input and outputs a list of Documents.
    */
   retriever: RunnableInterface<string, DocumentInterface[]>;
-  /** The prompt used to generate the search query for the retriever. */
-  prompt: BasePromptTemplate;
+  /**
+   * The prompt used to generate the search query for the retriever.
+   */
+  rephrasePrompt: BasePromptTemplate;
 };
 
 /**
@@ -36,21 +38,38 @@ export type CreateHistoryAwareRetriever = {
  * The Runnable output is a list of Documents
  * @example
  * ```typescript
- * // TODO
+ * // yarn add langchain @langchain/openai
+ *
+ * import { ChatOpenAI } from "@langchain/openai";
+ * import { pull } from "langchain/hub";
+ * import { createRetrievalChain } from "langchain/chains/retrieval";
+ * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+ *
+ * const rephrasePrompt = await pull("langchain-ai/chat-langchain-rephrase");
+ * const llm = new ChatOpenAI({});
+ * const retriever = ...
+ * const historyAwareRetrieverChain = await createHistoryAwareRetriever({
+ *   llm,
+ *   retriever,
+ *   rephrasePrompt,
+ * });
+ * const result = await chain.invoke({"input": "...", "chat_history": [] })
  * ```
  */
-export function createHistoryAwareRetriever({
+export async function createHistoryAwareRetriever({
   llm,
   retriever,
-  prompt,
-}: CreateHistoryAwareRetriever): RunnableInterface<
-  { input: string; chat_history: string | BaseMessage[] },
-  DocumentInterface[]
+  rephrasePrompt,
+}: CreateHistoryAwareRetriever): Promise<
+  RunnableInterface<
+    { input: string; chat_history: string | BaseMessage[] },
+    DocumentInterface[]
+  >
 > {
-  if (!prompt.inputVariables.includes("input")) {
+  if (!rephrasePrompt.inputVariables.includes("input")) {
     throw new Error(
       `Expected "input" to be a prompt variable, but got ${JSON.stringify(
-        prompt.inputVariables
+        rephrasePrompt.inputVariables
       )}`
     );
   }
@@ -59,7 +78,12 @@ export function createHistoryAwareRetriever({
       (input) => input.chat_history?.length > 0,
       RunnableSequence.from([(input) => input.input, retriever]),
     ],
-    RunnableSequence.from([prompt, llm, new StringOutputParser(), retriever]),
+    RunnableSequence.from([
+      rephrasePrompt,
+      llm,
+      new StringOutputParser(),
+      retriever,
+    ]),
   ]).withConfig({
     runName: "chat_retriever_chain",
   });
