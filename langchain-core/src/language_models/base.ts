@@ -281,6 +281,13 @@ export interface BaseLanguageModelInterface<
   serialize(): SerializedLLM;
 }
 
+export type LanguageModelOutput = BaseMessage | string;
+
+export type LanguageModelLike = Runnable<
+  BaseLanguageModelInput,
+  LanguageModelOutput
+>;
+
 /**
  * Base class for language models.
  */
