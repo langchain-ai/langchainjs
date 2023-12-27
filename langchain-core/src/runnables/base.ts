@@ -1615,6 +1615,70 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, options);
   }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    config?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    let finalChunk;
+    for await (const chunk of generator) {
+      if (finalChunk === undefined) {
+        finalChunk = chunk;
+      } else {
+        // Make a best effort to gather, for any type that supports concat.
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          finalChunk = concat(finalChunk, chunk as any);
+        } catch (e) {
+          finalChunk = chunk;
+        }
+      }
+    }
+
+    const output = this.func(finalChunk, { config });
+    if (output && Runnable.isRunnable(output)) {
+      if (config?.recursionLimit === 0) {
+        throw new Error("Recursion limit reached.");
+      }
+      const stream = await output.stream(
+        finalChunk,
+        this._patchConfig(
+          config,
+          runManager?.getChild(),
+          (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1
+        )
+      );
+      for await (const chunk of stream) {
+        yield chunk;
+      }
+    } else {
+      yield output;
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
+  }
 }
 
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
