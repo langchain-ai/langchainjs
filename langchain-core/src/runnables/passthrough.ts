@@ -1,4 +1,6 @@
-import { Runnable, RunnableLike, RunnableMap } from "./base.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
+import { IterableReadableStream, atee } from "../utils/stream.js";
+import { Runnable, RunnableMap, RunnableMapLike } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
 /**
@@ -6,9 +8,9 @@ import type { RunnableConfig } from "./config.js";
  */
 export class RunnableAssign<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends Record<string, any> = any,
+  RunInput extends Record<string, any> = Record<string, any>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = any,
+  RunOutput extends Record<string, any> = Record<string, any>,
   CallOptions extends RunnableConfig = RunnableConfig
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain_core", "runnables"];
@@ -30,6 +32,66 @@ export class RunnableAssign<
       ...input,
       ...mapperResult,
     } as RunOutput;
+  }
+
+  async *_transform(
+    generator: AsyncGenerator<RunInput>,
+    runManager?: CallbackManagerForChainRun,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    // collect mapper keys
+    const mapperKeys = this.mapper.getStepsKeys();
+    // create two input gens, one for the mapper, one for the input
+    const [forPassthrough, forMapper] = atee(generator, 2);
+    // create mapper output gen
+    const mapperOutput = this.mapper.transform(
+      forMapper,
+      this._patchConfig(options, runManager?.getChild())
+    );
+    // start the mapper
+    const firstMapperChunkPromise = mapperOutput.next();
+    // yield the passthrough
+    for await (const chunk of forPassthrough) {
+      if (typeof chunk !== "object" || Array.isArray(chunk)) {
+        throw new Error(
+          `RunnableAssign can only be used with objects as input, got ${typeof chunk}`
+        );
+      }
+      const filtered = Object.fromEntries(
+        Object.entries(chunk).filter(([key]) => !mapperKeys.includes(key))
+      );
+      if (Object.keys(filtered).length > 0) {
+        yield filtered as unknown as RunOutput;
+      }
+    }
+    // yield the mapper output
+    yield (await firstMapperChunkPromise).value;
+    for await (const chunk of mapperOutput) {
+      yield chunk as unknown as RunOutput;
+    }
+  }
+
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options?: Partial<RunnableConfig>
+  ): AsyncGenerator<RunOutput> {
+    return this._transformStreamWithConfig(
+      generator,
+      this._transform.bind(this),
+      options
+    );
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<RunnableConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    async function* generator() {
+      yield input;
+    }
+    return IterableReadableStream.fromAsyncGenerator(
+      this.transform(generator(), options)
+    );
   }
 }
 
@@ -82,6 +144,17 @@ export class RunnablePassthrough<RunInput> extends Runnable<
     );
   }
 
+  transform(
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<RunnableConfig>
+  ): AsyncGenerator<RunInput> {
+    return this._transformStreamWithConfig(
+      generator,
+      (input: AsyncGenerator<RunInput>) => input,
+      options
+    );
+  }
+
   /**
    * A runnable that assigns key-value pairs to the input.
    *
@@ -112,7 +185,7 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    */
   static assign(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mapping: Record<string, RunnableLike<Record<string, unknown>, any>>
+    mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
   ): RunnableAssign<Record<string, unknown>, Record<string, unknown>> {
     return new RunnableAssign(
       new RunnableMap<Record<string, unknown>>({ steps: mapping })
