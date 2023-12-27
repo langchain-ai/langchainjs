@@ -1,31 +1,24 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
-import { LLMChain } from "../llm_chain.js";
-import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { Document } from "../../document.js";
 import {
   loadQAMapReduceChain,
   loadQARefineChain,
 } from "../question_answering/load.js";
+import { createStuffDocumentsChain } from "../combine_documents/stuff.js";
+import { createRefineDocumentsChain } from "../combine_documents/refine.js";
 
 test("Test StuffDocumentsChain", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
-  const prompt = new PromptTemplate({
-    template: "Print {foo}",
-    inputVariables: ["foo"],
-  });
-  const llmChain = new LLMChain({ prompt, llm: model });
-  const chain = new StuffDocumentsChain({
-    llmChain,
-    documentVariableName: "foo",
-  });
+  const llm = new OpenAI({ modelName: "text-ada-001" });
+  const prompt = PromptTemplate.fromTemplate("Print {context}");
+  const chain = await createStuffDocumentsChain({ llm, prompt });
   const docs = [
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),
     new Document({ pageContent: "baz" }),
   ];
-  const res = await chain.call({ input_documents: docs });
+  const res = await chain.invoke({ context: docs });
   console.log({ res });
 });
 
@@ -44,14 +37,18 @@ test("Test MapReduceDocumentsChain with QA chain", async () => {
 });
 
 test("Test RefineDocumentsChain with QA chain", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
-  const chain = loadQARefineChain(model);
+  const llm = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
+  const chain = await createRefineDocumentsChain({
+    llm,
+    initialPrompt: PromptTemplate.fromTemplate("Print {context}"),
+    refinePrompt: PromptTemplate.fromTemplate("Print {output} {context}"),
+  });
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
   ];
-  const res = await chain.call({
-    input_documents: docs,
+  const res = await chain.invoke({
+    context: docs,
     question: "Where did harrison go to college",
   });
   console.log({ res });

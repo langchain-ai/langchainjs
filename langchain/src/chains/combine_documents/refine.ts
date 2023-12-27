@@ -61,17 +61,24 @@ interface IntermediateInputs {
  *  ["user", "Here is the next page:\n\n{context}"]
  * ])
  * 
- * const chain = await createRefineDocumentsChain(llm, initialPrompt, refinePrompt);
+ * const chain = await createRefineDocumentsChain({ llm, initialPrompt, refinePrompt });
  * const output = await chain.invoke({ context: documents, question: "..." });
  */
-export async function createRefineDocumentsChain(
-  llm: LanguageModelLike,
-  initialPrompt: BasePromptTemplate,
-  refinePrompt: BasePromptTemplate,
-  documentPrompt: BasePromptTemplate = DEFAULT_DOCUMENT_PROMPT
-) {
+export async function createRefineDocumentsChain({
+  llm,
+  initialPrompt,
+  refinePrompt,
+  documentPrompt = DEFAULT_DOCUMENT_PROMPT,
+}: {
+  llm: LanguageModelLike;
+  initialPrompt: BasePromptTemplate;
+  refinePrompt: BasePromptTemplate;
+  documentPrompt?: BasePromptTemplate;
+}) {
   if (!initialPrompt.inputVariables.includes(DOCUMENTS_KEY)) {
-    throw new Error(`Initial prompt must include a "${DOCUMENTS_KEY}" variable`);
+    throw new Error(
+      `Initial prompt must include a "${DOCUMENTS_KEY}" variable`
+    );
   }
   if (!refinePrompt.inputVariables.includes(DOCUMENTS_KEY)) {
     throw new Error(`Refine prompt must include a "${DOCUMENTS_KEY}" variable`);
@@ -103,7 +110,7 @@ export async function createRefineDocumentsChain(
       "refine_step"
     ),
     [INTERMEDIATE_STEPS_KEY]: (inputs: IntermediateInputs) => [
-      ...inputs[INTERMEDIATE_STEPS_KEY],
+      ...(inputs[INTERMEDIATE_STEPS_KEY] ?? []),
       inputs[OUTPUT_KEY],
     ],
   });
@@ -140,5 +147,10 @@ function formatNextDoc(
 ) {
   const nextIdx = (inputs[INTERMEDIATE_STEPS_KEY] ?? []).length;
   const nextDoc = inputs[DOCUMENTS_KEY][nextIdx];
-  return documentPrompt.invoke({ page_content: nextDoc.pageContent });
+  return {
+    ...inputs,
+    [DOCUMENTS_KEY]: documentPrompt.invoke({
+      page_content: nextDoc.pageContent,
+    }),
+  };
 }

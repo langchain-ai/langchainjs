@@ -34,13 +34,19 @@ import {
     the "context" key.
     Return type depends on the `output_parser` used.
  */
-export async function createStuffDocumentsChain(
-  llm: LanguageModelLike,
-  prompt: BasePromptTemplate,
-  outputParser: BaseOutputParser = new StringOutputParser(),
-  documentPrompt: BasePromptTemplate = DEFAULT_DOCUMENT_PROMPT,
-  documentSeparator: string = DEFAULT_DOCUMENT_SEPARATOR
-) {
+export async function createStuffDocumentsChain({
+  llm,
+  prompt,
+  outputParser = new StringOutputParser(),
+  documentPrompt = DEFAULT_DOCUMENT_PROMPT,
+  documentSeparator = DEFAULT_DOCUMENT_SEPARATOR,
+}: {
+  llm: LanguageModelLike;
+  prompt: BasePromptTemplate;
+  outputParser?: BaseOutputParser;
+  documentPrompt?: BasePromptTemplate;
+  documentSeparator?: string;
+}) {
   if (!prompt.inputVariables.includes(DOCUMENTS_KEY)) {
     throw new Error(`Prompt must include a "${DOCUMENTS_KEY}" variable`);
   }
