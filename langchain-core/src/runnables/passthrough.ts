@@ -6,8 +6,6 @@ import {
 } from "./base.js";
 import type { RunnableConfig } from "./config.js";
 
-export { RunnableAssign };
-
 /**
  * A runnable to passthrough inputs unchanged or with additional keys.
  *

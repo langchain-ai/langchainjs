@@ -552,7 +552,6 @@ export abstract class Runnable<
    * Assigns new fields to the dict output of this runnable. Returns a new runnable.
    */
   assign(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
   ): RunnableSequence {
     return this.pipe(
