@@ -3,7 +3,21 @@ import {
   CallbackManager,
 } from "../callbacks/manager.js";
 
-export type RunnableConfig = BaseCallbackConfig;
+export const DEFAULT_RECURSION_LIMIT = 25;
+
+export interface RunnableConfig extends BaseCallbackConfig {
+  /**
+   * Runtime values for attributes previously made configurable on this Runnable,
+   * or sub-Runnables.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  configurable?: Record<string, any>;
+
+  /**
+   * Maximum number of times a call can recurse. If not provided, defaults to 25.
+   */
+  recursionLimit?: number;
+}
 
 export async function getCallbackMangerForConfig(config?: RunnableConfig) {
   return CallbackManager.configure(
@@ -28,6 +42,8 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
         copy[key] = { ...copy[key], ...options[key] };
       } else if (key === "tags") {
         copy[key] = (copy[key] ?? []).concat(options[key] ?? []);
+      } else if (key === "configurable") {
+        copy[key] = { ...copy[key], ...options[key] };
       } else if (key === "callbacks") {
         const baseCallbacks = copy.callbacks;
         const providedCallbacks = options.callbacks ?? config.callbacks;
