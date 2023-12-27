@@ -622,7 +622,6 @@ export class ChatPromptTemplate<
       } else {
         const inputValues = promptMessage.inputVariables.reduce(
           (acc, inputVariable) => {
-            console.log(isMessagesPlaceholder(promptMessage));
             if (
               !(inputVariable in allValues) &&
               !(isMessagesPlaceholder(promptMessage) && promptMessage.optional)
