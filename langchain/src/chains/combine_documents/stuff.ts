@@ -42,7 +42,7 @@ export async function createStuffDocumentsChain(
   documentSeparator: string = DEFAULT_DOCUMENT_SEPARATOR
 ) {
   if (!prompt.inputVariables.includes(DOCUMENTS_KEY)) {
-    throw new Error(`Prompt must include ${DOCUMENTS_KEY} variable`);
+    throw new Error(`Prompt must include a "${DOCUMENTS_KEY}" variable`);
   }
 
   return RunnableSequence.from(
