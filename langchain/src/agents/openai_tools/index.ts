@@ -21,7 +21,7 @@ export { OpenAIToolsAgentOutputParser, type ToolsAgentStep };
 export type CreateOpenAIToolsAgentParams = {
   llm: BaseChatModel<
     BaseChatModelCallOptions & {
-      tools?: OpenAIClient.ChatCompletionTool[];
+      tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
       tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
     }
   >;
