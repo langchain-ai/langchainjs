@@ -2,28 +2,17 @@
 sidebar_position: 0
 ---
 
-# LLMs
-
-:::info
-Head to [Integrations](/docs/integrations/llms) for documentation on built-in integrations with LLM providers.
-:::
+# Quick Start
 
 Large Language Models (LLMs) are a core component of LangChain.
 LangChain does not serve its own LLMs, but rather provides a standard interface for interacting with many different LLMs.
 
-For more detailed documentation check out our:
-
-- **How-to guides**: Walkthroughs of core functionality, like streaming, async, etc.
-
-- **Integrations**: How to use different LLM providers (OpenAI, Anthropic, etc.)
-
-## Get started
 
 There are lots of LLM providers (OpenAI, Cohere, Hugging Face, etc) - the `LLM` class is designed to provide a standard interface for all of them.
 
 In this walkthrough we'll work with an OpenAI LLM wrapper, although the functionalities highlighted are generic for all LLM types.
 
-### Setup
+## Setup
 
 To start we'll need to install the official OpenAI package:
 
@@ -67,19 +56,25 @@ import { OpenAI } from "langchain/llms/openai";
 const llm = new OpenAI({});
 ```
 
-### `call`: string in -> string out
+## LCEL
 
-The simplest way to use an LLM is the `.call` method: pass in a string, get a string completion.
+LLMs implement the [Runnable interface](/docs/expression_language/interface), the basic building block of the [LangChain Expression Language (LCEL)](/docs/expression_language/). This means they support `invoke`, `ainvoke`, `stream`, `astream`, `batch`, `abatch`, `astream_log` calls.
+
+LLMs accept **strings** as inputs, or objects which can be coerced to string prompts, including `List[BaseMessage]` and `PromptValue`.
 
 ```typescript
-const res = await llm.call("Tell me a joke");
-
-console.log(res);
-
-// "Why did the chicken cross the road?\n\nTo get to the other side."
+await llm.invoke(
+    "What are some theories about the relationship between unemployment and inflation?"
+)
 ```
 
-### `generate`: batch calls, richer outputs
+```
+'\n\n1. The Phillips Curve Theory: This suggests that there is an inverse relationship between unemployment and inflation, meaning that when unemployment is low, inflation will be higher, and when unemployment is high, inflation will be lower.\n\n2. The Monetarist Theory: This theory suggests that the relationship between unemployment and inflation is weak, and that changes in the money supply are more important in determining inflation.\n\n3. The Resource Utilization Theory: This suggests that when unemployment is low, firms are able to raise wages and prices in order to take advantage of the increased demand for their products and services. This leads to higher inflation.'
+```
+
+See the [Runnable interface](/docs/expression_language/interface) for more details on the available methods.
+
+## [Lgeacy] `generate`: batch calls, richer outputs
 
 `generate` lets you can call the model with a list of strings, getting back a more complete response than just the text. This complete response can include things like multiple top responses and other LLM provider-specific information:
 
@@ -133,13 +128,3 @@ import AdvancedExample from "@examples/models/llm/llm_advanced.ts";
 Here's an example with additional parameters, which sets `-1` for `max_tokens` to turn on token size calculations:
 
 <CodeBlock language="typescript">{AdvancedExample}</CodeBlock>
-
-## Advanced
-
-_This section is for users who want a deeper technical understanding of how LangChain works. If you are just getting started, you can skip this section._
-
-Both LLMs and Chat Models are built on top of the `BaseLanguageModel` class. This class provides a common interface for all models, and allows us to easily swap out models in chains without changing the rest of the code.
-
-The `BaseLanguageModel` class has two abstract methods: `generatePrompt` and `getNumTokens`, which are implemented by `BaseChatModel` and `BaseLLM` respectively.
-
-`BaseLLM` is a subclass of `BaseLanguageModel` that provides a common interface for LLMs while `BaseChatModel` is a subclass of `BaseLanguageModel` that provides a common interface for chat models.

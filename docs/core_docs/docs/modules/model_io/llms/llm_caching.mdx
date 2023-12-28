@@ -25,7 +25,7 @@ The default cache is stored in-memory. This means that if you restart your appli
 
 ```typescript
 // The first time, it is not yet in cache, so it should take longer
-const res = await model.predict("Tell me a joke");
+const res = await model.invoke("Tell me a joke");
 console.log(res);
 
 /*
@@ -39,7 +39,7 @@ console.log(res);
 
 ```typescript
 // The second time it is, so it goes faster
-const res2 = await model.predict("Tell me a joke");
+const res2 = await model.invoke("Tell me a joke");
 console.log(res2);
 
 /*

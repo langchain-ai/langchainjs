@@ -22,19 +22,27 @@
     },
     {
       "source": "/docs/modules/models(/?)",
-      "destination": "/docs/modules/model_io/models/"
+      "destination": "/docs/modules/model_io/"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat/(.*)",
+      "destination": "/docs/modules/model_io/chat/"
+    },
+    {
+      "source": "/docs/modules/model_io/models/chat(/?)",
+      "destination": "/docs/modules/model_io/chat/"
     },
     {
       "source": "/docs/modules/models/chat(/?)",
-      "destination": "/docs/modules/model_io/models/chat/"
+      "destination": "/docs/modules/model_io/chat/"
     },
     {
       "source": "/docs/modules/models/chat/integrations(/?)",
-      "destination": "/docs/modules/model_io/models/chat/"
+      "destination": "/docs/integrations/chat/"
     },
     {
       "source": "/docs/modules/models/chat/additional_functionality(/?)",
-      "destination": "/docs/modules/model_io/models/chat/"
+      "destination": "/docs/modules/model_io/chat/"
     },
     {
       "source": "/docs/modules/models/embeddings(/?)",
@@ -42,7 +50,7 @@
     },
     {
       "source": "/docs/modules/models/embeddings/integrations(/?)",
-      "destination": "/docs/modules/data_connection/text_embedding/"
+      "destination": "/docs/integrations/text_embedding/"
     },
     {
       "source": "/docs/modules/models/embeddings/additional_functionality(/?)",
@@ -50,15 +58,23 @@
     },
     {
       "source": "/docs/modules/models/llms(/?)",
-      "destination": "/docs/modules/model_io/models/llms/"
+      "destination": "/docs/modules/model_io/llms/"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms/(.*)",
+      "destination": "/docs/modules/model_io/llms/"
+    },
+    {
+      "source": "/docs/modules/model_io/models/llms(/?)",
+      "destination": "/docs/modules/model_io/llms/"
     },
     {
       "source": "/docs/modules/models/llms/integrations(/?)",
-      "destination": "/docs/modules/model_io/models/llms/"
+      "destination": "/docs/integrations/llms/"
     },
     {
       "source": "/docs/modules/models/llms/additional_functionality(/?)",
-      "destination": "/docs/modules/model_io/models/llms/"
+      "destination": "/docs/modules/model_io/llms/"
     },
     {
       "source": "/docs/modules/prompts(/?)",
@@ -82,7 +98,11 @@
     },
     {
       "source": "/docs/modules/prompts/example_selectors(/?)",
-      "destination": "/docs/modules/model_io/prompts/example_selectors/"
+      "destination": "/docs/modules/model_io/prompts/example_selector/"
+    },
+    {
+      "source": "/docs/modules/model_io/prompts/example_selector(/?)",
+      "destination": "/docs/modules/model_io/prompts/example_selector_types/"
     },
     {
       "source": "/docs/modules/indexes(/?)",
