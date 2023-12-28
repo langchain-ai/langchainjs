@@ -1,5 +1,7 @@
 import { type DocumentInterface, Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { VectorStore } from "@langchain/core/vectorstores";
 
@@ -19,6 +21,7 @@ export interface TurbopufferParams {
   namespace?: string;
   distanceMetric?: TurbopufferDistanceMetric;
   apiUrl?: string;
+  batchSize?: number;
 }
 
 export interface TurbopufferQueryResult {
@@ -33,13 +36,13 @@ export class TurbopufferVectorStore extends VectorStore {
 
   get lc_secrets(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY",
+      apiKey: "TURBOPUFFER_API_KEY"
     };
   }
 
   get lc_aliases(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY",
+      apiKey: "TURBOPUFFER_API_KEY"
     };
   }
 
@@ -54,7 +57,11 @@ export class TurbopufferVectorStore extends VectorStore {
 
   protected namespace = "default";
 
-  protected apiUrl = "https://api.turbopuffer.com/v1/";
+  protected apiUrl = "https://api.turbopuffer.com/v1";
+
+  caller: AsyncCaller;
+
+  batchSize = 500;
 
   public _vectorstoreType(): string {
     return "turbopuffer";
@@ -66,25 +73,34 @@ export class TurbopufferVectorStore extends VectorStore {
     const apiKey = args.apiKey ?? getEnvironmentVariable("TURBOPUFFER_API_KEY");
     if (!apiKey) {
       throw new Error(
-        [
-          "Turbopuffer API key not found.",
-          `Please pass it in as "apiKey" or set it as an environment variable called "TURBOPUFFER_API_KEY"`,
-        ].join("\n")
+        `Turbopuffer API key not found.\nPlease pass it in as "apiKey" or set it as an environment variable called "TURBOPUFFER_API_KEY"`
       );
     }
     this.apiKey = apiKey;
     this.namespace = args.namespace ?? this.namespace;
     this.distanceMetric = args.distanceMetric ?? this.distanceMetric;
     this.apiUrl = args.apiUrl ?? this.apiUrl;
+    this.batchSize = args.batchSize ?? this.batchSize;
   }
 
   getJsonHeader(): TurbopufferHeaders {
     return {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     };
+  }
+
+  async callWithRetry(fetchUrl: string, stringifiedBody: string) {
+    const response = await this.caller.call(async () =>
+      fetch(fetchUrl, {
+        method: "POST",
+        headers: this.getJsonHeader().headers,
+        body: stringifiedBody
+      })
+    );
+    return response;
   }
 
   async addVectors(
@@ -109,24 +125,45 @@ export class TurbopufferVectorStore extends VectorStore {
         throw new Error("No documents provided");
       }
 
-      const docIds = options?.ids ?? documents.map((_, index) => index);
+      const batchedVectors = chunkArray(vectors, this.batchSize);
+      const batchedDocuments = chunkArray(documents, this.batchSize);
+      const batchedIds = options?.ids
+        ? chunkArray(options.ids, this.batchSize)
+        : batchedDocuments.map((docs, index) =>
+            docs.map((_, docIndex) => index * this.batchSize + docIndex)
+          );
 
-      const attributes = {
-        source: documents.map((doc) => doc.metadata.source),
-        pageContent: documents.map((doc) => doc.pageContent),
-      };
+      const batchRequests = batchedVectors.map(async (batchVectors, index) => {
+        const batchDocs = batchedDocuments[index];
+        const batchIds = batchedIds[index];
 
-      const data = {
-        docIds,
-        vectors,
-        attributes,
-      };
+        const attributes = {
+          source: batchDocs.map((doc) => doc.metadata.source),
+          pageContent: batchDocs.map((doc) => doc.pageContent)
+        };
 
-      await fetch(`${this.apiUrl}/vectors/${this.namespace}`, {
-        method: "POST",
-        headers: this.getJsonHeader().headers,
-        body: JSON.stringify(data),
+        const data = {
+          docIds: batchIds,
+          vectors: batchVectors,
+          attributes
+        };
+
+        const response = await this.callWithRetry(
+          `${this.apiUrl}/vectors/${this.namespace}`,
+          JSON.stringify(data)
+        );
+
+        if (response.status !== 200) {
+          throw new Error(
+            `Failed to add vectors to Turbopuffer. Response status ${
+              response.status
+            }\nFull response: ${await response.text()}`
+          );
+        }
       });
+
+      // Execute all batch requests in parallel
+      await Promise.all(batchRequests);
     } catch (error) {
       console.error("Error storing vectors:", error);
       throw error;
@@ -158,17 +195,20 @@ export class TurbopufferVectorStore extends VectorStore {
       distanceMetric: this.distanceMetric,
       filters: filter,
       includeAttributes,
-      includeVector,
+      includeVector
     };
 
-    const response = await fetch(
+    const response = await this.callWithRetry(
       `${this.apiUrl}/vectors/${this.namespace}/query`,
-      {
-        method: "POST",
-        headers: this.getJsonHeader().headers,
-        body: JSON.stringify(data),
-      }
+      JSON.stringify(data)
     );
+    if (response.status !== 200) {
+      throw new Error(
+        `Failed to query vectors from Turbopuffer. Response status ${
+          response.status
+        }\nFull response: ${await response.text()}`
+      );
+    }
 
     const json = await response.json();
 
@@ -192,10 +232,10 @@ export class TurbopufferVectorStore extends VectorStore {
       new Document({
         pageContent: res.attributes.pageContent,
         metadata: {
-          source: res.attributes.source,
-        },
+          source: res.attributes.source
+        }
       }),
-      res.dist,
+      res.dist
     ]);
 
     return result;
