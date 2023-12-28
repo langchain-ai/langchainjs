@@ -350,7 +350,11 @@ export class FakeListChatMessageHistory extends BaseListChatMessageHistory {
     super();
   }
 
-  public async addMessage(message: BaseMessage): Promise<void> {
+  async addMessage(message: BaseMessage): Promise<void> {
     this.messages.push(message);
+  }
+
+  async getMessages(): Promise<BaseMessage[]> {
+    return this.messages;
   }
 }
