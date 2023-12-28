@@ -2,8 +2,6 @@
 sidebar_position: 0
 ---
 
-import CodeBlock from "@theme/CodeBlock";
-
 # Quick Start
 
 Chat models are a variation on language models.
@@ -12,19 +10,22 @@ Rather than using a "text in, text out" API, they use an interface where "chat m
 
 ## Setup
 
-For this example we'll need to install the OpenAI JavaScript package:
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
 
 <Tabs>
-  <TabItem value="npm" label="npm" default>
-    <CodeBlock language="bash">npm install -S openai</CodeBlock>
-  </TabItem>
-  <TabItem value="yarn" label="Yarn">
-    <CodeBlock language="bash">yarn add openai</CodeBlock>
-  </TabItem>
-  <TabItem value="pnpm" label="pnpm">
-    <CodeBlock language="bash">pnpm add openai</CodeBlock>
-  </TabItem>
-</Tabs>
+  <TabItem value="openai" label="OpenAI" default>
+
+First we'll need to install the LangChain OpenAI integration package:
+
+```bash npm2yarn
+npm install @langchain/openai
+```
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
 
 Accessing the API requires an API key, which you can get by creating an account and heading [here](https://platform.openai.com/account/api-keys). Once we have a key we'll want to set it as an environment variable by running:
 
@@ -37,7 +38,7 @@ If you'd prefer not to set an environment variable you can pass the key in direc
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
-const chat = new ChatOpenAI({
+const chatModel = new ChatOpenAI({
   openAIApiKey: "...",
 });
 ```
@@ -50,6 +51,40 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 const chat = new ChatOpenAI();
 ```
 
+  </TabItem>
+  <TabItem value="local" label="Local">
+
+[Ollama](https://ollama.ai/) allows you to run open-source large language models, such as Llama 2 and Mistral, locally.
+
+First, follow [these instructions](https://github.com/jmorganca/ollama) to set up and run a local Ollama instance:
+
+- [Download](https://ollama.ai/download)
+- Fetch a model via e.g. `ollama pull mistral`
+
+Then, make sure the Ollama server is running. Next, you'll need to install the LangChain community package:
+
+:::tip
+See [this section for general instructions on installing integration packages](/docs/get_started/installation#installing-integration-packages).
+:::
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+And then you can do:
+
+```typescript
+import { ChatOllama } from "@langchain/community/chat_models/ollama";
+
+const chatModel = new ChatOllama({
+  baseUrl: "http://localhost:11434", // Default value
+  model: "mistral",
+});
+```
+
+  </TabItem>
+</Tabs>
+
 ## Messages
 
 The chat model interface is based around messages rather than raw text.
@@ -57,7 +92,7 @@ The types of messages currently supported in LangChain are `AIMessage`, `HumanMe
 
 ## LCEL
 
-Chat models implement the [Runnable interface](/docs/expression_language/interface), the basic building block of the [LangChain Expression Language (LCEL)](/docs/expression_language/). This means they support `invoke`, `stream`, `batch`, `streamLog` calls.
+Chat models implement the [Runnable interface](/docs/expression_language/interface), the basic building block of the [LangChain Expression Language (LCEL)](/docs/expression_language/). This means they support `invoke`, `stream`, `batch`, and `streamLog` calls.
 
 Chat models accept `BaseMessage[]` as inputs, or objects which can be coerced to messages, including `string` (converted to `HumanMessage`) and `PromptValue`.
 
@@ -67,11 +102,11 @@ import { HumanMessage, SystemMessage } from "langchain/chat_models/messages";
 const messages = [
   new SystemMessage("You're a helpful assistant"),
   new HumanMessage("What is the purpose of model regularization?"),
-]
+];
 ```
 
 ```typescript
-await chat.invoke(messages);
+await chatModel.invoke(messages);
 ```
 
 ```
@@ -83,6 +118,7 @@ See the [Runnable interface](/docs/expression_language/interface) for more detai
 ## [LangSmith](https://docs.smith.langchain.com/)
 
 All `ChatModel`s come with built-in LangSmith tracing. Just set the following environment variables:
+
 ```bash
 export LANGCHAIN_TRACING_V2="true"
 export LANGCHAIN_API_KEY=<your-api-key>
@@ -92,7 +128,6 @@ and any `ChatModel` invocation (whether it's nested in a chain or not) will auto
 
 In LangSmith you can then provide feedback for any trace, compile annotated datasets for evals, debug performance in the playground, and more.
 
-
 ## [Legacy] `generate`
 
 ### Batch calls, richer outputs
@@ -100,7 +135,7 @@ In LangSmith you can then provide feedback for any trace, compile annotated data
 You can go one step further and generate completions for multiple sets of messages using `generate`. This returns an `LLMResult` with an additional `message` parameter.
 
 ```typescript
-const response3 = await chat.generate([
+const response3 = await chatModel.generate([
   [
     new SystemMessage(
       "You are a helpful assistant that translates English to French."

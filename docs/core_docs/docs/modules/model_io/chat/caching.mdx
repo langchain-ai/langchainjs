@@ -8,14 +8,12 @@ It can speed up your application by reducing the number of API calls you make to
 import CodeBlock from "@theme/CodeBlock";
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 // To make the caching really obvious, lets use a slower model.
 const model = new ChatOpenAI({
-  modelName: "text-davinci-002",
+  modelName: "gpt-4",
   cache: true,
-  n: 2,
-  bestOf: 2,
 });
 ```
 
@@ -24,30 +22,51 @@ const model = new ChatOpenAI({
 The default cache is stored in-memory. This means that if you restart your application, the cache will be cleared.
 
 ```typescript
+console.time();
+
 // The first time, it is not yet in cache, so it should take longer
-const res = await model.invoke("Tell me a joke");
+const res = await model.invoke("Tell me a joke!");
 console.log(res);
 
+console.timeEnd();
+
 /*
-  CPU times: user 35.9 ms, sys: 28.6 ms, total: 64.6 ms
-  Wall time: 4.83 s
-
-
-  "\n\nWhy did the chicken cross the road?\n\nTo get to the other side."
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+      additional_kwargs: { function_call: undefined, tool_calls: undefined }
+    },
+    lc_namespace: [ 'langchain_core', 'messages' ],
+    content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+    name: undefined,
+    additional_kwargs: { function_call: undefined, tool_calls: undefined }
+  }
+  default: 2.224s
 */
 ```
 
 ```typescript
+console.time();
+
 // The second time it is, so it goes faster
-const res2 = await model.invoke("Tell me a joke");
+const res2 = await model.invoke("Tell me a joke!");
 console.log(res2);
 
+console.timeEnd();
 /*
-  CPU times: user 238 µs, sys: 143 µs, total: 381 µs
-  Wall time: 1.76 ms
-
-
-  "\n\nWhy did the chicken cross the road?\n\nTo get to the other side."
+  AIMessage {
+    lc_serializable: true,
+    lc_kwargs: {
+      content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+      additional_kwargs: { function_call: undefined, tool_calls: undefined }
+    },
+    lc_namespace: [ 'langchain_core', 'messages' ],
+    content: "Why don't scientists trust atoms?\n\nBecause they make up everything!",
+    name: undefined,
+    additional_kwargs: { function_call: undefined, tool_calls: undefined }
+  }
+  default: 181.98ms
 */
 ```
 
