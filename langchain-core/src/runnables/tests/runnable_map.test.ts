@@ -243,7 +243,7 @@ test("Should stream chunks through runnable passthrough and assign", async () =>
     await chainWithAssign.invoke("What is your name?")
   );
 
-  const chainWithPick = chainWithAssign.pipe(RunnablePassthrough.pick("llm"));
+  const chainWithPick = chainWithAssign.pick("llm");
 
   const chunks3 = [];
 
@@ -275,9 +275,7 @@ test("Should stream chunks through runnable passthrough and assign", async () =>
     await chainWithPick.invoke("What is your name?")
   );
 
-  const chainWithPickMulti = chainWithAssign.pipe(
-    RunnablePassthrough.pick(["llm"])
-  );
+  const chainWithPickMulti = chainWithAssign.pick(["llm"]);
 
   const chunks4 = [];
 
