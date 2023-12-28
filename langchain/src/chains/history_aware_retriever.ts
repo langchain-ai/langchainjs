@@ -75,7 +75,7 @@ export async function createHistoryAwareRetriever({
   }
   const retrieveDocuments = RunnableBranch.from([
     [
-      (input) => input.chat_history?.length > 0,
+      (input) => !input.chat_history || input.chat_history.length === 0,
       RunnableSequence.from([(input) => input.input, retriever]),
     ],
     RunnableSequence.from([
@@ -85,7 +85,7 @@ export async function createHistoryAwareRetriever({
       retriever,
     ]),
   ]).withConfig({
-    runName: "chat_retriever_chain",
+    runName: "history_aware_retriever",
   });
   return retrieveDocuments;
 }

@@ -7,7 +7,7 @@ import { FakeListLLM } from "../../llms/fake.js";
 
 test("createRetrievalChain", async () => {
   const answer = "I know the answer!";
-  const questionGenPrompt = ChatPromptTemplate.fromTemplate(
+  const combineDocsPrompt = ChatPromptTemplate.fromTemplate(
     `hi! {input} {chat_history}`
   );
   const fakeRetrievedDocs = [
@@ -20,7 +20,7 @@ test("createRetrievalChain", async () => {
   });
   const chain = await createRetrievalChain({
     retriever,
-    combineDocsChain: questionGenPrompt.pipe(llm),
+    combineDocsChain: combineDocsPrompt.pipe(llm),
   });
   const output = await chain.invoke({ input });
   expect(output).toEqual({

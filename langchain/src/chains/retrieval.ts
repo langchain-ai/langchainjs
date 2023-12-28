@@ -31,7 +31,7 @@ export type CreateRetrievalChainParams = {
    * The inputs to this will be any original inputs to this chain, a new
    * context key with the retrieved documents, and chat_history (if not present
    * in the inputs) with a value of `[]` (to easily enable conversational
-   * retrieval.
+   * retrieval).
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   combineDocsChain: RunnableInterface<Record<string, any>, string>;
@@ -75,7 +75,9 @@ export async function createRetrievalChain({
   combineDocsChain,
 }: CreateRetrievalChainParams): Promise<
   RunnableInterface<
-    { input: string; chat_history?: BaseMessage[] | string },
+    { input: string; chat_history?: BaseMessage[] | string } & {
+      [key: string]: unknown;
+    },
     { context: string; answer: string } & { [key: string]: unknown }
   >
 > {
