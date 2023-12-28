@@ -1,4 +1,5 @@
 import { Document } from "../../document.js";
+import { collapseDocsMetadata } from "./collapse.js";
 
 /**
  * Splits a list of documents into sublists based on a maximum token limit.
@@ -55,20 +56,5 @@ export async function collapseDocs(
   combineDocumentFunc: (docs: Document[]) => Promise<string>
 ): Promise<Document> {
   const result = await combineDocumentFunc(docs);
-  const combinedMetadata: Record<string, string> = {};
-  for (const key in docs[0].metadata) {
-    if (key in docs[0].metadata) {
-      combinedMetadata[key] = String(docs[0].metadata[key]);
-    }
-  }
-  for (const doc of docs.slice(1)) {
-    for (const key in doc.metadata) {
-      if (key in combinedMetadata) {
-        combinedMetadata[key] += `, ${doc.metadata[key]}`;
-      } else {
-        combinedMetadata[key] = String(doc.metadata[key]);
-      }
-    }
-  }
-  return { pageContent: result, metadata: combinedMetadata };
+  return { pageContent: result, metadata: collapseDocsMetadata(docs) };
 }
