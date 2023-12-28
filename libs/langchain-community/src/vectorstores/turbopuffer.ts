@@ -36,13 +36,13 @@ export class TurbopufferVectorStore extends VectorStore {
 
   get lc_secrets(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY"
+      apiKey: "TURBOPUFFER_API_KEY",
     };
   }
 
   get lc_aliases(): { [key: string]: string } {
     return {
-      apiKey: "TURBOPUFFER_API_KEY"
+      apiKey: "TURBOPUFFER_API_KEY",
     };
   }
 
@@ -87,8 +87,8 @@ export class TurbopufferVectorStore extends VectorStore {
     return {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     };
   }
 
@@ -97,7 +97,7 @@ export class TurbopufferVectorStore extends VectorStore {
       fetch(fetchUrl, {
         method: "POST",
         headers: this.getJsonHeader().headers,
-        body: stringifiedBody
+        body: stringifiedBody,
       })
     );
     return response;
@@ -139,13 +139,13 @@ export class TurbopufferVectorStore extends VectorStore {
 
         const attributes = {
           source: batchDocs.map((doc) => doc.metadata.source),
-          pageContent: batchDocs.map((doc) => doc.pageContent)
+          pageContent: batchDocs.map((doc) => doc.pageContent),
         };
 
         const data = {
           docIds: batchIds,
           vectors: batchVectors,
-          attributes
+          attributes,
         };
 
         const response = await this.callWithRetry(
@@ -195,7 +195,7 @@ export class TurbopufferVectorStore extends VectorStore {
       distanceMetric: this.distanceMetric,
       filters: filter,
       includeAttributes,
-      includeVector
+      includeVector,
     };
 
     const response = await this.callWithRetry(
@@ -232,10 +232,10 @@ export class TurbopufferVectorStore extends VectorStore {
       new Document({
         pageContent: res.attributes.pageContent,
         metadata: {
-          source: res.attributes.source
-        }
+          source: res.attributes.source,
+        },
       }),
-      res.dist
+      res.dist,
     ]);
 
     return result;
