@@ -3,10 +3,10 @@ hide_table_of_contents: true
 sidebar_position: 1
 ---
 
-# OpenAI tool calling
+# OpenAI tools
 
 :::tip Compatibility
-Tool calling is new and only available on [OpenAI's latest models](https://platform.openai.com/docs/guides/function-calling).
+OpenAI tool calling is new and only available on [OpenAI's latest models](https://platform.openai.com/docs/guides/function-calling).
 :::
 
 Certain OpenAI models have been finetuned to work with with tool calling. This is very similar but different from function calling, and thus requires a separate agent type.
@@ -46,10 +46,10 @@ const tools = [new TavilySearchResults({ maxResults: 1 })];
 import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 import { pull } from "langchain/hub";
 import { ChatOpenAI } from "@langchain/openai";
-import type { BasePromptTemplate } from "@langchain/core/prompts";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
 // Get the prompt to use - you can modify this!
-const prompt = await pull<BasePromptTemplate>("hwchase17/openai-tools-agent");
+const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
 
 const llm = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",

@@ -93,3 +93,4 @@ export {
   type CreateReactAgentParams,
   createReactAgent,
 } from "./react/index.js";
+export type { AgentAction, AgentFinish, AgentStep } from "../schema/index.js";

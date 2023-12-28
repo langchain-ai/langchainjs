@@ -125,10 +125,13 @@ const llm = new ChatOpenAI({
 Next, we choose the prompt we want to use to guide the agent:
 
 ```typescript
+import type { ChatPromptTemplate } from "@langchain/prompts";
 import { pull } from "langchain/hub";
 
 // Get the prompt to use - you can modify this!
-const prompt = await pull("hwchase17/openai-functions-agent");
+const prompt = await pull<ChatPromptTemplate>(
+  "hwchase17/openai-functions-agent"
+);
 ```
 
 Now, we can initalize the agent with the LLM, the prompt, and the tools. The agent is responsible for taking in input and deciding what actions to take.

@@ -1,6 +1,6 @@
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { ChatOpenAI } from "@langchain/openai";
-import type { BasePromptTemplate } from "@langchain/core/prompts";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
 import { Calculator } from "langchain/tools/calculator";
 import { pull } from "langchain/hub";
@@ -15,7 +15,7 @@ const llm = new ChatOpenAI({
 });
 
 // Get the prompt to use - you can modify this!
-const prompt = await pull<BasePromptTemplate>(
+const prompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { DynamicStructuredTool } from "langchain/tools";
 import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
@@ -42,7 +43,9 @@ const tools = [
 ];
 
 // Get the prompt to use - you can modify this!
-const prompt = await pull("hwchase17/openai-functions-agent");
+const prompt = await pull<ChatPromptTemplate>(
+  "hwchase17/openai-functions-agent"
+);
 
 const agent = await createOpenAIFunctionsAgent({
   llm: model,

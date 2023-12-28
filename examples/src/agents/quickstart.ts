@@ -5,6 +5,7 @@ import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 import { pull } from "langchain/hub";
+import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -65,7 +66,9 @@ const llm = new ChatOpenAI({
 });
 
 // Get the prompt to use - you can modify this!
-const prompt = await pull("hwchase17/openai-functions-agent");
+const prompt = await pull<ChatPromptTemplate>(
+  "hwchase17/openai-functions-agent"
+);
 
 const agent = await createOpenAIFunctionsAgent({
   llm,

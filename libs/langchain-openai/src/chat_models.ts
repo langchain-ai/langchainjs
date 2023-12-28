@@ -171,7 +171,7 @@ function convertMessagesToOpenAIParams(messages: BaseMessage[]) {
 export interface ChatOpenAICallOptions
   extends OpenAICallOptions,
     BaseFunctionCallOptions {
-  tools?: StructuredToolInterface[] | OpenAIClient.ChatCompletionTool[];
+  tools?: OpenAIClient.ChatCompletionTool[];
   tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption;
   promptIndex?: number;
   response_format?: { type: "json_object" };
