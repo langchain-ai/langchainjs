@@ -1,6 +1,5 @@
 /* eslint-disable no-instanceof/no-instanceof */
-import { ICacheClient, CreateCache } from "@gomomento/sdk-core";
-
+import { ICacheClient, CreateCache } from "@gomomento/sdk";
 /**
  * Utility function to ensure that a Momento cache exists.
  * If the cache does not exist, it is created.
