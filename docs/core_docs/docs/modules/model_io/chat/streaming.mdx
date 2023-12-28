@@ -18,14 +18,14 @@ import StreamMethodExample from "@examples/models/chat/chat_streaming_stream_met
 
 For models that do not support streaming, the entire response will be returned as a single chunk.
 
-For convenience, you can also pipe a chat model into a [StringOutputParser](/docs/modules/model_io/output_parsers/string) to extract
+For convenience, you can also pipe a chat model into a [StringOutputParser](/docs/modules/model_io/output_parsers/types/string) to extract
 just the raw string values from each chunk:
 
 import StringExample from "@examples/prompts/string_output_parser.ts";
 
 <CodeBlock language="typescript">{StringExample}</CodeBlock>
 
-You can also do something similar to stream bytes directly (e.g. for returning a stream in an HTTP response) using the [HttpResponseOutputParser](/docs/modules/model_io/output_parsers/http_response):
+You can also do something similar to stream bytes directly (e.g. for returning a stream in an HTTP response) using the [HttpResponseOutputParser](/docs/modules/model_io/output_parsers/types/http_response):
 
 import HttpExample from "@examples/prompts/http_response_output_parser.ts";
 

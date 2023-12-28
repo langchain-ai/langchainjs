@@ -100,12 +100,12 @@ console.log(formattedPromptTemplate);
 // "Tell me a funny joke about chickens."
 ```
 
-You can create custom prompt templates that format the prompt in any way you want. For more information, see [Custom Prompt Templates](/docs/modules/model_io/prompts/prompt_templates).
+You can create custom prompt templates that format the prompt in any way you want.
 
 ## Chat prompt template
 
-[Chat Models](/docs/modules/model_io/models/chat) take a list of chat messages as input - this list is commonly referred to as a `prompt`.
-These chat messages differ from raw string (which you would pass into a [LLM](/docs/modules/model_io/models/llms) model) in that every message is associated with a `role`.
+[Chat Models](/docs/modules/model_io/chat) take a list of chat messages as input - this list is commonly referred to as a `prompt`.
+These chat messages differ from raw string (which you would pass into a [LLM](/docs/modules/model_io/llms)) in that every message is associated with a `role`.
 
 For example, in OpenAI [Chat Completion API](https://platform.openai.com/docs/guides/chat/introduction), a chat message can be associated with an AI, human or system role. The model is supposed to follow instruction from system chat message more closely.
 
