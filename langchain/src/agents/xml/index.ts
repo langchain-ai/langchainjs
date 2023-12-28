@@ -128,12 +128,69 @@ export class XMLAgent extends BaseSingleActionAgent implements XMLAgentInput {
   }
 }
 
+/**
+ * Params used by the createXmlAgent function.
+ */
 export type CreateXmlAgentParams = {
+  /** LLM to use for the agent. */
   llm: BaseLanguageModelInterface;
+  /** Tools this agent has access to. */
   tools: ToolInterface[];
+  /**
+   * The prompt to use. Must have input keys for
+   * `tools` and `agent_scratchpad`.
+   */
   prompt: BasePromptTemplate;
 };
 
+/**
+ * Create an agent that uses XML to format its logic.
+ * @param params Params required to create the agent. Includes an LLM, tools, and prompt.
+ * @returns A runnable sequence representing an agent. It takes as input all the same input
+ *     variables as the prompt passed in does. It returns as output either an
+ *     AgentAction or AgentFinish.
+ *
+ * @example
+ * ```typescript
+ * import { AgentExecutor, createXmlAgent } from "langchain/agents";
+ * import { pull } from "langchain/hub";
+ * import type { PromptTemplate } from "@langchain/core/prompts";
+ *
+ * import { ChatAnthropic } from "@langchain/anthropic";
+ *
+ * // Define the tools the agent will have access to.
+ * const tools = [...];
+ *
+ * // Get the prompt to use - you can modify this!
+ * const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
+ *
+ * const llm = new ChatAnthropic({
+ *   temperature: 0,
+ * });
+ *
+ * const agent = await createXmlAgent({
+ *   llm,
+ *   tools,
+ *   prompt,
+ * });
+ *
+ * const agentExecutor = new AgentExecutor({
+ *   agent,
+ *   tools,
+ * });
+ *
+ * const result = await agentExecutor.invoke({
+ *   input: "what is LangChain?",
+ * });
+ *
+ * // With chat history
+ * const result2 = await agentExecutor.invoke({
+ *   input: "what's my name?",
+ *   // Notice that chat_history is a string, since this prompt is aimed at LLMs, not chat models
+ *   chat_history: "Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you",
+ * });
+ * ```
+ */
 export async function createXmlAgent({
   llm,
   tools,

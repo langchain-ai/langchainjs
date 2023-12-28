@@ -11,7 +11,7 @@ import {
 } from "@langchain/core/runnables";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../../chat_models/openai.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
+import type { BasePromptTemplate } from "../../prompts/base.js";
 import {
   AIMessage,
   AgentAction,
@@ -255,18 +255,73 @@ export class OpenAIAgent extends Agent {
 }
 
 /**
- *
+ * Params used by the createOpenAIFunctionsAgent function.
  */
 export type CreateOpenAIFunctionsAgentParams = {
+  /**
+   * LLM to use as the agent. Should work with OpenAI function calling,
+   * so must either be an OpenAI model that supports that or a wrapper of
+   * a different model that adds in equivalent support.
+   */
   llm: BaseChatModel<BaseFunctionCallOptions>;
+  /** Tools this agent has access to. */
   tools: StructuredToolInterface[];
+  /** The prompt to use, must have an input key for `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
 };
 
 /**
  * Create an agent that uses OpenAI-style function calling.
- * @param param0
- * @returns
+ * @param params Params required to create the agent. Includes an LLM, tools, and prompt.
+ * @returns A runnable sequence representing an agent. It takes as input all the same input
+ *     variables as the prompt passed in does. It returns as output either an
+ *     AgentAction or AgentFinish.
+ *
+ * @example
+ * ```typescript
+ * import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+ * import { pull } from "langchain/hub";
+ * import type { ChatPromptTemplate } from "@langchain/core/prompts";
+ * import { AIMessage, HumanMessage } from "@langchain/core/messages";
+ *
+ * import { ChatOpenAI } from "@langchain/openai";
+ *
+ * // Define the tools the agent will have access to.
+ * const tools = [...];
+ *
+ * // Get the prompt to use - you can modify this!
+ * const prompt = await pull<ChatPromptTemplate>(
+ *   "hwchase17/openai-functions-agent"
+ * );
+ *
+ * const llm = new ChatOpenAI({
+ *   temperature: 0,
+ * });
+ *
+ * const agent = await createOpenAIFunctionsAgent({
+ *   llm,
+ *   tools,
+ *   prompt,
+ * });
+ *
+ * const agentExecutor = new AgentExecutor({
+ *   agent,
+ *   tools,
+ * });
+ *
+ * const result = await agentExecutor.invoke({
+ *   input: "what is LangChain?",
+ * });
+ *
+ * // With chat history
+ * const result2 = await agentExecutor.invoke({
+ *   input: "what's my name?",
+ *   chat_history: [
+ *     new HumanMessage("hi! my name is cob"),
+ *     new AIMessage("Hello Cob! How can I assist you today?"),
+ *   ],
+ * });
+ * ```
  */
 export async function createOpenAIFunctionsAgent({
   llm,
