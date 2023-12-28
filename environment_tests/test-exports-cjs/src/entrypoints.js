@@ -17,6 +17,7 @@ const tools_connery = require("langchain/tools/connery");
 const tools_render = require("langchain/tools/render");
 const tools_google_places = require("langchain/tools/google_places");
 const chains = require("langchain/chains");
+const chains_combine_documents = require("langchain/chains/combine_documents");
 const chains_combine_documents_reduce = require("langchain/chains/combine_documents/reduce");
 const chains_history_aware_retriever = require("langchain/chains/history_aware_retriever");
 const chains_openai_functions = require("langchain/chains/openai_functions");
