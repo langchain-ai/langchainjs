@@ -270,6 +270,16 @@ Similar to linting, we recognize documentation can be annoying. If you do not wa
 
 Documentation and the skeleton lives under the `docs/` folder. Example code is imported from under the `examples/` folder.
 
+To contribute a new documentation notebook:
+
+1. Navigate to the `docs/core_docs/docs/` directory.
+2. Use the provided yarn script to create a new Jupyter notebook:
+```shell
+# Create the notebook, passing the name of the file as the second arg.
+yarn create-notebook your_notebook_name
+```
+Replace `your_notebook_name` with the desired name for your notebook. This will create a `.ipynb` file in the current directory the script was invoked from.
+
 ### Running examples
 
 If you add a new major piece of functionality, it is helpful to add an
