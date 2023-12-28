@@ -70,8 +70,6 @@ function getPathToNotebookInitUtils(invokedFromDirectory) {
   return relativePathParts.join(path.sep);
 }
 
-
-
 /**
  * Generate a notebook file inside the directory the script
  * was invoked from. Automatically write the .ipynb file with 
